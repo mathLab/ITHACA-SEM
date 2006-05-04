@@ -1,0 +1,33 @@
+ARCH	 = $(shell uname)
+VPATH	 = ../../../Demos/SpatialDomains
+
+# Must provide (relative) location or root director of libraries,i.e
+# typiecally Nektar++/libs
+NEK_LIB_ROOT = ../../../
+
+# Compilers and options
+
+CPPFLAGS = 
+include ../../Flags/${ARCH}.inc
+
+LDLIBS	 = -L../../../  -lSpatialDomains  -lStdRegions -lNekUtilities -lPolylib -lm  $(LIBS)  -L../../../../ThirdParty/boost_1_33_0/stage/lib -lboost_thread-gcc-1_33 -L../../../../ThirdParty/tinyxml/ -ltinyxml
+
+
+default:
+# These are the module names:
+	PROG = $<
+	$(CXX) $(CPPFLAGS) -c $(VPATH)/$(PROG)
+	$(CXX) $(CPPFLAGS) -o $(PROG)  $(PROG).o -L../../../  -lStdRegions -lPolylib -lm  $(LIBS)
+
+
+
+
+help:
+	@echo ''
+	@echo ' To run: make [DEBUG=1] "Program name"'	
+	@echo ''
+
+clean:
+	-rm -f *.o *~
+
+

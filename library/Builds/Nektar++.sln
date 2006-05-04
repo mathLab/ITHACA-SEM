@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibUtilities", "LibUtilities\LibUtilities.vcproj", "{8E141027-06D5-47AF-B7E2-FCE2956A137A}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SpatialDomains", "SpatialDomains\SpatialDomains.vcproj", "{7662782E-DD8F-4F08-A563-EAB5DFFC5623}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{8E141027-06D5-47AF-B7E2-FCE2956A137A}.Debug.ActiveCfg = Debug|Win32
+		{8E141027-06D5-47AF-B7E2-FCE2956A137A}.Debug.Build.0 = Debug|Win32
+		{8E141027-06D5-47AF-B7E2-FCE2956A137A}.Release.ActiveCfg = Release|Win32
+		{8E141027-06D5-47AF-B7E2-FCE2956A137A}.Release.Build.0 = Release|Win32
+		{7662782E-DD8F-4F08-A563-EAB5DFFC5623}.Debug.ActiveCfg = Debug|Win32
+		{7662782E-DD8F-4F08-A563-EAB5DFFC5623}.Debug.Build.0 = Debug|Win32
+		{7662782E-DD8F-4F08-A563-EAB5DFFC5623}.Release.ActiveCfg = Release|Win32
+		{7662782E-DD8F-4F08-A563-EAB5DFFC5623}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

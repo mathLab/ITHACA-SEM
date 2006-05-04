@@ -1,0 +1,52 @@
+ARCH	 = $(shell uname)
+VPATH	 = ../../LibUtilities 
+LIB	 = libBlockMat.a
+INCDIR	 = ../../LibUtilities
+
+# Compilers and options
+
+CPPFLAGS = -I../../../include -I$(INCDIR) -g 
+
+ifeq ($(ARCH),IRIX64)			# Silicon Graphics IRIX64
+CPPFLAGS += -LANG:std
+include ../Flags/IRIX64.inc
+endif
+
+ifeq ($(ARCH),Linux)			# Linux  platform
+include ../Flags/Linux.inc
+endif
+
+# These are the module names:
+
+ALL   = BlockMat
+
+# ---------------------------------------------------------------- #
+# The following expand to give the names of all sections (ALL),    #
+# all library member dependencies (LMOD), all associated           #
+# object files (OBJS), and all source code files (SRC).            #
+# ---------------------------------------------------------------- #
+
+LMOD  = $(foreach routine, $(ALL), $(LIB)($(routine).o))
+OBJS  = $(foreach routine, $(ALL), $(routine).o)
+
+# ----------------------------------------------------------------------------
+# Make library, default action.
+#
+$(LIB): $(LMOD)
+
+# ----------------------------------------------------------------------------
+# Install library & associated header files.
+#
+install:
+	cp -f ../../LibUtilities/BlockMat.h        ../../../include;
+	mv -f libBlockMat.a                        ../../; 
+
+help:
+	@echo ''
+	@echo ' Run make :'	
+	@echo ''
+
+clean:
+	-rm -f *.o *~
+
+

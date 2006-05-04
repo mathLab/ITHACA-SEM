@@ -1,0 +1,112 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/QuadGeom.h,v $
+//
+//  For more information, please see: http://www.nektar.info/
+//
+//  The MIT License
+//
+//  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
+//  Computing and Imaging Institute, University of Utah (USA).
+//
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//
+//  Description:
+//
+//
+////////////////////////////////////////////////////////////////////////////////
+#ifndef NEKTAR_SPATIALDOMAINS_QUADGEOM_H
+#define NEKTAR_SPATIALDOMAINS_QUADGEOM_H
+
+#include <StdRegions/StdRegions.hpp>
+#include <SpatialDomains/SpatialDomains.hpp>
+
+#include <SpatialDomains/GeoFac.h>
+#include <SpatialDomains/Geometry2D.h>
+#include <SpatialDomains/QuadFaceComponent.h>
+
+class VertexComponent;
+class EdgeComponent;
+
+namespace Nektar
+{
+    namespace SpatialDomains
+    {
+        class QuadGeom: public QuadFaceComponent
+        {
+        public:
+            QuadGeom();
+            QuadGeom(const EdgeComponentSharedPtr edges[], StdRegions::EdgeOrientation * eorient);
+            ~QuadGeom();
+
+            inline void SetOwnData()
+            {
+                m_owndata = true; 
+            }
+
+            void FillGeom();
+            GeoFac *GenXGeoFac();
+
+            void GetLocCoords(double *Lcoords, const double *coords);
+
+            static const int kNverts = 4;
+            static const int kNedges = 4;
+
+        protected:
+            VertexComponentVector           m_verts;
+            EdgeComponentVector             m_edges;
+            StdRegions::EdgeOrientation m_eorient[kNedges];
+
+        private:
+            bool m_owndata;   ///< Boolean indicating whether object owns the data
+        };
+
+    }; //end of namespace
+}; //end of namespace
+
+#endif //NEKTAR_SPATIALDOMAINS_QUADGEOM_H
+
+//
+// $Log: QuadGeom.h,v $
+// Revision 1.24  2006/04/11 23:18:11  jfrazier
+// Completed MeshGraph2D for tri's and quads.  Not thoroughly tested.
+//
+// Revision 1.23  2006/04/09 02:08:35  jfrazier
+// Added precompiled header.
+//
+// Revision 1.22  2006/03/25 00:58:29  jfrazier
+// Many changes dealing with fundamental structure and reading/writing.
+//
+// Revision 1.21  2006/03/12 14:20:43  sherwin
+//
+// First compiling version of SpatialDomains and associated modifications
+//
+// Revision 1.20  2006/03/12 11:06:40  sherwin
+//
+// First complete copy of code standard code but still not compile tested
+//
+// Revision 1.19  2006/03/04 20:26:05  bnelson
+// Added comments after #endif.
+//
+// Revision 1.18  2006/02/19 01:37:34  jfrazier
+// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
+//
+//

@@ -1,0 +1,28 @@
+
+* To generate Makefiles from a clean checkout.
+run autoconf (version 2.58 or higher required)
+run aclocal
+run automake -a 
+mkdir build
+$(NEKTAR)/libs/configure --prefix $(PATH_FOR_BINARIES)
+make
+make install 
+
+
+* To add a new source file to a directory.
+Modify local file Makefile.am to match .ccp, .h and .hpp definitions
+
+* To add a new project
+
+1. Create a new directory in the libs directory.
+2. In your project directory, create a Makefile.am.
+3. In the parent directory, add to SUBDIRS.
+4. Add a reference to Makefile.am in configure.ac
+5. Run automake and autoconf.
+
+
+
+
+
+
+

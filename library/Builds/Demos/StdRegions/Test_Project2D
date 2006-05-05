@@ -1,0 +1,41 @@
+#!/bin/csh
+
+set tol = 1e-10
+
+#   Quadrilateral Tests with Polynomial expansion
+echo 'Testing Qadurilaterals for polynomials from [2-11]:'
+
+foreach i (0 3 7 8 9 )
+	foreach n (2 3 4 5 6 7 8 9 10 11)
+	  	set q = `expr $n+1`
+		./Project2D 3 $i $i $n $n $q $q | grep infinity | awk '{if ($4 > '$tol') printf "Infinity error of run with base (%d,%d) at Polynomial order %d is %lg\n", '$i', '$i', '$n', $4}'
+	end
+end
+echo 'finished testing all polynomial expansions '
+
+
+# Quadrilateral Tests with Fourier tests
+echo 'Testing quadrilateral Fourier expansions for orders from [2-10] even order:'
+foreach i (6)
+	foreach n (2 4 6 8 10)
+	  	set q = `expr $n \+ 2`
+		./Project2D 3 $i $i $n $n $q $q | grep infinity | awk '{if ($4 > '$tol') printf "Infinity error of run with base (%d,%d) at Polynomial order %d is %lg\n", '$i','$i', '$n', $4}'
+
+	end
+end
+echo 'finished testing all Quadrilateral Fourier expansion'
+
+#  Triangle Tests
+echo 'Testing Triangles for polynomials from [2-11]:'
+
+foreach i (0 3)
+	set j = `expr $i \+ 1`
+	foreach n (2 3 4 5 6 7 8 9 10 11)
+	  	set q = `expr $n \+ 1`
+		./Project2D 2 $i $j $n $n $q $q | grep infinity | awk '{if ($4 > '$tol') printf "Infinity error of run with basis (%d,%d) at Polynomial order %d is %lg\n", '$i','$j', '$n', $4}'
+	end
+end
+echo 'finished testing all polynomial expansions '
+
+
+

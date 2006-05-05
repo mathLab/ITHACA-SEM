@@ -1,7 +1,7 @@
 AC_INIT([Nektar++], [0.1])
 AM_INIT_AUTOMAKE
 
-AC_PREFIX_DEFAULT([$ac_top_builddir../bin])
+AC_PREFIX_DEFAULT([$ac_top_builddir../dist])
 
 # Looks for appropriate ranlib.
 AC_PROG_RANLIB

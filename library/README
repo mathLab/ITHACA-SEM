@@ -1,12 +1,30 @@
 
 * To generate Makefiles from a clean checkout.
-run autoconf (version 2.58 or higher required)
-run aclocal
-run automake -a 
-mkdir build
-$(NEKTAR)/libs/configure --prefix $(PATH_FOR_BINARIES)
-make
-make install 
+
+- run aclocal
+- run autoconf (version 2.58 or higher required)
+- run automake -a 
+
+  Once things have stabalized a bit more we'll check in 
+  a configure script so that these steps can be skipped unless
+  new files or projects are added.
+
+- Create a directory for object files.  Don't run the configure
+  scripts from the libs/Build directory, as that may cause problems.
+
+- For example:
+  cd $NEKTAR
+  mkdir build_release
+  cd build_release
+  ../libs/configure 
+
+- You can now build Nektar from this location using
+  make
+
+- Once built, "make install" will install Nektar.  By default, 
+  the install files will go into a "dist" directory inside your 
+  build directory.  You can modify this default through a 
+  --prefix <path> command to the configure script.
 
 
 * To add a new source file to a directory.

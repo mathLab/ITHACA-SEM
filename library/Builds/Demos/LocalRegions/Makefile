@@ -1,13 +1,15 @@
 ARCH	 = $(shell uname)
 VPATH	 = ../../../Demos/LocalRegions
 
+# Must provide (relative) location or root director of libraries,i.e
+# typiecally Nektar++/libs
+NEK_LIB_ROOT = ../../../
+
 # Compilers and options
-
-CPPFLAGS = -I../../../
-
+CPPFLAGS =
 include ../../Flags/${ARCH}.inc
 
-LDLIBS	 = -L../../../  -lLocalRegions -lSpatialDomains -lStdRegions -lNekUtilities -lPolylib -lm  $(LIBS)
+LDLIBS	 = -L../../../  -lLocalRegions -lSpatialDomains -lStdRegions -lNekUtilities -lPolylib -lm  $(LIBS) -L../../../../ThirdParty/boost_1_33_0/stage/lib -lboost_thread-gcc-1_33
 
 
 default:

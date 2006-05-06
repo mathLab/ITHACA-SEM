@@ -49,18 +49,6 @@ namespace Nektar
 {
   namespace LocalRegions
   {
-  
-    class NekConstants: public SpatialDomains::NekConstants
-    {
-      
-    public:
-      
-    protected:
-      
-    private:
-      
-    };
-
 
     enum GeomState
     {
@@ -107,6 +95,9 @@ namespace Nektar
 
 /** 
  *    $Log: LocalRegions.hpp,v $
+ *    Revision 1.1  2006/05/04 18:58:45  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.2  2006/03/13 11:17:03  sherwin
  *
  *    First compiing version of Demos in SpatialDomains and LocalRegions. However they do not currently seem to execute properly

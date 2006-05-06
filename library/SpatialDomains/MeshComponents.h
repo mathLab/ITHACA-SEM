@@ -83,7 +83,7 @@ namespace Nektar
 
         };
 
-        // -----------------------------------------------------------------------
+        // --------------------------------------------------------------------
         /// Vertex Component
         class VertexComponent: public LibUtilities::NekPoint<double, 3>
         {
@@ -177,6 +177,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.1  2006/05/04 18:59:01  kirby
+// *** empty log message ***
+//
 // Revision 1.31  2006/05/02 21:21:11  sherwin
 // Corrected libraries to compile new version of spatialdomains and demo Graph1D
 //

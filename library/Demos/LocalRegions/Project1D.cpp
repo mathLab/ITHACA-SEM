@@ -49,7 +49,7 @@ main(int argc, char *argv[]){
   if((btype == eOrtho_B)||(btype == eOrtho_B)||
      (btype == eModified_B)||(btype == eModified_C))
   {
-    ErrorUtil::Error(ErrorUtil::efatal,"Project1D",
+    ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		     "This basis is for 2 or 3D expansions");
   }
   
@@ -73,9 +73,9 @@ main(int argc, char *argv[]){
   // Define a segment expansion based on basis definition
   const BasisKey b1(btype,order, Qtype, nq,0,0);
 
-  VertexComponent *vert1 = new VertexComponent(1,0,x);
-  VertexComponent *vert2 = new VertexComponent(1,0,x+1);
-  SegGeom *geom = new SegGeom(vert1,vert2);
+  SharedVertexPtr  vert1(new VertexComponent(1,0,x[0],0,0));
+  SharedVertexPtr  vert2(new VertexComponent(1,0,x[1],0,0));
+  SegGeom *geom = new SegGeom(0,vert1,vert2);
   geom->SetOwnData();
 
   E = new SegExp(b1,geom);

@@ -131,8 +131,8 @@ namespace Nektar
 	
 	  minfo->ResetJac(ndata);
 
-	  ErrorUtil::Error(ErrorUtil::ewarning,"SegExp::GenGeoFac()",
-		   "Need to check/debug routine for deformed elements");
+	  ErrorUtil::Error(ErrorUtil::ewarning,__FILE__,__LINE__,
+		       "Need to check/debug routine for deformed elements");
 	}
       }
       else    // regular geometry
@@ -335,7 +335,7 @@ namespace Nektar
 
       if(m_geom)
       {
-	ASSERTL2(n <= m_geom->GetCoordim(),"SegExp::Deriv",
+	ASSERTL2(n <= m_geom->GetCoordim(),
 		 "value of n is larger than the number of coordinates");
       }
 
@@ -408,7 +408,7 @@ namespace Nektar
       const double *I;
       const StdRegions::BasisKey *CBasis;
 
-      ASSERTL0(m_geom, "SegExp::GetCoords","m_geom not define");
+      ASSERTL0(m_geom, "m_geom not define");
 
       // get physical points defined in Geom
       m_geom->FillGeom();
@@ -441,7 +441,7 @@ namespace Nektar
     {
       int  i;
 
-      ASSERTL1(Lcoords[0] >= -1.0&& Lcoords[1] <= 1.0,"SegExp::GetCoord",
+      ASSERTL1(Lcoords[0] >= -1.0&& Lcoords[1] <= 1.0,
 	       "Local coordinates are not in region [-1,1]");
       
       m_geom->FillGeom();
@@ -459,7 +459,7 @@ namespace Nektar
       double *coords[3];
       int  nquad = m_base[0]->GetPointsOrder();
 
-      ASSERTL0(m_geom,"SegExp::WriteToFile","_geom not defined");
+      ASSERTL0(m_geom,"_geom not defined");
 
       int  coordim  = m_geom->GetCoordim();
 
@@ -501,7 +501,7 @@ namespace Nektar
       double *coords[3];
       int     nquad = m_base[0]->GetPointsOrder();
 
-      ASSERTL0(m_geom,"SegExp::WriteToFile","m_geom not defined");
+      ASSERTL0(m_geom,"m_geom not defined");
 
       int     coordim  = m_geom->GetCoordim();
       
@@ -545,7 +545,7 @@ namespace Nektar
       double val;
       double Lcoord;
     
-      ASSERTL0(m_geom,"SegExp::Evaluate","_geom not defined");
+      ASSERTL0(m_geom,"_geom not defined");
       m_geom->GetLocCoords(&Lcoord,coord);
 
       return val = StdSegExp::Evaluate(&Lcoord);
@@ -556,6 +556,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.1  2006/05/04 18:58:46  kirby
+// *** empty log message ***
+//
 // Revision 1.38  2006/03/13 19:47:54  sherwin
 //
 // Fixed bug related to constructor of GeoFac and also makde arguments to GeoFac all consts

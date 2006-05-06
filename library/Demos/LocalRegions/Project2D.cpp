@@ -1,20 +1,18 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <SpatialDomains/SpatialDomains.hpp>
-#include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/EdgeComponent.h>
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/TriGeom.h>
-
 #include <LocalRegions/LocalRegions.hpp>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
 
+#include <SpatialDomains/QuadGeom.h>
+#include <SpatialDomains/TriGeom.h>
+#include <SpatialDomains/MeshComponents.h>
+
 using namespace Nektar;
 using namespace StdRegions; 
-using namespace SpatialDomains; 
 using namespace LocalRegions; 
+using namespace SpatialDomains; 
 using namespace std;
 
 static double quadsol(double x1,double x2,int order1, int order2, 
@@ -73,7 +71,7 @@ int main(int argc, char *argv[])
   // Check to see if 2D region 
   if((regionshape != eTriangle)&&(regionshape != eQuadrilateral))
   {
-    ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
+    ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		     "This shape is not a 2D region");
   }
 
@@ -86,13 +84,13 @@ int main(int argc, char *argv[])
   case eTriangle:
     if((btype1 == eOrtho_B)||(btype1 == eModified_B))
     {
-      ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
+      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		       "Basis 1 cannot be of type Ortho_B or Modified_B");
     }
     
     if((btype2 != eOrtho_B)&&(btype2 != eModified_B))
     {
-      ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
+      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		       "Basis 2 must be of type Ortho_B or Modified_B");
     }
     break;
@@ -101,14 +99,14 @@ int main(int argc, char *argv[])
     if((btype1 == eOrtho_B)||(btype1 == eOrtho_B)||
        (btype1 == eModified_B)||(btype1 == eModified_C))
     {
-      ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
+      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		     "Basis 1 is for 2 or 3D expansions");
     }
 
     if((btype2 == eOrtho_B)||(btype2 == eOrtho_B)||
        (btype2 == eModified_B)||(btype2 == eModified_C))
     {
-      ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
+      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		       "Basis 2 is for 2 or 3D expansions");
     }
     break;

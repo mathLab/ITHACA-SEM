@@ -98,7 +98,7 @@ namespace IOutils
       if(!IOutils::FindToken(line,token))
       {
     line = "Cannot find Section "+token;
-    ErrorUtil::Error(ErrorUtil::efatal,"IOutils::FindSection",line.c_str());
+    ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,line.c_str());
       }
     }
     return line;
@@ -107,6 +107,9 @@ namespace IOutils
 
 /***
 $Log: IOutils.cpp,v $
+Revision 1.1  2006/05/04 18:57:42  kirby
+*** empty log message ***
+
 Revision 1.9  2006/03/13 11:17:03  sherwin
 
 First compiing version of Demos in SpatialDomains and LocalRegions. However they do not currently seem to execute properly

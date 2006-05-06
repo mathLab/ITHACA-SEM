@@ -51,9 +51,9 @@ namespace Nektar
         {
         }
 
-        SegGeom::SegGeom(int id, SharedVertexPtr vert1, SharedVertexPtr  vert2)
+      SegGeom::SegGeom(int id, SharedVertexPtr vert1, SharedVertexPtr  vert2):
+	EdgeComponent(id,vert1->GetCoordim())
         {
-            m_eid = id;
             m_owndata = false;
             m_verts[0] = vert1; 
             m_verts[1] = vert2;
@@ -220,6 +220,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.1  2006/05/04 18:59:04  kirby
+// *** empty log message ***
+//
 // Revision 1.26  2006/05/02 21:21:11  sherwin
 // Corrected libraries to compile new version of spatialdomains and demo Graph1D
 //

@@ -125,7 +125,8 @@ namespace Nektar
                     break;
 
                 case eFourierEvenSp:
-                    ASSERTL0(!np%2, "Fourier points need to be of even order");
+                    ASSERTL0(!(np%2), "Fourier points need to be of even order");
+                    ASSERTL0(false, "Need to define routine for Fourier Evan Spacing");
                     break;
 
                 default:
@@ -170,7 +171,7 @@ namespace Nektar
                     break;
 
                 case eFourierEvenSp:
-                    ASSERTL0(!m_pointsorder%2, "Fourier points need to be of even order");
+		  ASSERTL0(!(m_pointsorder%2), "Fourier points need to be of even order");
 
                     // define points in the region [-1,1]
                     for(int i = 0; i < m_pointsorder; ++i)
@@ -805,6 +806,9 @@ defaults:
 
 /** 
 * $Log: PolyManager.cpp,v $
+* Revision 1.1  2006/05/04 18:58:30  kirby
+* *** empty log message ***
+*
 * Revision 1.30  2006/04/25 20:23:33  jfrazier
 * Various fixes to correct bugs, calls to ASSERT, etc.
 *

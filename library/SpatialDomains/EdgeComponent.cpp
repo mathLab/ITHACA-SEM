@@ -45,7 +45,25 @@ namespace Nektar
         {
         }
 
-        EdgeComponent::EdgeComponent(int id, const int coordim, SharedVertexPtr vertex[])
+      EdgeComponent::EdgeComponent(int id, const int coordim): 
+	Geometry1D(coordim)
+      {
+	
+	const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
+				     StdRegions::eLobatto, 3,0,0);
+	m_eid = id;
+
+	m_xmap = new StdRegions::StdSegExp * [m_coordim];
+
+	for(int i = 0; i < m_coordim; ++i)
+        {
+	  m_xmap[i] = new StdRegions::StdSegExp(B);
+	}
+      }
+
+      EdgeComponent::EdgeComponent(int id, const int coordim,
+				   SharedVertexPtr vertex[]): 
+	Geometry1D(coordim)
         {
             m_eid = id;
 
@@ -66,7 +84,8 @@ namespace Nektar
             m_vertex[1] = vertex[1];
         }
 
-        EdgeComponent::EdgeComponent(int id, const int coordim, const int order, const int nquad):
+        EdgeComponent::EdgeComponent(int id, const int coordim, 
+				     const int order, const int nquad):
             Geometry1D(coordim)
         {
 
@@ -185,6 +204,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.1  2006/05/04 18:58:59  kirby
+*    *** empty log message ***
+*
 *    Revision 1.14  2006/04/11 23:18:11  jfrazier
 *    Completed MeshGraph2D for tri's and quads.  Not thoroughly tested.
 *

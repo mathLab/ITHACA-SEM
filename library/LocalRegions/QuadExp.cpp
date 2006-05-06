@@ -335,7 +335,7 @@ namespace Nektar
 	
 	if(m_geom)
         {
-	  ASSERTL2(n <= m_geom->GetCoordDim(),"QuadExp::Deriv",
+	  ASSERTL2(n <= m_geom->GetCoordDim(),
 		   "value of n is larger than the number of coordinates");
 	}
 
@@ -430,7 +430,7 @@ namespace Nektar
       int  i;
       
       ASSERTL1(Lcoords[0] >= -1.0 && Lcoords[1] <= 1.0 && 
-	       Lcoords[1] >= -1.0 && Lcoords[1]  <=1.0,"QuadExp::GetCoord",
+	       Lcoords[1] >= -1.0 && Lcoords[1]  <=1.0,
 	       "Local coordinates are not in region [-1,1]");
 
       m_geom->FillGeom();
@@ -484,7 +484,7 @@ namespace Nektar
     {
       double Lcoord[2];
     
-      ASSERTL0(m_geom,"QuadExp::Evaluate","_geom not defined");
+      ASSERTL0(m_geom,"_geom not defined");
       m_geom->GetLocCoords(Lcoord,coord);
 
       return StdQuadExp::Evaluate(Lcoord);
@@ -495,6 +495,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.1  2006/05/04 18:58:46  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.23  2006/03/13 19:47:54  sherwin
  *
  *    Fixed bug related to constructor of GeoFac and also makde arguments to GeoFac all consts

@@ -65,7 +65,7 @@ main(int argc, char *argv[]){
   // Check to see if 2D region 
   if((regionshape != eTriangle)&&(regionshape != eQuadrilateral))
   {
-    ErrorUtil::Error(ErrorUtil::efatal,"Project2D","This shape is not a 2D region");
+    ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,"This shape is not a 2D region");
   }
   
   btype1 =   (BasisType) atoi(argv[2]);
@@ -77,13 +77,13 @@ main(int argc, char *argv[]){
   case eTriangle:
     if((btype1 == eOrtho_B)||(btype1 == eModified_B))
     {
-      ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
+      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		       "Basis 1 cannot be of type Ortho_B or Modified_B");
     }
 
     if((btype2 != eOrtho_B)&&(btype2 != eModified_B))
     {
-      ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
+      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		       "Basis 2 must be of type Ortho_B or Modified_B");
     }
     break;
@@ -91,14 +91,14 @@ main(int argc, char *argv[]){
     if((btype1 == eOrtho_B)||(btype1 == eOrtho_B)||
        (btype1 == eModified_B)||(btype1 == eModified_C))
     {
-      ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
+      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		     "Basis 1 is for 2 or 3D expansions");
     }
 
     if((btype2 == eOrtho_B)||(btype2 == eOrtho_B)||
        (btype2 == eModified_B)||(btype2 == eModified_C))
     {
-      ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
+      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		     "Basis 2 is for 2 or 3D expansions");
     }
     break;

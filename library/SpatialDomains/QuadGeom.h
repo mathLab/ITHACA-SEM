@@ -41,6 +41,7 @@
 
 #include <SpatialDomains/GeoFac.h>
 #include <SpatialDomains/Geometry2D.h>
+#include <SpatialDomains/EdgeComponent.h>
 #include <SpatialDomains/QuadFaceComponent.h>
 
 class VertexComponent;
@@ -73,7 +74,7 @@ namespace Nektar
         protected:
             VertexComponentVector           m_verts;
             EdgeComponentVector             m_edges;
-            StdRegions::EdgeOrientation m_eorient[kNedges];
+            StdRegions::EdgeOrientation     m_eorient[kNedges];
 
         private:
             bool m_owndata;   ///< Boolean indicating whether object owns the data
@@ -86,6 +87,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.1  2006/05/04 18:59:04  kirby
+// *** empty log message ***
+//
 // Revision 1.24  2006/04/11 23:18:11  jfrazier
 // Completed MeshGraph2D for tri's and quads.  Not thoroughly tested.
 //

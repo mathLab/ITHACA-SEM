@@ -48,7 +48,7 @@ main(int argc, char *argv[])
   if((btype == eOrtho_B)||(btype == eOrtho_B)||
      (btype == eModified_B)||(btype == eModified_C))
   {
-    ErrorUtil::Error(ErrorUtil::efatal,"Project1D",
+    ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		     "This basis is for 2 or 3D expansions");
   }
   

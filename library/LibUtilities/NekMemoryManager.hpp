@@ -113,7 +113,8 @@ namespace Nektar
             /// \{
             ////////////////////////////////////////////////////////////////////
 
-            /// \brief Deallocate a pointer allocated by the MemoryManager without a memory pool.
+            /// \brief Deallocate a pointer allocated by the
+            /// MemoryManager without a memory pool.
             template<typename DataType>
             static void Deallocate(DataType*& data,
                     typename boost::disable_if_c<DataType::MemoryPoolEnabled>::type* p = NULL)
@@ -122,7 +123,8 @@ namespace Nektar
                 data = NULL;
             }
 
-            /// \brief Deallocate a pointer allocated by the Memory Manager with a memory pool.
+            /// \brief Deallocate a pointer allocated by the Memory
+            /// Manager with a memory pool.
             template<typename DataType>
             static void Deallocate(DataType*& data,
                     typename boost::enable_if_c<DataType::MemoryPoolEnabled>::type* p = NULL)
@@ -132,7 +134,8 @@ namespace Nektar
                 data = NULL;
             }
 
-            /// \brief Allocate a pointer to an object of type DataType*.
+            /// \brief Allocate a pointer to an object of type
+            /// DataType*.
             ///
             /// This method based heavily on the boost object pool code.
             template<typename DataType>
@@ -145,16 +148,17 @@ namespace Nektar
                 {
                     try
                     {
-                        // This is placement new, constructing the object inside
-                        // the memory returned by the pool.
+                        // This is placement new, constructing the
+                        // object inside the memory returned by the
+                        // pool.
                         new (result) DataType;
                     }
                     catch(...)
                     {
-                        // Clean up the memory since the object didn't get
-                        // created successfully.  Note that we don't call
-                        // the destructor here because the object wasn't fully
-                        // created.
+                        // Clean up the memory since the object didn't
+                        // get created successfully.  Note that we
+                        // don't call the destructor here because the
+                        // object wasn't fully created.
                         ThreadSpecificPool<sizeof(DataType)>::Deallocate(result);
                         throw;
                     }
@@ -163,7 +167,8 @@ namespace Nektar
                 return result;
             }
 
-            /// \brief Allocate a pointer without using the memory pool.
+            /// \brief Allocate a pointer without using the memory
+            /// pool.
             template<typename DataType>
             static DataType* Allocate(
                 typename boost::disable_if_c<DataType::MemoryPoolEnabled>::type* p = NULL)
@@ -254,7 +259,8 @@ namespace Nektar
                 data = NULL;
             }
 
-            /// \brief Allocate ArraySize values in an array of DataType using the memory pool.
+            /// \brief Allocate ArraySize values in an array of
+            /// DataType using the memory pool.
             template<unsigned int ArraySize, typename DataType>
             static DataType* AllocateArray(
                 typename boost::enable_if_c<DataType::MemoryPoolEnabled>::type* p = NULL)
@@ -402,6 +408,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.1  2006/05/04 18:57:43  kirby
+    *** empty log message ***
+
     Revision 1.5  2006/04/25 20:17:39  jfrazier
     Fixed a .Net issue with the deallocator function passed to shared_array.
 

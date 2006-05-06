@@ -52,7 +52,7 @@ namespace Nektar
 
         public:
             EdgeComponent();
-
+            EdgeComponent(int id, const int coordim);
             EdgeComponent(int id, const int coordim, SharedVertexPtr vertex[]);
             EdgeComponent(int id, const int coordim, const int order, const int nquad);
 
@@ -135,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.1  2006/05/04 18:58:59  kirby
+// *** empty log message ***
+//
 // Revision 1.17  2006/05/02 21:21:11  sherwin
 // Corrected libraries to compile new version of spatialdomains and demo Graph1D
 //

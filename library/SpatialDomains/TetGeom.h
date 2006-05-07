@@ -44,9 +44,8 @@
 #include <SpatialDomains/GeoFac.h>
 #include <SpatialDomains/Geometry3D.h>
 
-class VertexComponent;
-class EdgeComponent;
-class TriFaceComponent;
+#include <SpatialDomains/EdgeComponent.h>
+#include <SpatialDomains/TriFaceComponent.h>
 
 namespace Nektar
 {
@@ -86,6 +85,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.1  2006/05/04 18:59:04  kirby
+// *** empty log message ***
+//
 // Revision 1.16  2006/04/09 02:08:36  jfrazier
 // Added precompiled header.
 //

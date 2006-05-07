@@ -5,15 +5,16 @@
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
 
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/MeshComponents.h>
 
 using namespace Nektar;
 using namespace StdRegions; 
 using namespace LocalRegions; 
 using namespace SpatialDomains; 
 using namespace std;
+
+#include <SpatialDomains/QuadGeom.h>
+#include <SpatialDomains/TriGeom.h>
+#include <SpatialDomains/MeshComponents.h>
 
 static double quadsol(double x1,double x2,int order1, int order2, 
 		      BasisType btype1, BasisType btype2);
@@ -27,6 +28,7 @@ static double trisol(double x1,double x2,int order1, int order2);
 
 int main(int argc, char *argv[])
 {
+
   int           i,j,k,l;
   const         double *z1,*z2,*w;
   int           order1,order2, nq1,nq2;
@@ -154,16 +156,22 @@ int main(int argc, char *argv[])
     coords[5]    =   atof(argv[13]);
 
     // Set up coordinates
-    VertexComponent *vert[3];
-    vert[0] = new VertexComponent(2,0,coords);
-    vert[1] = new VertexComponent(2,1,coords+2);
-    vert[2] = new VertexComponent(2,2,coords+4);
+    VertexComponentSharedPtr verts[3];
+    SharedVertexPtr vert0(new VertexComponent(2,0,coords[0],coords[1],0));
+    verts[0].swap(vert0);
+    SharedVertexPtr vert1(new VertexComponent(2,1,coords[2],coords[3],0));
+    verts[1].swap(vert1);
+    SharedVertexPtr vert2(new VertexComponent(2,2,coords[4],coords[5],0));
+    verts[2].swap(vert2);
 
     // Set up Edges
-    EdgeComponent *edge[3];
-    edge[0] = new EdgeComponent(2);
-    edge[1] = new EdgeComponent(2);
-    edge[2] = new EdgeComponent(2);
+    EdgeComponentSharedPtr edges[3];
+    EdgeComponentSharedPtr edge0(new EdgeComponent(0,2));
+    edges[0].swap(edge0);
+    EdgeComponentSharedPtr edge1(new EdgeComponent(1,2));
+    edges[1].swap(edge1);
+    EdgeComponentSharedPtr edge2(new EdgeComponent(2,2));
+    edges[2].swap(edge2);
 
     EdgeOrientation eorient[3];
     
@@ -171,7 +179,7 @@ int main(int argc, char *argv[])
     eorient[1] = edgeDir; 
     eorient[2] = edgeDir; 
       
-    TriGeom *geom = new TriGeom(vert,edge,eorient);
+    TriGeom *geom = new TriGeom(verts,edges,eorient);
     geom->SetOwnData();
 
     const BasisKey b1(btype1,order1,Qtype1,nq1,0,0);
@@ -216,18 +224,26 @@ int main(int argc, char *argv[])
     coords[7]    =   atof(argv[15]);
 
     // Set up coordinates
-    VertexComponent *vert[4];
-    vert[0] = new VertexComponent(2,0,coords);
-    vert[1] = new VertexComponent(2,1,coords+2);
-    vert[2] = new VertexComponent(2,2,coords+4);
-    vert[3] = new VertexComponent(2,3,coords+6);
+    VertexComponentSharedPtr verts[4];
+    SharedVertexPtr vert0(new VertexComponent(2,0,coords[0],coords[1],0));
+    verts[0].swap(vert0);
+    SharedVertexPtr vert1(new VertexComponent(2,1,coords[2],coords[3],0));
+    verts[1].swap(vert1);
+    SharedVertexPtr vert2(new VertexComponent(2,2,coords[4],coords[5],0));
+    verts[2].swap(vert2);
+    SharedVertexPtr vert3(new VertexComponent(2,3,coords[6],coords[7],0));
+    verts[3].swap(vert3);
 
     // Set up Edges
-    EdgeComponent *edge[4];
-    edge[0] = new EdgeComponent(2);
-    edge[1] = new EdgeComponent(2);
-    edge[2] = new EdgeComponent(2);
-    edge[3] = new EdgeComponent(2);
+    EdgeComponentSharedPtr edges[4];
+    EdgeComponentSharedPtr edge0(new EdgeComponent(0,2));
+    edges[0].swap(edge0);
+    EdgeComponentSharedPtr  edge1(new EdgeComponent(0,2));
+    edges[1].swap(edge1);
+    EdgeComponentSharedPtr edge2(new EdgeComponent(0,2));
+    edges[2].swap(edge2);
+    EdgeComponentSharedPtr edge3(new EdgeComponent(0,2));
+    edges[3].swap(edge3);
 
     EdgeOrientation eorient[4];
     
@@ -236,7 +252,7 @@ int main(int argc, char *argv[])
     eorient[2] = edgeDir; 
     eorient[3] = edgeDir; 
       
-    QuadGeom *geom = new QuadGeom(vert,edge,eorient);
+    QuadGeom *geom = new QuadGeom(verts,edges,eorient);
     geom->SetOwnData();
 
     // Define basis

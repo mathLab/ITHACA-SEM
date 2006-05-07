@@ -45,8 +45,8 @@
 
 namespace Nektar
 {
-    namespace SpatialDomains
-    {
+      namespace SpatialDomains
+      {
         // ------------------------------------------------------------------------
         /// Structure holding graphvertexobject id and local element facet id
         class CompToElmt
@@ -177,6 +177,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.2  2006/05/06 20:36:16  sherwin
+// Modifications to get LocalRegions/Project1D working
+//
 // Revision 1.1  2006/05/04 18:59:01  kirby
 // *** empty log message ***
 //

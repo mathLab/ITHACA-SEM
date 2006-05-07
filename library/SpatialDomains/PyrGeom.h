@@ -44,11 +44,9 @@
 #include <SpatialDomains/GeoFac.h>
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/MeshComponents.h>
-
-class VertexComponent;
-class EdgeComponent;
-class QuadFaceComponent;
-class TriFaceComponent;
+#include <SpatialDomains/EdgeComponent.h>
+#include <SpatialDomains/QuadFaceComponent.h>
+#include <SpatialDomains/TriFaceComponent.h>
 
 namespace Nektar
 {
@@ -91,6 +89,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.h,v $
+// Revision 1.1  2006/05/04 18:59:02  kirby
+// *** empty log message ***
+//
 // Revision 1.15  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

@@ -44,8 +44,6 @@
 #include <SpatialDomains/EdgeComponent.h>
 #include <SpatialDomains/QuadFaceComponent.h>
 
-class VertexComponent;
-class EdgeComponent;
 
 namespace Nektar
 {
@@ -55,6 +53,7 @@ namespace Nektar
         {
         public:
             QuadGeom();
+            QuadGeom(const VertexComponentSharedPtr verts[],  const EdgeComponentSharedPtr edges[], StdRegions::EdgeOrientation * eorient);
             QuadGeom(const EdgeComponentSharedPtr edges[], StdRegions::EdgeOrientation * eorient);
             ~QuadGeom();
 
@@ -87,6 +86,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.2  2006/05/06 20:36:16  sherwin
+// Modifications to get LocalRegions/Project1D working
+//
 // Revision 1.1  2006/05/04 18:59:04  kirby
 // *** empty log message ***
 //

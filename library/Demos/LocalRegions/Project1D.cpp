@@ -10,7 +10,7 @@ using namespace StdRegions;
 using namespace LocalRegions; 
 using namespace SpatialDomains; 
 using namespace std;
-
+  
 // compile using Builds/Demos/StdRegions -> make DEBUG=1 ProjectS1D
 
 // This routine projects a polynomial or trigonmetric functions which 

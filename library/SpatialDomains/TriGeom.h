@@ -45,9 +45,6 @@
 #include <SpatialDomains/EdgeComponent.h>
 #include <SpatialDomains/TriFaceComponent.h>
 
-class VertexComponent;
-class EdgeComponent;
-
 namespace Nektar
 {
     namespace SpatialDomains
@@ -56,6 +53,7 @@ namespace Nektar
         {
         public:
             TriGeom();
+            TriGeom(const VertexComponentSharedPtr verts[], const EdgeComponentSharedPtr edges[], StdRegions::EdgeOrientation * eorient);
             TriGeom(const EdgeComponentSharedPtr edges[], StdRegions::EdgeOrientation * eorient);
             ~TriGeom();
 
@@ -70,7 +68,7 @@ namespace Nektar
             void GetLocCoords(double *Lcoords, const double *coords);
 
         static const int kNedges = 3;
-        static const int kNvertices = 3;
+        static const int kNverts = 3;
 
         protected:
             VertexComponentVector           m_verts;
@@ -91,6 +89,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.1  2006/05/04 18:59:05  kirby
+// *** empty log message ***
+//
 // Revision 1.23  2006/04/11 23:18:11  jfrazier
 // Completed MeshGraph2D for tri's and quads.  Not thoroughly tested.
 //

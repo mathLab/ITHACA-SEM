@@ -45,7 +45,28 @@ namespace Nektar
         {
         }
 
-        TriGeom::TriGeom(const EdgeComponentSharedPtr edges[], StdRegions::EdgeOrientation * eorient)
+        TriGeom::TriGeom(const VertexComponentSharedPtr verts[], 
+			 const EdgeComponentSharedPtr edges[], 
+			 StdRegions::EdgeOrientation * eorient)
+        {
+            /// Copy the vert shared pointers.
+	  m_verts.insert(m_verts.begin(), verts, verts+TriGeom::kNverts);
+
+            /// Copy the edge shared pointers.
+            m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
+
+            for (int j=0; j<kNedges; ++j)
+            {
+                m_eorient[j] = eorient[j];
+            }
+
+            m_coordim = verts[0]->GetCoordim();
+            ASSERTL0(m_coordim > 1,
+                "Cannot call function with dim == 1");
+        }
+
+        TriGeom::TriGeom(const EdgeComponentSharedPtr edges[], 
+			 StdRegions::EdgeOrientation * eorient)
         {
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
@@ -231,6 +252,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.1  2006/05/04 18:59:05  kirby
+// *** empty log message ***
+//
 // Revision 1.19  2006/05/02 21:21:11  sherwin
 // Corrected libraries to compile new version of spatialdomains and demo Graph1D
 //

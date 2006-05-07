@@ -16,6 +16,7 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/testNekPoint.h>
 #include <UnitTests/testNekVector.h>
 #include <UnitTests/testBoostUtil.h>
+#include <UnitTests/testNekMatrix.h>
 
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
@@ -34,11 +35,19 @@ test_suite* init_unit_test_suite( int, char* [] )
 
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testMakePtr), 0);
 
+
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixConstruction), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixAccess), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixBasicMath), 0);
+
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.2  2006/05/07 15:23:28  bnelson
+    Added tests for boost utilities.
+
     Revision 1.1  2006/05/04 18:59:55  kirby
     *** empty log message ***
 

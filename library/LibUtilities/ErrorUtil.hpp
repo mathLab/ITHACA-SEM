@@ -50,15 +50,15 @@ namespace ErrorUtil
     {
         switch(type)
         {
-        case efatal:
-			std::cerr << routine << "[" << lineNumber << "]:" << msg << std::endl;
-            exit(1);
-            break;
-        case ewarning:
-            std::cerr << routine << ": " << msg << std::endl;
-            break;
-        default:
-            std::cerr << "Unknown warning type" << std::endl;
+            case efatal:
+                std::cerr << routine << "[" << lineNumber << "]:" << msg << std::endl;
+                exit(1);
+                break;
+            case ewarning:
+                std::cerr << routine << ": " << msg << std::endl;
+                break;
+            default:
+                std::cerr << "Unknown warning type" << std::endl;
         }
     }
 } // end of namespace
@@ -109,6 +109,9 @@ namespace ErrorUtil
 #endif //ERRORUTIL_HPP
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.1  2006/05/04 18:57:41  kirby
+*** empty log message ***
+
 Revision 1.7  2006/04/14 14:51:17  jfrazier
 Fixed a problem which is most likely a preprocessor problem.  The file and line
 number were inconsistent between release and debug builds.

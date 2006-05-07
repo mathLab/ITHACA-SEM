@@ -28,8 +28,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: Header file for Input/Output Utilities 
+//
+// Description: Header file for Input/Output Utilities
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -37,21 +37,25 @@
 #define IOUTILS_H
 
 #include <string>
-#include <iostream> 
-#include <fstream> 
+#include <iostream>
+#include <fstream>
 
-namespace IOutils 
+namespace IOutils
 {
 
-  int FindToken(const std::string &line, const std::string &identifier);
+    int FindToken(const std::string& line, const std::string& identifier);
 
-  std::string FindSection(std::ifstream &in, const std::string token);
-    
+    std::string FindSection(std::ifstream& in, const std::string& token);
+
 }
-#endif
-  
-/*** 
+
+#endif //IOUTILS_H
+
+/***
 $Log: IOutils.h,v $
+Revision 1.1  2006/05/04 18:57:42  kirby
+*** empty log message ***
+
 Revision 1.5  2006/02/12 21:51:42  sherwin
 
 Added licence

@@ -39,74 +39,78 @@
 namespace IOutils
 {
 
-  int FindToken(const std::string &line, const std::string &identifier)
-  {
-    int i, start;
-    std::string Token;
+    int FindToken(const std::string& line, const std::string& identifier)
+    {
+        int i = 0;
+        int start = 0;
+        std::string Token;
 
-    if((start = line.find_first_of("<",0))!=std::string::npos) // found '<'
-    {
-      for(i =start; i < line.size(); ++i)
-      {
-    if(line[i] == '>')
-    {
-      Token += line[i];
-      break;
+        if((start = line.find_first_of("<",0))!=std::string::npos) // found '<'
+        {
+            for(i =start; i < line.size(); ++i)
+            {
+                if(line[i] == '>')
+                {
+                    Token += line[i];
+                    break;
+                }
+
+                if((line[i] != '\t')&&(line[i]!=' '))// remove whitespace
+                {
+                    Token += toupper(line[i]);
+                }
+            }
+
+            if(Token.find(identifier,0) != std::string::npos)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
-    if((line[i] != '\t')&&(line[i]!=' '))// remove whitespace
+    /// \brief  search file 'in' for a line with the token 'token'.
+    std::string FindSection(std::ifstream& in, const std::string& token)
     {
-      Token += toupper(line[i]);
+        std::string line;
+
+        while(getline(in,line)) // Find Nodes section
+        {
+            if(IOutils::FindToken(line,token))
+            {
+                break;
+            }
+        }
+
+        // check to see if at end of file or have token
+        if(!IOutils::FindToken(line,token))
+        {
+            in.clear();
+            in.seekg(0,std::ios::beg); // rewind file;
+
+            while(getline(in,line)) // Find Nodes section
+            {
+                if(IOutils::FindToken(line,token))
+                {
+                    break;
+                }
+            }
+
+            if(!IOutils::FindToken(line,token))
+            {
+                line = "Cannot find Section "+token;
+                ErrorUtil::Error(ErrorUtil::efatal, "IOutils::FindSection", __LINE__, line.c_str());
+            }
+        }
+        return line;
     }
-      }
-
-      if(Token.find(identifier,0) != std::string::npos)
-      {
-      return true;
-      }
-    }
-    return false;
-  }
-
-  /// \brief  search file 'in' for a line with the token 'token'.
-  std::string FindSection(std::ifstream &in, const std::string token)
-  {
-    std::string line;
-
-    while(getline(in,line)) // Find Nodes section
-    {
-      if(IOutils::FindToken(line,token))
-      {
-    break;
-      }
-    }
-
-    // check to see if at end of file or have token
-    if(!IOutils::FindToken(line,token))
-    {
-      in.clear();
-      in.seekg(0,std::ios::beg); // rewind file;
-
-      while(getline(in,line)) // Find Nodes section
-      {
-    if(IOutils::FindToken(line,token))
-    {
-      break;
-    }
-      }
-
-      if(!IOutils::FindToken(line,token))
-      {
-    line = "Cannot find Section "+token;
-    ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,line.c_str());
-      }
-    }
-    return line;
-  }
 }
 
 /***
 $Log: IOutils.cpp,v $
+Revision 1.2  2006/05/06 20:36:16  sherwin
+Modifications to get LocalRegions/Project1D working
+
 Revision 1.1  2006/05/04 18:57:42  kirby
 *** empty log message ***
 

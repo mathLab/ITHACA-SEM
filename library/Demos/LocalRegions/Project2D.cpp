@@ -157,21 +157,15 @@ int main(int argc, char *argv[])
 
     // Set up coordinates
     VertexComponentSharedPtr verts[3];
-    SharedVertexPtr vert0(new VertexComponent(2,0,coords[0],coords[1],0));
-    verts[0].swap(vert0);
-    SharedVertexPtr vert1(new VertexComponent(2,1,coords[2],coords[3],0));
-    verts[1].swap(vert1);
-    SharedVertexPtr vert2(new VertexComponent(2,2,coords[4],coords[5],0));
-    verts[2].swap(vert2);
+    verts[0] = SharedVertexPtr(new VertexComponent(2,0,coords[0],coords[1],0));
+    verts[1] = SharedVertexPtr(new VertexComponent(2,1,coords[2],coords[3],0));
+    verts[2] = SharedVertexPtr(new VertexComponent(2,2,coords[4],coords[5],0));
 
     // Set up Edges
     EdgeComponentSharedPtr edges[3];
-    EdgeComponentSharedPtr edge0(new EdgeComponent(0,2));
-    edges[0].swap(edge0);
-    EdgeComponentSharedPtr edge1(new EdgeComponent(1,2));
-    edges[1].swap(edge1);
-    EdgeComponentSharedPtr edge2(new EdgeComponent(2,2));
-    edges[2].swap(edge2);
+    edges[0] = EdgeComponentSharedPtr(new EdgeComponent(0,2));
+    edges[1] = EdgeComponentSharedPtr(new EdgeComponent(1,2));
+    edges[2] = EdgeComponentSharedPtr(new EdgeComponent(2,2));
 
     EdgeOrientation eorient[3];
     
@@ -225,25 +219,17 @@ int main(int argc, char *argv[])
 
     // Set up coordinates
     VertexComponentSharedPtr verts[4];
-    SharedVertexPtr vert0(new VertexComponent(2,0,coords[0],coords[1],0));
-    verts[0].swap(vert0);
-    SharedVertexPtr vert1(new VertexComponent(2,1,coords[2],coords[3],0));
-    verts[1].swap(vert1);
-    SharedVertexPtr vert2(new VertexComponent(2,2,coords[4],coords[5],0));
-    verts[2].swap(vert2);
-    SharedVertexPtr vert3(new VertexComponent(2,3,coords[6],coords[7],0));
-    verts[3].swap(vert3);
+    verts[0] = SharedVertexPtr(new VertexComponent(2,0,coords[0],coords[1],0));
+    verts[1] = SharedVertexPtr(new VertexComponent(2,1,coords[2],coords[3],0));
+    verts[2] = SharedVertexPtr(new VertexComponent(2,2,coords[4],coords[5],0));
+    verts[3] = SharedVertexPtr(new VertexComponent(2,3,coords[6],coords[7],0));
 
     // Set up Edges
     EdgeComponentSharedPtr edges[4];
-    EdgeComponentSharedPtr edge0(new EdgeComponent(0,2));
-    edges[0].swap(edge0);
-    EdgeComponentSharedPtr  edge1(new EdgeComponent(0,2));
-    edges[1].swap(edge1);
-    EdgeComponentSharedPtr edge2(new EdgeComponent(0,2));
-    edges[2].swap(edge2);
-    EdgeComponentSharedPtr edge3(new EdgeComponent(0,2));
-    edges[3].swap(edge3);
+    edges[0] = EdgeComponentSharedPtr(new EdgeComponent(0,2));
+    edges[1] = EdgeComponentSharedPtr(new EdgeComponent(0,2));
+    edges[2] = EdgeComponentSharedPtr(new EdgeComponent(0,2));
+    edges[3] = EdgeComponentSharedPtr(new EdgeComponent(0,2));
 
     EdgeOrientation eorient[4];
     

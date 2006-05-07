@@ -46,3 +46,7 @@ namespace Nektar
 }
 
 #endif // NEKTAR_UNIT_TESTS_TEST_BOOST_UTIL_H
+
+/**
+    $Log: $
+ **/

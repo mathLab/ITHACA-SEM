@@ -1,5 +1,7 @@
 #pragma once
 
+#define NOMINMAX
+
 #include <list>
 #include <set>
 #include <vector>

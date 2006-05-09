@@ -105,23 +105,23 @@ namespace Nektar
 
         // _this = a + b
         void VertexComponent::Add(VertexComponent& a,VertexComponent& b)
-	{
-	  (*this)(0) = a[0] + b[0];
-	  (*this)(1) = a[1] + b[1];
-	  (*this)(2) = a[2] + b[2];
-	  m_coordim = std::max(a.GetCoordim(),b.GetCoordim());
-	}
+        {
+            (*this)(0) = a[0] + b[0];
+            (*this)(1) = a[1] + b[1];
+            (*this)(2) = a[2] + b[2];
+            m_coordim = std::max(a.GetCoordim(),b.GetCoordim());
+        }
 
         // _this = a + b
         void VertexComponent::Sub(VertexComponent& a,VertexComponent& b)
-	{
-	  (*this)(0) = a[0] - b[0];
-	  (*this)(1) = a[1] - b[1];
-	  (*this)(2) = a[2] - b[2];
-	  m_coordim = std::max(a.GetCoordim(),b.GetCoordim());
-	}
+        {
+            (*this)(0) = a[0] - b[0];
+            (*this)(1) = a[1] - b[1];
+            (*this)(2) = a[2] - b[2];
+            m_coordim = std::max(a.GetCoordim(),b.GetCoordim());
+        }
 
-       // _this = a x b 
+        // _this = a x b 
         void VertexComponent::Mult(VertexComponent& a,VertexComponent& b)
         {
             (*this)(0) = a[1]*b[2] - a[2]*b[1];
@@ -182,6 +182,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.cpp,v $
+// Revision 1.2  2006/05/07 11:26:38  sherwin
+// Modifications to get the demo LocalRegions::Project2D to compile
+//
 // Revision 1.1  2006/05/04 18:59:01  kirby
 // *** empty log message ***
 //

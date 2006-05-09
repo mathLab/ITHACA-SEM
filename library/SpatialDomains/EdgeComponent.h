@@ -53,7 +53,7 @@ namespace Nektar
         public:
             EdgeComponent();
             EdgeComponent(int id, const int coordim);
-            EdgeComponent(int id, const int coordim, SharedVertexPtr vertex[]);
+            EdgeComponent(int id, const int coordim, VertexComponentSharedPtr vertex[]);
             EdgeComponent(int id, const int coordim, const int order, const int nquad);
 
             ~EdgeComponent();
@@ -82,9 +82,9 @@ namespace Nektar
                 return m_xmap[i]->GetPhys();
             }
 
-            inline SharedVertexPtr GetVertex(int i) const
+            inline VertexComponentSharedPtr GetVertex(int i) const
             {
-                SharedVertexPtr returnval;
+                VertexComponentSharedPtr returnval;
 
                 if (i >= 0 && i < int(m_vertex.size()))
                 {
@@ -135,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.2  2006/05/06 20:36:16  sherwin
+// Modifications to get LocalRegions/Project1D working
+//
 // Revision 1.1  2006/05/04 18:58:59  kirby
 // *** empty log message ***
 //

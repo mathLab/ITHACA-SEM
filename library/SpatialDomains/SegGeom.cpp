@@ -51,7 +51,7 @@ namespace Nektar
         {
         }
 
-      SegGeom::SegGeom(int id, SharedVertexPtr vert1, SharedVertexPtr  vert2):
+      SegGeom::SegGeom(int id, VertexComponentSharedPtr vert1, VertexComponentSharedPtr  vert2):
 	EdgeComponent(id,vert1->GetCoordim())
         {
             m_owndata = false;
@@ -220,6 +220,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.2  2006/05/06 20:36:16  sherwin
+// Modifications to get LocalRegions/Project1D working
+//
 // Revision 1.1  2006/05/04 18:59:04  kirby
 // *** empty log message ***
 //

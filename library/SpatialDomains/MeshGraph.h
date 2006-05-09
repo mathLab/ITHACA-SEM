@@ -49,9 +49,8 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        typedef boost::shared_ptr<VertexComponent> SharedVertexPtr;
         typedef boost::shared_ptr<InterfaceComponent> SharedInterfaceCompPtr;
-        typedef std::vector< SharedVertexPtr >  VertexVector;
+        typedef std::vector< VertexComponentSharedPtr >  VertexVector;
         typedef std::list< SharedInterfaceCompPtr > InterfaceCompList;
 
         class MeshGraph
@@ -63,7 +62,7 @@ namespace Nektar
             void Read(std::string &infilename);
             void Read(TiXmlDocument &doc);
 
-            inline SharedVertexPtr GetVertex(int id)
+            inline VertexComponentSharedPtr GetVertex(int id)
             {
                 return m_vertset[id];
             }
@@ -109,6 +108,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.1  2006/05/04 18:59:02  kirby
+// *** empty log message ***
+//
 // Revision 1.16  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

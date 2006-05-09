@@ -134,7 +134,7 @@ namespace Nektar
                         ASSERTL0(false, errstr.c_str());
                     }
 
-                    SharedVertexPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                    VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
 
                     EdgeComponentSharedPtr edge(new EdgeComponent(edgeid, m_SpaceDimension, vertices));
                     m_ecomps.push_back(edge);
@@ -344,6 +344,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.1  2006/05/04 18:59:01  kirby
+// *** empty log message ***
+//
 // Revision 1.11  2006/04/11 23:18:11  jfrazier
 // Completed MeshGraph2D for tri's and quads.  Not thoroughly tested.
 //

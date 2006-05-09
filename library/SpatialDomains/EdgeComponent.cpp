@@ -62,7 +62,7 @@ namespace Nektar
       }
 
       EdgeComponent::EdgeComponent(int id, const int coordim,
-				   SharedVertexPtr vertex[]): 
+				   VertexComponentSharedPtr vertex[]): 
 	Geometry1D(coordim)
         {
             m_eid = id;
@@ -204,6 +204,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.2  2006/05/06 20:36:16  sherwin
+*    Modifications to get LocalRegions/Project1D working
+*
 *    Revision 1.1  2006/05/04 18:58:59  kirby
 *    *** empty log message ***
 *

@@ -155,7 +155,7 @@ namespace Nektar
                     vertexDataStrm >> indx;
                     vertexDataStrm >> xval >> yval >> zval;
 
-                    SharedVertexPtr vert(new VertexComponent(m_MeshDimension, indx, xval, yval, zval));
+                    VertexComponentSharedPtr vert(new VertexComponent(m_MeshDimension, indx, xval, yval, zval));
                     m_vertset.push_back(vert);
                 }
             }
@@ -177,6 +177,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.1  2006/05/04 18:59:02  kirby
+// *** empty log message ***
+//
 // Revision 1.14  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

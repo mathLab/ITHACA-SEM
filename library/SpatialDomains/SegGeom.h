@@ -42,6 +42,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/GeoFac.h>
 #include <SpatialDomains/Geometry1D.h>
+#include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/EdgeComponent.h>
 
 namespace Nektar
@@ -52,7 +53,7 @@ namespace Nektar
         {
         public:
             SegGeom();
-            SegGeom(int id, SharedVertexPtr vert1, SharedVertexPtr  vert2);
+            SegGeom(int id, VertexComponentSharedPtr vert1, VertexComponentSharedPtr  vert2);
 
             SegGeom(SegGeom &in);
 
@@ -77,7 +78,7 @@ namespace Nektar
 
         protected:
             static const int kNverts = 2;
-            SpatialDomains::SharedVertexPtr m_verts[kNverts];
+            SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
 
         private:
             bool m_owndata;   ///< Boolean indicating whether object owns the data
@@ -94,6 +95,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.1  2006/05/04 18:59:04  kirby
+// *** empty log message ***
+//
 // Revision 1.25  2006/04/04 23:12:38  jfrazier
 // More updates to readers.  Still work to do on MeshGraph2D to store tris and quads.
 //

@@ -69,6 +69,9 @@ namespace ErrorUtil
 /// considered code critical, even under
 /// optimized compilation.
 
+#define ERROR(type, msg) \
+    ErrorUtil::Error(type, __FILE__, __LINE__, msg);
+
 #define ASSERTL0(condition,msg) \
     if(!(condition)) \
 { \
@@ -109,6 +112,9 @@ namespace ErrorUtil
 #endif //ERRORUTIL_HPP
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.2  2006/05/07 18:51:05  bnelson
+Format changes for coding standard.
+
 Revision 1.1  2006/05/04 18:57:41  kirby
 *** empty log message ***
 

@@ -363,22 +363,13 @@ namespace Nektar
                 {
                     return MemoryManager::AllocateSharedArray<50, DataType>();
                 }
-                else if( arraySize < 200 )
+                else if( arraySize < 60 )
                 {
-                    return MemoryManager::AllocateSharedArray<200, DataType>();
-                }
-                else if( arraySize < 1000 )
-                {
-                    return MemoryManager::AllocateSharedArray<1000, DataType>();
-                }
-                else if( arraySize < 10000 )
-                {
-                    return MemoryManager::AllocateSharedArray<10000, DataType>();
+                    return MemoryManager::AllocateSharedArray<60, DataType>();
                 }
                 else
                 {
-                    ASSERTL0(0, "Requested array size is too large.");
-                    return boost::shared_array<DataType>();
+                    return boost::shared_array<DataType>(new DataType[arraySize]);
                 }
             }
 
@@ -387,7 +378,7 @@ namespace Nektar
       ////////////////////////////////////////////////////////////////////
     };
 
-  // typedef boost access for use in temporary memory allocation 
+  // typedef boost access for use in temporary memory allocation
   typedef boost::shared_array<double> BstShrDArray;
   typedef boost::shared_array<int>    BstShrIArray;
 
@@ -408,6 +399,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.2  2006/05/06 20:36:16  sherwin
+    Modifications to get LocalRegions/Project1D working
+
     Revision 1.1  2006/05/04 18:57:43  kirby
     *** empty log message ***
 

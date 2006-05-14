@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <UnitTests/testNekMatrix.h>
-#include <LibUtilties/nekMatrix.hpp>
+#include <LibUtilities/NekMatrix.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -123,56 +123,56 @@ namespace Nektar
             }
 
             // Invalid access is an unrecoverable error.
-            BOOST_CHECK_THROW(static_matrix(3,2), NekMatrix::OutOfBoundsError);
-            BOOST_CHECK_THROW(static_matrix(2,3), NekMatrix::OutOfBoundsError);
+            BOOST_CHECK_THROW(static_matrix(3,2), OutOfBoundsError);
+            BOOST_CHECK_THROW(static_matrix(2,3), OutOfBoundsError);
             BOOST_CHECK_NO_THROW(static_matrix(2,2));
 
         }
 
         void testNekMatrixBasicMath()
         {
-            // Addition tests.
-            {
-                double buf[] = {1.0, 2.0, 3.0,
-                    4.0, 5.0, 6.0,
-                    7.0, 8.0, 9.0 };
-
-                NekMatrix<double, 3, 3> m1(buf);
-                NekMatrix<double, 3, 3> m2(buf);
-                NekMatrix<double, 3, 3> m3 = m1 + m2;
-
-                for(unsigned int i = 0; i < 3; ++i)
-                {
-                    for(unsigned int j = 0; j < 3; ++j)
-                    {
-                        BOOST_CHECK(m3(i,j) == buf[3*i+j] + buf[3*i+j]);
-                    }
-                }
-
-                NekMatrix<double> m4(buf, 3, 3);
-                NekMatrix<double> m5(buf, 3, 3);
-                NekMatrix<double> m6 = m4+m5;
-
-                for(unsigned int i = 0; i < 3; ++i)
-                {
-                    for(unsigned int j = 0; j < 3; ++j)
-                    {
-                        BOOST_CHECK(m6(i,j) == buf[3*i+j] + buf[3*i+j]);
-                    }
-                }
-
-                // Do a couple of tests that shouldn't compile.
-                NekMatrix<double, 3, 3> m7(buf);
-                NekMatrix<double, 2, 2> m8(buf);
-                NekMatrix<double> m9 = m7 + m8; // This line should fail.
-                NekMatrix<double, 3, 3> m10 = m7 + m8; // This line should fail.
-
-                // Mixed mode.
-                NekMatrix<double> m11 = m7 + m4;
-                NekMatrix<double, 3, 3> m12 = m7 + m4;
-                BOOST_CHECK(m11 == m12);
-                BOOST_CHECK(m11 == m3);
-            }
+//             // Addition tests.
+//             {
+//                 double buf[] = {1.0, 2.0, 3.0,
+//                     4.0, 5.0, 6.0,
+//                     7.0, 8.0, 9.0 };
+//
+//                 NekMatrix<double, 3, 3> m1(buf);
+//                 NekMatrix<double, 3, 3> m2(buf);
+//                 NekMatrix<double, 3, 3> m3 = m1 + m2;
+//
+//                 for(unsigned int i = 0; i < 3; ++i)
+//                 {
+//                     for(unsigned int j = 0; j < 3; ++j)
+//                     {
+//                         BOOST_CHECK(m3(i,j) == buf[3*i+j] + buf[3*i+j]);
+//                     }
+//                 }
+//
+//                 NekMatrix<double> m4(buf, 3, 3);
+//                 NekMatrix<double> m5(buf, 3, 3);
+//                 NekMatrix<double> m6 = m4+m5;
+//
+//                 for(unsigned int i = 0; i < 3; ++i)
+//                 {
+//                     for(unsigned int j = 0; j < 3; ++j)
+//                     {
+//                         BOOST_CHECK(m6(i,j) == buf[3*i+j] + buf[3*i+j]);
+//                     }
+//                 }
+//
+//                 // Do a couple of tests that shouldn't compile.
+//                 NekMatrix<double, 3, 3> m7(buf);
+//                 NekMatrix<double, 2, 2> m8(buf);
+//                 NekMatrix<double> m9 = m7 + m8; // This line should fail.
+//                 NekMatrix<double, 3, 3> m10 = m7 + m8; // This line should fail.
+//
+//                 // Mixed mode.
+//                 NekMatrix<double> m11 = m7 + m4;
+//                 NekMatrix<double, 3, 3> m12 = m7 + m4;
+//                 BOOST_CHECK(m11 == m12);
+//                 BOOST_CHECK(m11 == m3);
+//            }
 
             // Multiply
 
@@ -195,6 +195,9 @@ namespace Nektar
 
 
 /**
-    $Log: $
+    $Log: testNekMatrix.cpp,v $
+    Revision 1.1  2006/05/07 21:10:09  bnelson
+    *** empty log message ***
+
  **/
 

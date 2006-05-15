@@ -50,15 +50,6 @@ namespace Nektar
 
         void testNekMatrixConstruction()
         {
-            {
-                double buf[] = { 1.0, 2.0, 3.0,
-                                4.0, 5.0, 6.0,
-                                7.0, 8.0, 9.0,
-                                10.0, 11.0, 12.0 };
-
-                NekMatrix<double> static_matrix(4, 3);
-            }
-
             // Basic, dense matrix construction.
             {
                 double buf[] = { 1.0, 2.0, 3.0,
@@ -66,7 +57,7 @@ namespace Nektar
                                 7.0, 8.0, 9.0,
                                 10.0, 11.0, 12.0 };
 
-                NekMatrix<double> static_matrix(4, 3);
+                NekMatrix<double, 4, 3> static_matrix(buf);
                 NekMatrix<double> dynamic_matrix(buf, 4, 3);
 
                 BOOST_CHECK(static_matrix.rows() == 4);
@@ -78,8 +69,8 @@ namespace Nektar
                 {
                     for(unsigned int j = 0; j < 3; ++j)
                     {
-                        BOOST_CHECK(static_matrix(i,j) == buf[4*i + j]);
-                        BOOST_CHECK(dynamic_matrix(i,j) == buf[4*i + j]);
+                        BOOST_CHECK(static_matrix(i,j) == buf[3*i + j]);
+                        BOOST_CHECK(dynamic_matrix(i,j) == buf[3*i + j]);
                     }
                 }
             }
@@ -106,15 +97,6 @@ namespace Nektar
             // assign into the matrix at any location.
             NekMatrix<unsigned int, 3, 3> static_matrix;
 
-            // Test read access.
-            for(unsigned int i = 0; i < 3; ++i)
-            {
-                for(unsigned int j = 0; j < 3; ++j)
-                {
-                    BOOST_CHECK(static_matrix(i,j) == 0.0);
-                }
-            }
-
             for(unsigned int i = 0; i < 3; ++i)
             {
                 for(unsigned int j = 0; j < 3; ++j)
@@ -127,7 +109,7 @@ namespace Nektar
             {
                 for(unsigned int j = 0; j < 3; ++j)
                 {
-                    static_matrix(i,j) == 10*i + j;
+                    BOOST_CHECK(static_matrix(i,j) == 10*i + j);
                 }
             }
 
@@ -140,35 +122,36 @@ namespace Nektar
 
         void testNekMatrixBasicMath()
         {
-//             // Addition tests.
-//             {
-//                 double buf[] = {1.0, 2.0, 3.0,
-//                     4.0, 5.0, 6.0,
-//                     7.0, 8.0, 9.0 };
-//
-//                 NekMatrix<double, 3, 3> m1(buf);
-//                 NekMatrix<double, 3, 3> m2(buf);
-//                 NekMatrix<double, 3, 3> m3 = m1 + m2;
-//
-//                 for(unsigned int i = 0; i < 3; ++i)
-//                 {
-//                     for(unsigned int j = 0; j < 3; ++j)
-//                     {
-//                         BOOST_CHECK(m3(i,j) == buf[3*i+j] + buf[3*i+j]);
-//                     }
-//                 }
-//
-//                 NekMatrix<double> m4(buf, 3, 3);
-//                 NekMatrix<double> m5(buf, 3, 3);
-//                 NekMatrix<double> m6 = m4+m5;
-//
-//                 for(unsigned int i = 0; i < 3; ++i)
-//                 {
-//                     for(unsigned int j = 0; j < 3; ++j)
-//                     {
-//                         BOOST_CHECK(m6(i,j) == buf[3*i+j] + buf[3*i+j]);
-//                     }
-//                 }
+            // Addition tests.
+            {
+                double buf[] = {1.0, 2.0, 3.0,
+                    4.0, 5.0, 6.0,
+                    7.0, 8.0, 9.0 };
+
+                NekMatrix<double, 3, 3> m1(buf);
+                NekMatrix<double, 3, 3> m2(buf);
+                NekMatrix<double, 3, 3> m3 = m1 + m2;
+
+                for(unsigned int i = 0; i < 3; ++i)
+                {
+                    for(unsigned int j = 0; j < 3; ++j)
+                    {
+                        BOOST_CHECK(m3(i,j) == buf[3*i+j] + buf[3*i+j]);
+                    }
+                }
+
+                NekMatrix<double> m4(buf, 3, 3);
+                NekMatrix<double> m5(buf, 3, 3);
+                NekMatrix<double> m6 = m4+m5;
+
+                for(unsigned int i = 0; i < 3; ++i)
+                {
+                    for(unsigned int j = 0; j < 3; ++j)
+                    {
+                        BOOST_CHECK(m6(i,j) == buf[3*i+j] + buf[3*i+j]);
+                    }
+                }
+            }
 //
 //                 // Do a couple of tests that shouldn't compile.
 //                 NekMatrix<double, 3, 3> m7(buf);
@@ -205,6 +188,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.3  2006/05/15 04:10:35  bnelson
+    no message
+
     Revision 1.2  2006/05/14 21:33:58  bnelson
     *** empty log message ***
 

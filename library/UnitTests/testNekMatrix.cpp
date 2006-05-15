@@ -50,6 +50,15 @@ namespace Nektar
 
         void testNekMatrixConstruction()
         {
+            {
+                double buf[] = { 1.0, 2.0, 3.0,
+                                4.0, 5.0, 6.0,
+                                7.0, 8.0, 9.0,
+                                10.0, 11.0, 12.0 };
+
+                NekMatrix<double> static_matrix(4, 3);
+            }
+
             // Basic, dense matrix construction.
             {
                 double buf[] = { 1.0, 2.0, 3.0,
@@ -57,7 +66,7 @@ namespace Nektar
                                 7.0, 8.0, 9.0,
                                 10.0, 11.0, 12.0 };
 
-                NekMatrix<double, 4, 3> static_matrix(buf);
+                NekMatrix<double> static_matrix(4, 3);
                 NekMatrix<double> dynamic_matrix(buf, 4, 3);
 
                 BOOST_CHECK(static_matrix.rows() == 4);
@@ -196,6 +205,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.2  2006/05/14 21:33:58  bnelson
+    *** empty log message ***
+
     Revision 1.1  2006/05/07 21:10:09  bnelson
     *** empty log message ***
 

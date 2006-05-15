@@ -42,6 +42,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/call_traits.hpp>
+#include <boost/concept_check.hpp>
 
 #include <LibUtilities/NekMemoryManager.hpp>
 
@@ -64,6 +65,18 @@ namespace Nektar
 
         class OutOfBoundsError
         {
+        };
+
+        // Used to force the NekMatrix factory to register.
+        template<typename MatrixType>
+        class NekMatrixFunctionRegistration
+        {
+            public:
+                void constraints()
+                {
+                    MatrixType* m;
+                    m->RegisterCreateFuncs();
+                }
         };
 
         /// NekMatrix Class
@@ -153,6 +166,7 @@ namespace Nektar
                 typename boost::call_traits<DataType>::const_reference operator()
                         (unsigned int rowNumber, unsigned int colNumber) const
                 {
+                    assert(fullRegistered);
                     if( rowNumber >= rows() || colNumber >= columns() )
                     {
                         throw OutOfBoundsError();
@@ -160,6 +174,14 @@ namespace Nektar
 
                     return (*m_impl)(rowNumber, colNumber);
                 }
+
+                bool RegisterCreateFuncs()
+                {
+                    return fullRegistered;
+                }
+
+                typedef NekMatrix<DataType, NumRows, NumColumns, space> MyType;
+                BOOST_CLASS_REQUIRE(MyType, LibUtilities, NekMatrixFunctionRegistration);
 
             private:
                 // The implementation classes prevent the need for enumerated types
@@ -179,7 +201,9 @@ namespace Nektar
                         {
                         }
 
-                        virtual ~NekMatrixImpl() = 0;
+                        virtual ~NekMatrixImpl()
+                        {
+                        };
 
                         NekMatrixImpl& operator=(const NekMatrixImpl& rhs)
                         {
@@ -288,25 +312,29 @@ namespace Nektar
                             return m_data[rowNumber*columns() + colNumber];
                         }
 
+                        static const MemoryManager::MemoryPoolEnabler MemoryPoolEnabled = MemoryManager::eEnabled;
+
                     protected:
                         void CreateSharedArray()
                         {
-                            m_data = MemoryManager::AllocateSharedArray<DataType>(rows()*columns());
+                            //m_data = MemoryManager::AllocateSharedArray<DataType>(rows()*columns());
+                            //m_data = new DataType[rows()*columns()];
+                            m_data = boost::shared_array<DataType>(new DataType[rows()*columns()]);
                         }
 
                     private:
                         NekFullMatrixImpl();
                         boost::shared_array<DataType> m_data;
+                        //DataType* m_data;
                 };
 
 
-                NekFullMatrixImpl* createFullMatrix()
+                static NekFullMatrixImpl* createFullMatrix(unsigned int rows, unsigned int cols)
                 {
-                    return MemoryManager::Allocate<NekFullMatrixImpl>();
+                    return MemoryManager::Allocate<NekFullMatrixImpl>(rows, cols);
                 }
 
                 static const bool fullRegistered;
-
 
                 NekMatrixForm m_form;
                 unsigned int m_rows;
@@ -325,6 +353,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.2  2006/05/14 21:32:03  bnelson
+    *** empty log message ***
+
     Revision 1.1  2006/05/04 18:57:43  kirby
     *** empty log message ***
 

@@ -167,6 +167,64 @@ namespace Nektar
                 return result;
             }
 
+            template<typename DataType, typename Arg1Type>
+            static DataType* Allocate(const Arg1Type& arg1,
+                typename boost::enable_if_c<DataType::MemoryPoolEnabled>::type* p = NULL)
+            {
+                DataType* result = static_cast<DataType*>(ThreadSpecificPool<sizeof(DataType)>::Allocate());
+
+                if( result )
+                {
+                    try
+                    {
+                        // This is placement new, constructing the
+                        // object inside the memory returned by the
+                        // pool.
+                        new (result) DataType(arg1);
+                    }
+                    catch(...)
+                    {
+                        // Clean up the memory since the object didn't
+                        // get created successfully.  Note that we
+                        // don't call the destructor here because the
+                        // object wasn't fully created.
+                        ThreadSpecificPool<sizeof(DataType)>::Deallocate(result);
+                        throw;
+                    }
+                }
+
+                return result;
+            }
+
+            template<typename DataType, typename Arg1Type, typename Arg2Type>
+            static DataType* Allocate(const Arg1Type& arg1, const Arg2Type& arg2,
+                typename boost::enable_if_c<DataType::MemoryPoolEnabled>::type* p = NULL)
+            {
+                DataType* result = static_cast<DataType*>(ThreadSpecificPool<sizeof(DataType)>::Allocate());
+
+                if( result )
+                {
+                    try
+                    {
+                        // This is placement new, constructing the
+                        // object inside the memory returned by the
+                        // pool.
+                        new (result) DataType(arg1, arg2);
+                    }
+                    catch(...)
+                    {
+                        // Clean up the memory since the object didn't
+                        // get created successfully.  Note that we
+                        // don't call the destructor here because the
+                        // object wasn't fully created.
+                        ThreadSpecificPool<sizeof(DataType)>::Deallocate(result);
+                        throw;
+                    }
+                }
+
+                return result;
+            }
+
             /// \brief Allocate a pointer without using the memory
             /// pool.
             template<typename DataType>
@@ -399,6 +457,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.3  2006/05/14 21:31:49  bnelson
+    Modified the upper bound on static shared array allocation.
+
     Revision 1.2  2006/05/06 20:36:16  sherwin
     Modifications to get LocalRegions/Project1D working
 

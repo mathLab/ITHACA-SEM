@@ -95,27 +95,21 @@ namespace Nektar
             public:
                 NekMatrix(NekMatrixForm form = eFull) :
                     m_form(form),
-                    m_rows(NumRows),
-                    m_columns(NumColumns),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, m_rows, m_columns))
+                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, NumRows, NumColumns))
                 {
                     m_impl->Initialize();
                 }
 
                 NekMatrix(unsigned int rows, unsigned int columns, NekMatrixForm form = eFull) :
                     m_form(form),
-                    m_rows(rows),
-                    m_columns(columns),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, m_rows, m_columns))
+                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, rows, columns))
                 {
                     m_impl->Initialize();
                 }
 
                 explicit NekMatrix(const DataType* const ptr, NekMatrixForm form = eFull) :
                     m_form(form),
-                    m_rows(NumRows),
-                    m_columns(NumColumns),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, m_rows, m_columns))
+                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, NumRows, NumColumns))
                 {
                     m_impl->Initialize(ptr);
                 }
@@ -123,18 +117,14 @@ namespace Nektar
                 NekMatrix(const DataType* const ptr, unsigned int rows, unsigned int columns,
                           NekMatrixForm form = eFull) :
                     m_form(form),
-                    m_rows(rows),
-                    m_columns(columns),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, m_rows, m_columns))
+                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, rows, columns))
                 {
                     m_impl->Initialize(ptr);
                 }
 
                 NekMatrix(typename boost::call_traits<DataType>::param_type d, NekMatrixForm form = eFull) :
                     m_form(form),
-                    m_rows(NumRows),
-                    m_columns(NumColumns),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, m_rows, m_columns))
+                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, NumRows, NumColumns))
                 {
                     m_impl->Initialize(d);
                 }
@@ -142,9 +132,7 @@ namespace Nektar
                 NekMatrix(typename boost::call_traits<DataType>::param_type d,
                           unsigned int rows, unsigned int columns, NekMatrixForm form = eFull) :
                     m_form(form),
-                    m_rows(rows),
-                    m_columns(columns),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, m_rows, m_columns))
+                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, rows, columns))
                 {
                     m_impl->Initialize(d);
                 }
@@ -182,6 +170,19 @@ namespace Nektar
 
                 typedef NekMatrix<DataType, NumRows, NumColumns, space> MyType;
                 BOOST_CLASS_REQUIRE(MyType, LibUtilities, NekMatrixFunctionRegistration);
+
+                NekMatrix<DataType, NumRows, NumColumns, space> operator+=(const NekMatrix<DataType, NumRows, NumColumns, space>& rhs)
+                {
+                    for(unsigned int i = 0; i < rows(); ++i)
+                    {
+                        for(unsigned int j = 0; j < columns(); ++j)
+                        {
+                            (*this)(i,j) += rhs(i,j);
+                        }
+                    }
+
+                    return *this;
+                }
 
             private:
                 // The implementation classes prevent the need for enumerated types
@@ -331,14 +332,13 @@ namespace Nektar
 
                 static NekFullMatrixImpl* createFullMatrix(unsigned int rows, unsigned int cols)
                 {
-                    return MemoryManager::Allocate<NekFullMatrixImpl>(rows, cols);
+                    //return MemoryManager::Allocate<NekFullMatrixImpl>(rows, cols);
+                    return new NekFullMatrixImpl(rows, cols);
                 }
 
                 static const bool fullRegistered;
 
                 NekMatrixForm m_form;
-                unsigned int m_rows;
-                unsigned int m_columns;
                 boost::shared_ptr<NekMatrixImpl> m_impl;
         };
 
@@ -346,6 +346,17 @@ namespace Nektar
         const bool NekMatrix<DataType, width, height, space>::fullRegistered =
                 NekMatrix<DataType, width, height, space>::NekMatrixImplFactory::
                 Instance().Register(eFull, NekMatrix<DataType, width, height, space>::createFullMatrix);
+
+
+        template<typename DataType, unsigned int NumRows, unsigned int NumColumns, unsigned int space>
+        NekMatrix<DataType, NumRows, NumColumns, space> operator+(
+                const NekMatrix<DataType, NumRows, NumColumns, space>& lhs,
+                const NekMatrix<DataType, NumRows, NumColumns, space>& rhs)
+        {
+            NekMatrix<DataType, NumRows, NumColumns, space> result(lhs);
+            result += rhs;
+            return result;
+        }
     }
 }
 
@@ -353,6 +364,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.3  2006/05/15 04:13:36  bnelson
+    no message
+
     Revision 1.2  2006/05/14 21:32:03  bnelson
     *** empty log message ***
 

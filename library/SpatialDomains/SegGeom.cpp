@@ -80,14 +80,14 @@ namespace Nektar
 
         SegGeom::~SegGeom()
         {
-            if(m_xgeofac->GetMemCount() == 1)
-            {
-                delete m_xgeofac;
-            }
-            else
-            {
-                m_xgeofac->SubMemCount();
-            }
+            //if(m_xgeofac->GetMemCount() == 1)
+            //{
+            //    delete m_xgeofac;
+            //}
+            //else
+            //{
+            //    m_xgeofac->SubMemCount();
+            //}
         }
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
@@ -220,6 +220,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.3  2006/05/09 13:37:01  jfrazier
+// Removed duplicate definition of shared vertex pointer.
+//
 // Revision 1.2  2006/05/06 20:36:16  sherwin
 // Modifications to get LocalRegions/Project1D working
 //

@@ -45,25 +45,25 @@ namespace Nektar
         {
         }
 
-      EdgeComponent::EdgeComponent(int id, const int coordim): 
-	Geometry1D(coordim)
-      {
-	
-	const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
-				     StdRegions::eLobatto, 3,0,0);
-	m_eid = id;
-
-	m_xmap = new StdRegions::StdSegExp * [m_coordim];
-
-	for(int i = 0; i < m_coordim; ++i)
+        EdgeComponent::EdgeComponent(int id, const int coordim): 
+        Geometry1D(coordim)
         {
-	  m_xmap[i] = new StdRegions::StdSegExp(B);
-	}
-      }
 
-      EdgeComponent::EdgeComponent(int id, const int coordim,
-				   VertexComponentSharedPtr vertex[]): 
-	Geometry1D(coordim)
+            const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
+                StdRegions::eLobatto, 3,0,0);
+            m_eid = id;
+
+            m_xmap = new StdRegions::StdSegExp * [m_coordim];
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                m_xmap[i] = NULL;// new StdRegions::StdSegExp(B);
+            }
+        }
+
+        EdgeComponent::EdgeComponent(int id, const int coordim,
+            VertexComponentSharedPtr vertex[]): 
+        Geometry1D(coordim)
         {
             m_eid = id;
 
@@ -79,14 +79,14 @@ namespace Nektar
                     m_xmap[i] = new StdRegions::StdSegExp(B);
                 }
             }
-            
+
             m_vertex[0] = vertex[0];
             m_vertex[1] = vertex[1];
         }
 
         EdgeComponent::EdgeComponent(int id, const int coordim, 
-				     const int order, const int nquad):
-            Geometry1D(coordim)
+            const int order, const int nquad):
+        Geometry1D(coordim)
         {
 
             const StdRegions::BasisKey B(StdRegions::eModified_A, order,
@@ -109,7 +109,7 @@ namespace Nektar
             {
                 for(int i =0; i < m_coordim; ++i)
                 {
-                    delete m_xmap[i];
+                    //delete m_xmap[i];
                 }
 
                 delete[] m_xmap;
@@ -171,18 +171,18 @@ namespace Nektar
             return(false);
         }
 
-                /// \brief Get the orientation of edge1.
+        /// \brief Get the orientation of edge1.
         ///
         /// If edge1 is connected to edge2 in the same direction
         /// as the points comprising edge1 then it is forward, otherwise it is backward.  For example, assume
         /// edge1 is comprised of points 1 and 2, and edge2 is comprised of points 2 and 3, then edge
         /// is forward.  If edge1 is comprised of points 2 and 1 and edge2 is comprised of points
         /// 3 and 2, then edge1 is backward.
-        
+
         StdRegions::EdgeOrientation EdgeComponent::GetEdgeOrientation(const EdgeComponent &edge1, const EdgeComponent &edge2)
         {
             StdRegions::EdgeOrientation returnval = StdRegions::eForwards;
-            
+
             /// Backward direction.  Vertex 0 is connected to edge 2.
             if ((*edge1.GetVertex(0) == *edge2.GetVertex(0)) || (*edge1.GetVertex(0) == *edge2.GetVertex(1)))
             {
@@ -204,6 +204,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.3  2006/05/09 13:37:01  jfrazier
+*    Removed duplicate definition of shared vertex pointer.
+*
 *    Revision 1.2  2006/05/06 20:36:16  sherwin
 *    Modifications to get LocalRegions/Project1D working
 *

@@ -42,87 +42,92 @@ namespace Nektar
     namespace SpatialDomains
     {
         MeshGraph1D::MeshGraph1D():
-        m_geofac_defined(false)
+    m_geofac_defined(false)
+    {
+    }
+
+    MeshGraph1D::~MeshGraph1D()
+    {
+    }
+
+    // \brief Read segments (and general MeshGraph) given filename.
+    void MeshGraph1D::Read(std::string &infilename)
+    {
+        SetFileName(infilename);
+        TiXmlDocument doc(infilename);
+
+        bool loadOkay = doc.LoadFile();
+
+        ASSERTL0(loadOkay, (string("Unable to load file:") + infilename + ".").c_str());
+
+        Read(doc);
+    }
+
+    // \brief Read segments (and general MeshGraph) given TiXmlDocument.
+    void MeshGraph1D::Read(TiXmlDocument &doc)
+    {
+        // Read mesh first
+        MeshGraph::Read(doc);
+
+        TiXmlHandle docHandle(&doc);
+
+        TiXmlNode* node = NULL;
+        TiXmlElement *element = NULL;
+        int err;    /// Error value returned by TinyXML.
+
+        /// Look for segments in ELEMENT block.
+        element = docHandle.FirstChildElement("MESH").FirstChildElement("ELEMENT").Element();
+
+        ASSERTL0(element, "Unable to find ELEMENT tag in file.");
+        TiXmlAttribute *attr = element->FirstAttribute();
+        int numSegments = -1;
+
+        while (attr)
         {
-        }
-
-        MeshGraph1D::~MeshGraph1D()
-        {
-        }
-
-        // \brief Read segments (and general MeshGraph) given filename.
-        void MeshGraph1D::Read(std::string &infilename)
-        {
-            SetFileName(infilename);
-            TiXmlDocument doc(infilename);
-            bool loadOkay = doc.LoadFile();
-
-            std::string errstr("Unable to load file: ");
-            errstr += infilename;
-            errstr += ".";
-            ASSERTL0(loadOkay, errstr.c_str());
-
-            Read(doc);
-        }
-
-        // \brief Read segments (and general MeshGraph) given TiXmlDocument.
-        void MeshGraph1D::Read(TiXmlDocument &doc)
-        {
-            // Read mesh first
-            MeshGraph::Read(doc);
-
-            TiXmlNode* node = NULL;
-            TiXmlElement* element = NULL;
-            int err;    /// Error value returned by TinyXML.
-
-            /// Look for segments in ELEMENT block.
-            element = doc.FirstChildElement("ELEMENT");
-
-            ASSERTL0(element, "Unable to find ELEMENT tag in file.");
-            TiXmlAttribute *attr = element->FirstAttribute();
-            int numSegments = -1;
-
-            while (attr)
+            std::string attrName(attr->Name());
+            if (attrName == "NUMBER")
             {
-                std::string attrName(attr->Name());
-                if (attrName == "NUMBER")
+                err = attr->QueryIntValue(&numSegments);
+                if (err)
                 {
-                    err = attr->QueryIntValue(&numSegments);
-                    if (err)
-                    {
-                        numSegments = -1;
-                    }
+                    numSegments = -1;
                 }
-                // Get the next attribute.  Shouldn't be any more, but just in case.
-                attr = attr->Next();
             }
+            // Get the next attribute.  Shouldn't be any more, but just in case.
+            attr = attr->Next();
+        }
 
-            ASSERTL0(numSegments > 0, "Unable to read NUMBER attribute value.");
+        ASSERTL0(numSegments > 0, "Unable to read NUMBER attribute value.");
+        int indx = -1;
 
-           node = element->FirstChild();
-           for (int i=0; i<numSegments; ++numSegments)
+        node = element->FirstChild();
+        for (int i=0; i<numSegments; ++i)
+        {
+            /// First read index number
+            /// Then read tagged element
+
+            int nodeType = node->Type();
+            if (nodeType == TiXmlNode::TEXT)
             {
-                /// First read index number
-                /// Then read tagged element
-
-                int indx = -1;
-                int nodeType = node->Type();
-                if (nodeType == TiXmlNode::TEXT)
+                // Read index number
+                indx = atoi(node->ToText()->Value());
+                --i; // Don't count the index
+            }
+            else if (nodeType == TiXmlNode::COMMENT)
+            {
+                --numSegments; /// Leave it pointing where it is and skip it.
+                continue;
+            }
+            else if (nodeType == TiXmlNode::ELEMENT)
+            {
+                /// All segments are embedded in <S></S> tags.
+                TiXmlElement* segment = element->FirstChildElement();
+                if (std::string(segment->Value())!= "S")
                 {
-                    // Read index number
-                    indx = atoi(node->ToText()->Value());
+                    NEKERROR(ErrorUtil::ewarning,(std::string("Element type not allowed: ") + segment->Value()).c_str());
                 }
-                else if (nodeType == TiXmlNode::COMMENT)
+                else
                 {
-                    --numSegments; /// Leave it pointing where it is and skip it.
-                    continue;
-                }
-                else if (nodeType == TiXmlNode::ELEMENT)
-                {
-                    /// All segments are embedded in <S></S> tags.
-                    TiXmlElement* segment = element->FirstChildElement();
-                    ASSERTL1(std::string(segment->Value())== "S", (std::string("Unknown element type in file: ") + GetFileName()+".").c_str());
-
                     //// Get the entire data block then go through it one piece at a time.
                     std::string segmentData;
 
@@ -151,10 +156,8 @@ namespace Nektar
 
                         if (vertexDataStrm.fail())
                         {
-                            std::string errstr("Unable to read segment data: ");
-                            errstr += segmentData;
-                            errstr += ".";
-                            ASSERTL0(false, errstr.c_str());
+                            ASSERTL0(false, (std::string("Unable to read segment data: ")
+                                + std::string(segmentData) + ".").c_str());
                         }
 
                         SharedSegGeomPtr seg(new SegGeom(indx, GetVertex(vertex1), GetVertex(vertex2)));
@@ -162,42 +165,46 @@ namespace Nektar
                     }
                     catch(...)
                     {
-                        std::string errstr("Unable to read segment data: ");
-                        errstr += segmentData;
-                        errstr += ".";
-                        ASSERTL0(false, errstr.c_str());
+                        ASSERTL0(false, (std::string("Unable to read segment data: "
+                            + segmentData + ".").c_str()));
                     }
+
+                    indx = -1;
                 }
-                else
-                {
-                    ASSERTL1(false, "Unknown node type.");
-                }
-
-                node = node->NextSibling();
-           }
-        }
-
-        void MeshGraph1D::Write(std::string &outfilename)
-        {
-        }
-
-        // generate geometric factors based on MeshGraph information. 
-        void MeshGraph1D::GenXGeoFac()
-        {
-            SegGeomVector::const_iterator def; 
-
-            for(def = m_seggeoms.begin(); def != m_seggeoms.end(); ++def)
+            }
+            else
             {
-                (*def)->SetXGeoFac((*def)->GenXGeoFac());
+                ASSERTL1(false, "Unknown node type.");
             }
 
-            m_geofac_defined = true;
+            node = node->NextSibling();
         }
+    }
+
+    void MeshGraph1D::Write(std::string &outfilename)
+    {
+    }
+
+    // generate geometric factors based on MeshGraph information. 
+    void MeshGraph1D::GenXGeoFac()
+    {
+        SegGeomVector::const_iterator def; 
+
+        for(def = m_seggeoms.begin(); def != m_seggeoms.end(); ++def)
+        {
+            (*def)->SetXGeoFac((*def)->GenXGeoFac());
+        }
+
+        m_geofac_defined = true;
+    }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.1  2006/05/04 18:59:01  kirby
+// *** empty log message ***
+//
 // Revision 1.17  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

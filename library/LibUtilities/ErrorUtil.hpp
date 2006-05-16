@@ -69,7 +69,7 @@ namespace ErrorUtil
 /// considered code critical, even under
 /// optimized compilation.
 
-#define ERROR(type, msg) \
+#define NEKERROR(type, msg) \
     ErrorUtil::Error(type, __FILE__, __LINE__, msg);
 
 #define ASSERTL0(condition,msg) \
@@ -112,6 +112,9 @@ namespace ErrorUtil
 #endif //ERRORUTIL_HPP
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.3  2006/05/09 16:40:57  jfrazier
+Added ERROR macro definition.
+
 Revision 1.2  2006/05/07 18:51:05  bnelson
 Format changes for coding standard.
 

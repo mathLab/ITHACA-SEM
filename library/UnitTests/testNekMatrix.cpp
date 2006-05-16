@@ -83,8 +83,8 @@ namespace Nektar
                 {
                     for(unsigned int j = 0; j < 3; ++j)
                     {
-                        BOOST_CHECK(static_matrix(i,j) == 7.8);
-                        BOOST_CHECK(dynamic_matrix(i,j) == 7.8);
+                        BOOST_CHECK(static_matrix(i,j) == 7.8f);
+                        BOOST_CHECK(dynamic_matrix(i,j) == 7.8f);
                     }
                 }
             }
@@ -188,6 +188,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.4  2006/05/15 05:06:07  bnelson
+    Added addition tests.
+
     Revision 1.3  2006/05/15 04:10:35  bnelson
     no message
 

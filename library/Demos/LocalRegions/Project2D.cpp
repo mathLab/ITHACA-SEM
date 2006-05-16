@@ -157,9 +157,9 @@ int main(int argc, char *argv[])
 
     // Set up coordinates
     VertexComponentSharedPtr verts[3];
-    verts[0] = SharedVertexPtr(new VertexComponent(2,0,coords[0],coords[1],0));
-    verts[1] = SharedVertexPtr(new VertexComponent(2,1,coords[2],coords[3],0));
-    verts[2] = SharedVertexPtr(new VertexComponent(2,2,coords[4],coords[5],0));
+    verts[0] = VertexComponentSharedPtr(new VertexComponent(2,0,coords[0],coords[1],0));
+    verts[1] = VertexComponentSharedPtr(new VertexComponent(2,1,coords[2],coords[3],0));
+    verts[2] = VertexComponentSharedPtr(new VertexComponent(2,2,coords[4],coords[5],0));
 
     // Set up Edges
     EdgeComponentSharedPtr edges[3];
@@ -216,13 +216,13 @@ int main(int argc, char *argv[])
     coords[5]    =   atof(argv[13]);
     coords[6]    =   atof(argv[14]);
     coords[7]    =   atof(argv[15]);
-
+ 
     // Set up coordinates
     VertexComponentSharedPtr verts[4];
-    verts[0] = SharedVertexPtr(new VertexComponent(2,0,coords[0],coords[1],0));
-    verts[1] = SharedVertexPtr(new VertexComponent(2,1,coords[2],coords[3],0));
-    verts[2] = SharedVertexPtr(new VertexComponent(2,2,coords[4],coords[5],0));
-    verts[3] = SharedVertexPtr(new VertexComponent(2,3,coords[6],coords[7],0));
+    verts[0] = VertexComponentSharedPtr(new VertexComponent(2,0,coords[0],coords[1],0));
+    verts[1] = VertexComponentSharedPtr(new VertexComponent(2,1,coords[2],coords[3],0));
+    verts[2] = VertexComponentSharedPtr(new VertexComponent(2,2,coords[4],coords[5],0));
+    verts[3] = VertexComponentSharedPtr(new VertexComponent(2,3,coords[6],coords[7],0));
 
     // Set up Edges
     EdgeComponentSharedPtr edges[4];

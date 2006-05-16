@@ -124,17 +124,20 @@ namespace Nektar
                 TiXmlElement* segment = element->FirstChildElement();
                 if (std::string(segment->Value())!= "S")
                 {
-                    NEKERROR(ErrorUtil::ewarning,(std::string("Element type not allowed: ") + segment->Value()).c_str());
+		  NEKERROR(ErrorUtil::ewarning,(std::string("Element type not allowed: ") +
+						segment->Value()).c_str());
                 }
                 else
                 {
                     //// Get the entire data block then go through it one piece at a time.
                     std::string segmentData;
 
-                    // Look through all immediate children and accumulate all text (type TEXT).
-                    // This is just in case it is broken up by other tagged elements.
-                    // Using element->GetText() will not work if text contains XML comments,
-                    // for example.
+                    // Look through all immediate children and
+                    // accumulate all text (type TEXT).  This is just
+                    // in case it is broken up by other tagged
+                    // elements.  Using element->GetText() will not
+                    // work if text contains XML comments, for
+                    // example.
                     TiXmlNode *child = node->FirstChild();
                     while(child)
                     {
@@ -202,6 +205,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.2  2006/05/16 20:12:59  jfrazier
+// Minor fixes to correct bugs.
+//
 // Revision 1.1  2006/05/04 18:59:01  kirby
 // *** empty log message ***
 //

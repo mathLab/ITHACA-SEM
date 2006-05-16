@@ -56,7 +56,8 @@ namespace Nektar
 
         QuadGeom::QuadGeom(const VertexComponentSharedPtr verts[], 
 			   const EdgeComponentSharedPtr edges[], 
-			   StdRegions::EdgeOrientation * eorient)
+			   StdRegions::EdgeOrientation * eorient):
+	  QuadFaceComponent(verts[0]->GetCoordim())
         {
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+QuadGeom::kNverts);
@@ -75,7 +76,8 @@ namespace Nektar
                 "Cannot call function with dim == 1");
         }
 
-        QuadGeom::QuadGeom(const EdgeComponentSharedPtr edges[], StdRegions::EdgeOrientation * eorient)
+      QuadGeom::QuadGeom(const EdgeComponentSharedPtr edges[], 
+			 StdRegions::EdgeOrientation * eorient)
         {
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
@@ -116,7 +118,7 @@ namespace Nektar
 
             for(i=0;i<m_coordim;i++)
             {
-                xmaptemp[i] = m_xmap[i];
+	      xmaptemp[i] = m_xmap[i];
             }
 
             FillGeom();
@@ -308,6 +310,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.2  2006/05/07 11:26:38  sherwin
+// Modifications to get the demo LocalRegions::Project2D to compile
+//
 // Revision 1.1  2006/05/04 18:59:03  kirby
 // *** empty log message ***
 //

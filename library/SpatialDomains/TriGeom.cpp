@@ -47,7 +47,8 @@ namespace Nektar
 
         TriGeom::TriGeom(const VertexComponentSharedPtr verts[], 
 			 const EdgeComponentSharedPtr edges[], 
-			 StdRegions::EdgeOrientation * eorient)
+			 StdRegions::EdgeOrientation * eorient):
+	  TriFaceComponent(verts[0]->GetCoordim())
         {
             /// Copy the vert shared pointers.
 	  m_verts.insert(m_verts.begin(), verts, verts+TriGeom::kNverts);
@@ -252,6 +253,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.2  2006/05/07 11:26:38  sherwin
+// Modifications to get the demo LocalRegions::Project2D to compile
+//
 // Revision 1.1  2006/05/04 18:59:05  kirby
 // *** empty log message ***
 //

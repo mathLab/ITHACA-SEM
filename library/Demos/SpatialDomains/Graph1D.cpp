@@ -9,16 +9,17 @@ using namespace std;
 
 // compile using Builds/Demos/SpatialDomains -> make DEBUG=1 Graph1D
 
-main(int argc, char *argv[]){
+int main(int argc, char *argv[]){
 
-  if(argc != 2){
-    cerr << "usage: Graph1D file" << endl;
-    exit(1);
-  }
+    if(argc != 2){
+      cerr << "usage: Graph1D file" << endl;
+      exit(1);
+    }
 
-  string in(argv[argc-1]);
-  MeshGraph1D graph1D;
+    string in(argv[argc-1]);
+    MeshGraph1D graph1D;
 
-  graph1D.Read(in);
+    graph1D.Read(in);
 
+    return 0;
 }

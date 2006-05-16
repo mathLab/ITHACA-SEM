@@ -14,7 +14,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
-			ConfigurationType="2"
+			ConfigurationType="4"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
@@ -32,15 +32,7 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="tinyxmld_STL.lib"
-				OutputFile="$(OutDir)/SpatialDomains.dll"
-				LinkIncremental="2"
-				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/SpatialDomains.pdb"
-				SubSystem="2"
-				ImportLibrary="$(OutDir)/SpatialDomains.lib"
-				TargetMachine="1"/>
+				Name="VCLibrarianTool"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -55,8 +47,6 @@
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCWebDeploymentTool"/>
 			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
 			<Tool
@@ -190,85 +180,85 @@
 			<File
 				RelativePath="..\..\SpatialDomains\TriGeom.cpp">
 			</File>
-			<Filter
-				Name="Header Files"
-				Filter="h;hpp;hxx;hm;inl;inc;xsd"
-				UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
-				<File
-					RelativePath="..\..\SpatialDomains\EdgeComponent.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\GeoFac.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\Geometry.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\Geometry1D.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\Geometry2D.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\Geometry3D.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\HexGeom.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\InterfaceComponent.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\MeshComponents.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\MeshGraph.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\MeshGraph1D.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\MeshGraph2D.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\MeshGraph3D.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\pchSpatialDomains.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\PrismGeom.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\PyrGeom.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\QuadFaceComponent.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\QuadGeom.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\SegGeom.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\SpatialDomains.hpp">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\TetGeom.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\TriFaceComponent.h">
-				</File>
-				<File
-					RelativePath="..\..\SpatialDomains\TriGeom.h">
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
+		</Filter>
+		<Filter
+			Name="Header Files"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			<File
+				RelativePath="..\..\SpatialDomains\EdgeComponent.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\GeoFac.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\Geometry.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\Geometry1D.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\Geometry2D.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\Geometry3D.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\HexGeom.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\InterfaceComponent.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\MeshComponents.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\MeshGraph.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\MeshGraph1D.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\MeshGraph2D.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\MeshGraph3D.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\pchSpatialDomains.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\PrismGeom.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\PyrGeom.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\QuadFaceComponent.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\QuadGeom.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\SegGeom.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\SpatialDomains.hpp">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\TetGeom.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\TriFaceComponent.h">
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\TriGeom.h">
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

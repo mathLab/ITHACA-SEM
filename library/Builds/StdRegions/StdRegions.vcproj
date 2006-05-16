@@ -156,9 +156,6 @@
 			<File
 				RelativePath="..\..\StdRegions\StdTriExp.cpp">
 			</File>
-			<File
-				RelativePath="..\..\StdRegions\StdWKSpace.cpp">
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

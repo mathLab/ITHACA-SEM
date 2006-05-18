@@ -57,11 +57,8 @@ namespace Nektar
                                 7.0, 8.0, 9.0,
                                 10.0, 11.0, 12.0 };
 
-                NekMatrix<double, 4, 3> static_matrix(buf);
                 NekMatrix<double> dynamic_matrix(buf, 4, 3);
 
-                BOOST_CHECK(static_matrix.rows() == 4);
-                BOOST_CHECK(static_matrix.columns() == 3);
                 BOOST_CHECK(dynamic_matrix.rows() == 4);
                 BOOST_CHECK(dynamic_matrix.columns() == 3);
 
@@ -69,21 +66,19 @@ namespace Nektar
                 {
                     for(unsigned int j = 0; j < 3; ++j)
                     {
-                        BOOST_CHECK(static_matrix(i,j) == buf[3*i + j]);
                         BOOST_CHECK(dynamic_matrix(i,j) == buf[3*i + j]);
                     }
                 }
             }
 
             {
-                NekMatrix<float, 7, 3> static_matrix(7.8);
+
                 NekMatrix<float> dynamic_matrix(7.8, 7, 3);
 
                 for(unsigned int i = 0; i < 7; ++i)
                 {
                     for(unsigned int j = 0; j < 3; ++j)
                     {
-                        BOOST_CHECK(static_matrix(i,j) == 7.8f);
                         BOOST_CHECK(dynamic_matrix(i,j) == 7.8f);
                     }
                 }
@@ -95,7 +90,7 @@ namespace Nektar
         {
             // We need to be able to access any element in the matrix, and
             // assign into the matrix at any location.
-            NekMatrix<unsigned int, 3, 3> static_matrix;
+            NekMatrix<unsigned int> static_matrix(3,3);
 
             for(unsigned int i = 0; i < 3; ++i)
             {
@@ -128,9 +123,9 @@ namespace Nektar
                     4.0, 5.0, 6.0,
                     7.0, 8.0, 9.0 };
 
-                NekMatrix<double, 3, 3> m1(buf);
-                NekMatrix<double, 3, 3> m2(buf);
-                NekMatrix<double, 3, 3> m3 = m1 + m2;
+                NekMatrix<double> m1(buf, 3, 3);
+                NekMatrix<double> m2(buf, 3, 3);
+                NekMatrix<double> m3 = m1 + m2;
 
                 for(unsigned int i = 0; i < 3; ++i)
                 {
@@ -167,6 +162,36 @@ namespace Nektar
 //            }
 
             // Multiply
+            {
+                unsigned int buf1[] = {1, 2, 3,
+                                       4, 5, 6,
+                                       7, 8, 9};
+                unsigned int buf2[] = { 10, 11, 12, 14,
+                                        15, 16, 17, 18,
+                                        19, 20, 21, 22 };
+
+                NekMatrix<unsigned int> lhs(buf1, 3, 3);
+                NekMatrix<unsigned int> rhs(buf2, 3, 4);
+                NekMatrix<unsigned int> result = lhs*rhs;
+
+                BOOST_CHECK(result.rows() == 3);
+                BOOST_CHECK(result.columns() == 4);
+
+                BOOST_CHECK(result(0,0) == 97);
+                BOOST_CHECK(result(0,1) == 103);
+                BOOST_CHECK(result(0,2) == 109);
+                BOOST_CHECK(result(0,3) == 116);
+
+                BOOST_CHECK(result(1,0) == 229);
+                BOOST_CHECK(result(1,1) == 244);
+                BOOST_CHECK(result(1,2) == 259);
+                BOOST_CHECK(result(1,3) == 278);
+
+                BOOST_CHECK(result(2,0) == 361);
+                BOOST_CHECK(result(2,1) == 385);
+                BOOST_CHECK(result(2,2) == 409);
+                BOOST_CHECK(result(2,3) == 440);
+            }
 
             // Transpose
 
@@ -188,6 +213,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.5  2006/05/16 20:35:30  jfrazier
+    Added the float literal specifier to make the unit test happy.
+
     Revision 1.4  2006/05/15 05:06:07  bnelson
     Added addition tests.
 

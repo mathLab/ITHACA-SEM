@@ -45,6 +45,7 @@
 #include <boost/concept_check.hpp>
 
 #include <LibUtilities/NekMemoryManager.hpp>
+#include <LibUtilities/ErrorUtil.hpp>
 
 namespace Nektar
 {
@@ -53,14 +54,14 @@ namespace Nektar
 
         enum NekMatrixForm
         {
-            eFull,
-            eZero,
-            eDiagonal,
-            eSquareSymmetric,
-            eSquareSymmetricPositiveDefinite,
-            eSymmetricPositiveDefiniteBanded,
-            eSquareGeneral,
-            eSquareGeneralBanded
+            eFull//,
+//             eZero,
+//             eDiagonal,
+//             eSquareSymmetric,
+//             eSquareSymmetricPositiveDefinite,
+//             eSymmetricPositiveDefiniteBanded,
+//             eSquareGeneral,
+//             eSquareGeneralBanded
         };
 
         class OutOfBoundsError
@@ -88,30 +89,16 @@ namespace Nektar
         /// Initialize methods.  I could have made many constructors for the
         /// impl object constructors, but then I would have had a lot of messy
         /// Factory objects to created, one for each constructor.
-        template<typename DataType, unsigned int NumRows = 0, unsigned int NumColumns = 0, unsigned int space = 0>
+        template<typename DataType, unsigned int space = 0>
         class NekMatrix
         {
 
             public:
-                NekMatrix(NekMatrixForm form = eFull) :
-                    m_form(form),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, NumRows, NumColumns))
-                {
-                    m_impl->Initialize();
-                }
-
                 NekMatrix(unsigned int rows, unsigned int columns, NekMatrixForm form = eFull) :
                     m_form(form),
                     m_impl(NekMatrixImplFactory::Instance().CreateObject(form, rows, columns))
                 {
                     m_impl->Initialize();
-                }
-
-                explicit NekMatrix(const DataType* const ptr, NekMatrixForm form = eFull) :
-                    m_form(form),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, NumRows, NumColumns))
-                {
-                    m_impl->Initialize(ptr);
                 }
 
                 NekMatrix(const DataType* const ptr, unsigned int rows, unsigned int columns,
@@ -120,13 +107,6 @@ namespace Nektar
                     m_impl(NekMatrixImplFactory::Instance().CreateObject(form, rows, columns))
                 {
                     m_impl->Initialize(ptr);
-                }
-
-                NekMatrix(typename boost::call_traits<DataType>::param_type d, NekMatrixForm form = eFull) :
-                    m_form(form),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, NumRows, NumColumns))
-                {
-                    m_impl->Initialize(d);
                 }
 
                 NekMatrix(typename boost::call_traits<DataType>::param_type d,
@@ -168,11 +148,12 @@ namespace Nektar
                     return fullRegistered;
                 }
 
-                typedef NekMatrix<DataType, NumRows, NumColumns, space> MyType;
+                typedef NekMatrix<DataType, space> MyType;
                 BOOST_CLASS_REQUIRE(MyType, LibUtilities, NekMatrixFunctionRegistration);
 
-                NekMatrix<DataType, NumRows, NumColumns, space> operator+=(const NekMatrix<DataType, NumRows, NumColumns, space>& rhs)
+                NekMatrix<DataType, space> operator+=(const NekMatrix<DataType, space>& rhs)
                 {
+                    ASSERTL0(rows() == rhs.rows() && columns() == rhs.columns(), "Matrix dimensions must agree in operator+");
                     for(unsigned int i = 0; i < rows(); ++i)
                     {
                         for(unsigned int j = 0; j < columns(); ++j)
@@ -318,9 +299,9 @@ namespace Nektar
                     protected:
                         void CreateSharedArray()
                         {
-                            //m_data = MemoryManager::AllocateSharedArray<DataType>(rows()*columns());
+                            m_data = MemoryManager::AllocateSharedArray<DataType>(rows()*columns());
                             //m_data = new DataType[rows()*columns()];
-                            m_data = boost::shared_array<DataType>(new DataType[rows()*columns()]);
+                            //m_data = boost::shared_array<DataType>(new DataType[rows()*columns()]);
                         }
 
                     private:
@@ -332,31 +313,65 @@ namespace Nektar
 
                 static NekFullMatrixImpl* createFullMatrix(unsigned int rows, unsigned int cols)
                 {
-                    //return MemoryManager::Allocate<NekFullMatrixImpl>(rows, cols);
-                    return new NekFullMatrixImpl(rows, cols);
+                    //NekFullMatrixImpl* result = MemoryManager::Allocate<NekFullMatrixImpl>(rows, cols);
+                    NekFullMatrixImpl* result = new NekFullMatrixImpl(rows, cols);
+                    return result;
                 }
 
                 static const bool fullRegistered;
 
                 NekMatrixForm m_form;
-                boost::shared_ptr<NekMatrixImpl> m_impl;
+
+                // Change back to the shared pointer after finishing the
+                // NekFactory.
+                //boost::shared_ptr<NekMatrixImpl> m_impl;
+                NekMatrixImpl* m_impl;
         };
 
-        template<typename DataType, unsigned int width, unsigned int height, unsigned int space>
-        const bool NekMatrix<DataType, width, height, space>::fullRegistered =
-                NekMatrix<DataType, width, height, space>::NekMatrixImplFactory::
-                Instance().Register(eFull, NekMatrix<DataType, width, height, space>::createFullMatrix);
+        template<typename DataType, unsigned int space>
+        const bool NekMatrix<DataType, space>::fullRegistered =
+                NekMatrix<DataType, space>::NekMatrixImplFactory::
+                Instance().Register(eFull, NekMatrix<DataType, space>::createFullMatrix);
 
 
-        template<typename DataType, unsigned int NumRows, unsigned int NumColumns, unsigned int space>
-        NekMatrix<DataType, NumRows, NumColumns, space> operator+(
-                const NekMatrix<DataType, NumRows, NumColumns, space>& lhs,
-                const NekMatrix<DataType, NumRows, NumColumns, space>& rhs)
+        template<typename DataType, unsigned int space>
+        NekMatrix<DataType, space> operator+(
+                const NekMatrix<DataType, space>& lhs,
+                const NekMatrix<DataType, space>& rhs)
         {
-            NekMatrix<DataType, NumRows, NumColumns, space> result(lhs);
+            NekMatrix<DataType, space> result(lhs);
             result += rhs;
             return result;
         }
+
+
+        template<typename DataType, unsigned int space>
+        NekMatrix<DataType, space> operator*(
+            const NekMatrix<DataType, space>& lhs,
+            const NekMatrix<DataType, space>& rhs)
+        {
+            ASSERTL0(lhs.columns() == rhs.rows(), "Invalid matrix dimensions in operator*");
+
+            NekMatrix<DataType, space> result(lhs.rows(), rhs.columns());
+
+            for(unsigned int i = 0; i < result.rows(); ++i)
+            {
+                for(unsigned int j = 0; j < result.columns(); ++j)
+                {
+                    DataType t = DataType(0);
+
+                    // Set the result(i,j) element.
+                    for(unsigned int k = 0; k < lhs.columns(); ++k)
+                    {
+                        t += lhs(i,k)*rhs(k,j);
+                    }
+                    result(i,j) = t;
+                }
+            }
+
+            return result;
+        }
+
     }
 }
 
@@ -364,6 +379,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.4  2006/05/15 05:06:55  bnelson
+    Removed use of MemoryManager pending review of some memory problems.
+
     Revision 1.3  2006/05/15 04:13:36  bnelson
     no message
 

@@ -1,197 +1,273 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File ExpList1D.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Expansion list 1D definition
+//
+///////////////////////////////////////////////////////////////////////////////
+
 #include <MultiRegions/ExpList1D.h>
 
-namespace MultiRegions{
-
-  ExpList1D::ExpList1D(){
-  }
+namespace Nektar
+{
+  namespace MultiRegions
+  {
+    
+    ExpList1D::ExpList1D()
+    {
+    }
   
-  ExpList1D::~ExpList1D(){
-    vector<LocalRegions::SegExp*>::iterator def;
-    for(def = _Seg.begin(); def != _Seg.end(); ++def){
-      delete def[0]->get_geom();
-      delete def[0];
+    ExpList1D::~ExpList1D()
+    {
+      SegExpVectorIter def;
+      for(def = m_seg.begin(); def != m_seg.end(); ++def){
+	delete def[0]->GetGeom();
+	delete def[0];
+      }
     }
-  }
 
-  ExpList1D::ExpList1D(const StdRegions::BasisKey &Ba, 
-		       SpatialDomains::MeshGraph1D &graph1D){
-    LocalRegions::SegExp *seg;
-    list<SpatialDomains::SegGeom *> SegGeoms = graph1D.get_SegGeoms();
-    
-    _ncoeffs = SegGeoms.size()*Ba.get_order();
-    _nquad   = SegGeoms.size()*Ba.get_nquad();
-    
-    _coeffs = new double [_ncoeffs];
-    _trans_state = NotSet; 
-
-    _phys   = new double [_nquad];
-    _phys_state  = false;
-    
-    // make sure Geofacs are defined in MeshGraph1D
-    if(graph1D.get_geofac_defined() != true)
-      graph1D.GenXGeoFac();
-
-    list<SpatialDomains::SegGeom *>::const_iterator def;
-    int cnt,cnt1;
-    SpatialDomains::SegGeom *geom;
-
-    cnt = cnt1 = 0;
-    for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def){
-      geom = new SpatialDomains::SegGeom (**def);
-      seg  = new LocalRegions::SegExp(Ba,_coeffs+cnt,_phys+cnt1, geom);
-      seg->SetGeoFac(seg->GenGeoFac());
-      _Seg.push_back(seg);
+    ExpList1D::ExpList1D(const StdRegions::BasisKey &Ba, 
+			 SpatialDomains::MeshGraph1D &graph1D)
+    {
+      LocalRegions::SegExp *seg;
+      SegGeomVector SegGeoms = graph1D.GetSegGeoms();
       
-      cnt  += Ba.get_order();
-      cnt1 += Ba.get_nquad();
+      m_ncoeffs = SegGeoms.size()*Ba.GetOrder();
+      m_npoints = SegGeoms.size()*Ba.GetNquad();
+    
+      m_coeffs = new double [m_ncoeffs];
+      m_transState = NotSet; 
+
+      m_phys   = new double [m_npoints];
+      m_physState  = false;
+    
+      // make sure Geofacs are defined in MeshGraph1D
+      if(graph1D.GetGeofac_defined() != true)
+      {
+	graph1D.GenXGeoFac();
+      }
+
+      SegExpVectorIter def;
+      int cnt,cnt1;
+      SpatialDomains::SegGeom *geom;
+
+      cnt = cnt1 = 0;
+      for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
+      {
+	geom = new SpatialDomains::SegGeom (**def);
+	seg  = new LocalRegions::SegExp(Ba,m_coeffs+cnt,m_phys+cnt1, geom);
+	seg->SetGeoFac(seg->GenGeoFac());
+	m_seg.push_back(seg);
+	
+	cnt  += Ba.GetPrder();
+	cnt1 += Ba.GetPoints();
+      }
     }
-  }
+
+    /** \brief Integrate the physical point list \a inarray over region
+	and return the value
+	
+	Inputs:\n
+	
+	- \a inarray: definition of function to be returned at quadrature point 
+	of expansion. 
+	
+	Outputs:\n
+	
+	- returns \f$ \sum_{i=1}^{n_{el}} \int_{\Omega_i} u(\xi_1)d \xi_1 \f$ 
+    */
+    double ExpList1D::Integral(const double *inarray)
+    {
+      SegExpVectorIter def;
+      int    cnt = 0;
+      double sum = 0.0;
+      
+      for(def = m_seg.begin(); def != m_seg.end(); ++def){
+	sum += (*def)->Integral(inarray+cnt);
+	cnt += (*def)->GetPointsOrder(0);
+      }
+      
+      return sum; 
+    }
+
   
-  /** \brief Integrate the physical point list \a inarray over region
-      and return the value
+    void ExpList1D::IProductWRTBase(const double *inarray, double *outarray)
+    {
+      SegExpVectorIter def;
+      int    cnt  = 0;
+      int    cnt1 = 0;
       
-      Inputs:\n
+      for(def = m_seg.begin(); def != m_seg.end(); ++def){
+	(*def)->IProductWRTBase(inarray+cnt,outarray+cnt1);
+	cnt  += (*def)->GetPointOrder(0);
+	cnt1 += (*def)->GetNcoeffs();
+      }
+    }
+
+    void ExpList1D::IProductWRTBase(ExpList1D &S1, ExpList1D &S2)
+    {
+      IProductWRTBase(S1.GetPhys(),S2.GetCoeffs());
+      m_transState = Local;
+    }
+
+    void ExpList1D::IProduct_WRT_B(ExpList1D &S1, double * outarray)
+    {
+      IProductWRTBase( S1.GetPhys(),outarray);
+    }
+    
+    void ExpList1D::Deriv(const int n, double **outarray)
+    {
+      Deriv(n,m_phys,outarray);
+    }
+
+    void ExpList1D::Deriv(const int n,const double *inarray,double **outarray)
+    {
+      SegExpVectorIter def;
+      int    cnt = 0;
       
-      - \a inarray: definition of function to be returned at quadrature point 
-      of expansion. 
+      if(m_physState == false)
+      {
+	v_BwdTrans(m_phys);
+      }
+    
+      for(def = m_seg.begin(); def != m_seg.end(); ++def)
+      {
+	(*def)->Deriv(n,inarray+cnt,outarray+cnt);
+	cnt  += (*def)->get_pointorder(0);
+      }
+    }
+    
+    void ExpList1D::FwdTrans(const double *inarray)
+    {
+      SegExpVectorIter def;
+      int    cnt = 0;
       
-      Outputs:\n
-
-      - returns \f$ \sum_{i=1}^{n_{el}} \int_{\Omega_i} u(\xi_1)d \xi_1 \f$ 
-  */
-  double ExpList1D::Integral(const double *inarray){
-    vector<LocalRegions::SegExp *>::iterator def;
-    int    cnt = 0;
-    double sum = 0.0;
-
-    for(def = _Seg.begin(); def != _Seg.end(); ++def){
-      sum += (*def)->Integral(inarray+cnt);
-      cnt += (*def)->get_pointorder(0);
-    }
-
-    return sum; 
-  }
-  
-  void ExpList1D::IProduct_WRT_B(const double *inarray, double *outarray){
-    vector<LocalRegions::SegExp *>::iterator def;
-    int    cnt  = 0;
-    int    cnt1 = 0;
-    
-    for(def = _Seg.begin(); def != _Seg.end(); ++def){
-      (*def)->IProduct_WRT_B(inarray+cnt,outarray+cnt1);
-      cnt  += (*def)->get_pointorder(0);
-      cnt1 += (*def)->get_ncoeffs();
-    }
-  }
-
-  void ExpList1D::IProduct_WRT_B(ExpList1D &S1, ExpList1D &S2){
-    IProduct_WRT_B(S1.get_phys(),S2.get_coeffs());
-    _trans_state = Local;
-  }
-
-  void ExpList1D::IProduct_WRT_B(ExpList1D &S1, double * outarray){
-    IProduct_WRT_B( S1.get_phys(),outarray);
-  }
-
-  void ExpList1D::Deriv(const int n, double **outarray){
-    Deriv(n,_phys,outarray);
-  }
-
-  void ExpList1D::Deriv(const int n,const double *inarray,double **outarray){
-    vector<LocalRegions::SegExp *>::iterator def;
-    int    cnt = 0;
-    
-    if(_phys_state == false)
-      V_BwdTrans(_phys);
-    
-    for(def = _Seg.begin(); def != _Seg.end(); ++def){
-      (*def)->Deriv(n,inarray+cnt,outarray+cnt);
-      cnt  += (*def)->get_pointorder(0);
-    }
-  }
-
-  void ExpList1D::FwdTrans(const double *inarray){
-    vector<LocalRegions::SegExp *>::iterator def;
-    int    cnt = 0;
-
-    for(def = _Seg.begin(); def != _Seg.end(); ++def){
-      (*def)->FwdTrans(inarray+cnt);
-      cnt  += (*def)->get_pointorder(0);
-    }
-
-    _trans_state = Local;
-  }
-
-  void ExpList1D::BwdTrans(double *outarray){
-    vector<LocalRegions::SegExp *>::iterator def;
-    int    cnt = 0;
-
-    for(def = _Seg.begin(); def != _Seg.end(); ++def){
-      (*def)->BwdTrans(outarray+cnt);
-      cnt  += (*def)->get_pointorder(0);
-    }
-    _phys_state = true;
-  }
-
-  void ExpList1D::GetCoords(double **coords){
-    vector<LocalRegions::SegExp *>::iterator def;
-    int    i, cnt = 0;
-    double *E_coords[3];
-
-    for(def = _Seg.begin(); def != _Seg.end(); ++def){
-      for(i = 0 ; i < (*def)->get_coordim(); ++i)
-	E_coords[i] = coords[i]+cnt;
+      for(def = m_seg.begin(); def != m_seg.end(); ++def)
+      {
+	(*def)->FwdTrans(inarray+cnt);
+	cnt  += (*def)->GetPointsOrder(0);
+      }
       
-      (*def)->GetCoords(E_coords);
-      cnt  += (*def)->get_pointorder(0);
-    }
-  }
-  
-  void ExpList1D::WriteToFile(ofstream &out){
-    vector<LocalRegions::SegExp *>::iterator def; 
-
-    if(_phys_state == false)
-      V_BwdTrans(_phys);
-
-    (*_Seg.begin())->WriteToFile(out,1);
-    
-    for(def = ++_Seg.begin(); def != _Seg.end(); ++def)
-      (*def)->WriteToFile(out,0);
-  }
-
-  double  ExpList1D::Linf(const double *sol){
-    vector<LocalRegions::SegExp *>::iterator def;
-    double err = 0.0;
-    int    cnt = 0;
-
-    if(_phys_state == false)
-      V_BwdTrans(_phys);
-    
-    for(def = _Seg.begin(); def != _Seg.end(); ++def){
-      err  = max(err,(*def)->Linf(sol+cnt));
-      cnt  += (*def)->get_pointorder(0);
+      m_transState = Local;
     }
 
-    return err;
-  }
-
-  double  ExpList1D::L2(const double *sol){
-    vector<LocalRegions::SegExp *>::iterator def;
-    double err = 0.0,errl2;
-    int    cnt = 0;
+    void ExpList1D::BwdTrans(double *outarray)
+    {
+      SegExpVectorIter def;
+      int    cnt = 0;
+      
+      for(def = m_seg.begin(); def != m_seg.end(); ++def)
+      {
+	(*def)->BwdTrans(outarray+cnt);
+	cnt  += (*def)->GetPointsOrder(0);
+      }
+      m_physState = true;
+    }
     
-    if(_phys_state == false)
-      V_BwdTrans(_phys);
+    void ExpList1D::GetCoords(double **coords)
+    {
+      SegExpVectorIter def;
+      int    i, cnt = 0;
+      double *E_coords[3];
+      
+      for(def = m_seg.begin(); def != m_seg.end(); ++def)
+      {
+	for(i = 0 ; i < (*def)->GetCoorDim(); ++i)
+	{
+	  E_coords[i] = coords[i]+cnt;
+	}
+	
+	(*def)->GetCoords(E_coords);
+	cnt  += (*def)->GetPointsOrder(0);
+      }
+    }
+    
+    void ExpList1D::WriteToFile(ofstream &out)
+    {
+      SegExpVectorIter def; 
 
-    for(def = _Seg.begin(); def != _Seg.end(); ++def){
-      errl2 = (*def)->L2(sol+cnt);
-      err += errl2*errl2;
-      cnt  += (*def)->get_pointorder(0);
+      if(m_physState == false)
+      {
+	v_BwdTrans(m_phys);
+      }
+
+      (*m_seg.begin())->WriteToFile(out,1);
+      
+      for(def = ++m_seg.begin(); def != m_seg.end(); ++def)
+      {
+	(*def)->WriteToFile(out,0);
+      }
     }
 
-    return sqrt(err);
-  }
-  
+    double  ExpList1D::Linf(const double *sol)
+    {
+      SegExpVectorIter def;
+      double err = 0.0;
+      int    cnt = 0;
+      
+      if(m_physState == false)
+      {
+	v_BwdTrans(m_phys);
+      }
+    
+      for(def = m_seg.begin(); def != m_seg.end(); ++def)
+      {
+	err  = max(err,(*def)->Linf(sol+cnt));
+	cnt  += (*def)->GetPointsOrder(0);
+      }
 
+      return err;
+    }
+
+    double  ExpList1D::L2(const double *sol)
+    {
+      SegExpVectorIter def;
+      double err = 0.0,errl2;
+      int    cnt = 0;
+      
+      if(m_physState == false)
+      {
+	v_BwdTrans(m_phys);
+      }
+
+      for(def = m_seg.begin(); def != m_seg.end(); ++def)
+      {
+	errl2 = (*def)->L2(sol+cnt);
+	err += errl2*errl2;
+	cnt  += (*def)->GetPointsOrder(0);
+      }
+      
+      return sqrt(err);
+    }
+    
+    
+  } //end of namespace
 } //end of namespace
 

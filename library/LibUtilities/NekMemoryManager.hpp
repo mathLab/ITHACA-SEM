@@ -50,10 +50,6 @@
 #include <boost/bind.hpp>
 #include <boost/type_traits.hpp>
 
-#include <iostream>
-
-using namespace std;
-
 namespace Nektar
 {
     /// \brief General purpose memory allocation routines with the ability
@@ -262,6 +258,22 @@ namespace Nektar
                 return boost::shared_ptr<DataType>(data, &MemoryManager::DeallocateSharedPtr<DataType>);
             }
 
+            template<typename DataType, typename Arg1Type>
+                    static boost::shared_ptr<DataType> AllocateSharedPtr(const Arg1Type& arg1)
+            {
+                DataType* data = Allocate<DataType>(arg1);
+                return boost::shared_ptr<DataType>(data, &MemoryManager::DeallocateSharedPtr<DataType>);
+            }
+
+            template<typename DataType, typename Arg1Type, typename Arg2Type>
+                    static boost::shared_ptr<DataType> AllocateSharedPtr(const Arg1Type& arg1,
+                                                                        const Arg2Type& arg2)
+            {
+                DataType* data = Allocate<DataType>(arg1, arg2);
+                return boost::shared_ptr<DataType>(data, &MemoryManager::DeallocateSharedPtr<DataType>);
+            }
+
+
             ////////////////////////////////////////////////////////////////////
             /// \}
             ////////////////////////////////////////////////////////////////////
@@ -457,6 +469,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.4  2006/05/15 04:13:36  bnelson
+    no message
+
     Revision 1.3  2006/05/14 21:31:49  bnelson
     Modified the upper bound on static shared array allocation.
 

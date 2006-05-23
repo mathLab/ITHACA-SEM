@@ -77,6 +77,7 @@ namespace Nektar
 
                 for(int i = 0; i < m_coordim; ++i)
                 {
+#pragma message("Fix this! " __FILE__)
                     m_xmap[i] = NULL; //new StdRegions::StdSegExp(B);
                 }
             }
@@ -110,7 +111,8 @@ namespace Nektar
             {
                 for(int i =0; i < m_coordim; ++i)
                 {
-                    //delete m_xmap[i];
+  #pragma message("Fix this! " __FILE__)
+                  //delete m_xmap[i];
                 }
 
                 delete[] m_xmap;
@@ -205,6 +207,10 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.5  2006/05/23 19:56:33  jfrazier
+*    These build and run, but the expansion pieces are commented out
+*    because they would not run.
+*
 *    Revision 1.4  2006/05/16 20:12:59  jfrazier
 *    Minor fixes to correct bugs.
 *

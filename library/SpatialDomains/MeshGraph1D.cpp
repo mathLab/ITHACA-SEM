@@ -58,7 +58,7 @@ namespace Nektar
 
         bool loadOkay = doc.LoadFile();
 
-        ASSERTL0(loadOkay, (string("Unable to load file:") + infilename + ".").c_str());
+        ASSERTL0(loadOkay, (std::string("Unable to load file:") + infilename + ".").c_str());
 
         Read(doc);
     }
@@ -157,18 +157,15 @@ namespace Nektar
                     {
                         vertexDataStrm >> vertex1 >> vertex2;
 
-                        if (vertexDataStrm.fail())
-                        {
-                            ASSERTL0(false, (std::string("Unable to read segment data: ")
-                                + std::string(segmentData) + ".").c_str());
-                        }
+                        ASSERTL0(!vertexDataStrm.fail(), (std::string("Unable to read segment data: ")
+                            + std::string(segmentData) + ".").c_str());
 
                         SharedSegGeomPtr seg(new SegGeom(indx, GetVertex(vertex1), GetVertex(vertex2)));
                         m_seggeoms.push_back(seg);
                     }
                     catch(...)
                     {
-                        ASSERTL0(false, (std::string("Unable to read segment data: "
+                        NEKERROR(ErrorUtil::efatal, (std::string("Unable to read segment data: "
                             + segmentData + ".").c_str()));
                     }
 
@@ -205,6 +202,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.3  2006/05/16 22:28:31  sherwin
+// Updates to add in FaceComponent call to constructors
+//
 // Revision 1.2  2006/05/16 20:12:59  jfrazier
 // Minor fixes to correct bugs.
 //

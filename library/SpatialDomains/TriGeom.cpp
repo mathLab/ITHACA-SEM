@@ -46,12 +46,12 @@ namespace Nektar
         }
 
         TriGeom::TriGeom(const VertexComponentSharedPtr verts[], 
-			 const EdgeComponentSharedPtr edges[], 
-			 StdRegions::EdgeOrientation * eorient):
-	  TriFaceComponent(verts[0]->GetCoordim())
+            const EdgeComponentSharedPtr edges[], 
+            StdRegions::EdgeOrientation * eorient):
+        TriFaceComponent(verts[0]->GetCoordim())
         {
             /// Copy the vert shared pointers.
-	  m_verts.insert(m_verts.begin(), verts, verts+TriGeom::kNverts);
+            m_verts.insert(m_verts.begin(), verts, verts+TriGeom::kNverts);
 
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
@@ -67,7 +67,8 @@ namespace Nektar
         }
 
         TriGeom::TriGeom(const EdgeComponentSharedPtr edges[], 
-			 StdRegions::EdgeOrientation * eorient)
+            StdRegions::EdgeOrientation * eorient):
+        TriFaceComponent(edges[0]->GetCoordim())
         {
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
@@ -85,7 +86,7 @@ namespace Nektar
 
             /// Insert unique, unsorted elements into the vector.
             m_verts.insert(m_verts.begin(), vertSet.begin(), vertSet.end());
-            
+
             m_coordim = edges[0]->GetVertex(0)->GetCoordim();
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
@@ -244,7 +245,7 @@ namespace Nektar
             }
             else
             {
-	      ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__,
+                ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__,
                     "inverse mapping must be set up to use this call");
             }
         }
@@ -253,6 +254,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.3  2006/05/16 22:28:31  sherwin
+// Updates to add in FaceComponent call to constructors
+//
 // Revision 1.2  2006/05/07 11:26:38  sherwin
 // Modifications to get the demo LocalRegions::Project2D to compile
 //

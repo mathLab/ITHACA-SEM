@@ -63,7 +63,8 @@ namespace Nektar
 
         EdgeComponent::EdgeComponent(int id, const int coordim,
             VertexComponentSharedPtr vertex[]): 
-        Geometry1D(coordim)
+        Geometry1D(coordim),
+        m_vertex(2) //always have two vertices per edge
         {
             m_eid = id;
 
@@ -76,7 +77,7 @@ namespace Nektar
 
                 for(int i = 0; i < m_coordim; ++i)
                 {
-                    m_xmap[i] = new StdRegions::StdSegExp(B);
+                    m_xmap[i] = NULL; //new StdRegions::StdSegExp(B);
                 }
             }
 
@@ -204,6 +205,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.4  2006/05/16 20:12:59  jfrazier
+*    Minor fixes to correct bugs.
+*
 *    Revision 1.3  2006/05/09 13:37:01  jfrazier
 *    Removed duplicate definition of shared vertex pointer.
 *

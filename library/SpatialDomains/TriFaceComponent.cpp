@@ -56,7 +56,8 @@ namespace Nektar
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = new StdRegions::StdTriExp(B0,B1);
+#pragma message("Fix this! " __FILE__)
+                m_xmap[i] = NULL; //new StdRegions::StdTriExp(B0,B1);
             }
 
             m_state = eNotFilled;
@@ -69,7 +70,8 @@ namespace Nektar
             {
                 for(int i = 0; i < m_coordim; ++i)
                 {
-                    delete m_xmap[i]; 
+#pragma message("Fix this! " __FILE__)
+                    //delete m_xmap[i]; 
                 }
 
                 delete[] m_xmap;
@@ -130,6 +132,9 @@ namespace Nektar
 
 //
 // $Log: TriFaceComponent.cpp,v $
+// Revision 1.1  2006/05/04 18:59:04  kirby
+// *** empty log message ***
+//
 // Revision 1.9  2006/04/09 02:08:36  jfrazier
 // Added precompiled header.
 //

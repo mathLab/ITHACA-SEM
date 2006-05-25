@@ -81,6 +81,11 @@ namespace Nektar
                 {
                 }
 
+                NekVector(unsigned int size, const DataType* const ptr) :
+                    m_impl(size, ptr)
+                {
+                }
+
                 ~NekVector()
                 {
                 }
@@ -306,6 +311,15 @@ namespace Nektar
                             }
                         }
 
+                        VectorImpl(const DataType* const ptr) :
+                            data()
+                        {
+                            for(unsigned int i = 0; i < ImplSize; ++i)
+                            {
+                                data[i] = ptr[i];
+                            }
+                        }
+
                         VectorImpl(const VectorImpl<ImplDataType, ImplSize, ImplSpace>& rhs) :
                             data()
                         {
@@ -358,6 +372,17 @@ namespace Nektar
                         {
                             data[0] = a;
                         }
+
+                        VectorImpl(unsigned int s, const DataType* const ptr) :
+                            data(new DataType[s]),
+                            size(s)
+                        {
+                            for(unsigned int i = 0; i < size; ++i)
+                            {
+                                data[i] = ptr[i];
+                            }
+                        }
+
 
                         VectorImpl(const VectorImpl<ImplDataType, 0, ImplSpace>& rhs) :
                                 data(new ImplDataType[rhs.size]),
@@ -450,6 +475,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.1  2006/05/04 18:57:44  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/04/11 02:00:43  bnelson
     Initial Revision
 

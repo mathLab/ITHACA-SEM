@@ -46,6 +46,7 @@
 
 #include <LibUtilities/NekMemoryManager.hpp>
 #include <LibUtilities/ErrorUtil.hpp>
+#include <LibUtilities/NekVector.hpp>
 
 namespace Nektar
 {
@@ -372,6 +373,28 @@ namespace Nektar
             return result;
         }
 
+        template<typename DataType, unsigned int space>
+        NekVector<DataType, 0, space> operator*(
+                const NekMatrix<DataType, space>& lhs,
+                const NekVector<DataType, 0, space>& rhs)
+        {
+            ASSERTL0(lhs.columns() == rhs.dimension(), "Invalid matrix dimensions in operator*");
+
+            NekVector<DataType, 0, space> result(rhs.dimension(), DataType(0));
+
+            for(unsigned int i = 0; i < lhs.columns(); ++i)
+            {
+                DataType t = DataType(0);
+                for(unsigned int j = 0; j < rhs.dimension(); ++j)
+                {
+                    t += lhs(i,j)*rhs(j);
+                }
+                result(i) = t;
+            }
+
+            return result;
+        }
+
     }
 }
 
@@ -379,6 +402,11 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.5  2006/05/18 04:21:06  bnelson
+    Removed the ability to specify the rows and columns in the template parameter list.  If this behavior is desired we'll need to create a fixed size array class.
+
+    Added multiplication to the arrays.
+
     Revision 1.4  2006/05/15 05:06:55  bnelson
     Removed use of MemoryManager pending review of some memory problems.
 

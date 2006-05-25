@@ -147,20 +147,6 @@ namespace Nektar
                     }
                 }
             }
-//
-//                 // Do a couple of tests that shouldn't compile.
-//                 NekMatrix<double, 3, 3> m7(buf);
-//                 NekMatrix<double, 2, 2> m8(buf);
-//                 NekMatrix<double> m9 = m7 + m8; // This line should fail.
-//                 NekMatrix<double, 3, 3> m10 = m7 + m8; // This line should fail.
-//
-//                 // Mixed mode.
-//                 NekMatrix<double> m11 = m7 + m4;
-//                 NekMatrix<double, 3, 3> m12 = m7 + m4;
-//                 BOOST_CHECK(m11 == m12);
-//                 BOOST_CHECK(m11 == m3);
-//            }
-
             // Multiply
             {
                 unsigned int buf1[] = {1, 2, 3,
@@ -193,6 +179,22 @@ namespace Nektar
                 BOOST_CHECK(result(2,3) == 440);
             }
 
+            {
+                unsigned int buf1[] = {1, 2, 3,
+                                       4, 5, 6,
+                                       7, 8, 9};
+                unsigned int buf2[] = { 1, 2, 3};
+
+                NekMatrix<unsigned int> lhs(buf1, 3, 3);
+                NekVector<unsigned int> rhs(3, buf2);
+
+                NekVector<unsigned int> result = lhs*rhs;
+
+                BOOST_CHECK(result[0] == 14);
+                BOOST_CHECK(result[1] == 32);
+                BOOST_CHECK(result[2] == 50);
+            }
+
             // Transpose
 
             // Determinant.
@@ -213,6 +215,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.6  2006/05/18 04:25:19  bnelson
+    Added a multiplication test.
+
     Revision 1.5  2006/05/16 20:35:30  jfrazier
     Added the float literal specifier to make the unit test happy.
 

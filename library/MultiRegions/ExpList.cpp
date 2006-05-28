@@ -42,8 +42,8 @@ namespace Nektar
 
     ExpList::ExpList()
     {
-      m_TransState = NotSet; 
-      m_PhysState  = false;
+      m_transState = eNotSet; 
+      m_physState  = false;
     }
     
     ExpList::~ExpList()

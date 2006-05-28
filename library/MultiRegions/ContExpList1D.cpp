@@ -1,110 +1,180 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File ContExpList1D.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Continuous Expansion list definition in 1D
+//
+///////////////////////////////////////////////////////////////////////////////
+
 #include <MultiRegions/ContExpList1D.h>
 
-namespace MultiRegions{
-
-  ContExpList1D::ContExpList1D(){
-    _Mass = (StdRegions::StdMatContainer *)NULL;
-    _LocToContMap = (int *)NULL;
+namespace Nektar
+{
+  namespace MultiRegions
+  {
+    
+    ContExpList1D::ContExpList1D()
+    {
+      m_mass = (StdRegions::StdMatContainer *)NULL;
+      m_locToContMap = (int *)NULL;
   }
   
-  ContExpList1D::~ContExpList1D(){
-    if(_cont_coeffs)
-      delete[] _cont_coeffs;
-
-    if(_LocToContMap)
-      delete[] _LocToContMap;
-  }
-
-  ContExpList1D::ContExpList1D(const StdRegions::BasisKey &Ba, 
-     SpatialDomains::MeshGraph1D &graph1D):ExpList1D(Ba,graph1D){
-    int gid,i,j;
-    int order = Ba.get_order();
-
-    ASSERTL1((Ba.get_Btype() == StdRegions::Modified_A)
-	     ||(Ba.get_Btype() == StdRegions::GLL_Lagrange),
-	     "ConExpList1D::ConExpList1D",
-	     "Expansion not of an boundary-interior type");
-
-    _Mass = (StdRegions::StdMatContainer *)NULL;
-
-    _LocToContMap = new int [_ncoeffs];
-    Vmath::fill(_ncoeffs,-1,_LocToContMap,1);
-    
-    // set up mapping based 
-    StdRegions::StdExpMap vmap;
-    
-    // assume all elements have the same mapping and expasion order
-    _Seg[0]->MapTo(StdRegions::Forwards, vmap);
-    
-    // set up simple map;
-    for(gid = i = 0; i < _Seg.size(); ++i,++gid)
-      for(j = 0; j < 2; ++j)
-	_LocToContMap[order*i+vmap[j]] = gid+j;
-    ++gid;
-
-    for(i = 0; i < _Seg.size(); ++i)
-      for(j = 0; j < order; ++j)
-	if(_LocToContMap[order*i+j] == -1)
-	  _LocToContMap[order*i+j] = gid++;
-
-    _cont_ncoeffs = gid;
-    _cont_coeffs = new double [_cont_ncoeffs];
-  }
-  
-
-  void ContExpList1D::IProduct_WRT_B(const double *inarray, double *outarray){
-    ExpList1D::IProduct_WRT_B(inarray,_coeffs);
-    Assemble(_coeffs,outarray);
-    _trans_state = LocalCont;
-  }
-
-  void ContExpList1D::FwdTrans(const double *inarray){
-    IProduct_WRT_B(inarray,_cont_coeffs);
-    if(!_Mass) GenMassMatrix();
-    _Mass->Solve(_cont_coeffs,1);
-    _trans_state = Continuous;
-    _phys_state = false;
-  }
-
-  void ContExpList1D::BwdTrans(double *outarray){
-
-    if(_trans_state == Continuous)
-      ContToLocal();
-
-    ExpList1D::BwdTrans(outarray);
-  }
-
-
-  void ContExpList1D::GenMassMatrix(void){
-    if(!_Mass){
-      int   i,j,cnt,gid1,gid2,loc_lda;
-      double *loc_mat;
-      StdRegions::StdMatContainer *loc_mass;
-      vector<LocalRegions::SegExp *>::iterator def;
-
-      double *mmat = new double [_cont_ncoeffs*_cont_ncoeffs];
-      Vmath::zero(_cont_ncoeffs*_cont_ncoeffs,mmat,1);
+    ContExpList1D::~ContExpList1D()
+    {
+      if(m_contCoeffs)
+      {
+	delete[] m_contCoeffs;
+      }
       
-      _Mass = new StdRegions::StdMatContainer(mmat);
-      _Mass->set_lda      (_cont_ncoeffs);
-      _Mass->set_mat_form (StdRegions::Symmetric_Positive);
-
-      // fill global matrix 
-      for(cnt = 0, def = _Seg.begin(); def != _Seg.end(); ++def){
-	loc_mass = (*def)->GetMassMatrix();
-	loc_lda = loc_mass->get_lda();
-	loc_mat = loc_mass->get_matrix();
-	
-	for(i = 0; i < loc_lda; ++i){
-	  gid1 = _LocToContMap[i+cnt];
-	  for(j = 0; j < loc_lda; ++j){
-	    gid2 = _LocToContMap[j+cnt];
-	    mmat[gid1*_cont_ncoeffs + gid2] += loc_mat[i*loc_lda + j];
-	  }
-	}
-	cnt+=(*def)->get_ncoeffs();
+      if(m_locToContMap)
+      {
+	delete[] m_locToContMap;
       }
     }
-  }
+
+    ContExpList1D::ContExpList1D(const StdRegions::BasisKey &Ba, 
+				 SpatialDomains::MeshGraph1D &graph1D):
+      ExpList1D(Ba,graph1D)
+    {
+      int gid,i,j;
+      int order = Ba.GetBasisOrder();
+
+      ASSERTL1((Ba.GetBasisType() == StdRegions::Modified_A)
+	       ||(Ba.GetBasisType() == StdRegions::GLL_Lagrange),
+	       "Expansion not of an boundary-interior type");
+
+      m_mass = (StdRegions::StdMatContainer *)NULL;
+
+      m_locToContMap = new int [m_ncoeffs];
+      Vmath::Fill(m_ncoeffs,-1,m_locToContMap,1);
+      
+      // set up mapping based 
+      StdRegions::StdExpMap vmap;
+    
+      // assume all elements have the same mapping and expasion order
+      m_seg[0]->MapTo(StdRegions::eForwards, vmap);
+    
+      // set up simple map;
+      for(gid = i = 0; i < _Seg.size(); ++i,++gid)
+      {
+	for(j = 0; j < 2; ++j)
+	{
+	  m_locToContMap[order*i+vmap[j]] = gid+j;
+	}
+      }
+      ++gid;
+
+      for(i = 0; i < m_seg.size(); ++i)
+      {
+	for(j = 0; j < order; ++j)
+	{
+	  if(m_locToContMap[order*i+j] == -1)
+	  {
+	    m_locToContMap[order*i+j] = gid++;
+	  }
+	}
+      }
+
+      m_contNcoeffs = gid;
+      m_contCoeffs = new double [m_contNcoeffs];
+    }
+    
+    
+    void ContExpList1D::IProductWRTBase(const double *inarray, double *outarray)
+    {
+      ExpList1D::IProductWRTBase(inarray,m_coeffs);
+      Assemble(m_coeffs,outarray);
+      m_transState = LocalCont;
+    }
+
+    void ContExpList1D::FwdTrans(const double *inarray)
+    {
+      IProductWRTBase(inarray,m_contcoeffs);
+      if(!m_mass)
+      {
+	GenMassMatrix();
+      }
+      m_mass->Solve(m_contCoeffs,1);
+      m_transTtate = eContinuous;
+      m_physState = false;
+    }
+
+    void ContExpList1D::BwdTrans(double *outarray)
+    {
+
+      if(_transState == eContinuous)
+      {
+	ContToLocal();
+      }
+
+      ExpList1D::BwdTrans(outarray);
+    }
+    
+
+    void ContExpList1D::GenMassMatrix(void)
+    {
+      if(!m_mass)
+      {
+	int   i,j,cnt,gid1,gid2,loc_lda;
+	double *loc_mat;
+	StdRegions::StdMatContainer *loc_mass;
+	vector<LocalRegions::SegExp *>::iterator def;
+	
+	double *mmat = new double [m_contNcoeffs*m_contNcoeffs];
+	Vmath::Zero(m_contNcoeffs*m_contNcoeffs,mmat,1);
+      
+	m_mass = new StdRegions::StdMatContainer(mmat);
+	m_mass->SetLda     (m_contNcoeffs);
+	m_mass->SetMatForm (StdRegions::eSymmetric_Positive);
+	
+      // fill global matrix 
+	for(cnt = 0, def = m_seg.begin(); def != m_seg.end(); ++def)
+	{
+	  loc_mass = (*def)->GetMassMatrix();
+	  loc_lda = loc_mass->GetLda();
+	  loc_mat = loc_mass->GetMatrix();
+	
+	  for(i = 0; i < loc_lda; ++i)
+	  {
+	    gid1 = m_locToContMap[i+cnt];
+
+	    for(j = 0; j < loc_lda; ++j)
+	    {
+	      gid2 = m_locToContMap[j+cnt];
+	      mmat[gid1*m_contNcoeffs + gid2] += loc_mat[i*loc_lda + j];
+	    }
+	  }
+	  cnt+=(*def)->getNcoeffs();
+	}
+      }
+    }
+  } //end of namespace
 } //end of namespace
 

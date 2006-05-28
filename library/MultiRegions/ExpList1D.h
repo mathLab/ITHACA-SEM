@@ -50,11 +50,6 @@ namespace Nektar
   namespace MultiRegions
   {
 
-    typedef boost::shared_ptr<SegExp> SharedSegExpPtr;
-    typedef std::vector< SharedSegExpPtr > SegExpVector;
-    typedef std::vector< SharedSegExpPtr >::iterator SegExpVectorIter;
-
-
     class ExpList1D: 
       public ExpList
     {
@@ -82,16 +77,15 @@ namespace Nektar
     
       inline int GetCoordim(int eid)
       {
-	ASSERTL2(eid <= m_seg.size(),"ExpList1D:get_coordim()",
-		 "eid is larger than number of elements");
-	return m_seg[eid]->GetCoordim();
+	ASSERTL2(eid <= m_seg.size(),"eid is larger than number of elements");
+	return ((LocalRegions::SegExp *)(m_seg[eid]))->GetCoordim();
       }
       
       double Linf (const double *sol);
       double L2   (const double *sol);
       
     protected:
-      SegExpVector  m_seg;
+      StdRegions::ExpVector  m_seg;
 
     private:
       

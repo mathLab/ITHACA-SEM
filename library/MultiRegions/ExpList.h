@@ -37,6 +37,7 @@
 #define H_EXPLIST
 
 #include <MultiRegions/MultiRegions.hpp>
+#include <LibUtilities/NekMemoryManager.hpp>
 
 namespace Nektar
 {
@@ -55,6 +56,7 @@ namespace Nektar
       }
       
       inline int GetPointsTot(void)
+      {
 	return m_npoints;
       }
       
@@ -68,21 +70,21 @@ namespace Nektar
 	return (m_phys);
       }
       
-      inline void SetTransState(TransState trans_state)
+      inline void SetTransState(TransState transState)
       {
-	m_transState = trans_state;
+	m_transState = transState;
       }
       
-      inline void SetPhysState(bool phys_state)
+      inline void SetPhysState(bool physState)
       {
-	m_physState = phys_state;
+	m_physState = physState;
       }
-      
+  
       void  BwdTrans (double *outarray)
       {
 	v_BwdTrans (outarray);
       }
-
+    
     protected:
       int m_ncoeffs; 
       int m_npoints;

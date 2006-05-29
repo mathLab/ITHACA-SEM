@@ -43,7 +43,7 @@ namespace Nektar
 {
   namespace StdRegions 
   {
-
+    
     Points::Points(const int npts):
       m_pointsorder(npts)
     {
@@ -51,15 +51,15 @@ namespace Nektar
       m_weights     = new double [npts];
       m_derivmatrix = new double [npts*npts];
     }
-
+    
     Points::~Points()
     {
       if(m_zeros)       delete[] m_zeros;
       if(m_weights)     delete[] m_weights;
       if(m_derivmatrix) delete[] m_derivmatrix;
     }
-
-
+    
+    
     PolyPoints::PolyPoints(const int npts, double *z):
       Points(npts)
     {
@@ -67,7 +67,7 @@ namespace Nektar
       CalcWeights();
       CalcDerivMatrix();
     }
-
+    
     
     void PolyPoints::CalcWeights()
     {
@@ -75,7 +75,7 @@ namespace Nektar
 		       "Routine needs defining");
       // need to set up Lagrange routine
     }
-
+    
 
     void  PolyPoints::CalcDerivMatrix()
     {
@@ -144,7 +144,10 @@ namespace Nektar
 } // end of namespace stdregion
 
 /** 
- * $Log: $
+ * $Log: StdPoints.cpp,v $
+ * Revision 1.1  2006/05/08 05:41:52  sherwin
+ * Initial attempt at sorting out points structure
+ *
  **/ 
 
 

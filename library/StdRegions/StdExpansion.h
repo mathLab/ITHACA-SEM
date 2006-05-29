@@ -40,6 +40,7 @@
 #include <StdRegions/BasisManager.h>
 #include <loki/Factory.h>
 #include <fstream>
+#include <LibUtilities/NekMemoryManager.hpp>
 
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
 #include <StdRegions/LocalRegionsDeclarations.hpp>
@@ -321,12 +322,12 @@ namespace Nektar
             }
 
             // virtual functions related to LocalRegions
-            LocalRegions::MetricRelatedInfo *GenGeoFac(void)
+            boost::shared_ptr<LocalRegions::MetricRelatedInfo> GenGeoFac(void)
             {
-                return v_GenGeoFac();
+	      return v_GenGeoFac();
             }
 
-            void SetGeoFac(LocalRegions::MetricRelatedInfo *minfo)
+            void SetGeoFac(boost::shared_ptr<LocalRegions::MetricRelatedInfo> minfo)
             {
                 v_SetGeoFac(minfo);
             }
@@ -479,24 +480,31 @@ namespace Nektar
             }
 
             // virtual functions related to LocalRegions
-            virtual LocalRegions::MetricRelatedInfo *v_GenGeoFac()
+            virtual boost::shared_ptr<LocalRegions::MetricRelatedInfo> v_GenGeoFac()
             {
                 ASSERTL0(false, "This function is only valid for LocalRegions");
-                return NULL;
             }
-
-            virtual void v_SetGeoFac(LocalRegions::MetricRelatedInfo *minfo)
+	    
+            virtual void v_SetGeoFac(boost::shared_ptr<LocalRegions::MetricRelatedInfo>
+				     minfo)
             {
                 ASSERTL0(false, "This function is only valid for LocalRegions");
             }
         };
 
+	typedef boost::shared_ptr<StdExpansion> SharedExpPtr;
+	typedef std::vector< SharedExpPtr > ExpVector;
+	typedef std::vector< SharedExpPtr >::iterator ExpVectorIter;
+	
     } //end of namespace
 } //end of namespace
 
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.1  2006/05/04 18:58:31  kirby
+* *** empty log message ***
+*
 * Revision 1.75  2006/04/25 20:23:33  jfrazier
 * Various fixes to correct bugs, calls to ASSERT, etc.
 *

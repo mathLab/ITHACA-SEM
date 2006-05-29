@@ -133,7 +133,7 @@ namespace Nektar
 	    Points(npts)
 	{
 	    
-	 
+	    
 	    if(m_pointsorder%2)
 	    {
 		ErrorUtil::Error(ErrorUtil::efatal,
@@ -159,6 +159,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPoints.cpp,v $
+ * Revision 1.4  2006/05/29 16:02:00  sherwin
+ * Used default spacing
+ *
  * Revision 1.3  2006/05/29 13:43:29  sherwin
  * U
  *

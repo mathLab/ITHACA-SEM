@@ -101,6 +101,7 @@ namespace Nektar
 	break;
       case eLobatto:
 	Polylib::zwglj(m_zeros,m_weights,m_pointsorder,m_alpha,m_beta);
+
 	Polylib::Dglj(m_derivmatrix,m_zeros,m_pointsorder,m_alpha,m_beta);
 	break;
       case eRadauM:
@@ -145,6 +146,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPoints.cpp,v $
+ * Revision 1.2  2006/05/29 13:40:40  sherwin
+ * Tab checking
+ *
  * Revision 1.1  2006/05/08 05:41:52  sherwin
  * Initial attempt at sorting out points structure
  *

@@ -41,111 +41,127 @@
 
 namespace Nektar
 {
-  namespace StdRegions 
-  {
-    
-    Points::Points(const int npts):
-      m_pointsorder(npts)
+    namespace StdRegions 
     {
-      m_zeros       = new double [npts];
-      m_weights     = new double [npts];
-      m_derivmatrix = new double [npts*npts];
-    }
-    
-    Points::~Points()
-    {
-      if(m_zeros)       delete[] m_zeros;
-      if(m_weights)     delete[] m_weights;
-      if(m_derivmatrix) delete[] m_derivmatrix;
-    }
-    
-    
-    PolyPoints::PolyPoints(const int npts, double *z):
-      Points(npts)
-    {
-      Blas::Dcopy(npts,z,1,m_zeros,1);
-      CalcWeights();
-      CalcDerivMatrix();
-    }
-    
-    
-    void PolyPoints::CalcWeights()
-    {
-      ErrorUtil::Error(ErrorUtil::efatal,"PolyPoints::CalcWeights",
-		       "Routine needs defining");
-      // need to set up Lagrange routine
-    }
-    
-
-    void  PolyPoints::CalcDerivMatrix()
-    {
-      ErrorUtil::Error(ErrorUtil::efatal,"PolyPoints::CalcDerivMatrix",
-		       "Routine needs defining");
-
-      // need to set up Lagrange routine
-    }
-
-    GaussPolyPoints::GaussPolyPoints(const int npts, PointsType ptype, 
-				     const double alpha, const double beta):
-      PolyPoints(npts),
-      m_gausspointstype(ptype),
-      m_alpha(alpha),
-      m_beta(beta)
-    {
-      
-      switch(m_gausspointstype)
-      {
-      case eGauss:
-	Polylib::zwgj(m_zeros,m_weights,m_pointsorder,m_alpha,m_beta);
-	Polylib::Dgj(m_derivmatrix,m_zeros,m_pointsorder,m_alpha,m_beta);
-	break;
-      case eLobatto:
-	Polylib::zwglj(m_zeros,m_weights,m_pointsorder,m_alpha,m_beta);
-
-	Polylib::Dglj(m_derivmatrix,m_zeros,m_pointsorder,m_alpha,m_beta);
-	break;
-      case eRadauM:
-	Polylib::zwgrjm(m_zeros,m_weights,m_pointsorder,m_alpha,m_beta);
-	Polylib::Dgrjm(m_derivmatrix,m_zeros,m_pointsorder,m_alpha,m_beta);
-	break;
-      case eRadauP:
-	Polylib::zwgrjp(m_zeros,m_weights,m_pointsorder,m_alpha,m_beta);
-	Polylib::Dgrjp(m_derivmatrix,m_zeros,m_pointsorder,m_alpha,m_beta);
-	break;
-      default:
-	ErrorUtil::Error(ErrorUtil::efatal,"GaussPolyPoints::GaussPolyPoints",
-			 "Unknown points type");
-	break;
-      }      
-    }
-
-
-    FourierPoints::FourierPoints(const int npts):
-      Points(npts)
-    {
-      
-      if(m_pointsorder%2)
-      {
-	ErrorUtil::Error(ErrorUtil::efatal,"FourierPoints::FourierPoints",
-			 "Fourier points need to be of even order");
-      }
-
-      // define points in the region [-1,1]
-      for(int i = 0; i < m_pointsorder; ++i)
-      {
-	m_zeros  [i] = -1.0 + i*2.0/(double)m_pointsorder;
-	m_weights[i] =  2.0/(double)m_pointsorder;
-      }      
-
-      ErrorUtil::Error(ErrorUtil::ewarning,"FourierPoints::FourierPoints",
-     "Fourier points Derivative matrix need defining for Fourier spacing");
-    }     
-
-  } // end of namespace stdregion
+	
+	Points::Points(const int npts):
+	    m_pointsorder(npts)
+	{
+	    m_zeros       = new double [npts];
+	    m_weights     = new double [npts];
+	    m_derivmatrix = new double [npts*npts];
+	}
+	
+	Points::~Points()
+	{
+	    if(m_zeros)       delete[] m_zeros;
+	    if(m_weights)     delete[] m_weights;
+	    if(m_derivmatrix) delete[] m_derivmatrix;
+	}
+	
+	
+	PolyPoints::PolyPoints(const int npts, double *z):
+	    Points(npts)
+	{
+	    Blas::Dcopy(npts,z,1,m_zeros,1);
+	    CalcWeights();
+	    CalcDerivMatrix();
+	}
+	
+	
+	void PolyPoints::CalcWeights()
+	{
+	    ErrorUtil::Error(ErrorUtil::efatal,"PolyPoints::CalcWeights",
+			     "Routine needs defining");
+	    // need to set up Lagrange routine
+	}
+	
+	
+	void  PolyPoints::CalcDerivMatrix()
+	{
+	    ErrorUtil::Error(ErrorUtil::efatal,"PolyPoints::CalcDerivMatrix",
+			     "Routine needs defining");
+	    
+	    // need to set up Lagrange routine
+	}
+	
+	GaussPolyPoints::GaussPolyPoints(const int npts, PointsType ptype, 
+				       const double alpha, const double beta):
+	    PolyPoints(npts),
+	    m_gausspointstype(ptype),
+	    m_alpha(alpha),
+	    m_beta(beta)
+	{
+	    
+	    switch(m_gausspointstype)
+	    {
+	    case eGauss:
+		Polylib::zwgj(m_zeros,m_weights,m_pointsorder,m_alpha,
+			      m_beta);
+		Polylib::Dgj(m_derivmatrix,m_zeros,m_pointsorder,m_alpha,
+			     m_beta);
+		break;
+	    case eLobatto:
+		Polylib::zwglj(m_zeros,m_weights,m_pointsorder,m_alpha,
+			       m_beta);
+		
+		Polylib::Dglj(m_derivmatrix,m_zeros,m_pointsorder,m_alpha,
+			      m_beta);
+		break;
+	    case eRadauM:
+		Polylib::zwgrjm(m_zeros,m_weights,m_pointsorder,m_alpha,
+				m_beta);
+		Polylib::Dgrjm(m_derivmatrix,m_zeros,m_pointsorder,m_alpha,
+			       m_beta);
+		break;
+	    case eRadauP:
+		Polylib::zwgrjp(m_zeros,m_weights,m_pointsorder,m_alpha,
+				m_beta);
+		Polylib::Dgrjp(m_derivmatrix,m_zeros,m_pointsorder,m_alpha,
+			       m_beta);
+		break;
+	    default:
+		ErrorUtil::Error(ErrorUtil::efatal,
+				 "GaussPolyPoints::GaussPolyPoints",
+				 "Unknown points type");
+		break;
+	    }      
+	}
+	
+	
+	FourierPoints::FourierPoints(const int npts):
+	    Points(npts)
+	{
+	    
+	 
+	    if(m_pointsorder%2)
+	    {
+		ErrorUtil::Error(ErrorUtil::efatal,
+				 "FourierPoints::FourierPoints",
+				 "Fourier points need to be of even order");
+	    }
+	    
+	    // define points in the region [-1,1]
+	    for(int i = 0; i < m_pointsorder; ++i)
+	    {
+		m_zeros  [i] = -1.0 + i*2.0/(double)m_pointsorder;
+		m_weights[i] =  2.0/(double)m_pointsorder;
+	    }      
+	    
+	    ErrorUtil::Error(ErrorUtil::ewarning,
+			     "FourierPoints::FourierPoints",
+			     "Fourier points Derivative matrix "
+			     "need defining for Fourier spacing");
+	}     
+	
+    } // end of namespace stdregion
 } // end of namespace stdregion
 
 /** 
  * $Log: StdPoints.cpp,v $
+ * Revision 1.3  2006/05/29 13:43:29  sherwin
+ * U
+ *
  * Revision 1.2  2006/05/29 13:40:40  sherwin
  * Tab checking
  *

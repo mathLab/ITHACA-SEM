@@ -94,13 +94,15 @@ namespace Nektar
                     {
                         case eFull:
                         {
-                            m_data = new DataType[rows*columns];//boost::shared_array<DataType>(new DataType[rows*columns]);
+                            //m_data = new DataType[rows*columns];
+                            m_data = boost::shared_array<DataType>(new DataType[rows*columns]);
                         }
                         break;
 
                         case eDiagonal:
                         {
-                            m_data = new DataType[rows]; //boost::shared_array<DataType>(new DataType[rows]);
+                            //m_data = new DataType[rows];
+                            m_data = boost::shared_array<DataType>(new DataType[rows]);
                         }
                         break;
                     }
@@ -117,14 +119,16 @@ namespace Nektar
                     {
                         case eFull:
                         {
-                            m_data = new DataType[rows*columns]; //boost::shared_array<DataType>(new DataType[rows*columns]);
+                            //m_data = new DataType[rows*columns];
+                            m_data = boost::shared_array<DataType>(new DataType[rows*columns]);
                             std::copy(ptr, ptr+rows*columns, begin());
                         }
                         break;
 
                         case eDiagonal:
                         {
-                            m_data = new DataType[rows]; //boost::shared_array<DataType>(new DataType[rows]);
+                            //m_data = new DataType[rows];
+                            m_data = boost::shared_array<DataType>(new DataType[rows]);
                             std::copy(ptr, ptr+rows, begin());
                         }
                         break;
@@ -142,13 +146,15 @@ namespace Nektar
                     {
                         case eFull:
                         {
-                            m_data = new DataType[rows*columns]; //boost::shared_array<DataType>(new DataType[rows*columns]);
+                            //m_data = new DataType[rows*columns];
+                            m_data = boost::shared_array<DataType>(new DataType[rows*columns]);
                         }
                         break;
 
                         case eDiagonal:
                         {
-                            m_data = new DataType[rows]; //boost::shared_array<DataType>(new DataType[rows]);
+                            //m_data = new DataType[rows];
+                            m_data = boost::shared_array<DataType>(new DataType[rows]);
                         }
                         break;
                     }
@@ -328,8 +334,8 @@ namespace Nektar
                 NekMatrixForm m_form;
                 unsigned int m_rows;
                 unsigned int m_columns;
-                //boost::shared_array<DataType> m_data;
-                DataType* m_data;
+                boost::shared_array<DataType> m_data;
+                //DataType* m_data;
         };
 
 
@@ -400,6 +406,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.8  2006/05/29 03:45:04  bnelson
+    Updated operator+= to be more efficient using iterators.
+
     Revision 1.7  2006/05/29 03:40:12  bnelson
     Changed the implementation from individual NekMatrixImpl objects for each type of matrix to an enumeration to store the type.
 

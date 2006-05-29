@@ -57,7 +57,7 @@ namespace Nektar
                                 7.0, 8.0, 9.0,
                                 10.0, 11.0, 12.0 };
 
-                NekMatrix<double> dynamic_matrix(buf, 4, 3);
+                NekMatrix<double> dynamic_matrix(4, 3, buf);
 
                 BOOST_CHECK(dynamic_matrix.rows() == 4);
                 BOOST_CHECK(dynamic_matrix.columns() == 3);
@@ -73,7 +73,7 @@ namespace Nektar
 
             {
 
-                NekMatrix<float> dynamic_matrix(7.8, 7, 3);
+                NekMatrix<float> dynamic_matrix(7, 3, 7.8);
 
                 for(unsigned int i = 0; i < 7; ++i)
                 {
@@ -123,8 +123,8 @@ namespace Nektar
                     4.0, 5.0, 6.0,
                     7.0, 8.0, 9.0 };
 
-                NekMatrix<double> m1(buf, 3, 3);
-                NekMatrix<double> m2(buf, 3, 3);
+                NekMatrix<double> m1(3, 3, buf);
+                NekMatrix<double> m2(3, 3, buf);
                 NekMatrix<double> m3 = m1 + m2;
 
                 for(unsigned int i = 0; i < 3; ++i)
@@ -135,8 +135,8 @@ namespace Nektar
                     }
                 }
 
-                NekMatrix<double> m4(buf, 3, 3);
-                NekMatrix<double> m5(buf, 3, 3);
+                NekMatrix<double> m4(3, 3, buf);
+                NekMatrix<double> m5(3, 3, buf);
                 NekMatrix<double> m6 = m4+m5;
 
                 for(unsigned int i = 0; i < 3; ++i)
@@ -156,8 +156,8 @@ namespace Nektar
                                         15, 16, 17, 18,
                                         19, 20, 21, 22 };
 
-                NekMatrix<unsigned int> lhs(buf1, 3, 3);
-                NekMatrix<unsigned int> rhs(buf2, 3, 4);
+                NekMatrix<unsigned int> lhs(3, 3, buf1);
+                NekMatrix<unsigned int> rhs(3, 4, buf2);
                 NekMatrix<unsigned int> result = lhs*rhs;
 
                 BOOST_CHECK(result.rows() == 3);
@@ -185,7 +185,7 @@ namespace Nektar
                                        7, 8, 9};
                 unsigned int buf2[] = { 1, 2, 3};
 
-                NekMatrix<unsigned int> lhs(buf1, 3, 3);
+                NekMatrix<unsigned int> lhs(3, 3, buf1);
                 NekVector<unsigned int> rhs(3, buf2);
 
                 NekVector<unsigned int> result = lhs*rhs;
@@ -215,6 +215,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.7  2006/05/25 02:54:54  bnelson
+    Added Matrix/Vector multiplication test.
+
     Revision 1.6  2006/05/18 04:25:19  bnelson
     Added a multiplication test.
 

@@ -43,20 +43,18 @@ namespace Nektar
   {
   
     SegExp::SegExp(const StdRegions::BasisKey &Ba, 
-		   SpatialDomains::SegGeom *geom): 
+		   SpatialDomains::SharedSegGeomPtr geom): 
       StdRegions::StdSegExp(Ba)
     {
       m_geom = geom;    
-      m_minfo = (MetricRelatedInfo *)NULL;
     }
 
   
     SegExp::SegExp(const StdRegions::BasisKey &Ba, double *coeffs, 
-		   double *phys, SpatialDomains::SegGeom *geom):
+		   double *phys, SpatialDomains::SharedSegGeomPtr geom):
       StdRegions::StdSegExp(Ba,coeffs,phys)
     {
       m_geom = geom;
-      m_minfo = (MetricRelatedInfo *)NULL;
     }
   
   
@@ -64,28 +62,19 @@ namespace Nektar
     {
       m_geom   = S.m_geom;
       m_minfo  = S.m_minfo;
-      m_minfo->AddMemCount();
     }
   
     // by default the StdExpansion1D destructor will be called
   
     SegExp::~SegExp()
     {
-      if(m_minfo->GetMemCount() == 1)
-      {
-	delete m_minfo;
-      }
-      else
-      {
-	m_minfo->SubMemCount();
-      }
     }
 
 
     // interpolate and possibly generate geometric factors. 
-    MetricRelatedInfo *SegExp::GenGeoFac()
+    SharedMetricRelatedInfoPtr SegExp::GenGeoFac()
     {
-      MetricRelatedInfo *minfo;
+      SharedMetricRelatedInfoPtr minfo;
       SpatialDomains::GeoFac *Xgfac;
       double *ndata;
       const double **gmat, *odata;
@@ -98,7 +87,7 @@ namespace Nektar
       int coordim = m_geom->GetCoordim();
       StdRegions::GeomType gtype = Xgfac->GetGtype();
     
-      minfo = new MetricRelatedInfo (gtype,1,coordim);
+      minfo.reset(new MetricRelatedInfo (gtype,1,coordim));
 
       // interp gfac to 
       if(gtype == StdRegions::eDeformed)
@@ -556,6 +545,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.2  2006/05/06 20:36:16  sherwin
+// Modifications to get LocalRegions/Project1D working
+//
 // Revision 1.1  2006/05/04 18:58:46  kirby
 // *** empty log message ***
 //

@@ -45,32 +45,35 @@
 
 namespace Nektar
 {
-  namespace LocalRegions 
-  {  
- 
-    class NodalTriExp: public TriExp
-    {
-    public:
-      NodalTriExp(const StdRegions::BasisKey &Ba, 
-		  const StdRegions::BasisKey &Bb, 
-		  SpatialDomains::TriGeom *geom):
-	TriExp(Ba,Bb,geom)
-      {
-      }
-
-    private:
-    
-    protected:
-    
-    };
-
-  } //end of namespace
+    namespace LocalRegions 
+    {  
+	    
+	class NodalTriExp: public TriExp
+	{
+	public:
+	    NodalTriExp(const StdRegions::BasisKey &Ba, 
+			const StdRegions::BasisKey &Bb, 
+			SpatialDomains::SharedTriGeomPtr geom):
+		TriExp(Ba,Bb,geom)
+	    {
+	    }
+	    
+	 private:
+	     
+	 protected:
+	     
+	 };
+	
+    } //end of namespace
 } //end of namespace
 
 #endif // NODALTRIEXP_H
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.1  2006/05/04 18:58:46  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.10  2006/03/12 21:59:48  sherwin
  *
  *    compiling version of LocalRegions

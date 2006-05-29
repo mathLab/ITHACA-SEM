@@ -78,6 +78,10 @@ namespace Nektar
        StdRegions::StdMatrix m_elmtmats; 
        
     }; 
+
+    // shorthand (?) for boost pointer
+    typedef boost::shared_ptr<MetricRelatedInfo> SharedMetricRelatedInfoPtr;
+
       
   } //end of namespace
 } //end of namespace
@@ -86,6 +90,9 @@ namespace Nektar
 
 /** 
  *    $Log: MetricRelatedInfo.h,v $
+ *    Revision 1.1  2006/05/04 18:58:45  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.5  2006/03/13 19:47:54  sherwin
  *
  *    Fixed bug related to constructor of GeoFac and also makde arguments to GeoFac all consts

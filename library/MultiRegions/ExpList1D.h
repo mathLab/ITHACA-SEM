@@ -78,7 +78,7 @@ namespace Nektar
       inline int GetCoordim(int eid)
       {
 	ASSERTL2(eid <= m_seg.size(),"eid is larger than number of elements");
-	return ((LocalRegions::SegExp *)(m_seg[eid]))->GetCoordim();
+	return static_cast<LocalRegions::SegExp>(m_seg[eid])->GetCoordim();
       }
       
       double Linf (const double *sol);

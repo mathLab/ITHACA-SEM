@@ -79,6 +79,9 @@ namespace Nektar
             bool m_owndata;   ///< Boolean indicating whether object owns the data
         };
 
+	// shorthand for boost pointer
+	typedef boost::shared_ptr<QuadGeom> SharedQuadGeomPtr;
+
     }; //end of namespace
 }; //end of namespace
 
@@ -86,6 +89,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.3  2006/05/07 11:26:38  sherwin
+// Modifications to get the demo LocalRegions::Project2D to compile
+//
 // Revision 1.2  2006/05/06 20:36:16  sherwin
 // Modifications to get LocalRegions/Project1D working
 //

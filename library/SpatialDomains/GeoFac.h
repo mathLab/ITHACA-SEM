@@ -71,21 +71,6 @@ namespace Nektar
 
             ~GeoFac();
 
-            inline int GetMemCount()
-            {
-                return m_mem_count;
-            }
-
-            inline void AddMemCount()
-            {
-                m_mem_count += 1;
-            }
-
-            inline void SubMemCount()
-            {
-                m_mem_count -= 1;
-            }
-
             inline StdRegions::GeomType GetGtype()
             {
                 return m_gtype;
@@ -142,6 +127,9 @@ namespace Nektar
 
 //
 // $Log: GeoFac.h,v $
+// Revision 1.1  2006/05/04 18:58:59  kirby
+// *** empty log message ***
+//
 // Revision 1.16  2006/03/25 00:58:28  jfrazier
 // Many changes dealing with fundamental structure and reading/writing.
 //

@@ -82,6 +82,9 @@ namespace Nektar
         typedef boost::shared_ptr<TriGeom>      SharedTriGeomPtr;
         typedef std::vector< SharedTriGeomPtr > TriGeomVector;
 
+	// shorthand for boost pointer
+	typedef boost::shared_ptr<TriGeom> SharedTriGeomPtr;
+
     }; //end of namespace SpatialDomains
 }; //end of namespace Nektar
 
@@ -89,6 +92,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.2  2006/05/07 11:26:38  sherwin
+// Modifications to get the demo LocalRegions::Project2D to compile
+//
 // Revision 1.1  2006/05/04 18:59:05  kirby
 // *** empty log message ***
 //

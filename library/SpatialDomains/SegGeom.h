@@ -88,6 +88,9 @@ namespace Nektar
             }
         };
 
+	// shorthand for boost pointer
+	typedef boost::shared_ptr<SegGeom> SharedSegGeomPtr;
+
     }; //end of namespace
 }; //end of namespace
 
@@ -95,6 +98,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.2  2006/05/09 13:37:01  jfrazier
+// Removed duplicate definition of shared vertex pointer.
+//
 // Revision 1.1  2006/05/04 18:59:04  kirby
 // *** empty log message ***
 //

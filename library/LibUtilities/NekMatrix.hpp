@@ -260,8 +260,34 @@ namespace Nektar
                     }
                 }
 
-                DataType* begin() { return &m_data[0]; }
+                DataType* begin()
+                {
+                    return &m_data[0];
+                }
+
                 DataType* end()
+                {
+                    switch(m_form)
+                    {
+                        case eFull:
+                            return &m_data[m_rows*m_columns];
+                            break;
+
+                        case eDiagonal:
+                            return &m_data[m_rows];
+                            break;
+
+                        default:
+                            return NULL;
+                    }
+                }
+
+                const DataType* begin() const
+                {
+                    return &m_data[0];
+                }
+
+                const DataType* end() const
                 {
                     switch(m_form)
                     {
@@ -281,14 +307,20 @@ namespace Nektar
                 NekMatrix<DataType, space> operator+=(const NekMatrix<DataType, space>& rhs)
                 {
                     ASSERTL0(rows() == rhs.rows() && columns() == rhs.columns(), "Matrix dimensions must agree in operator+");
-                    for(unsigned int i = 0; i < rows(); ++i)
-                    {
-                        for(unsigned int j = 0; j < columns(); ++j)
-                        {
-                            (*this)(i,j) += rhs(i,j);
-                        }
-                    }
+//                     for(unsigned int i = 0; i < rows(); ++i)
+//                     {
+//                         for(unsigned int j = 0; j < columns(); ++j)
+//                         {
+//                             (*this)(i,j) += rhs(i,j);
+//                         }
+//                     }
+                    DataType* lhs_data = begin();
+                    const DataType* rhs_data = rhs.begin();
 
+                    for(unsigned int i = 0; i < m_rows*m_columns; ++i)
+                    {
+                        lhs_data[i] += rhs_data[i];
+                    }
                     return *this;
                 }
 
@@ -303,8 +335,8 @@ namespace Nektar
 
     template<typename DataType, unsigned int space>
     NekMatrix<DataType, space> operator+(
-        const NekMatrix<DataType, space>& lhs,
-        const NekMatrix<DataType, space>& rhs)
+            const NekMatrix<DataType, space>& lhs,
+            const NekMatrix<DataType, space>& rhs)
         {
             NekMatrix<DataType, space> result(lhs);
             result += rhs;
@@ -368,6 +400,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.7  2006/05/29 03:40:12  bnelson
+    Changed the implementation from individual NekMatrixImpl objects for each type of matrix to an enumeration to store the type.
+
     Revision 1.6  2006/05/25 03:02:40  bnelson
     Added Matrix/Vector multiplication.
 

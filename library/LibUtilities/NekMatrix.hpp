@@ -55,7 +55,8 @@ namespace Nektar
 
         enum NekMatrixForm
         {
-            eFull//,
+            eFull,
+            eDiagonal
 //             eZero,
 //             eDiagonal,
 //             eSquareSymmetric,
@@ -67,18 +68,6 @@ namespace Nektar
 
         class OutOfBoundsError
         {
-        };
-
-        // Used to force the NekMatrix factory to register.
-        template<typename MatrixType>
-        class NekMatrixFunctionRegistration
-        {
-            public:
-                void constraints()
-                {
-                    MatrixType* m;
-                    m->RegisterCreateFuncs();
-                }
         };
 
         /// NekMatrix Class
@@ -97,60 +86,197 @@ namespace Nektar
             public:
                 NekMatrix(unsigned int rows, unsigned int columns, NekMatrixForm form = eFull) :
                     m_form(form),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, rows, columns))
+                    m_rows(rows),
+                    m_columns(columns),
+                    m_data()
                 {
-                    m_impl->Initialize();
+                    switch(form)
+                    {
+                        case eFull:
+                        {
+                            m_data = new DataType[rows*columns];//boost::shared_array<DataType>(new DataType[rows*columns]);
+                        }
+                        break;
+
+                        case eDiagonal:
+                        {
+                            m_data = new DataType[rows]; //boost::shared_array<DataType>(new DataType[rows]);
+                        }
+                        break;
+                    }
                 }
 
-                NekMatrix(const DataType* const ptr, unsigned int rows, unsigned int columns,
-                          NekMatrixForm form = eFull) :
-                    m_form(form),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, rows, columns))
+                NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr,
+                        NekMatrixForm form = eFull) :
+                        m_form(form),
+                        m_rows(rows),
+                        m_columns(columns),
+                        m_data()
                 {
-                    m_impl->Initialize(ptr);
+                    switch(form)
+                    {
+                        case eFull:
+                        {
+                            m_data = new DataType[rows*columns]; //boost::shared_array<DataType>(new DataType[rows*columns]);
+                            std::copy(ptr, ptr+rows*columns, begin());
+                        }
+                        break;
+
+                        case eDiagonal:
+                        {
+                            m_data = new DataType[rows]; //boost::shared_array<DataType>(new DataType[rows]);
+                            std::copy(ptr, ptr+rows, begin());
+                        }
+                        break;
+                    }
                 }
 
-                NekMatrix(typename boost::call_traits<DataType>::param_type d,
-                          unsigned int rows, unsigned int columns, NekMatrixForm form = eFull) :
-                    m_form(form),
-                    m_impl(NekMatrixImplFactory::Instance().CreateObject(form, rows, columns))
+                NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::param_type d,
+                        NekMatrixForm form = eFull) :
+                        m_form(form),
+                        m_rows(rows),
+                        m_columns(columns),
+                        m_data()
                 {
-                    m_impl->Initialize(d);
+                    switch(form)
+                    {
+                        case eFull:
+                        {
+                            m_data = new DataType[rows*columns]; //boost::shared_array<DataType>(new DataType[rows*columns]);
+                        }
+                        break;
+
+                        case eDiagonal:
+                        {
+                            m_data = new DataType[rows]; //boost::shared_array<DataType>(new DataType[rows]);
+                        }
+                        break;
+                    }
+
+                    std::fill(begin(), end(), d);
                 }
 
-                unsigned int rows() const { return m_impl->rows(); }
-                unsigned int columns() const { return m_impl->columns(); }
+                unsigned int rows() const { return m_rows; }
+                unsigned int columns() const { return m_columns; }
 
-                typename boost::call_traits<DataType>::reference operator()
-                        (unsigned int rowNumber, unsigned int colNumber)
+                inline typename boost::call_traits<DataType>::reference operator()
+                    (unsigned int rowNumber, unsigned int colNumber)
                 {
-                    if( rowNumber >= rows() || colNumber >= columns() )
+                    if( rowNumber >= m_rows || colNumber >= m_columns )
                     {
                         throw OutOfBoundsError();
                     }
 
-                    return (*m_impl)(rowNumber, colNumber);
+                    switch(m_form)
+                    {
+                        case eFull:
+                        {
+                            return m_data[rowNumber*m_columns + colNumber];
+                        }
+                        break;
+
+                        case eDiagonal:
+                        {
+                            return m_data[rowNumber];
+                        }
+                        break;
+
+                        default:
+                        {
+                            static DataType result;
+                            return result;
+                        }
+                    }
                 }
 
-                typename boost::call_traits<DataType>::const_reference operator()
+                inline typename boost::call_traits<DataType>::const_reference operator()
                         (unsigned int rowNumber, unsigned int colNumber) const
                 {
-                    assert(fullRegistered);
-                    if( rowNumber >= rows() || colNumber >= columns() )
+                    if( rowNumber >= m_rows || colNumber >= m_columns )
                     {
                         throw OutOfBoundsError();
                     }
 
-                    return (*m_impl)(rowNumber, colNumber);
+                    switch(m_form)
+                    {
+                        case eFull:
+                        {
+                            return m_data[rowNumber*m_columns + colNumber];
+                        }
+                        break;
+
+                        case eDiagonal:
+                        {
+                            return m_data[rowNumber];
+                        }
+                        break;
+
+                        default:
+                        {
+                            static DataType result;
+                            return result;
+                        }
+                    }
                 }
 
-                bool RegisterCreateFuncs()
+
+                typename boost::call_traits<DataType>::reference getValue
+                        (unsigned int rowNumber, unsigned int colNumber)
                 {
-                    return fullRegistered;
+                    return (*this)(rowNumber, colNumber);
                 }
 
-                typedef NekMatrix<DataType, space> MyType;
-                BOOST_CLASS_REQUIRE(MyType, LibUtilities, NekMatrixFunctionRegistration);
+                typename boost::call_traits<DataType>::const_reference getValue
+                        (unsigned int rowNumber, unsigned int colNumber) const
+                {
+                    return (*this)(rowNumber, colNumber);
+                }
+
+                void setValue(unsigned int rowNumber, unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
+                {
+                    (*this)(rowNumber, colNumber) = rhs;
+                }
+
+                DataType* getPtr(unsigned int rowNumber, unsigned int colNumber)
+                {
+                    switch(m_form)
+                    {
+                        case eFull:
+                        {
+                            return &m_data[rowNumber*m_columns + colNumber];
+                        }
+                        break;
+
+                        case eDiagonal:
+                        {
+                            return &m_data[rowNumber];
+                        }
+                        break;
+
+                        default:
+                        {
+                            return NULL;
+                        }
+                    }
+                }
+
+                DataType* begin() { return &m_data[0]; }
+                DataType* end()
+                {
+                    switch(m_form)
+                    {
+                        case eFull:
+                            return &m_data[m_rows*m_columns];
+                            break;
+
+                        case eDiagonal:
+                            return &m_data[m_rows];
+                            break;
+
+                        default:
+                            return NULL;
+                    }
+                }
 
                 NekMatrix<DataType, space> operator+=(const NekMatrix<DataType, space>& rhs)
                 {
@@ -167,178 +293,18 @@ namespace Nektar
                 }
 
             private:
-                // The implementation classes prevent the need for enumerated types
-                // and large nested switch statements.
-                class NekMatrixImpl
-                {
-                    public:
-                        NekMatrixImpl(unsigned int rows, unsigned int columns) :
-                            m_rows(rows),
-                            m_columns(columns)
-                        {
-                        }
-
-                        NekMatrixImpl(const NekMatrixImpl& rhs) :
-                            m_rows(rhs.m_rows),
-                            m_columns(rhs.m_columns)
-                        {
-                        }
-
-                        virtual ~NekMatrixImpl()
-                        {
-                        };
-
-                        NekMatrixImpl& operator=(const NekMatrixImpl& rhs)
-                        {
-                            m_rows = rhs.m_rows;
-                            m_columns = rhs.m_columns;
-                            return *this;
-                        }
-
-                        virtual void Initialize() = 0;
-                        virtual void Initialize(const DataType* const p) = 0;
-                        virtual void Initialize(typename boost::call_traits<DataType>::param_type d) = 0;
-
-                        unsigned int rows() const { return m_rows; }
-                        unsigned int columns() const { return m_columns; }
-
-                        virtual typename boost::call_traits<DataType>::reference operator()
-                                (unsigned int rowNumber, unsigned int colNumber) = 0;
-
-
-                        virtual typename boost::call_traits<DataType>::const_reference operator()
-                                (unsigned int rowNumber, unsigned int colNumber) const = 0;
-
-                    protected:
-
-
-                    private:
-                        unsigned int m_rows;
-                        unsigned int m_columns;
-                };
-
-                // Factory to generate implementations based upon the MatrixForm.
-                typedef Loki::SingletonHolder< Loki::Factory<NekMatrixImpl, NekMatrixForm,
-                    Loki::TL::MakeTypelist<unsigned int, unsigned int>::Result > >
-                    NekMatrixImplFactory;
-
-                class NekFullMatrixImpl : public NekMatrixImpl
-                {
-                    public:
-                        NekFullMatrixImpl(unsigned int rows, unsigned int columns) :
-                            NekMatrixImpl(rows, columns),
-                            m_data()
-                        {
-                        }
-
-                        NekFullMatrixImpl(const NekFullMatrixImpl& rhs) :
-                            NekMatrixImpl(rhs),
-                            m_data()
-                        {
-                            CreateSharedArray();
-                            std::copy(rhs.begin(), rhs.end(), begin());
-                        }
-
-                        NekFullMatrixImpl& operator=(const NekFullMatrixImpl& rhs)
-                        {
-                            if( this != &rhs )
-                            {
-                                NekMatrixImpl::operator=(rhs);
-                                CreateSharedArray();
-                                std::copy(rhs.begin(), rhs.end(), begin());
-                            }
-
-                            return *this;
-                        }
-
-                        virtual ~NekFullMatrixImpl() {}
-
-                        virtual void Initialize()
-                        {
-                            CreateSharedArray();
-
-                            // Don't do anything else, it is up to the user
-                            // to initialize.
-                        }
-
-                        virtual void Initialize(const DataType* const p)
-                        {
-                            CreateSharedArray();
-                            std::copy(p, p+(rows()*columns()), begin());
-                        }
-
-                        virtual void Initialize(typename boost::call_traits<DataType>::param_type d)
-                        {
-                            CreateSharedArray();
-                            std::fill(begin(), end(), d);
-                        }
-
-                        DataType* begin()
-                        {
-                            return &m_data[0];
-                        }
-
-                        DataType* end()
-                        {
-                            return &m_data[rows()*columns()];
-                        }
-
-                        typename boost::call_traits<DataType>::reference operator()
-                            (unsigned int rowNumber, unsigned int colNumber)
-                        {
-                            return m_data[rowNumber*columns() + colNumber];
-                        }
-
-                        typename boost::call_traits<DataType>::const_reference operator()
-                                (unsigned int rowNumber, unsigned int colNumber) const
-                        {
-                            return m_data[rowNumber*columns() + colNumber];
-                        }
-
-                        static const MemoryManager::MemoryPoolEnabler MemoryPoolEnabled = MemoryManager::eEnabled;
-
-                    protected:
-                        void CreateSharedArray()
-                        {
-                            m_data = MemoryManager::AllocateSharedArray<DataType>(rows()*columns());
-                            //m_data = new DataType[rows()*columns()];
-                            //m_data = boost::shared_array<DataType>(new DataType[rows()*columns()]);
-                        }
-
-                    private:
-                        NekFullMatrixImpl();
-                        boost::shared_array<DataType> m_data;
-                        //DataType* m_data;
-                };
-
-
-                static NekFullMatrixImpl* createFullMatrix(unsigned int rows, unsigned int cols)
-                {
-                    //NekFullMatrixImpl* result = MemoryManager::Allocate<NekFullMatrixImpl>(rows, cols);
-                    NekFullMatrixImpl* result = new NekFullMatrixImpl(rows, cols);
-                    return result;
-                }
-
-                static const bool fullRegistered;
-
                 NekMatrixForm m_form;
-
-                // Change back to the shared pointer after finishing the
-                // NekFactory.
-                //boost::shared_ptr<NekMatrixImpl> m_impl;
-                NekMatrixImpl* m_impl;
+                unsigned int m_rows;
+                unsigned int m_columns;
+                //boost::shared_array<DataType> m_data;
+                DataType* m_data;
         };
 
-        template<typename DataType, unsigned int space>
-        const bool NekMatrix<DataType, space>::fullRegistered =
-                NekMatrix<DataType, space>::NekMatrixImplFactory::
-                Instance().Register(eFull, NekMatrix<DataType, space>::createFullMatrix);
 
-
-        template<typename DataType, unsigned int space>
-        NekMatrix<DataType, space> operator+(
-                const NekMatrix<DataType, space>& lhs,
-                const NekMatrix<DataType, space>& rhs)
+    template<typename DataType, unsigned int space>
+    NekMatrix<DataType, space> operator+(
+        const NekMatrix<DataType, space>& lhs,
+        const NekMatrix<DataType, space>& rhs)
         {
             NekMatrix<DataType, space> result(lhs);
             result += rhs;
@@ -348,8 +314,8 @@ namespace Nektar
 
         template<typename DataType, unsigned int space>
         NekMatrix<DataType, space> operator*(
-            const NekMatrix<DataType, space>& lhs,
-            const NekMatrix<DataType, space>& rhs)
+        const NekMatrix<DataType, space>& lhs,
+        const NekMatrix<DataType, space>& rhs)
         {
             ASSERTL0(lhs.columns() == rhs.rows(), "Invalid matrix dimensions in operator*");
 
@@ -359,14 +325,14 @@ namespace Nektar
             {
                 for(unsigned int j = 0; j < result.columns(); ++j)
                 {
-                    DataType t = DataType(0);
+                DataType t = DataType(0);
 
-                    // Set the result(i,j) element.
-                    for(unsigned int k = 0; k < lhs.columns(); ++k)
-                    {
-                        t += lhs(i,k)*rhs(k,j);
-                    }
-                    result(i,j) = t;
+                // Set the result(i,j) element.
+                for(unsigned int k = 0; k < lhs.columns(); ++k)
+                {
+                t += lhs(i,k)*rhs(k,j);
+                }
+                result(i,j) = t;
                 }
             }
 
@@ -375,8 +341,8 @@ namespace Nektar
 
         template<typename DataType, unsigned int space>
         NekVector<DataType, 0, space> operator*(
-                const NekMatrix<DataType, space>& lhs,
-                const NekVector<DataType, 0, space>& rhs)
+        const NekMatrix<DataType, space>& lhs,
+        const NekVector<DataType, 0, space>& rhs)
         {
             ASSERTL0(lhs.columns() == rhs.dimension(), "Invalid matrix dimensions in operator*");
 
@@ -402,6 +368,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.6  2006/05/25 03:02:40  bnelson
+    Added Matrix/Vector multiplication.
+
     Revision 1.5  2006/05/18 04:21:06  bnelson
     Removed the ability to specify the rows and columns in the template parameter list.  If this behavior is desired we'll need to create a fixed size array class.
 
@@ -414,14 +383,15 @@ namespace Nektar
     no message
 
     Revision 1.2  2006/05/14 21:32:03  bnelson
-    *** empty log message ***
+ *** empty log message ***
 
     Revision 1.1  2006/05/04 18:57:43  kirby
-    *** empty log message ***
+ *** empty log message ***
 
     Revision 1.1  2006/04/11 02:00:43  bnelson
     Initial Revision
 
 
-**/
+ **/
+
 

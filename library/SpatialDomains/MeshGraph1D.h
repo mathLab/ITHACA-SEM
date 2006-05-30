@@ -45,8 +45,6 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        typedef boost::shared_ptr<SegGeom> SharedSegGeomPtr;
-        typedef std::vector< SharedSegGeomPtr > SegGeomVector;
 
         class MeshGraph1D: public MeshGraph
         {
@@ -89,6 +87,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.h,v $
+// Revision 1.1  2006/05/04 18:59:01  kirby
+// *** empty log message ***
+//
 // Revision 1.15  2006/05/02 21:21:11  sherwin
 // Corrected libraries to compile new version of spatialdomains and demo Graph1D
 //

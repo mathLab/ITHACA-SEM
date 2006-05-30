@@ -46,7 +46,7 @@ namespace Nektar
 	
 	QuadExp::QuadExp(const StdRegions::BasisKey &Ba, 
 			 const StdRegions::BasisKey &Bb, 
-			 SpatialDomains::SharedQuadGeomPtr geom):
+			 SpatialDomains::QuadGeomSharedPtr geom):
 	    StdRegions::StdQuadExp(Ba,Bb),
 	    m_geom(geom)
 	{
@@ -56,7 +56,7 @@ namespace Nektar
 	QuadExp::QuadExp(const StdRegions::BasisKey &Ba, 
 			 const StdRegions::BasisKey &Bb, 
 			 double *coeffs, double *phys, 
-			 SpatialDomains::SharedQuadGeomPtr geom):
+			 SpatialDomains::QuadGeomSharedPtr geom):
 	    StdRegions::StdQuadExp(Ba,Bb,coeffs,phys),
 	    m_geom(geom)
 	{
@@ -74,14 +74,15 @@ namespace Nektar
 	{
 	}
 	
-	SharedMetricRelatedInfoPtr QuadExp::GenGeoFac()
+	MetricRelatedInfoSharedPtr QuadExp::GenGeoFac()
 	{
-	    SharedMetricRelatedInfoPtr minfo;
+	    MetricRelatedInfoSharedPtr minfo;
 	    SpatialDomains::GeoFac *Xgfac;
 	    double *ndata;
 	    const double **gmat, *odata;
-	    
-	    if((Xgfac = m_geom->GetXGeoFac()) == NULL)  // define geometric version 
+	    	
+	    // define geometric version 
+	    if((Xgfac = m_geom->GetXGeoFac()) == NULL)  
 	    {
 		m_geom->SetXGeoFac(Xgfac = m_geom->GenXGeoFac());
 	    }
@@ -494,6 +495,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.3  2006/05/29 17:05:49  sherwin
+ *    Modified to put shared_ptr around geom definitions
+ *
  *    Revision 1.2  2006/05/06 20:36:16  sherwin
  *    Modifications to get LocalRegions/Project1D working
  *

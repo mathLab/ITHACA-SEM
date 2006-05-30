@@ -9,7 +9,7 @@ NEK_LIB_ROOT = ../../../
 CPPFLAGS = 
 include ../../Flags/${ARCH}.inc
 
-LDLIBS	 = -L../../../  -lStdRegions -lPolylib -lm  $(LIBS)  -L../../../../ThirdParty/boost_1_33_0/stage/lib -lboost_thread-gcc-1_33
+LDLIBS	 = -L../../../  -lStdRegions -lPolylib -lm  $(LIBS)  -L../../../../ThirdParty/${BOOST_VERSION}/stage/lib -lboost_thread-gcc-1_33
 
 
 default:

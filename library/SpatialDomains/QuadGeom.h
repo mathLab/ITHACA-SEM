@@ -80,7 +80,7 @@ namespace Nektar
         };
 
 	// shorthand for boost pointer
-	typedef boost::shared_ptr<QuadGeom> SharedQuadGeomPtr;
+	typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
 
     }; //end of namespace
 }; //end of namespace
@@ -89,6 +89,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.4  2006/05/29 17:05:17  sherwin
+// Updated to use shared_ptr around Geom types - added typedef
+//
 // Revision 1.3  2006/05/07 11:26:38  sherwin
 // Modifications to get the demo LocalRegions::Project2D to compile
 //

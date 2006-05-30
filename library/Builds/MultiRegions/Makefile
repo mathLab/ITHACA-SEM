@@ -32,7 +32,6 @@ $(LIB): $(LMOD)
 # Install library & associated header files.
 #
 install:
-	cp -f ../../MultiRegions/*.h      ../../../include;
 	cp  -f libMultiRegions.a           ../../; 
 ifeq ($(ARCH),Darwin)
 	ranlib ../../libMultiRegions.a;

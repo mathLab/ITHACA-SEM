@@ -43,7 +43,7 @@ namespace Nektar
   {
   
     SegExp::SegExp(const StdRegions::BasisKey &Ba, 
-		   SpatialDomains::SharedSegGeomPtr geom): 
+		   SpatialDomains::SegGeomSharedPtr geom): 
       StdRegions::StdSegExp(Ba)
     {
       m_geom = geom;    
@@ -51,7 +51,7 @@ namespace Nektar
 
   
     SegExp::SegExp(const StdRegions::BasisKey &Ba, double *coeffs, 
-		   double *phys, SpatialDomains::SharedSegGeomPtr geom):
+		   double *phys, SpatialDomains::SegGeomSharedPtr geom):
       StdRegions::StdSegExp(Ba,coeffs,phys)
     {
       m_geom = geom;
@@ -72,16 +72,17 @@ namespace Nektar
 
 
     // interpolate and possibly generate geometric factors. 
-    SharedMetricRelatedInfoPtr SegExp::GenGeoFac()
+    MetricRelatedInfoSharedPtr SegExp::GenGeoFac()
     {
-      SharedMetricRelatedInfoPtr minfo;
+      MetricRelatedInfoSharedPtr minfo;
       SpatialDomains::GeoFac *Xgfac;
       double *ndata;
       const double **gmat, *odata;
 
       if((Xgfac = m_geom->GetXGeoFac()) == NULL)  // define geometric version 
       {
-	m_geom->SetXGeoFac(Xgfac = m_geom->GenXGeoFac());
+	Xgfac = m_geom->GenXGeoFac();
+	m_geom->SetXGeoFac(Xgfac);
       }
 
       int coordim = m_geom->GetCoordim();
@@ -545,6 +546,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.3  2006/05/29 17:05:49  sherwin
+// Modified to put shared_ptr around geom definitions
+//
 // Revision 1.2  2006/05/06 20:36:16  sherwin
 // Modifications to get LocalRegions/Project1D working
 //

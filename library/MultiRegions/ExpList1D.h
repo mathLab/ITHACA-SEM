@@ -52,7 +52,7 @@ namespace Nektar
 
     class ExpList1D: 
       public ExpList
-    {
+     {
 
     public:
 

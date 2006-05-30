@@ -57,15 +57,18 @@ namespace Nektar
 	    
 	    /** \brief Constructor using BasisKey class for quadrature
 		points and order definition */
-	    TriExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb,
-		   SpatialDomains::SharedTriGeomPtr geom);
+	    TriExp(const StdRegions::BasisKey &Ba, 
+		   const StdRegions::BasisKey &Bb,
+		   SpatialDomains::TriGeomSharedPtr geom);
 
 	    
 	    /** \brief Constructor using BasisKey class for quadrature
 		points and order definition where _coeffs and _phys are all
 		set. */
-	    TriExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb,
-		   double *coeffs, double *phys, SpatialDomains::SharedTriGeomPtr geom);
+	    TriExp(const StdRegions::BasisKey &Ba, 
+		   const StdRegions::BasisKey &Bb,
+		   double *coeffs, double *phys, 
+		   SpatialDomains::TriGeomSharedPtr geom);
 	    
 	    /// Copy Constructor
 	    TriExp(const TriExp &T);
@@ -73,19 +76,19 @@ namespace Nektar
 	    /// Destructor
 	    ~TriExp();
     
-	    /// Return Shape of region, using  ShapeType enum list. i.e. Triangle
+	    /// Return Shape of region, using  ShapeType enum list. 
 	    StdRegions::ShapeType DetShapeType() 
 	    {
-		return StdRegions::eTriangle;
+	      return StdRegions::eTriangle;
 	    }
 	    
-	    SharedMetricRelatedInfoPtr TriExp::GenGeoFac();
+	    MetricRelatedInfoSharedPtr TriExp::GenGeoFac();
 	    
 	    
-	    inline void SetGeoFac(SharedMetricRelatedInfoPtr minfo)
-	     {
-		 m_minfo = minfo;
-	     }
+	    inline void SetGeoFac(MetricRelatedInfoSharedPtr minfo)
+	    {
+	      m_minfo = minfo;
+	    }
 
 
 	    void GetCoords(double **coords);
@@ -166,13 +169,15 @@ namespace Nektar
 	    int m_id;
 	    int m_field;
 	    
-	    SpatialDomains::SharedTriGeomPtr m_geom;
-	    SharedMetricRelatedInfoPtr       m_minfo;
+	    SpatialDomains::TriGeomSharedPtr m_geom;
+	    MetricRelatedInfoSharedPtr       m_minfo;
       
 	    /** \brief  Inner product of \a inarray over region with respect to
 		the expansion basis \a base and return in \a outarray */
-	    inline void IProductWRTBase(const double *base0, const double *base1, 
-					const double *inarray, double *outarray);
+	    inline void IProductWRTBase(const double *base0, 
+					const double *base1, 
+					const double *inarray, 
+					double *outarray);
 
 	private:
 
@@ -181,12 +186,12 @@ namespace Nektar
 		DetShapeType();
 	    }
 
-	    virtual SharedMetricRelatedInfoPtr v_GenGeoFac()
+	    virtual MetricRelatedInfoSharedPtr v_GenGeoFac()
 	    {
 		return GenGeoFac();
 	    }
 
-	    virtual void v_SetGeoFac(SharedMetricRelatedInfoPtr minfo)
+	    virtual void v_SetGeoFac(MetricRelatedInfoSharedPtr minfo)
 	    {
 		SetGeoFac(minfo);
 	    }
@@ -277,6 +282,10 @@ namespace Nektar
 	    }
 	};
 	
+	// type defines for use of TriExp in a boost vector
+	typedef boost::shared_ptr<TriExp> TriExpSharedPtr;
+	typedef std::vector< TriExpSharedPtr > TriExpVector;
+	typedef std::vector< TriExpSharedPtr >::iterator TriExpVectorIter;
 	
     } //end of namespace
 } //end of namespace
@@ -285,6 +294,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.h,v $
+ *    Revision 1.2  2006/05/29 17:05:49  sherwin
+ *    Modified to put shared_ptr around geom definitions
+ *
  *    Revision 1.1  2006/05/04 18:58:47  kirby
  *    *** empty log message ***
  *

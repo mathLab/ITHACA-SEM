@@ -56,12 +56,12 @@ namespace Nektar
       
       /// \brief Constructor using BasisKey class for quadrature
       /// points and order definition 
-      SegExp(const StdRegions::BasisKey &Ba, SpatialDomains::SharedSegGeomPtr geom);
+      SegExp(const StdRegions::BasisKey &Ba, SpatialDomains::SegGeomSharedPtr geom);
     
       /// \brief Constructor using BasisKey class for quadrature
       /// points and order definition where _coeffs and _phys are all set. 
       SegExp(const StdRegions::BasisKey &Ba, double *coeffs, double *phys, 
-	     SpatialDomains::SharedSegGeomPtr geom);
+	     SpatialDomains::SegGeomSharedPtr geom);
     
       ///Copy Constructor
       SegExp(const SegExp &S);
@@ -75,9 +75,9 @@ namespace Nektar
 	return StdRegions::eSegment;
       }    
 
-      SharedMetricRelatedInfoPtr GenGeoFac();    
+      MetricRelatedInfoSharedPtr GenGeoFac();    
 
-      inline void SetGeoFac(SharedMetricRelatedInfoPtr minfo)
+      inline void SetGeoFac(MetricRelatedInfoSharedPtr minfo)
       {
 	m_minfo = minfo;
       }
@@ -92,7 +92,7 @@ namespace Nektar
       void GetCoord(const double *Lcoords, double *coords);
     
 
-      SpatialDomains::SharedSegGeomPtr GetGeom()
+      SpatialDomains::SegGeomSharedPtr GetGeom()
       {
 	return m_geom;
       }
@@ -157,8 +157,8 @@ namespace Nektar
       int m_id;
       int m_field;
     
-      SpatialDomains::SharedSegGeomPtr m_geom;
-      SharedMetricRelatedInfoPtr       m_minfo;
+      SpatialDomains::SegGeomSharedPtr m_geom;
+      MetricRelatedInfoSharedPtr       m_minfo;
       
       /// \brief  Inner product of \a inarray over region with respect to
       /// the expansion basis \a base and return in \a outarray 
@@ -172,12 +172,12 @@ namespace Nektar
 	DetShapeType();
       }
 
-      virtual SharedMetricRelatedInfoPtr v_GenGeoFac()
+      virtual MetricRelatedInfoSharedPtr v_GenGeoFac()
       {
 	return GenGeoFac();
       }
 
-      virtual void  v_SetGeoFac(SharedMetricRelatedInfoPtr minfo)
+      virtual void  v_SetGeoFac(MetricRelatedInfoSharedPtr minfo)
       {
 	SetGeoFac(minfo);
       } 
@@ -347,10 +347,10 @@ namespace Nektar
     };
 
     // type defines for use of SegExp in a boost vector
-    typedef boost::shared_ptr<SegExp> SharedSegExpPtr;
-    typedef std::vector< SharedSegExpPtr > SegExpVector;
-    typedef std::vector< SharedSegExpPtr >::iterator SegExpVectorIter;
-
+    typedef boost::shared_ptr<SegExp> SegExpSharedPtr;
+    typedef std::vector< SegExpSharedPtr > SegExpVector;
+    typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
+    
   } //end of namespace
 } //end of namespace
 
@@ -358,6 +358,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.2  2006/05/29 17:05:49  sherwin
+// Modified to put shared_ptr around geom definitions
+//
 // Revision 1.1  2006/05/04 18:58:46  kirby
 // *** empty log message ***
 //

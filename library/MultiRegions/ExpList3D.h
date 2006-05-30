@@ -47,28 +47,27 @@
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
-
-    class ExpList3D: 
-      public ExpList
+    namespace MultiRegions
     {
-    public:
-      ExpList3D();
-      ~ExpList3D();
-      
-    protected:
-      
-    private:
-      StdRegions::ExpVector  m _hex;
-      StdRegions::ExpVector  m_prism;
-      StdRegions::ExpVector  m_pyr;
-      StdRegions::ExpVector  m_tet;
-    
-    };
 
-
-  } //end of namespace
+	class ExpList3D: 
+	    public ExpList
+	{
+	public:
+	    ExpList3D();
+	    ~ExpList3D();
+	    
+	protected:
+	    
+	private:
+	    LocalRegions::HexExpVector    m_hex;
+	    LocalRegions::PrismExpVector  m_prism;
+	    LocalRegions::PyrExpVector    m_pyr;
+	    LocalRegions::TetExpVector    m_tet;
+	    
+	};
+	
+    } //end of namespace
 } //end of namespace
 
 #endif

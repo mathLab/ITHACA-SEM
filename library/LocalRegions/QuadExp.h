@@ -57,13 +57,16 @@ namespace Nektar
 	    
 	    /** \brief Constructor using BasisKey class for quadrature
 		points and order definition */
-	    QuadExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-		    SpatialDomains::SharedQuadGeomPtr geom);
+	    QuadExp(const StdRegions::BasisKey &Ba,
+		    const StdRegions::BasisKey &Bb, 
+		    SpatialDomains::QuadGeomSharedPtr geom);
 	    
 	    /** \brief Constructor using BasisKey class for quadrature
 		points and order definition */
-	    QuadExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-		    double *coeffs, double *phys, SpatialDomains::SharedQuadGeomPtr geom);
+	    QuadExp(const StdRegions::BasisKey &Ba, 
+		    const StdRegions::BasisKey &Bb, 
+		    double *coeffs, double *phys, 
+		    SpatialDomains::QuadGeomSharedPtr geom);
     
 	    /// Copy Constructor
 	    QuadExp(QuadExp &T);
@@ -78,10 +81,10 @@ namespace Nektar
 		return StdRegions::eQuadrilateral;
 	    }
 	    
-	    SharedMetricRelatedInfoPtr QuadExp::GenGeoFac();
+	    MetricRelatedInfoSharedPtr QuadExp::GenGeoFac();
 	    
 	    
-	    inline  void SetGeoFac(SharedMetricRelatedInfoPtr minfo)
+	    inline  void SetGeoFac(MetricRelatedInfoSharedPtr minfo)
 	    {
 		m_minfo = minfo;
 	    }
@@ -160,27 +163,29 @@ namespace Nektar
 	    int m_id;
 	    int m_field;
 	    
-	    SpatialDomains::SharedQuadGeomPtr m_geom;
-	    SharedMetricRelatedInfoPtr  m_minfo;
+	    SpatialDomains::QuadGeomSharedPtr m_geom;
+	    MetricRelatedInfoSharedPtr  m_minfo;
     
 	    /** \brief  Inner product of \a inarray over region with respect to
 		the expansion basis \a base and return in \a outarray */
-	    inline void IProductWRTBase(const double *base0, const double *base1, 
-					const double *inarray, double *outarray, 
+	    inline void IProductWRTBase(const double *base0, 
+					const double *base1, 
+					const double *inarray, 
+					double *outarray, 
 					int coll_check);
 	    
 	private:
 	    virtual StdRegions::ShapeType v_DetShapeType() 
-	    {
+	      {
 		DetShapeType();
 	    }
 	    
-	    virtual SharedMetricRelatedInfoPtr v_GenGeoFac()
+	    virtual MetricRelatedInfoSharedPtr v_GenGeoFac()
 	    {
 		return GenGeoFac();
 	    }
 
-	    virtual void v_SetGeoFac(SharedMetricRelatedInfoPtr minfo)
+	    virtual void v_SetGeoFac(MetricRelatedInfoSharedPtr minfo)
 	    {
 		SetGeoFac(minfo);
 	    }
@@ -297,6 +302,12 @@ namespace Nektar
 	    }
 	};
 	
+	// type defines for use of QuadExp in a boost vector
+	typedef boost::shared_ptr<QuadExp> QuadExpSharedPtr;
+	typedef std::vector< QuadExpSharedPtr > QuadExpVector;
+	typedef std::vector< QuadExpSharedPtr >::iterator QuadExpVectorIter;
+
+	
     } //end of namespace
 } //end of namespace
 
@@ -304,6 +315,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.h,v $
+ *    Revision 1.2  2006/05/29 17:05:49  sherwin
+ *    Modified to put shared_ptr around geom definitions
+ *
  *    Revision 1.1  2006/05/04 18:58:46  kirby
  *    *** empty log message ***
  *

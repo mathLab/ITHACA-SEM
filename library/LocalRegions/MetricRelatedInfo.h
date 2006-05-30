@@ -80,7 +80,7 @@ namespace Nektar
     }; 
 
     // shorthand (?) for boost pointer
-    typedef boost::shared_ptr<MetricRelatedInfo> SharedMetricRelatedInfoPtr;
+    typedef boost::shared_ptr<MetricRelatedInfo> MetricRelatedInfoSharedPtr;
 
       
   } //end of namespace
@@ -90,6 +90,9 @@ namespace Nektar
 
 /** 
  *    $Log: MetricRelatedInfo.h,v $
+ *    Revision 1.2  2006/05/29 17:05:49  sherwin
+ *    Modified to put shared_ptr around geom definitions
+ *
  *    Revision 1.1  2006/05/04 18:58:45  kirby
  *    *** empty log message ***
  *

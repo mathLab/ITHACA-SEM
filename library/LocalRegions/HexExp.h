@@ -88,9 +88,13 @@ namespace Nektar
 	DetShapeType();
       }
       
+    };
 
-  };
-  
+    // type defines for use of HexExp in a boost vector
+    typedef boost::shared_ptr<HexExp> HexExpSharedPtr;
+    typedef std::vector< HexExpSharedPtr > HexExpVector;
+    typedef std::vector< HexExpSharedPtr >::iterator HexExpVectorIter;
+    
   } //end of namespace
 } //end of namespace
 
@@ -98,6 +102,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.1  2006/05/04 18:58:45  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.14  2006/05/02 21:21:11  sherwin
  *    Corrected libraries to compile new version of spatialdomains and demo Graph1D
  *

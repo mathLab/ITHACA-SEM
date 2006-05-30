@@ -79,11 +79,8 @@ namespace Nektar
             bool m_owndata;
         };
 
-        typedef boost::shared_ptr<TriGeom>      SharedTriGeomPtr;
-        typedef std::vector< SharedTriGeomPtr > TriGeomVector;
-
-	// shorthand for boost pointer
-	typedef boost::shared_ptr<TriGeom> SharedTriGeomPtr;
+        typedef boost::shared_ptr<TriGeom>      TriGeomSharedPtr;
+        typedef std::vector< TriGeomSharedPtr > TriGeomVector;
 
     }; //end of namespace SpatialDomains
 }; //end of namespace Nektar
@@ -92,6 +89,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.3  2006/05/29 17:05:17  sherwin
+// Updated to use shared_ptr around Geom types - added typedef
+//
 // Revision 1.2  2006/05/07 11:26:38  sherwin
 // Modifications to get the demo LocalRegions::Project2D to compile
 //

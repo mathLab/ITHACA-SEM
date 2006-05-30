@@ -427,7 +427,7 @@ namespace Nektar
                 }
                 else if( arraySize < 40 )
                 {
-                    return MemoryManager::AllocateSharedArray<40, DataType>();
+		  return MemoryManager::AllocateSharedArray<40, DataType>();
                 }
                 else if( arraySize < 50 )
                 {
@@ -461,7 +461,7 @@ namespace Nektar
   {
     return MemoryManager::AllocateSharedArray<int>(size);
   }
-
+  
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_MEMORY_MANAGER_H
@@ -469,6 +469,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.5  2006/05/18 04:23:57  bnelson
+    Added allocation functions that pass arguments to the constructors of the objects being created.
+
     Revision 1.4  2006/05/15 04:13:36  bnelson
     no message
 

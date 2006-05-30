@@ -126,26 +126,26 @@ namespace Nektar
 
         void SegGeom::FillGeom()
         {
-            if(m_state != ePtsFilled)
+	    if(m_state != ePtsFilled)
             {
                 int i;
-
+		
                 for(i = 0; i < m_coordim; ++i){
-                    m_xmap[i]->SetCoeff(0,(*m_verts[0])[i]);
+		    m_xmap[i]->SetCoeff(0,(*m_verts[0])[i]);
                     m_xmap[i]->SetCoeff(1,(*m_verts[1])[i]);
                     m_xmap[i]->BwdTrans(m_xmap[i]->GetPhys());
                 }
                 m_state = ePtsFilled;
             }
         }
-
-
+	
+	
         void SegGeom::GetLocCoords(double *Lcoords,const double *coords)
         {
             int i;
-
+	    
             FillGeom();
-
+	    
             // calculate local coordinate for coord
             if(GetGtype() == StdRegions::eRegular)
             {
@@ -220,6 +220,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.4  2006/05/16 20:12:59  jfrazier
+// Minor fixes to correct bugs.
+//
 // Revision 1.3  2006/05/09 13:37:01  jfrazier
 // Removed duplicate definition of shared vertex pointer.
 //

@@ -3,14 +3,13 @@ VPATH	 = ../../../Demos/MultiRegions
 
 # Must provide (relative) location or root director of libraries,i.e
 # typiecally Nektar++/libs
-
 NEK_LIB_ROOT = ../../../
 
 # Compilers and options
 CPPFLAGS = 
 include ../../Flags/${ARCH}.inc
 
-LDLIBS	 = -L../../../  -lMultiRegions -lLocalRegions -lSpatialDomains -lStdRegions -lNekUtilities -lPolylib -lm  $(LIBS)
+LDLIBS	 = -L../../../  -lMultiRegions -lLocalRegions -lSpatialDomains -lStdRegions -lNekUtilities -lPolylib -lm  $(LIBS) -L../../../../ThirdParty/${BOOST_VERSION}/stage/lib -lboost_thread-gcc-1_33 -L../../../../ThirdParty/tinyxml/ -ltinyxml
 
 
 default:

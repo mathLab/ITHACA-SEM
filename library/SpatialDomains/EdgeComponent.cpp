@@ -44,44 +44,43 @@ namespace Nektar
         EdgeComponent::EdgeComponent()
         {
         }
-
-        EdgeComponent::EdgeComponent(int id, const int coordim): 
-        Geometry1D(coordim)
-        {
-
-            const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
-                StdRegions::eLobatto, 3,0,0);
-            m_eid = id;
-
-            m_xmap = new StdRegions::StdSegExp * [m_coordim];
-
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i] = NULL;// new StdRegions::StdSegExp(B);
-            }
-        }
-
+	
+	EdgeComponent::EdgeComponent(int id, const int coordim): 
+	    Geometry1D(coordim)
+	{
+	    
+	    const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
+					 StdRegions::eLobatto, 3,0,0);
+	    m_eid = id;
+	    
+	    m_xmap = new StdRegions::StdSegExp * [m_coordim];
+	    
+	    for(int i = 0; i < m_coordim; ++i)
+	    {
+		m_xmap[i] =  new StdRegions::StdSegExp(B);
+	    }
+	}
+	
         EdgeComponent::EdgeComponent(int id, const int coordim,
-            VertexComponentSharedPtr vertex[]): 
-        Geometry1D(coordim),
-        m_vertex(2) //always have two vertices per edge
+				     VertexComponentSharedPtr vertex[]): 
+	    Geometry1D(coordim),
+	    m_vertex(2) //always have two vertices per edge
         {
             m_eid = id;
-
+	    
             if (coordim > 0)
             {
                 const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
-                    StdRegions::eLobatto, 3,0,0);
+					     StdRegions::eLobatto, 3,0,0);
 
                 m_xmap = new StdRegions::StdSegExp * [m_coordim];
-
+		
                 for(int i = 0; i < m_coordim; ++i)
-                {
-#pragma message("Fix this! " __FILE__)
-                    m_xmap[i] = NULL; //new StdRegions::StdSegExp(B);
-                }
+		{
+		    m_xmap[i] = new StdRegions::StdSegExp(B);
+		}
             }
-
+	    
             m_vertex[0] = vertex[0];
             m_vertex[1] = vertex[1];
         }
@@ -111,8 +110,7 @@ namespace Nektar
             {
                 for(int i =0; i < m_coordim; ++i)
                 {
-  #pragma message("Fix this! " __FILE__)
-                  //delete m_xmap[i];
+		    delete m_xmap[i];
                 }
 
                 delete[] m_xmap;
@@ -207,6 +205,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.6  2006/05/23 20:19:58  jfrazier
+*    Added #pragma to show where problems currently exist.
+*
 *    Revision 1.5  2006/05/23 19:56:33  jfrazier
 *    These build and run, but the expansion pieces are commented out
 *    because they would not run.

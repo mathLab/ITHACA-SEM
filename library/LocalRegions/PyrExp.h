@@ -90,12 +90,20 @@ namespace Nektar
     
     };
 
+    // type defines for use of PyrExp in a boost vector
+    typedef boost::shared_ptr<PyrExp> PyrExpSharedPtr;
+    typedef std::vector< PyrExpSharedPtr > PyrExpVector;
+    typedef std::vector< PyrExpSharedPtr >::iterator PyrExpVectorIter;
+
   } //end of namespace
 } //end of namespace
 
 #endif  PYREXP_H
 /** 
  *    $Log: PyrExp.h,v $
+ *    Revision 1.1  2006/05/04 18:58:46  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.9  2006/03/12 21:59:48  sherwin
  *
  *    compiling version of LocalRegions

@@ -53,7 +53,7 @@ namespace Nektar
 	public:
 	    NodalTriExp(const StdRegions::BasisKey &Ba, 
 			const StdRegions::BasisKey &Bb, 
-			SpatialDomains::SharedTriGeomPtr geom):
+			SpatialDomains::TriGeomSharedPtr geom):
 		TriExp(Ba,Bb,geom)
 	    {
 	    }
@@ -71,6 +71,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.2  2006/05/29 17:05:49  sherwin
+ *    Modified to put shared_ptr around geom definitions
+ *
  *    Revision 1.1  2006/05/04 18:58:46  kirby
  *    *** empty log message ***
  *

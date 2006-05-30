@@ -89,7 +89,9 @@ namespace Nektar
         };
 
 	// shorthand for boost pointer
-	typedef boost::shared_ptr<SegGeom> SharedSegGeomPtr;
+	typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;
+        typedef std::vector< SegGeomSharedPtr > SegGeomVector;
+        typedef std::vector< SegGeomSharedPtr >::iterator SegGeomVectorIter;
 
     }; //end of namespace
 }; //end of namespace
@@ -98,6 +100,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.3  2006/05/29 17:05:17  sherwin
+// Updated to use shared_ptr around Geom types - added typedef
+//
 // Revision 1.2  2006/05/09 13:37:01  jfrazier
 // Removed duplicate definition of shared vertex pointer.
 //

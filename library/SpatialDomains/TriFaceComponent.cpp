@@ -56,8 +56,7 @@ namespace Nektar
 
             for(int i = 0; i < m_coordim; ++i)
             {
-#pragma message("Fix this! " __FILE__)
-                m_xmap[i] = NULL; //new StdRegions::StdTriExp(B0,B1);
+	      m_xmap[i] = new StdRegions::StdTriExp(B0,B1);
             }
 
             m_state = eNotFilled;
@@ -70,8 +69,7 @@ namespace Nektar
             {
                 for(int i = 0; i < m_coordim; ++i)
                 {
-#pragma message("Fix this! " __FILE__)
-                    //delete m_xmap[i]; 
+		  delete m_xmap[i]; 
                 }
 
                 delete[] m_xmap;
@@ -132,6 +130,10 @@ namespace Nektar
 
 //
 // $Log: TriFaceComponent.cpp,v $
+// Revision 1.2  2006/05/23 19:56:33  jfrazier
+// These build and run, but the expansion pieces are commented out
+// because they would not run.
+//
 // Revision 1.1  2006/05/04 18:59:04  kirby
 // *** empty log message ***
 //

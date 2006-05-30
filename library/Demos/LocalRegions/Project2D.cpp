@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
     eorient[1] = edgeDir; 
     eorient[2] = edgeDir; 
       
-    TriGeom *geom = new TriGeom(verts,edges,eorient);
+    TriGeomSharedPtr geom(new TriGeom(verts,edges,eorient));
     geom->SetOwnData();
 
     const BasisKey b1(btype1,order1,Qtype1,nq1,0,0);
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
     eorient[2] = edgeDir; 
     eorient[3] = edgeDir; 
       
-    QuadGeom *geom = new QuadGeom(verts,edges,eorient);
+    QuadGeomSharedPtr geom(new QuadGeom(verts,edges,eorient));
     geom->SetOwnData();
 
     // Define basis

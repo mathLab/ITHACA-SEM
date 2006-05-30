@@ -86,6 +86,11 @@ namespace Nektar
       }  
     };
     
+    // type defines for use of TetExp in a boost vector
+    typedef boost::shared_ptr<TetExp> TetExpSharedPtr;
+    typedef std::vector< TetExpSharedPtr > TetExpVector;
+    typedef std::vector< TetExpSharedPtr >::iterator TetExpVectorIter;
+
   } //end of namespace
 } //end of namespace
 
@@ -93,6 +98,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.1  2006/05/04 18:58:46  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.9  2006/03/12 21:59:48  sherwin
  *
  *    compiling version of LocalRegions

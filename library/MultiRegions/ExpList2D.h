@@ -52,16 +52,17 @@ namespace Nektar
     class ExpList2D:
       public ExpList
     {
-    private:
-      StdRegions::ExpVector m_quad;
-      StdRegions::ExpVector m_tri;
-    
-    protected:
-
-
     public:
       ExpList2D();
       ~ExpList2D();
+
+    protected:
+
+
+    private:
+	LocalRegions::QuadExpVector m_quad;
+	LocalRegions::TriExpVector  m_tri;
+    
     };
 
   } //end of namespace

@@ -73,9 +73,9 @@ main(int argc, char *argv[]){
   // Define a segment expansion based on basis definition
   const BasisKey b1(btype,order, Qtype, nq,0,0);
 
-  SharedVertexPtr  vert1(new VertexComponent(1,0,x[0],0,0));
-  SharedVertexPtr  vert2(new VertexComponent(1,0,x[1],0,0));
-  SegGeom *geom = new SegGeom(0,vert1,vert2);
+  VertexComponentSharedPtr  vert1(new VertexComponent(1,0,x[0],0,0));
+  VertexComponentSharedPtr  vert2(new VertexComponent(1,0,x[1],0,0));
+  SegGeomSharedPtr geom(new SegGeom(0,vert1,vert2));
   geom->SetOwnData();
 
   E = new SegExp(b1,geom);

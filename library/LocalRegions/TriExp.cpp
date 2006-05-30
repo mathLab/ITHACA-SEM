@@ -43,7 +43,7 @@ namespace Nektar
 	
 	TriExp::TriExp(const StdRegions::BasisKey &Ba,  
 		       const StdRegions::BasisKey &Bb, 
-		       SpatialDomains::SharedTriGeomPtr geom):
+		       SpatialDomains::TriGeomSharedPtr geom):
 	    StdRegions::StdTriExp(Ba,Bb)
 	{
 	    m_geom = geom;
@@ -51,7 +51,8 @@ namespace Nektar
 	
 	TriExp::TriExp(const StdRegions::BasisKey &Ba, 
 		       const StdRegions::BasisKey &Bb, 
-		       double *coeffs, double *phys, SpatialDomains::SharedTriGeomPtr geom)
+		       double *coeffs, double *phys, 
+		       SpatialDomains::TriGeomSharedPtr geom)
 	    :StdRegions::StdTriExp(Ba,Bb,coeffs,phys)
 	{
 	    m_geom = geom;
@@ -69,9 +70,9 @@ namespace Nektar
 	}
 	
 	
-	SharedMetricRelatedInfoPtr TriExp::GenGeoFac()
+	MetricRelatedInfoSharedPtr TriExp::GenGeoFac()
 	{
-	    SharedMetricRelatedInfoPtr minfo;
+	    MetricRelatedInfoSharedPtr minfo;
 	    SpatialDomains::GeoFac *Xgfac;
 	    const double **gmat, *odata;
 	    double *ndata;
@@ -475,6 +476,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.3  2006/05/29 17:05:49  sherwin
+ *    Modified to put shared_ptr around geom definitions
+ *
  *    Revision 1.2  2006/05/06 20:36:16  sherwin
  *    Modifications to get LocalRegions/Project1D working
  *

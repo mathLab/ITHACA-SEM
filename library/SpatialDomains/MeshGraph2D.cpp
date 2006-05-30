@@ -234,7 +234,7 @@ namespace Nektar
                         EdgeComponentSharedPtr edges[TriGeom::kNedges] = {GetEdgeComponent(edge1),GetEdgeComponent(edge2),GetEdgeComponent(edge3)};
                         StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] = {EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
                             EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]), EdgeComponent::GetEdgeOrientation(*edges[2], *edges[0])};
-                        SharedTriGeomPtr trigeom(new TriGeom(edges, edgeorient));
+                        TriGeomSharedPtr trigeom(new TriGeom(edges, edgeorient));
 
                         m_trigeoms.push_back(trigeom);
                     }
@@ -268,7 +268,7 @@ namespace Nektar
                                 EdgeComponent::GetEdgeOrientation(*edges[2], *edges[3]),
                                 EdgeComponent::GetEdgeOrientation(*edges[3], *edges[0])
                         };
-                        SharedQuadGeomPtr quadgeom(new QuadGeom(edges, edgeorient));
+                        QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
 
                         m_quadgeoms.push_back(quadgeom);
 
@@ -324,6 +324,10 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.3  2006/05/23 19:56:33  jfrazier
+// These build and run, but the expansion pieces are commented out
+// because they would not run.
+//
 // Revision 1.2  2006/05/09 13:37:01  jfrazier
 // Removed duplicate definition of shared vertex pointer.
 //

@@ -80,9 +80,9 @@ namespace Nektar
     
       // assume all elements have the same mapping and expasion order
       m_seg[0]->MapTo(StdRegions::eForwards, vmap);
-    
+   
       // set up simple map;
-      for(gid = i = 0; i < _Seg.size(); ++i,++gid)
+      for(gid = i = 0; i < m_seg.size(); ++i,++gid)
       {
 	for(j = 0; j < 2; ++j)
 	{
@@ -111,25 +111,25 @@ namespace Nektar
     {
       ExpList1D::IProductWRTBase(inarray,m_coeffs);
       Assemble(m_coeffs,outarray);
-      m_transState = LocalCont;
+      m_transState = eLocalCont;
     }
 
     void ContExpList1D::FwdTrans(const double *inarray)
     {
-      IProductWRTBase(inarray,m_contcoeffs);
+      IProductWRTBase(inarray,m_contCoeffs);
       if(!m_mass)
       {
 	GenMassMatrix();
       }
       m_mass->Solve(m_contCoeffs,1);
-      m_transTtate = eContinuous;
+      m_transState = eContinuous;
       m_physState = false;
     }
 
     void ContExpList1D::BwdTrans(double *outarray)
     {
 
-      if(_transState == eContinuous)
+      if(m_transState == eContinuous)
       {
 	ContToLocal();
       }
@@ -145,7 +145,7 @@ namespace Nektar
 	int   i,j,cnt,gid1,gid2,loc_lda;
 	double *loc_mat;
 	StdRegions::StdMatContainer *loc_mass;
-	vector<LocalRegions::SegExp *>::iterator def;
+	LocalRegions::SegExpVectorIter def;
 	
 	double *mmat = new double [m_contNcoeffs*m_contNcoeffs];
 	Vmath::Zero(m_contNcoeffs*m_contNcoeffs,mmat,1);
@@ -171,7 +171,7 @@ namespace Nektar
 	      mmat[gid1*m_contNcoeffs + gid2] += loc_mat[i*loc_lda + j];
 	    }
 	  }
-	  cnt+=(*def)->getNcoeffs();
+	  cnt+=(*def)->GetNcoeffs();
 	}
       }
     }

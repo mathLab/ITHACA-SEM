@@ -60,7 +60,7 @@ namespace Nektar
 	return m_contNcoeffs;
       }
 
-      inline double *get_cont_coeffs()
+      inline double *getContCoeffs()
       {
 	return m_contCoeffs;
       }

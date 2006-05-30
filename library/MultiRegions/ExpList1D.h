@@ -73,19 +73,20 @@ namespace Nektar
       void   BwdTrans (double *outarray); 
       
       void   GetCoords(double **coords);
-      void   WriteToFile(ofstream &out);
+      void   WriteToFile(std::ofstream &out);
     
       inline int GetCoordim(int eid)
       {
 	ASSERTL2(eid <= m_seg.size(),"eid is larger than number of elements");
-	return static_cast<LocalRegions::SegExp>(m_seg[eid])->GetCoordim();
+
+	return m_seg[eid]->GetCoordim();
       }
       
       double Linf (const double *sol);
       double L2   (const double *sol);
       
     protected:
-      StdRegions::ExpVector  m_seg;
+      LocalRegions::SegExpVector m_seg;
 
     private:
       

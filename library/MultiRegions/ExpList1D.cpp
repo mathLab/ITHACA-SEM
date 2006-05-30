@@ -46,13 +46,13 @@ namespace Nektar
   
     ExpList1D::~ExpList1D()
     {
-      SegExpVectorIter def;
+      LocalRegions::SegExpVectorIter def;
       for(def = m_seg.begin(); def != m_seg.end(); ++def){
 	delete def[0]->GetGeom();
 	delete def[0];
       }
     }
-
+    
     ExpList1D::ExpList1D(const StdRegions::BasisKey &Ba, 
 			 SpatialDomains::MeshGraph1D &graph1D)
     {
@@ -64,7 +64,7 @@ namespace Nektar
     
       m_coeffs = new double [m_ncoeffs];
       m_transState = NotSet; 
-
+      
       m_phys   = new double [m_npoints];
       m_physState  = false;
     

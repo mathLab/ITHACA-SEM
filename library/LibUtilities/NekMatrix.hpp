@@ -71,158 +71,62 @@ namespace Nektar
         };
 
         /// NekMatrix Class
-        /// \param width the width of the matrix.  Setting this to 0 allows for dynamically sized matrices.
-        /// \param height The height of the matrix.  Setting this to 0 allows for dynamically size matrices.
+        /// \param DataType The type of data to store in each element of the matrix.
+        /// \param
         ///
         /// Some design decisions about the class.
         /// Only one factory object.  All impl objects need to implement the
         /// Initialize methods.  I could have made many constructors for the
         /// impl object constructors, but then I would have had a lot of messy
         /// Factory objects to created, one for each constructor.
-        template<typename DataType, unsigned int space = 0>
+        template<typename DataType, NekMatrixForm form = eFull, unsigned int space = 0>
         class NekMatrix
         {
 
             public:
-                NekMatrix(unsigned int rows, unsigned int columns, NekMatrixForm form = eFull) :
-                    m_form(form),
+                NekMatrix(unsigned int rows, unsigned int columns) :
                     m_rows(rows),
                     m_columns(columns),
-                    m_data()
+                    m_data(new DataType[rows*columns])
                 {
-                    switch(form)
-                    {
-                        case eFull:
-                        {
-                            //m_data = new DataType[rows*columns];
-                            m_data = boost::shared_array<DataType>(new DataType[rows*columns]);
-                        }
-                        break;
-
-                        case eDiagonal:
-                        {
-                            //m_data = new DataType[rows];
-                            m_data = boost::shared_array<DataType>(new DataType[rows]);
-                        }
-                        break;
-                    }
                 }
 
-                NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr,
-                        NekMatrixForm form = eFull) :
-                        m_form(form),
+                NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
                         m_rows(rows),
                         m_columns(columns),
-                        m_data()
+                        m_data(new DataType[rows*columns])
                 {
-                    switch(form)
-                    {
-                        case eFull:
-                        {
-                            //m_data = new DataType[rows*columns];
-                            m_data = boost::shared_array<DataType>(new DataType[rows*columns]);
-                            std::copy(ptr, ptr+rows*columns, begin());
-                        }
-                        break;
-
-                        case eDiagonal:
-                        {
-                            //m_data = new DataType[rows];
-                            m_data = boost::shared_array<DataType>(new DataType[rows]);
-                            std::copy(ptr, ptr+rows, begin());
-                        }
-                        break;
-                    }
+                    std::copy(ptr, ptr+rows*columns, begin());
                 }
 
-                NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::param_type d,
-                        NekMatrixForm form = eFull) :
-                        m_form(form),
+                NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::param_type d) :
                         m_rows(rows),
                         m_columns(columns),
-                        m_data()
+                        m_data(new DataType[rows*columns])
                 {
-                    switch(form)
-                    {
-                        case eFull:
-                        {
-                            //m_data = new DataType[rows*columns];
-                            m_data = boost::shared_array<DataType>(new DataType[rows*columns]);
-                        }
-                        break;
-
-                        case eDiagonal:
-                        {
-                            //m_data = new DataType[rows];
-                            m_data = boost::shared_array<DataType>(new DataType[rows]);
-                        }
-                        break;
-                    }
-
                     std::fill(begin(), end(), d);
                 }
 
-                unsigned int rows() const { return m_rows; }
-                unsigned int columns() const { return m_columns; }
+                unsigned int rows() const
+                {
+                    return m_rows;
+                }
+
+                unsigned int columns() const
+                {
+                    return m_columns;
+                }
 
                 inline typename boost::call_traits<DataType>::reference operator()
                     (unsigned int rowNumber, unsigned int colNumber)
                 {
-                    if( rowNumber >= m_rows || colNumber >= m_columns )
-                    {
-                        throw OutOfBoundsError();
-                    }
-
-                    switch(m_form)
-                    {
-                        case eFull:
-                        {
-                            return m_data[rowNumber*m_columns + colNumber];
-                        }
-                        break;
-
-                        case eDiagonal:
-                        {
-                            return m_data[rowNumber];
-                        }
-                        break;
-
-                        default:
-                        {
-                            static DataType result;
-                            return result;
-                        }
-                    }
+                    return m_data[rowNumber*m_columns + colNumber];
                 }
 
                 inline typename boost::call_traits<DataType>::const_reference operator()
                         (unsigned int rowNumber, unsigned int colNumber) const
                 {
-                    if( rowNumber >= m_rows || colNumber >= m_columns )
-                    {
-                        throw OutOfBoundsError();
-                    }
-
-                    switch(m_form)
-                    {
-                        case eFull:
-                        {
-                            return m_data[rowNumber*m_columns + colNumber];
-                        }
-                        break;
-
-                        case eDiagonal:
-                        {
-                            return m_data[rowNumber];
-                        }
-                        break;
-
-                        default:
-                        {
-                            static DataType result;
-                            return result;
-                        }
-                    }
+                    return m_data[rowNumber*m_columns + colNumber];
                 }
 
 
@@ -245,81 +149,41 @@ namespace Nektar
 
                 DataType* getPtr(unsigned int rowNumber, unsigned int colNumber)
                 {
-                    switch(m_form)
-                    {
-                        case eFull:
-                        {
-                            return &m_data[rowNumber*m_columns + colNumber];
-                        }
-                        break;
 
-                        case eDiagonal:
-                        {
-                            return &m_data[rowNumber];
-                        }
-                        break;
-
-                        default:
-                        {
-                            return NULL;
-                        }
-                    }
+                    return &m_data[rowNumber*m_columns + colNumber];
                 }
 
-                DataType* begin()
+                typedef DataType* iterator;
+                typedef const DataType* const_iterator;
+
+                iterator begin()
                 {
                     return &m_data[0];
                 }
 
-                DataType* end()
+                iterator end()
                 {
-                    switch(m_form)
-                    {
-                        case eFull:
-                            return &m_data[m_rows*m_columns];
-                            break;
-
-                        case eDiagonal:
-                            return &m_data[m_rows];
-                            break;
-
-                        default:
-                            return NULL;
-                    }
+                    return &m_data[m_rows*m_columns];
                 }
 
-                const DataType* begin() const
+                const_iterator begin() const
                 {
                     return &m_data[0];
                 }
 
-                const DataType* end() const
+                const_iterator end() const
                 {
-                    switch(m_form)
-                    {
-                        case eFull:
-                            return &m_data[m_rows*m_columns];
-                            break;
-
-                        case eDiagonal:
-                            return &m_data[m_rows];
-                            break;
-
-                        default:
-                            return NULL;
-                    }
+                    return &m_data[m_rows*m_columns];
                 }
 
-                NekMatrix<DataType, space> operator+=(const NekMatrix<DataType, space>& rhs)
+                NekMatrixForm GetForm() const
+                {
+                    return form;
+                }
+
+                NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eFull, space>& rhs)
                 {
                     ASSERTL0(rows() == rhs.rows() && columns() == rhs.columns(), "Matrix dimensions must agree in operator+");
-//                     for(unsigned int i = 0; i < rows(); ++i)
-//                     {
-//                         for(unsigned int j = 0; j < columns(); ++j)
-//                         {
-//                             (*this)(i,j) += rhs(i,j);
-//                         }
-//                     }
                     DataType* lhs_data = begin();
                     const DataType* rhs_data = rhs.begin();
 
@@ -327,59 +191,70 @@ namespace Nektar
                     {
                         lhs_data[i] += rhs_data[i];
                     }
+
+                    return *this;
+                }
+
+                NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eDiagonal, space>& rhs)
+                {
+                    ASSERTL0(rows() == rhs.rows() && columns() == rhs.columns(), "Matrix dimensions must agree in operator+");
+                    DataType* lhs_data = begin();
+                    const DataType* rhs_data = rhs.begin();
+
                     return *this;
                 }
 
             private:
-                NekMatrixForm m_form;
                 unsigned int m_rows;
                 unsigned int m_columns;
                 boost::shared_array<DataType> m_data;
-                //DataType* m_data;
         };
 
 
-    template<typename DataType, unsigned int space>
-    NekMatrix<DataType, space> operator+(
-            const NekMatrix<DataType, space>& lhs,
-            const NekMatrix<DataType, space>& rhs)
+        // Diagonal specialization.
+
+
+        template<typename DataType, NekMatrixForm form, unsigned int space>
+        NekMatrix<DataType, form, space> operator+(
+            const NekMatrix<DataType, form, space>& lhs,
+            const NekMatrix<DataType, form, space>& rhs)
         {
-            NekMatrix<DataType, space> result(lhs);
+            NekMatrix<DataType, form, space> result(lhs);
             result += rhs;
             return result;
         }
 
 
-        template<typename DataType, unsigned int space>
-        NekMatrix<DataType, space> operator*(
-        const NekMatrix<DataType, space>& lhs,
-        const NekMatrix<DataType, space>& rhs)
+        template<typename DataType, NekMatrixForm form, unsigned int space>
+        NekMatrix<DataType, form, space> operator*(
+        const NekMatrix<DataType, form, space>& lhs,
+        const NekMatrix<DataType, form, space>& rhs)
         {
             ASSERTL0(lhs.columns() == rhs.rows(), "Invalid matrix dimensions in operator*");
 
-            NekMatrix<DataType, space> result(lhs.rows(), rhs.columns());
+            NekMatrix<DataType, form, space> result(lhs.rows(), rhs.columns());
 
             for(unsigned int i = 0; i < result.rows(); ++i)
             {
                 for(unsigned int j = 0; j < result.columns(); ++j)
                 {
-                DataType t = DataType(0);
+                    DataType t = DataType(0);
 
-                // Set the result(i,j) element.
-                for(unsigned int k = 0; k < lhs.columns(); ++k)
-                {
-                t += lhs(i,k)*rhs(k,j);
-                }
-                result(i,j) = t;
+                    // Set the result(i,j) element.
+                    for(unsigned int k = 0; k < lhs.columns(); ++k)
+                    {
+                        t += lhs(i,k)*rhs(k,j);
+                    }
+                    result(i,j) = t;
                 }
             }
 
             return result;
         }
 
-        template<typename DataType, unsigned int space>
+        template<typename DataType, NekMatrixForm form, unsigned int space>
         NekVector<DataType, 0, space> operator*(
-        const NekMatrix<DataType, space>& lhs,
+        const NekMatrix<DataType, form, space>& lhs,
         const NekVector<DataType, 0, space>& rhs)
         {
             ASSERTL0(lhs.columns() == rhs.dimension(), "Invalid matrix dimensions in operator*");
@@ -406,6 +281,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.9  2006/05/29 04:32:18  bnelson
+    Changed the data holder to boost::shared_array.
+
     Revision 1.8  2006/05/29 03:45:04  bnelson
     Updated operator+= to be more efficient using iterators.
 

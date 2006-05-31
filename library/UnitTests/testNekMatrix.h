@@ -44,6 +44,8 @@ namespace Nektar
         void testNekMatrixConstruction();
         void testNekMatrixAccess();
         void testNekMatrixBasicMath();
+
+        void testDiagonalMatrix();
     }
 }
 
@@ -51,6 +53,9 @@ namespace Nektar
 
 
 /**
-    $Log: $
+    $Log: testNekMatrix.h,v $
+    Revision 1.1  2006/05/07 21:10:10  bnelson
+    *** empty log message ***
+
 **/
 

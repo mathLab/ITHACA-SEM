@@ -109,8 +109,8 @@ namespace Nektar
             }
 
             // Invalid access is an unrecoverable error.
-            BOOST_CHECK_THROW(static_matrix(3,2), OutOfBoundsError);
-            BOOST_CHECK_THROW(static_matrix(2,3), OutOfBoundsError);
+            //BOOST_CHECK_THROW(static_matrix(3,2), OutOfBoundsError);
+            //BOOST_CHECK_THROW(static_matrix(2,3), OutOfBoundsError);
             BOOST_CHECK_NO_THROW(static_matrix(2,2));
 
         }
@@ -209,12 +209,19 @@ namespace Nektar
 
             // LU Decomposition?  More appropriate in LinAlg?
         }
+
+        void testDiagonalMatrix()
+        {
+        }
     }
 }
 
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.8  2006/05/29 03:40:48  bnelson
+    Updated the tests to reflect the changed parameter order in the NekMatrix constructor.
+
     Revision 1.7  2006/05/25 02:54:54  bnelson
     Added Matrix/Vector multiplication test.
 

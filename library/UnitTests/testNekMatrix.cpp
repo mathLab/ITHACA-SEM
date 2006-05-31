@@ -59,8 +59,8 @@ namespace Nektar
 
                 NekMatrix<double> dynamic_matrix(4, 3, buf);
 
-                BOOST_CHECK(dynamic_matrix.rows() == 4);
-                BOOST_CHECK(dynamic_matrix.columns() == 3);
+                BOOST_CHECK(dynamic_matrix.GetRows() == 4);
+                BOOST_CHECK(dynamic_matrix.GetColumns() == 3);
 
                 for(unsigned int i = 0; i < 4; ++i)
                 {
@@ -160,8 +160,8 @@ namespace Nektar
                 NekMatrix<unsigned int> rhs(3, 4, buf2);
                 NekMatrix<unsigned int> result = lhs*rhs;
 
-                BOOST_CHECK(result.rows() == 3);
-                BOOST_CHECK(result.columns() == 4);
+                BOOST_CHECK(result.GetRows() == 3);
+                BOOST_CHECK(result.GetColumns() == 4);
 
                 BOOST_CHECK(result(0,0) == 97);
                 BOOST_CHECK(result(0,1) == 103);
@@ -219,6 +219,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.9  2006/05/31 04:19:36  bnelson
+    Removed a test for invalid access to a matrix.
+
     Revision 1.8  2006/05/29 03:40:48  bnelson
     Updated the tests to reflect the changed parameter order in the NekMatrix constructor.
 

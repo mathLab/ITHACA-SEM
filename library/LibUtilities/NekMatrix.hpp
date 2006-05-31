@@ -107,12 +107,12 @@ namespace Nektar
                     std::fill(begin(), end(), d);
                 }
 
-                unsigned int rows() const
+                unsigned int GetRows() const
                 {
                     return m_rows;
                 }
 
-                unsigned int columns() const
+                unsigned int GetColumns() const
                 {
                     return m_columns;
                 }
@@ -130,24 +130,24 @@ namespace Nektar
                 }
 
 
-                typename boost::call_traits<DataType>::reference getValue
+                typename boost::call_traits<DataType>::reference GetValue
                         (unsigned int rowNumber, unsigned int colNumber)
                 {
                     return (*this)(rowNumber, colNumber);
                 }
 
-                typename boost::call_traits<DataType>::const_reference getValue
+                typename boost::call_traits<DataType>::const_reference GetValue
                         (unsigned int rowNumber, unsigned int colNumber) const
                 {
                     return (*this)(rowNumber, colNumber);
                 }
 
-                void setValue(unsigned int rowNumber, unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
+                void SetValue(unsigned int rowNumber, unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
                 {
                     (*this)(rowNumber, colNumber) = rhs;
                 }
 
-                DataType* getPtr(unsigned int rowNumber, unsigned int colNumber)
+                DataType* GetPtr(unsigned int rowNumber, unsigned int colNumber)
                 {
 
                     return &m_data[rowNumber*m_columns + colNumber];
@@ -183,7 +183,7 @@ namespace Nektar
 
                 NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eFull, space>& rhs)
                 {
-                    ASSERTL0(rows() == rhs.rows() && columns() == rhs.columns(), "Matrix dimensions must agree in operator+");
+                    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
                     DataType* lhs_data = begin();
                     const DataType* rhs_data = rhs.begin();
 
@@ -197,7 +197,7 @@ namespace Nektar
 
                 NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eDiagonal, space>& rhs)
                 {
-                    ASSERTL0(rows() == rhs.rows() && columns() == rhs.columns(), "Matrix dimensions must agree in operator+");
+                    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
                     DataType* lhs_data = begin();
                     const DataType* rhs_data = rhs.begin();
 
@@ -212,7 +212,169 @@ namespace Nektar
 
 
         // Diagonal specialization.
+        template<typename DataType, unsigned int space>
+        class NekMatrix<DataType, eDiagonal, space>
+        {
 
+            public:
+                NekMatrix(unsigned int rows, unsigned int columns) :
+                    m_rows(rows),
+                    m_columns(columns),
+                    m_data(new DataType[rows])
+                {
+                    ASSERTL0(rows == columns, "Diagonal matrices must be square.");
+                }
+
+                NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
+                    m_rows(rows),
+                    m_columns(columns),
+                    m_data(new DataType[rows])
+                {
+                    ASSERTL0(rows == columns, "Diagonal matrices must be square.");
+                    std::copy(ptr, ptr+rows, begin());
+                }
+
+                NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::param_type d) :
+                    m_rows(rows),
+                    m_columns(columns),
+                m_data(new DataType[rows])
+                {
+                    std::fill(begin(), end(), d);
+                }
+
+                unsigned int GetRows() const
+                {
+                    return m_rows;
+                }
+
+                unsigned int GetColumns() const
+                {
+                    return m_columns;
+                }
+
+                typename boost::call_traits<DataType>::reference operator()
+                    (unsigned int rowNumber, unsigned int colNumber)
+                {
+                    if( rowNumber == colNumber )
+                    {
+                        return m_data[rowNumber];
+                    }
+                    else
+                    {
+                        // TOOD - Find a good way to deal with this.  Probably
+                        // need a proxy object with an assertion error.
+                        static DataType result(0);
+                        return result;
+                    }
+                }
+
+                typename boost::call_traits<DataType>::const_reference operator()
+                        (unsigned int rowNumber, unsigned int colNumber) const
+                {
+                    if( rowNumber == colNumber )
+                    {
+                        return m_data[rowNumber*m_columns + colNumber];
+                    }
+                    else
+                    {
+                        static DataType result(0);
+                        return result;
+                    }
+                }
+
+
+                typename boost::call_traits<DataType>::reference GetValue
+                        (unsigned int rowNumber, unsigned int colNumber)
+                {
+                    return (*this)(rowNumber, colNumber);
+                }
+
+                typename boost::call_traits<DataType>::const_reference GetValue
+                    (unsigned int rowNumber, unsigned int colNumber) const
+                {
+                    return (*this)(rowNumber, colNumber);
+                }
+
+                void SetValue(unsigned int rowNumber, unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
+                {
+                    if( rowNumber == colNumber )
+                    {
+                        (*this)(rowNumber, colNumber) = rhs;
+                    }
+                    else
+                    {
+                        ASSERTL0(false, "Can't assign into non-diagonal element of a diagonal matrix.");
+                    }
+                }
+
+                DataType* GetPtr(unsigned int rowNumber, unsigned int colNumber)
+                {
+                    if( rowNumber == colNumber )
+                    {
+                        return &m_data[m_columns];
+                    }
+                    else
+                    {
+                        ASSERTL0(false, "Can't acces a non-diagonal element pointer of a diagonal matrix.");
+                    }
+                }
+
+                typedef DataType* iterator;
+                typedef const DataType* const_iterator;
+
+                iterator begin()
+                {
+                    return &m_data[0];
+                }
+
+                iterator end()
+                {
+                    return &m_data[m_rows];
+                }
+
+                const_iterator begin() const
+                {
+                    return &m_data[0];
+                }
+
+                const_iterator end() const
+                {
+                    return &m_data[m_rows*m_columns];
+                }
+
+                NekMatrixForm GetForm() const
+                {
+                    return eDiagonal;
+                }
+
+                NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eFull, space>& rhs)
+                {
+                    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
+                    DataType* lhs_data = begin();
+                    const DataType* rhs_data = rhs.begin();
+
+                    for(unsigned int i = 0; i < m_rows*m_columns; ++i)
+                    {
+                        lhs_data[i] += rhs_data[i];
+                    }
+
+                    return *this;
+                }
+
+                NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eDiagonal, space>& rhs)
+                {
+                    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
+                    DataType* lhs_data = begin();
+                    const DataType* rhs_data = rhs.begin();
+
+                    return *this;
+                }
+
+            private:
+                unsigned int m_rows;
+                unsigned int m_columns;
+                boost::shared_array<DataType> m_data;
+        };
 
         template<typename DataType, NekMatrixForm form, unsigned int space>
         NekMatrix<DataType, form, space> operator+(
@@ -230,18 +392,18 @@ namespace Nektar
         const NekMatrix<DataType, form, space>& lhs,
         const NekMatrix<DataType, form, space>& rhs)
         {
-            ASSERTL0(lhs.columns() == rhs.rows(), "Invalid matrix dimensions in operator*");
+            ASSERTL0(lhs.GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
 
-            NekMatrix<DataType, form, space> result(lhs.rows(), rhs.columns());
+            NekMatrix<DataType, form, space> result(lhs.GetRows(), rhs.GetColumns());
 
-            for(unsigned int i = 0; i < result.rows(); ++i)
+            for(unsigned int i = 0; i < result.GetRows(); ++i)
             {
-                for(unsigned int j = 0; j < result.columns(); ++j)
+                for(unsigned int j = 0; j < result.GetColumns(); ++j)
                 {
                     DataType t = DataType(0);
 
                     // Set the result(i,j) element.
-                    for(unsigned int k = 0; k < lhs.columns(); ++k)
+                    for(unsigned int k = 0; k < lhs.GetColumns(); ++k)
                     {
                         t += lhs(i,k)*rhs(k,j);
                     }
@@ -257,11 +419,11 @@ namespace Nektar
         const NekMatrix<DataType, form, space>& lhs,
         const NekVector<DataType, 0, space>& rhs)
         {
-            ASSERTL0(lhs.columns() == rhs.dimension(), "Invalid matrix dimensions in operator*");
+            ASSERTL0(lhs.GetColumns() == rhs.dimension(), "Invalid matrix dimensions in operator*");
 
             NekVector<DataType, 0, space> result(rhs.dimension(), DataType(0));
 
-            for(unsigned int i = 0; i < lhs.columns(); ++i)
+            for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
             {
                 DataType t = DataType(0);
                 for(unsigned int j = 0; j < rhs.dimension(); ++j)
@@ -281,6 +443,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.10  2006/05/31 04:20:16  bnelson
+    Changed matrix implementation so the form is a template parameter.
+
     Revision 1.9  2006/05/29 04:32:18  bnelson
     Changed the data holder to boost::shared_array.
 

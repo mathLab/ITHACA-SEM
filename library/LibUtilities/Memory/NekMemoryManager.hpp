@@ -469,6 +469,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.6  2006/05/30 14:00:03  sherwin
+    Updates to make MultiRegions and its Demos work
+
     Revision 1.5  2006/05/18 04:23:57  bnelson
     Added allocation functions that pass arguments to the constructors of the objects being created.
 

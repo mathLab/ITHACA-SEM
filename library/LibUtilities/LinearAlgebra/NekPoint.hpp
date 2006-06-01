@@ -380,6 +380,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.1  2006/05/04 18:57:44  kirby
+    *** empty log message ***
+
     Revision 1.5  2006/04/11 02:01:32  bnelson
     Fleshed out the interface.
 

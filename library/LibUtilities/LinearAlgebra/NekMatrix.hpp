@@ -443,6 +443,11 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.11  2006/05/31 23:24:21  bnelson
+    Moved the diagonal matrix to NekMatrix.hpp.
+
+    Updated method names for the coding standard.
+
     Revision 1.10  2006/05/31 04:20:16  bnelson
     Changed matrix implementation so the form is a template parameter.
 

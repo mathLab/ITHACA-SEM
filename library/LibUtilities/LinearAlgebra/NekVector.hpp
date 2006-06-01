@@ -475,6 +475,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.2  2006/05/25 03:02:40  bnelson
+    Added Matrix/Vector multiplication.
+
     Revision 1.1  2006/05/04 18:57:44  kirby
     *** empty log message ***
 

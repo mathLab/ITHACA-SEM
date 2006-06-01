@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdNodalTriExp.h>
-#include <LibUtilities/NekMemoryManager.hpp>
 
 namespace Nektar
 {
@@ -237,6 +236,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.1  2006/05/04 18:58:32  kirby
+* *** empty log message ***
+*
 * Revision 1.19  2006/04/25 20:23:33  jfrazier
 * Various fixes to correct bugs, calls to ASSERT, etc.
 *

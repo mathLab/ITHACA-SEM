@@ -36,7 +36,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdExpansion2D.h>
-#include <LibUtilities/NekMemoryManager.hpp>
 
 namespace Nektar
 {
@@ -243,6 +242,9 @@ namespace Nektar
 
 /** 
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.1  2006/05/04 18:58:31  kirby
+* *** empty log message ***
+*
 * Revision 1.16  2006/04/25 20:23:33  jfrazier
 * Various fixes to correct bugs, calls to ASSERT, etc.
 *

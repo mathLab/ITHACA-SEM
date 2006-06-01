@@ -642,7 +642,7 @@ namespace Nektar
       case eFourierEvenSp:
           ASSERTL0(false, "Fourier points Interpolation matrix for Fourier spacing");
           break;
-defaults:
+      default:
           ASSERTL0(false, "Unknown point type distribution");
                 }
             }
@@ -806,6 +806,9 @@ defaults:
 
 /** 
 * $Log: PolyManager.cpp,v $
+* Revision 1.2  2006/05/06 20:36:16  sherwin
+* Modifications to get LocalRegions/Project1D working
+*
 * Revision 1.1  2006/05/04 18:58:30  kirby
 * *** empty log message ***
 *

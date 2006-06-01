@@ -34,8 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <LibUtilities/ErrorUtil.hpp>
-#include <LibUtilities/Lapack.hpp>
 
 #include <LibUtilities/Polylib/Polylib.h>
 
@@ -985,6 +983,9 @@ eHexOrtho3:
 
 /** 
 * $Log: StdMatrix.cpp,v $
+* Revision 1.1  2006/05/04 18:58:31  kirby
+* *** empty log message ***
+*
 * Revision 1.29  2006/04/25 20:23:33  jfrazier
 * Various fixes to correct bugs, calls to ASSERT, etc.
 *

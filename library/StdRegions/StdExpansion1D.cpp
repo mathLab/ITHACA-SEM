@@ -36,7 +36,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdExpansion1D.h>
-#include <LibUtilities/NekMemoryManager.hpp>
 
 namespace Nektar
 {
@@ -156,6 +155,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.1  2006/05/04 18:58:30  kirby
+ * *** empty log message ***
+ *
  * Revision 1.15  2006/04/01 21:59:27  sherwin
  * Sorted new definition of ASSERT
  *

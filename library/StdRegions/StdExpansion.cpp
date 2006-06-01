@@ -34,7 +34,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/NekMemoryManager.hpp>
 
 #include <StdRegions/StdExpansion.h>
 
@@ -391,6 +390,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.2  2006/05/29 19:03:08  sherwin
+* Modifications to wrap geometric information in shared_ptr
+*
 * Revision 1.1  2006/05/04 18:58:31  kirby
 * *** empty log message ***
 *

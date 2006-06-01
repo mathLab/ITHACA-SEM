@@ -37,21 +37,20 @@
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
+    namespace MultiRegions
+    {
 
-    ExpList::ExpList()
-    {
-      m_transState = eNotSet; 
-      m_physState  = false;
-    }
+	ExpList::ExpList()
+	{
+	    m_transState = eNotSet; 
+	    m_physState  = false;
+	}
     
-    ExpList::~ExpList()
-    {
-      
-    }
-    
-    
-  } //end of namespace
+	ExpList::~ExpList()
+	{
+	}
+	
+	
+    } //end of namespace
 } //end of namespace
 

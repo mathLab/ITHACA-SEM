@@ -47,7 +47,7 @@ namespace Nektar
     {
     public:
       ExpList();
-      ~ExpList();
+      virtual ~ExpList();
       
       inline int GetNcoeffs(void)
       {

@@ -37,56 +37,56 @@
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
-    
-    ExpList1D::ExpList1D()
+    namespace MultiRegions
     {
-    }
-  
-    ExpList1D::~ExpList1D()
-    {
-    }
-    
-      ExpList1D::ExpList1D(const StdRegions::BasisKey &Ba, 
-			 SpatialDomains::MeshGraph1D &graph1D)
-    {
-	LocalRegions::SegExpSharedPtr seg;
-	SpatialDomains::SegGeomVector SegGeoms = graph1D.GetSeggeoms();
-      
-	m_ncoeffs = SegGeoms.size()*Ba.GetBasisOrder();
-	m_npoints = SegGeoms.size()*Ba.GetPointsOrder();
 	
-	m_coeffs = new double [m_ncoeffs];
-	m_transState = eNotSet; 
-	
-	m_phys   = new double [m_npoints];
-	m_physState  = false;
-	
-	// make sure Geofacs are defined in MeshGraph1D
-	if(graph1D.GetGeofac_defined() != true)
+	ExpList1D::ExpList1D()
 	{
-	    graph1D.GenXGeoFac();
 	}
 	
-	SpatialDomains::SegGeomVectorIter def;
-	//      SpatialDomains::SegGeomSharedPtr geom;
-	int cnt,cnt1;
-	
-	cnt = cnt1 = 0;
-	for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
+	ExpList1D::~ExpList1D()
 	{
-	    // removed copy construction of geom
-	    // geom = new SpatialDomains::SegGeom (**def);
-	    seg.reset( new LocalRegions::SegExp(Ba,m_coeffs+cnt,m_phys+cnt1, 
-						*def));
-	    seg->SetGeoFac(seg->GenGeoFac());
-	    m_seg.push_back(seg);
+	}
+	
+	ExpList1D::ExpList1D(const StdRegions::BasisKey &Ba, 
+			     SpatialDomains::MeshGraph1D &graph1D)
+	{
+	    LocalRegions::SegExpSharedPtr seg;
+	    SpatialDomains::SegGeomVector SegGeoms = graph1D.GetSeggeoms();
 	    
-	    cnt  += Ba.GetBasisOrder();
-	    cnt1 += Ba.GetPointsOrder();
+	    m_ncoeffs = SegGeoms.size()*Ba.GetBasisOrder();
+	    m_npoints = SegGeoms.size()*Ba.GetPointsOrder();
+	    
+	    m_coeffs = new double [m_ncoeffs];
+	    m_transState = eNotSet; 
+	    
+	    m_phys   = new double [m_npoints];
+	    m_physState  = false;
+	    
+	    // make sure Geofacs are defined in MeshGraph1D
+	    if(graph1D.GetGeofac_defined() != true)
+	    {
+		graph1D.GenXGeoFac();
+	    }
+	    
+	    SpatialDomains::SegGeomVectorIter def;
+	    //      SpatialDomains::SegGeomSharedPtr geom;
+	    int cnt,cnt1;
+	    
+	    cnt = cnt1 = 0;
+	    for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
+	    {
+		// removed copy construction of geom
+		// geom = new SpatialDomains::SegGeom (**def);
+		seg.reset( new LocalRegions::SegExp(Ba,m_coeffs+cnt,m_phys+cnt1, 
+						    *def));
+		seg->SetGeoFac(seg->GenGeoFac());
+		m_seg.push_back(seg);
+		
+		cnt  += Ba.GetBasisOrder();
+		cnt1 += Ba.GetPointsOrder();
+	    }
 	}
-    }
       
       /** \brief Integrate the physical point list \a inarray over region
 	  and return the value

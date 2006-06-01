@@ -72,21 +72,21 @@ namespace Nektar
                 return m_coordim;
             }
 
-            inline void SetXGeoFac(GeoFac *gfac)
+            inline void SetXGeoFac(GeoFacSharedPtr gfac)
             {
                 m_xgeofac = gfac;
             }
 
-            inline GeoFac* GetXGeoFac()
+            inline GeoFacSharedPtr GetXGeoFac()
             {
                 return m_xgeofac;
             }
 
 
         protected:
-            int m_coordim;     // coordinate dimension
-            GeoFac* m_xgeofac;
-            GeomState m_state; // enum identifier to determine if quad points are filled
+            int             m_coordim;     // coordinate dimension
+            GeoFacSharedPtr m_xgeofac;
+            GeomState       m_state; // enum identifier to determine if quad points are filled
 
         private:
             virtual void v_GenXGeoFac(void)
@@ -103,6 +103,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.1  2006/05/04 18:59:00  kirby
+// *** empty log message ***
+//
 // Revision 1.21  2006/05/02 21:21:11  sherwin
 // Corrected libraries to compile new version of spatialdomains and demo Graph1D
 //

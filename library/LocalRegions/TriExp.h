@@ -91,6 +91,11 @@ namespace Nektar
 	    }
 
 
+	    inline int GetCoordim()
+	    {
+		return m_geom->GetCoordim();
+	    }
+
 	    void GetCoords(double **coords);
       
 
@@ -294,6 +299,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.h,v $
+ *    Revision 1.3  2006/05/30 14:00:04  sherwin
+ *    Updates to make MultiRegions and its Demos work
+ *
  *    Revision 1.2  2006/05/29 17:05:49  sherwin
  *    Modified to put shared_ptr around geom definitions
  *

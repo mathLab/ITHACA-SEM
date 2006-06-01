@@ -157,10 +157,12 @@ namespace Nektar
                     {
                         vertexDataStrm >> vertex1 >> vertex2;
 
-                        ASSERTL0(!vertexDataStrm.fail(), (std::string("Unable to read segment data: ")
-                            + std::string(segmentData) + ".").c_str());
+                        ASSERTL0(!vertexDataStrm.fail(), 
+				 (std::string("Unable to read segment data: ")
+				  + std::string(segmentData) + ".").c_str());
 
-                        SharedSegGeomPtr seg(new SegGeom(indx, GetVertex(vertex1), GetVertex(vertex2)));
+                        SegGeomSharedPtr seg(new SegGeom(indx, 
+				      GetVertex(vertex1), GetVertex(vertex2)));
                         m_seggeoms.push_back(seg);
                     }
                     catch(...)
@@ -202,6 +204,10 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.4  2006/05/23 19:56:33  jfrazier
+// These build and run, but the expansion pieces are commented out
+// because they would not run.
+//
 // Revision 1.3  2006/05/16 22:28:31  sherwin
 // Updates to add in FaceComponent call to constructors
 //

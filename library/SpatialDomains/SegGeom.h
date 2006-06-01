@@ -66,7 +66,7 @@ namespace Nektar
                 return StdRegions::eSegment;
             }
 
-            GeoFac *GenXGeoFac(void);
+            GeoFacSharedPtr GenXGeoFac(void);
 
             void GetLocCoords(double *Lcoords, const double *coords);
             inline void SetOwnData()
@@ -100,6 +100,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.4  2006/05/30 14:00:04  sherwin
+// Updates to make MultiRegions and its Demos work
+//
 // Revision 1.3  2006/05/29 17:05:17  sherwin
 // Updated to use shared_ptr around Geom types - added typedef
 //

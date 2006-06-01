@@ -80,25 +80,16 @@ namespace Nektar
 
         SegGeom::~SegGeom()
         {
-            //if(m_xgeofac->GetMemCount() == 1)
-            //{
-            //    delete m_xgeofac;
-            //}
-            //else
-            //{
-            //    m_xgeofac->SubMemCount();
-            //}
         }
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
-
-        GeoFac *SegGeom::GenXGeoFac(void)
-        {
-            GeoFac *gfac;
+        GeoFacSharedPtr SegGeom::GenXGeoFac(void)
+	{
+            GeoFacSharedPtr gfac;
 
             StdRegions::StdExpansion1D ** xmaptemp =
                 new StdRegions::StdExpansion1D*[m_coordim];
-
+	    
             for(int i=0;i<m_coordim;++i)
             {
                 xmaptemp[i] = m_xmap[i];
@@ -107,13 +98,13 @@ namespace Nektar
             FillGeom();
             if(m_xmap[0]->GetBasisOrder(0)==2)
             {// assumes all direction have same order
-                gfac = new GeoFac(StdRegions::eRegular, m_coordim, 
-                    (const StdRegions::StdExpansion1D **) xmaptemp);
+                gfac.reset( new GeoFac(StdRegions::eRegular, m_coordim, 
+                    (const StdRegions::StdExpansion1D **) xmaptemp));
             }
             else
             {
-                gfac = new GeoFac(StdRegions::eDeformed, m_coordim, 
-                    (const StdRegions::StdExpansion1D **) xmaptemp);
+                gfac.reset(new GeoFac(StdRegions::eDeformed, m_coordim, 
+  	            (const StdRegions::StdExpansion1D **) xmaptemp));
             }
 
             delete[] xmaptemp;
@@ -220,6 +211,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.5  2006/05/30 14:00:04  sherwin
+// Updates to make MultiRegions and its Demos work
+//
 // Revision 1.4  2006/05/16 20:12:59  jfrazier
 // Minor fixes to correct bugs.
 //

@@ -63,7 +63,7 @@ namespace Nektar
             }
 
             inline const SegGeomVector &GetSeggeoms(void) const
-            {
+		{
                 return m_seggeoms;
             }
 
@@ -87,6 +87,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.h,v $
+// Revision 1.2  2006/05/30 14:00:04  sherwin
+// Updates to make MultiRegions and its Demos work
+//
 // Revision 1.1  2006/05/04 18:59:01  kirby
 // *** empty log message ***
 //

@@ -107,9 +107,9 @@ namespace Nektar
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
 
-        GeoFac *QuadGeom::GenXGeoFac()
+        GeoFacSharedPtr QuadGeom::GenXGeoFac()
         {
-            GeoFac *gfac;
+            GeoFacSharedPtr gfac;
             int i;
             StdRegions::GeomType Gtype = StdRegions::eRegular;
 
@@ -156,8 +156,8 @@ namespace Nektar
                 }
             }
 
-            gfac = new GeoFac(Gtype,  m_coordim, 
-                (const StdRegions::StdExpansion2D **) xmaptemp);
+            gfac.reset(new GeoFac(Gtype,  m_coordim, 
+                (const StdRegions::StdExpansion2D **) xmaptemp));
 
             delete[] xmaptemp;
 
@@ -310,6 +310,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.3  2006/05/16 22:28:31  sherwin
+// Updates to add in FaceComponent call to constructors
+//
 // Revision 1.2  2006/05/07 11:26:38  sherwin
 // Modifications to get the demo LocalRegions::Project2D to compile
 //

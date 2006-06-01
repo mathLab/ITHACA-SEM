@@ -63,7 +63,7 @@ namespace Nektar
             }
 
             void FillGeom();
-            GeoFac *GenXGeoFac();
+            GeoFacSharedPtr GenXGeoFac();
 
             void GetLocCoords(double *Lcoords, const double *coords);
 
@@ -81,6 +81,7 @@ namespace Nektar
 
         typedef boost::shared_ptr<TriGeom>      TriGeomSharedPtr;
         typedef std::vector< TriGeomSharedPtr > TriGeomVector;
+        typedef std::vector< TriGeomSharedPtr >::iterator TriGeomVectorIter;
 
     }; //end of namespace SpatialDomains
 }; //end of namespace Nektar
@@ -89,6 +90,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.4  2006/05/30 14:00:04  sherwin
+// Updates to make MultiRegions and its Demos work
+//
 // Revision 1.3  2006/05/29 17:05:17  sherwin
 // Updated to use shared_ptr around Geom types - added typedef
 //

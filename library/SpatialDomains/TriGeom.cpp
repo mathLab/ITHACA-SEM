@@ -98,13 +98,14 @@ namespace Nektar
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
 
-        GeoFac *TriGeom::GenXGeoFac()
+        GeoFacSharedPtr TriGeom::GenXGeoFac()
         {
-            GeoFac *gfac;
+            GeoFacSharedPtr gfac;
             StdRegions::GeomType Gtype = StdRegions::eRegular;
 
             StdRegions::StdExpansion2D ** xmaptemp = new 
                 StdRegions::StdExpansion2D*[m_coordim];
+
             for(int i=0;i<m_coordim;i++)
             {
                 xmaptemp[i] = m_xmap[i];
@@ -122,8 +123,8 @@ namespace Nektar
                 }
             }
 
-            gfac = new GeoFac(Gtype,  m_coordim, 
-                (const StdRegions::StdExpansion2D **) xmaptemp);
+            gfac.reset(new GeoFac(Gtype,  m_coordim, 
+		      (const StdRegions::StdExpansion2D **) xmaptemp));
 
             delete[] xmaptemp;
 
@@ -254,6 +255,10 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.4  2006/05/23 19:56:33  jfrazier
+// These build and run, but the expansion pieces are commented out
+// because they would not run.
+//
 // Revision 1.3  2006/05/16 22:28:31  sherwin
 // Updates to add in FaceComponent call to constructors
 //

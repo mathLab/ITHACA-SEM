@@ -64,6 +64,28 @@ namespace Nektar
 
             EdgeComponentSharedPtr GetEdgeComponent(int eID);
 
+            inline const int GetCoordim(void){
+                return GetSpaceDimension();
+            }
+
+            inline const TriGeomVector &GetTrigeoms(void) const
+            {
+                return m_trigeoms;
+            }
+
+            inline const QuadGeomVector &GetQuadgeoms(void) const
+            {
+                return m_quadgeoms;
+            }
+
+            inline bool GetGeofac_defined(void)
+            {
+                return m_geofac_defined;
+            }
+
+            void GenXGeoFac();
+
+
         protected:
             void ReadEdges(TiXmlDocument &doc);
             void ReadElements(TiXmlDocument &doc);
@@ -82,6 +104,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.1  2006/05/04 18:59:01  kirby
+// *** empty log message ***
+//
 // Revision 1.11  2006/04/11 23:18:11  jfrazier
 // Completed MeshGraph2D for tri's and quads.  Not thoroughly tested.
 //

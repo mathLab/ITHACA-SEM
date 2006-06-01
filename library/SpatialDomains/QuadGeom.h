@@ -63,7 +63,7 @@ namespace Nektar
             }
 
             void FillGeom();
-            GeoFac *GenXGeoFac();
+            GeoFacSharedPtr GenXGeoFac();
 
             void GetLocCoords(double *Lcoords, const double *coords);
 
@@ -81,6 +81,8 @@ namespace Nektar
 
 	// shorthand for boost pointer
 	typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
+        typedef std::vector< QuadGeomSharedPtr > QuadGeomVector;
+        typedef std::vector< QuadGeomSharedPtr >::iterator QuadGeomVectorIter;
 
     }; //end of namespace
 }; //end of namespace
@@ -89,6 +91,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.5  2006/05/30 14:00:04  sherwin
+// Updates to make MultiRegions and its Demos work
+//
 // Revision 1.4  2006/05/29 17:05:17  sherwin
 // Updated to use shared_ptr around Geom types - added typedef
 //

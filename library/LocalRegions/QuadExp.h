@@ -89,6 +89,11 @@ namespace Nektar
 		m_minfo = minfo;
 	    }
       
+	    inline int GetCoordim()
+	    {
+		return m_geom->GetCoordim();
+	    }
+
 	    void GetCoords(double **coords);
 	    
 	    void GetCoord(const double *Lcoords, double *coords);    
@@ -315,6 +320,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.h,v $
+ *    Revision 1.3  2006/05/30 14:00:03  sherwin
+ *    Updates to make MultiRegions and its Demos work
+ *
  *    Revision 1.2  2006/05/29 17:05:49  sherwin
  *    Modified to put shared_ptr around geom definitions
  *

@@ -120,6 +120,11 @@ namespace Nektar
             int m_mem_count;
         };
 
+	typedef boost::shared_ptr<GeoFac> GeoFacSharedPtr;
+        typedef std::vector< GeoFacSharedPtr > GeoFacVector;
+        typedef std::vector< GeoFacSharedPtr >::iterator GeoFacVectorIter;
+	
+
     }; //end of namespace
 }; //end of namespace
 
@@ -127,6 +132,9 @@ namespace Nektar
 
 //
 // $Log: GeoFac.h,v $
+// Revision 1.2  2006/05/29 17:05:17  sherwin
+// Updated to use shared_ptr around Geom types - added typedef
+//
 // Revision 1.1  2006/05/04 18:58:59  kirby
 // *** empty log message ***
 //

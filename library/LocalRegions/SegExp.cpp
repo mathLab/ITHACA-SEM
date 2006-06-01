@@ -75,11 +75,11 @@ namespace Nektar
     MetricRelatedInfoSharedPtr SegExp::GenGeoFac()
     {
       MetricRelatedInfoSharedPtr minfo;
-      SpatialDomains::GeoFac *Xgfac;
+      SpatialDomains::GeoFacSharedPtr Xgfac;
       double *ndata;
       const double **gmat, *odata;
 
-      if((Xgfac = m_geom->GetXGeoFac()) == NULL)  // define geometric version 
+      if((Xgfac = m_geom->GetXGeoFac()).get() == NULL) // define geometric version 
       {
 	Xgfac = m_geom->GenXGeoFac();
 	m_geom->SetXGeoFac(Xgfac);
@@ -546,6 +546,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.4  2006/05/30 14:00:03  sherwin
+// Updates to make MultiRegions and its Demos work
+//
 // Revision 1.3  2006/05/29 17:05:49  sherwin
 // Modified to put shared_ptr around geom definitions
 //

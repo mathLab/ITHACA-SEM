@@ -40,7 +40,7 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/Graph.h>
+#include <LibUtilities/Foundations/Graph.h>
 
 namespace Nektar
 {
@@ -69,6 +69,9 @@ namespace Nektar
 
 //
 // $Log: SpatialDomains.hpp,v $
+// Revision 1.2  2006/06/01 13:42:26  kirby
+// *** empty log message ***
+//
 // Revision 1.1  2006/05/04 18:59:04  kirby
 // *** empty log message ***
 //

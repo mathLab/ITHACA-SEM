@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LibUtilities/Graph.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LibUtilities/Foundations/Graph.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,7 +33,7 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/Graph.h>
+#include <LibUtilities/Foundations/Graph.h>
 
 namespace Nektar
 {
@@ -103,6 +103,9 @@ namespace Nektar
 
 //
 // $Log: Graph.cpp,v $
+// Revision 1.1  2006/06/01 14:56:20  kirby
+// *** empty log message ***
+//
 // Revision 1.1  2006/05/04 18:57:42  kirby
 // *** empty log message ***
 //

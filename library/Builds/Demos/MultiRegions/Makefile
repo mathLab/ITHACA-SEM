@@ -9,7 +9,7 @@ NEK_LIB_ROOT = ../../../
 CPPFLAGS = 
 include ../../Flags/${ARCH}.inc
 
-LDLIBS	 = -L../../../  -lMultiRegions -lLocalRegions -lSpatialDomains -lStdRegions -lNekUtilities -lPolylib -lm  $(LIBS) -L../../../../ThirdParty/${BOOST_VERSION}/stage/lib -lboost_thread-gcc-1_33 -L../../../../ThirdParty/tinyxml/ -ltinyxml
+LDLIBS	 = -L../../../  -lMultiRegions -lLocalRegions -lSpatialDomains -lStdRegions -lNekUtilities -lm  $(LIBS) -L../../../../ThirdParty/${BOOST_VERSION}/stage/lib -lboost_thread-gcc-1_33 -L../../../../ThirdParty/tinyxml/ -ltinyxml
 
 
 default:

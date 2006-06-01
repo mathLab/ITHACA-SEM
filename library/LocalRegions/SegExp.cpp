@@ -33,9 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LocalRegions/LocalRegions.hpp>
 #include <LocalRegions/SegExp.h>
-
-#include <LibUtilities/Vmath.hpp>
 
 namespace Nektar
 {
@@ -546,6 +545,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.5  2006/06/01 14:15:58  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.4  2006/05/30 14:00:03  sherwin
 // Updates to make MultiRegions and its Demos work
 //

@@ -16,7 +16,8 @@ using namespace std;
 // This routine projects a polynomial or trigonmetric functions which 
 // has energy in all mdoes of the expansions and report an error.
 
-main(int argc, char *argv[]){
+main(int argc, char *argv[])
+{
   int i,j;
   int order, nq;
   const double *z,*w;
@@ -26,7 +27,8 @@ main(int argc, char *argv[]){
   BasisType  btype;
   StdExpansion1D  *E;
   
-  if(argc != 6){
+  if(argc != 6)
+  {
     fprintf(stderr,"Usage: Project1D Type order nq  x0 x1 \n");
 
     fprintf(stderr,"Where type is an integer value which "

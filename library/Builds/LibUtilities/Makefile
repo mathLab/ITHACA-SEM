@@ -1,5 +1,5 @@
 ARCH	 = $(shell uname)
-VPATH	 = ../../LibUtilities ../../Polylib
+VPATH	 = ../../LibUtilities/BasicUtils ../../LibUtilities/Polylib
 LIB	 = libNekUtilities.a
 
 # Must provide (relative) location or root director of libraries,i.e
@@ -13,7 +13,7 @@ include ../Flags/${ARCH}.inc
 
 # These are the module names:
 
-ALL   =  IOutils Graph #NekUtilities
+ALL   =  Polylib 
 
 # ---------------------------------------------------------------- #
 # The following expand to give the names of all sections (ALL),    #
@@ -29,12 +29,6 @@ OBJS  = $(foreach routine, $(ALL), $(routine).o)
 #
 $(LIB): $(LMOD)
 
-ifeq ($(ARCH),Darwin)
-	ranlib $(LIB)
-endif
-
-
-
 # ----------------------------------------------------------------------------
 # Install library & associated header files.
 #
@@ -45,6 +39,9 @@ ifeq ($(ARCH),Darwin)
 endif
 
 help:
+	@echo ${ALL}
+	@echo ${LMOD}
+
 	@echo ''
 	@echo ' Run make :'	
 	@echo ''

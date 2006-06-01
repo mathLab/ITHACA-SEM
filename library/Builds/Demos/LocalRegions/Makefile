@@ -6,7 +6,7 @@ VPATH	 = ../../../Demos/LocalRegions
 NEK_LIB_ROOT = ../../../
 
 # Compilers and options
-CPPFLAGS =
+CPPFLAGS  = 
 include ../../Flags/${ARCH}.inc
 
 LDLIBS	 = -L../../../  -lLocalRegions -lSpatialDomains -lStdRegions -lNekUtilities -lPolylib -lm  $(LIBS) -L../../../../ThirdParty/${BOOST_VERSION}/stage/lib -lboost_thread-gcc-1_33

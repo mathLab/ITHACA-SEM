@@ -17,6 +17,7 @@ LD	= $(CXX)
 
 #turn of long-double warning associated with singleton
   CPPFLAGS += -Wno-long-double
+  CPPFLAGS += -Wno-deprecated
 
 #define Third party include directories
 BOOST_VERSION = boost_1_33_0

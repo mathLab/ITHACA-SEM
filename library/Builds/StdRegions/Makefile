@@ -1,5 +1,5 @@
 ARCH	 = $(shell uname)
-VPATH	 = ../../StdRegions ../../Polylib
+VPATH	 = ../../StdRegions ../../LibUtilities/Polylib
 LIB	 = libStdRegions.a
 
                        

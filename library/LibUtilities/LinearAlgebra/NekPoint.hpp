@@ -36,10 +36,10 @@
 #ifndef NEKTAR_LIB_UTILITIES_NEK_POINT_HPP
 #define NEKTAR_LIB_UTILITIES_NEK_POINT_HPP
 
-#include <LibUtilities/ExpressionTemplates.hpp>
-#include <LibUtilities/ArithmeticConcepts.hpp>
-#include <LibUtilities/ErrorUtil.hpp>
-#include <LibUtilities/Concepts.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
+#include <LibUtilities/ExpressionTemplates/ArithmeticConcepts.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/Concepts.hpp>
 
 #include <boost/concept_check.hpp>
 
@@ -380,6 +380,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.1  2006/06/01 09:12:42  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/05/04 18:57:44  kirby
     *** empty log message ***
 

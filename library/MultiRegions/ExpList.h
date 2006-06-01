@@ -37,7 +37,6 @@
 #define H_EXPLIST
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <LibUtilities/NekMemoryManager.hpp>
 
 namespace Nektar
 {

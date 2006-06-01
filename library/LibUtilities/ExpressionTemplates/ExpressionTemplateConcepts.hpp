@@ -12,7 +12,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_EXPRT_CONCEPTS_H
 #define NEKTAR_LIB_UTILITIES_EXPRT_CONCEPTS_H
 
-#include <LibUtilities/BinaryExpressionTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
 
 namespace Nektar
 {
@@ -104,6 +104,9 @@ namespace Nektar
 
 /**
     $Log: ExpressionTemplateConcepts.hpp,v $
+    Revision 1.1  2006/06/01 09:20:55  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/05/04 18:57:42  kirby
     *** empty log message ***
 

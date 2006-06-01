@@ -36,7 +36,7 @@
 #include <StdRegions/NodalBasisManager.h>
 
 #include <StdRegions/StdRegions.hpp>
-#include <LibUtilities/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
 {
@@ -376,6 +376,9 @@ namespace Nektar
 
 /** 
 * $Log: NodalBasisManager.cpp,v $
+* Revision 1.1  2006/05/04 18:58:30  kirby
+* *** empty log message ***
+*
 * Revision 1.18  2006/04/25 20:23:32  jfrazier
 * Various fixes to correct bugs, calls to ASSERT, etc.
 *

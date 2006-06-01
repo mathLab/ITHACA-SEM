@@ -40,11 +40,10 @@
 #include <StdRegions/BasisManager.h>
 #include <loki/Factory.h>
 #include <fstream>
-#include <LibUtilities/NekMemoryManager.hpp>
 
+#include <StdRegions/StdRegions.hpp>
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
 #include <StdRegions/LocalRegionsDeclarations.hpp>
-#include <LibUtilities/NekMemoryManager.hpp>
 
 namespace Nektar
 {
@@ -504,6 +503,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.3  2006/05/30 14:00:04  sherwin
+* Updates to make MultiRegions and its Demos work
+*
 * Revision 1.2  2006/05/29 19:03:08  sherwin
 * Modifications to wrap geometric information in shared_ptr
 *

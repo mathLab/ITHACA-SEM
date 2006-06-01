@@ -20,12 +20,12 @@
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
 
-#include <LibUtilities/ExpressionReturnType.hpp>
-#include <LibUtilities/ExpressionTemplateConcepts.hpp>
-#include <LibUtilities/BinaryExpressionTraits.hpp>
-#include <LibUtilities/ConstantExpression.hpp>
-#include <LibUtilities/BinaryExpression.hpp>
-#include <LibUtilities/ExpressionTemplateOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionReturnType.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionTemplateConcepts.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionTemplateOperators.hpp>
 
 #include <boost/call_traits.hpp>
 #include <boost/concept_check.hpp>
@@ -508,6 +508,9 @@ namespace Nektar
 
 /**
     $Log: ExpressionTemplates.hpp,v $
+    Revision 1.1  2006/06/01 09:20:56  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/05/04 18:57:42  kirby
     *** empty log message ***
 

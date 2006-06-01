@@ -42,7 +42,6 @@
 #include <loki/Factory.h>
 
 #include <StdRegions/StdRegions.hpp>
-#include <LibUtilities/ErrorUtil.hpp>
 
 namespace Nektar
 {
@@ -58,8 +57,8 @@ namespace Nektar
     public:
       BasisKey()
       {
-	m_basisorder = 0;
-	m_pointsorder = 0;
+	    m_basisorder = 0;
+	    m_pointsorder = 0;
       }
     
       BasisKey(const BasisType btype, const int border, const PointsType ptstype,

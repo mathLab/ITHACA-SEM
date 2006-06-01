@@ -35,7 +35,7 @@
 #ifndef  LAPACK_HPP
 #define  LAPACK_HPP
 
-#include <LibUtilities/TransF77.hpp>
+#include <LibUtilities/BasicUtils/TransF77.hpp>
 
 namespace Lapack
 {
@@ -221,6 +221,9 @@ namespace Lapack
 
 /***
 $Log: Lapack.hpp,v $
+Revision 1.1  2006/06/01 11:07:52  kirby
+*** empty log message ***
+
 Revision 1.1  2006/05/04 18:57:43  kirby
 *** empty log message ***
 

@@ -37,7 +37,7 @@
 #define VECTORMATH_HPP
 
 #include <string>
-#include <LibUtilities/Blas.hpp>
+#include <LibUtilities/BasicUtils/Blas.hpp>
 
 namespace Vmath 
 {
@@ -437,6 +437,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.1  2006/06/01 11:07:52  kirby
+*** empty log message ***
+
 Revision 1.1  2006/05/04 18:57:44  kirby
 *** empty log message ***
 

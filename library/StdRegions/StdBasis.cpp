@@ -37,7 +37,6 @@
 #include <LibUtilities/Polylib/Polylib.h>
 #include <StdRegions/StdBasis.h>
 
-#include <LibUtilities/ErrorUtil.hpp>
 
 namespace Nektar
 {
@@ -706,6 +705,9 @@ namespace Nektar
 
 /** 
 * $Log: StdBasis.cpp,v $
+* Revision 1.1  2006/05/04 18:58:30  kirby
+* *** empty log message ***
+*
 * Revision 1.30  2006/04/25 20:23:33  jfrazier
 * Various fixes to correct bugs, calls to ASSERT, etc.
 *

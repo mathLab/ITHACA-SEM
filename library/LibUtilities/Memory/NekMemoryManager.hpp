@@ -38,8 +38,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_NEK_MEMORY_MANAGER_H
 #define NEKTAR_LIB_UTILITIES_NEK_MEMORY_MANAGER_H
 
-#include <LibUtilities/ThreadSpecificPool.hpp>
-#include <LibUtilities/ErrorUtil.hpp>
+#include <LibUtilities/Memory/ThreadSpecificPool.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <boost/mpl/contains.hpp>
 #include <boost/mpl/list_c.hpp>
@@ -469,6 +469,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.1  2006/06/01 09:17:24  kirby
+    *** empty log message ***
+
     Revision 1.6  2006/05/30 14:00:03  sherwin
     Updates to make MultiRegions and its Demos work
 

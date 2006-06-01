@@ -40,8 +40,6 @@
 #include <StdRegions/StdBasis.h>
 
 #include <StdRegions/StdRegions.hpp>
-#include <LibUtilities/ErrorUtil.hpp>
-#include <LibUtilities/Vmath.hpp>
 
 namespace Nektar
 {
@@ -714,6 +712,9 @@ namespace Nektar
 
 /**
  * $Log: PolyManager.h,v $
+ * Revision 1.1  2006/05/04 18:58:30  kirby
+ * *** empty log message ***
+ *
  * Revision 1.32  2006/03/21 09:21:31  sherwin
  * Introduced NekMemoryManager
  *

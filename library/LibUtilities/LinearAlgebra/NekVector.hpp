@@ -36,7 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 #define NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 
-#include <LibUtilities/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <functional>
 #include <algorithm>
@@ -475,6 +475,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.1  2006/06/01 09:12:42  kirby
+    *** empty log message ***
+
     Revision 1.2  2006/05/25 03:02:40  bnelson
     Added Matrix/Vector multiplication.
 

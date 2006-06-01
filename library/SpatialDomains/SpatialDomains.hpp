@@ -38,7 +38,8 @@
 
 #include <StdRegions/StdRegions.hpp>
 
-#include <LibUtilities/ErrorUtil.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Graph.h>
 
 namespace Nektar
@@ -68,6 +69,9 @@ namespace Nektar
 
 //
 // $Log: SpatialDomains.hpp,v $
+// Revision 1.1  2006/05/04 18:59:04  kirby
+// *** empty log message ***
+//
 // Revision 1.4  2006/03/25 00:58:29  jfrazier
 // Many changes dealing with fundamental structure and reading/writing.
 //

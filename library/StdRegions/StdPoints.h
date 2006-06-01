@@ -48,7 +48,15 @@ namespace Nektar
 {
   namespace StdRegions 
   {
-  
+
+    typedef boost::shared_ptr<NekMatrix> SharedNekMatrixPtr;
+
+    struct PointsKey
+    {
+        int m_pointsorder; //< Number of points
+        PointsType m_pointstype;
+        double m_params[2];
+    };
 
     // base class for points definition whic can store the zeros and
     // must have a definition of weight and a derivative matrix
@@ -56,13 +64,13 @@ namespace Nektar
     class Points
     {
     public:
-      Points():
-	m_pointsorder(0),
-	m_zeros(NULL),
-	m_weights(NULL),
-	m_derivmatrix(NULL)
-      {
-      }
+        Points():
+            m_pointsorder(0),
+            m_zeros(NULL),
+	        m_weights(NULL),
+	        m_derivmatrix(NULL)
+        {
+            }
 
       Points(const int npts);
 
@@ -90,10 +98,10 @@ namespace Nektar
       }
 
     protected:
-      int     m_pointsorder; //< Number of points 
       double *m_zeros;       //< definition of points
       double *m_weights;     //< definition of integration weights
-      // probably should be a NekMatrix so we can use diagonal/banded matrix
+    
+        SharedNekMatrixPtr
       double *m_derivmatrix; //< defintiion of derivative matrix
       
     private:
@@ -145,9 +153,6 @@ namespace Nektar
     protected:
 
     private:
-      PointsType m_gausspointstype;
-      double m_alpha;
-      double m_beta;
       
     };
 

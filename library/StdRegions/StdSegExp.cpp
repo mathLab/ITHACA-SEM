@@ -35,9 +35,6 @@
 
 #include <StdRegions/StdSegExp.h>
 
-#include <LibUtilities/Vmath.hpp>
-#include <LibUtilities/NekMemoryManager.hpp>
-
 
 namespace Nektar
 {
@@ -473,6 +470,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.1  2006/05/04 18:58:33  kirby
+ * *** empty log message ***
+ *
  * Revision 1.52  2006/04/01 21:59:27  sherwin
  * Sorted new definition of ASSERT
  *

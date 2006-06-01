@@ -36,7 +36,7 @@
 #ifndef BLAS_HPP
 #define BLAS_HPP
 
-#include <LibUtilities/TransF77.hpp>
+#include <LibUtilities/BasicUtils/TransF77.hpp>
 
 /** Translations for using Fortran version of blas */
 namespace Blas
@@ -190,6 +190,9 @@ namespace Blas
 
 /***
 $Log: Blas.hpp,v $
+Revision 1.1  2006/06/01 11:07:52  kirby
+*** empty log message ***
+
 Revision 1.1  2006/05/04 18:57:41  kirby
 *** empty log message ***
 

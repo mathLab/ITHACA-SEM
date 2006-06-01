@@ -44,9 +44,9 @@
 #include <boost/call_traits.hpp>
 #include <boost/concept_check.hpp>
 
-#include <LibUtilities/NekMemoryManager.hpp>
-#include <LibUtilities/ErrorUtil.hpp>
-#include <LibUtilities/NekVector.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
 namespace Nektar
 {
@@ -443,6 +443,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.1  2006/06/01 09:12:41  kirby
+    *** empty log message ***
+
     Revision 1.11  2006/05/31 23:24:21  bnelson
     Moved the diagonal matrix to NekMatrix.hpp.
 

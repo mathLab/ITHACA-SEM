@@ -7,8 +7,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BinaryExpressionTraits.hpp>
-#include <LibUtilities/ExpressionTemplateConcepts.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionTemplateConcepts.hpp>
 
 #include <boost/concept_check.hpp>
 
@@ -175,6 +175,9 @@ namespace Nektar
 
 /**
     $Log: ExpressionTemplateOperators.hpp,v $
+    Revision 1.1  2006/06/01 09:20:55  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/05/04 18:57:42  kirby
     *** empty log message ***
 

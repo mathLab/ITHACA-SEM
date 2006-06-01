@@ -36,6 +36,9 @@
 #ifndef MULTIREGIONS_H
 #define MULTIREGIONS_H
 
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+
 
 namespace Nektar
 {

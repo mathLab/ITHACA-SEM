@@ -39,10 +39,10 @@
 //Standard Matrix
 #include <math.h>
 
+#include <StdRegions/StdRegions.hpp>
 #include <StdRegions/PolyManager.h>
 #include <StdRegions/StdExpansion.h>
 
-#include <StdRegions/StdRegions.hpp>
 
 namespace Nektar
 {
@@ -306,6 +306,9 @@ namespace Nektar
 
 /**
  * $Log: StdMatrix.h,v $
+ * Revision 1.1  2006/05/04 18:58:32  kirby
+ * *** empty log message ***
+ *
  * Revision 1.20  2006/03/12 21:59:48  sherwin
  *
  * compiling version of LocalRegions

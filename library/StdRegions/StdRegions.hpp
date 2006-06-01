@@ -36,6 +36,15 @@
 #ifndef STDREGIONS_H
 #define STDREGIONS_H
 
+
+// Headers from LibUtilities needed in StdRegions
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/Vmath.hpp>
+#include <LibUtilities/BasicUtils/Lapack.hpp>
+
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+
+
 #include <string>
 #include <loki/Factory.h>
 
@@ -194,6 +203,9 @@ namespace Nektar
 
 /**
  * $Log: StdRegions.hpp,v $
+ * Revision 1.1  2006/05/04 18:58:33  kirby
+ * *** empty log message ***
+ *
  * Revision 1.8  2006/03/23 21:55:02  jfrazier
  * Declared NekConstants namespace to replace NekConstants class.
  *

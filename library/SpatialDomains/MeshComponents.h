@@ -37,10 +37,8 @@
 #define NEKTAR_SPATIALDOMAINS_MESHCOMPONENTS_H
 
 #include <SpatialDomains/SpatialDomains.hpp>
-#include <LibUtilities/NekPoint.hpp>
-#include <LibUtilities/Vmath.hpp>
-#include <LibUtilities/Blas.hpp>
-#include <LibUtilities/NekMemoryManager.hpp>
+#include <LibUtilities/LinearAlgebra/NekPoint.hpp>
+
 #include <set>
 
 namespace Nektar
@@ -177,6 +175,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.3  2006/05/07 11:26:38  sherwin
+// Modifications to get the demo LocalRegions::Project2D to compile
+//
 // Revision 1.2  2006/05/06 20:36:16  sherwin
 // Modifications to get LocalRegions/Project1D working
 //

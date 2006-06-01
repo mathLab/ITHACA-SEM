@@ -42,8 +42,6 @@
 
 #include <StdRegions/StdRegions.hpp>
 
-#include <LibUtilities/NekMemoryManager.hpp>
-
 namespace Nektar
 {
   namespace LocalRegions 
@@ -102,6 +100,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.2  2006/05/30 14:00:03  sherwin
+ *    Updates to make MultiRegions and its Demos work
+ *
  *    Revision 1.1  2006/05/04 18:58:45  kirby
  *    *** empty log message ***
  *

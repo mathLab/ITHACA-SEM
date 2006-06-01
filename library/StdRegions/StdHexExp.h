@@ -36,6 +36,7 @@
 #ifndef STDHEXEXP_H
 #define STDHEXEXP_H
 
+#include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion3D.h>
 #include <StdRegions/StdMatrix.h>
 
@@ -207,6 +208,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.2  2006/05/23 15:08:19  jfrazier
+* Minor cleanup to correct compile warnings.
+*
 * Revision 1.1  2006/05/04 18:58:31  kirby
 * *** empty log message ***
 *

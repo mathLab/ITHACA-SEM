@@ -36,6 +36,7 @@
 #ifndef STDTRIEXP_H
 #define STDTRIEXP_H
 
+#include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdMatrix.h>
 #include <StdRegions/StdSegExp.h>
@@ -210,6 +211,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.1  2006/05/04 18:58:33  kirby
+ * *** empty log message ***
+ *
  * Revision 1.39  2006/03/12 14:20:45  sherwin
  *
  * First compiling version of SpatialDomains and associated modifications

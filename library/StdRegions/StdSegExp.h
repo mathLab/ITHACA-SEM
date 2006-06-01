@@ -36,6 +36,7 @@
 #ifndef STDSEGEXP_H
 #define STDSEGEXP_H
 
+#include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion1D.h>
 #include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdExpMap.h>
@@ -246,6 +247,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.1  2006/05/04 18:58:33  kirby
+ * *** empty log message ***
+ *
  * Revision 1.41  2006/03/13 18:29:35  sherwin
  *
  * Corrected error with definition of GetCoords

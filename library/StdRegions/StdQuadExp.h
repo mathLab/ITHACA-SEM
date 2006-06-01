@@ -37,6 +37,7 @@
 #ifndef STDQUADEXP_H
 #define STDQUADEXP_H
 
+#include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdMatrix.h>
 #include <StdRegions/StdSegExp.h>
@@ -212,6 +213,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.2  2006/05/23 15:08:19  jfrazier
+* Minor cleanup to correct compile warnings.
+*
 * Revision 1.1  2006/05/04 18:58:32  kirby
 * *** empty log message ***
 *

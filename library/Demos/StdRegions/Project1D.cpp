@@ -3,7 +3,6 @@
 #include "StdRegions/StdSegExp.h"
 
 #include "StdRegions/StdRegions.hpp"
-#include "LibUtilities/ErrorUtil.hpp"
 
 using namespace Nektar;
 using namespace StdRegions; 

@@ -638,6 +638,9 @@
 
 /**
  * $Log: BlockMat.h,v $
+ * Revision 1.2  2006/05/14 21:33:25  bnelson
+ * Updates to fix compile errors and format for the coding convention.
+ *
  * Revision 1.1  2006/05/04 18:57:41  kirby
  * *** empty log message ***
  *

@@ -437,6 +437,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.1  2006/05/04 18:57:44  kirby
+*** empty log message ***
+
 Revision 1.5  2006/03/01 08:25:03  sherwin
 
 First compiling version of StdRegions

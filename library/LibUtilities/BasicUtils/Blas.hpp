@@ -190,6 +190,9 @@ namespace Blas
 
 /***
 $Log: Blas.hpp,v $
+Revision 1.1  2006/05/04 18:57:41  kirby
+*** empty log message ***
+
 Revision 1.4  2006/02/26 21:13:45  bnelson
 Fixed a variety of compiler errors caused by updates to the coding standard.
 

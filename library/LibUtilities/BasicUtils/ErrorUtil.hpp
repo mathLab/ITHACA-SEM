@@ -112,6 +112,9 @@ namespace ErrorUtil
 #endif //ERRORUTIL_HPP
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.4  2006/05/16 20:40:44  jfrazier
+Renamed ERROR to NEKERROR to prevent conflict in Visual Studio.
+
 Revision 1.3  2006/05/09 16:40:57  jfrazier
 Added ERROR macro definition.
 

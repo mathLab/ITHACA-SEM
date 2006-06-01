@@ -38,7 +38,6 @@
 
 #include <cstdlib>
 #include <fstream>
-#include <LibUtilities/IOutils.h>
 
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/InterfaceComponent.h>
@@ -108,6 +107,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.2  2006/05/09 13:37:01  jfrazier
+// Removed duplicate definition of shared vertex pointer.
+//
 // Revision 1.1  2006/05/04 18:59:02  kirby
 // *** empty log message ***
 //

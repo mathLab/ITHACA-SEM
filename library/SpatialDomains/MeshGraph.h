@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+
 //
 //  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/MeshGraph.h,v $
 //
@@ -107,6 +107,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.3  2006/06/01 14:58:53  kirby
+// *** empty log message ***
+//
 // Revision 1.2  2006/05/09 13:37:01  jfrazier
 // Removed duplicate definition of shared vertex pointer.
 //

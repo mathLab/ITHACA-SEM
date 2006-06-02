@@ -46,9 +46,9 @@ namespace Nektar
         }
 
         TriGeom::TriGeom(const VertexComponentSharedPtr verts[], 
-            const EdgeComponentSharedPtr edges[], 
-            StdRegions::EdgeOrientation * eorient):
-        TriFaceComponent(verts[0]->GetCoordim())
+			 const EdgeComponentSharedPtr edges[], 
+			 StdRegions::EdgeOrientation * eorient):
+	    TriFaceComponent(verts[0]->GetCoordim())
         {
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+TriGeom::kNverts);
@@ -67,29 +67,26 @@ namespace Nektar
         }
 
         TriGeom::TriGeom(const EdgeComponentSharedPtr edges[], 
-            StdRegions::EdgeOrientation * eorient):
-        TriFaceComponent(edges[0]->GetCoordim())
+			 StdRegions::EdgeOrientation * eorient):
+	    TriFaceComponent(edges[0]->GetCoordim())
         {
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
 
-            /// Want a unique set of vertices.
-            VertexComponentSet vertSet;
-
-            for (int j=0; j<kNedges; ++j)
-            {
-                vertSet.insert(edges[j]->GetVertex(0));
-                vertSet.insert(edges[j]->GetVertex(1));
-
-                m_eorient[j] = eorient[j];
-            }
-
-            /// Insert unique, unsorted elements into the vector.
-            m_verts.insert(m_verts.begin(), vertSet.begin(), vertSet.end());
+	    for(int j=0; j <kNedges; ++j)
+	    {
+		if(eorient[j] == StdRegions::eForwards)
+		{
+		    m_verts.push_back(edges[j]->GetVertex(0));
+		}
+		else
+		{
+		    m_verts.push_back(edges[j]->GetVertex(1));
+		}
+	    }
 
             m_coordim = edges[0]->GetVertex(0)->GetCoordim();
-            ASSERTL0(m_coordim > 1,
-                "Cannot call function with dim == 1");
+            ASSERTL0(m_coordim > 1,"Cannot call function with dim == 1");
         }
 
         TriGeom::~TriGeom()
@@ -255,6 +252,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.5  2006/06/01 14:15:31  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.4  2006/05/23 19:56:33  jfrazier
 // These build and run, but the expansion pieces are commented out
 // because they would not run.

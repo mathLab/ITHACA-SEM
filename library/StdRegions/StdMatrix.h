@@ -43,6 +43,7 @@
 #include <StdRegions/PolyManager.h>
 #include <StdRegions/StdExpansion.h>
 
+#include <stdio.h>
 
 namespace Nektar
 {
@@ -227,7 +228,12 @@ namespace Nektar
 
       /// show the matrix structure in file out
       void ShowMatrixStructure (FILE *out);
-
+      inline void ShowMatrixStructure (void)
+      {
+	  FILE *out = stdout; 
+	  ShowMatrixStructure(out);
+      }
+      
       // Overloaded Operators
       friend bool operator  == (const StdExpansion &x, const StdMatContainer *y);
       friend bool operator  != (const StdExpansion &x, const StdMatContainer *y);
@@ -306,6 +312,9 @@ namespace Nektar
 
 /**
  * $Log: StdMatrix.h,v $
+ * Revision 1.2  2006/06/01 13:43:19  kirby
+ * *** empty log message ***
+ *
  * Revision 1.1  2006/05/04 18:58:32  kirby
  * *** empty log message ***
  *

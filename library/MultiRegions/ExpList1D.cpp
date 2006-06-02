@@ -108,7 +108,7 @@ namespace Nektar
 	  
 	  for(def = m_seg.begin(); def != m_seg.end(); ++def){
 	      sum += (*def)->Integral(inarray+cnt);
-	      cnt += (*def)->GetPointsOrder(0);
+	      cnt += (*def)->GetPointsTot();
 	  }
 	  
 	  return sum; 
@@ -124,7 +124,7 @@ namespace Nektar
 	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
 	  {
 	      (*def)->IProductWRTBase(inarray+cnt,outarray+cnt1);
-	      cnt  += (*def)->GetPointsOrder(0);
+	      cnt  += (*def)->GetPointsTot();
 	      cnt1 += (*def)->GetNcoeffs();
 	  }
       }
@@ -159,7 +159,7 @@ namespace Nektar
 	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
 	  {
 	      (*def)->Deriv(n,inarray+cnt,outarray+cnt);
-	      cnt  += (*def)->GetPointsOrder(0);
+	      cnt  += (*def)->GetPointsTot();
 	  }
       }
       
@@ -171,7 +171,7 @@ namespace Nektar
 	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
 	  {
 	      (*def)->FwdTrans(inarray+cnt);
-	      cnt  += (*def)->GetPointsOrder(0);
+	      cnt  += (*def)->GetPointsTot();
 	  }
 	
 	  m_transState = eLocal;
@@ -185,7 +185,7 @@ namespace Nektar
 	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
 	  {
 	      (*def)->BwdTrans(outarray+cnt);
-	      cnt  += (*def)->GetPointsOrder(0);
+	      cnt  += (*def)->GetPointsTot();
 	  }
 	  m_physState = true;
       }
@@ -204,7 +204,7 @@ namespace Nektar
 	      }
 	      
 	      (*def)->GetCoords(E_coords);
-	      cnt  += (*def)->GetPointsOrder(0);
+	      cnt  += (*def)->GetPointsTot();
 	  }
       }
       
@@ -239,7 +239,7 @@ namespace Nektar
 	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
 	  {
 	      err  = std::max(err,(*def)->Linf(sol+cnt));
-	      cnt  += (*def)->GetPointsOrder(0);
+	      cnt  += (*def)->GetPointsTot();
 	  }
 	  
 	  return err;
@@ -260,13 +260,13 @@ namespace Nektar
 	  {
 	      errl2 = (*def)->L2(sol+cnt);
 	      err += errl2*errl2;
-	      cnt  += (*def)->GetPointsOrder(0);
+	      cnt  += (*def)->GetPointsTot();
 	  }
 	  
 	  return sqrt(err);
       }
       
-      
+    
   } //end of namespace
 } //end of namespace
 

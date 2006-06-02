@@ -203,7 +203,7 @@ namespace Nektar
 		    std::string elementType(child->ValueStr());
 		    
 		    ASSERTL0(elementType == "Q" || elementType == "T",
-			     (std::string("Unknown 2D element type: ") + elementType).c_str());
+		   (std::string("Unknown 2D element type: ") + elementType).c_str());
 		    
 		    elementID = nextElementNumber++;
 		    /// Read text element description.
@@ -234,9 +234,16 @@ namespace Nektar
 			    ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
 			    
 			    /// Create a TriGeom to hold the new definition.
-			    EdgeComponentSharedPtr edges[TriGeom::kNedges] = {GetEdgeComponent(edge1),GetEdgeComponent(edge2),GetEdgeComponent(edge3)};
-			    StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] = {EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
-											EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]), EdgeComponent::GetEdgeOrientation(*edges[2], *edges[0])};
+			    EdgeComponentSharedPtr edges[TriGeom::kNedges] = 
+			    {GetEdgeComponent(edge1),
+			     GetEdgeComponent(edge2),
+			     GetEdgeComponent(edge3)};
+			    
+			    StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] = 
+			    {EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
+			     EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]), 
+			     EdgeComponent::GetEdgeOrientation(*edges[2], *edges[0])};
+
 			    TriGeomSharedPtr trigeom(new TriGeom(edges, edgeorient));
 			    
 			    m_trigeoms.push_back(trigeom);
@@ -263,14 +270,18 @@ namespace Nektar
 			    ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
 			    
 			    /// Create a QuadGeom to hold the new definition.
-			    EdgeComponentSharedPtr edges[QuadGeom::kNedges] = {GetEdgeComponent(edge1),GetEdgeComponent(edge2),GetEdgeComponent(edge3)};
+			    EdgeComponentSharedPtr edges[QuadGeom::kNedges] = 
+			    {GetEdgeComponent(edge1),GetEdgeComponent(edge2),
+			     GetEdgeComponent(edge3),GetEdgeComponent(edge4)};
+
 			    StdRegions::EdgeOrientation edgeorient[QuadGeom::kNedges] =
-				{
-				    EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
-				    EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]),
-				    EdgeComponent::GetEdgeOrientation(*edges[2], *edges[3]),
-				    EdgeComponent::GetEdgeOrientation(*edges[3], *edges[0])
-				};
+			    {
+				EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
+				EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]),
+				EdgeComponent::GetEdgeOrientation(*edges[2], *edges[3]),
+				EdgeComponent::GetEdgeOrientation(*edges[3], *edges[0])
+			    };
+
 			    QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
 			    
 			    m_quadgeoms.push_back(quadgeom);
@@ -278,7 +289,7 @@ namespace Nektar
 			}
 			catch(...)
 			{
-			    NEKERROR(ErrorUtil::efatal, (std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
+			    NEKERROR(ErrorUtil::efatal,(std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
 			}
 		    }
 		}
@@ -353,6 +364,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.5  2006/06/01 14:15:30  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.4  2006/05/30 14:00:04  sherwin
 // Updates to make MultiRegions and its Demos work
 //

@@ -174,30 +174,38 @@ namespace Nektar
 
         /// \brief Get the orientation of edge1.
         ///
-        /// If edge1 is connected to edge2 in the same direction
-        /// as the points comprising edge1 then it is forward, otherwise it is backward.  For example, assume
-        /// edge1 is comprised of points 1 and 2, and edge2 is comprised of points 2 and 3, then edge
-        /// is forward.  If edge1 is comprised of points 2 and 1 and edge2 is comprised of points
-        /// 3 and 2, then edge1 is backward.
+        /// If edge1 is connected to edge2 in the same direction as
+        /// the points comprising edge1 then it is forward, otherwise
+        /// it is backward.  
+	///
+	/// For example, assume edge1 is comprised of points 1 and 2,
+        /// and edge2 is comprised of points 2 and 3, then edge is
+        /// forward.
+	///
+        /// If edge1 is comprised of points 2 and 1 and edge2 is
+        /// comprised of points 3 and 2, then edge1 is backward.
 
-        StdRegions::EdgeOrientation EdgeComponent::GetEdgeOrientation(const EdgeComponent &edge1, const EdgeComponent &edge2)
+        StdRegions::EdgeOrientation EdgeComponent::GetEdgeOrientation(const EdgeComponent &edge1, 
+								      const EdgeComponent &edge2)
         {
             StdRegions::EdgeOrientation returnval = StdRegions::eForwards;
-
+	    
             /// Backward direction.  Vertex 0 is connected to edge 2.
-            if ((*edge1.GetVertex(0) == *edge2.GetVertex(0)) || (*edge1.GetVertex(0) == *edge2.GetVertex(1)))
+            if ((*edge1.GetVertex(0) == *edge2.GetVertex(0)) || 
+		(*edge1.GetVertex(0) == *edge2.GetVertex(1)))
             {
                 returnval = StdRegions::eBackwards;
             }
             // Not forward either, then we have a problem.
-            else if ((*edge1.GetVertex(1) != *edge2.GetVertex(0)) && (*edge1.GetVertex(1) != *edge2.GetVertex(1)))
+            else if ((*edge1.GetVertex(1) != *edge2.GetVertex(0)) && 
+		     (*edge1.GetVertex(1) != *edge2.GetVertex(1)))
             {
                 std::ostrstream errstrm;
                 errstrm << "Connected edges do not share a vertex. Edges ";
                 errstrm << edge1.GetEid() << ", " << edge2.GetEid();
                 ASSERTL0(false, errstrm.str());
             }
-
+	    
             return returnval;
         }
     }; //end of namespace
@@ -205,6 +213,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.7  2006/05/30 14:00:04  sherwin
+*    Updates to make MultiRegions and its Demos work
+*
 *    Revision 1.6  2006/05/23 20:19:58  jfrazier
 *    Added #pragma to show where problems currently exist.
 *

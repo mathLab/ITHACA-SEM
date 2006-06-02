@@ -190,7 +190,7 @@ namespace Nektar
             for(i = 0; i < nquad1; ++i)
             {
                 Vmath::Vmul(nquad0,(double*)inarray+i*nquad0,1,(double*)w0,1,
-                    tmp.get()+i*nquad0,1);
+			    tmp.get()+i*nquad0,1);
             }
 
             switch((int)m_base[1]->GetAlpha())
@@ -604,6 +604,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.2  2006/06/01 14:13:37  kirby
+* *** empty log message ***
+*
 * Revision 1.1  2006/05/04 18:58:33  kirby
 * *** empty log message ***
 *

@@ -481,6 +481,52 @@ namespace Nektar
 	}
 	
 	
+	void QuadExp::WriteToFile(std::ofstream &outfile, const int dumpVar)
+	{
+	    int i,j;
+	    double *coords[3];
+	    int  nquad0 = m_base[0]->GetPointsOrder();
+	    int  nquad1 = m_base[1]->GetPointsOrder();
+	    int  gdim   = m_geom->GetCoordDim();
+	    
+	    
+	    coords[0] = new double [3*nquad0*nquad1]; 
+	    coords[1] = coords[0] + nquad0*nquad1;
+	    coords[2] = coords[1] + nquad0*nquad1;
+	    
+	    GetCoords(coords);
+
+      
+	    if(dumpVar)
+	    {
+		outfile << "Variables = x";
+		
+		if(gdim == 2)
+		{
+		    outfile << ", y";
+		}
+		else if (gdim == 3)
+		{
+		    outfile << ", y, z";
+		}
+		outfile << ", v\n" << std::endl;
+	    }
+    
+	    outfile << "Zone, I=" << nquad0 << ", J=" << 
+		nquad1 <<", F=Point" << std::endl;
+	    
+	    for(i = 0; i < nquad0*nquad1; ++i)
+	    {
+		for(j = 0; j < gdim; ++j)
+		{
+		    outfile << coords[j][i] << " ";
+		}
+		outfile << m_phys[i] << std::endl;
+	    }
+	    delete[] coords[0];
+	}
+
+
 	double QuadExp::Evaluate(const double *coord)
 	{
 	    double Lcoord[2];
@@ -496,6 +542,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.6  2006/06/01 15:27:27  sherwin
+ *    Modifications to account for LibUtilities reshuffle
+ *
  *    Revision 1.5  2006/06/01 14:15:57  sherwin
  *    Added typdef of boost wrappers and made GeoFac a boost shared pointer.
  *

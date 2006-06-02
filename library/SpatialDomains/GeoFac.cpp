@@ -43,7 +43,6 @@ namespace Nektar
     {
       GeoFac::GeoFac(const StdRegions::GeomType gtype, 
 		     const int expdim, const int coordim):
-	m_mem_count(1),
 	m_gtype(gtype),
 	m_jac((double *) NULL)
       {
@@ -71,7 +70,6 @@ namespace Nektar
 
 	ASSERTL1(coordim <= 3, "Only understand up to 3 Coordinate for this routine");
 	
-	m_mem_count = 1;
 	m_gtype  = gtype;
 	m_gmat = new double* [coordim];
 
@@ -203,7 +201,6 @@ namespace Nektar
 		 "Only understand up to three Coordinate and must have "
 		 "at least two coordinates for this routine");
 	
-	m_mem_count = 1;
 	m_gtype = gtype;
 	m_gmat  = new double*[2*n];
 	
@@ -253,7 +250,7 @@ namespace Nektar
 	  if(n == 2) // assume g = [0,0,1]
 	  {
 	    m_jac[0] = d1[0][0]*d2[1][0] - d2[0][0]*d1[1][0];
-
+	    
 	    ASSERTL1(m_jac[0] > 0, "2D Regular Jacobian is not positive");
 	    
 	    m_gmat[0][0] =  d2[1][0]/m_jac[0]; // d xi_1/d x_1
@@ -269,6 +266,7 @@ namespace Nektar
 	    g[2] = d1[0][0]*d2[1][0] - d1[1][0]*d2[0][0];
 	    
 	    m_jac[0] = g[0]*g[0]+g[1]*g[1]+g[2]*g[2];
+	    ASSERTL1(m_jac[0] > 0, "Regular Jacobian is not positive");
 
 	    m_gmat[0][0] =  (d2[1][0]*g[2] - d2[2][0]*g[1])/m_jac[0]; // d xi_1/d x_1
 	    m_gmat[1][0] = -(d1[1][0]*g[2] - d1[2][0]*g[1])/m_jac[0]; // d xi_2/d x_1
@@ -415,8 +413,6 @@ namespace Nektar
 	int        i,nquad0,nquad1,nquad2,nqtot;
 	StdRegions::PointsType  ptype0, ptype1, ptype2;
 	double      *d1[3], *d2[3], *d3[3],*tmp;
-	
-	m_mem_count = 1;
 	
 	m_gtype = gtype;
 	m_gmat  = new double*[9];
@@ -587,6 +583,9 @@ namespace Nektar
 
 //
 // $Log: GeoFac.cpp,v $
+// Revision 1.1  2006/05/04 18:58:59  kirby
+// *** empty log message ***
+//
 // Revision 1.18  2006/04/09 02:08:34  jfrazier
 // Added precompiled header.
 //

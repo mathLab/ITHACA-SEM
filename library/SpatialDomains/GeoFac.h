@@ -117,7 +117,6 @@ namespace Nektar
 
         private:
             StdRegions::GeomType m_gtype;
-            int m_mem_count;
         };
 
 	typedef boost::shared_ptr<GeoFac> GeoFacSharedPtr;
@@ -132,6 +131,9 @@ namespace Nektar
 
 //
 // $Log: GeoFac.h,v $
+// Revision 1.3  2006/06/01 14:15:30  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.2  2006/05/29 17:05:17  sherwin
 // Updated to use shared_ptr around Geom types - added typedef
 //

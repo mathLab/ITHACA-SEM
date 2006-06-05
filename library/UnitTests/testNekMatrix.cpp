@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <UnitTests/testNekMatrix.h>
-#include <LibUtilities/NekMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -219,6 +219,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.10  2006/05/31 23:24:47  bnelson
+    Updated NekMatrix method names for the coding standard.
+
     Revision 1.9  2006/05/31 04:19:36  bnelson
     Removed a test for invalid access to a matrix.
 

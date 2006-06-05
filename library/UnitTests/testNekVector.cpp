@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <UnitTests/testNekVector.h>
-#include <LibUtilities/NekVector.hpp>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -341,6 +341,9 @@ namespace Nektar
 
 /**
     $Log: testNekVector.cpp,v $
+    Revision 1.1  2006/05/04 18:59:56  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/04/11 02:02:13  bnelson
     Added more tests.
 

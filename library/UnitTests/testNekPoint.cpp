@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <UnitTests/testNekPoint.h>
-#include <LibUtilities/NekPoint.hpp>
+#include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -123,6 +123,9 @@ namespace Nektar
 
 /**
     $Log: testNekPoint.cpp,v $
+    Revision 1.1  2006/05/04 18:59:56  kirby
+    *** empty log message ***
+
     Revision 1.3  2006/04/11 02:02:13  bnelson
     Added more tests.
 

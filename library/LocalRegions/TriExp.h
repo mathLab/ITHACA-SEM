@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LocalRegions/TriExp.h,v $ 
+// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LocalRegions/TriExp.h,v $
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -47,259 +47,262 @@
 
 namespace Nektar
 {
-    namespace LocalRegions 
+    namespace LocalRegions
     {
 
-	class TriExp: public StdRegions::StdTriExp
-	{
+    class TriExp: public StdRegions::StdTriExp
+    {
 
-	public:
-	    
-	    /** \brief Constructor using BasisKey class for quadrature
-		points and order definition */
-	    TriExp(const StdRegions::BasisKey &Ba, 
-		   const StdRegions::BasisKey &Bb,
-		   SpatialDomains::TriGeomSharedPtr geom);
+    public:
 
-	    
-	    /** \brief Constructor using BasisKey class for quadrature
-		points and order definition where _coeffs and _phys are all
-		set. */
-	    TriExp(const StdRegions::BasisKey &Ba, 
-		   const StdRegions::BasisKey &Bb,
-		   double *coeffs, double *phys, 
-		   SpatialDomains::TriGeomSharedPtr geom);
-	    
-	    /// Copy Constructor
-	    TriExp(const TriExp &T);
-
-	    /// Destructor
-	    ~TriExp();
-    
-	    /// Return Shape of region, using  ShapeType enum list. 
-	    StdRegions::ShapeType DetShapeType() 
-	    {
-	      return StdRegions::eTriangle;
-	    }
-	    
-	    MetricRelatedInfoSharedPtr TriExp::GenGeoFac();
-	    
-	    
-	    inline void SetGeoFac(MetricRelatedInfoSharedPtr minfo)
-	    {
-	      m_minfo = minfo;
-	    }
+        /** \brief Constructor using BasisKey class for quadrature
+        points and order definition */
+        TriExp(const StdRegions::BasisKey &Ba,
+           const StdRegions::BasisKey &Bb,
+           SpatialDomains::TriGeomSharedPtr geom);
 
 
-	    inline int GetCoordim()
-	    {
-		return m_geom->GetCoordim();
-	    }
+        /** \brief Constructor using BasisKey class for quadrature
+        points and order definition where _coeffs and _phys are all
+        set. */
+        TriExp(const StdRegions::BasisKey &Ba,
+           const StdRegions::BasisKey &Bb,
+           double *coeffs, double *phys,
+           SpatialDomains::TriGeomSharedPtr geom);
 
-	    void GetCoords(double **coords);
-      
+        /// Copy Constructor
+        TriExp(const TriExp &T);
 
-	    void GetCoord(const double *Lcoords, double *coords);
-    
+        /// Destructor
+        ~TriExp();
 
-	    virtual StdRegions::GeomType V_GeoFacType()
-	    {
-		return m_minfo->GetGtype();
-	    }
-	    
-	    void WriteToFile(FILE *outfile);
-	    void WriteToFile(std::ofstream &outfile, const int dumpVar);
-	    
-	    //----------------------------
-	    // Integration Methods
-	    //----------------------------
-	    
-	    /// \brief Integrate the physical point list \a inarray over region
-	    double Integral(const double *inarray);
+        /// Return Shape of region, using  ShapeType enum list.
+        StdRegions::ShapeType DetShapeType()
+        {
+          return StdRegions::eTriangle;
+        }
 
-	    /** \brief  Inner product of \a inarray over region with respect to the 
-		expansion basis (this)->_Base[0] and return in \a outarray */
-	    void IProductWRTBase(const double * inarray, double * outarray);
+        MetricRelatedInfoSharedPtr GenGeoFac();
 
-	    //----------------------------------
-	    // Local Matrix Routines 
-	    //----------------------------------
-	    
-	    /** \brief Get the mass matrix attached to this expansion by using
-		the StdMatrix manager _ElmtMats and return the standard Matrix
-		container */
-	    StdRegions::StdMatContainer *GetMassMatrix(); 
-      
-	    /** \brief Get the weak Laplacian matrix attached to this
-		expansion by using the StdMatrix manager _ElmtMats and return
-		the standard Matrix container */
-	    StdRegions::StdMatContainer * GetLapMatrix();
-	    
-	    //-----------------------------
-	    // Differentiation Methods
-	    //-----------------------------
-	    
-	    void Deriv(double * outarray_d1, double *outarray_d2)
-	    {
-		double *out[2];
-		out [0] = outarray_d1;  
-		out [1] = outarray_d2;
-		Deriv(2, this->m_phys, out);
-	    }
-	    
-	    void Deriv(const double *inarray, double * outarray_d1, 
-		       double *outarray_d2)
-	    {
-		double *out[2];
-		out [0] = outarray_d1;  
-		out [1] = outarray_d2;
-		Deriv(2, inarray, out);
-	    }
-	    
-	    void Deriv(const int n, double **outarray);
-	    
-	    void Deriv(const int n, const double *inarray, double ** outarray);
-	    
-	    //----------------------------
-	    // Evaluations Methods
-	    //---------------------------
-	    
-	    /** \brief Forward transform from physical quadrature space
-		stored in \a inarray and evaluate the expansion coefficients and
-		store in \a (this)->_coeffs  */
-	    void FwdTrans(const double * inarray);
 
-	    double Evaluate(const double *coord);
-	    
-	protected:
-	    int m_id;
-	    int m_field;
-	    
-	    SpatialDomains::TriGeomSharedPtr m_geom;
-	    MetricRelatedInfoSharedPtr       m_minfo;
-      
-	    /** \brief  Inner product of \a inarray over region with respect to
-		the expansion basis \a base and return in \a outarray */
-	    inline void IProductWRTBase(const double *base0, 
-					const double *base1, 
-					const double *inarray, 
-					double *outarray);
+        inline void SetGeoFac(MetricRelatedInfoSharedPtr minfo)
+        {
+          m_minfo = minfo;
+        }
 
-	private:
 
-	    virtual StdRegions::ShapeType v_DetShapeType() 
-	    {
-		DetShapeType();
-	    }
+        inline int GetCoordim()
+        {
+        return m_geom->GetCoordim();
+        }
 
-	    virtual MetricRelatedInfoSharedPtr v_GenGeoFac()
-	    {
-		return GenGeoFac();
-	    }
+        void GetCoords(double **coords);
 
-	    virtual void v_SetGeoFac(MetricRelatedInfoSharedPtr minfo)
-	    {
-		SetGeoFac(minfo);
-	    }
 
-	    virtual void v_GetCoords(double **coords)
-	    {
-		GetCoords(coords);
-	    }
+        void GetCoord(const double *Lcoords, double *coords);
 
-	    virtual void v_GetCoord(const double *Lcoords, double *coords)
-	    {
-		GetCoord(Lcoords, coords);
-	    }
 
-	    virtual void v_WriteToFile(FILE *outfile)
-	    {
-		WriteToFile(outfile);
-	    }
+        virtual StdRegions::GeomType V_GeoFacType()
+        {
+        return m_minfo->GetGtype();
+        }
 
-	    /** \brief Virtual call to integrate the physical point list \a inarray
-		over region (see SegExp::Integral) */
-	    virtual double v_Integral(const double *inarray)
-	    {
-		return Integral(inarray);
-	    }
+        void WriteToFile(FILE *outfile);
+        void WriteToFile(std::ofstream &outfile, const int dumpVar);
 
-	    /** \brief Virtual call to TriExp::IProduct_WRT_B */
-	    virtual void v_IProductWRTBase(const double * inarray, double * outarray)
-	    {
-		IProductWRTBase(inarray,outarray);
-	    }
-	    
-	    /// virtual call to GetMassMatrix
-	    virtual StdRegions::StdMatContainer *v_GetMassMatrix() 
-	    {
-		return GetMassMatrix();
-	    }
-	    
-	    /// virtual call to GetLapatrix
-	    virtual StdRegions::StdMatContainer *v_GetLapMatrix() 
-	    {
-		return GetLapMatrix();
-	    }
-      
-	    virtual void v_Deriv(double * outarray_d1, double *outarray_d2)
-	    {
-		Deriv(this->m_phys, outarray_d1, outarray_d2);
-	    }
+        //----------------------------
+        // Integration Methods
+        //----------------------------
 
-	    virtual void v_StdDeriv(double * outarray_d1, double *outarray_d2)
-	    {
-		StdTriExp::Deriv(this->m_phys, outarray_d1, outarray_d2);
-	    }
-    
-	    virtual void v_Deriv(const double *inarray, double * outarray_d1, 
-				 double *outarray_d2)
-	    {
-		Deriv(inarray, outarray_d1, outarray_d2);
-	    }
+        /// \brief Integrate the physical point list \a inarray over region
+        double Integral(const double *inarray);
 
-	    virtual void v_StdDeriv(const double *inarray, double * outarray_d1, 
-				    double *outarray_d2)
-	    {
-		StdTriExp::Deriv(inarray, outarray_d1, outarray_d2);
-	    }
-  
-	    virtual void v_Deriv(const int n,  double ** outarray)
-	    {
-		Deriv(n, outarray);
-	    }
+        /** \brief  Inner product of \a inarray over region with respect to the
+        expansion basis (this)->_Base[0] and return in \a outarray */
+        void IProductWRTBase(const double * inarray, double * outarray);
 
-	    virtual void v_Deriv(const int n, const double *inarray,
-				 double ** outarray)
-	    {
-		Deriv(n, inarray, outarray);
-	    }
-    
-	    /// Virtual call to SegExp::FwdTrans
-	    virtual void v_FwdTrans(const double * inarray)
-	    {
-		FwdTrans(inarray);
-	    }
-	    
-	    /// Virtual call to TriExp::Evaluate
-	    virtual double v_Evaluate(const double * coords)
-	    {
-		return Evaluate(coords);
-	    }
-	};
-	
-	// type defines for use of TriExp in a boost vector
-	typedef boost::shared_ptr<TriExp> TriExpSharedPtr;
-	typedef std::vector< TriExpSharedPtr > TriExpVector;
-	typedef std::vector< TriExpSharedPtr >::iterator TriExpVectorIter;
-	
+        //----------------------------------
+        // Local Matrix Routines
+        //----------------------------------
+
+        /** \brief Get the mass matrix attached to this expansion by using
+        the StdMatrix manager _ElmtMats and return the standard Matrix
+        container */
+        StdRegions::StdMatContainer *GetMassMatrix();
+
+        /** \brief Get the weak Laplacian matrix attached to this
+        expansion by using the StdMatrix manager _ElmtMats and return
+        the standard Matrix container */
+        StdRegions::StdMatContainer * GetLapMatrix();
+
+        //-----------------------------
+        // Differentiation Methods
+        //-----------------------------
+
+        void Deriv(double * outarray_d1, double *outarray_d2)
+        {
+        double *out[2];
+        out [0] = outarray_d1;
+        out [1] = outarray_d2;
+        Deriv(2, this->m_phys, out);
+        }
+
+        void Deriv(const double *inarray, double * outarray_d1,
+               double *outarray_d2)
+        {
+        double *out[2];
+        out [0] = outarray_d1;
+        out [1] = outarray_d2;
+        Deriv(2, inarray, out);
+        }
+
+        void Deriv(const int n, double **outarray);
+
+        void Deriv(const int n, const double *inarray, double ** outarray);
+
+        //----------------------------
+        // Evaluations Methods
+        //---------------------------
+
+        /** \brief Forward transform from physical quadrature space
+        stored in \a inarray and evaluate the expansion coefficients and
+        store in \a (this)->_coeffs  */
+        void FwdTrans(const double * inarray);
+
+        double Evaluate(const double *coord);
+
+    protected:
+        int m_id;
+        int m_field;
+
+        SpatialDomains::TriGeomSharedPtr m_geom;
+        MetricRelatedInfoSharedPtr       m_minfo;
+
+        /** \brief  Inner product of \a inarray over region with respect to
+        the expansion basis \a base and return in \a outarray */
+        inline void IProductWRTBase(const double *base0,
+                    const double *base1,
+                    const double *inarray,
+                    double *outarray);
+
+    private:
+
+        virtual StdRegions::ShapeType v_DetShapeType()
+        {
+        DetShapeType();
+        }
+
+        virtual MetricRelatedInfoSharedPtr v_GenGeoFac()
+        {
+        return GenGeoFac();
+        }
+
+        virtual void v_SetGeoFac(MetricRelatedInfoSharedPtr minfo)
+        {
+        SetGeoFac(minfo);
+        }
+
+        virtual void v_GetCoords(double **coords)
+        {
+        GetCoords(coords);
+        }
+
+        virtual void v_GetCoord(const double *Lcoords, double *coords)
+        {
+        GetCoord(Lcoords, coords);
+        }
+
+        virtual void v_WriteToFile(FILE *outfile)
+        {
+        WriteToFile(outfile);
+        }
+
+        /** \brief Virtual call to integrate the physical point list \a inarray
+        over region (see SegExp::Integral) */
+        virtual double v_Integral(const double *inarray)
+        {
+        return Integral(inarray);
+        }
+
+        /** \brief Virtual call to TriExp::IProduct_WRT_B */
+        virtual void v_IProductWRTBase(const double * inarray, double * outarray)
+        {
+        IProductWRTBase(inarray,outarray);
+        }
+
+        /// virtual call to GetMassMatrix
+        virtual StdRegions::StdMatContainer *v_GetMassMatrix()
+        {
+        return GetMassMatrix();
+        }
+
+        /// virtual call to GetLapatrix
+        virtual StdRegions::StdMatContainer *v_GetLapMatrix()
+        {
+        return GetLapMatrix();
+        }
+
+        virtual void v_Deriv(double * outarray_d1, double *outarray_d2)
+        {
+        Deriv(this->m_phys, outarray_d1, outarray_d2);
+        }
+
+        virtual void v_StdDeriv(double * outarray_d1, double *outarray_d2)
+        {
+        StdTriExp::Deriv(this->m_phys, outarray_d1, outarray_d2);
+        }
+
+        virtual void v_Deriv(const double *inarray, double * outarray_d1,
+                 double *outarray_d2)
+        {
+        Deriv(inarray, outarray_d1, outarray_d2);
+        }
+
+        virtual void v_StdDeriv(const double *inarray, double * outarray_d1,
+                    double *outarray_d2)
+        {
+        StdTriExp::Deriv(inarray, outarray_d1, outarray_d2);
+        }
+
+        virtual void v_Deriv(const int n,  double ** outarray)
+        {
+        Deriv(n, outarray);
+        }
+
+        virtual void v_Deriv(const int n, const double *inarray,
+                 double ** outarray)
+        {
+        Deriv(n, inarray, outarray);
+        }
+
+        /// Virtual call to SegExp::FwdTrans
+        virtual void v_FwdTrans(const double * inarray)
+        {
+        FwdTrans(inarray);
+        }
+
+        /// Virtual call to TriExp::Evaluate
+        virtual double v_Evaluate(const double * coords)
+        {
+        return Evaluate(coords);
+        }
+    };
+
+    // type defines for use of TriExp in a boost vector
+    typedef boost::shared_ptr<TriExp> TriExpSharedPtr;
+    typedef std::vector< TriExpSharedPtr > TriExpVector;
+    typedef std::vector< TriExpSharedPtr >::iterator TriExpVectorIter;
+
     } //end of namespace
 } //end of namespace
 
 #endif // TRIEXP_H
 
-/** 
+/**
  *    $Log: TriExp.h,v $
+ *    Revision 1.5  2006/06/02 18:48:39  sherwin
+ *    Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
+ *
  *    Revision 1.4  2006/06/01 14:15:58  sherwin
  *    Added typdef of boost wrappers and made GeoFac a boost shared pointer.
  *

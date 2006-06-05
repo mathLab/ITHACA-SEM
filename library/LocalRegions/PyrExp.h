@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LocalRegions/PyrExp.h,v $ 
+// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LocalRegions/PyrExp.h,v $
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -45,49 +45,49 @@
 
 namespace Nektar
 {
-  namespace LocalRegions 
+  namespace LocalRegions
   {
 
     class PyrExp: public StdRegions::StdPyrExp
     {
 
     public:
-      
+
       /** \brief Constructor using BasisKey class for quadrature points and order
-	  definition */
-      PyrExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-	     const StdRegions::BasisKey &Bc);
-      
+      definition */
+      PyrExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb,
+         const StdRegions::BasisKey &Bc);
+
       /** \brief Constructor using BasisKey class for quadrature
-	  points and order definition where _coeffs and _phys are all
-	  set. */
-      PyrExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-	     const StdRegions::BasisKey &Bc, double *coeffs, double *phys);
-      
+      points and order definition where _coeffs and _phys are all
+      set. */
+      PyrExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb,
+         const StdRegions::BasisKey &Bc, double *coeffs, double *phys);
+
     /// Copy Constructor
       PyrExp(PyrExp &T);
-      
+
       /// Destructor
       ~PyrExp();
-    
+
       /// Return Shape of region, using  ShapeType enum list. i.e. Pyramid
-      StdRegions::ShapeType DetShapeType() 
-      { 
-	return StdRegions::ePyramid; 
+      StdRegions::ShapeType DetShapeType()
+      {
+    return StdRegions::ePyramid;
       }
-      
+
     protected:
       int m_id;
       int m_field;
-    
+
       SpatialDomains::PyrGeom * m_geom;
 
     private:
-      virtual StdRegions::ShapeType v_DetShapeType() 
+      virtual StdRegions::ShapeType v_DetShapeType()
       {
-	DetShapeType();
+    DetShapeType();
       }
-    
+
     };
 
     // type defines for use of PyrExp in a boost vector
@@ -98,9 +98,13 @@ namespace Nektar
   } //end of namespace
 } //end of namespace
 
-#endif  PYREXP_H
-/** 
+#endif  //PYREXP_H
+
+/**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.2  2006/05/30 14:00:03  sherwin
+ *    Updates to make MultiRegions and its Demos work
+ *
  *    Revision 1.1  2006/05/04 18:58:46  kirby
  *    *** empty log message ***
  *

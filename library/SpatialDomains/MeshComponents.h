@@ -61,7 +61,7 @@ namespace Nektar
 
               ~CompToElmt()
               {
-                  m_id = -1; 
+                  m_id = -1;
                   m_locid = -1;
               }
 
@@ -91,7 +91,7 @@ namespace Nektar
             {
             }
 
-            VertexComponent::VertexComponent(const int coordim, const int vid, 
+            VertexComponent(const int coordim, const int vid,
                 double x, double y, double z);
             ~VertexComponent();
             VertexComponent(const VertexComponent &T);
@@ -175,6 +175,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.4  2006/06/01 13:42:26  kirby
+// *** empty log message ***
+//
 // Revision 1.3  2006/05/07 11:26:38  sherwin
 // Modifications to get the demo LocalRegions::Project2D to compile
 //

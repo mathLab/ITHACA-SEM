@@ -28,8 +28,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: Header file of Points definition 
+//
+// Description: Header file of Points definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -42,11 +42,11 @@
 #include <loki/Factory.h>
 
 #include <StdRegions/StdRegions.hpp>
-#include <LibUtilities/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
 {
-  namespace StdRegions 
+  namespace StdRegions
   {
 
     typedef boost::shared_ptr<NekMatrix> SharedNekMatrixPtr;
@@ -60,15 +60,15 @@ namespace Nektar
 
     // base class for points definition whic can store the zeros and
     // must have a definition of weight and a derivative matrix
-    
+
     class Points
     {
     public:
         Points():
             m_pointsorder(0),
             m_zeros(NULL),
-	        m_weights(NULL),
-	        m_derivmatrix(NULL)
+            m_weights(NULL),
+            m_derivmatrix(NULL)
         {
             }
 
@@ -78,38 +78,38 @@ namespace Nektar
 
       inline double *GetZ() const
       {
-	return m_zeros; 
+    return m_zeros;
       }
 
       inline double *GetW() const
       {
-	return m_weights; 
+    return m_weights;
       }
-      
-      inline void GetZW(const double *&z, const double *&w) 
+
+      inline void GetZW(const double *&z, const double *&w)
       {
-	z = m_zeros;
-	w = m_weights;
+    z = m_zeros;
+    w = m_weights;
       }
 
       inline double *GetD() const
       {
-	return m_derivmatrix;
+    return m_derivmatrix;
       }
 
     protected:
       double *m_zeros;       //< definition of points
       double *m_weights;     //< definition of integration weights
-    
+
         SharedNekMatrixPtr
       double *m_derivmatrix; //< defintiion of derivative matrix
-      
+
     private:
 
     };
 
 
-    
+
     // definition of points using given points through which we assume
     // a polynomial fit
     class PolyPoints: public Points
@@ -121,14 +121,14 @@ namespace Nektar
       }
 
       PolyPoints(const int npts):
-	Points(npts)
+    Points(npts)
       {
       }
 
       PolyPoints(const int npts, double *z);
 
       void CalcWeights();
-      
+
       void CalcDerivMatrix();
 
     protected:
@@ -147,13 +147,13 @@ namespace Nektar
       {
       }
 
-      GaussPolyPoints(const int npts, PointsType ptype, 
-		      const double alpha, const double beta);
-      
+      GaussPolyPoints(const int npts, PointsType ptype,
+              const double alpha, const double beta);
+
     protected:
 
     private:
-      
+
     };
 
 
@@ -174,6 +174,6 @@ namespace Nektar
     };
 
   } // end of namespace
-} // end of namespace 
+} // end of namespace
 
 #endif //STDPOINTS_H

@@ -1,0 +1,28 @@
+SET(MULTI_REGIONS_SOURCES
+ContExpList1D.cpp
+DisContExpList1D.cpp
+ExpList1D.cpp
+ExpList2D.cpp
+ExpList3D.cpp
+ExpList.cpp
+Loc2GloMap.cpp
+)
+
+SET(MULTI_REGIONS_HEADERS
+ContExpList1D.h
+DisContExpList1D.h
+ExpList1D.h
+ExpList2D.h
+ExpList3D.h
+ExpList.h
+Loc2GloMap.h
+)
+
+
+ADD_NEKTAR_LIBRARY(MultiRegions STATIC ${MULTI_REGIONS_SOURCES} ${MULTI_REGIONS_HEADERS})
+
+INSTALL_FILES(${NEKTAR_INCLUDE_DIR}/MultiRegions FILES ${MULTI_REGIONS_HEADERS})
+
+
+
+

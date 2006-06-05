@@ -37,33 +37,36 @@
 #define LOC2GLOMAP_H
 
 #include <vector>
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
   namespace MultiRegions
   {
-  
-    typedef boost::shared_ptr<int} IntPtr;
-    typedef std::vector< IntPtr > IntVector;
-    typedef std::vector< IntPtr >::iterator IntVectorIter;
-    
+
+    typedef boost::shared_ptr<int> IntPtr;
+    typedef std::vector<IntPtr> IntVector;
+    typedef std::vector<IntPtr>::iterator IntVectorIter;
+
     class Loc2GloMap
     {
-    public:
-      Loc2GloMap();
-      ~Loc2GloMap();
+        public:
+            Loc2GloMap();
+            ~Loc2GloMap();
 
-    protected:
-      
-      
-    private:
-      int *m_nbndry;
-      IntVector m_locid;
-      IntVector  m_gmap;
-      
+        protected:
+
+        private:
+            int* m_nbndry;
+            IntVector m_locid;
+            IntVector m_gmap;
     };
-    
+
   } // end of namespace
 } // end of namespace
 
-#endif
+#endif //LOC2GLOMAP_H
+
+
+/** $Log: $ */
+

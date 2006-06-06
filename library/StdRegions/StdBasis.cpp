@@ -234,7 +234,7 @@ namespace Nektar
 
             case eOrtho_B:
                 {
-                    double *one_m_z_pow,fac;
+                    double *one_m_z_pow;
 
                     // bdata should be of size order*(order+1)/2*zorder;
 
@@ -294,7 +294,7 @@ namespace Nektar
             case eOrtho_C:
                 {
 
-                    double *one_m_z_pow,scal,fac;
+                    double *one_m_z_pow,scal;
 
                     // bdata should be of size _order*(order+1)*(order+2)/6*zorder;
 
@@ -705,6 +705,9 @@ namespace Nektar
 
 /** 
 * $Log: StdBasis.cpp,v $
+* Revision 1.2  2006/06/01 13:43:19  kirby
+* *** empty log message ***
+*
 * Revision 1.1  2006/05/04 18:58:30  kirby
 * *** empty log message ***
 *

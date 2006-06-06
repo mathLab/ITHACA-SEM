@@ -320,7 +320,7 @@ namespace Nektar
             int    i;
             int    nquad0 = m_base[0]->GetPointsOrder();
             int    nquad1 = m_base[1]->GetPointsOrder();
-            const  double *D0,*D1,*z0,*z1,*w;
+            const  double *z0,*z1,*w;
             double *d0, *d1;
             BstShrDArray wsp;
             BstShrDArray wsp1  = GetDoubleTmpSpace(nquad0*nquad1);
@@ -464,7 +464,7 @@ namespace Nektar
             const EdgeOrientation eorient, StdExpMap &Map)
         {
 
-            int i, start, skip;
+            int i;
             const int ncoeffs = edge.GetNcoeffs();
             int *dir, order0,order1;
             BasisType Btype = edge.GetBasisType(0);
@@ -604,6 +604,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.3  2006/06/02 18:48:40  sherwin
+* Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
+*
 * Revision 1.2  2006/06/01 14:13:37  kirby
 * *** empty log message ***
 *

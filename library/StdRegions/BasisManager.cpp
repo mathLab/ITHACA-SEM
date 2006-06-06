@@ -63,11 +63,8 @@ namespace StdRegions
       return (def[0]); 
     }
     else
-    { // set up new defintiion
-      int id = m_basis[id_btype].size();
-      
+    { // set up new definition
       Basis * B = new Basis(bkey);
-      
       m_basis[id_btype].push_back(B);
       
       return (B);
@@ -106,6 +103,9 @@ namespace StdRegions
 
 /** 
  * $Log: BasisManager.cpp,v $
+ * Revision 1.1  2006/05/04 18:58:29  kirby
+ * *** empty log message ***
+ *
  * Revision 1.20  2006/02/27 23:47:23  sherwin
  *
  * Standard coding update upto compilation of StdHexExp.cpp

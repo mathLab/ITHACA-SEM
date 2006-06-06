@@ -407,13 +407,13 @@ namespace Nektar
 
             virtual StdMatContainer *v_GetMassMatrix()
             {
-                ASSERTL0(false, "This function is not define for this class or inherited class ");
+                NEKERROR(ErrorUtil::efatal, "This function is not define for this class or inherited class ");
                 return NULL;
             }
 
             virtual StdMatContainer *v_GetLapMatrix()
             {
-                ASSERTL0(false, "This function is not define for this class or inherited class ");
+                NEKERROR(ErrorUtil::efatal, "This function is not define for this class or inherited class ");
                 return NULL;
             }
 
@@ -425,54 +425,54 @@ namespace Nektar
 
             virtual void v_FillMode(const int mode, double * outarray)
             {
-                ASSERTL0(false, "This function is has not been defined for this shape");
+                NEKERROR(ErrorUtil::efatal, "This function is has not been defined for this shape");
             }
 
             virtual void v_IProductWRTBase(const double *inarray, double * outarray)
             {
-                ASSERTL0(false, "This function is has not been defined for this shape");
+                NEKERROR(ErrorUtil::efatal, "This function is has not been defined for this shape");
             }
 
             virtual void v_GenMassMatrix(double * outarray)
             {
-                ASSERTL0(false, "This function is has not been defined for this element");
+                NEKERROR(ErrorUtil::efatal, "This function is has not been defined for this element");
             }
 
             virtual void v_GenLapMatrix(double * outarray)
             {
-                ASSERTL0(false, "This function is has not been defined for this element");
+                NEKERROR(ErrorUtil::efatal, "This function is has not been defined for this element");
             }
 
             virtual void v_GenNBasisTransMatrix(double * outarray)
             {
-                ASSERTL0(false, "This function is only valid for nodal expansions");
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for nodal expansions");
             }
 
             virtual StdMatContainer *v_GetNBasisTransMatrix()
             {
-                ASSERTL0(false, "This function is only valid for nodal expansions");
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for nodal expansions");
                 return NULL;
             }
 
             virtual void v_GetCoords(double **coords)
             {
-                ASSERTL0(false, "Write coordinate definition method");
+                NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
 
             virtual void v_GetCoord(const double *Lcoords, double *coords)
             {
-                ASSERTL0(false, "Write coordinate definition method");
+                NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
 
             virtual void v_WriteToFile(FILE *outfile)
             {
-                ASSERTL0(false, "Write method");
+                NEKERROR(ErrorUtil::efatal, "Write method");
             }
 
 
             virtual void v_WriteToFile(std::ofstream &outfile)
             {
-                ASSERTL0(false, "Write method");
+                NEKERROR(ErrorUtil::efatal, "Write method");
             }
 
             virtual GeomType v_GeoFacType()
@@ -483,13 +483,14 @@ namespace Nektar
             // virtual functions related to LocalRegions
             virtual boost::shared_ptr<LocalRegions::MetricRelatedInfo> v_GenGeoFac()
             {
-                ASSERTL0(false, "This function is only valid for LocalRegions");
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return boost::shared_ptr<LocalRegions::MetricRelatedInfo>();
             }
 	    
             virtual void v_SetGeoFac(boost::shared_ptr<LocalRegions::MetricRelatedInfo>
 				     minfo)
             {
-                ASSERTL0(false, "This function is only valid for LocalRegions");
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             }
         };
 
@@ -503,6 +504,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.4  2006/06/01 13:43:19  kirby
+* *** empty log message ***
+*
 * Revision 1.3  2006/05/30 14:00:04  sherwin
 * Updates to make MultiRegions and its Demos work
 *

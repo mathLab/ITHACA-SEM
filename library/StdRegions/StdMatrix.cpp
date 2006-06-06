@@ -116,7 +116,6 @@ namespace Nektar
         */
         void StdMatContainer::Mxv(const double *in, double *out)
         {
-            int info;
             BstShrDArray wsp; 
             double *tmp;
 
@@ -983,6 +982,9 @@ eHexOrtho3:
 
 /** 
 * $Log: StdMatrix.cpp,v $
+* Revision 1.3  2006/06/01 15:03:59  sherwin
+* Updated header file to include StdRegions.hpp and removed NekMemoryManager.hpp
+*
 * Revision 1.2  2006/06/01 14:46:16  kirby
 * *** empty log message ***
 *

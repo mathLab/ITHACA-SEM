@@ -61,7 +61,6 @@ namespace Nektar
         {
             int             i,j;
             int             tot_order = GetNcoeffs();
-            int             nquad;
             const double*   r; 
             const double*   s; 
             const double*   t;
@@ -236,6 +235,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.2  2006/06/01 14:46:16  kirby
+* *** empty log message ***
+*
 * Revision 1.1  2006/05/04 18:58:32  kirby
 * *** empty log message ***
 *

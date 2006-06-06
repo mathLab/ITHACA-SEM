@@ -99,7 +99,6 @@ namespace Nektar
     /// = u(\xi_{1i}) \f$
     double StdSegExp::Integral(const double *inarray)
     {
-      int    i;
       double Int = 0.0;
       const double *z,*w0;
       int    nquad0 = m_base[0]->GetPointsOrder();
@@ -192,7 +191,6 @@ namespace Nektar
 
   void StdSegExp::FillMode(const int mode, double *outarray)
   {
-    int    i;
     int   nquad = m_base[0]->GetPointsOrder();
     const double * base  = m_base[0]->GetBdata();
 
@@ -470,6 +468,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.2  2006/06/01 13:43:20  kirby
+ * *** empty log message ***
+ *
  * Revision 1.1  2006/05/04 18:58:33  kirby
  * *** empty log message ***
  *

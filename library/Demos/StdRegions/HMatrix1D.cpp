@@ -14,7 +14,7 @@ using namespace std;
    g++ -g -o HMatrix1D HMatrix1D.o -L../../  -lStdRegions -lPolylib -lm  -framework Accelerate 
 */
 
-main(int argc, char *argv[]){
+int main(int argc, char *argv[]){
   int i,j;
   int order, nq;
   const double *z,*w;
@@ -82,5 +82,5 @@ main(int argc, char *argv[]){
     fputc('\n',stdout);
   }
   //-----------------------------------------------
-    
+ return 0;   
 }

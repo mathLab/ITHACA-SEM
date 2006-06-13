@@ -95,7 +95,7 @@ namespace Nektar
       /// \brief return points order at which  basis is defined 
       inline int GetPointsOrder() const
       {
-	return m_pointsorder;
+		return m_pointsorder;
       }
 
       /// \brief return type of expansion basis

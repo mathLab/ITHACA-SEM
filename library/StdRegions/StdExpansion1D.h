@@ -66,6 +66,12 @@ namespace Nektar
                 v_GetCoords(coords);
             }
 
+
+	    virtual int v_GetCoordim(void)
+	    {
+                return 1; 
+	    }
+
             void TensorDeriv(double * outarray);
             void TensorDeriv(const double *inarray, double * outarray);
 
@@ -87,17 +93,6 @@ namespace Nektar
             void StdDeriv (const double *inarray, double *outarray)
             {
                 v_StdDeriv (inarray,outarray);
-            }
-
-            void  Deriv (const int dim, double **outarray) 
-            {
-                v_Deriv (dim,outarray);
-            }
-
-            void Deriv (const int dim, const double *inarray, 
-                double **outarray)
-            {
-                v_Deriv (dim, inarray, outarray);
             }
 
             /** \brief Evaluate a function at points coords which is assumed
@@ -144,17 +139,6 @@ namespace Nektar
             virtual void   v_Deriv    (const double *inarray, double *outarray) = 0;
             virtual void   v_StdDeriv (const double *inarray, double *outarray) = 0;
 
-            virtual void   v_Deriv (const int dim, double **outarray)
-            {
-                ASSERTL0(false, "This function is only valid for local expansions");
-            }
-
-            virtual void   v_Deriv (const int dim, const double *inarray,
-                double **outarray)
-            {
-                ASSERTL0(false, "This function is only valid for local expansions");
-            }
-
             virtual void v_GetCoords(double **coords)
             {
                 GetCoords1D(coords);
@@ -169,6 +153,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.1  2006/05/04 18:58:31  kirby
+* *** empty log message ***
+*
 * Revision 1.17  2006/05/02 21:21:12  sherwin
 * Corrected libraries to compile new version of spatialdomains and demo Graph1D
 *

@@ -366,8 +366,7 @@ namespace Nektar
 	void TriExp::FwdTrans(const double *inarray)
 	{
 	    StdRegions::StdMatContainer *M;
-	    
-	    IProductWRTBase(inarray,m_coeffs);
+		IProductWRTBase(inarray,m_coeffs);
 	    M = GetMassMatrix();
 	    M->Solve(m_coeffs,1);
 	}
@@ -521,6 +520,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.6  2006/06/02 18:48:39  sherwin
+ *    Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
+ *
  *    Revision 1.5  2006/06/01 14:15:58  sherwin
  *    Added typdef of boost wrappers and made GeoFac a boost shared pointer.
  *

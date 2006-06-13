@@ -61,17 +61,17 @@ namespace Nektar
 
     ContExpList1D::ContExpList1D(const StdRegions::BasisKey &Ba, 
 				 SpatialDomains::MeshGraph1D &graph1D):
-      ExpList1D(Ba,graph1D)
+	ExpList1D(Ba,graph1D)
     {
       int gid,i,j;
       int order = Ba.GetBasisOrder();
-
+      
       ASSERTL1((Ba.GetBasisType() == StdRegions::Modified_A)
 	       ||(Ba.GetBasisType() == StdRegions::GLL_Lagrange),
 	       "Expansion not of an boundary-interior type");
 
       m_mass = (StdRegions::StdMatContainer *)NULL;
-
+      
       m_locToContMap = new int [m_ncoeffs];
       Vmath::Fill(m_ncoeffs,-1,m_locToContMap,1);
       
@@ -79,10 +79,10 @@ namespace Nektar
       StdRegions::StdExpMap vmap;
     
       // assume all elements have the same mapping and expasion order
-      m_seg[0]->MapTo(StdRegions::eForwards, vmap);
+      static_cast<StdRegions::StdSegExp*>(m_exp_shapes[0][0].get())->MapTo(StdRegions::eForwards, vmap);
    
       // set up simple map;
-      for(gid = i = 0; i < m_seg.size(); ++i,++gid)
+      for(gid = i = 0; i < m_exp_shapes[0].size(); ++i,++gid)
       {
 	for(j = 0; j < 2; ++j)
 	{
@@ -91,7 +91,7 @@ namespace Nektar
       }
       ++gid;
 
-      for(i = 0; i < m_seg.size(); ++i)
+      for(i = 0; i < m_exp_shapes[0].size(); ++i)
       {
 	for(j = 0; j < order; ++j)
 	{
@@ -145,7 +145,7 @@ namespace Nektar
 	int   i,j,cnt,gid1,gid2,loc_lda;
 	double *loc_mat;
 	StdRegions::StdMatContainer *loc_mass;
-	LocalRegions::SegExpVectorIter def;
+	StdRegions::StdExpansionVectorIter def;
 	
 	double *mmat = new double [m_contNcoeffs*m_contNcoeffs];
 	Vmath::Zero(m_contNcoeffs*m_contNcoeffs,mmat,1);
@@ -155,7 +155,8 @@ namespace Nektar
 	m_mass->SetMatForm (StdRegions::eSymmetric_Positive);
 	
       // fill global matrix 
-	for(cnt = 0, def = m_seg.begin(); def != m_seg.end(); ++def)
+	for(cnt = 0, def = m_exp_shapes[0].begin(); 
+	    def != m_exp_shapes[0].end(); ++def)
 	{
 	  loc_mass = (*def)->GetMassMatrix();
 	  loc_lda = loc_mass->GetLda();

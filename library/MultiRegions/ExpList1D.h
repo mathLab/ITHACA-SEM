@@ -63,38 +63,10 @@ namespace Nektar
 
       ~ExpList1D();
 
-      double Integral(const double *inarray);
-      void   IProductWRTBase(const double *inarray, double *outarray);
-      void   IProductWRTBase(ExpList1D &S1, ExpList1D &S2);
-      void   IProductWRTBase(ExpList1D &S1, double * outarray);
-      void   Deriv    (const int n, double **outarray);
-      void   Deriv    (const int n, const double *inarray, double ** outarray);
-      void   FwdTrans (const double *inarray);
-      void   BwdTrans (double *outarray); 
-      
-      void   GetCoords(double **coords);
-      void   WriteToFile(std::ofstream &out);
-    
-      inline int GetCoordim(int eid)
-      {
-	ASSERTL2(eid <= m_seg.size(),"eid is larger than number of elements");
-
-	return m_seg[eid]->GetCoordim();
-      }
-      
-      double Linf (const double *sol);
-      double L2   (const double *sol);
-      
     protected:
-      LocalRegions::SegExpVector m_seg;
 
     private:
-      
-      virtual void v_BwdTrans(double *outarray)
-      {
-	BwdTrans(outarray);
-      }
-      
+            
     };
     
   } //end of namespace

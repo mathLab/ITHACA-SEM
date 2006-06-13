@@ -22,8 +22,8 @@ double Quad_sol(double x, double y, int order1, int order2,
 // This routine projects a polynomial or trigonmetric functions which 
 // has energy in all mdoes of the expansions and reports and error
 
-main(int argc, char *argv[]){
-  int           i,j,k,l;
+int main(int argc, char *argv[]){
+  int           i,j;
   const         double *z1,*z2,*w;
   int           order1,order2, nq1,nq2;
   PointsType    Qtype1,Qtype2;
@@ -224,6 +224,7 @@ main(int argc, char *argv[]){
   //-------------------------------------------
 
   delete[] sol;
+  return 0;
 }
 
 double Tri_sol(double x, double y, int order1, int order2){

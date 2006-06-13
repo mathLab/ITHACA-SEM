@@ -37,6 +37,7 @@
 #define H_EXPLIST
 
 #include <MultiRegions/MultiRegions.hpp>
+#include <StdRegions/StdExpansion.h>
 
 namespace Nektar
 {
@@ -79,11 +80,35 @@ namespace Nektar
 	m_physState = physState;
       }
   
-      void  BwdTrans (double *outarray)
-      {
-	v_BwdTrans (outarray);
-      }
+      double Integral(const double *inarray);
+      void   IProductWRTBase(const double *inarray, double *outarray);
+      void   IProductWRTBase(ExpList &S1, ExpList &S2);
+      void   IProductWRTBase(ExpList &S1, double * outarray);
+      void   Deriv    (const int n, double **outarray);
+      void   Deriv    (const int n, const double *inarray, double ** outarray);
+      void   FwdTrans (const double *inarray);
+      void   BwdTrans (double *outarray); 
+      
+      void   GetCoords(double **coords);
+      void   WriteToFile(std::ofstream &out);
     
+      inline int GetCoordim(int eid)
+      {
+	ASSERTL2(eid <= m_seg.size(),"eid is larger than number of elements");
+	
+	for(int i = 0; i < m_exp_shapes.size(); ++i)
+	    if((m_exp_shapes[i]).size()){
+		return m_exp_shapes[i][0]->GetCoordim();
+		break;
+	    }
+	    
+	// should not get to this point
+	return -1;
+      }
+      
+      double Linf (const double *sol);
+      double L2   (const double *sol);
+      
     protected:
       int m_ncoeffs; 
       int m_npoints;
@@ -93,10 +118,15 @@ namespace Nektar
       
       TransState m_transState;
       bool       m_physState;
+     
+      std::vector<StdRegions::StdExpansionVector> m_exp_shapes;
       
     private:
-      //virtuals
-      virtual void   v_BwdTrans (double *outarray)  = 0;
+      
+      virtual void v_BwdTrans(double *outarray)
+      {
+	  BwdTrans(outarray);
+      }
     };
     
   } //end of namespace

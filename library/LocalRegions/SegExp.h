@@ -82,11 +82,6 @@ namespace Nektar
 	m_minfo = minfo;
       }
     
-      inline int GetCoordim()
-      {
-	return m_geom->GetCoordim();
-      }
-
       void GetCoords(double **coords);
       
       void GetCoord(const double *Lcoords, double *coords);
@@ -169,98 +164,108 @@ namespace Nektar
     
       virtual StdRegions::ShapeType v_DetShapeType() 
       {
-	DetShapeType();
+		return DetShapeType();
       }
 
       virtual MetricRelatedInfoSharedPtr v_GenGeoFac()
       {
-	return GenGeoFac();
+		return GenGeoFac();
       }
 
       virtual void  v_SetGeoFac(MetricRelatedInfoSharedPtr minfo)
       {
-	SetGeoFac(minfo);
+		SetGeoFac(minfo);
       } 
 
       virtual void v_GetCoord(const double *Lcoords, double *coords)
       {
-	GetCoord(Lcoords, coords);
+		GetCoord(Lcoords, coords);
       }
 
       virtual void v_GetCoords(double **coords)
       {
-	GetCoords(coords);
+		GetCoords(coords);
+      }
+
+      virtual int GetCoordim()
+      {
+		return m_geom->GetCoordim();
       }
 
       virtual void v_WriteToFile(FILE *outfile)
       {
-	WriteToFile(outfile);
+		WriteToFile(outfile);
+      }
+
+      virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
+      {
+		WriteToFile(outfile,dumpVar);
       }
 
       virtual StdRegions::GeomType v_GeoFacType()
       {
-	return m_minfo->GetGtype();
+		return m_minfo->GetGtype();
       }
 
       /// \brief Virtual call to integrate the physical point list \a inarray
       /// over region (see SegExp::Integral) 
       virtual double v_Integral(const double *inarray )
       {
-	return Integral(inarray);
+		return Integral(inarray);
       }
 
       /** \brief Virtual call to SegExp::IProduct_WRT_B */
       virtual void v_IProductWRTBase(const double * inarray, double * outarray)
       {
-	IProductWRTBase(inarray,outarray);
+		IProductWRTBase(inarray,outarray);
       }
 
 
       /// Virtual call to SegExp::Deriv
       virtual void v_Deriv(double *outarray)
       {
-	Deriv(1, this->m_phys, &outarray);
+		Deriv(1, this->m_phys, &outarray);
       }
 
       /// Virtual call to SegExp::Deriv
       virtual void v_StdDeriv(double * outarray)
       {
-	StdSegExp::Deriv(this->m_phys, outarray);
+		StdSegExp::Deriv(this->m_phys, outarray);
       }
 
       /// Virtual call to SegExp::Deriv
       virtual void v_Deriv(const double *inarray, double * outarray)
       {
-	Deriv(inarray, outarray);
+		Deriv(inarray, outarray);
       }
 
       /// Virtual call to SegExp::Deriv
       virtual void v_StdDeriv(const double *inarray, double * outarray)
       {
-	StdSegExp::Deriv(inarray, outarray);
+		StdSegExp::Deriv(inarray, outarray);
       }
 
       virtual void v_Deriv(const int n,  double ** outarray)
       {
-	Deriv(n, outarray);
+		Deriv(n, outarray);
       }
 
       virtual void v_Deriv(const int n, const double *inarray, 
 			   double **outarray)
       {
-	Deriv(n, inarray, outarray);
+		Deriv(n, inarray, outarray);
       }
 
       /// Virtual call to SegExp::FwdTrans
       virtual void v_FwdTrans(const double * inarray)
       {
-	FwdTrans(inarray);
+		FwdTrans(inarray);
       }
 
       /// Virtual call to SegExp::Evaluate
       virtual double v_Evaluate(const double * coords)
       {
-	return Evaluate(coords);
+		return Evaluate(coords);
       }
 
       /** \brief Virtual function to evaluate the discrete \f$ L_\infty\f$
@@ -358,6 +363,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.3  2006/05/30 14:00:04  sherwin
+// Updates to make MultiRegions and its Demos work
+//
 // Revision 1.2  2006/05/29 17:05:49  sherwin
 // Modified to put shared_ptr around geom definitions
 //

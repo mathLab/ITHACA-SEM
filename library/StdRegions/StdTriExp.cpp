@@ -467,7 +467,6 @@ namespace Nektar
             int i;
             const int ncoeffs = edge.GetNcoeffs();
             int *dir, order0,order1;
-            BasisType Btype = edge.GetBasisType(0);
             BstShrIArray wsp; 
 
             ASSERTL2(eid>=0&&eid<=2,"eid must be between 0 and 2");
@@ -604,6 +603,10 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.4  2006/06/06 15:25:21  jfrazier
+* Removed unreferenced variables and replaced ASSERTL0(false, ....) with
+* NEKERROR.
+*
 * Revision 1.3  2006/06/02 18:48:40  sherwin
 * Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
 *

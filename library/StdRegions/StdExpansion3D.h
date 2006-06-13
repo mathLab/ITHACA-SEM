@@ -138,6 +138,11 @@ namespace Nektar
             virtual void   v_StdDeriv(const double *inarray, double *outarray_d0,
                 double *outarray_d1, double *outarray_d2) = 0;
 
+	    virtual int v_GetCoordim(void)
+	    {
+                return 3; 
+	    }
+
         };
 
     } //end of namespace
@@ -147,6 +152,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.1  2006/05/04 18:58:31  kirby
+* *** empty log message ***
+*
 * Revision 1.12  2006/04/25 20:23:33  jfrazier
 * Various fixes to correct bugs, calls to ASSERT, etc.
 *

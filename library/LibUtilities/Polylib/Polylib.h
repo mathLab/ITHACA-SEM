@@ -4,9 +4,9 @@
  */
 
 
-#ifdef __cplusplus
+
 namespace Polylib {
-#endif
+
 
 /*-----------------------------------------------------------------------
                          M A I N     R O U T I N E S
@@ -54,9 +54,9 @@ void jacobfd (const int, const double *, double *, double *, const int ,
 void jacobd  (const int, const double *, double *,  const int , 
 	      const double, const double);
 
-#ifdef __cplusplus
+
 } // end of namespace
-#endif
+
 
 #define H_PLYLIB
 #endif          /* END OF POLYLIB.H DECLARATIONS */

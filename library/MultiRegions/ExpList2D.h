@@ -64,41 +64,7 @@ namespace Nektar
 		const StdRegions::BasisKey &QuadBb, 
 		SpatialDomains::MeshGraph2D &graph2D);
       
-
-      double Integral(const double *inarray);
-      void   IProductWRTBase(const double *inarray, double *outarray);
-      void   IProductWRTBase(ExpList2D &S1, ExpList2D &S2);
-      void   IProductWRTBase(ExpList2D &S1, double * outarray);
-      void   Deriv      (const int n, double **outarray);
-      void   Deriv      (const int n, const double *inarray, double ** outarray);
-      void   FwdTrans   (const double *inarray);
-      void   BwdTrans   (double *outarray); 
-      
-      void   GetCoords  (double **coords);
-      void   WriteToFile(std::ofstream &out);
-
-      inline int GetCoordim(int eid)
-      {
-	  if(m_tri.size())
-	  {
-	      ASSERTL2(eid <= m_tri.size(),
-		       "eid is larger than number of elements");
-	      return m_tri[eid]->GetCoordim();
-	  }
-	  else
-	  {
-	      ASSERTL2(eid <= m_quad.size(),
-		       "eid is larger than number of elements");
-	      return m_quad[eid]->GetCoordim();
-	  }
-      }
-
-      double Linf (const double *sol);
-      double L2   (const double *sol);
-
     protected:
-      LocalRegions::TriExpVector  m_tri;
-      LocalRegions::QuadExpVector m_quad;
 
     private:
     

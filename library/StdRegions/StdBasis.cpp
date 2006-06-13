@@ -197,7 +197,6 @@ namespace Nektar
             int i,p,q;
             double scal,*mode;
             const double *z,*w,*D;
-            int localPManager = 0;
 
             PolyManagerSingleton::Instance().GetZW(m_pointstype, m_pointsorder, 
                 z, w, m_alpha, m_beta);
@@ -705,6 +704,10 @@ namespace Nektar
 
 /** 
 * $Log: StdBasis.cpp,v $
+* Revision 1.3  2006/06/06 15:25:21  jfrazier
+* Removed unreferenced variables and replaced ASSERTL0(false, ....) with
+* NEKERROR.
+*
 * Revision 1.2  2006/06/01 13:43:19  kirby
 * *** empty log message ***
 *

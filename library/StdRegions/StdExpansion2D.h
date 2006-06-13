@@ -87,17 +87,6 @@ namespace Nektar
                 v_StdDeriv(inarray, outarray_d1, outarray_d2);
             }
 
-            void Deriv (const int dim, double **outarray) 
-            {
-                v_Deriv (dim, outarray);
-            }
-
-            void Deriv (const int dim, const double *inarray, 
-                double **outarray)
-            {
-                v_Deriv (dim, inarray, outarray);
-            }
-
             /** \brief Evaluate a function at points coords which is assumed
             to be in local collapsed coordinate format. The function is
             assumed to be in physical space */
@@ -151,16 +140,13 @@ namespace Nektar
             virtual void   v_StdDeriv(const double *inarray, double *outarray_d1,
                 double *outarray_d2) = 0;
 
-            virtual void   v_Deriv (const int dim, double **outarray)
-            {
-                ASSERTL0(false, "This function is only valid for local expansions");
-            }
 
-            virtual void   v_Deriv (const int dim, const double *inarray,
-                double **outarray)
-            {
-                ASSERTL0(false, "This function is only valid for local expansions");
-            }
+	    virtual int v_GetCoordim(void)
+	    {
+                return 2; 
+	    }
+
+
         };
 
     } //end of namespace
@@ -170,6 +156,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.1  2006/05/04 18:58:31  kirby
+* *** empty log message ***
+*
 * Revision 1.19  2006/05/02 21:21:12  sherwin
 * Corrected libraries to compile new version of spatialdomains and demo Graph1D
 *

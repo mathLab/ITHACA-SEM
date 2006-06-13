@@ -15,22 +15,20 @@ using namespace std;
 // This routine projects a polynomial which has energy in all mdoes of
 // the expansions and report an error.
 
-main(int argc, char *argv[]){
+int main(int argc, char *argv[]){
     ExpList2D  *Exp;
     int        i,j,k;
-    int        order, nq;
+    int        nq;
     double     *sol;
     int        coordim;
     double     **xc;
-    char       *infile;
-    PointsType Qtype;
-    int        Tritype, Quadtype, Triorder, Quadorder;
+    int        Tritype, Quadtype, order;
     BasisType  Tri_btype1, Tri_btype2, Quad_btype;  
     
-    if(argc != 6)
+    if(argc != 5)
     {
-	fprintf(stderr,"Usage: ProjectLoc2D  Tri_Type Tri_order "  
-		"Quad_Type Quad_order mesh.xml\n");
+	fprintf(stderr,"Usage: ProjectLoc2D  Tri_Type  "  
+		"Quad_Type order mesh.xml\n");
 	
 	fprintf(stderr,"Where Type is an integer value which "
 		"dictates the basis type as:\n");
@@ -49,9 +47,8 @@ main(int argc, char *argv[]){
     }
     
     Tritype   = (BasisType) atoi(argv[1]);
-    Triorder  = atoi(argv[2]);
-    Quadtype  = (BasisType) atoi(argv[3]);
-    Quadorder = atoi(argv[4]);
+    Quadtype  = (BasisType) atoi(argv[2]);
+    order     = atoi(argv[3]);
     
     if((Tritype < 1)||(Tritype > 2))
     {
@@ -96,9 +93,9 @@ main(int argc, char *argv[]){
 	break;
     }
 
-    const BasisKey T_Ba(Tri_btype1, Triorder,  eLobatto, Triorder+1, 0,0);
-    const BasisKey T_Bb(Tri_btype2, Triorder,  eLobatto, Triorder+1, 1,0);
-    const BasisKey Q_Ba(Quad_btype ,Quadorder, eLobatto, Quadorder+1,0,0);
+    const BasisKey T_Ba(Tri_btype1, order,  eLobatto, order+1, 0,0);
+    const BasisKey T_Bb(Tri_btype2, order,  eLobatto, order+1, 1,0);
+    const BasisKey Q_Ba(Quad_btype ,order, eLobatto, order+1,0,0);
     
     Exp = new ExpList2D (T_Ba,T_Bb,Q_Ba,Q_Ba,graph2D);
     
@@ -121,14 +118,14 @@ main(int argc, char *argv[]){
     
     for(i = 0; i < nq; ++i)
     {
-	sol[i] = 0.0;
-	for(j = 0; j < order; ++j)
-	{
-	    for(k = 0; k < coordim; ++k)
-	    {
-		sol[i] += pow(xc[k][i],j);
-	    }
-	}
+		sol[i] = 0.0;
+		for(j = 0; j < order; ++j)
+		{
+			for(k = 0; k < coordim; ++k)
+			{
+				sol[i] += pow(xc[k][i],j);
+			}
+		}
     }
     
     //---------------------------------------------
@@ -156,4 +153,5 @@ main(int argc, char *argv[]){
     delete[] sol; 
     delete[] xc[0];
     delete[] xc;
+	return 0;
 }

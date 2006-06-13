@@ -64,9 +64,8 @@ namespace Nektar
 
 	    if(TriGeoms.size())
 	    {		
-		tri_ncoeffs_elmt = (TriBa.GetBasisOrder()+1)/2*
-		    TriBa.GetBasisOrder()*(TriBb.GetBasisOrder()-
-					   TriBa.GetBasisOrder());
+		tri_ncoeffs_elmt = (TriBa.GetBasisOrder()*(TriBa.GetBasisOrder()+1))/2 + 
+						TriBa.GetBasisOrder()*(TriBb.GetBasisOrder()-TriBa.GetBasisOrder());
 		tri_npoints_elmt = (TriBa.GetPointsOrder()*
 				    TriBb.GetPointsOrder());
 		
@@ -91,11 +90,13 @@ namespace Nektar
 	    m_phys   = new double [m_npoints];
 	    m_physState  = false;
 		
+	    
 	    // declare triangles using first block of data 	    
 	    if(TriGeoms.size())
 	    {		
 		LocalRegions::TriExpSharedPtr tri;
 		SpatialDomains::TriGeomVectorIter def;
+		StdRegions::StdExpansionVector explist;
 
 		// make sure Geofacs are defined in MeshGraph1D
 		if(graph2D.GetGeofac_defined() != true)
@@ -109,14 +110,16 @@ namespace Nektar
 		    // removed copy construction of geom
 		    // geom = new SpatialDomains::SegGeom (**def);
 		    tri.reset(new LocalRegions::TriExp(TriBa,TriBb,
-						       m_coeffs+cnt,m_phys+cnt1, 
+				      m_coeffs+cnt,m_phys+cnt1, 
 						       *def));
 		    tri->SetGeoFac(tri->GenGeoFac());
-		    m_tri.push_back(tri);
+		    explist.push_back(tri);
 		    
 		    cnt  += tri_ncoeffs_elmt;
 		    cnt1 += tri_npoints_elmt;
+
 		}
+		m_exp_shapes.push_back(explist);
 	    }
 	    
 	    // set up quads 
@@ -124,6 +127,7 @@ namespace Nektar
 	    {		
 		LocalRegions::QuadExpSharedPtr quad;
 		SpatialDomains::QuadGeomVectorIter def;
+		StdRegions::StdExpansionVector explist;
 
 		// make sure Geofacs are defined in MeshGraph1D
 		if(graph2D.GetGeofac_defined() != true)
@@ -140,255 +144,13 @@ namespace Nektar
 							m_coeffs+cnt,m_phys+cnt1, 
 							*def));
 		    quad->SetGeoFac(quad->GenGeoFac());
-		    m_quad.push_back(quad);
+		    explist.push_back(quad);
 		    
 		    cnt  += quad_ncoeffs_elmt;
 		    cnt1 += quad_npoints_elmt;
 		}
+		m_exp_shapes.push_back(explist);
 	    }
-	}
-    
-	double ExpList2D::Integral(const double *inarray)
-	{
-	    LocalRegions::TriExpVectorIter  Tdef;
-	    LocalRegions::QuadExpVectorIter Qdef;
-	    int    cnt = 0;
-	    double sum = 0.0;
-	    
-	    for(Tdef = m_tri.begin(); Tdef != m_tri.end(); ++Tdef){
-		sum += (*Tdef)->Integral(inarray+cnt);
-		cnt += (*Tdef)->GetPointsTot();
-	    }
-
-	    for(Qdef = m_quad.begin(); Qdef != m_quad.end(); ++Qdef){
-		sum += (*Qdef)->Integral(inarray+cnt);
-		cnt += (*Qdef)->GetPointsTot();
-	    }
-	    
-	    return sum; 
-	}
-	
-  
-	void ExpList2D::IProductWRTBase(const double *inarray, 
-					double *outarray)
-	{
-	    LocalRegions::TriExpVectorIter  Tdef;
-	    LocalRegions::QuadExpVectorIter Qdef;
-	    int    cnt  = 0;
-	    int    cnt1 = 0;
-	    
-	    for(Tdef = m_tri.begin(); Tdef != m_tri.end(); ++Tdef)
-	    {
-		(*Tdef)->IProductWRTBase(inarray+cnt,outarray+cnt1);
-		cnt  += (*Tdef)->GetPointsTot();
-		cnt1 += (*Tdef)->GetNcoeffs();
-	    }
-
-	    for(Qdef = m_quad.begin(); Qdef != m_quad.end(); ++Qdef)
-	    {
-		(*Qdef)->IProductWRTBase(inarray+cnt,outarray+cnt1);
-		cnt  += (*Qdef)->GetPointsTot();
-		cnt1 += (*Qdef)->GetNcoeffs();
-	    }
-	}
-      
-	void ExpList2D::IProductWRTBase(ExpList2D &S1, ExpList2D &S2)
-	{
-	    IProductWRTBase(S1.GetPhys(),S2.GetCoeffs());
-	    m_transState = eLocal;
-	}
-      
-	void ExpList2D::IProductWRTBase(ExpList2D &S1, double * outarray)
-	{
-	    IProductWRTBase( S1.GetPhys(),outarray);
-	}
-      
-	void ExpList2D::Deriv(const int n, double **outarray)
-	{
-	    Deriv(n,m_phys,outarray);
-	}
-      
-	void ExpList2D::Deriv(const int n, const double *inarray,
-			      double **outarray)
-	{
-	    LocalRegions::TriExpVectorIter Tdef;
-	    LocalRegions::QuadExpVectorIter Qdef;
-	    int    cnt = 0;
-	  
-	    if(m_physState == false)
-	    {
-		v_BwdTrans(m_phys);
-	    }
-	  
-	    for(Tdef = m_tri.begin(); Tdef != m_tri.end(); ++Tdef)
-	    {
-		(*Tdef)->Deriv(n,inarray+cnt,outarray+cnt);
-		cnt  += (*Tdef)->GetPointsTot();
-	    }
-
-	    for(Qdef = m_quad.begin(); Qdef != m_quad.end(); ++Qdef)
-	    {
-		(*Qdef)->Deriv(n,inarray+cnt,outarray+cnt);
-		cnt  += (*Qdef)->GetPointsTot();
-	    }
-	}
-	
-	void ExpList2D::FwdTrans(const double *inarray)
-	{
-	    LocalRegions::TriExpVectorIter  Tdef;
-	    LocalRegions::QuadExpVectorIter Qdef;
-	    int    cnt = 0;
-	    
-	    for(Tdef = m_tri.begin(); Tdef != m_tri.end(); ++Tdef)
-	    {
-		(*Tdef)->FwdTrans(inarray+cnt);
-		cnt  += (*Tdef)->GetPointsTot();
-	    }
-	    
-	    for(Qdef = m_quad.begin(); Qdef != m_quad.end(); ++Qdef)
-	    {
-		(*Qdef)->FwdTrans(inarray+cnt);
-		cnt  += (*Qdef)->GetPointsTot();
-	    }
-	    
-	    m_transState = eLocal;
-	}
-      
-	void ExpList2D::BwdTrans(double *outarray)
-	{
-	    LocalRegions::TriExpVectorIter  Tdef;
-	    LocalRegions::QuadExpVectorIter Qdef;
-	    int    cnt = 0;
-	  
-	    for(Tdef = m_tri.begin(); Tdef != m_tri.end(); ++Tdef)
-	    {
-		(*Tdef)->BwdTrans(outarray+cnt);
-		cnt  += (*Tdef)->GetPointsTot();
-	    }
-
-	    for(Qdef = m_quad.begin(); Qdef != m_quad.end(); ++Qdef)
-	    {
-		(*Qdef)->BwdTrans(outarray+cnt);
-		cnt  += (*Qdef)->GetPointsTot();
-	    }
-	    
-	    m_physState = true;
-	}
-	
-	void ExpList2D::GetCoords(double **coords)
-	{
-	    LocalRegions::TriExpVectorIter  Tdef;
-	    LocalRegions::QuadExpVectorIter Qdef;
-	    int    i, cnt = 0;
-	    double *E_coords[3];
-	    
-	    for(Tdef = m_tri.begin(); Tdef != m_tri.end(); ++Tdef)
-	    {
-		for(i = 0 ; i < (*Tdef)->GetCoordim(); ++i)
-		{
-		    E_coords[i] = coords[i]+cnt;
-		}
-	      
-		(*Tdef)->GetCoords(E_coords);
-		cnt  += (*Tdef)->GetPointsTot();
-	    }
-
-	    for(Qdef = m_quad.begin(); Qdef != m_quad.end(); ++Qdef)
-	    {
-		for(i = 0 ; i < (*Qdef)->GetCoordim(); ++i)
-		{
-		    E_coords[i] = coords[i]+cnt;
-		}
-		
-		(*Qdef)->GetCoords(E_coords);
-		cnt  += (*Qdef)->GetPointsTot();
-	    }
-	}
-      
-	void ExpList2D::WriteToFile(std::ofstream &out)
-	{
-	    LocalRegions::TriExpVectorIter Tdef; 
-	    LocalRegions::QuadExpVectorIter Qdef; 
-	    
-	    if(m_physState == false)
-	    {
-		BwdTrans(m_phys);
-	    }
-	    
-	    if(m_tri.size()){
-		(*m_tri.begin())->WriteToFile(out,1);
-		
-		for(Tdef = ++m_tri.begin(); Tdef != m_tri.end(); ++Tdef)
-		{
-		    (*Tdef)->WriteToFile(out,0);
-		}
-	    }
-
-	    if(m_quad.size()){
-		(*m_quad.begin())->WriteToFile(out,1);
-		
-		for(Qdef = ++m_quad.begin(); Qdef != m_quad.end(); ++Qdef)
-		{
-		    (*Qdef)->WriteToFile(out,0);
-		}
-	    }
-	}
-      
-	double  ExpList2D::Linf(const double *sol)
-	{
-	    LocalRegions::TriExpVectorIter  Tdef;
-	    LocalRegions::QuadExpVectorIter Qdef;
-	    double err = 0.0;
-	    int    cnt = 0;
-	    
-	    if(m_physState == false)
-	    {
-		BwdTrans(m_phys);
-	    }
-	    
-	    for(Tdef = m_tri.begin(); Tdef != m_tri.end(); ++Tdef)
-	    {
-		err  = std::max(err,(*Tdef)->Linf(sol+cnt));
-		cnt  += (*Tdef)->GetPointsTot();
-	    }
-
-	    for(Qdef = m_quad.begin(); Qdef != m_quad.end(); ++Qdef)
-	    {
-		err  = std::max(err,(*Qdef)->Linf(sol+cnt));
-		cnt  += (*Qdef)->GetPointsTot();
-	    }
-	    
-	    return err;
-	}
-
-      
-	double  ExpList2D::L2(const double *sol)
-	{
-	    LocalRegions::TriExpVectorIter Tdef;
-	    LocalRegions::QuadExpVectorIter Qdef;
-	    double err = 0.0,errl2;
-	    int    cnt = 0;
-	  
-	    if(m_physState == false)
-	    {
-		BwdTrans(m_phys);
-	    }
-	    
-	    for(Tdef = m_tri.begin(); Tdef != m_tri.end(); ++Tdef)
-	    {
-		errl2 = (*Tdef)->L2(sol+cnt);
-		err += errl2*errl2;
-		cnt  += (*Tdef)->GetPointsTot();
-	    }
-
-	    for(Qdef = m_quad.begin(); Qdef != m_quad.end(); ++Qdef)
-	    {
-		errl2 = (*Qdef)->L2(sol+cnt);
-		err += errl2*errl2;
-		cnt  += (*Qdef)->GetPointsTot();
-	    }
-	    
-	    return sqrt(err);
 	}
       
     } //end of namespace

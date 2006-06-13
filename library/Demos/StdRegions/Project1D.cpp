@@ -13,12 +13,12 @@ using namespace std;
 // This routine projects a polynomial or trigonmetric functions which 
 // has energy in all mdoes of the expansions and report an error.
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   int i,j;
   int order, nq;
   const double *z,*w;
-  double *sol,*phys,L2_err;
+  double *sol;
   PointsType Qtype;
   BasisType  btype;
   StdExpansion1D  *E;
@@ -92,7 +92,7 @@ main(int argc, char *argv[])
       sol[i] = 0.0;
       for(j = 0; j < order/2; ++j)
       {
-	sol[i] += sin(j*M_PI*z[i]) + cos(j*M_PI*z[i]);
+		sol[i] += sin(j*M_PI*z[i]) + cos(j*M_PI*z[i]);
       }
     }
   }
@@ -131,4 +131,5 @@ main(int argc, char *argv[])
   //-------------------------------------------
 
   delete[] sol; 
+  return 0;	
 }

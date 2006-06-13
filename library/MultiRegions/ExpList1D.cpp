@@ -69,204 +69,24 @@ namespace Nektar
 		graph1D.GenXGeoFac();
 	    }
 	    
+	    StdRegions::StdExpansionVector seglist;
 	    SpatialDomains::SegGeomVectorIter def;
-	    //      SpatialDomains::SegGeomSharedPtr geom;
 	    int cnt,cnt1;
 	    
 	    cnt = cnt1 = 0;
 	    for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
 	    {
-		// removed copy construction of geom
-		// geom = new SpatialDomains::SegGeom (**def);
-		seg.reset( new LocalRegions::SegExp(Ba,m_coeffs+cnt,m_phys+cnt1, 
-						    *def));
+		seg.reset( new LocalRegions::SegExp(Ba, m_coeffs+cnt,
+						    m_phys+cnt1, *def));
 		seg->SetGeoFac(seg->GenGeoFac());
-		m_seg.push_back(seg);
+		seglist.push_back(seg);
 		
 		cnt  += Ba.GetBasisOrder();
 		cnt1 += Ba.GetPointsOrder();
 	    }
+	    m_exp_shapes.push_back(seglist);
 	}
-      
-      /** \brief Integrate the physical point list \a inarray over region
-	  and return the value
-	  
-	  Inputs:\n
-	  
-	  - \a inarray: definition of function to be returned at quadrature point 
-	  of expansion. 
-	  
-	  Outputs:\n
-	  
-	  - returns \f$ \sum_{i=1}^{n_{el}} \int_{\Omega_i} u(\xi_1)d \xi_1 \f$ 
-      */
-      double ExpList1D::Integral(const double *inarray)
-      {
-	  LocalRegions::SegExpVectorIter def;
-	  int    cnt = 0;
-	  double sum = 0.0;
-	  
-	  for(def = m_seg.begin(); def != m_seg.end(); ++def){
-	      sum += (*def)->Integral(inarray+cnt);
-	      cnt += (*def)->GetPointsTot();
-	  }
-	  
-	  return sum; 
-      }
-      
-  
-      void ExpList1D::IProductWRTBase(const double *inarray, double *outarray)
-      {
-	  LocalRegions::SegExpVectorIter def;
-	  int    cnt  = 0;
-	  int    cnt1 = 0;
-	  
-	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
-	  {
-	      (*def)->IProductWRTBase(inarray+cnt,outarray+cnt1);
-	      cnt  += (*def)->GetPointsTot();
-	      cnt1 += (*def)->GetNcoeffs();
-	  }
-      }
-      
-      void ExpList1D::IProductWRTBase(ExpList1D &S1, ExpList1D &S2)
-      {
-	  IProductWRTBase(S1.GetPhys(),S2.GetCoeffs());
-	  m_transState = eLocal;
-      }
-      
-      void ExpList1D::IProductWRTBase(ExpList1D &S1, double * outarray)
-      {
-	  IProductWRTBase( S1.GetPhys(),outarray);
-      }
-      
-      void ExpList1D::Deriv(const int n, double **outarray)
-      {
-	  Deriv(n,m_phys,outarray);
-      }
-      
-      void ExpList1D::Deriv(const int n, const double *inarray,
-			    double **outarray)
-      {
-	  LocalRegions::SegExpVectorIter def;
-	  int    cnt = 0;
-	  
-	  if(m_physState == false)
-	  {
-	      v_BwdTrans(m_phys);
-	  }
-	  
-	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
-	  {
-	      (*def)->Deriv(n,inarray+cnt,outarray+cnt);
-	      cnt  += (*def)->GetPointsTot();
-	  }
-      }
-      
-      void ExpList1D::FwdTrans(const double *inarray)
-      {
-	  LocalRegions::SegExpVectorIter def;
-	  int    cnt = 0;
-	  
-	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
-	  {
-	      (*def)->FwdTrans(inarray+cnt);
-	      cnt  += (*def)->GetPointsTot();
-	  }
 	
-	  m_transState = eLocal;
-      }
-      
-      void ExpList1D::BwdTrans(double *outarray)
-      {
-	  LocalRegions::SegExpVectorIter def;
-	  int    cnt = 0;
-	  
-	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
-	  {
-	      (*def)->BwdTrans(outarray+cnt);
-	      cnt  += (*def)->GetPointsTot();
-	  }
-	  m_physState = true;
-      }
-      
-      void ExpList1D::GetCoords(double **coords)
-      {
-	  LocalRegions::SegExpVectorIter def;
-	  int    i, cnt = 0;
-	  double *E_coords[3];
-	  
-	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
-	  {
-	      for(i = 0 ; i < (*def)->GetCoordim(); ++i)
-	      {
-		  E_coords[i] = coords[i]+cnt;
-	      }
-	      
-	      (*def)->GetCoords(E_coords);
-	      cnt  += (*def)->GetPointsTot();
-	  }
-      }
-      
-      void ExpList1D::WriteToFile(std::ofstream &out)
-      {
-	  LocalRegions::SegExpVectorIter def; 
-	  
-	  if(m_physState == false)
-	  {
-	      v_BwdTrans(m_phys);
-	  }
-	  
-	  (*m_seg.begin())->WriteToFile(out,1);
-	  
-	  for(def = ++m_seg.begin(); def != m_seg.end(); ++def)
-	  {
-	      (*def)->WriteToFile(out,0);
-	  }
-      }
-      
-      double  ExpList1D::Linf(const double *sol)
-      {
-	  LocalRegions::SegExpVectorIter def;
-	  double err = 0.0;
-	  int    cnt = 0;
-	  
-	  if(m_physState == false)
-	  {
-	      v_BwdTrans(m_phys);
-	  }
-	  
-	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
-	  {
-	      err  = std::max(err,(*def)->Linf(sol+cnt));
-	      cnt  += (*def)->GetPointsTot();
-	  }
-	  
-	  return err;
-      }
-      
-      double  ExpList1D::L2(const double *sol)
-      {
-	  LocalRegions::SegExpVectorIter def;
-	  double err = 0.0,errl2;
-	  int    cnt = 0;
-	  
-	  if(m_physState == false)
-	  {
-	      v_BwdTrans(m_phys);
-	  }
-	  
-	  for(def = m_seg.begin(); def != m_seg.end(); ++def)
-	  {
-	      errl2 = (*def)->L2(sol+cnt);
-	      err += errl2*errl2;
-	      cnt  += (*def)->GetPointsTot();
-	  }
-	  
-	  return sqrt(err);
-      }
-      
-    
-  } //end of namespace
+	
+    } //end of namespace
 } //end of namespace
-

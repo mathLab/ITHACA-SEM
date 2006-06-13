@@ -83,7 +83,7 @@ namespace Nektar
       /// Return Shape of region, using  ShapeType enum list. i.e. Hexahedron
       virtual StdRegions::ShapeType V_DetShapeType() 
       {
-	DetShapeType();
+		return DetShapeType();
       }
       
     };
@@ -100,6 +100,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.3  2006/06/01 13:42:07  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.2  2006/05/30 14:00:03  sherwin
  *    Updates to make MultiRegions and its Demos work
  *

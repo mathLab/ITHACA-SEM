@@ -69,7 +69,7 @@ namespace Nektar
       /// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
       StdRegions::ShapeType DetShapeType() 
       { 
-	return StdRegions::eTetrahedron; 
+		return StdRegions::eTetrahedron; 
       }
     
     protected:
@@ -82,7 +82,7 @@ namespace Nektar
 
       virtual StdRegions::ShapeType v_DetShapeType() 
       {
-	DetShapeType();
+		return DetShapeType();
       }  
     };
     
@@ -98,6 +98,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.2  2006/05/30 14:00:04  sherwin
+ *    Updates to make MultiRegions and its Demos work
+ *
  *    Revision 1.1  2006/05/04 18:58:46  kirby
  *    *** empty log message ***
  *

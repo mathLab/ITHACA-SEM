@@ -89,11 +89,6 @@ namespace Nektar
         m_minfo = minfo;
         }
 
-        inline int GetCoordim()
-        {
-        return m_geom->GetCoordim();
-        }
-
         void GetCoords(double **coords);
 
         void GetCoord(const double *Lcoords, double *coords);
@@ -182,39 +177,49 @@ namespace Nektar
 
     private:
         virtual StdRegions::ShapeType v_DetShapeType()
-          {
-        DetShapeType();
+		{
+			return DetShapeType();
         }
-
+	
         virtual MetricRelatedInfoSharedPtr v_GenGeoFac()
         {
-        return GenGeoFac();
+		return GenGeoFac();
         }
 
         virtual void v_SetGeoFac(MetricRelatedInfoSharedPtr minfo)
         {
-        SetGeoFac(minfo);
+			SetGeoFac(minfo);
         }
 
         virtual void v_GetCoords(double **coords)
         {
-        GetCoords(coords);
+			GetCoords(coords);
         }
 
         virtual void v_GetCoord(const double *Lcoords, double *coords)
         {
-        GetCoord(Lcoords, coords);
+			GetCoord(Lcoords, coords);
+        }
+
+        virtual  int v_GetCoordim()
+        {
+	    return m_geom->GetCoordim();
         }
 
 
         virtual StdRegions::GeomType v_GeoFacType()
         {
-        return m_minfo->GetGtype();
+	    return m_minfo->GetGtype();
         }
 
         virtual void v_WriteToFile(FILE *outfile)
         {
-        WriteToFile(outfile);
+	    WriteToFile(outfile);
+        }
+
+        virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
+        {
+	    WriteToFile(outfile,dumpVar);
         }
 
         /** \brief Virtual call to integrate the physical point list \a inarray
@@ -244,67 +249,67 @@ namespace Nektar
 
         virtual void v_Deriv(double * outarray_d1, double *outarray_d2)
         {
-        Deriv(this->m_phys, outarray_d1, outarray_d2);
+	    Deriv(this->m_phys, outarray_d1, outarray_d2);
         }
 
         virtual void v_StdDeriv(double * outarray_d1, double *outarray_d2)
         {
-        StdQuadExp::Deriv(this->m_phys, outarray_d1, outarray_d2);
+	    StdQuadExp::Deriv(this->m_phys, outarray_d1, outarray_d2);
         }
 
         virtual void v_Deriv(const double *inarray, double * outarray_d1,
-                 double *outarray_d2)
+			     double *outarray_d2)
         {
-        Deriv(inarray, outarray_d1, outarray_d2);
+	    Deriv(inarray, outarray_d1, outarray_d2);
         }
 
         virtual void v_StdDeriv(const double *inarray, double * outarray_d1,
-                    double *outarray_d2)
+				double *outarray_d2)
         {
-        StdQuadExp::Deriv(inarray, outarray_d1, outarray_d2);
+	    StdQuadExp::Deriv(inarray, outarray_d1, outarray_d2);
         }
-
+	
         virtual void v_Deriv(const int n,  double ** outarray)
         {
-        Deriv(n, outarray);
+	    Deriv(n, outarray);
         }
 
         virtual void v_Deriv(const int n, const double *inarray,
-                 double ** outarray)
+			     double ** outarray)
         {
-        Deriv(n, inarray, outarray);
+	    Deriv(n, inarray, outarray);
         }
-
+	
         /// Virtual call to SegExp::FwdTrans
         virtual void v_FwdTrans(const double * inarray)
         {
-        FwdTrans(inarray);
+	    FwdTrans(inarray);
         }
-
+	
         /// Virtual call to QuadExp::Evaluate
         virtual double v_Evaluate(const double * coords)
         {
-        return Evaluate(coords);
+	    return Evaluate(coords);
         }
-
+	
         virtual double v_Linf(const double *sol)
         {
-        return Linf(sol);
+	    return Linf(sol);
         }
-
+	
         virtual double v_Linf()
         {
-        return Linf();
+	    return Linf();
         }
-
+	
         virtual double v_L2(const double *sol)
         {
-        return StdExpansion::L2(sol);
+	    return StdExpansion::L2(sol);
         }
-
+	
         virtual double v_L2()
         {
-        return StdExpansion::L2();
+	    return StdExpansion::L2();
         }
     };
 
@@ -321,6 +326,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.6  2006/06/05 00:10:01  bnelson
+ *    Fixed a gcc 4.1.0 compilation error (ClassName::method not allowed in class definition).
+ *
  *    Revision 1.5  2006/06/02 18:48:39  sherwin
  *    Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
  *

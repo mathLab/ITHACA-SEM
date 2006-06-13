@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef BASISMANAGER_H
-#define BASISMANAGER_H
+#ifndef STDREGIONS_BASISMANAGER_H
+#define STDREGIONS_BASISMANAGER_H
 
 #include <StdRegions/PolyManager.h>
 #include <StdRegions/StdBasis.h>
@@ -59,10 +59,10 @@ namespace StdRegions
       std::vector<Basis*>::iterator def;
 
       for(int i=0;i<SIZE_BasisType;i++){
-    for(def = m_basis[i].begin(); def != m_basis[i].end(); ++def)
-      delete def[0];
+	  for(def = m_basis[i].begin(); def != m_basis[i].end(); ++def)
+	      delete def[0];
       }
-
+      
       delete[] m_basis;
     }
 
@@ -93,6 +93,9 @@ namespace StdRegions
 
 /**
  * $Log: BasisManager.h,v $
+ * Revision 1.1  2006/05/04 18:58:29  kirby
+ * *** empty log message ***
+ *
  * Revision 1.19  2006/03/04 20:26:54  bnelson
  * Added comments after #endif.
  *

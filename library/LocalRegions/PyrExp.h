@@ -85,7 +85,7 @@ namespace Nektar
     private:
       virtual StdRegions::ShapeType v_DetShapeType()
       {
-    DetShapeType();
+		return DetShapeType();
       }
 
     };
@@ -102,6 +102,9 @@ namespace Nektar
 
 /**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.3  2006/06/05 00:09:22  bnelson
+ *    Fixed a gcc 4.1.0 compilation warning with the #endif at the end of the file.
+ *
  *    Revision 1.2  2006/05/30 14:00:03  sherwin
  *    Updates to make MultiRegions and its Demos work
  *

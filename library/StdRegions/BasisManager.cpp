@@ -38,39 +38,43 @@
 
 namespace Nektar
 {
-namespace StdRegions
-{
+	namespace StdRegions
+	{
 
-  const Basis* BasisManager::GetBasis (const BasisKey &bkey)
-  {
+	const Basis* BasisManager::GetBasis (const BasisKey &bkey)
+	{
 
-    std::vector<Basis*>::iterator def;
-    int  id_btype = (int)bkey.GetBasisType();
+		std::vector<Basis*>::iterator def;
+		int  id_btype = (int)bkey.GetBasisType();
     
-    def = find(m_basis[id_btype].begin(),
-	       m_basis[id_btype].end(),bkey);
+		def = find(m_basis[id_btype].begin(),
+			m_basis[id_btype].end(),bkey);
     
-    if(def != m_basis[id_btype].end())
-    {
+		if(def != m_basis[id_btype].end())
+		{	
 
-      // check that this definition has sufficiently high order
-      if(bkey.GetBasisOrder() > def[0]->GetBasisOrder())
-      {
-	// reset bdata in this defintiion.
-	def[0]->ResetBasisOrder(bkey.GetBasisOrder());
-      }
+		// check that this definition has sufficiently high order
+		if(bkey.GetBasisOrder() > def[0]->GetBasisOrder())
+		{
+		// reset bdata in this defintiion.
+			def[0]->ResetBasisOrder(bkey.GetBasisOrder());
+		}
       
-      return (def[0]); 
-    }
-    else
-    { // set up new definition
-      Basis * B = new Basis(bkey);
-      m_basis[id_btype].push_back(B);
+		return (def[0]); 
+		}
+		else
+		{ // set up new defintiion
+		    //	int id = m_basis[id_btype].size();
       
-      return (B);
-    }
-  }
-
+		    Basis * B = new Basis(bkey);
+		    
+		    m_basis[id_btype].push_back(B);
+		    
+		    return (B);
+		}
+		return (Basis *)NULL;
+	}
+	
   const Basis* BasisManager::GetBasis (const BasisType btype, const int order,
 				       const PointsType ptype, const int nq,
 				       const double alpha, const double beta)
@@ -103,6 +107,10 @@ namespace StdRegions
 
 /** 
  * $Log: BasisManager.cpp,v $
+ * Revision 1.2  2006/06/06 15:25:21  jfrazier
+ * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
+ * NEKERROR.
+ *
  * Revision 1.1  2006/05/04 18:58:29  kirby
  * *** empty log message ***
  *

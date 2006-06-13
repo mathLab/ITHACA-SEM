@@ -100,9 +100,9 @@
   -# All array subscripts start from zero, i.e. vector[0..N-1] 
 */
 
-#ifdef __cplusplus
+
 namespace Polylib {
-#endif
+
  /// Define whether to use polynomial deflation (1)  or tridiagonal solver (0).
 #define POLYNOMIAL_DEFLATION 0
 
@@ -1111,6 +1111,5 @@ static void TriQL(const int n, double *d,double *e){
 
 
 
-#ifdef __cplusplus
 } // end of namespace
-#endif
+

@@ -91,11 +91,6 @@ namespace Nektar
         }
 
 
-        inline int GetCoordim()
-        {
-        return m_geom->GetCoordim();
-        }
-
         void GetCoords(double **coords);
 
 
@@ -189,102 +184,113 @@ namespace Nektar
 
         virtual StdRegions::ShapeType v_DetShapeType()
         {
-        DetShapeType();
+			return DetShapeType();
         }
 
         virtual MetricRelatedInfoSharedPtr v_GenGeoFac()
         {
-        return GenGeoFac();
+			return GenGeoFac();
         }
 
         virtual void v_SetGeoFac(MetricRelatedInfoSharedPtr minfo)
         {
-        SetGeoFac(minfo);
+			SetGeoFac(minfo);
         }
 
         virtual void v_GetCoords(double **coords)
         {
-        GetCoords(coords);
+			GetCoords(coords);
         }
 
         virtual void v_GetCoord(const double *Lcoords, double *coords)
         {
-        GetCoord(Lcoords, coords);
+			GetCoord(Lcoords, coords);
         }
+
+        virtual int v_GetCoordim()
+        {
+			return m_geom->GetCoordim();
+        }
+
 
         virtual void v_WriteToFile(FILE *outfile)
         {
-        WriteToFile(outfile);
+			WriteToFile(outfile);
+        }
+
+        virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
+        {
+			WriteToFile(outfile,dumpVar);
         }
 
         /** \brief Virtual call to integrate the physical point list \a inarray
         over region (see SegExp::Integral) */
         virtual double v_Integral(const double *inarray)
         {
-        return Integral(inarray);
+			return Integral(inarray);
         }
 
         /** \brief Virtual call to TriExp::IProduct_WRT_B */
         virtual void v_IProductWRTBase(const double * inarray, double * outarray)
         {
-        IProductWRTBase(inarray,outarray);
+			IProductWRTBase(inarray,outarray);
         }
 
         /// virtual call to GetMassMatrix
         virtual StdRegions::StdMatContainer *v_GetMassMatrix()
         {
-        return GetMassMatrix();
+			return GetMassMatrix();
         }
 
         /// virtual call to GetLapatrix
         virtual StdRegions::StdMatContainer *v_GetLapMatrix()
         {
-        return GetLapMatrix();
+			return GetLapMatrix();
         }
 
         virtual void v_Deriv(double * outarray_d1, double *outarray_d2)
         {
-        Deriv(this->m_phys, outarray_d1, outarray_d2);
+			Deriv(this->m_phys, outarray_d1, outarray_d2);
         }
 
         virtual void v_StdDeriv(double * outarray_d1, double *outarray_d2)
         {
-        StdTriExp::Deriv(this->m_phys, outarray_d1, outarray_d2);
+			StdTriExp::Deriv(this->m_phys, outarray_d1, outarray_d2);
         }
 
         virtual void v_Deriv(const double *inarray, double * outarray_d1,
                  double *outarray_d2)
         {
-        Deriv(inarray, outarray_d1, outarray_d2);
+			Deriv(inarray, outarray_d1, outarray_d2);
         }
 
         virtual void v_StdDeriv(const double *inarray, double * outarray_d1,
                     double *outarray_d2)
-        {
-        StdTriExp::Deriv(inarray, outarray_d1, outarray_d2);
+		{
+			StdTriExp::Deriv(inarray, outarray_d1, outarray_d2);
         }
 
         virtual void v_Deriv(const int n,  double ** outarray)
         {
-        Deriv(n, outarray);
+			Deriv(n, outarray);
         }
 
         virtual void v_Deriv(const int n, const double *inarray,
                  double ** outarray)
         {
-        Deriv(n, inarray, outarray);
+			Deriv(n, inarray, outarray);
         }
 
         /// Virtual call to SegExp::FwdTrans
         virtual void v_FwdTrans(const double * inarray)
         {
-        FwdTrans(inarray);
+			FwdTrans(inarray);
         }
 
         /// Virtual call to TriExp::Evaluate
         virtual double v_Evaluate(const double * coords)
         {
-        return Evaluate(coords);
+			return Evaluate(coords);
         }
     };
 
@@ -300,6 +306,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.6  2006/06/05 00:08:48  bnelson
+ *    Fixed a gcc 4.1.0 compilation problem.  TriExp::GenGeoFac not allowed in the class declaration, but GenGeoFac is.
+ *
  *    Revision 1.5  2006/06/02 18:48:39  sherwin
  *    Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
  *

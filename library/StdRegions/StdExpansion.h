@@ -174,7 +174,7 @@ namespace Nektar
             }
 
             /// Sets the value of _phys to the input argument *phys
-            inline double * SetPhys(const double *phys)
+            inline void  SetPhys(const double *phys)
             {
                 int nqtot = GetPointsTot();
 
@@ -312,9 +312,9 @@ namespace Nektar
                 v_WriteToFile(outfile);
             }
 
-            void WriteToFile(std::ofstream &outfile)
+            void WriteToFile(std::ofstream &outfile, const int dumpVar)
             {
-                v_WriteToFile(outfile);
+                v_WriteToFile(outfile,dumpVar);
             }
 
             GeomType GeoFacType(void)
@@ -325,13 +325,18 @@ namespace Nektar
             // virtual functions related to LocalRegions
             boost::shared_ptr<LocalRegions::MetricRelatedInfo> GenGeoFac(void)
             {
-	      return v_GenGeoFac();
+				return v_GenGeoFac();
             }
 
             void SetGeoFac(boost::shared_ptr<LocalRegions::MetricRelatedInfo> minfo)
             {
                 v_SetGeoFac(minfo);
             }
+
+			int GetCoordim()
+			{
+				return v_GetCoordim(); 
+			}
 
             // Matrix Routines
             void GenerateMassMatrix(double *outarray);
@@ -345,6 +350,18 @@ namespace Nektar
             {
                 v_GenLapMatrix(outarray);
             }
+
+            void Deriv (const int dim, double **outarray) 
+            {
+                v_Deriv (dim, outarray);
+            }
+
+            void Deriv (const int dim, const double *inarray, 
+                double **outarray)
+            {
+                v_Deriv (dim, inarray, outarray);
+            }
+
 
             // Overloaded Operators
             friend bool operator == (const StdExpansion &x,const StdMatContainer *y);
@@ -423,34 +440,54 @@ namespace Nektar
             virtual double v_Integral(const double *inarray ) = 0;
             virtual double v_Evaluate(const double * coords)  = 0;
 
+            virtual void   v_Deriv (const int dim, double **outarray)
+            {
+                ASSERTL0(false, "This function is only valid for "
+			 " local expansions");
+            }
+	    
+
+            virtual void   v_Deriv (const int dim, const double *inarray,
+                double **outarray)
+            {
+                ASSERTL0(false, "This function is only valid for "
+			 "local expansions");
+            }
+
             virtual void v_FillMode(const int mode, double * outarray)
             {
-                NEKERROR(ErrorUtil::efatal, "This function is has not been defined for this shape");
+                NEKERROR(ErrorUtil::efatal, "This function is has not "
+			 "been defined for this shape");
             }
 
             virtual void v_IProductWRTBase(const double *inarray, double * outarray)
             {
-                NEKERROR(ErrorUtil::efatal, "This function is has not been defined for this shape");
+                NEKERROR(ErrorUtil::efatal, "This function is has not "
+			 "been defined for this shape");
             }
 
             virtual void v_GenMassMatrix(double * outarray)
             {
-                NEKERROR(ErrorUtil::efatal, "This function is has not been defined for this element");
+                NEKERROR(ErrorUtil::efatal, "This function is has not "
+			 "been defined for this element");
             }
 
             virtual void v_GenLapMatrix(double * outarray)
             {
-                NEKERROR(ErrorUtil::efatal, "This function is has not been defined for this element");
+                NEKERROR(ErrorUtil::efatal, "This function is has not "
+			 "been defined for this element");
             }
 
             virtual void v_GenNBasisTransMatrix(double * outarray)
             {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for nodal expansions");
+                NEKERROR(ErrorUtil::efatal, "This function is only valid "
+			 "for nodal expansions");
             }
 
             virtual StdMatContainer *v_GetNBasisTransMatrix()
             {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for nodal expansions");
+                NEKERROR(ErrorUtil::efatal, "This function is only valid "
+			 "for nodal expansions");
                 return NULL;
             }
 
@@ -464,13 +501,23 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
 
+			virtual int v_GetCoordim(void)
+			{
+                NEKERROR(ErrorUtil::efatal, "Write method");		
+				return -1;
+			}
+	    
             virtual void v_WriteToFile(FILE *outfile)
             {
                 NEKERROR(ErrorUtil::efatal, "Write method");
             }
 
-
             virtual void v_WriteToFile(std::ofstream &outfile)
+            {
+                NEKERROR(ErrorUtil::efatal, "Write method");
+            }
+
+	    virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
             {
                 NEKERROR(ErrorUtil::efatal, "Write method");
             }
@@ -504,6 +551,10 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.5  2006/06/06 15:25:21  jfrazier
+* Removed unreferenced variables and replaced ASSERTL0(false, ....) with
+* NEKERROR.
+*
 * Revision 1.4  2006/06/01 13:43:19  kirby
 * *** empty log message ***
 *

@@ -59,6 +59,12 @@ namespace Nektar
 
             ~SegGeom();
 
+	    inline int GetVid(int i){
+		ASSERTL2((i >=0) && (i <= 1),"Verted id must be between 0 and 1");
+		
+		return m_verts[i]->GetVid();
+	    }
+
             void    FillGeom ();
 
             StdRegions::ShapeType DetShapeType() 
@@ -100,6 +106,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.5  2006/06/01 14:15:31  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.4  2006/05/30 14:00:04  sherwin
 // Updates to make MultiRegions and its Demos work
 //

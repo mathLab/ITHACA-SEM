@@ -33,96 +33,85 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef CONTEXPLIST1D_H
-#define CONTEXPLIST1D_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_CONTEXPLIST1D_H
+#define NEKTAR_LIB_MULTIREGIONS_CONTEXPLIST1D_H
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/LocalToGlobalMap1D.h>
 
 #include <StdRegions/StdMatrix.h>
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
-    
-    class ContExpList1D: 
-      public ExpList1D 
+    namespace MultiRegions
     {
-    public:
-      ContExpList1D();
-      ContExpList1D(const StdRegions::BasisKey &Ba, 
-		    SpatialDomains::MeshGraph1D &graph1D);
-      ~ContExpList1D();
-      
-      inline int getContNcoeffs()
-      {
-	return m_contNcoeffs;
-      }
+	
+	class ContExpList1D: 
+	public ExpList1D 
+	{
+	public:
+	    ContExpList1D();
+	    ContExpList1D(const StdRegions::BasisKey &Ba, 
+			  SpatialDomains::MeshGraph1D &graph1D);
+	    ~ContExpList1D();
+	    
+	    inline int getContNcoeffs()
+	    {
+		return m_contNcoeffs;
+	    }
+	    
+	    inline double *getContCoeffs()
+	    {
+		return m_contCoeffs;
+	    }
+	    
+	    inline void ContToLocal()
+	    {
+		m_locToGloMap->ContToLocal(m_contCoeffs,m_coeffs);
+	    }
+	    
+	    inline void LocalToCont()
+	    {
+		m_locToGloMap->LocalToCont(m_coeffs,m_contCoeffs);
+	    }
+	    
+	    
+	    inline void Assemble()
+	    {
+		Assemble(m_coeffs,m_contCoeffs);
+	    }
+	    
+	    inline void Assemble(const double *loc, double *cont)
+	    {
+		m_locToGloMap->Assemble(loc,cont);
+	    }
 
-      inline double *getContCoeffs()
-      {
-	return m_contCoeffs;
-      }
-    
-      inline void ContToLocal()
-      {
-	ContToLocal(m_contCoeffs,m_coeffs);
-      }
-    
-      inline void ContToLocal(const double *cont,double *loc)
-      {
-	Vmath::Gathr(m_ncoeffs,cont,m_locToContMap,loc);
-      }
-
-      inline void LocalToCont()
-      {
-	LocalToCont(m_coeffs,m_contCoeffs);
-      }
-
-      inline void LocalToCont(const double *loc, double *cont)
-      {
-	Vmath::Scatr(m_ncoeffs,loc,m_locToContMap,cont);
-      }
-
-      inline void Assemble()
-      {
-	Assemble(m_coeffs,m_contCoeffs);
-      }
-
-      inline void Assemble(const double *loc, double *cont)
-      {
-	Vmath::Zero(m_contNcoeffs,cont,1);
-	Vmath::Assmb(m_ncoeffs,loc,m_locToContMap,cont);
-      }
-		       
-      void IProductWRTBase(const double *inarray, double *outarray);
-      
-      void FwdTrans(const double *inarray);
-
-      void BwdTrans(double *outarray);
-      
-      void GenMassMatrix(void);
-
-    protected:
-    
-
-    private:
-      int    m_contNcoeffs;
-      int    *m_locToContMap;
-      
-      double *m_contCoeffs;
-      
-      StdRegions::StdMatContainer *m_mass;
-      
-      virtual void v_BwdTrans(double *outarray)
-      {
-	BwdTrans(outarray);
-      }
-      
-      
-    };
-  } //end of namespace
+	    void IProductWRTBase(const double *inarray, double *outarray);
+	    
+	    void FwdTrans(const double *inarray);
+	    
+	    void BwdTrans(double *outarray);
+	    
+	    void GenMassMatrix(void);
+	    
+	protected:
+	    
+	    
+	private:
+	    int      m_contNcoeffs;
+	    double  *m_contCoeffs;
+	    
+	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
+	    
+	    StdRegions::StdMatContainer *m_mass;
+	    
+	    virtual void v_BwdTrans(double *outarray)
+	    {
+		BwdTrans(outarray);
+	    }
+	};
+    } //end of namespace
 } //end of namespace
 
 #endif // end of define

@@ -356,29 +356,28 @@ namespace Nektar
             }
 
 
-            void StdQuadExp::MapTo(StdSegExp& edge, const int eid, 
-                const EdgeOrientation eorient, StdExpMap &Map)
+            void StdQuadExp::MapTo(const int edge_ncoeffs, const BasisType Btype, 
+				   const int eid, const EdgeOrientation eorient,
+				   StdExpMap &Map)
             {
 
                 int i, start, skip;
-                const int ncoeffs = edge.GetNcoeffs();
                 int *dir, order0,order1;
-                BasisType Btype = edge.GetBasisType(0);
                 BstShrIArray wsp; 
 
                 ASSERTL2(eid>=0&&eid <=3,"eid must be between 0 and 3");
                 // make sure have correct memory storage
-                if(ncoeffs != Map.GetLen())
+                if(edge_ncoeffs != Map.GetLen())
                 {
-                    Map.SetMap(ncoeffs);
+                    Map.SetMap(edge_ncoeffs);
                 }
 
-                wsp = GetIntTmpSpace(ncoeffs);
+                wsp = GetIntTmpSpace(edge_ncoeffs);
                 dir = wsp.get(); 
 
                 if(eorient == eForwards)
                 {
-                    for(i = 0; i < ncoeffs; ++i)
+                    for(i = 0; i < edge_ncoeffs; ++i)
                     {
                         dir[i] = i;
                     }
@@ -387,15 +386,15 @@ namespace Nektar
                 {
                     if(Btype == eGLL_Lagrange)
                     {
-                        for(i = 0; i < ncoeffs; ++i)
+                        for(i = 0; i < edge_ncoeffs; ++i)
                         {
-                            dir[i] = ncoeffs-i-1;
+                            dir[i] = edge_ncoeffs-i-1;
                         }
                     }
                     else{
                         dir[1] = 0; 
                         dir[0] = 1;
-                        for(i = 2; i < ncoeffs; ++i)
+                        for(i = 2; i < edge_ncoeffs; ++i)
                         {
                             dir[i] = i;
                         }
@@ -414,7 +413,7 @@ namespace Nektar
                     switch(Btype)
                     {
                     case eGLL_Lagrange:
-                        ASSERTL2(ncoeffs == order0,
+                        ASSERTL2(edge_ncoeffs == order0,
                             "Expansion order of edge and StdQuadExp are different");
 
                         if(eid == 0)
@@ -454,7 +453,7 @@ namespace Nektar
                     switch(Btype)
                     {
                     case eGLL_Lagrange:
-                        ASSERTL2(ncoeffs == order1,
+                        ASSERTL2(edge_ncoeffs == order1,
                             "Expansion order of edge and StdQuadExp are different");
                         if(eid == 1)
                         {
@@ -486,7 +485,7 @@ namespace Nektar
                     }
                 }
 
-                for(i = 0; i < ncoeffs; ++i)
+                for(i = 0; i < edge_ncoeffs; ++i)
                 {
                     Map[dir[i]] = start + i*skip; 
                 }
@@ -498,6 +497,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.2  2006/06/01 14:13:36  kirby
+* *** empty log message ***
+*
 * Revision 1.1  2006/05/04 18:58:32  kirby
 * *** empty log message ***
 *

@@ -14,7 +14,7 @@ using namespace std;
 // This routine projects a which has energy in all mdoes of the
 // expansions and report an error.
 
-main(int argc, char *argv[]){
+int main(int argc, char *argv[]){
   ContExpList1D  *Exp;
   int i,j,k;
   int order, nq;
@@ -125,4 +125,6 @@ main(int argc, char *argv[]){
   delete[] sol; 
   delete[] xc[0];
   delete[] xc;
+  
+  return 0;
 }

@@ -270,7 +270,7 @@ namespace Nektar
             switch(m_matform)
             {
             case eSymmetric:
-            case eSymmetric_Positive:
+            case eSymmetric_Positive: 
                 m_packed_matrix = new double [m_lda*(m_lda+1)/2];
                 Vmath::Zero(m_lda*(m_lda+1)/2,m_packed_matrix,1);
                 break;
@@ -982,6 +982,10 @@ eHexOrtho3:
 
 /** 
 * $Log: StdMatrix.cpp,v $
+* Revision 1.4  2006/06/06 15:25:21  jfrazier
+* Removed unreferenced variables and replaced ASSERTL0(false, ....) with
+* NEKERROR.
+*
 * Revision 1.3  2006/06/01 15:03:59  sherwin
 * Updated header file to include StdRegions.hpp and removed NekMemoryManager.hpp
 *

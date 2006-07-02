@@ -49,7 +49,7 @@ namespace Nektar
         class MeshGraph1D: public MeshGraph
         {
         public:
-
+	    
             MeshGraph1D();
             virtual ~MeshGraph1D();
 
@@ -58,13 +58,14 @@ namespace Nektar
 
             void Write(std::string &outfilename);
 
-            inline const int GetCoordim(void){
+            inline const int GetCoordim(void)
+	    {
                 return GetSpaceDimension();
             }
 
             inline const SegGeomVector &GetSeggeoms(void) const
-		{
-                return m_seggeoms;
+	    {
+		return m_seggeoms;
             }
 
             inline bool GetGeofac_defined(void)
@@ -74,6 +75,14 @@ namespace Nektar
 
             void GenXGeoFac();
 
+	    inline int GetVidFromElmt(const int vert, const int elmt)
+	    {
+		ASSERTL2((elmt >=0)&&(elmt < m_seggeoms.size()),
+				     "eid is out of range");
+
+		return m_seggeoms[elmt]->GetVid(vert);
+	    }
+	    
         protected:
             bool   m_geofac_defined;
 
@@ -87,6 +96,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.h,v $
+// Revision 1.3  2006/06/01 14:15:30  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.2  2006/05/30 14:00:04  sherwin
 // Updates to make MultiRegions and its Demos work
 //

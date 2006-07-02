@@ -409,13 +409,13 @@ namespace Nektar
 
 
             ASSERTL2((m_base[1]->GetBasisType() != eOrtho_B)||
-                (m_base[1]->GetBasisType() != eModified_B),
-                "Basis[1] is not of general tensor type");
+		     (m_base[1]->GetBasisType() != eModified_B),
+		     "Basis[1] is not of general tensor type");
 
             for(i = mode = 0; i < order0; ++i)
             {
                 Blas::Dgemv('N', nquad1,order1-i,1.0,base1+mode*nquad1,
-                    nquad1,m_coeffs+mode,1,0.0,tmp.get()+i*nquad1,1);
+			    nquad1,m_coeffs+mode,1,0.0,tmp.get()+i*nquad1,1);
                 mode += order1-i;
             }
 
@@ -426,13 +426,13 @@ namespace Nektar
             }
 
             Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0,nquad0, 
-                tmp.get(), nquad1,0.0,outarray, nquad0);
+			tmp.get(), nquad1,0.0,outarray, nquad0);
         }
 
         void StdTriExp::FwdTrans(const double *inarray)
         {
             StdMatContainer *M;
-
+	    
             IProductWRTBase(inarray,m_coeffs);
             M = GetMassMatrix();
             M->Solve(m_coeffs,1);
@@ -460,12 +460,12 @@ namespace Nektar
         }
 
 
-        void  StdTriExp::MapTo(StdSegExp& edge, const int eid, 
-            const EdgeOrientation eorient, StdExpMap &Map)
+        void  StdTriExp::MapTo(const int edge_ncoeffs, const BasisType Btype,
+			       const int eid, const EdgeOrientation eorient, 
+			       StdExpMap &Map)
         {
-
+	    
             int i;
-            const int ncoeffs = edge.GetNcoeffs();
             int *dir, order0,order1;
             BstShrIArray wsp; 
 
@@ -475,21 +475,21 @@ namespace Nektar
             ASSERTL2(Btype == m_base[0]->GetBasisType(),
                 "Expansion type of edge and StdQuadExp are different");
 
-            // make sure have correct memory storage
-            if(ncoeffs != Map.GetLen())
+            // make sure haved correct memory storage
+            if(edge_ncoeffs != Map.GetLen())
             {
-                Map.SetMap(ncoeffs);
+                Map.SetMap(edge_ncoeffs);
             }
 
             order0 = m_base[0]->GetBasisOrder();
-            order1 = m_base[0]->GetBasisOrder();
+            order1 = m_base[1]->GetBasisOrder();
 
-            wsp = GetIntTmpSpace(ncoeffs);
+            wsp = GetIntTmpSpace(edge_ncoeffs);
             dir = wsp.get(); 
 
             if(eorient == eForwards)
             {
-                for(i = 0; i < ncoeffs; ++i)
+                for(i = 0; i < edge_ncoeffs; ++i)
                 {
                     dir[i] = i;
                 }
@@ -498,8 +498,8 @@ namespace Nektar
             {
                 dir[1] = 0; 
                 dir[0] = 1;
-
-                for(i = 2; i < ncoeffs; ++i)
+		
+                for(i = 2; i < edge_ncoeffs; ++i)
                 {
                     dir[i] = i;
                 }
@@ -509,26 +509,26 @@ namespace Nektar
             switch (eid)
             {
             case 0:
-                {
+		{
                     int cnt = 0;
-
-                    for(i = 0; i < ncoeffs; cnt+=order1-i, ++i)
+		    
+                    for(i = 0; i < edge_ncoeffs; cnt+=order1-i, ++i)
                     {
                         Map[dir[i]] = cnt; 
                     }
                 }
                 break;
             case 1:
-                Map[dir[0]] = order0;
+                Map[dir[0]] = order1;
                 Map[dir[1]] = 1;
-
-                for(i = 2; i < ncoeffs; ++i)
+		
+                for(i = 2; i < edge_ncoeffs; ++i)
                 {
-                    Map[dir[i]] = order0+1+i; 
+                    Map[dir[i]] = order1+i-1; 
                 }
                 break;
             case 2:
-                for(i = 0; i < ncoeffs; ++i)
+                for(i = 0; i < edge_ncoeffs; ++i)
                 {
                     Map[dir[i]] = i; 
                 }
@@ -603,6 +603,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.5  2006/06/13 18:05:02  sherwin
+* Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+*
 * Revision 1.4  2006/06/06 15:25:21  jfrazier
 * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
 * NEKERROR.

@@ -34,8 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef STANDARDEXPANSION_H
-#define STANDARDEXPANSION_H
+#ifndef NEKTAR_LIB_STDREGIONS_STANDARDEXPANSION_H
+#define NEKTAR_LIB_STDREGIONS_STANDARDEXPANSION_H
 
 #include <StdRegions/BasisManager.h>
 #include <loki/Factory.h>
@@ -45,6 +45,8 @@
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
 #include <StdRegions/LocalRegionsDeclarations.hpp>
 
+#include <StdRegions/StdExpMap.h>
+
 namespace Nektar
 {
     namespace StdRegions
@@ -52,6 +54,7 @@ namespace Nektar
 
 
         class StdMatContainer;
+	class StdSegExp;
 
         // We do this so that we can have an array of 'const Basis *'
         // const Basis** is ambiguous; using a typedef resolves the
@@ -71,7 +74,7 @@ namespace Nektar
 
             /// Default Constructor
             StdExpansion();
-
+	    
             /// Constructor
             StdExpansion(const int numbases, const BasisKey &Ba, const BasisKey &Bb,
                 const BasisKey &Bc, int numcoeffs, double *coeffs,
@@ -126,6 +129,8 @@ namespace Nektar
                     m_base[dir]->GetPointsOrder(),m_base[dir]->GetAlpha(),
                     m_base[dir]->GetBeta(), I);
             }
+	    
+
 
             /// Return the number of 1D basis used in expansion
             inline int GetNumBases() const
@@ -242,6 +247,32 @@ namespace Nektar
             }
 
             // Wrappers around virtual Functions
+	    int GetNverts()
+	    {
+		return v_GetNverts();
+	    }
+
+	    int GetNedges()
+	    {
+		return v_GetNedges();
+	    }
+
+	    int GetEdgeNcoeffs(const int i)
+	    {
+		return v_GetEdgeNcoeffs(i);
+	    }
+
+	    BasisType GetEdgeBasisType(const int i)
+	    {
+		return v_GetEdgeBasisType(i);
+	    }
+
+
+	    int GetNfaces()
+	    {
+		return v_GetNfaces();
+	    }
+	    
             ShapeType DetShapeType()
             {
                 return v_DetShapeType();
@@ -325,7 +356,7 @@ namespace Nektar
             // virtual functions related to LocalRegions
             boost::shared_ptr<LocalRegions::MetricRelatedInfo> GenGeoFac(void)
             {
-				return v_GenGeoFac();
+		return v_GenGeoFac();
             }
 
             void SetGeoFac(boost::shared_ptr<LocalRegions::MetricRelatedInfo> minfo)
@@ -333,10 +364,25 @@ namespace Nektar
                 v_SetGeoFac(minfo);
             }
 
-			int GetCoordim()
-			{
-				return v_GetCoordim(); 
-			}
+	    int GetCoordim()
+	    {
+		return v_GetCoordim(); 
+	    }
+
+	    // element boundary ordering 
+	    // Segment mapping: Vertex to Seg
+	    void MapTo(EdgeOrientation dir, StdExpMap &Map)
+	    {
+		v_MapTo(dir,Map);
+	    }
+
+	    // EdgeTo2D mapping 
+	    void  MapTo(const int edge_ncoeff, const BasisType Btype, 
+			const int eid, const EdgeOrientation eorient, 
+			StdExpMap &Map)
+	    {
+		v_MapTo(edge_ncoeff,Btype,eid,eorient,Map);
+	    }
 
             // Matrix Routines
             void GenerateMassMatrix(double *outarray);
@@ -420,6 +466,25 @@ namespace Nektar
         private:
 
             // Virtual functions
+
+	    virtual int v_GetNverts() = 0;
+	    virtual int v_GetNedges() = 0;
+	    virtual int v_GetNfaces() = 0;
+
+	    virtual int v_GetEdgeNcoeffs(const int i)
+	    {
+                ASSERTL0(false, "This function is not valid or not defined");
+		return 0;
+	    }
+
+
+	    virtual BasisType v_GetEdgeBasisType(const int i)
+	    {
+                ASSERTL0(false, "This function is not valid or not defined");
+		return (BasisType) NULL;
+	    }
+
+
             virtual ShapeType v_DetShapeType()                = 0;
 
             virtual StdMatContainer *v_GetMassMatrix()
@@ -501,11 +566,24 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
 
-			virtual int v_GetCoordim(void)
-			{
+	    virtual int v_GetCoordim(void)
+	    {
                 NEKERROR(ErrorUtil::efatal, "Write method");		
-				return -1;
-			}
+		return -1;
+	    }
+
+	    // element boundary ordering 
+	    virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
+	    {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
+	    }
+	    
+	    virtual void  v_MapTo(const int edge_ncoeffs, const BasisType Btype,
+				  const int eid, const EdgeOrientation eorient, 
+				  StdExpMap &Map)
+	    {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
+	    }
 	    
             virtual void v_WriteToFile(FILE *outfile)
             {
@@ -551,6 +629,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.6  2006/06/13 18:05:02  sherwin
+* Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+*
 * Revision 1.5  2006/06/06 15:25:21  jfrazier
 * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
 * NEKERROR.

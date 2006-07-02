@@ -34,65 +34,83 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef STDPRISMEXP_H
-#define STDPRISMEXP_H
+#ifndef NEKTAR_LIB_STDREGIONS_STDPRISMEXP_H
+#define NEKTAR_LIB_STDREGIONS_STDPRISMEXP_H
 
 #include <StdRegions/StdExpansion3D.h>
 #include <StdRegions/StdMatrix.h>
 
 namespace Nektar
 {
-  namespace StdRegions
-  {
-
-    class StdPrismExp: public StdExpansion3D
+    namespace StdRegions
     {
+	
+	class StdPrismExp: public StdExpansion3D
+	{
+	    
+	public:
+	    
+	    /** \brief Constructor using BasisKey class for quadrature
+		points and order definition */
+	    StdPrismExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
+	    
+	    /** \brief Constructor using BasisKey class for quadrature
+		points and order definition where _coeffs and _phys are all
+		set. */
+	    StdPrismExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
+			double *coeffs, double *phys);
+	    
+	    /// Copy Constructor
+	    StdPrismExp(const StdPrismExp &T);
+	    
+	    /// Destructor
+	    ~StdPrismExp();
+	    
+	    /// Return Shape of region, using  ShapeType enum list. i.e. Prism
+	    ShapeType DetShapeType()
+	    {
+		return ePrism;
+	    }
+	    
+	protected:
+	    
+	    static StdMatrix s_elmtmats;
+	    
+	    
+	private:
+	    
+	    virtual int v_GetNverts()
+	    {
+		return 6;
+	    }
+	    
+	    virtual int v_GetNedges()
+	    {
+		return 9;
+	    }
+	    
+	    virtual int v_GetNfaces()
+	    {
+		return 5;
+	    }
 
-    public:
-
-      /** \brief Constructor using BasisKey class for quadrature
-	  points and order definition */
-      StdPrismExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
-
-      /** \brief Constructor using BasisKey class for quadrature
-	  points and order definition where _coeffs and _phys are all
-	  set. */
-      StdPrismExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
-          double *coeffs, double *phys);
-
-      /// Copy Constructor
-      StdPrismExp(const StdPrismExp &T);
-
-      /// Destructor
-      ~StdPrismExp();
-
-      /// Return Shape of region, using  ShapeType enum list. i.e. Prism
-      ShapeType DetShapeType()
-      {
-	return ePrism;
-      }
-
-    protected:
-
-      static StdMatrix s_elmtmats;
-
-
-    private:
-
-      virtual ShapeType v_DetShapeType()
-      {
-	return DetShapeType();
-      }
-
-  };
-
-  } //end of namespace
+	    virtual ShapeType v_DetShapeType()
+	    {
+		return DetShapeType();
+	    }
+	    
+	};
+	
+    } //end of namespace
 } //end of namespace
 
 #endif //STDPRISMEXP_H
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.1  2006/05/04 18:58:32  kirby
+ * *** empty log message ***
+ *
  * Revision 1.23  2006/03/06 17:12:46  sherwin
  *
  * Updated to properly execute all current StdRegions Demos.

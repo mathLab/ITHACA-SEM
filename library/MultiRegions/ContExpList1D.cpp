@@ -37,75 +37,42 @@
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
-    
-    ContExpList1D::ContExpList1D()
+    namespace MultiRegions
     {
-      m_mass = (StdRegions::StdMatContainer *)NULL;
-      m_locToContMap = (int *)NULL;
-  }
-  
-    ContExpList1D::~ContExpList1D()
-    {
-      if(m_contCoeffs)
-      {
-	delete[] m_contCoeffs;
-      }
-      
-      if(m_locToContMap)
-      {
-	delete[] m_locToContMap;
-      }
-    }
-
-    ContExpList1D::ContExpList1D(const StdRegions::BasisKey &Ba, 
-				 SpatialDomains::MeshGraph1D &graph1D):
-	ExpList1D(Ba,graph1D)
-    {
-      int gid,i,j;
-      int order = Ba.GetBasisOrder();
-      
-      ASSERTL1((Ba.GetBasisType() == StdRegions::Modified_A)
-	       ||(Ba.GetBasisType() == StdRegions::GLL_Lagrange),
-	       "Expansion not of an boundary-interior type");
-
-      m_mass = (StdRegions::StdMatContainer *)NULL;
-      
-      m_locToContMap = new int [m_ncoeffs];
-      Vmath::Fill(m_ncoeffs,-1,m_locToContMap,1);
-      
-      // set up mapping based 
-      StdRegions::StdExpMap vmap;
-    
-      // assume all elements have the same mapping and expasion order
-      static_cast<StdRegions::StdSegExp*>(m_exp_shapes[0][0].get())->MapTo(StdRegions::eForwards, vmap);
-   
-      // set up simple map;
-      for(gid = i = 0; i < m_exp_shapes[0].size(); ++i,++gid)
-      {
-	for(j = 0; j < 2; ++j)
+	
+	ContExpList1D::ContExpList1D()
 	{
-	  m_locToContMap[order*i+vmap[j]] = gid+j;
+	    m_mass = (StdRegions::StdMatContainer *)NULL;
 	}
-      }
-      ++gid;
-
-      for(i = 0; i < m_exp_shapes[0].size(); ++i)
-      {
-	for(j = 0; j < order; ++j)
+	
+	ContExpList1D::~ContExpList1D()
 	{
-	  if(m_locToContMap[order*i+j] == -1)
-	  {
-	    m_locToContMap[order*i+j] = gid++;
-	  }
+	    if(m_contCoeffs)
+	    {
+		delete[] m_contCoeffs;
+	    }
+	    
 	}
-      }
 
-      m_contNcoeffs = gid;
-      m_contCoeffs = new double [m_contNcoeffs];
-    }
-    
+	ContExpList1D::ContExpList1D(const StdRegions::BasisKey &Ba, 
+				     SpatialDomains::MeshGraph1D &graph1D):
+	    ExpList1D(Ba,graph1D)
+	{
+	    
+	    ASSERTL1((Ba.GetBasisType() == StdRegions::Modified_A)
+		     ||(Ba.GetBasisType() == StdRegions::GLL_Lagrange),
+		     "Expansion not of an boundary-interior type");
+	    
+	    m_mass = (StdRegions::StdMatContainer *)NULL;
+	
+	    // setup mapping array 
+	    m_locToGloMap.reset(new LocalToGlobalMap1D(m_ncoeffs, m_exp_shapes, 
+						       graph1D));
+	    
+	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
+	    m_contCoeffs = new double [m_contNcoeffs];
+	}
+      
     
     void ContExpList1D::IProductWRTBase(const double *inarray, double *outarray)
     {
@@ -140,42 +107,44 @@ namespace Nektar
 
     void ContExpList1D::GenMassMatrix(void)
     {
-      if(!m_mass)
-      {
-	int   i,j,cnt,gid1,gid2,loc_lda;
-	double *loc_mat;
-	StdRegions::StdMatContainer *loc_mass;
-	StdRegions::StdExpansionVectorIter def;
-	
-	double *mmat = new double [m_contNcoeffs*m_contNcoeffs];
-	Vmath::Zero(m_contNcoeffs*m_contNcoeffs,mmat,1);
-      
-	m_mass = new StdRegions::StdMatContainer(mmat);
-	m_mass->SetLda     (m_contNcoeffs);
-	m_mass->SetMatForm (StdRegions::eSymmetric_Positive);
-	
-      // fill global matrix 
-	for(cnt = 0, def = m_exp_shapes[0].begin(); 
-	    def != m_exp_shapes[0].end(); ++def)
+	if(!m_mass)
 	{
-	  loc_mass = (*def)->GetMassMatrix();
-	  loc_lda = loc_mass->GetLda();
-	  loc_mat = loc_mass->GetMatrix();
-	
-	  for(i = 0; i < loc_lda; ++i)
-	  {
-	    gid1 = m_locToContMap[i+cnt];
-
-	    for(j = 0; j < loc_lda; ++j)
+	    int   i,j,cnt,gid1,gid2,loc_lda;
+	    double *loc_mat;
+	    StdRegions::StdMatContainer *loc_mass;
+	    StdRegions::StdExpansionVectorIter def;
+	    
+	    double *mmat = new double [m_contNcoeffs*m_contNcoeffs];
+	    Vmath::Zero(m_contNcoeffs*m_contNcoeffs,mmat,1);
+	    
+	    m_mass = new StdRegions::StdMatContainer(mmat);
+	    m_mass->SetLda     (m_contNcoeffs);
+	    m_mass->SetMatForm (StdRegions::eSymmetric_Positive);
+	    
+	    // fill global matrix 
+	    for(cnt = 0, def = m_exp_shapes[0].begin(); 
+		def != m_exp_shapes[0].end(); ++def)
 	    {
-	      gid2 = m_locToContMap[j+cnt];
-	      mmat[gid1*m_contNcoeffs + gid2] += loc_mat[i*loc_lda + j];
+		loc_mass = (*def)->GetMassMatrix();
+		loc_lda = loc_mass->GetLda();
+		loc_mat = loc_mass->GetMatrix();
+		
+		for(i = 0; i < loc_lda; ++i)
+		{
+		    gid1 = m_locToGloMap->GetMap(i+cnt);
+		    
+		    for(j = 0; j < loc_lda; ++j)
+		    {
+			gid2 = m_locToGloMap->GetMap(j+cnt);
+			mmat[gid1*m_contNcoeffs+gid2] += loc_mat[i*loc_lda+j];
+		    }
+		}
+		cnt+=(*def)->GetNcoeffs();
 	    }
-	  }
-	  cnt+=(*def)->GetNcoeffs();
 	}
-      }
     }
   } //end of namespace
 } //end of namespace
+
+
 

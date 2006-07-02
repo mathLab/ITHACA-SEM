@@ -52,7 +52,6 @@ namespace Nektar
       eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values 
     };
 
-    
   }// end of namespace
 }// end of namespace
 

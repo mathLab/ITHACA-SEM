@@ -12,7 +12,7 @@ include ../Flags/${ARCH}.inc
 
 # These are the module names:
 
-ALL   =  ContExpList1D DisContExpList1D ExpList ExpList1D ExpList2D ExpList3D
+ALL   =  ContExpList1D ContExpList2D  DisContExpList1D ExpList ExpList1D ExpList2D ExpList3D LocalToGlobalMap  LocalToGlobalMap1D LocalToGlobalMap2D LocalToGlobalMap3D
 
 # ---------------------------------------------------------------- #
 # The following expand to give the names of all sections (ALL),    #

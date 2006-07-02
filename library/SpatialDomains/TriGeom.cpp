@@ -70,10 +70,11 @@ namespace Nektar
 			 StdRegions::EdgeOrientation * eorient):
 	    TriFaceComponent(edges[0]->GetCoordim())
         {
+	    int j;
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
 
-	    for(int j=0; j <kNedges; ++j)
+	    for(j=0; j <kNedges; ++j)
 	    {
 		if(eorient[j] == StdRegions::eForwards)
 		{
@@ -84,6 +85,11 @@ namespace Nektar
 		    m_verts.push_back(edges[j]->GetVertex(1));
 		}
 	    }
+
+            for (j=0; j<kNedges; ++j)
+            {
+                m_eorient[j] = eorient[j];
+            }
 
             m_coordim = edges[0]->GetVertex(0)->GetCoordim();
             ASSERTL0(m_coordim > 1,"Cannot call function with dim == 1");
@@ -152,7 +158,9 @@ namespace Nektar
             StdRegions::StdExpMap Map,MapV;
 
             // set side 1 
-            m_xmap[0]->MapTo(*(*m_edges[0])[0],0,m_eorient[0],Map);
+            m_xmap[0]->MapTo((*m_edges[0])[0]->GetNcoeffs(),
+			     (*m_edges[0])[0]->GetBasisType(0),
+			     0,m_eorient[0],Map);
 
             for(i = 0; i < m_coordim; ++i)
             {
@@ -182,8 +190,10 @@ namespace Nektar
             }
 
             // set side 2
-            m_xmap[0]->MapTo(*(*m_edges[1])[0],1,(m_eorient[1]),Map);
-
+            m_xmap[0]->MapTo((*m_edges[1])[0]->GetNcoeffs(),
+			     (*m_edges[1])[0]->GetBasisType(0),
+			     1,(m_eorient[1]),Map);
+	    
             for(i = 0; i < m_coordim; ++i)
             {
                 coef  = (*m_edges[1])[i]->GetCoeffs();
@@ -194,7 +204,9 @@ namespace Nektar
             }
 
             // set side 3
-            m_xmap[0]->MapTo(*(*m_edges[2])[0],2,m_eorient[2],Map);
+            m_xmap[0]->MapTo((*m_edges[2])[0]->GetNcoeffs(),
+			     (*m_edges[2])[0]->GetBasisType(0),
+			     2,(m_eorient[2]),Map);
 
             for(i = 0; i < m_coordim; ++i)
             {
@@ -252,6 +264,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.6  2006/06/02 18:48:40  sherwin
+// Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
+//
 // Revision 1.5  2006/06/01 14:15:31  sherwin
 // Added typdef of boost wrappers and made GeoFac a boost shared pointer.
 //

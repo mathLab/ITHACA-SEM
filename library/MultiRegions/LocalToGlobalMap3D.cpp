@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Loc2GloMap.cpp
+// File LocalToGlobalMap3D.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,18 +29,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Local to Global mapping routines
+// Description: Local to Global mapping routines in 3D
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/Loc2GloMap.h>
-
-#include <LocalRegions/SegExp.h>
+#include <MultiRegions/LocalToGlobalMap3D.h>
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
+    namespace MultiRegions
+    {
+	LocalToGlobalMap3D::LocalToGlobalMap3D(int loclen, 
+		       std::vector<StdRegions::StdExpansionVector> &exp_shapes, 
+					 SpatialDomains::MeshGraph3D &graph3D)
+	{
+	}
 
-  }
+	LocalToGlobalMap3D::~LocalToGlobalMap3D()
+	{
+	}
+    }
 }

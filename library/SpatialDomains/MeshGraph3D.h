@@ -36,6 +36,9 @@
 #ifndef NEKTAR_SPATIALDOMAINS_MESHGRAPH3D_H
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH3D_H
 
+#include <SpatialDomains/MeshGraph.h>
+#include <SpatialDomains/PrismGeom.h>
+
 #include <list>
 
 namespace Nektar
@@ -50,7 +53,8 @@ namespace Nektar
         class PrimsGeom;
         class HexGeom;
 
-        class MeshGraph3D: public MeshGraph
+        class MeshGraph3D: 
+	public MeshGraph
         {
         public:
             MeshGraph3D();
@@ -77,6 +81,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.h,v $
+// Revision 1.1  2006/05/04 18:59:02  kirby
+// *** empty log message ***
+//
 // Revision 1.6  2006/03/25 00:58:29  jfrazier
 // Many changes dealing with fundamental structure and reading/writing.
 //

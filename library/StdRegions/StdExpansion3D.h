@@ -99,6 +99,10 @@ namespace Nektar
 
             // Virtual Functions ----------------------------------------
 
+	    virtual int v_GetNverts() = 0;
+	    virtual int v_GetNedges() = 0;
+	    virtual int v_GetNfaces() = 0;
+
             virtual void v_GenMassMatrix(double * outarray)   = 0;
             virtual void v_GenLapMatrix (double * outarray)   = 0;
             virtual ShapeType v_DetShapeType()                = 0;
@@ -152,6 +156,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.2  2006/06/13 18:05:02  sherwin
+* Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+*
 * Revision 1.1  2006/05/04 18:58:31  kirby
 * *** empty log message ***
 *

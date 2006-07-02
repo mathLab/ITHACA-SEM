@@ -60,12 +60,12 @@ namespace Nektar
 	    int tri_ncoeffs_elmt = 0, quad_ncoeffs_elmt = 0;
 	    int tri_npoints_elmt = 0, quad_npoints_elmt = 0;
 	    
-	    // declare memory
+	    // determine size of local expansion and quadrature space
+	    // and declare memory
 
 	    if(TriGeoms.size())
 	    {		
-		tri_ncoeffs_elmt = (TriBa.GetBasisOrder()*(TriBa.GetBasisOrder()+1))/2 + 
-						TriBa.GetBasisOrder()*(TriBb.GetBasisOrder()-TriBa.GetBasisOrder());
+		tri_ncoeffs_elmt = (TriBa.GetBasisOrder()*(TriBa.GetBasisOrder()+1))/2 + TriBa.GetBasisOrder()*(TriBb.GetBasisOrder()-TriBa.GetBasisOrder());
 		tri_npoints_elmt = (TriBa.GetPointsOrder()*
 				    TriBb.GetPointsOrder());
 		
@@ -91,6 +91,13 @@ namespace Nektar
 	    m_physState  = false;
 		
 	    
+	    // make sure Geofacs are defined in MeshGraph2D
+	    if(graph2D.GetGeofac_defined() != true)
+	    {
+		graph2D.GenXGeoFac();
+	    }
+	    
+
 	    // declare triangles using first block of data 	    
 	    if(TriGeoms.size())
 	    {		
@@ -129,12 +136,6 @@ namespace Nektar
 		SpatialDomains::QuadGeomVectorIter def;
 		StdRegions::StdExpansionVector explist;
 
-		// make sure Geofacs are defined in MeshGraph1D
-		if(graph2D.GetGeofac_defined() != true)
-		{
-		    graph2D.GenXGeoFac();
-		}
-	    
 		cnt = cnt1 = 0;
 		for(def = QuadGeoms.begin(); def != QuadGeoms.end(); ++def)
 		{

@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef STDHEXEXP_H
-#define STDHEXEXP_H
+#ifndef NEKTAR_LIBS_STDREGSION_STDHEXEXP_H
+#define NEKTAR_LIBS_STDREGSION_STDHEXEXP_H
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion3D.h>
@@ -117,6 +117,21 @@ namespace Nektar
                 double *outarray, int coll_check);
 
         private:
+
+	    virtual int v_GetNverts()
+	    {
+		return 8;
+	    }
+	    
+	    virtual int v_GetNedges()
+	    {
+		return 12;
+	    }
+	    
+	    virtual int v_GetNfaces()
+	    {
+		return 6;
+	    }
 
             virtual ShapeType v_DetShapeType()
             {
@@ -208,6 +223,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.3  2006/06/01 14:13:36  kirby
+* *** empty log message ***
+*
 * Revision 1.2  2006/05/23 15:08:19  jfrazier
 * Minor cleanup to correct compile warnings.
 *

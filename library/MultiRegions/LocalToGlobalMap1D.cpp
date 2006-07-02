@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File StdExpMap.h
+// File LocaltoGlobalMap1D.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,98 +29,59 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Determine mapping information between 1D and 2D
-// expansions as well as between 2D and 3D Expansions
+// Description: Local to Global mapping routines in 1D
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_STDREGIONS_STDEXPMAP_H
-#define NEKTAR_LIB_STDREGIONS_STDEXPMAP_H
-
-#include <StdRegions/StdRegions.hpp>
+#include <MultiRegions/LocalToGlobalMap1D.h>
 
 namespace Nektar
 {
-    namespace StdRegions
+    namespace MultiRegions
     {
-	
-	class StdExpMap
+	LocalToGlobalMap1D::LocalToGlobalMap1D(int loclen, std::vector<StdRegions::StdExpansionVector> &exp_shapes, SpatialDomains::MeshGraph1D &graph1D)
 	{
+	    int i,j,gid,cnt;
+	    int *locToContMap;
 	    
-	public:
-	    StdExpMap();
-	    StdExpMap(const int len);
-	    ~StdExpMap();
+	    m_totLocLen = loclen; 
 	    
-	    void SetMap(const int len);
+	    // set up Local to Continuous mapping 
+	    locToContMap = new int [m_totLocLen];
+	    Vmath::Fill(m_totLocLen,-1,locToContMap,1);
+	  
+	    StdRegions::StdExpMap vmap;
 	    
-	    inline int GetLen()
+	    // set up simple map based on vertex and edge id's
+	    cnt = 0;
+	    for(i = 0; i < exp_shapes[0].size(); ++i)
 	    {
-		return m_len;
-	    }
-	    
-	    inline int* GetMap()
-	    {
-		return m_map;
-	    }
-	    
-	    int operator[](const int i) const
-	    {
-		
-		if((i>=0) && (i<m_len))
+		exp_shapes[0][i]->MapTo(StdRegions::eForwards,vmap);
+		for(j = 0; j < 2; ++j)
 		{
-		    return m_map[i];
+		    locToContMap[cnt+vmap[j]] = graph1D.GetVidFromElmt(j,i);
 		}
-		ASSERTL0(false, "Invalid Index used in [] operator");
-		
-		return m_map[0]; //should never be reached
+		cnt += exp_shapes[0][i]->GetNcoeffs();
 	    }
 	    
-	    int& operator[](const int i)
+	    gid = Vmath::Vmax(m_totLocLen,locToContMap,1)+1;
+	    for(i = 0; i < m_totLocLen; ++i)
 	    {
-		
-		if((i>=0) && (i<m_len))
+		if(locToContMap[i] == -1)
 		{
-		    return m_map[i];
+		    locToContMap[i] = gid++;
 		}
-		
-		ASSERTL0(false, "Invalid Index used in [] operator");
-		return m_map[0]; //should never be reached
 	    }
 	    
-	protected:
+	    m_totGloLen = gid;
 	    
-	private:
-	    
-	    int m_len;
-	    int *m_map;
-	    
-	};
+	    m_locToContMap.reset(locToContMap);
+	}
 	
-    } // end of namespace
-} // end of namespace
-
-#endif //STDEXPMAP_H
-
-/**
- * $Log: StdExpMap.h,v $
- * Revision 1.2  2006/06/01 13:43:19  kirby
- * *** empty log message ***
- *
- * Revision 1.1  2006/05/04 18:58:31  kirby
- * *** empty log message ***
- *
- * Revision 1.6  2006/04/25 20:23:33  jfrazier
- * Various fixes to correct bugs, calls to ASSERT, etc.
- *
- * Revision 1.5  2006/03/04 20:26:54  bnelson
- * Added comments after #endif.
- *
- * Revision 1.4  2006/02/27 23:47:23  sherwin
- *
- * Standard coding update upto compilation of StdHexExp.cpp
- *
- *
- **/
-
-
+	
+	LocalToGlobalMap1D::~LocalToGlobalMap1D()
+	{
+	}
+	
+    }
+}

@@ -185,8 +185,7 @@ namespace Nektar
         /// If edge1 is comprised of points 2 and 1 and edge2 is
         /// comprised of points 3 and 2, then edge1 is backward.
 
-        StdRegions::EdgeOrientation EdgeComponent::GetEdgeOrientation(const EdgeComponent &edge1, 
-								      const EdgeComponent &edge2)
+        StdRegions::EdgeOrientation EdgeComponent::GetEdgeOrientation(const EdgeComponent &edge1,  const EdgeComponent &edge2)
         {
             StdRegions::EdgeOrientation returnval = StdRegions::eForwards;
 	    
@@ -213,6 +212,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.8  2006/06/02 18:48:40  sherwin
+*    Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
+*
 *    Revision 1.7  2006/05/30 14:00:04  sherwin
 *    Updates to make MultiRegions and its Demos work
 *

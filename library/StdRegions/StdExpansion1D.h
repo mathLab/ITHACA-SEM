@@ -60,7 +60,7 @@ namespace Nektar
 
             void GetCoords1D(double **coords);
 
-            // wrapper call to GetCoords of given expansion, i.e. StdSegExp or SegExp
+            //wrapper call to GetCoords of given expansion,i.e. StdSegExp or SegExp
             void GetCoords(double **coords)
             {
                 v_GetCoords(coords);
@@ -105,6 +105,18 @@ namespace Nektar
         private:
 
             // Virtual Functions ----------------------------------------
+
+	    virtual int v_GetNverts() = 0;
+	    virtual int v_GetNedges()
+	    {
+		ASSERTL0(false,"This function is only valid for 2 and 3D expansions");
+		return 0;
+	    }
+	    virtual int v_GetNfaces()
+	    {
+		ASSERTL0(false,"This function is only valid for 2 and 3D expansions");
+		return 0;
+	    }
 
             virtual ShapeType v_DetShapeType()                = 0;
 
@@ -153,6 +165,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.2  2006/06/13 18:05:02  sherwin
+* Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+*
 * Revision 1.1  2006/05/04 18:58:31  kirby
 * *** empty log message ***
 *

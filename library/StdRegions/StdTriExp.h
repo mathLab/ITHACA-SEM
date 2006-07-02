@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef STDTRIEXP_H
-#define STDTRIEXP_H
+#ifndef NEKTAR_LIB_STDREGIONS_STDTRIEXP_H
+#define NEKTAR_LIB_STDREGIONS_STDTRIEXP_H
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
@@ -43,174 +43,235 @@
 
 namespace Nektar
 {
-  namespace StdRegions
-  {
-
-    class StdTriExp: public StdExpansion2D
+    namespace StdRegions
     {
+	
+	class StdTriExp: public StdExpansion2D
+	{
+	    
+	public:
+	    
+	    StdTriExp();
+	    
+	    /** \brief Constructor using BasisKey class for quadrature points and order
+		definition */
+	    StdTriExp(const BasisKey &Ba, const BasisKey &Bb);
+	    
+	    /** \brief Constructor using BasisKey class for quadrature points and order
+		definition where _coeffs and _phys are all set. */
+	    StdTriExp(const BasisKey &Ba, const BasisKey &Bb, double *coeffs,
+		      double *phys);
+	    
+	    /// Copy Constructor
+	    StdTriExp(const StdTriExp &T);
+	    
+	    /// Destructor
+	    ~StdTriExp();
+	    
+	    /// Return Shape of region, using  ShapeType enum list. i.e. Triangle
+	    ShapeType DetShapeType()
+	    {
+		return eTriangle;
+	    };
+	    
+	    //////////////////////////////
+	    // Integration Methods
+	    //////////////////////////////
+	    
+	    double Integral(const double *inarray);
+	    
+	    void IProductWRTBase(const double * inarray, double * outarray);
+	    
+	    void FillMode(const int mode, double *outarray);
+	    
+	    ///////////////////////////////////
+	    // Differentiation Methods
+	    //////////////////////////////////
+	    
+	    void Deriv(const double *inarray, double * outarray_d1,
+		       double *outarray_d2);
+	    
+	    void Deriv(double * outarray_d1, double *outarray_d2);
+	    
+	    //-----------------------------
+	    // Evaluations Methods
+	    //-----------------------------
+	    
+	    void BwdTrans(double * outarray);
+	    void FwdTrans(const double * inarray);
+	    double Evaluate(const double * coords);
+	    
+	    StdMatContainer * GetMassMatrix();
+	    StdMatContainer * GetLapMatrix();
+	    
+	    void  MapTo(const int edge_ncoeffs, const BasisType Btype, 
+			const int eid, const EdgeOrientation eorient,
+			StdExpMap &Map);
+	    
+	    void WriteToFile(std::ofstream &outfile);
+	    void WriteCoeffsToFile(std::ofstream &outfile);
+	    
 
-  public:
+	    int GetEdgeNcoeffs(const int i)
+	    {
+		ASSERTL2((i > 0)&&(i < 2),"edge id is out of range");
 
-    StdTriExp();
+		if(i ==0)
+		{
+		    return  GetBasisOrder(0);
+		}
+		else
+		{
+		    return  GetBasisOrder(1); 
+		}
+		    
+	    }
 
-    /** \brief Constructor using BasisKey class for quadrature points and order
-    definition */
-    StdTriExp(const BasisKey &Ba, const BasisKey &Bb);
+	    BasisType  GetEdgeBasisType(const int i)
+	    {
+		ASSERTL2((i > 0)&&(i < 2),"edge id is out of range");
 
-    /** \brief Constructor using BasisKey class for quadrature points and order
-    definition where _coeffs and _phys are all set. */
-    StdTriExp(const BasisKey &Ba, const BasisKey &Bb, double *coeffs,
-          double *phys);
+		if(i == 0)
+		{
+		    return  GetBasisType(0);
+		}
+		else
+		{
+		    return  GetBasisType(1);
+		}
+		    
+	    }
 
-    /// Copy Constructor
-    StdTriExp(const StdTriExp &T);
+	protected:
+	    
+	    static StdMatrix s_elmtmats;
+	    
+	    void IProductWRTBase(const double *base0, const double *base1,
+				 const double *inarray, double *outarray);
+	private:
+	    
+	    virtual int v_GetNverts()
+	    {
+		return 3;
+	    }
+	    
+	    virtual int v_GetNedges()
+	    {
+		return 3;
+	    }
+	    
+	    virtual int v_GetEdgeNcoeffs(const int i)
+	    {
+		return GetEdgeNcoeffs(i);
+	    }
 
-    /// Destructor
-    ~StdTriExp();
+	    virtual BasisType v_GetEdgeBasisType(const int i)
+	    {
+		return GetEdgeBasisType(i);
+	    }
 
-    /// Return Shape of region, using  ShapeType enum list. i.e. Triangle
-    ShapeType DetShapeType()
-    {
-      return eTriangle;
-    };
+	    virtual ShapeType v_DetShapeType()
+	    {
+		return DetShapeType();
+	    };
+	    
+	    virtual double v_Integral(const double *inarray )
+	    {
+		return Integral(inarray);
+	    }
+	    
+	    virtual void v_IProductWRTBase(const double * inarray, double * outarray)
+	    {
+		IProductWRTBase(inarray,outarray);
+	    }
+	    
+	    virtual void v_FillMode(const int mode, double *outarray)
+	    {
+		FillMode(mode,outarray);
+	    }
+	    
+	    virtual void  v_GenMassMatrix(double *outarray) 
+	    {
+		StdExpansion::GenerateMassMatrix(outarray);
+	    }
+	    
+	    
+	    virtual StdMatContainer *v_GetMassMatrix() 
+	    {
+		return GetMassMatrix();
+	    }
+	    
+	    virtual StdMatContainer *v_GetLapMatrix() 
+	    {
+		return GetLapMatrix();
+	    }
+	    
+	    virtual void v_Deriv(const double *inarray, double * outarray_d1,
+				 double *outarray_d2)
+	    {
+		Deriv(inarray,outarray_d1,outarray_d2);
+	    }
+	    
+	    virtual void v_StdDeriv(const double *inarray, double * outarray_d1,
+				    double *outarray_d2)
+	    {
+		Deriv(inarray,outarray_d1,outarray_d2);
+	    }
+	    
+	    virtual void v_Deriv(double * outarray_d1, double *outarray_d2)
+	    {
+		Deriv(this->m_phys,outarray_d1,outarray_d2);
+	    }
+	    
+	    virtual void v_StdDeriv(double * outarray_d1, double *outarray_d2)
+	    {
+		Deriv(this->m_phys,outarray_d1,outarray_d2);
+	    }
+	    
+	    virtual void v_BwdTrans(double * outarray)
+	    {
+		BwdTrans(outarray);
+	    }
+	    
+	    virtual void v_FwdTrans(const double * inarray)
+	    {
+		FwdTrans(inarray);
+	    }
+	    
+	    virtual double v_Evaluate(const double * coords)
+	    {
+		return Evaluate(coords);
+	    }
+	    
+	    virtual void v_MapTo(const int edge_ncoeffs, const BasisType Btype, 
+				 const int eid, const EdgeOrientation eorient,
+				 StdExpMap &Map)
+	    {
+		MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
+	    }
+	    
+	    virtual void v_WriteToFile(std::ofstream &outfile)
+	    {
+		WriteToFile(outfile);
+	    }
+	    
+	    virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
+	    {
+		WriteCoeffsToFile(outfile);
+	    }
 
-    //////////////////////////////
-    // Integration Methods
-    //////////////////////////////
-
-    double Integral(const double *inarray);
-
-    void IProductWRTBase(const double * inarray, double * outarray);
-
-    void FillMode(const int mode, double *outarray);
-
-    ///////////////////////////////////
-    // Differentiation Methods
-    //////////////////////////////////
-
-    void Deriv(const double *inarray, double * outarray_d1,
-           double *outarray_d2);
-
-    void Deriv(double * outarray_d1, double *outarray_d2);
-
-    //-----------------------------
-    // Evaluations Methods
-    //-----------------------------
-
-    void BwdTrans(double * outarray);
-    void FwdTrans(const double * inarray);
-    double Evaluate(const double * coords);
-
-    StdMatContainer * GetMassMatrix();
-    StdMatContainer * GetLapMatrix();
-
-    void  MapTo(StdSegExp& edge, const int eid, const EdgeOrientation eorient,
-        StdExpMap &Map);
-
-    void WriteToFile(std::ofstream &outfile);
-    void WriteCoeffsToFile(std::ofstream &outfile);
-
-
-    protected:
-
-    static StdMatrix s_elmtmats;
-
-    void IProductWRTBase(const double *base0, const double *base1,
-             const double *inarray, double *outarray);
-    private:
-
-    virtual ShapeType v_DetShapeType()
-    {
-      return DetShapeType();
-    };
-
-    virtual double v_Integral(const double *inarray )
-    {
-      return Integral(inarray);
-    }
-
-    virtual void v_IProductWRTBase(const double * inarray, double * outarray)
-    {
-      IProductWRTBase(inarray,outarray);
-    }
-
-    virtual void v_FillMode(const int mode, double *outarray)
-    {
-      FillMode(mode,outarray);
-    }
-
-    virtual void  v_GenMassMatrix(double *outarray) 
-    {
-      StdExpansion::GenerateMassMatrix(outarray);
-    }
-
- 
-    virtual StdMatContainer *v_GetMassMatrix() 
-    {
-      return GetMassMatrix();
-    }
-
-    virtual StdMatContainer *v_GetLapMatrix() 
-    {
-      return GetLapMatrix();
-    }
-
-    virtual void v_Deriv(const double *inarray, double * outarray_d1,
-             double *outarray_d2)
-    {
-      Deriv(inarray,outarray_d1,outarray_d2);
-    }
-
-    virtual void v_StdDeriv(const double *inarray, double * outarray_d1,
-                double *outarray_d2)
-    {
-      Deriv(inarray,outarray_d1,outarray_d2);
-    }
-
-    virtual void v_Deriv(double * outarray_d1, double *outarray_d2)
-    {
-      Deriv(this->m_phys,outarray_d1,outarray_d2);
-    }
-
-    virtual void v_StdDeriv(double * outarray_d1, double *outarray_d2)
-    {
-      Deriv(this->m_phys,outarray_d1,outarray_d2);
-    }
-
-    virtual void v_BwdTrans(double * outarray)
-    {
-      BwdTrans(outarray);
-    }
-
-    virtual void v_FwdTrans(const double * inarray)
-    {
-      FwdTrans(inarray);
-    }
-
-    virtual double v_Evaluate(const double * coords)
-    {
-      return Evaluate(coords);
-    }
-
-    virtual void v_WriteToFile(std::ofstream &outfile)
-    {
-      WriteToFile(outfile);
-    }
-
-    virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
-    {
-      WriteCoeffsToFile(outfile);
-    }
-
-    };
-
-  } //end of namespace
+	};
+	
+    } //end of namespace
 } //end of namespace
 #endif //STDTRIEXP_H
 
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.2  2006/06/01 14:13:37  kirby
+ * *** empty log message ***
+ *
  * Revision 1.1  2006/05/04 18:58:33  kirby
  * *** empty log message ***
  *

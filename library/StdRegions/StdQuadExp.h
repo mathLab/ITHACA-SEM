@@ -34,8 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef STDQUADEXP_H
-#define STDQUADEXP_H
+#ifndef NEKTAR_LIB_STDREGIONS_STDQUADEXP_H
+#define NEKTAR_LIB_STDREGIONS_STDQUADEXP_H
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
@@ -118,14 +118,66 @@ namespace Nektar
             void FwdTrans(const double * inarray);
 
             double Evaluate(const double * coords);
-            void MapTo(StdSegExp& edge, const int eid,
-                const EdgeOrientation eorient, StdExpMap &Map);
+            void MapTo(const int edge_ncoeffs, const BasisType Btype, 
+		       const int eid, const EdgeOrientation eorient, 
+		       StdExpMap &Map);
+	    
+	    const int GetEdgeNcoeff( int i)
+	    {
+		ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
+
+		if((i == 0)||(i == 2))
+		{
+		    return  GetBasisOrder(0);
+		}
+		else
+		{
+		    return  GetBasisOrder(1); 
+		}
+		    
+	    }
+
+	    const BasisType  GetEdgeBasisType( int i)
+	    {
+		ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
+
+		if((i == 0)||(i == 2))
+		{
+		    return  GetBasisType(0);
+		}
+		else
+		{
+		    return  GetBasisType(1);
+		}
+		    
+	    }
 
         protected:
 
             static StdMatrix s_elmtmats;
 
         private:
+
+	    virtual int v_GetNverts()
+	    {
+		return 4;
+	    }
+	    
+	    virtual int v_GetNedges()
+	    {
+		return 4;
+	    }
+	    
+	    virtual int v_GetEdgeNcoeffs(const int i)
+	    {
+		return GetEdgeNcoeffs(i);
+	    }
+
+	    virtual BasisType v_GetEdgeBasisType(const int i)
+	    {
+		return GetEdgeBasisType(i);
+	    }
+
 
             virtual ShapeType v_DetShapeType()
             {
@@ -204,6 +256,13 @@ namespace Nektar
                 return Evaluate(coords);
             }
 
+	    virtual void v_MapTo(const int edge_ncoeffs, const BasisType Btype, 
+				 const int eid, const EdgeOrientation eorient,
+				 StdExpMap &Map)
+	    {
+		MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
+	    }
+
         };
 
     } //end of namespace
@@ -213,6 +272,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.3  2006/06/01 14:13:36  kirby
+* *** empty log message ***
+*
 * Revision 1.2  2006/05/23 15:08:19  jfrazier
 * Minor cleanup to correct compile warnings.
 *

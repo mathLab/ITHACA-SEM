@@ -50,7 +50,8 @@ namespace Nektar
         typedef boost::shared_ptr<QuadGeom> SharedQuadGeomPtr;
         typedef std::vector< SharedQuadGeomPtr >      QuadGeomVector;
 
-        class MeshGraph2D: public MeshGraph
+        class MeshGraph2D: 
+	public MeshGraph
         {
 
         public:
@@ -85,10 +86,105 @@ namespace Nektar
 
             void GenXGeoFac();
 
+	    inline int GetNecomps()
+	    {
+		return m_ecomps.size();
+	    }
 
+	    inline int GetVidFromElmt(StdRegions::ShapeType shape, 
+					 const int vert, const int elmt)
+	    {
+		if(shape == StdRegions::eTriangle)
+		{
+		    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+			     "eid is out of range");
+		    
+		    return m_trigeoms[elmt]->GetVid(vert);
+		}
+		else
+		{
+		    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+				     "eid is out of range");
+		    
+		    return m_quadgeoms[elmt]->GetVid(vert);
+		}
+	    }
+
+	    inline int GetEidFromElmt(StdRegions::ShapeType shape, 
+					 const int edge, const int elmt)
+	    {
+		if(shape == StdRegions::eTriangle)
+		{
+		    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+			     "eid is out of range");
+		    
+		    return m_trigeoms[elmt]->GetEid(edge);
+		}
+		else
+		{
+		    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+			     "eid is out of range");
+		    
+		    return m_quadgeoms[elmt]->GetEid(edge);
+		}
+	    }
+	    
+	    inline StdRegions::EdgeOrientation GetEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt)
+	    {
+		if(shape == StdRegions::eTriangle)
+		{
+		    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+			     "eid is out of range");
+		    
+		    return m_trigeoms[elmt]->GetEorient(edge);
+		}
+		else
+		{
+		    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+			     "eid is out of range");
+		    
+		    return m_quadgeoms[elmt]->GetEorient(edge);
+		}
+	    }
+
+
+	    inline StdRegions::EdgeOrientation GetCartesianEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt)
+	    {
+		StdRegions::EdgeOrientation returnval;
+		
+		if(shape == StdRegions::eTriangle)
+		{
+		    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+			     "eid is out of range");
+		    
+		    returnval = m_trigeoms[elmt]->GetEorient(edge);
+		}
+		else
+		{
+		    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+			     "eid is out of range");
+		    
+		    returnval =  m_quadgeoms[elmt]->GetEorient(edge);
+		}
+		
+		// swap orientation if on edge 2 & 3 (if quad)
+		if(edge >= 2)
+		{
+		    if(returnval == StdRegions::eForwards)
+		    {
+			returnval = StdRegions::eBackwards;
+		    }
+		    else
+		    {
+			returnval = StdRegions::eForwards; 
+		    }
+		}
+		return returnval;
+	    }
+	
         protected:
-            void ReadEdges(TiXmlDocument &doc);
-            void ReadElements(TiXmlDocument &doc);
+            void ReadEdges    (TiXmlDocument &doc);
+            void ReadElements (TiXmlDocument &doc);
 
             bool   m_geofac_defined;
 
@@ -104,6 +200,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.2  2006/06/01 14:15:30  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.1  2006/05/04 18:59:01  kirby
 // *** empty log message ***
 //

@@ -34,66 +34,84 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef STDTETEXP_H
-#define STDTETEXP_H
+#ifndef NEKTAR_LIB_STDREGIONS_STDTETEXP_H
+#define NEKTAR_LIB_STDREGIONS_STDTETEXP_H
 
 #include <StdRegions/StdExpansion3D.h>
 #include <StdRegions/StdMatrix.h>
 
 namespace Nektar
 {
-  namespace StdRegions
-  {
-
-    class StdTetExp: public StdExpansion3D
+    namespace StdRegions
     {
+	
+	class StdTetExp: public StdExpansion3D
+	{
+	    
+	public:
+	    
+	    /** \brief Constructor using BasisKey class for quadrature
+		points and order definition */
+	    StdTetExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
+	    
+	    /** \brief Constructor using BasisKey class for quadrature
+		points and order definition where _coeffs and _phys are all
+		set. */
+	    StdTetExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
+		      double *coeffs, double *phys);
+	    
+	    /// Copy Constructor
+	    StdTetExp(const StdTetExp &T);
+	    
+	    /// Destructor
+	    ~StdTetExp();
+	    
+	    /// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
+	    ShapeType DetShapeType()
+	    {
+		return eTetrahedron;
+	    }
+	    
+	    
+	protected:
+	    
+	    static StdMatrix s_elmtmats;
+	    
+	private:
+	    
+	    virtual int v_GetNverts()
+	    {
+		return 4;
+	    }
+	    
+	    virtual int v_GetNedges()
+	    {
+		return 6;
+	    }
+	    
+	    virtual int v_GetNfaces()
+	    {
+		return 4;
+	    }
 
-    public:
-
-      /** \brief Constructor using BasisKey class for quadrature
-	  points and order definition */
-      StdTetExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
-
-      /** \brief Constructor using BasisKey class for quadrature
-	  points and order definition where _coeffs and _phys are all
-	  set. */
-      StdTetExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
-        double *coeffs, double *phys);
-
-      /// Copy Constructor
-      StdTetExp(const StdTetExp &T);
-
-      /// Destructor
-      ~StdTetExp();
-
-      /// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
-      ShapeType DetShapeType()
-      {
-	return eTetrahedron;
-      }
-
-
-    protected:
-
-      static StdMatrix s_elmtmats;
-
-    private:
-
-      virtual ShapeType v_DetShapeType()
-      {
-	return DetShapeType();
-      }
-
-
-  };
-
-} //end of namespace
+	    virtual ShapeType v_DetShapeType()
+	    {
+		return DetShapeType();
+	    }
+	    
+	    
+	};
+	
+    } //end of namespace
 } //end of namespace
 
 #endif //STDTETEXP_H
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.1  2006/05/04 18:58:33  kirby
+ * *** empty log message ***
+ *
  * Revision 1.24  2006/03/12 21:59:48  sherwin
  *
  * compiling version of LocalRegions

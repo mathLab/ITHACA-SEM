@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File StdExpMap.h
+// File LocalToGlobalMap1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,98 +29,43 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Determine mapping information between 1D and 2D
-// expansions as well as between 2D and 3D Expansions
+// Description: Local to Global mapping routines in 1D, header file
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_STDREGIONS_STDEXPMAP_H
-#define NEKTAR_LIB_STDREGIONS_STDEXPMAP_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_LOC2GLOMAP1D_H
+#define NEKTAR_LIB_MULTIREGIONS_LOC2GLOMAP1D_H
 
-#include <StdRegions/StdRegions.hpp>
+#include <MultiRegions/LocalToGlobalMap.h>
+#include <SpatialDomains/MeshGraph1D.h>
 
 namespace Nektar
 {
-    namespace StdRegions
+    namespace MultiRegions
     {
 	
-	class StdExpMap
+	class LocalToGlobalMap1D: 
+	public LocalToGlobalMap
 	{
+        public:
+            LocalToGlobalMap1D(){};
+	    LocalToGlobalMap1D(int loclen, std::vector<StdRegions::StdExpansionVector> &exp_shapes, SpatialDomains::MeshGraph1D &graph1D);
+
+            virtual ~LocalToGlobalMap1D();
 	    
-	public:
-	    StdExpMap();
-	    StdExpMap(const int len);
-	    ~StdExpMap();
+        protected:
 	    
-	    void SetMap(const int len);
-	    
-	    inline int GetLen()
-	    {
-		return m_len;
-	    }
-	    
-	    inline int* GetMap()
-	    {
-		return m_map;
-	    }
-	    
-	    int operator[](const int i) const
-	    {
-		
-		if((i>=0) && (i<m_len))
-		{
-		    return m_map[i];
-		}
-		ASSERTL0(false, "Invalid Index used in [] operator");
-		
-		return m_map[0]; //should never be reached
-	    }
-	    
-	    int& operator[](const int i)
-	    {
-		
-		if((i>=0) && (i<m_len))
-		{
-		    return m_map[i];
-		}
-		
-		ASSERTL0(false, "Invalid Index used in [] operator");
-		return m_map[0]; //should never be reached
-	    }
-	    
-	protected:
-	    
-	private:
-	    
-	    int m_len;
-	    int *m_map;
-	    
+        private:
 	};
 	
     } // end of namespace
 } // end of namespace
 
-#endif //STDEXPMAP_H
+#endif //LOC2GLOMAP1D_H
 
-/**
- * $Log: StdExpMap.h,v $
- * Revision 1.2  2006/06/01 13:43:19  kirby
- * *** empty log message ***
- *
- * Revision 1.1  2006/05/04 18:58:31  kirby
- * *** empty log message ***
- *
- * Revision 1.6  2006/04/25 20:23:33  jfrazier
- * Various fixes to correct bugs, calls to ASSERT, etc.
- *
- * Revision 1.5  2006/03/04 20:26:54  bnelson
- * Added comments after #endif.
- *
- * Revision 1.4  2006/02/27 23:47:23  sherwin
- *
- * Standard coding update upto compilation of StdHexExp.cpp
- *
- *
- **/
 
+/** $Log: Loc2GloMap.h,v $
+/** Revision 1.3  2006/06/05 00:14:33  bnelson
+/** Fixed a compiler error (couldn't find boost::shared_ptr) and a couple of formatting updates for the standard.
+/** */
 

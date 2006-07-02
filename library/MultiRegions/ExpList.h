@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef H_EXPLIST
-#define H_EXPLIST
+#ifndef NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
+#define NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>

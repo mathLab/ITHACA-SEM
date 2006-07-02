@@ -67,6 +67,25 @@ namespace Nektar
 
             void GetLocCoords(double *Lcoords, const double *coords);
 
+	    inline int GetEid(int i){
+		ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
+
+		return m_edges[i]->GetEid();
+	    }
+
+	    inline int GetVid(const int i){
+		ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
+		
+		return m_verts[i]->GetVid();
+	    }
+
+	    inline StdRegions::EdgeOrientation GetEorient(const int i)
+	    {
+		ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
+
+		return m_eorient[i];
+	    }
+
         static const int kNedges = 3;
         static const int kNverts = 3;
 
@@ -90,6 +109,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.5  2006/06/01 14:15:31  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.4  2006/05/30 14:00:04  sherwin
 // Updates to make MultiRegions and its Demos work
 //

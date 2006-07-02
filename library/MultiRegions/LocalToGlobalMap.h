@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Loc2GloMap.h
+// File LocalToGlobalMap.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,40 +33,70 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef LOC2GLOMAP_H
-#define LOC2GLOMAP_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_LOC2GLOMAP_H
+#define NEKTAR_LIB_MULTIREGIONS_LOC2GLOMAP_H
 
+#include <MultiRegions/MultiRegions.hpp>
 #include <vector>
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
-
-    typedef boost::shared_ptr<int> IntPtr;
-    typedef std::vector<IntPtr> IntVector;
-    typedef std::vector<IntPtr>::iterator IntVectorIter;
-
-    class Loc2GloMap
+    namespace MultiRegions
     {
+	
+	class LocalToGlobalMap
+	{
         public:
-            Loc2GloMap();
-            ~Loc2GloMap();
+            LocalToGlobalMap();
+	    LocalToGlobalMap(const int totdata, int *map);
+	    
+            ~LocalToGlobalMap();
+	    
+	    inline int GetMap(const int i) const
+	    {
+		ASSERTL2((i>0)&&(i<m_totLocLen),"index is out of range");
+		
+		return (m_locToContMap.get())[i];
+	    }
+
+	    inline void LocalToCont(const double *loc, double *cont)
+	    {
+		Vmath::Scatr(m_totLocLen,loc,m_locToContMap.get(),cont);
+	    }
+	    
+	    inline void ContToLocal(const double *cont, double *loc)
+	    {
+		Vmath::Gathr(m_totLocLen,cont,m_locToContMap.get(),loc);
+
+	    }
+	    
+	    inline void Assemble(const double *loc, double *cont)
+	    {
+		Vmath::Zero(m_totGloLen,cont,1);
+		Vmath::Assmb(m_totLocLen,loc,m_locToContMap.get(),cont);
+	    }
+	    
+	    inline int GetTotGloLen()
+	    {
+		return m_totGloLen;
+	    }
 
         protected:
-
+            int m_totLocLen;    //< length of local mapping 
+	    int m_totGloLen;    //< length of global dofs
+            boost::shared_ptr<int> m_locToContMap;
         private:
-            int* m_nbndry;
-            IntVector m_locid;
-            IntVector m_gmap;
-    };
-
-  } // end of namespace
+	};
+	
+    } // end of namespace
 } // end of namespace
 
 #endif //LOC2GLOMAP_H
 
 
-/** $Log: $ */
+/** $Log: Loc2GloMap.h,v $
+/** Revision 1.3  2006/06/05 00:14:33  bnelson
+/** Fixed a compiler error (couldn't find boost::shared_ptr) and a couple of formatting updates for the standard.
+/** */
 

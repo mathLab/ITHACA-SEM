@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef STDSEGEXP_H
-#define STDSEGEXP_H
+#ifndef NEKTAR_LIBS_STDREGIONS_STDSEGEXP_H
+#define NEKTAR_LIBS_STDREGIONS_STDSEGEXP_H
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion1D.h>
@@ -151,93 +151,103 @@ namespace Nektar
 
     private:
 
+      virtual int v_GetNverts()
+      {
+	  return 2;
+      }
+
       virtual ShapeType v_DetShapeType()
       {
-    return DetShapeType();
+	  return DetShapeType();
       };
 
       /// \brief Virtual call to integrate the physical point list \a
       /// inarray over region (see StdSegExp::Integral)
       virtual double v_Integral(const double *inarray )
       {
-    return Integral(inarray);
+	  return Integral(inarray);
       }
 
       /// \brief Virtual call to StdSegExp::IProduct_WRT_B */
       virtual void v_IProductWRTBase(const double * inarray, double * outarray)
       {
-    IProductWRTBase(inarray,outarray);
+	  IProductWRTBase(inarray,outarray);
       }
 
       virtual void v_FillMode(const int mode, double *outarray)
       {
-    FillMode(mode,outarray);
+	  FillMode(mode,outarray);
       }
 
       /// Virtual call to GenMassMatrix
       virtual void v_GenMassMatrix(double * outarray)
       {
-    GenMassMatrix(outarray);
+	  GenMassMatrix(outarray);
       }
-
+      
       virtual void v_GenLapMatrix(double * outarray)
       {
-    GenLapMatrix(outarray);
+	  GenLapMatrix(outarray);
       }
 
       /// virtual call to GetMassMatrix
       virtual StdMatContainer *v_GetMassMatrix()
       {
-    return GetMassMatrix();
+	  return GetMassMatrix();
       }
-
+      
       virtual StdMatContainer *v_GetLapMatrix()
       {
-    return GetLapMatrix();
+	  return GetLapMatrix();
       }
-
+      
       /// Virtual call to StdSegExp::Deriv
       virtual void v_Deriv(double * outarray)
       {
-    Deriv(this->m_phys, outarray);
+	  Deriv(this->m_phys, outarray);
       }
-
+      
       /// Virtual call to StdSegExp::Deriv
       virtual void v_StdDeriv(double * outarray)
       {
-	Deriv(this->m_phys, outarray);
+	  Deriv(this->m_phys, outarray);
       }
-
+      
       /// Virtual call to StdSegExp::Deriv
       virtual void v_Deriv(const double *inarray, double * outarray)
       {
-	Deriv(inarray, outarray);
+	  Deriv(inarray, outarray);
       }
-
+      
       /// Virtual call to StdSegExp::Deriv
       virtual void v_StdDeriv(const double *inarray, double * outarray)
       {
-	Deriv(inarray, outarray);
+	  Deriv(inarray, outarray);
       }
-
+      
       /// Virtual call to StdSegExp::BwdTrans
       virtual void v_BwdTrans(double * outarray)
       {
-	BwdTrans(outarray);
+	  BwdTrans(outarray);
       }
-
+      
       /// Virtual call to StdSegExp::FwdTrans
       virtual void v_FwdTrans(const double * inarray)
       {
-	FwdTrans(inarray);
+	  FwdTrans(inarray);
       }
-
+      
       /// Virtual call to StdSegExp::Evaluate
       virtual double v_Evaluate(const double * Lcoords)
       {
-    return Evaluate(Lcoords);
+	  return Evaluate(Lcoords);
       }
-
+      
+      virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
+      {
+	  MapTo(dir,Map);
+      }
+      
     };
 
   } //end of namespace
@@ -247,6 +257,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.2  2006/06/01 14:13:37  kirby
+ * *** empty log message ***
+ *
  * Revision 1.1  2006/05/04 18:58:33  kirby
  * *** empty log message ***
  *

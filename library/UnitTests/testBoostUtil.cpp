@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <UnitTests/testBoostUtil.h>
-#include <LibUtilities/BoostUtil.hpp>
+#include <LibUtilities/BasicUtils/BoostUtil.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -85,6 +85,9 @@ namespace Nektar
 
 
 /**
-    $Log: $
+    $Log: testBoostUtil.cpp,v $
+    Revision 1.2  2006/05/07 21:10:34  bnelson
+    Added the log
+
  **/
 

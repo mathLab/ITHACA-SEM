@@ -17,6 +17,7 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/testNekVector.h>
 #include <UnitTests/testBoostUtil.h>
 #include <UnitTests/testNekMatrix.h>
+#include <UnitTests/testNekManager.h>
 
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
@@ -48,11 +49,17 @@ test_suite* init_unit_test_suite( int, char* [] )
 //     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNoParameterConstruction), 0);
 //     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testSingleParameterConstruction), 0);
 
+	// Unit tests for NekManager
+	test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekManager), 0);
+
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.5  2006/06/05 02:23:17  bnelson
+    Updates for the reorganization of LibUtilities.
+
     Revision 1.4  2006/05/25 02:54:53  bnelson
     Added Matrix/Vector multiplication test.
 

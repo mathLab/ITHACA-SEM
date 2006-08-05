@@ -146,7 +146,7 @@ namespace Nektar
         (p=3,q=0) \\
         \left [(1-z_i)/2\right]^{k+1}(1+z_i)/2 & m(p,q).\ \ 
         (p=3.q=1) \\
-        \vdots	              &         \vdots                      \\
+\vdots	              &         \vdots                      \\
         \left [(1-z_i)/2\right]^{k+1} (1+z_i)/2 P_{j-1}^{2k+1,1}(z_i) & 
         m(p,q)\ \  (p=k.q=j) 
         \end{array} \right . \f$ \n \n
@@ -704,6 +704,9 @@ namespace Nektar
 
 /** 
 * $Log: StdBasis.cpp,v $
+* Revision 1.4  2006/06/13 18:05:02  sherwin
+* Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+*
 * Revision 1.3  2006/06/06 15:25:21  jfrazier
 * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
 * NEKERROR.

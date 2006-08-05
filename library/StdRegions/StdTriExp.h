@@ -107,6 +107,12 @@ namespace Nektar
 	    void  MapTo(const int edge_ncoeffs, const BasisType Btype, 
 			const int eid, const EdgeOrientation eorient,
 			StdExpMap &Map);
+
+	    void  MapTo_ModalFormat(const int edge_ncoeffs, 
+				    const BasisType Btype, 
+				    const int eid, 
+				    const EdgeOrientation eorient,
+				    StdExpMap &Map);
 	    
 	    void WriteToFile(std::ofstream &outfile);
 	    void WriteCoeffsToFile(std::ofstream &outfile);
@@ -249,6 +255,15 @@ namespace Nektar
 	    {
 		MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
 	    }
+
+	    virtual void v_MapTo_ModalFormat(const int edge_ncoeffs, 
+					     const BasisType Btype, 
+					     const int eid, 
+					     const EdgeOrientation eorient,
+					     StdExpMap &Map)
+	    {
+		MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
+	    }
 	    
 	    virtual void v_WriteToFile(std::ofstream &outfile)
 	    {
@@ -269,6 +284,10 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.3  2006/07/02 17:16:19  sherwin
+ *
+ * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+ *
  * Revision 1.2  2006/06/01 14:13:37  kirby
  * *** empty log message ***
  *

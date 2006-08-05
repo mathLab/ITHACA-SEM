@@ -40,10 +40,13 @@ namespace Nektar
     namespace MultiRegions
     {
 
-	ExpList::ExpList()
+	ExpList::ExpList(void):
+	    m_ncoeffs(0),
+	    m_npoints(0),
+	    m_transState(eNotSet),
+	    m_physState(false)
+
 	{
-	    m_transState = eNotSet; 
-	    m_physState  = false;
 	}
     
 	ExpList::~ExpList()
@@ -153,7 +156,7 @@ namespace Nektar
 		    (*def)->FwdTrans(inarray+cnt);
 		    cnt  += (*def)->GetPointsTot();
 		}
-		}
+	    }
 	    
 	    m_transState = eLocal;
 	}

@@ -384,6 +384,16 @@ namespace Nektar
 		v_MapTo(edge_ncoeff,Btype,eid,eorient,Map);
 	    }
 
+	    // EdgeTo2D mapping 
+	    void  MapTo_ModalFormat(const int edge_ncoeff, 
+				    const BasisType Btype, 
+				    const int eid, 
+				    const EdgeOrientation eorient, 
+				    StdExpMap &Map)
+	    {
+		v_MapTo_ModalFormat(edge_ncoeff,Btype,eid,eorient,Map);
+	    }
+
             // Matrix Routines
             void GenerateMassMatrix(double *outarray);
 
@@ -584,6 +594,16 @@ namespace Nektar
 	    {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
 	    }
+
+	    virtual void  v_MapTo_ModalFormat(const int edge_ncoeffs, 
+					      const BasisType Btype,
+					      const int eid, 
+					      const EdgeOrientation eorient, 
+					      StdExpMap &Map)
+	    {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
+	    }
+
 	    
             virtual void v_WriteToFile(FILE *outfile)
             {
@@ -629,6 +649,10 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.7  2006/07/02 17:16:18  sherwin
+*
+* Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+*
 * Revision 1.6  2006/06/13 18:05:02  sherwin
 * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
 *

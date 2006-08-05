@@ -132,7 +132,7 @@ namespace Nektar
             key.m_porder = order-1; // constructor order is 1D expansion order
 
             def = find(m_nodecontainer[id_ntype].begin(),
-                m_nodecontainer[id_ntype].end(),key);
+		       m_nodecontainer[id_ntype].end(),key);
 
             if(def != m_nodecontainer[id_ntype].end())
             {
@@ -376,6 +376,9 @@ namespace Nektar
 
 /** 
 * $Log: NodalBasisManager.cpp,v $
+* Revision 1.2  2006/06/01 13:43:19  kirby
+* *** empty log message ***
+*
 * Revision 1.1  2006/05/04 18:58:30  kirby
 * *** empty log message ***
 *

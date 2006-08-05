@@ -52,7 +52,7 @@ namespace Nektar
         const int g_shapenfaces[SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
 
         StdExpansion::StdExpansion(void): 
-        m_numbases(0), 
+	    m_numbases(0), 
             m_ncoeffs(0),
             m_coeffs(NULL),
             m_owncoeffs(false),
@@ -390,6 +390,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.3  2006/06/01 14:46:16  kirby
+* *** empty log message ***
+*
 * Revision 1.2  2006/05/29 19:03:08  sherwin
 * Modifications to wrap geometric information in shared_ptr
 *

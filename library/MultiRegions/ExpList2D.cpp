@@ -63,6 +63,8 @@ namespace Nektar
 	    // determine size of local expansion and quadrature space
 	    // and declare memory
 
+	    m_npoints = m_ncoeffs = 0;
+	    
 	    if(TriGeoms.size())
 	    {		
 		tri_ncoeffs_elmt = (TriBa.GetBasisOrder()*(TriBa.GetBasisOrder()+1))/2 + TriBa.GetBasisOrder()*(TriBb.GetBasisOrder()-TriBa.GetBasisOrder());
@@ -99,6 +101,7 @@ namespace Nektar
 	    
 
 	    // declare triangles using first block of data 	    
+	    cnt = cnt1 = 0; // use these counts for data offsets
 	    if(TriGeoms.size())
 	    {		
 		LocalRegions::TriExpSharedPtr tri;
@@ -111,7 +114,6 @@ namespace Nektar
 		    graph2D.GenXGeoFac();
 		}
 	    
-		cnt = cnt1 = 0;
 		for(def = TriGeoms.begin(); def != TriGeoms.end(); ++def)
 		{
 		    // removed copy construction of geom
@@ -136,7 +138,6 @@ namespace Nektar
 		SpatialDomains::QuadGeomVectorIter def;
 		StdRegions::StdExpansionVector explist;
 
-		cnt = cnt1 = 0;
 		for(def = QuadGeoms.begin(); def != QuadGeoms.end(); ++def)
 		{
 		    // removed copy construction of geom

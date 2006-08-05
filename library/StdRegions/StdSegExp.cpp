@@ -419,7 +419,7 @@ namespace Nektar
 
     if(Map.GetLen() < 2)
     {
-      Map.SetMap(2);
+      Map.SetMapMemory(2);
     }
     
     switch(m_base[0]->GetBasisType())
@@ -468,6 +468,10 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.3  2006/06/06 15:25:21  jfrazier
+ * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
+ * NEKERROR.
+ *
  * Revision 1.2  2006/06/01 13:43:20  kirby
  * *** empty log message ***
  *

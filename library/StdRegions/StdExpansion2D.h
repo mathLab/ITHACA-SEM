@@ -135,6 +135,7 @@ namespace Nektar
                 return NULL;
             }
 
+
             virtual void   v_BwdTrans (double *outarray)      = 0;
             virtual void   v_FwdTrans (const double *inarray) = 0;
 
@@ -164,6 +165,10 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.3  2006/07/02 17:16:18  sherwin
+*
+* Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+*
 * Revision 1.2  2006/06/13 18:05:02  sherwin
 * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
 *

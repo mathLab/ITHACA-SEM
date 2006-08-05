@@ -121,8 +121,13 @@ namespace Nektar
             void MapTo(const int edge_ncoeffs, const BasisType Btype, 
 		       const int eid, const EdgeOrientation eorient, 
 		       StdExpMap &Map);
+
+            void MapTo_ModalFormat(const int edge_ncoeffs, 
+				   const BasisType Btype, const int eid, 
+				   const EdgeOrientation eorient, 
+				   StdExpMap &Map);
 	    
-	    const int GetEdgeNcoeff( int i)
+	    const int GetEdgeNcoeffs( int i)
 	    {
 		ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
 
@@ -263,6 +268,14 @@ namespace Nektar
 		MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
 	    }
 
+	    virtual void v_MapTo_ModalFormat(const int edge_ncoeffs, 
+					     const BasisType Btype, 
+					     const int eid, 
+					     const EdgeOrientation eorient,
+					     StdExpMap &Map)
+	    {
+		MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
+	    }
         };
 
     } //end of namespace
@@ -272,6 +285,10 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.4  2006/07/02 17:16:18  sherwin
+*
+* Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+*
 * Revision 1.3  2006/06/01 14:13:36  kirby
 * *** empty log message ***
 *

@@ -435,6 +435,7 @@ namespace Nektar
 	    
             IProductWRTBase(inarray,m_coeffs);
             M = GetMassMatrix();
+	    M->ShowMatrixStructure(stdout);
             M->Solve(m_coeffs,1);
         }
 
@@ -478,7 +479,7 @@ namespace Nektar
             // make sure haved correct memory storage
             if(edge_ncoeffs != Map.GetLen())
             {
-                Map.SetMap(edge_ncoeffs);
+                Map.SetMapMemory(edge_ncoeffs);
             }
 
             order0 = m_base[0]->GetBasisOrder();
@@ -535,6 +536,18 @@ namespace Nektar
                 break;
             }
         }
+
+	// currently same as MapTo 
+
+	void StdTriExp::MapTo_ModalFormat(const int edge_ncoeffs, 
+					   const BasisType Btype, 
+					   const int eid, 
+					   const EdgeOrientation eorient,
+					   StdExpMap &Map)
+	{	    
+	    MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
+	}
+
 
         void StdTriExp::WriteToFile(std::ofstream &outfile)
         {
@@ -603,6 +616,10 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.6  2006/07/02 17:16:19  sherwin
+*
+* Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+*
 * Revision 1.5  2006/06/13 18:05:02  sherwin
 * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
 *

@@ -5,6 +5,7 @@
 #include "StdRegions/StdExpansion2D.h"
 #include "StdRegions/StdQuadExp.h"
 #include "StdRegions/StdTriExp.h"
+#include "StdRegions/StdNodalTriExp.h"
 
 #include "StdRegions/StdRegions.hpp"
 
@@ -28,6 +29,7 @@ int main(int argc, char *argv[]){
   int           order1,order2, nq1,nq2;
   PointsType    Qtype1,Qtype2;
   BasisType     btype1,btype2;
+  NodalBasisType NodalBtype;
   ShapeType     regionshape;
   StdExpansion2D *E;
   double        *sol;
@@ -54,7 +56,9 @@ int main(int argc, char *argv[]){
     fprintf(stderr,"\t Lagrange   = 7\n");
     fprintf(stderr,"\t Legendre   = 8\n"); 
     fprintf(stderr,"\t Chebyshev  = 9\n");
- 
+    fprintf(stderr,"\t Nodal tri (Electro) = 10\n");
+    fprintf(stderr,"\t Nodal tri (Fekete)  = 11\n");
+
     fprintf(stderr,"Note type = 2,5 are for three-dimensional basis\n");
 
     exit(1);
@@ -68,8 +72,28 @@ int main(int argc, char *argv[]){
     ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,"This shape is not a 2D region");
   }
   
-  btype1 =   (BasisType) atoi(argv[2]);
-  btype2 =   (BasisType) atoi(argv[3]);
+  int btype1_val = atoi(argv[2]);
+  int btype2_val = atoi(argv[3]);
+  
+  if(( btype1_val <= 9)&&( btype2_val <= 9))
+  {
+      btype1 =   (BasisType) 0;
+      btype2 =   (BasisType) 1;
+  }
+  else if(( btype1_val >=10)&&(btype2_val <= 11))
+  {
+      btype1 =   eOrtho_A;
+      btype2 =   eOrtho_B;
+      
+      if(btype1_val == 10)
+      {
+	  NodalBtype = eNodalTriElec;
+      }
+      else
+      {
+	  NodalBtype = eNodalTriFekete;
+      }
+  }
 
   // Check to see that correct Expansions are used
   switch(regionshape)
@@ -81,11 +105,6 @@ int main(int argc, char *argv[]){
 		       "Basis 1 cannot be of type Ortho_B or Modified_B");
     }
 
-    if((btype2 != eOrtho_B)&&(btype2 != eModified_B))
-    {
-      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
-		       "Basis 2 must be of type Ortho_B or Modified_B");
-    }
     break;
   case eQuadrilateral:
     if((btype1 == eOrtho_B)||(btype1 == eOrtho_B)||
@@ -141,7 +160,14 @@ int main(int argc, char *argv[]){
     const BasisKey b1(btype1,order1,Qtype1,nq1,0,0);
     const BasisKey b2(btype2,order2,Qtype2,nq2,1,0);
 
-    E = new StdTriExp (b1,b2);
+    if(btype1_val >= 10)
+    {
+	E = new StdNodalTriExp(b1,b2,NodalBtype); 
+    }
+    else
+    {
+	E = new StdTriExp (b1,b2);
+    }
     
     E->GetZW(0,z1,w);
     E->GetZW(1,z2,w);

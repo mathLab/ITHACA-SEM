@@ -38,52 +38,55 @@
 
 namespace Nektar
 {
-  namespace StdRegions
-  {
-
-    StdExpMap::StdExpMap():
-      m_len(0),
-      m_map((int *)NULL)
+    namespace StdRegions
     {
-    }
-    
-    StdExpMap::StdExpMap(const int len)
-    {
-      m_len = len;
-      ASSERTL2(len > 0,"called with zero length");
-      m_map = new int [m_len];
-    }
-
-
-    StdExpMap::~StdExpMap()
-    {
-      if(m_map)
-      {
-	delete[] m_map;
-      }
-    }
-    
-    void StdExpMap::SetMap(const int len)
-    {
-
-      if(m_len != len)
-      {
-	m_len = len;
-
-	if(m_map)
-        {
-	  delete[] m_map;      
+	
+	StdExpMap::StdExpMap():
+	    m_len(0),
+	    m_map((int *)NULL)
+	{
 	}
-
-	m_map = new int [m_len];
-      }
-    }
-    
-  } // end of namespace
+	
+	StdExpMap::StdExpMap(const int len)
+	{
+	    m_len = len;
+	    ASSERTL2(len > 0,"called with zero length");
+	    m_map = new int [m_len];
+	}
+	
+	
+	StdExpMap::~StdExpMap()
+	{
+	    if(m_map)
+	    {
+		delete[] m_map;
+	    }
+	}
+	
+	void StdExpMap::SetMapMemory(const int len)
+	{
+	    
+	    if(m_len != len)
+	    {
+		m_len = len;
+		
+		if(m_map)
+		{
+		    delete[] m_map;      
+		}
+		
+		m_map = new int [m_len];
+	    }
+	}
+	
+    } // end of namespace
 } // end of namespace
 
 /** 
  * $Log: StdExpMap.cpp,v $
+ * Revision 1.1  2006/05/04 18:58:31  kirby
+ * *** empty log message ***
+ *
  * Revision 1.4  2006/04/01 21:59:26  sherwin
  * Sorted new definition of ASSERT
  *

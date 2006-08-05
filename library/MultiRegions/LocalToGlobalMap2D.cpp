@@ -48,7 +48,8 @@ namespace Nektar
 	    int *locToContMap;
 	    std::vector<StdRegions::StdExpansionVector>::iterator  def;
 	    StdRegions::EdgeOrientation eorient;
-
+	    StdRegions::BasisType Btype;
+	   
 	    m_totLocLen = loclen; 
 
 	    locToContMap = new int [m_totLocLen];
@@ -71,7 +72,7 @@ namespace Nektar
 		    {
 			
 			nGloVerts = std::max(nGloVerts,
-			      graph2D.GetVidFromElmt((*(*def)[i]).DetShapeType(),j,i));
+					     graph2D.GetVidFromElmt((*(*def)[i]).DetShapeType(),j,i));
 			//set up nedge coefficients for each edge 	
 			nedge_coeffs = (*(*def)[i]).GetEdgeNcoeffs(j);
 			edge_offset[graph2D.GetEidFromElmt((*(*def)[i]).DetShapeType(),j,i)+1] =   nedge_coeffs -2;
@@ -110,10 +111,21 @@ namespace Nektar
 		{
 		    for(j = 0; j < (nedge = (*(*def)[i]).GetNedges()); ++j)
 		    {
-			(*(*def)[i]).MapTo(nedge_coeffs = 
-					   (*(*def)[i]).GetEdgeNcoeffs(j),
-					   (*(*def)[i]).GetEdgeBasisType(j), j,
-					   eorient = graph2D.GetEorientFromElmt((*(*def)[i]).DetShapeType(),j,i), vmap);
+			(*(*def)[i]).MapTo_ModalFormat
+			(nedge_coeffs = (*(*def)[i]).GetEdgeNcoeffs(j),
+			 Btype = (*(*def)[i]).GetEdgeBasisType(j), j,
+			 eorient = graph2D.GetEorientFromElmt((*(*def)[i]).DetShapeType(),j,i), vmap);
+
+
+			// set edge ids before setting vertices 
+			// so that can be reverse for nodal expansion when j>2
+			
+			edgid = graph2D.GetEidFromElmt((*(*def)[i]).DetShapeType(),j,i);
+			
+			for(k = 2; k < nedge_coeffs; ++k)
+			{
+			    locToContMap[cnt+vmap[k]] =  edge_offset[edgid]+(k-2);
+			}
 			
 			// vmap is set up according to cartesian
 			// coordinates so have to change setting
@@ -129,18 +141,17 @@ namespace Nektar
 			    {
 				locToContMap[cnt+vmap[1]] = 
 				graph2D.GetVidFromElmt((*(*def)[i]).DetShapeType(),j,i);
-			    }
 
-			    if(m_sign_change)
-			    {
-				if(eorient == StdRegions::eBackwards)
+				if(m_sign_change)
 				{
 				    for(k = 3; k < nedge_coeffs; k+=2)
 				    {
 					sign[cnt+vmap[k]] = -1;
 				    }
 				}
+				
 			    }
+			    
 			}
 			else
 			{
@@ -149,16 +160,8 @@ namespace Nektar
 			    {
 				locToContMap[cnt+vmap[1]] = 
 				graph2D.GetVidFromElmt((*(*def)[i]).DetShapeType(),j,i);
-			    }
-			    else
-			    {
-				locToContMap[cnt+vmap[0]] = 
-				graph2D.GetVidFromElmt((*(*def)[i]).DetShapeType(),j,i);
-			    }
 
-			    if(m_sign_change)
-			    {
-				if(eorient == StdRegions::eForwards)
+				if(m_sign_change)
 				{
 				    for(k = 3; k < nedge_coeffs; k+=2)
 				    {
@@ -166,14 +169,19 @@ namespace Nektar
 				    }
 				}
 			    }
-			}
+			    else
+			    {
+				locToContMap[cnt+vmap[0]] = 
+				graph2D.GetVidFromElmt((*(*def)[i]).DetShapeType(),j,i);
 
-			edgid = graph2D.GetEidFromElmt((*(*def)[i]).DetShapeType(),j,i);
-
-			
-			for(k = 2; k < nedge_coeffs; ++k)
-			{
-			    locToContMap[cnt+vmap[k]] =  edge_offset[edgid]+(k-2);
+				if(Btype == StdRegions::eGLL_Lagrange)
+				{
+				    for(k = 2; k < nedge_coeffs; ++k)
+				    {
+					locToContMap[cnt+vmap[nedge_coeffs+1-k]] = edge_offset[edgid]+(k-2);
+				    }
+				}
+			    }
 			}
 
 		    }

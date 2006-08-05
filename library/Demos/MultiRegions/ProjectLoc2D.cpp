@@ -36,12 +36,13 @@ int main(int argc, char *argv[]){
 	fprintf(stderr,"Triangle options:\n");
 	fprintf(stderr,"\t Ortho_A, Ortho_B       = 1\n");
 	fprintf(stderr,"\t Modified_A, Modified_B = 2\n");
+	fprintf(stderr,"\t Nodal Fekete           = 3\n");
 
 	fprintf(stderr,"Quadrilateral options:\n");
-	fprintf(stderr,"\t Ortho_A, Ortho_A       = 3\n");
-	fprintf(stderr,"\t Modified_A, Modified_A = 4\n");
-	fprintf(stderr,"\t Lagrange, Lagrange     = 5\n");
-	fprintf(stderr,"\t Chebyshev, Chebychev   = 6\n");
+	fprintf(stderr,"\t Ortho_A, Ortho_A       = 4\n");
+	fprintf(stderr,"\t Modified_A, Modified_A = 5\n");
+	fprintf(stderr,"\t Lagrange, Lagrange     = 6\n");
+	fprintf(stderr,"\t Chebyshev, Chebychev   = 7\n");
 	
 	exit(1);
     }
@@ -50,13 +51,13 @@ int main(int argc, char *argv[]){
     Quadtype  = (BasisType) atoi(argv[2]);
     order     = atoi(argv[3]);
     
-    if((Tritype < 1)||(Tritype > 2))
+    if((Tritype < 1)||(Tritype > 3))
     {
       ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		       "Illegal option for Tri_Type\n");
     }
 
-    if((Quadtype < 3)||(Quadtype > 6))
+    if((Quadtype < 4)||(Quadtype > 7))
     {
       ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		       "Illegal option for Quad_Type\n");
@@ -67,7 +68,7 @@ int main(int argc, char *argv[]){
     graph2D.Read(in);
     
     switch(Tritype){
-    case 1:
+    case 1: case 3:
 	Tri_btype1 = eOrtho_A;
 	Tri_btype2 = eOrtho_B;
     
@@ -79,23 +80,23 @@ int main(int argc, char *argv[]){
     }
     
     switch(Quadtype){
-    case 3:
+    case 4:
 	Quad_btype = eOrtho_A;
 	break;
-    case 4:
+    case 5:
 	Quad_btype = eModified_A;
 	break;
-    case 5:
+    case 6:
 	Quad_btype = eGLL_Lagrange;
 	break;
-    case 6:
+    case 7:
 	Quad_btype = eChebyshev;
 	break;
     }
 
     const BasisKey T_Ba(Tri_btype1, order,  eLobatto, order+1, 0,0);
     const BasisKey T_Bb(Tri_btype2, order,  eLobatto, order+1, 1,0);
-    const BasisKey Q_Ba(Quad_btype ,order, eLobatto, order+1,0,0);
+    const BasisKey Q_Ba(Quad_btype ,order,  eLobatto, order+1,0,0);
     
     Exp = new ExpList2D (T_Ba,T_Bb,Q_Ba,Q_Ba,graph2D);
     
@@ -118,14 +119,14 @@ int main(int argc, char *argv[]){
     
     for(i = 0; i < nq; ++i)
     {
-		sol[i] = 0.0;
-		for(j = 0; j < order; ++j)
-		{
-			for(k = 0; k < coordim; ++k)
-			{
-				sol[i] += pow(xc[k][i],j);
-			}
-		}
+	sol[i] = 0.0;
+	for(j = 0; j < order; ++j)
+	{
+	    for(k = 0; k < coordim; ++k)
+	    {
+		sol[i] += pow(xc[k][i],j);
+	    }
+	}
     }
     
     //---------------------------------------------

@@ -77,7 +77,8 @@ namespace Nektar
         }
 	
 	QuadGeom::QuadGeom(const EdgeComponentSharedPtr edges[], 
-			   StdRegions::EdgeOrientation * eorient)
+			   StdRegions::EdgeOrientation * eorient):
+	    QuadFaceComponent(edges[0]->GetCoordim())
         {
 	    int j;
 
@@ -324,6 +325,10 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.6  2006/07/02 17:16:17  sherwin
+//
+// Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+//
 // Revision 1.5  2006/06/02 18:48:40  sherwin
 // Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
 //

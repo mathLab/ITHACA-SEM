@@ -52,14 +52,21 @@ namespace Nektar
 	    StdExpMap(const int len);
 	    ~StdExpMap();
 	    
-	    void SetMap(const int len);
+	    void SetMapMemory(const int len);
+
+	    void SetMap(const int id, const int val)
+	    {
+		ASSERTL1(id < m_len,"id is larger than length of map");
+
+		m_map[id] = val;
+	    }
 	    
 	    inline int GetLen()
 	    {
 		return m_len;
 	    }
 	    
-	    inline int* GetMap()
+	    inline int* GetMap() const
 	    {
 		return m_map;
 	    }
@@ -104,6 +111,10 @@ namespace Nektar
 
 /**
  * $Log: StdExpMap.h,v $
+ * Revision 1.3  2006/07/02 17:16:18  sherwin
+ *
+ * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+ *
  * Revision 1.2  2006/06/01 13:43:19  kirby
  * *** empty log message ***
  *

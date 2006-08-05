@@ -119,17 +119,17 @@ namespace Nektar
 		    {
 			Interp2D(CBasis0,CBasis1, gmat[i], m_base[0],
 				 m_base[1], ndata + i*nq);
-			
-			minfo->ResetGmat(ndata,nq,2,coordim);
-			
-			// interpolate Jacobian
-			ndata = new double [nq];	
-			odata = Xgfac->GetJac();
-			
-			Interp2D(CBasis0,CBasis1,odata,m_base[0],m_base[1],ndata);
-			
-			minfo->ResetJac(ndata);
 		    }
+		    minfo->ResetGmat(ndata,nq,2,coordim);
+
+		    // interpolate Jacobian
+		    ndata = new double [nq];	
+		    odata = Xgfac->GetJac();
+		    
+		    Interp2D(CBasis0,CBasis1,odata,m_base[0],
+			     m_base[1], ndata);
+		    
+		    minfo->ResetJac(ndata);
 		}
 	    }
 	    else
@@ -542,6 +542,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.7  2006/06/02 18:48:39  sherwin
+ *    Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
+ *
  *    Revision 1.6  2006/06/01 15:27:27  sherwin
  *    Modifications to account for LibUtilities reshuffle
  *

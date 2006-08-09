@@ -5,7 +5,10 @@ ExpList1D.cpp
 ExpList2D.cpp
 ExpList3D.cpp
 ExpList.cpp
-Loc2GloMap.cpp
+LocalToGlobalMap1D.cpp
+LocalToGlobalMap2D.cpp
+LocalToGlobalMap3D.cpp
+LocalToGlobalMap.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS
@@ -15,7 +18,11 @@ ExpList1D.h
 ExpList2D.h
 ExpList3D.h
 ExpList.h
-Loc2GloMap.h
+LocalToGlobalMap1D.h
+LocalToGlobalMap2D.h
+LocalToGlobalMap3D.h
+LocalToGlobalMap.h
+MultiRegions.hpp
 )
 
 

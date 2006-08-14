@@ -35,6 +35,13 @@ SET(LibUtilityHeaders
 
 ADD_NEKTAR_LIBRARY(LibUtilities STATIC ${LibUtilitySources} ${LibUtilityHeaders})
 
+IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
+	# Needed for M_PI to be visible in visual studio.
+	ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
+
+
+
 # This doesn't preserve the BasicUtils, Memory, etc. Find a way to fix this.
 INSTALL_FILES(${NEKTAR_INCLUDE_DIR} FILES ${LibUtilityHeaders})
 

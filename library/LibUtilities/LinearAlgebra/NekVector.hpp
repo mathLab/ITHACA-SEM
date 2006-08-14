@@ -37,6 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 
 #include <functional>
 #include <algorithm>
@@ -68,6 +69,21 @@ namespace Nektar
                 //        This constructor is only valid for variable sized vectors.
                 NekVector(unsigned int size, typename boost::call_traits<DataType>::param_type a) :
                     m_impl(size, a)
+                {
+                }
+
+                NekVector(const std::string& vectorValues) :
+                    m_impl()
+                {
+                    BOOST_STATIC_ASSERT(dim > 0 );
+                    bool result = fromString(vectorValues, *this);
+                    ASSERTL1(result, "Error converting string values to vector");
+                }
+
+                NekVector(typename boost::call_traits<DataType>::param_type x,
+                          typename boost::call_traits<DataType>::param_type y,
+                          typename boost::call_traits<DataType>::param_type z) :
+                    m_impl(x,y,z)
                 {
                 }
 
@@ -136,41 +152,59 @@ namespace Nektar
 
                 typename boost::call_traits<DataType>::const_reference x() const
                 {
-                    ASSERTL1( dimension() >= 1, "Invalid use of Vector::x");
+                    ASSERTL1( dimension() >= 1, "Invalid use of NekVector::x");
                     return (*this)(0);
                 }
 
                 typename boost::call_traits<DataType>::const_reference y() const
                 {
-                    ASSERTL1( dimension() >= 2, "Invalid use of Vector::y");
+                    ASSERTL1( dimension() >= 2, "Invalid use of NekVector::y");
                     return (*this)(1);
                 }
 
                 typename boost::call_traits<DataType>::const_reference z() const
                 {
-                    ASSERTL1( dimension() >= 3, "Invalid use of Vector::z");
+                    ASSERTL1( dimension() >= 3, "Invalid use of NekVector::z");
                     return (*this)(2);
                 }
 
                 typename boost::call_traits<DataType>::reference x()
                 {
-                    ASSERTL1( dimension() >= 1, "Invalid use of Vector::x");
+                    ASSERTL1(dimension() >= 1, "Invalid use of NekVector::x");
                     return (*this)(0);
                 }
 
                 typename boost::call_traits<DataType>::reference y()
                 {
-                    ASSERTL1( dimension() >= 2, "Invalid use of Vector::y");
+                    ASSERTL1(dimension() >= 2, "Invalid use of NekVector::y");
                     return (*this)(1);
                 }
 
                 typename boost::call_traits<DataType>::reference z()
                 {
-                    ASSERTL1( dimension() >= 3, "Invalid use of Vector::z");
+                    ASSERTL1(dimension() >= 3, "Invalid use of NekVector::z");
                     return (*this)(2);
                 }
 
-                bool operator==(const NekVector<DataType, dim, space>& rhs)
+                void SetX(typename boost::call_traits<DataType>::const_reference val)
+                {
+                    ASSERTL1(dimension() >= 1, "Invalid use of NekVector::SetX");
+                    m_impl.data[0] = val;
+                }
+
+                void SetY(typename boost::call_traits<DataType>::const_reference val)
+                {
+                    ASSERTL1(dimension() >= 2, "Invalid use of NekVector::SetX");
+                    m_impl.data[1] = val;
+                }
+
+                void SetZ(typename boost::call_traits<DataType>::const_reference val)
+                {
+                    ASSERTL1(dimension() >= 3, "Invalid use of NekVector::SetX");
+                    m_impl.data[2] = val;
+                }
+
+                bool operator==(const NekVector<DataType, dim, space>& rhs) const
                 {
                     if( dimension() != rhs.dimension() )
                     {
@@ -189,7 +223,7 @@ namespace Nektar
                     return true;
                 }
 
-                bool operator!=(const NekVector<DataType, dim, space>& rhs)
+                bool operator!=(const NekVector<DataType, dim, space>& rhs) const
                 {
                     return !(*this == rhs);
                 }
@@ -200,7 +234,7 @@ namespace Nektar
                 NekVector<DataType, dim, space> operator-() const
                 {
                     NekVector<DataType, dim, space> temp(*this);
-                    for(int i=0; i < dimension(); ++i)
+                    for(unsigned int i=0; i < dimension(); ++i)
                     {
                         temp(i) = -temp(i);
                     }
@@ -273,6 +307,22 @@ namespace Nektar
                     }
                 }
 
+                NekVector<DataType, dim, space> cross(typename boost::call_traits<NekVector<DataType, dim, space> >::param_type rhs) const
+                {
+                    BOOST_STATIC_ASSERT(dim==3 || dim == 0);
+                    ASSERTL1(dimension() == 3 && rhs.dimension() == 3, "NekVector::cross is only valid for 3D vectors.");
+
+                    DataType first = y()*rhs.z() - z()*rhs.y();
+                    DataType second = z()*rhs.x() - x()*rhs.z();
+                    DataType third = x()*rhs.y() - y()*rhs.x();
+
+                    NekVector<DataType, dim, space> result;
+                    result[0] = first;
+                    result[1] = second;
+                    result[2] = third;
+                    return result;
+                }
+
             private:
                 template<typename ImplDataType, unsigned int ImplSize, unsigned int ImplSpace>
                 class VectorImpl
@@ -294,6 +344,16 @@ namespace Nektar
                             {
                                 data[i] = a;
                             }
+                        }
+
+                        VectorImpl(typename boost::call_traits<DataType>::param_type x,
+                                typename boost::call_traits<DataType>::param_type y,
+                                typename boost::call_traits<DataType>::param_type z)
+                        {
+                            BOOST_STATIC_ASSERT(ImplSize == 3);
+                            data[0] = x;
+                            data[1] = y;
+                            data[2] = z;
                         }
 
                         VectorImpl(unsigned int size, typename boost::call_traits<ImplDataType>::param_type a) :
@@ -468,6 +528,62 @@ namespace Nektar
         {
             return lhs.dot(rhs);
         }
+
+        template<typename DataType, unsigned int dim, unsigned int space>
+        NekVector<DataType, dim, space> cross(const NekVector<DataType, dim, space>& lhs,
+                                              const NekVector<DataType, dim, space>& rhs)
+        {
+            return lhs.cross(rhs);
+        }
+
+        template<typename DataType, unsigned int dim, unsigned int space>
+        NekVector<DataType, dim, space> createVectorFromPoints(const NekPoint<DataType, dim, space>& source,
+                                                            const NekPoint<DataType, dim, space>& dest)
+        {
+            NekVector<DataType, dim, space> result;
+            for(unsigned int i = 0; i < dim; ++i)
+            {
+                result[i] = dest[i]-source[i];
+            }
+            return result;
+        }
+
+        template<typename DataType, unsigned int dim, unsigned int space>
+        NekPoint<DataType, dim, space> findPointAlongVector(const NekVector<DataType, dim, space>& lhs,
+            typename boost::call_traits<DataType>::param_type t)
+        {
+            NekPoint<DataType, dim, space> result;
+            for(unsigned int i = 0; i < dim; ++i)
+            {
+                result[i] = lhs[i]*t;
+            }
+
+            return result;
+        }
+
+        template<typename DataType, unsigned int dim, unsigned int space>
+        bool fromString(const std::string& str, NekVector<DataType, dim, space>& result)
+        {
+            try
+            {
+                typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+                boost::char_separator<char> sep("(<,>) ");
+                tokenizer tokens(str, sep);
+                unsigned int i = 0;
+                for(tokenizer::iterator iter = tokens.begin(); iter != tokens.end(); ++iter)
+                {
+                    result[i] = boost::lexical_cast<DataType>(*iter);
+                    ++i;
+                }
+
+                return i == dim;
+            }
+            catch(boost::bad_lexical_cast&)
+            {
+                return false;
+            }
+        }
+
     }
 }
 
@@ -475,6 +591,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.2  2006/06/01 13:44:29  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/06/01 09:12:42  kirby
     *** empty log message ***
 

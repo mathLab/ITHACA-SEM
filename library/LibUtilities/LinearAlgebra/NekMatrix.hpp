@@ -66,6 +66,8 @@ namespace Nektar
 //             eSquareGeneralBanded
         };
 
+
+
         class OutOfBoundsError
         {
         };
@@ -105,6 +107,28 @@ namespace Nektar
                         m_data(new DataType[rows*columns])
                 {
                     std::fill(begin(), end(), d);
+                }
+
+
+                NekMatrix(const NekMatrix<DataType, form, space>& rhs) :
+                    m_rows(rhs.m_rows),
+                    m_columns(rhs.m_columns),
+                    m_data(new DataType[m_rows*m_columns])
+                {
+                    std::copy(rhs.begin(), rhs.end(), begin());
+                }
+
+                NekMatrix<DataType, form, space>& operator=(const NekMatrix<DataType, form, space>& rhs)
+                {
+                    if( this != &rhs )
+                    {
+                        m_rows = rhs.m_rows;
+                        m_columns = rhs.m_columns;
+                        m_data = boost::shared_array<DataType>(new DataType[m_rows*m_columns]);
+                        std::copy(rhs.begin(), rhs.end(), begin());
+                    }
+
+                    return *this;
                 }
 
                 unsigned int GetRows() const
@@ -198,8 +222,11 @@ namespace Nektar
                 NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eDiagonal, space>& rhs)
                 {
                     ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
-                    DataType* lhs_data = begin();
-                    const DataType* rhs_data = rhs.begin();
+
+                    for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+                    {
+                        (*this)(i,i) += rhs(i,i);
+                    }
 
                     return *this;
                 }
@@ -222,7 +249,7 @@ namespace Nektar
                     m_columns(columns),
                     m_data(new DataType[rows])
                 {
-                    ASSERTL0(rows == columns, "Diagonal matrices must be square.");
+                    ASSERTL1(rows == columns, "Diagonal matrices must be square.");
                 }
 
                 NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
@@ -230,7 +257,7 @@ namespace Nektar
                     m_columns(columns),
                     m_data(new DataType[rows])
                 {
-                    ASSERTL0(rows == columns, "Diagonal matrices must be square.");
+                    ASSERTL1(rows == columns, "Diagonal matrices must be square.");
                     std::copy(ptr, ptr+rows, begin());
                 }
 
@@ -240,6 +267,27 @@ namespace Nektar
                 m_data(new DataType[rows])
                 {
                     std::fill(begin(), end(), d);
+                }
+
+                NekMatrix(const NekMatrix<DataType, eDiagonal, space>& rhs) :
+                    m_rows(rhs.m_rows),
+                    m_columns(rhs.m_columns),
+                    m_data(new DataType[m_rows])
+                {
+                    std::copy(rhs.begin(), rhs.end(), begin());
+                }
+
+                NekMatrix<DataType, eDiagonal, space>& operator=(const NekMatrix<DataType, eDiagonal, space>& rhs)
+                {
+                    if( this != &rhs )
+                    {
+                        m_rows = rhs.m_rows;
+                        m_columns = rhs.m_columns;
+                        m_data = boost::shared_array<DataType>(new DataType[m_rows]);
+                        std::copy(rhs.begin(), rhs.end(), begin());
+                    }
+
+                    return *this;
                 }
 
                 unsigned int GetRows() const
@@ -273,7 +321,7 @@ namespace Nektar
                 {
                     if( rowNumber == colNumber )
                     {
-                        return m_data[rowNumber*m_columns + colNumber];
+                        return m_data[rowNumber];
                     }
                     else
                     {
@@ -376,16 +424,60 @@ namespace Nektar
                 boost::shared_array<DataType> m_data;
         };
 
-        template<typename DataType, NekMatrixForm form, unsigned int space>
-        NekMatrix<DataType, form, space> operator+(
-            const NekMatrix<DataType, form, space>& lhs,
-            const NekMatrix<DataType, form, space>& rhs)
+        template<typename DataType, unsigned int space>
+        const NekMatrix<DataType, eFull, space>& convertToFull(const NekMatrix<DataType, eFull, space>& m)
         {
-            NekMatrix<DataType, form, space> result(lhs);
+            return m;
+        }
+
+        template<typename DataType, unsigned int space>
+        NekMatrix<DataType, eFull, space> convertToFull(const NekMatrix<DataType, eDiagonal, space>& m)
+        {
+            NekMatrix<DataType, eFull, space> result(m.GetRows(), m.GetColumns(), DataType());
+            for(unsigned int i = 0; i < m.GetRows(); ++i)
+            {
+                result(i,i) = m(i,i);
+            }
+
+            return result;
+        }
+
+        template<NekMatrixForm lhsMatrixType, NekMatrixForm rhsMatrixType>
+        class NekMatrixOperationResult
+        {
+            public:
+                static const NekMatrixForm AdditionResultType = eFull;
+        };
+
+        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+        NekMatrix<DataType, eFull, space> operator+(
+            const NekMatrix<DataType, lhsForm, space>& lhs,
+            const NekMatrix<DataType, rhsForm, space>& rhs)
+        {
+            NekMatrix<DataType, NekMatrixOperationResult<lhsForm, rhsForm>::AdditionResultType, space> result(lhs);
             result += rhs;
             return result;
         }
 
+        template<typename DataType, unsigned int space>
+        NekMatrix<DataType, eFull, space> operator+(
+            const NekMatrix<DataType, eFull, space>& lhs,
+            const NekMatrix<DataType, eDiagonal, space>& rhs)
+        {
+            NekMatrix<DataType, eFull, space> result = lhs;
+            result += rhs;
+            return result;
+        }
+
+        template<typename DataType, unsigned int space>
+        NekMatrix<DataType, eFull, space> operator+(
+            const NekMatrix<DataType, eDiagonal, space>& lhs,
+            const NekMatrix<DataType, eFull, space>& rhs)
+        {
+            NekMatrix<DataType, eFull, space> result = rhs;
+            result += lhs;
+            return result;
+        }
 
         template<typename DataType, NekMatrixForm form, unsigned int space>
         NekMatrix<DataType, form, space> operator*(
@@ -436,6 +528,35 @@ namespace Nektar
             return result;
         }
 
+
+
+        template<typename DataType, NekMatrixForm form, unsigned int space>
+        bool operator==(const NekMatrix<DataType, form, space>& lhs, 
+                        const NekMatrix<DataType, form, space>& rhs)
+        {
+            if( lhs.GetRows() != rhs.GetRows() )
+            {
+                return false;
+            }
+
+            if( lhs.GetColumns() != rhs.GetColumns() )
+            {
+                return false;
+            }
+
+            typename NekMatrix<DataType, form, space>::const_iterator lhs_iter = lhs.begin();
+            typename NekMatrix<DataType, form, space>::const_iterator rhs_iter = rhs.begin();
+
+            for( ; lhs_iter != lhs.end(); ++lhs_iter, ++rhs_iter )
+            {
+                if( *lhs_iter != *rhs_iter )
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }
 
@@ -443,6 +564,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.2  2006/06/01 13:44:28  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/06/01 09:12:41  kirby
     *** empty log message ***
 

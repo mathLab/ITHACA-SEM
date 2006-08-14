@@ -36,6 +36,8 @@
 #define ERRORUTIL_HPP
 
 #include <iostream>
+#include <stdexcept>
+#include <boost/lexical_cast.hpp>
 
 namespace ErrorUtil
 {
@@ -45,6 +47,17 @@ namespace ErrorUtil
         efatal,
         ewarning
     };
+
+#ifdef ENABLE_NEKTAR_EXCEPTIONS
+    static void ExceptionError(ErrType type, const char *routine, int lineNumber, const char *msg)
+    {
+        std::string errorMessage = std::string(routine) + "[" +
+                boost::lexical_cast<std::string>(lineNumber) + "]:" +
+                std::string(msg);
+        std::cerr << errorMessage << std::endl;
+        throw std::runtime_error(errorMessage);
+    }
+#endif
 
     static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
     {
@@ -72,6 +85,17 @@ namespace ErrorUtil
 #define NEKERROR(type, msg) \
     ErrorUtil::Error(type, __FILE__, __LINE__, msg);
 
+#ifdef ENABLE_NEKTAR_EXCEPTIONS
+
+#define ASSERTL0(condition,msg) \
+    if(!(condition)) \
+{ \
+    fprintf(stderr,"Level 0 Assert Violation\n"); \
+    ErrorUtil::ExceptionError(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
+}
+
+#else
+
 #define ASSERTL0(condition,msg) \
     if(!(condition)) \
 { \
@@ -79,17 +103,32 @@ namespace ErrorUtil
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
 }
 
+#endif
 
 /// Assert Level 1 -- Debugging which is used whether in FULLDEBUG or
 /// DEBUG compilation mode.  This level assert is designed for aiding
 /// in standard debug (-g) mode
 #ifdef DEBUG
+#ifdef ENABLE_NEKTAR_EXCEPTIONS
+
+#define ASSERTL1(condition,msg) \
+    if(!(condition)) \
+{ \
+    fprintf(stderr,"Level 1 Assert Violation\n"); \
+    ErrorUtil::ExceptionError(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
+}
+
+#else
+
 #define ASSERTL1(condition,msg) \
     if(!(condition)) \
 { \
     fprintf(stderr,"Level 1 Assert Violation\n"); \
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
 }
+
+#endif
+
 #else
 #define ASSERTL1(condition,msg)
 #endif
@@ -99,12 +138,27 @@ namespace ErrorUtil
 /// mode.  This level assert is designed to provide addition safety
 /// checks within the code (such as bounds checking, etc.).
 #ifdef FULLDEBUG
+
+#ifdef ENABLE_NEKTAR_EXCEPTIONS
+
+#define ASSERTL2(condition,msg) \
+    if(!(condition)) \
+{ \
+    fprintf(stderr,"Level 2 Assert Violation\n"); \
+    ErrorUtil::ExceptionError(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
+}
+
+#else
+
 #define ASSERTL2(condition,msg) \
     if(!(condition)) \
 { \
     fprintf(stderr,"Level 2 Assert Violation\n"); \
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
 }
+
+#endif
+
 #else
 #define ASSERTL2(condition,msg)
 #endif
@@ -112,6 +166,9 @@ namespace ErrorUtil
 #endif //ERRORUTIL_HPP
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.1  2006/06/01 11:07:52  kirby
+*** empty log message ***
+
 Revision 1.4  2006/05/16 20:40:44  jfrazier
 Renamed ERROR to NEKERROR to prevent conflict in Visual Studio.
 

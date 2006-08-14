@@ -363,12 +363,12 @@ namespace Nektar
                     return result;
                 }
 
-                friend NekPoint<DataType, dim, space>
-                operator*(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs);
+                //friend NekPoint<DataType, dim, space>
+                //operator*(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs);
         
 
-                NekPoint<DataType, dim, space>
-                friend operator*(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs);
+                //NekPoint<DataType, dim, space>
+                //friend operator*(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs);
             
 
             private:
@@ -537,6 +537,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.3  2006/08/14 02:29:49  bnelson
+    Updated points, vectors, and matrix classes to work with ElVis.  Added a variety of methods to all of these classes.
+
     Revision 1.2  2006/06/01 13:44:28  kirby
     *** empty log message ***
 

@@ -17,7 +17,7 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/testNekVector.h>
 #include <UnitTests/testBoostUtil.h>
 #include <UnitTests/testNekMatrix.h>
-#include <UnitTests/testNekManager.h>
+//#include <UnitTests/testNekManager.h>
 
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
@@ -27,6 +27,12 @@ test_suite* init_unit_test_suite( int, char* [] )
 
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointConstruction), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointArithmetic), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointDataAccess), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointMisc), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointAssignment), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointPointerManipulation), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointComparison), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointOperators), 0);
 
 
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekVectorConstruction), 0);
@@ -40,6 +46,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixConstruction), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixAccess), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixBasicMath), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixFullDiagonalOperations), 0);
 
 
     // These tests were originally added because it appeared that a NekObjectFactory
@@ -49,14 +56,17 @@ test_suite* init_unit_test_suite( int, char* [] )
 //     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNoParameterConstruction), 0);
 //     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testSingleParameterConstruction), 0);
 
-	// Unit tests for NekManager
-	test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekManager), 0);
+    // Unit tests for NekManager
+    //test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekManager), 0);
 
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.6  2006/07/05 20:21:24  jfrazier
+    Added NekManager test case.
+
     Revision 1.5  2006/06/05 02:23:17  bnelson
     Updates for the reorganization of LibUtilities.
 

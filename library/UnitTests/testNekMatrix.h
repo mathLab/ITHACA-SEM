@@ -44,7 +44,7 @@ namespace Nektar
         void testNekMatrixConstruction();
         void testNekMatrixAccess();
         void testNekMatrixBasicMath();
-
+        void testNekMatrixFullDiagonalOperations();
         void testDiagonalMatrix();
     }
 }
@@ -54,6 +54,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.h,v $
+    Revision 1.2  2006/05/31 04:19:37  bnelson
+    Removed a test for invalid access to a matrix.
+
     Revision 1.1  2006/05/07 21:10:10  bnelson
     *** empty log message ***
 

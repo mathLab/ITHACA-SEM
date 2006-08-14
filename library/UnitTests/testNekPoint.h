@@ -43,6 +43,12 @@ namespace Nektar
     {
         void testNekPointConstruction();
         void testNekPointArithmetic();
+        void testNekPointDataAccess();
+        void testNekPointMisc();
+        void testNekPointAssignment();
+        void testNekPointPointerManipulation();
+        void testNekPointComparison();
+        void testNekPointOperators();
     }
 }
 
@@ -50,6 +56,9 @@ namespace Nektar
 
 /**
     $Log: testNekPoint.h,v $
+    Revision 1.1  2006/05/04 18:59:56  kirby
+    *** empty log message ***
+
     Revision 1.2  2006/04/11 02:02:13  bnelson
     Added more tests.
 

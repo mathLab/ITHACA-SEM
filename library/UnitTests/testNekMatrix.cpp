@@ -73,7 +73,7 @@ namespace Nektar
 
             {
 
-                NekMatrix<float> dynamic_matrix(7, 3, 7.8);
+                NekMatrix<float> dynamic_matrix(7, 3, (float)7.8);
 
                 for(unsigned int i = 0; i < 7; ++i)
                 {
@@ -213,12 +213,41 @@ namespace Nektar
         void testDiagonalMatrix()
         {
         }
+
+        void testNekMatrixFullDiagonalOperations()
+        {
+            unsigned int fullValues[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+            NekMatrix<unsigned int> full(3, 3, fullValues);
+
+            unsigned int diagonalValues[] = {6, 12, 5};
+            NekMatrix<unsigned int, eDiagonal> diag(3, 3, diagonalValues);
+
+            NekMatrix<unsigned int> result1 = full+diag;
+            NekMatrix<unsigned int> result2 = diag+full;
+
+            BOOST_CHECK(result1 == result2);
+            BOOST_CHECK(result1(0,0) == 7);
+            BOOST_CHECK(result1(0,1) == 2);
+            BOOST_CHECK(result1(0,2) == 3);
+
+            BOOST_CHECK(result1(1,0) == 4);
+            BOOST_CHECK(result1(1,1) == 17);
+            BOOST_CHECK(result1(1,2) == 6);
+
+            BOOST_CHECK(result1(2,0) == 7);
+            BOOST_CHECK(result1(2,1) == 8);
+            BOOST_CHECK(result1(2,2) == 14);
+
+        }
     }
 }
 
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.11  2006/06/05 02:23:17  bnelson
+    Updates for the reorganization of LibUtilities.
+
     Revision 1.10  2006/05/31 23:24:47  bnelson
     Updated NekMatrix method names for the coding standard.
 

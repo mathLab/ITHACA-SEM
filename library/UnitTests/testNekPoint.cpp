@@ -104,6 +104,10 @@ namespace Nektar
                 BOOST_CHECK(p1.y() == PointTestClass(0));
                 BOOST_CHECK(p1.z() == PointTestClass(0));
 
+                BOOST_CHECK(p1.x() == PointTestClass());
+                BOOST_CHECK(p1.y() == PointTestClass());
+                BOOST_CHECK(p1.z() == PointTestClass());
+
                 NekPoint<PointTestClass, 10> p2(PointTestClass(-2));
                 for(int i = 0; i < 10; ++i)
                 {
@@ -113,16 +117,261 @@ namespace Nektar
                 NekPoint<PointTestClass, 3> p3(p1);
                 BOOST_CHECK(p1==p3);
             }
+
+            // Test string construction.
+            {
+                std::string testValues("<1,2>");
+
+                NekPoint<int, 2> p2;
+                NekPoint<int, 3> p3;
+
+                BOOST_CHECK(fromString(testValues, p2));
+                BOOST_CHECK(p2.x() == 1);
+                BOOST_CHECK(p2.y() == 2);
+
+                BOOST_CHECK(!fromString(testValues, p3));
+
+                try
+                {
+                    NekPoint<int, 3> p4(testValues);
+                    BOOST_CHECK(false);
+                }
+                catch(std::runtime_error& e)
+                {
+                    BOOST_CHECK(true);
+                }
+
+            }
+
+            {
+                NekPoint<int, 3> p(1, 2, 3);
+                BOOST_CHECK(p.x() == 1);
+                BOOST_CHECK(p.y() == 2);
+                BOOST_CHECK(p.z() == 3);
+
+                NekPoint<int, 3> p1(p);
+                BOOST_CHECK(p == p1);
+
+                NekPoint<int, 3> p2;
+                p2 = p;
+                BOOST_CHECK(p2 == p);
+            }
         }
 
         void testNekPointArithmetic()
         {
         }
+
+        void testNekPointDataAccess()
+        {
+            using namespace Nektar::LibUtilities;
+
+            NekPoint<int, 3> p(1,2,3);
+            BOOST_CHECK((p.x() == p.a()) && (p.x() == p.r()));
+            BOOST_CHECK((p.y() == p.b()) && (p.y() == p.s()));
+            BOOST_CHECK((p.z() == p.c()) && (p.z() == p.t()));
+
+            p.SetX(10);
+            p.SetY(11);
+            p.SetZ(12);
+
+            BOOST_CHECK((p.x() == p.a()) && (p.x() == p.r()) && (p.x() == 10));
+            BOOST_CHECK((p.y() == p.b()) && (p.y() == p.s()) && (p.y() == 11));
+            BOOST_CHECK((p.z() == p.c()) && (p.z() == p.t()) && (p.z() == 12));
+
+            BOOST_CHECK(p.x() == p(0));
+            BOOST_CHECK(p.y() == p(1));
+            BOOST_CHECK(p.z() == p(2));
+
+            BOOST_CHECK(p.x() == p[0]);
+            BOOST_CHECK(p.y() == p[1]);
+            BOOST_CHECK(p.z() == p[2]);
+
+            BOOST_CHECK_THROW(p(3), std::runtime_error);
+            BOOST_CHECK_NO_THROW(p[3]);
+
+            // Test constant versions.
+            const NekPoint<int, 3> p2(p);
+
+            BOOST_CHECK((p2.x() == p2.a()) && (p2.x() == p2.r()) && (p2.x() == 10));
+            BOOST_CHECK((p2.y() == p2.b()) && (p2.y() == p2.s()) && (p2.y() == 11));
+            BOOST_CHECK((p2.z() == p2.c()) && (p2.z() == p2.t()) && (p2.z() == 12));
+
+            BOOST_CHECK(p2.x() == p2(0));
+            BOOST_CHECK(p2.y() == p2(1));
+            BOOST_CHECK(p2.z() == p2(2));
+
+            BOOST_CHECK(p2.x() == p2[0]);
+            BOOST_CHECK(p2.y() == p2[1]);
+            BOOST_CHECK(p2.z() == p2[2]);
+
+            BOOST_CHECK_THROW(p2(3), std::runtime_error);
+            BOOST_CHECK_NO_THROW(p2[3]);
+
+
+        }
+
+        void testNekPointPointerManipulation()
+        {
+            using namespace Nektar::LibUtilities;
+            NekPoint<int, 3> p(1,2,3);
+            const int* ptr = p.GetPtr();
+            int expected[] = {1, 2, 3};
+            BOOST_CHECK(memcmp(expected, ptr, sizeof(int)*3) == 0);
+        }
+
+        void testNekPointComparison()
+        {
+            using namespace Nektar::LibUtilities;
+            NekPoint<int, 3> lhs(1, 2, 3);
+            NekPoint<int, 3> rhs(lhs);
+            NekPoint<int, 3> ne(3, 2, 1);
+
+            BOOST_CHECK(lhs == rhs);
+            BOOST_CHECK(lhs != ne);
+        }
+
+        void testNekPointOperators()
+        {
+            //using Nektar::LibUtilities::NekPoint;
+
+            //{
+            //    NekPoint<int, 3> p(1,2,3);
+            //    NekPoint<int, 3> negated = -p;
+
+            //    BOOST_CHECK(p.x() == -negated.x());
+            //    BOOST_CHECK(p.y() == -negated.y());
+            //    BOOST_CHECK(p.z() == -negated.z());
+            //}
+
+            //{
+            //    NekPoint<int, 3> p(1,2,3);
+            //    p += p;
+            //    BOOST_CHECK(p.x() == 2);
+            //    BOOST_CHECK(p.y() == 4);
+            //    BOOST_CHECK(p.z() == 6);
+
+            //    p += 8;
+            //    BOOST_CHECK(p.x() == 10);
+            //    BOOST_CHECK(p.y() == 12);
+            //    BOOST_CHECK(p.z() == 14);
+
+            //    NekPoint<int, 3> sub(9, 3, -5);
+            //    p -= sub;
+            //    BOOST_CHECK(p.x() == 1);
+            //    BOOST_CHECK(p.y() == 9);
+            //    BOOST_CHECK(p.z() == 19);
+
+            //    p -= 1;
+            //    BOOST_CHECK(p.x() == 0);
+            //    BOOST_CHECK(p.y() == 8);
+            //    BOOST_CHECK(p.z() == 18);
+
+            //    p *= 3;
+            //    BOOST_CHECK(p.x() == 0);
+            //    BOOST_CHECK(p.y() == 24);
+            //    BOOST_CHECK(p.z() == 54);
+
+            //    p[0] = 2;
+            //    p /= 2;
+            //    BOOST_CHECK(p.x() == 1);
+            //    BOOST_CHECK(p.y() == 12);
+            //    BOOST_CHECK(p.z() == 27);
+
+
+            //    std::string s = p.AsString();
+            //    BOOST_CHECK(s == "(1, 12, 27)");
+            //}
+
+            {
+                Nektar::LibUtilities::NekPoint<int, 3> p1(1, 2, 3);
+                Nektar::LibUtilities::NekPoint<int, 3> p2(10, 20, 30);
+
+                Nektar::LibUtilities::NekPoint<int, 3> p3 = p1 + p2;
+                BOOST_CHECK(p3.x() == 11);
+                BOOST_CHECK(p3.y() == 22);
+                BOOST_CHECK(p3.z() == 33);
+
+                Nektar::LibUtilities::NekPoint<int, 3> p4 = p1 + 2;
+                BOOST_CHECK(p4.x() == 3);
+                BOOST_CHECK(p4.y() == 4);
+                BOOST_CHECK(p4.z() == 5);
+
+                Nektar::LibUtilities::NekPoint<int, 3> p5 = 2 + p1;
+                BOOST_CHECK(p5 == p4);
+
+                Nektar::LibUtilities::NekPoint<int, 3> p6 = p2 - p1;
+                BOOST_CHECK(p6.x() == 9);
+                BOOST_CHECK(p6.y() == 18);
+                BOOST_CHECK(p6.z() == 27);
+
+                Nektar::LibUtilities::NekPoint<int, 3> p7 = p1 - 2;
+                BOOST_CHECK(p7.x() == -1);
+                BOOST_CHECK(p7.y() == 0);
+                BOOST_CHECK(p7.z() == 1);
+
+                Nektar::LibUtilities::NekPoint<int, 3> p8 = 2 - p1;
+                BOOST_CHECK(p8.x() == 1);
+                BOOST_CHECK(p8.y() == 0);
+                BOOST_CHECK(p8.z() == -1);
+
+                Nektar::LibUtilities::operator*<int, 3, 0>(2, p1);
+                p1*2;
+                //NekPoint<int, 3> p9 = p1*(int)2;
+                //BOOST_CHECK(p9.x() == 2);
+                //BOOST_CHECK(p9.y() == 4);
+                //BOOST_CHECK(p9.z() == 6);
+
+                //NekPoint<int, 3> p10 = 2*p1;
+                //BOOST_CHECK(p9 == p10);
+
+                //NekPoint<int, 3> p11 = p2/2;
+                //BOOST_CHECK(p11.x() == 5);
+                //BOOST_CHECK(p11.y() == 10);
+                //BOOST_CHECK(p11.z() == 15);
+            }
+
+        }
+
+        void testNekPointMisc()
+        {
+            using namespace Nektar::LibUtilities;
+
+            NekPoint<int, 3> p1;
+            NekPoint<int, 100> p2;
+
+            BOOST_CHECK(p1.dimension() == 3);
+            BOOST_CHECK(p2.dimension() == 100);
+
+            NekPoint<double, 2> source(0,0);
+            NekPoint<double, 2> dest(1,1);
+
+            BOOST_CHECK(distanceBetween(source, dest) == sqrt(2.0));
+            BOOST_CHECK(distanceBetween(dest, source) == sqrt(2.0));
+        }
+
+        void testNekPointAssignment()
+        {
+            using namespace Nektar::LibUtilities;
+            NekPoint<int, 3> lhs(1,2,3);
+            NekPoint<int, 3> rhs(10, 11, 12);
+
+            lhs = rhs;
+
+            BOOST_CHECK(lhs == rhs);
+            BOOST_CHECK(lhs.x() == rhs.x() && lhs.x() == 10);
+            BOOST_CHECK(lhs.y() == rhs.y() && lhs.y() == 11);
+            BOOST_CHECK(lhs.z() == rhs.z() && lhs.z() == 12);
+        }
+
     }
 }
 
 /**
     $Log: testNekPoint.cpp,v $
+    Revision 1.2  2006/06/05 02:23:17  bnelson
+    Updates for the reorganization of LibUtilities.
+
     Revision 1.1  2006/05/04 18:59:56  kirby
     *** empty log message ***
 

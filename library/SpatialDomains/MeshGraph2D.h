@@ -51,7 +51,7 @@ namespace Nektar
         typedef std::vector< SharedQuadGeomPtr >      QuadGeomVector;
 
         class MeshGraph2D: 
-	public MeshGraph
+            public MeshGraph
         {
 
         public:
@@ -86,105 +86,106 @@ namespace Nektar
 
             void GenXGeoFac();
 
-	    inline int GetNecomps()
-	    {
-		return m_ecomps.size();
-	    }
+            inline int GetNecomps()
+            {
+                return int(m_ecomps.size());
+            }
 
-	    inline int GetVidFromElmt(StdRegions::ShapeType shape, 
-					 const int vert, const int elmt)
-	    {
-		if(shape == StdRegions::eTriangle)
-		{
-		    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
-			     "eid is out of range");
-		    
-		    return m_trigeoms[elmt]->GetVid(vert);
-		}
-		else
-		{
-		    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
-				     "eid is out of range");
-		    
-		    return m_quadgeoms[elmt]->GetVid(vert);
-		}
-	    }
+            inline int GetVidFromElmt(StdRegions::ShapeType shape, 
+                const int vert, const int elmt)
+            {
+                if(shape == StdRegions::eTriangle)
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                        "eid is out of range");
 
-	    inline int GetEidFromElmt(StdRegions::ShapeType shape, 
-					 const int edge, const int elmt)
-	    {
-		if(shape == StdRegions::eTriangle)
-		{
-		    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
-			     "eid is out of range");
-		    
-		    return m_trigeoms[elmt]->GetEid(edge);
-		}
-		else
-		{
-		    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
-			     "eid is out of range");
-		    
-		    return m_quadgeoms[elmt]->GetEid(edge);
-		}
-	    }
-	    
-	    inline StdRegions::EdgeOrientation GetEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt)
-	    {
-		if(shape == StdRegions::eTriangle)
-		{
-		    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
-			     "eid is out of range");
-		    
-		    return m_trigeoms[elmt]->GetEorient(edge);
-		}
-		else
-		{
-		    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
-			     "eid is out of range");
-		    
-		    return m_quadgeoms[elmt]->GetEorient(edge);
-		}
-	    }
+                    return m_trigeoms[elmt]->GetVid(vert);
+                }
+                else
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                        "eid is out of range");
+
+                    return m_quadgeoms[elmt]->GetVid(vert);
+                }
+            }
+
+            inline int GetEidFromElmt(StdRegions::ShapeType shape, 
+                const int edge, const int elmt)
+            {
+                if(shape == StdRegions::eTriangle)
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                        "eid is out of range");
+
+                    return m_trigeoms[elmt]->GetEid(edge);
+                }
+                else
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+                        "eid is out of range");
+
+                    return m_quadgeoms[elmt]->GetEid(edge);
+                }
+            }
+
+            inline StdRegions::EdgeOrientation GetEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt)
+            {
+                if(shape == StdRegions::eTriangle)
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                        "eid is out of range");
+
+                    return m_trigeoms[elmt]->GetEorient(edge);
+                }
+                else
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+                        "eid is out of range");
+
+                    return m_quadgeoms[elmt]->GetEorient(edge);
+                }
+            }
 
 
-	    inline StdRegions::EdgeOrientation GetCartesianEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt)
-	    {
-		StdRegions::EdgeOrientation returnval;
-		
-		if(shape == StdRegions::eTriangle)
-		{
-		    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
-			     "eid is out of range");
-		    
-		    returnval = m_trigeoms[elmt]->GetEorient(edge);
-		}
-		else
-		{
-		    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
-			     "eid is out of range");
-		    
-		    returnval =  m_quadgeoms[elmt]->GetEorient(edge);
-		}
-		
-		// swap orientation if on edge 2 & 3 (if quad)
-		if(edge >= 2)
-		{
-		    if(returnval == StdRegions::eForwards)
-		    {
-			returnval = StdRegions::eBackwards;
-		    }
-		    else
-		    {
-			returnval = StdRegions::eForwards; 
-		    }
-		}
-		return returnval;
-	    }
-	
+            inline StdRegions::EdgeOrientation GetCartesianEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt)
+            {
+                StdRegions::EdgeOrientation returnval;
+
+                if(shape == StdRegions::eTriangle)
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                        "eid is out of range");
+
+                    returnval = m_trigeoms[elmt]->GetEorient(edge);
+                }
+                else
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+                        "eid is out of range");
+
+                    returnval =  m_quadgeoms[elmt]->GetEorient(edge);
+                }
+
+                // swap orientation if on edge 2 & 3 (if quad)
+                if(edge >= 2)
+                {
+                    if(returnval == StdRegions::eForwards)
+                    {
+                        returnval = StdRegions::eBackwards;
+                    }
+                    else
+                    {
+                        returnval = StdRegions::eForwards; 
+                    }
+                }
+                return returnval;
+            }
+
         protected:
             void ReadEdges    (TiXmlDocument &doc);
             void ReadElements (TiXmlDocument &doc);
+            void ReadComposites(TiXmlDocument &doc);
 
             bool   m_geofac_defined;
 
@@ -192,6 +193,9 @@ namespace Nektar
             EdgeComponentVector m_ecomps;
             TriGeomVector       m_trigeoms;
             QuadGeomVector      m_quadgeoms;
+
+            typedef boost::shared_ptr<Geometry2D> SharedGeom2DPtr;
+            std::vector< std::vector<SharedGeom2DPtr> > Mesh2DCompositeVector;
         };
     };
 };
@@ -200,6 +204,10 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.3  2006/07/02 17:16:17  sherwin
+//
+// Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+//
 // Revision 1.2  2006/06/01 14:15:30  sherwin
 // Added typdef of boost wrappers and made GeoFac a boost shared pointer.
 //

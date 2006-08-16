@@ -44,43 +44,43 @@ namespace Nektar
         EdgeComponent::EdgeComponent()
         {
         }
-	
-	EdgeComponent::EdgeComponent(int id, const int coordim): 
-	    Geometry1D(coordim)
-	{
-	    
-	    const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
-					 StdRegions::eLobatto, 3,0,0);
-	    m_eid = id;
-	    
-	    m_xmap = new StdRegions::StdSegExp * [m_coordim];
-	    
-	    for(int i = 0; i < m_coordim; ++i)
-	    {
-		m_xmap[i] =  new StdRegions::StdSegExp(B);
-	    }
-	}
-	
+
+        EdgeComponent::EdgeComponent(int id, const int coordim): 
+        Geometry1D(coordim)
+        {
+
+            const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
+                StdRegions::eLobatto, 3,0,0);
+            m_eid = id;
+
+            m_xmap = new StdRegions::StdSegExp * [m_coordim];
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                m_xmap[i] =  new StdRegions::StdSegExp(B);
+            }
+        }
+
         EdgeComponent::EdgeComponent(int id, const int coordim,
-				     VertexComponentSharedPtr vertex[]): 
-	    Geometry1D(coordim),
-	    m_vertex(2) //always have two vertices per edge
+            VertexComponentSharedPtr vertex[]): 
+        Geometry1D(coordim),
+            m_vertex(2) //always have two vertices per edge
         {
             m_eid = id;
-	    
+
             if (coordim > 0)
             {
                 const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
-					     StdRegions::eLobatto, 3,0,0);
+                    StdRegions::eLobatto, 3,0,0);
 
                 m_xmap = new StdRegions::StdSegExp * [m_coordim];
-		
+
                 for(int i = 0; i < m_coordim; ++i)
-		{
-		    m_xmap[i] = new StdRegions::StdSegExp(B);
-		}
+                {
+                    m_xmap[i] = new StdRegions::StdSegExp(B);
+                }
             }
-	    
+
             m_vertex[0] = vertex[0];
             m_vertex[1] = vertex[1];
         }
@@ -110,7 +110,7 @@ namespace Nektar
             {
                 for(int i =0; i < m_coordim; ++i)
                 {
-		    delete m_xmap[i];
+                    delete m_xmap[i];
                 }
 
                 delete[] m_xmap;
@@ -177,34 +177,34 @@ namespace Nektar
         /// If edge1 is connected to edge2 in the same direction as
         /// the points comprising edge1 then it is forward, otherwise
         /// it is backward.  
-	///
-	/// For example, assume edge1 is comprised of points 1 and 2,
+        ///
+        /// For example, assume edge1 is comprised of points 1 and 2,
         /// and edge2 is comprised of points 2 and 3, then edge is
         /// forward.
-	///
+        ///
         /// If edge1 is comprised of points 2 and 1 and edge2 is
         /// comprised of points 3 and 2, then edge1 is backward.
 
         StdRegions::EdgeOrientation EdgeComponent::GetEdgeOrientation(const EdgeComponent &edge1,  const EdgeComponent &edge2)
         {
             StdRegions::EdgeOrientation returnval = StdRegions::eForwards;
-	    
+
             /// Backward direction.  Vertex 0 is connected to edge 2.
             if ((*edge1.GetVertex(0) == *edge2.GetVertex(0)) || 
-		(*edge1.GetVertex(0) == *edge2.GetVertex(1)))
+                (*edge1.GetVertex(0) == *edge2.GetVertex(1)))
             {
                 returnval = StdRegions::eBackwards;
             }
             // Not forward either, then we have a problem.
             else if ((*edge1.GetVertex(1) != *edge2.GetVertex(0)) && 
-		     (*edge1.GetVertex(1) != *edge2.GetVertex(1)))
+                (*edge1.GetVertex(1) != *edge2.GetVertex(1)))
             {
                 std::ostrstream errstrm;
                 errstrm << "Connected edges do not share a vertex. Edges ";
                 errstrm << edge1.GetEid() << ", " << edge2.GetEid();
                 ASSERTL0(false, errstrm.str());
             }
-	    
+
             return returnval;
         }
     }; //end of namespace
@@ -212,6 +212,10 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.9  2006/07/02 17:16:17  sherwin
+*
+*    Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+*
 *    Revision 1.8  2006/06/02 18:48:40  sherwin
 *    Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
 *

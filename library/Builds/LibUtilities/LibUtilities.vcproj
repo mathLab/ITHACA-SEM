@@ -20,7 +20,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../LibUtilities"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBUTILITIES_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_USE_MATH_DEFINES"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -56,11 +56,11 @@
 			Name="Release|Win32"
 			OutputDirectory="Release"
 			IntermediateDirectory="Release"
-			ConfigurationType="2"
+			ConfigurationType="4"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBUTILITIES_EXPORTS"
+				PreprocessorDefinitions="_USE_MATH_DEFINES"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -69,15 +69,7 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/LibUtilities.dll"
-				LinkIncremental="1"
-				GenerateDebugInformation="TRUE"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				ImportLibrary="$(OutDir)/LibUtilities.lib"
-				TargetMachine="1"/>
+				Name="VCLibrarianTool"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -93,8 +85,6 @@
 			<Tool
 				Name="VCXMLDataGeneratorTool"/>
 			<Tool
-				Name="VCWebDeploymentTool"/>
-			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
 			<Tool
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
@@ -108,13 +98,10 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath="..\..\LibUtilities\BlockMat.cpp">
+				RelativePath="..\..\LibUtilities\Foundations\Graph.cpp">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Graph.cpp">
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\IOutils.cpp">
+				RelativePath="..\..\LibUtilities\Polylib\Polylib.cpp">
 			</File>
 		</Filter>
 		<Filter
@@ -122,43 +109,91 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
-				RelativePath="..\..\LibUtilities\Blas.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ArithmeticConcepts.hpp">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\BlockMat.h">
+				RelativePath="..\..\LibUtilities\Foundations\Basis.h">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ErrorUtil.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpression.hpp">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Graph.h">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionTraits.hpp">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\IOutils.h">
+				RelativePath="..\..\LibUtilities\BasicUtils\Blas.hpp">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Lapack.hpp">
+				RelativePath="..\..\LibUtilities\LinearAlgebra\BlockMat.h">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\NekGraph.h">
+				RelativePath="..\..\LibUtilities\BasicUtils\BoostUtil.hpp">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\NekLinAlg.h">
+				RelativePath="..\..\LibUtilities\BasicUtils\Concepts.hpp">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\NekLinAlg.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ConstantExpression.hpp">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\NekLinSys.h">
+				RelativePath="..\..\LibUtilities\BasicUtils\ErrorUtil.hpp">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\NekPoint.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionReturnType.hpp">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\TransF77.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplateConcepts.hpp">
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Vmath.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplateOperators.hpp">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplates.hpp">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\Graph.h">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\BasicUtils\Lapack.hpp">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinAlg.h">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinSys.h">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\BasicUtils\NekManager.hpp">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrix.hpp">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Memory\NekMemoryManager.hpp">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekPoint.hpp">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekVector.hpp">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\NodalTriFekete.h">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\Points1d.h">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Polylib\Polylib.h">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Memory\ThreadSpecificPool.hpp">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\BasicUtils\TransF77.hpp">
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\BasicUtils\Vmath.hpp">
 			</File>
 		</Filter>
 		<Filter

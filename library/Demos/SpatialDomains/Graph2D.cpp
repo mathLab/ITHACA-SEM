@@ -16,8 +16,8 @@ int main(int argc, char *argv[]){
     //  exit(1);
     //}
 
-    string in(argv[argc-1]);
-    //string in("C:\\Data\\PhD\\Research\\dev\\Nektar++\\libs\\Demos\\SpatialDomains\\meshdef2D.xml");
+    //string in(argv[argc-1]);
+    string in("C:\\Data\\PhD\\Research\\dev\\Nektar++\\libs\\Demos\\SpatialDomains\\meshdef2D.xml");
     MeshGraph2D graph2D;
 
     graph2D.Read(in);

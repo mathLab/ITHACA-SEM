@@ -48,7 +48,7 @@ namespace Nektar
     ///
     /// Inputs:\n
     ///	
-    ///	- \a Ba: BasisKey class definition containsing order and
+    ///	- \a Ba: BasisKey class definition containing order and
     /// quadrature points.
     
     StdSegExp::StdSegExp(const BasisKey &Ba):
@@ -468,6 +468,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.4  2006/08/05 19:03:48  sherwin
+ * Update to make the multiregions 2D expansion in connected regions work
+ *
  * Revision 1.3  2006/06/06 15:25:21  jfrazier
  * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
  * NEKERROR.

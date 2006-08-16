@@ -6,6 +6,7 @@
 <MESH DIM="2" SPACE="2">
 
     <!-- Definitions that can be used below in this file. -->
+    <!-- Not currently implemented -->
     <DEF>
         A = 1.0
         B = 2.0
@@ -52,22 +53,24 @@
     <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, R - prism, H - hex -->
     <!-- Only certain element types are appropriate for the given dimension (dim on mesh) -->
     <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
+    <!-- Element need to be entered in consistent "anti-clockwise" manner -->
     <ELEMENT NUMBER="8">
 		<!-- List the edges for each element -->
-        0 <T> 2 3 7 </T>
+        0 <T> 3 7 2 </T>
         1 <T> 0 4 3 </T>
         2 <T> 1 5 4 </T>
-        3 <T> 5 6 8 </T>
+        3 <T> 6 8 5 </T>
         4 <T> 7 10 9 </T>
-        5 <T> 10 11 14 </T>
+        5 <T> 11 14 10 </T>
         6 <T> 11 12 15 </T>
         7 <T> 8 13 12 </T>
     </ELEMENT>
     
     <!-- V - vertex, E - edge, F - face, L - element -->
-    <COMPOSITE>
-        1 V[1] V[3] E[2]
-        2 E[5] E[6] E[7]
+    <COMPOSITE NUMBER="3">
+        0 <C> V[1] V[3] E[2] </C>
+        1 <C> E[5] E[6] E[7] </C>
+        2 <C> L[0] L[1] L[2] L[6] L[7] </C>
     </COMPOSITE>
 </MESH>
 

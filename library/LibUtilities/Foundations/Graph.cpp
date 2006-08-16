@@ -69,40 +69,21 @@ namespace Nektar
 
         bool operator  == (const GraphVertexObject &x, const GraphVertexObject &y)
         {
-            bool var = true;
-
-            if((x.m_id != y.m_id))
-            {
-                var = false;
-            }
-            else
-            {
-                var = true;
-            }
-
-            return var;
+            return (x.m_id == y.m_id);
         }
 
         bool operator != (const GraphVertexObject &x, const GraphVertexObject &y)
         {
-            bool var = true;
-
-            if((x.m_id != y.m_id))
-            {
-                var = false;
-            }
-            else
-            {
-                var = true;
-            }
-
-            return !var;
+            return (x.m_id != y.m_id);
         }
     } // end of namespace 
 } // end of namespace 
 
 //
 // $Log: Graph.cpp,v $
+// Revision 1.2  2006/06/01 14:59:58  sherwin
+// Modified header file path
+//
 // Revision 1.1  2006/06/01 14:56:20  kirby
 // *** empty log message ***
 //

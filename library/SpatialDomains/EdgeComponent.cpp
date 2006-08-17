@@ -106,7 +106,7 @@ namespace Nektar
 
         EdgeComponent::~EdgeComponent()
         {
-            if(m_xmap[0])
+            if(m_xmap)
             {
                 for(int i =0; i < m_coordim; ++i)
                 {
@@ -114,8 +114,7 @@ namespace Nektar
                 }
 
                 delete[] m_xmap;
-
-                m_xmap[0] = (StdRegions::StdSegExp *) NULL;
+                m_xmap = NULL;
             }
         }
 
@@ -212,6 +211,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.10  2006/08/16 23:34:42  jfrazier
+*    *** empty log message ***
+*
 *    Revision 1.9  2006/07/02 17:16:17  sherwin
 *
 *    Modifications to make MultiRegions work for a connected domain in 2D (Tris)

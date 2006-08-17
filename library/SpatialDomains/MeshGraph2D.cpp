@@ -133,9 +133,9 @@ namespace Nektar
                 ASSERTL0(!edgeDataStrm.fail(), (std::string("Unable to read edge data: ") + edgeStr).c_str());
 
                 VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                EdgeComponentSharedPtr edge(new EdgeComponent(edgeid, m_MeshDimension, vertices));
 
-//                EdgeComponentSharedPtr edge(new EdgeComponent(edgeid, m_MeshDimension, vertices));
-                //m_ecomps.push_back(edge);
+                m_ecomps.push_back(edge);
             }
             catch(...)
             {
@@ -235,18 +235,22 @@ namespace Nektar
 
                         /// Create a TriGeom to hold the new definition.
                         EdgeComponentSharedPtr edges[TriGeom::kNedges] = 
-                        {GetEdgeComponent(edge1),
-                        GetEdgeComponent(edge2),
-                        GetEdgeComponent(edge3)};
+                        {
+                            GetEdgeComponent(edge1),
+                                GetEdgeComponent(edge2),
+                                GetEdgeComponent(edge3)
+                        };
 
                         StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] = 
-                        {EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
-                        EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]), 
-                        EdgeComponent::GetEdgeOrientation(*edges[2], *edges[0])};
+                        {
+                            EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
+                                EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]), 
+                                EdgeComponent::GetEdgeOrientation(*edges[2], *edges[0])
+                        };
 
                         TriGeomSharedPtr trigeom(new TriGeom(edges, edgeorient));
 
-                        //m_trigeoms.push_back(trigeom);
+                        m_trigeoms.push_back(trigeom);
                     }
                     catch(...)
                     {
@@ -382,12 +386,24 @@ namespace Nektar
 
                 try
                 {
+                    bool first = true;
                     while (compositeDataStrm)
                     {
                         std::string compositeElementStr;
                         compositeDataStrm >> compositeElementStr;
 
-                        std::cout << compositeElementStr << std::endl;
+                        if (first)
+                        {
+                            first = false;
+
+                            std::vector<GeometrySharedPtr> curVector;
+                            m_Mesh2DCompositeVector.push_back(curVector);
+                        }
+
+                        if (compositeElementStr.length() > 0)
+                        {
+                            m_Mesh2DCompositeVector.back().push_back(ResolveGeomRef(compositeElementStr));
+                        }
                     }
                 }
                 catch(...)
@@ -417,8 +433,8 @@ namespace Nektar
         ASSERTL0(mesh, "Unable to find MESH tag in file.");
 
         ReadEdges(doc);
- //       ReadElements(doc);
- //       ReadComposites(doc);
+        ReadElements(doc);
+        ReadComposites(doc);
     }
 
     EdgeComponentSharedPtr MeshGraph2D::GetEdgeComponent(int eID)
@@ -460,13 +476,64 @@ namespace Nektar
     }
 
 
+    // Take the string that is the composite reference and find the
+    // pointer to the Geometry object corresponding to it.
+    GeometrySharedPtr MeshGraph2D::ResolveGeomRef(std::string &token)
+    {
+        GeometrySharedPtr returnval;
 
+        try
+        {
+            std::istringstream tokenStream(token);
+            char type;
+            int index;
+
+            tokenStream >> type;
+            tokenStream.ignore(1);// Skip the '['
+            tokenStream >> index;
+
+            switch(type)
+            {
+            case 'E':   // Edge
+                returnval = m_ecomps[index];
+                std::cout << "found edge: " << index << std::endl;
+                break;
+
+            case 'T':   // Triangle
+                returnval = m_trigeoms[index];
+                std::cout << "found triangle: " << index << std::endl;
+                break;
+
+            case 'Q':   // Quad
+                returnval = m_quadgeoms[index];
+                std::cout << "found quad: " << index << std::endl;
+                break;
+
+            case 'V':   // Vertex
+                returnval = m_vertset[index];
+                std::cout << "found vertex: " << index << std::endl;
+                break;
+
+            default:
+                NEKERROR(ErrorUtil::efatal, (std::string("Unrecognized composite token: ") + token).c_str());
+            }
+        }
+        catch(...)
+        {
+            NEKERROR(ErrorUtil::efatal, (std::string("Problem processing composite token: ") + token).c_str());
+        }
+
+        return returnval;
+    }
 
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.7  2006/08/16 23:34:42  jfrazier
+// *** empty log message ***
+//
 // Revision 1.6  2006/06/02 18:48:40  sherwin
 // Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
 //

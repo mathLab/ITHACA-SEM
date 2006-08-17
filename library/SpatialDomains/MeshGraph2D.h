@@ -186,6 +186,7 @@ namespace Nektar
             void ReadEdges    (TiXmlDocument &doc);
             void ReadElements (TiXmlDocument &doc);
             void ReadComposites(TiXmlDocument &doc);
+            GeometrySharedPtr ResolveGeomRef(std::string &token);
 
             bool   m_geofac_defined;
 
@@ -194,8 +195,7 @@ namespace Nektar
             TriGeomVector       m_trigeoms;
             QuadGeomVector      m_quadgeoms;
 
-            typedef boost::shared_ptr<Geometry2D> SharedGeom2DPtr;
-            std::vector< std::vector<SharedGeom2DPtr> > Mesh2DCompositeVector;
+            std::vector< std::vector<GeometrySharedPtr> > m_Mesh2DCompositeVector;
         };
     };
 };
@@ -204,6 +204,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.4  2006/08/16 23:34:42  jfrazier
+// *** empty log message ***
+//
 // Revision 1.3  2006/07/02 17:16:17  sherwin
 //
 // Modifications to make MultiRegions work for a connected domain in 2D (Tris)

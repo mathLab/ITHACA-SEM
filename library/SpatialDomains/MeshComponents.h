@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SPATIALDOMAINS_MESHCOMPONENTS_H
 #define NEKTAR_SPATIALDOMAINS_MESHCOMPONENTS_H
 
+#include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/SpatialDomains.hpp>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 
@@ -83,7 +84,7 @@ namespace Nektar
 
         // --------------------------------------------------------------------
         /// Vertex Component
-        class VertexComponent: public LibUtilities::NekPoint<double, 3>
+        class VertexComponent: public Geometry, public LibUtilities::NekPoint<double, 3>
         {
         public:
             //Temp debug constructor
@@ -175,6 +176,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.5  2006/06/05 00:07:43  bnelson
+// Fixed a gcc 4.1.0 compilation problem.  VertexComponent::VertexComponent is not allowed in the class declaration.
+//
 // Revision 1.4  2006/06/01 13:42:26  kirby
 // *** empty log message ***
 //

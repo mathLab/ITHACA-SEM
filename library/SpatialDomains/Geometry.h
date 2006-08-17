@@ -37,6 +37,8 @@
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 
+#include "pchSpatialDomains.h"
+
 #include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/GeoFac.h>
 
@@ -44,6 +46,9 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        class Geometry; // Forward declaration for typedef.
+        typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
+
         class Geometry
         {
         public:
@@ -103,6 +108,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.2  2006/06/01 14:15:30  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.1  2006/05/04 18:59:00  kirby
 // *** empty log message ***
 //

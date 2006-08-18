@@ -182,6 +182,29 @@ namespace Nektar
                 return returnval;
             }
 
+            int GetNumComposites(void)
+            {
+                return int(m_Mesh2DCompositeVector.size());
+            }
+
+            int GetNumCompositeItems(int whichComposite)
+            {
+                int returnval = -1;
+
+                try
+                {
+                    returnval = int(m_Mesh2DCompositeVector[whichComposite].size());
+                }
+                catch(...)
+                {
+                    std::ostrstream errStream;
+                    errStream << "Unable to access composite item [" << whichComposite << "].";
+                    NEKERROR(ErrorUtil::efatal, errStream.str());
+                }
+            }
+
+            GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
+
         protected:
             void ReadEdges    (TiXmlDocument &doc);
             void ReadElements (TiXmlDocument &doc);
@@ -204,6 +227,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.5  2006/08/17 22:55:00  jfrazier
+// Continued adding code to process composites in the mesh2d.
+//
 // Revision 1.4  2006/08/16 23:34:42  jfrazier
 // *** empty log message ***
 //

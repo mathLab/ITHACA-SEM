@@ -22,5 +22,7 @@ int main(int argc, char *argv[]){
 
     graph2D.Read(in);
 
+    GeometrySharedPtr geom = graph2D.GetCompositeItem(2,2);
+
     return 0;
 }

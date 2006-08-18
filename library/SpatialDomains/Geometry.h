@@ -96,7 +96,7 @@ namespace Nektar
         private:
             virtual void v_GenXGeoFac(void)
             {
-	      ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
+                ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
                     "This function is only valid for shape type geometries");
             }
 
@@ -108,6 +108,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.3  2006/08/17 22:55:00  jfrazier
+// Continued adding code to process composites in the mesh2d.
+//
 // Revision 1.2  2006/06/01 14:15:30  sherwin
 // Added typdef of boost wrappers and made GeoFac a boost shared pointer.
 //

@@ -496,22 +496,18 @@ namespace Nektar
             {
             case 'E':   // Edge
                 returnval = m_ecomps[index];
-                std::cout << "found edge: " << index << std::endl;
                 break;
 
             case 'T':   // Triangle
                 returnval = m_trigeoms[index];
-                std::cout << "found triangle: " << index << std::endl;
                 break;
 
             case 'Q':   // Quad
                 returnval = m_quadgeoms[index];
-                std::cout << "found quad: " << index << std::endl;
                 break;
 
             case 'V':   // Vertex
                 returnval = m_vertset[index];
-                std::cout << "found vertex: " << index << std::endl;
                 break;
 
             default:
@@ -526,11 +522,48 @@ namespace Nektar
         return returnval;
     }
 
+    GeometrySharedPtr MeshGraph2D::GetCompositeItem(int whichComposite, int whichItem)
+    {
+        GeometrySharedPtr returnval;
+        bool error = false;
+
+        if (whichComposite >= 0 && whichComposite < int(m_Mesh2DCompositeVector.size()))
+        {
+            if (whichItem >= 0 && whichItem < int(m_Mesh2DCompositeVector[whichComposite].size()))
+            {
+                returnval = m_Mesh2DCompositeVector[whichComposite][whichItem];
+            }
+            else
+            {
+                error = true;
+            }
+        }
+        else
+        {
+            error = true;
+        }
+
+        if (error)
+        {
+            std::ostringstream errStream;
+            errStream << "Unable to access composite item [" << whichComposite << "][" << whichItem << "].";
+            
+            std::string testStr = errStream.str();
+
+            NEKERROR(ErrorUtil::efatal, testStr.c_str());
+        }
+
+        return returnval;
+    }
+
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.8  2006/08/17 22:55:00  jfrazier
+// Continued adding code to process composites in the mesh2d.
+//
 // Revision 1.7  2006/08/16 23:34:42  jfrazier
 // *** empty log message ***
 //

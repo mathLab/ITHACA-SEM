@@ -17,6 +17,7 @@
 (defun my-c-mode-common-hook ()
   ;; my customizations for all of c-mode and related modes
   (c-set-style "gnu")
+  (set 'c-basic-offset 4)
   (set 'c-label-minimum-indentation 0)
   (c-set-offset 'substatement-open 0)
   ;(c-set-offset 'innamespace 0)
@@ -24,10 +25,4 @@
   )
 
 (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
-
-(set 'c-basic-offset 4)
-(set 'c-label-minimum-indentation 0)
-(c-set-offset 'substatement-open 0)
-;(c-set-offset 'innamespace 0)
-(c-set-offset 'statement-cont 0)
 

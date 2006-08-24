@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
     int numComposites = graph2D.GetNumComposites();
     int numCompositeItems = graph2D.GetNumCompositeItems(2);
 
-    GeometrySharedPtr geom = graph2D.GetCompositeItem(2,2);
+    GeometrySharedPtr geom = graph2D.GetCompositeItem(2,4);
 
     return 0;
 }

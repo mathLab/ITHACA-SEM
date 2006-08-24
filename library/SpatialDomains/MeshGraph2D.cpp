@@ -387,6 +387,8 @@ namespace Nektar
                 try
                 {
                     bool first = true;
+                    std::string prevCompositeElementStr;
+
                     while (compositeDataStrm)
                     {
                         std::string compositeElementStr;
@@ -402,8 +404,10 @@ namespace Nektar
 
                         if (compositeElementStr.length() > 0)
                         {
-                            m_Mesh2DCompositeVector.back().push_back(ResolveGeomRef(compositeElementStr));
+                            m_Mesh2DCompositeVector.back().push_back(
+                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr));
                         }
+                        prevCompositeElementStr = compositeElementStr;
                     }
                 }
                 catch(...)
@@ -478,19 +482,37 @@ namespace Nektar
 
     // Take the string that is the composite reference and find the
     // pointer to the Geometry object corresponding to it.
-    GeometrySharedPtr MeshGraph2D::ResolveGeomRef(std::string &token)
+
+    // The only allowable combinations of previous and current items
+    // are V (0D); E (1D); and T and Q (2D).  Only elements of the same
+    // dimension are allowed to be grouped.
+    GeometrySharedPtr MeshGraph2D::ResolveGeomRef(const std::string &prevToken, const std::string &token)
     {
         GeometrySharedPtr returnval;
 
         try
         {
             std::istringstream tokenStream(token);
+            std::istringstream prevTokenStream(prevToken);
+
             char type;
+            char prevType;
             int index;
 
             tokenStream >> type;
             tokenStream.ignore(1);// Skip the '['
             tokenStream >> index;
+
+            prevTokenStream >> prevType;
+
+            bool validSequence = (prevToken.empty() ||         // No previous, then current is just fine.
+                                 (type == 'V' && prevType == 'V') ||
+                                 (type == 'E' && prevType == 'E') ||
+                                 ((type == 'T' || type == 'Q') &&
+                                    (prevType == 'T' || prevType == 'Q')));
+
+            ASSERTL0(validSequence, (std::string("Invalid combination of composite items: ")
+                + type + " and " + prevType + ".").c_str()); 
 
             switch(type)
             {
@@ -561,6 +583,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.9  2006/08/18 19:37:17  jfrazier
+// *** empty log message ***
+//
 // Revision 1.8  2006/08/17 22:55:00  jfrazier
 // Continued adding code to process composites in the mesh2d.
 //

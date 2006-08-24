@@ -201,6 +201,8 @@ namespace Nektar
                     errStream << "Unable to access composite item [" << whichComposite << "].";
                     NEKERROR(ErrorUtil::efatal, errStream.str());
                 }
+
+                return returnval;
             }
 
             GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
@@ -209,7 +211,7 @@ namespace Nektar
             void ReadEdges    (TiXmlDocument &doc);
             void ReadElements (TiXmlDocument &doc);
             void ReadComposites(TiXmlDocument &doc);
-            GeometrySharedPtr ResolveGeomRef(std::string &token);
+            GeometrySharedPtr ResolveGeomRef(const std::string &prevToken, const std::string &token);
 
             bool   m_geofac_defined;
 
@@ -227,6 +229,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.6  2006/08/18 19:45:29  jfrazier
+// Completed composites.
+//
 // Revision 1.5  2006/08/17 22:55:00  jfrazier
 // Continued adding code to process composites in the mesh2d.
 //

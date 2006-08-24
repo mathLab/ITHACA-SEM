@@ -84,8 +84,8 @@ namespace Nektar
             // Initialize the mesh and space dimensions to 3 dimensions.
             // We want to do this each time we read a file, so it should
             // be done here and not just during class initialization.
-            int m_MeshDimension = 3;
-            int m_SpaceDimension = 3;
+            m_MeshDimension = 3;
+            m_SpaceDimension = 3;
 
             while (attr)
             {
@@ -177,6 +177,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.2  2006/05/09 13:37:01  jfrazier
+// Removed duplicate definition of shared vertex pointer.
+//
 // Revision 1.1  2006/05/04 18:59:02  kirby
 // *** empty log message ***
 //

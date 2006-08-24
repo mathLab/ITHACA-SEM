@@ -43,17 +43,17 @@ namespace Nektar
     namespace SpatialDomains
     {
         Geometry::Geometry():
-	  m_coordim(0),
-	  m_state(eNotFilled)	  
-	{
-	}
+            m_coordim(0),
+            m_state(eNotFilled)	  
+        {
+        }
 
         Geometry::Geometry(const int coordim):
-	  m_coordim(coordim),
-	  m_state(eNotFilled)	  
-	{
-	}
-	
+            m_coordim(coordim),
+            m_state(eNotFilled)	  
+        {
+        }
+
         Geometry::~Geometry()
         {
         }
@@ -62,6 +62,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.cpp,v $
+// Revision 1.2  2006/06/01 14:15:30  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.1  2006/05/04 18:59:00  kirby
 // *** empty log message ***
 //

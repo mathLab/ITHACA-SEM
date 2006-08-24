@@ -68,7 +68,7 @@
     
     <!-- V - vertex, E - edge, F - face, T - Triangle, Q - Quad -->
     <COMPOSITE NUMBER="3">
-        0 <C> V[1] V[3] E[2] </C>
+        0 <C> V[1] V[3] V[2] </C>
         1 <C> E[5] E[6] E[7] </C>
         2 <C> T[0] T[1] T[2] T[6] T[7] </C>
     </COMPOSITE>

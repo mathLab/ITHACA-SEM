@@ -316,7 +316,7 @@ namespace Nektar
                 BOOST_CHECK(p8.z() == -1);
 
                 Nektar::LibUtilities::operator*<int, 3, 0>(2, p1);
-                p1*2;
+                //p1*2;
                 //NekPoint<int, 3> p9 = p1*(int)2;
                 //BOOST_CHECK(p9.x() == 2);
                 //BOOST_CHECK(p9.y() == 4);
@@ -369,6 +369,9 @@ namespace Nektar
 
 /**
     $Log: testNekPoint.cpp,v $
+    Revision 1.4  2006/08/25 01:36:25  bnelson
+    no message
+
     Revision 1.3  2006/08/14 02:35:45  bnelson
     Added many LinearAlgebra tests
 

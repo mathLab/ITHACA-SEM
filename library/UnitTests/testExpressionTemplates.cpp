@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: testNekMatrix.h
+// File: testExpressionTemplates.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,40 +29,83 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Tests NekMatrix functionality.
+// Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <UnitTests/testExpressionTemplates.h>
 
-#ifndef NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-#define NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
+#include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
+#include <LibUtilities/LinearAlgebra/NekPoint.hpp>
+
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_case_template.hpp>
+#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/unit_test.hpp>
+#include <boost/progress.hpp>
+
+#include <iostream>
+
+using std::cout;
+using std::endl;
 
 namespace Nektar
 {
     namespace UnitTests
     {
-        void testNekMatrixConstruction();
-        void testNekMatrixAccess();
-        void testNekMatrixBasicMath();
-        void testNekMatrixFullDiagonalOperations();
-        void testDiagonalMatrix();
-		void testUserManagedMatrixData();
-    }
+        using namespace Nektar;
+
+		void testConstantExpressions()
+		{
+			{
+				ConstantExpression<int> e1(7);
+				BOOST_CHECK_EQUAL(*e1, 7);
+				BOOST_CHECK_EQUAL(e1.GetValue(), 7);
+
+				ConstantExpression<int> e2(e1);
+				BOOST_CHECK_EQUAL(*e2, *e1);
+			}
+
+			using namespace Nektar::LibUtilities;
+
+			typedef NekPoint<unsigned int, 3> Point;
+			{
+				Point p(1,2,3);
+				Nektar::ConstantExpression<Point> e1(p);
+
+				Point p1(e1);
+				BOOST_CHECK_EQUAL(p, p1);
+
+				Point p2 = e1;
+				BOOST_CHECK_EQUAL(p, p2);
+
+				Point p3(9, 10, 11);
+				BOOST_CHECK(p != p3);
+				p3 = e1;
+				BOOST_CHECK_EQUAL(p, p3);
+			}
+
+			{
+				// TODO - Find a way to prevent temporaries (meaning that the parameter to 
+				// this call is temporary and that could cause problems).
+				Nektar::ConstantExpression<Point> e2(Point(1,2,3));	
+			}
+		}
+
+		void testUnaryExpressions()
+		{
+			using namespace Nektar::LibUtilities;
+
+			NekPoint<double, 3> p(1,2,3);
+			//NekPoint<double, 3> p1(-(-p));
+
+			//BOOST_CHECK_EQUAL(p, p1);
+		}
+
+     }
 }
 
-#endif // NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-
-
 /**
-    $Log: testNekMatrix.h,v $
-    Revision 1.3  2006/08/14 02:35:45  bnelson
-    Added many LinearAlgebra tests
-
-    Revision 1.2  2006/05/31 04:19:37  bnelson
-    Removed a test for invalid access to a matrix.
-
-    Revision 1.1  2006/05/07 21:10:10  bnelson
-    *** empty log message ***
+    $Log:  $
 
 **/
-

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: testNekMatrix.h
+// File: UnaryExpressionTraits.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,40 +29,33 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Tests NekMatrix functionality.
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
-#ifndef NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-#define NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
+#ifndef NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_TRAITS_HPP
+#define NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_TRAITS_HPP
 
 namespace Nektar
 {
-    namespace UnitTests
+    /// \brief Defines the abstract UnaryExpressionTraits class. 
+    ///
+    /// UnaryExpressionTraits are used when using unary expressions with 
+    /// expression templates.  They specify the return type of a unary 
+    /// expression.
+    ///
+    /// Every UnaryExpressionTemplate will be looking for a different typedef
+    /// inside this class.  Consult the unary expression you are using for details.
+    template<typename DataType>
+    class UnaryExpressionTraits
     {
-        void testNekMatrixConstruction();
-        void testNekMatrixAccess();
-        void testNekMatrixBasicMath();
-        void testNekMatrixFullDiagonalOperations();
-        void testDiagonalMatrix();
-		void testUserManagedMatrixData();
-    }
+        public:
+            typedef DataType NegationType;
+    };
 }
 
-#endif // NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-
+#endif // NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_TRAITS_HPP
 
 /**
-    $Log: testNekMatrix.h,v $
-    Revision 1.3  2006/08/14 02:35:45  bnelson
-    Added many LinearAlgebra tests
-
-    Revision 1.2  2006/05/31 04:19:37  bnelson
-    Removed a test for invalid access to a matrix.
-
-    Revision 1.1  2006/05/07 21:10:10  bnelson
-    *** empty log message ***
-
+    $Log: $
 **/
-

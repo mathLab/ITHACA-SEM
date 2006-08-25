@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: testNekMatrix.h
+// File: UnaryExpressionTraits.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,40 +29,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Tests NekMatrix functionality.
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
+#define NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
 
-#ifndef NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-#define NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
+#include <LibUtilities/ExpressionTemplates/UnaryExpressionTraits.hpp>
+
+#include <boost/call_traits.hpp>
 
 namespace Nektar
 {
-    namespace UnitTests
+    /// \brief An expression to negate an object of ParameterType.
+    template<typename ParameterType>
+    class NegateOp
     {
-        void testNekMatrixConstruction();
-        void testNekMatrixAccess();
-        void testNekMatrixBasicMath();
-        void testNekMatrixFullDiagonalOperations();
-        void testDiagonalMatrix();
-		void testUserManagedMatrixData();
-    }
+        public:
+            typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
+
+            static void Apply(typename boost::call_traits<ParameterType>::const_reference param, 
+                typename boost::call_traits<ResultType>::reference result)
+            {
+                param.operator_negate(result);
+            }
+
+        private:
+    };
+\
 }
 
-#endif // NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-
+#endif // NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
 
 /**
-    $Log: testNekMatrix.h,v $
-    Revision 1.3  2006/08/14 02:35:45  bnelson
-    Added many LinearAlgebra tests
-
-    Revision 1.2  2006/05/31 04:19:37  bnelson
-    Removed a test for invalid access to a matrix.
-
-    Revision 1.1  2006/05/07 21:10:10  bnelson
-    *** empty log message ***
-
+    $Log: $
 **/
-

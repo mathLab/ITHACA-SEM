@@ -136,7 +136,7 @@ namespace Nektar
                     NekPoint<int, 3> p4(testValues);
                     BOOST_CHECK(false);
                 }
-                catch(std::runtime_error& e)
+                catch(std::runtime_error&)
                 {
                     BOOST_CHECK(true);
                 }
@@ -233,16 +233,16 @@ namespace Nektar
 
         void testNekPointOperators()
         {
-            //using Nektar::LibUtilities::NekPoint;
+            using Nektar::LibUtilities::NekPoint;
 
-            //{
-            //    NekPoint<int, 3> p(1,2,3);
-            //    NekPoint<int, 3> negated = -p;
+            {
+                NekPoint<int, 3> p(1,2,3);
+                NekPoint<int, 3> negated = -p;
 
-            //    BOOST_CHECK(p.x() == -negated.x());
-            //    BOOST_CHECK(p.y() == -negated.y());
-            //    BOOST_CHECK(p.z() == -negated.z());
-            //}
+                BOOST_CHECK(p.x() == -negated.x());
+                BOOST_CHECK(p.y() == -negated.y());
+                BOOST_CHECK(p.z() == -negated.z());
+            }
 
             //{
             //    NekPoint<int, 3> p(1,2,3);
@@ -369,6 +369,9 @@ namespace Nektar
 
 /**
     $Log: testNekPoint.cpp,v $
+    Revision 1.3  2006/08/14 02:35:45  bnelson
+    Added many LinearAlgebra tests
+
     Revision 1.2  2006/06/05 02:23:17  bnelson
     Updates for the reorganization of LibUtilities.
 

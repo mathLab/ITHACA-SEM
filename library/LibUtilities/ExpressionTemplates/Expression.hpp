@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: testNekMatrix.h
+// File: Expression.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,40 +29,38 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Tests NekMatrix functionality.
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
+#define NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 
-#ifndef NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-#define NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
+#include <boost/call_traits.hpp>
 
 namespace Nektar
 {
-    namespace UnitTests
+    // An expression that, when fully evaulated, returns an object or value of type "Type".
+    template<typename Type>
+    class Expression
     {
-        void testNekMatrixConstruction();
-        void testNekMatrixAccess();
-        void testNekMatrixBasicMath();
-        void testNekMatrixFullDiagonalOperations();
-        void testDiagonalMatrix();
-		void testUserManagedMatrixData();
-    }
+        public:
+            typedef Type ResultType;
+
+        public:
+            void Apply(typename boost::call_traits<ResultType>::reference result) const
+            {
+                return DoApply(result);
+            }
+
+        private:
+            virtual void DoApply(typename boost::call_traits<ResultType>::reference result) const = 0;
+
+    };
 }
 
-#endif // NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-
+#endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 
 /**
-    $Log: testNekMatrix.h,v $
-    Revision 1.3  2006/08/14 02:35:45  bnelson
-    Added many LinearAlgebra tests
-
-    Revision 1.2  2006/05/31 04:19:37  bnelson
-    Removed a test for invalid access to a matrix.
-
-    Revision 1.1  2006/05/07 21:10:10  bnelson
-    *** empty log message ***
-
+    $Log: $
 **/
-

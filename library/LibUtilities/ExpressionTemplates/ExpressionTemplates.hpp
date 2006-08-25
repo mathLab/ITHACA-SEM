@@ -1,10 +1,35 @@
-////////////////////////////////////////////////////////////////////////////////
-// 
-// exprt.hpp
-// Blake Nelson
+///////////////////////////////////////////////////////////////////////////////
 //
-// Generic expression templates.
+// File: ExpressionTemplates.hpp
 //
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description:
 // Three steps to integrate your classes with the expression templates.
 //
 // 1.  Provide a copy constructor and an assignment operator for your class which 
@@ -15,90 +40,96 @@
 //
 // 3.  Define op_add, op_subtract, op_divide, op_multiply.
 //
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
 
+#include <LibUtilities/ExpressionTemplates/Expression.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionReturnType.hpp>
-#include <LibUtilities/ExpressionTemplates/ExpressionTemplateConcepts.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpression.hpp>
-#include <LibUtilities/ExpressionTemplates/ExpressionTemplateOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/UnaryExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/UnaryExpressionTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/NegateOp.hpp>
 
-#include <boost/call_traits.hpp>
-#include <boost/concept_check.hpp>
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits.hpp>
+//#include <LibUtilities/ExpressionTemplates/ExpressionTemplateConcepts.hpp>
+//#include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
 
-#include <iostream>
+//#include <LibUtilities/ExpressionTemplates/BinaryExpression.hpp>
+//#include <LibUtilities/ExpressionTemplates/ExpressionTemplateOperators.hpp>
+
+//#include <boost/call_traits.hpp>
+//#include <boost/concept_check.hpp>
+//#include <boost/utility/enable_if.hpp>
+//#include <boost/type_traits.hpp>
+//
+//#include <iostream>
 
 namespace Nektar
 {
-	//// Utilities and functors.
-	//template<typename LhsType, typename RhsType>
-	//class OpAddEqual
-	//{
+    //// Utilities and functors.
+    //template<typename LhsType, typename RhsType>
+    //class OpAddEqual
+    //{
  //       public:
  //           BOOST_CLASS_REQUIRE2(LhsType, RhsType, Nektar, OpAddEqualConcept);
  //           typedef typename GetReturnType<LhsType>::result_type result_type;
 
-	//	public:
-	//		typedef typename boost::call_traits<LhsType>::reference reference_type;
-	//		typedef typename boost::call_traits<RhsType>::param_type param_type;
+    //    public:
+    //        typedef typename boost::call_traits<LhsType>::reference reference_type;
+    //        typedef typename boost::call_traits<RhsType>::param_type param_type;
 
-	//	public:
-	//		static reference_type apply(reference_type lhs, param_type rhs) 
-	//		{
-	//			return lhs += rhs;
-	//		}
-	//};
+    //    public:
+    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        {
+    //            return lhs += rhs;
+    //        }
+    //};
 
-	//template<typename LhsType, typename RhsType>
-	//class OpSubtractEqual
-	//{
-	//	public:
-	//		typedef typename boost::call_traits<LhsType>::reference reference_type;
-	//		typedef typename boost::call_traits<RhsType>::param_type param_type;
+    //template<typename LhsType, typename RhsType>
+    //class OpSubtractEqual
+    //{
+    //    public:
+    //        typedef typename boost::call_traits<LhsType>::reference reference_type;
+    //        typedef typename boost::call_traits<RhsType>::param_type param_type;
  //           typedef typename GetReturnType<LhsType>::result_type result_type;
 
-	//	public:
-	//		static reference_type apply(reference_type lhs, param_type rhs) 
-	//		{
-	//			return lhs -= rhs;
-	//		}
-	//};
+    //    public:
+    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        {
+    //            return lhs -= rhs;
+    //        }
+    //};
 
-	//template<typename LhsType, typename RhsType>
-	//class OpMultiplyEqual
-	//{
-	//	public:
-	//		typedef typename boost::call_traits<LhsType>::reference reference_type;
-	//		typedef typename boost::call_traits<RhsType>::param_type param_type;
+    //template<typename LhsType, typename RhsType>
+    //class OpMultiplyEqual
+    //{
+    //    public:
+    //        typedef typename boost::call_traits<LhsType>::reference reference_type;
+    //        typedef typename boost::call_traits<RhsType>::param_type param_type;
  //           typedef typename GetReturnType<LhsType>::result_type result_type;
 
-	//	public:
-	//		static reference_type apply(reference_type lhs, param_type rhs) 
-	//		{
-	//			return lhs *= rhs;
-	//		}
-	//};
+    //    public:
+    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        {
+    //            return lhs *= rhs;
+    //        }
+    //};
 
-	//template<typename LhsType, typename RhsType>
-	//class OpDivideEqual
-	//{
-	//	public:
-	//		typedef typename boost::call_traits<LhsType>::reference reference_type;
-	//		typedef typename boost::call_traits<RhsType>::param_type param_type;
+    //template<typename LhsType, typename RhsType>
+    //class OpDivideEqual
+    //{
+    //    public:
+    //        typedef typename boost::call_traits<LhsType>::reference reference_type;
+    //        typedef typename boost::call_traits<RhsType>::param_type param_type;
  //           typedef typename GetReturnType<LhsType>::result_type result_type;
 
-	//	public:
-	//		static reference_type apply(reference_type lhs, param_type rhs) 
-	//		{
-	//			return lhs /= rhs;
-	//		}
-	//};
+    //    public:
+    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        {
+    //            return lhs /= rhs;
+    //        }
+    //};
 
 
 
@@ -126,7 +157,7 @@ namespace Nektar
  //   };
 
 
-	
+    
 
 
 
@@ -206,132 +237,132 @@ namespace Nektar
 
 
 
-	// Utilities.
-	template<typename DataType>
-	inline ConstantExpression<DataType> make_expr(const DataType& p)
-	{
-		return ConstantExpression<DataType>(p);
-	}
+    // Utilities.
+    template<typename DataType>
+    inline ConstantExpression<DataType> make_expr(const DataType& p)
+    {
+        return ConstantExpression<DataType>(p);
+    }
 
 
 }
 
 
 /// BACKUP
-	//// Utilities and functors.
-	//template<typename DataType>
-	//class OpPlusEqual
-	//{
-	//	public:
-	//		typedef typename boost::call_traits<DataType>::reference reference_type;
-	//		typedef typename boost::call_traits<DataType>::param_type param_type;
+    //// Utilities and functors.
+    //template<typename DataType>
+    //class OpPlusEqual
+    //{
+    //    public:
+    //        typedef typename boost::call_traits<DataType>::reference reference_type;
+    //        typedef typename boost::call_traits<DataType>::param_type param_type;
 
-	//	public:
-	//		static reference_type apply(reference_type lhs, param_type rhs) 
-	//		{
-	//			return lhs += rhs;
-	//		}
-	//};
+    //    public:
+    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        {
+    //            return lhs += rhs;
+    //        }
+    //};
 
-	//template<typename DataType>
-	//class OpMinusEqual
-	//{
-	//	public:
-	//		typedef typename boost::call_traits<DataType>::reference reference_type;
-	//		typedef typename boost::call_traits<DataType>::param_type param_type;
+    //template<typename DataType>
+    //class OpMinusEqual
+    //{
+    //    public:
+    //        typedef typename boost::call_traits<DataType>::reference reference_type;
+    //        typedef typename boost::call_traits<DataType>::param_type param_type;
 
-	//	public:
-	//		static reference_type apply(reference_type lhs, param_type rhs) 
-	//		{
-	//			return lhs -= rhs;
-	//		}
-	//};
+    //    public:
+    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        {
+    //            return lhs -= rhs;
+    //        }
+    //};
 
-	//template<typename DataType>
-	//class OpTimesEqual
-	//{
-	//	public:
-	//		typedef typename boost::call_traits<DataType>::reference reference_type;
-	//		typedef typename boost::call_traits<DataType>::param_type param_type;
+    //template<typename DataType>
+    //class OpTimesEqual
+    //{
+    //    public:
+    //        typedef typename boost::call_traits<DataType>::reference reference_type;
+    //        typedef typename boost::call_traits<DataType>::param_type param_type;
 
-	//	public:
-	//		static reference_type apply(reference_type lhs, param_type rhs) 
-	//		{
-	//			return lhs *= rhs;
-	//		}
-	//};
+    //    public:
+    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        {
+    //            return lhs *= rhs;
+    //        }
+    //};
 
-	//template<typename DataType>
-	//class OpDivideEqual
-	//{
-	//	public:
-	//		typedef typename boost::call_traits<DataType>::reference reference_type;
-	//		typedef typename boost::call_traits<DataType>::param_type param_type;
+    //template<typename DataType>
+    //class OpDivideEqual
+    //{
+    //    public:
+    //        typedef typename boost::call_traits<DataType>::reference reference_type;
+    //        typedef typename boost::call_traits<DataType>::param_type param_type;
 
-	//	public:
-	//		static reference_type apply(reference_type lhs, param_type rhs) 
-	//		{
-	//			return lhs /= rhs;
-	//		}
-	//};
+    //    public:
+    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        {
+    //            return lhs /= rhs;
+    //        }
+    //};
 
-	//template<typename ResultType, typename LhsType, typename RhsType>
-	//class OpPlus
-	//{
-	//	public:
+    //template<typename ResultType, typename LhsType, typename RhsType>
+    //class OpPlus
+    //{
+    //    public:
 
-	//	public:
-	//		static typename boost::call_traits<ResultType>::reference apply(typename boost::call_traits<LhsType>::param_type lhs,
-	//			typename boost::call_traits<RhsType>::param_type rhs, typename boost::call_traits<ResultType>::reference result)
-	//		{
-	//			// op_plus is a user defined function along the lines of operator+
-	//			op_plus(lhs, rhs, result);
-	//			return result;
-	//		}
-	//};
+    //    public:
+    //        static typename boost::call_traits<ResultType>::reference apply(typename boost::call_traits<LhsType>::param_type lhs,
+    //            typename boost::call_traits<RhsType>::param_type rhs, typename boost::call_traits<ResultType>::reference result)
+    //        {
+    //            // op_plus is a user defined function along the lines of operator+
+    //            op_plus(lhs, rhs, result);
+    //            return result;
+    //        }
+    //};
 
 
-	//template<typename ResultType>
-	//class ConstantExpression 
-	//{
-	//	public:
-	//		typedef ResultType result_type;
+    //template<typename ResultType>
+    //class ConstantExpression 
+    //{
+    //    public:
+    //        typedef ResultType result_type;
 
-	//	public:
-	//		explicit ConstantExpression(typename boost::call_traits<ResultType>::param_type value) :
-	//			m_value(value)
-	//		{
-	//		}
+    //    public:
+    //        explicit ConstantExpression(typename boost::call_traits<ResultType>::param_type value) :
+    //            m_value(value)
+    //        {
+    //        }
 
-	//		ConstantExpression(const ConstantExpression<ResultType>& rhs) :
-	//			m_value(rhs.m_value)
-	//		{
-	//		}
+    //        ConstantExpression(const ConstantExpression<ResultType>& rhs) :
+    //            m_value(rhs.m_value)
+    //        {
+    //        }
 
-	//		~ConstantExpression() {}
+    //        ~ConstantExpression() {}
 
-	//		ConstantExpression<ResultType>& operator=(const ConstantExpression<ResultType>& rhs)
-	//		{
-	//			m_value = rhs.m_value;
-	//			return *this;
-	//		}
+    //        ConstantExpression<ResultType>& operator=(const ConstantExpression<ResultType>& rhs)
+    //        {
+    //            m_value = rhs.m_value;
+    //            return *this;
+    //        }
 
-	//		void operator()(typename boost::call_traits<ResultType>::reference result) const
-	//		{
-	//			result = m_value;
-	//		}
+    //        void operator()(typename boost::call_traits<ResultType>::reference result) const
+    //        {
+    //            result = m_value;
+    //        }
 
-	//		template<typename OpType>
-	//		void evaluate(typename boost::call_traits<ResultType>::reference result) const
-	//		{
-	//			OpType::apply(result, m_value);
-	//		}
+    //        template<typename OpType>
+    //        void evaluate(typename boost::call_traits<ResultType>::reference result) const
+    //        {
+    //            OpType::apply(result, m_value);
+    //        }
 
-	//		const ResultType& getValue() const { return m_value; }
+    //        const ResultType& getValue() const { return m_value; }
 
-	//	private:
-	//		const ResultType& m_value;
-	//};
+    //    private:
+    //        const ResultType& m_value;
+    //};
 
 
  //   template<typename ResultType, typename LhsExpressionType, typename RhsExpressionType, typename OpType>
@@ -435,7 +466,7 @@ namespace Nektar
 
  //   // The only requirement on ExpressionType is that it support operator().
  //   template<typename ExpressionType>
-	//class Expression
+    //class Expression
  //   {
  //       public:
  //           typedef typename ExpressionResultType<ExpressionType>::result_type result_type;
@@ -469,45 +500,48 @@ namespace Nektar
  //           ExpressionType m_expression;
  //   };
 
-	//
-	//// Expression template traits.
-	//template<typename LhsType, typename RhsType>
-	//class expr_traits_base
-	//{
-	//};
+    //
+    //// Expression template traits.
+    //template<typename LhsType, typename RhsType>
+    //class expr_traits_base
+    //{
+    //};
 
-	//template<typename LhsType, typename RhsType>
-	//class expr_traits
-	//{
-	//};
+    //template<typename LhsType, typename RhsType>
+    //class expr_traits
+    //{
+    //};
 
-	//// Operators - These do the real work in constructing expression templates.
-	//template<typename LhsType, typename RhsType>
-	//Expression<BinaryExpression<typename expr_traits<LhsType, RhsType>::op_plus_result_type, ConstantExpression<LhsType>, ConstantExpression<RhsType>, OpPlus<typename expr_traits<LhsType, RhsType>::op_plus_result_type , LhsType, RhsType> > >
-	//operator+(const ConstantExpression<LhsType>& lhs, const ConstantExpression<RhsType>& rhs)
-	//{
-	//	return BinaryExpression<typename expr_traits<LhsType, RhsType>::op_plus_result_type, ConstantExpression<LhsType>, ConstantExpression<RhsType>, OpPlus<typename expr_traits<LhsType, RhsType>::op_plus_result_type , LhsType, RhsType> >(lhs, rhs);
-	//}
+    //// Operators - These do the real work in constructing expression templates.
+    //template<typename LhsType, typename RhsType>
+    //Expression<BinaryExpression<typename expr_traits<LhsType, RhsType>::op_plus_result_type, ConstantExpression<LhsType>, ConstantExpression<RhsType>, OpPlus<typename expr_traits<LhsType, RhsType>::op_plus_result_type , LhsType, RhsType> > >
+    //operator+(const ConstantExpression<LhsType>& lhs, const ConstantExpression<RhsType>& rhs)
+    //{
+    //    return BinaryExpression<typename expr_traits<LhsType, RhsType>::op_plus_result_type, ConstantExpression<LhsType>, ConstantExpression<RhsType>, OpPlus<typename expr_traits<LhsType, RhsType>::op_plus_result_type , LhsType, RhsType> >(lhs, rhs);
+    //}
 
  //   template<typename LhsExpressionType, typename RhsType>
  //   Expression<BinaryExpression<typename expr_traits<typename LhsExpressionType::result_type, RhsType>::op_plus_result_type, LhsExpressionType, ConstantExpression<RhsType>, OpPlus<typename expr_traits<typename LhsExpressionType::result_type, RhsType>::op_plus_result_type , typename LhsExpressionType::result_type, RhsType> > >
-	//operator+(const LhsExpressionType& lhs, const ConstantExpression<RhsType>& rhs)
-	//{
-	//	return BinaryExpression<typename expr_traits<typename LhsExpressionType::result_type, RhsType>::op_plus_result_type, LhsExpressionType, ConstantExpression<RhsType>, OpPlus<typename expr_traits<typename LhsExpressionType::result_type, RhsType>::op_plus_result_type , typename LhsExpressionType::result_type, RhsType> >(lhs, rhs);
-	//}
+    //operator+(const LhsExpressionType& lhs, const ConstantExpression<RhsType>& rhs)
+    //{
+    //    return BinaryExpression<typename expr_traits<typename LhsExpressionType::result_type, RhsType>::op_plus_result_type, LhsExpressionType, ConstantExpression<RhsType>, OpPlus<typename expr_traits<typename LhsExpressionType::result_type, RhsType>::op_plus_result_type , typename LhsExpressionType::result_type, RhsType> >(lhs, rhs);
+    //}
 
-	//// Utilities.
-	//template<typename DataType>
-	//ConstantExpression<DataType> make_expr(const DataType& p)
-	//{
-	//	return ConstantExpression<DataType>(p);
-	//}
+    //// Utilities.
+    //template<typename DataType>
+    //ConstantExpression<DataType> make_expr(const DataType& p)
+    //{
+    //    return ConstantExpression<DataType>(p);
+    //}
 // }
 
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
 
 /**
     $Log: ExpressionTemplates.hpp,v $
+    Revision 1.2  2006/06/01 13:44:28  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/06/01 09:20:56  kirby
     *** empty log message ***
 

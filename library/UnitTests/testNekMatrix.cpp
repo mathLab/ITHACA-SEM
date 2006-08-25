@@ -105,6 +105,13 @@ namespace Nektar
                 for(unsigned int j = 0; j < 3; ++j)
                 {
                     BOOST_CHECK(static_matrix(i,j) == 10*i + j);
+					BOOST_CHECK(static_matrix.GetValue(i,j) == 10*i + j);
+
+					const NekMatrix<unsigned int>& ref = static_matrix;
+
+					BOOST_CHECK(ref(i,j) == 10*i + j);
+					BOOST_CHECK(ref.GetValue(i,j) == 10*i + j);
+
                 }
             }
 
@@ -239,12 +246,61 @@ namespace Nektar
             BOOST_CHECK(result1(2,2) == 14);
 
         }
+
+		void testUserManagedMatrixData()
+		{	
+			{
+				unsigned int matrixValues[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+				NekMatrix<unsigned int> m(3, 3, matrixValues, eWrapper);
+
+				BOOST_CHECK_EQUAL(m(0,0), 1);
+				BOOST_CHECK_EQUAL(m(0,1), 2);
+				BOOST_CHECK_EQUAL(m(0,2), 3);
+
+				BOOST_CHECK_EQUAL(m(1,0), 4);
+				BOOST_CHECK_EQUAL(m(1,1), 5);
+				BOOST_CHECK_EQUAL(m(1,2), 6);
+
+				BOOST_CHECK_EQUAL(m(2,0), 7);
+				BOOST_CHECK_EQUAL(m(2,1), 8);
+				BOOST_CHECK_EQUAL(m(2,2), 9);
+
+				m(0,0) = 18;
+				BOOST_CHECK_EQUAL(m(0,0), 18);
+				BOOST_CHECK_EQUAL(matrixValues[0], m(0,0));
+
+				NekMatrix<unsigned int> m1(m);
+				m1(1,0) = 900;
+				BOOST_CHECK_EQUAL(m1(1,0), 900);
+				BOOST_CHECK_EQUAL(m(1,0), 900);
+				BOOST_CHECK_EQUAL(matrixValues[3], 900);
+
+				NekMatrix<unsigned int> m2(3, 3);
+				m2 = m1;
+				m2(0,0) = 800;
+				BOOST_CHECK_EQUAL(m2(0,0), m1(0,0));
+				BOOST_CHECK_EQUAL(m1(0,0), m(0,0));
+				BOOST_CHECK_EQUAL(m2(0,0), 800);
+			}
+
+			{
+				unsigned int matrixValues[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+				NekMatrix<unsigned int> m(3, 3, matrixValues, eCopy);
+
+				m(0,0) = 800;
+				BOOST_CHECK_EQUAL(m(0,0), 800);
+				BOOST_CHECK_EQUAL(matrixValues[0], 1);
+			}
+		}
     }
 }
 
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.12  2006/08/14 02:35:45  bnelson
+    Added many LinearAlgebra tests
+
     Revision 1.11  2006/06/05 02:23:17  bnelson
     Updates for the reorganization of LibUtilities.
 

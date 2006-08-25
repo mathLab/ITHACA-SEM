@@ -17,6 +17,7 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/testNekVector.h>
 #include <UnitTests/testBoostUtil.h>
 #include <UnitTests/testNekMatrix.h>
+#include <UnitTests/testExpressionTemplates.h>
 //#include <UnitTests/testNekManager.h>
 
 // The boost unit test framework provides the main function for us.
@@ -47,6 +48,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixAccess), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixBasicMath), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixFullDiagonalOperations), 0);
+	test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUserManagedMatrixData), 0);
 
 
     // These tests were originally added because it appeared that a NekObjectFactory
@@ -59,11 +61,21 @@ test_suite* init_unit_test_suite( int, char* [] )
     // Unit tests for NekManager
     //test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekManager), 0);
 
+
+
+
+
+	test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testConstantExpressions), 0);
+	test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUnaryExpressions), 0);
+
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.7  2006/08/14 02:35:45  bnelson
+    Added many LinearAlgebra tests
+
     Revision 1.6  2006/07/05 20:21:24  jfrazier
     Added NekManager test case.
 

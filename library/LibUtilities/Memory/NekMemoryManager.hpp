@@ -384,8 +384,79 @@ namespace Nektar
                 return static_cast<DataType*>(ThreadSpecificPool<sizeof(DataType)*ArraySize>::Allocate());
             }
 
+            template<typename DataType>
+            static DataType* AllocateArray(unsigned int arraySize)
+            {
+                if( arraySize < 10 )
+                {
+                    return MemoryManager::AllocateArray<10, DataType>();
+                }
+                else if( arraySize < 20 )
+                {
+                    return MemoryManager::AllocateArray<20, DataType>();
+                }
+                else if( arraySize < 30 )
+                {
+                    return MemoryManager::AllocateArray<30, DataType>();
+                }
+                else if( arraySize < 40 )
+                {
+                    return MemoryManager::AllocateArray<40, DataType>();
+                }
+                else if( arraySize < 50 )
+                {
+                    return MemoryManager::AllocateArray<50, DataType>();
+                }
+                else if( arraySize < 60 )
+                {
+                    return MemoryManager::AllocateArray<60, DataType>();
+                }
+                else
+                {
+                    return new DataType[arraySize];
+                }
+            }
+
+            /// Note - the size checks in DeallocateArray must match those of
+            ///        AllocateArray.
+            template<typename DataType>
+            static void DeallocateArray(DataType*& array, unsigned int arraySize)
+            {
+                if( arraySize < 10 )
+                {
+                    return MemoryManager::DeallocateArray<10, DataType>(array);
+                }
+                else if( arraySize < 20 )
+                {
+                    return MemoryManager::DeallocateArray<20, DataType>(array);
+                }
+                else if( arraySize < 30 )
+                {
+                    return MemoryManager::DeallocateArray<30, DataType>(array);
+                }
+                else if( arraySize < 40 )
+                {
+                    return MemoryManager::DeallocateArray<40, DataType>(array);
+                }
+                else if( arraySize < 50 )
+                {
+                    return MemoryManager::DeallocateArray<50, DataType>(array);
+                }
+                else if( arraySize < 60 )
+                {
+                    return MemoryManager::DeallocateArray<60, DataType>(array);
+                }
+                else
+                {
+                    delete[] array;
+                }
+
+                array = 0;
+            }
+
             ////////////////////////////////////////////////////////////////////
             /// \}
+
             ////////////////////////////////////////////////////////////////////
 
             ////////////////////////////////////////////////////////////////////
@@ -427,7 +498,7 @@ namespace Nektar
                 }
                 else if( arraySize < 40 )
                 {
-		  return MemoryManager::AllocateSharedArray<40, DataType>();
+          return MemoryManager::AllocateSharedArray<40, DataType>();
                 }
                 else if( arraySize < 50 )
                 {
@@ -469,6 +540,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.2  2006/06/01 13:44:29  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/06/01 09:17:24  kirby
     *** empty log message ***
 

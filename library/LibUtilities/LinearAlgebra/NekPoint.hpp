@@ -36,8 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_NEK_POINT_HPP
 #define NEKTAR_LIB_UTILITIES_NEK_POINT_HPP
 
-//#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
-//#include <LibUtilities/ExpressionTemplates/ArithmeticConcepts.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Concepts.hpp>
 
@@ -111,6 +110,11 @@ namespace Nektar
                     }
                 }
 
+                NekPoint(const Expression<NekPoint<DataType, dim, space> >& rhs)
+                {
+                    rhs.Apply(*this);
+                }
+
                 NekPoint(const NekPoint<DataType, dim, space>& rhs)
                 {
                     for(unsigned int i = 0; i < dim; ++i)
@@ -121,6 +125,12 @@ namespace Nektar
 
                 ~NekPoint()
                 {
+                }
+
+                NekPoint<DataType, dim, space>& operator=(const Expression<NekPoint<DataType, dim, space> >& rhs)
+                {
+                    rhs.Apply(*this);
+                    return *this;
                 }
 
                 NekPoint<DataType, dim, space>& operator=(const NekPoint<DataType, dim, space>& rhs)
@@ -283,14 +293,17 @@ namespace Nektar
                 /// Arithmetic Routines
 
                 // Unitary operators
-                NekPoint<DataType, dim, space> operator-() const
+                void operator_negate(NekPoint<DataType, dim, space>& result) const
                 {
-                    NekPoint<DataType, dim, space> temp(*this);
                     for(int i=0; i < dim; ++i)
                     {
-                        temp(i) = -temp(i);
+                        result(i) = -(*this)[i];
                     }
-                    return temp;
+                }
+
+                UnaryExpression<NegateOp, NekPoint<DataType, dim, space> > operator-() const
+                {
+                    return UnaryExpression<NegateOp, NekPoint<DataType, dim, space> >(*this);
                 }
 
                 NekPoint<DataType, dim, space>& operator+=(const NekPoint<DataType, dim, space>& rhs)
@@ -361,15 +374,7 @@ namespace Nektar
                     }
                     result += ")";
                     return result;
-                }
-
-                //friend NekPoint<DataType, dim, space>
-                //operator*(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs);
-        
-
-                //NekPoint<DataType, dim, space>
-                //friend operator*(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs);
-            
+                }           
 
             private:
                 DataType m_data[dim];
@@ -495,7 +500,7 @@ namespace Nektar
         template<typename DataType, unsigned int dim, unsigned int space>
         std::ostream& operator<<(std::ostream& os, const NekPoint<DataType, dim, space>& p)
         {
-            os << p.asString();
+            os << p.AsString();
             return os;
         }
 
@@ -537,6 +542,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.4  2006/08/14 02:40:24  bnelson
+    no message
+
     Revision 1.3  2006/08/14 02:29:49  bnelson
     Updated points, vectors, and matrix classes to work with ElVis.  Added a variety of methods to all of these classes.
 

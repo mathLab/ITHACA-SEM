@@ -324,6 +324,25 @@ namespace Nektar
                 }
 
             private:
+                /// Indicates if the vectors data is managed internally or 
+                /// externally by the user.
+                enum DataHolderType { eINTERNAL, eEXTERNAL };
+
+                template<typename ImplDataType, unsigned int ImplSize, unsigned int ImplSpace, DataHolderType holder>
+                class VectorDataHolder;
+
+                template<typename ImplDataType, unsigned int ImplSize, unsigned int ImplSpace>
+                class VectorDataHolder<ImplDataType, ImplSize, ImplSpace, eINTERNAL>
+                {
+                    public:
+                };
+
+                template<typename ImplDataType, unsigned int ImplSize, unsigned int ImplSpace>
+                class VectorDataHolder<ImplDataType, ImplSize, ImplSpace, eEXTERNAL>
+                {
+                    public:
+                };
+
                 template<typename ImplDataType, unsigned int ImplSize, unsigned int ImplSpace>
                 class VectorImpl
                 {
@@ -591,6 +610,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.3  2006/08/14 02:29:49  bnelson
+    Updated points, vectors, and matrix classes to work with ElVis.  Added a variety of methods to all of these classes.
+
     Revision 1.2  2006/06/01 13:44:29  kirby
     *** empty log message ***
 

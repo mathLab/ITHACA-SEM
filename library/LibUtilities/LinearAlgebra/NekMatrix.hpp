@@ -58,7 +58,6 @@ namespace Nektar
             eFull,
             eDiagonal
 //             eZero,
-//             eDiagonal,
 //             eSquareSymmetric,
 //             eSquareSymmetricPositiveDefinite,
 //             eSymmetricPositiveDefiniteBanded,
@@ -66,11 +65,7 @@ namespace Nektar
 //             eSquareGeneralBanded
         };
 
-
-
-        class OutOfBoundsError
-        {
-        };
+        enum MatrixDataHolderType { eWrapper, eCopy };
 
         /// NekMatrix Class
         /// \param DataType The type of data to store in each element of the matrix.
@@ -84,27 +79,48 @@ namespace Nektar
         template<typename DataType, NekMatrixForm form = eFull, unsigned int space = 0>
         class NekMatrix
         {
-
             public:
                 NekMatrix(unsigned int rows, unsigned int columns) :
                     m_rows(rows),
                     m_columns(columns),
-                    m_data(new DataType[rows*columns])
+                    m_data(NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(rows, columns)),
+                    m_dataIsDeletable(true)
                 {
                 }
 
                 NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
-                        m_rows(rows),
-                        m_columns(columns),
-                        m_data(new DataType[rows*columns])
+                    m_rows(rows),
+                    m_columns(columns),
+                    m_data(),
+                    m_dataIsDeletable(true)
                 {
+                    m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(rows, columns);
                     std::copy(ptr, ptr+rows*columns, begin());
                 }
 
-                NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::param_type d) :
+                NekMatrix(unsigned int rows, unsigned int columns, DataType* ptr, MatrixDataHolderType t = eCopy) :
+                    m_rows(rows),
+                    m_columns(columns),
+                    m_data(),
+                    m_dataIsDeletable(false)
+                {
+                    if( t == eCopy )
+                    {
+                        m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(rows, columns);
+                        std::copy(ptr, ptr+rows*columns, begin());
+                        m_dataIsDeletable = true;
+                    }
+                    else
+                    {
+                        m_data = ptr;
+                    }
+                }
+
+                NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference d) :
                         m_rows(rows),
                         m_columns(columns),
-                        m_data(new DataType[rows*columns])
+                        m_data(NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(rows, columns)),
+                        m_dataIsDeletable(true)
                 {
                     std::fill(begin(), end(), d);
                 }
@@ -113,22 +129,34 @@ namespace Nektar
                 NekMatrix(const NekMatrix<DataType, form, space>& rhs) :
                     m_rows(rhs.m_rows),
                     m_columns(rhs.m_columns),
-                    m_data(new DataType[m_rows*m_columns])
+                    m_data(),
+                    m_dataIsDeletable(rhs.m_dataIsDeletable)
                 {
-                    std::copy(rhs.begin(), rhs.end(), begin());
+                    if( m_dataIsDeletable )
+                    {
+                        m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
+                        std::copy(rhs.begin(), rhs.end(), begin());
+                    }
+                    else
+                    {
+                        m_data = rhs.m_data;
+                    }
                 }
 
                 NekMatrix<DataType, form, space>& operator=(const NekMatrix<DataType, form, space>& rhs)
                 {
-                    if( this != &rhs )
-                    {
-                        m_rows = rhs.m_rows;
-                        m_columns = rhs.m_columns;
-                        m_data = boost::shared_array<DataType>(new DataType[m_rows*m_columns]);
-                        std::copy(rhs.begin(), rhs.end(), begin());
-                    }
-
+                    NekMatrix<DataType, form, space> temp(rhs);
+                    Swap(temp);
                     return *this;
+                }
+
+                ~NekMatrix()
+                {
+                    if( m_dataIsDeletable )
+                    {
+                        NekMatrixImpl<DataType, form, space>::DeallocateMatrixStorage(m_data, m_rows, m_columns);
+                    }
+                    m_data = NULL;
                 }
 
                 unsigned int GetRows() const
@@ -144,37 +172,36 @@ namespace Nektar
                 inline typename boost::call_traits<DataType>::reference operator()
                     (unsigned int rowNumber, unsigned int colNumber)
                 {
-                    return m_data[rowNumber*m_columns + colNumber];
+                    return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
                 }
 
                 inline typename boost::call_traits<DataType>::const_reference operator()
                         (unsigned int rowNumber, unsigned int colNumber) const
                 {
-                    return m_data[rowNumber*m_columns + colNumber];
+                    return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
                 }
 
 
                 typename boost::call_traits<DataType>::reference GetValue
                         (unsigned int rowNumber, unsigned int colNumber)
                 {
-                    return (*this)(rowNumber, colNumber);
+                    return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
                 }
 
                 typename boost::call_traits<DataType>::const_reference GetValue
                         (unsigned int rowNumber, unsigned int colNumber) const
                 {
-                    return (*this)(rowNumber, colNumber);
+                    return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
                 }
 
                 void SetValue(unsigned int rowNumber, unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
                 {
-                    (*this)(rowNumber, colNumber) = rhs;
+                    NekMatrixImpl<DataType, form, space>::SetValue(m_data, m_columns, rowNumber, colNumber, rhs);
                 }
 
                 DataType* GetPtr(unsigned int rowNumber, unsigned int colNumber)
                 {
-
-                    return &m_data[rowNumber*m_columns + colNumber];
+                    return NekMatrixImpl<DataType, form, space>::GetPtr(m_data, m_columns, rowNumber, colNumber);
                 }
 
                 typedef DataType* iterator;
@@ -187,7 +214,7 @@ namespace Nektar
 
                 iterator end()
                 {
-                    return &m_data[m_rows*m_columns];
+                    return NekMatrixImpl<DataType, form, space>::end(m_data, m_rows, m_columns);
                 }
 
                 const_iterator begin() const
@@ -197,7 +224,7 @@ namespace Nektar
 
                 const_iterator end() const
                 {
-                    return &m_data[m_rows*m_columns];
+                    return NekMatrixImpl<DataType, form, space>::end(m_data, m_rows, m_columns);
                 }
 
                 NekMatrixForm GetForm() const
@@ -232,197 +259,98 @@ namespace Nektar
                 }
 
             private:
+                template<typename DataType, NekMatrixForm form, unsigned int space>
+                class NekMatrixImpl;
+
+                template<typename DataType, unsigned int space>
+                class NekMatrixImpl<DataType, eFull, space>
+                {
+                    public:
+                        static inline DataType* CreateMatrixStorage(unsigned int rows, unsigned int columns)
+                        {
+                            return Nektar::MemoryManager::AllocateArray<DataType>(rows*columns);
+                        }
+
+                        static inline void DeallocateMatrixStorage(DataType*& data, unsigned int rows, unsigned int columns)
+                        {
+                            Nektar::MemoryManager::DeallocateArray<DataType>(data, rows*columns);
+                        }
+
+                        static inline typename NekMatrix<DataType, form, space>::iterator end(DataType* data, unsigned int rows, unsigned int columns) 
+                        {
+                            return &data[rows*columns];
+                        }
+
+                        static inline typename boost::call_traits<DataType>::reference GetValue(
+                            DataType* data, unsigned int matrixColumns, unsigned int rowNumber, unsigned int colNumber)
+                        {
+                            return data[rowNumber*matrixColumns + colNumber];
+                        }
+
+                        static inline void SetValue(DataType* data, unsigned int matrixColumns, unsigned int rowNumber, 
+                            unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
+                        {
+                            NekMatrixImpl<DataType, eFull, space>::GetValue(data, matrixColumns, rowNumber, colNumber) = rhs;
+                        }
+
+                        static inline DataType* GetPtr(DataType* data, unsigned int matrixColumns, unsigned int rowNumber, unsigned int colNumber)
+                        {
+                            return &data[rowNumber*matrixColumns + colNumber];
+                        }
+                };
+
+                template<typename DataType, unsigned int space>
+                class NekMatrixImpl<DataType, eDiagonal, space>
+                {
+                    public:
+                        static inline DataType* CreateMatrixStorage(unsigned int rows, unsigned int columns)
+                        {
+                            ASSERTL0(rows == columns, "Digaonal matrices must be square.");
+                            return Nektar::MemoryManager::AllocateArray<DataType>(rows);
+                        }
+
+                        static inline void DeallocateMatrixStorage(DataType*& data, unsigned int rows, unsigned int /*columns*/)
+                        {
+                            Nektar::MemoryManager::DeallocateArray<DataType>(data, rows);
+                        }
+
+                        static inline typename NekMatrix<DataType, form, space>::iterator end(DataType* data, unsigned int rows, unsigned int /*columns*/) 
+                        {
+                            return &data[rows];
+                        }
+
+                        static inline typename boost::call_traits<DataType>::reference GetValue(
+                            DataType* data, unsigned int /*matrixColumns*/, unsigned int rowNumber, unsigned int /*colNumber*/)
+                        {
+                            return data[rowNumber];
+                        }
+
+                        static inline void SetValue(DataType* data, unsigned int matrixColumns, unsigned int rowNumber, 
+                            unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
+                        {
+                            NekMatrixImpl<DataType, eFull, space>::GetValue(data, matrixColumns, rowNumber, colNumber) = rhs;
+                        }
+
+                        static inline DataType* GetPtr(DataType* data, unsigned int /*matrixColumns*/, unsigned int rowNumber, unsigned int /*colNumber*/)
+                        {
+                            return &data[rowNumber];
+                        }
+                };
+
+                void Swap(NekMatrix<DataType, form, space>& rhs)
+                {
+                    std::swap(m_rows, rhs.m_rows);
+                    std::swap(m_columns, rhs.m_columns);
+                    std::swap(m_data, rhs.m_data);
+                    std::swap(m_dataIsDeletable, rhs.m_dataIsDeletable);
+                }
+
                 unsigned int m_rows;
                 unsigned int m_columns;
-                boost::shared_array<DataType> m_data;
+                DataType* m_data;
+                bool m_dataIsDeletable;
         };
 
-
-        // Diagonal specialization.
-        template<typename DataType, unsigned int space>
-        class NekMatrix<DataType, eDiagonal, space>
-        {
-
-            public:
-                NekMatrix(unsigned int rows, unsigned int columns) :
-                    m_rows(rows),
-                    m_columns(columns),
-                    m_data(new DataType[rows])
-                {
-                    ASSERTL1(rows == columns, "Diagonal matrices must be square.");
-                }
-
-                NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
-                    m_rows(rows),
-                    m_columns(columns),
-                    m_data(new DataType[rows])
-                {
-                    ASSERTL1(rows == columns, "Diagonal matrices must be square.");
-                    std::copy(ptr, ptr+rows, begin());
-                }
-
-                NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::param_type d) :
-                    m_rows(rows),
-                    m_columns(columns),
-                m_data(new DataType[rows])
-                {
-                    std::fill(begin(), end(), d);
-                }
-
-                NekMatrix(const NekMatrix<DataType, eDiagonal, space>& rhs) :
-                    m_rows(rhs.m_rows),
-                    m_columns(rhs.m_columns),
-                    m_data(new DataType[m_rows])
-                {
-                    std::copy(rhs.begin(), rhs.end(), begin());
-                }
-
-                NekMatrix<DataType, eDiagonal, space>& operator=(const NekMatrix<DataType, eDiagonal, space>& rhs)
-                {
-                    if( this != &rhs )
-                    {
-                        m_rows = rhs.m_rows;
-                        m_columns = rhs.m_columns;
-                        m_data = boost::shared_array<DataType>(new DataType[m_rows]);
-                        std::copy(rhs.begin(), rhs.end(), begin());
-                    }
-
-                    return *this;
-                }
-
-                unsigned int GetRows() const
-                {
-                    return m_rows;
-                }
-
-                unsigned int GetColumns() const
-                {
-                    return m_columns;
-                }
-
-                typename boost::call_traits<DataType>::reference operator()
-                    (unsigned int rowNumber, unsigned int colNumber)
-                {
-                    if( rowNumber == colNumber )
-                    {
-                        return m_data[rowNumber];
-                    }
-                    else
-                    {
-                        // TOOD - Find a good way to deal with this.  Probably
-                        // need a proxy object with an assertion error.
-                        static DataType result(0);
-                        return result;
-                    }
-                }
-
-                typename boost::call_traits<DataType>::const_reference operator()
-                        (unsigned int rowNumber, unsigned int colNumber) const
-                {
-                    if( rowNumber == colNumber )
-                    {
-                        return m_data[rowNumber];
-                    }
-                    else
-                    {
-                        static DataType result(0);
-                        return result;
-                    }
-                }
-
-
-                typename boost::call_traits<DataType>::reference GetValue
-                        (unsigned int rowNumber, unsigned int colNumber)
-                {
-                    return (*this)(rowNumber, colNumber);
-                }
-
-                typename boost::call_traits<DataType>::const_reference GetValue
-                    (unsigned int rowNumber, unsigned int colNumber) const
-                {
-                    return (*this)(rowNumber, colNumber);
-                }
-
-                void SetValue(unsigned int rowNumber, unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
-                {
-                    if( rowNumber == colNumber )
-                    {
-                        (*this)(rowNumber, colNumber) = rhs;
-                    }
-                    else
-                    {
-                        ASSERTL0(false, "Can't assign into non-diagonal element of a diagonal matrix.");
-                    }
-                }
-
-                DataType* GetPtr(unsigned int rowNumber, unsigned int colNumber)
-                {
-                    if( rowNumber == colNumber )
-                    {
-                        return &m_data[m_columns];
-                    }
-                    else
-                    {
-                        ASSERTL0(false, "Can't acces a non-diagonal element pointer of a diagonal matrix.");
-                    }
-                }
-
-                typedef DataType* iterator;
-                typedef const DataType* const_iterator;
-
-                iterator begin()
-                {
-                    return &m_data[0];
-                }
-
-                iterator end()
-                {
-                    return &m_data[m_rows];
-                }
-
-                const_iterator begin() const
-                {
-                    return &m_data[0];
-                }
-
-                const_iterator end() const
-                {
-                    return &m_data[m_rows*m_columns];
-                }
-
-                NekMatrixForm GetForm() const
-                {
-                    return eDiagonal;
-                }
-
-                NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eFull, space>& rhs)
-                {
-                    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
-                    DataType* lhs_data = begin();
-                    const DataType* rhs_data = rhs.begin();
-
-                    for(unsigned int i = 0; i < m_rows*m_columns; ++i)
-                    {
-                        lhs_data[i] += rhs_data[i];
-                    }
-
-                    return *this;
-                }
-
-                NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eDiagonal, space>& rhs)
-                {
-                    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
-                    DataType* lhs_data = begin();
-                    const DataType* rhs_data = rhs.begin();
-
-                    return *this;
-                }
-
-            private:
-                unsigned int m_rows;
-                unsigned int m_columns;
-                boost::shared_array<DataType> m_data;
-        };
 
         template<typename DataType, unsigned int space>
         const NekMatrix<DataType, eFull, space>& convertToFull(const NekMatrix<DataType, eFull, space>& m)
@@ -564,6 +492,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.3  2006/08/14 02:29:49  bnelson
+    Updated points, vectors, and matrix classes to work with ElVis.  Added a variety of methods to all of these classes.
+
     Revision 1.2  2006/06/01 13:44:28  kirby
     *** empty log message ***
 

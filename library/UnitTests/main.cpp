@@ -48,7 +48,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixAccess), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixBasicMath), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixFullDiagonalOperations), 0);
-	test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUserManagedMatrixData), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUserManagedMatrixData), 0);
 
 
     // These tests were originally added because it appeared that a NekObjectFactory
@@ -65,14 +65,17 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 
 
-	test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testConstantExpressions), 0);
-	test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUnaryExpressions), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testConstantExpressions), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUnaryExpressions), 0);
 
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.8  2006/08/25 01:36:25  bnelson
+    no message
+
     Revision 1.7  2006/08/14 02:35:45  bnelson
     Added many LinearAlgebra tests
 

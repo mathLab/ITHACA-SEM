@@ -42,8 +42,8 @@ namespace Nektar
 {
     namespace UnitTests
     {
-		void testConstantExpressions();
-		void testUnaryExpressions();
+        void testConstantExpressions();
+        void testUnaryExpressions();
     }
 }
 
@@ -51,6 +51,9 @@ namespace Nektar
 
 
 /**
-    $Log:  $
+    $Log: testExpressionTemplates.h,v $
+    Revision 1.1  2006/08/25 01:36:26  bnelson
+    no message
+
 
 **/

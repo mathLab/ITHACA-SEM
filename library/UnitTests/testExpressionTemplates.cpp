@@ -55,57 +55,60 @@ namespace Nektar
     {
         using namespace Nektar;
 
-		void testConstantExpressions()
-		{
-			{
-				ConstantExpression<int> e1(7);
-				BOOST_CHECK_EQUAL(*e1, 7);
-				BOOST_CHECK_EQUAL(e1.GetValue(), 7);
+        void testConstantExpressions()
+        {
+            {
+                ConstantExpression<int> e1(7);
+                BOOST_CHECK_EQUAL(*e1, 7);
+                BOOST_CHECK_EQUAL(e1.GetValue(), 7);
 
-				ConstantExpression<int> e2(e1);
-				BOOST_CHECK_EQUAL(*e2, *e1);
-			}
+                ConstantExpression<int> e2(e1);
+                BOOST_CHECK_EQUAL(*e2, *e1);
+            }
 
-			using namespace Nektar::LibUtilities;
+            using namespace Nektar::LibUtilities;
 
-			typedef NekPoint<unsigned int, 3> Point;
-			{
-				Point p(1,2,3);
-				Nektar::ConstantExpression<Point> e1(p);
+            typedef NekPoint<unsigned int, 3> Point;
+            {
+                Point p(1,2,3);
+                Nektar::ConstantExpression<Point> e1(p);
 
-				Point p1(e1);
-				BOOST_CHECK_EQUAL(p, p1);
+                Point p1(e1);
+                BOOST_CHECK_EQUAL(p, p1);
 
-				Point p2 = e1;
-				BOOST_CHECK_EQUAL(p, p2);
+                Point p2 = e1;
+                BOOST_CHECK_EQUAL(p, p2);
 
-				Point p3(9, 10, 11);
-				BOOST_CHECK(p != p3);
-				p3 = e1;
-				BOOST_CHECK_EQUAL(p, p3);
-			}
+                Point p3(9, 10, 11);
+                BOOST_CHECK(p != p3);
+                p3 = e1;
+                BOOST_CHECK_EQUAL(p, p3);
+            }
 
-			{
-				// TODO - Find a way to prevent temporaries (meaning that the parameter to 
-				// this call is temporary and that could cause problems).
-				Nektar::ConstantExpression<Point> e2(Point(1,2,3));	
-			}
-		}
+            {
+                // TODO - Find a way to prevent temporaries (meaning that the parameter to 
+                // this call is temporary and that could cause problems).
+                Nektar::ConstantExpression<Point> e2(Point(1,2,3));    
+            }
+        }
 
-		void testUnaryExpressions()
-		{
-			using namespace Nektar::LibUtilities;
+        void testUnaryExpressions()
+        {
+            using namespace Nektar::LibUtilities;
 
-			NekPoint<double, 3> p(1,2,3);
-			//NekPoint<double, 3> p1(-(-p));
+            NekPoint<double, 3> p(1,2,3);
+            //NekPoint<double, 3> p1(-(-p));
 
-			//BOOST_CHECK_EQUAL(p, p1);
-		}
+            //BOOST_CHECK_EQUAL(p, p1);
+        }
 
      }
 }
 
 /**
-    $Log:  $
+    $Log: testExpressionTemplates.cpp,v $
+    Revision 1.1  2006/08/25 01:36:25  bnelson
+    no message
+
 
 **/

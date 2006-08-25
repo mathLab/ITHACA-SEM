@@ -46,7 +46,7 @@ namespace Nektar
         void testNekMatrixBasicMath();
         void testNekMatrixFullDiagonalOperations();
         void testDiagonalMatrix();
-		void testUserManagedMatrixData();
+        void testUserManagedMatrixData();
     }
 }
 
@@ -55,6 +55,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.h,v $
+    Revision 1.4  2006/08/25 01:36:25  bnelson
+    no message
+
     Revision 1.3  2006/08/14 02:35:45  bnelson
     Added many LinearAlgebra tests
 

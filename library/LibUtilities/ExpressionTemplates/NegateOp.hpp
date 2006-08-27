@@ -37,6 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
 
 #include <LibUtilities/ExpressionTemplates/UnaryExpressionTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/Expression.hpp>
 
 #include <boost/call_traits.hpp>
 
@@ -49,7 +50,7 @@ namespace Nektar
         public:
             typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
 
-            static void Apply(typename boost::call_traits<ParameterType>::const_reference param, 
+            static void Apply(typename boost::call_traits<ParameterType>::const_reference param,
                 typename boost::call_traits<ResultType>::reference result)
             {
                 param.operator_negate(result);
@@ -57,11 +58,28 @@ namespace Nektar
 
         private:
     };
-\
+
+    template<typename ParameterType>
+    class NegateOp<Expression<ParameterType> >
+    {
+        public:
+            typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
+
+            static void Apply(const Expression<ParameterType>& param,
+                              typename boost::call_traits<ResultType>::reference result)
+            {
+                param.Apply(result);
+            }
+
+        private:
+    };
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
 
 /**
-    $Log: $
+    $Log: NegateOp.hpp,v $
+    Revision 1.1  2006/08/25 01:33:48  bnelson
+    no message
+
 **/

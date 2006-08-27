@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -86,9 +86,9 @@ namespace Nektar
             }
 
             {
-                // TODO - Find a way to prevent temporaries (meaning that the parameter to 
+                // TODO - Find a way to prevent temporaries (meaning that the parameter to
                 // this call is temporary and that could cause problems).
-                Nektar::ConstantExpression<Point> e2(Point(1,2,3));    
+                Nektar::ConstantExpression<Point> e2(Point(1,2,3));
             }
         }
 
@@ -97,9 +97,9 @@ namespace Nektar
             using namespace Nektar::LibUtilities;
 
             NekPoint<double, 3> p(1,2,3);
-            //NekPoint<double, 3> p1(-(-p));
+            NekPoint<double, 3> p1(-(-p));
 
-            //BOOST_CHECK_EQUAL(p, p1);
+            BOOST_CHECK_EQUAL(p, p1);
         }
 
      }
@@ -107,6 +107,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.2  2006/08/25 01:37:34  bnelson
+    no message
+
     Revision 1.1  2006/08/25 01:36:25  bnelson
     no message
 

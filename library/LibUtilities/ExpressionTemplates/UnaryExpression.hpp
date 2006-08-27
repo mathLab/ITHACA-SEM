@@ -46,9 +46,9 @@
 
 namespace Nektar
 {
-    // OpType - A class with a statis method called Apply that takes a single 
+    // OpType - A class with a statis method called Apply that takes a single
     // parameter and returns a result of the same or different type.
-    // A template parameter to allow a single OpType templated class to be 
+    // A template parameter to allow a single OpType templated class to be
     // used for a variety of types.
     template<template <typename> class OpType, typename ParameterType>
     class UnaryExpression : public Expression<typename OpType<ParameterType>::ResultType>
@@ -82,23 +82,23 @@ namespace Nektar
             ParameterType m_value;
     };
 
-    //template<typename ResultType>
-    //UnaryExpression<NegateOp, ResultType> operator-(const Expression<ResultType>& rhs)
-    //{
-    //    
-    //}
+    template<typename ResultType>
+    UnaryExpression<NegateOp, ResultType> operator-(const Expression<ResultType>& rhs)
+    {
+        return UnaryExpression<NegateOp, ResultType>(rhs);
+    }
 
 
     //// To evaluate an expression, I need to know if the lhs or rhs of the binary tree
     //// matches the overall result type.  This can be done with enable_if and disable_if,
-    //// but for some reason the work for global functions but not member functions.  
-    //// Therefore, these global functions exist solely so the binary functions can forward 
+    //// but for some reason the work for global functions but not member functions.
+    //// Therefore, these global functions exist solely so the binary functions can forward
     //// the evaluation.
     //
     //template<template <typename, typename> class OpType, typename LhsType, typename RhsType>
     //class BinaryExpression
     //{
-    //    
+    //
     //};
 
     //template<template <typename, typename> class OpType, typename LhsType, typename RhsType>
@@ -180,7 +180,7 @@ namespace Nektar
     //        typedef typename OpType<LhsResultType, RhsResultType>::result_type ResultType;
 
     //    public:
-    //        BinaryExpression(typename boost::call_traits<LhsType>::param_type lhs, 
+    //        BinaryExpression(typename boost::call_traits<LhsType>::param_type lhs,
     //                         typename boost::call_traits<RhsType>::param_type rhs) :
     //            m_lhs(lhs),
     //            m_rhs(rhs)
@@ -208,11 +208,11 @@ namespace Nektar
     //        }
 
     //        //// Case 2 - rhs result type is the same as the final result type and the lhs is not.
-    //        //void apply(typename boost::call_traits<result_type>::reference result, 
+    //        //void apply(typename boost::call_traits<result_type>::reference result,
     //        //    typename boost::disable_if<boost::is_same<int, int> >::type* param1 = 0,
     //        //    double t = 0) const
     //        //{
-    //        //    // This assumes the the result type of the lhs is the same as the result type of 
+    //        //    // This assumes the the result type of the lhs is the same as the result type of
     //        //    // the rhs.
     //        //    //m_lhs.apply(result);
     //        //    //m_rhs.apply(result);
@@ -235,5 +235,8 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_HPP
 
 /**
-    $Log: $
+    $Log: UnaryExpression.hpp,v $
+    Revision 1.1  2006/08/25 01:33:48  bnelson
+    no message
+
 **/

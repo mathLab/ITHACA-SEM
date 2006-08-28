@@ -47,6 +47,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
+#include <LibUtilities/ExpressionTemplates/Expression.hpp>
 
 namespace Nektar
 {
@@ -82,6 +83,43 @@ namespace Nektar
         template<typename DataType, NekMatrixForm form = eFull, unsigned int space = 0>
         class NekMatrix
         {
+            public:
+                typedef NekMatrix<DataType, form, space> ThisType;
+
+                // Interface for expression templates.
+                class NekMatrixMetadata
+                {
+                    public:
+                        explicit NekMatrixMetadata(typename boost::call_traits<ThisType>::const_reference matrix) :
+                            Rows(matrix.GetRows()),
+                            Columns(matrix.GetColumns())
+                        {
+                        }
+
+                        NekMatrixMetadata(const NekMatrixMetadata& rhs) :
+                            Rows(rhs.Rows),
+                            Columns(rhs.Columns)
+                        {
+                        }
+
+                        static NekMatrixMetadata UpdateForNegation(const NekMatrixMetadata& rhs)
+                        {
+                            return NekMatrixMetadata(rhs);
+                        }
+
+                        NekMatrixMetadata& operator=(const NekMatrixMetadata& rhs)
+                        {
+                            Rows = rhs.Rows;
+                            Columns = rhs.Columns;
+                            return *this;
+                        }
+
+                        unsigned int Rows;
+                        unsigned int Columns;
+                };
+
+                typedef NekMatrixMetadata ExpressionMetadataType;
+
             public:
                 NekMatrix(unsigned int rows, unsigned int columns) :
                     m_rows(rows),
@@ -146,10 +184,32 @@ namespace Nektar
                     }
                 }
 
+                template<typename ExpressionType>
+                NekMatrix(const ExpressionType& rhs) :
+                    m_rows(rhs.GetMetadata().Rows),
+                    m_columns(rhs.GetMetadata().Columns),
+                    m_data(),
+                    m_dataIsDeletable(true)
+                {
+                    m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
+                    rhs.Apply(*this);
+                }
+
                 NekMatrix<DataType, form, space>& operator=(const NekMatrix<DataType, form, space>& rhs)
                 {
                     NekMatrix<DataType, form, space> temp(rhs);
                     Swap(temp);
+                    return *this;
+                }
+
+                template<typename ExpressionType>
+                NekMatrix<DataType, form, space>& operator=(const ExpressionType& rhs)
+                {
+                    m_rows = rhs.GetMetadata().Rows;
+                    m_columns = rhs.GetMetadata().Columns;
+                    m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
+                    m_dataIsDeletable = true;
+                    rhs.Apply(*this);
                     return *this;
                 }
 
@@ -233,6 +293,20 @@ namespace Nektar
                 NekMatrixForm GetForm() const
                 {
                     return form;
+                }
+
+                void operator_negate()
+                {
+                    for(iterator iter = begin(); iter != end(); ++iter)
+                    {
+                        *iter = -*iter;
+                    }
+                }
+
+                UnaryExpression<NegateOp, ConstantExpression<NekMatrix<DataType, form, space> > > operator-() const
+                {
+                    return UnaryExpression<NegateOp, ConstantExpression<NekMatrix<DataType, form, space> > >(
+                            ConstantExpression<NekMatrix<DataType, form, space> >(*this));
                 }
 
                 NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eFull, space>& rhs)
@@ -494,6 +568,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.5  2006/08/25 03:05:16  bnelson
+    Fixed gcc compile errors.
+
     Revision 1.4  2006/08/25 01:28:53  bnelson
     Changed the way specialized matrices are handled.
 

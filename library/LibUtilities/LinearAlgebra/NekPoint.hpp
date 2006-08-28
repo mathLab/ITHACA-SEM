@@ -110,8 +110,11 @@ namespace Nektar
                     }
                 }
 
-                NekPoint(const Expression<NekPoint<DataType, dim, space> >& rhs)
+                template<typename ExpressionType>
+                NekPoint(const ExpressionType& rhs)
                 {
+                    // TODO - Static assert that this type and the result type are the same.
+                    //BOOST_STATIC_ASSERT
                     rhs.Apply(*this);
                 }
 
@@ -127,7 +130,8 @@ namespace Nektar
                 {
                 }
 
-                NekPoint<DataType, dim, space>& operator=(const Expression<NekPoint<DataType, dim, space> >& rhs)
+                template<typename ExpressionType>
+                NekPoint<DataType, dim, space>& operator=(const ExpressionType& rhs)
                 {
                     rhs.Apply(*this);
                     return *this;
@@ -301,9 +305,18 @@ namespace Nektar
                     }
                 }
 
-                UnaryExpression<NegateOp, NekPoint<DataType, dim, space> > operator-() const
+                void operator_negate()
                 {
-                    return UnaryExpression<NegateOp, NekPoint<DataType, dim, space> >(*this);
+                    for(int i=0; i < dim; ++i)
+                    {
+                        (*this)[i] = -(*this)[i];
+                    }
+                }
+
+                UnaryExpression<NegateOp, ConstantExpression<NekPoint<DataType, dim, space> > > operator-() const
+                {
+                    return UnaryExpression<NegateOp, ConstantExpression<NekPoint<DataType, dim, space> > >(
+                            ConstantExpression<NekPoint<DataType, dim, space> >(*this));
                 }
 
                 NekPoint<DataType, dim, space>& operator+=(const NekPoint<DataType, dim, space>& rhs)
@@ -374,7 +387,7 @@ namespace Nektar
                     }
                     result += ")";
                     return result;
-                }           
+                }
 
             private:
                 DataType m_data[dim];
@@ -542,6 +555,11 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.5  2006/08/25 01:27:04  bnelson
+    Added construction and assignment from expressions.
+
+    Added the unary negation expression template.
+
     Revision 1.4  2006/08/14 02:40:24  bnelson
     no message
 

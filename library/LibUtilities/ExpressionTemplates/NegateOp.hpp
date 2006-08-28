@@ -43,6 +43,7 @@
 
 namespace Nektar
 {
+
     /// \brief An expression to negate an object of ParameterType.
     template<typename ParameterType>
     class NegateOp
@@ -50,17 +51,17 @@ namespace Nektar
         public:
             typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
 
-            static void Apply(typename boost::call_traits<ParameterType>::const_reference param,
-                typename boost::call_traits<ResultType>::reference result)
+            static void Apply(typename boost::call_traits<ParameterType>::reference result)
             {
-                param.operator_negate(result);
+                result.operator_negate();
             }
 
         private:
     };
 
-    template<typename ParameterType>
-    class NegateOp<Expression<ParameterType> >
+    /*
+    template<typename ExpressionType>
+    class NegateOp
     {
         public:
             typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
@@ -69,16 +70,21 @@ namespace Nektar
                               typename boost::call_traits<ResultType>::reference result)
             {
                 param.Apply(result);
+                result.operator_negate();
             }
 
         private:
     };
+    */
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
 
 /**
     $Log: NegateOp.hpp,v $
+    Revision 1.2  2006/08/27 02:11:29  bnelson
+    Added support for negating an expression.
+
     Revision 1.1  2006/08/25 01:33:48  bnelson
     no message
 

@@ -37,30 +37,112 @@
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 
 #include <boost/call_traits.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_same.hpp>
+
+#include <algorithm>
 
 namespace Nektar
 {
-    // An expression that, when fully evaulated, returns an object or value of type "Type".
-    template<typename Type>
-    class Expression
+    enum ExpressionOperation
+    {
+        eNEGATION,
+        eSUBTRACTION,
+        eADDITION,
+        eDIVISION,
+        eMULTIPLICATION
+    };
+
+    template<typename DataType>
+    class DefaultExpressionMetadata
     {
         public:
-            typedef Type ResultType;
-
-        public:
-            void Apply(typename boost::call_traits<ResultType>::reference result) const
+            DefaultExpressionMetadata(typename boost::call_traits<DataType>::const_reference)
             {
-                return DoApply(result);
             }
 
-        private:
-            virtual void DoApply(typename boost::call_traits<ResultType>::reference result) const = 0;
-
+            static DefaultExpressionMetadata UpdateForNegation(const DefaultExpressionMetadata& rhs)
+            {
+                return DefaultExpressionMetadata(rhs);
+            }
     };
+
+    template<typename Type, typename enabled=void>
+    class ExpressionMetadataChooser
+    {
+        public:
+            typedef DefaultExpressionMetadata<Type> MetadataType;
+    };
+
+    template<typename Type>
+    class ExpressionMetadataChooser<Type, typename boost::enable_if<
+        boost::is_same<typename Type::ExpressionMetadataType, typename Type::ExpressionMetadataType>
+        >::type >
+    {
+        public:
+            typedef typename Type::ExpressionMetadataType MetadataType;
+    };
+
+//     template<typename ParameterType, unsigned int numberOfParameters, typename ParamType2 = void>
+//     class Expression;
+
+//     // An expression that, when fully evaulated, returns an object or value of type "Type".
+//     template<typename Type>
+//     class Expression
+//     {
+//         public:
+//             typedef Type ResultType;
+//             typedef typename ExpressionMetadataChooser<Type>::MetadataType MetadataType;
+//
+//         public:
+//             Expression() :
+//                 m_metadata()
+//             {
+//             }
+//
+//             Expression(const Expression<Type>& rhs) :
+//                 m_metadata(rhs.m_metadata)
+//             {
+//             }
+//
+//             virtual ~Expression()
+//             {
+//             }
+//
+//             Expression<Type>& operator=(const Expression<Type>& rhs)
+//             {
+//                 Expression<Type> temp(rhs);
+//                 Swap(rhs);
+//                 return *this;
+//             }
+//
+//             const MetadataType& GetMetadata() const
+//             {
+//                 return m_metadata;
+//             }
+//
+//             void Apply(typename boost::call_traits<ResultType>::reference result) const
+//             {
+//                 return DoApply(result);
+//             }
+//
+//         private:
+//             virtual void DoApply(typename boost::call_traits<ResultType>::reference result) const = 0;
+//
+//             void Swap(Expression<Type>& rhs)
+//             {
+//                 std::swap(m_metadata, rhs.m_metadata);
+//             }
+//
+//             MetadataType m_metadata;
+//     };
 }
 
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 
 /**
-    $Log: $
+    $Log: Expression.hpp,v $
+    Revision 1.1  2006/08/25 01:33:47  bnelson
+    no message
+
 **/

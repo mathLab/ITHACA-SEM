@@ -32,10 +32,10 @@
 // Description:
 // Three steps to integrate your classes with the expression templates.
 //
-// 1.  Provide a copy constructor and an assignment operator for your class which 
+// 1.  Provide a copy constructor and an assignment operator for your class which
 //     takes a binary expression as the argument.
 //
-// 2.  Define a BinaryExpressionTraits object for each possible combination of 
+// 2.  Define a BinaryExpressionTraits object for each possible combination of
 //     operators using your type.
 //
 // 3.  Define op_add, op_subtract, op_divide, op_multiply.
@@ -80,7 +80,7 @@ namespace Nektar
     //        typedef typename boost::call_traits<RhsType>::param_type param_type;
 
     //    public:
-    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        static reference_type apply(reference_type lhs, param_type rhs)
     //        {
     //            return lhs += rhs;
     //        }
@@ -95,7 +95,7 @@ namespace Nektar
  //           typedef typename GetReturnType<LhsType>::result_type result_type;
 
     //    public:
-    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        static reference_type apply(reference_type lhs, param_type rhs)
     //        {
     //            return lhs -= rhs;
     //        }
@@ -110,7 +110,7 @@ namespace Nektar
  //           typedef typename GetReturnType<LhsType>::result_type result_type;
 
     //    public:
-    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        static reference_type apply(reference_type lhs, param_type rhs)
     //        {
     //            return lhs *= rhs;
     //        }
@@ -125,7 +125,7 @@ namespace Nektar
  //           typedef typename GetReturnType<LhsType>::result_type result_type;
 
     //    public:
-    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        static reference_type apply(reference_type lhs, param_type rhs)
     //        {
     //            return lhs /= rhs;
     //        }
@@ -157,7 +157,7 @@ namespace Nektar
  //   };
 
 
-    
+
 
 
 
@@ -170,7 +170,7 @@ namespace Nektar
 
     //    //public:
     //    //    static void apply(typename boost::call_traits<LhsType>::param_type lhs,
-    //    //        typename boost::call_traits<RhsType>::param_type rhs, 
+    //    //        typename boost::call_traits<RhsType>::param_type rhs,
     //    //        typename boost::call_traits<result_type>::reference result)
     //    //    {
     //    //        OpType::apply(lhs, rhs, result);7
@@ -208,21 +208,21 @@ namespace Nektar
     //        }
 
     //        // Case 1 - lhs result type is the same as the final result type.
-    //        void apply(typename boost::call_traits<result_type>::reference result, 
+    //        void apply(typename boost::call_traits<result_type>::reference result,
     //            typename boost::enable_if<boost::is_same<lhs_result_type, result_type> >::type* param = 0) const
     //        {
-    //            // This assumes the the result type of the lhs is the same as the result type of 
+    //            // This assumes the the result type of the lhs is the same as the result type of
     //            // the rhs.
     //            m_lhs.apply(result);
     //            OpType<typename LhsType::result_type, RhsType>::apply(result, m_rhs.getValue(), result);
     //        }
 
     //        // Case 2 - rhs result type is the same as the final result type and the lhs is not.
-    //        void apply(typename boost::call_traits<result_type>::reference result, 
+    //        void apply(typename boost::call_traits<result_type>::reference result,
     //            typename boost::disable_if<boost::is_same<lhs_result_type, result_type> >::type* param1 = 0,
     //            typename boost::enable_if<boost::is_same<rhs_result_type, result_type> >::type* param2 = 0) const
     //        {
-    //            // This assumes the the result type of the lhs is the same as the result type of 
+    //            // This assumes the the result type of the lhs is the same as the result type of
     //            // the rhs.
     //            //m_lhs.apply(result);
     //            //m_rhs.apply(result);
@@ -236,13 +236,14 @@ namespace Nektar
 
 
 
-
+    /*
     // Utilities.
     template<typename DataType>
     inline ConstantExpression<DataType> make_expr(const DataType& p)
     {
         return ConstantExpression<DataType>(p);
     }
+    */
 
 
 }
@@ -258,7 +259,7 @@ namespace Nektar
     //        typedef typename boost::call_traits<DataType>::param_type param_type;
 
     //    public:
-    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        static reference_type apply(reference_type lhs, param_type rhs)
     //        {
     //            return lhs += rhs;
     //        }
@@ -272,7 +273,7 @@ namespace Nektar
     //        typedef typename boost::call_traits<DataType>::param_type param_type;
 
     //    public:
-    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        static reference_type apply(reference_type lhs, param_type rhs)
     //        {
     //            return lhs -= rhs;
     //        }
@@ -286,7 +287,7 @@ namespace Nektar
     //        typedef typename boost::call_traits<DataType>::param_type param_type;
 
     //    public:
-    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        static reference_type apply(reference_type lhs, param_type rhs)
     //        {
     //            return lhs *= rhs;
     //        }
@@ -300,7 +301,7 @@ namespace Nektar
     //        typedef typename boost::call_traits<DataType>::param_type param_type;
 
     //    public:
-    //        static reference_type apply(reference_type lhs, param_type rhs) 
+    //        static reference_type apply(reference_type lhs, param_type rhs)
     //        {
     //            return lhs /= rhs;
     //        }
@@ -323,7 +324,7 @@ namespace Nektar
 
 
     //template<typename ResultType>
-    //class ConstantExpression 
+    //class ConstantExpression
     //{
     //    public:
     //        typedef ResultType result_type;
@@ -539,6 +540,9 @@ namespace Nektar
 
 /**
     $Log: ExpressionTemplates.hpp,v $
+    Revision 1.3  2006/08/25 01:33:47  bnelson
+    no message
+
     Revision 1.2  2006/06/01 13:44:28  kirby
     *** empty log message ***
 

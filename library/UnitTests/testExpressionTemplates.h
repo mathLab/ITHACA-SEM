@@ -44,6 +44,7 @@ namespace Nektar
     {
         void testConstantExpressions();
         void testUnaryExpressions();
+        void testNekMatrixMetadata();
     }
 }
 
@@ -52,6 +53,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.h,v $
+    Revision 1.2  2006/08/25 01:37:34  bnelson
+    no message
+
     Revision 1.1  2006/08/25 01:36:26  bnelson
     no message
 

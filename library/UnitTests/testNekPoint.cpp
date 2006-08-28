@@ -244,44 +244,44 @@ namespace Nektar
                 BOOST_CHECK(p.z() == -negated.z());
             }
 
-            //{
-            //    NekPoint<int, 3> p(1,2,3);
-            //    p += p;
-            //    BOOST_CHECK(p.x() == 2);
-            //    BOOST_CHECK(p.y() == 4);
-            //    BOOST_CHECK(p.z() == 6);
+            {
+               NekPoint<int, 3> p(1,2,3);
+               p += p;
+               BOOST_CHECK(p.x() == 2);
+               BOOST_CHECK(p.y() == 4);
+               BOOST_CHECK(p.z() == 6);
 
-            //    p += 8;
-            //    BOOST_CHECK(p.x() == 10);
-            //    BOOST_CHECK(p.y() == 12);
-            //    BOOST_CHECK(p.z() == 14);
+               p += 8;
+               BOOST_CHECK(p.x() == 10);
+               BOOST_CHECK(p.y() == 12);
+               BOOST_CHECK(p.z() == 14);
 
-            //    NekPoint<int, 3> sub(9, 3, -5);
-            //    p -= sub;
-            //    BOOST_CHECK(p.x() == 1);
-            //    BOOST_CHECK(p.y() == 9);
-            //    BOOST_CHECK(p.z() == 19);
+               NekPoint<int, 3> sub(9, 3, -5);
+               p -= sub;
+               BOOST_CHECK(p.x() == 1);
+               BOOST_CHECK(p.y() == 9);
+               BOOST_CHECK(p.z() == 19);
 
-            //    p -= 1;
-            //    BOOST_CHECK(p.x() == 0);
-            //    BOOST_CHECK(p.y() == 8);
-            //    BOOST_CHECK(p.z() == 18);
+               p -= 1;
+               BOOST_CHECK(p.x() == 0);
+               BOOST_CHECK(p.y() == 8);
+               BOOST_CHECK(p.z() == 18);
 
-            //    p *= 3;
-            //    BOOST_CHECK(p.x() == 0);
-            //    BOOST_CHECK(p.y() == 24);
-            //    BOOST_CHECK(p.z() == 54);
+               p *= 3;
+               BOOST_CHECK(p.x() == 0);
+               BOOST_CHECK(p.y() == 24);
+               BOOST_CHECK(p.z() == 54);
 
-            //    p[0] = 2;
-            //    p /= 2;
-            //    BOOST_CHECK(p.x() == 1);
-            //    BOOST_CHECK(p.y() == 12);
-            //    BOOST_CHECK(p.z() == 27);
+               p[0] = 2;
+               p /= 2;
+               BOOST_CHECK(p.x() == 1);
+               BOOST_CHECK(p.y() == 12);
+               BOOST_CHECK(p.z() == 27);
 
 
-            //    std::string s = p.AsString();
-            //    BOOST_CHECK(s == "(1, 12, 27)");
-            //}
+               std::string s = p.AsString();
+               BOOST_CHECK(s == "(1, 12, 27)");
+            }
 
             {
                 Nektar::LibUtilities::NekPoint<int, 3> p1(1, 2, 3);
@@ -316,19 +316,21 @@ namespace Nektar
                 BOOST_CHECK(p8.z() == -1);
 
                 Nektar::LibUtilities::operator*<int, 3, 0>(2, p1);
-                //p1*2;
-                //NekPoint<int, 3> p9 = p1*(int)2;
-                //BOOST_CHECK(p9.x() == 2);
-                //BOOST_CHECK(p9.y() == 4);
-                //BOOST_CHECK(p9.z() == 6);
 
-                //NekPoint<int, 3> p10 = 2*p1;
-                //BOOST_CHECK(p9 == p10);
-
-                //NekPoint<int, 3> p11 = p2/2;
-                //BOOST_CHECK(p11.x() == 5);
-                //BOOST_CHECK(p11.y() == 10);
-                //BOOST_CHECK(p11.z() == 15);
+                // TODO - These tests don't compile in Linux.  Why?
+//                 p1*(int)2;
+//                 NekPoint<int, 3> p9 = p1*(int)2;
+//                 BOOST_CHECK(p9.x() == 2);
+//                 BOOST_CHECK(p9.y() == 4);
+//                 BOOST_CHECK(p9.z() == 6);
+//
+//                 NekPoint<int, 3> p10 = 2*p1;
+//                 BOOST_CHECK(p9 == p10);
+//
+//                 NekPoint<int, 3> p11 = p2/2;
+//                 BOOST_CHECK(p11.x() == 5);
+//                 BOOST_CHECK(p11.y() == 10);
+//                 BOOST_CHECK(p11.z() == 15);
             }
 
         }
@@ -369,6 +371,9 @@ namespace Nektar
 
 /**
     $Log: testNekPoint.cpp,v $
+    Revision 1.5  2006/08/25 03:04:57  bnelson
+    *** empty log message ***
+
     Revision 1.4  2006/08/25 01:36:25  bnelson
     no message
 

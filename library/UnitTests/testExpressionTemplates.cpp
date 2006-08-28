@@ -37,6 +37,7 @@
 
 #include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -100,6 +101,27 @@ namespace Nektar
             NekPoint<double, 3> p1(-(-p));
 
             BOOST_CHECK_EQUAL(p, p1);
+
+            NekMatrix<double, eFull> m(3,3);
+            NekMatrix<double, eFull> m1(-m);
+        }
+
+        void testNekMatrixMetadata()
+        {
+            using namespace Nektar;
+            using namespace Nektar::LibUtilities;
+
+            // Constant
+            NekMatrix<double> m(3,3);
+            Nektar::ConstantExpression<NekMatrix<double> > m_exp(m);
+            BOOST_CHECK_EQUAL(m.GetRows(), m_exp.GetMetadata().Rows);
+            BOOST_CHECK_EQUAL(m.GetColumns(), m_exp.GetMetadata().Columns);
+
+            // Unary
+            // TODO
+
+            // Binary
+            // TODO
         }
 
      }
@@ -107,6 +129,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.3  2006/08/27 02:14:09  bnelson
+    Added support for negating an expression.
+
     Revision 1.2  2006/08/25 01:37:34  bnelson
     no message
 

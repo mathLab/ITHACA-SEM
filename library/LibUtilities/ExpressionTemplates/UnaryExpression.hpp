@@ -50,42 +50,70 @@ namespace Nektar
     // parameter and returns a result of the same or different type.
     // A template parameter to allow a single OpType templated class to be
     // used for a variety of types.
-    template<template <typename> class OpType, typename ParameterType>
-    class UnaryExpression : public Expression<typename OpType<ParameterType>::ResultType>
+    // ParameterType - A type which follows the expression interface.
+    template<template <typename> class OpType, typename InputExpressionType>
+    class UnaryExpression
     {
         public:
             // Defined by the user who codes the operation.  They need to tell us what
             // the result type of the operation will be.
+            typedef typename InputExpressionType::ResultType ParameterType;
             typedef typename OpType<ParameterType>::ResultType ResultType;
+            typedef typename ExpressionMetadataChooser<ResultType>::MetadataType MetadataType;
 
         public:
-            explicit UnaryExpression(typename boost::call_traits<ParameterType>::const_reference value) :
-                m_value(value)
+            explicit UnaryExpression(const InputExpressionType& value) :
+                m_value(value),
+                m_metadata(MetadataType::UpdateForNegation(value.GetMetadata()))
             {
             }
 
-            UnaryExpression(const UnaryExpression<OpType, ParameterType>& rhs) :
-                m_value(rhs.m_value)
+            UnaryExpression(const UnaryExpression<OpType, InputExpressionType>& rhs) :
+                m_value(rhs.m_value),
+                m_metadata(rhs.m_metadata)
             {
+            }
+
+            virtual ~UnaryExpression() {}
+
+            // Two cases for the apply method.
+            // 1.  Result and Parameter types are the same.
+            // 2.  Result and Parameter types are different.
+            void Apply(typename boost::call_traits<ResultType>::reference result,
+                       typename boost::enable_if<boost::is_same<ResultType, ParameterType> >::type* = NULL) const
+            {
+                // Evaluate the expression up to this point.
+                m_value.Apply(result);
+
+                // Now apply the negation to the operation.
+                OpType<ParameterType>::Apply(result);
+            }
+
+//             void Apply(typename boost::call_traits<ResultType>::reference result,
+//                        typename boost::disable_if<boost::is_same<ResultType, ParameterType> >::type* = NULL)
+//             {
+//                 ParameterType temp;
+//                 m_value.Apply(temp);
+//
+//                 OpType<ParameterType>::Apply(result, temp);
+//             }
+
+            const MetadataType& GetMetadata() const
+            {
+                return m_metadata;
             }
 
         private:
-            virtual void DoApply(typename boost::call_traits<ResultType>::reference result) const
-            {
-                OpType<ParameterType>::Apply(m_value, result);
-            }
-
             UnaryExpression<OpType, ParameterType>& operator=(const UnaryExpression<OpType, ParameterType>& rhs);
 
-            // This should always be an expression, but it really doesn't matter
-            // as long as the interface is kept.
-            ParameterType m_value;
+            InputExpressionType m_value;
+            MetadataType m_metadata;
     };
 
-    template<typename ResultType>
-    UnaryExpression<NegateOp, ResultType> operator-(const Expression<ResultType>& rhs)
+    template<typename ExpressionType>
+    UnaryExpression<NegateOp, ExpressionType> operator-(const ExpressionType& rhs)
     {
-        return UnaryExpression<NegateOp, ResultType>(rhs);
+        return UnaryExpression<NegateOp, ExpressionType>(rhs);
     }
 
 
@@ -236,6 +264,9 @@ namespace Nektar
 
 /**
     $Log: UnaryExpression.hpp,v $
+    Revision 1.2  2006/08/27 02:11:30  bnelson
+    Added support for negating an expression.
+
     Revision 1.1  2006/08/25 01:33:48  bnelson
     no message
 

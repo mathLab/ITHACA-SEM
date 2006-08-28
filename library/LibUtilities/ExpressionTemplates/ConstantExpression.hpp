@@ -43,22 +43,25 @@
 
 namespace Nektar
 {
-    // Expressions can support constant, unary, and binary expressions.
-    template<typename ResultType>
-    class ConstantExpression : public Expression<ResultType>
+    /// \param ParameterType any type that does not implement the expression interface.
+    template<typename ParameterType>
+    class ConstantExpression
     {
         public:
-            typedef ResultType result_type;
+            typedef ParameterType ResultType;
+            typedef typename ExpressionMetadataChooser<ParameterType>::MetadataType MetadataType;
 
         public:
             /// \note The parameter must not be a temporary or strange behavior will result.
-            explicit inline ConstantExpression(typename boost::call_traits<ResultType>::const_reference value) :
-                m_value(value)
+            explicit ConstantExpression(typename boost::call_traits<ResultType>::const_reference value) :
+                m_value(value),
+                m_metadata(value)
             {
             }
 
-            inline ConstantExpression(const ConstantExpression& rhs) :
-                m_value(rhs.m_value)
+            ConstantExpression(const ConstantExpression<ParameterType>& rhs) :
+                m_value(rhs.m_value),
+                m_metadata(rhs.m_metadata)
             {
             }
 
@@ -67,21 +70,22 @@ namespace Nektar
             typename boost::call_traits<ResultType>::const_reference operator*() const { return m_value; }
             typename boost::call_traits<ResultType>::const_reference GetValue() const { return m_value; }
 
-        private:
-            void DoApply(typename boost::call_traits<ResultType>::reference result) const
+            void Apply(typename boost::call_traits<ResultType>::reference result) const
             {
                 result = m_value;
             }
 
-            ConstantExpression<ResultType>& operator=(const ConstantExpression<ResultType>& rhs);
-            typename boost::call_traits<ResultType>::const_reference m_value;
-    };
+            const MetadataType& GetMetadata() const
+            {
+                return m_metadata;
+            }
 
-    template<typename DataType>
-    class GetReturnType<ConstantExpression<DataType> >
-    {
-        public:
-            typedef typename ConstantExpression<DataType>::result_type result_type;
+        private:
+            ConstantExpression<ParameterType>& operator=(const ConstantExpression<ParameterType>& rhs);
+
+            typename boost::call_traits<ResultType>::const_reference m_value;
+            MetadataType m_metadata;
+
     };
 }
 
@@ -90,6 +94,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.2  2006/08/25 01:33:47  bnelson
+    no message
+
     Revision 1.1  2006/06/01 09:20:55  kirby
     *** empty log message ***
 

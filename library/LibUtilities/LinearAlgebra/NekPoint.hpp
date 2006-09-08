@@ -44,6 +44,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/call_traits.hpp>
+#include <boost/type_traits.hpp>
+#include <boost/mpl/or.hpp>
+#include <boost/mpl/logical.hpp>
 
 #include <math.h>
 #include <functional>
@@ -111,10 +114,15 @@ namespace Nektar
                 }
 
                 template<typename ExpressionType>
-                NekPoint(const ExpressionType& rhs)
+                NekPoint(const ExpressionType& rhs,
+                         typename boost::disable_if<
+                         boost::mpl::or_<
+                                        typename boost::mpl::or_<
+                                            typename boost::is_base_of<NekPoint<DataType, dim, space>, ExpressionType>::type,
+                                            typename boost::is_arithmetic<ExpressionType>::type>::type, 
+                                        typename boost::is_same<ExpressionType, DataType>::type
+                         > >::type* p0 = NULL)
                 {
-                    // TODO - Static assert that this type and the result type are the same.
-                    //BOOST_STATIC_ASSERT
                     rhs.Apply(*this);
                 }
 
@@ -555,6 +563,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.6  2006/08/28 02:40:21  bnelson
+    *** empty log message ***
+
     Revision 1.5  2006/08/25 01:27:04  bnelson
     Added construction and assignment from expressions.
 

@@ -57,11 +57,11 @@ namespace Nektar
     namespace LibUtilities
     {
 
-        template<typename DataType, unsigned int dim, unsigned int space = 0>
+        template<typename data_type, unsigned int dim, unsigned int space = 0>
         class NekPoint
         {
             public:
-                typedef DataType data_type;
+                typedef data_type DataType;
 
             public:
                 NekPoint()
@@ -321,10 +321,10 @@ namespace Nektar
                     }
                 }
 
-                UnaryExpression<NegateOp, ConstantExpression<NekPoint<DataType, dim, space> > > operator-() const
+                UnaryExpression<NegateOp, Expression<eCONSTANT, NekPoint<DataType, dim, space> > > operator-() const
                 {
-                    return UnaryExpression<NegateOp, ConstantExpression<NekPoint<DataType, dim, space> > >(
-                            ConstantExpression<NekPoint<DataType, dim, space> >(*this));
+                    return UnaryExpression<NegateOp, Expression<eCONSTANT, NekPoint<DataType, dim, space> > >(
+                            Expression<eCONSTANT, NekPoint<DataType, dim, space> >(*this));
                 }
 
                 NekPoint<DataType, dim, space>& operator+=(const NekPoint<DataType, dim, space>& rhs)
@@ -563,6 +563,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.7  2006/09/08 03:37:18  bnelson
+    Fixed an ambiguous case with the templated copy constructor.
+
     Revision 1.6  2006/08/28 02:40:21  bnelson
     *** empty log message ***
 

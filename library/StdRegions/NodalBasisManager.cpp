@@ -294,10 +294,90 @@ namespace Nektar
                 }//end symmetry6
             }//end npts
 
+            NodalPointReorder2d(rc);
+
             ASSERTL1((sum==rc->m_npts),"sum not equal to npts");
 
         }//end NodalPointExpand2D
 
+
+        void NodalBasisManager::NodalPointReorder2d(BaryNodeContainer * rc)
+        {
+            int i,j,istart,iend,sum=0;
+            const int numvert = 3;
+            const int numepoints = rc->m_porder-1;
+            double tmpdouble;
+
+            if(numepoints=0)
+            {
+                return;
+            }
+
+            // bubble sort for first edge
+            istart = numvert + sum;
+            iend = istart + numepoints;
+            for(i=istart;i<iend;++j)
+            {
+                for(j=istart;j<iend-1;++j)
+                {
+                    if(rc->m_xi[0][j+1]<rc->m_xi[0][j])
+                    {
+                        tmpdouble = rc->m_xi[0][j+1];
+                        rc->m_xi[0][j+1] = rc->m_xi[0][j];
+                        rc->m_xi[0][j] = tmpdouble;
+
+                        tmpdouble = rc->m_xi[1][j+1];
+                        rc->m_xi[1][j+1] = rc->m_xi[0][j];
+                        rc->m_xi[1][j] = tmpdouble;
+                    }
+                }
+            }
+            sum += numepoints;
+
+            // bubble sort for second edge
+            istart = numvert + sum;
+            iend = istart + numepoints;
+            for(i=istart;i<iend;++j)
+            {
+                for(j=istart;j<iend-1;++j)
+                {
+                    if(rc->m_xi[0][j+1]>rc->m_xi[0][j])
+                    {
+                        tmpdouble = rc->m_xi[0][j+1];
+                        rc->m_xi[0][j+1] = rc->m_xi[0][j];
+                        rc->m_xi[0][j] = tmpdouble;
+
+                        tmpdouble = rc->m_xi[1][j+1];
+                        rc->m_xi[1][j+1] = rc->m_xi[0][j];
+                        rc->m_xi[1][j] = tmpdouble;
+                    }
+                }
+            }
+            sum += numepoints;
+
+            // bubble sort for third edge
+            istart = numvert + sum;
+            iend = istart + numepoints;
+            for(i=istart;i<iend;++j)
+            {
+                for(j=istart;j<iend-1;++j)
+                {
+                    if(rc->m_xi[1][j+1]>rc->m_xi[1][j])
+                    {
+                        tmpdouble = rc->m_xi[0][j+1];
+                        rc->m_xi[0][j+1] = rc->m_xi[0][j];
+                        rc->m_xi[0][j] = tmpdouble;
+
+                        tmpdouble = rc->m_xi[1][j+1];
+                        rc->m_xi[1][j+1] = rc->m_xi[0][j];
+                        rc->m_xi[1][j] = tmpdouble;
+                    }
+                }
+            }
+            
+            return;
+
+        }        
 
         void NodalBasisManager::NodalPointExpand3D(BaryNodeContainer * rc)
         {
@@ -376,6 +456,9 @@ namespace Nektar
 
 /** 
 * $Log: NodalBasisManager.cpp,v $
+* Revision 1.3  2006/08/05 19:03:48  sherwin
+* Update to make the multiregions 2D expansion in connected regions work
+*
 * Revision 1.2  2006/06/01 13:43:19  kirby
 * *** empty log message ***
 *

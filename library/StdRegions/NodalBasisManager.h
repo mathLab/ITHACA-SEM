@@ -41,130 +41,124 @@
 
 namespace Nektar
 {
-  namespace StdRegions
-  {
-
-    static const int perm3A_2d[3][3] = {{0,1,2},{0,2,1},{2,0,1}};
-    static const int perm3B_2d[3][3] = {{0,1,2},{1,0,2},{1,2,0}};
-    static const int perm6_2d [6][3] = {{0,1,2},{0,2,1},{1,2,0},
-					{1,0,2},{2,0,1},{2,1,0}};
-
-    
-    class BaryNodeContainer
+    namespace StdRegions
     {
-    public:
-      /////////////////////////
-      // Container Data
-      /////////////////////////
-      NodalBasisType m_ntype;     //< Nodal Point Type
-      int m_dim;                  //< Dimension of point set
-      int m_porder;               //< Polynomial order of point set
-      /// Number of barycentric points (with no symmetry duplications)
-      int m_bnpts;               
-      /// Up to five possible symmetries (in 3D)
-      int *m_symm[(int) NekConstants::kMaxSym];  
-      /// Up to four barycentric coordinates (in 3D)
-      double * m_bpoints[NekConstants::kMaxBary];  
+        static const int perm3A_2d[3][3] = {{0,1,2},{2,0,1},{0,2,1}};
+        static const int perm3B_2d[3][3] = {{0,1,2},{1,0,2},{1,2,0}};
+        static const int perm6_2d [6][3] = {{0,1,2},{1,0,2},
+                                            {2,0,1},{2,1,0},
+                                            {0,2,1},{1,2,0}};
+		                        	    
+        class BaryNodeContainer
+        {
+        public:
+        /////////////////////////
+        // Container Data
+        /////////////////////////
+            NodalBasisType m_ntype;     //< Nodal Point Type
+            int m_dim;                  //< Dimension of point set
+            int m_porder;               //< Polynomial order of point set
+            /// Number of barycentric points (with no symmetry duplications)
+            int m_bnpts;               
+            /// Up to five possible symmetries (in 3D)
+            int *m_symm[(int) NekConstants::kMaxSym];  
+            /// Up to four barycentric coordinates (in 3D)
+            double * m_bpoints[NekConstants::kMaxBary];  
 
-      int m_npts;
-      double * m_xi[NekConstants::kMaxDim];
+            int m_npts;
+            double * m_xi[NekConstants::kMaxDim];
 
-      /////////////////////////////
-      // Container Initialization
-      // and destruction
-      ////////////////////////////
+            /////////////////////////////
+            // Container Initialization
+            // and destruction
+            ////////////////////////////
 
-      BaryNodeContainer():
-	m_dim(0),
-	m_porder(0),
-	m_npts(0)
-      {
-	int i;
-	for(i=0;i<NekConstants::kMaxSym;i++)
-	{
-	  m_symm[i] = (int*) NULL;
-	}
+            BaryNodeContainer(): m_dim(0), m_porder(0), m_npts(0)
+            {
+ 	            int i;
+	            for(i=0;i<NekConstants::kMaxSym;i++)
+	            {
+	                m_symm[i] = (int*) NULL;
+	            }
 
-	for(i=0;i<NekConstants::kMaxBary;i++)
-	{
-	  m_bpoints[i] = (double*)NULL;
-	}
+            	for(i=0;i<NekConstants::kMaxBary;i++)
+	            {
+	                m_bpoints[i] = (double*)NULL;
+            	}
 
-	for(i=0;i<NekConstants::kMaxDim;i++)
-	{
-	  m_xi[i] = (double*)NULL;
-	}
-      }
+            	for(i=0;i<NekConstants::kMaxDim;i++)
+	            {
+	                m_xi[i] = (double*)NULL;
+            	}
+            }
 
-      ~BaryNodeContainer()
-      {
-	int i;
-	for(i=0;i<NekConstants::kMaxSym;i++)
-	{
-	  if(m_symm[i])
-	  {
-	    delete[] m_symm[i];
-	  }
-	}
+            ~BaryNodeContainer()
+            {
+	            int i;
+	            for(i=0;i<NekConstants::kMaxSym;i++)
+	            {
+	                if(m_symm[i])
+                	{
+                	    delete[] m_symm[i];
+	                }
+	            }
 
-	for(i=0;i<NekConstants::kMaxBary;i++)
-	{
-	  if(m_bpoints[i])
-	  {
-	    delete[] m_bpoints[i];
-	  }
-	}
+            	for(i=0;i<NekConstants::kMaxBary;i++)
+            	{
+	                if(m_bpoints[i])
+                    {
+            	        delete[] m_bpoints[i];
+	                }
+            	}
 
-	for(i=0;i<NekConstants::kMaxDim;i++)
-	{
-	  if(m_xi[i])
-	  {
-	    delete[] m_xi[i];
-	  }
-	}
-      }
+            	for(i=0;i<NekConstants::kMaxDim;i++)
+	            {
+	                if(m_xi[i])
+	                {
+    	                delete[] m_xi[i];
+                    }
+              	}
+            }
 
-      void set_ntype(NodalBasisType ntype)
-      {
-	m_ntype = ntype;
-      }
+            void set_ntype(NodalBasisType ntype)
+            {
+	            m_ntype = ntype;
+            }
 
-      //Overloaded Operators
-      friend bool operator  == (const BaryNodeContainer *x,
-				const BaryNodeContainer &y);
-      friend bool operator  == (const BaryNodeContainer& x,
-				const BaryNodeContainer *y);
-      friend bool operator  != (const BaryNodeContainer* x,
-				const BaryNodeContainer &y);
-      friend bool operator  != (const BaryNodeContainer& x,
-				const BaryNodeContainer *y);
-    };
+            //Overloaded Operators
+            friend bool operator  == (const BaryNodeContainer *x, const BaryNodeContainer &y);
+            friend bool operator  == (const BaryNodeContainer& x, const BaryNodeContainer *y);
+            friend bool operator  != (const BaryNodeContainer* x, const BaryNodeContainer &y);
+            friend bool operator  != (const BaryNodeContainer& x, const BaryNodeContainer *y);
+        };
 
 
-    class NodalBasisManager: public PolyManager
-    {
-    public:
-      NodalBasisManager();
-      ~NodalBasisManager();
+        class NodalBasisManager: public PolyManager
+        {
+            public:
+            NodalBasisManager();
+            ~NodalBasisManager();
+            
+            int GetNodePoints(const NodalBasisType ntype, const int order, const double* &x, 
+                const double* &y, const double* &z);
 
-      int GetNodePoints(const NodalBasisType ntype, const int order,
-			const double* &x, const double* &y, const double* &z);
+            protected:
 
-    protected:
-
-      /// Functions used by constructor to read nodal points From files
-      void NodalFileRead2D(std::FILE *fp, BaryNodeContainer * rc);
-      void NodalFileRead3D(std::FILE *fp, BaryNodeContainer * rc);
+            /// Functions used by constructor to read nodal points From files
+            void NodalFileRead2D(std::FILE *fp, BaryNodeContainer * rc);
+            void NodalFileRead3D(std::FILE *fp, BaryNodeContainer * rc);
       
-      /// Functions used to expand barycenter points to standard elements
-      void NodalPointExpand2D(BaryNodeContainer * rc);
-      void NodalPointExpand3D(BaryNodeContainer * rc);
+            /// Functions used to expand barycenter points to standard elements
+            void NodalPointExpand2D(BaryNodeContainer * rc);
+            void NodalPointExpand3D(BaryNodeContainer * rc);
 
-    private:
-      std::vector<BaryNodeContainer*> *m_nodecontainer;
-    };
+            /// Functions used to reorder points to a prescribed vertex/edge/interior ordering 
+            void NodalBasisManager::NodalPointReorder2d(BaryNodeContainer * rc);
 
-  } //end of namespace
+            private:
+            std::vector<BaryNodeContainer*> *m_nodecontainer;
+        };
+    } //end of namespace
 } //end of namespace
 
 #endif //NODALBASISMANAGER_H
@@ -172,6 +166,9 @@ namespace Nektar
 
 /**
  * $Log: NodalBasisManager.h,v $
+ * Revision 1.1  2006/05/04 18:58:30  kirby
+ * *** empty log message ***
+ *
  * Revision 1.9  2006/03/12 14:20:44  sherwin
  *
  * First compiling version of SpatialDomains and associated modifications

@@ -308,7 +308,7 @@ namespace Nektar
             const int numepoints = rc->m_porder-1;
             double tmpdouble;
 
-            if(numepoints=0)
+            if(numepoints==0)
             {
                 return;
             }
@@ -456,6 +456,9 @@ namespace Nektar
 
 /** 
 * $Log: NodalBasisManager.cpp,v $
+* Revision 1.4  2006/09/10 02:20:52  kirby
+* *** empty log message ***
+*
 * Revision 1.3  2006/08/05 19:03:48  sherwin
 * Update to make the multiregions 2D expansion in connected regions work
 *

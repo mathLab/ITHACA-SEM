@@ -43,29 +43,34 @@
 
 namespace Nektar
 {
-    /// \param ParameterType any type that does not implement the expression interface.
-    template<typename ParameterType>
-    class ConstantExpression
+    template<typename DataType>
+    class ConstantExpressionPolicy
+    {
+    };
+
+    template<typename DataType>
+    class Expression<ConstantExpressionPolicy<DataType> >
     {
         public:
-            typedef ParameterType ResultType;
-            typedef typename ExpressionMetadataChooser<ParameterType>::MetadataType MetadataType;
+            typedef DataType ResultType;
+            typedef typename ExpressionMetadataChooser<DataType>::MetadataType MetadataType;
+            typedef Expression<ConstantExpressionPolicy<DataType> > ThisType;
 
         public:
             /// \note The parameter must not be a temporary or strange behavior will result.
-            explicit ConstantExpression(typename boost::call_traits<ResultType>::const_reference value) :
+            explicit Expression(typename boost::call_traits<ResultType>::const_reference value) :
                 m_value(value),
                 m_metadata(value)
             {
             }
 
-            ConstantExpression(const ConstantExpression<ParameterType>& rhs) :
+            Expression(const ThisType& rhs) :
                 m_value(rhs.m_value),
                 m_metadata(rhs.m_metadata)
             {
             }
 
-            inline ~ConstantExpression() {}
+            ~Expression() {}
 
             typename boost::call_traits<ResultType>::const_reference operator*() const { return m_value; }
             typename boost::call_traits<ResultType>::const_reference GetValue() const { return m_value; }
@@ -75,17 +80,22 @@ namespace Nektar
                 result = m_value;
             }
 
+            template<typename OpType>
+            void ApplyEqual(typename boost::call_traits<ResultType>::reference result) const
+            {
+                OpType::ApplyEqual(result, m_value);
+            }
+
             const MetadataType& GetMetadata() const
             {
                 return m_metadata;
             }
 
         private:
-            ConstantExpression<ParameterType>& operator=(const ConstantExpression<ParameterType>& rhs);
+            ThisType& operator=(const ThisType& rhs);
 
             typename boost::call_traits<ResultType>::const_reference m_value;
             MetadataType m_metadata;
-
     };
 }
 
@@ -94,6 +104,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.3  2006/08/28 02:39:53  bnelson
+    *** empty log message ***
+
     Revision 1.2  2006/08/25 01:33:47  bnelson
     no message
 

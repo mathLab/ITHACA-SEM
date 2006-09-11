@@ -45,15 +45,23 @@ namespace Nektar
 {
 
     /// \brief An expression to negate an object of ParameterType.
+    /// Parameter type is the actual object, not the expression that may lead to it.
     template<typename ParameterType>
     class NegateOp
     {
         public:
             typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
+            typedef ParameterType InputType;
+            typedef typename ExpressionMetadataChooser<ParameterType>::MetadataType MetadataType;
 
             static void Apply(typename boost::call_traits<ParameterType>::reference result)
             {
                 result.operator_negate();
+            }
+
+            static MetadataType CreateUnaryMetadata(const MetadataType& rhs)
+            {
+                return MetadataType::CreateForNegation(rhs);
             }
 
         private:
@@ -82,6 +90,9 @@ namespace Nektar
 
 /**
     $Log: NegateOp.hpp,v $
+    Revision 1.3  2006/08/28 02:39:53  bnelson
+    *** empty log message ***
+
     Revision 1.2  2006/08/27 02:11:29  bnelson
     Added support for negating an expression.
 

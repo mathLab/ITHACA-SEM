@@ -46,47 +46,77 @@
 
 namespace Nektar
 {
+    //template<typename InputExpressionPolicyType, typename RhsExpressionType, typename ResultType, template <typename, typename> class OpType>
+    //void EvaluateExpression(typename boost::call_traits<LhsExpressionType>::const_reference lhs, 
+    //                                typename boost::call_traits<RhsExpressionType>::const_reference rhs,
+    //                                typename boost::call_traits<ResultType>::reference result, 
+    //                                typename boost::enable_if<boost::is_same<typename LhsExpressionType::ResultType, ResultType> >::type* f0 = NULL,
+    //                                typename boost::enable_if<boost::is_same<typename RhsExpressionType::ResultType, ResultType> >::type* f1 = NULL)
+    //{
+    //}
+
+    template<typename InputExpressionPolicyType, template <typename> class OpType>
+    class UnaryExpressionPolicy
+    {
+    };
+
     // OpType - A class with a statis method called Apply that takes a single
     // parameter and returns a result of the same or different type.
     // A template parameter to allow a single OpType templated class to be
     // used for a variety of types.
     // ParameterType - A type which follows the expression interface.
-    template<template <typename> class OpType, typename InputExpressionType>
-    class UnaryExpression
+    //template<template <typename> class OpType, typename InputExpressionType>
+    //class UnaryExpression
+    //template<unsigned int NumberOfArguments, typename Argument1Type, typename Argument2Type, template <typename> class ArgumentUnaryOpType, template <typename, typename> class BinaryOpType, typename OpType>
+    //class Expression<1, Expression<NumberOfArguments, Argument1Type, Argument2Type, ArgumentUnaryOpType, BinaryOpType>, void, OpType>
+    template<typename InputExpressionPolicyType, template <typename> class OpType>
+    class Expression<UnaryExpressionPolicy<typename Expression<InputExpressionPolicyType>, OpType> >
     {
         public:
             // Defined by the user who codes the operation.  They need to tell us what
             // the result type of the operation will be.
-            typedef typename InputExpressionType::ResultType ParameterType;
-            typedef typename OpType<ParameterType>::ResultType ResultType;
+            typedef typename Expression<InputExpressionPolicyType> InputExpressionType;
+            typedef typename InputExpressionType::ResultType InputExpressionResultType;
+            typedef typename OpType<InputExpressionResultType>::ResultType ResultType;
+
+            typedef typename ExpressionMetadataChooser<InputExpressionResultType>::MetadataType InputExpressionMetadataType;
             typedef typename ExpressionMetadataChooser<ResultType>::MetadataType MetadataType;
+            
+            typedef Expression<UnaryExpressionPolicy<typename Expression<InputExpressionPolicyType>, OpType> > ThisType;
 
         public:
-            explicit UnaryExpression(const InputExpressionType& value) :
+            explicit Expression(const InputExpressionType& value) :
                 m_value(value),
-                m_metadata(MetadataType::UpdateForNegation(value.GetMetadata()))
+                m_metadata(OpType<InputExpressionResultType>::CreateUnaryMetadata(value.GetMetadata()))
             {
             }
 
-            UnaryExpression(const UnaryExpression<OpType, InputExpressionType>& rhs) :
+            Expression(const ThisType& rhs) :
                 m_value(rhs.m_value),
                 m_metadata(rhs.m_metadata)
             {
             }
 
-            virtual ~UnaryExpression() {}
+            virtual ~Expression() {}
 
             // Two cases for the apply method.
             // 1.  Result and Parameter types are the same.
             // 2.  Result and Parameter types are different.
             void Apply(typename boost::call_traits<ResultType>::reference result,
-                       typename boost::enable_if<boost::is_same<ResultType, ParameterType> >::type* = NULL) const
+                       typename boost::enable_if<boost::is_same<ResultType, InputExpressionResultType> >::type* = NULL) const
             {
                 // Evaluate the expression up to this point.
                 m_value.Apply(result);
 
                 // Now apply the negation to the operation.
-                OpType<ParameterType>::Apply(result);
+                OpType<ResultType>::Apply(result);
+            }
+
+            template<typename IncomingOpType>
+            void ApplyEqual(typename boost::call_traits<ResultType>::reference result) const
+            {
+                m_value.ApplyEqual<IncomingOpType>(result);
+                OpType<ResultType>::Apply(result);
             }
 
 //             void Apply(typename boost::call_traits<ResultType>::reference result,
@@ -104,166 +134,26 @@ namespace Nektar
             }
 
         private:
-            UnaryExpression<OpType, ParameterType>& operator=(const UnaryExpression<OpType, ParameterType>& rhs);
+            ThisType& operator=(const ThisType& rhs);
 
             InputExpressionType m_value;
             MetadataType m_metadata;
     };
 
-    template<typename ExpressionType>
-    UnaryExpression<NegateOp, ExpressionType> operator-(const ExpressionType& rhs)
+    template<typename InputExpressionPolicyType>
+    Expression<UnaryExpressionPolicy<typename Expression<InputExpressionPolicyType>, NegateOp> > operator-(const Expression<InputExpressionPolicyType>& rhs)
     {
-        return UnaryExpression<NegateOp, ExpressionType>(rhs);
+        return Expression<UnaryExpressionPolicy<typename Expression<InputExpressionPolicyType>,NegateOp> >(rhs);
     }
-
-
-    //// To evaluate an expression, I need to know if the lhs or rhs of the binary tree
-    //// matches the overall result type.  This can be done with enable_if and disable_if,
-    //// but for some reason the work for global functions but not member functions.
-    //// Therefore, these global functions exist solely so the binary functions can forward
-    //// the evaluation.
-    //
-    //template<template <typename, typename> class OpType, typename LhsType, typename RhsType>
-    //class BinaryExpression
-    //{
-    //
-    //};
-
-    //template<template <typename, typename> class OpType, typename LhsType, typename RhsType>
-    //class BinaryExpression<OpType, ConstantExpression<LhsType>, ConstantExpression<RhsType> >
-    //{
-    //    public:
-    //        typedef typename GetReturnType<LhsType>::result_type lhs_result_type;
-    //        typedef typename GetReturnType<RhsType>::result_type rhs_result_type;
-
-    //        typedef typename OpType<lhs_result_type, rhs_result_type>::result_type result_type;
-
-    //    public:
-    //        BinaryExpression(const ConstantExpression<LhsType>& lhs, const ConstantExpression<RhsType>& rhs) :
-    //            m_lhs(lhs),
-    //            m_rhs(rhs)
-    //        {
-    //        }
-
-    //        BinaryExpression(const BinaryExpression& rhs) :
-    //            m_lhs(rhs.m_lhs),
-    //            m_rhs(rhs.m_rhs)
-    //        {
-    //        }
-
-    //        ~BinaryExpression() {}
-
-    //        BinaryExpression& operator=(const BinaryExpression& rhs)
-    //        {
-    //            m_lhs = rhs.m_lhs;
-    //            m_rhs = rhs.m_rhs;
-    //        }
-
-    //        void apply(typename boost::call_traits<result_type>::reference result) const
-    //        {
-    //            OpType<lhs_result_type, rhs_result_type>::apply(m_lhs.getValue(), m_rhs.getValue(), result);
-    //        }
-
-    //    private:
-    //        ConstantExpression<LhsType> m_lhs;
-    //        ConstantExpression<RhsType> m_rhs;
-    //};
-
-    //// Case 1 - The lhs does match the result type.
-    //template<template <typename, typename> class OpType, typename LhsType, typename RhsType, typename ResultType>
-    //void evaluate_expression(typename boost::call_traits<LhsType>::param_type lhs,
-    //                         typename boost::call_traits<RhsType>::param_type rhs,
-    //                         typename boost::call_traits<ResultType>::reference result,
-    //                         typename boost::enable_if<boost::is_same<typename GetReturnType<LhsType>::result_type, ResultType> >::type* v = 0)
-    //{
-    //    typedef typename GetReturnType<LhsType>::result_type lhs_result_type;
-    //    typedef typename GetReturnType<RhsType>::result_type rhs_result_type;
-
-    //    lhs.apply(result);
-    //    OpType<lhs_result_type, rhs_result_type>::apply(result, rhs.getValue(), result);
-    //}
-
-    //template<template <typename, typename> class OpType, typename LhsType, typename RhsType, typename ResultType>
-    //void evaluate_expression(typename boost::call_traits<LhsType>::param_type lhs,
-    //                         typename boost::call_traits<RhsType>::param_type rhs,
-    //                         typename boost::call_traits<ResultType>::reference result,
-    //                         typename boost::disable_if<boost::is_same<typename GetReturnType<LhsType>::result_type, ResultType> >::type* v = 0)
-    //{
-    //    typedef typename GetReturnType<LhsType>::result_type LhsResultType;
-    //    typedef typename GetReturnType<RhsType>::result_type RhsResultType;
-
-    //    LhsResultType temp;
-    //    lhs.apply(temp);
-    //    OpType<LhsResultType, RhsResultType>::apply(temp, rhs.getValue(), result);
-    //}
-
-    //template<template <typename, typename> class OpType, typename LhsType, typename RhsDataType>
-    //class BinaryExpression<OpType, LhsType, ConstantExpression<RhsDataType> >
-    //{
-    //    public:
-    //        typedef ConstantExpression<RhsDataType> RhsType;
-    //        typedef typename GetReturnType<LhsType>::result_type LhsResultType;
-    //        typedef typename GetReturnType<RhsType>::result_type RhsResultType;
-
-    //        typedef typename OpType<LhsResultType, RhsResultType>::result_type ResultType;
-
-    //    public:
-    //        BinaryExpression(typename boost::call_traits<LhsType>::param_type lhs,
-    //                         typename boost::call_traits<RhsType>::param_type rhs) :
-    //            m_lhs(lhs),
-    //            m_rhs(rhs)
-    //        {
-    //        }
-
-    //        BinaryExpression(const BinaryExpression& rhs) :
-    //            m_lhs(rhs.m_lhs),
-    //            m_rhs(rhs.m_rhs)
-    //        {
-    //        }
-
-    //        ~BinaryExpression() {}
-
-    //        BinaryExpression& operator=(const BinaryExpression& rhs)
-    //        {
-    //            m_lhs = rhs.m_lhs;
-    //            m_rhs = rhs.m_rhs;
-    //        }
-
-    //        // Case 1 - The return type of the lhs is the same as the result, so we can accumulate.
-    //        void apply(typename boost::call_traits<ResultType>::reference result) const
-    //        {
-    //            evaluate_expression<OpType, LhsType, RhsType, ResultType>(m_lhs, m_rhs, result);
-    //        }
-
-    //        //// Case 2 - rhs result type is the same as the final result type and the lhs is not.
-    //        //void apply(typename boost::call_traits<result_type>::reference result,
-    //        //    typename boost::disable_if<boost::is_same<int, int> >::type* param1 = 0,
-    //        //    double t = 0) const
-    //        //{
-    //        //    // This assumes the the result type of the lhs is the same as the result type of
-    //        //    // the rhs.
-    //        //    //m_lhs.apply(result);
-    //        //    //m_rhs.apply(result);
-    //        //    //OpType<typename LhsType::result_type, RhsType>::apply(result, m_rhs.getValue(), result);
-    //        //}
-
-    //    private:
-    //        LhsType m_lhs;
-    //        RhsType m_rhs;
-    //};
-
-    //template<template <typename, typename> class OpType, typename LhsType, typename RhsType>
-    //class GetReturnType<BinaryExpression<OpType, LhsType, RhsType> >
-    //{
-    //    public:
-    //        typedef typename BinaryExpression<OpType, LhsType, RhsType>::result_type result_type;
-    //};
 }
 
 #endif // NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_HPP
 
 /**
     $Log: UnaryExpression.hpp,v $
+    Revision 1.3  2006/08/28 02:39:53  bnelson
+    *** empty log message ***
+
     Revision 1.2  2006/08/27 02:11:30  bnelson
     Added support for negating an expression.
 

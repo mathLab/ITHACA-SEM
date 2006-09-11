@@ -53,6 +53,13 @@ namespace Nektar
         eMULTIPLICATION
     };
 
+    enum ExpressionType
+    {
+        eCONSTANT,
+        eUNARY,
+        eBINARY
+    };
+
     template<typename DataType>
     class DefaultExpressionMetadata
     {
@@ -61,7 +68,7 @@ namespace Nektar
             {
             }
 
-            static DefaultExpressionMetadata UpdateForNegation(const DefaultExpressionMetadata& rhs)
+            static DefaultExpressionMetadata CreateForNegation(const DefaultExpressionMetadata& rhs)
             {
                 return DefaultExpressionMetadata(rhs);
             }
@@ -82,6 +89,22 @@ namespace Nektar
         public:
             typedef typename Type::ExpressionMetadataType MetadataType;
     };
+
+    //Expression<0, int>;
+    //Expression<1, int, NegateOp>;
+    //Expression<2, int, int, MultiplyOp>
+
+    //template<typename ArgumentType>
+    //class UnaryNoOp {};
+    //template<typename LhsType, typename RhsType>
+    //class BinaryNoOp {};
+
+
+    //template<unsigned int NumberOfArguments, typename Argument1Type=void, typename Argument2Type=void, template <typename> class UnaryOpType=UnaryNoOp, template <typename, typename> class BinaryOpType = BinaryNoOp>
+    //class Expression;
+
+    template<typename ExpressionPolicy>
+    class Expression;
 
 //     template<typename ParameterType, unsigned int numberOfParameters, typename ParamType2 = void>
 //     class Expression;
@@ -142,6 +165,9 @@ namespace Nektar
 
 /**
     $Log: Expression.hpp,v $
+    Revision 1.2  2006/08/28 02:39:53  bnelson
+    *** empty log message ***
+
     Revision 1.1  2006/08/25 01:33:47  bnelson
     no message
 

@@ -47,6 +47,7 @@
 #include <boost/type_traits.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/logical.hpp>
+#include <boost/mpl/assert.hpp>
 
 #include <math.h>
 #include <functional>
@@ -113,16 +114,10 @@ namespace Nektar
                     }
                 }
 
-                template<typename ExpressionType>
-                NekPoint(const ExpressionType& rhs,
-                         typename boost::disable_if<
-                         boost::mpl::or_<
-                                        typename boost::mpl::or_<
-                                            typename boost::is_base_of<NekPoint<DataType, dim, space>, ExpressionType>::type,
-                                            typename boost::is_arithmetic<ExpressionType>::type>::type, 
-                                        typename boost::is_same<ExpressionType, DataType>::type
-                         > >::type* p0 = NULL)
+                template<typename ExpressionPolicyType>
+                NekPoint(const Expression<ExpressionPolicyType>& rhs)
                 {
+                    BOOST_MPL_ASSERT(( boost::is_same<Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
                     rhs.Apply(*this);
                 }
 
@@ -138,9 +133,10 @@ namespace Nektar
                 {
                 }
 
-                template<typename ExpressionType>
-                NekPoint<DataType, dim, space>& operator=(const ExpressionType& rhs)
+                template<typename ExpressionPolicyType>
+                NekPoint<DataType, dim, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
                 {
+                    BOOST_MPL_ASSERT(( boost::is_same<Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
                     rhs.Apply(*this);
                     return *this;
                 }
@@ -321,11 +317,12 @@ namespace Nektar
                     }
                 }
 
-                UnaryExpression<NegateOp, Expression<eCONSTANT, NekPoint<DataType, dim, space> > > operator-() const
+                Expression<UnaryExpressionPolicy< Expression<ConstantExpressionPolicy<NekPoint<DataType, dim, space> > >, NegateOp > > operator-() const
                 {
-                    return UnaryExpression<NegateOp, Expression<eCONSTANT, NekPoint<DataType, dim, space> > >(
-                            Expression<eCONSTANT, NekPoint<DataType, dim, space> >(*this));
+                    return Expression<UnaryExpressionPolicy< Expression<ConstantExpressionPolicy<NekPoint<DataType, dim, space> > >, NegateOp > >(
+                            Expression<ConstantExpressionPolicy<NekPoint<DataType, dim, space> > >(*this));
                 }
+
 
                 NekPoint<DataType, dim, space>& operator+=(const NekPoint<DataType, dim, space>& rhs)
                 {
@@ -563,6 +560,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.8  2006/09/10 20:40:24  bnelson
+    Changed DataType to data_type
+
     Revision 1.7  2006/09/08 03:37:18  bnelson
     Fixed an ambiguous case with the templated copy constructor.
 

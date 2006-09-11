@@ -11,13 +11,15 @@ SET(LibUtilityHeaders
 ./Foundations/Graph.h
 ./Polylib/Polylib.h
 ./LinearAlgebra/NekMatrix.hpp
+./LinearAlgebra/NekMatrixMetadata.hpp
 ./LinearAlgebra/NekVector.hpp
 ./LinearAlgebra/NekPoint.hpp
-./ExpressionTemplates/ExpressionTemplateOperators.hpp
+./ExpressionTemplates/ArithmeticConcepts.hpp
 ./ExpressionTemplates/BinaryExpressionTraits.hpp
 ./ExpressionTemplates/BinaryExpression.hpp
+./ExpressionTemplates/BinaryExpressionOperators.hpp
+./ExpressionTemplates/ExpressionTemplateOperators.hpp
 ./ExpressionTemplates/ConstantExpression.hpp
-./ExpressionTemplates/ArithmeticConcepts.hpp
 ./ExpressionTemplates/Expression.hpp
 ./ExpressionTemplates/ExpressionReturnType.hpp
 ./ExpressionTemplates/ExpressionTemplates.hpp

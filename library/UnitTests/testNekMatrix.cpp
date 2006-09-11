@@ -202,6 +202,32 @@ namespace Nektar
                 BOOST_CHECK(result[2] == 50);
             }
 
+            // Negation
+            {
+                int buf[] = {1, 2, 3,
+                                       4, 5, 6,
+                                       7, 8, 9};
+
+                int neg_buf[] = {-1, -2, -3,
+                                       -4, -5, -6,
+                                       -7, -8, -9};
+
+                NekMatrix<int> m1(3,3, buf);
+                NekMatrix<int> m2 = -m1;
+                NekMatrix<int> m3 = -m2;
+
+                BOOST_CHECK_EQUAL(m1, m3);
+
+                NekMatrix<int> negated(3,3,neg_buf);
+                BOOST_CHECK_EQUAL(m2, negated);
+
+                NekMatrix<int> m4 = -(-m1);
+                BOOST_CHECK_EQUAL(m4, m1);
+
+                NekMatrix<int> m5 = -(-(-(-(-(-(-(-(-m1))))))));
+                BOOST_CHECK_EQUAL(m5, negated);
+            }
+
             // Transpose
 
             // Determinant.
@@ -232,18 +258,18 @@ namespace Nektar
             NekMatrix<unsigned int> result1 = full+diag;
             NekMatrix<unsigned int> result2 = diag+full;
 
-            BOOST_CHECK(result1 == result2);
-            BOOST_CHECK(result1(0,0) == 7);
-            BOOST_CHECK(result1(0,1) == 2);
-            BOOST_CHECK(result1(0,2) == 3);
+            BOOST_CHECK_EQUAL(result1, result2);
+            BOOST_CHECK_EQUAL(result1(0,0),7);
+            BOOST_CHECK_EQUAL(result1(0,1),2);
+            BOOST_CHECK_EQUAL(result1(0,2),3);
 
-            BOOST_CHECK(result1(1,0) == 4);
-            BOOST_CHECK(result1(1,1) == 17);
-            BOOST_CHECK(result1(1,2) == 6);
+            BOOST_CHECK_EQUAL(result1(1,0),4);
+            BOOST_CHECK_EQUAL(result1(1,1),17);
+            BOOST_CHECK_EQUAL(result1(1,2),6);
 
-            BOOST_CHECK(result1(2,0) == 7);
-            BOOST_CHECK(result1(2,1) == 8);
-            BOOST_CHECK(result1(2,2) == 14);
+            BOOST_CHECK_EQUAL(result1(2,0),7);
+            BOOST_CHECK_EQUAL(result1(2,1),8);
+            BOOST_CHECK_EQUAL(result1(2,2),14);
 
         }
 
@@ -298,6 +324,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.14  2006/08/25 01:38:59  bnelson
+    no message
+
     Revision 1.13  2006/08/25 01:36:25  bnelson
     no message
 

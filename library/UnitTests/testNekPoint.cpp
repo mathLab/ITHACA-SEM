@@ -75,6 +75,21 @@ namespace Nektar
             return !(lhs == rhs);
         }
 
+        class TestPoint : public Nektar::LibUtilities::NekPoint<double, 3, 0>
+        {
+            public:
+                TestPoint() {}
+                TestPoint(const TestPoint& rhs) :
+                Nektar::LibUtilities::NekPoint<double, 3, 0>(rhs)
+                {
+                }
+        };
+
+        void test()
+        {
+            TestPoint p;
+            TestPoint p1(p);
+        }
 
         void testNekPointConstruction()
         {
@@ -318,19 +333,19 @@ namespace Nektar
                 Nektar::LibUtilities::operator*<int, 3, 0>(2, p1);
 
                 // TODO - These tests don't compile in Linux.  Why?
-//                 p1*(int)2;
-//                 NekPoint<int, 3> p9 = p1*(int)2;
-//                 BOOST_CHECK(p9.x() == 2);
-//                 BOOST_CHECK(p9.y() == 4);
-//                 BOOST_CHECK(p9.z() == 6);
-//
-//                 NekPoint<int, 3> p10 = 2*p1;
-//                 BOOST_CHECK(p9 == p10);
-//
-//                 NekPoint<int, 3> p11 = p2/2;
-//                 BOOST_CHECK(p11.x() == 5);
-//                 BOOST_CHECK(p11.y() == 10);
-//                 BOOST_CHECK(p11.z() == 15);
+                 p1*(int)2;
+                 NekPoint<int, 3> p9 = p1*(int)2;
+                 BOOST_CHECK(p9.x() == 2);
+                 BOOST_CHECK(p9.y() == 4);
+                 BOOST_CHECK(p9.z() == 6);
+
+                 NekPoint<int, 3> p10 = 2*p1;
+                 BOOST_CHECK(p9 == p10);
+
+                 NekPoint<int, 3> p11 = p2/2;
+                 BOOST_CHECK(p11.x() == 5);
+                 BOOST_CHECK(p11.y() == 10);
+                 BOOST_CHECK(p11.z() == 15);
             }
 
         }
@@ -345,8 +360,8 @@ namespace Nektar
             BOOST_CHECK(p1.dimension() == 3);
             BOOST_CHECK(p2.dimension() == 100);
 
-            NekPoint<double, 2> source(0,0);
-            NekPoint<double, 2> dest(1,1);
+            NekPoint<double, 2> source(0.0, 0.0);
+            NekPoint<double, 2> dest(1.0, 1.0);
 
             BOOST_CHECK(distanceBetween(source, dest) == sqrt(2.0));
             BOOST_CHECK(distanceBetween(dest, source) == sqrt(2.0));
@@ -371,6 +386,9 @@ namespace Nektar
 
 /**
     $Log: testNekPoint.cpp,v $
+    Revision 1.6  2006/08/28 02:40:51  bnelson
+    *** empty log message ***
+
     Revision 1.5  2006/08/25 03:04:57  bnelson
     *** empty log message ***
 

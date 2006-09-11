@@ -68,12 +68,16 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testConstantExpressions), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUnaryExpressions), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixMetadata), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBinaryExpressions), 0);
 
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.10  2006/08/28 02:40:50  bnelson
+    *** empty log message ***
+
     Revision 1.9  2006/08/25 01:38:58  bnelson
     no message
 

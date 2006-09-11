@@ -35,7 +35,8 @@
 
 #include <UnitTests/testExpressionTemplates.h>
 
-#include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
+
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
@@ -59,11 +60,11 @@ namespace Nektar
         void testConstantExpressions()
         {
             {
-                ConstantExpression<int> e1(7);
+                Expression<ConstantExpressionPolicy<int> > e1(7);
                 BOOST_CHECK_EQUAL(*e1, 7);
                 BOOST_CHECK_EQUAL(e1.GetValue(), 7);
 
-                ConstantExpression<int> e2(e1);
+                Expression<ConstantExpressionPolicy<int> > e2(e1);
                 BOOST_CHECK_EQUAL(*e2, *e1);
             }
 
@@ -72,7 +73,7 @@ namespace Nektar
             typedef NekPoint<unsigned int, 3> Point;
             {
                 Point p(1,2,3);
-                Nektar::ConstantExpression<Point> e1(p);
+                Nektar::Expression<ConstantExpressionPolicy<Point> > e1(p);
 
                 Point p1(e1);
                 BOOST_CHECK_EQUAL(p, p1);
@@ -89,7 +90,7 @@ namespace Nektar
             {
                 // TODO - Find a way to prevent temporaries (meaning that the parameter to
                 // this call is temporary and that could cause problems).
-                Nektar::ConstantExpression<Point> e2(Point(1,2,3));
+                Nektar::Expression<ConstantExpressionPolicy<Point> > e2(Point(1,2,3));
             }
         }
 
@@ -113,22 +114,73 @@ namespace Nektar
 
             // Constant
             NekMatrix<double> m(3,3);
-            Nektar::ConstantExpression<NekMatrix<double> > m_exp(m);
+            Nektar::Expression<ConstantExpressionPolicy<NekMatrix<double> > > m_exp(m);
             BOOST_CHECK_EQUAL(m.GetRows(), m_exp.GetMetadata().Rows);
             BOOST_CHECK_EQUAL(m.GetColumns(), m_exp.GetMetadata().Columns);
 
             // Unary
-            // TODO
+            NekMatrix<double> m1(3,3);
+            Nektar::Expression<UnaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<double> > >, NegateOp> > m1_exp = 
+                Nektar::Expression<UnaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<double> > >, NegateOp> >(
+                Nektar::Expression<ConstantExpressionPolicy<NekMatrix<double> > >(m1));
+            BOOST_CHECK_EQUAL(m1.GetRows(), m1_exp.GetMetadata().Rows);
+            BOOST_CHECK_EQUAL(m1.GetColumns(), m1_exp.GetMetadata().Columns);
 
             // Binary
             // TODO
         }
 
+        void testBinaryExpressions()
+        {
+            using namespace Nektar;
+            using namespace LibUtilities;
+
+            unsigned int buf1[] = {1, 2, 3, 4};
+            unsigned int buf2[] = {3, 4, 5, 6};
+
+            // The following crashes because of the temporary.  What to do here?
+            //Nektar::ConstantExpression<Nektar::LibUtilities::NekMatrix<unsigned int> > m1(Nektar::LibUtilities::NekMatrix<unsigned int>(2, 2, buf1));
+            //Nektar::ConstantExpression<Nektar::LibUtilities::NekMatrix<unsigned int> > m2(Nektar::LibUtilities::NekMatrix<unsigned int>(2, 2, buf2));
+
+            NekMatrix<unsigned int> lhs(2,2,buf1);
+            NekMatrix<unsigned int> rhs(2,2,buf2);
+            Nektar::Expression<ConstantExpressionPolicy<Nektar::LibUtilities::NekMatrix<unsigned int> > > m1(lhs);
+            Nektar::Expression<ConstantExpressionPolicy<Nektar::LibUtilities::NekMatrix<unsigned int> > > m2(rhs);
+
+
+            Nektar::Expression<BinaryExpressionPolicy<
+                Nektar::Expression<ConstantExpressionPolicy<NekMatrix<unsigned int> > >,
+                Nektar::Expression<ConstantExpressionPolicy<NekMatrix<unsigned int> > >,
+                AddOp > > bexp(m1, m2);
+
+            unsigned int result_buf[] = {4, 6, 8, 10};
+            NekMatrix<unsigned int> result(2, 2, result_buf);
+            NekMatrix<unsigned int> evaluated_result(bexp);
+            BOOST_CHECK_EQUAL(result, evaluated_result);
+
+            {
+                // Nested additions.
+                NekMatrix<unsigned int> m1(2,2,buf1);
+                NekMatrix<unsigned int> m2(2,2,buf2);
+                NekMatrix<unsigned int> m3(m1);
+                NekMatrix<unsigned int> m4(m2);
+
+                NekMatrix<unsigned int> m5 = m1+m2+m3+m4;
+
+                unsigned int buf3[] = { 8, 12, 16, 20 };
+                NekMatrix<unsigned int> nested_add_result(2,2,buf3);
+
+                BOOST_CHECK_EQUAL(nested_add_result, m5);
+            }
+        }
      }
 }
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.4  2006/08/28 02:40:51  bnelson
+    *** empty log message ***
+
     Revision 1.3  2006/08/27 02:14:09  bnelson
     Added support for negating an expression.
 

@@ -13,6 +13,7 @@ SET(LibUtilityHeaders
 ./LinearAlgebra/NekMatrix.hpp
 ./LinearAlgebra/NekMatrixMetadata.hpp
 ./LinearAlgebra/NekVector.hpp
+./LinearAlgebra/NekVectorMetadata.hpp
 ./LinearAlgebra/NekPoint.hpp
 ./ExpressionTemplates/ArithmeticConcepts.hpp
 ./ExpressionTemplates/BinaryExpressionTraits.hpp
@@ -21,10 +22,13 @@ SET(LibUtilityHeaders
 ./ExpressionTemplates/ExpressionTemplateOperators.hpp
 ./ExpressionTemplates/ConstantExpression.hpp
 ./ExpressionTemplates/Expression.hpp
+./ExpressionTemplates/ExpressionMetadata.hpp
 ./ExpressionTemplates/ExpressionReturnType.hpp
 ./ExpressionTemplates/ExpressionTemplates.hpp
 ./ExpressionTemplates/ExpressionTemplateConcepts.hpp
+./ExpressionTemplates/ExpressionTraits.hpp
 ./ExpressionTemplates/NegateOp.hpp
+./ExpressionTemplates/NekMatrixExpressionTemplates.hpp
 ./ExpressionTemplates/UnaryExpression.hpp
 ./ExpressionTemplates/UnaryExpressionTraits.hpp
 ./BasicUtils/BoostUtil.hpp

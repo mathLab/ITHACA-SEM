@@ -38,6 +38,8 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorMetadata.hpp>
 
 #include <functional>
 #include <algorithm>
@@ -59,6 +61,9 @@ namespace Nektar
         template<typename DataType, unsigned int dim = 0, unsigned int space = 0>
         class NekVector
         {
+            public:
+                typedef NekVectorMetadata ExpressionMetadataType;
+
             public:
                 NekVector() :
                     m_impl()
@@ -102,8 +107,23 @@ namespace Nektar
                 {
                 }
 
+                template<typename ExpressionPolicyType>
+                NekVector(const expt::Expression<ExpressionPolicyType>& rhs)
+                {
+                    BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
+                    rhs.Apply(*this);
+                }
+
                 ~NekVector()
                 {
+                }
+
+                template<typename ExpressionPolicyType>
+                NekVector<DataType, dim, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
+                {
+                    BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
+                    rhs.Apply(*this);
+                    return *this;
                 }
 
                 NekVector<DataType, dim, space>& operator=(const NekVector<DataType, dim, space>& rhs)
@@ -114,7 +134,7 @@ namespace Nektar
                 }
 
                 /// \brief Returns the number of dimensions for the point.
-                unsigned int dimension() const
+                unsigned int GetDimension() const
                 {
                     return m_impl.dimension();
                 }
@@ -206,12 +226,12 @@ namespace Nektar
 
                 bool operator==(const NekVector<DataType, dim, space>& rhs) const
                 {
-                    if( dimension() != rhs.dimension() )
+                    if( GetDimension() != rhs.GetDimension() )
                     {
                         return false;
                     }
 
-                    for(unsigned int i = 0; i < dimension(); ++i)
+                    for(unsigned int i = 0; i < GetDimension(); ++i)
                     {
                         // If you get a compile error here then you have to
                         // add a != operator to the DataType class.
@@ -234,7 +254,7 @@ namespace Nektar
                 NekVector<DataType, dim, space> operator-() const
                 {
                     NekVector<DataType, dim, space> temp(*this);
-                    for(unsigned int i=0; i < dimension(); ++i)
+                    for(unsigned int i=0; i < GetDimension(); ++i)
                     {
                         temp(i) = -temp(i);
                     }
@@ -244,8 +264,8 @@ namespace Nektar
 
                 NekVector<DataType, dim, space>& operator+=(const NekVector<DataType, dim, space>& rhs)
                 {
-                    ASSERTL1( dimension() == rhs.dimensin(), "NekVector::operator+=, dimension of the two operands must be identical.");
-                    for(unsigned int i=0; i < dimension(); ++i)
+                    ASSERTL1( GetDimension() == rhs.GetDimension(), "NekVector::operator+=, dimension of the two operands must be identical.");
+                    for(unsigned int i=0; i < GetDimension(); ++i)
                     {
                         (*this)[i] += rhs[i];
                     }
@@ -254,8 +274,8 @@ namespace Nektar
 
                 NekVector<DataType, dim, space>& operator-=(const NekVector<DataType, dim, space>& rhs)
                 {
-                    ASSERTL1( dimension() == rhs.dimensin(), "NekVector::operator-=, dimension of the two operands must be identical.");
-                    for(unsigned int i=0; i < dimension(); ++i)
+                    ASSERTL1( GetDimension() == rhs.GetDimension(), "NekVector::operator-=, dimension of the two operands must be identical.");
+                    for(unsigned int i=0; i < GetDimension(); ++i)
                     {
                         (*this)[i] -= rhs[i];
                     }
@@ -264,7 +284,7 @@ namespace Nektar
 
                 NekVector<DataType, dim, space>& operator*=(typename boost::call_traits<DataType>::param_type rhs)
                 {
-                    for(unsigned int i=0; i < dimension(); ++i)
+                    for(unsigned int i=0; i < GetDimension(); ++i)
                     {
                         (*this)[i] *= rhs;
                     }
@@ -275,7 +295,7 @@ namespace Nektar
                 {
                     DataType result = DataType(0);
 
-                    for(unsigned int i = 0; i < dimension(); ++i)
+                    for(unsigned int i = 0; i < GetDimension(); ++i)
                     {
                         result += (*this)[i]*(*this)[i];
                     }
@@ -284,10 +304,10 @@ namespace Nektar
 
                 DataType dot(const NekVector<DataType, dim, space>& rhs) const
                 {
-                    ASSERTL1( dimension() == rhs.dimensin(), "NekVector::dot, dimension of the two operands must be identical.");
+                    ASSERTL1( GetDimension() == rhs.GetDimension(), "NekVector::dot, dimension of the two operands must be identical.");
 
                     DataType result = DataType(0);
-                    for(unsigned int i = 0; i < dimension(); ++i)
+                    for(unsigned int i = 0; i < GetDimension(); ++i)
                     {
                         result += (*this)[i]*rhs[i];
                     }
@@ -300,7 +320,7 @@ namespace Nektar
                     DataType m = magnitude();
                     if( m > DataType(0) )
                     {
-                        for(unsigned int i = 0; i < dimension(); ++i)
+                        for(unsigned int i = 0; i < GetDimension(); ++i)
                         {
                             (*this)[i] /= m;
                         }
@@ -610,6 +630,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.4  2006/08/25 01:22:01  bnelson
+    no message
+
     Revision 1.3  2006/08/14 02:29:49  bnelson
     Updated points, vectors, and matrix classes to work with ElVis.  Added a variety of methods to all of these classes.
 

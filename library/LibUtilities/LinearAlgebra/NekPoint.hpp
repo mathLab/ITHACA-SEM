@@ -115,9 +115,9 @@ namespace Nektar
                 }
 
                 template<typename ExpressionPolicyType>
-                NekPoint(const Expression<ExpressionPolicyType>& rhs)
+                NekPoint(const expt::Expression<ExpressionPolicyType>& rhs)
                 {
-                    BOOST_MPL_ASSERT(( boost::is_same<Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
+                    BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
                     rhs.Apply(*this);
                 }
 
@@ -134,9 +134,9 @@ namespace Nektar
                 }
 
                 template<typename ExpressionPolicyType>
-                NekPoint<DataType, dim, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
+                NekPoint<DataType, dim, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
                 {
-                    BOOST_MPL_ASSERT(( boost::is_same<Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
+                    BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
                     rhs.Apply(*this);
                     return *this;
                 }
@@ -317,10 +317,11 @@ namespace Nektar
                     }
                 }
 
-                Expression<UnaryExpressionPolicy< Expression<ConstantExpressionPolicy<NekPoint<DataType, dim, space> > >, NegateOp > > operator-() const
+                NekPoint<DataType, dim, space> operator-() const
                 {
-                    return Expression<UnaryExpressionPolicy< Expression<ConstantExpressionPolicy<NekPoint<DataType, dim, space> > >, NegateOp > >(
-                            Expression<ConstantExpressionPolicy<NekPoint<DataType, dim, space> > >(*this));
+                    NekPoint<DataType, dim, space> result;
+                    operator_negate(result);
+                    return result;
                 }
 
 
@@ -452,18 +453,18 @@ namespace Nektar
             return result;
         }
 
-        template<typename DataType, int dim, unsigned int space>
+        template<typename DataType, int dim, unsigned int space, typename ScalarType>
         NekPoint<DataType, dim, space>
-        operator*(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs)
+        operator*(const ScalarType& lhs, const NekPoint<DataType, dim, space>& rhs)
         {
             NekPoint<DataType, dim, space> result(rhs);
             result *= lhs;
             return result;
         }
 
-        template<typename DataType, int dim, unsigned int space>
+        template<typename DataType, int dim, unsigned int space, typename ScalarType>
         NekPoint<DataType, dim, space>
-        operator*(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
+        operator*(const NekPoint<DataType, dim, space>& lhs, const ScalarType& rhs)
         {
             NekPoint<DataType, dim, space> result(lhs);
             result *= rhs;
@@ -560,6 +561,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.9  2006/09/11 03:26:26  bnelson
+    Updated to use new policy based expression templates.
+
     Revision 1.8  2006/09/10 20:40:24  bnelson
     Changed DataType to data_type
 

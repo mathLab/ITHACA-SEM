@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: NekMatrixMetadata.hpp
+// File: NekVectorMetadata.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,80 +33,72 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_NEK_MATRIX_METADATA_HPP
-#define NEKTAR_LIB_UTILITIES_NEK_MATRIX_METADATA_HPP
+#ifndef NEKTAR_LIB_UTILITIES_NEK_VECTOR_METADATA_HPP
+#define NEKTAR_LIB_UTILITIES_NEK_VECTOR_METADATA_HPP
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-
+#include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
 
 namespace Nektar
 {
     namespace LibUtilities
     {
         // Interface for expression templates.
-        class NekMatrixMetadata
+        class NekVectorMetadata
         {
             public:
-                template<typename MatrixType>
-                explicit NekMatrixMetadata(const MatrixType& matrix) :
-                    Rows(matrix.GetRows()),
-                    Columns(matrix.GetColumns())
+                template<typename VectorType>
+                explicit NekVectorMetadata(const VectorType& vec) :
+                    Rows(vec.GetDimension())
                 {
                 }
 
-                NekMatrixMetadata(const NekMatrixMetadata& rhs) :
-                    Rows(rhs.Rows),
-                    Columns(rhs.Columns)
+                NekVectorMetadata(const NekVectorMetadata& rhs) :
+                    Rows(rhs.Rows)
                 {
                 }
 
-                static NekMatrixMetadata CreateForNegation(const NekMatrixMetadata& rhs)
+                static NekVectorMetadata CreateForNegation(const NekVectorMetadata& rhs)
                 {
-                    return NekMatrixMetadata(rhs);
+                    return NekVectorMetadata(rhs);
                 }
 
-                static NekMatrixMetadata CreateForAddition(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs)
+                static NekVectorMetadata CreateForAddition(const NekVectorMetadata& lhs, const NekVectorMetadata& rhs)
                 {
-                    ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree in operator+");
-                    return NekMatrixMetadata(lhs);
+                    ASSERTL1(lhs.Rows == rhs.Rows, "Vector dimensions must agree in operator+");
+                    return NekVectorMetadata(lhs);
                 }
 
-                static NekMatrixMetadata CreateForMultiplication(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs)
+                static NekVectorMetadata CreateForMultiplication(const NekMatrixMetadata& lhs, const NekVectorMetadata& rhs)
                 {
                     ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree in operator*");
-                    NekMatrixMetadata result;
+                    NekVectorMetadata result;
                     result.Rows = lhs.Rows;
-                    result.Columns = rhs.Columns;
                     return result;
                 }
 
-                NekMatrixMetadata& operator=(const NekMatrixMetadata& rhs)
+
+                NekVectorMetadata& operator=(const NekVectorMetadata& rhs)
                 {
                     Rows = rhs.Rows;
-                    Columns = rhs.Columns;
                     return *this;
                 }
 
                 unsigned int Rows;
-                unsigned int Columns;
 
             private:
-                NekMatrixMetadata() :
-                    Rows(0),
-                    Columns(0)
+                NekVectorMetadata() :
+                    Rows(0)
                 {
                 }
         };
     }
 }
 
-#endif //NEKTAR_LIB_UTILITIES_NEK_MATRIX_METADATA_HPP
+#endif //NEKTAR_LIB_UTILITIES_NEK_VECTOR_METADATA_HPP
 
 /**
-    $Log: NekMatrixMetadata.hpp,v $
-    Revision 1.1  2006/09/11 03:26:27  bnelson
-    Updated to use new policy based expression templates.
-
+    $Log: $
  **/
 
 

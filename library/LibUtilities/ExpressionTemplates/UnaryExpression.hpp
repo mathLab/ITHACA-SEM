@@ -46,104 +46,107 @@
 
 namespace Nektar
 {
-    //template<typename InputExpressionPolicyType, typename RhsExpressionType, typename ResultType, template <typename, typename> class OpType>
-    //void EvaluateExpression(typename boost::call_traits<LhsExpressionType>::const_reference lhs, 
-    //                                typename boost::call_traits<RhsExpressionType>::const_reference rhs,
-    //                                typename boost::call_traits<ResultType>::reference result, 
-    //                                typename boost::enable_if<boost::is_same<typename LhsExpressionType::ResultType, ResultType> >::type* f0 = NULL,
-    //                                typename boost::enable_if<boost::is_same<typename RhsExpressionType::ResultType, ResultType> >::type* f1 = NULL)
-    //{
-    //}
-
-    template<typename InputExpressionPolicyType, template <typename> class OpType>
-    class UnaryExpressionPolicy
+    namespace expt
     {
-    };
+        //template<typename InputExpressionPolicyType, typename RhsExpressionType, typename ResultType, template <typename, typename> class OpType>
+        //void EvaluateExpression(typename boost::call_traits<LhsExpressionType>::const_reference lhs, 
+        //                                typename boost::call_traits<RhsExpressionType>::const_reference rhs,
+        //                                typename boost::call_traits<ResultType>::reference result, 
+        //                                typename boost::enable_if<boost::is_same<typename LhsExpressionType::ResultType, ResultType> >::type* f0 = NULL,
+        //                                typename boost::enable_if<boost::is_same<typename RhsExpressionType::ResultType, ResultType> >::type* f1 = NULL)
+        //{
+        //}
 
-    // OpType - A class with a statis method called Apply that takes a single
-    // parameter and returns a result of the same or different type.
-    // A template parameter to allow a single OpType templated class to be
-    // used for a variety of types.
-    // ParameterType - A type which follows the expression interface.
-    //template<template <typename> class OpType, typename InputExpressionType>
-    //class UnaryExpression
-    //template<unsigned int NumberOfArguments, typename Argument1Type, typename Argument2Type, template <typename> class ArgumentUnaryOpType, template <typename, typename> class BinaryOpType, typename OpType>
-    //class Expression<1, Expression<NumberOfArguments, Argument1Type, Argument2Type, ArgumentUnaryOpType, BinaryOpType>, void, OpType>
-    template<typename InputExpressionPolicyType, template <typename> class OpType>
-    class Expression<UnaryExpressionPolicy<typename Expression<InputExpressionPolicyType>, OpType> >
-    {
-        public:
-            // Defined by the user who codes the operation.  They need to tell us what
-            // the result type of the operation will be.
-            typedef typename Expression<InputExpressionPolicyType> InputExpressionType;
-            typedef typename InputExpressionType::ResultType InputExpressionResultType;
-            typedef typename OpType<InputExpressionResultType>::ResultType ResultType;
+        template<typename InputExpressionPolicyType, template <typename> class OpType>
+        class UnaryExpressionPolicy
+        {
+        };
 
-            typedef typename ExpressionMetadataChooser<InputExpressionResultType>::MetadataType InputExpressionMetadataType;
-            typedef typename ExpressionMetadataChooser<ResultType>::MetadataType MetadataType;
-            
-            typedef Expression<UnaryExpressionPolicy<typename Expression<InputExpressionPolicyType>, OpType> > ThisType;
+        // OpType - A class with a statis method called Apply that takes a single
+        // parameter and returns a result of the same or different type.
+        // A template parameter to allow a single OpType templated class to be
+        // used for a variety of types.
+        // ParameterType - A type which follows the expression interface.
+        //template<template <typename> class OpType, typename InputExpressionType>
+        //class UnaryExpression
+        //template<unsigned int NumberOfArguments, typename Argument1Type, typename Argument2Type, template <typename> class ArgumentUnaryOpType, template <typename, typename> class BinaryOpType, typename OpType>
+        //class Expression<1, Expression<NumberOfArguments, Argument1Type, Argument2Type, ArgumentUnaryOpType, BinaryOpType>, void, OpType>
+        template<typename InputExpressionPolicyType, template <typename> class OpType>
+        class Expression<UnaryExpressionPolicy<Expression<InputExpressionPolicyType>, OpType> >
+        {
+            public:
+                // Defined by the user who codes the operation.  They need to tell us what
+                // the result type of the operation will be.
+                typedef Expression<InputExpressionPolicyType> InputExpressionType;
+                typedef typename InputExpressionType::ResultType InputExpressionResultType;
+                typedef typename OpType<InputExpressionResultType>::ResultType ResultType;
 
-        public:
-            explicit Expression(const InputExpressionType& value) :
-                m_value(value),
-                m_metadata(OpType<InputExpressionResultType>::CreateUnaryMetadata(value.GetMetadata()))
-            {
-            }
+                typedef typename ExpressionMetadataChooser<InputExpressionResultType>::MetadataType InputExpressionMetadataType;
+                typedef typename ExpressionMetadataChooser<ResultType>::MetadataType MetadataType;
+                
+                typedef Expression<UnaryExpressionPolicy<Expression<InputExpressionPolicyType>, OpType> > ThisType;
 
-            Expression(const ThisType& rhs) :
-                m_value(rhs.m_value),
-                m_metadata(rhs.m_metadata)
-            {
-            }
+            public:
+                explicit Expression(const InputExpressionType& value) :
+                    m_value(value),
+                    m_metadata(OpType<InputExpressionResultType>::CreateUnaryMetadata(value.GetMetadata()))
+                {
+                }
 
-            virtual ~Expression() {}
+                Expression(const ThisType& rhs) :
+                    m_value(rhs.m_value),
+                    m_metadata(rhs.m_metadata)
+                {
+                }
 
-            // Two cases for the apply method.
-            // 1.  Result and Parameter types are the same.
-            // 2.  Result and Parameter types are different.
-            void Apply(typename boost::call_traits<ResultType>::reference result,
-                       typename boost::enable_if<boost::is_same<ResultType, InputExpressionResultType> >::type* = NULL) const
-            {
-                // Evaluate the expression up to this point.
-                m_value.Apply(result);
+                virtual ~Expression() {}
 
-                // Now apply the negation to the operation.
-                OpType<ResultType>::Apply(result);
-            }
+                // Two cases for the apply method.
+                // 1.  Result and Parameter types are the same.
+                // 2.  Result and Parameter types are different.
+                void Apply(typename boost::call_traits<ResultType>::reference result,
+                        typename boost::enable_if<boost::is_same<ResultType, InputExpressionResultType> >::type* = NULL) const
+                {
+                    // Evaluate the expression up to this point.
+                    m_value.Apply(result);
 
-            template<typename IncomingOpType>
-            void ApplyEqual(typename boost::call_traits<ResultType>::reference result) const
-            {
-                m_value.ApplyEqual<IncomingOpType>(result);
-                OpType<ResultType>::Apply(result);
-            }
+                    // Now apply the negation to the operation.
+                    OpType<ResultType>::Apply(result);
+                }
 
-//             void Apply(typename boost::call_traits<ResultType>::reference result,
-//                        typename boost::disable_if<boost::is_same<ResultType, ParameterType> >::type* = NULL)
-//             {
-//                 ParameterType temp;
-//                 m_value.Apply(temp);
-//
-//                 OpType<ParameterType>::Apply(result, temp);
-//             }
+                template<typename IncomingOpType>
+                void ApplyEqual(typename boost::call_traits<ResultType>::reference result) const
+                {
+                    m_value.ApplyEqual<IncomingOpType>(result);
+                    OpType<ResultType>::Apply(result);
+                }
 
-            const MetadataType& GetMetadata() const
-            {
-                return m_metadata;
-            }
+    //             void Apply(typename boost::call_traits<ResultType>::reference result,
+    //                        typename boost::disable_if<boost::is_same<ResultType, ParameterType> >::type* = NULL)
+    //             {
+    //                 ParameterType temp;
+    //                 m_value.Apply(temp);
+    //
+    //                 OpType<ParameterType>::Apply(result, temp);
+    //             }
 
-        private:
-            ThisType& operator=(const ThisType& rhs);
+                const MetadataType& GetMetadata() const
+                {
+                    return m_metadata;
+                }
 
-            InputExpressionType m_value;
-            MetadataType m_metadata;
-    };
+            private:
+                ThisType& operator=(const ThisType& rhs);
 
-    template<typename InputExpressionPolicyType>
-    Expression<UnaryExpressionPolicy<typename Expression<InputExpressionPolicyType>, NegateOp> > operator-(const Expression<InputExpressionPolicyType>& rhs)
-    {
-        return Expression<UnaryExpressionPolicy<typename Expression<InputExpressionPolicyType>,NegateOp> >(rhs);
+                InputExpressionType m_value;
+                MetadataType m_metadata;
+        };
+
+        template<typename InputExpressionPolicyType>
+        Expression<UnaryExpressionPolicy<Expression<InputExpressionPolicyType>, NegateOp> > operator-(const Expression<InputExpressionPolicyType>& rhs)
+        {
+            return Expression<UnaryExpressionPolicy<Expression<InputExpressionPolicyType>,NegateOp> >(rhs);
+        }
     }
 }
 
@@ -151,6 +154,9 @@ namespace Nektar
 
 /**
     $Log: UnaryExpression.hpp,v $
+    Revision 1.4  2006/09/11 03:24:24  bnelson
+    Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
+
     Revision 1.3  2006/08/28 02:39:53  bnelson
     *** empty log message ***
 

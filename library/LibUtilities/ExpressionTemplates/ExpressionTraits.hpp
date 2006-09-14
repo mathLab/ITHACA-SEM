@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Expression.hpp
+// File: ExpressionTraits.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,36 +33,22 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
-#define NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
-
-#include <boost/call_traits.hpp>
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits/is_same.hpp>
-
-#include <algorithm>
+#ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TRAITS_H
+#define NEKTAR_LIB_UTILITIES_EXPRESSION_TRAITS_H
 
 namespace Nektar
 {
     namespace expt
     {
-        template<typename ExpressionPolicy>
-        class Expression;
-    }
 
+        template<typename DataType>
+        class ExpressionTraits;    
+    }
 }
 
-#endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
+#endif // NEKTAR_LIB_UTILITIES_EXPRESSION_TRAITS_H
 
 /**
-    $Log: Expression.hpp,v $
-    Revision 1.3  2006/09/11 03:24:24  bnelson
-    Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
-
-    Revision 1.2  2006/08/28 02:39:53  bnelson
-    *** empty log message ***
-
-    Revision 1.1  2006/08/25 01:33:47  bnelson
-    no message
-
+    $Log: $
 **/
+

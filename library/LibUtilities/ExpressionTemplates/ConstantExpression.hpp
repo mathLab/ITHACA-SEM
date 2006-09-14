@@ -39,64 +39,67 @@
 #include <boost/call_traits.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionReturnType.hpp>
 #include <LibUtilities/ExpressionTemplates/Expression.hpp>
-
+#include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
 
 namespace Nektar
 {
-    template<typename DataType>
-    class ConstantExpressionPolicy
+    namespace expt
     {
-    };
+        template<typename DataType>
+        class ConstantExpressionPolicy
+        {
+        };
 
-    template<typename DataType>
-    class Expression<ConstantExpressionPolicy<DataType> >
-    {
-        public:
-            typedef DataType ResultType;
-            typedef typename ExpressionMetadataChooser<DataType>::MetadataType MetadataType;
-            typedef Expression<ConstantExpressionPolicy<DataType> > ThisType;
+        template<typename DataType>
+        class Expression<ConstantExpressionPolicy<DataType> >
+        {
+            public:
+                typedef DataType ResultType;
+                typedef typename ExpressionMetadataChooser<DataType>::MetadataType MetadataType;
+                typedef Expression<ConstantExpressionPolicy<DataType> > ThisType;
 
-        public:
-            /// \note The parameter must not be a temporary or strange behavior will result.
-            explicit Expression(typename boost::call_traits<ResultType>::const_reference value) :
-                m_value(value),
-                m_metadata(value)
-            {
-            }
+            public:
+                /// \note The parameter must not be a temporary or strange behavior will result.
+                explicit Expression(typename boost::call_traits<ResultType>::const_reference value) :
+                    m_value(value),
+                    m_metadata(value)
+                {
+                }
 
-            Expression(const ThisType& rhs) :
-                m_value(rhs.m_value),
-                m_metadata(rhs.m_metadata)
-            {
-            }
+                Expression(const ThisType& rhs) :
+                    m_value(rhs.m_value),
+                    m_metadata(rhs.m_metadata)
+                {
+                }
 
-            ~Expression() {}
+                ~Expression() {}
 
-            typename boost::call_traits<ResultType>::const_reference operator*() const { return m_value; }
-            typename boost::call_traits<ResultType>::const_reference GetValue() const { return m_value; }
+                typename boost::call_traits<ResultType>::const_reference operator*() const { return m_value; }
+                typename boost::call_traits<ResultType>::const_reference GetValue() const { return m_value; }
 
-            void Apply(typename boost::call_traits<ResultType>::reference result) const
-            {
-                result = m_value;
-            }
+                void Apply(typename boost::call_traits<ResultType>::reference result) const
+                {
+                    result = m_value;
+                }
 
-            template<typename OpType>
-            void ApplyEqual(typename boost::call_traits<ResultType>::reference result) const
-            {
-                OpType::ApplyEqual(result, m_value);
-            }
+                template<typename OpType>
+                void ApplyEqual(typename boost::call_traits<ResultType>::reference result) const
+                {
+                    OpType::ApplyEqual(result, m_value);
+                }
 
-            const MetadataType& GetMetadata() const
-            {
-                return m_metadata;
-            }
+                const MetadataType& GetMetadata() const
+                {
+                    return m_metadata;
+                }
 
-        private:
-            ThisType& operator=(const ThisType& rhs);
+            private:
+                ThisType& operator=(const ThisType& rhs);
 
-            typename boost::call_traits<ResultType>::const_reference m_value;
-            MetadataType m_metadata;
-    };
+                typename boost::call_traits<ResultType>::const_reference m_value;
+                MetadataType m_metadata;
+        };
+    }
 }
 
 #endif // NEKTAR_LIB_UTILITIES_CONSTANT_EXPRESSION_HPP
@@ -104,6 +107,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.4  2006/09/11 03:24:24  bnelson
+    Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
+
     Revision 1.3  2006/08/28 02:39:53  bnelson
     *** empty log message ***
 

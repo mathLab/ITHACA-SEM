@@ -38,79 +38,154 @@
 
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/Expression.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
 
 #include <boost/call_traits.hpp>
 
 namespace Nektar
 {
-
-    /// \brief An expression to negate an object of ParameterType.
-	/// Parameter type is the actual object, not the expression that may lead to it.
-    template<typename LhsType, typename RhsType>
-    class AddOp
+    namespace expt
     {
-        public:
-            typedef typename BinaryExpressionTraits<LhsType, RhsType>::AdditionResultType ResultType;
+        template<typename LhsType, typename RhsType>
+        class BinaryOp
+        {
+            public:
+                
+        };
 
-			typedef typename ExpressionMetadataChooser<LhsType>::MetadataType LhsMetadataType;
-			typedef typename ExpressionMetadataChooser<RhsType>::MetadataType RhsMetadataType;
-			typedef typename ExpressionMetadataChooser<ResultType>::MetadataType ResultMetadataType;
+        /// \brief An expression to negate an object of ParameterType.
+        /// Parameter type is the actual object, not the expression that may lead to it.
+        template<typename LhsType, typename RhsType>
+        class AddOp : public BinaryOp<LhsType, RhsType>
+        {
+            public:
+                typedef typename BinaryExpressionTraits<LhsType, RhsType>::AdditionResultType ResultType;
 
-			// This method is only valid if LhsType and ResultType are the same type.  Enforce it?
-			static void ApplyEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<RhsType>::const_reference rhs)
-            {
-				result += rhs;
-            }
+                typedef typename ExpressionMetadataChooser<LhsType>::MetadataType LhsMetadataType;
+                typedef typename ExpressionMetadataChooser<RhsType>::MetadataType RhsMetadataType;
+                typedef typename ExpressionMetadataChooser<ResultType>::MetadataType ResultMetadataType;
 
-			static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
-			{
-				result = lhs;
-				result += rhs;
-			}
+                // This method is only valid if LhsType and ResultType are the same type.  Enforce it?
+                static void ApplyEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    result += rhs;
+                }
 
-			static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
-			{
-				return ResultMetadataType::CreateForAddition(lhs, rhs);
-			}
+                static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    result = lhs;
+                    result += rhs;
+                }
 
-        private:
+                static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
+                {
+                    return ResultMetadataType::CreateForAddition(lhs, rhs);
+                }
 
-    };
+            private:
 
-	template<typename LhsType, typename RhsType>
-    class MultiplyOp
-    {
-        public:
-            typedef typename BinaryExpressionTraits<LhsType, RhsType>::MultiplyResultType ResultType;
+        };
 
-			typedef typename ExpressionMetadataChooser<LhsType>::MetadataType LhsMetadataType;
-			typedef typename ExpressionMetadataChooser<RhsType>::MetadataType RhsMetadataType;
-			typedef typename ExpressionMetadataChooser<ResultType>::MetadataType ResultMetadataType;
+        template<typename LhsType, typename RhsType>
+        class MultiplyOp : public BinaryOp<LhsType, RhsType>
+        {
+            public:
+                typedef typename BinaryExpressionTraits<LhsType, RhsType>::MultiplicationResultType ResultType;
 
-			// This method is only valid if LhsType and ResultType are the same type.  Enforce it?
-			static void ApplyEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<RhsType>::const_reference rhs)
-            {
-				result *= rhs;
-            }
+                typedef typename ExpressionMetadataChooser<LhsType>::MetadataType LhsMetadataType;
+                typedef typename ExpressionMetadataChooser<RhsType>::MetadataType RhsMetadataType;
+                typedef typename ExpressionMetadataChooser<ResultType>::MetadataType ResultMetadataType;
 
-			static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
-			{
-				result = lhs;
-				result *= rhs;
-			}
+                // This method is only valid if LhsType and ResultType are the same type.  Enforce it?
+                static void ApplyEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    result *= rhs;
+                }
 
-			static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
-			{
-				return ResultMetadataType::CreateForMultiplication(lhs, rhs);
-			}
+                static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    result = lhs;
+                    result *= rhs;
+                }
 
-        private:
+                static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
+                {
+                    return ResultMetadataType::CreateForMultiplication(lhs, rhs);
+                }
 
-    };
+            private:
+
+        };
+
+        template<typename LhsType, typename RhsType>
+        class DivideOp : public BinaryOp<LhsType, RhsType>
+        {
+            public:
+                typedef typename BinaryExpressionTraits<LhsType, RhsType>::DivideResultType ResultType;
+
+                typedef typename ExpressionMetadataChooser<LhsType>::MetadataType LhsMetadataType;
+                typedef typename ExpressionMetadataChooser<RhsType>::MetadataType RhsMetadataType;
+                typedef typename ExpressionMetadataChooser<ResultType>::MetadataType ResultMetadataType;
+
+                // This method is only valid if LhsType and ResultType are the same type.  Enforce it?
+                static void ApplyEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    result /= rhs;
+                }
+
+                static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    result = lhs;
+                    result /= rhs;
+                }
+
+                static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
+                {
+                    return ResultMetadataType::CreateForDivision(lhs, rhs);
+                }
+
+            private:
+
+        };
+
+        template<typename LhsType, typename RhsType>
+        class SubtractOp : public BinaryOp<LhsType, RhsType>
+        {
+            public:
+                typedef typename BinaryExpressionTraits<LhsType, RhsType>::MultiplyResultType ResultType;
+
+                typedef typename ExpressionMetadataChooser<LhsType>::MetadataType LhsMetadataType;
+                typedef typename ExpressionMetadataChooser<RhsType>::MetadataType RhsMetadataType;
+                typedef typename ExpressionMetadataChooser<ResultType>::MetadataType ResultMetadataType;
+
+                // This method is only valid if LhsType and ResultType are the same type.  Enforce it?
+                static void ApplyEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    result -= rhs;
+                }
+
+                static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    result = lhs;
+                    result -= rhs;
+                }
+
+                static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
+                {
+                    return ResultMetadataType::CreateForSubtraction(lhs, rhs);
+                }
+
+            private:
+
+        };
+    }
 }
 
 #endif // NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_OPERATORS_HPP
 
 /**
-    $Log: $
+    $Log: BinaryExpressionOperators.hpp,v $
+    Revision 1.1  2006/09/11 03:24:24  bnelson
+    Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
+
 **/

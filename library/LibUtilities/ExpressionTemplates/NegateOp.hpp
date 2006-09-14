@@ -38,58 +38,47 @@
 
 #include <LibUtilities/ExpressionTemplates/UnaryExpressionTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/Expression.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
 
 #include <boost/call_traits.hpp>
 
 namespace Nektar
 {
 
-    /// \brief An expression to negate an object of ParameterType.
-    /// Parameter type is the actual object, not the expression that may lead to it.
-    template<typename ParameterType>
-    class NegateOp
+    namespace expt
     {
-        public:
-            typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
-            typedef ParameterType InputType;
-            typedef typename ExpressionMetadataChooser<ParameterType>::MetadataType MetadataType;
+        /// \brief An expression to negate an object of ParameterType.
+        /// Parameter type is the actual object, not the expression that may lead to it.
+        template<typename ParameterType>
+        class NegateOp
+        {
+            public:
+                typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
+                typedef ParameterType InputType;
+                typedef typename ExpressionMetadataChooser<ParameterType>::MetadataType MetadataType;
 
-            static void Apply(typename boost::call_traits<ParameterType>::reference result)
-            {
-                result.operator_negate();
-            }
+                static void Apply(typename boost::call_traits<ParameterType>::reference result)
+                {
+                    result.operator_negate();
+                }
 
-            static MetadataType CreateUnaryMetadata(const MetadataType& rhs)
-            {
-                return MetadataType::CreateForNegation(rhs);
-            }
+                static MetadataType CreateUnaryMetadata(const MetadataType& rhs)
+                {
+                    return MetadataType::CreateForNegation(rhs);
+                }
 
-        private:
-    };
-
-    /*
-    template<typename ExpressionType>
-    class NegateOp
-    {
-        public:
-            typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
-
-            static void Apply(const Expression<ParameterType>& param,
-                              typename boost::call_traits<ResultType>::reference result)
-            {
-                param.Apply(result);
-                result.operator_negate();
-            }
-
-        private:
-    };
-    */
+            private:
+        };
+    }
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
 
 /**
     $Log: NegateOp.hpp,v $
+    Revision 1.4  2006/09/11 03:24:24  bnelson
+    Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
+
     Revision 1.3  2006/08/28 02:39:53  bnelson
     *** empty log message ***
 

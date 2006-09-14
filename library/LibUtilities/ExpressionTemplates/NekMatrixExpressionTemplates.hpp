@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Expression.hpp
+// File: NekMatrixExpressionTemplates.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,40 +29,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:
+// Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
-#define NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
+#ifndef NEKTAR_LIB_UTILITIES_NEK_MATRIX_EXPRESSION_TEMPLATES_HPP
+#define NEKTAR_LIB_UTILITIES_NEK_MATRIX_EXPRESSION_TEMPLATES_HPP
 
-#include <boost/call_traits.hpp>
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits/is_same.hpp>
-
-#include <algorithm>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionTraits.hpp>
 
 namespace Nektar
 {
-    namespace expt
-    {
-        template<typename ExpressionPolicy>
-        class Expression;
-    }
 
 }
 
-#endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
+#endif //NEKTAR_LIB_UTILITIES_NEK_MATRIX_EXPRESSION_TEMPLATES_HPP
 
 /**
-    $Log: Expression.hpp,v $
-    Revision 1.3  2006/09/11 03:24:24  bnelson
-    Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
+    $Log: $
 
-    Revision 1.2  2006/08/28 02:39:53  bnelson
-    *** empty log message ***
+ **/
 
-    Revision 1.1  2006/08/25 01:33:47  bnelson
-    no message
 
-**/

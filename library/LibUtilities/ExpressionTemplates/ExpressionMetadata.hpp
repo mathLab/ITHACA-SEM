@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Expression.hpp
+// File: ExpressionMetadata.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,36 +33,52 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
-#define NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
+#ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_METADATA_H
+#define NEKTAR_LIB_UTILITIES_EXPRESSION_METADATA_H
 
-#include <boost/call_traits.hpp>
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits/is_same.hpp>
+#include <boost/utility.hpp>
+#include <boost/type_traits.hpp>
 
-#include <algorithm>
+#include <LibUtilities/ExpressionTemplates/ExpressionTraits.hpp>
 
 namespace Nektar
 {
     namespace expt
     {
-        template<typename ExpressionPolicy>
-        class Expression;
-    }
+        template<typename DataType>
+        class DefaultExpressionMetadata
+        {
+            public:
+                DefaultExpressionMetadata(typename boost::call_traits<DataType>::const_reference)
+                {
+                }
 
+                static DefaultExpressionMetadata CreateForNegation(const DefaultExpressionMetadata& rhs)
+                {
+                    return DefaultExpressionMetadata(rhs);
+                }
+        };
+
+        template<typename Type, typename enabled=void>
+        class ExpressionMetadataChooser
+        {
+            public:
+                typedef DefaultExpressionMetadata<Type> MetadataType;
+        };
+
+        /// TODO - try this without the enable_if.
+        template<typename Type>
+        class ExpressionMetadataChooser<Type, typename boost::enable_if<boost::is_same<typename ExpressionTraits<Type>::MetadataType, typename ExpressionTraits<Type>::MetadataType> >::type >
+        {
+            public:
+                typedef typename ExpressionTraits<Type>::MetadataType MetadataType;
+        };
+    }
 }
 
-#endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
+#endif // NEKTAR_LIB_UTILITIES_EXPRESSION_METADATA_H
 
 /**
-    $Log: Expression.hpp,v $
-    Revision 1.3  2006/09/11 03:24:24  bnelson
-    Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
-
-    Revision 1.2  2006/08/28 02:39:53  bnelson
-    *** empty log message ***
-
-    Revision 1.1  2006/08/25 01:33:47  bnelson
-    no message
-
+    $Log: $
 **/
+

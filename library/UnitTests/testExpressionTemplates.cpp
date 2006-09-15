@@ -59,6 +59,9 @@ namespace Nektar
 
         void testConstantExpressions()
         {
+            using namespace Nektar::LibUtilities;
+            using namespace Nektar::expt;
+
             {
                 Expression<ConstantExpressionPolicy<int> > e1(7);
                 BOOST_CHECK_EQUAL(*e1, 7);
@@ -68,12 +71,10 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(*e2, *e1);
             }
 
-            using namespace Nektar::LibUtilities;
-
             typedef NekPoint<unsigned int, 3> Point;
             {
                 Point p(1,2,3);
-                Nektar::Expression<ConstantExpressionPolicy<Point> > e1(p);
+                Expression<ConstantExpressionPolicy<Point> > e1(p);
 
                 Point p1(e1);
                 BOOST_CHECK_EQUAL(p, p1);
@@ -90,7 +91,7 @@ namespace Nektar
             {
                 // TODO - Find a way to prevent temporaries (meaning that the parameter to
                 // this call is temporary and that could cause problems).
-                Nektar::Expression<ConstantExpressionPolicy<Point> > e2(Point(1,2,3));
+                Nektar::expt::Expression<ConstantExpressionPolicy<Point> > e2(Point(1,2,3));
             }
         }
 
@@ -111,18 +112,19 @@ namespace Nektar
         {
             using namespace Nektar;
             using namespace Nektar::LibUtilities;
+            using namespace Nektar::expt;
 
             // Constant
             NekMatrix<double> m(3,3);
-            Nektar::Expression<ConstantExpressionPolicy<NekMatrix<double> > > m_exp(m);
+            Expression<ConstantExpressionPolicy<NekMatrix<double> > > m_exp(m);
             BOOST_CHECK_EQUAL(m.GetRows(), m_exp.GetMetadata().Rows);
             BOOST_CHECK_EQUAL(m.GetColumns(), m_exp.GetMetadata().Columns);
 
             // Unary
             NekMatrix<double> m1(3,3);
-            Nektar::Expression<UnaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<double> > >, NegateOp> > m1_exp = 
-                Nektar::Expression<UnaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<double> > >, NegateOp> >(
-                Nektar::Expression<ConstantExpressionPolicy<NekMatrix<double> > >(m1));
+            Expression<UnaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<double> > >, NegateOp> > m1_exp = 
+                Expression<UnaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<double> > >, NegateOp> >(
+                Expression<ConstantExpressionPolicy<NekMatrix<double> > >(m1));
             BOOST_CHECK_EQUAL(m1.GetRows(), m1_exp.GetMetadata().Rows);
             BOOST_CHECK_EQUAL(m1.GetColumns(), m1_exp.GetMetadata().Columns);
 
@@ -134,6 +136,7 @@ namespace Nektar
         {
             using namespace Nektar;
             using namespace LibUtilities;
+            using namespace Nektar::expt;
 
             unsigned int buf1[] = {1, 2, 3, 4};
             unsigned int buf2[] = {3, 4, 5, 6};
@@ -144,13 +147,13 @@ namespace Nektar
 
             NekMatrix<unsigned int> lhs(2,2,buf1);
             NekMatrix<unsigned int> rhs(2,2,buf2);
-            Nektar::Expression<ConstantExpressionPolicy<Nektar::LibUtilities::NekMatrix<unsigned int> > > m1(lhs);
-            Nektar::Expression<ConstantExpressionPolicy<Nektar::LibUtilities::NekMatrix<unsigned int> > > m2(rhs);
+            Expression<ConstantExpressionPolicy<Nektar::LibUtilities::NekMatrix<unsigned int> > > m1(lhs);
+            Expression<ConstantExpressionPolicy<Nektar::LibUtilities::NekMatrix<unsigned int> > > m2(rhs);
 
 
-            Nektar::Expression<BinaryExpressionPolicy<
-                Nektar::Expression<ConstantExpressionPolicy<NekMatrix<unsigned int> > >,
-                Nektar::Expression<ConstantExpressionPolicy<NekMatrix<unsigned int> > >,
+            Expression<BinaryExpressionPolicy<
+                Expression<ConstantExpressionPolicy<NekMatrix<unsigned int> > >,
+                Expression<ConstantExpressionPolicy<NekMatrix<unsigned int> > >,
                 AddOp > > bexp(m1, m2);
 
             unsigned int result_buf[] = {4, 6, 8, 10};
@@ -178,6 +181,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.5  2006/09/11 03:28:41  bnelson
+    no message
+
     Revision 1.4  2006/08/28 02:40:51  bnelson
     *** empty log message ***
 

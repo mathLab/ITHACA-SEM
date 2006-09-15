@@ -88,28 +88,28 @@ namespace Nektar
             // Test the constructors on a numeric type.
             {
                 NekVector<double> p1(10, 2.7);
-                BOOST_CHECK(p1.dimension() == 10);
-                for(unsigned int i = 0; i < p1.dimension(); ++i)
+                BOOST_CHECK(p1.GetDimension() == 10);
+                for(unsigned int i = 0; i < p1.GetDimension(); ++i)
                 {
                     BOOST_CHECK(p1(i) == 2.7);
                     BOOST_CHECK(p1[i] == 2.7);
                 }
 
                 NekVector<double> p2;
-                BOOST_CHECK(p2.dimension() == 1);
+                BOOST_CHECK(p2.GetDimension() == 1);
                 BOOST_CHECK(p2(0) == 0.0);
 
                 NekVector<double> p3(p1);
-                BOOST_CHECK(p3.dimension() == 10);
-                for(unsigned int i = 0; i < p3.dimension(); ++i)
+                BOOST_CHECK(p3.GetDimension() == 10);
+                for(unsigned int i = 0; i < p3.GetDimension(); ++i)
                 {
                     BOOST_CHECK(p3(i) == 2.7);
                     BOOST_CHECK(p3[i] == 2.7);
                 }
 
                 p2 = p3;
-                BOOST_CHECK(p2.dimension() == 10);
-                for(unsigned int i = 0; i < p2.dimension(); ++i)
+                BOOST_CHECK(p2.GetDimension() == 10);
+                for(unsigned int i = 0; i < p2.GetDimension(); ++i)
                 {
                     BOOST_CHECK(p2(i) == 2.7);
                     BOOST_CHECK(p2[i] == 2.7);
@@ -125,20 +125,20 @@ namespace Nektar
             {
                 // Now do the same tests with constant sized vectors.
                 NekVector<double, 10> p1(2.7);
-                BOOST_CHECK(p1.dimension() == 10);
-                for(unsigned int i = 0; i < p1.dimension(); ++i)
+                BOOST_CHECK(p1.GetDimension() == 10);
+                for(unsigned int i = 0; i < p1.GetDimension(); ++i)
                 {
                     BOOST_CHECK(p1(i) == 2.7);
                     BOOST_CHECK(p1[i] == 2.7);
                 }
 
                 NekVector<double, 1> p2;
-                BOOST_CHECK(p2.dimension() == 1);
+                BOOST_CHECK(p2.GetDimension() == 1);
                 BOOST_CHECK(p2(0) == 0.0);
 
                 NekVector<double, 10> p3(p1);
-                BOOST_CHECK(p3.dimension() == 10);
-                for(unsigned int i = 0; i < p3.dimension(); ++i)
+                BOOST_CHECK(p3.GetDimension() == 10);
+                for(unsigned int i = 0; i < p3.GetDimension(); ++i)
                 {
                     BOOST_CHECK(p3(i) == 2.7);
                     BOOST_CHECK(p3[i] == 2.7);
@@ -146,8 +146,8 @@ namespace Nektar
 
                 NekVector<double, 10> p4;
                 p4 = p3;
-                BOOST_CHECK(p4.dimension() == 10);
-                for(unsigned int i = 0; i < p4.dimension(); ++i)
+                BOOST_CHECK(p4.GetDimension() == 10);
+                for(unsigned int i = 0; i < p4.GetDimension(); ++i)
                 {
                     BOOST_CHECK(p4(i) == 2.7);
                     BOOST_CHECK(p4[i] == 2.7);
@@ -341,6 +341,9 @@ namespace Nektar
 
 /**
     $Log: testNekVector.cpp,v $
+    Revision 1.2  2006/06/05 02:23:17  bnelson
+    Updates for the reorganization of LibUtilities.
+
     Revision 1.1  2006/05/04 18:59:56  kirby
     *** empty log message ***
 

@@ -299,8 +299,8 @@ namespace Nektar
             }
 
             {
-                Nektar::LibUtilities::NekPoint<int, 3> p1(1, 2, 3);
-                Nektar::LibUtilities::NekPoint<int, 3> p2(10, 20, 30);
+                Nektar::LibUtilities::NekPoint<int, 3, 0> p1(1, 2, 3);
+                Nektar::LibUtilities::NekPoint<int, 3, 0> p2(10, 20, 30);
 
                 Nektar::LibUtilities::NekPoint<int, 3> p3 = p1 + p2;
                 BOOST_CHECK(p3.x() == 11);
@@ -332,20 +332,19 @@ namespace Nektar
 
                 Nektar::LibUtilities::operator*<int, 3, 0>(2, p1);
 
-                // TODO - These tests don't compile in Linux.  Why?
-                 p1*(int)2;
-                 NekPoint<int, 3> p9 = p1*(int)2;
-                 BOOST_CHECK(p9.x() == 2);
-                 BOOST_CHECK(p9.y() == 4);
-                 BOOST_CHECK(p9.z() == 6);
+                p1*(int)2;
+                NekPoint<int, 3> p9 = p1*(int)2;
+                BOOST_CHECK(p9.x() == 2);
+                BOOST_CHECK(p9.y() == 4);
+                BOOST_CHECK(p9.z() == 6);
 
-                 NekPoint<int, 3> p10 = 2*p1;
-                 BOOST_CHECK(p9 == p10);
+                NekPoint<int, 3> p10 = 2*p1;
+                BOOST_CHECK(p9 == p10);
 
-                 NekPoint<int, 3> p11 = p2/2;
-                 BOOST_CHECK(p11.x() == 5);
-                 BOOST_CHECK(p11.y() == 10);
-                 BOOST_CHECK(p11.z() == 15);
+                NekPoint<int, 3> p11 = p2/2;
+                BOOST_CHECK(p11.x() == 5);
+                BOOST_CHECK(p11.y() == 10);
+                BOOST_CHECK(p11.z() == 15);
             }
 
         }
@@ -386,6 +385,9 @@ namespace Nektar
 
 /**
     $Log: testNekPoint.cpp,v $
+    Revision 1.7  2006/09/11 03:28:41  bnelson
+    no message
+
     Revision 1.6  2006/08/28 02:40:51  bnelson
     *** empty log message ***
 

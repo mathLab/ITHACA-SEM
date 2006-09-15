@@ -410,7 +410,7 @@ namespace Nektar
 
         template<typename DataType, unsigned int dim, unsigned int space>
         NekPoint<DataType, dim, space>
-        operator+(typename boost::call_traits<DataType>::param_type lhs, const NekPoint<DataType, dim, space>& rhs)
+        operator+(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs)
         {
             NekPoint<DataType, dim, space> result(rhs);
             result += lhs;
@@ -419,7 +419,7 @@ namespace Nektar
 
         template<typename DataType, unsigned int dim, unsigned int space>
         NekPoint<DataType, dim, space>
-        operator+(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::param_type rhs)
+        operator+(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
         {
             NekPoint<DataType, dim, space> result(lhs);
             result += rhs;
@@ -437,7 +437,7 @@ namespace Nektar
 
         template<typename DataType, unsigned int dim, unsigned int space>
         NekPoint<DataType, dim, space>
-        operator-(typename boost::call_traits<DataType>::param_type lhs, const NekPoint<DataType, dim, space>& rhs)
+        operator-(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs)
         {
             NekPoint<DataType, dim, space> result(-rhs);
             result += lhs;
@@ -446,14 +446,14 @@ namespace Nektar
 
         template<typename DataType, unsigned int dim, unsigned int space>
         NekPoint<DataType, dim, space>
-        operator-(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::param_type rhs)
+        operator-(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
         {
             NekPoint<DataType, dim, space> result(lhs);
             result -= rhs;
             return result;
         }
 
-        template<typename DataType, int dim, unsigned int space, typename ScalarType>
+        template<typename DataType, unsigned int dim, unsigned int space, typename ScalarType>
         NekPoint<DataType, dim, space>
         operator*(const ScalarType& lhs, const NekPoint<DataType, dim, space>& rhs)
         {
@@ -462,7 +462,7 @@ namespace Nektar
             return result;
         }
 
-        template<typename DataType, int dim, unsigned int space, typename ScalarType>
+        template<typename DataType, unsigned int dim, unsigned int space, typename ScalarType>
         NekPoint<DataType, dim, space>
         operator*(const NekPoint<DataType, dim, space>& lhs, const ScalarType& rhs)
         {
@@ -471,7 +471,7 @@ namespace Nektar
             return result;
         }
 
-        template<typename DataType, int dim, unsigned int space>
+        template<typename DataType, unsigned int dim, unsigned int space>
         NekPoint<DataType, dim, space>
         operator/(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::param_type rhs)
         {
@@ -561,6 +561,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.10  2006/09/14 02:06:16  bnelson
+    Fixed gcc compiler errors.
+
     Revision 1.9  2006/09/11 03:26:26  bnelson
     Updated to use new policy based expression templates.
 

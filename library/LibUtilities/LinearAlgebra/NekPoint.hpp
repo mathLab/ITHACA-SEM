@@ -301,15 +301,7 @@ namespace Nektar
                 /// Arithmetic Routines
 
                 // Unitary operators
-                void operator_negate(NekPoint<DataType, dim, space>& result) const
-                {
-                    for(int i=0; i < dim; ++i)
-                    {
-                        result(i) = -(*this)[i];
-                    }
-                }
-
-                void operator_negate()
+                void negate()
                 {
                     for(int i=0; i < dim; ++i)
                     {
@@ -319,8 +311,8 @@ namespace Nektar
 
                 NekPoint<DataType, dim, space> operator-() const
                 {
-                    NekPoint<DataType, dim, space> result;
-                    operator_negate(result);
+                    NekPoint<DataType, dim, space> result(*this);
+                    result.negate();
                     return result;
                 }
 
@@ -399,6 +391,13 @@ namespace Nektar
                 DataType m_data[dim];
         };
 
+        // Operators for expression templates
+        template<typename DataType, unsigned int dim, unsigned int space>
+        void negate(NekPoint<DataType, dim, space>& rhs)
+        {
+            rhs.negate();
+        }
+        
         template<typename DataType, unsigned int dim, unsigned int space>
         NekPoint<DataType, dim, space>
         operator+(const NekPoint<DataType, dim, space>& lhs, const NekPoint<DataType, dim>& rhs)
@@ -561,6 +560,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.11  2006/09/15 02:18:39  bnelson
+    Fixed a problem with operator*
+
     Revision 1.10  2006/09/14 02:06:16  bnelson
     Fixed gcc compiler errors.
 

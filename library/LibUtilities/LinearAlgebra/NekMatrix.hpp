@@ -290,20 +290,13 @@ namespace Nektar
                     return form;
                 }
 
-                void operator_negate()
+                void negate()
                 {
                     for(iterator iter = begin(); iter != end(); ++iter)
                     {
                         *iter = -*iter;
                     }
                 }
-
-                //UnaryExpression<NegateOp, Expression<eCONSTANT, NekMatrix<DataType, form, space> > > operator-() const
-                //{
-                //    return UnaryExpression<NegateOp, Expression<eCONSTANT, NekMatrix<DataType, form, space> > >(
-                //            Expression<eCONSTANT, NekMatrix<DataType, form, space> >(*this));
-                //}
-
 
                 expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, form, space> > >, expt::NegateOp> > operator-() const
                 {
@@ -525,6 +518,12 @@ namespace Nektar
 
     namespace LibUtilities
     {
+        template<typename DataType, NekMatrixForm form, unsigned int space>
+        void negate(NekMatrix<DataType, form, space>& rhs)
+        {
+            rhs.negate();
+        }
+        
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
         template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
         expt::Expression<expt::BinaryExpressionPolicy<
@@ -703,6 +702,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.8  2006/09/14 02:06:16  bnelson
+    Fixed gcc compiler errors.
+
     Revision 1.7  2006/09/11 03:26:26  bnelson
     Updated to use new policy based expression templates.
 

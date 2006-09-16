@@ -99,7 +99,7 @@ namespace Nektar
                 {
                 }
 
-                virtual ~Expression() {}
+                ~Expression() {}
 
                 // Two cases for the apply method.
                 // 1.  Result and Parameter types are the same.
@@ -154,6 +154,9 @@ namespace Nektar
 
 /**
     $Log: UnaryExpression.hpp,v $
+    Revision 1.5  2006/09/14 02:08:59  bnelson
+    Fixed gcc compile errors
+
     Revision 1.4  2006/09/11 03:24:24  bnelson
     Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
 

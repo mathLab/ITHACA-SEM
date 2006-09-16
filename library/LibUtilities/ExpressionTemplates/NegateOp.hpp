@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: UnaryExpressionTraits.hpp
+// File: NetageOP.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -59,7 +59,7 @@ namespace Nektar
 
                 static void Apply(typename boost::call_traits<ParameterType>::reference result)
                 {
-                    result.operator_negate();
+                    negate(result);
                 }
 
                 static MetadataType CreateUnaryMetadata(const MetadataType& rhs)
@@ -76,6 +76,9 @@ namespace Nektar
 
 /**
     $Log: NegateOp.hpp,v $
+    Revision 1.5  2006/09/14 02:08:59  bnelson
+    Fixed gcc compile errors
+
     Revision 1.4  2006/09/11 03:24:24  bnelson
     Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
 

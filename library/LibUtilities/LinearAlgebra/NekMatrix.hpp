@@ -78,12 +78,6 @@ namespace Nektar
         /// NekMatrix Class
         /// \param DataType The type of data to store in each element of the matrix.
         /// \param
-        ///
-        /// Some design decisions about the class.
-        /// Only one factory object.  All impl objects need to implement the
-        /// Initialize methods.  I could have made many constructors for the
-        /// impl object constructors, but then I would have had a lot of messy
-        /// Factory objects to created, one for each constructor.
         template<typename DataType, NekMatrixForm form = eFull, unsigned int space = 0>
         class NekMatrix
         {
@@ -319,6 +313,8 @@ namespace Nektar
                     return *this;
                 }
 
+                // This is wrong as well.  What if this is diagonal?
+                // enable if on the output.
                 NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eDiagonal, space>& rhs)
                 {
                     ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
@@ -327,6 +323,40 @@ namespace Nektar
                     {
                         (*this)(i,i) += rhs(i,i);
                     }
+
+                    return *this;
+                }
+
+                // Full *= full = full
+                // Full *= diagonal = full
+
+                // diag *= diag = diag
+                // diag *= full = full
+
+
+                template<NekMatrixForm rhsForm>
+                NekMatrix<DataType, eFull, space>& operator*=(const NekMatrix<DataType, rhsForm, space>& rhs)
+                {
+                    ASSERTL0(GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
+
+                    NekMatrix<DataType, eFull, space> result(GetRows(), rhs.GetColumns());
+
+                    for(unsigned int i = 0; i < result.GetRows(); ++i)
+                    {
+                        for(unsigned int j = 0; j < result.GetColumns(); ++j)
+                        {
+                            DataType t = DataType(0);
+
+                            // Set the result(i,j) element.
+                            for(unsigned int k = 0; k < GetColumns(); ++k)
+                            {
+                                t += (*this)(i,k)*rhs(k,j);
+                            }
+                            result(i,j) = t;
+                        }
+                    }
+
+                    Swap(result);
 
                     return *this;
                 }
@@ -524,6 +554,20 @@ namespace Nektar
             rhs.negate();
         }
         
+
+        ////////////////////////////////////////
+        // Addition
+        ////////////////////////////////////////
+        
+        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+        void add(const NekMatrix<DataType, lhsForm, space>& lhs, 
+                 const NekMatrix<DataType, rhsForm, space>& rhs,
+                 typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::AdditionResultType& result)
+        {
+            result = lhs;
+            result += rhs;
+        }
+
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
         template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
         expt::Expression<expt::BinaryExpressionPolicy<
@@ -570,33 +614,76 @@ namespace Nektar
         }
 #endif
 
-//#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-//        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
-//        Expression<BinaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >, Expression<ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > >, MultiplyOp > > operator*(
-//                const NekMatrix<DataType, lhsForm, space>& lhs,
-//                const NekMatrix<DataType, rhsForm, space>& rhs)
-//        {
-//            typedef Expression<ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > > LhsExpressionType;
-//            typedef Expression<ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > > RhsExpressionType;
-//
-//            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
-//        }
-//
-//        template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, unsigned int space>
-//        Expression<BinaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >, Expression<ConstantExpressionPolicy<NekVector<DataType, vectorDim, space> > >, MultiplyOp > > operator*(
-//                const NekMatrix<DataType, lhsForm, space>& lhs,
-//                const NekVector<DataType, vectorDim, space>& rhs)
-//        {
-//            typedef Expression<ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > > LhsExpressionType;
-//            typedef Expression<ConstantExpressionPolicy<NekVector<DataType, vectorDim, space> > > RhsExpressionType;
-//
-//            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
-//        }
-//#else
+
+        /////////////////////////////////////
+        // Subtraction
+        ////////////////////////////////////
+        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+        void subtract(const NekMatrix<DataType, lhsForm, space>& lhs, 
+                 const NekMatrix<DataType, rhsForm, space>& rhs,
+                 typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::SubtractionResultType& result)
+        {
+            result = lhs;
+            result -= rhs;
+        }
+
+
+
+        /////////////////////////////////////////
+        // Multiplication
+        /////////////////////////////////////////
+        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+        void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, 
+                 const NekMatrix<DataType, rhsForm, space>& rhs,
+                 typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::MultiplicationResultType& result)
+        {
+            result = lhs;
+            result *= rhs;
+        }
+
+        template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, unsigned int space>
+        void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, const NekVector<DataType, vectorDim, space>& rhs,
+                      typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekVector<DataType, vectorDim, space> >::MultiplicationResultType& result)
+        {
+            ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
+
+            for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
+            {
+                DataType t = DataType(0);
+                for(unsigned int j = 0; j < rhs.GetDimension(); ++j)
+                {
+                    t += lhs(i,j)*rhs(j);
+                }
+                result(i) = t;
+            }
+        }
+
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+        expt::Expression<expt::BinaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >, expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > >, expt::MultiplyOp > > operator*(
+                const NekMatrix<DataType, lhsForm, space>& lhs,
+                const NekMatrix<DataType, rhsForm, space>& rhs)
+        {
+            typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > > LhsExpressionType;
+            typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > > RhsExpressionType;
+
+            return expt::Expression<expt::BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, expt::MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+        }
+
+        template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, unsigned int space>
+        expt::Expression<expt::BinaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >, expt::Expression<expt::ConstantExpressionPolicy<NekVector<DataType, vectorDim, space> > >, expt::MultiplyOp > > operator*(
+                const NekMatrix<DataType, lhsForm, space>& lhs,
+                const NekVector<DataType, vectorDim, space>& rhs)
+        {
+            typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > > LhsExpressionType;
+            typedef expt::Expression<expt::ConstantExpressionPolicy<NekVector<DataType, vectorDim, space> > > RhsExpressionType;
+
+            return expt::Expression<expt::BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, expt::MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+        }
+#else
         template<typename DataType, NekMatrixForm form, unsigned int space>
-        NekMatrix<DataType, form, space> operator*(
-        const NekMatrix<DataType, form, space>& lhs,
-        const NekMatrix<DataType, form, space>& rhs)
+        NekMatrix<DataType, form, space> operator*(const NekMatrix<DataType, form, space>& lhs,
+                                                   const NekMatrix<DataType, form, space>& rhs)
         {
             ASSERTL0(lhs.GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
 
@@ -641,7 +728,7 @@ namespace Nektar
 
             return result;
         }
-//#endif
+#endif
 
 
         template<typename DataType, NekMatrixForm form, unsigned int space>
@@ -702,6 +789,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.9  2006/09/16 23:53:35  bnelson
+    Modified the negation operation to reflect changes in the unary expression templates.
+
     Revision 1.8  2006/09/14 02:06:16  bnelson
     Fixed gcc compiler errors.
 

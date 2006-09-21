@@ -25,4 +25,10 @@ TARGET_LINK_LIBRARIES(UnitTests
     optimized ${BoostThreadName} debug ${BoostThreadDebugName}
 )
 
+IF( ${CMAKE_COMPILER_IS_GNUCXX} )
+        IF( USE_GCOV )
+		TARGET_LINK_LIBRARIES(UnitTests gcov)
+	ENDIF( USE_GCOV )
+ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
+
 INSTALL_TARGETS(${NEKTAR_BIN_DIR} UnitTests)

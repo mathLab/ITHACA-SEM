@@ -62,9 +62,6 @@ namespace Nektar
         class NekVector
         {
             public:
-                typedef NekVectorMetadata ExpressionMetadataType;
-
-            public:
                 NekVector() :
                     m_impl()
                 {
@@ -108,7 +105,8 @@ namespace Nektar
                 }
 
                 template<typename ExpressionPolicyType>
-                NekVector(const expt::Expression<ExpressionPolicyType>& rhs)
+                NekVector(const expt::Expression<ExpressionPolicyType>& rhs) :
+                    m_impl(rhs.GetMetadata().Rows, DataType())
                 {
                     BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
                     rhs.Apply(*this);
@@ -344,25 +342,6 @@ namespace Nektar
                 }
 
             private:
-                /// Indicates if the vectors data is managed internally or 
-                /// externally by the user.
-                enum DataHolderType { eINTERNAL, eEXTERNAL };
-
-                template<typename ImplDataType, unsigned int ImplSize, unsigned int ImplSpace, DataHolderType holder>
-                class VectorDataHolder;
-
-                template<typename ImplDataType, unsigned int ImplSize, unsigned int ImplSpace>
-                class VectorDataHolder<ImplDataType, ImplSize, ImplSpace, eINTERNAL>
-                {
-                    public:
-                };
-
-                template<typename ImplDataType, unsigned int ImplSize, unsigned int ImplSpace>
-                class VectorDataHolder<ImplDataType, ImplSize, ImplSpace, eEXTERNAL>
-                {
-                    public:
-                };
-
                 template<typename ImplDataType, unsigned int ImplSize, unsigned int ImplSpace>
                 class VectorImpl
                 {
@@ -515,8 +494,21 @@ namespace Nektar
                 };
 
                 VectorImpl<DataType, dim, space> m_impl;
-        };
+        };    
+    }
 
+    namespace expt
+    {
+        template<typename DataType, unsigned int dim, unsigned int space>
+        class ExpressionTraits<LibUtilities::NekVector<DataType, dim, space> >
+        {
+            public:
+                typedef LibUtilities::NekVectorMetadata MetadataType;
+        };
+    }
+
+    namespace LibUtilities
+    {
         template<typename DataType, unsigned int dim, unsigned int space>
         NekVector<DataType, dim, space>
         operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim>& rhs)
@@ -630,6 +622,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.5  2006/09/14 02:06:16  bnelson
+    Fixed gcc compiler errors.
+
     Revision 1.4  2006/08/25 01:22:01  bnelson
     no message
 

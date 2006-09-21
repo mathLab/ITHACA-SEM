@@ -73,8 +73,7 @@ namespace Nektar
 
                 static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
                 {
-                    result = lhs;
-                    result += rhs;
+                    add(lhs, rhs, result);
                 }
 
                 static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
@@ -104,8 +103,7 @@ namespace Nektar
 
                 static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
                 {
-                    result = lhs;
-                    result *= rhs;
+                    multiply(lhs, rhs, result);
                 }
 
                 static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
@@ -135,8 +133,7 @@ namespace Nektar
 
                 static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
                 {
-                    result = lhs;
-                    result /= rhs;
+                    divide(lhs, rhs, result);
                 }
 
                 static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
@@ -166,8 +163,7 @@ namespace Nektar
 
                 static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
                 {
-                    result = lhs;
-                    result -= rhs;
+                    subtract(lhs, rhs, result);
                 }
 
                 static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
@@ -185,6 +181,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpressionOperators.hpp,v $
+    Revision 1.2  2006/09/14 02:08:59  bnelson
+    Fixed gcc compile errors
+
     Revision 1.1  2006/09/11 03:24:24  bnelson
     Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
 

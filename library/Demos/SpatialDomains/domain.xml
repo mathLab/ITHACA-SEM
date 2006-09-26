@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+	<DOMAIN>
+		C[0-2]
+	</DOMAIN>
+	
+	<BOUNDARY>
+		<D > C[1] </D>
+		<N> C[2] </N>
+	</BOUNDARY>
+</NEKTAR>
+

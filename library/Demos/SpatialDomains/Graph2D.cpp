@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream> 
 #include "SpatialDomains/MeshGraph2D.h"
+#include "SpatialDomains/Domain.h"
 
 using namespace Nektar;
 using namespace SpatialDomains; 
@@ -18,14 +19,15 @@ int main(int argc, char *argv[]){
 
     //string in(argv[argc-1]);
     string in("C:\\Data\\PhD\\Research\\dev\\Nektar++\\libs\\Demos\\SpatialDomains\\meshdef2D.xml");
+    string domainfile("C:\\Data\\PhD\\Research\\dev\\Nektar++\\libs\\Demos\\SpatialDomains\\domain.xml");
     MeshGraph2D graph2D;
+    Domain domain2D(&graph2D);
 
     graph2D.Read(in);
+    domain2D.Read(domainfile);
 
-    int numComposites = graph2D.GetNumComposites();
-    int numCompositeItems = graph2D.GetNumCompositeItems(2);
-
-    GeometrySharedPtr geom = graph2D.GetCompositeItem(2,4);
-
+    CompositeVector compVector = domain2D.GetDomain();
+    BoundaryVector boundVector = domain2D.GetBoundaries();
+    
     return 0;
 }

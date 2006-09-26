@@ -51,6 +51,7 @@ namespace Nektar
         typedef boost::shared_ptr<InterfaceComponent> SharedInterfaceCompPtr;
         typedef std::vector< VertexComponentSharedPtr >  VertexVector;
         typedef std::list< SharedInterfaceCompPtr > InterfaceCompList;
+        typedef boost::shared_ptr< std::vector<GeometrySharedPtr> > Composite;
 
         class MeshGraph
         {
@@ -90,12 +91,26 @@ namespace Nektar
                 m_FileName = inString;
             };
 
-        protected:
+            GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
+            Composite GetComposite(int whichComposite)
+            {
+                Composite returnval;
+                if (whichComposite >= 0 && whichComposite < int(m_MeshCompositeVector.size()))
+                {
+                    returnval = m_MeshCompositeVector[whichComposite];
+                }
+
+                return returnval;
+            }
+
+       protected:
             VertexVector  m_vertset;
             InterfaceCompList m_icomps;
 
             int m_MeshDimension;
             int m_SpaceDimension;
+
+            std::vector< Composite > m_MeshCompositeVector;
 
         private:
             std::string m_FileName;
@@ -107,6 +122,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.4  2006/06/02 18:48:40  sherwin
+// Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
+//
 // Revision 1.3  2006/06/01 14:58:53  kirby
 // *** empty log message ***
 //

@@ -71,14 +71,20 @@ namespace Nektar
         // \brief Read will read the meshgraph vertices given a TiXmlDocument.
         void MeshGraph::Read(TiXmlDocument &doc)
         {
+            TiXmlHandle docHandle(&doc);
             TiXmlNode* node = NULL;
             TiXmlElement* mesh = NULL;
+            TiXmlElement* master = NULL;    // Master tag within which all data is contained.
+
             int err;    /// Error value returned by TinyXML.
 
-            // Find the Mesh tag and same the dim and space attributes
-            mesh = doc.FirstChildElement("MESH");
+            master = doc.FirstChildElement("NEKTAR");
+            ASSERTL0(master, "Unable to find NEKTAR tag in file");
 
-            ASSERTL0(mesh, "Unable to find MESH tag in file.");
+            // Find the Mesh tag and same the dim and space attributes
+            mesh = master->FirstChildElement("GEOMETRY");
+
+            ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
             TiXmlAttribute *attr = mesh->FirstAttribute();
 
             // Initialize the mesh and space dimensions to 3 dimensions.
@@ -165,6 +171,40 @@ namespace Nektar
             }
         }
 
+        GeometrySharedPtr MeshGraph::GetCompositeItem(int whichComposite, int whichItem)
+        {
+            GeometrySharedPtr returnval;
+            bool error = false;
+
+            if (whichComposite >= 0 && whichComposite < int(m_MeshCompositeVector.size()))
+            {
+                if (whichItem >= 0 && whichItem < int(m_MeshCompositeVector[whichComposite]->size()))
+                {
+                    returnval = m_MeshCompositeVector[whichComposite]->at(whichItem);
+                }
+                else
+                {
+                    error = true;
+                }
+            }
+            else
+            {
+                error = true;
+            }
+
+            if (error)
+            {
+                std::ostringstream errStream;
+                errStream << "Unable to access composite item [" << whichComposite << "][" << whichItem << "].";
+                
+                std::string testStr = errStream.str();
+
+                NEKERROR(ErrorUtil::efatal, testStr.c_str());
+            }
+
+            return returnval;
+        }
+
         void MeshGraph::Write(std::string &outfilename)
         {
         }
@@ -177,6 +217,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.3  2006/08/24 18:50:00  jfrazier
+// Completed error checking on permissable composite item combinations.
+//
 // Revision 1.2  2006/05/09 13:37:01  jfrazier
 // Removed duplicate definition of shared vertex pointer.
 //

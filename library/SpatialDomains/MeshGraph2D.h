@@ -184,7 +184,7 @@ namespace Nektar
 
             int GetNumComposites(void)
             {
-                return int(m_Mesh2DCompositeVector.size());
+                return int(m_MeshCompositeVector.size());
             }
 
             int GetNumCompositeItems(int whichComposite)
@@ -193,7 +193,7 @@ namespace Nektar
 
                 try
                 {
-                    returnval = int(m_Mesh2DCompositeVector[whichComposite].size());
+                    returnval = int(m_MeshCompositeVector[whichComposite]->size());
                 }
                 catch(...)
                 {
@@ -204,8 +204,6 @@ namespace Nektar
 
                 return returnval;
             }
-
-            GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
 
         protected:
             void ReadEdges    (TiXmlDocument &doc);
@@ -219,8 +217,6 @@ namespace Nektar
             EdgeComponentVector m_ecomps;
             TriGeomVector       m_trigeoms;
             QuadGeomVector      m_quadgeoms;
-
-            std::vector< std::vector<GeometrySharedPtr> > m_Mesh2DCompositeVector;
         };
     };
 };
@@ -229,6 +225,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.7  2006/08/24 18:50:01  jfrazier
+// Completed error checking on permissable composite item combinations.
+//
 // Revision 1.6  2006/08/18 19:45:29  jfrazier
 // Completed composites.
 //

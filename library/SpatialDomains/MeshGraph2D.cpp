@@ -66,7 +66,8 @@ namespace Nektar
     void MeshGraph2D::ReadEdges(TiXmlDocument &doc)
     {
         /// We know we have it since we made it this far.
-        TiXmlElement* mesh = doc.FirstChildElement("MESH");
+        TiXmlHandle docHandle(&doc);
+        TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
         TiXmlElement* field = NULL;
 
         /// Look for elements in ELEMENT block.
@@ -147,7 +148,8 @@ namespace Nektar
     void MeshGraph2D::ReadElements(TiXmlDocument &doc)
     {
         /// We know we have it since we made it this far.
-        TiXmlElement* mesh = doc.FirstChildElement("MESH");
+        TiXmlHandle docHandle(&doc);
+        TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
         TiXmlElement* field = NULL;
 
         /// Look for elements in ELEMENT block.
@@ -305,11 +307,15 @@ namespace Nektar
 
     void MeshGraph2D::ReadComposites(TiXmlDocument &doc)
     {
+        TiXmlHandle docHandle(&doc);
+
         /// We know we have it since we made it this far.
-        TiXmlElement* mesh = doc.FirstChildElement("MESH");
+        TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
         TiXmlElement* field = NULL;
 
-        /// Look for elements in ELEMENT block.
+         ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
+
+         /// Look for elements in ELEMENT block.
         field = mesh->FirstChildElement("COMPOSITE");
 
         ASSERTL0(field, "Unable to find COMPOSITE tag in file.");
@@ -398,13 +404,13 @@ namespace Nektar
                         {
                             first = false;
 
-                            std::vector<GeometrySharedPtr> curVector;
-                            m_Mesh2DCompositeVector.push_back(curVector);
+                            Composite curVector(new std::vector<GeometrySharedPtr>);
+                            m_MeshCompositeVector.push_back(curVector);
                         }
 
                         if (compositeElementStr.length() > 0)
                         {
-                            m_Mesh2DCompositeVector.back().push_back(
+                            m_MeshCompositeVector.back()->push_back(
                                 ResolveGeomRef(prevCompositeElementStr, compositeElementStr));
                         }
                         prevCompositeElementStr = compositeElementStr;
@@ -427,14 +433,15 @@ namespace Nektar
     {
         // Read mesh first
         MeshGraph::Read(doc);
+        TiXmlHandle docHandle(&doc);
 
         TiXmlNode* node = NULL;
         TiXmlElement* mesh = NULL;
 
-        /// Look for all geometry related data in MESH block.
-        mesh = doc.FirstChildElement("MESH");
+        /// Look for all geometry related data in GEOMETRY block.
+        mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
 
-        ASSERTL0(mesh, "Unable to find MESH tag in file.");
+        ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
 
         ReadEdges(doc);
         ReadElements(doc);
@@ -544,45 +551,14 @@ namespace Nektar
         return returnval;
     }
 
-    GeometrySharedPtr MeshGraph2D::GetCompositeItem(int whichComposite, int whichItem)
-    {
-        GeometrySharedPtr returnval;
-        bool error = false;
-
-        if (whichComposite >= 0 && whichComposite < int(m_Mesh2DCompositeVector.size()))
-        {
-            if (whichItem >= 0 && whichItem < int(m_Mesh2DCompositeVector[whichComposite].size()))
-            {
-                returnval = m_Mesh2DCompositeVector[whichComposite][whichItem];
-            }
-            else
-            {
-                error = true;
-            }
-        }
-        else
-        {
-            error = true;
-        }
-
-        if (error)
-        {
-            std::ostringstream errStream;
-            errStream << "Unable to access composite item [" << whichComposite << "][" << whichItem << "].";
-            
-            std::string testStr = errStream.str();
-
-            NEKERROR(ErrorUtil::efatal, testStr.c_str());
-        }
-
-        return returnval;
-    }
-
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.10  2006/08/24 18:50:00  jfrazier
+// Completed error checking on permissable composite item combinations.
+//
 // Revision 1.9  2006/08/18 19:37:17  jfrazier
 // *** empty log message ***
 //

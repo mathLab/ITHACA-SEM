@@ -76,7 +76,7 @@ namespace Nektar
         int err;    /// Error value returned by TinyXML.
 
         /// Look for segments in ELEMENT block.
-        element = docHandle.FirstChildElement("MESH").FirstChildElement("ELEMENT").Element();
+        element = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").FirstChildElement("ELEMENT").Element();
 
         ASSERTL0(element, "Unable to find ELEMENT tag in file.");
         TiXmlAttribute *attr = element->FirstAttribute();
@@ -204,6 +204,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.5  2006/06/01 14:15:30  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.4  2006/05/23 19:56:33  jfrazier
 // These build and run, but the expansion pieces are commented out
 // because they would not run.

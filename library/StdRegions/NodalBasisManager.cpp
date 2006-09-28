@@ -316,7 +316,7 @@ namespace Nektar
             // bubble sort for first edge
             istart = numvert + sum;
             iend = istart + numepoints;
-            for(i=istart;i<iend;++j)
+            for(i=istart;i<iend;++i)
             {
                 for(j=istart;j<iend-1;++j)
                 {
@@ -337,7 +337,7 @@ namespace Nektar
             // bubble sort for second edge
             istart = numvert + sum;
             iend = istart + numepoints;
-            for(i=istart;i<iend;++j)
+            for(i=istart;i<iend;++i)
             {
                 for(j=istart;j<iend-1;++j)
                 {
@@ -358,7 +358,7 @@ namespace Nektar
             // bubble sort for third edge
             istart = numvert + sum;
             iend = istart + numepoints;
-            for(i=istart;i<iend;++j)
+            for(i=istart;i<iend;++i)
             {
                 for(j=istart;j<iend-1;++j)
                 {
@@ -456,6 +456,9 @@ namespace Nektar
 
 /** 
 * $Log: NodalBasisManager.cpp,v $
+* Revision 1.5  2006/09/10 02:22:32  kirby
+* *** empty log message ***
+*
 * Revision 1.4  2006/09/10 02:20:52  kirby
 * *** empty log message ***
 *

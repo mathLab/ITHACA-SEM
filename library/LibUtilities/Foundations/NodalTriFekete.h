@@ -38,8 +38,11 @@
 
 #include <math.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
+#include <LibUtilities/Foundations/Points.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
+const int NodalTriFeketeAvailable = 16;
+static const int NodalTriFeketeNPTS[] = {1,2,3,4,5,7,8,10,12,14,16,19,21,24,27,30};
 
 namespace Nektar
 {
@@ -53,26 +56,24 @@ namespace Nektar
                 NEKERROR(efatal, "This constructor should not be called");
             }
  
-            rc->m_npts = (rc->m_porder+1)*(rc->m_porder+2)/2;
-
-
             NodalTriFekete(const int &order): 
-                Points<double,2>(PointsKey((order+1)*(order+2)/2,eNodalTriFekete,eWildcard)),
-                m_derivmatrix((order+1)*(order+2)/2)
+                Points<double,2>(order,eNodalTriFekete,eWildcard)
             {
-                for(unsigned int i = 0; i < dim; ++i)
-                {
-                    m_points[i] = new double[m_pointskey.GetNumPoints()];
-                }
-                m_weights = new double[m_pointskey.GetNumPoints()];
             }
+
+            virtual ~NodalTriFekete()
+            {
+            }
+
 
         protected:
 
+
         private:
-            void CalculatePoints();
-            void CalculateWeights();
-            void CalculateDerivMatrix();
+            virtual void CalculateNumPoints();
+            virtual void CalculatePoints();
+            virtual void CalculateWeights();
+            virtual void CalculateDerivMatrix();
         };  
         
 

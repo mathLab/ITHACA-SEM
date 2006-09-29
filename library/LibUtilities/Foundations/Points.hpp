@@ -38,15 +38,13 @@
 
 #include <math.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 namespace Nektar
 {
     namespace LibUtilities
     {
-
-        typedef boost::shared_ptr<NekMatrix> NekMatrixSharedPtr;
-
         class PointsKey
         {
         public:
@@ -56,11 +54,10 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Default Constructor for PointsKey should not be called");
             }
 
-            PointsKey(int numpoints, PointsType pointstype, PointsIdentifier pointsid)
+            PointsKey(const int &pointsorder, const PointsType &pointstype, 
+                const PointsIdentifier &pointsid): m_pointsorder(pointsorder), 
+                m_pointstype(pointstype), m_pointsid(pointsid) 
             {
-                m_numpoints = numpoints;
-                m_pointstype = pointstype;
-                m_pointsid = pointsid;
             }
 
             virtual ~PointsKey()
@@ -74,15 +71,15 @@ namespace Nektar
 
             PointsKey& operator=(const PointsKey &key)
             {
-                m_numpoints = key.m_numpoints;
-                m_pointstype = key.m_pointstype;
-                m_pointsid = key.m_pointsid;
+                m_pointsorder = key.m_pointsorder;
+                m_pointstype  = key.m_pointstype;
+                m_pointsid    = key.m_pointsid;
                 return *this;
             }
 
-            inline int GetNumPoints() const
+            inline int GetPointsOrder() const
             {
-                return m_numpoints;
+                return m_pointsorder;
             }
 
             inline PointsType GetPointsType() const
@@ -96,10 +93,11 @@ namespace Nektar
             }
 
         protected:
-            int m_numpoints;              //!< Number of points
-            PointsType m_pointstype       //!< Type of Points
+            int m_pointsorder;            //!< "Order" of the points (as appropriately defined for PointsType)
+            PointsType m_pointstype;      //!< Type of Points
             PointsIdentifier m_pointsid;  //!< Unique indentifier (when needed) 
         };
+
 
         template<typename DataType, unsigned int dim>
         class Points
@@ -110,22 +108,26 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Default Constructor for Points should not be called");
             }
 
-            Points(const PointsKey &key)
-            {
-                m_pkey = key;
 
-                     for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        delete[] m_points[i];
-                    }
-                    delete[] m_weights;
-                    key.m_numpoints = 0;
+            Points(const PointsKey &key): m_pkey(key)
+            {
+                CalculateNumPoints(); //populate m_numpoints
+
+                // Allocate Memory
+                for(unsigned int i = 0; i < dim; ++i)
+                {
+                    m_points[i] = new DataType[m_numpoints];
                 }
 
+                m_weights = new DataType[m_numpoints];
+                m_derivmatrix.reset( new NekMatrix<DataType>(m_numpoints) );
+
+                CalculatePoints();
+
+                CalculateWeights();
+
+                CalculateDerivMatrix();                           
             }
-
-
-           friend bool operator  == (const BasisKey& x, const BasisKey& y);
 
             virtual ~Points()
             {
@@ -135,24 +137,31 @@ namespace Nektar
                     {
                         delete[] m_points[i];
                     }
+
                     delete[] m_weights;
+
                     key.m_numpoints = 0;
                 }
             }
-  
+
+            inline int GetPointsOrder() const
+            {
+                return m_pkey.GetNumPoints();
+            }
+
             inline int GetNumPoints() const
             {
-                return key.GetNumPoints();
+                return m_numpoints;
             }
 
             inline PointsType GetPointsType() const
             {
-                return key.GetPointsType();
+                return m_pkey.GetPointsType();
             }
 
             inline PointsIdentifier GetPointsId() const
             {
-                return key.GetPointsId();
+                return m_pkey.GetPointsId();
             }
 
             inline double *GetZ() const
@@ -194,18 +203,20 @@ namespace Nektar
                 z = m_points[2];
             }
 
-            inline const NekMatrix<DataType,FULL> *GetD() const
+            inline const boost::shared_ptr<NekMatrix<DataType> > GetD() const
             {
                 return m_derivmatrix;
             }
         
         protected:
-            PointsKey m_pointskey;
-            DataType * m_points[dim];
-            DataType * m_weights;
-            NekMatrix<DataType,eFull> m_derivmatrix;
+            PointsKey m_pkey;
+            int m_numpoints;          
+            DataType *m_points[dim];
+            DataType *m_weights;
+            boost::shared_ptr<NekMatrix<DataType> > m_derivmatrix;
 
         private:
+            virtual void CalculateNumPoints() = 0;
             virtual void CalculatePoints() = 0;
             virtual void CalculateWeights() = 0;
             virtual void CalculateDerivMatrix() = 0;
@@ -214,91 +225,79 @@ namespace Nektar
 
         bool operator == (const PointsKey& x, const PointsKey& y)
         {
-            if( (x.m_numpoints == y.m_numpoints) &&
+            if( (x.m_pointsorder == y.m_pointsorder) &&
                 (x.m_pointstype == y.m_pointstype) &&
                 (x.m_pointsid == y.m_pointsid) )
             {
                 return true;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
 
         bool operator == (const PointsKey* x, const PointsKey& y)
         {
-            if( ((*x).m_numpoints == y.m_numpoints) &&
+            if( ((*x).m_pointsorder == y.m_pointsorder) &&
                 ((*x).m_pointstype == y.m_pointstype) &&
                 ((*x).m_pointsid == y.m_pointsid) )
             {
                 return true;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
 
         bool operator == (const PointsKey& x, const PointsKey *y)
         {
-            if( (x.m_numpoints == (*y).m_numpoints) &&
+            if( (x.m_pointsorder == (*y).m_pointsorder) &&
                 (x.m_pointstype == (*y).m_pointstype) &&
                 (x.m_pointsid == (*y).m_pointsid) )
             {
                 return true;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
 
         bool operator != (const PointsKey& x, const PointsKey& y)
         {
-            if( (x.m_numpoints == y.m_numpoints) &&
+            if( (x.m_pointsorder == y.m_pointsorder) &&
                 (x.m_pointstype == y.m_pointstype) &&
                 (x.m_pointsid == y.m_pointsid) )
             {
                 return false;
             }
-            else
-            {
-                return true;
-            }
+
+            return true;
         }
 
 
         bool operator != (const PointsKey* x, const PointsKey& y)
         {
-            if( ((*x).m_numpoints == y.m_numpoints) &&
+            if( ((*x).m_pointsorder == y.m_pointsorder) &&
                 ((*x).m_pointstype == y.m_pointstype) &&
                 ((*x).m_pointsid == y.m_pointsid) )
             {
                 return false;
             }
-            else
-            {
-                return true;
-            }
+            
+            return true;
         }
 
 
         bool operator != (const PoinstKey& x, const PointsKey *y)
         {
-            if( (x.m_numpoints == (*y).m_numpoints) &&
+            if( (x.m_pointsorder == (*y).m_pointsorder) &&
                 (x.m_pointstype == (*y).m_pointstype) &&
                 (x.m_pointsid == (*y).m_pointsid) )
             {
                 return false;
             }
-            else
-            {
-                return true;
-            }
+
+            return true;
         }
 
     } // end of namespace

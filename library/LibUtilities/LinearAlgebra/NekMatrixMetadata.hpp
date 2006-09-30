@@ -41,69 +41,70 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
+
+    // Interface for expression templates.
+    class NekMatrixMetadata
     {
-        // Interface for expression templates.
-        class NekMatrixMetadata
-        {
-            public:
-                template<typename MatrixType>
-                explicit NekMatrixMetadata(const MatrixType& matrix) :
-                    Rows(matrix.GetRows()),
-                    Columns(matrix.GetColumns())
-                {
-                }
+        public:
+            template<typename MatrixType>
+            explicit NekMatrixMetadata(const MatrixType& matrix) :
+                Rows(matrix.GetRows()),
+                Columns(matrix.GetColumns())
+            {
+            }
 
-                NekMatrixMetadata(const NekMatrixMetadata& rhs) :
-                    Rows(rhs.Rows),
-                    Columns(rhs.Columns)
-                {
-                }
+            NekMatrixMetadata(const NekMatrixMetadata& rhs) :
+                Rows(rhs.Rows),
+                Columns(rhs.Columns)
+            {
+            }
 
-                static NekMatrixMetadata CreateForNegation(const NekMatrixMetadata& rhs)
-                {
-                    return NekMatrixMetadata(rhs);
-                }
+            static NekMatrixMetadata CreateForNegation(const NekMatrixMetadata& rhs)
+            {
+                return NekMatrixMetadata(rhs);
+            }
 
-                static NekMatrixMetadata CreateForAddition(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs)
-                {
-                    ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree in operator+");
-                    return NekMatrixMetadata(lhs);
-                }
+            static NekMatrixMetadata CreateForAddition(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs)
+            {
+                ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree in operator+");
+                return NekMatrixMetadata(lhs);
+            }
 
-                static NekMatrixMetadata CreateForMultiplication(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs)
-                {
-                    ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree in operator*");
-                    NekMatrixMetadata result;
-                    result.Rows = lhs.Rows;
-                    result.Columns = rhs.Columns;
-                    return result;
-                }
+            static NekMatrixMetadata CreateForMultiplication(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs)
+            {
+                ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree in operator*");
+                NekMatrixMetadata result;
+                result.Rows = lhs.Rows;
+                result.Columns = rhs.Columns;
+                return result;
+            }
 
-                NekMatrixMetadata& operator=(const NekMatrixMetadata& rhs)
-                {
-                    Rows = rhs.Rows;
-                    Columns = rhs.Columns;
-                    return *this;
-                }
+            NekMatrixMetadata& operator=(const NekMatrixMetadata& rhs)
+            {
+                Rows = rhs.Rows;
+                Columns = rhs.Columns;
+                return *this;
+            }
 
-                unsigned int Rows;
-                unsigned int Columns;
+            unsigned int Rows;
+            unsigned int Columns;
 
-            private:
-                NekMatrixMetadata() :
-                    Rows(0),
-                    Columns(0)
-                {
-                }
-        };
-    }
+        private:
+            NekMatrixMetadata() :
+                Rows(0),
+                Columns(0)
+            {
+            }
+    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_MATRIX_METADATA_HPP
 
 /**
     $Log: NekMatrixMetadata.hpp,v $
+    Revision 1.2  2006/09/14 02:06:16  bnelson
+    Fixed gcc compiler errors.
+
     Revision 1.1  2006/09/11 03:26:27  bnelson
     Updated to use new policy based expression templates.
 

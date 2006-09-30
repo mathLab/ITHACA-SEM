@@ -54,453 +54,449 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
+    enum NekMatrixForm
     {
-
-        enum NekMatrixForm
-        {
-            eFull,
-            eDiagonal
+        eFull,
+        eDiagonal
 //             eZero,
 //             eSquareSymmetric,
 //             eSquareSymmetricPositiveDefinite,
 //             eSymmetricPositiveDefiniteBanded,
 //             eSquareGeneral,
 //             eSquareGeneralBanded
-        };
+    };
 
-        enum MatrixDataHolderType { eWrapper, eCopy };
+    enum MatrixDataHolderType { eWrapper, eCopy };
 
-        template<typename DataType, NekMatrixForm form, unsigned int space>
-        class NekMatrixImpl;
+    template<typename DataType, NekMatrixForm form, unsigned int space>
+    class NekMatrixImpl;
 
 
-        /// NekMatrix Class
-        /// \param DataType The type of data to store in each element of the matrix.
-        /// \param
-        template<typename DataType, NekMatrixForm form = eFull, unsigned int space = 0>
-        class NekMatrix
-        {
-            public:
-                typedef NekMatrix<DataType, form, space> ThisType;
+    /// NekMatrix Class
+    /// \param DataType The type of data to store in each element of the matrix.
+    /// \param
+    template<typename DataType, NekMatrixForm form = eFull, unsigned int space = 0>
+    class NekMatrix
+    {
+        public:
+            typedef NekMatrix<DataType, form, space> ThisType;
 
-            public:
-                NekMatrix(unsigned int rows, unsigned int columns) :
+        public:
+            NekMatrix(unsigned int rows, unsigned int columns) :
+                m_rows(rows),
+                m_columns(columns),
+                m_data(NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(rows, columns)),
+                m_dataIsDeletable(true)
+            {
+            }
+
+            NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
+                m_rows(rows),
+                m_columns(columns),
+                m_data(),
+                m_dataIsDeletable(true)
+            {
+                m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(rows, columns);
+                std::copy(ptr, ptr+rows*columns, begin());
+            }
+
+            NekMatrix(unsigned int rows, unsigned int columns, DataType* ptr, MatrixDataHolderType t = eCopy) :
+                m_rows(rows),
+                m_columns(columns),
+                m_data(),
+                m_dataIsDeletable(false)
+            {
+                if( t == eCopy )
+                {
+                    m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(rows, columns);
+                    std::copy(ptr, ptr+rows*columns, begin());
+                    m_dataIsDeletable = true;
+                }
+                else
+                {
+                    m_data = ptr;
+                }
+            }
+
+            NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference d) :
                     m_rows(rows),
                     m_columns(columns),
                     m_data(NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(rows, columns)),
                     m_dataIsDeletable(true)
-                {
-                }
-
-                NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
-                    m_rows(rows),
-                    m_columns(columns),
-                    m_data(),
-                    m_dataIsDeletable(true)
-                {
-                    m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(rows, columns);
-                    std::copy(ptr, ptr+rows*columns, begin());
-                }
-
-                NekMatrix(unsigned int rows, unsigned int columns, DataType* ptr, MatrixDataHolderType t = eCopy) :
-                    m_rows(rows),
-                    m_columns(columns),
-                    m_data(),
-                    m_dataIsDeletable(false)
-                {
-                    if( t == eCopy )
-                    {
-                        m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(rows, columns);
-                        std::copy(ptr, ptr+rows*columns, begin());
-                        m_dataIsDeletable = true;
-                    }
-                    else
-                    {
-                        m_data = ptr;
-                    }
-                }
-
-                NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference d) :
-                        m_rows(rows),
-                        m_columns(columns),
-                        m_data(NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(rows, columns)),
-                        m_dataIsDeletable(true)
-                {
-                    std::fill(begin(), end(), d);
-                }
-
-
-                NekMatrix(const NekMatrix<DataType, form, space>& rhs) :
-                    m_rows(rhs.m_rows),
-                    m_columns(rhs.m_columns),
-                    m_data(),
-                    m_dataIsDeletable(rhs.m_dataIsDeletable)
-                {
-                    if( m_dataIsDeletable )
-                    {
-                        m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
-                        std::copy(rhs.begin(), rhs.end(), begin());
-                    }
-                    else
-                    {
-                        m_data = rhs.m_data;
-                    }
-                }
-
-                template<NekMatrixForm rhsForm>
-                NekMatrix(const NekMatrix<DataType, rhsForm, space>& rhs) :
-                    m_rows(rhs.m_rows),
-                    m_columns(rhs.m_columns),
-                    m_data(),
-                    m_dataIsDeletable(true)
-                {
-                
-                    m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
-                    NekMatrixImpl<DataType, form, space>::CopyMatrixValues(m_data, rhs, m_rows, m_columns);
-                }
-
-                template<typename ExpressionPolicyType>
-                NekMatrix(const expt::Expression<ExpressionPolicyType>& rhs) :
-                    m_rows(rhs.GetMetadata().Rows),
-                    m_columns(rhs.GetMetadata().Columns),
-                    m_data(),
-                    m_dataIsDeletable(true)
-                {
-                    BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, form, space> > ));
-                    m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
-                    rhs.Apply(*this);
-                }
-
-                NekMatrix<DataType, form, space>& operator=(const NekMatrix<DataType, form, space>& rhs)
-                {
-                    NekMatrix<DataType, form, space> temp(rhs);
-                    Swap(temp);
-                    return *this;
-                }
-
-                template<NekMatrixForm rhsForm>
-                NekMatrix<DataType, form, space>& operator=(const NekMatrix<DataType, rhsForm, space>& rhs)
-                {
-                    m_rows = rhs.GetRows();
-                    m_columns = rhs.GetColumns();
-                    m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
-                    m_dataIsDeletable = true;
-                    NekMatrixImpl<DataType, form, space>::CopyMatrixValues(m_data, rhs, m_rows, m_columns);
-                    return *this;
-                }
-
-                template<typename ExpressionPolicyType>
-                NekMatrix<DataType, form, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
-                {
-                    BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, form, space> > ));
-                    m_rows = rhs.GetMetadata().Rows;
-                    m_columns = rhs.GetMetadata().Columns;
-                    m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
-                    m_dataIsDeletable = true;
-                    rhs.Apply(*this);
-                    return *this;
-                }
-
-                ~NekMatrix()
-                {
-                    if( m_dataIsDeletable )
-                    {
-                        NekMatrixImpl<DataType, form, space>::DeallocateMatrixStorage(m_data, m_rows, m_columns);
-                    }
-                    m_data = NULL;
-                }
-
-                unsigned int GetRows() const
-                {
-                    return m_rows;
-                }
-
-                unsigned int GetColumns() const
-                {
-                    return m_columns;
-                }
-
-                inline typename boost::call_traits<DataType>::reference operator()
-                    (unsigned int rowNumber, unsigned int colNumber)
-                {
-                    return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
-                }
-
-                inline typename boost::call_traits<DataType>::const_reference operator()
-                        (unsigned int rowNumber, unsigned int colNumber) const
-                {
-                    return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
-                }
-
-
-                typename boost::call_traits<DataType>::reference GetValue
-                        (unsigned int rowNumber, unsigned int colNumber)
-                {
-                    return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
-                }
-
-                typename boost::call_traits<DataType>::const_reference GetValue
-                        (unsigned int rowNumber, unsigned int colNumber) const
-                {
-                    return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
-                }
-
-                void SetValue(unsigned int rowNumber, unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
-                {
-                    NekMatrixImpl<DataType, form, space>::SetValue(m_data, m_columns, rowNumber, colNumber, rhs);
-                }
-
-                DataType* GetPtr(unsigned int rowNumber, unsigned int colNumber)
-                {
-                    return NekMatrixImpl<DataType, form, space>::GetPtr(m_data, m_columns, rowNumber, colNumber);
-                }
-
-                typedef DataType* iterator;
-                typedef const DataType* const_iterator;
-
-                iterator begin()
-                {
-                    return &m_data[0];
-                }
-
-                iterator end()
-                {
-                    return NekMatrixImpl<DataType, form, space>::end(m_data, m_rows, m_columns);
-                }
-
-                const_iterator begin() const
-                {
-                    return &m_data[0];
-                }
-
-                const_iterator end() const
-                {
-                    return NekMatrixImpl<DataType, form, space>::end(m_data, m_rows, m_columns);
-                }
-
-                NekMatrixForm GetForm() const
-                {
-                    return form;
-                }
-
-                void negate()
-                {
-                    for(iterator iter = begin(); iter != end(); ++iter)
-                    {
-                        *iter = -*iter;
-                    }
-                }
-
-                expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, form, space> > >, expt::NegateOp> > operator-() const
-                {
-                    return expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, form, space> > >, expt::NegateOp> >(
-                            expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, form, space> > >(*this));
-                }
-
-
-                NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eFull, space>& rhs)
-                {
-                    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
-                    DataType* lhs_data = begin();
-                    const DataType* rhs_data = rhs.begin();
-
-                    for(unsigned int i = 0; i < m_rows*m_columns; ++i)
-                    {
-                        lhs_data[i] += rhs_data[i];
-                    }
-
-                    return *this;
-                }
-
-                // This is wrong as well.  What if this is diagonal?
-                // enable if on the output.
-                NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eDiagonal, space>& rhs)
-                {
-                    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
-
-                    for(unsigned int i = 0; i < rhs.GetRows(); ++i)
-                    {
-                        (*this)(i,i) += rhs(i,i);
-                    }
-
-                    return *this;
-                }
-
-                // Full *= full = full
-                // Full *= diagonal = full
-
-                // diag *= diag = diag
-                // diag *= full = full
-
-
-                template<NekMatrixForm rhsForm>
-                NekMatrix<DataType, eFull, space>& operator*=(const NekMatrix<DataType, rhsForm, space>& rhs)
-                {
-                    ASSERTL0(GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
-
-                    NekMatrix<DataType, eFull, space> result(GetRows(), rhs.GetColumns());
-
-                    for(unsigned int i = 0; i < result.GetRows(); ++i)
-                    {
-                        for(unsigned int j = 0; j < result.GetColumns(); ++j)
-                        {
-                            DataType t = DataType(0);
-
-                            // Set the result(i,j) element.
-                            for(unsigned int k = 0; k < GetColumns(); ++k)
-                            {
-                                t += (*this)(i,k)*rhs(k,j);
-                            }
-                            result(i,j) = t;
-                        }
-                    }
-
-                    Swap(result);
-
-                    return *this;
-                }
-
-            private:
-
-
-                void Swap(NekMatrix<DataType, form, space>& rhs)
-                {
-                    std::swap(m_rows, rhs.m_rows);
-                    std::swap(m_columns, rhs.m_columns);
-                    std::swap(m_data, rhs.m_data);
-                    std::swap(m_dataIsDeletable, rhs.m_dataIsDeletable);
-                }
-
-                unsigned int m_rows;
-                unsigned int m_columns;
-                DataType* m_data;
-                bool m_dataIsDeletable;
-        };
-
-        template<typename DataType, unsigned int space>
-        class NekMatrixImpl<DataType, eFull, space>
-        {
-            public:
-                static void CopyMatrixValues(DataType* data, const NekMatrix<DataType, eDiagonal, space>& rhs, unsigned int rows, unsigned int columns)
-                {
-                    std::fill(data, end(data, rows, columns), DataType(0));
-                    for(unsigned int i = 0; i < rows; ++i)
-                    {
-                        SetValue(data, columns, i, i, rhs.GetValue(i,i));
-                    }
-                }
-
-                static inline DataType* CreateMatrixStorage(unsigned int rows, unsigned int columns)
-                {
-                    return Nektar::MemoryManager::AllocateArray<DataType>(rows*columns);
-                }
-
-                static inline void DeallocateMatrixStorage(DataType*& data, unsigned int rows, unsigned int columns)
-                {
-                    Nektar::MemoryManager::DeallocateArray<DataType>(data, rows*columns);
-                }
-
-                static inline typename NekMatrix<DataType, eFull, space>::iterator end(DataType* data, unsigned int rows, unsigned int columns)
-                {
-                    return &data[rows*columns];
-                }
-
-                static inline typename boost::call_traits<DataType>::reference GetValue(
-                DataType* data, unsigned int matrixColumns, unsigned int rowNumber, unsigned int colNumber)
-                {
-                    return data[rowNumber*matrixColumns + colNumber];
-                }
-
-                static inline void SetValue(DataType* data, unsigned int matrixColumns, unsigned int rowNumber,
-                        unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
-                {
-                    NekMatrixImpl<DataType, eFull, space>::GetValue(data, matrixColumns, rowNumber, colNumber) = rhs;
-                }
-
-                static inline DataType* GetPtr(DataType* data, unsigned int matrixColumns, unsigned int rowNumber, unsigned int colNumber)
-                {
-                    return &data[rowNumber*matrixColumns + colNumber];
-                }
-        };
-
-        template<typename DataType, unsigned int space>
-        class NekMatrixImpl<DataType, eDiagonal, space>
-        {
-            public:
-                static inline DataType* CreateMatrixStorage(unsigned int rows, unsigned int columns)
-                {
-                    ASSERTL0(rows == columns, "Digaonal matrices must be square.");
-                    return Nektar::MemoryManager::AllocateArray<DataType>(rows);
-                }
-
-                static inline void DeallocateMatrixStorage(DataType*& data, unsigned int rows, unsigned int /*columns*/)
-                {
-                    Nektar::MemoryManager::DeallocateArray<DataType>(data, rows);
-                }
-
-                static inline typename NekMatrix<DataType, eDiagonal, space>::iterator end(DataType* data, unsigned int rows, unsigned int /*columns*/)
-                {
-                    return &data[rows];
-                }
-
-                static inline typename boost::call_traits<DataType>::reference GetValue(
-                DataType* data, unsigned int /*matrixColumns*/, unsigned int rowNumber, unsigned int /*colNumber*/)
-                {
-                    return data[rowNumber];
-                }
-
-                static inline void SetValue(DataType* data, unsigned int matrixColumns, unsigned int rowNumber,
-                        unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
-                {
-                    NekMatrixImpl<DataType, eFull, space>::GetValue(data, matrixColumns, rowNumber, colNumber) = rhs;
-                }
-
-                static inline DataType* GetPtr(DataType* data, unsigned int /*matrixColumns*/, unsigned int rowNumber, unsigned int /*colNumber*/)
-                {
-                    return &data[rowNumber];
-                }
-        };
-
-
-        template<typename DataType, unsigned int space>
-        const NekMatrix<DataType, eFull, space>& convertToFull(const NekMatrix<DataType, eFull, space>& m)
-        {
-            return m;
-        }
-
-        template<typename DataType, unsigned int space>
-        NekMatrix<DataType, eFull, space> convertToFull(const NekMatrix<DataType, eDiagonal, space>& m)
-        {
-            NekMatrix<DataType, eFull, space> result(m.GetRows(), m.GetColumns(), DataType());
-            for(unsigned int i = 0; i < m.GetRows(); ++i)
             {
-                result(i,i) = m(i,i);
+                std::fill(begin(), end(), d);
             }
 
-            return result;
+
+            NekMatrix(const NekMatrix<DataType, form, space>& rhs) :
+                m_rows(rhs.m_rows),
+                m_columns(rhs.m_columns),
+                m_data(),
+                m_dataIsDeletable(rhs.m_dataIsDeletable)
+            {
+                if( m_dataIsDeletable )
+                {
+                    m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
+                    std::copy(rhs.begin(), rhs.end(), begin());
+                }
+                else
+                {
+                    m_data = rhs.m_data;
+                }
+            }
+
+            template<NekMatrixForm rhsForm>
+            NekMatrix(const NekMatrix<DataType, rhsForm, space>& rhs) :
+                m_rows(rhs.m_rows),
+                m_columns(rhs.m_columns),
+                m_data(),
+                m_dataIsDeletable(true)
+            {
+            
+                m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
+                NekMatrixImpl<DataType, form, space>::CopyMatrixValues(m_data, rhs, m_rows, m_columns);
+            }
+
+            template<typename ExpressionPolicyType>
+            NekMatrix(const expt::Expression<ExpressionPolicyType>& rhs) :
+                m_rows(rhs.GetMetadata().Rows),
+                m_columns(rhs.GetMetadata().Columns),
+                m_data(),
+                m_dataIsDeletable(true)
+            {
+                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, form, space> > ));
+                m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
+                rhs.Apply(*this);
+            }
+
+            NekMatrix<DataType, form, space>& operator=(const NekMatrix<DataType, form, space>& rhs)
+            {
+                NekMatrix<DataType, form, space> temp(rhs);
+                Swap(temp);
+                return *this;
+            }
+
+            template<NekMatrixForm rhsForm>
+            NekMatrix<DataType, form, space>& operator=(const NekMatrix<DataType, rhsForm, space>& rhs)
+            {
+                m_rows = rhs.GetRows();
+                m_columns = rhs.GetColumns();
+                m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
+                m_dataIsDeletable = true;
+                NekMatrixImpl<DataType, form, space>::CopyMatrixValues(m_data, rhs, m_rows, m_columns);
+                return *this;
+            }
+
+            template<typename ExpressionPolicyType>
+            NekMatrix<DataType, form, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
+            {
+                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, form, space> > ));
+                m_rows = rhs.GetMetadata().Rows;
+                m_columns = rhs.GetMetadata().Columns;
+                m_data = NekMatrixImpl<DataType, form, space>::CreateMatrixStorage(m_rows, m_columns);
+                m_dataIsDeletable = true;
+                rhs.Apply(*this);
+                return *this;
+            }
+
+            ~NekMatrix()
+            {
+                if( m_dataIsDeletable )
+                {
+                    NekMatrixImpl<DataType, form, space>::DeallocateMatrixStorage(m_data, m_rows, m_columns);
+                }
+                m_data = NULL;
+            }
+
+            unsigned int GetRows() const
+            {
+                return m_rows;
+            }
+
+            unsigned int GetColumns() const
+            {
+                return m_columns;
+            }
+
+            inline typename boost::call_traits<DataType>::reference operator()
+                (unsigned int rowNumber, unsigned int colNumber)
+            {
+                return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
+            }
+
+            inline typename boost::call_traits<DataType>::const_reference operator()
+                    (unsigned int rowNumber, unsigned int colNumber) const
+            {
+                return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
+            }
+
+
+            typename boost::call_traits<DataType>::reference GetValue
+                    (unsigned int rowNumber, unsigned int colNumber)
+            {
+                return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
+            }
+
+            typename boost::call_traits<DataType>::const_reference GetValue
+                    (unsigned int rowNumber, unsigned int colNumber) const
+            {
+                return NekMatrixImpl<DataType, form, space>::GetValue(m_data, m_columns, rowNumber, colNumber);
+            }
+
+            void SetValue(unsigned int rowNumber, unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
+            {
+                NekMatrixImpl<DataType, form, space>::SetValue(m_data, m_columns, rowNumber, colNumber, rhs);
+            }
+
+            DataType* GetPtr(unsigned int rowNumber, unsigned int colNumber)
+            {
+                return NekMatrixImpl<DataType, form, space>::GetPtr(m_data, m_columns, rowNumber, colNumber);
+            }
+
+            typedef DataType* iterator;
+            typedef const DataType* const_iterator;
+
+            iterator begin()
+            {
+                return &m_data[0];
+            }
+
+            iterator end()
+            {
+                return NekMatrixImpl<DataType, form, space>::end(m_data, m_rows, m_columns);
+            }
+
+            const_iterator begin() const
+            {
+                return &m_data[0];
+            }
+
+            const_iterator end() const
+            {
+                return NekMatrixImpl<DataType, form, space>::end(m_data, m_rows, m_columns);
+            }
+
+            NekMatrixForm GetForm() const
+            {
+                return form;
+            }
+
+            void negate()
+            {
+                for(iterator iter = begin(); iter != end(); ++iter)
+                {
+                    *iter = -*iter;
+                }
+            }
+
+            expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, form, space> > >, expt::NegateOp> > operator-() const
+            {
+                return expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, form, space> > >, expt::NegateOp> >(
+                        expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, form, space> > >(*this));
+            }
+
+
+            NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eFull, space>& rhs)
+            {
+                ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
+                DataType* lhs_data = begin();
+                const DataType* rhs_data = rhs.begin();
+
+                for(unsigned int i = 0; i < m_rows*m_columns; ++i)
+                {
+                    lhs_data[i] += rhs_data[i];
+                }
+
+                return *this;
+            }
+
+            // This is wrong as well.  What if this is diagonal?
+            // enable if on the output.
+            NekMatrix<DataType, eFull, space> operator+=(const NekMatrix<DataType, eDiagonal, space>& rhs)
+            {
+                ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
+
+                for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+                {
+                    (*this)(i,i) += rhs(i,i);
+                }
+
+                return *this;
+            }
+
+            // Full *= full = full
+            // Full *= diagonal = full
+
+            // diag *= diag = diag
+            // diag *= full = full
+
+
+            template<NekMatrixForm rhsForm>
+            NekMatrix<DataType, eFull, space>& operator*=(const NekMatrix<DataType, rhsForm, space>& rhs)
+            {
+                ASSERTL0(GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
+
+                NekMatrix<DataType, eFull, space> result(GetRows(), rhs.GetColumns());
+
+                for(unsigned int i = 0; i < result.GetRows(); ++i)
+                {
+                    for(unsigned int j = 0; j < result.GetColumns(); ++j)
+                    {
+                        DataType t = DataType(0);
+
+                        // Set the result(i,j) element.
+                        for(unsigned int k = 0; k < GetColumns(); ++k)
+                        {
+                            t += (*this)(i,k)*rhs(k,j);
+                        }
+                        result(i,j) = t;
+                    }
+                }
+
+                Swap(result);
+
+                return *this;
+            }
+
+        private:
+
+
+            void Swap(NekMatrix<DataType, form, space>& rhs)
+            {
+                std::swap(m_rows, rhs.m_rows);
+                std::swap(m_columns, rhs.m_columns);
+                std::swap(m_data, rhs.m_data);
+                std::swap(m_dataIsDeletable, rhs.m_dataIsDeletable);
+            }
+
+            unsigned int m_rows;
+            unsigned int m_columns;
+            DataType* m_data;
+            bool m_dataIsDeletable;
+    };
+
+    template<typename DataType, unsigned int space>
+    class NekMatrixImpl<DataType, eFull, space>
+    {
+        public:
+            static void CopyMatrixValues(DataType* data, const NekMatrix<DataType, eDiagonal, space>& rhs, unsigned int rows, unsigned int columns)
+            {
+                std::fill(data, end(data, rows, columns), DataType(0));
+                for(unsigned int i = 0; i < rows; ++i)
+                {
+                    SetValue(data, columns, i, i, rhs.GetValue(i,i));
+                }
+            }
+
+            static inline DataType* CreateMatrixStorage(unsigned int rows, unsigned int columns)
+            {
+                return Nektar::MemoryManager::AllocateArray<DataType>(rows*columns);
+            }
+
+            static inline void DeallocateMatrixStorage(DataType*& data, unsigned int rows, unsigned int columns)
+            {
+                Nektar::MemoryManager::DeallocateArray<DataType>(data, rows*columns);
+            }
+
+            static inline typename NekMatrix<DataType, eFull, space>::iterator end(DataType* data, unsigned int rows, unsigned int columns)
+            {
+                return &data[rows*columns];
+            }
+
+            static inline typename boost::call_traits<DataType>::reference GetValue(
+            DataType* data, unsigned int matrixColumns, unsigned int rowNumber, unsigned int colNumber)
+            {
+                return data[rowNumber*matrixColumns + colNumber];
+            }
+
+            static inline void SetValue(DataType* data, unsigned int matrixColumns, unsigned int rowNumber,
+                    unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
+            {
+                NekMatrixImpl<DataType, eFull, space>::GetValue(data, matrixColumns, rowNumber, colNumber) = rhs;
+            }
+
+            static inline DataType* GetPtr(DataType* data, unsigned int matrixColumns, unsigned int rowNumber, unsigned int colNumber)
+            {
+                return &data[rowNumber*matrixColumns + colNumber];
+            }
+    };
+
+    template<typename DataType, unsigned int space>
+    class NekMatrixImpl<DataType, eDiagonal, space>
+    {
+        public:
+            static inline DataType* CreateMatrixStorage(unsigned int rows, unsigned int columns)
+            {
+                ASSERTL0(rows == columns, "Digaonal matrices must be square.");
+                return Nektar::MemoryManager::AllocateArray<DataType>(rows);
+            }
+
+            static inline void DeallocateMatrixStorage(DataType*& data, unsigned int rows, unsigned int /*columns*/)
+            {
+                Nektar::MemoryManager::DeallocateArray<DataType>(data, rows);
+            }
+
+            static inline typename NekMatrix<DataType, eDiagonal, space>::iterator end(DataType* data, unsigned int rows, unsigned int /*columns*/)
+            {
+                return &data[rows];
+            }
+
+            static inline typename boost::call_traits<DataType>::reference GetValue(
+            DataType* data, unsigned int /*matrixColumns*/, unsigned int rowNumber, unsigned int /*colNumber*/)
+            {
+                return data[rowNumber];
+            }
+
+            static inline void SetValue(DataType* data, unsigned int matrixColumns, unsigned int rowNumber,
+                    unsigned int colNumber, typename boost::call_traits<DataType>::param_type rhs)
+            {
+                NekMatrixImpl<DataType, eFull, space>::GetValue(data, matrixColumns, rowNumber, colNumber) = rhs;
+            }
+
+            static inline DataType* GetPtr(DataType* data, unsigned int /*matrixColumns*/, unsigned int rowNumber, unsigned int /*colNumber*/)
+            {
+                return &data[rowNumber];
+            }
+    };
+
+
+    template<typename DataType, unsigned int space>
+    const NekMatrix<DataType, eFull, space>& convertToFull(const NekMatrix<DataType, eFull, space>& m)
+    {
+        return m;
+    }
+
+    template<typename DataType, unsigned int space>
+    NekMatrix<DataType, eFull, space> convertToFull(const NekMatrix<DataType, eDiagonal, space>& m)
+    {
+        NekMatrix<DataType, eFull, space> result(m.GetRows(), m.GetColumns(), DataType());
+        for(unsigned int i = 0; i < m.GetRows(); ++i)
+        {
+            result(i,i) = m(i,i);
         }
+
+        return result;
     }
 
     // All of the expression interfaces for NekMatrix should go here.
     namespace expt
     {
-        template<typename DataType, LibUtilities::NekMatrixForm form, unsigned int space>
-        class ExpressionTraits<LibUtilities::NekMatrix<DataType, form, space> >
+        template<typename DataType, NekMatrixForm form, unsigned int space>
+        class ExpressionTraits<NekMatrix<DataType, form, space> >
         {
             public:
-                typedef LibUtilities::NekMatrixMetadata MetadataType;
+                typedef NekMatrixMetadata MetadataType;
         };
 
         // Binary expression specializations for NekMatrix.
-        template<typename DataType, Nektar::LibUtilities::NekMatrixForm lhsForm, Nektar::LibUtilities::NekMatrixForm rhsForm, unsigned int space>
-        class BinaryExpressionTraits<Nektar::LibUtilities::NekMatrix<DataType, lhsForm, space>, Nektar::LibUtilities::NekMatrix<DataType, rhsForm, space> >
+        template<typename DataType, Nektar::NekMatrixForm lhsForm, Nektar::NekMatrixForm rhsForm, unsigned int space>
+        class BinaryExpressionTraits<Nektar::NekMatrix<DataType, lhsForm, space>, Nektar::NekMatrix<DataType, rhsForm, space> >
         {
             public:
-                typedef Nektar::LibUtilities::NekMatrix<DataType, Nektar::LibUtilities::eFull, space> AdditionResultType;
-                typedef Nektar::LibUtilities::NekMatrix<DataType, Nektar::LibUtilities::eFull, space> SubtractionResultType;
-                typedef Nektar::LibUtilities::NekMatrix<DataType, Nektar::LibUtilities::eFull, space> DivisionResultType;
-                typedef Nektar::LibUtilities::NekMatrix<DataType, Nektar::LibUtilities::eFull, space> MultiplicationResultType;
+                typedef Nektar::NekMatrix<DataType, Nektar::eFull, space> AdditionResultType;
+                typedef Nektar::NekMatrix<DataType, Nektar::eFull, space> SubtractionResultType;
+                typedef Nektar::NekMatrix<DataType, Nektar::eFull, space> DivisionResultType;
+                typedef Nektar::NekMatrix<DataType, Nektar::eFull, space> MultiplicationResultType;
         };
 
         //// Binary expression specializations for NekMatrix.
@@ -527,268 +523,267 @@ namespace Nektar
 
         // Binary expression specializations for NekMatrix.
         template<typename DataType, unsigned int space>
-        class BinaryExpressionTraits<Nektar::LibUtilities::NekMatrix<DataType, Nektar::LibUtilities::eDiagonal, space>, Nektar::LibUtilities::NekMatrix<DataType, Nektar::LibUtilities::eDiagonal, space> >
+        class BinaryExpressionTraits<Nektar::NekMatrix<DataType, Nektar::eDiagonal, space>, Nektar::NekMatrix<DataType, Nektar::eDiagonal, space> >
         {
             public:
-                typedef Nektar::LibUtilities::NekMatrix<DataType, Nektar::LibUtilities::eDiagonal, space> AdditionResultType;
-                typedef Nektar::LibUtilities::NekMatrix<DataType, Nektar::LibUtilities::eDiagonal, space> SubtractionResultType;
-                typedef Nektar::LibUtilities::NekMatrix<DataType, Nektar::LibUtilities::eDiagonal, space> DivisionResultType;
-                typedef Nektar::LibUtilities::NekMatrix<DataType, Nektar::LibUtilities::eDiagonal, space> MultiplicationResultType;
+                typedef Nektar::NekMatrix<DataType, Nektar::eDiagonal, space> AdditionResultType;
+                typedef Nektar::NekMatrix<DataType, Nektar::eDiagonal, space> SubtractionResultType;
+                typedef Nektar::NekMatrix<DataType, Nektar::eDiagonal, space> DivisionResultType;
+                typedef Nektar::NekMatrix<DataType, Nektar::eDiagonal, space> MultiplicationResultType;
         };
         
         
-        template<typename DataType, Nektar::LibUtilities::NekMatrixForm lhsForm, unsigned int vectorDim, unsigned int space>
-        class BinaryExpressionTraits<Nektar::LibUtilities::NekMatrix<DataType, lhsForm, space>, Nektar::LibUtilities::NekVector<DataType, vectorDim, space> >
+        template<typename DataType, Nektar::NekMatrixForm lhsForm, unsigned int vectorDim, unsigned int space>
+        class BinaryExpressionTraits<Nektar::NekMatrix<DataType, lhsForm, space>, Nektar::NekVector<DataType, vectorDim, space> >
         {
             public:
-                typedef Nektar::LibUtilities::NekVector<DataType, vectorDim, space> MultiplicationResultType;
+                typedef Nektar::NekVector<DataType, vectorDim, space> MultiplicationResultType;
         };
 
     }
 
-    namespace LibUtilities
+    template<typename DataType, NekMatrixForm form, unsigned int space>
+    void negate(NekMatrix<DataType, form, space>& rhs)
     {
-        template<typename DataType, NekMatrixForm form, unsigned int space>
-        void negate(NekMatrix<DataType, form, space>& rhs)
-        {
-            rhs.negate();
-        }
-        
+        rhs.negate();
+    }
+    
 
-        ////////////////////////////////////////
-        // Addition
-        ////////////////////////////////////////
-        
-        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
-        void add(const NekMatrix<DataType, lhsForm, space>& lhs, 
-                 const NekMatrix<DataType, rhsForm, space>& rhs,
-                 typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::AdditionResultType& result)
-        {
-            result = lhs;
-            result += rhs;
-        }
+    ////////////////////////////////////////
+    // Addition
+    ////////////////////////////////////////
+    
+    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+    void add(const NekMatrix<DataType, lhsForm, space>& lhs, 
+                const NekMatrix<DataType, rhsForm, space>& rhs,
+                typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::AdditionResultType& result)
+    {
+        result = lhs;
+        result += rhs;
+    }
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
-        expt::Expression<expt::BinaryExpressionPolicy<
-            expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >,
-            expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > >,
-            expt::AddOp > > operator+(
-            const NekMatrix<DataType, lhsForm, space>& lhs,
-            const NekMatrix<DataType, rhsForm, space>& rhs)
-        {
-            typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > > LhsExpressionType;
-            typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > > RhsExpressionType;
+    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+    expt::Expression<expt::BinaryExpressionPolicy<
+        expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >,
+        expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > >,
+        expt::AddOp > > operator+(
+        const NekMatrix<DataType, lhsForm, space>& lhs,
+        const NekMatrix<DataType, rhsForm, space>& rhs)
+    {
+        typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > > LhsExpressionType;
+        typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > > RhsExpressionType;
 
-            return expt::Expression<expt::BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, expt::AddOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
-        }
+        return expt::Expression<expt::BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, expt::AddOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+    }
 #else
-        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
-        NekMatrix<DataType, eFull, space> operator+(
-            const NekMatrix<DataType, lhsForm, space>& lhs,
-            const NekMatrix<DataType, rhsForm, space>& rhs)
-        {
-            NekMatrix<DataType, NekMatrixOperationResult<lhsForm, rhsForm>::AdditionResultType, space> result(lhs);
-            result += rhs;
-            return result;
-        }
+    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+    NekMatrix<DataType, eFull, space> operator+(
+        const NekMatrix<DataType, lhsForm, space>& lhs,
+        const NekMatrix<DataType, rhsForm, space>& rhs)
+    {
+        NekMatrix<DataType, NekMatrixOperationResult<lhsForm, rhsForm>::AdditionResultType, space> result(lhs);
+        result += rhs;
+        return result;
+    }
 
-        template<typename DataType, unsigned int space>
-        NekMatrix<DataType, eFull, space> operator+(
-            const NekMatrix<DataType, eFull, space>& lhs,
-            const NekMatrix<DataType, eDiagonal, space>& rhs)
-        {
-            NekMatrix<DataType, eFull, space> result = lhs;
-            result += rhs;
-            return result;
-        }
+    template<typename DataType, unsigned int space>
+    NekMatrix<DataType, eFull, space> operator+(
+        const NekMatrix<DataType, eFull, space>& lhs,
+        const NekMatrix<DataType, eDiagonal, space>& rhs)
+    {
+        NekMatrix<DataType, eFull, space> result = lhs;
+        result += rhs;
+        return result;
+    }
 
-        template<typename DataType, unsigned int space>
-        NekMatrix<DataType, eFull, space> operator+(
-            const NekMatrix<DataType, eDiagonal, space>& lhs,
-            const NekMatrix<DataType, eFull, space>& rhs)
-        {
-            NekMatrix<DataType, eFull, space> result = rhs;
-            result += lhs;
-            return result;
-        }
+    template<typename DataType, unsigned int space>
+    NekMatrix<DataType, eFull, space> operator+(
+        const NekMatrix<DataType, eDiagonal, space>& lhs,
+        const NekMatrix<DataType, eFull, space>& rhs)
+    {
+        NekMatrix<DataType, eFull, space> result = rhs;
+        result += lhs;
+        return result;
+    }
 #endif
 
 
-        /////////////////////////////////////
-        // Subtraction
-        ////////////////////////////////////
-        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
-        void subtract(const NekMatrix<DataType, lhsForm, space>& lhs, 
-                 const NekMatrix<DataType, rhsForm, space>& rhs,
-                 typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::SubtractionResultType& result)
+    /////////////////////////////////////
+    // Subtraction
+    ////////////////////////////////////
+    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+    void subtract(const NekMatrix<DataType, lhsForm, space>& lhs, 
+                const NekMatrix<DataType, rhsForm, space>& rhs,
+                typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::SubtractionResultType& result)
+    {
+        result = lhs;
+        result -= rhs;
+    }
+
+
+
+    /////////////////////////////////////////
+    // Multiplication
+    /////////////////////////////////////////
+    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+    void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, 
+                const NekMatrix<DataType, rhsForm, space>& rhs,
+                typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::MultiplicationResultType& result)
+    {
+        result = lhs;
+        result *= rhs;
+    }
+
+    template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, unsigned int space>
+    void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, const NekVector<DataType, vectorDim, space>& rhs,
+                    typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekVector<DataType, vectorDim, space> >::MultiplicationResultType& result)
+    {
+        ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
+
+        for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
         {
-            result = lhs;
-            result -= rhs;
-        }
-
-
-
-        /////////////////////////////////////////
-        // Multiplication
-        /////////////////////////////////////////
-        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
-        void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, 
-                 const NekMatrix<DataType, rhsForm, space>& rhs,
-                 typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::MultiplicationResultType& result)
-        {
-            result = lhs;
-            result *= rhs;
-        }
-
-        template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, unsigned int space>
-        void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, const NekVector<DataType, vectorDim, space>& rhs,
-                      typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekVector<DataType, vectorDim, space> >::MultiplicationResultType& result)
-        {
-            ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
-
-            for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
+            DataType t = DataType(0);
+            for(unsigned int j = 0; j < rhs.GetDimension(); ++j)
             {
-                DataType t = DataType(0);
-                for(unsigned int j = 0; j < rhs.GetDimension(); ++j)
-                {
-                    t += lhs(i,j)*rhs(j);
-                }
-                result(i) = t;
+                t += lhs(i,j)*rhs(j);
             }
-        }
-
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-        template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
-        expt::Expression<expt::BinaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >, expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > >, expt::MultiplyOp > > operator*(
-                const NekMatrix<DataType, lhsForm, space>& lhs,
-                const NekMatrix<DataType, rhsForm, space>& rhs)
-        {
-            typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > > LhsExpressionType;
-            typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > > RhsExpressionType;
-
-            return expt::Expression<expt::BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, expt::MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
-        }
-
-        template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, unsigned int space>
-        expt::Expression<expt::BinaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >, expt::Expression<expt::ConstantExpressionPolicy<NekVector<DataType, vectorDim, space> > >, expt::MultiplyOp > > operator*(
-                const NekMatrix<DataType, lhsForm, space>& lhs,
-                const NekVector<DataType, vectorDim, space>& rhs)
-        {
-            typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > > LhsExpressionType;
-            typedef expt::Expression<expt::ConstantExpressionPolicy<NekVector<DataType, vectorDim, space> > > RhsExpressionType;
-
-            return expt::Expression<expt::BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, expt::MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
-        }
-#else
-        template<typename DataType, NekMatrixForm form, unsigned int space>
-        NekMatrix<DataType, form, space> operator*(const NekMatrix<DataType, form, space>& lhs,
-                                                   const NekMatrix<DataType, form, space>& rhs)
-        {
-            ASSERTL0(lhs.GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
-
-            NekMatrix<DataType, form, space> result(lhs.GetRows(), rhs.GetColumns());
-
-            for(unsigned int i = 0; i < result.GetRows(); ++i)
-            {
-                for(unsigned int j = 0; j < result.GetColumns(); ++j)
-                {
-                    DataType t = DataType(0);
-
-                    // Set the result(i,j) element.
-                    for(unsigned int k = 0; k < lhs.GetColumns(); ++k)
-                    {
-                        t += lhs(i,k)*rhs(k,j);
-                    }
-                    result(i,j) = t;
-                }
-            }
-
-            return result;
-        }
-
-        template<typename DataType, NekMatrixForm form, unsigned int space>
-        NekVector<DataType, 0, space> operator*(
-        const NekMatrix<DataType, form, space>& lhs,
-        const NekVector<DataType, 0, space>& rhs)
-        {
-            ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
-
-            NekVector<DataType, 0, space> result(rhs.GetDimension(), DataType(0));
-
-            for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
-            {
-                DataType t = DataType(0);
-                for(unsigned int j = 0; j < rhs.GetDimension(); ++j)
-                {
-                    t += lhs(i,j)*rhs(j);
-                }
-                result(i) = t;
-            }
-
-            return result;
-        }
-#endif
-
-
-        template<typename DataType, NekMatrixForm form, unsigned int space>
-        bool operator==(const NekMatrix<DataType, form, space>& lhs,
-                        const NekMatrix<DataType, form, space>& rhs)
-        {
-            if( lhs.GetRows() != rhs.GetRows() )
-            {
-                return false;
-            }
-
-            if( lhs.GetColumns() != rhs.GetColumns() )
-            {
-                return false;
-            }
-
-            typename NekMatrix<DataType, form, space>::const_iterator lhs_iter = lhs.begin();
-            typename NekMatrix<DataType, form, space>::const_iterator rhs_iter = rhs.begin();
-
-            for( ; lhs_iter != lhs.end(); ++lhs_iter, ++rhs_iter )
-            {
-                if( *lhs_iter != *rhs_iter )
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        template<typename DataType, NekMatrixForm form, unsigned int space>
-        std::ostream& operator<<(std::ostream& os, const NekMatrix<DataType, form, space>& rhs)
-        {
-            for(unsigned int i = 0; i < rhs.GetRows(); ++i)
-            {
-                os << "[";
-                for(unsigned int j = 0; j < rhs.GetColumns(); ++j)
-                {
-                    os << rhs(i,j);
-                    if( j != rhs.GetColumns() - 1 )
-                    {
-                        os << ", ";
-                    }
-                }
-                os << "]";
-                if( i != rhs.GetRows()-1 )
-                {
-                    os << std::endl;
-                }
-            }
-            return os;
+            result(i) = t;
         }
     }
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+    expt::Expression<expt::BinaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >, expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > >, expt::MultiplyOp > > operator*(
+            const NekMatrix<DataType, lhsForm, space>& lhs,
+            const NekMatrix<DataType, rhsForm, space>& rhs)
+    {
+        typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > > LhsExpressionType;
+        typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > > RhsExpressionType;
+
+        return expt::Expression<expt::BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, expt::MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+    }
+
+    template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, unsigned int space>
+    expt::Expression<expt::BinaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >, expt::Expression<expt::ConstantExpressionPolicy<NekVector<DataType, vectorDim, space> > >, expt::MultiplyOp > > operator*(
+            const NekMatrix<DataType, lhsForm, space>& lhs,
+            const NekVector<DataType, vectorDim, space>& rhs)
+    {
+        typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > > LhsExpressionType;
+        typedef expt::Expression<expt::ConstantExpressionPolicy<NekVector<DataType, vectorDim, space> > > RhsExpressionType;
+
+        return expt::Expression<expt::BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, expt::MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+    }
+#else
+    template<typename DataType, NekMatrixForm form, unsigned int space>
+    NekMatrix<DataType, form, space> operator*(const NekMatrix<DataType, form, space>& lhs,
+                                                const NekMatrix<DataType, form, space>& rhs)
+    {
+        ASSERTL0(lhs.GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
+
+        NekMatrix<DataType, form, space> result(lhs.GetRows(), rhs.GetColumns());
+
+        for(unsigned int i = 0; i < result.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < result.GetColumns(); ++j)
+            {
+                DataType t = DataType(0);
+
+                // Set the result(i,j) element.
+                for(unsigned int k = 0; k < lhs.GetColumns(); ++k)
+                {
+                    t += lhs(i,k)*rhs(k,j);
+                }
+                result(i,j) = t;
+            }
+        }
+
+        return result;
+    }
+
+    template<typename DataType, NekMatrixForm form, unsigned int space>
+    NekVector<DataType, 0, space> operator*(
+    const NekMatrix<DataType, form, space>& lhs,
+    const NekVector<DataType, 0, space>& rhs)
+    {
+        ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
+
+        NekVector<DataType, 0, space> result(rhs.GetDimension(), DataType(0));
+
+        for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
+        {
+            DataType t = DataType(0);
+            for(unsigned int j = 0; j < rhs.GetDimension(); ++j)
+            {
+                t += lhs(i,j)*rhs(j);
+            }
+            result(i) = t;
+        }
+
+        return result;
+    }
+#endif
+
+
+    template<typename DataType, NekMatrixForm form, unsigned int space>
+    bool operator==(const NekMatrix<DataType, form, space>& lhs,
+                    const NekMatrix<DataType, form, space>& rhs)
+    {
+        if( lhs.GetRows() != rhs.GetRows() )
+        {
+            return false;
+        }
+
+        if( lhs.GetColumns() != rhs.GetColumns() )
+        {
+            return false;
+        }
+
+        typename NekMatrix<DataType, form, space>::const_iterator lhs_iter = lhs.begin();
+        typename NekMatrix<DataType, form, space>::const_iterator rhs_iter = rhs.begin();
+
+        for( ; lhs_iter != lhs.end(); ++lhs_iter, ++rhs_iter )
+        {
+            if( *lhs_iter != *rhs_iter )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template<typename DataType, NekMatrixForm form, unsigned int space>
+    std::ostream& operator<<(std::ostream& os, const NekMatrix<DataType, form, space>& rhs)
+    {
+        for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+        {
+            os << "[";
+            for(unsigned int j = 0; j < rhs.GetColumns(); ++j)
+            {
+                os << rhs(i,j);
+                if( j != rhs.GetColumns() - 1 )
+                {
+                    os << ", ";
+                }
+            }
+            os << "]";
+            if( i != rhs.GetRows()-1 )
+            {
+                os << std::endl;
+            }
+        }
+        return os;
+    }
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_MATRIX_HPP
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.10  2006/09/21 01:03:31  bnelson
+    Added addition and subtraction expression templates.
+
     Revision 1.9  2006/09/16 23:53:35  bnelson
     Modified the negation operation to reflect changes in the unary expression templates.
 

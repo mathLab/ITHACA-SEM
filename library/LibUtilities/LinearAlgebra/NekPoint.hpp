@@ -55,511 +55,509 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
+    template<typename data_type, unsigned int dim, unsigned int space = 0>
+    class NekPoint
     {
+        public:
+            typedef data_type DataType;
 
-        template<typename data_type, unsigned int dim, unsigned int space = 0>
-        class NekPoint
-        {
-            public:
-                typedef data_type DataType;
-
-            public:
-                NekPoint()
-                {
-                    // This may be suboptimal if DataType isn't numeric.
-                    // If we use them then maybe we could look at an enable_if
-                    // template to choose a better constructor.
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        // If you get a compile error pointing you here then
-                        // the DataType being stored in the point doesn't have an
-                        // accessible operator= or default copy constructor.
-                        m_data[i] = DataType();
-                    }
-                }
-
-                NekPoint(const std::string& pointValues)
-                {
-                    bool result = fromString(pointValues, *this);
-                    ASSERTL0(result, "Unable to create a point from a string.");
-                }
-
-
-                NekPoint(typename boost::call_traits<DataType>::param_type x,
-                         typename boost::call_traits<DataType>::param_type y)
-                {
-                    BOOST_STATIC_ASSERT(dim == 2);
-                    m_data[0] = x;
-                    m_data[1] = y;
-                }
-
-                NekPoint(typename boost::call_traits<DataType>::param_type x,
-                         typename boost::call_traits<DataType>::param_type y,
-                         typename boost::call_traits<DataType>::param_type z)
-                {
-                    BOOST_STATIC_ASSERT(dim == 3);
-                    m_data[0] = x;
-                    m_data[1] = y;
-                    m_data[2] = z;
-                }
-
-                explicit NekPoint(typename boost::call_traits<DataType>::const_reference a)
-                {
-                    boost::function_requires< Nektar::AssignableConcept<DataType> >();
-
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        m_data[i] = a;
-                    }
-                }
-
-                template<typename ExpressionPolicyType>
-                NekPoint(const expt::Expression<ExpressionPolicyType>& rhs)
-                {
-                    BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
-                    rhs.Apply(*this);
-                }
-
-                NekPoint(const NekPoint<DataType, dim, space>& rhs)
-                {
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        m_data[i] = rhs.m_data[i];
-                    }
-                }
-
-                ~NekPoint()
-                {
-                }
-
-                template<typename ExpressionPolicyType>
-                NekPoint<DataType, dim, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
-                {
-                    BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
-                    rhs.Apply(*this);
-                    return *this;
-                }
-
-                NekPoint<DataType, dim, space>& operator=(const NekPoint<DataType, dim, space>& rhs)
-                {
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        m_data[i] = rhs.m_data[i];
-                    }
-                    return *this;
-                }
-
-                /// \brief Returns the number of dimensions for the point.
-                static unsigned int dimension() { return dim; }
-
-                /// \brief Returns i^{th} element.
-                /// \param i The element to return.
-                /// \pre i < dim
-                /// \return A reference to the i^{th} element.
-                ///
-                /// Retrieves the i^{th} element.  Since it returns a reference you may
-                /// assign a new value (i.e., p(2) = 3.2;)
-                ///
-                /// This operator performs range checking.
-                typename boost::call_traits<DataType>::reference operator()(unsigned int i)
-                {
-                    ASSERTL0( (i>=0) && (i<dim), "Invalid access to NekPoint data via parenthesis operator: index out of range");
-                    return m_data[i];
-                }
-
-                typename boost::call_traits<DataType>::const_reference operator()(unsigned int i) const
-                {
-                    ASSERTL0( (i>=0) && (i<dim), "Invalid access to NekPoint data via parenthesis operator: index out of range");
-                    return m_data[i];
-                }
-
-                typename boost::call_traits<DataType>::reference operator[](unsigned int i)
-                {
-                    return m_data[i];
-                }
-
-                typename boost::call_traits<DataType>::const_reference operator[](unsigned int i) const
-                {
-                    return m_data[i];
-                }
-
-                typename boost::call_traits<DataType>::const_reference x() const
-                {
-                    BOOST_STATIC_ASSERT(dim >= 1);
-                    return m_data[0];
-                }
-
-                typename boost::call_traits<DataType>::const_reference y() const
-                {
-                    BOOST_STATIC_ASSERT(dim >= 2);
-                    return (*this)[1];
-                }
-
-                typename boost::call_traits<DataType>::const_reference z() const
-                {
-                    BOOST_STATIC_ASSERT(dim >= 3);
-                    return (*this)[2];
-                }
-
-                typename boost::call_traits<DataType>::const_reference a() const
-                {
-                    BOOST_STATIC_ASSERT(dim >= 1);
-                    return m_data[0];
-                }
-
-                typename boost::call_traits<DataType>::const_reference b() const
-                {
-                    BOOST_STATIC_ASSERT(dim >= 2);
-                    return (*this)[1];
-                }
-
-                typename boost::call_traits<DataType>::const_reference c() const
-                {
-                    BOOST_STATIC_ASSERT(dim >= 3);
-                    return (*this)[2];
-                }
-
-                typename boost::call_traits<DataType>::const_reference r() const
-                {
-                    BOOST_STATIC_ASSERT(dim >= 1);
-                    return m_data[0];
-                }
-
-                typename boost::call_traits<DataType>::const_reference s() const
-                {
-                    BOOST_STATIC_ASSERT(dim >= 2);
-                    return (*this)[1];
-                }
-
-                typename boost::call_traits<DataType>::const_reference t() const
-                {
-                    BOOST_STATIC_ASSERT(dim >= 3);
-                    return (*this)[2];
-                }
-
-                void SetX(typename boost::call_traits<DataType>::const_reference val)
-                {
-                    BOOST_STATIC_ASSERT(dim >= 1);
-                    m_data[0] = val;
-                }
-
-                void SetY(typename boost::call_traits<DataType>::const_reference val)
-                {
-                    BOOST_STATIC_ASSERT(dim >= 2);
-                    m_data[1] = val;
-                }
-
-                void SetZ(typename boost::call_traits<DataType>::const_reference val)
-                {
-                    BOOST_STATIC_ASSERT(dim >= 2);
-                    m_data[2] = val;
-                }
-
-                typename boost::call_traits<DataType>::reference x()
-                {
-                    BOOST_STATIC_ASSERT(dim >= 1);
-                    return (*this)(0);
-                }
-
-                typename boost::call_traits<DataType>::reference y()
-                {
-                    BOOST_STATIC_ASSERT(dim >= 2);
-                    return (*this)(1);
-                }
-
-                typename boost::call_traits<DataType>::reference z()
-                {
-                    BOOST_STATIC_ASSERT(dim >= 3);
-                    return (*this)(2);
-                }
-
-                const DataType* GetPtr() const
-                {
-                    return &m_data[0];
-                }
-
-                bool operator==(const NekPoint<DataType, dim, space>& rhs) const
-                {
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        // If you get a compile error here then you have to
-                        // add a != operator to the DataType class.
-                        if( m_data[i] != rhs.m_data[i] )
-                        {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-
-                bool operator!=(const NekPoint<DataType, dim, space>& rhs) const
-                {
-                    return !(*this == rhs);
-                }
-
-                /// Arithmetic Routines
-
-                // Unitary operators
-                void negate()
-                {
-                    for(int i=0; i < dim; ++i)
-                    {
-                        (*this)[i] = -(*this)[i];
-                    }
-                }
-
-                NekPoint<DataType, dim, space> operator-() const
-                {
-                    NekPoint<DataType, dim, space> result(*this);
-                    result.negate();
-                    return result;
-                }
-
-
-                NekPoint<DataType, dim, space>& operator+=(const NekPoint<DataType, dim, space>& rhs)
-                {
-                    for(unsigned int i=0; i < dim; ++i)
-                    {
-                        m_data[i] += rhs.m_data[i];
-                    }
-                    return *this;
-                }
-
-                NekPoint<DataType, dim, space>& operator+=(typename boost::call_traits<DataType>::param_type rhs)
-                {
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        m_data[i] += rhs;
-                    }
-                    return *this;
-                }
-
-                NekPoint<DataType, dim, space>& operator-=(const NekPoint<DataType, dim, space>& rhs)
-                {
-                    for(unsigned int i=0; i < dim; ++i)
-                    {
-                        m_data[i] -= rhs.m_data[i];
-                    }
-                    return *this;
-                }
-
-
-                NekPoint<DataType, dim, space>& operator-=(typename boost::call_traits<DataType>::param_type rhs)
-                {
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        m_data[i] -= rhs;
-                    }
-                    return *this;
-                }
-
-                NekPoint<DataType, dim, space>& operator*=(typename boost::call_traits<DataType>::param_type rhs)
-                {
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        m_data[i] *= rhs;
-                    }
-                    return *this;
-                }
-
-                NekPoint<DataType, dim, space>& operator/=(typename boost::call_traits<DataType>::param_type rhs)
-                {
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        m_data[i] /= rhs;
-                    }
-                    return *this;
-                }
-
-                std::string AsString() const
-                {
-                    std::string result = "(";
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        result += boost::lexical_cast<std::string>(m_data[i]);
-                        if( i < dim-1 )
-                        {
-                            result += ", ";
-                        }
-                    }
-                    result += ")";
-                    return result;
-                }
-
-            private:
-                DataType m_data[dim];
-        };
-
-        // Operators for expression templates
-        template<typename DataType, unsigned int dim, unsigned int space>
-        void negate(NekPoint<DataType, dim, space>& rhs)
-        {
-            rhs.negate();
-        }
-        
-        template<typename DataType, unsigned int dim, unsigned int space>
-        NekPoint<DataType, dim, space>
-        operator+(const NekPoint<DataType, dim, space>& lhs, const NekPoint<DataType, dim>& rhs)
-        {
-            NekPoint<DataType, dim, space> result(lhs);
-            result += rhs;
-            return result;
-        }
-
-        template<typename DataType, unsigned int dim, unsigned int space>
-        NekPoint<DataType, dim, space>
-        operator+(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs)
-        {
-            NekPoint<DataType, dim, space> result(rhs);
-            result += lhs;
-            return result;
-        }
-
-        template<typename DataType, unsigned int dim, unsigned int space>
-        NekPoint<DataType, dim, space>
-        operator+(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
-        {
-            NekPoint<DataType, dim, space> result(lhs);
-            result += rhs;
-            return result;
-        }
-
-        template<typename DataType, unsigned int dim, unsigned int space>
-        NekPoint<DataType, dim, space>
-        operator-(const NekPoint<DataType, dim, space>& lhs, const NekPoint<DataType, dim, space>& rhs)
-        {
-            NekPoint<DataType, dim, space> result(lhs);
-            result -= rhs;
-            return result;
-        }
-
-        template<typename DataType, unsigned int dim, unsigned int space>
-        NekPoint<DataType, dim, space>
-        operator-(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs)
-        {
-            NekPoint<DataType, dim, space> result(-rhs);
-            result += lhs;
-            return result;
-        }
-
-        template<typename DataType, unsigned int dim, unsigned int space>
-        NekPoint<DataType, dim, space>
-        operator-(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
-        {
-            NekPoint<DataType, dim, space> result(lhs);
-            result -= rhs;
-            return result;
-        }
-
-        template<typename DataType, unsigned int dim, unsigned int space, typename ScalarType>
-        NekPoint<DataType, dim, space>
-        operator*(const ScalarType& lhs, const NekPoint<DataType, dim, space>& rhs)
-        {
-            NekPoint<DataType, dim, space> result(rhs);
-            result *= lhs;
-            return result;
-        }
-
-        template<typename DataType, unsigned int dim, unsigned int space, typename ScalarType>
-        NekPoint<DataType, dim, space>
-        operator*(const NekPoint<DataType, dim, space>& lhs, const ScalarType& rhs)
-        {
-            NekPoint<DataType, dim, space> result(lhs);
-            result *= rhs;
-            return result;
-        }
-
-        template<typename DataType, unsigned int dim, unsigned int space>
-        NekPoint<DataType, dim, space>
-        operator/(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::param_type rhs)
-        {
-            NekPoint<DataType, dim, space> result(lhs);
-            result /= rhs;
-            return result;
-        }
-
-        template<typename DataType, unsigned int dim, unsigned int space>
-        typename boost::call_traits<DataType>::value_type distanceBetween(const NekPoint<DataType, dim, space>& lhs,
-                                const NekPoint<DataType, dim, space>& rhs)
-        {
-            DataType result = 0.0;
-            for(unsigned int i = 0; i < dim; ++i)
+        public:
+            NekPoint()
             {
-                DataType temp = lhs[i] - rhs[i];
-                result += temp*temp;
-            }
-            return sqrt(result);
-        }
-
-        template<typename DataType, unsigned int dim, unsigned int space>
-        bool fromString(const std::string& str, NekPoint<DataType, dim, space>& result)
-        {
-            try
-            {
-                typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-                boost::char_separator<char> sep("(<,>) ");
-                tokenizer tokens(str, sep);
-                unsigned int i = 0;
-                for(tokenizer::iterator iter = tokens.begin(); iter != tokens.end(); ++iter)
+                // This may be suboptimal if DataType isn't numeric.
+                // If we use them then maybe we could look at an enable_if
+                // template to choose a better constructor.
+                for(unsigned int i = 0; i < dim; ++i)
                 {
-                    result[i] = boost::lexical_cast<DataType>(*iter);
-                    ++i;
+                    // If you get a compile error pointing you here then
+                    // the DataType being stored in the point doesn't have an
+                    // accessible operator= or default copy constructor.
+                    m_data[i] = DataType();
                 }
-
-                return i == dim;
             }
-            catch(boost::bad_lexical_cast&)
+
+            NekPoint(const std::string& pointValues)
             {
-                return false;
+                bool result = fromString(pointValues, *this);
+                ASSERTL0(result, "Unable to create a point from a string.");
             }
-        }
 
-        template<typename DataType, unsigned int dim, unsigned int space>
-        std::ostream& operator<<(std::ostream& os, const NekPoint<DataType, dim, space>& p)
-        {
-            os << p.AsString();
-            return os;
-        }
 
-    //   template<typename DataType, int dim>
-    //   NekPoint<DataType,dim> operator+(const NekPoint<DataType,dim>& P, const NekVector<DataType>& V){
-    //     ASSERTL0(P.dimension() == V.size(),"NekPoint::operator", "Point and Vector dimensions do not match");
-        //
-    //     NekPoint<DataType,dim> temp(P);
-    //     for(int i=0;i<P.dimension();++i)
-    //      temp(i) = temp(i) + V(i);
-    //     return temp;
-    //   }
-    //
-    //   template<typename DataType, int dim>
-    //   NekPoint<DataType,dim> operator+(const NekVector<DataType>& V, const NekPoint<DataType,dim>& P){
-    //     ASSERTL0(dim == V.size(),"NekPoint::operator", "Point and Vector dimensions do not match");
-    //
-    //     NekPoint<DataType,dim> temp(P);
-    //     for(int i=0;i<dim;++i)
-        //temp(i) += V(i);
-    //     return temp;
-    //   }
-    //
-    //   template<typename DataType, int dim>
+            NekPoint(typename boost::call_traits<DataType>::param_type x,
+                        typename boost::call_traits<DataType>::param_type y)
+            {
+                BOOST_STATIC_ASSERT(dim == 2);
+                m_data[0] = x;
+                m_data[1] = y;
+            }
 
-    //   NekPoint<DataType,dim> operator-(const NekPoint<DataType,dim>& P, const NekVector<DataType>& V){
-    //     ASSERTL0(dim == V.size(),"NekPoint::operator", "Point and Vector dimensions do not match");
-    //
-    //     NekPoint<DataType,dim> temp(P);
-    //     for(int i=0;i<dim;++i)
-        //temp(i) -= V(i);
-    //     return temp;
-    //   }
+            NekPoint(typename boost::call_traits<DataType>::param_type x,
+                        typename boost::call_traits<DataType>::param_type y,
+                        typename boost::call_traits<DataType>::param_type z)
+            {
+                BOOST_STATIC_ASSERT(dim == 3);
+                m_data[0] = x;
+                m_data[1] = y;
+                m_data[2] = z;
+            }
 
+            explicit NekPoint(typename boost::call_traits<DataType>::const_reference a)
+            {
+                boost::function_requires< Nektar::AssignableConcept<DataType> >();
+
+                for(unsigned int i = 0; i < dim; ++i)
+                {
+                    m_data[i] = a;
+                }
+            }
+
+            template<typename ExpressionPolicyType>
+            NekPoint(const expt::Expression<ExpressionPolicyType>& rhs)
+            {
+                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
+                rhs.Apply(*this);
+            }
+
+            NekPoint(const NekPoint<DataType, dim, space>& rhs)
+            {
+                for(unsigned int i = 0; i < dim; ++i)
+                {
+                    m_data[i] = rhs.m_data[i];
+                }
+            }
+
+            ~NekPoint()
+            {
+            }
+
+            template<typename ExpressionPolicyType>
+            NekPoint<DataType, dim, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
+            {
+                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
+                rhs.Apply(*this);
+                return *this;
+            }
+
+            NekPoint<DataType, dim, space>& operator=(const NekPoint<DataType, dim, space>& rhs)
+            {
+                for(unsigned int i = 0; i < dim; ++i)
+                {
+                    m_data[i] = rhs.m_data[i];
+                }
+                return *this;
+            }
+
+            /// \brief Returns the number of dimensions for the point.
+            static unsigned int dimension() { return dim; }
+
+            /// \brief Returns i^{th} element.
+            /// \param i The element to return.
+            /// \pre i < dim
+            /// \return A reference to the i^{th} element.
+            ///
+            /// Retrieves the i^{th} element.  Since it returns a reference you may
+            /// assign a new value (i.e., p(2) = 3.2;)
+            ///
+            /// This operator performs range checking.
+            typename boost::call_traits<DataType>::reference operator()(unsigned int i)
+            {
+                ASSERTL0( (i>=0) && (i<dim), "Invalid access to NekPoint data via parenthesis operator: index out of range");
+                return m_data[i];
+            }
+
+            typename boost::call_traits<DataType>::const_reference operator()(unsigned int i) const
+            {
+                ASSERTL0( (i>=0) && (i<dim), "Invalid access to NekPoint data via parenthesis operator: index out of range");
+                return m_data[i];
+            }
+
+            typename boost::call_traits<DataType>::reference operator[](unsigned int i)
+            {
+                return m_data[i];
+            }
+
+            typename boost::call_traits<DataType>::const_reference operator[](unsigned int i) const
+            {
+                return m_data[i];
+            }
+
+            typename boost::call_traits<DataType>::const_reference x() const
+            {
+                BOOST_STATIC_ASSERT(dim >= 1);
+                return m_data[0];
+            }
+
+            typename boost::call_traits<DataType>::const_reference y() const
+            {
+                BOOST_STATIC_ASSERT(dim >= 2);
+                return (*this)[1];
+            }
+
+            typename boost::call_traits<DataType>::const_reference z() const
+            {
+                BOOST_STATIC_ASSERT(dim >= 3);
+                return (*this)[2];
+            }
+
+            typename boost::call_traits<DataType>::const_reference a() const
+            {
+                BOOST_STATIC_ASSERT(dim >= 1);
+                return m_data[0];
+            }
+
+            typename boost::call_traits<DataType>::const_reference b() const
+            {
+                BOOST_STATIC_ASSERT(dim >= 2);
+                return (*this)[1];
+            }
+
+            typename boost::call_traits<DataType>::const_reference c() const
+            {
+                BOOST_STATIC_ASSERT(dim >= 3);
+                return (*this)[2];
+            }
+
+            typename boost::call_traits<DataType>::const_reference r() const
+            {
+                BOOST_STATIC_ASSERT(dim >= 1);
+                return m_data[0];
+            }
+
+            typename boost::call_traits<DataType>::const_reference s() const
+            {
+                BOOST_STATIC_ASSERT(dim >= 2);
+                return (*this)[1];
+            }
+
+            typename boost::call_traits<DataType>::const_reference t() const
+            {
+                BOOST_STATIC_ASSERT(dim >= 3);
+                return (*this)[2];
+            }
+
+            void SetX(typename boost::call_traits<DataType>::const_reference val)
+            {
+                BOOST_STATIC_ASSERT(dim >= 1);
+                m_data[0] = val;
+            }
+
+            void SetY(typename boost::call_traits<DataType>::const_reference val)
+            {
+                BOOST_STATIC_ASSERT(dim >= 2);
+                m_data[1] = val;
+            }
+
+            void SetZ(typename boost::call_traits<DataType>::const_reference val)
+            {
+                BOOST_STATIC_ASSERT(dim >= 2);
+                m_data[2] = val;
+            }
+
+            typename boost::call_traits<DataType>::reference x()
+            {
+                BOOST_STATIC_ASSERT(dim >= 1);
+                return (*this)(0);
+            }
+
+            typename boost::call_traits<DataType>::reference y()
+            {
+                BOOST_STATIC_ASSERT(dim >= 2);
+                return (*this)(1);
+            }
+
+            typename boost::call_traits<DataType>::reference z()
+            {
+                BOOST_STATIC_ASSERT(dim >= 3);
+                return (*this)(2);
+            }
+
+            const DataType* GetPtr() const
+            {
+                return &m_data[0];
+            }
+
+            bool operator==(const NekPoint<DataType, dim, space>& rhs) const
+            {
+                for(unsigned int i = 0; i < dim; ++i)
+                {
+                    // If you get a compile error here then you have to
+                    // add a != operator to the DataType class.
+                    if( m_data[i] != rhs.m_data[i] )
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            bool operator!=(const NekPoint<DataType, dim, space>& rhs) const
+            {
+                return !(*this == rhs);
+            }
+
+            /// Arithmetic Routines
+
+            // Unitary operators
+            void negate()
+            {
+                for(int i=0; i < dim; ++i)
+                {
+                    (*this)[i] = -(*this)[i];
+                }
+            }
+
+            NekPoint<DataType, dim, space> operator-() const
+            {
+                NekPoint<DataType, dim, space> result(*this);
+                result.negate();
+                return result;
+            }
+
+
+            NekPoint<DataType, dim, space>& operator+=(const NekPoint<DataType, dim, space>& rhs)
+            {
+                for(unsigned int i=0; i < dim; ++i)
+                {
+                    m_data[i] += rhs.m_data[i];
+                }
+                return *this;
+            }
+
+            NekPoint<DataType, dim, space>& operator+=(typename boost::call_traits<DataType>::param_type rhs)
+            {
+                for(unsigned int i = 0; i < dim; ++i)
+                {
+                    m_data[i] += rhs;
+                }
+                return *this;
+            }
+
+            NekPoint<DataType, dim, space>& operator-=(const NekPoint<DataType, dim, space>& rhs)
+            {
+                for(unsigned int i=0; i < dim; ++i)
+                {
+                    m_data[i] -= rhs.m_data[i];
+                }
+                return *this;
+            }
+
+
+            NekPoint<DataType, dim, space>& operator-=(typename boost::call_traits<DataType>::param_type rhs)
+            {
+                for(unsigned int i = 0; i < dim; ++i)
+                {
+                    m_data[i] -= rhs;
+                }
+                return *this;
+            }
+
+            NekPoint<DataType, dim, space>& operator*=(typename boost::call_traits<DataType>::param_type rhs)
+            {
+                for(unsigned int i = 0; i < dim; ++i)
+                {
+                    m_data[i] *= rhs;
+                }
+                return *this;
+            }
+
+            NekPoint<DataType, dim, space>& operator/=(typename boost::call_traits<DataType>::param_type rhs)
+            {
+                for(unsigned int i = 0; i < dim; ++i)
+                {
+                    m_data[i] /= rhs;
+                }
+                return *this;
+            }
+
+            std::string AsString() const
+            {
+                std::string result = "(";
+                for(unsigned int i = 0; i < dim; ++i)
+                {
+                    result += boost::lexical_cast<std::string>(m_data[i]);
+                    if( i < dim-1 )
+                    {
+                        result += ", ";
+                    }
+                }
+                result += ")";
+                return result;
+            }
+
+        private:
+            DataType m_data[dim];
+    };
+
+    // Operators for expression templates
+    template<typename DataType, unsigned int dim, unsigned int space>
+    void negate(NekPoint<DataType, dim, space>& rhs)
+    {
+        rhs.negate();
     }
+    
+    template<typename DataType, unsigned int dim, unsigned int space>
+    NekPoint<DataType, dim, space>
+    operator+(const NekPoint<DataType, dim, space>& lhs, const NekPoint<DataType, dim>& rhs)
+    {
+        NekPoint<DataType, dim, space> result(lhs);
+        result += rhs;
+        return result;
+    }
+
+    template<typename DataType, unsigned int dim, unsigned int space>
+    NekPoint<DataType, dim, space>
+    operator+(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs)
+    {
+        NekPoint<DataType, dim, space> result(rhs);
+        result += lhs;
+        return result;
+    }
+
+    template<typename DataType, unsigned int dim, unsigned int space>
+    NekPoint<DataType, dim, space>
+    operator+(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
+    {
+        NekPoint<DataType, dim, space> result(lhs);
+        result += rhs;
+        return result;
+    }
+
+    template<typename DataType, unsigned int dim, unsigned int space>
+    NekPoint<DataType, dim, space>
+    operator-(const NekPoint<DataType, dim, space>& lhs, const NekPoint<DataType, dim, space>& rhs)
+    {
+        NekPoint<DataType, dim, space> result(lhs);
+        result -= rhs;
+        return result;
+    }
+
+    template<typename DataType, unsigned int dim, unsigned int space>
+    NekPoint<DataType, dim, space>
+    operator-(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs)
+    {
+        NekPoint<DataType, dim, space> result(-rhs);
+        result += lhs;
+        return result;
+    }
+
+    template<typename DataType, unsigned int dim, unsigned int space>
+    NekPoint<DataType, dim, space>
+    operator-(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
+    {
+        NekPoint<DataType, dim, space> result(lhs);
+        result -= rhs;
+        return result;
+    }
+
+    template<typename DataType, unsigned int dim, unsigned int space, typename ScalarType>
+    NekPoint<DataType, dim, space>
+    operator*(const ScalarType& lhs, const NekPoint<DataType, dim, space>& rhs)
+    {
+        NekPoint<DataType, dim, space> result(rhs);
+        result *= lhs;
+        return result;
+    }
+
+    template<typename DataType, unsigned int dim, unsigned int space, typename ScalarType>
+    NekPoint<DataType, dim, space>
+    operator*(const NekPoint<DataType, dim, space>& lhs, const ScalarType& rhs)
+    {
+        NekPoint<DataType, dim, space> result(lhs);
+        result *= rhs;
+        return result;
+    }
+
+    template<typename DataType, unsigned int dim, unsigned int space>
+    NekPoint<DataType, dim, space>
+    operator/(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::param_type rhs)
+    {
+        NekPoint<DataType, dim, space> result(lhs);
+        result /= rhs;
+        return result;
+    }
+
+    template<typename DataType, unsigned int dim, unsigned int space>
+    typename boost::call_traits<DataType>::value_type distanceBetween(const NekPoint<DataType, dim, space>& lhs,
+                            const NekPoint<DataType, dim, space>& rhs)
+    {
+        DataType result = 0.0;
+        for(unsigned int i = 0; i < dim; ++i)
+        {
+            DataType temp = lhs[i] - rhs[i];
+            result += temp*temp;
+        }
+        return sqrt(result);
+    }
+
+    template<typename DataType, unsigned int dim, unsigned int space>
+    bool fromString(const std::string& str, NekPoint<DataType, dim, space>& result)
+    {
+        try
+        {
+            typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+            boost::char_separator<char> sep("(<,>) ");
+            tokenizer tokens(str, sep);
+            unsigned int i = 0;
+            for(tokenizer::iterator iter = tokens.begin(); iter != tokens.end(); ++iter)
+            {
+                result[i] = boost::lexical_cast<DataType>(*iter);
+                ++i;
+            }
+
+            return i == dim;
+        }
+        catch(boost::bad_lexical_cast&)
+        {
+            return false;
+        }
+    }
+
+    template<typename DataType, unsigned int dim, unsigned int space>
+    std::ostream& operator<<(std::ostream& os, const NekPoint<DataType, dim, space>& p)
+    {
+        os << p.AsString();
+        return os;
+    }
+
+//   template<typename DataType, int dim>
+//   NekPoint<DataType,dim> operator+(const NekPoint<DataType,dim>& P, const NekVector<DataType>& V){
+//     ASSERTL0(P.dimension() == V.size(),"NekPoint::operator", "Point and Vector dimensions do not match");
+    //
+//     NekPoint<DataType,dim> temp(P);
+//     for(int i=0;i<P.dimension();++i)
+//      temp(i) = temp(i) + V(i);
+//     return temp;
+//   }
+//
+//   template<typename DataType, int dim>
+//   NekPoint<DataType,dim> operator+(const NekVector<DataType>& V, const NekPoint<DataType,dim>& P){
+//     ASSERTL0(dim == V.size(),"NekPoint::operator", "Point and Vector dimensions do not match");
+//
+//     NekPoint<DataType,dim> temp(P);
+//     for(int i=0;i<dim;++i)
+    //temp(i) += V(i);
+//     return temp;
+//   }
+//
+//   template<typename DataType, int dim>
+
+//   NekPoint<DataType,dim> operator-(const NekPoint<DataType,dim>& P, const NekVector<DataType>& V){
+//     ASSERTL0(dim == V.size(),"NekPoint::operator", "Point and Vector dimensions do not match");
+//
+//     NekPoint<DataType,dim> temp(P);
+//     for(int i=0;i<dim;++i)
+    //temp(i) -= V(i);
+//     return temp;
+//   }
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NEK_POINT_HPP
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.12  2006/09/16 23:53:36  bnelson
+    Modified the negation operation to reflect changes in the unary expression templates.
+
     Revision 1.11  2006/09/15 02:18:39  bnelson
     Fixed a problem with operator*
 

@@ -46,7 +46,7 @@ namespace Nektar
 {
     namespace UnitTests
     {
-        using namespace Nektar::LibUtilities;
+        using namespace Nektar;
 
         void testNekMatrixConstruction()
         {
@@ -318,12 +318,29 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(matrixValues[0], 1);
             }
         }
+
+        void testBlockMatrices()
+        {
+            //typedef NekMatrix<boost::shared_ptr<NekMatrix<unsigned int> > > BlockMatrix;
+
+            //BlockMatrix m1(3,3);
+            //BlockMatrix m2(3,3);
+
+            //BlockMatrix m3 = m1 + m2;
+
+            NekMatrix<double> m1(3,3);
+            NekMatrix<NekMatrix<double> > m2(3, 3, {widths, heights});
+            NekMatrix<boost::shared_ptr<NekMatrix<double> > > m3(3, 3, {widths, heights});
+        }
     }
 }
 
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.15  2006/09/11 03:28:41  bnelson
+    no message
+
     Revision 1.14  2006/08/25 01:38:59  bnelson
     no message
 

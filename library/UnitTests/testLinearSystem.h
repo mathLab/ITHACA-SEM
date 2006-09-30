@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: testNekMatrix.h
+// File: testLinearSystem.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,47 +29,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Tests NekMatrix functionality.
+// Description: Test code for NekVector
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-#define NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
+#ifndef NEKTAR_UNIT_TESTS_TEST_LINEAR_SYSTEM_H
+#define NEKTAR_UNIT_TESTS_TEST_LINEAR_SYSTEM_H
 
 namespace Nektar
 {
-    namespace UnitTests
+    namespace LinearSystemUnitTests
     {
-        void testNekMatrixConstruction();
-        void testNekMatrixAccess();
-        void testNekMatrixBasicMath();
-        void testNekMatrixFullDiagonalOperations();
-        void testDiagonalMatrix();
-        void testUserManagedMatrixData();
-        void testBlockMatrices();
+        void testDiagonalSystem();
     }
 }
 
-#endif // NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-
+#endif //NEKTAR_UNIT_TESTS_TEST_LINEAR_SYSTEM_H
 
 /**
-    $Log: testNekMatrix.h,v $
-    Revision 1.5  2006/08/25 01:38:59  bnelson
-    no message
-
-    Revision 1.4  2006/08/25 01:36:25  bnelson
-    no message
-
-    Revision 1.3  2006/08/14 02:35:45  bnelson
-    Added many LinearAlgebra tests
-
-    Revision 1.2  2006/05/31 04:19:37  bnelson
-    Removed a test for invalid access to a matrix.
-
-    Revision 1.1  2006/05/07 21:10:10  bnelson
-    *** empty log message ***
-
+    $Log:$
 **/
-

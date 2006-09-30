@@ -18,6 +18,8 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/testBoostUtil.h>
 #include <UnitTests/testNekMatrix.h>
 #include <UnitTests/testExpressionTemplates.h>
+#include <UnitTests/testLinearSystem.h>
+
 //#include <UnitTests/testNekManager.h>
 
 // The boost unit test framework provides the main function for us.
@@ -49,6 +51,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixBasicMath), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixFullDiagonalOperations), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUserManagedMatrixData), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockMatrices), 0);
 
 
     // These tests were originally added because it appeared that a NekObjectFactory
@@ -61,20 +64,24 @@ test_suite* init_unit_test_suite( int, char* [] )
     // Unit tests for NekManager
     //test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekManager), 0);
 
-
-
-
-
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testConstantExpressions), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUnaryExpressions), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixMetadata), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBinaryExpressions), 0);
 
+
+    /// Linear system tests.
+    test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testDiagonalSystem), 0);
+
+    
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.11  2006/09/11 03:28:41  bnelson
+    no message
+
     Revision 1.10  2006/08/28 02:40:50  bnelson
     *** empty log message ***
 

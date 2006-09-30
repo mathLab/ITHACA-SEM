@@ -6,6 +6,7 @@ testNekMatrix.cpp
 testNekVector.cpp
 testNekPoint.cpp
 testExpressionTemplates.cpp
+testLinearSystem.cpp
 )
 
 SET(UnitTestHeaders
@@ -14,6 +15,7 @@ testNekMatrix.h
 testNekPoint.h
 testNekVector.h
 testExpressionTemplates.h
+testLinearSystem.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS -DNEKTAR_USE_EXPRESSION_TEMPLATES)
@@ -27,8 +29,8 @@ TARGET_LINK_LIBRARIES(UnitTests
 
 IF( ${CMAKE_COMPILER_IS_GNUCXX} )
         IF( USE_GCOV )
-		TARGET_LINK_LIBRARIES(UnitTests gcov)
-	ENDIF( USE_GCOV )
+        TARGET_LINK_LIBRARIES(UnitTests gcov)
+    ENDIF( USE_GCOV )
 ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
 
 INSTALL_TARGETS(${NEKTAR_BIN_DIR} UnitTests)

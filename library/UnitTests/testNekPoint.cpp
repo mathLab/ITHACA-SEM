@@ -75,12 +75,12 @@ namespace Nektar
             return !(lhs == rhs);
         }
 
-        class TestPoint : public Nektar::LibUtilities::NekPoint<double, 3, 0>
+        class TestPoint : public Nektar::NekPoint<double, 3, 0>
         {
             public:
                 TestPoint() {}
                 TestPoint(const TestPoint& rhs) :
-                Nektar::LibUtilities::NekPoint<double, 3, 0>(rhs)
+                Nektar::NekPoint<double, 3, 0>(rhs)
                 {
                 }
         };
@@ -93,7 +93,7 @@ namespace Nektar
 
         void testNekPointConstruction()
         {
-            using namespace Nektar::LibUtilities;
+            using namespace Nektar;
 
             // Test the constructors on a numeric type.
             {
@@ -179,7 +179,7 @@ namespace Nektar
 
         void testNekPointDataAccess()
         {
-            using namespace Nektar::LibUtilities;
+            using namespace Nektar;
 
             NekPoint<int, 3> p(1,2,3);
             BOOST_CHECK((p.x() == p.a()) && (p.x() == p.r()));
@@ -228,7 +228,7 @@ namespace Nektar
 
         void testNekPointPointerManipulation()
         {
-            using namespace Nektar::LibUtilities;
+            using namespace Nektar;
             NekPoint<int, 3> p(1,2,3);
             const int* ptr = p.GetPtr();
             int expected[] = {1, 2, 3};
@@ -237,7 +237,7 @@ namespace Nektar
 
         void testNekPointComparison()
         {
-            using namespace Nektar::LibUtilities;
+            using namespace Nektar;
             NekPoint<int, 3> lhs(1, 2, 3);
             NekPoint<int, 3> rhs(lhs);
             NekPoint<int, 3> ne(3, 2, 1);
@@ -248,7 +248,7 @@ namespace Nektar
 
         void testNekPointOperators()
         {
-            using Nektar::LibUtilities::NekPoint;
+            using Nektar::NekPoint;
 
             {
                 NekPoint<int, 3> p(1,2,3);
@@ -299,38 +299,38 @@ namespace Nektar
             }
 
             {
-                Nektar::LibUtilities::NekPoint<int, 3, 0> p1(1, 2, 3);
-                Nektar::LibUtilities::NekPoint<int, 3, 0> p2(10, 20, 30);
+                Nektar::NekPoint<int, 3, 0> p1(1, 2, 3);
+                Nektar::NekPoint<int, 3, 0> p2(10, 20, 30);
 
-                Nektar::LibUtilities::NekPoint<int, 3> p3 = p1 + p2;
+                Nektar::NekPoint<int, 3> p3 = p1 + p2;
                 BOOST_CHECK(p3.x() == 11);
                 BOOST_CHECK(p3.y() == 22);
                 BOOST_CHECK(p3.z() == 33);
 
-                Nektar::LibUtilities::NekPoint<int, 3> p4 = p1 + 2;
+                Nektar::NekPoint<int, 3> p4 = p1 + 2;
                 BOOST_CHECK(p4.x() == 3);
                 BOOST_CHECK(p4.y() == 4);
                 BOOST_CHECK(p4.z() == 5);
 
-                Nektar::LibUtilities::NekPoint<int, 3> p5 = 2 + p1;
+                Nektar::NekPoint<int, 3> p5 = 2 + p1;
                 BOOST_CHECK(p5 == p4);
 
-                Nektar::LibUtilities::NekPoint<int, 3> p6 = p2 - p1;
+                Nektar::NekPoint<int, 3> p6 = p2 - p1;
                 BOOST_CHECK(p6.x() == 9);
                 BOOST_CHECK(p6.y() == 18);
                 BOOST_CHECK(p6.z() == 27);
 
-                Nektar::LibUtilities::NekPoint<int, 3> p7 = p1 - 2;
+                Nektar::NekPoint<int, 3> p7 = p1 - 2;
                 BOOST_CHECK(p7.x() == -1);
                 BOOST_CHECK(p7.y() == 0);
                 BOOST_CHECK(p7.z() == 1);
 
-                Nektar::LibUtilities::NekPoint<int, 3> p8 = 2 - p1;
+                Nektar::NekPoint<int, 3> p8 = 2 - p1;
                 BOOST_CHECK(p8.x() == 1);
                 BOOST_CHECK(p8.y() == 0);
                 BOOST_CHECK(p8.z() == -1);
 
-                Nektar::LibUtilities::operator*<int, 3, 0>(2, p1);
+                Nektar::operator*<int, 3, 0>(2, p1);
 
                 p1*(int)2;
                 NekPoint<int, 3> p9 = p1*(int)2;
@@ -351,7 +351,7 @@ namespace Nektar
 
         void testNekPointMisc()
         {
-            using namespace Nektar::LibUtilities;
+            using namespace Nektar;
 
             NekPoint<int, 3> p1;
             NekPoint<int, 100> p2;
@@ -368,7 +368,7 @@ namespace Nektar
 
         void testNekPointAssignment()
         {
-            using namespace Nektar::LibUtilities;
+            using namespace Nektar;
             NekPoint<int, 3> lhs(1,2,3);
             NekPoint<int, 3> rhs(10, 11, 12);
 
@@ -385,6 +385,9 @@ namespace Nektar
 
 /**
     $Log: testNekPoint.cpp,v $
+    Revision 1.8  2006/09/15 02:19:08  bnelson
+    *** empty log message ***
+
     Revision 1.7  2006/09/11 03:28:41  bnelson
     no message
 

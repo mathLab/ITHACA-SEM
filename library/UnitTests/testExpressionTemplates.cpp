@@ -59,7 +59,7 @@ namespace Nektar
 
         void testConstantExpressions()
         {
-            using namespace Nektar::LibUtilities;
+            using namespace Nektar;
             using namespace Nektar::expt;
 
             {
@@ -97,7 +97,7 @@ namespace Nektar
 
         void testUnaryExpressions()
         {
-            using namespace Nektar::LibUtilities;
+            using namespace Nektar;
 
             NekPoint<double, 3> p(1,2,3);
             NekPoint<double, 3> p1(-(-p));
@@ -111,7 +111,6 @@ namespace Nektar
         void testNekMatrixMetadata()
         {
             using namespace Nektar;
-            using namespace Nektar::LibUtilities;
             using namespace Nektar::expt;
 
             // Constant
@@ -135,7 +134,6 @@ namespace Nektar
         void testBinaryExpressions()
         {
             using namespace Nektar;
-            using namespace LibUtilities;
             using namespace Nektar::expt;
 
             unsigned int buf1[] = {1, 2, 3, 4};
@@ -147,8 +145,8 @@ namespace Nektar
 
             NekMatrix<unsigned int> lhs(2,2,buf1);
             NekMatrix<unsigned int> rhs(2,2,buf2);
-            Expression<ConstantExpressionPolicy<Nektar::LibUtilities::NekMatrix<unsigned int> > > m1(lhs);
-            Expression<ConstantExpressionPolicy<Nektar::LibUtilities::NekMatrix<unsigned int> > > m2(rhs);
+            Expression<ConstantExpressionPolicy<Nektar::NekMatrix<unsigned int> > > m1(lhs);
+            Expression<ConstantExpressionPolicy<Nektar::NekMatrix<unsigned int> > > m2(rhs);
 
 
             Expression<BinaryExpressionPolicy<
@@ -181,6 +179,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.6  2006/09/15 02:01:16  bnelson
+    no message
+
     Revision 1.5  2006/09/11 03:28:41  bnelson
     no message
 

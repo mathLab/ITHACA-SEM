@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: testNekMatrix.h
+// File: testLinearSystem.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,47 +29,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Tests NekMatrix functionality.
+// Description: Test code for NekVector
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <UnitTests/testLinearSystem.h>
+#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 
-#ifndef NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-#define NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_case_template.hpp>
+#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/unit_test.hpp>
 
 namespace Nektar
 {
-    namespace UnitTests
+    namespace LinearSystemUnitTests
     {
-        void testNekMatrixConstruction();
-        void testNekMatrixAccess();
-        void testNekMatrixBasicMath();
-        void testNekMatrixFullDiagonalOperations();
-        void testDiagonalMatrix();
-        void testUserManagedMatrixData();
-        void testBlockMatrices();
+        void testDiagonalSystem()
+        {
+            unsigned int matrix_buf[] = { 10, 5, 2 };
+
+            unsigned int result_buf[] = { 20, 50, 10 };
+
+            boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,3,matrix_buf));
+            boost::shared_ptr<NekVector<unsigned int, 3> > b(new NekVector<unsigned int, 3>(result_buf));
+
+            LinearSystem<NekMatrix<unsigned int, eDiagonal>, NekVector<unsigned int, 3> > linsys(A, b);
+
+            NekVector<unsigned int, 3> result = linsys.Solve();
+            
+            unsigned int expected_result_buf[] = { 2, 10, 5 };
+            NekVector<unsigned int, 3> expectedResult(expected_result_buf);
+
+            BOOST_CHECK_EQUAL(result, expectedResult);
+        }
     }
 }
-
-#endif // NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-
-
-/**
-    $Log: testNekMatrix.h,v $
-    Revision 1.5  2006/08/25 01:38:59  bnelson
-    no message
-
-    Revision 1.4  2006/08/25 01:36:25  bnelson
-    no message
-
-    Revision 1.3  2006/08/14 02:35:45  bnelson
-    Added many LinearAlgebra tests
-
-    Revision 1.2  2006/05/31 04:19:37  bnelson
-    Removed a test for invalid access to a matrix.
-
-    Revision 1.1  2006/05/07 21:10:10  bnelson
-    *** empty log message ***
-
-**/
-

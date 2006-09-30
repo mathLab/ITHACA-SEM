@@ -51,7 +51,7 @@ namespace Nektar
 {
     namespace UnitTests
     {
-        using namespace Nektar::LibUtilities;
+        using namespace Nektar;
 
         class VectorTestClass
         {
@@ -341,6 +341,9 @@ namespace Nektar
 
 /**
     $Log: testNekVector.cpp,v $
+    Revision 1.3  2006/09/15 02:01:16  bnelson
+    no message
+
     Revision 1.2  2006/06/05 02:23:17  bnelson
     Updates for the reorganization of LibUtilities.
 

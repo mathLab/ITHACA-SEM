@@ -6,6 +6,7 @@ SET(LibUtilitySources
 
 SET(LibUtilityHeaders
 ./LinearAlgebra/NekLinSys.h
+./LinearAlgebra/NekLinSys.hpp
 ./LinearAlgebra/NekLinAlg.h
 ./LinearAlgebra/BlockMat.h
 ./Foundations/Graph.h

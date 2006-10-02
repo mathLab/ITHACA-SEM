@@ -39,6 +39,7 @@
 #include <loki/Factory.h>
 #include <loki/Singleton.h>
 #include <loki/Typelist.h>
+#include <iostream>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/call_traits.hpp>
@@ -51,6 +52,7 @@
 
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
+#include <LibUtilities/LinearAlgebra/blas.h>
 
 namespace Nektar
 {
@@ -582,7 +584,7 @@ namespace Nektar
         const NekMatrix<DataType, lhsForm, space>& lhs,
         const NekMatrix<DataType, rhsForm, space>& rhs)
     {
-        NekMatrix<DataType, NekMatrixOperationResult<lhsForm, rhsForm>::AdditionResultType, space> result(lhs);
+        typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::AdditionResultType result(lhs);
         result += rhs;
         return result;
     }
@@ -635,12 +637,29 @@ namespace Nektar
         result *= rhs;
     }
 
+
+    /////////////////////////////////////////
+    // Multiplication
+    /////////////////////////////////////////
+    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+    void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, 
+                const NekMatrix<DataType, rhsForm, space>& rhs,
+                typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::MultiplicationResultType& result,
+                typename boost::enable_if<boost::is_same<DataType, double> >::type* p = NULL )
+    {
+#ifdef NEKTAR_USING_BLAS
+        dgemm(lhs.GetRows(), lhs.GetColumns(), rhs.GetColumns(), lhs.begin(), rhs.begin(), result.begin());
+#else
+        result = lhs;
+        result *= rhs;
+#endif
+    }
+
     template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, unsigned int space>
     void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, const NekVector<DataType, vectorDim, space>& rhs,
                     typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekVector<DataType, vectorDim, space> >::MultiplicationResultType& result)
     {
         ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
-
         for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
         {
             DataType t = DataType(0);
@@ -652,6 +671,16 @@ namespace Nektar
         }
     }
 
+    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+    void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, 
+            const NekMatrix<DataType, rhsForm, space>& rhs,
+            typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::MultiplicationResultType& result,
+            typename boost::disable_if<boost::is_same<DataType, double> >::type* p = NULL )
+    {
+        result = lhs;
+        result *= rhs;
+    }
+                
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
     expt::Expression<expt::BinaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >, expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > >, expt::MultiplyOp > > operator*(
@@ -675,6 +704,17 @@ namespace Nektar
         return expt::Expression<expt::BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, expt::MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
     }
 #else
+
+    template<typename DataType, NekMatrixForm form, unsigned int space>
+    NekMatrix<DataType, form, space> operator*(const NekMatrix<DataType, form, space>& lhs,
+                                                const NekMatrix<DataType, form, space>& rhs)
+    {
+        NekMatrix<DataType, form, space> result(lhs.GetRows(), rhs.GetColumns());
+        multiply(lhs, rhs, result);
+
+        return result;
+    }
+
     template<typename DataType, NekMatrixForm form, unsigned int space>
     NekMatrix<DataType, form, space> operator*(const NekMatrix<DataType, form, space>& lhs,
                                                 const NekMatrix<DataType, form, space>& rhs)
@@ -700,6 +740,7 @@ namespace Nektar
 
         return result;
     }
+
 
     template<typename DataType, NekMatrixForm form, unsigned int space>
     NekVector<DataType, 0, space> operator*(
@@ -781,6 +822,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.11  2006/09/30 15:18:37  bnelson
+    no message
+
     Revision 1.10  2006/09/21 01:03:31  bnelson
     Added addition and subtraction expression templates.
 

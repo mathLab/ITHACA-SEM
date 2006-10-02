@@ -41,6 +41,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/progress.hpp>
+#include <iostream>
 
 namespace Nektar
 {
@@ -187,6 +188,69 @@ namespace Nektar
             }
 
             {
+                double buf1[] = {1, 2, 3,
+                                4, 5, 6,
+                                7, 8, 9};
+                double buf2[] = { 10, 11, 12,
+                    15, 16, 17,
+                    19, 20, 21 };
+
+                    NekMatrix<double> lhs(3, 3, buf1);
+                    NekMatrix<double> rhs(3, 3, buf2);
+
+                    NekMatrix<double> result = lhs*rhs;
+
+                    BOOST_CHECK(result.GetRows() == 3);
+                    BOOST_CHECK(result.GetColumns() == 3);
+
+                    double epsilon = 1e-12;
+                    BOOST_CHECK_CLOSE(result(0,0), 97.0, epsilon);
+                    BOOST_CHECK_CLOSE(result(0,1), 103.0, epsilon);
+                    BOOST_CHECK_CLOSE(result(0,2), 109.0, epsilon);
+
+                    BOOST_CHECK_CLOSE(result(1,0), 229.0, epsilon);
+                    BOOST_CHECK_CLOSE(result(1,1), 244.0, epsilon);
+                    BOOST_CHECK_CLOSE(result(1,2), 259.0, epsilon);
+
+                    BOOST_CHECK_CLOSE(result(2,0), 361.0, epsilon);
+                    BOOST_CHECK_CLOSE(result(2,1), 385.0, epsilon);
+                    BOOST_CHECK_CLOSE(result(2,2), 409.0, epsilon);
+            }
+        
+            {
+                double buf1[] = {1, 2, 3,
+                                        4, 5, 6,
+                                        7, 8, 9};
+                double buf2[] = { 10, 11, 12, 14,
+                                    15, 16, 17, 18,
+                                    19, 20, 21, 22 };
+
+                NekMatrix<double> lhs(3, 3, buf1);
+                NekMatrix<double> rhs(3, 4, buf2);
+
+                NekMatrix<double> result = lhs*rhs;
+
+                BOOST_CHECK(result.GetRows() == 3);
+                BOOST_CHECK(result.GetColumns() == 4);
+
+                double epsilon = 1e-12;
+                BOOST_CHECK_CLOSE(result(0,0), 97.0, epsilon);
+                BOOST_CHECK_CLOSE(result(0,1), 103.0, epsilon);
+                BOOST_CHECK_CLOSE(result(0,2), 109.0, epsilon);
+                BOOST_CHECK_CLOSE(result(0,3), 116.0, epsilon);
+
+                BOOST_CHECK_CLOSE(result(1,0), 229.0, epsilon);
+                BOOST_CHECK_CLOSE(result(1,1), 244.0, epsilon);
+                BOOST_CHECK_CLOSE(result(1,2), 259.0, epsilon);
+                BOOST_CHECK_CLOSE(result(1,3), 278.0, epsilon);
+
+                BOOST_CHECK_CLOSE(result(2,0), 361.0, epsilon);
+                BOOST_CHECK_CLOSE(result(2,1), 385.0, epsilon);
+                BOOST_CHECK_CLOSE(result(2,2), 409.0, epsilon);
+                BOOST_CHECK_CLOSE(result(2,3), 440.0, epsilon);
+            }
+            
+            {
                 unsigned int buf1[] = {1, 2, 3,
                                        4, 5, 6,
                                        7, 8, 9};
@@ -329,8 +393,8 @@ namespace Nektar
             //BlockMatrix m3 = m1 + m2;
 
             NekMatrix<double> m1(3,3);
-            NekMatrix<NekMatrix<double> > m2(3, 3, {widths, heights});
-            NekMatrix<boost::shared_ptr<NekMatrix<double> > > m3(3, 3, {widths, heights});
+            //NekMatrix<NekMatrix<double> > m2(3, 3, {widths, heights});
+            //NekMatrix<boost::shared_ptr<NekMatrix<double> > > m3(3, 3, {widths, heights});
         }
     }
 }
@@ -338,6 +402,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.16  2006/09/30 15:38:29  bnelson
+    no message
+
     Revision 1.15  2006/09/11 03:28:41  bnelson
     no message
 

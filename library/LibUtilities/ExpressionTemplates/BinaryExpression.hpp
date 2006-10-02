@@ -14,6 +14,7 @@
 #include <boost/type_traits.hpp>
 
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
+#include <iostream>
 
 namespace Nektar
 {
@@ -24,50 +25,60 @@ namespace Nektar
         {
         };
 
-        // Originally these functions were methods inside the binary expression class.
-        // Visual Studio 2003 didn't like that, so I had to move them outside the class as static methods.
-        template<typename LhsExpressionType, typename RhsExpressionType, typename ResultType, template <typename, typename> class OpType>
-        void EvaluateExpression(typename boost::call_traits<LhsExpressionType>::const_reference lhs, 
-                                        typename boost::call_traits<RhsExpressionType>::const_reference rhs,
-                                        typename boost::call_traits<ResultType>::reference result, 
-                                        typename boost::enable_if<boost::is_same<typename LhsExpressionType::ResultType, ResultType> >::type* f0 = NULL,
-                                        typename boost::enable_if<boost::is_same<typename RhsExpressionType::ResultType, ResultType> >::type* f1 = NULL)
+        
+        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType, typename LhsSameTypeEnable = void, typename RhsSameTypeEnable = void>
+        class EvaluateExpression
         {
-            typedef typename LhsExpressionType::ResultType LhsType;
-            typedef typename RhsExpressionType::ResultType RhsType;
-            lhs.Apply(result);
-            rhs.template ApplyEqual<OpType<LhsType, RhsType> >(result);
-        }
-
-        template<typename LhsExpressionType, typename RhsExpressionType, typename ResultType, template <typename, typename> class OpType>
-        void EvaluateExpression(typename boost::call_traits<LhsExpressionType>::const_reference lhs, 
-                                        typename boost::call_traits<RhsExpressionType>::const_reference rhs,
-                                        typename boost::call_traits<ResultType>::reference result, 
-                                        typename boost::disable_if<boost::is_same<typename LhsExpressionType::ResultType, ResultType> >::type* f0 = NULL,
-                                        typename boost::enable_if<boost::is_same<typename RhsExpressionType::ResultType, ResultType> >::type* f1 = NULL)
+            public:
+                static void eval(const Expression<LhsExpressionPolicyType>& lhs, 
+                                 const Expression<RhsExpressionPolicyType>& rhs,
+                                 typename boost::call_traits<ResultType>::reference result)
+                {
+                    typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
+                    typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
+                    lhs.Apply(result);
+                    rhs.template ApplyEqual<OpType<LhsType, RhsType> >(result);
+                }
+        };
+        
+        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType>
+        class EvaluateExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, 
+                                       typename boost::disable_if<boost::is_same<typename Expression<LhsExpressionPolicyType>::ResultType, ResultType> >::type,
+                                       typename boost::enable_if<boost::is_same<typename Expression<RhsExpressionPolicyType>::ResultType, ResultType> >::type>
         {
-            typedef typename LhsExpressionType::ResultType LhsType;
-            typedef typename RhsExpressionType::ResultType RhsType;
-            LhsType lhs_value = lhs;
-            RhsType rhs_value = rhs;
+            public:
+                static void eval(const Expression<LhsExpressionPolicyType>& lhs, 
+                                    const Expression<RhsExpressionPolicyType>& rhs,
+                                    typename boost::call_traits<ResultType>::reference result)
+                {
+                    typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
+                    typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
+                    LhsType lhs_value = lhs;
+                    RhsType rhs_value = rhs;
             
 
-            OpType<LhsType, RhsType>::Apply(result, lhs, rhs);
-        }
-
-        template<typename LhsExpressionType, typename RhsExpressionType, typename ResultType, template <typename, typename> class OpType>
-        void EvaluateExpression(typename boost::call_traits<LhsExpressionType>::const_reference lhs, 
-                                        typename boost::call_traits<RhsExpressionType>::const_reference rhs,
-                                        typename boost::call_traits<ResultType>::reference result, 
-                                        typename boost::enable_if<boost::is_same<typename LhsExpressionType::ResultType, ResultType> >::type* f0 = NULL,
-                                        typename boost::disable_if<boost::is_same<typename RhsExpressionType::ResultType, ResultType> >::type* f1 = NULL)
+                    OpType<LhsType, RhsType>::Apply(result, lhs, rhs);
+                }
+        };
+        
+        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType>
+        class EvaluateExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, 
+                                       typename boost::enable_if<boost::is_same<typename Expression<LhsExpressionPolicyType>::ResultType, ResultType> >::type,
+                                       typename boost::disable_if<boost::is_same<typename Expression<RhsExpressionPolicyType>::ResultType, ResultType> >::type>
         {
-            typedef typename LhsExpressionType::ResultType LhsType;
-            typedef typename RhsExpressionType::ResultType RhsType;
-            lhs.Apply(result);
-            RhsType rhs_value = rhs;
-            OpType<LhsType, RhsType>::ApplyEqual(result, rhs);
-        }
+            public:
+                static void eval(const Expression<LhsExpressionPolicyType>& lhs, 
+                                    const Expression<RhsExpressionPolicyType>& rhs,
+                                    typename boost::call_traits<ResultType>::reference result)
+                {
+                    typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
+                    typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
+                    lhs.Apply(result);
+                    RhsType rhs_value = rhs;
+                    OpType<LhsType, RhsType>::ApplyEqual(result, rhs);
+                }
+        };
+                
 
         // OpType - A class with a statis method called Apply that takes a single
         // parameter and returns a result of the same or different type.
@@ -145,7 +156,7 @@ namespace Nektar
                 // 2.  Result and Parameter types are different.
                 void Apply(typename boost::call_traits<ResultType>::reference result) const
                 {
-                    EvaluateExpression<LhsExpressionType, RhsExpressionType, ResultType, OpType>(m_lhs, m_rhs, result);
+                    EvaluateExpression<LhsInputExpressionPolicyType, RhsInputExpressionPolicyType, ResultType, OpType>::eval(m_lhs, m_rhs, result);
                 }
 
                 const MetadataType& GetMetadata() const
@@ -204,6 +215,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpression.hpp,v $
+    Revision 1.4  2006/09/14 02:08:59  bnelson
+    Fixed gcc compile errors
+
     Revision 1.3  2006/09/11 03:24:24  bnelson
     Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
 

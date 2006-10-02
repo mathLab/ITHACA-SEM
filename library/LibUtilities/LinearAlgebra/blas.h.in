@@ -1,0 +1,100 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: blas.h
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: 
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLAS_H
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLAS_H
+
+#cmakedefine NEKTAR_USING_BLAS
+#cmakedefine NEKTAR_USING_MKL
+#cmakedefine NEKTAR_USING_ATLAS
+
+#ifdef NEKTAR_USING_MKL
+#include <@MKL_BLAS_INCLUDE_FILE@>
+#endif
+
+#ifdef NEKTAR_USING_ATLAS
+extern "C"
+{
+#include <@ATLAS_INCLUDE_FILE@>
+}
+#endif
+
+namespace Nektar
+{
+    enum MatrixOrder
+    {
+        eROW_MAJOR = 0,
+        eCOLUMN_MAJOR = 1
+    };
+    
+    enum Transpose
+    {
+        eNO_TRANSPOSE = 0,
+        eTRANSPOSE = 1,
+        eCONJUGATE_TRANSPOSE = 2
+    };
+
+#if defined(NEKTAR_USING_MKL) || defined(NEKTAR_USING_ATLAS)
+    extern CBLAS_ORDER OrderMapping[];
+    extern CBLAS_TRANSPOSE TransposeMapping[];
+#endif
+
+// Note - Document this better to get past the issues.
+// Basically, specifying row major turns everything around.
+/*
+    void dgemv(const MatrixOrder order, const Transpose matrixTranspose, const int rows, const int columns,
+                 const double alpha, const double* A, const int lda,
+                 const double* X, const int incX, const double beta,
+                 double* Y, const int incY)
+    {
+#ifdef NEKTAR_USING_MKL
+            cblas_dgemv(order, transA, M, N, alpha, A, lda, X, incX, beta, Y, incY);
+#endif
+    }
+*/
+    
+    void dgemm(const MatrixOrder order, const Transpose MatrixATranspose, const Transpose MatrixBTranspose,
+               const int M, const int N, const int K,
+               const double alpha, const double* A, const int lda, const double* B,
+               const int ldb, const double beta, double* C, const int ldc);
+               
+    // Make the common case easy - just multiply two matrices.
+    // result = A*B
+    void dgemm(const int rowsInA, const int columnsInA, const int columnsInB, 
+               const double* A, const double* B, double* result);
+}
+
+#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLAS_H

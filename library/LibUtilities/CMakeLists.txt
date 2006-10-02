@@ -16,6 +16,7 @@ SET(LibUtilityHeaders
 ./LinearAlgebra/NekVector.hpp
 ./LinearAlgebra/NekVectorMetadata.hpp
 ./LinearAlgebra/NekPoint.hpp
+./LinearAlgebra/blas.cpp
 ./ExpressionTemplates/ArithmeticConcepts.hpp
 ./ExpressionTemplates/BinaryExpressionTraits.hpp
 ./ExpressionTemplates/BinaryExpression.hpp
@@ -43,6 +44,7 @@ SET(LibUtilityHeaders
 ./Memory/NekMemoryManager.hpp
 )
 
+CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/LibUtilities/LinearAlgebra/blas.h.in ${PROJECT_BINARY_DIR}/LibUtilities/LinearAlgebra/blas.h)
 
 ADD_NEKTAR_LIBRARY(LibUtilities STATIC ${LibUtilitySources} ${LibUtilityHeaders})
 
@@ -55,6 +57,19 @@ IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
 	# Needed for M_PI to be visible in visual studio.
 	ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
+
+#IF( ${USE_MKL} AND ${MKL_FOUND} )
+#        TARGET_LINK_LIBRARIES(${name}
+#            optimized ${MKL_LAPACK} debug ${MKL_LAPACK}
+#        )
+#ENDIF( ${USE_MKL} AND ${MKL_FOUND} )
+
+IF( USE_ATLAS AND ATLAS_FOUND )
+        TARGET_LINK_LIBRARIES(LibUtilities
+            ${ATLAS_LAPACK}
+            ${ATLAS_CBLAS}
+            ${ATLAS} )
+ENDIF( USE_ATLAS AND ATLAS_FOUND )
 
 # This doesn't preserve the BasicUtils, Memory, etc. Find a way to fix this.
 INSTALL_FILES(${NEKTAR_INCLUDE_DIR} FILES ${LibUtilityHeaders})

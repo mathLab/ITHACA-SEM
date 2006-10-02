@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: testLinearSystem.h
+// File: blas.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,27 +29,49 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Test code for NekVector
+// Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
-#ifndef NEKTAR_UNIT_TESTS_TEST_LINEAR_SYSTEM_H
-#define NEKTAR_UNIT_TESTS_TEST_LINEAR_SYSTEM_H
+#include <LibUtilities/LinearAlgebra/blas.h>
 
 namespace Nektar
 {
-    namespace LinearSystemUnitTests
+#if defined(NEKTAR_USING_MKL) || defined(NEKTAR_USING_ATLAS)
+    CBLAS_ORDER OrderMapping[] = { CblasRowMajor, CblasColMajor };
+    CBLAS_TRANSPOSE TransposeMapping[] = { CblasNoTrans, CblasTrans, CblasConjTrans };
+#endif
+
+   void dgemm(const MatrixOrder order, const Transpose MatrixATranspose, const Transpose MatrixBTranspose,
+              const int M, const int N, const int K,
+              const double alpha, const double* A, const int lda, const double* B,
+              const int ldb, const double beta, double* C, const int ldc)
     {
-        void testDiagonalSystem();
+#ifdef NEKTAR_USING_MKL
+        cblas_dgemm(OrderMapping[order], TransposeMapping[MatrixATranspose], TransposeMapping[MatrixBTranspose],
+                    M, N, K,
+                    alpha, A, lda, B, ldb, beta, C, ldc);
+#endif
+
+#ifdef NEKTAR_USING_ATLAS
+        cblas_dgemm(OrderMapping[order], TransposeMapping[MatrixATranspose], TransposeMapping[MatrixBTranspose],
+           M, N, K,
+           alpha, A, lda, B, ldb, beta, C, ldc);
+#endif
+
+    }
+    
+    void dgemm(const int rowsInA, const int columnsInA, const int columnsInB, 
+               const double* A, const double* B, double* result)
+    {
+        dgemm(eROW_MAJOR, eNO_TRANSPOSE, eNO_TRANSPOSE, rowsInA, columnsInB, columnsInA,
+              1.0, A, columnsInA, B, columnsInB, 0.0, result, columnsInB);
     }
 }
 
-#endif //NEKTAR_UNIT_TESTS_TEST_LINEAR_SYSTEM_H
 
 /**
-    $Log: testLinearSystem.h,v $
-    Revision 1.1  2006/09/30 15:38:29  bnelson
-    no message
+    $Log: $
 
-**/
+ **/
+ 

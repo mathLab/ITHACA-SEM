@@ -350,9 +350,9 @@ namespace Nektar
 
             std::string AsString() const
             {
-                unsigned int dim = GetRows();
+                unsigned int d = GetRows();
                 std::string result = "(";
-                for(unsigned int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < d; ++i)
                 {
                     result += boost::lexical_cast<std::string>((*this)[i]);
                     if( i < dim-1 )
@@ -647,6 +647,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.7  2006/09/30 15:18:37  bnelson
+    no message
+
     Revision 1.6  2006/09/21 01:00:38  bnelson
     Fixed an expression template problem.
 

@@ -52,7 +52,12 @@
 
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
+
+// This check will eventually need to go away, but for now it allow people not using
+// cmake to use the NekMatrix header.
+#ifdef NEKTAR_USING_CMAKE
 #include <LibUtilities/LinearAlgebra/blas.h>
+#endif
 
 namespace Nektar
 {
@@ -782,6 +787,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.13  2006/10/04 03:02:36  bnelson
+    Fixed a conflict problem from the previous commit.
+
     Revision 1.12  2006/10/02 01:16:14  bnelson
     Started working on adding BLAS and LAPACK
 

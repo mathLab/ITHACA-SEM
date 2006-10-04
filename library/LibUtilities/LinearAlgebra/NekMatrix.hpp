@@ -624,20 +624,6 @@ namespace Nektar
     }
 
 
-
-    /////////////////////////////////////////
-    // Multiplication
-    /////////////////////////////////////////
-    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
-    void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, 
-                const NekMatrix<DataType, rhsForm, space>& rhs,
-                typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::MultiplicationResultType& result)
-    {
-        result = lhs;
-        result *= rhs;
-    }
-
-
     /////////////////////////////////////////
     // Multiplication
     /////////////////////////////////////////
@@ -653,6 +639,16 @@ namespace Nektar
         result = lhs;
         result *= rhs;
 #endif
+    }
+
+    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
+    void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, 
+                const NekMatrix<DataType, rhsForm, space>& rhs,
+                typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::MultiplicationResultType& result,
+                typename boost::disable_if<boost::is_same<DataType, double> >::type* p = NULL )
+    {
+        result = lhs;
+        result *= rhs;
     }
 
     template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, unsigned int space>
@@ -671,16 +667,7 @@ namespace Nektar
         }
     }
 
-    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
-    void multiply(const NekMatrix<DataType, lhsForm, space>& lhs, 
-            const NekMatrix<DataType, rhsForm, space>& rhs,
-            typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, space>, NekMatrix<DataType, rhsForm, space> >::MultiplicationResultType& result,
-            typename boost::disable_if<boost::is_same<DataType, double> >::type* p = NULL )
-    {
-        result = lhs;
-        result *= rhs;
-    }
-                
+               
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, unsigned int space>
     expt::Expression<expt::BinaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, space> > >, expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, space> > >, expt::MultiplyOp > > operator*(
@@ -714,33 +701,6 @@ namespace Nektar
 
         return result;
     }
-
-    template<typename DataType, NekMatrixForm form, unsigned int space>
-    NekMatrix<DataType, form, space> operator*(const NekMatrix<DataType, form, space>& lhs,
-                                                const NekMatrix<DataType, form, space>& rhs)
-    {
-        ASSERTL0(lhs.GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
-
-        NekMatrix<DataType, form, space> result(lhs.GetRows(), rhs.GetColumns());
-
-        for(unsigned int i = 0; i < result.GetRows(); ++i)
-        {
-            for(unsigned int j = 0; j < result.GetColumns(); ++j)
-            {
-                DataType t = DataType(0);
-
-                // Set the result(i,j) element.
-                for(unsigned int k = 0; k < lhs.GetColumns(); ++k)
-                {
-                    t += lhs(i,k)*rhs(k,j);
-                }
-                result(i,j) = t;
-            }
-        }
-
-        return result;
-    }
-
 
     template<typename DataType, NekMatrixForm form, unsigned int space>
     NekVector<DataType, 0, space> operator*(
@@ -822,6 +782,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.12  2006/10/02 01:16:14  bnelson
+    Started working on adding BLAS and LAPACK
+
     Revision 1.11  2006/09/30 15:18:37  bnelson
     no message
 

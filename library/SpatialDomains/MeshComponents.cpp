@@ -57,7 +57,7 @@ namespace Nektar
 
         // copy constructor
         VertexComponent::VertexComponent(const VertexComponent &T)
-            :LibUtilities::NekPoint<double,3>(T)
+            : NekPoint<double,3>(T)
         {
             m_vid = T.m_vid;
             m_coordim = T.m_coordim;
@@ -182,6 +182,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.cpp,v $
+// Revision 1.3  2006/05/09 13:37:01  jfrazier
+// Removed duplicate definition of shared vertex pointer.
+//
 // Revision 1.2  2006/05/07 11:26:38  sherwin
 // Modifications to get the demo LocalRegions::Project2D to compile
 //

@@ -84,7 +84,7 @@ namespace Nektar
 
         // --------------------------------------------------------------------
         /// Vertex Component
-        class VertexComponent: public Geometry, public LibUtilities::NekPoint<double, 3>
+        class VertexComponent: public Geometry, public NekPoint <double, 3>
         {
         public:
             //Temp debug constructor
@@ -176,6 +176,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.6  2006/08/17 22:55:00  jfrazier
+// Continued adding code to process composites in the mesh2d.
+//
 // Revision 1.5  2006/06/05 00:07:43  bnelson
 // Fixed a gcc 4.1.0 compilation problem.  VertexComponent::VertexComponent is not allowed in the class declaration.
 //

@@ -41,8 +41,9 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        MeshGraph1D::MeshGraph1D():
-    m_geofac_defined(false)
+	
+    MeshGraph1D::MeshGraph1D():
+	    m_geofac_defined(false)
     {
     }
 
@@ -204,6 +205,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.6  2006/09/26 23:41:53  jfrazier
+// Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
+//
 // Revision 1.5  2006/06/01 14:15:30  sherwin
 // Added typdef of boost wrappers and made GeoFac a boost shared pointer.
 //

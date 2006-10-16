@@ -13,13 +13,13 @@ using namespace std;
 int main(int argc, char *argv[]){
 
     //if(argc != 2){
-    //  cerr << "usage: Graph1D file" << endl;
+    //  cerr << "usage: Graph2D file" << endl;
     //  exit(1);
     //}
 
     //string in(argv[argc-1]);
-    string in("C:\\Data\\PhD\\Research\\dev\\Nektar++\\libs\\Demos\\SpatialDomains\\meshdef2D.xml");
-    string domainfile("C:\\Data\\PhD\\Research\\dev\\Nektar++\\libs\\Demos\\SpatialDomains\\domain.xml");
+    string in("meshdef2D.xml");
+    string domainfile("domain.xml");
     MeshGraph2D graph2D;
     Domain domain2D(&graph2D);
 

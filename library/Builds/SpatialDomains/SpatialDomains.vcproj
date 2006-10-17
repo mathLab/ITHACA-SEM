@@ -23,7 +23,7 @@
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="3"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough="pchSpatialDomains.h"
 				PrecompiledHeaderFile="$(IntDir)/pchSpatialDomains.pch"
 				WarningLevel="3"
@@ -100,6 +100,9 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
+				RelativePath="..\..\SpatialDomains\Domain.cpp">
+			</File>
+			<File
 				RelativePath="..\..\SpatialDomains\EdgeComponent.cpp">
 			</File>
 			<File
@@ -159,6 +162,12 @@
 			</File>
 			<File
 				RelativePath="..\..\SpatialDomains\QuadGeom.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ShowIncludes="FALSE"/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\SpatialDomains\SegGeom.cpp">
@@ -182,6 +191,9 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			<File
+				RelativePath="..\..\SpatialDomains\Domain.h">
+			</File>
 			<File
 				RelativePath="..\..\SpatialDomains\EdgeComponent.h">
 			</File>

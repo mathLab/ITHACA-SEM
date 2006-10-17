@@ -362,8 +362,7 @@ namespace Nektar
 
                             if (compositeElementStr.length() > 0)
                             {
-                                m_MeshCompositeVector.back()->push_back(
-                                    ResolveGeomRef(prevCompositeElementStr, compositeElementStr));
+                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr);
                             }
                             prevCompositeElementStr = compositeElementStr;
                         }
@@ -446,10 +445,8 @@ namespace Nektar
     // The only allowable combinations of previous and current items
     // are V (0D); E (1D); and T and Q (2D).  Only elements of the same
     // dimension are allowed to be grouped.
-    GeometrySharedPtr MeshGraph2D::ResolveGeomRef(const std::string &prevToken, const std::string &token)
+    void MeshGraph2D::ResolveGeomRef(const std::string &prevToken, const std::string &token)
     {
-        GeometrySharedPtr returnval;
-
         try
         {
             std::istringstream tokenStream(token);
@@ -457,45 +454,90 @@ namespace Nektar
 
             char type;
             char prevType;
-            int index;
 
             tokenStream >> type;
-            tokenStream.ignore(1);// Skip the '['
-            tokenStream >> index;
 
-#pragma message("Add index range here " __FILE__)
+            std::string::size_type indxBeg = token.find_first_of('[') + 1;
+            std::string::size_type indxEnd = token.find_last_of(']') - 1;
 
-            prevTokenStream >> prevType;
+            ASSERTL0(indxBeg <= indxEnd, (std::string("Error reading index definition:") + token).c_str());
 
-            bool validSequence = (prevToken.empty() ||         // No previous, then current is just fine.
-                                 (type == 'V' && prevType == 'V') ||
-                                 (type == 'E' && prevType == 'E') ||
-                                 ((type == 'T' || type == 'Q') &&
-                                    (prevType == 'T' || prevType == 'Q')));
+            std::string indxStr = token.substr(indxBeg, indxEnd - indxBeg + 1);
 
-            ASSERTL0(validSequence, (std::string("Invalid combination of composite items: ")
-                + type + " and " + prevType + ".").c_str()); 
+            std::istringstream indexStrm(indxStr);
+            int indx1=-1, indx2=-1;
 
-            switch(type)
+            // Should read either [a] where a is a nonnegative integer, or
+            // [a-b] where a and b are nonnegative integers, b>a.
+            // Easiest way to know is if a '-' is present we have the latter
+            // case.
+
+            indexStrm >> indx1;
+            ASSERTL0(indx1 >= 0, (std::string("Error reading range: ") + indxStr).c_str());
+            indx2 = indx1;
+
+            if (!indexStrm.fail())
             {
-            case 'E':   // Edge
-                returnval = m_ecomps[index];
-                break;
+                std::string::size_type dashLoc=indxStr.find('-');
+                if (dashLoc != std::string::npos)
+                {
+                    // Skip up to and including the '-' character, then read
+                    // the other index.  We are safe in doing this because we
+                    // already know it is there...somewhere.
+                    indexStrm.seekg(dashLoc+1);
+                    indexStrm >> indx2;
 
-            case 'T':   // Triangle
-                returnval = m_trigeoms[index];
-                break;
+                    ASSERTL0(indx1 < indx2 && indx2 >= 0,
+                        (std::string("Error reading collection range: ") + indxStr).c_str());
+                }
+            }
 
-            case 'Q':   // Quad
-                returnval = m_quadgeoms[index];
-                break;
+            if (!indexStrm.fail())
+            {
+                prevTokenStream >> prevType;
 
-            case 'V':   // Vertex
-                returnval = m_vertset[index];
-                break;
+                bool validSequence = (prevToken.empty() ||         // No previous, then current is just fine.
+                                    (type == 'V' && prevType == 'V') ||
+                                    (type == 'E' && prevType == 'E') ||
+                                    ((type == 'T' || type == 'Q') &&
+                                        (prevType == 'T' || prevType == 'Q')));
 
-            default:
-                NEKERROR(ErrorUtil::efatal, (std::string("Unrecognized composite token: ") + token).c_str());
+                ASSERTL0(validSequence, (std::string("Invalid combination of composite items: ")
+                    + type + " and " + prevType + ".").c_str()); 
+
+                switch(type)
+                {
+                case 'E':   // Edge
+                    for (int i=indx1; i<=indx2; ++i)
+                    {
+                        m_MeshCompositeVector.back()->push_back(m_ecomps[i]);
+                    }
+                    break;
+
+                case 'T':   // Triangle
+                    for (int i=indx1; i<=indx2; ++i)
+                    {
+                        m_MeshCompositeVector.back()->push_back(m_trigeoms[i]);
+                    }
+                    break;
+
+                case 'Q':   // Quad
+                    for (int i=indx1; i<=indx2; ++i)
+                    {
+                        m_MeshCompositeVector.back()->push_back(m_quadgeoms[i]);
+                    }
+                    break;
+
+                case 'V':   // Vertex
+                    for (int i=indx1; i<=indx2; ++i)
+                    {
+                        m_MeshCompositeVector.back()->push_back(m_vertset[i]);
+                    }
+                    break;
+
+                default:
+                    NEKERROR(ErrorUtil::efatal, (std::string("Unrecognized composite token: ") + token).c_str());
+                }
             }
         }
         catch(...)
@@ -503,7 +545,7 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, (std::string("Problem processing composite token: ") + token).c_str());
         }
 
-        return returnval;
+        return;
     }
 
     }; //end of namespace
@@ -511,6 +553,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.12  2006/10/17 18:42:54  jfrazier
+// Removed "NUMBER" attribute in items.
+//
 // Revision 1.11  2006/09/26 23:41:53  jfrazier
 // Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
 //

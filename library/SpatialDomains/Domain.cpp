@@ -115,6 +115,7 @@ namespace Nektar
 
                         indexStrm >> indx1;
                         ASSERTL0(indx1 >= 0, (std::string("Error reading collection range: ") + indxStr).c_str());
+                        indx2 = indx1;
 
                         std::string::size_type dashLoc=indxStr.find('-');
                         if (dashLoc != std::string::npos)

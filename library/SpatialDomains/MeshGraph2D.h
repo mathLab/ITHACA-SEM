@@ -209,7 +209,7 @@ namespace Nektar
             void ReadEdges    (TiXmlDocument &doc);
             void ReadElements (TiXmlDocument &doc);
             void ReadComposites(TiXmlDocument &doc);
-            GeometrySharedPtr ResolveGeomRef(const std::string &prevToken, const std::string &token);
+            void ResolveGeomRef(const std::string &prevToken, const std::string &token);
 
             bool   m_geofac_defined;
 
@@ -225,6 +225,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.8  2006/09/26 23:41:53  jfrazier
+// Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
+//
 // Revision 1.7  2006/08/24 18:50:01  jfrazier
 // Completed error checking on permissable composite item combinations.
 //

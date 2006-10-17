@@ -18,8 +18,9 @@ int main(int argc, char *argv[]){
     //}
 
     //string in(argv[argc-1]);
-    string in("meshdef2D.xml");
-    string domainfile("domain.xml");
+    // If we all have the same relative structure, these should work for everyone.
+    string in("../../../Demos/SpatialDomains/meshdef2D.xml");
+    string domainfile("../../../Demos/SpatialDomains/domain.xml");
     MeshGraph2D graph2D;
     Domain domain2D(&graph2D);
 

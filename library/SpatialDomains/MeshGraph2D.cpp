@@ -76,28 +76,9 @@ namespace Nektar
         ASSERTL0(field, "Unable to find EDGE tag in file.");
 
         TiXmlAttribute *attr = field->FirstAttribute();
-        int numEdges = -1;
         int edgeNumber = 0;
         int nextEdgeNumber = 0;
         int err = 0;
-
-        while (attr)
-        {
-            std::string attrName(attr->Name());
-            if (attrName == "NUMBER")
-            {
-                err = attr->QueryIntValue(&numEdges);
-                if (err)
-                {
-                    numEdges = -1;
-                }
-            }
-            // Get the next attribute. Shouldn't be any more, 
-            // but just in case.
-            attr = attr->Next();
-        }
-
-        ASSERTL0(numEdges > 0, "Unable to read NUMBER attribute value.");
 
         /// All elements are of the form: "ID <?> ... </?>", with
         /// ? being the element type.
@@ -125,24 +106,29 @@ namespace Nektar
         int edgeid, vertex1, vertex2;
         std::istrstream edgeDataStrm(edgeStr.c_str());
 
-        for (int i=0; i<numEdges; ++i)
+        try
         {
-            try
+            while (!edgeDataStrm.fail())
             {
                 edgeDataStrm >> edgeid >> vertex1 >> vertex2;
+                
+                // Must check after the read because we may be at the end and not know it.
+                // If we are at the end we will add a duplicate of the last entry if we
+                // don't check here.
+                if (!edgeDataStrm.fail())
+                {
+                    VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                    EdgeComponentSharedPtr edge(new EdgeComponent(edgeid, m_MeshDimension, vertices));
 
-                ASSERTL0(!edgeDataStrm.fail(), (std::string("Unable to read edge data: ") + edgeStr).c_str());
-
-                VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
-                EdgeComponentSharedPtr edge(new EdgeComponent(edgeid, m_MeshDimension, vertices));
-
-                m_ecomps.push_back(edge);
-            }
-            catch(...)
-            {
-                NEKERROR(ErrorUtil::efatal, (std::string("Unable to read edge data: ") + edgeStr).c_str());
+                    m_ecomps.push_back(edge);
+                }
             }
         }
+        catch(...)
+        {
+            NEKERROR(ErrorUtil::efatal, (std::string("Unable to read edge data: ") + edgeStr).c_str());
+        }
+
     }
 
     void MeshGraph2D::ReadElements(TiXmlDocument &doc)
@@ -158,27 +144,9 @@ namespace Nektar
         ASSERTL0(field, "Unable to find ELEMENT tag in file.");
 
         TiXmlAttribute *attr = field->FirstAttribute();
-        int numElements = -1;
         int elementNumber = 0;
         int nextElementNumber = 0;
         int err = 0;
-
-        while (attr)
-        {
-            std::string attrName(attr->Name());
-            if (attrName == "NUMBER")
-            {
-                err = attr->QueryIntValue(&numElements);
-                if (err)
-                {
-                    numElements = -1;
-                }
-            }
-            // Get the next attribute.  Shouldn't be any more, but just in case.
-            attr = attr->Next();
-        }
-
-        ASSERTL0(numElements > 0, "Unable to read NUMBER attribute value.");
 
         /// All elements are of the form: "ID <?> ... </?>", with
         /// ? being the element type.
@@ -321,27 +289,9 @@ namespace Nektar
         ASSERTL0(field, "Unable to find COMPOSITE tag in file.");
 
         TiXmlAttribute *attr = field->FirstAttribute();
-        int numComposites = -1;
         int compositeNumber = 0;
         int nextCompositeNumber = 0;
         int err = 0;
-
-        while (attr)
-        {
-            std::string attrName(attr->Name());
-            if (attrName == "NUMBER")
-            {
-                err = attr->QueryIntValue(&numComposites);
-                if (err)
-                {
-                    numComposites = -1;
-                }
-            }
-            // Get the next attribute.  Shouldn't be any more, but just in case.
-            attr = attr->Next();
-        }
-
-        ASSERTL0(numComposites > 0, "Unable to read NUMBER attribute value.");
 
         /// All elements are of the form: "ID <?> ... </?>", with
         /// ? being the element type.
@@ -395,25 +345,28 @@ namespace Nektar
                     bool first = true;
                     std::string prevCompositeElementStr;
 
-                    while (compositeDataStrm)
+                    while (!compositeDataStrm.fail())
                     {
                         std::string compositeElementStr;
                         compositeDataStrm >> compositeElementStr;
 
-                        if (first)
+                        if (!compositeDataStrm.fail())
                         {
-                            first = false;
+                            if (first)
+                            {
+                                first = false;
 
-                            Composite curVector(new std::vector<GeometrySharedPtr>);
-                            m_MeshCompositeVector.push_back(curVector);
-                        }
+                                Composite curVector(new std::vector<GeometrySharedPtr>);
+                                m_MeshCompositeVector.push_back(curVector);
+                            }
 
-                        if (compositeElementStr.length() > 0)
-                        {
-                            m_MeshCompositeVector.back()->push_back(
-                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr));
+                            if (compositeElementStr.length() > 0)
+                            {
+                                m_MeshCompositeVector.back()->push_back(
+                                    ResolveGeomRef(prevCompositeElementStr, compositeElementStr));
+                            }
+                            prevCompositeElementStr = compositeElementStr;
                         }
-                        prevCompositeElementStr = compositeElementStr;
                     }
                 }
                 catch(...)
@@ -510,6 +463,8 @@ namespace Nektar
             tokenStream.ignore(1);// Skip the '['
             tokenStream >> index;
 
+#pragma message("Add index range here " __FILE__)
+
             prevTokenStream >> prevType;
 
             bool validSequence = (prevToken.empty() ||         // No previous, then current is just fine.
@@ -556,6 +511,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.11  2006/09/26 23:41:53  jfrazier
+// Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
+//
 // Revision 1.10  2006/08/24 18:50:00  jfrazier
 // Completed error checking on permissable composite item combinations.
 //

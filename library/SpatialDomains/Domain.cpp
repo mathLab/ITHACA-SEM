@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/MeshGraph.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/Domain.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -122,7 +122,7 @@ namespace Nektar
                             // Skip up to and including the '-' character, then read
                             // the other index.  We are safe in doing this because we
                             // already know it is there...somewhere.
-                            while(indexStrm.get() != '-');
+                            indexStrm.seekg(dashLoc+1);
                             indexStrm >> indx2;
 
                             ASSERTL0(indx1 < indx2 && indx2 >= 0,

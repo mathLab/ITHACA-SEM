@@ -123,14 +123,6 @@ namespace Nektar
             TiXmlElement* element = mesh->FirstChildElement("VERTEX");
             ASSERTL0(element, "Unable to find mesh VERTEX tag in file.");
 
-            attr = element->FirstAttribute();
-            ASSERTL0(attr, "VERTEX tag must include NUMBER"
-                "attribute specifying the number of vertices");
-
-            int numVertices;
-            err = attr->QueryIntValue(&numVertices);
-            ASSERTL0(err==TIXML_SUCCESS, "Unable to read VERTEX NUMBER attribute value.");
-
             //// Get the entire data block then go through it one line at a time.
             std::string vertexData;
 
@@ -156,13 +148,18 @@ namespace Nektar
 
             try
             {
-                for (int i=0; i<numVertices; ++i)
+                while(!vertexDataStrm.fail())
                 {
                     vertexDataStrm >> indx;
                     vertexDataStrm >> xval >> yval >> zval;
 
-                    VertexComponentSharedPtr vert(new VertexComponent(m_MeshDimension, indx, xval, yval, zval));
-                    m_vertset.push_back(vert);
+                    // Need to check it here because we may not be good after the read
+                    // indicating that there was nothing to read.
+                    if (!vertexDataStrm.fail())
+                    {
+                        VertexComponentSharedPtr vert(new VertexComponent(m_MeshDimension, indx, xval, yval, zval));
+                        m_vertset.push_back(vert);
+                    }
                 }
             }
             catch(...)
@@ -217,6 +214,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.4  2006/09/26 23:41:52  jfrazier
+// Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
+//
 // Revision 1.3  2006/08/24 18:50:00  jfrazier
 // Completed error checking on permissable composite item combinations.
 //

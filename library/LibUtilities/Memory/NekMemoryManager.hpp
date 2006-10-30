@@ -294,17 +294,24 @@ namespace Nektar
             /// \param data The data to be deleted.  This parameter will be set to
             ///             NULL when the method is finished.
             template<unsigned int ArraySize, typename DataType>
-            static void DeallocateArray(DataType*& data,
+            static void DeallocateArray(DataType*& data, unsigned int numToDelete = ArraySize,
                     typename boost::disable_if_c<DataType::MemoryPoolEnabled>::type* p = NULL)
             {
                 BOOST_STATIC_ASSERT(ArraySize > 0);
-                delete [] data;
+                // Dont do "delete [] data;", as this could call the constructor on memory for which a 
+                // constructor was never used.
+                for(unsigned int i = 0; i < numToDelete; ++i)
+                {
+                    DataType* memLocation = &data[i];
+                    memLocation->~DataType();
+                }
+                delete data;
                 data = NULL;
             }
 
             /// \brief Deallocates arrays of fundamental data types.
             template<unsigned int ArraySize, typename DataType>
-            static void DeallocateArray(DataType*& data,
+            static void DeallocateArray(DataType*& data, unsigned int numToDelete = ArraySize,
                     typename boost::enable_if<boost::is_fundamental<DataType> >::type* p = NULL)
             {
                 BOOST_STATIC_ASSERT(ArraySize > 0);
@@ -313,12 +320,13 @@ namespace Nektar
             }
 
             /// \brief Deallocate a pointer allocated by the Memory Manager with a memory pool.
+            /// \param numToDelete The number of objects in this memory chunk on which the destructor must be called.
             template<unsigned int ArraySize, typename DataType>
-            static void DeallocateArray(DataType*& data,
+            static void DeallocateArray(DataType*& data, unsigned int numToDelete = ArraySize,
                     typename boost::enable_if_c<DataType::MemoryPoolEnabled>::type* p = NULL)
             {
                 BOOST_STATIC_ASSERT(ArraySize > 0);
-                for(unsigned int i = 0; i < ArraySize; ++i)
+                for(unsigned int i = 0; i < numToDelete; ++i)
                 {
                     DataType* memLocation = &data[i];
                     memLocation->~DataType();
@@ -424,27 +432,27 @@ namespace Nektar
             {
                 if( arraySize < 10 )
                 {
-                    return MemoryManager::DeallocateArray<10, DataType>(array);
+                    MemoryManager::DeallocateArray<10, DataType>(array, arraySize);
                 }
                 else if( arraySize < 20 )
                 {
-                    return MemoryManager::DeallocateArray<20, DataType>(array);
+                    MemoryManager::DeallocateArray<20, DataType>(array, arraySize);
                 }
                 else if( arraySize < 30 )
                 {
-                    return MemoryManager::DeallocateArray<30, DataType>(array);
+                    MemoryManager::DeallocateArray<30, DataType>(array, arraySize);
                 }
                 else if( arraySize < 40 )
                 {
-                    return MemoryManager::DeallocateArray<40, DataType>(array);
+                    MemoryManager::DeallocateArray<40, DataType>(array, arraySize);
                 }
                 else if( arraySize < 50 )
                 {
-                    return MemoryManager::DeallocateArray<50, DataType>(array);
+                    MemoryManager::DeallocateArray<50, DataType>(array, arraySize);
                 }
                 else if( arraySize < 60 )
                 {
-                    return MemoryManager::DeallocateArray<60, DataType>(array);
+                    MemoryManager::DeallocateArray<60, DataType>(array, arraySize);
                 }
                 else
                 {
@@ -540,6 +548,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.3  2006/08/25 01:30:36  bnelson
+    Added allocation of raw arrays.
+
     Revision 1.2  2006/06/01 13:44:29  kirby
     *** empty log message ***
 

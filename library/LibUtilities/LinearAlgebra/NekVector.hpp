@@ -144,6 +144,16 @@ namespace Nektar
                 return m_impl.dimension();
             }
 
+            DataType* GetPtr()
+            {
+                return m_impl.GetPtr();
+            }
+            
+            const DataType* GetPtr() const
+            {
+                return m_impl.GetPtr();
+            }
+            
             /// \brief Returns i^{th} element.
             /// \param i The element to return.
             /// \pre i < dim
@@ -441,6 +451,16 @@ namespace Nektar
 
                     ~VectorImpl() {}
 
+                    DataType* GetPtr()
+                    {
+                        return data;
+                    }
+                    
+                    const DataType* GetPtr() const
+                    {
+                        return data;
+                    }
+
                     unsigned int dimension() const { return ImplSize; }
                     ImplDataType data[ImplSize];
             };
@@ -512,6 +532,16 @@ namespace Nektar
 
                     unsigned int dimension() const { return size; }
 
+                    DataType* GetPtr()
+                    {
+                        return data.get();
+                    }
+                    
+                    const DataType* GetPtr() const
+                    {
+                        return data.get();
+                    }
+                    
                     boost::shared_array<ImplDataType> data;
                     unsigned int size;
             };
@@ -647,6 +677,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.8  2006/10/02 01:16:14  bnelson
+    Started working on adding BLAS and LAPACK
+
     Revision 1.7  2006/09/30 15:18:37  bnelson
     no message
 

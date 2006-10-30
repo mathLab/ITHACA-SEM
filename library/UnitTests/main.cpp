@@ -52,7 +52,9 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixFullDiagonalOperations), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUserManagedMatrixData), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockMatrices), 0);
-
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockDiagonalMatrices), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockDiagonalTimesEqual), 0);
+    
 
     // These tests were originally added because it appeared that a NekObjectFactory
     // would be needed instead of the LokiObject factory so that the factory would
@@ -72,6 +74,8 @@ test_suite* init_unit_test_suite( int, char* [] )
 
     /// Linear system tests.
     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testDiagonalSystem), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testFullSystem), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testSolvingBlockDiagonalMatrices), 0);
 
     
     return test;
@@ -79,6 +83,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.12  2006/09/30 15:38:29  bnelson
+    no message
+
     Revision 1.11  2006/09/11 03:28:41  bnelson
     no message
 

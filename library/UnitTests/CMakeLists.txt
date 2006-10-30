@@ -44,8 +44,10 @@ TARGET_LINK_LIBRARIES(UnitTests
 IF( USE_MKL AND MKL_FOUND )
 #        MESSAGE("Using MKL")
         TARGET_LINK_LIBRARIES(UnitTests
+            ${MKL_LAPACK}
             optimized ${MKL} debug ${MKL}
             ${MKL_GUIDE}
+
 #optimized mkl_ia32 debug mkl_ia32
 #            optimized mkl debug mkl
 #            optimized vml debug vml

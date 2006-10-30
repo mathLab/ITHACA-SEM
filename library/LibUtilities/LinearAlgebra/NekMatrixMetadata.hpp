@@ -96,12 +96,80 @@ namespace Nektar
             {
             }
     };
+    
+    class NekBlockMatrixMetadata
+    {
+        public:
+            template<typename MatrixType>
+            explicit NekBlockMatrixMetadata(const MatrixType& matrix) :
+                Rows(matrix.GetRows()),
+                Columns(matrix.GetColumns()),
+                BlockRows(matrix.GetBlockRows()),
+                BlockColumns(matrix.GetBlockColumns())
+            {
+            }
+
+            NekBlockMatrixMetadata(const NekBlockMatrixMetadata& rhs) :
+                Rows(rhs.Rows),
+                Columns(rhs.Columns),
+                BlockRows(rhs.BlockRows),
+                BlockColumns(rhs.BlockColumns)
+            {
+            }
+
+            static NekBlockMatrixMetadata CreateForNegation(const NekBlockMatrixMetadata& rhs)
+            {
+                return NekBlockMatrixMetadata(rhs);
+            }
+
+            static NekBlockMatrixMetadata CreateForAddition(const NekBlockMatrixMetadata& lhs, const NekBlockMatrixMetadata& rhs)
+            {
+                ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree in operator+");
+                ASSERTL1(lhs.BlockRows == rhs.BlockRows && lhs.BlockColumns == rhs.BlockColumns, "Matrix block dimensions must agree in operator+");
+                return NekBlockMatrixMetadata(lhs);
+            }
+
+//             static NekBlockMatrixMetadata CreateForMultiplication(const NekBlockMatrixMetadata& lhs, const NekBlockMatrixMetadata& rhs)
+//             {
+//                 ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree in operator*");
+//                 NekBlockMatrixMetadata result;
+//                 result.Rows = lhs.Rows;
+//                 result.Columns = rhs.Columns;
+//                 return result;
+//             }
+
+            NekBlockMatrixMetadata& operator=(const NekBlockMatrixMetadata& rhs)
+            {
+                Rows = rhs.Rows;
+                Columns = rhs.Columns;
+                BlockRows = rhs.BlockRows;
+                BlockColumns = rhs.BlockColumns;
+                return *this;
+            }
+
+            unsigned int Rows;
+            unsigned int Columns;
+            std::vector<unsigned int> BlockRows;
+            std::vector<unsigned int> BlockColumns;
+
+        private:
+            NekBlockMatrixMetadata() :
+                Rows(0),
+                Columns(0),
+                BlockRows(),
+                BlockColumns()
+            {
+            }
+    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_MATRIX_METADATA_HPP
 
 /**
     $Log: NekMatrixMetadata.hpp,v $
+    Revision 1.3  2006/09/30 15:18:37  bnelson
+    no message
+
     Revision 1.2  2006/09/14 02:06:16  bnelson
     Fixed gcc compiler errors.
 

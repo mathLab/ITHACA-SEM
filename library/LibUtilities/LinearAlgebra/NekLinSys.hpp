@@ -36,7 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_HPP
 
-//#include <LibUtilities/Lapack.h>
+#include <LibUtilities/LinearAlgebra/lapack.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
@@ -44,6 +44,58 @@
   
 namespace Nektar
 {
+    template<typename DataType>
+    class NekObjectAccessor
+    {
+        public:
+            explicit NekObjectAccessor(DataType& obj) :
+                m_object(obj)
+            {
+            }
+            
+            NekObjectAccessor(const NekObjectAccessor<DataType>& rhs) :
+                m_object(rhs.m_object)
+            {
+            }
+                  
+                
+            DataType* operator->()
+            {
+                return &m_object;
+            }
+           
+            
+        private:
+            NekObjectAccessor<DataType>& operator=(const NekObjectAccessor<DataType>& rhs);
+            DataType& m_object;
+    };
+    
+    template<typename DataType>
+    class NekObjectAccessor<DataType*>
+    {
+        public:
+            explicit NekObjectAccessor(DataType& obj) :
+                m_object(obj)
+            {
+            }
+            
+            NekObjectAccessor(const NekObjectAccessor<DataType>& rhs) :
+                m_object(rhs.m_object)
+            {
+            }
+                  
+                
+            DataType* operator->()
+            {
+                return m_object;
+            }
+           
+            
+        private:
+            NekObjectAccessor<DataType>& operator=(const NekObjectAccessor<DataType>& rhs);
+            DataType* m_object;
+    };
+            
     // Linear system object.
     // A linear system is one 
 
@@ -58,13 +110,13 @@ namespace Nektar
 
     // Ax=b
     template<typename DataType, unsigned int space, unsigned int vectorDim>
-    class LinearSystem<NekMatrix<DataType, eDiagonal, space>, NekVector<DataType, vectorDim, space> >
+    class LinearSystem<NekMatrix<DataType, eDiagonal, eNormal, space>, NekVector<DataType, vectorDim, space> >
     {
         public:
-            typedef LinearSystem<NekMatrix<DataType, eDiagonal, space>, NekVector<DataType, vectorDim, space> > ThisType;
+            typedef LinearSystem<NekMatrix<DataType, eDiagonal, eNormal, space>, NekVector<DataType, vectorDim, space> > ThisType;
             typedef NekVector<DataType, vectorDim, space> ResultType; 
         public:
-            LinearSystem(const boost::shared_ptr<NekMatrix<DataType, eDiagonal, space> >& theA,
+            LinearSystem(const boost::shared_ptr<NekMatrix<DataType, eDiagonal, eNormal, space> >& theA,
                          const boost::shared_ptr<NekVector<DataType, vectorDim, space> >& theB) :
                 A(theA),
                 b(theB)
@@ -91,12 +143,12 @@ namespace Nektar
             {
                 ASSERTL0(A->GetColumns() == b->GetRows(), "ERROR: NekLinSys::Solve matrix columns must equal vector rows");
                 ResultType result(*b);
-
+        
                 for(unsigned int i = 0; i < A->GetColumns(); ++i)
                 {
                     result[i] = (*b)[i]/(*A)(i,i);
                 }
-
+        
                 return result;
             }
 
@@ -107,7 +159,61 @@ namespace Nektar
                 std::swap(b, rhs.b);
             }
 
-            boost::shared_ptr<NekMatrix<DataType, eDiagonal, space> > A;
+            boost::shared_ptr<NekMatrix<DataType, eDiagonal, eNormal, space> > A;
+            boost::shared_ptr<NekVector<DataType, vectorDim, space> > b;
+
+    };
+    
+    template<typename DataType, NekMatrixForm form, unsigned int space, MatrixBlockType BlockType, unsigned int vectorDim>
+            class LinearSystem<NekMatrix<DataType, form, BlockType, space>, NekVector<DataType, vectorDim, space> >
+    {
+        public:
+            typedef LinearSystem<NekMatrix<DataType, form, BlockType, space>, NekVector<DataType, vectorDim, space> > ThisType;
+            typedef NekVector<DataType, vectorDim, space> ResultType; 
+            
+        public:
+            LinearSystem(const boost::shared_ptr<NekMatrix<DataType, form, BlockType, space> >& theA,
+                         const boost::shared_ptr<NekVector<DataType, vectorDim, space> >& theB) :
+                A(theA),
+                b(theB)
+            {
+            }
+
+            LinearSystem(const ThisType& rhs) :
+                A(rhs.A),
+                b(rhs.b)
+            {
+            }
+
+            ThisType& operator=(const ThisType& rhs)
+            {
+                ThisType temp(rhs);
+                swap(temp);
+                return *this;
+            }
+
+            ~LinearSystem() {}
+
+
+            ResultType Solve() const
+            {
+#ifdef NEKTAR_USING_LAPACK
+                ResultType result(*b);
+                dgetrs(A->GetRows(), A->GetColumns(), A->GetPtr().get(), result.GetPtr());
+                return result;
+#else
+#error NekLinSys::Solve not yet supported with without lapack support.
+#endif //NEKTAR_USING_LAPACK
+            }
+
+        private:
+            void swap(ThisType& rhs)
+            {
+                std::swap(A, rhs.A);
+                std::swap(b, rhs.b);
+            }
+
+            boost::shared_ptr<NekMatrix<DataType, form, BlockType, space> > A;
             boost::shared_ptr<NekVector<DataType, vectorDim, space> > b;
 
     };

@@ -46,10 +46,14 @@
 #endif
 
 #ifdef NEKTAR_USING_ATLAS
+#ifdef __cplusplus
 extern "C"
 {
+#endif //__cplusplus
 #include <@ATLAS_INCLUDE_FILE@>
+#ifdef __cplusplus
 }
+#endif //__cplusplus
 #endif
 
 namespace Nektar

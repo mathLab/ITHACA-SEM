@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: testNekMatrix.h
+// File: NekBlockMatrix.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,53 +29,43 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Tests NekMatrix functionality.
+// Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_BLOCK_MATRIX_HPP
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_BLOCK_MATRIX_HPP
 
-#ifndef NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-#define NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixForm.h>
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
-    namespace UnitTests
+    template<MatrixBlockType BlockType, typename MatrixType>
+    class BlockMatrixDataType
     {
-        void testNekMatrixConstruction();
-        void testNekMatrixAccess();
-        void testNekMatrixBasicMath();
-        void testNekMatrixFullDiagonalOperations();
-        void testDiagonalMatrix();
-        void testUserManagedMatrixData();
-        void testBlockMatrices();
-        void testBlockDiagonalMatrices();
-        void testBlockDiagonalTimesEqual();
-        
-    }
-}
-
-#endif // NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
-
+        public:
+            typedef MatrixType ResultType;
+    };
+    
+    template<typename MatrixType>
+    class BlockMatrixDataType<ePointerBlock, MatrixType>
+    {
+        public:
+            typedef boost::shared_ptr<MatrixType> ResultType;
+    };
+    
+    template<typename DataType>
+    DataType* GetObj(DataType& rhs) { return &rhs; }
+    
+    template<typename DataType>
+    DataType* GetObj(boost::shared_ptr<DataType>& rhs) { return rhs.get(); }
+};
+    
+#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_BLOCK_MATRIX_HPP
 
 /**
-    $Log: testNekMatrix.h,v $
-    Revision 1.6  2006/09/30 15:38:29  bnelson
-    no message
-
-    Revision 1.5  2006/08/25 01:38:59  bnelson
-    no message
-
-    Revision 1.4  2006/08/25 01:36:25  bnelson
-    no message
-
-    Revision 1.3  2006/08/14 02:35:45  bnelson
-    Added many LinearAlgebra tests
-
-    Revision 1.2  2006/05/31 04:19:37  bnelson
-    Removed a test for invalid access to a matrix.
-
-    Revision 1.1  2006/05/07 21:10:10  bnelson
-    *** empty log message ***
-
-**/
-
+    $Log:$
+ **/
+ 

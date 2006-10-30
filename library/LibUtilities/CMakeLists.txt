@@ -12,11 +12,13 @@ SET(LibUtilityHeaders
 ./Foundations/Graph.h
 ./Polylib/Polylib.h
 ./LinearAlgebra/NekMatrix.hpp
+./LinearAlgebra/NekMatrixImpl.hpp
 ./LinearAlgebra/NekMatrixMetadata.hpp
 ./LinearAlgebra/NekVector.hpp
 ./LinearAlgebra/NekVectorMetadata.hpp
 ./LinearAlgebra/NekPoint.hpp
 ./LinearAlgebra/blas.cpp
+./LinearAlgebra/lapack.cpp
 ./ExpressionTemplates/ArithmeticConcepts.hpp
 ./ExpressionTemplates/BinaryExpressionTraits.hpp
 ./ExpressionTemplates/BinaryExpression.hpp
@@ -45,6 +47,7 @@ SET(LibUtilityHeaders
 )
 
 CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/LibUtilities/LinearAlgebra/blas.h.in ${PROJECT_BINARY_DIR}/LibUtilities/LinearAlgebra/blas.h)
+CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/LibUtilities/LinearAlgebra/lapack.h.in ${PROJECT_BINARY_DIR}/LibUtilities/LinearAlgebra/lapack.h)
 
 ADD_NEKTAR_LIBRARY(LibUtilities STATIC ${LibUtilitySources} ${LibUtilityHeaders})
 

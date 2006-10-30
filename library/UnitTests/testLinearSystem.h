@@ -42,6 +42,8 @@ namespace Nektar
     namespace LinearSystemUnitTests
     {
         void testDiagonalSystem();
+        void testFullSystem();
+        void testSolvingBlockDiagonalMatrices();
     }
 }
 
@@ -49,6 +51,9 @@ namespace Nektar
 
 /**
     $Log: testLinearSystem.h,v $
+    Revision 1.2  2006/10/02 01:20:38  bnelson
+    Started working on adding BLAS and LAPACK
+
     Revision 1.1  2006/09/30 15:38:29  bnelson
     no message
 

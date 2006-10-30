@@ -64,14 +64,20 @@ namespace Nektar
     void dgemm(const int rowsInA, const int columnsInA, const int columnsInB, 
                const double* A, const double* B, double* result)
     {
-        dgemm(eROW_MAJOR, eNO_TRANSPOSE, eNO_TRANSPOSE, rowsInA, columnsInB, columnsInA,
-              1.0, A, columnsInA, B, columnsInB, 0.0, result, columnsInB);
+        //dgemm(eROW_MAJOR, eNO_TRANSPOSE, eNO_TRANSPOSE, rowsInA, columnsInB, columnsInA,
+        //      1.0, A, columnsInA, B, columnsInB, 0.0, result, columnsInB);
+        
+        dgemm(eCOLUMN_MAJOR, eNO_TRANSPOSE, eNO_TRANSPOSE, rowsInA, columnsInB, columnsInA,
+              1.0, A, rowsInA, B, columnsInA, 0.0, result, rowsInA);
     }
 }
 
 
 /**
-    $Log: $
+    $Log: blas.cpp,v $
+    Revision 1.1  2006/10/02 01:16:37  bnelson
+    Started working on adding BLAS and LAPACK
+
 
  **/
  

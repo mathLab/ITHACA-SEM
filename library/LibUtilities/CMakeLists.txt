@@ -36,6 +36,7 @@ SET(LibUtilityHeaders
 ./ExpressionTemplates/UnaryExpression.hpp
 ./ExpressionTemplates/UnaryExpressionTraits.hpp
 ./BasicUtils/BoostUtil.hpp
+./BasicUtils/ConsistentObjectAccess.hpp
 ./BasicUtils/ErrorUtil.hpp
 ./BasicUtils/Lapack.hpp
 ./BasicUtils/Concepts.hpp

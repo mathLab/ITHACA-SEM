@@ -71,7 +71,7 @@ namespace Nektar
                 ASSERTL0(blockRows == blockColumns, "ERROR: Block diagonal matrices must consist of square blocks.");
                 for(unsigned int i = 0; i < m_numberOfElements; ++i)
                 {
-                    GetObj(m_data[i])->Initialize(blockRows, blockColumns);
+                    m_data[i]->Initialize(blockRows, blockColumns);
                 }
             }
             
@@ -136,12 +136,12 @@ namespace Nektar
                 if( blockRow == blockColumn )
                 {
                     ASSERTL2(rowNumber < m_numberOfElements, "Illegal access to NekMatrix via operator()");
-                    return GetBlock(blockRow, blockColumn)(innerBlockRow, innerBlockColumn);
+                    return GetBlock(blockRow, blockColumn)->operator()(innerBlockRow, innerBlockColumn);
                 }
                 else
                 {
                     static InnerDataType zeroElement(m_blockRows[0], m_blockColumns[0], DataType(0));
-                    return zeroElement(innerBlockRow, innerBlockColumn);
+                    return zeroElement->operator()(innerBlockRow, innerBlockColumn);
                 }
             }
 
@@ -155,12 +155,12 @@ namespace Nektar
                 if( blockRow == blockColumn )
                 {
                     ASSERTL2(rowNumber < m_numberOfElements, "Illegal access to NekMatrix via operator()");
-                    return GetBlock(blockRow, blockColumn)(innerBlockRow, innerBlockColumn);
+                    return GetBlock(blockRow, blockColumn)->operator()(innerBlockRow, innerBlockColumn);
                 }
                 else
                 {
                     static InnerDataType zeroElement(m_blockRows[0], m_blockColumns[0], DataType(0));
-                    return zeroElement(innerBlockRow, innerBlockColumn);
+                    return zeroElement->operator()(innerBlockRow, innerBlockColumn);
                 }
             }
 
@@ -522,6 +522,9 @@ namespace Nektar
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_BLOCK_DIAGONAL_MATRIX_HPP
 
 /**
-    $Log:$
+    $Log: NekBlockDiagonalMatrix.hpp,v $
+    Revision 1.1  2006/10/30 05:11:15  bnelson
+    Added preliminary linear system and block matrix support.
+
  **/
  

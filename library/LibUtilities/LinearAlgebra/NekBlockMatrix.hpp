@@ -38,34 +38,37 @@
 
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixForm.h>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
+
 #include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
+
     template<MatrixBlockType BlockType, typename MatrixType>
     class BlockMatrixDataType
     {
         public:
-            typedef MatrixType ResultType;
+            typedef ConsistentObjectAccess<MatrixType> ResultType;
     };
-    
+
     template<typename MatrixType>
-    class BlockMatrixDataType<ePointerBlock, MatrixType>
+            class BlockMatrixDataType<ePointerBlock, MatrixType>
     {
         public:
-            typedef boost::shared_ptr<MatrixType> ResultType;
+            typedef ConsistentObjectAccess<boost::shared_ptr<MatrixType> > ResultType;
     };
-    
-    template<typename DataType>
-    DataType* GetObj(DataType& rhs) { return &rhs; }
-    
-    template<typename DataType>
-    DataType* GetObj(boost::shared_ptr<DataType>& rhs) { return rhs.get(); }
+
+
 };
     
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_BLOCK_MATRIX_HPP
 
 /**
-    $Log:$
+    $Log: NekBlockMatrix.hpp,v $
+    Revision 1.1  2006/10/30 05:11:16  bnelson
+    Added preliminary linear system and block matrix support.
+
  **/
  

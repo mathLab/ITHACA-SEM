@@ -58,6 +58,14 @@ namespace Nektar
             static const MemoryManager::MemoryPoolEnabler MemoryPoolEnabled = MemoryManager::eEnabled;
 
         public:
+            /// \brief Creates an empty, 0x0 matrix.  
+            NekMatrix() :
+                m_rows(0),
+                m_columns(0),
+                m_data()
+            {
+            }
+
             /// \brief Create a matrix with the given size, initialized to the default value of DataType.
             ///
             /// It is not possible to create a block matrix with this constructor since the block size is not specified.
@@ -295,11 +303,6 @@ namespace Nektar
         }
 
     private:
-        /// \brief Constructor used for block matrices.  Care must be used with this constructor
-        ///         to initialize the matrix before use.
-        NekMatrix() {}
-
-
         void Swap(NekMatrix<DataType, eFull, eNormal, space>& rhs)
         {
             std::swap(m_rows, rhs.m_rows);
@@ -319,6 +322,9 @@ namespace Nektar
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_FULL_MATRIX_HPP
 
 /**
-    $Log:$
+    $Log: NekFullMatrix.hpp,v $
+    Revision 1.1  2006/10/30 05:11:16  bnelson
+    Added preliminary linear system and block matrix support.
+
  **/
 

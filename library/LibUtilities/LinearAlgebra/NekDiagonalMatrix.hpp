@@ -61,6 +61,12 @@ namespace Nektar
 
         public:
 
+            NekMatrix() :
+                m_numberOfElements(0),
+                m_data()
+            {
+            }
+            
             /// \brief Create an identity matrix.
             ///
             /// It is not possible to create a block matrix with this constructor since the block size is not specified.
@@ -330,6 +336,9 @@ namespace Nektar
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_DIAGONAL_MATRIX_HPP
 
 /**
-    $Log:$
+    $Log: NekDiagonalMatrix.hpp,v $
+    Revision 1.1  2006/10/30 05:11:16  bnelson
+    Added preliminary linear system and block matrix support.
+
  **/
  

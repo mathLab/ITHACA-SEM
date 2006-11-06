@@ -46,6 +46,8 @@ namespace Nektar
         void testUnaryExpressions();
         void testBinaryExpressions();
         void testNekMatrixMetadata();
+        void testNekMatrixMultiplication();
+        void testNekMatrixSomewhatComplicatedExpression();
     }
 }
 
@@ -54,6 +56,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.h,v $
+    Revision 1.4  2006/09/11 03:28:41  bnelson
+    no message
+
     Revision 1.3  2006/08/28 02:40:51  bnelson
     *** empty log message ***
 

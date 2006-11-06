@@ -35,6 +35,8 @@
 
 #include <LibUtilities/LinearAlgebra/blas.h>
 
+#ifdef NEKTAR_USING_BLAS
+
 namespace Nektar
 {
 #if defined(NEKTAR_USING_MKL) || defined(NEKTAR_USING_ATLAS)
@@ -72,9 +74,13 @@ namespace Nektar
     }
 }
 
+#endif //NEKTAR_USING_BLAS
 
 /**
     $Log: blas.cpp,v $
+    Revision 1.2  2006/10/30 05:11:16  bnelson
+    Added preliminary linear system and block matrix support.
+
     Revision 1.1  2006/10/02 01:16:37  bnelson
     Started working on adding BLAS and LAPACK
 

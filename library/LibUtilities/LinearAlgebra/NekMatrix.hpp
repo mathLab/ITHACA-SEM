@@ -81,6 +81,8 @@ namespace Nektar
                 typedef Nektar::NekMatrix<DataType, Nektar::eFull, BlockType, space> SubtractionResultType;
                 typedef Nektar::NekMatrix<DataType, Nektar::eFull, BlockType, space> DivisionResultType;
                 typedef Nektar::NekMatrix<DataType, Nektar::eFull, BlockType, space> MultiplicationResultType;
+                
+                static const bool AdditionIsAssociative = true;
         };
     
         //// Binary expression specializations for NekMatrix.
@@ -1076,6 +1078,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.15  2006/10/30 05:11:16  bnelson
+    Added preliminary linear system and block matrix support.
+
     Revision 1.14  2006/10/04 03:07:59  bnelson
     Added a check around blas.h to not break existing code.
 

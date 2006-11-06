@@ -47,6 +47,7 @@ namespace Nektar
     {
         void testDiagonalSystem()
         {
+#ifdef NEKTAR_USING_LAPACK
             unsigned int matrix_buf[] = { 10, 5, 2 };
 
             unsigned int result_buf[] = { 20, 50, 10 };
@@ -62,10 +63,12 @@ namespace Nektar
             NekVector<unsigned int, 3> expectedResult(expected_result_buf);
 
             BOOST_CHECK_EQUAL(result, expectedResult);
+#endif //NEKTAR_USING_LAPACK
         }
         
         void testFullSystem()
         {
+#ifdef NEKTAR_USING_LAPACK
             {
                 double matrix_buf[] = { 10, 0, 0,
                                         0, 5, 0, 
@@ -147,10 +150,12 @@ namespace Nektar
                 //double b_buf[] = {12719, -3169, -16810, 7408, -14945, -6822, 10166, 7023, 8679, -11826};
                 //boost::shared_ptr<NekVector<double> > b(new NekVector<double>(10, b_buf));
             }
+#endif //NEKTAR_USING_LAPACK
         }
         
         void testSolvingBlockDiagonalMatrices()
         {
+#ifdef NEKTAR_USING_LAPACK
             typedef NekMatrix<double, eDiagonal, eBlock> BlockMatrix;
             typedef BlockMatrix::InnerMatrixType InnerMatrixType;
                 
@@ -180,7 +185,7 @@ namespace Nektar
             BOOST_CHECK_CLOSE(result[5], -59.0, epsilon);
             BOOST_CHECK_CLOSE(result[6], 6.0, epsilon);
             BOOST_CHECK_CLOSE(result[7], -87.0, epsilon);
-            
+#endif //NEKTAR_USING_LAPACK
         }
     }
 }

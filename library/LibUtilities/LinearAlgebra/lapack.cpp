@@ -51,6 +51,8 @@
 #undef min
 #endif
 
+#ifdef NEKTAR_USING_LAPACK
+
 void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x)
 {
     // The factorization step replaces the input matrix, which we can't allow 
@@ -97,4 +99,5 @@ void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x)
     }
 }
 
+#endif //NEKTAR_USING_LAPACK
 #endif //NEKTAR_USING_CMAKE

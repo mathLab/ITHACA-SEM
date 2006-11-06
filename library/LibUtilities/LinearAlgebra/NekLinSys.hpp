@@ -42,8 +42,10 @@
 
 #include <boost/shared_ptr.hpp> 
   
+#ifdef NEKTAR_USING_LAPACK
 namespace Nektar
 {
+
     template<typename DataType>
     class NekObjectAccessor
     {
@@ -218,5 +220,5 @@ namespace Nektar
 
     };
 }
-
+#endif //NEKTAR_USING_LAPACK
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_HPP

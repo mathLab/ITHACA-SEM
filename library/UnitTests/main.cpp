@@ -70,6 +70,8 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUnaryExpressions), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixMetadata), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBinaryExpressions), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixMultiplication), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixSomewhatComplicatedExpression), 0);
 
 
     /// Linear system tests.
@@ -83,6 +85,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.13  2006/10/30 05:08:13  bnelson
+    Added preliminary linear system and block matrix support.
+
     Revision 1.12  2006/09/30 15:38:29  bnelson
     no message
 

@@ -35,6 +35,8 @@ namespace Nektar
                 typedef LhsType SubtractionResultType;
                 typedef LhsType DivisionResultType;
                 typedef LhsType MultiplicationResultType;
+                
+                static const bool AdditionIsAssociative = true;
         };
     }
 }
@@ -43,6 +45,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpressionTraits.hpp,v $
+    Revision 1.4  2006/09/14 02:08:59  bnelson
+    Fixed gcc compile errors
+
     Revision 1.3  2006/09/11 03:24:24  bnelson
     Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
 

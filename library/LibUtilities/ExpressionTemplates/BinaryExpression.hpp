@@ -14,6 +14,7 @@
 #include <boost/type_traits.hpp>
 
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/NullOp.hpp>
 #include <iostream>
 
 namespace Nektar
@@ -26,8 +27,26 @@ namespace Nektar
         };
 
         
-        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType, typename LhsSameTypeEnable = void, typename RhsSameTypeEnable = void>
-        class EvaluateExpression
+        // The evaluate expression class is really the Apply method for the BinaryExpression.  I needed to move it outside the class
+        // to use the enable_if feature.
+        
+        /// OpType is the operation that combines the lhs and rhs expression (lhs op rhs)
+        
+        // One thing to consider - it may not be valid to accumulate the lhs of the expression into the accumulator.
+        //
+        // Example, A + (B*C).  In this case.  Consider the evaluation of B*C.  The accumulator has the value of A,
+        // We need to create a temporary and then add it in.
+        //
+        // So we need a concept of incoming operation type.
+        
+        /// LhsExpressionPolicyType - The type of the lhs expression.
+        /// RhsExpressionPolicyType - The type of the rhs expression.
+
+                                                
+        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType, 
+                   typename ParentOpType = NullOp,
+                   typename LhsNeedsTemp = void, typename RhsNeedsTemp = void>
+        class EvaluateBinaryExpression
         {
             public:
                 static void eval(const Expression<LhsExpressionPolicyType>& lhs, 
@@ -41,10 +60,44 @@ namespace Nektar
                 }
         };
         
+        // The requirement for a temporary is either
+        // 1. One of the sides returns a data type different than the accumulator type.
+        // 2. The priority of the expression's operator is different than the parent operator.
         template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType>
-        class EvaluateExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, 
+        class EvaluateBinaryExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, 
+                                       NullOp,
                                        typename boost::disable_if<boost::is_same<typename Expression<LhsExpressionPolicyType>::ResultType, ResultType> >::type,
                                        typename boost::enable_if<boost::is_same<typename Expression<RhsExpressionPolicyType>::ResultType, ResultType> >::type>
+        {
+            public:
+                static void eval(const Expression<LhsExpressionPolicyType>& lhs, 
+                                 const Expression<RhsExpressionPolicyType>& rhs,
+                                 typename boost::call_traits<ResultType>::reference result)
+                {
+//                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
+//                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
+//                     LhsType lhs_temp;
+//                     lhs.Apply(lhs_temp);
+//                     rhs.Apply(result);
+
+                    //OpType<LhsType, RhsType>::ApplyLhsEqual(result, lhs_temp);
+                    typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
+                    typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
+                    LhsType lhs_temp;
+                    RhsType rhs_temp;
+                    lhs.Apply(lhs_temp);
+                    rhs.Apply(rhs_temp);
+
+                    OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
+                }
+        };
+        
+        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType,
+                   typename ParentOpType>
+        class EvaluateBinaryExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, 
+                                        ParentOpType,
+                                        typename boost::disable_if<boost::is_same<typename Expression<LhsExpressionPolicyType>::ResultType, ResultType> >::type,
+                                        typename boost::enable_if<boost::is_same<typename Expression<RhsExpressionPolicyType>::ResultType, ResultType> >::type>
         {
             public:
                 static void eval(const Expression<LhsExpressionPolicyType>& lhs, 
@@ -53,16 +106,18 @@ namespace Nektar
                 {
                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-                    LhsType lhs_value = lhs;
-                    RhsType rhs_value = rhs;
-            
+                    LhsType lhs_temp;
+                    RhsType rhs_temp;
+                    lhs.Apply(lhs_temp);
+                    rhs.Apply(rhs_temp);
 
-                    OpType<LhsType, RhsType>::Apply(result, lhs, rhs);
+                    OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
                 }
         };
         
         template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType>
-        class EvaluateExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, 
+        class EvaluateBinaryExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, 
+                                       NullOp,
                                        typename boost::enable_if<boost::is_same<typename Expression<LhsExpressionPolicyType>::ResultType, ResultType> >::type,
                                        typename boost::disable_if<boost::is_same<typename Expression<RhsExpressionPolicyType>::ResultType, ResultType> >::type>
         {
@@ -156,9 +211,21 @@ namespace Nektar
                 // 2.  Result and Parameter types are different.
                 void Apply(typename boost::call_traits<ResultType>::reference result) const
                 {
-                    EvaluateExpression<LhsInputExpressionPolicyType, RhsInputExpressionPolicyType, ResultType, OpType>::eval(m_lhs, m_rhs, result);
+                    EvaluateBinaryExpression<LhsInputExpressionPolicyType, RhsInputExpressionPolicyType, ResultType, OpType>::eval(m_lhs, m_rhs, result);
                 }
 
+                /// ParentOpType is the operation one step higher in the parse tree.
+                /// For example, if the expression is "A + BC", then then the OpType for 
+                /// this operation is "*" and the ParentOpType is +.
+//                 template<typename ParentOpType>
+//                 void ApplyEqual(typename boost::call_traits<ResultType>::reference result) const
+//                 {
+//                     // In this case, we can directly apply the operator to the lhs with the accumulator.
+//                     // This will be in cases like "A + B + C".
+//                     m_lhs.template  ApplyEqual<ParentOpType>(result);
+//                     OpType::ApplyEqual(result, m_value);
+//                 }
+                
                 const MetadataType& GetMetadata() const
                 {
                     return m_metadata;
@@ -208,6 +275,41 @@ namespace Nektar
 
             return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, AddOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
         }
+        
+        ////////////////////////////////
+        // Multiplication
+        ///////////////////////////////
+        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType>
+        Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, MultiplyOp > > operator*(
+            const Expression<LhsExpressionPolicyType>& lhs, const Expression<RhsExpressionPolicyType>& rhs)
+        {
+            return Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, MultiplyOp > >(lhs, rhs);
+        }
+
+        
+        template<typename LhsDataType, typename RhsExpressionPolicy>
+        Expression<BinaryExpressionPolicy<
+            Expression<ConstantExpressionPolicy<LhsDataType> >,
+            Expression<RhsExpressionPolicy>,
+            MultiplyOp > > operator*(const LhsDataType& lhs, const Expression<RhsExpressionPolicy>& rhs)
+        {
+            typedef Expression<ConstantExpressionPolicy<LhsDataType> > LhsExpressionType;
+            typedef Expression<RhsExpressionPolicy> RhsExpressionType;
+
+            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+        }
+
+        template<typename LhsExpressionPolicy, typename RhsDataType>
+            Expression<BinaryExpressionPolicy<
+            Expression<LhsExpressionPolicy>,
+            Expression<ConstantExpressionPolicy<RhsDataType> >,
+            MultiplyOp > > operator*(const Expression<LhsExpressionPolicy>& lhs, const RhsDataType& rhs)
+        {
+            typedef Expression<LhsExpressionPolicy> LhsExpressionType;
+            typedef Expression<ConstantExpressionPolicy<RhsDataType> > RhsExpressionType;
+
+            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+        }
     }
 }
 
@@ -215,6 +317,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpression.hpp,v $
+    Revision 1.5  2006/10/02 01:16:52  bnelson
+    Started working on adding BLAS and LAPACK
+
     Revision 1.4  2006/09/14 02:08:59  bnelson
     Fixed gcc compile errors
 

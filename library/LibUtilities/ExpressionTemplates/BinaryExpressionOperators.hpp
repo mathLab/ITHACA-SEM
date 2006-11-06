@@ -101,6 +101,11 @@ namespace Nektar
                     result *= rhs;
                 }
 
+                static void ApplyLhsEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs)
+                {
+                    result.TimesEqualLhs(lhs);
+                }
+                
                 static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
                 {
                     multiply(lhs, rhs, result);
@@ -111,6 +116,7 @@ namespace Nektar
                     return ResultMetadataType::CreateForMultiplication(lhs, rhs);
                 }
 
+                
             private:
 
         };
@@ -181,6 +187,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpressionOperators.hpp,v $
+    Revision 1.3  2006/09/21 01:07:59  bnelson
+    no message
+
     Revision 1.2  2006/09/14 02:08:59  bnelson
     Fixed gcc compile errors
 

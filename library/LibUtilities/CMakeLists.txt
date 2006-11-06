@@ -33,6 +33,7 @@ SET(LibUtilityHeaders
 ./ExpressionTemplates/ExpressionTraits.hpp
 ./ExpressionTemplates/NegateOp.hpp
 ./ExpressionTemplates/NekMatrixExpressionTemplates.hpp
+./ExpressionTemplates/NullOp.hpp
 ./ExpressionTemplates/UnaryExpression.hpp
 ./ExpressionTemplates/UnaryExpressionTraits.hpp
 ./BasicUtils/BoostUtil.hpp

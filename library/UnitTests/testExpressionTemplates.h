@@ -48,6 +48,7 @@ namespace Nektar
         void testNekMatrixMetadata();
         void testNekMatrixMultiplication();
         void testNekMatrixSomewhatComplicatedExpression();
+        void testNekMatrixComplicatedExpression();
     }
 }
 
@@ -56,6 +57,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.h,v $
+    Revision 1.5  2006/11/06 17:10:05  bnelson
+    *** empty log message ***
+
     Revision 1.4  2006/09/11 03:28:41  bnelson
     no message
 

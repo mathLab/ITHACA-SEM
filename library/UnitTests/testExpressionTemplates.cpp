@@ -213,37 +213,64 @@ namespace Nektar
         
         void testNekMatrixSomewhatComplicatedExpression()
         {
-//             {
-//                 double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
-//                 double m2_buf[] = {63, 57, -59, 45, -8, -93, 92, 43, -62};
-//                 double m3_buf[] = {77, 66, 54, -5, 99, -61, -50, -12, -18};
-//     
-//                 NekMatrix<double> m1(3, 3, m1_buf);
-//                 NekMatrix<double> m2(3, 3, m2_buf);
-//                 NekMatrix<double> m3(3, 3, m3_buf);
-//                 
-//                 NekMatrix<double> result = (m1*m2) + m3;
-//                 
-//                 double result_buf[] = {-11157, -5930, 12478, 6755, -522, -10117, 11955, 6150, -12925};
-//                 NekMatrix<double> expectedResult(3,3,result_buf);
-//                 double epsilon = 1e-11;
-//                 for(unsigned int i = 0; i < 3; ++i)
-//                 {
-//                     for(unsigned int j = 0; j < 3; ++j)
-//                     {
-//                         BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
-//                     }
-//                 }
-//                 
-//                 NekMatrix<double> result1 = m3 + (m1*m2);
-//                 for(unsigned int i = 0; i < 3; ++i)
-//                 {
-//                     for(unsigned int j = 0; j < 3; ++j)
-//                     {
-//                         BOOST_CHECK_CLOSE(result1(i,j), expectedResult(i,j), epsilon);
-//                     }
-//                 }
-//             }
+            {
+                double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
+                double m2_buf[] = {63, 57, -59, 45, -8, -93, 92, 43, -62};
+                double m3_buf[] = {77, 66, 54, -5, 99, -61, -50, -12, -18};
+    
+                NekMatrix<double> m1(3, 3, m1_buf);
+                NekMatrix<double> m2(3, 3, m2_buf);
+                NekMatrix<double> m3(3, 3, m3_buf);
+                
+                NekMatrix<double> result = (m1*m2) + m3;
+                
+                double result_buf[] = {-11157, -5930, 12478, 6755, -522, -10117, 11955, 6150, -12925};
+                NekMatrix<double> expectedResult(3,3,result_buf);
+                double epsilon = 1e-11;
+                for(unsigned int i = 0; i < 3; ++i)
+                {
+                    for(unsigned int j = 0; j < 3; ++j)
+                    {
+                        BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
+                    }
+                }
+                
+                NekMatrix<double> result1 = m3 + (m1*m2);
+                for(unsigned int i = 0; i < 3; ++i)
+                {
+                    for(unsigned int j = 0; j < 3; ++j)
+                    {
+                        BOOST_CHECK_CLOSE(result1(i,j), expectedResult(i,j), epsilon);
+                    }
+                }
+            }
+        }
+        
+        void testNekMatrixComplicatedExpression()
+        {
+            {
+                double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
+                double m2_buf[] = {63, 57, -59, 45, -8, -93, 92, 43, -62};
+                double m3_buf[] = {31, -26, -62, 1, -47, -91, -47, -61, 41};
+    
+                NekMatrix<double> m1(3, 3, m1_buf);
+                NekMatrix<double> m2(3, 3, m2_buf);
+                NekMatrix<double> m3(3, 3, m3_buf);
+                
+                NekMatrix<double> result = (((m3-m1)*m3) * (m1-m2)) + m1*m2*m3;
+                
+                double result_buf[] = {-1279130, -1162366, 243990, -1663904, 1197403, 2021293, 547959, 1802365, 1422677};
+                NekMatrix<double> expectedResult(3,3,result_buf);
+                
+                double epsilon = 1e-11;
+                for(unsigned int i = 0; i < 3; ++i)
+                {
+                    for(unsigned int j = 0; j < 3; ++j)
+                    {
+                        BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
+                    }
+                }
+            }
         }
         
      }
@@ -251,6 +278,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.8  2006/11/06 17:10:04  bnelson
+    *** empty log message ***
+
     Revision 1.7  2006/09/30 15:38:29  bnelson
     no message
 

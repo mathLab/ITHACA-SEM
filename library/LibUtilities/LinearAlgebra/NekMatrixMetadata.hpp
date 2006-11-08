@@ -69,6 +69,12 @@ namespace Nektar
                 ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree in operator+");
                 return NekMatrixMetadata(lhs);
             }
+            
+            static NekMatrixMetadata CreateForSubtraction(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs)
+            {
+                ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree in operator-");
+                return NekMatrixMetadata(lhs);
+            }
 
             static NekMatrixMetadata CreateForMultiplication(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs)
             {
@@ -167,6 +173,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrixMetadata.hpp,v $
+    Revision 1.4  2006/10/30 05:11:16  bnelson
+    Added preliminary linear system and block matrix support.
+
     Revision 1.3  2006/09/30 15:18:37  bnelson
     no message
 

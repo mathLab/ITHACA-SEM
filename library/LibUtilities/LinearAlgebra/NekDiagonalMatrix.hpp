@@ -252,11 +252,23 @@ namespace Nektar
             // enable if on the output.
             NekMatrix<DataType, eDiagonal, eNormal, space> operator+=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
             {
-                ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
+                ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+=");
 
                 for(unsigned int i = 0; i < rhs.GetRows(); ++i)
                 {
                     (*this)(i,i) += rhs(i,i);
+                }
+
+                return *this;
+            }
+            
+            NekMatrix<DataType, eDiagonal, eNormal, space> operator-=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
+            {
+                ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator-=");
+
+                for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+                {
+                    (*this)(i,i) -= rhs(i,i);
                 }
 
                 return *this;
@@ -337,6 +349,9 @@ namespace Nektar
 
 /**
     $Log: NekDiagonalMatrix.hpp,v $
+    Revision 1.2  2006/11/06 17:09:09  bnelson
+    *** empty log message ***
+
     Revision 1.1  2006/10/30 05:11:16  bnelson
     Added preliminary linear system and block matrix support.
 

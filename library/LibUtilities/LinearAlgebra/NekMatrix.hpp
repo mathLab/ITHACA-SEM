@@ -186,6 +186,28 @@ namespace Nektar
         result -= rhs;
     }
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+    expt::Expression<expt::BinaryExpressionPolicy<
+            expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, BlockType, space> > >,
+            expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, BlockType, space> > >, expt::SubtractOp > > 
+    operator-(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
+    {
+        typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, lhsForm, BlockType, space> > > LhsExpressionType;
+        typedef expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, rhsForm, BlockType, space> > > RhsExpressionType;
+
+        return expt::Expression<expt::BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, expt::SubtractOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+    }
+#else
+    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+    typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::SubtractionResultType 
+    operator+(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
+    {
+        typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::SubtractionResultType result(lhs);
+        result -= rhs;
+        return result;
+    }
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
     /////////////////////////////////////////
     // Multiplication
@@ -1078,6 +1100,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.16  2006/11/06 17:09:10  bnelson
+    *** empty log message ***
+
     Revision 1.15  2006/10/30 05:11:16  bnelson
     Added preliminary linear system and block matrix support.
 

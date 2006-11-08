@@ -236,7 +236,7 @@ namespace Nektar
 
         NekMatrix<DataType, eFull, eNormal, space> operator+=(const NekMatrix<DataType, eFull, eNormal, space>& rhs)
         {
-            ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
+            ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+=");
             DataType* lhs_data = begin();
             const DataType* rhs_data = rhs.begin();
 
@@ -252,7 +252,7 @@ namespace Nektar
         // enable if on the output.
         NekMatrix<DataType, eFull, eNormal, space> operator+=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
         {
-            ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
+            ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+=");
 
             for(unsigned int i = 0; i < rhs.GetRows(); ++i)
             {
@@ -262,6 +262,33 @@ namespace Nektar
             return *this;
         }
 
+        NekMatrix<DataType, eFull, eNormal, space> operator-=(const NekMatrix<DataType, eFull, eNormal, space>& rhs)
+        {
+            ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator-=");
+            DataType* lhs_data = begin();
+            const DataType* rhs_data = rhs.begin();
+
+            for( ; lhs_data < end(); ++lhs_data, ++rhs_data )
+            {
+                *lhs_data -= *rhs_data;
+            }
+
+            return *this;
+        }
+
+        // This is wrong as well.  What if this is diagonal?
+        // enable if on the output.
+        NekMatrix<DataType, eFull, eNormal, space> operator-=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
+        {
+            ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator-=");
+
+            for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+            {
+                (*this)(i,i) -= rhs(i, i);
+            }
+
+            return *this;
+        }
 
         NekMatrix<DataType, eFull, eNormal, space>& operator*=(const NekMatrix<DataType, eFull, eNormal, space>& rhs)
         {
@@ -323,6 +350,9 @@ namespace Nektar
 
 /**
     $Log: NekFullMatrix.hpp,v $
+    Revision 1.2  2006/11/01 04:07:08  bnelson
+    Changed block matrices to use the ConsistentObjectAccess object to store matrices or pointers to matrices so that the same pointer syntax works for both.
+
     Revision 1.1  2006/10/30 05:11:16  bnelson
     Added preliminary linear system and block matrix support.
 

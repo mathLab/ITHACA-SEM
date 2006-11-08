@@ -53,10 +53,16 @@ namespace Nektar
                                  const Expression<RhsExpressionPolicyType>& rhs,
                                  typename boost::call_traits<ResultType>::reference result)
                 {
+//                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
+//                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
+//                     lhs.Apply(result);
+//                     rhs.template ApplyEqual<OpType<LhsType, RhsType> >(result);
                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-                    lhs.Apply(result);
-                    rhs.template ApplyEqual<OpType<LhsType, RhsType> >(result);
+                    LhsType lhs_temp(lhs);
+                    RhsType rhs_temp(rhs);
+
+                    OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
                 }
         };
         
@@ -83,17 +89,14 @@ namespace Nektar
                     //OpType<LhsType, RhsType>::ApplyLhsEqual(result, lhs_temp);
                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-                    LhsType lhs_temp;
-                    RhsType rhs_temp;
-                    lhs.Apply(lhs_temp);
-                    rhs.Apply(rhs_temp);
+                    LhsType lhs_temp(lhs);
+                    RhsType rhs_temp(rhs);
 
                     OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
                 }
         };
         
-        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType,
-                   typename ParentOpType>
+        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType, typename ParentOpType>
         class EvaluateBinaryExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, 
                                         ParentOpType,
                                         typename boost::disable_if<boost::is_same<typename Expression<LhsExpressionPolicyType>::ResultType, ResultType> >::type,
@@ -106,18 +109,15 @@ namespace Nektar
                 {
                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-                    LhsType lhs_temp;
-                    RhsType rhs_temp;
-                    lhs.Apply(lhs_temp);
-                    rhs.Apply(rhs_temp);
+                    LhsType lhs_temp(lhs);
+                    RhsType rhs_temp(rhs);
 
                     OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
                 }
         };
         
         template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType>
-        class EvaluateBinaryExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, 
-                                       NullOp,
+        class EvaluateBinaryExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, NullOp,
                                        typename boost::enable_if<boost::is_same<typename Expression<LhsExpressionPolicyType>::ResultType, ResultType> >::type,
                                        typename boost::disable_if<boost::is_same<typename Expression<RhsExpressionPolicyType>::ResultType, ResultType> >::type>
         {
@@ -128,9 +128,10 @@ namespace Nektar
                 {
                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-                    lhs.Apply(result);
-                    RhsType rhs_value = rhs;
-                    OpType<LhsType, RhsType>::ApplyEqual(result, rhs);
+                    LhsType lhs_temp(lhs);
+                    RhsType rhs_temp(rhs);
+
+                    OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
                 }
         };
                 
@@ -240,6 +241,10 @@ namespace Nektar
                 MetadataType m_metadata;
         };
 
+        
+        //////////////////////////////////////////////////////
+        /// Addition
+        //////////////////////////////////////////////////////
         template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType>
         Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, AddOp > > operator+(
             const Expression<LhsExpressionPolicyType>& lhs, const Expression<RhsExpressionPolicyType>& rhs)
@@ -310,6 +315,68 @@ namespace Nektar
 
             return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
         }
+        
+        //////////////////////////////////////////////////////
+        /// Subtraction
+        //////////////////////////////////////////////////////
+        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType>
+        Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, SubtractOp > > operator-(
+        const Expression<LhsExpressionPolicyType>& lhs, const Expression<RhsExpressionPolicyType>& rhs)
+        {
+            return Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, SubtractOp > >(lhs, rhs);
+        }
+
+        
+        template<typename LhsDataType, typename RhsExpressionPolicy>
+        Expression<BinaryExpressionPolicy<Expression<ConstantExpressionPolicy<LhsDataType> >, Expression<RhsExpressionPolicy>, SubtractOp > > 
+        operator-(const LhsDataType& lhs, const Expression<RhsExpressionPolicy>& rhs)
+        {
+            typedef Expression<ConstantExpressionPolicy<LhsDataType> > LhsExpressionType;
+            typedef Expression<RhsExpressionPolicy> RhsExpressionType;
+
+            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, SubtractOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+        }
+
+        template<typename LhsExpressionPolicy, typename RhsDataType> 
+        Expression<BinaryExpressionPolicy<Expression<LhsExpressionPolicy>, Expression<ConstantExpressionPolicy<RhsDataType> >, SubtractOp > > 
+        operator-(const Expression<LhsExpressionPolicy>& lhs, const RhsDataType& rhs)
+        {
+            typedef Expression<LhsExpressionPolicy> LhsExpressionType;
+            typedef Expression<ConstantExpressionPolicy<RhsDataType> > RhsExpressionType;
+
+            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, SubtractOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+        }
+        
+        //////////////////////////////////////////////////////
+        /// Division
+        //////////////////////////////////////////////////////
+        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType>
+        Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, DivideOp > > operator/(
+        const Expression<LhsExpressionPolicyType>& lhs, const Expression<RhsExpressionPolicyType>& rhs)
+        {
+            return Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, DivideOp > >(lhs, rhs);
+        }
+
+        
+        template<typename LhsDataType, typename RhsExpressionPolicy>
+        Expression<BinaryExpressionPolicy<Expression<ConstantExpressionPolicy<LhsDataType> >, Expression<RhsExpressionPolicy>, DivideOp > > 
+        operator/(const LhsDataType& lhs, const Expression<RhsExpressionPolicy>& rhs)
+        {
+            typedef Expression<ConstantExpressionPolicy<LhsDataType> > LhsExpressionType;
+            typedef Expression<RhsExpressionPolicy> RhsExpressionType;
+
+            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, DivideOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+        }
+
+        template<typename LhsExpressionPolicy, typename RhsDataType> 
+        Expression<BinaryExpressionPolicy<Expression<LhsExpressionPolicy>, Expression<ConstantExpressionPolicy<RhsDataType> >, DivideOp > > 
+        operator/(const Expression<LhsExpressionPolicy>& lhs, const RhsDataType& rhs)
+        {
+            typedef Expression<LhsExpressionPolicy> LhsExpressionType;
+            typedef Expression<ConstantExpressionPolicy<RhsDataType> > RhsExpressionType;
+
+            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, DivideOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+        }
     }
 }
 
@@ -317,6 +384,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpression.hpp,v $
+    Revision 1.6  2006/11/06 17:07:18  bnelson
+    Continued work on creating temporaries as needed when sub-expression types don't match the type of the accumulator.
+
     Revision 1.5  2006/10/02 01:16:52  bnelson
     Started working on adding BLAS and LAPACK
 

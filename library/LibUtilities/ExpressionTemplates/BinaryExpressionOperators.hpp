@@ -155,7 +155,7 @@ namespace Nektar
         class SubtractOp : public BinaryOp<LhsType, RhsType>
         {
             public:
-                typedef typename BinaryExpressionTraits<LhsType, RhsType>::MultiplyResultType ResultType;
+                typedef typename BinaryExpressionTraits<LhsType, RhsType>::SubtractionResultType ResultType;
 
                 typedef typename ExpressionMetadataChooser<LhsType>::MetadataType LhsMetadataType;
                 typedef typename ExpressionMetadataChooser<RhsType>::MetadataType RhsMetadataType;
@@ -187,6 +187,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpressionOperators.hpp,v $
+    Revision 1.4  2006/11/06 17:07:19  bnelson
+    Continued work on creating temporaries as needed when sub-expression types don't match the type of the accumulator.
+
     Revision 1.3  2006/09/21 01:07:59  bnelson
     no message
 

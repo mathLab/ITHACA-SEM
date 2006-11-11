@@ -73,6 +73,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixMultiplication), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixSomewhatComplicatedExpression), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixComplicatedExpression), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testTemporaryGenerationFromSingleLevelBinaryExpressions), 0);
 
 
     /// Linear system tests.
@@ -86,6 +87,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.15  2006/11/08 04:18:22  bnelson
+    Added more expression template tests.
+
     Revision 1.14  2006/11/06 17:10:04  bnelson
     *** empty log message ***
 

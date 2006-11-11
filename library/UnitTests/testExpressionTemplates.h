@@ -49,6 +49,8 @@ namespace Nektar
         void testNekMatrixMultiplication();
         void testNekMatrixSomewhatComplicatedExpression();
         void testNekMatrixComplicatedExpression();
+        
+        void testTemporaryGenerationFromSingleLevelBinaryExpressions();
     }
 }
 
@@ -57,6 +59,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.h,v $
+    Revision 1.6  2006/11/08 04:18:22  bnelson
+    Added more expression template tests.
+
     Revision 1.5  2006/11/06 17:10:05  bnelson
     *** empty log message ***
 

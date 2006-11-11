@@ -273,11 +273,29 @@ namespace Nektar
             }
         }
         
+        
+        class CountedMatrix : public Nektar::NekMatrix<double>
+        {
+        };
+        
+        class CountedVector : public Nektar::NekVector<double>
+        {
+        };
+        
+        // For these tests I will be testing items of the form A = B op C, where I vary
+        // the data types for A, B, and C, as well as op types, to get all possible combinations.
+        void testTemporaryGenerationFromSingleLevelBinaryExpressions()
+        {
+        }
+        
      }
 }
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.9  2006/11/08 04:18:22  bnelson
+    Added more expression template tests.
+
     Revision 1.8  2006/11/06 17:10:04  bnelson
     *** empty log message ***
 

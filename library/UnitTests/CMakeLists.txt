@@ -1,5 +1,6 @@
 
 SET(UnitTestSources
+CountedObject.cpp
 main.cpp
 testNekManager.cpp
 testNekMatrix.cpp
@@ -10,6 +11,7 @@ testLinearSystem.cpp
 )
 
 SET(UnitTestHeaders
+CountedObject.h
 testNekManager.h
 testNekMatrix.h
 testNekPoint.h

@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <UnitTests/testExpressionTemplates.h>
+#include <UnitTests/CountedObject.h>
 
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 
@@ -213,79 +214,115 @@ namespace Nektar
         
         void testNekMatrixSomewhatComplicatedExpression()
         {
-            {
-                double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
-                double m2_buf[] = {63, 57, -59, 45, -8, -93, 92, 43, -62};
-                double m3_buf[] = {77, 66, 54, -5, 99, -61, -50, -12, -18};
-    
-                NekMatrix<double> m1(3, 3, m1_buf);
-                NekMatrix<double> m2(3, 3, m2_buf);
-                NekMatrix<double> m3(3, 3, m3_buf);
-                
-                NekMatrix<double> result = (m1*m2) + m3;
-                
-                double result_buf[] = {-11157, -5930, 12478, 6755, -522, -10117, 11955, 6150, -12925};
-                NekMatrix<double> expectedResult(3,3,result_buf);
-                double epsilon = 1e-11;
-                for(unsigned int i = 0; i < 3; ++i)
-                {
-                    for(unsigned int j = 0; j < 3; ++j)
-                    {
-                        BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
-                    }
-                }
-                
-                NekMatrix<double> result1 = m3 + (m1*m2);
-                for(unsigned int i = 0; i < 3; ++i)
-                {
-                    for(unsigned int j = 0; j < 3; ++j)
-                    {
-                        BOOST_CHECK_CLOSE(result1(i,j), expectedResult(i,j), epsilon);
-                    }
-                }
-            }
+//             {
+//                 double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
+//                 double m2_buf[] = {63, 57, -59, 45, -8, -93, 92, 43, -62};
+//                 double m3_buf[] = {77, 66, 54, -5, 99, -61, -50, -12, -18};
+//     
+//                 NekMatrix<double> m1(3, 3, m1_buf);
+//                 NekMatrix<double> m2(3, 3, m2_buf);
+//                 NekMatrix<double> m3(3, 3, m3_buf);
+//                 
+//                 NekMatrix<double> result = (m1*m2) + m3;
+//                 
+//                 double result_buf[] = {-11157, -5930, 12478, 6755, -522, -10117, 11955, 6150, -12925};
+//                 NekMatrix<double> expectedResult(3,3,result_buf);
+//                 double epsilon = 1e-11;
+//                 for(unsigned int i = 0; i < 3; ++i)
+//                 {
+//                     for(unsigned int j = 0; j < 3; ++j)
+//                     {
+//                         BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
+//                     }
+//                 }
+//                 
+//                 NekMatrix<double> result1 = m3 + (m1*m2);
+//                 for(unsigned int i = 0; i < 3; ++i)
+//                 {
+//                     for(unsigned int j = 0; j < 3; ++j)
+//                     {
+//                         BOOST_CHECK_CLOSE(result1(i,j), expectedResult(i,j), epsilon);
+//                     }
+//                 }
+//             }
         }
         
         void testNekMatrixComplicatedExpression()
         {
-            {
-                double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
-                double m2_buf[] = {63, 57, -59, 45, -8, -93, 92, 43, -62};
-                double m3_buf[] = {31, -26, -62, 1, -47, -91, -47, -61, 41};
-    
-                NekMatrix<double> m1(3, 3, m1_buf);
-                NekMatrix<double> m2(3, 3, m2_buf);
-                NekMatrix<double> m3(3, 3, m3_buf);
-                
-                NekMatrix<double> result = (((m3-m1)*m3) * (m1-m2)) + m1*m2*m3;
-                
-                double result_buf[] = {-1279130, -1162366, 243990, -1663904, 1197403, 2021293, 547959, 1802365, 1422677};
-                NekMatrix<double> expectedResult(3,3,result_buf);
-                
-                double epsilon = 1e-11;
-                for(unsigned int i = 0; i < 3; ++i)
-                {
-                    for(unsigned int j = 0; j < 3; ++j)
-                    {
-                        BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
-                    }
-                }
-            }
+//             {
+//                 double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
+//                 double m2_buf[] = {63, 57, -59, 45, -8, -93, 92, 43, -62};
+//                 double m3_buf[] = {31, -26, -62, 1, -47, -91, -47, -61, 41};
+//     
+//                 NekMatrix<double> m1(3, 3, m1_buf);
+//                 NekMatrix<double> m2(3, 3, m2_buf);
+//                 NekMatrix<double> m3(3, 3, m3_buf);
+//                 
+//                 NekMatrix<double> result = (((m3-m1)*m3) * (m1-m2)) + m1*m2*m3;
+//                 
+//                 double result_buf[] = {-1279130, -1162366, 243990, -1663904, 1197403, 2021293, 547959, 1802365, 1422677};
+//                 NekMatrix<double> expectedResult(3,3,result_buf);
+//                 
+//                 double epsilon = 1e-11;
+//                 for(unsigned int i = 0; i < 3; ++i)
+//                 {
+//                     for(unsigned int j = 0; j < 3; ++j)
+//                     {
+//                         BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
+//                     }
+//                 }
+//             }
         }
         
         
-        class CountedMatrix : public Nektar::NekMatrix<double>
+
+        class TestTemporary : public CountedObject<TestTemporary>
         {
+            public:
+                TestTemporary() : CountedObject<TestTemporary>() {}
+                TestTemporary(const TestTemporary& rhs) : CountedObject<TestTemporary>(rhs) {}
+                virtual ~TestTemporary() {}
+                TestTemporary& operator=(const TestTemporary& rhs) { CountedObject<TestTemporary>::operator=(rhs); return *this; }
+                
+                template<typename PolicyType>
+                TestTemporary(const expt::Expression<PolicyType>& rhs) : CountedObject<TestTemporary>()
+                {
+                    //BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<PolicyType>::ResultType, TestTemporary ));
+                    rhs.Apply(*this);
+                }
+                
+                template<typename PolicyType>
+                TestTemporary& operator=(const expt::Expression<PolicyType>& rhs)
+                {
+                    //BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<PolicyType>::ResultType, TestTemporary ));
+                    rhs.Apply(*this);
+                    return *this;
+                }
+                
+                TestTemporary& operator+=(const TestTemporary& rhs)
+                {
+                    return *this;
+                }
+                
+            private:
         };
         
-        class CountedVector : public Nektar::NekVector<double>
+        void add(const TestTemporary& lhs, const TestTemporary& rhs, TestTemporary& result)
         {
-        };
+        }
         
+        ENABLE_EXPRESSION_TEMPLATE_OPERATORS(TestTemporary);
+
         // For these tests I will be testing items of the form A = B op C, where I vary
         // the data types for A, B, and C, as well as op types, to get all possible combinations.
         void testTemporaryGenerationFromSingleLevelBinaryExpressions()
         {
+            TestTemporary a;
+            TestTemporary b;
+            CountedObject<TestTemporary>::clearCounters();
+            TestTemporary c = a + b;
+            
+            CountedObject<TestTemporary>::check(1, 0, 0, 0, 0, 1);
         }
         
      }
@@ -293,6 +330,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.10  2006/11/11 01:32:52  bnelson
+    *** empty log message ***
+
     Revision 1.9  2006/11/08 04:18:22  bnelson
     Added more expression template tests.
 

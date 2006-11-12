@@ -48,14 +48,6 @@ namespace Nektar
 {
     namespace expt
     {
-        //template<typename InputExpressionPolicyType, typename RhsExpressionType, typename ResultType, template <typename, typename> class OpType>
-        //void EvaluateExpression(typename boost::call_traits<LhsExpressionType>::const_reference lhs, 
-        //                                typename boost::call_traits<RhsExpressionType>::const_reference rhs,
-        //                                typename boost::call_traits<ResultType>::reference result, 
-        //                                typename boost::enable_if<boost::is_same<typename LhsExpressionType::ResultType, ResultType> >::type* f0 = NULL,
-        //                                typename boost::enable_if<boost::is_same<typename RhsExpressionType::ResultType, ResultType> >::type* f1 = NULL)
-        //{
-        //}
 
         template<typename InputExpressionPolicyType, template <typename> class OpType>
         class UnaryExpressionPolicy
@@ -110,7 +102,7 @@ namespace Nektar
                     // Evaluate the expression up to this point.
                     m_value.Apply(result);
 
-                    // Now apply the negation to the operation.
+                    // Now apply the operator to the result.
                     OpType<ResultType>::Apply(result);
                 }
 
@@ -120,15 +112,6 @@ namespace Nektar
                     m_value.ApplyEqual<IncomingOpType>(result);
                     OpType<ResultType>::Apply(result);
                 }
-
-    //             void Apply(typename boost::call_traits<ResultType>::reference result,
-    //                        typename boost::disable_if<boost::is_same<ResultType, ParameterType> >::type* = NULL)
-    //             {
-    //                 ParameterType temp;
-    //                 m_value.Apply(temp);
-    //
-    //                 OpType<ParameterType>::Apply(result, temp);
-    //             }
 
                 const MetadataType& GetMetadata() const
                 {
@@ -154,6 +137,9 @@ namespace Nektar
 
 /**
     $Log: UnaryExpression.hpp,v $
+    Revision 1.6  2006/09/16 23:52:56  bnelson
+    Changed unary operations to rely on methods outside the class (to aid adding expression templates to classes that can't be modified)
+
     Revision 1.5  2006/09/14 02:08:59  bnelson
     Fixed gcc compile errors
 

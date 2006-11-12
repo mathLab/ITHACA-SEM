@@ -53,16 +53,16 @@ namespace Nektar
                                  const Expression<RhsExpressionPolicyType>& rhs,
                                  typename boost::call_traits<ResultType>::reference result)
                 {
-//                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
-//                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-//                     lhs.Apply(result);
-//                     rhs.template ApplyEqual<OpType<LhsType, RhsType> >(result);
                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-                    LhsType lhs_temp(lhs);
-                    RhsType rhs_temp(rhs);
-
-                    OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
+                    lhs.Apply(result);
+                    rhs.template ApplyEqual<OpType<LhsType, RhsType> >(result);
+//                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
+//                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
+//                     LhsType lhs_temp(lhs);
+//                     RhsType rhs_temp(rhs);
+// 
+//                     OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
                 }
         };
         
@@ -384,6 +384,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpression.hpp,v $
+    Revision 1.7  2006/11/08 04:17:32  bnelson
+    Made expressions work for complicated, nested expression templates - but suboptimally.
+
     Revision 1.6  2006/11/06 17:07:18  bnelson
     Continued work on creating temporaries as needed when sub-expression types don't match the type of the accumulator.
 

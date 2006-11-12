@@ -57,6 +57,26 @@ namespace Nektar
                 {
                     return DefaultExpressionMetadata(rhs);
                 }
+                
+                static DefaultExpressionMetadata CreateForAddition(const DefaultExpressionMetadata& lhs, const DefaultExpressionMetadata& rhs)
+                {
+                    return DefaultExpressionMetadata(rhs);
+                }
+                
+                static DefaultExpressionMetadata CreateForSubtraction(const DefaultExpressionMetadata& lhs, const DefaultExpressionMetadata& rhs)
+                {
+                    return DefaultExpressionMetadata(rhs);
+                }
+                
+                static DefaultExpressionMetadata CreateForMultiplication(const DefaultExpressionMetadata& lhs, const DefaultExpressionMetadata& rhs)
+                {
+                    return DefaultExpressionMetadata(rhs);
+                }
+                
+                static DefaultExpressionMetadata CreateForDivision(const DefaultExpressionMetadata& lhs, const DefaultExpressionMetadata& rhs)
+                {
+                    return DefaultExpressionMetadata(rhs);
+                }
         };
 
         template<typename Type, typename enabled=void>
@@ -79,6 +99,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_METADATA_H
 
 /**
-    $Log: $
+    $Log: ExpressionMetadata.hpp,v $
+    Revision 1.1  2006/09/14 02:09:00  bnelson
+    Fixed gcc compile errors
+
 **/
 

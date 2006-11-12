@@ -51,16 +51,39 @@
 #include <LibUtilities/ExpressionTemplates/UnaryExpression.hpp>
 #include <LibUtilities/ExpressionTemplates/UnaryExpressionTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/NegateOp.hpp>
+#include <LibUtilities/ExpressionTemplates/NullOp.hpp>
 
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpression.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
 
+// Utility macros to generate the operators needed by a class supporting expression templates.
+#define ENABLE_EXPRESSION_TEMPLATE_OPERATORS(className) \
+    expt::Expression<expt::BinaryExpressionPolicy< \
+        expt::Expression<expt::ConstantExpressionPolicy<className > >, \
+        expt::Expression<expt::ConstantExpressionPolicy<className > >, expt::AddOp> > \
+    operator+(const className& lhs, const className& rhs) \
+    { \
+        typedef expt::Expression<expt::ConstantExpressionPolicy<className > > LhsExpressionType; \
+        typedef expt::Expression<expt::ConstantExpressionPolicy<className > > RhsExpressionType; \
+        \
+        return expt::Expression<expt::BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, expt::AddOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs)); \
+    }
 
+
+// Is this the correct place to put high level expression template documentation?
+// To create an object that can use expression template:
+//
+// If you want to be able to add two objects together, you must
+// 1. Provide an add method that takes three parameters: lhs, rhs, result.
+// 2. Provide a += method.
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
 
 /**
     $Log: ExpressionTemplates.hpp,v $
+    Revision 1.5  2006/09/11 03:24:24  bnelson
+    Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
+
     Revision 1.4  2006/08/28 02:39:53  bnelson
     *** empty log message ***
 

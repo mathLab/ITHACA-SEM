@@ -57,13 +57,13 @@ namespace Nektar
                 ++numberConstructedFromInt;
             }
 
-            CountedObject(const FICounterObject& rhs) :
+            CountedObject(const CountedObject<DerivedType>& rhs) :
                 value(rhs.value)
             {
                 ++numberCopied;
             }
 
-            ~CountedObject()
+            virtual ~CountedObject()
             {
                 ++numberDestroyed;
             }
@@ -105,26 +105,48 @@ namespace Nektar
                                 unsigned int expectedDestroyed, unsigned int expectedCopied, unsigned int expectedCloned,
                                 unsigned int expectedAssigned)
             {
-                BOOST_CHECK(numberDefaultConstructed == expectedDefaultConstructed);
-                BOOST_CHECK(numberConstructedFromInt == expectedConstructedFromInt);
-                BOOST_CHECK(numberDestroyed == expectedDestroyed);
-                BOOST_CHECK(numberCopied == expectedCopied);
-                BOOST_CHECK(numberAssigned == expectedAssigned);
-                BOOST_CHECK(numberCloned == expectedCloned);
+                BOOST_CHECK_EQUAL(numberDefaultConstructed, expectedDefaultConstructed);
+                BOOST_CHECK_EQUAL(numberConstructedFromInt, expectedConstructedFromInt);
+                BOOST_CHECK_EQUAL(numberDestroyed, expectedDestroyed);
+                BOOST_CHECK_EQUAL(numberCopied, expectedCopied);
+                BOOST_CHECK_EQUAL(numberAssigned, expectedAssigned);
+                BOOST_CHECK_EQUAL(numberCloned, expectedCloned);
             }
 
             unsigned int value;
 
-            static unsigned int numberDefaultConstructed ;
+            static unsigned int numberDefaultConstructed;
             static unsigned int numberConstructedFromInt;
             static unsigned int numberDestroyed;
             static unsigned int numberCopied;
             static unsigned int numberAssigned;
             static unsigned int numberCloned;
-};
+    };
+    
+    template<typename DerivedType>
+    unsigned int CountedObject<DerivedType>::numberDefaultConstructed = 0;
+    
+    template<typename DerivedType>
+    unsigned int CountedObject<DerivedType>::numberConstructedFromInt = 0;
+    
+    template<typename DerivedType>
+    unsigned int CountedObject<DerivedType>::numberDestroyed = 0;
+    
+    template<typename DerivedType>
+    unsigned int CountedObject<DerivedType>::numberCopied = 0;
+    
+    template<typename DerivedType>
+    unsigned int CountedObject<DerivedType>::numberAssigned = 0;
+    
+    template<typename DerivedType>
+    unsigned int CountedObject<DerivedType>::numberCloned = 0;
+}
 
 #endif //NEKTAR_UNIT_TESTS_COUNTED_OBJECT_H
 
 /**
-    $Log: $
+    $Log: CountedObject.h,v $
+    Revision 1.1  2006/11/11 01:32:52  bnelson
+    *** empty log message ***
+
 **/

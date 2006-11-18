@@ -40,9 +40,14 @@
 #cmakedefine NEKTAR_USING_BLAS
 #cmakedefine NEKTAR_USING_MKL
 #cmakedefine NEKTAR_USING_ATLAS
+#cmakedefine NEKTAR_USING_ACML
 
 #ifdef NEKTAR_USING_MKL
 #include <@MKL_BLAS_INCLUDE_FILE@>
+#endif
+
+#ifdef NEKTAR_USING_ACML
+#include <@ACML_BLAS_INCLUDE_FILE@>
 #endif
 
 #ifdef NEKTAR_USING_ATLAS

@@ -44,6 +44,10 @@ namespace Nektar
     CBLAS_TRANSPOSE TransposeMapping[] = { CblasNoTrans, CblasTrans, CblasConjTrans };
 #endif
 
+#ifdef NEKTAR_USING_ACML
+    char AcmlTransposeMapping[] = { 'N', 'T', 'C' };
+#endif
+
    void dgemm(const MatrixOrder order, const Transpose MatrixATranspose, const Transpose MatrixBTranspose,
               const int M, const int N, const int K,
               const double alpha, const double* A, const int lda, const double* B,
@@ -59,6 +63,13 @@ namespace Nektar
         cblas_dgemm(OrderMapping[order], TransposeMapping[MatrixATranspose], TransposeMapping[MatrixBTranspose],
            M, N, K,
            alpha, A, lda, B, ldb, beta, C, ldc);
+#endif
+
+#ifdef NEKTAR_USING_ACML
+        // The const_cast is necessary here because ACML has a broken interface.  The BLAS contract specifies
+        // that A and B are not modified, so this should be safe.
+        ::dgemm(AcmlTransposeMapping[MatrixATranspose], AcmlTransposeMapping[MatrixBTranspose],
+                M, N, K, alpha, const_cast<double*>(A), lda, const_cast<double*>(B), ldb, beta, C, ldc);
 #endif
 
     }
@@ -78,6 +89,9 @@ namespace Nektar
 
 /**
     $Log: blas.cpp,v $
+    Revision 1.3  2006/11/06 17:09:09  bnelson
+    *** empty log message ***
+
     Revision 1.2  2006/10/30 05:11:16  bnelson
     Added preliminary linear system and block matrix support.
 

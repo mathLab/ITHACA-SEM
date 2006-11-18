@@ -71,7 +71,12 @@ void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x)
     int pivotSize = std::max(1, std::min(m, n));
     int info = 0;
     boost::shared_array<int> ipivot = Nektar::MemoryManager::AllocateSharedArray<int>(pivotSize);
+    
+#ifdef NEKTAR_USING_ACML
+    dgetrf(m, n, factoredMatrix.GetPtr().get(), m, ipivot.get(), &info);
+#else
     dgetrf(&m, &n, factoredMatrix.GetPtr().get(), &m, ipivot.get(), &info);
+#endif
     
     if( info < 0 )
     {
@@ -89,7 +94,12 @@ void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x)
     //void    dgetrs(char *trans,int *n,int *nrhs,double *a,int *lda,int *ipiv,double *b,int *ldb,int *info);
     char trans = 'N';
     int nrhs = 1; // ONly 1 right hand side.
+    
+#ifdef NEKTAR_USING_ACML
+    dgetrs(trans, matrixRows, nrhs, factoredMatrix.GetPtr().get(), matrixRows, ipivot.get(), x, matrixRows, &info);
+#else
     dgetrs(&trans, &matrixRows, &nrhs, factoredMatrix.GetPtr().get(), &matrixRows, ipivot.get(), x, &matrixRows, &info);
+#endif //NEKTAR_USING_ACML
     
     if( info < 0 )
     {

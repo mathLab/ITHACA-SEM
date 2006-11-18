@@ -47,6 +47,10 @@
 #include <@MKL_LAPACK_INCLUDE_FILE@>
 #endif //NEKTAR_USING_MKL
 
+#ifdef NEKTAR_USING_ACML
+#include <@ACML_LAPACK_INCLUDE_FILE@>
+#endif //NEKTAR_USING_ACML
+
 // dgetrs is defined as normal in MKL.  We'll only need a common interface here
 // if things are different in other implementations.
 //void dgetrs(char *trans, int *n, int *nrhs, double *a, int *lda, int *ipiv, double *b, int *ldb, int *info)

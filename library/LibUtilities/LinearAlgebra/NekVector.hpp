@@ -46,11 +46,39 @@
 #include <math.h>
 
 #include <boost/call_traits.hpp>
+#include <boost/type_traits.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/utility/enable_if.hpp>
 
 namespace Nektar
 {
+    template<typename DataType, typename enabled = void>
+    class NekVectorTypeTraits;
+    
+    template<typename DataType>
+    class NekVectorTypeTraits<DataType, typename boost::enable_if<boost::is_floating_point<DataType> >::type >
+    {
+        public:
+            static 
+            typename boost::call_traits<DataType>::value_type 
+            abs(typename boost::call_traits<DataType>::const_reference v)
+            {
+                return fabs(v);
+            }
+    };
+    
+    template<typename DataType>
+    class NekVectorTypeTraits<DataType, typename boost::enable_if<boost::is_integral<DataType> >::type >
+    {
+        public:
+            static 
+            typename boost::call_traits<DataType>::value_type 
+            abs(typename boost::call_traits<DataType>::const_reference v)
+            {
+                return abs(v);
+            }
+    };
+    
     // \param DataType The type of data held by each element of the vector.
     // \param dim The number of elements in the vector.  If set to 0, the vector
     //            will have a variable number of elements.
@@ -153,6 +181,15 @@ namespace Nektar
             {
                 return m_impl.GetPtr();
             }
+            
+            typedef DataType* iterator;
+            typedef const DataType* const_iterator;
+            
+            iterator begin() { return GetPtr(); }
+            iterator end() { return GetPtr() + GetDimension(); }
+            
+            const_iterator begin() const { return GetPtr(); }
+            const_iterator end() const { return GetPtr() + GetDimension(); }
             
             /// \brief Returns i^{th} element.
             /// \param i The element to return.
@@ -374,6 +411,12 @@ namespace Nektar
                 return result;
             }
 
+            // Norms
+            DataType L1Norm() const;
+            DataType L2Norm() const;
+            DataType InfinityNorm() const;
+            DataType LpNorm(unsigned int p) const;
+            
         private:
             template<typename ImplDataType, unsigned int ImplSize, unsigned int ImplSpace>
             class VectorImpl
@@ -549,6 +592,47 @@ namespace Nektar
             VectorImpl<DataType, dim, space> m_impl;
     };    
 
+    /// \todo Do the Norms with Blas where applicable.
+    template<typename DataType, unsigned int dim, unsigned int space>
+    DataType NekVector<DataType, dim, space>::L1Norm() const
+    {
+        DataType result(0);
+        for(const_iterator iter = begin(); iter != end(); ++iter)
+        {
+            result += NekVectorTypeTraits<DataType>::abs(*iter);
+        }
+    }
+    
+    template<typename DataType, unsigned int dim, unsigned int space>
+    DataType NekVector<DataType, dim, space>::L2Norm() const
+    {
+        DataType result(0);
+        for(const_iterator iter = begin(); iter != end(); ++iter)
+        {
+            DataType v = NekVectorTypeTraits<DataType>::abs(*iter);
+            result += v*v;
+        }
+        return sqrt(result);
+    }
+    
+    template<typename DataType, unsigned int dim, unsigned int space>
+    DataType NekVector<DataType, dim, space>::InfinityNorm() const
+    {
+        DataType result = NekVectorTypeTraits<DataType>::abs((*this)[0]);
+        for(int i = 1; i < GetDimension(); ++i)
+        {
+            result = std::max(NekVectorTypeTraits<DataType>::abs((*this)[i]), result);
+        }
+        return result;
+    }
+    
+    template<typename DataType, unsigned int dim, unsigned int space>
+    DataType NekVector<DataType, dim, space>::LpNorm(unsigned int p) const
+    {
+        // \todo 
+        return DataType(0);
+    }
+    
     namespace expt
     {
         template<typename DataType, unsigned int dim, unsigned int space>
@@ -677,6 +761,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.9  2006/10/30 05:11:16  bnelson
+    Added preliminary linear system and block matrix support.
+
     Revision 1.8  2006/10/02 01:16:14  bnelson
     Started working on adding BLAS and LAPACK
 

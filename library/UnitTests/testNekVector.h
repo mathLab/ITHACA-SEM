@@ -44,6 +44,7 @@ namespace Nektar
         void testNekVectorConstruction();
         void testNekVectorOperators();
         void testNekVectorArithmetic();
+        void testNorms();
     }
 }
 
@@ -51,6 +52,9 @@ namespace Nektar
 
 /**
     $Log: testNekVector.h,v $
+    Revision 1.1  2006/05/04 18:59:56  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/04/11 02:02:13  bnelson
     Added more tests.
 

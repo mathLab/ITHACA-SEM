@@ -336,11 +336,25 @@ namespace Nektar
             }
 
         }
+        
+        void testNorms()
+        {
+            double vals[] = {1,-2,3};
+            NekVector<double, 3> v(vals);
+                
+            double epsilon = 1e-11;
+            BOOST_CHECK_EQUAL(v.L1Norm(), 1.0 + 2.0 + 3.0);
+            BOOST_CHECK_CLOSE(v.L2Norm(), sqrt(1.0+4.0+9.0), epsilon);
+            BOOST_CHECK_EQUAL(v.InfinityNorm(), 3);
+        }
     }
 }
 
 /**
     $Log: testNekVector.cpp,v $
+    Revision 1.4  2006/09/30 15:38:29  bnelson
+    no message
+
     Revision 1.3  2006/09/15 02:01:16  bnelson
     no message
 

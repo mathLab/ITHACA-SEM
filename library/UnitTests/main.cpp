@@ -41,6 +41,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekVectorConstruction), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekVectorOperators), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekVectorArithmetic), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNorms), 0);
 
 
     //test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testMakePtr), 0);
@@ -87,6 +88,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.16  2006/11/11 01:32:52  bnelson
+    *** empty log message ***
+
     Revision 1.15  2006/11/08 04:18:22  bnelson
     Added more expression template tests.
 

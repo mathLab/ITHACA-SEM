@@ -8,6 +8,7 @@ SET(LibUtilityHeaders
 ./LinearAlgebra/NekLinSys.h
 ./LinearAlgebra/NekLinSys.hpp
 ./LinearAlgebra/NekLinAlg.h
+./LinearAlgebra/NekLinAlgAlgorithms.hpp
 ./LinearAlgebra/BlockMat.h
 ./Foundations/Graph.h
 ./Polylib/Polylib.h

@@ -19,6 +19,7 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/testNekMatrix.h>
 #include <UnitTests/testExpressionTemplates.h>
 #include <UnitTests/testLinearSystem.h>
+#include <UnitTests/testNekLinAlgAlgorithms.h>
 
 //#include <UnitTests/testNekManager.h>
 
@@ -82,12 +83,17 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testFullSystem), 0);
     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testSolvingBlockDiagonalMatrices), 0);
 
+    /// Linear algebra algorithsm.
+    test->add(BOOST_TEST_CASE(&Nektar::NekLinAlgTests::testGramSchmidtOrthogonalizationBookExample), 0);
     
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.17  2006/11/18 17:18:46  bnelson
+    Added L1, L2, and Infinity norm tests.
+
     Revision 1.16  2006/11/11 01:32:52  bnelson
     *** empty log message ***
 

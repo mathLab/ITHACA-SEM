@@ -2,22 +2,26 @@
 SET(UnitTestSources
 CountedObject.cpp
 main.cpp
-testNekManager.cpp
-testNekMatrix.cpp
-testNekVector.cpp
-testNekPoint.cpp
+testBoostUtil.cpp
 testExpressionTemplates.cpp
 testLinearSystem.cpp
+testNekLinAlgAlgorithms.cpp
+testNekManager.cpp
+testNekMatrix.cpp
+testNekPoint.cpp
+testNekVector.cpp
 )
 
 SET(UnitTestHeaders
 CountedObject.h
+testBoostUtil.h
+testExpressionTemplates.h
+testLinearSystem.h
+testNekLinAlgAlgorithms.h
 testNekManager.h
 testNekMatrix.h
 testNekPoint.h
 testNekVector.h
-testExpressionTemplates.h
-testLinearSystem.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)

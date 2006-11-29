@@ -424,7 +424,6 @@ namespace Nektar
             DataType L1Norm() const;
             DataType L2Norm() const;
             DataType InfinityNorm() const;
-            DataType LpNorm(unsigned int p) const;
             
         private:
             template<typename ImplDataType, unsigned int ImplSize, unsigned int ImplSpace>
@@ -635,12 +634,6 @@ namespace Nektar
         return result;
     }
     
-    template<typename DataType, unsigned int dim, unsigned int space>
-    DataType NekVector<DataType, dim, space>::LpNorm(unsigned int p) const
-    {
-        // \todo 
-        return DataType(0);
-    }
     
     namespace expt
     {
@@ -779,6 +772,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.11  2006/11/20 03:38:44  bnelson
+    Added /= and /
+
     Revision 1.10  2006/11/18 17:18:30  bnelson
     Added L1, L2, and Infinity norms
 

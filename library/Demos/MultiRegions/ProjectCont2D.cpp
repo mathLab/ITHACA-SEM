@@ -23,6 +23,7 @@ int main(int argc, char *argv[]){
     int        coordim;
     double     **xc;
     int        Tritype, Quadtype, order;
+    NodalBasisType Tri_Nb;
     BasisType  Tri_btype1, Tri_btype2, Quad_btype;  
     
     if(argc != 5)
@@ -66,9 +67,14 @@ int main(int argc, char *argv[]){
     graph2D.Read(in);
     
     switch(Tritype){
-    case 1: case 2:
+    case 1: 
 	Tri_btype1 = eModified_A;
 	Tri_btype2 = eModified_B;
+	Tri_Nb     = (StdRegions::NodalBasisType) NULL;
+    case 2:
+	Tri_btype1 = (StdRegions::BasisType) StdRegions::eOrtho_A;
+	Tri_btype2 = (StdRegions::BasisType) StdRegions::eOrtho_B;
+	Tri_Nb     = (StdRegions::NodalBasisType) StdRegions::eNodalTriFekete;
 	break;
     }
     
@@ -85,7 +91,7 @@ int main(int argc, char *argv[]){
     const BasisKey T_Bb(Tri_btype2, order, eLobatto, order+1, 1,0);
     const BasisKey Q_Ba(Quad_btype ,order, eLobatto, order+1,0,0);
     
-    Exp = new ContExpList2D (T_Ba,T_Bb,Q_Ba,Q_Ba,graph2D);
+    Exp = new ContExpList2D (T_Ba,T_Bb,Tri_Nb,Q_Ba,Q_Ba,graph2D);
     
     //----------------------------------------------
     // Define solution to be projected 

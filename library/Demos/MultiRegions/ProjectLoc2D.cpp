@@ -23,6 +23,7 @@ int main(int argc, char *argv[]){
     int        coordim;
     double     **xc;
     int        Tritype, Quadtype, order;
+    NodalBasisType Tri_Nb;
     BasisType  Tri_btype1, Tri_btype2, Quad_btype;  
     
     if(argc != 5)
@@ -47,7 +48,17 @@ int main(int argc, char *argv[]){
 	exit(1);
     }
     
-    Tritype   = (BasisType) atoi(argv[1]);
+    if(atoi(argv[1]) != 3)
+    {
+	Tritype  = (StdRegions::BasisType) atoi(argv[1]);
+	Tri_Nb   = (StdRegions::NodalBasisType) NULL;
+    }
+    else
+    {
+	Tritype  = (StdRegions::BasisType) 1;
+	Tri_Nb   = (StdRegions::NodalBasisType) 1;
+    }
+
     Quadtype  = (BasisType) atoi(argv[2]);
     order     = atoi(argv[3]);
     
@@ -71,7 +82,7 @@ int main(int argc, char *argv[]){
     case 1: case 3:
 	Tri_btype1 = eOrtho_A;
 	Tri_btype2 = eOrtho_B;
-    
+
 	break;
     case 2:
 	Tri_btype1 = eModified_A;
@@ -98,7 +109,7 @@ int main(int argc, char *argv[]){
     const BasisKey T_Bb(Tri_btype2, order,  eLobatto, order+1, 1,0);
     const BasisKey Q_Ba(Quad_btype ,order,  eLobatto, order+1,0,0);
     
-    Exp = new ExpList2D (T_Ba,T_Bb,Q_Ba,Q_Ba,graph2D);
+    Exp = new ExpList2D (T_Ba,T_Bb,Tri_Nb,Q_Ba,Q_Ba,graph2D);
     
     //----------------------------------------------
     // Define solution to be projected 

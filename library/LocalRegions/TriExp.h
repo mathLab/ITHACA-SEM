@@ -99,7 +99,7 @@ namespace Nektar
 
         virtual StdRegions::GeomType V_GeoFacType()
         {
-        return m_minfo->GetGtype();
+	    return m_minfo->GetGtype();
         }
 
         void WriteToFile(FILE *outfile);
@@ -136,21 +136,21 @@ namespace Nektar
 
         void Deriv(double * outarray_d1, double *outarray_d2)
         {
-        double *out[2];
-        out [0] = outarray_d1;
-        out [1] = outarray_d2;
-        Deriv(2, this->m_phys, out);
+	    double *out[2];
+	    out [0] = outarray_d1;
+	    out [1] = outarray_d2;
+	    Deriv(2, this->m_phys, out);
         }
 
         void Deriv(const double *inarray, double * outarray_d1,
-               double *outarray_d2)
-        {
-        double *out[2];
-        out [0] = outarray_d1;
-        out [1] = outarray_d2;
-        Deriv(2, inarray, out);
-        }
-
+		   double *outarray_d2)
+	{
+	    double *out[2];
+	    out [0] = outarray_d1;
+	    out [1] = outarray_d2;
+	    Deriv(2, inarray, out);
+	}
+	
         void Deriv(const int n, double **outarray);
 
         void Deriv(const int n, const double *inarray, double ** outarray);
@@ -306,6 +306,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.7  2006/06/13 18:05:01  sherwin
+ *    Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+ *
  *    Revision 1.6  2006/06/05 00:08:48  bnelson
  *    Fixed a gcc 4.1.0 compilation problem.  TriExp::GenGeoFac not allowed in the class declaration, but GenGeoFac is.
  *

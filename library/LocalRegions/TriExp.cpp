@@ -52,8 +52,8 @@ namespace Nektar
 	TriExp::TriExp(const StdRegions::BasisKey &Ba, 
 		       const StdRegions::BasisKey &Bb, 
 		       double *coeffs, double *phys, 
-		       SpatialDomains::TriGeomSharedPtr geom)
-	    :StdRegions::StdTriExp(Ba,Bb,coeffs,phys)
+		       SpatialDomains::TriGeomSharedPtr geom):
+	    StdRegions::StdTriExp(Ba,Bb,coeffs,phys)
 	{
 	    m_geom = geom;
 	}
@@ -520,6 +520,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.7  2006/06/13 18:05:01  sherwin
+ *    Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+ *
  *    Revision 1.6  2006/06/02 18:48:39  sherwin
  *    Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
  *

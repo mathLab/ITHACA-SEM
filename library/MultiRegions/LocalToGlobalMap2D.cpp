@@ -72,7 +72,7 @@ namespace Nektar
 		    {
 			
 			nGloVerts = std::max(nGloVerts,
-					     graph2D.GetVidFromElmt((*(*def)[i]).DetShapeType(),j,i));
+			     graph2D.GetVidFromElmt((*(*def)[i]).DetShapeType(),j,i));
 			//set up nedge coefficients for each edge 	
 			nedge_coeffs = (*(*def)[i]).GetEdgeNcoeffs(j);
 			edge_offset[graph2D.GetEidFromElmt((*(*def)[i]).DetShapeType(),j,i)+1] =   nedge_coeffs -2;
@@ -111,8 +111,8 @@ namespace Nektar
 		{
 		    for(j = 0; j < (nedge = (*(*def)[i]).GetNedges()); ++j)
 		    {
-			(*(*def)[i]).MapTo_ModalFormat
-			(nedge_coeffs = (*(*def)[i]).GetEdgeNcoeffs(j),
+			(*(*def)[i]).MapTo_ModalFormat(
+			 nedge_coeffs = (*(*def)[i]).GetEdgeNcoeffs(j),
 			 Btype = (*(*def)[i]).GetEdgeBasisType(j), j,
 			 eorient = graph2D.GetEorientFromElmt((*(*def)[i]).DetShapeType(),j,i), vmap);
 
@@ -141,7 +141,6 @@ namespace Nektar
 			    {
 				locToContMap[cnt+vmap[1]] = 
 				graph2D.GetVidFromElmt((*(*def)[i]).DetShapeType(),j,i);
-
 				if(m_sign_change)
 				{
 				    for(k = 3; k < nedge_coeffs; k+=2)

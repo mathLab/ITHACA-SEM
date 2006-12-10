@@ -141,6 +141,8 @@ namespace Nektar
 
       void MapTo(EdgeOrientation dir, StdExpMap& Map);
 
+      void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
+
     protected:
       static StdMatrix s_elmtmats;
 
@@ -248,6 +250,11 @@ namespace Nektar
 	  MapTo(dir,Map);
       }
       
+
+      virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+      {
+	  SetInvInfo(mat,Mform);
+      }
     };
 
   } //end of namespace
@@ -257,6 +264,10 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.3  2006/07/02 17:16:19  sherwin
+ *
+ * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+ *
  * Revision 1.2  2006/06/01 14:13:37  kirby
  * *** empty log message ***
  *

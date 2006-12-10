@@ -110,7 +110,7 @@ namespace Nektar
                 Vmath::Smul(nquad1,0.5,(double *)w1,1,w1_tmp,1);      
                 break;
             }
-
+	    
             return StdExpansion2D::Integral(inarray,w0,w1_tmp);
         }
 
@@ -435,7 +435,6 @@ namespace Nektar
 	    
             IProductWRTBase(inarray,m_coeffs);
             M = GetMassMatrix();
-	    M->ShowMatrixStructure(stdout);
             M->Solve(m_coeffs,1);
         }
 
@@ -610,12 +609,80 @@ namespace Nektar
             outfile << "]" ; 
         }
 
+	void StdTriExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+	{
+	    mat->SetLda(m_ncoeffs);
+	    mat->SetMatForm(eSymmetric_Positive);
+      
+	    if(GeoFacType() == eRegular)
+	    {
+		switch(Mform)
+		{
+		case eMassMatrix:
+		    {
+			// default setting  for this matrix 
+			mat->SetMatForm(eSymmetric_Positive);
+			
+			switch(m_base[0]->GetBasisType())
+			{
+			    if((m_base[0]->ExactIprodInt())&&
+			   (m_base[1]->ExactIprodInt()))
+			    {
+				switch(m_base[0]->GetBasisType())
+				{
+				case eOrtho_A: case eLegendre:
+				    switch(m_base[1]->GetBasisType())
+				    {
+				    case eOrtho_B:
+					mat->SetMatForm(eSymmetric_Positive_Banded);
+					mat->SetBwidth(1);
+					break;
+				    case eModified_B:
+					if(m_ncoeffs > 2*m_base[1]->GetBasisOrder())
+					{
+					    mat->SetMatForm(eSymmetric_Positive_Banded);	
+					    mat->SetBwidth(m_base[1]->GetBasisOrder());      
+					}
+					break;
+				    }
+				case eModified_A:
+				    {
+					int bwidth = 4*m_base[1]->GetBasisOrder() - 6; 
+					if(m_ncoeffs > 2*bwidth)
+					{
+					    mat->SetMatForm(eSymmetric_Positive_Banded);
+					    mat->SetBwidth(bwidth);
+					}
+				    }
+				    break;
+				}
+				break;
+			    }
+			}
+			break;
+		    }
+		    break;
+		case eLapMatrix:
+		    mat->SetMatForm(eSymmetric);	
+		    break;
+		default:
+		    ASSERTL0(false, "MatrixType not known");
+		    break;
+	    
+		}
+	    }
+	}
+  
+
     }//end namespace
 }//end namespace
 
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.7  2006/08/05 19:03:48  sherwin
+* Update to make the multiregions 2D expansion in connected regions work
+*
 * Revision 1.6  2006/07/02 17:16:19  sherwin
 *
 * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

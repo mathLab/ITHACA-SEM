@@ -117,6 +117,7 @@ namespace Nektar
 	    void WriteToFile(std::ofstream &outfile);
 	    void WriteCoeffsToFile(std::ofstream &outfile);
 	    
+	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
 
 	    int GetEdgeNcoeffs(const int i)
 	    {
@@ -275,6 +276,11 @@ namespace Nektar
 		WriteCoeffsToFile(outfile);
 	    }
 
+	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+	    {
+		SetInvInfo(mat,Mform);
+	    }
+	    
 	};
 	
     } //end of namespace
@@ -284,6 +290,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.4  2006/08/05 19:03:48  sherwin
+ * Update to make the multiregions 2D expansion in connected regions work
+ *
  * Revision 1.3  2006/07/02 17:16:19  sherwin
  *
  * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

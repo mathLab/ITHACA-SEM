@@ -72,6 +72,7 @@ namespace Nektar
 		return eTetrahedron;
 	    }
 	    
+	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
 	    
 	protected:
 	    
@@ -98,7 +99,11 @@ namespace Nektar
 	    {
 		return DetShapeType();
 	    }
-	    
+
+	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+	    {
+		SetInvInfo(mat,Mform);
+	    }
 	    
 	};
 	
@@ -109,6 +114,10 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.2  2006/07/02 17:16:19  sherwin
+ *
+ * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+ *
  * Revision 1.1  2006/05/04 18:58:33  kirby
  * *** empty log message ***
  *

@@ -327,13 +327,16 @@ namespace Nektar
         void StdExpansion::GenerateMassMatrix(double *outarray)
         {
             int     i;
+            BstShrDArray store = GetDoubleTmpSpace(m_ncoeffs);
             BstShrDArray tmp = GetDoubleTmpSpace(GetPointsTot());
 
+	    Blas::Dcopy(m_ncoeffs,m_coeffs,1,store.get(),1);
             for(i=0; i<m_ncoeffs; ++i)
             {
                 v_FillMode(i, tmp.get());
                 v_IProductWRTBase(tmp.get(), outarray+i*m_ncoeffs);
             }
+	    Blas::Dcopy(m_ncoeffs,store.get(),1,m_coeffs,1);
         }
 
 
@@ -390,6 +393,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.4  2006/08/05 19:03:48  sherwin
+* Update to make the multiregions 2D expansion in connected regions work
+*
 * Revision 1.3  2006/06/01 14:46:16  kirby
 * *** empty log message ***
 *

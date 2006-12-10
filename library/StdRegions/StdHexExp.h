@@ -108,6 +108,9 @@ namespace Nektar
             void FwdTrans(const double * inarray);
             double Evaluate(const double * coords);
 
+	    // Matrix related methods 
+	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
+
         protected:
 
             static StdMatrix s_elmtmats;
@@ -214,6 +217,11 @@ namespace Nektar
                 return Evaluate(coords);
             }
 
+	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+	    {
+		SetInvInfo(mat,Mform);
+	    }
+
         };
 
     } //end of namespace
@@ -223,6 +231,10 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.4  2006/07/02 17:16:18  sherwin
+*
+* Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+*
 * Revision 1.3  2006/06/01 14:13:36  kirby
 * *** empty log message ***
 *

@@ -47,76 +47,76 @@
 
 namespace Nektar
 {
-  namespace StdRegions
-  {
-
-    class StdMatContainer
+    namespace StdRegions
     {
-    public:
-
-      StdMatContainer(double * M):
-	m_factored (false),
-	m_lda      (0),
-	m_bwidth   (0),
-	m_ldiag    (0),
-	m_packed_matrix ((double *)NULL)
-      {
-	m_matrix = M;
-      }
-
-      StdMatContainer(StdExpansion * E, double * M):
-	m_factored (false),
-	m_lda      (0),
-	m_bwidth   (0),
-	m_ldiag    (0),
-	m_packed_matrix ((double *)NULL)
-      {
-	m_numbases = E->GetNumBases();
-	m_basisorder = new int[m_numbases];
-	m_base = new const Basis*[m_numbases];
 	
-	for(int i=0;i<m_numbases;i++)
+	class StdMatContainer
 	{
-	  m_basisorder[i] = E->GetBasisOrder(i);
-	  m_base[i]     = E->GetBasis(i);
-	}
-	m_matrix = M;
-      }
+	public:
+	    
+	    StdMatContainer(double * M):
+		m_factored (false),
+		m_lda      (0),
+		m_bwidth   (0),
+		m_ldiag    (0),
+		m_packed_matrix ((double *)NULL)
+	    {
+		m_matrix = M;
+	    }
+	    
+	    StdMatContainer(StdExpansion * E, double * M):
+		m_factored (false),
+		m_lda      (0),
+		m_bwidth   (0),
+		m_ldiag    (0),
+		m_packed_matrix ((double *)NULL)
+	    {
+		m_numbases = E->GetNumBases();
+		m_basisorder = new int[m_numbases];
+		m_base = new const Basis*[m_numbases];
+		
+		for(int i=0;i<m_numbases;i++)
+		{
+		    m_basisorder[i] = E->GetBasisOrder(i);
+		    m_base[i]     = E->GetBasis(i);
+		}
+		m_matrix = M;
+	    }
 
-
-      ~StdMatContainer()
-      {
-
-	if(m_numbases)
-	{
-	  if(m_basisorder)
-	  {
-	    delete[] m_basisorder;
-	    m_basisorder = NULL;
-	  }
-
-	  if(m_base)
-	  {
-	    delete[] m_base;
-	    m_base = NULL;
-	  }
-	}
-	
-	// It is assumed that StdMatContainer always owns the vector
-	// attached to _matrix, and hence it is responsible for
-	// deleting the space
-	
-	if(m_matrix)
-	{
-	  delete[] m_matrix;
-	}
-
-	if(m_packed_matrix)
-	{
-	  delete[] m_packed_matrix;
-	  m_packed_matrix = NULL;
-	}
-      }
+	    
+	    ~StdMatContainer()
+	    {
+		 
+		if(m_numbases)
+		{
+		    if(m_basisorder)
+		    {
+			delete[] m_basisorder;
+			m_basisorder = NULL;
+		    }
+		    
+		    if(m_base)
+		    {
+			delete[] m_base;
+			m_base = NULL;
+		    }
+		}
+		
+		// It is assumed that StdMatContainer always owns the vector
+		// attached to _matrix, and hence it is responsible for
+		// deleting the space
+		
+		if(m_matrix)
+		{
+		    delete[] m_matrix;
+		}
+		
+		if(m_packed_matrix)
+		{
+		    delete[] m_packed_matrix;
+		    m_packed_matrix = NULL;
+		}
+	    }
 
       inline int GetNumBases() const
       {
@@ -142,7 +142,6 @@ namespace Nektar
       void Mxv(const double *in, double *out);
 
       /// Matrix factorisation initialisation routine
-      void SetInvInfo(StdExpansion *E, const MatrixType  Mform);
 
       //  Inversion routines
 
@@ -155,6 +154,7 @@ namespace Nektar
 
       /// evaulate \f$u \leftarrow A^{-1} u\f$ for \a nrhs solves
       void Solve(double *u, const int nrhs);
+      void SolveTranspose(double *u, const int nrhs);
 
       /// Fill _packed_matrix from _matrix
       void FillPackedMatrix();
@@ -312,6 +312,9 @@ namespace Nektar
 
 /**
  * $Log: StdMatrix.h,v $
+ * Revision 1.3  2006/06/02 18:48:40  sherwin
+ * Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
+ *
  * Revision 1.2  2006/06/01 13:43:19  kirby
  * *** empty log message ***
  *

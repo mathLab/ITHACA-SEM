@@ -45,6 +45,7 @@
 #include <StdRegions/NodalBasisManager.h>
 
 #include <StdRegions/StdRegions.hpp>
+#include <StdRegions/StdTriExp.h>
 #include <StdRegions/LocalRegionsDeclarations.hpp>
 
 namespace Nektar
@@ -61,8 +62,13 @@ namespace Nektar
             StdNodalTriExp(const BasisKey &Ba, const BasisKey &Bb,
                 NodalBasisType Ntype);
 
+	    StdNodalTriExp(const StdRegions::BasisKey &Ba, 
+			   const StdRegions::BasisKey &Bb, 
+			   StdRegions::NodalBasisType Ntype,
+			   double *coeffs, double *phys);
+
             //Copy Constructor
-            StdNodalTriExp(StdNodalTriExp &T);
+            StdNodalTriExp(const StdNodalTriExp &T);
 
             //Destructor
             ~StdNodalTriExp();
@@ -82,7 +88,13 @@ namespace Nektar
             StdMatContainer * GetNBasisTransMatrix();
 
             void NodalToModal();
+            void NodalToModal(double *in_out_array);
+
+            void NodalToModalTranspose();
+            void NodalToModalTranspose(double *in_out_array);
+
             void ModalToNodal();
+            void ModalToNodal(double *in_out_array);
 
             int  GetNodalPoints(const double * &x, const double * &y)
             {
@@ -99,14 +111,20 @@ namespace Nektar
 
             void FillMode(const int mode, double *outarray);
 
-            void GenMassMatrix(double * outarray);
-
-            void GenLapMatrix(double * outarray);
-
             StdMatContainer * GetMassMatrix();
 
             StdMatContainer * GetLapMatrix();
 
+
+	    void  MapTo(const int edge_ncoeffs, const BasisType Btype, 
+			const int eid, const EdgeOrientation eorient,
+			StdExpMap &Map);
+
+	    void  MapTo_ModalFormat(const int edge_ncoeffs, 
+				    const BasisType Btype, 
+				    const int eid, 
+				    const EdgeOrientation eorient,
+				    StdExpMap &Map);
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
@@ -126,6 +144,8 @@ namespace Nektar
 
             double Evaluate(const double * coords);
 
+	    // matrix inverse information
+	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
 
         protected:
 
@@ -135,7 +155,7 @@ namespace Nektar
             typedef Loki::SingletonHolder<NodalBasisManager> NBasisManagerSingleton;
 
             inline void IProductWRTBase(const double *base0, const double *base1,
-                const double *inarray, double *outarray);
+				     const double *inarray, double *outarray);
 
         private:
 
@@ -151,7 +171,7 @@ namespace Nektar
                 GenNBasisTransMatrix(outarray);
             }
 
-            virtual StdMatContainer * v_NBasisTransMatrix()
+            virtual StdMatContainer * v_GetNBasisTransMatrix()
             {
                 return GetNBasisTransMatrix();
             }
@@ -174,16 +194,6 @@ namespace Nektar
             virtual void v_FillMode(const int mode, double *outarray)
             {
                 FillMode(mode,outarray);
-            }
-
-            virtual void v_GenMassMatrix(double * outarray)
-            {
-                GenMassMatrix(outarray);
-            }
-
-            virtual void v_GenLapMatrix(double * outarray)
-            {
-                GenLapMatrix(outarray);
             }
 
             virtual StdMatContainer * v_GetMassMatrix()
@@ -225,14 +235,29 @@ namespace Nektar
             }
 
             virtual double v_Evaluate(const double * coords)
-            {
+	    {
                 return Evaluate(coords);
-            }
-
+	    }
+	    
             virtual int v_GetNodalPoints(const double * &x, const double* &y)
-            {
+	    {
                 return GetNodalPoints(x,y);
             }
+
+	    virtual void v_WriteToFile(std::ofstream &outfile)
+	    {
+		WriteToFile(outfile);
+	    }
+	    
+	    virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
+	    {
+		WriteCoeffsToFile(outfile);
+	    }
+
+	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+	    {
+		SetInvInfo(mat,Mform);
+	    }
 
         };
 
@@ -243,6 +268,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.3  2006/06/01 14:46:16  kirby
+* *** empty log message ***
+*
 * Revision 1.2  2006/05/23 15:08:19  jfrazier
 * Minor cleanup to correct compile warnings.
 *

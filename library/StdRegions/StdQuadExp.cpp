@@ -524,11 +524,91 @@ namespace Nektar
 	    }
 	}
 	
+	void StdQuadExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+	{
+	    mat->SetLda(m_ncoeffs);
+	    mat->SetMatForm(eSymmetric_Positive);
+      
+	    if(GeoFacType() == eRegular)
+	    {
+		switch(Mform)
+		{
+		case eMassMatrix:
+		    {
+			switch(m_base[1]->GetBasisType())
+			{
+			case eOrtho_A: case eLegendre:
+			    if(m_base[1]->ExactIprodInt())
+			    {
+				goto eQuadOrtho1;
+			    }
+			    break;
+			case eGLL_Lagrange:
+			    if(m_base[1]->Collocation())
+			    {
+				goto eQuadOrtho1;
+			    }
+			    break;
+			case eFourier:
+			    goto eQuadOrtho1;
+			    break;
+			default:
+			    mat->SetMatForm(eSymmetric_Positive_Banded);
+			    mat->SetBwidth(m_base[0]->GetBasisOrder()*m_base[1]->GetBasisOrder());
+			    break;
+			eQuadOrtho1:
+			    {
+				switch(m_base[0]->GetBasisType())
+				{
+				case eOrtho_A: case eLegendre:
+				    if(m_base[0]->ExactIprodInt())
+				    {
+					goto eQuadOrtho2;
+				    }
+				    break;
+				case eGLL_Lagrange:
+				    if(m_base[0]->Collocation())
+				    {
+					goto eQuadOrtho2;
+				    }
+				    break;
+				case eFourier:
+				    goto eQuadOrtho2;
+				    break;
+				default:
+				    mat->SetMatForm(eSymmetric_Positive_Banded);
+				    mat->SetBwidth(m_base[0]->GetBasisOrder());
+				    break;
+				eQuadOrtho2:
+				    {
+					mat->SetMatForm(eSymmetric_Positive_Banded);
+					mat->SetBwidth(1);
+					break;
+				    }
+				}
+			    }
+			}
+		    }	    
+		    break;
+		case eLapMatrix:
+		    mat->SetMatForm(eSymmetric);	
+		    break;
+		default:
+		    ASSERTL0(false, "MatrixType not known");
+		    break;
+	    
+		}
+	    }
+	}
+  
     } //end namespace			
 }//end namespace
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.4  2006/08/05 19:03:48  sherwin
+* Update to make the multiregions 2D expansion in connected regions work
+*
 * Revision 1.3  2006/07/02 17:16:18  sherwin
 *
 * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

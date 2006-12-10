@@ -256,6 +256,43 @@ namespace Nektar
             }
         }
 
+        void StdMatContainer::SolveTranspose(double *u, const int nrhs)
+        {
+            int info;
+
+            if(!m_factored) 
+            {
+                Factor();
+            }
+
+            switch(m_matform)
+            {
+            case eSymmetric:
+                Lapack::Dsptrs('L',m_lda,nrhs,m_packed_matrix,m_ipiv,u,m_lda,info);
+                ASSERTL0(info==0, "matrix did not solve");
+                break;
+            case eSymmetric_Positive:
+                Lapack::Dpptrs('L', m_lda,nrhs,m_packed_matrix,u,m_lda,info);
+                ASSERTL0(info==0, "matrix did not solve");
+                break;
+            case eSymmetric_Positive_Banded:
+                Lapack::Dpbtrs('L',m_lda,m_bwidth-1,nrhs,m_packed_matrix,m_bwidth,u,
+                    m_lda,info);
+                ASSERTL0(info==0, "matrix did not solve");
+                break;
+            case eGeneral_Banded:
+                Lapack::Dgbtrs('T',m_lda,m_ldiag,m_bwidth-1,nrhs,m_packed_matrix,
+                    2*m_ldiag+m_bwidth,m_ipiv,u,m_lda,info);
+                ASSERTL0(info==0, "matrix did not solve");
+                break;
+            case eGeneral_Full:
+                Lapack::Dgetrs('T',m_lda,nrhs,m_packed_matrix,m_lda,m_ipiv,u,
+                    m_lda,info);     
+                ASSERTL0(info==0, "matrix did not solve");
+                break;
+            }
+        }
+
         // declare the memory of _packed_matrix depending upon its definition
         void StdMatContainer::SetMemPackedMatrix()
         {
@@ -452,282 +489,6 @@ namespace Nektar
             }
         }
 
-        /** 
-        \brief Set up information about matrix form. 
-
-        The default is a symmetric positive definite matrix  or rank E->_ncoeffs
-
-        **/
-        void StdMatContainer::SetInvInfo(StdExpansion *E, const MatrixType  Mform)
-        {
-            SetLda(E->GetNcoeffs());
-            SetMatForm(eSymmetric_Positive);
-
-            if(E->GeoFacType() == eRegular)
-            {
-                switch(Mform)
-                {
-                case eMassMatrix:
-                    {
-                        // default setting  for this matrix 
-                        SetMatForm(eSymmetric_Positive);
-
-                        switch(E->DetShapeType())
-                        {
-                        case eSegment:
-                            {
-                                switch(m_base[0]->GetBasisType())
-                                {
-                                case eOrtho_A: case eLegendre: 
-                                    if(m_base[0]->ExactIprodInt()) // diagonal matrix 
-                                    {
-                                        SetMatForm(eSymmetric_Positive_Banded);
-                                        SetBwidth(1);
-                                    }	
-                                    break;
-                                case eModified_A:
-                                    // Banded matrix. Note only makes sense to use banded storage
-                                    // when rank > 2*bandwidth-1
-                                    if((m_base[0]->ExactIprodInt())&&(m_base[0]->GetBasisOrder()>7))
-                                    { 
-                                        SetMatForm(eSymmetric_Positive_Banded);
-                                        SetBwidth(4);
-                                    }  
-                                    break;
-                                case eFourier:
-                                    SetMatForm(eSymmetric_Positive_Banded);
-                                    SetBwidth(1);
-                                    break;	
-                                case eGLL_Lagrange:
-                                    // diagonal matrix 
-                                    if(m_base[0]->GetPointsOrder() == m_base[0]->GetBasisOrder()) 
-                                    {
-                                        SetMatForm(eSymmetric_Positive_Banded);
-                                        SetBwidth(1);
-                                    }
-                                    break;
-                                default:
-                                    break;
-                                }
-                                break;
-                            }
-                        case eTriangle:
-                            {
-                                if((m_base[0]->ExactIprodInt())&&(m_base[1]->ExactIprodInt()))
-                                {
-                                    switch(m_base[0]->GetBasisType())
-                                    {
-                                    case eOrtho_A: case eLegendre:
-                                        switch(m_base[1]->GetBasisType())
-                                        {
-                                        case eOrtho_B:
-                                            SetMatForm(eSymmetric_Positive_Banded);
-                                            SetBwidth(1);
-                                            break;
-                                        case eModified_B:
-                                            if(E->GetNcoeffs() > 2*m_base[1]->GetBasisOrder())
-                                            {
-                                                SetMatForm(eSymmetric_Positive_Banded);	
-                                                SetBwidth(m_base[1]->GetBasisOrder());      
-                                            }
-                                            break;
-                                        }
-                                    case eModified_A:
-                                        {
-                                            int bwidth = 4*m_base[1]->GetBasisOrder() - 6; 
-                                            if(E->GetNcoeffs() > 2*bwidth)
-                                            {
-                                                SetMatForm(eSymmetric_Positive_Banded);
-                                                SetBwidth(bwidth);
-                                            }
-                                        }
-                                        break;
-                                    }
-                                    break;
-                                }
-                            }
-                        case eQuadrilateral:
-                            {
-                                switch(m_base[1]->GetBasisType())
-                                {
-                                case eOrtho_A: case eLegendre:
-                                    if(m_base[1]->ExactIprodInt())
-                                    {
-                                        goto eQuadOrtho1;
-                                    }
-                                    break;
-                                case eGLL_Lagrange:
-                                    if(m_base[1]->Collocation())
-                                    {
-                                        goto eQuadOrtho1;
-                                    }
-                                    break;
-                                case eFourier:
-                                    goto eQuadOrtho1;
-                                    break;
-                                default:
-                                    SetMatForm(eSymmetric_Positive_Banded);
-                                    SetBwidth(m_base[0]->GetBasisOrder()*m_base[1]->GetBasisOrder());
-                                    break;
-eQuadOrtho1:
-                                    {
-                                        switch(m_base[0]->GetBasisType())
-                                        {
-                                        case eOrtho_A: case eLegendre:
-                                            if(m_base[0]->ExactIprodInt())
-                                            {
-                                                goto eQuadOrtho2;
-                                            }
-                                            break;
-                                        case eGLL_Lagrange:
-                                            if(m_base[0]->Collocation())
-                                            {
-                                                goto eQuadOrtho2;
-                                            }
-                                            break;
-                                        case eFourier:
-                                            goto eQuadOrtho2;
-                                            break;
-                                        default:
-                                            SetMatForm(eSymmetric_Positive_Banded);
-                                            SetBwidth(m_base[0]->GetBasisOrder());
-                                            break;
-eQuadOrtho2:
-                                            {
-                                                SetMatForm(eSymmetric_Positive_Banded);
-                                                SetBwidth(1);
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }	    
-                        case eTetrahedron:
-                            {
-                            }
-                            break;
-                        case ePyramid:
-                            ASSERTL0(false, "Pyramid needs defining");
-                            break;
-                        case ePrism:
-                            break;
-                        case eHexahedron:
-
-                            switch(m_base[2]->GetBasisType())
-                            {
-                            case eOrtho_A: case eLegendre:
-                                if(m_base[2]->ExactIprodInt())
-                                {
-                                    goto eHexOrtho1;
-                                }
-                                break;
-                            case eGLL_Lagrange:
-                                if(m_base[1]->Collocation())
-                                {
-                                    goto eHexOrtho1;
-                                }
-                                break;
-                            case eFourier:
-                                goto eHexOrtho1;
-                                break;
-eHexOrtho1:
-                                {
-                                    switch(m_base[1]->GetBasisType())
-                                    {
-                                    case eOrtho_A: case eLegendre:
-                                        if(m_base[1]->ExactIprodInt())
-                                        {
-                                            goto eHexOrtho2;
-                                        }
-                                        break;
-                                    case eGLL_Lagrange:
-                                        if(m_base[1]->Collocation())
-                                        {
-                                            goto eHexOrtho2;
-                                        }
-                                        break;
-                                    case eFourier:
-                                        goto eHexOrtho2;
-                                        break;
-                                    default:
-                                        SetMatForm(eSymmetric_Positive_Banded);
-                                        SetBwidth(m_base[0]->GetBasisOrder()*m_base[1]->GetBasisOrder());
-                                        break;
-eHexOrtho2:
-                                        {
-                                            switch(m_base[0]->GetBasisType())
-                                            {
-                                            case eOrtho_A: case eLegendre:
-                                                if(m_base[0]->ExactIprodInt())
-                                                {
-                                                    goto eHexOrtho3;
-                                                }
-                                                break;
-                                            case eGLL_Lagrange:
-                                                if(m_base[0]->Collocation())
-                                                {
-                                                    goto eHexOrtho3;
-                                                }
-                                                break;
-                                            case eFourier:
-                                                goto eHexOrtho3;
-                                                break;
-                                            default:
-                                                SetMatForm(eSymmetric_Positive_Banded);
-                                                SetBwidth(m_base[0]->GetBasisOrder());
-                                                break;
-eHexOrtho3:
-                                                {
-                                                    SetMatForm(eSymmetric_Positive_Banded);
-                                                    SetBwidth(1);
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            break;
-                        default:
-                            ASSERTL0(false, "ShapeType unknown");
-                            break;
-                        }
-                    }
-                    break;
-
-                case eLapMatrix:
-                    SetMatForm(eSymmetric);	
-
-                    switch(E->DetShapeType())
-                    {
-                    case eSegment:
-                        break;
-                    case eTriangle:
-                        break;
-                    case eQuadrilateral:
-                        break;
-                    case eTetrahedron:
-                        break;
-                    case ePyramid:
-                        ASSERTL0(false, "Pyramid needs defining");
-                        break;
-                    case ePrism:
-                        break;
-                    case eHexahedron:
-                        break;
-                    default:
-                        ASSERTL0(false, "ShapeType unknown");
-                        break;
-                    }
-                case eNBasisTrans:
-                    SetMatForm(eGeneral_Full);	
-                    break;
-                default:
-                    ASSERTL0(false, "MatrixType not known");
-                    break;
-                }
-            }
-        }  
 
         /** 
         Get the Local mass matrix \f$ \bf M\f$ given a standard
@@ -754,19 +515,19 @@ eHexOrtho3:
                 StdMatContainer * tmp = new StdMatContainer(E,outarray);
 
                 // set up how matrix should be inverted 
-                tmp->SetInvInfo(E,eMassMatrix);
+		E->SetInvInfo(tmp,eMassMatrix);
 
                 m_local_mass.push_back(tmp);
                 m_local_mass_cur = (--m_local_mass.end());
-
+		
                 M = tmp; 
             }
-
+	    
             return M;
         }
 
         /**   
-        Get the Local Laplacian matrix \f$ L\f$ given a standard
+	      Get the Local Laplacian matrix \f$ L\f$ given a standard
         expansion E
         */
         StdMatContainer * StdMatrix::GetLocalLap(StdExpansion * E)
@@ -789,7 +550,7 @@ eHexOrtho3:
                 StdMatContainer * tmp = new StdMatContainer(E,outarray);
 
                 // set up how matrix should be inverted 
-                tmp->SetInvInfo(E,eLapMatrix);
+		E->SetInvInfo(tmp,eLapMatrix);
 
                 m_local_lap.push_back(tmp);
                 m_local_lap_cur = (--m_local_lap.end());
@@ -807,9 +568,9 @@ eHexOrtho3:
         {
             std::vector<StdMatContainer*>::iterator def;
             StdMatContainer *M;       
-
+	    
             def = find(m_nbasis_trans.begin(),m_nbasis_trans.end(),
-                m_nbasis_trans_cur,*E);
+		       m_nbasis_trans_cur,*E);
 
             if(def != m_nbasis_trans.end())
             {
@@ -823,7 +584,7 @@ eHexOrtho3:
 
                 StdMatContainer * tmp = new StdMatContainer(E,outarray);
                 // set up how matrix should be inverted 
-                tmp->SetInvInfo(E,eNBasisTrans);
+		E->SetInvInfo(tmp,eNBasisTrans);
 
                 m_nbasis_trans.push_back(tmp);
                 m_nbasis_trans_cur = (--m_nbasis_trans.end());
@@ -982,6 +743,10 @@ eHexOrtho3:
 
 /** 
 * $Log: StdMatrix.cpp,v $
+* Revision 1.5  2006/07/02 17:16:18  sherwin
+*
+* Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+*
 * Revision 1.4  2006/06/06 15:25:21  jfrazier
 * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
 * NEKERROR.

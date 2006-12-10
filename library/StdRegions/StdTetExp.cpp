@@ -38,16 +38,41 @@
 
 namespace Nektar
 {
-  namespace StdRegions
-  {
+    namespace StdRegions
+    {
 
-    StdMatrix StdTetExp::s_elmtmats;
-  
-  }//end namespace
+	StdMatrix StdTetExp::s_elmtmats;
+	
+	void StdTetExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+	{
+	    mat->SetLda(m_ncoeffs);
+	    mat->SetMatForm(eSymmetric_Positive);
+      
+	    if(GeoFacType() == eRegular)
+	    {
+		switch(Mform)
+		{
+		case eMassMatrix: // definitions need adding 
+		    mat->SetMatForm(eSymmetric);	
+		    break;
+		case eLapMatrix:
+		    mat->SetMatForm(eSymmetric);	
+		    break;
+		default:
+		    ASSERTL0(false, "MatrixType not known");
+		    break;
+	    
+		}
+	    }
+	}
+      }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.1  2006/05/04 18:58:33  kirby
+ * *** empty log message ***
+ *
  * Revision 1.7  2006/03/06 17:12:46  sherwin
  *
  * Updated to properly execute all current StdRegions Demos.

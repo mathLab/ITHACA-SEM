@@ -127,6 +127,8 @@ namespace Nektar
 				   const EdgeOrientation eorient, 
 				   StdExpMap &Map);
 	    
+	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
+
 	    const int GetEdgeNcoeffs( int i)
 	    {
 		ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
@@ -276,6 +278,12 @@ namespace Nektar
 	    {
 		MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
 	    }
+
+	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+	    {
+		SetInvInfo(mat,Mform);
+	    }
+
         };
 
     } //end of namespace
@@ -285,6 +293,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.5  2006/08/05 19:03:48  sherwin
+* Update to make the multiregions 2D expansion in connected regions work
+*
 * Revision 1.4  2006/07/02 17:16:18  sherwin
 *
 * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

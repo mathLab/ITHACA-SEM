@@ -43,13 +43,31 @@ namespace Nektar
         StdMatrix StdNodalTriExp::s_elmtmats;
 
         StdNodalTriExp::StdNodalTriExp(const BasisKey &Ba, const BasisKey &Bb, 
-            NodalBasisType Ntype):
-        StdTriExp(Ba,Bb)
+				       NodalBasisType Ntype):
+	    StdTriExp(Ba,Bb)
         {
             m_nbtype = Ntype;
 
             ASSERTL0(m_base[0]->GetBasisOrder() == m_base[1]->GetBasisOrder(),
-                "Nodal basis initiated with different orders in the a and b directions");
+                "Nodal basis initiated with different orders in the a "
+		     "and b directions");
+        }
+
+        StdNodalTriExp::StdNodalTriExp(const BasisKey &Ba,  const BasisKey &Bb,
+		       NodalBasisType Ntype, double *coeffs,  double *phys):
+	    StdTriExp(Ba,Bb,coeffs,phys)
+        {    
+	    m_nbtype = Ntype;
+
+            ASSERTL0(m_base[0]->GetBasisOrder() == m_base[1]->GetBasisOrder(),
+		     "Nodal basis initiated with different "
+		     "orders in the a and b directions");
+        }
+	
+        StdNodalTriExp::StdNodalTriExp(const StdNodalTriExp &T):
+	    StdTriExp(T)
+        {
+	    m_nbtype = T.m_nbtype;
         }
 
         // Destructor
@@ -88,11 +106,32 @@ namespace Nektar
 
         void StdNodalTriExp::NodalToModal()
         {
+            NodalToModal(m_coeffs); 
+        }
+
+        void StdNodalTriExp::NodalToModal(double *in_out_array)
+        {
             StdMatContainer *M;
 
             M = GetNBasisTransMatrix();
-            M->Solve(m_coeffs,1);
+            M->Solve(in_out_array,1);
         }
+
+
+        void StdNodalTriExp::NodalToModalTranspose()
+        {
+            NodalToModal(m_coeffs); 
+        }
+
+	// Operate with transpose of NodalToModal transformation
+        void StdNodalTriExp::NodalToModalTranspose(double *in_out_array)
+        {
+            StdMatContainer *M;
+
+            M = GetNBasisTransMatrix();
+            M->SolveTranspose(in_out_array,1);
+        }
+
 
         StdMatContainer * StdNodalTriExp::GetNBasisTransMatrix() 
         {
@@ -103,10 +142,14 @@ namespace Nektar
 
         void StdNodalTriExp::ModalToNodal()
         {
-            StdMatContainer *M;
+	    ModalToNodal(m_coeffs);
+        }
 
+        void StdNodalTriExp::ModalToNodal(double *in_out_array)
+        {
+            StdMatContainer *M;
             M = GetNBasisTransMatrix();
-            M->Mxv(m_coeffs,m_coeffs);
+            M->Mxv(in_out_array,in_out_array);
         }
 
 
@@ -136,10 +179,10 @@ namespace Nektar
         {
             // Take inner product with respect to Orthgonal basis using
             // StdTri routine
+
             StdTriExp::IProductWRTBase(base0,base1,inarray,outarray);
 
-            // Transform to Nodal Expansion
-            ModalToNodal();
+	    NodalToModalTranspose(outarray);
         }
 
 
@@ -155,27 +198,7 @@ namespace Nektar
             Vmath::Zero(m_ncoeffs,m_coeffs,1);
 
             m_coeffs[mode] = 1.0;
-            NodalToModal();
-
-            StdTriExp::BwdTrans(outarray);
-        }
-
-        void StdNodalTriExp::GenMassMatrix(double * outarray)
-        {
-            int      i;
-            BstShrDArray tmp = GetDoubleTmpSpace(GetPointsOrder(0)*
-                GetPointsOrder(1));
-
-            for(i = 0; i < m_ncoeffs; ++i)
-            {
-                FillMode(i,tmp.get());
-                IProductWRTBase(tmp.get(),outarray+i*m_ncoeffs);
-            }
-        }
-
-        void StdNodalTriExp::GenLapMatrix(double * outarray)
-        {
-            ASSERTL0(false, "Not implemented");
+	    BwdTrans(outarray);
         }
 
         StdMatContainer * StdNodalTriExp::GetMassMatrix() 
@@ -211,30 +234,143 @@ namespace Nektar
 
         void StdNodalTriExp::BwdTrans(double * outarray)
         {
-            double *tmp = new double[m_ncoeffs];
+            BstShrDArray tmp  = GetDoubleTmpSpace(m_ncoeffs);
 
             // save nodal values
-            Blas::Dcopy(m_ncoeffs,m_coeffs,1,tmp,1);
+            Blas::Dcopy(m_ncoeffs,m_coeffs,1,tmp.get(),1);
             NodalToModal();
             StdTriExp::BwdTrans(outarray);
-            Blas::Dcopy(m_ncoeffs,tmp,1,m_coeffs,1);
+            Blas::Dcopy(m_ncoeffs,tmp.get(),1,m_coeffs,1);
         }
 
         void StdNodalTriExp::FwdTrans(const double * inarray)
         {
-            StdTriExp::FwdTrans(inarray);
-            ModalToNodal();
+            StdMatContainer *M;
+	    
+            IProductWRTBase(inarray,m_coeffs);
+            M = GetMassMatrix();
+	    M->ShowMatrixStructure(stdout);
+            M->Solve(m_coeffs,1);
         }
 
         double StdNodalTriExp::Evaluate(const double * coords)
         {
             return StdTriExp::Evaluate(coords);
         }
+
+
+        void  StdNodalTriExp::MapTo(const int edge_ncoeffs, 
+				    const BasisType Btype,
+				    const int eid, 
+				    const EdgeOrientation eorient, 
+				    StdExpMap &Map)
+        {
+	    
+            int i;
+            int *dir, order0,order1;
+            BstShrIArray wsp; 
+
+            ASSERTL2(eid>=0&&eid<=2,"eid must be between 0 and 2");
+
+            ASSERTL2(Btype == m_base[0]->GetBasisType(),
+                "Expansion type of edge and StdQuadExp are different");
+
+            // make sure have correct memory storage
+            if(edge_ncoeffs != Map.GetLen())
+            {
+                Map.SetMapMemory(edge_ncoeffs);
+            }
+
+            order0 = m_base[0]->GetBasisOrder();
+            order1 = m_base[1]->GetBasisOrder();
+
+            wsp = GetIntTmpSpace(edge_ncoeffs);
+            dir = wsp.get(); 
+
+            if(eorient == eForwards)
+            {
+                for(i = 0; i < edge_ncoeffs; ++i)
+                {
+                    dir[i] = i;
+                }
+            }
+            else
+            {
+                dir[1] = 0; 
+                dir[0] = 1;
+		
+                for(i = 2; i < edge_ncoeffs; ++i)
+                {
+                    dir[i] = i;
+                }
+            }
+
+            // Set up Mapping details
+            switch (eid)
+            {
+            case 0:
+		{
+                    int cnt = 0;
+		    
+                    for(i = 0; i < edge_ncoeffs; cnt+=order1-i, ++i)
+                    {
+                        Map[dir[i]] = cnt; 
+                    }
+                }
+                break;
+            case 1:
+                Map[dir[0]] = order1;
+                Map[dir[1]] = 1;
+		
+                for(i = 2; i < edge_ncoeffs; ++i)
+                {
+                    Map[dir[i]] = order1+i-1; 
+                }
+                break;
+            case 2:
+                for(i = 0; i < edge_ncoeffs; ++i)
+                {
+                    Map[dir[i]] = i; 
+                }
+                break;
+            }
+        }
+	
+	void StdNodalTriExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+	{
+	    mat->SetLda(m_ncoeffs);
+	    mat->SetMatForm(eSymmetric_Positive);
+	    
+	    if(GeoFacType() == eRegular)
+	    {
+		switch(Mform)
+		{
+		case eMassMatrix:
+		    // Nothing additional to be done 
+		    break;
+		case eLapMatrix:
+		    mat->SetMatForm(eSymmetric);	
+		    break;
+                case eNBasisTrans:
+                    mat->SetMatForm(eGeneral_Full);	
+                    break;
+		default:
+		    ASSERTL0(false, "MatrixType not known");
+		    break;
+		    
+		}
+	    }
+	}
+	
     } // end of namespace
 } // end of namespace
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.3  2006/06/06 15:25:21  jfrazier
+* Removed unreferenced variables and replaced ASSERTL0(false, ....) with
+* NEKERROR.
+*
 * Revision 1.2  2006/06/01 14:46:16  kirby
 * *** empty log message ***
 *

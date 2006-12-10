@@ -455,7 +455,69 @@ namespace Nektar
     default:
       ASSERTL0(0,"Mapping not defined for this expansion");
     }
-    
+  }    
+  
+  void StdSegExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+  {
+      mat->SetLda(m_ncoeffs);
+      mat->SetMatForm(eSymmetric_Positive);
+      
+      if(GeoFacType() == eRegular)
+      {
+	  switch(Mform)
+	  {
+	  case eMassMatrix:
+	    {
+		// default setting  for this matrix 
+		mat->SetMatForm(eSymmetric_Positive);
+		
+		switch(m_base[0]->GetBasisType())
+		{
+		case eOrtho_A: case eLegendre: 
+		if(m_base[0]->ExactIprodInt()) // diagonal matrix 
+		{
+		    mat->SetMatForm(eSymmetric_Positive_Banded);
+		    mat->SetBwidth(1);
+		}	
+		break;
+		case eModified_A:
+		    // Banded matrix. Note only makes sense to use banded storage
+		    // when rank > 2*bandwidth-1
+		    if((m_base[0]->ExactIprodInt())&&(m_base[0]->GetBasisOrder()>7))
+		    { 
+			mat->SetMatForm(eSymmetric_Positive_Banded);
+			mat->SetBwidth(4);
+		    }  
+		    break;
+		case eFourier:
+		    mat->SetMatForm(eSymmetric_Positive_Banded);
+		    mat->SetBwidth(1);
+		    break;	
+		case eGLL_Lagrange:
+		    // diagonal matrix 
+		    if(m_base[0]->GetPointsOrder() == m_base[0]->GetBasisOrder()) 
+		    {
+			mat->SetMatForm(eSymmetric_Positive_Banded);
+			mat->SetBwidth(1);
+		    }
+		    break;
+		default:
+		    break;
+		}
+		break;
+	    case eLapMatrix:
+		mat->SetMatForm(eSymmetric);	
+		
+		break;
+	    default:
+		ASSERTL0(false, "MatrixType not known");
+                   break;
+	    
+	    }
+	    
+	    
+	    }
+	}
   }
   
   /** \brief Define an integer mapping vector to map to different types
@@ -468,6 +530,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.5  2006/08/16 23:34:42  jfrazier
+ * *** empty log message ***
+ *
  * Revision 1.4  2006/08/05 19:03:48  sherwin
  * Update to make the multiregions 2D expansion in connected regions work
  *

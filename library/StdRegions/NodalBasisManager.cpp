@@ -120,9 +120,12 @@ namespace Nektar
 
         }//end destructor
 
-
-        int NodalBasisManager::GetNodePoints(NodalBasisType ntype, const int order, 
-            const double* &x, const double* &y, const double* &z)
+	
+        int NodalBasisManager::GetNodePoints(NodalBasisType ntype, 
+					     const int order, 
+					     const double* &x, 
+					     const double* &y, 
+					     const double* &z)
         {
             std::vector<BaryNodeContainer*>::iterator def;
             BaryNodeContainer key;
@@ -154,7 +157,8 @@ namespace Nektar
                 y = def[0]->m_xi[1];
                 z = def[0]->m_xi[2];
             }
-            else{
+            else
+	    {
                 ASSERTL0(false, "Nodal order requested which is not available");
             }
 
@@ -456,6 +460,9 @@ namespace Nektar
 
 /** 
 * $Log: NodalBasisManager.cpp,v $
+* Revision 1.6  2006/09/28 20:33:53  kirby
+* *** empty log message ***
+*
 * Revision 1.5  2006/09/10 02:22:32  kirby
 * *** empty log message ***
 *

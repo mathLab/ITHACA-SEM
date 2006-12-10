@@ -52,7 +52,6 @@ namespace Nektar
     namespace StdRegions
     {
 
-
         class StdMatContainer;
 	class StdSegExp;
 
@@ -84,7 +83,7 @@ namespace Nektar
             StdExpansion(const StdExpansion &T);
 
             /// Destructor
-            ~StdExpansion();
+            virtual ~StdExpansion();
 
             // Standard Expansion Routines Applicable Regardless of Region
 
@@ -343,6 +342,11 @@ namespace Nektar
                 v_WriteToFile(outfile);
             }
 
+            void WriteToFile(std::ofstream &outfile)
+            {
+                v_WriteToFile(outfile);
+            }
+
             void WriteToFile(std::ofstream &outfile, const int dumpVar)
             {
                 v_WriteToFile(outfile,dumpVar);
@@ -418,6 +422,13 @@ namespace Nektar
                 v_Deriv (dim, inarray, outarray);
             }
 
+
+
+	    void SetInvInfo(StdMatContainer *mat, const MatrixType Mform)
+	    {
+		v_SetInvInfo(mat,Mform);
+	    }
+	    
 
             // Overloaded Operators
             friend bool operator == (const StdExpansion &x,const StdMatContainer *y);
@@ -607,17 +618,17 @@ namespace Nektar
 	    
             virtual void v_WriteToFile(FILE *outfile)
             {
-                NEKERROR(ErrorUtil::efatal, "Write method");
+                NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
             }
 
             virtual void v_WriteToFile(std::ofstream &outfile)
             {
-                NEKERROR(ErrorUtil::efatal, "Write method");
+                NEKERROR(ErrorUtil::efatal, "WriteToFile:Write method");
             }
 
 	    virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
             {
-                NEKERROR(ErrorUtil::efatal, "Write method");
+                NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
             }
 
             virtual GeomType v_GeoFacType()
@@ -637,6 +648,11 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             }
+
+	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+	    {
+		NEKERROR(ErrorUtil::efatal,"SetInvInfo not set for this expansion type");
+	    }
         };
 
 	typedef boost::shared_ptr<StdExpansion> StdExpansionSharedPtr;
@@ -649,6 +665,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.8  2006/08/05 19:03:48  sherwin
+* Update to make the multiregions 2D expansion in connected regions work
+*
 * Revision 1.7  2006/07/02 17:16:18  sherwin
 *
 * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

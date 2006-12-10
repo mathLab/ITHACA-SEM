@@ -77,8 +77,8 @@ int main(int argc, char *argv[]){
   
   if(( btype1_val <= 9)&&( btype2_val <= 9))
   {
-      btype1 =   (BasisType) 0;
-      btype2 =   (BasisType) 1;
+      btype1 =   (BasisType) btype1_val;
+      btype2 =   (BasisType) btype2_val;
   }
   else if(( btype1_val >=10)&&(btype2_val <= 11))
   {
@@ -211,6 +211,7 @@ int main(int argc, char *argv[]){
   break;
   }
 
+  Vmath::Fill(nq1*nq2,1.0,sol,1);
 
   //---------------------------------------------
   // Project onto Expansion 

@@ -87,10 +87,10 @@ main(int argc, char *argv[])
     // activate all modes
     for(k = 0; k < order; ++k)
     {
-      for(l = 0; l < order-k; ++l)
-      {
-	coeffs[i] += pow(xp[i],k)*pow(yp[i],l);
-      }
+	for(l = 0; l < order-k; ++l)
+	{
+	    coeffs[i] += pow(xp[i],k)*pow(yp[i],l);
+	}
     }
   }
 

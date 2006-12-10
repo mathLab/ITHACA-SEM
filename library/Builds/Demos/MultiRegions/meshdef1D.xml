@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
+<NEKTAR>
 <!-- Embed a 2-dimensional object in a 2-dimensional space -->
 <!-- DIM <= SPACE -->
 <!-- This provides a method of optimizing code for a 1-D curve embedded in 3-space. -->
-<MESH DIM="2" SPACE="2">
+<GEOMETRY DIM="2" SPACE="2">
 
     <!-- Definitions that can be used below in this file. -->
     <DEF>
@@ -51,5 +52,6 @@
         1 V[1] V[3] E[2]
         2 E[5] E[6] E[7]
     </COMPOSITE>
-</MESH>
+</GEOMETRY>
+</NEKTAR>
 

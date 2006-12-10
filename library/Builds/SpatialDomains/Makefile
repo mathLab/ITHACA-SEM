@@ -13,7 +13,7 @@ include ../Flags/${ARCH}.inc
 
 # These are the module names:
 
-ALL = GeoFac Geometry Geometry1D Geometry2D Geometry3D EdgeComponent	\
+ALL = Domain GeoFac Geometry Geometry1D Geometry2D Geometry3D EdgeComponent	\
 MeshComponents MeshGraph MeshGraph1D MeshGraph2D MeshGraph3D		\
 TriFaceComponent QuadFaceComponent InterfaceComponent SegGeom TriGeom	\
 QuadGeom HexGeom PrismGeom PyrGeom TetGeom

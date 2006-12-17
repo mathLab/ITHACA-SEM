@@ -153,7 +153,7 @@ namespace Nektar
             void NodalPointExpand3D(BaryNodeContainer * rc);
 
             /// Functions used to reorder points to a prescribed vertex/edge/interior ordering 
-            void NodalBasisManager::NodalPointReorder2d(BaryNodeContainer * rc);
+            void NodalPointReorder2d(BaryNodeContainer * rc);
 
             private:
             std::vector<BaryNodeContainer*> *m_nodecontainer;
@@ -166,6 +166,9 @@ namespace Nektar
 
 /**
  * $Log: NodalBasisManager.h,v $
+ * Revision 1.2  2006/09/10 02:20:52  kirby
+ * *** empty log message ***
+ *
  * Revision 1.1  2006/05/04 18:58:30  kirby
  * *** empty log message ***
  *

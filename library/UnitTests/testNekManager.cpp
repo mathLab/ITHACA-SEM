@@ -63,6 +63,15 @@ class Temp
         }
 };
 
+class GlobalCreator
+{
+    public:
+        double operator()(const int& key)
+        {
+            return key;
+        }
+};
+
 namespace Nektar
 {
    namespace UnitTests
@@ -71,7 +80,9 @@ namespace Nektar
        {
             typedef NekManager<int, double> ManagerType;
 
-            ManagerType manager;
+            /// TODO - See why I can't do GlobalCreator() directly in the constructor call.
+            GlobalCreator c;
+            ManagerType manager(c);
             int key = 10;
 
             // Registering a C function
@@ -79,21 +90,24 @@ namespace Nektar
 
             // Registering a static class method
             manager.RegisterCreator(20, Temp::create);
-
-            double value = manager.GetValue(key);
+            
+            double value = manager[key];
             BOOST_CHECK(value == 12.5);
 
-            value = manager.GetValue(20);
+            value = manager[20];
             BOOST_CHECK(value == 20.5);
             
-            manager.AddValue(17, -2.0);
-            BOOST_CHECK_EQUAL(manager.GetValue(17), -2.0);
+            manager[17] = -2.0;
+            BOOST_CHECK_EQUAL(manager[17], -2.0);
         }
    }
 }
 
 /**
    $Log: testNekManager.cpp,v $
+   Revision 1.3  2006/12/10 21:36:08  bnelson
+   *** empty log message ***
+
    Revision 1.2  2006/08/25 01:38:58  bnelson
    no message
 

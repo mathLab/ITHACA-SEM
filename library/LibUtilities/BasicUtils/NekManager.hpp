@@ -36,16 +36,9 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_MANAGER_HPP
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_MANAGER_HPP
 
-#include <utility>
-#include <vector>
 #include <algorithm>
 #include <map>
 
-#include <functional> // for bind1st
-#include <iostream>
-
-#include <boost/mem_fn.hpp>
-#include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/call_traits.hpp>
 
@@ -53,80 +46,77 @@
 
 using namespace std;
 
-template <typename keyT, typename valueT,
-    typename valueContainer = std::map<keyT, valueT>,
-    typename creatorContainer = std::map<keyT, boost::function<valueT (const keyT& key)> > >
+template<typename KeyType, typename ValueType>
+class NekManagerCreator
+{
+    public:
+        ValueType operator()(const KeyType& key)
+        {
+            return ValueType::Create(key);
+        }
+};
+
+template <typename KeyType, typename ValueType>
 class NekManager
 {
     public:
-        typedef boost::function<valueT (const keyT& key)> CreateFunc;
+        typedef boost::function<ValueType (const KeyType& key)> CreateFuncType;
+        typedef std::map<KeyType, ValueType> ValueContainer;
+        typedef std::map<KeyType, CreateFuncType> CreateFuncContainer;
+
 
         NekManager() :
-            m_Values(), 
-            m_CreateFuncs()
+            m_values(), 
+            m_globalCreateFunc(NekManagerCreator<KeyType, ValueType>()),
+            m_keySpecificCreateFuncs()
         {
         };
+
+        explicit NekManager(CreateFuncType f) :
+            m_values(),
+            m_globalCreateFunc(f),
+            m_keySpecificCreateFuncs()
+        {
+        }
         
         ~NekManager() {}
 	
-        void RegisterCreator(typename boost::call_traits<keyT>::const_reference key, 
-                             const CreateFunc& createFunc)
+        void RegisterCreator(typename boost::call_traits<KeyType>::const_reference key, 
+                             const CreateFuncType& createFunc)
         {
-            m_CreateFuncs[key] = createFunc;
+            m_keySpecificCreateFuncs[key] = createFunc;
         }
 
-        void AddValue(typename boost::call_traits<keyT>::const_reference key, 
-                      typename boost::call_traits<valueT>::const_reference value)
+        ValueType& operator[](typename boost::call_traits<KeyType>::const_reference key)
         {
-            typename valueContainer::iterator found = m_Values.find(key);
-            if( found == m_Values.end() )
-            {
-                m_Values[key] = value;
-            }
-            else
-            {
-                std::string errorMessage = "Adding an object for key " +
-                        boost::lexical_cast<std::string>(key) + 
-                        " to a NekManager, but a value for this key already exists.";
-
-                throw std::runtime_error(errorMessage);
-            }
-        }
-
-        typename boost::call_traits<valueT>::reference 
-        GetValue(typename boost::call_traits<keyT>::const_reference key)
-        {
-            typename valueContainer::iterator found = m_Values.find(key);
-            if( found == m_Values.end() )
-            {
-                // No object, create a new one.
-                typename creatorContainer::iterator keyFound = m_CreateFuncs.find(key);
-                if( keyFound != m_CreateFuncs.end() )
-                {
-                    valueT newObj = (*keyFound).second(key);
-                    m_Values[key] = newObj;
-                    return m_Values[key];
-                }
-                else
-                {
-                    std::string errorMessage = "Attempting to obtain an object for key " +
-                            boost::lexical_cast<std::string>(key) + 
-                            " in a NekManager but no create function has been registered";
-                    throw std::runtime_error(errorMessage);
-                }
-            }
-            else
+            typename ValueContainer::iterator found = m_values.find(key);
+            if( found != m_values.end() )
             {
                 return (*found).second;
             }
+            else
+            {
+                // No object, create a new one.
+                CreateFuncType f = m_globalCreateFunc;
+                typename CreateFuncContainer::iterator keyFound = m_keySpecificCreateFuncs.find(key);
+                if( keyFound != m_keySpecificCreateFuncs.end() )
+                {
+                    f = (*keyFound).second;
+                }
+
+                ValueType newObj = f(key);
+                m_values[key] = newObj;
+                return m_values[key];
+            }
         }
-
+        
     private:
-        NekManager(const NekManager<keyT, valueT, valueContainer, creatorContainer>& rhs);
-        NekManager<keyT, valueT, valueContainer, creatorContainer>& operator=(const NekManager<keyT, valueT, valueContainer, creatorContainer>& rhs);
+        NekManager(const NekManager<KeyType, ValueType>& rhs);
+        NekManager<KeyType, ValueType>& operator=(const NekManager<KeyType, ValueType>& rhs);
 
-        valueContainer m_Values;
-        creatorContainer m_CreateFuncs;
+        ValueContainer m_values;
+        CreateFuncType m_globalCreateFunc;
+        CreateFuncContainer m_keySpecificCreateFuncs;
 };
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_MANAGER_HPP

@@ -21,7 +21,7 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/testLinearSystem.h>
 #include <UnitTests/testNekLinAlgAlgorithms.h>
 
-//#include <UnitTests/testNekManager.h>
+#include <UnitTests/testNekManager.h>
 
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
@@ -66,7 +66,7 @@ test_suite* init_unit_test_suite( int, char* [] )
 //     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testSingleParameterConstruction), 0);
 
     // Unit tests for NekManager
-    //test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekManager), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekManager), 0);
 
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testConstantExpressions), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUnaryExpressions), 0);
@@ -76,6 +76,8 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixSomewhatComplicatedExpression), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixComplicatedExpression), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testTemporaryGenerationFromSingleLevelBinaryExpressions), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testExhaustiveSingleLevelBinaryExpressions), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testExhaustive2OpBinaryExpressions), 0);
 
 
     /// Linear system tests.
@@ -91,6 +93,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.18  2006/11/20 03:39:41  bnelson
+    Added Gram-Schmidt tests
+
     Revision 1.17  2006/11/18 17:18:46  bnelson
     Added L1, L2, and Infinity norm tests.
 

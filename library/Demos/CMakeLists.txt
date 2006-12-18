@@ -1,0 +1,2 @@
+
+SUBDIRS(LibUtilities StdRegions)

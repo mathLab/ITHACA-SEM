@@ -12,7 +12,6 @@ StdHexExp.cpp
 StdMatrix.cpp
 StdNodalTetExp.cpp
 StdNodalTriExp.cpp
-StdPoints.cpp
 StdPrismExp.cpp
 StdPyrExp.cpp
 StdQuadExp.cpp
@@ -55,5 +54,7 @@ ADD_NEKTAR_LIBRARY(StdRegions STATIC ${STD_REGIONS_SOURCES} ${STD_REGIONS_HEADER
 INSTALL_FILES(${NEKTAR_INCLUDE_DIR}/StdRegions FILES ${STD_REGIONS_HEADERS})
 
 
-
+TARGET_LINK_LIBRARIES(StdRegions
+        optimized LibUtilities debug LibUtilities-g
+        optimized ${BoostThreadName} debug ${BoostThreadDebugName})
 

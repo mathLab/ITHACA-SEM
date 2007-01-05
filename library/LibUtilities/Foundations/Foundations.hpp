@@ -77,11 +77,11 @@ namespace Nektar
         enum PointsIdentifier
         {
             eWildcard,                  //!< Indentifier to use when PointType is sufficient to uniquely specify things
-            eGaussChebyshevFirstKind,   //!< Gauss \f$ \alpha = -1/2, \beta = -1/2} \f$
-            eGaussChebyshevSecondKind,  //!< Gauss \f$ \alpha =  1/2, \beta =  1/2} \f$
-            eGaussLegendre,             //!< Gauss \f$ \alpha =    0, \beta =    0} \f$
-            eGaussAlpha0Beta1,          //!< Gauss \f$ \alpha =    0, \beta =    1} \f$
-            eGaussAlpha0Beta2,          //!< Gauss \f$ \alpha =    0, \beta =    2} \f$
+            eGaussChebyshevFirstKind,   //!< Gauss \f$ \alpha = -1/2, \beta = -1/2 \f$
+            eGaussChebyshevSecondKind,  //!< Gauss \f$ \alpha =  1/2, \beta =  1/2 \f$
+            eGaussLegendre,             //!< Gauss \f$ \alpha =    0, \beta =    0 \f$
+            eGaussAlpha0Beta1,          //!< Gauss \f$ \alpha =    0, \beta =    1 \f$
+            eGaussAlpha0Beta2,          //!< Gauss \f$ \alpha =    0, \beta =    2 \f$
             SIZE_PointsIdentifier       //!< Length of enum list
         };
 

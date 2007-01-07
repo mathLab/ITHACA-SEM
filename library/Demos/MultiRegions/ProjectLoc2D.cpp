@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
     double     *sol;
     int        coordim;
     double     **xc;
-    int        Tritype, Quadtype, order;
+    int        Tritype, Quadtype, order, Tri_input;
     NodalBasisType Tri_Nb;
     BasisType  Tri_btype1, Tri_btype2, Quad_btype;  
     
@@ -37,18 +37,19 @@ int main(int argc, char *argv[]){
 	fprintf(stderr,"Triangle options:\n");
 	fprintf(stderr,"\t Ortho_A, Ortho_B       = 1\n");
 	fprintf(stderr,"\t Modified_A, Modified_B = 2\n");
-	fprintf(stderr,"\t Nodal Fekete           = 3\n");
+	fprintf(stderr,"\t Nodal Elec             = 3\n");
+	fprintf(stderr,"\t Nodal Fekete           = 4\n");
 
 	fprintf(stderr,"Quadrilateral options:\n");
-	fprintf(stderr,"\t Ortho_A, Ortho_A       = 4\n");
-	fprintf(stderr,"\t Modified_A, Modified_A = 5\n");
-	fprintf(stderr,"\t Lagrange, Lagrange     = 6\n");
-	fprintf(stderr,"\t Chebyshev, Chebychev   = 7\n");
+	fprintf(stderr,"\t Ortho_A, Ortho_A       = 5\n");
+	fprintf(stderr,"\t Modified_A, Modified_A = 6\n");
+	fprintf(stderr,"\t Lagrange, Lagrange     = 7\n");
+	fprintf(stderr,"\t Chebyshev, Chebychev   = 8\n");
 	
 	exit(1);
     }
     
-    if(atoi(argv[1]) != 3)
+    if((Tri_input = atoi(argv[1]))  < 3)
     {
 	Tritype  = (StdRegions::BasisType) atoi(argv[1]);
 	Tri_Nb   = (StdRegions::NodalBasisType) NULL;
@@ -56,19 +57,26 @@ int main(int argc, char *argv[]){
     else
     {
 	Tritype  = (StdRegions::BasisType) 1;
-	Tri_Nb   = (StdRegions::NodalBasisType) 1;
+	if(Tri_input == 3)
+	{
+	    Tri_Nb   = (StdRegions::NodalBasisType) StdRegions::eNodalTriElec;
+	}
+	else
+	{
+	    Tri_Nb   = (StdRegions::NodalBasisType) StdRegions::eNodalTriFekete;
+	}
     }
 
     Quadtype  = (BasisType) atoi(argv[2]);
     order     = atoi(argv[3]);
     
-    if((Tritype < 1)||(Tritype > 3))
+    if((Tritype < 1)||(Tritype > 4))
     {
       ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		       "Illegal option for Tri_Type\n");
     }
 
-    if((Quadtype < 4)||(Quadtype > 7))
+    if((Quadtype < 5)||(Quadtype > 8))
     {
       ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		       "Illegal option for Quad_Type\n");
@@ -79,7 +87,7 @@ int main(int argc, char *argv[]){
     graph2D.Read(in);
     
     switch(Tritype){
-    case 1: case 3:
+    case 1: case 3: case 4:
 	Tri_btype1 = eOrtho_A;
 	Tri_btype2 = eOrtho_B;
 
@@ -91,16 +99,16 @@ int main(int argc, char *argv[]){
     }
     
     switch(Quadtype){
-    case 4:
+    case 5:
 	Quad_btype = eOrtho_A;
 	break;
-    case 5:
+    case 6:
 	Quad_btype = eModified_A;
 	break;
-    case 6:
+    case 7:
 	Quad_btype = eGLL_Lagrange;
 	break;
-    case 7:
+    case 8:
 	Quad_btype = eChebyshev;
 	break;
     }

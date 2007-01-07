@@ -32,9 +32,10 @@ int main(int argc, char *argv[])
 
   int           i,j,k,l;
   const         double *z1,*z2,*w;
-  int           order1,order2, nq1,nq2,NodalTri;
+  int           order1,order2, nq1,nq2,NodalTri = 0;
   PointsType    Qtype1,Qtype2;
   BasisType     btype1,btype2;
+  NodalBasisType NodalBtype;
   ShapeType     regionshape;
   StdExpansion2D *E;
   double        *sol, coords[8];
@@ -62,7 +63,8 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\t Lagrange   = 7\n");
     fprintf(stderr,"\t Legendre   = 8\n"); 
     fprintf(stderr,"\t Chebyshev  = 9\n");
-    fprintf(stderr,"\t Nodal Tri  = 10\n");
+    fprintf(stderr,"\t Nodal Elec = 10\n");
+    fprintf(stderr,"\t Nodal Feke = 11\n");
  
     fprintf(stderr,"Note type = 2,5 are for three-dimensional basis\n");
 
@@ -79,7 +81,7 @@ int main(int argc, char *argv[])
 		     "This shape is not a 2D region");
   }
 
-  if(atoi(argv[2]) != 10)
+  if(atoi(argv[2]) < 10)
   {
       btype1 = (BasisType) atoi(argv[2]);
       btype2 = (BasisType) atoi(argv[3]);
@@ -87,6 +89,14 @@ int main(int argc, char *argv[])
   else
   {
       NodalTri = 1;
+      if(atoi(argv[2]) == 10)
+      {
+	  NodalBtype = eNodalTriElec;
+      }
+      else
+      {
+	  NodalBtype = eNodalTriFekete;
+      }
   }
   
   order1 =   atoi(argv[4]);
@@ -203,7 +213,7 @@ int main(int argc, char *argv[])
 
       if(NodalTri)
       {
-	  E = new NodalTriExp(b1,b2,StdRegions::eNodalTriElec, geom);
+	  E = new NodalTriExp(b1,b2,NodalBtype,geom);
       }
       else
       {

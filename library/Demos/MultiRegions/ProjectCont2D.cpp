@@ -36,11 +36,12 @@ int main(int argc, char *argv[]){
 	
 	fprintf(stderr,"Triangle options:\n");
 	fprintf(stderr,"\t Modified_A, Modified_B = 1\n");
-	fprintf(stderr,"\t Nodal Fekete           = 2\n");
+	fprintf(stderr,"\t Nodal Elec             = 2\n");
+	fprintf(stderr,"\t Nodal Fekete           = 3\n");
 
 	fprintf(stderr,"Quadrilateral options:\n");
-	fprintf(stderr,"\t Modified_A, Modified_A = 3\n");
-	fprintf(stderr,"\t Lagrange, Lagrange     = 4\n");
+	fprintf(stderr,"\t Modified_A, Modified_A = 4\n");
+	fprintf(stderr,"\t Lagrange, Lagrange     = 5\n");
 	
 	exit(1);
     }
@@ -49,13 +50,13 @@ int main(int argc, char *argv[]){
     Quadtype  = (BasisType) atoi(argv[2]);
     order     = atoi(argv[3]);
     
-    if((Tritype < 1)||(Tritype > 2))
+    if((Tritype < 1)||(Tritype > 3))
     {
 	ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 			 "Illegal option for Tri_Type\n");
     }
     
-    if((Quadtype < 3)||(Quadtype > 4))
+    if((Quadtype < 4)||(Quadtype > 5))
     {
 	ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 			 "Illegal option for Quad_Type\n");
@@ -71,7 +72,13 @@ int main(int argc, char *argv[]){
 	Tri_btype1 = eModified_A;
 	Tri_btype2 = eModified_B;
 	Tri_Nb     = (StdRegions::NodalBasisType) NULL;
+	break;
     case 2:
+	Tri_btype1 = (StdRegions::BasisType) StdRegions::eOrtho_A;
+	Tri_btype2 = (StdRegions::BasisType) StdRegions::eOrtho_B;
+	Tri_Nb     = (StdRegions::NodalBasisType) StdRegions::eNodalTriElec;
+	break;
+    case 3:
 	Tri_btype1 = (StdRegions::BasisType) StdRegions::eOrtho_A;
 	Tri_btype2 = (StdRegions::BasisType) StdRegions::eOrtho_B;
 	Tri_Nb     = (StdRegions::NodalBasisType) StdRegions::eNodalTriFekete;
@@ -79,10 +86,10 @@ int main(int argc, char *argv[]){
     }
     
     switch(Quadtype){
-    case 3:
+    case 4:
 	Quad_btype = eModified_A;
 	break;
-    case 4:
+    case 5:
 	Quad_btype = eGLL_Lagrange;
 	break;
     }

@@ -194,7 +194,6 @@ namespace Nektar
             case eGeneral_Full:
                 m_ipiv = new int[m_lda];
                 Lapack::Dgetrf(m_lda,m_lda,m_packed_matrix,m_lda,m_ipiv,info);     
-		ShowMatrixStructure(stdout);
                 ASSERTL0(info==0, "matrix did not factor");
                 break;
             }
@@ -744,6 +743,9 @@ namespace Nektar
 
 /** 
 * $Log: StdMatrix.cpp,v $
+* Revision 1.7  2007/01/10 20:13:25  sherwin
+* Fixed bug in NodalPointReorder2D
+*
 * Revision 1.6  2006/12/10 19:00:54  sherwin
 * Modifications to handle nodal expansions
 *

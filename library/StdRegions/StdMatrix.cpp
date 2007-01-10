@@ -194,6 +194,7 @@ namespace Nektar
             case eGeneral_Full:
                 m_ipiv = new int[m_lda];
                 Lapack::Dgetrf(m_lda,m_lda,m_packed_matrix,m_lda,m_ipiv,info);     
+		ShowMatrixStructure(stdout);
                 ASSERTL0(info==0, "matrix did not factor");
                 break;
             }
@@ -636,7 +637,7 @@ namespace Nektar
                             fputc('*',out);
                     else
                         fputc('-',out);
-                }
+                } 
                 fputc('\n',out);
             }
             fputc('\n',out);
@@ -743,6 +744,9 @@ namespace Nektar
 
 /** 
 * $Log: StdMatrix.cpp,v $
+* Revision 1.6  2006/12/10 19:00:54  sherwin
+* Modifications to handle nodal expansions
+*
 * Revision 1.5  2006/07/02 17:16:18  sherwin
 *
 * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

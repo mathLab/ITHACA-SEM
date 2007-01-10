@@ -331,7 +331,7 @@ namespace Nektar
                         rc->m_xi[0][j] = tmpdouble;
 
                         tmpdouble = rc->m_xi[1][j+1];
-                        rc->m_xi[1][j+1] = rc->m_xi[0][j];
+                        rc->m_xi[1][j+1] = rc->m_xi[1][j];
                         rc->m_xi[1][j] = tmpdouble;
                     }
                 }
@@ -352,7 +352,7 @@ namespace Nektar
                         rc->m_xi[0][j] = tmpdouble;
 
                         tmpdouble = rc->m_xi[1][j+1];
-                        rc->m_xi[1][j+1] = rc->m_xi[0][j];
+                        rc->m_xi[1][j+1] = rc->m_xi[1][j];
                         rc->m_xi[1][j] = tmpdouble;
                     }
                 }
@@ -373,7 +373,7 @@ namespace Nektar
                         rc->m_xi[0][j] = tmpdouble;
 
                         tmpdouble = rc->m_xi[1][j+1];
-                        rc->m_xi[1][j+1] = rc->m_xi[0][j];
+                        rc->m_xi[1][j+1] = rc->m_xi[1][j];
                         rc->m_xi[1][j] = tmpdouble;
                     }
                 }
@@ -460,6 +460,9 @@ namespace Nektar
 
 /** 
 * $Log: NodalBasisManager.cpp,v $
+* Revision 1.7  2006/12/10 19:00:53  sherwin
+* Modifications to handle nodal expansions
+*
 * Revision 1.6  2006/09/28 20:33:53  kirby
 * *** empty log message ***
 *

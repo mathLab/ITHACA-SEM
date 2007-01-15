@@ -42,13 +42,13 @@ namespace Nektar
     namespace StdRegions
     {
 
-        /// define list of number of vertices corresponding to each ShapeType
+        /** define list of number of vertices corresponding to each ShapeType */
         const int g_shapenverts[SIZE_ShapeType] = {0,2,3,4,4,5,6,8};
 
-        /// define list of number of edges corresponding to each ShapeType
+        /** define list of number of edges corresponding to each ShapeType */
         const int g_shapenedges[SIZE_ShapeType] = {0,1,3,4,6,8,9,12};
 
-        /// define list of number of faces corresponding to each ShapeType
+        /** define list of number of faces corresponding to each ShapeType */
         const int g_shapenfaces[SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
 
         StdExpansion::StdExpansion(void): 
@@ -185,23 +185,6 @@ namespace Nektar
             }
         }
 
-        /// \brief Function to evaluate the discrete \f$ L_\infty\f$
-        /// error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
-        ///	u_{exact}\f$ is given by the array \a sol. 
-        ///
-        // 	The full function is defined in StdExpansion::Linf 
-        ///
-        ///	Input: 
-        ///
-        ///	- \a _phys: takes the physical value space array as
-        ///      approximate solution
-        ///
-        ///  - \a sol: array of solution function  at physical quadrature points
-        ///
-        ///      output: 
-        ///
-        ///      - returns the \f$ L_\infty \f$ error as a double. 
-
         double StdExpansion::Linf(const double *sol)
         {
             int     i,ntot = 1;
@@ -224,21 +207,6 @@ namespace Nektar
             return  val;
         }
 
-        /** \brief Function to evaluate the \f$ L_\infty \f$ norm of
-        the function defined at the physical points \a (this)->_phys. 
-
-        The full function is defined in StdExpansion::Linf 
-
-        Input: 
-
-        - \a _phys: uses the physical value space array as discrete
-        function to be evaulated.
-
-        output: 
-
-        - returns the \f$ L_\infty \f$  as a double. 
-        */
-
         double StdExpansion::Linf()
         {
             int  i,ntot = 1;
@@ -250,23 +218,6 @@ namespace Nektar
 
             return Vmath::Vamax(ntot,m_phys,1);    
         }
-
-        /** \brief Function to evaluate the \f$ L_2\f$, \f$ | \epsilon
-        |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2 dx \right]^{1/2}
-        d\xi_1 \f$ where \f$ u_{exact}\f$ is given by the array sol.
-
-        The full function is defined in StdExpansion::L2 
-
-        Input: 
-
-        - \a _phys: takes the physical value space array as
-        approximate solution
-        - \a sol: array of solution function  at physical quadrature points
-
-        output: 
-
-        - returns the \f$ L_2 \f$ error as a double. 
-        */
 
         double StdExpansion::L2(const double *sol)
         {
@@ -290,18 +241,6 @@ namespace Nektar
 
             return val;
         }
-
-
-        /// \brief Function to evaluate the \f$ L_2\f$ norm of the
-        ///  function defined at the physical points \a (this)->_phys.  
-        ///    
-        ///  The full function is defined in StdExpansion::L2 
-        ///
-        ///      
-        /// \param _phys: uses the physical value space array as discrete
-        ///    function to be evaulated.
-        ///    
-        ///  \return value of the \f$ L_2 \f$  as a double. 
 
         double StdExpansion::L2()
         {
@@ -393,6 +332,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.5  2006/12/10 19:00:54  sherwin
+* Modifications to handle nodal expansions
+*
 * Revision 1.4  2006/08/05 19:03:48  sherwin
 * Update to make the multiregions 2D expansion in connected regions work
 *

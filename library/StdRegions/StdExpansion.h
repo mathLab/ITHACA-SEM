@@ -61,58 +61,60 @@ namespace Nektar
         typedef const Basis* constbasis;
 
 
-        /// \brief The base class for all shapes
-        ///
-        /// This is the lowest level basic class for all shapes and so
-        /// contains the defintiion of common data and common routine to all
-        /// elements
-        ///
+        /** \brief The base class for all shapes
+	 *   
+         *  This is the lowest level basic class for all shapes and so
+         *  contains the defintiion of common data and common routine to all
+         *  elements
+         */
         class StdExpansion{
 
         public:
 
-            /// Default Constructor
+	    /** \brief Default Constructor */
             StdExpansion();
 	    
-            /// Constructor
+            /** \brief Constructor */
             StdExpansion(const int numbases, const BasisKey &Ba, const BasisKey &Bb,
                 const BasisKey &Bc, int numcoeffs, double *coeffs,
                 double *phys, bool spaceowner);
 
-            /// Copy Constructor
+            /** \brief Copy Constructor */
             StdExpansion(const StdExpansion &T);
 
-            /// Destructor
+            /** \brief Destructor */
             virtual ~StdExpansion();
 
             // Standard Expansion Routines Applicable Regardless of Region
 
-            ///  \brief Quadrature zeros and weights in direction dir
-            ///
-            ///  Get the quadrature zeros, <z>, and weights, <w>, of the
-            ///  quadrature points in the <dir> direction
-            ///
-            ///  \param dir direction of points and weights
-            ///  \param z   quadrature zeros
-            ///  \param w   quadrature weights
-            ///  \return provides the constant pointer to the zeros and weights
-            ///  in directions dir
+            /**  \brief Quadrature zeros and weights in direction \a dir
+	     * 
+             *    Get the quadrature zeros, \a z, and weights, \a w, of the
+	     *    quadrature points in the \a dir direction
+	     *
+	     *  \param dir direction of points and weights
+	     *  \param z   quadrature zeros
+	     *  \param w   quadrature weights
+	     *  \return provides the constant pointer to the zeros and weights
+	     *  in directions \a dir
+	     */
             inline void GetZW(int dir, const double * &z, const double * &w)
             {
                 ASSERTL1(dir <= m_numbases,"Base_id was larger than _numbasis");
                 BasisManagerSingleton::Instance().GetZW(m_base[dir], z, w);
             }
 
-            ///  \brief Quadrature zeros and weights in direction dir
-            ///
-            ///  Get the quadrature zeros, <z>, and weights, <w>, of the
-            ///  quadrature points using BasisKey <b>
-            ///
-            ///  \param <b> BasisKeycontaining zero quadrature information
-            ///  \param z   quadrature zeros
-            ///  \param w   quadrature weights
-            ///  \return provides the constant pointer to the zeros and weights
-            ///  associated with b
+            /**  \brief Quadrature zeros and weights in direction \a dir
+	     *
+	     *   Get the quadrature zeros, \a z, and weights, \a w, of the
+	     *   quadrature points using BasisKey \a b
+	     *
+	     *   \param b   BasisKeycontaining zero quadrature information
+	     *   \param z   quadrature zeros
+	     *   \param w   quadrature weights
+             *   \return provides the constant pointer to the zeros and weights
+	     *   associated with \a b
+	     */
             inline void GetZW(const BasisKey *b, const double * &z, 
                 const double * &w)
             {
@@ -131,53 +133,64 @@ namespace Nektar
 	    
 
 
-            /// Return the number of 1D basis used in expansion
+            /** \brief Return the number of 1D basis used in expansion */
             inline int GetNumBases() const
             {
                 return m_numbases;
             }
 
-            /// Return a double pointer to the basis in the \a dir direction
+            /** \brief Return a double pointer to the basis in the \a dir 
+	     *  direction 
+	     */
             inline const Basis * GetBasis(const int dir) const
             {
                 ASSERTL1(dir <= m_numbases,"Base_id was larger than _numbases");
                 return(m_base[dir]);
             }
 
-            /// Return the number of coefficient used in the total expansion
+            /** \brief Return the number of coefficient used in the total 
+	     *  expansion 
+	     */
             inline int GetNcoeffs(void)
             {
                 return(m_ncoeffs);
             }
 
-            /// Return the double pointer to the coefficient array \a _coeffs
+            /** \brief Return the double pointer to the coefficient array 
+	     *  \a m_coeffs 
+	     */
             inline double *GetCoeffs(void)
             {
                 return(m_coeffs);
             }
 
-            /// Set the coefficient array \a (this)._coeffs to the values
-            /// given by \a coeffs
+            /** \brief Set the coefficient array \a (this).m_coeffs to the values
+	     *  given by \a coeffs
+	     */
             inline void SetCoeffs(double *coeffs)
             {
                 Vmath::Vcopy(m_ncoeffs, coeffs, 1, m_coeffs, 1);
             }
 
-            /// Set the \a i th coefficient \a (this)._coeffs[i] to the values
-            /// given by \a coeff
+            /** \brief Set the \a i th coefficient \a (this).m_coeffs[i] to the
+	     *   values given by \a coeff
+	     */
             inline void SetCoeff(const int i, double coeff)
             {
                 m_coeffs[i] = coeff;
             }
 
-            /// Return the double pointer to the physical quarature points
-            /// array \a _phys
+            /** \brief Return the double pointer to the physical quarature points
+	     *  array \a m_phys
+	     */
             inline double * GetPhys(void)
             {
                 return(m_phys);
             }
 
-            /// Sets the value of _phys to the input argument *phys
+            /** \brief Sets the value of \a m_phys to the input argument 
+	     *  \a phys 
+	     */
             inline void  SetPhys(const double *phys)
             {
                 int nqtot = GetPointsTot();
@@ -199,32 +212,36 @@ namespace Nektar
                 return  nqtot;
             }
 
-            /// Return the basis type in the \a dir direction using the enum
-            /// BasisType list
+            /** Return the basis type in the \a dir direction using the enum
+	     *  BasisType list
+	     */
             inline BasisType GetBasisType(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisType());
             }
 
-            /// Return the expansion order of the 1D expansion in the \a dir
-            /// direction
+            /** Return the expansion order of the 1D expansion in the \a dir
+	     *  direction
+	     */
             inline int GetBasisOrder(const int dir) const
             {
                 ASSERTL1(dir < m_numbases,"dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisOrder());
             }
 
-            /// Return the quadrature type in the \a dir direction using the
-            /// enum PointType list
+            /** Return the quadrature type in the \a dir direction using the
+	     *  enum PointType list
+	     */
             inline PointsType GetPointsType(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(m_base[dir]->GetPointsType());
             }
 
-            ///  Return the number of quadrature points in the \a dir
-            ///  direction
+            /** Return the number of quadrature points in the \a dir
+	     *  direction
+	     */
             inline int GetPointsOrder(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
@@ -444,23 +461,51 @@ namespace Nektar
                 const double *from,   const BasisKey *tbasis0,
                 const BasisKey* tbasis1, double *to);
 
-
-            /// \brief Function to evaluate the \f$ L_\infty \f$ norm of
-            /// the function defined at the physical points \a (this)->_phys.
+            /** \brief Function to evaluate the discrete \f$ L_\infty\f$
+	     *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
+	     *	u_{exact}\f$ is given by the array \a sol. 
+	     *
+	     *	This function takes the physical value space array \a m_phys as
+	     *  approximate solution
+	     *
+	     *  \param sol array of solution function  at physical quadrature
+	     *  points
+	     *  \return returns the \f$ L_\infty \f$ error as a double. 
+	     */
             double Linf(const double *sol);
 
-            /// \brief Function to evaluate the discrete \f$ L_\infty\f$
-            /// error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
-            /// u_{exact}\f$ is given by the array \a sol.
+            /** \brief Function to evaluate the discrete \f$ L_\infty \f$ norm of
+	     *  the function defined at the physical points \a (this)->m_phys. 
+	     *
+	     *	This function takes the physical value space array \a m_phys as
+	     *  discrete function to be evaluated
+	     *
+	     *  \return returns the \f$ L_\infty \f$ norm as a double.
+	     */
             double Linf();
 
-            /// \brief Function to evaluate the \f$ L_2\f$, \f$ | \epsilon
-            /// |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2 dx \right]^{1/2}
-            /// d\xi_1 \f$ where \f$ u_{exact}\f$ is given by the array sol.
+            /** \brief Function to evaluate the discrete \f$ L_2\f$ error,
+	     *  \f$ | \epsilon |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2
+	     *  dx \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by 
+	     *  the array \a sol.
+	     *
+	     *	This function takes the physical value space array \a m_phys as
+	     *  approximate solution
+	     *
+	     *  \param sol array of solution function  at physical quadrature
+	     *  points
+	     *  \return returns the \f$ L_2 \f$ error as a double. 
+	     */
             double L2(const double *sol);
 
-            /// \brief Function to evaluate the \f$ L_2\f$ norm of the
-            ///   function defined at the physical points \a (this)->_phys.
+	    /** \brief Function to evaluate the discrete \f$ L_2\f$ norm of the
+	     *  function defined at the physical points \a (this)->m_phys.
+	     *
+	     *	This function takes the physical value space array \a m_phys as
+	     *  discrete function to be evaluated
+	     *
+	     *  \return returns the \f$ L_2 \f$ norm as a double
+	     */
             double L2();
 
             // I/O routines
@@ -468,20 +513,20 @@ namespace Nektar
 
         protected:
 
-            /// All Expansions share the same BasisManager
+            /** All Expansions share the same BasisManager */
             typedef Loki::SingletonHolder<BasisManager> BasisManagerSingleton;
 
-            int   m_numbases;   //!< Number of 1D basis defined in expansion
-            constbasis *m_base; //!< Bases needed for the expansion
-            /// Total number of coefficients used in the expansion
+            int   m_numbases;   /**< Number of 1D basis defined in expansion */
+            constbasis *m_base; /**< Bases needed for the expansion */
+            /** Total number of coefficients used in the expansion*/
             int  m_ncoeffs;
-            ///  Boolean indicating whether object owns the coeff array
+            /**  Boolean indicating whether object owns the coeff array */
             bool    m_owncoeffs;
-            double *m_coeffs;   //!< Array containing expansion coefficients
+            double *m_coeffs;   /**< Array containing expansion coefficients */
 
-            /// Boolean indicating whether object owns the phys array
+            /** Boolean indicating whether object owns the phys array */
             bool  m_ownphys;
-            /// Array containing expansion evaluated at the quad points
+            /** Array containing expansion evaluated at the quad points */
             double *m_phys;
 
         private:
@@ -665,6 +710,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.9  2006/12/10 19:00:54  sherwin
+* Modifications to handle nodal expansions
+*
 * Revision 1.8  2006/08/05 19:03:48  sherwin
 * Update to make the multiregions 2D expansion in connected regions work
 *

@@ -149,8 +149,6 @@ namespace Nektar
       double Evaluate(const double *coord);
 
     protected:
-      int m_id;
-      int m_field;
     
       SpatialDomains::SegGeomSharedPtr m_geom;
       MetricRelatedInfoSharedPtr       m_minfo;
@@ -363,6 +361,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.4  2006/06/13 18:05:01  sherwin
+// Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+//
 // Revision 1.3  2006/05/30 14:00:04  sherwin
 // Updates to make MultiRegions and its Demos work
 //

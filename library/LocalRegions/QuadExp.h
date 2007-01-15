@@ -161,9 +161,6 @@ namespace Nektar
         double Evaluate(const double *coord);
 
     protected:
-        int m_id;
-        int m_field;
-
         SpatialDomains::QuadGeomSharedPtr m_geom;
         MetricRelatedInfoSharedPtr  m_minfo;
 
@@ -326,6 +323,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.7  2006/06/13 18:05:01  sherwin
+ *    Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+ *
  *    Revision 1.6  2006/06/05 00:10:01  bnelson
  *    Fixed a gcc 4.1.0 compilation error (ClassName::method not allowed in class definition).
  *

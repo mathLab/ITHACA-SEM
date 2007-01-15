@@ -77,9 +77,6 @@ namespace Nektar
       }
 
     protected:
-      int m_id;
-      int m_field;
-
       SpatialDomains::PyrGeom * m_geom;
 
     private:
@@ -102,6 +99,9 @@ namespace Nektar
 
 /**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.4  2006/06/13 18:05:01  sherwin
+ *    Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+ *
  *    Revision 1.3  2006/06/05 00:09:22  bnelson
  *    Fixed a gcc 4.1.0 compilation warning with the #endif at the end of the file.
  *

@@ -167,9 +167,6 @@ namespace Nektar
         double Evaluate(const double *coord);
 
     protected:
-        int m_id;
-        int m_field;
-
         SpatialDomains::TriGeomSharedPtr m_geom;
         MetricRelatedInfoSharedPtr       m_minfo;
 
@@ -306,6 +303,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.8  2006/12/10 18:59:47  sherwin
+ *    Updates for Nodal points
+ *
  *    Revision 1.7  2006/06/13 18:05:01  sherwin
  *    Modifications to make MultiRegions demo ProjectLoc2D execute properly.
  *

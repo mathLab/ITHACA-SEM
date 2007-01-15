@@ -74,9 +74,6 @@ namespace Nektar
       }
     
     protected:
-      int m_id;
-      int m_field;
-      
       SpatialDomains::HexGeom * m_geom;
 
     private:
@@ -100,6 +97,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.4  2006/06/13 18:05:01  sherwin
+ *    Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+ *
  *    Revision 1.3  2006/06/01 13:42:07  kirby
  *    *** empty log message ***
  *

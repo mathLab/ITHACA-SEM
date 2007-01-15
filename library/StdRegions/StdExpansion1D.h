@@ -60,7 +60,8 @@ namespace Nektar
 
             void GetCoords1D(double **coords);
 
-            //wrapper call to GetCoords of given expansion,i.e. StdSegExp or SegExp
+            // wrapper call to GetCoords of given expansion,i.e. StdSegExp or
+	    // SegExp
             void GetCoords(double **coords)
             {
                 v_GetCoords(coords);
@@ -72,7 +73,32 @@ namespace Nektar
                 return 1; 
 	    }
 
+	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical
+	     *  quadrature points in the expansion (i.e. \a (this)->m_phys)
+	     *  and return in \a outarray. 
+	     *
+	     *  This is a wrapper function around
+	     *  StdSegExp::Tensor_Deriv(inarray,outarray)
+	     *
+	     *	This function takes the physical value space array \a m_phys as
+	     *  discrete function to be evaluated
+	     *
+	     *  \param outarray the resulting array of the derivative \f$
+	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
+	     *  \a outarray as output of the function
+	     */
             void TensorDeriv(double * outarray);
+
+	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
+	     *  physical quadrature points given by \a inarray and return in
+	     *  \a outarray.
+	     *
+	     *  \param inarray array of a function evaluated at the quadrature
+	     *  points
+	     *  \param outarray the resulting array of the derivative \f$
+	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
+	     *  \a outarray as output of the function
+	     */
             void TensorDeriv(const double *inarray, double * outarray);
 
             void Deriv  (double *outarray) 
@@ -96,8 +122,9 @@ namespace Nektar
             }
 
             /** \brief Evaluate a function at points coords which is assumed
-            to be in local collapsed coordinate format. The function is
-            assumed to be in physical space */
+	     *  to be in local collapsed coordinate format. The function is
+	     *  assumed to be in physical space
+	     */
             double PhysEvaluate(const double *coords);
 
         protected:
@@ -165,6 +192,10 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.3  2006/07/02 17:16:18  sherwin
+*
+* Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+*
 * Revision 1.2  2006/06/13 18:05:02  sherwin
 * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
 *

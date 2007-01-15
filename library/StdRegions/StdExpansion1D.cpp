@@ -64,45 +64,13 @@ namespace Nektar
     //----------------------------
     // Differentiation Methods
     //-----------------------------
-    
-    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
-	physical quadrature opoints in the expansion (i.e. (this)->_phys)
-	and return in \a outarray. 
-	
-	This is a wrapper function around
-	StdSegExp::Tensor_Deriv(inarray,outarray)
-	
-	Input:\n
-	
-	- \a (this)->_phys: array of function evaluated at the
-        quadrature points
-	
-	Output: \n
-	
-	- \a outarray: array of the derivative \f$
-        du/d_{\xi_1}|_{\xi_{1i}} \f$
-    */
+
     inline void StdExpansion1D::TensorDeriv(double * outarray)
     {
       TensorDeriv(m_phys,outarray);
     }  
 
-    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
-	physical quadrature points given by \a inarray and return in \a
-	outarray.
-	
-	Input:\n
-	
-	- \a inarray: array of function evaluated at the quadrature
-        points
-	
-	Output: \n
-	
-	- \a outarray: array of the derivative \f$
-        du/d_{\xi_1}|_{\xi_{1i}} \f$
-	
-    */
-    void StdExpansion1D::TensorDeriv(const double *inarray, double * outarray)
+     void StdExpansion1D::TensorDeriv(const double *inarray, double * outarray)
     {
       int    nquad = m_base[0]->GetPointsOrder();
       const double *D;
@@ -155,6 +123,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.2  2006/06/01 14:46:16  kirby
+ * *** empty log message ***
+ *
  * Revision 1.1  2006/05/04 18:58:30  kirby
  * *** empty log message ***
  *

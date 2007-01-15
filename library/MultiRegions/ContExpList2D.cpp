@@ -94,7 +94,7 @@ namespace Nektar
 
 	ContExpList2D::ContExpList2D(const StdRegions::BasisKey &TriBa, 
 				     const StdRegions::BasisKey &TriBb, 
-				     const StdRegions::NodalBasisType &TriNb,
+				     const StdRegions::NodalBasisType  TriNb,
 				     const StdRegions::BasisKey &QuadBa, 
 				     const StdRegions::BasisKey &QuadBb, 
 				     SpatialDomains::MeshGraph2D &graph2D):
@@ -150,6 +150,8 @@ namespace Nektar
 	    }
 	    
 	    m_mass->ShowMatrixStructure(stdout);
+	    fflush(stdout);
+
 	    m_mass->Solve(m_contCoeffs,1);
 	    m_transState = eContinuous;
 	    m_physState = false;

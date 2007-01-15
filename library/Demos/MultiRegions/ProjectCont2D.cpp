@@ -71,7 +71,8 @@ int main(int argc, char *argv[]){
     case 1: 
 	Tri_btype1 = eModified_A;
 	Tri_btype2 = eModified_B;
-	Tri_Nb     = (StdRegions::NodalBasisType) NULL;
+	// size counter is used as a trip to turn off Nodal Basis
+	Tri_Nb     = (StdRegions::NodalBasisType) SIZE_NodalBasisType;
 	break;
     case 2:
 	Tri_btype1 = (StdRegions::BasisType) StdRegions::eOrtho_A;
@@ -119,14 +120,14 @@ int main(int argc, char *argv[]){
     
     for(i = 0; i < nq; ++i)
     {
-		sol[i] = 0.0;
-		for(j = 0; j < order; ++j)
-		{
-			for(k = 0; k < coordim; ++k)
-			{
-				sol[i] += pow(xc[k][i],j);
-			}
-		}
+	sol[i] = 0.0;
+	for(j = 0; j < order; ++j)
+	{
+	    for(k = 0; k < coordim; ++k)
+	    {
+		sol[i] += pow(xc[k][i],j);
+	    }
+	}
     }
     
     //---------------------------------------------

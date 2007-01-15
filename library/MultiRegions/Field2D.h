@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ExpList3D.h
+// File Field2D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,49 +29,40 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Expansion list 3D header definition
+// Description: Field definition in two-dimensions
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef EXPLIST3D_H
-#define EXPLIST3D_H
+#ifndef NEKTAR_LIBS_MULTIREGIONS_FIELD2D_H
+#define NEKTAR_LIBS_MULTIREGIONS_FIELD2D_H
 
-#include <vector>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList.h>
-
-#include <LocalRegions/HexExp.h>
-#include <LocalRegions/PrismExp.h>
-#include <LocalRegions/PyrExp.h>
-#include <LocalRegions/TetExp.h>
+#include <MultiRegions/Field.h>
+#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList2D.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
 
-	class ExpList3D: 
-	    public ExpList
-	{
-	public:
-	    ExpList3D();
-	    ~ExpList3D();
-	    
-	protected:
-	    
-	private:
-	    LocalRegions::HexExpVector    m_hex;
-	    LocalRegions::PrismExpVector  m_prism;
-	    LocalRegions::PyrExpVector    m_pyr;
-	    LocalRegions::TetExpVector    m_tet;
-	    
-	};
+	class Field2D:
+	    public Field
+	    {
+	    public:
+		Field2D();
+		~Field2D();
 		
-        typedef boost::shared_ptr<ExpList3D>      ExpList3DSharedPtr;
-        typedef std::vector<ExpList3DSharedPtr>   ExpList3DVector;
-        typedef std::vector<ExpList3DSharedPtr>::iterator ExpList3DVectorIter;
+	    protected:
+		
+	    private:
 
+		ExpList2D        m_field;
+		ExpList1DVector  m_bndContraint;
+		BndTypesVector   m_bndTypes;
+	    };
+	
     } //end of namespace
 } //end of namespace
-
-#endif
+  
+#endif // FIELD2D_H

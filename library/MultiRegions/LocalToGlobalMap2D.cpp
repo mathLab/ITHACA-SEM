@@ -63,7 +63,7 @@ namespace Nektar
 	    double *sign;
 	    m_sign_change = false;
 
-	    // determine up global vertex ids
+	    // determine global vertex ids
 	    for(def = exp_shapes.begin(); def != exp_shapes.end(); ++def)
 	    {
 		for(i = 0; i < (*def).size(); ++i)
@@ -72,20 +72,22 @@ namespace Nektar
 		    {
 			
 			nGloVerts = std::max(nGloVerts,
-			     graph2D.GetVidFromElmt((*(*def)[i]).DetShapeType(),j,i));
+					     graph2D.GetVidFromElmt((*(*def)[i]).DetShapeType(),j,i));
 			//set up nedge coefficients for each edge 	
 			nedge_coeffs = (*(*def)[i]).GetEdgeNcoeffs(j);
-			edge_offset[graph2D.GetEidFromElmt((*(*def)[i]).DetShapeType(),j,i)+1] =   nedge_coeffs -2;
+			edge_offset[graph2D.GetEidFromElmt((*(*def)[i]).DetShapeType(),
+							   j,i)+1] =   nedge_coeffs -2;
 			
 			// need a sign vector if edge_nceoff >=4 
-			if((nedge_coeffs >= 4)&&((*(*def)[i]).GetEdgeBasisType(0) == StdRegions::eModified_A))
+			if((nedge_coeffs >= 4)&&((*(*def)[i]).GetEdgeBasisType(0) == 
+						 StdRegions::eModified_A))
 			{
 			    m_sign_change = true;
 			}
 		    }
 		}
 	    }
-	    nGloVerts++; // set actual value to one pluse maximum id
+	    nGloVerts++; // set actual value to one plus maximum id
 	    
 	    // set up sign vector
 	    if(m_sign_change){

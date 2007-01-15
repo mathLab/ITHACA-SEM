@@ -59,12 +59,12 @@ namespace Nektar
 		SpatialDomains::MeshGraph2D &graph2D);
 
 	    ContExpList2D(const StdRegions::BasisKey &TriBa, 
-		const StdRegions::BasisKey &TriBb, 
-		const StdRegions::NodalBasisType &TriNb,
-		const StdRegions::BasisKey &QuadBa, 
-		const StdRegions::BasisKey &QuadBb, 
-		SpatialDomains::MeshGraph2D &graph2D);
-
+			  const StdRegions::BasisKey &TriBb, 
+			  const StdRegions::NodalBasisType TriNb,
+			  const StdRegions::BasisKey &QuadBa, 
+			  const StdRegions::BasisKey &QuadBb, 
+			  SpatialDomains::MeshGraph2D &graph2D);
+	    
 	    ~ContExpList2D();
 	    
 	    inline int getContNcoeffs()
@@ -110,7 +110,7 @@ namespace Nektar
     
 	    
 	private:
-	    int    m_contNcoeffs;
+	    int     m_contNcoeffs;
 	    double *m_contCoeffs;
 	    
 	    boost::shared_ptr<LocalToGlobalMap2D> m_locToGloMap;

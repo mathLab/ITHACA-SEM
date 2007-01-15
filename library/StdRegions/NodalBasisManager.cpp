@@ -329,7 +329,7 @@ namespace Nektar
                         tmpdouble = rc->m_xi[0][j+1];
                         rc->m_xi[0][j+1] = rc->m_xi[0][j];
                         rc->m_xi[0][j] = tmpdouble;
-
+			
                         tmpdouble = rc->m_xi[1][j+1];
                         rc->m_xi[1][j+1] = rc->m_xi[1][j];
                         rc->m_xi[1][j] = tmpdouble;
@@ -366,7 +366,7 @@ namespace Nektar
             {
                 for(j=istart;j<iend-1;++j)
                 {
-                    if(rc->m_xi[1][j+1]>rc->m_xi[1][j])
+                    if(rc->m_xi[1][j+1]<rc->m_xi[1][j])
                     {
                         tmpdouble = rc->m_xi[0][j+1];
                         rc->m_xi[0][j+1] = rc->m_xi[0][j];
@@ -460,6 +460,9 @@ namespace Nektar
 
 /** 
 * $Log: NodalBasisManager.cpp,v $
+* Revision 1.8  2007/01/10 20:13:24  sherwin
+* Fixed bug in NodalPointReorder2D
+*
 * Revision 1.7  2006/12/10 19:00:53  sherwin
 * Modifications to handle nodal expansions
 *

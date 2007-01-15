@@ -48,41 +48,44 @@
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
-
-
-    class ExpList2D:
-      public ExpList
+    namespace MultiRegions
     {
-    public:
-      ExpList2D();
-      ~ExpList2D();
 
-      ExpList2D(const StdRegions::BasisKey &TriBa, 
-		const StdRegions::BasisKey &TriBb, 
-		const StdRegions::BasisKey &QuadBa, 
-		const StdRegions::BasisKey &QuadBb, 
-		SpatialDomains::MeshGraph2D &graph2D);
 
-      ExpList2D(const StdRegions::BasisKey &TriBa, 
-		const StdRegions::BasisKey &TriBb, 
-		const StdRegions::NodalBasisType &TriNb,
-		const StdRegions::BasisKey &QuadBa, 
-		const StdRegions::BasisKey &QuadBb, 
-		SpatialDomains::MeshGraph2D &graph2D);
-      
-    protected:
-
-    private:
-    
-      virtual void v_BwdTrans(double *outarray)
-      {
-	BwdTrans(outarray);
-      }
-    };
-
-  } //end of namespace
+	class ExpList2D:
+	    public ExpList
+	{
+	public:
+	    ExpList2D();
+	    ~ExpList2D();
+	    
+	    ExpList2D(const StdRegions::BasisKey &TriBa, 
+		      const StdRegions::BasisKey &TriBb, 
+		      const StdRegions::BasisKey &QuadBa, 
+		      const StdRegions::BasisKey &QuadBb, 
+		      SpatialDomains::MeshGraph2D &graph2D);
+	    
+	    ExpList2D(const StdRegions::BasisKey &TriBa, 
+		      const StdRegions::BasisKey &TriBb, 
+		      const StdRegions::NodalBasisType TriNb,
+		      const StdRegions::BasisKey &QuadBa, 
+		      const StdRegions::BasisKey &QuadBb, 
+		      SpatialDomains::MeshGraph2D &graph2D);
+	    
+	protected:
+	    
+	private:
+	    
+	    virtual void v_BwdTrans(double *outarray)
+	    {
+		BwdTrans(outarray);
+	    }
+	};
+	
+        typedef boost::shared_ptr<ExpList2D>      ExpList2DSharedPtr;
+        typedef std::vector< ExpList2DSharedPtr > ExpList2DVector;
+        typedef std::vector< ExpList2DSharedPtr >::iterator ExpList2DVectorIter;
+    } //end of namespace
 } //end of namespace
 
 #endif

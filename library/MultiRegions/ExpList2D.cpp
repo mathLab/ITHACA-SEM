@@ -157,7 +157,7 @@ namespace Nektar
 
 	ExpList2D::ExpList2D(const StdRegions::BasisKey &TriBa, 
 			     const StdRegions::BasisKey &TriBb, 
-			     const StdRegions::NodalBasisType &TriNb,
+			     const StdRegions::NodalBasisType TriNb,
 			     const StdRegions::BasisKey &QuadBa, 
 			     const StdRegions::BasisKey &QuadBb, 
 			     SpatialDomains::MeshGraph2D &graph2D)
@@ -172,7 +172,7 @@ namespace Nektar
 	    // and declare memory
 
 	    m_npoints = m_ncoeffs = 0;
-	    
+
 	    if(TriGeoms.size())
 	    {		
 		tri_ncoeffs_elmt = (TriBa.GetBasisOrder()*(TriBa.GetBasisOrder()+1))/2 + TriBa.GetBasisOrder()*(TriBb.GetBasisOrder()-TriBa.GetBasisOrder());
@@ -227,21 +227,22 @@ namespace Nektar
 		{
 		    // removed copy construction of geom
 		    // geom = new SpatialDomains::SegGeom (**def);
-		    if(TriNb == (StdRegions::NodalBasisType) NULL)
+		    
+		    if(TriNb < StdRegions::SIZE_NodalBasisType)
+		    {
+			Ntri.reset(new LocalRegions::NodalTriExp(TriBa,TriBb,
+						 TriNb, m_coeffs+cnt,
+						 m_phys+cnt1, *def));
+			Ntri->SetGeoFac(Ntri->GenGeoFac());
+			explist.push_back(Ntri);
+		    }
+		    else
 		    {
 			tri.reset(new LocalRegions::TriExp(TriBa,TriBb,
 						  m_coeffs+cnt,m_phys+cnt1, 
 							   *def));
 			tri->SetGeoFac(tri->GenGeoFac());
 			explist.push_back(tri);
-		    }
-		    else
-		    {
-			Ntri.reset(new LocalRegions::NodalTriExp(TriBa,TriBb,
-						    TriNb, m_coeffs+cnt,
-						    m_phys+cnt1, *def));
-			Ntri->SetGeoFac(Ntri->GenGeoFac());
-			explist.push_back(Ntri);
 		    }
 		    cnt  += tri_ncoeffs_elmt;
 		    cnt1 += tri_npoints_elmt;

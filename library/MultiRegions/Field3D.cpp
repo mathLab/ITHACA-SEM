@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ExpList3D.h
+// File Field3D.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,49 +29,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Expansion list 3D header definition
+// Description: Field definition for 3D domains
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef EXPLIST3D_H
-#define EXPLIST3D_H
-
-#include <vector>
-#include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList.h>
-
-#include <LocalRegions/HexExp.h>
-#include <LocalRegions/PrismExp.h>
-#include <LocalRegions/PyrExp.h>
-#include <LocalRegions/TetExp.h>
+#include <MultiRegions/Field3D.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-
-	class ExpList3D: 
-	    public ExpList
+	
+	Field3D::Field3D(void)
 	{
-	public:
-	    ExpList3D();
-	    ~ExpList3D();
-	    
-	protected:
-	    
-	private:
-	    LocalRegions::HexExpVector    m_hex;
-	    LocalRegions::PrismExpVector  m_prism;
-	    LocalRegions::PyrExpVector    m_pyr;
-	    LocalRegions::TetExpVector    m_tet;
-	    
-	};
-		
-        typedef boost::shared_ptr<ExpList3D>      ExpList3DSharedPtr;
-        typedef std::vector<ExpList3DSharedPtr>   ExpList3DVector;
-        typedef std::vector<ExpList3DSharedPtr>::iterator ExpList3DVectorIter;
+	}
 
-    } //end of namespace
+	Field3D::~Field3D()
+	{
+	}
+
+    } // end of namespace
 } //end of namespace
-
-#endif

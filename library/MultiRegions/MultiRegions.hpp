@@ -40,19 +40,33 @@
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
+    namespace MultiRegions
+    {
 
 
-    // multiregion stuff here
-    enum TransState{
-      eNotSet,      ///< No transformed state set 
-      eLocal,       ///< Local  Modal space array contains "true" expansion values
-      eContinuous,  ///< Continuous Modal space array contains "true" expansion values
-      eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values 
-    };
+	// multiregion stuff here
+	enum TransState
+	{
+	    eNotSet,      ///< No transformed state set 
+	    eLocal,       ///< Local  Modal space array contains "true" expansion values
+	    eContinuous,  ///< Continuous Modal space array contains "true" expansion values
+	    eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values 
+	};
+	
+	enum BndConstraintTypes
+	{
+	    eDirichlet,     ///< Dirichlet Boundary Condition
+	    eNeumann,       ///< Neumann Boundary Condition
+	    eRobin,         ///< Robin Boudnary Condition
+	    eDirichletZero, ///< Zero Dirichlet Boundary Condition
+	    eNeumannZero,   ///< Zero Neumann Boundary Condition
+	    eRobinZero 	    ///< Zero Robin Boundary Condition
+	};
 
-  }// end of namespace
+        typedef std::vector<BndConstraintTypes>  BndTypesVector;
+        typedef std::vector<BndConstraintTypes>::iterator BndTypesVectorIter;
+
+    }// end of namespace
 }// end of namespace
 
 #endif

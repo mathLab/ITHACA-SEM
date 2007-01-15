@@ -301,7 +301,7 @@ namespace Nektar
 		
                 for(i = 2; i < edge_ncoeffs; ++i)
                 {
-                    dir[i] = i;
+                    dir[i] = edge_ncoeffs-i+1;
                 }
             }
 
@@ -309,32 +309,45 @@ namespace Nektar
             switch (eid)
             {
             case 0:
-		{
-                    int cnt = 0;
+		Map[dir[0]] = 0;
+		Map[dir[1]] = 1;
 		    
-                    for(i = 0; i < edge_ncoeffs; cnt+=order1-i, ++i)
-                    {
-                        Map[dir[i]] = cnt; 
-                    }
-                }
+		
+		for(i = 2; i < edge_ncoeffs;  ++i)
+		{
+		    Map[dir[i]] = i+1; 
+		}
                 break;
             case 1:
-                Map[dir[0]] = order1;
-                Map[dir[1]] = 1;
+		Map[dir[0]] = 1;
+		Map[dir[1]] = 2;
 		
                 for(i = 2; i < edge_ncoeffs; ++i)
                 {
-                    Map[dir[i]] = order1+i-1; 
+                    Map[dir[i]] = i+edge_ncoeffs-1; 
                 }
                 break;
             case 2:
-                for(i = 0; i < edge_ncoeffs; ++i)
+		Map[dir[0]] = 0;
+		Map[dir[1]] = 2;
+
+                for(i = 2; i < edge_ncoeffs; ++i)
                 {
-                    Map[dir[i]] = i; 
+                    Map[dir[i]] = i+2*edge_ncoeffs-3; 
                 }
                 break;
             }
         }
+
+	void StdNodalTriExp::MapTo_ModalFormat(const int edge_ncoeffs, 
+						const BasisType Btype, 
+						const int eid, 
+						const EdgeOrientation eorient,
+						StdExpMap &Map)
+	{	    
+	    MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
+	}
+
 	
 	void StdNodalTriExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
 	{
@@ -367,6 +380,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.4  2006/12/10 19:00:54  sherwin
+* Modifications to handle nodal expansions
+*
 * Revision 1.3  2006/06/06 15:25:21  jfrazier
 * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
 * NEKERROR.

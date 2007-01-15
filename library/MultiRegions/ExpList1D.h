@@ -47,29 +47,34 @@
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
+    namespace MultiRegions
+    {
 
-    class ExpList1D: 
-      public ExpList
-     {
+	class ExpList1D: 
+	    public ExpList
+	{
 
-    public:
-
-      ExpList1D();
-
-      ExpList1D(const StdRegions::BasisKey &Ba, 
-		SpatialDomains::MeshGraph1D &graph1D);
-
-      ~ExpList1D();
-
-    protected:
-
-    private:
+	public:
+	    
+	    ExpList1D();
+	    
+	    ExpList1D(const StdRegions::BasisKey &Ba, 
+		      SpatialDomains::MeshGraph1D &graph1D);
+	    
+	    ~ExpList1D();
+	    
+	protected:
+	    
+	private:
             
-    };
-    
-  } //end of namespace
+	};
+
+	
+        typedef boost::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
+        typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
+        typedef std::vector<ExpList1DSharedPtr>::iterator ExpList1DVectorIter;
+	
+    } //end of namespace
 } //end of namespace
 
 #endif//EXPLIST1D_H

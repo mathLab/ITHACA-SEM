@@ -147,6 +147,12 @@ namespace Nektar
 	    // matrix inverse information
 	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
 
+	    BasisType  GetEdgeBasisType(const int i)
+	    {
+		return eGLL_Lagrange;
+	    }
+
+
         protected:
 
             static StdMatrix s_elmtmats;
@@ -165,6 +171,11 @@ namespace Nektar
             {
                 return DetShapeType();
             }
+
+	    virtual BasisType v_GetEdgeBasisType(const int i)
+	    {
+		return GetEdgeBasisType(i);
+	    }
 
             virtual void v_GenNBasisTransMatrix(double * outarray)
             {
@@ -249,6 +260,23 @@ namespace Nektar
 		WriteToFile(outfile);
 	    }
 	    
+	    virtual void v_MapTo(const int edge_ncoeffs, const BasisType Btype, 
+				 const int eid, const EdgeOrientation eorient,
+				 StdExpMap &Map)
+	    {
+		MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
+	    }
+
+	    virtual void v_MapTo_ModalFormat(const int edge_ncoeffs, 
+					     const BasisType Btype, 
+					     const int eid, 
+					     const EdgeOrientation eorient,
+					     StdExpMap &Map)
+	    {
+		MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
+	    }
+	    
+
 	    virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
 	    {
 		WriteCoeffsToFile(outfile);
@@ -268,6 +296,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.4  2006/12/10 19:00:54  sherwin
+* Modifications to handle nodal expansions
+*
 * Revision 1.3  2006/06/01 14:46:16  kirby
 * *** empty log message ***
 *

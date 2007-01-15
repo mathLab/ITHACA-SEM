@@ -43,29 +43,11 @@ namespace Nektar
 
     StdMatrix StdSegExp::s_elmtmats;
     
-    /// \brief Constructor using BasisKey class for quadrature points and
-    /// order definition.
-    ///
-    /// Inputs:\n
-    ///	
-    ///	- \a Ba: BasisKey class definition containing order and
-    /// quadrature points.
-    
     StdSegExp::StdSegExp(const BasisKey &Ba):
       StdExpansion1D(Ba,Ba.GetBasisOrder(),NULL,NULL,true)
     {    
     }
 
-
-    /// \brief Constructor using BasisKey class for quadrature points and
-    /// order definition where _coeffs and _phys are all set.
-    ///      
-    /// Inputs:\n
-    ///
-    ///  - \a Ba: BasisKey definition containsing order and
-    /// quadrature points.
-    /// - \a coeffs list of expansions coefficient to be set in m_coeffs
-    /// - \a phys: list of physical values to be set in m_phys
     StdSegExp::StdSegExp(const BasisKey &Ba,double *coeffs, double *phys):
       StdExpansion1D(Ba,Ba.GetBasisOrder(),coeffs,phys,false)
     {
@@ -84,19 +66,7 @@ namespace Nektar
     //----------------------------
     // Integration Methods
     //----------------------------
-    
-    /// \brief Integrate the physical point list \a inarray over region
-    /// and return the value
-    ///
-    /// Inputs:\n
-    ///
-    /// - \a inarray: definition of function to be returned at quadrature point 
-    /// of expansion. 
-    ///
-    /// Outputs:\n
-    ///
-    /// - returns \f$\int^1_{-1} u(\xi_1)d \xi_1 \f$ where \f$inarray[i]
-    /// = u(\xi_{1i}) \f$
+
     double StdSegExp::Integral(const double *inarray)
     {
       double Int = 0.0;
@@ -114,34 +84,6 @@ namespace Nektar
       return Int;
     }
 
-  /**
-     \brief  Inner product of \a inarray over region with respect to
-     expansion basis \a base and return in \a outarray 
-
-     Calculate \f$ I[p] = \int^{1}_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1
-     = \sum_{i=0}^{nq-1} \phi_p(\xi_{1i}) u(\xi_{1i}) w_i \f$ where
-     \f$ outarray[p] = I[p], inarray[i] = u(\xi_{1i}), base[p*nq+i] =
-     \phi_p(\xi_{1i}) \f$.
-
-     Inputs: \n 
-
-     - \a base: an array definiing the local basis for the inner
-     product usually passed from Basis->get_bdata() or
-     Basis->get_Dbdata()
-     - \a inarray: physical point array of function to be integrated
-     \f$ u(\xi_1) \f$
-     - \a coll_check: Flag to identify when a Basis->collocation()
-       call should be performed to see if this is a GLL_Lagrange basis
-       with a collocation property. (should be set to 0 if taking the
-       inner product with respect to the derivative of basis)
-       
-     Output: \n
-
-     - \a outarray: array of coefficients representing the inner
-       product of function with ever  mode in the exapnsion
-
-  **/
-    
   void StdSegExp::IProductWRTBase(const double *base, const double * inarray, 
 				 double * outarray, int coll_check)
   {
@@ -169,21 +111,6 @@ namespace Nektar
     
   }
   
-  /** \brief  Inner product of \a inarray over region with respect to the 
-      expansion basis (this)->_Base[0] and return in \a outarray 
-      
-      Wrapper call to StdSegExp::IProduct_WRT_B
-      
-      Input:\n
-      
-      - \a inarray: array of function evaluated at the physical
-      collocation points
-      
-      Output:\n
-
-      - \a outarray: array of inner product with respect to each
-      basis over region
-  */
   void StdSegExp::IProductWRTBase(const double * inarray, double * outarray)
   {
     IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
@@ -200,21 +127,6 @@ namespace Nektar
     Vmath::Vcopy(nquad,(double *)base+mode*nquad,1, outarray,1);
   }
     
-  /** \brief Generate local mass matrix \f$ {\bf M}[i][j] =
-      \int^1_{-1} \phi_i(\xi_1) \phi_j(\xi_1) d\xi_1 \f$ in standard
-      region and store in \a outarray  
-
-      Input:\n
-
-      None - all values set up in expansion class
-
-      Output:\n
-      
-      - \a outarray: Local mass matrix in standard region. Matrix is
-        in row major format and is of stored as \a
-        outarray[j*(this)->_ncoeffs + i]
-
-  */
   void StdSegExp::GenMassMatrix(double * outarray)
   {
     StdExpansion::GenerateMassMatrix(outarray);
@@ -226,23 +138,7 @@ namespace Nektar
       outarray[m_base[0]->GetBasisOrder()+1] = 1.0;
     }
   }
-
-  /** \brief Generate local weak Laplacian matrix \f$ {\bf L}[i][j] =
-      \int^1_{-1} \frac{d \phi_i(\xi_1)}{d \xi_1}\frac{d
-      \phi_j(\xi_1)}{d \xi_1} d\xi_1 \f$ in standard region and store in
-      \a outarray  
-
-      Input:\n
-
-      None - all values set up in expansion class
-
-      Output:\n
-      
-      - \a outarray: Local mass matrix in standard region. Matrix is
-        in row major format and is of stored as \a
-        outarray[j*(this)->_ncoeffs + i]
-  */
-
+ 
   void StdSegExp::GenLapMatrix(double * outarray)
   {
     int    i;
@@ -262,9 +158,6 @@ namespace Nektar
 
   }
 
-  /** \brief Get the mass matrix attached to this expansion by using
-      the StdMatrix manager _ElmtMats and return the standard Matrix
-      container */
   StdMatContainer * StdSegExp::GetMassMatrix() 
   {
     StdMatContainer * mat;
@@ -272,9 +165,6 @@ namespace Nektar
     return mat;
   }
 
-  /** \brief Get the weak Laplacian matrix attached to this
-      expansion by using the StdMatrix manager _ElmtMats and return
-      the standard Matrix container */
   StdMatContainer * StdSegExp::GetLapMatrix() 
   {
     StdMatContainer * mat;
@@ -285,45 +175,12 @@ namespace Nektar
   //----------------------------
   // Differentiation Methods
   //-----------------------------
-  
-  /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
-      physical quadrature opoints in the expansion (i.e. (this)->_phys)
-      and return in \a outarray. 
-      
-      This is a wrapper function around StdExpansion1D::TensorDeriv
-      
-      Input:\n
 
-      - \a (this)->_phys: array of function evaluated at the
-        quadrature points
-
-      Output: \n
-
-      - \a outarray: array of the derivative \f$
-        du/d_{\xi_1}|_{\xi_{1i}} \f$
-  */
   inline void StdSegExp::Deriv(double * outarray)
   {
     TensorDeriv(outarray);
   }  
 
-  /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
-      physical quadrature points given by \a inarray and return in \a
-      outarray.
-
-      This is a wrapper around StdExpansion1D::Tensor_Deriv
-
-      Input:\n
-
-      - \a inarray: array of function evaluated at the quadrature
-        points
-
-      Output: \n
-
-      - \a outarray: array of the derivative \f$
-        du/d_{\xi_1}|_{\xi_{1i}} \f$
-
-*/
   void StdSegExp::Deriv(const double *inarray, double * outarray)
   {
     TensorDeriv(inarray,outarray);
@@ -332,28 +189,7 @@ namespace Nektar
   //----------------------------
   // Evaluation Methods
   //----------------------------
-  
-  
-  /** \brief Backward transform from coefficient space (stored in
-      (this)->_coeffs) and evaluate at the physical quadrature points \a
-      outarray 
-
-      Operation can be evaluated as \f$ u(\xi_{1i}) =
-      \sum_{p=0}^{order-1} \hat{u}_p \phi_p(\xi_{1i}) \f$ or
-      equivalently \f$ {\bf u} = {\bf B}^T {\bf \hat{u}} \f$ where
-      \f${\bf B}[i][j] = \phi_i(\xi_{1j}), \mbox{\_coeffs}[p] = {\bf
-      \hat{u}}[p] \f$
-      
-
-      Inputs:\n
-
-      - (this)->_coeffs: Expansion coefficients
-
-      Output: \n
-
-      - \a outarray: Array of physical quadrature points of function
-  */
-  
+   
     void StdSegExp::BwdTrans(double * outarray)
     {
     int           nquad = m_base[0]->GetPointsOrder();
@@ -370,27 +206,6 @@ namespace Nektar
     }
   }
 
-  
-  /** \brief Forward transform from physical quadrature space
-      stored in \a inarray and evaluate the expansion coefficients and
-      store in \a (this)->_coeffs  
-
-      Perform a forward transform using a Galerkin projection by
-      taking the inner product of the physical points and multiplying
-      by the inverse of the mass matrix using the Solve method of the
-      standard matrix container holding the local mass matrix, i.e.
-      \f$ {\bf \hat{u}} = {\bf M}^{-1} {\bf I} \f$ where \f$ {\bf I}[p] =
-      \int^1_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1 \f$
-
-      Inputs:\n
-      
-      - \a inarray: array of physical quadrature points to be transformed
-
-      Outputs:\n
-
-      - (this)->_coeffs: updated array of expansion coefficients. 
-
-  */ 
   void StdSegExp::FwdTrans(const double *inarray)
   {
     StdMatContainer *M;
@@ -405,9 +220,7 @@ namespace Nektar
       M->Solve(m_coeffs,1);
     }
   }
-  
-  /** \brief Single Point Evaluation: \f$ u(x) = \sum_p \phi_p(x)
-      \hat{u}_p = \sum_p h_p(x) u(x_p)\f$  */
+ 
   double StdSegExp::Evaluate(const double *Lcoord)
   {
     return PhysEvaluate(Lcoord);
@@ -530,6 +343,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.6  2006/12/10 19:00:54  sherwin
+ * Modifications to handle nodal expansions
+ *
  * Revision 1.5  2006/08/16 23:34:42  jfrazier
  * *** empty log message ***
  *

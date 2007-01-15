@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File MultiRegsions.hpp
+// File LocalBndToGlobalMap.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,46 +29,38 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Multiregion overal header
+// Description: Local Boundary to Global mapping routines, header file
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef MULTIREGIONS_H
-#define MULTIREGIONS_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_LOCALBNDTOGLOBALMAP_H
+#define NEKTAR_LIB_MULTIREGIONS_LOCALBNDTOGLOBALMAP_H
 
-#include <LocalRegions/LocalRegions.hpp>
-#include <vector>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <MultiRegions/MultiRegions.hpp>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-
-
-	// multiregion stuff here
-	enum TransState
+	
+	class LocalBndToGlobalMap
 	{
-	    eNotSet,      ///< No transformed state set 
-	    eLocal,       ///< Local  Modal space array contains "true" expansion values
-	    eContinuous,  ///< Continuous Modal space array contains "true" expansion values
-	    eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values 
+        public:
+            LocalBndToGlobalMap();
+
+            ~LocalBndToGlobalMap();
+
+        protected:
+            int m_MapLen;    //< length of local boundary mapping 
+	    
+	    boost::shared_ptr<int> m_MapIndex;
+            boost::shared_ptr<int> m_Map;
+        private:
 	};
 	
-	enum BndConstraintTypes
-	{
-	    eDirichlet,     ///< Dirichlet Boundary Condition
-	    eNeumann,       ///< Neumann Boundary Condition
-	    eRobin,         ///< Robin Boudnary Condition
-	    eDirichletZero, ///< Zero Dirichlet Boundary Condition
-	    eNeumannZero,   ///< Zero Neumann Boundary Condition
-	    eRobinZero 	    ///< Zero Robin Boundary Condition
-	};
+    } // end of namespace
+} // end of namespace
 
-        typedef std::vector<BndConstraintTypes>  BndTypesVector;
-        typedef std::vector<BndConstraintTypes>::iterator BndTypesVectorIter;
+#endif //LOCALTOGLOBALMAP_H
 
-    }// end of namespace
-}// end of namespace
 
-#endif

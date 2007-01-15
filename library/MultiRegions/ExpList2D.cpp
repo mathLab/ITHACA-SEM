@@ -54,7 +54,7 @@ namespace Nektar
 			     const StdRegions::BasisKey &QuadBb, 
 			     SpatialDomains::MeshGraph2D &graph2D)
 	{
-	    SpatialDomains::TriGeomVector TriGeoms   = graph2D.GetTrigeoms();
+	    SpatialDomains::TriGeomVector  TriGeoms  = graph2D.GetTrigeoms();
 	    SpatialDomains::QuadGeomVector QuadGeoms = graph2D.GetQuadgeoms();
 	    int cnt,cnt1;
 	    int tri_ncoeffs_elmt = 0, quad_ncoeffs_elmt = 0;
@@ -262,9 +262,8 @@ namespace Nektar
 		{
 		    // removed copy construction of geom
 		    // geom = new SpatialDomains::SegGeom (**def);
-		    quad.reset(new LocalRegions::QuadExp(QuadBa,QuadBb,
-							m_coeffs+cnt,m_phys+cnt1, 
-							*def));
+		    quad.reset(new LocalRegions::QuadExp(QuadBa, QuadBb,
+					m_coeffs+cnt, m_phys+cnt1, *def));
 		    quad->SetGeoFac(quad->GenGeoFac());
 		    explist.push_back(quad);
 		    
@@ -274,7 +273,6 @@ namespace Nektar
 		m_exp_shapes.push_back(explist);
 	    }
 	}
-
       
     } //end of namespace
 } //end of namespace

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File MultiRegsions.hpp
+// File LocalToGlobalMap.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,46 +29,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Multiregion overal header
+// Description: Local to Global mapping routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef MULTIREGIONS_H
-#define MULTIREGIONS_H
-
-#include <LocalRegions/LocalRegions.hpp>
-#include <vector>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <MultiRegions/LocalBndToGlobalMap.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-
-
-	// multiregion stuff here
-	enum TransState
-	{
-	    eNotSet,      ///< No transformed state set 
-	    eLocal,       ///< Local  Modal space array contains "true" expansion values
-	    eContinuous,  ///< Continuous Modal space array contains "true" expansion values
-	    eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values 
-	};
+	LocalBndToGlobalMap::LocalBndToGlobalMap(){};
+	LocalBndToGlobalMap::~LocalBndToGlobalMap(){};
 	
-	enum BndConstraintTypes
-	{
-	    eDirichlet,     ///< Dirichlet Boundary Condition
-	    eNeumann,       ///< Neumann Boundary Condition
-	    eRobin,         ///< Robin Boudnary Condition
-	    eDirichletZero, ///< Zero Dirichlet Boundary Condition
-	    eNeumannZero,   ///< Zero Neumann Boundary Condition
-	    eRobinZero 	    ///< Zero Robin Boundary Condition
-	};
+    } // end of namespace
+} // end of namespace
 
-        typedef std::vector<BndConstraintTypes>  BndTypesVector;
-        typedef std::vector<BndConstraintTypes>::iterator BndTypesVectorIter;
-
-    }// end of namespace
-}// end of namespace
-
-#endif

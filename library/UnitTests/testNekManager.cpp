@@ -40,45 +40,56 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/progress.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <iostream>
 
 using std::cout;
 using std::endl;
 
-// Test stuff.
-double MyCreator(const int &key)
-{
-   return key + 2.5;
-};
 
-class Temp
-{
-    public:
-        Temp() {};
-        
-        static double create(const int &key)
-        {
-            return key*1.025;
-        }
-};
-
-class GlobalCreator
-{
-    public:
-        double operator()(const int& key)
-        {
-            return key;
-        }
-};
 
 namespace Nektar
 {
    namespace UnitTests
    {
+        class DoubleWrapper
+        {
+            public:
+                DoubleWrapper(double v) : val(v) {}
+                double val;
+        };
+
+        
+        // Test stuff.
+        boost::shared_ptr<DoubleWrapper> MyCreator(const int &key)
+        {
+            return boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(key + 2.5));;
+        };
+        
+        class Temp
+        {
+            public:
+                Temp() {};
+                
+                static boost::shared_ptr<DoubleWrapper> create(const int &key)
+                {
+                    return boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(key*1.025));
+                }
+        };
+        
+        class GlobalCreator
+        {
+            public:
+                boost::shared_ptr<DoubleWrapper> operator()(const int& key)
+                {
+                    return boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(key));
+                }
+        };
+
        void testNekManager()
        {
-            typedef NekManager<int, double> ManagerType;
+            typedef NekManager<int, DoubleWrapper> ManagerType;
 
             /// TODO - See why I can't do GlobalCreator() directly in the constructor call.
             GlobalCreator c;
@@ -91,20 +102,42 @@ namespace Nektar
             // Registering a static class method
             manager.RegisterCreator(20, Temp::create);
             
-            double value = manager[key];
-            BOOST_CHECK(value == 12.5);
+            boost::shared_ptr<DoubleWrapper> value = manager[key];
+            BOOST_CHECK(value->val == 12.5);
 
             value = manager[20];
-            BOOST_CHECK(value == 20.5);
+            BOOST_CHECK(value->val == 20.5);
             
-            manager[17] = -2.0;
-            BOOST_CHECK_EQUAL(manager[17], -2.0);
+            manager[17] = boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(-2.0));
+            BOOST_CHECK_EQUAL(manager[17]->val, -2.0);
         }
+        
+
+//         typedef boost::shared_ptr<NekMatrix<double, eFull, eBlock> > MatrixType;
+//         
+//         MatrixType create(int k)
+//         {
+//             return MatrixType(new NekMatrix<double, eDiagonal>(k, k, 2, 2));
+//         }
+//         
+//         void testNekMatrixManager()
+//         {
+//             NekManager<int, NekMatrix<double, eDiagonal> > manager(create);
+//             
+//             manager[10] = boost::shared_ptr<NekMatrix<double, eDiagonal> >(new NekMatrix<double, eDiagonal>(3, 3));
+//            
+//            if( manager[11] )
+//            {
+//            }
+//         }
    }
 }
 
 /**
    $Log: testNekManager.cpp,v $
+   Revision 1.4  2006/12/17 21:45:25  bnelson
+   Added tests for the global create function.
+
    Revision 1.3  2006/12/10 21:36:08  bnelson
    *** empty log message ***
 

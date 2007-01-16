@@ -77,5 +77,47 @@ IF( USE_ACML )
     SET(NEKTAR_USING_ACML TRUE)
 ENDIF( USE_ACML )
 
-SUBDIRS(LibUtilities LocalRegions MultiRegions SpatialDomains StdRegions Stochastic UnitTests)
+MACRO(ADD_NEKTAR_EXECUTABLE name sources)
+    ADD_EXECUTABLE(${name} ${${sources}} )
+
+    IF( USE_MKL AND MKL_FOUND )
+    #        MESSAGE("Using MKL")
+            TARGET_LINK_LIBRARIES(${name}
+                ${MKL_LAPACK}
+                optimized ${MKL} debug ${MKL}
+                ${MKL_GUIDE}
+    
+    #optimized mkl_ia32 debug mkl_ia32
+    #            optimized mkl debug mkl
+    #            optimized vml debug vml
+    #            optimized guide debug guide
+            )
+    ENDIF( USE_MKL AND MKL_FOUND )
+    
+    IF( USE_ACML AND ACML_FOUND )
+        TARGET_LINK_LIBRARIES(${name} ${ACML} gfortran )
+    ENDIF( USE_ACML AND ACML_FOUND )
+    
+    IF( USE_ATLAS AND ATLAS_FOUND )
+            TARGET_LINK_LIBRARIES(${name}
+                ${ATLAS_LAPACK}
+                ${ATLAS_CBLAS}
+                ${ATLAS} )
+    ENDIF( USE_ATLAS AND ATLAS_FOUND )
+    
+    IF( ${CMAKE_COMPILER_IS_GNUCXX} )
+            IF( USE_GCOV )
+            TARGET_LINK_LIBRARIES(${name} gcov)
+        ENDIF( USE_GCOV )
+    ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
+    
+    TARGET_LINK_LIBRARIES(${name}
+        optimized LibUtilities debug LibUtilities-g
+        optimized StdRegions debug StdRegions-g
+        optimized ${BoostThreadName} debug ${BoostThreadDebugName})
+        
+    INSTALL_TARGETS(${NEKTAR_BIN_DIR} ${name})
+ENDMACRO(ADD_NEKTAR_EXECUTABLE name)
+
+SUBDIRS(LibUtilities LocalRegions MultiRegions SpatialDomains StdRegions Stochastic UnitTests Demos)
 

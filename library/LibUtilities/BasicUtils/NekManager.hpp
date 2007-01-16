@@ -41,25 +41,18 @@
 
 #include <boost/function.hpp>
 #include <boost/call_traits.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 using namespace std;
 
-template<typename KeyType, typename ValueType>
-class NekManagerCreator
-{
-    public:
-        ValueType operator()(const KeyType& key)
-        {
-            return ValueType::Create(key);
-        }
-};
 
-template <typename KeyType, typename ValueType>
+template <typename KeyType, typename ValueT>
 class NekManager
 {
     public:
+        typedef boost::shared_ptr<ValueT> ValueType;
         typedef boost::function<ValueType (const KeyType& key)> CreateFuncType;
         typedef std::map<KeyType, ValueType> ValueContainer;
         typedef std::map<KeyType, CreateFuncType> CreateFuncContainer;
@@ -67,7 +60,7 @@ class NekManager
 
         NekManager() :
             m_values(), 
-            m_globalCreateFunc(NekManagerCreator<KeyType, ValueType>()),
+            m_globalCreateFunc(),
             m_keySpecificCreateFuncs()
         {
         };
@@ -96,6 +89,8 @@ class NekManager
             }
             else
             {
+                static ValueType result;
+            
                 // No object, create a new one.
                 CreateFuncType f = m_globalCreateFunc;
                 typename CreateFuncContainer::iterator keyFound = m_keySpecificCreateFuncs.find(key);
@@ -104,9 +99,20 @@ class NekManager
                     f = (*keyFound).second;
                 }
 
-                ValueType newObj = f(key);
-                m_values[key] = newObj;
-                return m_values[key];
+                if( f )
+                {
+                    result = f(key);
+                    m_values[key] = result;
+                    return m_values[key];
+                }
+                else
+                {
+                    std::string keyAsString = boost::lexical_cast<std::string>(key);
+                    std::string message = std::string("No create func found for key ") + keyAsString;
+                    NEKERROR(ErrorUtil::efatal, message.c_str());
+                }
+                
+                return result;
             }
         }
         

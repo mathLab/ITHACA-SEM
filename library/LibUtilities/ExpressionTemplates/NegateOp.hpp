@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #ifndef NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
 #define NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
 
@@ -85,9 +86,12 @@ namespace Nektar
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
-
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 /**
     $Log: NegateOp.hpp,v $
+    Revision 1.7  2007/01/16 05:29:50  bnelson
+    Major improvements for expression templates.
+
     Revision 1.6  2006/09/16 23:52:56  bnelson
     Changed unary operations to rely on methods outside the class (to aid adding expression templates to classes that can't be modified)
 

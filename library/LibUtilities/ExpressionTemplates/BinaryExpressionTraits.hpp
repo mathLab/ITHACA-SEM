@@ -10,6 +10,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_TRAITS_H
 #define NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_TRAITS_H
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #include <LibUtilities/ExpressionTemplates/AssociativeTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/CommutativeTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicyFwd.hpp>
@@ -206,10 +207,14 @@ namespace Nektar
     }
 }
 
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_TRAITS_H
 
 /**
     $Log: BinaryExpressionTraits.hpp,v $
+    Revision 1.6  2007/01/16 05:29:50  bnelson
+    Major improvements for expression templates.
+
     Revision 1.5  2006/11/06 17:07:19  bnelson
     Continued work on creating temporaries as needed when sub-expression types don't match the type of the accumulator.
 

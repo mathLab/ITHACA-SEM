@@ -42,6 +42,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
 
@@ -161,9 +162,12 @@ namespace Nektar
 // 1. Provide an add method that takes three parameters: lhs, rhs, result.
 // 2. Provide a += method.
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
-
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 /**
     $Log: ExpressionTemplates.hpp,v $
+    Revision 1.7  2007/01/16 05:29:50  bnelson
+    Major improvements for expression templates.
+
     Revision 1.6  2006/11/12 17:58:52  bnelson
     *** empty log message ***
 

@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_METADATA_H
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_METADATA_H
 
@@ -97,9 +99,12 @@ namespace Nektar
 }
 
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_METADATA_H
-
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 /**
     $Log: ExpressionMetadata.hpp,v $
+    Revision 1.3  2007/01/16 05:29:50  bnelson
+    Major improvements for expression templates.
+
     Revision 1.2  2006/11/12 17:58:52  bnelson
     *** empty log message ***
 

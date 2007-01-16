@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #ifndef NEKTAR_LIB_UTILITIES_NULL_OP_HPP
 #define NEKTAR_LIB_UTILITIES_NULL_OP_HPP
 
@@ -95,9 +96,12 @@ namespace Nektar
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NULL_OP_HPP
-
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 /**
     $Log: NullOp.hpp,v $
+    Revision 1.2  2007/01/16 05:29:50  bnelson
+    Major improvements for expression templates.
+
     Revision 1.1  2006/11/06 17:07:19  bnelson
     Continued work on creating temporaries as needed when sub-expression types don't match the type of the accumulator.
 

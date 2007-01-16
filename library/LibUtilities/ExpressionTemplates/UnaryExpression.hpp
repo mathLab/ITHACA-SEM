@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #ifndef NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_HPP
 #define NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_HPP
 
@@ -161,9 +162,12 @@ namespace Nektar
 }
 
 #endif // NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_HPP
-
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 /**
     $Log: UnaryExpression.hpp,v $
+    Revision 1.8  2007/01/16 05:29:50  bnelson
+    Major improvements for expression templates.
+
     Revision 1.7  2006/11/12 17:58:53  bnelson
     *** empty log message ***
 

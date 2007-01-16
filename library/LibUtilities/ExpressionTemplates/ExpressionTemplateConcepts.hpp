@@ -9,6 +9,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #ifndef NEKTAR_LIB_UTILITIES_EXPRT_CONCEPTS_H
 #define NEKTAR_LIB_UTILITIES_EXPRT_CONCEPTS_H
 
@@ -101,9 +102,12 @@ namespace Nektar
 }
 
 #endif // NEKTAR_LIB_UTILITIES_EXPRT_CONCEPTS_H
-
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 /**
     $Log: ExpressionTemplateConcepts.hpp,v $
+    Revision 1.2  2006/06/01 13:44:28  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/06/01 09:20:55  kirby
     *** empty log message ***
 

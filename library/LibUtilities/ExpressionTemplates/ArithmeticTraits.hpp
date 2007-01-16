@@ -36,6 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ARITHMETIC_TRAITS_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ARITHMETIC_TRAITS_HPP
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 namespace Nektar
 {
     namespace expt
@@ -52,6 +53,8 @@ namespace Nektar
         template<typename LhsType, typename RhsType>
         class DivisionTraits;
     }
+
 }
 
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ARITHMETIC_TRAITS_HPP

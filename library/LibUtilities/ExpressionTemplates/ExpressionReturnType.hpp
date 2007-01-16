@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #ifndef NEKTAR_LIB_UTILITIES_GET_RETURN_TYPE_H
 #define NEKTAR_LIB_UTILITIES_GET_RETURN_TYPE_H
 
@@ -47,9 +48,12 @@ namespace Nektar
 }
 
 #endif // NEKTAR_LIB_UTILITIES_GET_RETURN_TYPE_H
-
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 /**
     $Log: ExpressionReturnType.hpp,v $
+    Revision 1.2  2006/08/25 01:33:47  bnelson
+    no message
+
     Revision 1.1  2006/06/01 09:20:55  kirby
     *** empty log message ***
 

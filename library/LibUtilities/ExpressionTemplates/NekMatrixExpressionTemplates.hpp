@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #ifndef NEKTAR_LIB_UTILITIES_NEK_MATRIX_EXPRESSION_TEMPLATES_HPP
 #define NEKTAR_LIB_UTILITIES_NEK_MATRIX_EXPRESSION_TEMPLATES_HPP
 
@@ -46,9 +47,12 @@ namespace Nektar
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_MATRIX_EXPRESSION_TEMPLATES_HPP
-
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 /**
-    $Log: $
+    $Log: NekMatrixExpressionTemplates.hpp,v $
+    Revision 1.1  2006/09/14 02:09:00  bnelson
+    Fixed gcc compile errors
+
 
  **/
 

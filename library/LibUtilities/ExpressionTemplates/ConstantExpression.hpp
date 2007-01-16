@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #ifndef NEKTAR_LIB_UTILITIES_CONSTANT_EXPRESSION_HPP
 #define NEKTAR_LIB_UTILITIES_CONSTANT_EXPRESSION_HPP
 
@@ -168,10 +169,13 @@ namespace Nektar
 }
 
 #endif // NEKTAR_LIB_UTILITIES_CONSTANT_EXPRESSION_HPP
-
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.6  2007/01/16 05:29:50  bnelson
+    Major improvements for expression templates.
+
     Revision 1.5  2006/09/14 02:08:59  bnelson
     Fixed gcc compile errors
 

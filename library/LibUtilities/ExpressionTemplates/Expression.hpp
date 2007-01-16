@@ -40,14 +40,89 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 
+#include <LibUtilities/ExpressionTemplates/Accumulator.hpp>
+
 #include <algorithm>
 
 namespace Nektar
 {
     namespace expt
     {
-        template<typename ExpressionPolicy>
-        class Expression;
+//         template<typename ExpressionPolicy>
+//         class Expression;
+        template<typename PolicyType>
+        class Expression
+        {
+            public:
+                typedef typename PolicyType::ResultType ResultType;
+                typedef typename PolicyType::MetadataType MetadataType;
+                
+            public:
+                explicit Expression(typename boost::call_traits<typename PolicyType::DataType>::const_reference data) :
+                    m_data(data),
+                    m_metadata()
+                {
+                    PolicyType::InitializeMetadata(m_data, m_metadata);
+                }
+
+                Expression(const Expression<PolicyType>& rhs) :
+                    m_data(rhs.m_data),
+                    m_metadata(rhs.m_metadata)
+                {
+                }
+
+                ~Expression() {}
+
+                void Apply(typename boost::call_traits<ResultType>::reference result) const
+                {
+                    Accumulator<ResultType> accum(result);
+                    PolicyType::Apply(accum, m_data);
+                }
+
+                template<template <typename, typename> class ParentOpType>
+                void Apply(Accumulator<ResultType>& accum) const
+                {
+                    PolicyType::template Apply<ParentOpType>(accum, m_data);
+                }
+                
+                template<template <typename> class ParentOpType>
+                void Apply(Accumulator<ResultType>& accum) const
+                {
+                    PolicyType::template Apply<ParentOpType>(accum, m_data);
+                }
+
+//                 template<template <typename, typename> class ParentOpType>
+//                 void ApplyEqual(Accumulator<ResultType>& accum) const
+//                 {
+//                     PolicyType::template ApplyEqual<ParentOpType>(accum, m_data);
+//                 }
+                
+                const MetadataType& GetMetadata() const
+                {
+                    return m_metadata;
+                }
+
+                void Print(std::ostream& os) const
+                {
+                    PolicyType::Print(os, m_data);
+                }
+
+                typename boost::call_traits<typename PolicyType::DataType>::reference operator*()
+                {
+                    return m_data;
+                }
+                
+                typename boost::call_traits<typename PolicyType::DataType>::const_reference operator*() const
+                {
+                    return m_data;
+                }
+                
+            private:
+                Expression<PolicyType>& operator=(const Expression<PolicyType>& rhs);
+
+                typename PolicyType::DataType m_data;
+                MetadataType m_metadata;
+        };
     }
 
 }
@@ -56,6 +131,9 @@ namespace Nektar
 
 /**
     $Log: Expression.hpp,v $
+    Revision 1.4  2006/09/14 02:08:59  bnelson
+    Fixed gcc compile errors
+
     Revision 1.3  2006/09/11 03:24:24  bnelson
     Updated expression templates so they are all specializations of an Expression object, using policies to differentiate.
 

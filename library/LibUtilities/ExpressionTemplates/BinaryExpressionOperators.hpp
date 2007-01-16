@@ -36,11 +36,16 @@
 #ifndef NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_OPERATORS_HPP
 #define NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_OPERATORS_HPP
 
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/ArithmeticTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/Expression.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
+#include <LibUtilities/ExpressionTemplates/Accumulator.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionConcepts.hpp>
 
+#include <boost/concept_check.hpp>
 #include <boost/call_traits.hpp>
+#include <boost/utility/result_of.hpp>
+#include <string>
 
 namespace Nektar
 {
@@ -53,133 +58,253 @@ namespace Nektar
                 
         };
 
+        // Forward declarations needed to declare inverse operators.
+        template<typename LhsType, typename RhsType>
+        class AddOp;
+        
+        template<typename LhsType, typename RhsType>
+        class SubtractOp;
+                
+        template<typename LhsType, typename RhsType>
+        class MultiplyOp;
+                
+        template<typename LhsType, typename RhsType>
+        class DivideOp;
+        
+
+        
+        
         /// \brief An expression to negate an object of ParameterType.
         /// Parameter type is the actual object, not the expression that may lead to it.
         template<typename LhsType, typename RhsType>
         class AddOp : public BinaryOp<LhsType, RhsType>
         {
             public:
-                typedef typename BinaryExpressionTraits<LhsType, RhsType>::AdditionResultType ResultType;
+                typedef AdditionTraits<LhsType, RhsType> TraitsType;
+                typedef typename TraitsType::result_type ResultType;
 
-                typedef typename ExpressionMetadataChooser<LhsType>::MetadataType LhsMetadataType;
-                typedef typename ExpressionMetadataChooser<RhsType>::MetadataType RhsMetadataType;
-                typedef typename ExpressionMetadataChooser<ResultType>::MetadataType ResultMetadataType;
-
-                // This method is only valid if LhsType and ResultType are the same type.  Enforce it?
-                static void ApplyEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<RhsType>::const_reference rhs)
+                template<typename L, typename R>
+                class Rebind
                 {
-                    result += rhs;
+                    public:
+                        typedef AddOp<L,R> type;
+                };
+
+                static void Apply(Accumulator<ResultType>& result,
+                                  typename boost::call_traits<LhsType>::const_reference lhs, 
+                                  typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    TraitsType::Add(*result, lhs, rhs);
                 }
 
-                static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
+                static void ApplyEqual(Accumulator<LhsType>& result,
+                                       typename boost::call_traits<RhsType>::const_reference rhs)
                 {
-                    add(lhs, rhs, result);
+                    //TraitsType::AddEqual(*result, rhs);
+                    if( result.IsInitialized() )
+                    {
+                        *result += rhs;
+                    }
+                    else
+                    {
+                        *result = rhs;
+                    }
+                }
+                
+                static void ApplyLeftEqual(Accumulator<ResultType>& result,
+                                           typename boost::call_traits<LhsType>::const_reference lhs)
+                {
+                    if( result.IsInitialized() )
+                    {
+                        TraitsType::AddLeftEqual(*result, lhs);
+                    }
+                    else
+                    {
+                        *result = lhs;
+                    }
                 }
 
-                static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
+                static const std::string& AsString()
                 {
-                    return ResultMetadataType::CreateForAddition(lhs, rhs);
+                    return s_StringRep;
                 }
 
+                static const unsigned int Priority = 1;
             private:
-
+                static std::string s_StringRep;
         };
 
+        template<typename LhsType, typename RhsType>
+        std::string AddOp<LhsType, RhsType>::s_StringRep("+");
+                
         template<typename LhsType, typename RhsType>
         class MultiplyOp : public BinaryOp<LhsType, RhsType>
         {
             public:
-                typedef typename BinaryExpressionTraits<LhsType, RhsType>::MultiplicationResultType ResultType;
-
-                typedef typename ExpressionMetadataChooser<LhsType>::MetadataType LhsMetadataType;
-                typedef typename ExpressionMetadataChooser<RhsType>::MetadataType RhsMetadataType;
-                typedef typename ExpressionMetadataChooser<ResultType>::MetadataType ResultMetadataType;
-
-                // This method is only valid if LhsType and ResultType are the same type.  Enforce it?
-                static void ApplyEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<RhsType>::const_reference rhs)
+                typedef MultiplicationTraits<LhsType, RhsType> TraitsType;
+                typedef typename TraitsType::result_type ResultType;
+                
+                template<typename L, typename R>
+                class Rebind
                 {
-                    result *= rhs;
-                }
-
-                static void ApplyLhsEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs)
+                    public:
+                        typedef MultiplyOp<L,R> type;
+                };
+                
+                static void Apply(Accumulator<ResultType>& result,
+                                  typename boost::call_traits<LhsType>::const_reference lhs, 
+                                  typename boost::call_traits<RhsType>::const_reference rhs)
                 {
-                    result.TimesEqualLhs(lhs);
+                    TraitsType::Multiply(*result, lhs, rhs);
                 }
                 
-                static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
+                static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
+                                       typename boost::call_traits<RhsType>::const_reference rhs,
+                                       Accumulator<ResultType>& result)
                 {
-                    multiply(lhs, rhs, result);
+                    TraitsType::MultiplyEqual(lhs, rhs, *result);
                 }
-
-                static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
-                {
-                    return ResultMetadataType::CreateForMultiplication(lhs, rhs);
-                }
-
                 
+                static void ApplyEqual(Accumulator<LhsType>& result,
+                                       typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    if( result.IsInitialized() )
+                    {
+                        *result *= rhs;
+                    }
+                    else
+                    {
+                        *result = rhs;
+                    }
+                }
+
+                static const std::string& AsString()
+                {
+                    return s_StringRep;
+                }
+                
+                static const unsigned int Priority = 2;
             private:
-
+                static std::string s_StringRep;
         };
+        
+        template<typename LhsType, typename RhsType>
+        std::string MultiplyOp<LhsType, RhsType>::s_StringRep("*");
 
         template<typename LhsType, typename RhsType>
         class DivideOp : public BinaryOp<LhsType, RhsType>
         {
             public:
-                typedef typename BinaryExpressionTraits<LhsType, RhsType>::DivideResultType ResultType;
+                typedef DivisionTraits<LhsType, RhsType> TraitsType;
+                typedef typename TraitsType::result_type ResultType;
 
-                typedef typename ExpressionMetadataChooser<LhsType>::MetadataType LhsMetadataType;
-                typedef typename ExpressionMetadataChooser<RhsType>::MetadataType RhsMetadataType;
-                typedef typename ExpressionMetadataChooser<ResultType>::MetadataType ResultMetadataType;
-
-                // This method is only valid if LhsType and ResultType are the same type.  Enforce it?
-                static void ApplyEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<RhsType>::const_reference rhs)
+                
+                template<typename L, typename R>
+                class Rebind
                 {
-                    result /= rhs;
+                    public:
+                        typedef DivideOp<L,R> type;
+                };
+
+                
+                static void Apply(Accumulator<ResultType>& result,
+                                  typename boost::call_traits<LhsType>::const_reference lhs, 
+                                  typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    TraitsType::Divide(*result, lhs, rhs);
+                }
+                
+                static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
+                                       typename boost::call_traits<RhsType>::const_reference rhs,
+                                       Accumulator<ResultType>& result)
+                {
+                    TraitsType::DivideEqual(lhs, rhs, *result);
                 }
 
-                static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
+                static void ApplyEqual(Accumulator<LhsType>& result,
+                                       typename boost::call_traits<RhsType>::const_reference rhs)
                 {
-                    divide(lhs, rhs, result);
+                    //TraitsType::DivideEqual(*result, rhs);
+                    if( result.IsInitialized() )
+                    {
+                        *result /= rhs;
+                    }
+                    else
+                    {
+                        *result = rhs;
+                    }
                 }
-
-                static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
+                
+                static const std::string& AsString()
                 {
-                    return ResultMetadataType::CreateForDivision(lhs, rhs);
+                    return s_StringRep;
                 }
-
+                
+                static const unsigned int Priority = 2;
             private:
-
+                static std::string s_StringRep;
         };
 
+        template<typename LhsType, typename RhsType>
+        std::string DivideOp<LhsType, RhsType>::s_StringRep("/");
+                
         template<typename LhsType, typename RhsType>
         class SubtractOp : public BinaryOp<LhsType, RhsType>
         {
             public:
-                typedef typename BinaryExpressionTraits<LhsType, RhsType>::SubtractionResultType ResultType;
-
-                typedef typename ExpressionMetadataChooser<LhsType>::MetadataType LhsMetadataType;
-                typedef typename ExpressionMetadataChooser<RhsType>::MetadataType RhsMetadataType;
-                typedef typename ExpressionMetadataChooser<ResultType>::MetadataType ResultMetadataType;
-
-                // This method is only valid if LhsType and ResultType are the same type.  Enforce it?
-                static void ApplyEqual(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<RhsType>::const_reference rhs)
+                typedef SubtractionTraits<LhsType, RhsType> TraitsType;
+                typedef typename TraitsType::result_type ResultType;
+                
+                
+                template<typename L, typename R>
+                class Rebind
                 {
-                    result -= rhs;
+                    public:
+                        typedef SubtractOp<L,R> type;
+                };
+                
+                
+                static void Apply(Accumulator<ResultType>& result,
+                                  typename boost::call_traits<LhsType>::const_reference lhs, 
+                                  typename boost::call_traits<RhsType>::const_reference rhs)
+                {
+                    TraitsType::Subtract(*result, lhs, rhs);
+                }
+                
+                static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
+                                       typename boost::call_traits<RhsType>::const_reference rhs,
+                                       Accumulator<ResultType>& result)
+                {
+                    TraitsType::SubtractEqual(lhs, rhs, *result);
                 }
 
-                static void Apply(typename boost::call_traits<ResultType>::reference result, typename boost::call_traits<LhsType>::const_reference lhs, typename boost::call_traits<RhsType>::const_reference rhs)
+                static void ApplyEqual(Accumulator<LhsType>& result,
+                                       typename boost::call_traits<RhsType>::const_reference rhs)
                 {
-                    subtract(lhs, rhs, result);
+                    if( result.IsInitialized() )
+                    {
+                        *result -= rhs;
+                    }
+                    else
+                    {
+                        *result = rhs;
+                    }
                 }
+                
 
-                static ResultMetadataType CreateBinaryMetadata(const LhsMetadataType& lhs, const RhsMetadataType& rhs)
+                static const std::string& AsString()
                 {
-                    return ResultMetadataType::CreateForSubtraction(lhs, rhs);
+                    return s_StringRep;
                 }
-
+                
+                static const unsigned int Priority = 1;
             private:
+                static std::string s_StringRep;
 
         };
+        
+        template<typename LhsType, typename RhsType>
+        std::string SubtractOp<LhsType, RhsType>::s_StringRep("-");
     }
 }
 
@@ -187,6 +312,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpressionOperators.hpp,v $
+    Revision 1.5  2006/11/08 04:17:33  bnelson
+    Made expressions work for complicated, nested expression templates - but suboptimally.
+
     Revision 1.4  2006/11/06 17:07:19  bnelson
     Continued work on creating temporaries as needed when sub-expression types don't match the type of the accumulator.
 

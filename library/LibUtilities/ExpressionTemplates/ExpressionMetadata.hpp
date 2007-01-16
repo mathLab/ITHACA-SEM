@@ -53,46 +53,46 @@ namespace Nektar
                 {
                 }
 
-                static DefaultExpressionMetadata CreateForNegation(const DefaultExpressionMetadata& rhs)
+                template<typename T>
+                DefaultExpressionMetadata(const DefaultExpressionMetadata<T>& rhs)
                 {
-                    return DefaultExpressionMetadata(rhs);
                 }
                 
-                static DefaultExpressionMetadata CreateForAddition(const DefaultExpressionMetadata& lhs, const DefaultExpressionMetadata& rhs)
+                template<typename L, typename R>
+                DefaultExpressionMetadata(const DefaultExpressionMetadata<L>& lhs, 
+                                          const DefaultExpressionMetadata<R>& rhs)
                 {
-                    return DefaultExpressionMetadata(rhs);
                 }
                 
-                static DefaultExpressionMetadata CreateForSubtraction(const DefaultExpressionMetadata& lhs, const DefaultExpressionMetadata& rhs)
+                DefaultExpressionMetadata(const DefaultExpressionMetadata<DataType>& rhs)
                 {
-                    return DefaultExpressionMetadata(rhs);
                 }
                 
-                static DefaultExpressionMetadata CreateForMultiplication(const DefaultExpressionMetadata& lhs, const DefaultExpressionMetadata& rhs)
+                DefaultExpressionMetadata()
                 {
-                    return DefaultExpressionMetadata(rhs);
                 }
                 
-                static DefaultExpressionMetadata CreateForDivision(const DefaultExpressionMetadata& lhs, const DefaultExpressionMetadata& rhs)
-                {
-                    return DefaultExpressionMetadata(rhs);
-                }
+
+            private:
         };
 
-        template<typename Type, typename enabled=void>
+       
+        template<typename TraitsType, typename enabled = void>
         class ExpressionMetadataChooser
         {
             public:
-                typedef DefaultExpressionMetadata<Type> MetadataType;
+                typedef DefaultExpressionMetadata<typename TraitsType::result_type> MetadataType;
         };
-
-        /// TODO - try this without the enable_if.
-        template<typename Type>
-        class ExpressionMetadataChooser<Type, typename boost::enable_if<boost::is_same<typename ExpressionTraits<Type>::MetadataType, typename ExpressionTraits<Type>::MetadataType> >::type >
+        
+        template<typename TraitsType>
+        class ExpressionMetadataChooser<TraitsType,
+                                        typename boost::enable_if<boost::is_same<typename TraitsType::MetadataType, typename TraitsType::MetadataType> >::type >
+                                        //typename boost::enable_if<boost::is_same<typename TraitsType::MetadataType, typename TraitsType::MetadataType> >::type >
         {
             public:
-                typedef typename ExpressionTraits<Type>::MetadataType MetadataType;
+                typedef typename TraitsType::MetadataType MetadataType;
         };
+        
     }
 }
 
@@ -100,6 +100,9 @@ namespace Nektar
 
 /**
     $Log: ExpressionMetadata.hpp,v $
+    Revision 1.2  2006/11/12 17:58:52  bnelson
+    *** empty log message ***
+
     Revision 1.1  2006/09/14 02:09:00  bnelson
     Fixed gcc compile errors
 

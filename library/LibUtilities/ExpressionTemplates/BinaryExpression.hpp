@@ -12,378 +12,469 @@
 
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
+#include <boost/mpl/and.hpp>
+#include <boost/mpl/logical.hpp>
 
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
 #include <LibUtilities/ExpressionTemplates/NullOp.hpp>
+#include <LibUtilities/ExpressionTemplates/AssociativeTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/CommutativeTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/UnaryExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicy.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionEvaluator.hpp>
+#include <LibUtilities/ExpressionTemplates/AssociativeExpressionTraits.hpp>
+
 #include <iostream>
+
 
 namespace Nektar
 {
     namespace expt
     {
-        template<typename LhsInputExpressionPolicyType, typename RhsInputExpressionPolicyType, template <typename, typename> class OpType>
-        class BinaryExpressionPolicy
-        {
-        };
+        
 
+        // To aid evaluation, adjust the expression trees as they are being created.
+        // Generic constant + binary expression
         
-        // The evaluate expression class is really the Apply method for the BinaryExpression.  I needed to move it outside the class
-        // to use the enable_if feature.
         
-        /// OpType is the operation that combines the lhs and rhs expression (lhs op rhs)
+        // ReturnTypeGenerator
+        // Responsibility is to generate the return type of the given binary operation.
         
-        // One thing to consider - it may not be valid to accumulate the lhs of the expression into the accumulator.
-        //
-        // Example, A + (B*C).  In this case.  Consider the evaluation of B*C.  The accumulator has the value of A,
-        // We need to create a temporary and then add it in.
-        //
-        // So we need a concept of incoming operation type.
+        // Responsibilities of the Generator
+        // 1. Generate the correct return type for a given expression.
+        // 2. Provide an Apply method which creates the appropriate return type.
+        // 3. Some future optimization may include re-arranging the tree to optimize evaluation.
+        template<typename LhsExpressionPolicyType, 
+                 template <typename, typename> class OpType,
+                 typename RhsExpressionPolicyType,
+                 typename enabled = void>
+        class BinaryExpressionGenerator;
         
-        /// LhsExpressionPolicyType - The type of the lhs expression.
-        /// RhsExpressionPolicyType - The type of the rhs expression.
-
-                                                
-        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType, 
-                   typename ParentOpType = NullOp,
-                   typename LhsNeedsTemp = void, typename RhsNeedsTemp = void>
-        class EvaluateBinaryExpression
+        template<typename LhsExpressionPolicy, template <typename, typename> class OpType, typename RhsDataType>
+        class BinaryExpressionGenerator<LhsExpressionPolicy, OpType, ConstantExpressionPolicy<RhsDataType> >
         {
             public:
-                static void eval(const Expression<LhsExpressionPolicyType>& lhs, 
-                                 const Expression<RhsExpressionPolicyType>& rhs,
-                                 typename boost::call_traits<ResultType>::reference result)
-                {
-                    typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
-                    typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-                    lhs.Apply(result);
-                    rhs.template ApplyEqual<OpType<LhsType, RhsType> >(result);
-//                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
-//                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-//                     LhsType lhs_temp(lhs);
-//                     RhsType rhs_temp(rhs);
-// 
-//                     OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
-                }
-        };
-        
-        // The requirement for a temporary is either
-        // 1. One of the sides returns a data type different than the accumulator type.
-        // 2. The priority of the expression's operator is different than the parent operator.
-        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType>
-        class EvaluateBinaryExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, 
-                                       NullOp,
-                                       typename boost::disable_if<boost::is_same<typename Expression<LhsExpressionPolicyType>::ResultType, ResultType> >::type,
-                                       typename boost::enable_if<boost::is_same<typename Expression<RhsExpressionPolicyType>::ResultType, ResultType> >::type>
-        {
-            public:
-                static void eval(const Expression<LhsExpressionPolicyType>& lhs, 
-                                 const Expression<RhsExpressionPolicyType>& rhs,
-                                 typename boost::call_traits<ResultType>::reference result)
-                {
-//                     typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
-//                     typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-//                     LhsType lhs_temp;
-//                     lhs.Apply(lhs_temp);
-//                     rhs.Apply(result);
-
-                    //OpType<LhsType, RhsType>::ApplyLhsEqual(result, lhs_temp);
-                    typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
-                    typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-                    LhsType lhs_temp(lhs);
-                    RhsType rhs_temp(rhs);
-
-                    OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
-                }
-        };
-        
-        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType, typename ParentOpType>
-        class EvaluateBinaryExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, 
-                                        ParentOpType,
-                                        typename boost::disable_if<boost::is_same<typename Expression<LhsExpressionPolicyType>::ResultType, ResultType> >::type,
-                                        typename boost::enable_if<boost::is_same<typename Expression<RhsExpressionPolicyType>::ResultType, ResultType> >::type>
-        {
-            public:
-                static void eval(const Expression<LhsExpressionPolicyType>& lhs, 
-                                    const Expression<RhsExpressionPolicyType>& rhs,
-                                    typename boost::call_traits<ResultType>::reference result)
-                {
-                    typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
-                    typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-                    LhsType lhs_temp(lhs);
-                    RhsType rhs_temp(rhs);
-
-                    OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
-                }
-        };
-        
-        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, template <typename, typename> class OpType>
-        class EvaluateBinaryExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, ResultType, OpType, NullOp,
-                                       typename boost::enable_if<boost::is_same<typename Expression<LhsExpressionPolicyType>::ResultType, ResultType> >::type,
-                                       typename boost::disable_if<boost::is_same<typename Expression<RhsExpressionPolicyType>::ResultType, ResultType> >::type>
-        {
-            public:
-                static void eval(const Expression<LhsExpressionPolicyType>& lhs, 
-                                    const Expression<RhsExpressionPolicyType>& rhs,
-                                    typename boost::call_traits<ResultType>::reference result)
-                {
-                    typedef typename Expression<LhsExpressionPolicyType>::ResultType LhsType;
-                    typedef typename Expression<RhsExpressionPolicyType>::ResultType RhsType;
-                    LhsType lhs_temp(lhs);
-                    RhsType rhs_temp(rhs);
-
-                    OpType<LhsType, RhsType>::Apply(result, lhs_temp, rhs_temp);
-                }
-        };
+                typedef BinaryExpressionPolicy<LhsExpressionPolicy, ConstantExpressionPolicy<RhsDataType>, OpType> ResultPolicy;
+                typedef Expression<ResultPolicy> ResultExpression;
                 
-
-        // OpType - A class with a statis method called Apply that takes a single
-        // parameter and returns a result of the same or different type.
-        // A template parameter to allow a single OpType templated class to be
-        // used for a variety of types.
-        //
-        // OpType - The operation for the expression.  
-        // LhsExpressionType - The type of the lhs side of the expression.  Must be Constant, Unary, or Binary expressions.
-        // RhsExpressionType - Similar, but for the rhs.
-        template<typename LhsInputExpressionPolicyType, typename RhsInputExpressionPolicyType, template <typename, typename> class OpType>
-        class Expression<BinaryExpressionPolicy<Expression<LhsInputExpressionPolicyType>, Expression<RhsInputExpressionPolicyType>, OpType> >
-        {
-            public:
-                // The types of the objects being operated upon.  Not the expression types, but what the 
-                // expressions will return.
-                typedef Expression<BinaryExpressionPolicy<Expression<LhsInputExpressionPolicyType>, Expression<RhsInputExpressionPolicyType>, OpType> > ThisType;
-
-                typedef Expression<LhsInputExpressionPolicyType> LhsExpressionType;
-                typedef Expression<RhsInputExpressionPolicyType> RhsExpressionType;
-
-                typedef typename LhsExpressionType::ResultType LhsResultType;
-                typedef typename RhsExpressionType::ResultType RhsResultType;
-
-                typedef typename OpType<LhsResultType, RhsResultType>::ResultType ResultType;
-                typedef typename ExpressionMetadataChooser<ResultType>::MetadataType MetadataType;
-                typedef typename LhsExpressionType::MetadataType LhsMetadataType;
-                typedef typename RhsExpressionType::MetadataType RhsMetadataType;
-
-            public:
-                Expression(const LhsExpressionType& lhs, const RhsExpressionType& rhs) :
-                    m_lhs(lhs),
-                    m_rhs(rhs),
-                    m_metadata(OpType<LhsResultType, RhsResultType>::CreateBinaryMetadata(lhs.GetMetadata(), rhs.GetMetadata()))
+                static ResultExpression Apply(const Expression<LhsExpressionPolicy>& lhs, typename boost::call_traits<RhsDataType>::const_reference rhs)
                 {
+                    typename ResultPolicy::DataType d(lhs, Expression<ConstantExpressionPolicy<RhsDataType> >(rhs));
+                    return ResultExpression(d);
                 }
-
-                Expression(const ThisType& rhs) :
-                    m_lhs(rhs.m_lhs),
-                    m_rhs(rhs.m_rhs),
-                    m_metadata(rhs.m_metadata)
-                {
-                }
-
-
-                ~Expression() {}
-
-                //static void EvaluateExpression(typename boost::call_traits<LhsExpressionType>::const_reference lhs, 
-                //                               typename boost::call_traits<RhsExpressionType>::const_reference rhs,
-                //                               typename boost::call_traits<ResultType>::reference result, 
-                //                               typename boost::enable_if<boost::is_same<LhsParameterType, ResultType> >::type* f0 = NULL,
-                //                               typename boost::enable_if<boost::is_same<RhsParameterType, ResultType> >::type* f1 = NULL)
-                //{
-                //    lhs.Apply(result);
-                //}
-
-                //static void EvaluateExpression(typename boost::call_traits<LhsExpressionType>::const_reference lhs, 
-                //                               typename boost::call_traits<RhsExpressionType>::const_reference rhs,
-                //                               typename boost::call_traits<ResultType>::reference result, 
-                //                               typename boost::disable_if<boost::is_same<LhsParameterType, ResultType> >::type* f0 = NULL,
-                //                               typename boost::enable_if<boost::is_same<RhsParameterType, ResultType> >::type* f1 = NULL)
-                //{
-                //    LhsParameterType temp(lhs.GetMetadata());
-                //    lhs.Apply(temp);
-                //}
-
-                // Different cases for apply:
-                // All data types (result, lhs, rhs) are the same.
-                //   1.  Operations are serial (such as matrix m1 + m2 + m3 + m4).  In this case apply for both sides works.
-                //   
-                // All same data type, apply can go through as normal (such as matrix m1 + m2 + m3)
-                // All same data type, apply must create a temporary (such as matrix m1*m2 + m3*m4*m5)
-                //      in this case m3*m4*m5 must have a temporary created.
-                // Two cases for the apply method.
-                // 1.  Result and Parameter types are the same.
-                // 2.  Result and Parameter types are different.
-                void Apply(typename boost::call_traits<ResultType>::reference result) const
-                {
-                    EvaluateBinaryExpression<LhsInputExpressionPolicyType, RhsInputExpressionPolicyType, ResultType, OpType>::eval(m_lhs, m_rhs, result);
-                }
-
-                /// ParentOpType is the operation one step higher in the parse tree.
-                /// For example, if the expression is "A + BC", then then the OpType for 
-                /// this operation is "*" and the ParentOpType is +.
-//                 template<typename ParentOpType>
-//                 void ApplyEqual(typename boost::call_traits<ResultType>::reference result) const
+        };
+        
+//         // If the expression is associative, then we can re-order 
+//         template<typename LhsDataType, template <typename, typename> class OpType, typename RhsLhsDataType,
+//                  typename RhsRhsDataType, template <typename, typename> class RhsOpType>
+//         class BinaryExpressionGenerator<ConstantExpressionPolicy<LhsDataType>, OpType, 
+//                                         BinaryExpressionPolicy<RhsLhsDataType, RhsRhsDataType, RhsOpType>,
+//                                         typename boost::enable_if_c
+//                                         <
+//                                             AssociativeTraits<LhsDataType, OpType, RhsLhsDataType, RhsOpType, RhsRhsDataType>::IsAssociative,
+//                                             void
+//                                         >::type >
+//         {
+//             public:
+//                 typedef BinaryExpressionPolicy<LhsExpressionPolicy, ConstantExpressionPolicy<RhsDataType>, OpType> ResultPolicy;
+//                 typedef Expression<ResultPolicy> ResultExpression;
+//                 
+//                 static ResultExpression Apply(const Expression<LhsExpressionPolicy>& lhs, typename boost::call_traits<RhsDataType>::const_reference rhs)
 //                 {
-//                     // In this case, we can directly apply the operator to the lhs with the accumulator.
-//                     // This will be in cases like "A + B + C".
-//                     m_lhs.template  ApplyEqual<ParentOpType>(result);
-//                     OpType::ApplyEqual(result, m_value);
+//                     typename ResultPolicy::DataType d(lhs, Expression<ConstantExpressionPolicy<RhsDataType> >(rhs));
+//                     return ResultExpression(d);
 //                 }
-                
-                const MetadataType& GetMetadata() const
-                {
-                    return m_metadata;
-                }
-
-            private:
-                ThisType& operator=(const ThisType& rhs);
-
-                LhsExpressionType m_lhs;
-                RhsExpressionType m_rhs;
-
-                MetadataType m_metadata;
-        };
-
+//         };
+        
+        
+        // Generic binary + constant expression
         
         //////////////////////////////////////////////////////
         /// Addition
         //////////////////////////////////////////////////////
+
+        // Next up - There is a lot of duplication here.  Anything to be done about it?
+        // Follow up on the AssociativeExpressionTraits - But for non associative cases and do the 
+        // same thing.
+        
+        template<typename LhsPolicyType, typename RhsPolicyType>
+        typename BinaryExpressionTraits<LhsPolicyType, AddOp, RhsPolicyType>::ResultType
+        operator+(const Expression<LhsPolicyType>& lhs, const Expression<RhsPolicyType>& rhs)
+        {
+            typedef BinaryExpressionTraits<LhsPolicyType, AddOp, RhsPolicyType> Traits;
+            return Traits::Apply(lhs, rhs);
+        }
+        
+        template<typename LhsDataType, typename RhsPolicyType>
+        typename BinaryExpressionTraits<ConstantExpressionPolicy<LhsDataType>, AddOp, RhsPolicyType>::ResultType
+        operator+(const LhsDataType& lhs, const Expression<RhsPolicyType>& rhs)
+        {
+            return Expression<ConstantExpressionPolicy<LhsDataType> >(lhs) + rhs;
+        }
+        
+        template<typename LhsPolicyType, typename RhsDataType>
+        typename BinaryExpressionTraits<LhsPolicyType, AddOp, ConstantExpressionPolicy<RhsDataType> >::ResultType
+        operator+(const Expression<LhsPolicyType>& lhs, const RhsDataType& rhs)
+        {
+            return lhs + Expression<ConstantExpressionPolicy<RhsDataType> >(rhs);
+        }
+        // C + C
+/*        template<typename LhsDataType, typename RhsDataType>
+        Expression<BinaryExpressionPolicy<ConstantExpresionPolicy<LhsDataType>, ConstantExpressionPolicy<RhsDataType>, AddOp> >
+        operator+(const Expression<ConstantExpressionPolicy<LhsDataType> >& lhs, 
+                  const Expression<ConstantExpressionPolicy<RhsLhsDataType> >& rhs)
+        {
+            typedef ConstantExpressionPolicy<LhsDataType> LhsPolicy;
+            typedef ConstantExpressionPolicy<RhsDataType> RhsPolicy;
+            typedef BinaryExpressionPolicy<LhsPolicy, RhsPolicy> ResultPolicy;
+            typedef Expression<ResultPolicy> ResultType;
+            
+            typename ResultPolicy::DataType d(lhs, rhs);
+            return ResultType(d);
+        }
+        
+        // C + U
+        template<typename LhsDataType, typename RhsDataType, template <typename> class RhsOpType>
+        Expression<BinaryExpressionPolicy<ConstantExpresionPolicy<LhsDataType>, UnaryExpressionPolicy<RhsDataType, RhsOpType>, AddOp> >
+        operator+(const Expression<ConstantExpressionPolicy<LhsDataType> >& lhs, 
+                  const Expression<UnaryExpressionPolicy<RhsLhsDataType, OpType> >& rhs)
+        {
+            typedef ConstantExpressionPolicy<LhsDataType> LhsPolicy;
+            typedef UnaryExpressionPolicy<RhsDataType, RhsOpType> RhsPolicy;
+            typedef BinaryExpressionPolicy<LhsPolicy, RhsPolicy> ResultPolicy;
+            typedef Expression<ResultPolicy> ResultType;
+            
+            typename ResultPolicy::DataType d(lhs, rhs);
+            return ResultType(d);
+        }
+        
+        // C + B
+        template<typename LhsDataType, typename RhsLhsDataType,
+                 template<typename, typename> class RhsOpType,
+                 typename RhsRhsDataType>
+        typename AssociativeExpressionTraits
+                 <
+                    ConstantExpressionPolicy<LhsDataType>,
+                    AddOp,
+                    BinaryExpressionPolicy<RhsLhsDataType, RhsRhsDataType, RhsOpType>
+                 >::ResultType
+        operator+(const LhsDataType& lhs, const Expression<BinaryExpressionPolicy<RhsLhsDataType, RhsRhsDataType, RhsOpType> >& rhs)
+        {
+            typedef ConstantExpressionPolicy<LhsDataType> LhsPolicy;
+            typedef BinaryExpressionPolicy<RhsLhsDataType, RhsRhsDataType, RhsOpType> RhsPolicy;
+            
+            return AssociativeExpressionTraits<LhsPolicy, AddOp, RhsPolicy>::Apply(lhs, rhs);
+        }
+        
+        
+        // U + C
+        template<typename LhsDataType, template<typename> class LhsOpType, typename RhsDataType>
+        Expression<BinaryExpressionPolicy<UnaryExpresionPolicy<LhsDataType, LhsOpType>, ConstantExpressionPolicy<RhsDataType>, AddOp> >
+        operator+(const Expression<UnaryExpressionPolicy<LhsDataType, LhsOpType> >& lhs, 
+                  const Expression<ConstantExpressionPolicy<RhsLhsDataType> >& rhs)
+        {
+            typedef UnaryExpressionPolicy<LhsDataType, LhsOpType> LhsPolicy;
+            typedef ConstantExpressionPolicy<RhsDataType> RhsPolicy;
+            typedef BinaryExpressionPolicy<LhsPolicy, RhsPolicy> ResultPolicy;
+            typedef Expression<ResultPolicy> ResultType;
+            
+            typename ResultPolicy::DataType d(lhs, rhs);
+            return ResultType(d);
+        }
+        
+        // C + U
+        template<typename LhsDataType, typename RhsDataType, template <typename> class OpType>
+        Expression<BinaryExpressionPolicy<ConstantExpresionPolicy<LhsDataType>, UnaryExpressionPolicy<RhsDataType, OpType>, AddOp> >
+        operator+(const Expression<ConstantExpressionPolicy<LhsDataType> >& lhs, 
+                  const Expression<UnaryExpressionPolicy<RhsLhsDataType, OpType> >& rhs)
+        {
+            typedef ConstantExpressionPolicy<LhsDataType> LhsPolicy;
+            typedef UnaryExpressionPolicy<RhsDataType, OpType> RhsPolicy;
+            typedef BinaryExpressionPolicy<LhsPolicy, RhsPolicy> ResultPolicy;
+            typedef Expression<ResultPolicy> ResultType;
+            
+            typename ResultPolicy::DataType d(lhs, rhs);
+            return ResultType(d);
+        }
+        
+        // C + B
+        template<typename LhsDataType, typename RhsLhsDataType,
+                 template<typename, typename> class RhsOpType,
+                 typename RhsRhsDataType>
+        typename AssociativeExpressionTraits
+                 <
+                    ConstantExpressionPolicy<LhsDataType>,
+                    AddOp,
+                    BinaryExpressionPolicy<RhsLhsDataType, RhsRhsDataType, RhsOpType>
+                 >::ResultType
+        operator+(const LhsDataType& lhs, const Expression<BinaryExpressionPolicy<RhsLhsDataType, RhsRhsDataType, RhsOpType> >& rhs)
+        {
+            typedef ConstantExpressionPolicy<LhsDataType> LhsPolicy;
+            typedef BinaryExpressionPolicy<RhsLhsDataType, RhsRhsDataType, RhsOpType> RhsPolicy;
+            
+            return AssociativeExpressionTraits<LhsPolicy, AddOp, RhsPolicy>::Apply(lhs, rhs);
+        }*/
+        
+/*        
+        // Original Addition operators
         template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType>
-        Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, AddOp > > operator+(
+        Expression<BinaryExpressionPolicy< LhsExpressionPolicyType, RhsExpressionPolicyType, AddOp > > operator+(
             const Expression<LhsExpressionPolicyType>& lhs, const Expression<RhsExpressionPolicyType>& rhs)
         {
-            return Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, AddOp > >(lhs, rhs);
+            typedef BinaryExpressionPolicy< LhsExpressionPolicyType, RhsExpressionPolicyType, AddOp> ResultPolicyType;
+            typename ResultPolicyType::DataType d(lhs, rhs);
+            return Expression<ResultPolicyType>(d);
         }
 
-        
         template<typename LhsDataType, typename RhsExpressionPolicy>
         Expression<BinaryExpressionPolicy<
-            Expression<ConstantExpressionPolicy<LhsDataType> >,
-            Expression<RhsExpressionPolicy>,
+            ConstantExpressionPolicy<LhsDataType>,
+            RhsExpressionPolicy,
             AddOp > > operator+(
             const LhsDataType& lhs,
             const Expression<RhsExpressionPolicy>& rhs)
         {
-            typedef Expression<ConstantExpressionPolicy<LhsDataType> > LhsExpressionType;
+            typedef ConstantExpressionPolicy<LhsDataType> LhsExpressionPolicy;
+            typedef Expression<LhsExpressionPolicy> LhsExpressionType;
             typedef Expression<RhsExpressionPolicy> RhsExpressionType;
 
-            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, AddOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+            typedef BinaryExpressionPolicy<LhsExpressionPolicy, RhsExpressionPolicy, AddOp> ResultPolicy;
+            typename ResultPolicy::DataType d(Expression<LhsExpressionPolicy>(lhs), rhs);
+            return Expression<ResultPolicy>(d);
         }
 
-        template<typename LhsExpressionPolicy, typename RhsDataType>
+        template<typename LhsPolicy, typename RhsDataType>
         Expression<BinaryExpressionPolicy<
-            Expression<LhsExpressionPolicy>,
-            Expression<ConstantExpressionPolicy<RhsDataType> >,
+            LhsPolicy,
+            ConstantExpressionPolicy<RhsDataType >,
             AddOp > > operator+(
-            const Expression<LhsExpressionPolicy>& lhs,
+            const Expression<LhsPolicy>& lhs,
             const RhsDataType& rhs)
         {
-            typedef Expression<LhsExpressionPolicy> LhsExpressionType;
-            typedef Expression<ConstantExpressionPolicy<RhsDataType> > RhsExpressionType;
-
-            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, AddOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
-        }
+            // Even newer
+            //return AssociativeExpressionTraits<LhsPolicy, ConstantExpressionPolicy<RhsDataType>, AddOp>::Apply(lhs, rhs);
+            // New
+            return BinaryExpressionGenerator<LhsPolicy, AddOp, ConstantExpressionPolicy<RhsDataType> >::Apply(lhs, rhs);
+        
+            // Original
+//             typedef Expression<LhsExpressionPolicy> LhsExpressionType;
+//             typedef ConstantExpressionPolicy<RhsDataType> RhsExpressionPolicy;
+//             typedef Expression<RhsExpressionPolicy> RhsExpressionType;
+// 
+//             typedef BinaryExpressionPolicy<LhsExpressionPolicy, RhsExpressionPolicy, AddOp> ResultPolicyType;
+//             typename ResultPolicyType::DataType d(lhs, Expression<RhsExpressionPolicy>(rhs));
+//             return Expression<ResultPolicyType>(d);
+        }*/
         
         ////////////////////////////////
         // Multiplication
         ///////////////////////////////
-        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType>
-        Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, MultiplyOp > > operator*(
+        template<typename LhsPolicyType, typename RhsPolicyType>
+        typename BinaryExpressionTraits<LhsPolicyType, MultiplyOp, RhsPolicyType>::ResultType
+        operator*(const Expression<LhsPolicyType>& lhs, const Expression<RhsPolicyType>& rhs)
+        {
+            typedef BinaryExpressionTraits<LhsPolicyType, MultiplyOp, RhsPolicyType> Traits;
+            return Traits::Apply(lhs, rhs);
+        }
+        
+        template<typename LhsDataType, typename RhsPolicyType>
+        typename BinaryExpressionTraits<ConstantExpressionPolicy<LhsDataType>, MultiplyOp, RhsPolicyType>::ResultType
+        operator*(const LhsDataType& lhs, const Expression<RhsPolicyType>& rhs)
+        {
+            return Expression<ConstantExpressionPolicy<LhsDataType> >(lhs) * rhs;
+        }
+        
+        template<typename LhsPolicyType, typename RhsDataType>
+        typename BinaryExpressionTraits<LhsPolicyType, MultiplyOp, ConstantExpressionPolicy<RhsDataType> >::ResultType
+        operator*(const Expression<LhsPolicyType>& lhs, const RhsDataType& rhs)
+        {
+            return lhs * Expression<ConstantExpressionPolicy<RhsDataType> >(rhs);
+        }
+        
+//         template<typename LhsPolicyType, typename RhsPolicyType>
+//         typename BinaryExpressionTraits<LhsPolicyType, MultiplyOp, RhsPolicyType>::ResultType
+//         operator*(const Expression<LhsPolicyType>& lhs, const Expression<RhsPolicyType>& rhs)
+//         {
+//             typedef BinaryExpressionTraits<LhsPolicyType, MultiplyOp, RhsPolicyType> Traits;
+//             return Traits::Apply(lhs, rhs);
+//         }
+        
+/*        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType>
+        Expression<BinaryExpressionPolicy< LhsExpressionPolicyType, RhsExpressionPolicyType, MultiplyOp > > operator*(
             const Expression<LhsExpressionPolicyType>& lhs, const Expression<RhsExpressionPolicyType>& rhs)
         {
-            return Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, MultiplyOp > >(lhs, rhs);
+            typedef BinaryExpressionPolicy< LhsExpressionPolicyType, RhsExpressionPolicyType, MultiplyOp> ResultPolicyType;
+            typename ResultPolicyType::DataType d(lhs, rhs);
+            return Expression<ResultPolicyType>(d);
+            //return Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, MultiplyOp > >(lhs, rhs);
         }
 
         
         template<typename LhsDataType, typename RhsExpressionPolicy>
         Expression<BinaryExpressionPolicy<
-            Expression<ConstantExpressionPolicy<LhsDataType> >,
-            Expression<RhsExpressionPolicy>,
+            ConstantExpressionPolicy<LhsDataType>,
+            RhsExpressionPolicy,
             MultiplyOp > > operator*(const LhsDataType& lhs, const Expression<RhsExpressionPolicy>& rhs)
         {
-            typedef Expression<ConstantExpressionPolicy<LhsDataType> > LhsExpressionType;
+            typedef ConstantExpressionPolicy<LhsDataType> LhsPolicyType;
+            typedef Expression<LhsPolicyType> LhsExpressionType;
             typedef Expression<RhsExpressionPolicy> RhsExpressionType;
 
-            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+            typedef BinaryExpressionPolicy<LhsPolicyType, RhsExpressionPolicy, MultiplyOp> ResultPolicy;
+            typename ResultPolicy::DataType d(Expression<LhsPolicyType>(lhs), rhs);
+            return Expression<ResultPolicy>(d);
         }
 
         template<typename LhsExpressionPolicy, typename RhsDataType>
             Expression<BinaryExpressionPolicy<
-            Expression<LhsExpressionPolicy>,
-            Expression<ConstantExpressionPolicy<RhsDataType> >,
+            LhsExpressionPolicy,
+            ConstantExpressionPolicy<RhsDataType>,
             MultiplyOp > > operator*(const Expression<LhsExpressionPolicy>& lhs, const RhsDataType& rhs)
         {
-            typedef Expression<LhsExpressionPolicy> LhsExpressionType;
-            typedef Expression<ConstantExpressionPolicy<RhsDataType> > RhsExpressionType;
-
-            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, MultiplyOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
-        }
+            return BinaryExpressionGenerator<LhsExpressionPolicy, MultiplyOp, ConstantExpressionPolicy<RhsDataType> >::Apply(lhs, rhs);
+//             typedef Expression<LhsExpressionPolicy> LhsExpressionType;
+//             typedef ConstantExpressionPolicy<RhsDataType> RhsExpressionPolicy;
+//             typedef Expression<RhsExpressionPolicy> RhsExpressionType;
+// 
+//             typedef BinaryExpressionPolicy<LhsExpressionPolicy, RhsExpressionPolicy, MultiplyOp> ResultPolicy;
+//             typename ResultPolicy::DataType d(lhs, Expression<RhsExpressionPolicy>(rhs));
+//             return Expression<ResultPolicy>(d);
+        }*/
         
         //////////////////////////////////////////////////////
         /// Subtraction
         //////////////////////////////////////////////////////
-        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType>
-        Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, SubtractOp > > operator-(
-        const Expression<LhsExpressionPolicyType>& lhs, const Expression<RhsExpressionPolicyType>& rhs)
+        template<typename LhsPolicyType, typename RhsPolicyType>
+        typename BinaryExpressionTraits<LhsPolicyType, SubtractOp, RhsPolicyType>::ResultType
+        operator-(const Expression<LhsPolicyType>& lhs, const Expression<RhsPolicyType>& rhs)
         {
-            return Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, SubtractOp > >(lhs, rhs);
+            typedef BinaryExpressionTraits<LhsPolicyType, AddOp, RhsPolicyType> Traits;
+            return Traits::Apply(lhs, rhs);
         }
-
         
-        template<typename LhsDataType, typename RhsExpressionPolicy>
-        Expression<BinaryExpressionPolicy<Expression<ConstantExpressionPolicy<LhsDataType> >, Expression<RhsExpressionPolicy>, SubtractOp > > 
-        operator-(const LhsDataType& lhs, const Expression<RhsExpressionPolicy>& rhs)
+        template<typename LhsDataType, typename RhsPolicyType>
+        typename BinaryExpressionTraits<ConstantExpressionPolicy<LhsDataType>, SubtractOp, RhsPolicyType>::ResultType
+        operator-(const LhsDataType& lhs, const Expression<RhsPolicyType>& rhs)
         {
-            typedef Expression<ConstantExpressionPolicy<LhsDataType> > LhsExpressionType;
-            typedef Expression<RhsExpressionPolicy> RhsExpressionType;
-
-            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, SubtractOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+            return Expression<ConstantExpressionPolicy<LhsDataType> >(lhs) - rhs;
         }
-
-        template<typename LhsExpressionPolicy, typename RhsDataType> 
-        Expression<BinaryExpressionPolicy<Expression<LhsExpressionPolicy>, Expression<ConstantExpressionPolicy<RhsDataType> >, SubtractOp > > 
-        operator-(const Expression<LhsExpressionPolicy>& lhs, const RhsDataType& rhs)
+        
+        template<typename LhsPolicyType, typename RhsDataType>
+        typename BinaryExpressionTraits<LhsPolicyType, SubtractOp, ConstantExpressionPolicy<RhsDataType> >::ResultType
+        operator-(const Expression<LhsPolicyType>& lhs, const RhsDataType& rhs)
         {
-            typedef Expression<LhsExpressionPolicy> LhsExpressionType;
-            typedef Expression<ConstantExpressionPolicy<RhsDataType> > RhsExpressionType;
-
-            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, SubtractOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+            return lhs - Expression<ConstantExpressionPolicy<RhsDataType> >(rhs);
         }
+        
+//         template<typename LhsPolicyType, typename RhsPolicyType>
+//         typename BinaryExpressionTraits<LhsPolicyType, SubtractOp, RhsPolicyType>::ResultType
+//         operator-(const Expression<LhsPolicyType>& lhs, const Expression<RhsPolicyType>& rhs)
+//         {
+//             typedef BinaryExpressionTraits<LhsPolicyType, SubtractOp, RhsPolicyType> Traits;
+//             return Traits::Apply(lhs, rhs);
+//         }
+        
+//         template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType>
+//         Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, SubtractOp > > operator-(
+//         const Expression<LhsExpressionPolicyType>& lhs, const Expression<RhsExpressionPolicyType>& rhs)
+//         {
+//             return Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, SubtractOp > >(lhs, rhs);
+//         }
+// 
+//         
+//         template<typename LhsDataType, typename RhsExpressionPolicy>
+//         Expression<BinaryExpressionPolicy<Expression<ConstantExpressionPolicy<LhsDataType> >, Expression<RhsExpressionPolicy>, SubtractOp > > 
+//         operator-(const LhsDataType& lhs, const Expression<RhsExpressionPolicy>& rhs)
+//         {
+//             typedef Expression<ConstantExpressionPolicy<LhsDataType> > LhsExpressionType;
+//             typedef Expression<RhsExpressionPolicy> RhsExpressionType;
+// 
+//             return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, SubtractOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+//         }
+// 
+//         template<typename LhsExpressionPolicy, typename RhsDataType> 
+//         Expression<BinaryExpressionPolicy<Expression<LhsExpressionPolicy>, Expression<ConstantExpressionPolicy<RhsDataType> >, SubtractOp > > 
+//         operator-(const Expression<LhsExpressionPolicy>& lhs, const RhsDataType& rhs)
+//         {
+//             typedef Expression<LhsExpressionPolicy> LhsExpressionType;
+//             typedef Expression<ConstantExpressionPolicy<RhsDataType> > RhsExpressionType;
+// 
+//             return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, SubtractOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+//         }
         
         //////////////////////////////////////////////////////
         /// Division
         //////////////////////////////////////////////////////
-        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType>
-        Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, DivideOp > > operator/(
-        const Expression<LhsExpressionPolicyType>& lhs, const Expression<RhsExpressionPolicyType>& rhs)
+        template<typename LhsPolicyType, typename RhsPolicyType>
+        typename BinaryExpressionTraits<LhsPolicyType, DivideOp, RhsPolicyType>::ResultType
+        operator/(const Expression<LhsPolicyType>& lhs, const Expression<RhsPolicyType>& rhs)
         {
-            return Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, DivideOp > >(lhs, rhs);
+            typedef BinaryExpressionTraits<LhsPolicyType, DivideOp, RhsPolicyType> Traits;
+            return Traits::Apply(lhs, rhs);
         }
-
         
-        template<typename LhsDataType, typename RhsExpressionPolicy>
-        Expression<BinaryExpressionPolicy<Expression<ConstantExpressionPolicy<LhsDataType> >, Expression<RhsExpressionPolicy>, DivideOp > > 
-        operator/(const LhsDataType& lhs, const Expression<RhsExpressionPolicy>& rhs)
+        template<typename LhsDataType, typename RhsPolicyType>
+        typename BinaryExpressionTraits<ConstantExpressionPolicy<LhsDataType>, DivideOp, RhsPolicyType>::ResultType
+        operator/(const LhsDataType& lhs, const Expression<RhsPolicyType>& rhs)
         {
-            typedef Expression<ConstantExpressionPolicy<LhsDataType> > LhsExpressionType;
-            typedef Expression<RhsExpressionPolicy> RhsExpressionType;
-
-            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, DivideOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+            return Expression<ConstantExpressionPolicy<LhsDataType> >(lhs) + rhs;
         }
-
-        template<typename LhsExpressionPolicy, typename RhsDataType> 
-        Expression<BinaryExpressionPolicy<Expression<LhsExpressionPolicy>, Expression<ConstantExpressionPolicy<RhsDataType> >, DivideOp > > 
-        operator/(const Expression<LhsExpressionPolicy>& lhs, const RhsDataType& rhs)
+        
+        template<typename LhsPolicyType, typename RhsDataType>
+        typename BinaryExpressionTraits<LhsPolicyType, DivideOp, ConstantExpressionPolicy<RhsDataType> >::ResultType
+        operator/(const Expression<LhsPolicyType>& lhs, const RhsDataType& rhs)
         {
-            typedef Expression<LhsExpressionPolicy> LhsExpressionType;
-            typedef Expression<ConstantExpressionPolicy<RhsDataType> > RhsExpressionType;
-
-            return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, DivideOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+            return lhs + Expression<ConstantExpressionPolicy<RhsDataType> >(rhs);
         }
+        
+//         template<typename LhsPolicyType, typename RhsPolicyType>
+//         typename BinaryExpressionTraits<LhsPolicyType, DivideOp, RhsPolicyType>::ResultType
+//         operator/(const Expression<LhsPolicyType>& lhs, const Expression<RhsPolicyType>& rhs)
+//         {
+//             typedef BinaryExpressionTraits<LhsPolicyType, DivideOp, RhsPolicyType> Traits;
+//             return Traits::Apply(lhs, rhs);
+//         }
+        
+//         template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType>
+//         Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, DivideOp > > operator/(
+//         const Expression<LhsExpressionPolicyType>& lhs, const Expression<RhsExpressionPolicyType>& rhs)
+//         {
+//             return Expression<BinaryExpressionPolicy< Expression<LhsExpressionPolicyType>, Expression<RhsExpressionPolicyType>, DivideOp > >(lhs, rhs);
+//         }
+// 
+//         
+//         template<typename LhsDataType, typename RhsExpressionPolicy>
+//         Expression<BinaryExpressionPolicy<Expression<ConstantExpressionPolicy<LhsDataType> >, Expression<RhsExpressionPolicy>, DivideOp > > 
+//         operator/(const LhsDataType& lhs, const Expression<RhsExpressionPolicy>& rhs)
+//         {
+//             typedef Expression<ConstantExpressionPolicy<LhsDataType> > LhsExpressionType;
+//             typedef Expression<RhsExpressionPolicy> RhsExpressionType;
+// 
+//             return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, DivideOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+//         }
+// 
+//         template<typename LhsExpressionPolicy, typename RhsDataType> 
+//         Expression<BinaryExpressionPolicy<Expression<LhsExpressionPolicy>, Expression<ConstantExpressionPolicy<RhsDataType> >, DivideOp > > 
+//         operator/(const Expression<LhsExpressionPolicy>& lhs, const RhsDataType& rhs)
+//         {
+//             typedef Expression<LhsExpressionPolicy> LhsExpressionType;
+//             typedef Expression<ConstantExpressionPolicy<RhsDataType> > RhsExpressionType;
+// 
+//             return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, DivideOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
+//         }
     }
+    
+
 }
 
 #endif // NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_HPP
 
 /**
     $Log: BinaryExpression.hpp,v $
+    Revision 1.8  2006/11/12 17:58:47  bnelson
+    *** empty log message ***
+
     Revision 1.7  2006/11/08 04:17:32  bnelson
     Made expressions work for complicated, nested expression templates - but suboptimally.
 
@@ -413,3 +504,101 @@ namespace Nektar
 
 **/
     
+/*        template<typename LhsDataType, typename RhsLhsPolicyType, typename RhsRhsPolicyType, typename ResultType,
+                 template <typename, typename> class RhsOpType, 
+                 template <typename, typename> class OpType>
+        class EvaluateBinaryExpression<ConstantExpressionPolicy<LhsDataType>,
+                                       BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
+                                       ResultType, OpType, BinaryNullOp,
+                                       typename boost::enable_if
+                                       <
+                                            boost::mpl::not_<
+                                            boost::is_same
+                                            <
+                                                ResultType, 
+                                                typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>::ResultType
+                                            > >
+                                       >::type >
+        {
+            public:
+                typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>::ResultType RhsDataType;
+                
+                static void Eval(const Expression<ConstantExpressionPolicy<LhsDataType> >& lhs, 
+                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
+                                 Accumulator<ResultType>& accum)
+                {
+                    ASSERTL0(!accum.IsInitialized(), "Accumulator must not be initialized in the lowest level binary expression evaluator.");
+                    lhs.Apply(accum);
+                    RhsDataType t = rhs;
+                    OpType<LhsDataType, RhsDataType>::ApplyEqual(t, accum);
+                }
+                
+        };
+    
+        template<typename RhsDataType, typename LhsLhsPolicyType, typename LhsRhsPolicyType, typename ResultType,
+                 template <typename, typename> class LhsOpType, 
+                 template <typename, typename> class OpType>
+        class EvaluateBinaryExpression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
+                                       ConstantExpressionPolicy<RhsDataType>,
+                                       ResultType, OpType, BinaryNullOp,
+                                       typename boost::enable_if
+                                       <
+                                            boost::mpl::not_<
+                                            boost::is_same
+                                            <
+                                                ResultType, 
+                                                typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>::ResultType
+                                            > >
+                                        >::type >
+        {
+            public:
+            
+                typedef typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>::ResultType LhsDataType;
+                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs,
+                                 const Expression<ConstantExpressionPolicy<RhsDataType> >& rhs, 
+                                 Accumulator<ResultType>& accum)
+                {
+                    ASSERTL0(!accum.IsInitialized(), "Accumulator must not be initialized in the lowest level binary expression evaluator.");
+                    LhsDataType t = lhs;
+                    rhs.Apply(accum);
+                    OpType<LhsDataType, RhsDataType>::ApplyLeftEqual(t, accum);
+                }
+        };*/
+            // Parent and child priority are different
+        // Don't have to worry about this one at the low level - the temporary has already been created.
+            
+        
+        // Conditions for this one.
+        // 1. The accumulator and binary expression have the same type.
+        // 2. 
+//         template<typename LhsDataType, typename RhsLhsPolicyType, typename RhsRhsPolicyType, typename ResultType,
+//                  template <typename, typename> class RhsOpType, 
+//                  template <typename, typename> class OpType,
+//                  template <typename, typename> class ParentOpType>
+//         class EvaluateBinaryExpression<ConstantExpressionPolicy<LhsDataType>,
+//                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
+//                                        ResultType, OpType, ParentOpType,
+//                                        typename boost::enable_if
+//                                        <
+//                                             boost::mpl::and_
+//                                             <
+//                                                 boost::is_same
+//                                                 <
+//                                                     ResultType, 
+//                                                     typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>::ResultType
+//                                                 >,
+//                                                 boost::mpl::not_<boost::is_same<BinaryNullOp<void, void>, ParentOpType<void, void> > >
+//                                             >
+//                                        >::type >
+//         {
+//             public:
+//                 static void Eval(const Expression<ConstantExpressionPolicy<LhsDataType> >& lhs, 
+//                                  const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
+//                                  Accumulator<ResultType>& accum)
+//                 {
+//                     ASSERTL0(accum.IsInitialized(), "Accumulator must be initialized if a parent op type is provided.");
+//                     rhs.Apply(accum);
+//                     OpType<LhsDataType, ResultType>::ApplyLeftEqual(*lhs, accum);
+//                 }
+//                 
+//         };

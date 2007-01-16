@@ -52,10 +52,16 @@ namespace Nektar
         public:
             typedef DataType NegationType;
     };
+    
+    template<typename DataType>
+    class NegateTraits;
 }
 
 #endif // NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_TRAITS_HPP
 
 /**
-    $Log: $
+    $Log: UnaryExpressionTraits.hpp,v $
+    Revision 1.1  2006/08/25 01:33:48  bnelson
+    no message
+
 **/

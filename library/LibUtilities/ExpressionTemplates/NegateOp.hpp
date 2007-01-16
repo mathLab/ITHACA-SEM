@@ -41,6 +41,7 @@
 #include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
 
 #include <boost/call_traits.hpp>
+#include <string>
 
 namespace Nektar
 {
@@ -55,20 +56,31 @@ namespace Nektar
             public:
                 typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
                 typedef ParameterType InputType;
-                typedef typename ExpressionMetadataChooser<ParameterType>::MetadataType MetadataType;
+                typedef NegateTraits<ParameterType> TraitsType;
+                
+                //typedef typename ExpressionMetadataChooser<ParameterType>::MetadataType MetadataType;
 
                 static void Apply(typename boost::call_traits<ParameterType>::reference result)
                 {
                     negate(result);
                 }
 
-                static MetadataType CreateUnaryMetadata(const MetadataType& rhs)
-                {
-                    return MetadataType::CreateForNegation(rhs);
-                }
+//                 static MetadataType CreateUnaryMetadata(const MetadataType& rhs)
+//                 {
+//                     return MetadataType::CreateForNegation(rhs);
+//                 }
 
+                static const std::string& AsString()
+                {
+                    return s_StringRep;
+                }
+                
             private:
+                static std::string s_StringRep;
         };
+        
+        template<typename ParameterType>
+        std::string NegateOp<ParameterType>::s_StringRep("-");
     }
 }
 
@@ -76,6 +88,9 @@ namespace Nektar
 
 /**
     $Log: NegateOp.hpp,v $
+    Revision 1.6  2006/09/16 23:52:56  bnelson
+    Changed unary operations to rely on methods outside the class (to aid adding expression templates to classes that can't be modified)
+
     Revision 1.5  2006/09/14 02:08:59  bnelson
     Fixed gcc compile errors
 

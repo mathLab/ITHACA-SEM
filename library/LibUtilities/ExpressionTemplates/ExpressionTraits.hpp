@@ -40,15 +40,20 @@ namespace Nektar
 {
     namespace expt
     {
-
         template<typename DataType>
-        class ExpressionTraits;    
+        class ExpressionTraits;
+        
+
+
     }
 }
 
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_TRAITS_H
 
 /**
-    $Log: $
+    $Log: ExpressionTraits.hpp,v $
+    Revision 1.1  2006/09/14 02:09:00  bnelson
+    Fixed gcc compile errors
+
 **/
 

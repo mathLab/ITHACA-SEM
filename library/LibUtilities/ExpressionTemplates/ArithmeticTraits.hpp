@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: testExpressionTemplates.h
+// File: BinaryExpressionOperators.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,59 +29,29 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Test code for NekVector
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
-
-#ifndef NEKTAR_UNIT_TESTS_TEST_EXPRESSION_TEMPLATES_H
-#define NEKTAR_UNIT_TESTS_TEST_EXPRESSION_TEMPLATES_H
+#ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ARITHMETIC_TRAITS_HPP
+#define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ARITHMETIC_TRAITS_HPP
 
 namespace Nektar
 {
-    namespace UnitTests
+    namespace expt
     {
-        void testConstantExpressions();
-        void testUnaryExpressions();
-        void testBinaryExpressions();
-        void testNekMatrixMetadata();
-        void testNekMatrixMultiplication();
-        void testNekMatrixSomewhatComplicatedExpression();
-        void testNekMatrixComplicatedExpression();
+        template<typename LhsType, typename RhsType>
+        class AdditionTraits;
         
-        void testTemporaryGenerationFromSingleLevelBinaryExpressions();
+        template<typename LhsType, typename RhsType>
+        class SubtractionTraits;
         
-        void testExhaustiveSingleLevelBinaryExpressions();
-        void testExhaustive2OpBinaryExpressions();
+        template<typename LhsType, typename RhsType>
+        class MultiplicationTraits;
+        
+        template<typename LhsType, typename RhsType>
+        class DivisionTraits;
     }
 }
 
-#endif // NEKTAR_UNIT_TESTS_TEST_EXPRESSION_TEMPLATES_H
-
-
-/**
-    $Log: testExpressionTemplates.h,v $
-    Revision 1.7  2006/11/11 01:32:53  bnelson
-    *** empty log message ***
-
-    Revision 1.6  2006/11/08 04:18:22  bnelson
-    Added more expression template tests.
-
-    Revision 1.5  2006/11/06 17:10:05  bnelson
-    *** empty log message ***
-
-    Revision 1.4  2006/09/11 03:28:41  bnelson
-    no message
-
-    Revision 1.3  2006/08/28 02:40:51  bnelson
-    *** empty log message ***
-
-    Revision 1.2  2006/08/25 01:37:34  bnelson
-    no message
-
-    Revision 1.1  2006/08/25 01:36:26  bnelson
-    no message
-
-
-**/
+#endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ARITHMETIC_TRAITS_HPP

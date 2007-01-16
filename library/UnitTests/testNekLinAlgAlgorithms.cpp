@@ -62,7 +62,7 @@ namespace Nektar
             
             BOOST_CHECK_EQUAL(q.size(), 2);
             
-            double epsilon = 1e-2;
+            double epsilon = 1e-1;
             BOOST_CHECK_CLOSE(q[0][0], .4472, epsilon);
             BOOST_CHECK_CLOSE(q[0][1], .0, epsilon);
             BOOST_CHECK_CLOSE(q[0][2], .8942, epsilon);
@@ -75,7 +75,10 @@ namespace Nektar
 }
 
 /**
-    $Log: $
+    $Log: testNekLinAlgAlgorithms.cpp,v $
+    Revision 1.1  2006/11/20 03:39:41  bnelson
+    Added Gram-Schmidt tests
+
 
  **/
 

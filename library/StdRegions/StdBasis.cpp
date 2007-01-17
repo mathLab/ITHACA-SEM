@@ -43,154 +43,7 @@ namespace Nektar
     namespace StdRegions 
     {
 
-        /** \brief Generate a basis array stored in \a _bdata[m][i] of type \a
-        init_ptype of order \a init_order at \a init_zorder points
-        distributed according to \a init_z[i].
-
-        \b init_pointstype can take the following arguments: 
-
-        \li \b Ortho_A, \b Legendre: Orthogonal cardinal function A 
-        (Legendre polynomials) \f$\widetilde{\psi}^a_p(z) = L_p(z)\f$\n\n
-        %
-        \f$ \mbox{\bf \_bdata}[p][i] = \widetilde{\psi}^a_p(z_i) 
-        = P^{0,0}_p(z_i) \f$ 
-        normalised so that 
-        \f$ (\widetilde{\psi}^a_{p},\widetilde{\psi}^a_{p})=1\f$
-
-        \li \b Ortho_B: Orthogonal cardinal function B 
-        \f$\widetilde{\psi}^b_{pq}(z)\f$\n\n
-        %	
-        \f$ \mbox{\bf \_bdata}[m(p,q)][i]=\widetilde{\psi}^b_{pq}(z_i) = 
-        [(1-z_i)]^p P^{2p+1,0}_q(z_i) \f$
-        %     
-        normalised so that 
-        \f$(\widetilde{\psi}^b_{pq},\widetilde{\psi}^b_{pq})=1\f$\n\n
-        %
-        where \f$ m(p,q)=\frac{p}{2}(2\ \mbox{init\_order}-p+1)+q\f$ 
-        and  \f$0 \leq p, p+q < \mbox{init\_order}, \f$
-
-        \li \b Ortho_C: Orthogonal cadinal function C:
-        \f$ \widetilde{\psi}^b_{pqr}(z)\f$ \n
-        %	
-        \f$ \widetilde{\psi}^c_{pqr}(z_i)
-        =  [(1-z_i)]^{p+q} P^{2p+2q+1,0}_q(z_i) \f$
-        %     
-        normalised so that 
-        \f$(\widetilde{\psi}^c_{pqr},\widetilde{\psi}^c_{pqr})=1\f$\n
-        %
-        Due symmetry we note that \n
-        \f$ \widetilde{\psi}^c_{pqr}(z_i) = 
-        \widetilde{\psi}^{c\star}_{(p+q)r}(z_i) = 
-        \widetilde{\psi}^{c\star}_{sr}(z_i) \f$ \n
-        %
-        and so we only need calculate \n\n
-        %
-        \f$ \mbox{\bf \_bdata}[m(s,r)][i]=
-        \widetilde{\psi}^{c\star}_{sr}(z_i)\
-        = [(1-z)]^{s} P^{2s+2,0}_q(z)\f$
-        %
-        (Which is very similar to the cardinal function B)\n\n
-        %
-        where \f$ s = p+q, m(s,r)=\frac{s}{2}
-        (2\ \mbox{init\_order}-s+1)+r\f$		    
-        and  \f$0 \leq s, s+r < \mbox{init\_order}, \f$
-
-
-        \li \b Modified_A:  Modified cardial functions A, \f$ \psi^a_p(z)\f$\n\n
-        %
-        \f$ \mbox{\bf \_bdata}[p][i] = \left \{ \begin{array}{ll}
-        (1-z_i)/2    & p=0          \\          
-        (1+z_i)/2    & p=1          \\         
-        (1-z_i)/2 (1+z_i)/2 & p=2   \\
-        (1-z_i)/2 (1+z_i)/2 P_1^{1,1}(z_i)  & p=3\\
-        \vdots &   \vdots \\
-        (1-z_i)/2 (1+z_i)/2 P_{j-2}^{1,1}(z_i) & p=j \end{array} \right . 
-        \f$\n\n
-        %
-        Note this has been changed from Nektar where (1+z)/2 was
-        stored first in list rather than (1-z)/2. The new format is
-        more consistent with a left to right convention of
-        interpreting the basis index \a p.\n
-        %
-        The vertex modes are ordered in a hierarchical fashion rather
-        than the nodal format as used in the book.
-
-
-        \li \b Modified_B, \b Modified_C Modified cardinal functions B and C
-        \f$ \psi^b_{pq}(z)\f$, \f$ \psi^c_{pqr}(z)\f$\n
-        %
-        \b Note: Modified_B and  Modified_C can use the same definition
-        since \f$ \psi^c_{pqr}(z) =  \psi^b_{(p+q)r}(z) \f$	 
-        %
-        \f$ \mbox{\bf \_bdata[m(p,q)][i]} = 
-        \left \{ \begin{array}{ll}
-        (1-z_i)/2            & m = 0,\ \  (p=0,q=0) \\
-        (1+z_i)/2            & m = 1,\ \  (p=0,q=1) \\
-        (1-z_i)/2 (1+z_i)/2  & m = 2,\ \  (p=0,q=2) \\
-        \vdots       &       \vdots         \\
-        (1-z_i)/2 (1+z_i)/2 P_{j-2}^{1,1}(z_i) & m = j,\ \ (p=0,q=j) \\  
-        & \\
-        (1-z_i)/2            & m = \mbox{order},  \ \  (p=1,q=0) \\
-        (1-z_i)/2 (1+z_i)/2  & m = \mbox{order}+1,\ \  (p=1,q=2) \\
-        \vdots       &       \vdots         \\
-        (1-z_i)/2 (1+z_i)/2 P_{j-2}^{1,1}(z_i) & m = \mbox{order}+j,\ \ (p=1,q=j) \\  	   & \\
-        \left [(1-z_i)/2\right]^2           & m=\mbox{2 order-1}\ \ 
-        (p=2,q=0) \\
-        \left [(1-z_i)/2\right]^2 (1+z_i)/2 & m=\mbox{2 order}\ \ 
-        (p=2,q=1) \\
-        \vdots	           &         \vdots                         \\
-        \left [(1-z_i)/2\right]^2 (1+z_i)/2 P_{j-1}^{3,1}(z_i) &  
-        m=\mbox{2 order}+j-1\ \  (p=2,q=j)       \\
-        &        \\
-        \left [(1-z_i)/2\right]^{k+1}          & m(p,q)  \ \ 
-        (p=3,q=0) \\
-        \left [(1-z_i)/2\right]^{k+1}(1+z_i)/2 & m(p,q).\ \ 
-        (p=3.q=1) \\
-\vdots	              &         \vdots                      \\
-        \left [(1-z_i)/2\right]^{k+1} (1+z_i)/2 P_{j-1}^{2k+1,1}(z_i) & 
-        m(p,q)\ \  (p=k.q=j) 
-        \end{array} \right . \f$ \n \n
-        %
-        Note: this has been changed from Nektar where (1+z)/2 was
-        stored first in list rather than (1-z)/2. The new format is
-        more consistent with a left to right convention. The modes
-        used in edge 0 are now also interlaced with the interior modes
-        which is convenient for matrix operations in the  
-        sumfactorizations\n\n
-        %
-        The vertex modes are ordered in a hierarchical fashion
-        rather than the nodal format as used in the book.\n\n
-        %
-        Finally the second row which is almost identical to the first 
-        row but does not include the mode (1+z)/2. This is to make the block 
-        consistent with the size of the orthonormal basis and means that
-        similar sumfactorisation routines can be called for both basis althoug
-        the top vertex mode will remain a special case in the Modified_B
-        bases.
-
-        \li \b Fourier: Fourier bases stored in real and then imaginary parts, 
-        in the interval [-1,1] i.e.\n \n
-        %
-        \f$ \mbox{\bf \_bdata}[p][i] = \left \{ \begin{array}{ll}
-        1 & p=0 \\ 
-        \sin((m+1) \pi z) & p=1 \\ 
-        \cos(\pi z_i) & p=2 \\
-        \sin(\pi z_i) & p=3 \\
-        \cos(2 \pi z_i) & p=4 \\
-        \sin(2 \pi z_i) & p=5 \\
-        \vdots & \vdots \\
-        \cos(m \pi z) & p = 2m \\
-        \sin(m \pi z) & p = 2m+1  \end{array} \right . \f$\n \n
-        %	 
-        Note: Should alway be called with a factor of 2 modes
-        \li \b Chebychev: Chebychev polynomials \f$ T_p(z) \f$\n\n
-        %
-        \f$\mbox{\bf \_bdata}[p][i] = T_p(z_i) = 
-        2^{2p} (p!)^2/(2n!) P^{-1/2,-1/2}_p(z_i) \f$\n
-
-        */
-
-        void Basis::GenBasis(){
+         void Basis::GenBasis(){
 
             ASSERTL0(m_basisorder>0, "Cannot call Basis initialisation with zero or negative order");
 
@@ -531,8 +384,9 @@ namespace Nektar
             }
         }
 
-        /// \brief Determine if polynomial basis can be eactly integrated
-        /// with itself
+        /** \brief Determine if polynomial basis can be eactly integrated
+	 *  with itself
+	 */
         int BasisKey::ExactIprodInt(void) const 
         {
 
@@ -562,9 +416,9 @@ namespace Nektar
         }
 
 
-        /// \brief Determine if basis has collocation proeprty,
-        /// i.e. GLL_Lagrange with Lobatto integration of appropriate order.
-
+        /** \brief Determine if basis has collocation proeprty,
+	 * i.e. GLL_Lagrange with Lobatto integration of appropriate order.
+	 */
         int BasisKey::Collocation() const 
         {
 
@@ -704,6 +558,9 @@ namespace Nektar
 
 /** 
 * $Log: StdBasis.cpp,v $
+* Revision 1.5  2006/08/05 19:03:48  sherwin
+* Update to make the multiregions 2D expansion in connected regions work
+*
 * Revision 1.4  2006/06/13 18:05:02  sherwin
 * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
 *

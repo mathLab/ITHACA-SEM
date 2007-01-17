@@ -55,14 +55,14 @@ namespace Nektar
         /////////////////////////
         // Container Data
         /////////////////////////
-            NodalBasisType m_ntype;     //< Nodal Point Type
-            int m_dim;                  //< Dimension of point set
-            int m_porder;               //< Polynomial order of point set
-            /// Number of barycentric points (with no symmetry duplications)
+      	    NodalBasisType m_ntype;     /**< Nodal Point Type */
+            int m_dim;                  /**< Dimension of point set */
+            int m_porder;               /**< Polynomial order of point set */
+            /** Number of barycentric points (with no symmetry duplications) */
             int m_bnpts;               
-            /// Up to five possible symmetries (in 3D)
+            /** Up to five possible symmetries (in 3D) */
             int *m_symm[(int) NekConstants::kMaxSym];  
-            /// Up to four barycentric coordinates (in 3D)
+            /** Up to four barycentric coordinates (in 3D) */
             double * m_bpoints[NekConstants::kMaxBary];  
 
             int m_npts;
@@ -144,15 +144,29 @@ namespace Nektar
 
             protected:
 
-            /// Functions used by constructor to read nodal points From files
+            /** \brief Functions used by constructor to read nodal points
+	     *  from file (2D case)
+	     */
             void NodalFileRead2D(std::FILE *fp, BaryNodeContainer * rc);
+
+            /** \brief Functions used by constructor to read nodal points
+	     *  from file (3D case)
+	     */
             void NodalFileRead3D(std::FILE *fp, BaryNodeContainer * rc);
       
-            /// Functions used to expand barycenter points to standard elements
+            /** \brief Functions used to expand barycenter points to standard 
+	     *  elements (2D case)
+	     */
             void NodalPointExpand2D(BaryNodeContainer * rc);
+
+            /** \brief Functions used to expand barycenter points to standard 
+	     *  elements (3D case)
+	     */
             void NodalPointExpand3D(BaryNodeContainer * rc);
 
-            /// Functions used to reorder points to a prescribed vertex/edge/interior ordering 
+            /** \brief Functions used to reorder points to a prescribed 
+	     *  vertex/edge/interior ordering 
+	     */
             void NodalPointReorder2d(BaryNodeContainer * rc);
 
             private:
@@ -166,6 +180,9 @@ namespace Nektar
 
 /**
  * $Log: NodalBasisManager.h,v $
+ * Revision 1.3  2006/12/17 22:20:24  bnelson
+ * Fixed a compiler error on gcc 4.1
+ *
  * Revision 1.2  2006/09/10 02:20:52  kirby
  * *** empty log message ***
  *

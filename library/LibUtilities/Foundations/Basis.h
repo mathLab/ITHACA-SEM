@@ -68,32 +68,33 @@ namespace Nektar
             {
             }
 
-            /// \brief return order of basis
+            /** \brief return order of basis */
             inline int GetBasisOrder() const
             {
                 return m_basisorder;
             }
 
-            /// \brief return points order at which  basis is defined 
+            /** \brief return points order at which  basis is defined */
             inline int GetPointsOrder() const
             {
                 return m_pointskey.m_numpoints;
             }
 
-            /// \brief return type of expansion basis
+            /** \brief return type of expansion basis */
             inline BasisType GetBasisType() const
             {
                 return m_basistype;
             }
 
-            /// \brief return type of quadrature 
+            /** \brief return type of quadrature */
             inline PointsType GetPointsType() const
             {
                 return m_pointskey.m_pointstype;
             }    
 
-            /// \brief Check to see if the quadrature of expansions x is the
-            /// same as the calling basis
+            /** \brief Check to see if the quadrature of expansions x is the
+	     *  same as the calling basis
+	     */
             inline bool SamePoints(const BasisKey &x) const
             {
                 if(x.m_pointskey == m_pointskey)
@@ -106,8 +107,9 @@ namespace Nektar
                 }
             }
 
-            /// \brief Check to see if basis expansions x is the same as the
-            /// calling basis
+            /** \brief Check to see if basis expansions x is the same as the
+	     *  calling basis
+	     */
             inline bool SameExp(const BasisKey &x) const
             {
                 if((x.m_basisorder == m_basisorder)&&(x.m_basistype == m_basistype))
@@ -129,9 +131,10 @@ namespace Nektar
             friend bool operator  != (const BasisKey& x, const BasisKey *y);
 
         protected:
-            int        m_basisorder;  //< Expansion Order
-            BasisType  m_basistype;   //< Expansion Type 
-            PointKey   m_pointskey;      //< Point Key identifying points at which basis is evaluated
+            int        m_basisorder;  /**< Expansion Order */
+            BasisType  m_basistype;   /**< Expansion Type */
+	    /** Point Key identifying points at which basis is evaluated */
+            PointKey   m_pointskey;
 
         private:
         };
@@ -218,13 +221,13 @@ namespace Nektar
                 GenBasis();
             }
 
-            /// \brief return basis definition array m_bdata
+            /** \brief return basis definition array m_bdata */
             inline const double * GetBdata() const
             {
                 return m_bdata;
             }
 
-            /// \brief return basis definition array m_dbdata
+            /** \brief return basis definition array m_dbdata */
             inline const double * GetDbdata() const
             {
                 return m_dbdata;
@@ -234,8 +237,8 @@ namespace Nektar
 
 
         protected:
-            double    *m_bdata;       //!< Basis definition
-            double    *m_dbdata;      //!< Derivative Basis definition
+            double    *m_bdata;       /**< Basis definition */
+            double    *m_dbdata;      /**< Derivative Basis definition */
 
 
         private:

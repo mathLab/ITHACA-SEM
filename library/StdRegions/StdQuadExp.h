@@ -81,6 +81,12 @@ namespace Nektar
                 return eQuadrilateral;
             };
 
+
+	    /** \brief Fill outarray with mode \a mode of expansion
+	     *
+	     *	Note for quadrilateral expansions _base[0] (i.e. p)  modes run 
+	     *  fastest
+	     */
             void FillMode(int mode, double *array);
 
             //////////////////////////////
@@ -333,6 +339,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.7  2007/01/17 16:05:41  pvos
+* updated doxygen documentation
+*
 * Revision 1.6  2006/12/10 19:00:54  sherwin
 * Modifications to handle nodal expansions
 *

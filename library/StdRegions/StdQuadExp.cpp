@@ -155,13 +155,6 @@ namespace Nektar
                 }
 
             }
-
-
-	/** Fill outarray with mode 'mode' of expansion
-	    
-	Note for quadrilateral expansions _base[0] (i.e. p)  modes run fastest
-	
-	*/
 	
 	void StdQuadExp::FillMode(const int mode, double *outarray)
 	{
@@ -565,6 +558,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.6  2007/01/17 16:05:41  pvos
+* updated doxygen documentation
+*
 * Revision 1.5  2006/12/10 19:00:54  sherwin
 * Modifications to handle nodal expansions
 *

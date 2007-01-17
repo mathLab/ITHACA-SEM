@@ -188,13 +188,6 @@ namespace Nektar
 
         }
 
-
-        /** Fill outarray with mode 'mode' of expansion
-
-        Note for quadrilateral expansions _base[0] (i.e. p)  modes run fastest
-
-        */
-
         void StdTriExp::FillMode(const int mode, double *outarray)
         {
             int    i,m;
@@ -613,6 +606,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.9  2007/01/17 16:05:41  pvos
+* updated doxygen documentation
+*
 * Revision 1.8  2006/12/10 19:00:54  sherwin
 * Modifications to handle nodal expansions
 *

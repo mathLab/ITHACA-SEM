@@ -76,6 +76,11 @@ namespace Nektar
                 return eHexahedron;
             };
 
+	    /** \brief Fill outarray with mode \a mode of expansion
+	     *
+	     *	Note for hexahedral expansions _base[0] (i.e. p)  modes run 
+	     *  fastest
+	     */
             void FillMode(int mode, double *array);
 
             //////////////////////////////
@@ -246,6 +251,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.6  2007/01/17 16:05:40  pvos
+* updated doxygen documentation
+*
 * Revision 1.5  2006/12/10 19:00:54  sherwin
 * Modifications to handle nodal expansions
 *

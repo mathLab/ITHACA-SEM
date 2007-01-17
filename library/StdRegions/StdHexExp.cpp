@@ -226,13 +226,6 @@ namespace Nektar
             }
         }
 
-
-        /** Fill outarray with mode 'mode' of expansion
-
-        Note for hexahedral expansions _base[0] (i.e. p)  modes run fastest
-
-        */
-
         void StdHexExp::FillMode(const int mode, double *outarray)
         {
             int    i,j;
@@ -538,6 +531,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.4  2007/01/17 16:05:40  pvos
+* updated doxygen documentation
+*
 * Revision 1.3  2006/12/10 19:00:54  sherwin
 * Modifications to handle nodal expansions
 *

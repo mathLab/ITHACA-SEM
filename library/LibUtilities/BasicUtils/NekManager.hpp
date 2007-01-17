@@ -42,6 +42,7 @@
 #include <boost/function.hpp>
 #include <boost/call_traits.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/concept_check.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
@@ -52,8 +53,11 @@ template <typename KeyType, typename ValueT>
 class NekManager
 {
     public:
+        BOOST_CLASS_REQUIRE(KeyType, boost, LessThanComparableConcept);
+        
+    public:
         typedef boost::shared_ptr<ValueT> ValueType;
-        typedef boost::function<ValueType (const KeyType& key)> CreateFuncType;
+        typedef boost::function<ValueType (const KeyType&)> CreateFuncType;
         typedef std::map<KeyType, ValueType> ValueContainer;
         typedef std::map<KeyType, CreateFuncType> CreateFuncContainer;
 

@@ -45,18 +45,26 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        class PointsKey;
+        
+        // Use for looking up the creator.  The creator for number of points
+        // can generate for any number, so we want the same creator called
+        // for all number.
+        struct opLess
+        {
+            bool operator()(const PointsKey &lhs, const PointsKey &rhs);
+        };
+       
+
         class PointsKey
         {
         public:
-
-            PointsKey()
-            {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for PointsKey should not be called");
-            }
-
-            PointsKey(const int &pointsorder, const PointsType &pointstype, 
-                const PointsIdentifier &pointsid): m_pointsorder(pointsorder), 
-                m_pointstype(pointstype), m_pointsid(pointsid) 
+            PointsKey(const unsigned int &pointsdim, const int &numpoints,
+                      const PointsType &pointstype, const PointsIdentifier &pointsid = eWildcard): 
+                m_pointsdim(pointsdim),
+                m_numpoints(numpoints), 
+                m_pointstype(pointstype),
+                m_pointsid(pointsid)
             {
             }
 
@@ -66,20 +74,27 @@ namespace Nektar
 
             PointsKey(const PointsKey &key)
             {
-                *this = key;
+                *this = key; // defer to assignment operator
             }
 
             PointsKey& operator=(const PointsKey &key)
             {
-                m_pointsorder = key.m_pointsorder;
+                m_pointsdim = key.m_pointsdim;
+                m_numpoints = key.m_numpoints;
                 m_pointstype  = key.m_pointstype;
                 m_pointsid    = key.m_pointsid;
+
                 return *this;
             }
 
-            inline int GetPointsOrder() const
+            inline unsigned int GetPointsDim() const
             {
-                return m_pointsorder;
+                return m_pointsdim;
+            }
+
+            inline int GetNumPoints() const
+            {
+                return m_numpoints;
             }
 
             inline PointsType GetPointsType() const
@@ -92,66 +107,85 @@ namespace Nektar
                 return m_pointsid;
             }
 
+            bool operator==(const PointsKey &key)
+            {
+                return (m_pointsdim == key.m_pointsdim &&
+                        m_numpoints == key.m_numpoints &&
+                        m_pointstype == key.m_pointstype &&
+                        m_pointsid == key.m_pointsid);
+            }
+
+
+            bool operator == (const PointsKey *y)
+            {
+                return (*this == *y);
+            }
+
+            bool operator != (const PointsKey& y)
+            {
+                return (!(*this == y));
+            }
+
+            bool operator != (const PointsKey *y)
+            {
+                return (!(*this == *y));
+            }
+
+            friend bool operator<(const PointsKey &lhs, const PointsKey &rhs);
+            friend bool opLess::operator()(const PointsKey &lhs, const PointsKey &rhs);
+
         protected:
-            int m_pointsorder;            //!< "Order" of the points (as appropriately defined for PointsType)
+            unsigned int m_pointsdim;     //!< dimension of the points
+            int m_numpoints;              //!< number of the points (as appropriately defined for PointsType)
             PointsType m_pointstype;      //!< Type of Points
-            PointsIdentifier m_pointsid;  //!< Unique indentifier (when needed) 
+            PointsIdentifier m_pointsid;  //!< Unique indentifier (when needed)
+
+        private:
+            PointsKey()
+            {
+                NEKERROR(ErrorUtil::efatal,"Default Constructor for PointsKey should not be called");
+            }
         };
 
+        bool operator<(const PointsKey &lhs, const PointsKey &rhs);
 
-        template<typename DataType, unsigned int dim>
+        std::ostream& operator<<(std::ostream& os, const PointsKey& rhs);
+
+        template<typename DataType>
         class Points
         {
         public:
-            Points()
-            {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for Points should not be called");
-            }
-
-
             Points(const PointsKey &key): m_pkey(key)
             {
-                CalculateNumPoints(); //populate m_numpoints
-
-                // Allocate Memory
-                for(unsigned int i = 0; i < dim; ++i)
-                {
-                    m_points[i] = new DataType[m_numpoints];
-                }
-
-                m_weights = new DataType[m_numpoints];
-                m_derivmatrix.reset( new NekMatrix<DataType>(m_numpoints) );
-
-                CalculatePoints();
-
-                CalculateWeights();
-
-                CalculateDerivMatrix();                           
             }
+
 
             virtual ~Points()
+
             {
-                if(m_numpoints)
+                if(m_pkey.GetNumPoints())
                 {
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        delete[] m_points[i];
-                    }
+                    //unsigned int dim = m_pkey.GetPointsDim();
 
-                    delete[] m_weights;
+                    //for(unsigned int i = 0; i < dim; ++i)
+                    //{
+                    //    delete[] m_points[i];
+                    //}
 
-                    key.m_numpoints = 0;
+                    //delete[] m_points;
+                    //delete[] m_weights;
                 }
             }
 
-            inline int GetPointsOrder() const
+
+            inline int GetPointsDim() const
             {
-                return m_pkey.GetNumPoints();
+                return m_pkey.GetPointsDim();
             }
 
             inline int GetNumPoints() const
             {
-                return m_numpoints;
+                return m_pkey.GetNumPoints();
             }
 
             inline PointsType GetPointsType() const
@@ -167,6 +201,7 @@ namespace Nektar
             inline double *GetZ() const
             {
                 BOOST_STATIC_ASSERT(dim == 1);
+
                 return m_points[0];
             }
 
@@ -174,12 +209,13 @@ namespace Nektar
             {
                 return m_weights; 
             } 
-      
+
+
             inline void GetZW(const double *&z, const double *&w) const 
             {
                 BOOST_STATIC_ASSERT(dim == 1);
-	            z = m_points[0];
-            	w = m_weights;
+                z = m_points[0];
+                w = m_weights;
             }
 
             inline void GetPoints(const double *&x) const
@@ -198,6 +234,7 @@ namespace Nektar
             inline void GetPoints(const double *&x, const double *&y, const double *&z) const
             {
                 BOOST_STATIC_ASSERT(dim == 3);
+
                 x = m_points[0];
                 y = m_points[1];
                 z = m_points[2];
@@ -207,100 +244,26 @@ namespace Nektar
             {
                 return m_derivmatrix;
             }
-        
+
         protected:
             PointsKey m_pkey;
-            int m_numpoints;          
-            DataType *m_points[dim];
+            DataType **m_points;
             DataType *m_weights;
             boost::shared_ptr<NekMatrix<DataType> > m_derivmatrix;
 
         private:
-            virtual void CalculateNumPoints() = 0;
             virtual void CalculatePoints() = 0;
             virtual void CalculateWeights() = 0;
             virtual void CalculateDerivMatrix() = 0;
+
+            // This should never be called.
+            Points()
+            {
+                NEKERROR(ErrorUtil::efatal,"Default Constructor for Points should not be called");
+            }
         };
 
-
-        bool operator == (const PointsKey& x, const PointsKey& y)
-        {
-            if( (x.m_pointsorder == y.m_pointsorder) &&
-                (x.m_pointstype == y.m_pointstype) &&
-                (x.m_pointsid == y.m_pointsid) )
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-
-        bool operator == (const PointsKey* x, const PointsKey& y)
-        {
-            if( ((*x).m_pointsorder == y.m_pointsorder) &&
-                ((*x).m_pointstype == y.m_pointstype) &&
-                ((*x).m_pointsid == y.m_pointsid) )
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-
-        bool operator == (const PointsKey& x, const PointsKey *y)
-        {
-            if( (x.m_pointsorder == (*y).m_pointsorder) &&
-                (x.m_pointstype == (*y).m_pointstype) &&
-                (x.m_pointsid == (*y).m_pointsid) )
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-
-        bool operator != (const PointsKey& x, const PointsKey& y)
-        {
-            if( (x.m_pointsorder == y.m_pointsorder) &&
-                (x.m_pointstype == y.m_pointstype) &&
-                (x.m_pointsid == y.m_pointsid) )
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-
-        bool operator != (const PointsKey* x, const PointsKey& y)
-        {
-            if( ((*x).m_pointsorder == y.m_pointsorder) &&
-                ((*x).m_pointstype == y.m_pointstype) &&
-                ((*x).m_pointsid == y.m_pointsid) )
-            {
-                return false;
-            }
-            
-            return true;
-        }
-
-
-        bool operator != (const PoinstKey& x, const PointsKey *y)
-        {
-            if( (x.m_pointsorder == (*y).m_pointsorder) &&
-                (x.m_pointstype == (*y).m_pointstype) &&
-                (x.m_pointsid == (*y).m_pointsid) )
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-    } // end of namespace
+    }; // end of namespace
 } // end of namespace 
 
 #endif //POINTS_HPP

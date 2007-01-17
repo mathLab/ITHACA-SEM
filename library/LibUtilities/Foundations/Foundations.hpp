@@ -36,11 +36,9 @@
 #ifndef FOUNDATIONS_H
 #define FOUNDATIONS_H
 
-#include <string>
-
 namespace Nektar
 {
-    namespace LibUtiltities
+    namespace LibUtilities
     {
         enum BasisType
         {

@@ -89,31 +89,6 @@ namespace Nektar
                 inarray,outarray,1);
         }
 
-        /** 
-        \brief Calculate the inner product of inarray with respect to
-        the basis B=base0*base1 and put into outarray:
-
-        \f$ 
-        \begin{array}{rcl}
-        I_{pq} = (\phi_q \phi_q, u) & = & \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1}
-        \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j})\\
-        & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
-        \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} 
-        \end{array}
-        \f$ 
-
-        where
-
-        \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
-
-        which can be implemented as
-
-        \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} = 
-        {\bf B_1 U}  \f$
-        \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
-        {\bf B_0 F}  \f$
-        **/
-
         void StdQuadExp:: IProductWRTBase(const double *base0, const double *base1,
             const double *inarray, double *outarray,
             int coll_check){
@@ -270,26 +245,10 @@ namespace Nektar
 	/// Differentiation Methods
 	///////////////////////////////
 	
-	/** 
-            \brief Calculate the deritive of the physical points 
-	    
-            For quadrilateral region can use the Tensor_Deriv function
-            defined under StdExpansion.
-	    
-	**/
-	
 	void StdQuadExp::Deriv(double *outarray_d0, double *outarray_d1)
 	{
 	    TensorDeriv(this->m_phys, outarray_d0, outarray_d1);
 	}
-	
-	/** 
-	    \brief Calculate the derivative of the physical points 
-	    
-            For quadrilateral region can use the Tensor_Deriv funcion
-            defined under StdExpansion.
-	    
-	**/
 
 	void StdQuadExp::Deriv(const double *inarray, double *outarray_d0, 
 			       double *outarray_d1)
@@ -606,6 +565,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.5  2006/12/10 19:00:54  sherwin
+* Modifications to handle nodal expansions
+*
 * Revision 1.4  2006/08/05 19:03:48  sherwin
 * Update to make the multiregions 2D expansion in connected regions work
 *

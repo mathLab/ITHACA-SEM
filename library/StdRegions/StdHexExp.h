@@ -51,22 +51,26 @@ namespace Nektar
         public:
 
             /** \brief Constructor using BasisKey class for quadrature
-            points and order definition */
+	     *  points and order definition 
+	     */
             StdHexExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
 
             /** \brief Constructor using BasisKey class for quadrature
-            points and order definition where _coeffs and _phys are all
-            set. */
+	     *  points and order definition where m_coeffs and m_phys 
+	     *  are all set. 
+	     */
             StdHexExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
                 double *coeffs, double *phys);
 
-            /// Copy Constructor
+            /** \brief Copy Constructor */
             StdHexExp(const StdHexExp &T);
 
-            /// Destructor
+            /** \brief Destructor */
             ~StdHexExp();
 
-            /// Return Shape of region, using  ShapeType enum list. i.e. Hexahedron
+            /** \brief Return Shape of region, using  ShapeType enum list. 
+	     *  i.e. Hexahedron
+	     */
             ShapeType DetShapeType()
             {
                 return eHexahedron;
@@ -95,8 +99,19 @@ namespace Nektar
             //----------------------------
             // Differentiation Methods
             //----------------------------
-
+       
+	    /** \brief Calculate the deritive of the physical points 
+	     *
+	     *  For quadrilateral region can use the Tensor_Deriv function
+	     *  defined under StdExpansion.
+	     */
             void Deriv(double * outarray_d1, double *outarray_d2, double *outarray_d3);
+
+	    /** \brief Calculate the deritive of the physical points 
+	     *
+	     *  For quadrilateral region can use the Tensor_Deriv function
+	     *  defined under StdExpansion.
+	     */
             void Deriv(const double *inarray, double * outarray_d1,
                 double *outarray_d2, double * outarray_d3);
 
@@ -231,6 +246,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.5  2006/12/10 19:00:54  sherwin
+* Modifications to handle nodal expansions
+*
 * Revision 1.4  2006/07/02 17:16:18  sherwin
 *
 * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

@@ -109,6 +109,9 @@ namespace Nektar
 
             void IProductWRTBase(const double * inarray, double * outarray);
 
+	    /** \brief Fill outarray with nodal mode \a mode of expansion
+	     *   and put in m_phys
+	     */
             void FillMode(const int mode, double *outarray);
 
             StdMatContainer * GetMassMatrix();
@@ -157,9 +160,15 @@ namespace Nektar
 
             static StdMatrix s_elmtmats;
 
-            /// All Expansions share the same NodalBasisManager
+            // All Expansions share the same NodalBasisManager
             typedef Loki::SingletonHolder<NodalBasisManager> NBasisManagerSingleton;
 
+	    /** \brief Calculate the inner product of inarray with respect to
+	     *  the basis B=base0[p]*base1[pq] and put into outarray
+	     *
+	     *  This function uses the StdTriExp routine and then 
+	     *  calls ModalToNodal to transform to Nodal basis
+	     */
             inline void IProductWRTBase(const double *base0, const double *base1,
 				     const double *inarray, double *outarray);
 
@@ -296,6 +305,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.5  2007/01/15 21:13:46  sherwin
+* Nodal stuff correction and added Field Classes
+*
 * Revision 1.4  2006/12/10 19:00:54  sherwin
 * Modifications to handle nodal expansions
 *

@@ -345,27 +345,11 @@ namespace Nektar
         /// Differentiation Methods
         ///////////////////////////////
 
-        /** 
-        \brief Calculate the deritive of the physical points 
-
-        For quadrilateral region can use the Tensor_Deriv function
-        defined under StdExpansion.
-
-        **/
-
         void StdHexExp::Deriv(double *outarray_d0, double *outarray_d1, 
             double *outarray_d2)
         {
             TensorDeriv(this->m_phys, outarray_d0, outarray_d1, outarray_d2);
         }
-
-        /** 
-        \brief Calculate the derivitive of the physical points 
-
-        For quadrilateral region can use the Tensor_Deriv function
-        defined under StdExpansion.
-
-        **/
 
         void StdHexExp::Deriv(const double *inarray, double *outarray_d0, 
             double *outarray_d1, double *outarray_d2)
@@ -554,6 +538,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.3  2006/12/10 19:00:54  sherwin
+* Modifications to handle nodal expansions
+*
 * Revision 1.2  2006/06/01 14:13:36  kirby
 * *** empty log message ***
 *

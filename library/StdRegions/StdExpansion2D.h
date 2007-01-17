@@ -56,12 +56,76 @@ namespace Nektar
 
             // Generic operations in different elements
 
-            /** \brief Calculate the 2D derivative in the local collapsed
-            coordinate at the physical points  */
+	    /** \brief Calculate the 2D derivative in the local
+	     *  tensor/collapsed coordinate  at the physical points 
+	     *
+	     *  This is mainly a wrapper around StdExpansion2D::Tensor_Deriv
+	     *
+	     *  This function is independent of the expansion basis and can
+	     *  therefore be defined for all tensor product distribution of
+	     *  quadrature points in a generic manner.  The key operations are:
+	     *
+	     *  - \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
+	     *  - \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
+	     *  
+	     *  This function takes the physical value space array \a m_phys
+	     *  as discrete function to be evaluated
+	     * 
+	     *  \param  outarray_d0 the resulting array of derivative in the 
+	     *  \f$\eta_1\f$ direction will be stored in outarray_d0 as output
+	     *  of the function
+	     *  \param outarray_d1 the resulting array of derivative in the 
+	     *  \f$\eta_2\f$ direction will be stored in outarray_d1 as output 
+	     *  of the function
+	     *
+	     *  Recall that: 
+	     *  \f$
+	     *  \hspace{1cm} \begin{array}{llll}
+	     *  \mbox{Shape}    & \mbox{Cartesian coordinate range} &
+	     *  \mbox{Collapsed coord.}      & 
+	     *  \mbox{Collapsed coordinate definition}\\
+	     *  \mbox{Quadrilateral}  & -1 \leq \xi_1,\xi_2 \leq  1   
+	     *  & -1 \leq \eta_1,\eta_2 \leq 1 
+	     *  & \eta_1 = \xi_1, \eta_2 = \xi_2\\
+	     *  \mbox{Triangle}  & -1 \leq \xi_1,\xi_2; \xi_1+\xi_2 \leq  0   
+	     *  & -1 \leq \eta_1,\eta_2 \leq 1  
+	     *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
+	     *  \end{array} \f$
+	     */
             void  TensorDeriv(double *outarray_d0,double *outarray_d1);
 
-            /** \brief Calculate the 2D derivative in the local collapsed
-            coordinate at the physical points  */
+	    /** \brief Calculate the 2D derivative in the local 
+	     *  tensor/collapsed coordinate at the physical points 
+	     *
+	     *  This function is independent of the expansion basis and can
+	     *  therefore be defined for all tensor product distribution of
+	     *  quadrature points in a generic manner.  The key operations are:
+	     *
+	     *  - \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
+	     *  - \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
+	     *
+	     *  \param inarray array of physical points to be differentiated
+	     *  \param  outarray_d0 the resulting array of derivative in the 
+	     *  \f$\eta_1\f$ direction will be stored in outarray_d0 as output
+	     *  of the function
+	     *  \param outarray_d1 the resulting array of derivative in the 
+	     *  \f$\eta_2\f$ direction will be stored in outarray_d1 as output 
+	     *  of the function
+	     *
+	     *  Recall that: 
+	     *  \f$
+	     *  \hspace{1cm} \begin{array}{llll}
+	     *  \mbox{Shape}    & \mbox{Cartesian coordinate range} &
+	     *  \mbox{Collapsed coord.}      & 
+	     *  \mbox{Collapsed coordinate definition}\\
+	     *  \mbox{Quadrilateral}  & -1 \leq \xi_1,\xi_2 \leq  1   
+	     *  & -1 \leq \eta_1,\eta_2 \leq 1 
+	     *  & \eta_1 = \xi_1, \eta_2 = \xi_2\\
+	     *  \mbox{Triangle}  & -1 \leq \xi_1,\xi_2; \xi_1+\xi_2 \leq  0   
+	     *  & -1 \leq \eta_1,\eta_2 \leq 1  
+	     *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
+	     *  \end{array} \f$
+	     */
             void  TensorDeriv(const double *inarray, double *outarray_d0,
                 double *outarray_d1);
 
@@ -88,8 +152,9 @@ namespace Nektar
             }
 
             /** \brief Evaluate a function at points coords which is assumed
-            to be in local collapsed coordinate format. The function is
-            assumed to be in physical space */
+	     *  to be in local collapsed coordinate format. The function is
+	     *  assumed to be in physical space 
+	     */
             double PhysEvaluate(const double *coords);
 
             double Integral(const double *inarray, const double *w0, const double* w1);
@@ -165,6 +230,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.4  2006/08/05 19:03:48  sherwin
+* Update to make the multiregions 2D expansion in connected regions work
+*
 * Revision 1.3  2006/07/02 17:16:18  sherwin
 *
 * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

@@ -83,11 +83,6 @@ namespace Nektar
         //////////////////////////////
         // Integration Methods
         //////////////////////////////
-        /** 
-        This is just a wrapper around StdExpansoin2D which multiplies by
-        0.5 which is due to the factor (1-\xi_2)/2 in the integral
-        weight
-        */
         double StdTriExp::Integral(const double *inarray)
         {
             const double *z0,*z1,*w0,*w1;
@@ -120,42 +115,6 @@ namespace Nektar
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),inarray,
                 outarray);
         }
-
-        /** \brief Calculate the inner product of inarray with respect to
-        the basis B=base0[p]*base1[pq] and put into outarray:
-
-        \f$ 
-        \begin{array}{rcl}
-        I_{pq} = (\phi^A_q \phi^B_{pq}, u) &=& \sum_{i=0}^{nq_0}\sum_{j=0}^{nq_1}
-        \phi^A_p(\eta_{0,i})\phi^B_{pq}(\eta_{1,j}) w^0_i w^1_j 
-        u(\xi_{0,i} \xi_{1,j})\\
-        & = & \sum_{i=0}^{nq_0} \phi^A_p(\eta_{0,i})
-        \sum_{j=0}^{nq_1} \phi^B_{pq}(\eta_{1,j}) \tilde{u}_{i,j} 
-        \end{array}
-        \f$ 
-
-        where
-
-        \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
-
-        which can be implemented as
-
-        \f$  f_{pj} = \sum_{i=0}^{nq_0} \phi^A_p(\eta_{0,i}) \tilde{u}_{i,j} 
-        \rightarrow {\bf B_1 U}  \f$
-        \f$  I_{pq} = \sum_{j=0}^{nq_1} \phi^B_{pq}(\eta_{1,j}) f_{pj} 
-        \rightarrow {\bf B_2[p*skip] f[skip]}  \f$
-
-        \b Recall: \f$ \eta_{1} = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \, 
-        \eta_2 = \xi_2\f$
-
-        \b Note: For the orthgonality of this expansion to be realised
-        the 'q' ordering must run fastest in contrast to the Quad and
-        Hex ordering where 'p' index runs fastest to be consistent with
-        the quadrature ordering. 
-
-        In the triangular space the i (i.e. \f$\eta_1\f$ direction)
-        ordering still runs fastest by convention.
-        **/
 
         void StdTriExp:: IProductWRTBase(const double *base0, const double *base1, 
             const double *inarray, double *outarray)
@@ -300,20 +259,6 @@ namespace Nektar
         // Differentiation Methods
         //-----------------------------
 
-        /** 
-        \brief Calculate the deritive of the physical points 
-
-        \f$ \frac{\partial u}{\partial  x_1} =  \left . 
-        \frac{2.0}{1-\eta_2} \frac{\partial u}{\partial d\eta_1}
-        \right |_{\eta_2}\f$
-
-        \f$ \frac{\partial u}{\partial  x_2} =  \left . 
-        \frac{1+\eta_1}{1-\eta_2} \frac{\partial u}{\partial d\eta_1}
-        \right |_{\eta_2}  + \left . \frac{\partial u}{\partial d\eta_2}
-        \right |_{\eta_1}  \f$
-
-        **/
-
         void StdTriExp::Deriv(const double *inarray, double *outarray_d0, 
             double *outarray_d1)
         {
@@ -376,11 +321,6 @@ namespace Nektar
             }
         }
 
-        /** 
-        \brief Calculate the deritive of the physical points 
-
-        **/
-
         inline void StdTriExp::Deriv(double *outarray_d0, double *outarray_d1)
         {
             Deriv(this->m_phys,outarray_d0,outarray_d1);
@@ -389,12 +329,6 @@ namespace Nektar
         ///////////////////////////////
         // Evaluation Methods
         ///////////////////////////////
-
-        /** 
-        \brief Backward tranform for triangular elements
-
-        Note: That 'q' (base[1]) runs fastest in this element 
-        */
 
         void StdTriExp::BwdTrans(double * outarray)
         {
@@ -438,7 +372,6 @@ namespace Nektar
             M->Solve(m_coeffs,1);
         }
 
-        /// Single Point Evaluation
         double StdTriExp::Evaluate(const double * coords)
         {
             double coll[2];
@@ -680,6 +613,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.8  2006/12/10 19:00:54  sherwin
+* Modifications to handle nodal expansions
+*
 * Revision 1.7  2006/08/05 19:03:48  sherwin
 * Update to make the multiregions 2D expansion in connected regions work
 *

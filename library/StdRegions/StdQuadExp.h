@@ -56,23 +56,26 @@ namespace Nektar
             StdQuadExp();
 
             /** \brief Constructor using BasisKey class for quadrature
-            points and order definition */
+	     *  points and order definition 
+	     */
             StdQuadExp(const BasisKey &Ba, const BasisKey &Bb);
 
             /** \brief Constructor using BasisKey class for quadrature
-            points and order nition where _coeffs and _phys are all
-            set. */
+	     *  points and order nition where m_coeffs and m_phys are all
+	     *  set. 
+	     */
             StdQuadExp(const BasisKey &Ba, const BasisKey &Bb, double *coeffs,
                 double *phys);
 
-            /// Copy Constructor
+            /** \brief Copy Constructor */
             StdQuadExp(const StdQuadExp &T);
 
-            /// Destructor
+            /** \brief Destructor */
             ~StdQuadExp();
 
-            // Return Shape of region, using ShapeType enum
-            /// list. i.e. Quadrilateral
+            /** \brief Return Shape of region, using ShapeType enum list. 
+	     *  i.e. Quadrilateral
+	     */
             ShapeType DetShapeType()
             {
                 return eQuadrilateral;
@@ -88,6 +91,31 @@ namespace Nektar
 
             void IProductWRTBase(const double * inarray, double * outarray);
 
+	    /** \brief Calculate the inner product of inarray with respect to
+	     *  the basis B=base0*base1 and put into outarray
+	     *
+	     *  \f$ 
+	     *  \begin{array}{rcl}
+	     *  I_{pq} = (\phi_q \phi_q, u) & = & \sum_{i=0}^{nq_0}
+	     *  \sum_{j=0}^{nq_1}
+	     *  \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} 
+	     *  \xi_{1,j}) \\
+	     *  & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
+	     *  \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} 
+	     *  \end{array}
+	     *  \f$ 
+	     *
+	     *  where
+	     *
+	     *  \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
+	     *
+	     *  which can be implemented as
+	     *
+	     *  \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) 
+	     *  \tilde{u}_{i,j} = {\bf B_1 U}  \f$
+	     *  \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
+	     *  {\bf B_0 F}  \f$
+	     */
             void IProductWRTBase(const double *base0, const double *base1,
                 const double *inarray, double *outarray,
                 int coll_check);
@@ -106,7 +134,19 @@ namespace Nektar
             // Differentiation Methods
             //----------------------------
 
+	    /** \brief Calculate the derivative of the physical points 
+	     *
+	     *  For quadrilateral region can use the Tensor_Deriv function
+	     *  defined under StdExpansion.
+	     */
             void Deriv(double * outarray_d1, double *outarray_d2);
+
+	
+	    /** \brief Calculate the derivative of the physical points 
+	     *
+	     *  For quadrilateral region can use the Tensor_Deriv funcion
+	     *  defined under StdExpansion.
+	     */
             void Deriv(const double *inarray, double * outarray_d1,
                 double *outarray_d2);
 
@@ -293,6 +333,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.6  2006/12/10 19:00:54  sherwin
+* Modifications to handle nodal expansions
+*
 * Revision 1.5  2006/08/05 19:03:48  sherwin
 * Update to make the multiregions 2D expansion in connected regions work
 *

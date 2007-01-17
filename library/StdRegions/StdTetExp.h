@@ -51,22 +51,26 @@ namespace Nektar
 	public:
 	    
 	    /** \brief Constructor using BasisKey class for quadrature
-		points and order definition */
+	     *	points and order definition 
+	     */
 	    StdTetExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
 	    
 	    /** \brief Constructor using BasisKey class for quadrature
-		points and order definition where _coeffs and _phys are all
-		set. */
+	     *	points and order definition where m_coeffs and m_phys are all
+	     *  set. 
+	     */
 	    StdTetExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
 		      double *coeffs, double *phys);
 	    
-	    /// Copy Constructor
+	    /** \brief Copy Constructor */
 	    StdTetExp(const StdTetExp &T);
 	    
-	    /// Destructor
+	    /** \brief Destructor */
 	    ~StdTetExp();
 	    
-	    /// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
+	    /** \brief Return Shape of region, using  ShapeType enum list. 
+	     *  i.e. Tetrahedron
+	     */
 	    ShapeType DetShapeType()
 	    {
 		return eTetrahedron;
@@ -114,6 +118,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.3  2006/12/10 19:00:54  sherwin
+ * Modifications to handle nodal expansions
+ *
  * Revision 1.2  2006/07/02 17:16:19  sherwin
  *
  * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

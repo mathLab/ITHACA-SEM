@@ -57,6 +57,29 @@ namespace Nektar
             ~StdExpansion3D();
 
             // Differentiation
+
+	    /** \brief Calculate the 3D derivative in the local 
+	     *  tensor/collapsed coordinate at the physical points 
+	     *	
+	     *	This function is independent of the expansion basis and can
+	     *	therefore be defined for all tensor product distribution of
+	     *	quadrature points in a generic manner.  The key operations are:
+	     *
+	     *	- \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
+	     *	- \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
+	     *	- \f$ \frac{d}{d\eta_3} \rightarrow {\bf D_2 u } \f$
+	     *
+	     *  \param inarray array of physical points to be differentiated
+	     *  \param  outarray_d1 the resulting array of derivative in the 
+	     *  \f$\eta_1\f$ direction will be stored in outarray_d1 as output
+	     *  of the function
+	     *  \param outarray_d2 the resulting array of derivative in the 
+	     *  \f$\eta_2\f$ direction will be stored in outarray_d2 as output 
+	     *  of the function
+	     *  \param outarray_d3 the resulting array of derivative in the 
+	     *  \f$\eta_3\f$ direction will be stored in outarray_d3 as output 
+	     *  of the function
+	     */
             void TensorDeriv(const double *inarray, double *outarray_d1,
                 double *outarray_d2, double *outarray_d3);
 
@@ -64,8 +87,9 @@ namespace Nektar
                 double *outarray_d3);
 
             /** \brief Evaluate a function at points coords which is assumed
-            to be in local collapsed coordinate format. The function is
-            assumed to be in physical space */
+	     *  to be in local collapsed coordinate format. The function is
+	     *  assumed to be in physical space
+	     */
             double PhysEvaluate(const double *coords);
 
             void  Deriv(double *outarray_d0, double *outarray_d1, 
@@ -156,6 +180,10 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.3  2006/07/02 17:16:18  sherwin
+*
+* Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+*
 * Revision 1.2  2006/06/13 18:05:02  sherwin
 * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
 *

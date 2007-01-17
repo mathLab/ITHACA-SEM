@@ -63,31 +63,6 @@ namespace Nektar
     StdExpansion3D::~StdExpansion3D()
     { 
     }
-
-
-    /** 
-	\brief Calculate the 3D derivative in the local tensor/collapsed 
-	coordinate at the physical points 
-	
-	This function is independent of the expansion basis and can
-	therefore be defined for all tensor product distribution of
-	quadrature points in a generic manner.  The key operations are:
-	
-	- \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
-	- \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
-	- \f$ \frac{d}{d\eta_3} \rightarrow {\bf D_2 u } \f$
-	
-	Input: \n
-	
-	- \a inarray: array of physical points to be differentiated
-	
-	Outputs:
-	
-      - \a outarray_d1: array of derivative in the \f$\eta_1\f$ direction
-      - \a outarray_d2: array of derivative in the \f$\eta_2\f$ direction
-      - \a outarray_d3: array of derivative in the \f$\eta_3\f$ direction
-      
-    **/
   
     void StdExpansion3D::TensorDeriv(const double *inarray, 
 				     double *outarray_d0, 
@@ -209,6 +184,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.2  2006/06/01 14:46:16  kirby
+ * *** empty log message ***
+ *
  * Revision 1.1  2006/05/04 18:58:31  kirby
  * *** empty log message ***
  *

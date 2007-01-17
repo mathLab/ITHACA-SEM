@@ -165,13 +165,6 @@ namespace Nektar
                 inarray,outarray);
         }
 
-        /** \brief Calculate the inner product of inarray with respect to
-        the basis B=base0[p]*base1[pq] and put into outarray:
-
-        This function uses the StdTriExp routine and then 
-        calls ModalToNodal to transform to Nodal basis
-        **/
-
         void StdNodalTriExp:: IProductWRTBase(const double *base0, 
             const double *base1, 
             const double *inarray,
@@ -184,10 +177,6 @@ namespace Nektar
 
 	    NodalToModalTranspose(outarray);
         }
-
-
-        /** Fill outarray with nodal mode 'mode' of expansion and put in m_phys
-        */
 
         void StdNodalTriExp::FillMode(const int mode, double *outarray)
         {
@@ -380,6 +369,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.5  2007/01/15 21:13:46  sherwin
+* Nodal stuff correction and added Field Classes
+*
 * Revision 1.4  2006/12/10 19:00:54  sherwin
 * Modifications to handle nodal expansions
 *

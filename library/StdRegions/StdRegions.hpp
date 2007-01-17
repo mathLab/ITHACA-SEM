@@ -53,17 +53,17 @@ namespace Nektar
   namespace StdRegions
   {
 
-    /// Number of workspace arrays for expansions and size of arrays;
-    /// first value should be set to the maximum number of threads of
-    /// execution used per process; second should be set to the number
-    /// of workspaecs required for a single thread and the third value
-    /// should be set to hold 3D point set per element
-
-    /// This data is used in StdWKSpace.(h/cpp)
-    
+    /** Number of workspace arrays for expansions and size of arrays;
+     *  first value should be set to the maximum number of threads of
+     *  execution used per process; second should be set to the number
+     *  of workspaecs required for a single thread and the third value
+     *  should be set to hold 3D point set per element
+     *
+     *  This data is used in StdWKSpace.(h/cpp)
+     */
     namespace NekConstants
     {
-        /// Tolerance to within which a point is considered to be located 
+        /** Tolerance to within which a point is considered to be located */
         const double kEvaluateTol  = 1e-12;
 
         // constants from NodalBasisManager.h & .cpp
@@ -82,48 +82,48 @@ namespace Nektar
     
     enum BasisType
     {
-      eOrtho_A,     //!< Principle Orthogonal Functions \f$\widetilde{\psi}^a_p(z_i)\f$
-      eOrtho_B,     //!< Principle Orthogonal Functions \f$\widetilde{\psi}^b_{pq}(z_i)\f$
-      eOrtho_C,     //!< Principle Orthogonal Functions \f$\widetilde{\psi}^c_{pqr}(z_i)\f$
-      eModified_A,  //!< Principle Modified Functions \f$ \phi^a_p(z_i) \f$
-      eModified_B,  //!< Principle Modified Functions \f$ \phi^b_{pq}(z_i) \f$
-      eModified_C,  //!< Principle Modified Functions \f$ \phi^c_{pqr}(z_i) \f$
-      eFourier,     //!< Fourier Expansion \f$ \exp(i p\pi  z_i)\f$
-      eGLL_Lagrange,//!< Lagrange for SEM basis \f$ h_p(z_i) \f$
-      eLegendre,    //!< Legendre Polynomials \f$ L_p(z_i) = P^{0,0}_p(z_i)\f$. Same as Ortho_A
-      eChebyshev,   //!< Chebyshev Polynomials \f$ T_p(z_i) = P^{-1/2,-1/2}_p(z_i)\f$
-      SIZE_BasisType //!< Lenth of enum list
+      eOrtho_A,     /**< Principle Orthogonal Functions \f$\widetilde{\psi}^a_p(z_i)\f$ */
+      eOrtho_B,     /**< Principle Orthogonal Functions \f$\widetilde{\psi}^b_{pq}(z_i)\f$ */
+      eOrtho_C,     /**< Principle Orthogonal Functions \f$\widetilde{\psi}^c_{pqr}(z_i)\f$ */
+      eModified_A,  /**< Principle Modified Functions \f$ \phi^a_p(z_i) \f$ */
+      eModified_B,  /**< Principle Modified Functions \f$ \phi^b_{pq}(z_i) \f$ */
+      eModified_C,  /**< Principle Modified Functions \f$ \phi^c_{pqr}(z_i) \f$ */
+      eFourier,     /**< Fourier Expansion \f$ \exp(i p\pi  z_i)\f$ */
+      eGLL_Lagrange,/**< Lagrange for SEM basis \f$ h_p(z_i) \f$ */
+      eLegendre,    /**< Legendre Polynomials \f$ L_p(z_i) = P^{0,0}_p(z_i)\f$. Same as Ortho_A */
+      eChebyshev,   /**< Chebyshev Polynomials \f$ T_p(z_i) = P^{-1/2,-1/2}_p(z_i)\f$ */
+      SIZE_BasisType /**< Length of enum list */
     };
     
 
     enum PointsType
     {
-      eGauss,             //!< Gauss quadrature points
-      eLobatto,           //!< Gauss Lobatto quadrature points
-      eRadauM,            //!< Gauss Radau quadrature points including (z=-1)
-      eRadauP,            //!< Gauss Radau quadrature points including (z=+1)
-      ePolyEvenSp,        //!< Evenly-spaced points using Lagrange polynomial
-      eFourierEvenSp,     //!< Evenly-spaced points using Fourier Fit
-      eArbitrary,         //!< Arbitrary point distribution
-      SIZE_PointsType      //!< Lenth of enum list
+      eGauss,             /**< Gauss quadrature points */
+      eLobatto,           /**< Gauss Lobatto quadrature points */
+      eRadauM,            /**< Gauss Radau quadrature points including (z=-1) */
+      eRadauP,            /**< Gauss Radau quadrature points including (z=+1) */
+      ePolyEvenSp,        /**< Evenly-spaced points using Lagrange polynomial */
+      eFourierEvenSp,     /**< Evenly-spaced points using Fourier Fit */
+      eArbitrary,         /**< Arbitrary point distribution */
+      SIZE_PointsType     /**< Length of enum list */
     };
 
     enum NodalBasisType
     {
-      eNodalTriElec,      //!< 2D Nodal Electrostatic Points on a Triangle
-      eNodalTriFekete,    //!< 2D Nodal Fekete Points on a Triangle
-      eNodalTetElec,      //!< 3D Nodal Electrostatic Points on a Tetrahedron
-      SIZE_NodalBasisType //!< Lenth of enum list
+      eNodalTriElec,      /**< 2D Nodal Electrostatic Points on a Triangle */
+      eNodalTriFekete,    /**< 2D Nodal Fekete Points on a Triangle */
+      eNodalTetElec,      /**< 3D Nodal Electrostatic Points on a Tetrahedron */
+      SIZE_NodalBasisType /**< Length of enum list */
     };
     
-    /// Enumerator list for different types of matrix type supported by LAPACK
+    /** Enumerator list for different types of matrix type supported by LAPACK */
     enum MatrixForm
     {
-      eSymmetric,                 //!< Symmetric matrix
-      eSymmetric_Positive,        //!< Symmetric positive definite matrix
-      eSymmetric_Positive_Banded, //!< Symmetric positive definite banded matrix
-      eGeneral_Banded,            //!< General banded matrix
-      eGeneral_Full               //!< General full
+      eSymmetric,                 /**< Symmetric matrix */
+      eSymmetric_Positive,        /**< Symmetric positive definite matrix */
+      eSymmetric_Positive_Banded, /**< Symmetric positive definite banded matrix */
+      eGeneral_Banded,            /**< General banded matrix */
+      eGeneral_Full               /**< General full */
     };
 
     enum MatrixType
@@ -133,7 +133,7 @@ namespace Nektar
       eNBasisTrans
     };
 
-    /// enum list of StdExpansion regions
+    /** enum list of StdExpansion regions */
     enum ShapeType
     {
       eUnknown,
@@ -203,6 +203,9 @@ namespace Nektar
 
 /**
  * $Log: StdRegions.hpp,v $
+ * Revision 1.2  2006/06/01 13:43:20  kirby
+ * *** empty log message ***
+ *
  * Revision 1.1  2006/05/04 18:58:33  kirby
  * *** empty log message ***
  *

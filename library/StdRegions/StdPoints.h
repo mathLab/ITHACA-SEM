@@ -98,11 +98,11 @@ namespace Nektar
       }
 
     protected:
-      double *m_zeros;       //< definition of points
-      double *m_weights;     //< definition of integration weights
+      double *m_zeros;       /**< definition of points */
+      double *m_weights;     /**< definition of integration weights */
 
         SharedNekMatrixPtr
-      double *m_derivmatrix; //< defintiion of derivative matrix
+	  double *m_derivmatrix; /**< defintiion of derivative matrix */
 
     private:
 

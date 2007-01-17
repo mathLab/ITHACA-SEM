@@ -62,40 +62,6 @@ namespace Nektar
         { 
         }
 
-        /** 
-        \brief Calculate the 2D derivative in the local tensor/collapsed 
-        coordinate at the physical points 
-
-        This function is independent of the expansion basis and can
-        therefore be defined for all tensor product distribution of
-        quadrature points in a generic manner.  The key operations are:
-
-        - \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
-        - \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
-
-        Input: \n
-
-        - \a inarray: array of physical points to be differentiated
-
-        Outputs:
-
-        - \a outarray_d0: array of derivative in the \f$\eta_1\f$ direction
-        - \a outarray_d1: array of derivative in the \f$\eta_2\f$ direction
-
-        Recall that: 
-        \f$
-        \hspace{1cm} \begin{array}{llll}
-        \mbox{Shape}    & \mbox{Cartesian coordinate range} & \mbox{Collapsed coord.}      & \mbox{Collapsed coordinate definition}\\
-        \mbox{Quadrilateral}  & -1 \leq \xi_1,\xi_2 \leq  1   
-        & -1 \leq \eta_1,\eta_2 \leq 1 
-        & \eta_1 = \xi_1, \eta_2 = \xi_2\\
-        \mbox{Triangle}  & -1 \leq \xi_1,\xi_2; \xi_1+\xi_2 \leq  0   
-        & -1 \leq \eta_1,\eta_2 \leq 1  
-        & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
-        \end{array} \f$
-
-        **/
-
         void StdExpansion2D::TensorDeriv(const double *inarray, 
             double *outarray_d0,double *outarray_d1)
         {
@@ -133,41 +99,6 @@ namespace Nektar
 
         }
 
-        /** 
-        \brief Calculate the 2D derivative in the local tensor/collapsed 
-        coordinate  at the physical points 
-
-        This is mainly a wrapper around StdExpansion2D::Tensor_Deriv
-
-        This function is independent of the expansion basis and can
-        therefore be defined for all tensor product distribution of
-        quadrature points in a generic manner.  The key operations are:
-
-        - \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
-        - \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
-
-        Input: \n
-
-        - \a (this)->_phys: array of physical points to be differentiated
-
-        Outputs:
-
-        - \a outarray_d0: array of derivative in the \f$\eta_1\f$ direction
-        - \a outarray_d1: array of derivative in the \f$\eta_2\f$ direction
-
-        Recall that: 
-        \f$
-        \hspace{1cm} \begin{array}{llll}
-        \mbox{Shape}    & \mbox{Cartesian coordinate range} & \mbox{Collapsed coord.}      & \mbox{Collapsed coordinate definition}\\
-        \mbox{Quadrilateral}  & -1 \leq \xi_1,\xi_2 \leq  1   
-        & -1 \leq \eta_1,\eta_2 \leq 1 
-        & \eta_1 = \xi_1, \eta_2 = \xi_2\\
-        \mbox{Triangle}  & -1 \leq \xi_1,\xi_2; \xi_1+\xi_2 \leq  0   
-        & -1 \leq \eta_1,\eta_2 \leq 1  
-        & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
-        \end{array} \f$
-
-        **/
         void StdExpansion2D::TensorDeriv(double *outarray_d0, 
             double *outarray_d1)
         {
@@ -242,6 +173,9 @@ namespace Nektar
 
 /** 
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.2  2006/06/01 14:46:16  kirby
+* *** empty log message ***
+*
 * Revision 1.1  2006/05/04 18:58:31  kirby
 * *** empty log message ***
 *

@@ -47,14 +47,6 @@ namespace Nektar
     namespace StdRegions 
     {
 
-        /** \brief Fill _packed_matrix from _matrix 
-
-        Note: Assume input matrix is stored in RowMajor 'C' type format. The
-        packed matrix however is stored in Column Major Fortran type format
-        so that the appropriate Lapack routines can be called. This is only
-        important for the General Matrix forms.
-
-        */
         void StdMatContainer::FillPackedMatrix()
         {
             int i,j,cnt;
@@ -112,8 +104,6 @@ namespace Nektar
             }
         }
 
-        /** \brief Multiply full matrix so that \a out = \a _matrix x \a in 
-        */
         void StdMatContainer::Mxv(const double *in, double *out)
         {
             BstShrDArray wsp; 
@@ -136,24 +126,6 @@ namespace Nektar
             Blas::Dgemv('T',m_lda,m_lda,1.0,m_matrix,m_lda,tmp,1,0.0,out,1);      
         }
 
-        /** \brief factorise matrix depending upon definition stored in _mat_form.
-
-        Options for mat_from are: 
-
-        - m_matform = Symmetric-Positive implies Cholesky factorization using
-        lapack::dpptrf.
-
-        - m_matform = Symmetric implies Factorisation using Bunch-Kaufman
-        pivoting using lapack::dsptrf.
-
-        - m_matform = Symmetric-Positive-Banded implies lower diagonal banded
-        cholesky factorisation using lapack::dpbtrf.
-
-        - m_matform = General-Banded implies factoring using lapack::dgbtrf.
-
-        - m_matform = General-Full implies factoring using lapack::dgetrf.
-
-        */
         void StdMatContainer::Factor()
         {
             int info;
@@ -200,24 +172,6 @@ namespace Nektar
 
             m_factored = true;    
         }
-
-        /**  \brief evaulate \f$u \leftarrow _packed_matrix^{-1} u\f$ for
-        \a nrhs solves Options for mat_from are:
-
-        - _matform = Symmetric-Positive implies Cholesky back solve using
-        lapack::dpptrs.
-
-        - _matform = Symmetric implies Back solve from  using lapack::dsptrs.
-
-        - _matform = Symmetric-Positive-Banded implies lower diagonal banded
-        cholesky backsole using  lapack::dpbtrs.
-
-        - _matform = General-Banded implies LU back solve using
-        lapack::dgbtrs.
-
-        - _matform = General-Full implies LU back solve using lapack::dgetrs.
-
-        */
 
         void StdMatContainer::Solve(double *u, const int nrhs)
         {
@@ -375,12 +329,6 @@ namespace Nektar
             return max;
         }
 
-        /** 
-        Return the null space of the Packed Matrix 
-        where the null space is defined by the number of eigenvalues
-        with magnitude smaller than tol.
-        */
-
         int StdMatContainer::NullSpaceDim(const double tol)
         {
             BstShrDArray wsp  = GetDoubleTmpSpace(m_lda);
@@ -408,9 +356,6 @@ namespace Nektar
             return ndim;
         }
 
-        /** 
-        Write the eigenvalues of matrix _packed_matrix to file \a file
-        */
         void StdMatContainer::EigenValues(const char file[])
         {
             int i;
@@ -434,14 +379,6 @@ namespace Nektar
             fclose(fp);
         }
 
-        /** 
-        Determine the eigen specturm of the Packed matrix by  returning its
-        read values in \a er and its imaginary values in \a ei. 
-
-        if evecs is given then the eigenvectors are also returned. 
-        This option is currently only setup for a General_Full matrix.
-
-        */
         void StdMatContainer::EigenValues(double *er, double *ei, double *evecs)
         {
             double dum;
@@ -489,12 +426,6 @@ namespace Nektar
             }
         }
 
-
-        /** 
-        Get the Local mass matrix \f$ \bf M\f$ given a standard
-        expansion E
-        */
-
         StdMatContainer * StdMatrix::GetLocalMass(StdExpansion * E)
         {
             std::vector<StdMatContainer*>::iterator def;
@@ -526,10 +457,6 @@ namespace Nektar
             return M;
         }
 
-        /**   
-	      Get the Local Laplacian matrix \f$ L\f$ given a standard
-        expansion E
-        */
         StdMatContainer * StdMatrix::GetLocalLap(StdExpansion * E)
         {
             std::vector<StdMatContainer*>::iterator def;
@@ -558,11 +485,6 @@ namespace Nektar
             }
             return M;
         }
-
-        /** 
-        Get the Local mass matrix \f$ \bf M\f$ given a standard
-        expansion E
-        */
 
         StdMatContainer * StdMatrix::GetNBasisTrans(StdExpansion * E)
         {
@@ -743,6 +665,9 @@ namespace Nektar
 
 /** 
 * $Log: StdMatrix.cpp,v $
+* Revision 1.8  2007/01/10 20:17:31  sherwin
+* Accidentally left in a ShowMatrix in Factor
+*
 * Revision 1.7  2007/01/10 20:13:25  sherwin
 * Fixed bug in NodalPointReorder2D
 *

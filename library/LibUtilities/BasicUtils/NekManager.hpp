@@ -44,89 +44,93 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/concept_check.hpp>
 
+#include <LibUtilities/Foundations/Points.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 using namespace std;
 
-
-template <typename KeyType, typename ValueT>
-class NekManager
+namespace Nektar
 {
-    public:
-        BOOST_CLASS_REQUIRE(KeyType, boost, LessThanComparableConcept);
-        
-    public:
-        typedef boost::shared_ptr<ValueT> ValueType;
-        typedef boost::function<ValueType (const KeyType&)> CreateFuncType;
-        typedef std::map<KeyType, ValueType> ValueContainer;
-        typedef std::map<KeyType, CreateFuncType> CreateFuncContainer;
-
-
-        NekManager() :
-            m_values(), 
-            m_globalCreateFunc(),
-            m_keySpecificCreateFuncs()
+    namespace LibUtilities
+    {
+        template <typename KeyType, typename ValueT>
+        class NekManager
         {
-        };
+            public:
+                BOOST_CLASS_REQUIRE(KeyType, boost, LessThanComparableConcept);
 
-        explicit NekManager(CreateFuncType f) :
-            m_values(),
-            m_globalCreateFunc(f),
-            m_keySpecificCreateFuncs()
-        {
-        }
-        
-        ~NekManager() {}
-	
-        void RegisterCreator(typename boost::call_traits<KeyType>::const_reference key, 
-                             const CreateFuncType& createFunc)
-        {
-            m_keySpecificCreateFuncs[key] = createFunc;
-        }
+                typedef boost::shared_ptr<ValueT> ValueType;
+                typedef boost::function<ValueType (const KeyType& key)> CreateFuncType;
+                typedef std::map<KeyType, ValueType> ValueContainer;
+                typedef std::map<KeyType, CreateFuncType, opLess> CreateFuncContainer;
 
-        ValueType& operator[](typename boost::call_traits<KeyType>::const_reference key)
-        {
-            typename ValueContainer::iterator found = m_values.find(key);
-            if( found != m_values.end() )
-            {
-                return (*found).second;
-            }
-            else
-            {
-                static ValueType result;
-            
-                // No object, create a new one.
-                CreateFuncType f = m_globalCreateFunc;
-                typename CreateFuncContainer::iterator keyFound = m_keySpecificCreateFuncs.find(key);
-                if( keyFound != m_keySpecificCreateFuncs.end() )
+                NekManager() :
+                    m_values(), 
+                    m_globalCreateFunc(),
+                    m_keySpecificCreateFuncs()
                 {
-                    f = (*keyFound).second;
-                }
+                };
 
-                if( f )
+                explicit NekManager(CreateFuncType f) :
+                    m_values(),
+                    m_globalCreateFunc(f),
+                    m_keySpecificCreateFuncs()
                 {
-                    result = f(key);
-                    m_values[key] = result;
-                    return m_values[key];
-                }
-                else
-                {
-                    std::string keyAsString = boost::lexical_cast<std::string>(key);
-                    std::string message = std::string("No create func found for key ") + keyAsString;
-                    NEKERROR(ErrorUtil::efatal, message.c_str());
                 }
                 
-                return result;
-            }
-        }
-        
-    private:
-        NekManager(const NekManager<KeyType, ValueType>& rhs);
-        NekManager<KeyType, ValueType>& operator=(const NekManager<KeyType, ValueType>& rhs);
+                ~NekManager() {}
+        	
+                void RegisterCreator(typename boost::call_traits<KeyType>::const_reference key, 
+                                     const CreateFuncType& createFunc)
+                {
+                    m_keySpecificCreateFuncs[key] = createFunc;
+                }
 
-        ValueContainer m_values;
-        CreateFuncType m_globalCreateFunc;
-        CreateFuncContainer m_keySpecificCreateFuncs;
-};
+                ValueType operator[](typename boost::call_traits<KeyType>::const_reference key)
+                {
+                    typename ValueContainer::iterator found = m_values.find(key);
+                    if( found != m_values.end() )
+                    {
+                        return (*found).second;
+                    }
+                    else
+                    {
+                        static ValueType result;
+                    
+                        // No object, create a new one.
+                        CreateFuncType f = m_globalCreateFunc;
+                        typename CreateFuncContainer::iterator keyFound = m_keySpecificCreateFuncs.find(key);
+                        if( keyFound != m_keySpecificCreateFuncs.end() )
+                        {
+                            f = (*keyFound).second;
+                        }
+
+                        if( f )
+                        {
+                            result = f(key);
+                            m_values[key] = result;
+                            return m_values[key];
+                        }
+                        else
+                        {
+                            std::string keyAsString = boost::lexical_cast<std::string>(key);
+                            std::string message = std::string("No create func found for key ") + keyAsString;
+                            NEKERROR(ErrorUtil::efatal, message.c_str());
+                        }
+                        
+                        return result;
+                    }
+                }
+                
+            private:
+                NekManager(const NekManager<KeyType, ValueType>& rhs);
+                NekManager<KeyType, ValueType>& operator=(const NekManager<KeyType, ValueType>& rhs);
+
+                ValueContainer m_values;
+                CreateFuncType m_globalCreateFunc;
+                CreateFuncContainer m_keySpecificCreateFuncs;
+        };
+    }
+}
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_MANAGER_HPP

@@ -39,7 +39,7 @@
 #include <math.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+//#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 namespace Nektar
 {
@@ -249,16 +249,16 @@ namespace Nektar
                 z = m_points[2];
             }
 
-            inline const boost::shared_ptr<NekMatrix<DataType> > GetD() const
-            {
-                return m_derivmatrix;
-            }
+            //inline const boost::shared_ptr<NekMatrix<DataType> > GetD() const
+            //{
+            //    return m_derivmatrix;
+            //}
 
         protected:
             PointsKey m_pkey;
             DataType **m_points;
             DataType *m_weights;
-            boost::shared_ptr<NekMatrix<DataType> > m_derivmatrix;
+//            boost::shared_ptr<NekMatrix<DataType> > m_derivmatrix;
 
             virtual void CalculatePoints()
             {

@@ -37,6 +37,7 @@
 #define POINTS1D_H
 
 #include <math.h>
+#include <boost/shared_ptr.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.hpp>

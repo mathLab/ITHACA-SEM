@@ -15,7 +15,7 @@ using namespace std;
 // This routine generates a basis transformation from a nodal expansion to 
 // the orthogonal expansion
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 
   int           i,j,k,l;
@@ -107,4 +107,5 @@ main(int argc, char *argv[])
   //--------------------------------------------
 
   delete[] sol;
+  return 0;
 }

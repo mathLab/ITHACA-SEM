@@ -41,6 +41,9 @@
 #include <StdRegions/StdMatrix.h>
 #include <StdRegions/StdExpansion.h>
 
+#ifdef max
+#undef max
+#endif
 
 namespace Nektar
 {
@@ -665,6 +668,9 @@ namespace Nektar
 
 /** 
 * $Log: StdMatrix.cpp,v $
+* Revision 1.9  2007/01/17 16:05:40  pvos
+* updated doxygen documentation
+*
 * Revision 1.8  2007/01/10 20:17:31  sherwin
 * Accidentally left in a ShowMatrix in Factor
 *

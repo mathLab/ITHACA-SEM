@@ -37,6 +37,10 @@
 
 #include <StdRegions/StdExpansion3D.h>
 
+#ifdef max
+#undef max
+#endif
+
 namespace Nektar
 {
   namespace StdRegions
@@ -184,6 +188,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.3  2007/01/17 16:05:40  pvos
+ * updated doxygen documentation
+ *
  * Revision 1.2  2006/06/01 14:46:16  kirby
  * *** empty log message ***
  *

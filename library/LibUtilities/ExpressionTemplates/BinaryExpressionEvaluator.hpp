@@ -44,6 +44,7 @@
 #include <LibUtilities/ExpressionTemplates/AssociativeTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/CommutativeTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/AssignableTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
 
 #include <boost/utility/enable_if.hpp>
 
@@ -51,6 +52,17 @@ namespace Nektar
 {
     namespace expt
     {
+        // Visual Studio 2005 has a hard time with a construct such as
+        // OpType<LhsType, RhsType>::Traits::HasOpEqual.  
+        // This class is simply a level of indirection to get this to work.
+        template<typename TraitsType>
+        class GetTraitsValues
+        {
+            public:
+                static const bool HasOpEqual = TraitsType::HasOpEqual;
+                static const bool HasOpLeftEqual = TraitsType::HasOpLeftEqual;
+        };
+
         ////////////////////////////////////////////////
         // 1 op Specializations
         ////////////////////////////////////////////////
@@ -105,8 +117,8 @@ namespace Nektar
                                        ResultType, OpType, ParentOpType,
                                        typename boost::enable_if_c
                                        <
-                                            ParentOpType<ResultType, LhsDataType>::TraitsType::HasOpEqual &&
-                                            OpType<ResultType, RhsDataType>::TraitsType::HasOpEqual &&
+                                            GetTraitsValues<typename ParentOpType<ResultType, LhsDataType>::TraitsType>::HasOpEqual &&
+                                            GetTraitsValues<typename OpType<ResultType, RhsDataType>::TraitsType>::HasOpEqual &&                                
                                             !boost::is_same<BinaryNullOp<void, void>, typename ParentOpType<LhsDataType, RhsDataType>::template Rebind<void, void>::type >::value,
                                             void
                                        >::type >
@@ -219,7 +231,7 @@ namespace Nektar
                                             (!CommutativeTraits<A, OpType, R>::IsCommutative &&
                                             AssociativeTraits<A, OpType, typename RhsLhsPolicyType::ResultType, RhsOpType, typename RhsRhsPolicyType::ResultType>::IsAssociative &&
                                             !AssignableTraits<R, A>::IsAssignable &&
-                                            !OpType<R, A>::TraitsType::HasOpLeftEqual)
+                                            !GetTraitsValues<typename OpType<R, A>::TraitsType>::HasOpLeftEqual)
                                         >::type >
         {
             public:
@@ -261,7 +273,7 @@ namespace Nektar
                                             >::value &&
                                             !CommutativeTraits<A, OpType, R>::IsCommutative &&
                                             AssociativeTraits<A, OpType, typename RhsLhsPolicyType::ResultType, RhsOpType, typename RhsRhsPolicyType::ResultType>::IsAssociative &&
-                                            !OpType<R, A>::TraitsType::HasOpLeftEqual &&
+                                            !GetTraitsValues<typename OpType<R, A>::TraitsType>::HasOpLeftEqual &&
                                             AssignableTraits<R, A>::IsAssignable
                                         >::type >
         {
@@ -299,7 +311,7 @@ namespace Nektar
                                                 typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
                                             >::value &&
                                             !CommutativeTraits<A, OpType, R>::IsCommutative &&
-                                            OpType<R, A>::TraitsType::HasOpLeftEqual,
+                                            GetTraitsValues<typename OpType<R, A>::TraitsType>::HasOpLeftEqual,
                                             void
                                         >::type >
         {

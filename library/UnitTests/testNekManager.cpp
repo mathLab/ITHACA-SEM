@@ -89,7 +89,7 @@ namespace Nektar
 
        void testNekManager()
        {
-            typedef NekManager<int, DoubleWrapper> ManagerType;
+           typedef LibUtilities::NekManager<int, DoubleWrapper> ManagerType;
 
             /// TODO - See why I can't do GlobalCreator() directly in the constructor call.
             GlobalCreator c;
@@ -135,6 +135,9 @@ namespace Nektar
 
 /**
    $Log: testNekManager.cpp,v $
+   Revision 1.5  2007/01/16 17:17:58  bnelson
+   Updated to use shared pointers in the NekManager.
+
    Revision 1.4  2006/12/17 21:45:25  bnelson
    Added tests for the global create function.
 

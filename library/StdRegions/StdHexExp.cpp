@@ -35,6 +35,10 @@
 
 #include <StdRegions/StdHexExp.h>
 
+#ifdef max
+#undef max
+#endif
+
 namespace Nektar
 {
     namespace StdRegions
@@ -531,6 +535,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.5  2007/01/17 16:36:57  pvos
+* updating doxygen documentation
+*
 * Revision 1.4  2007/01/17 16:05:40  pvos
 * updated doxygen documentation
 *

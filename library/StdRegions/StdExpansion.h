@@ -513,11 +513,10 @@ namespace Nektar
 
         protected:
 
-            /** All Expansions share the same BasisManager */
-            typedef Loki::SingletonHolder<BasisManager> BasisManagerSingleton;
-
             int   m_numbases;   /**< Number of 1D basis defined in expansion */
+	    boost::shared_ptr<const Basis> 
             constbasis *m_base; /**< Bases needed for the expansion */
+
             /** Total number of coefficients used in the expansion*/
             int  m_ncoeffs;
             /**  Boolean indicating whether object owns the coeff array */
@@ -710,6 +709,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.10  2007/01/15 11:08:40  pvos
+* Updating doxygen documentation
+*
 * Revision 1.9  2006/12/10 19:00:54  sherwin
 * Modifications to handle nodal expansions
 *

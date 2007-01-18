@@ -1,5 +1,5 @@
 
-SET(AliasingProject2DSource  AliasingProject2D.cpp)
+#SET(AliasingProject2DSource  AliasingProject2D.cpp)
 SET(Basis1DSource  Basis1D.cpp)
 SET(HMatrix1DSource  HMatrix1D.cpp)
 SET(MMatrix1DSource  MMatrix1D.cpp)
@@ -12,7 +12,7 @@ SET(Project2DSource  Project2D.cpp)
 SET(Project_Diff2DSource  Project_Diff2D.cpp)
 
 
-ADD_NEKTAR_EXECUTABLE(AliasingProject2D AliasingProject2DSource )
+#ADD_NEKTAR_EXECUTABLE(AliasingProject2D AliasingProject2DSource )
 ADD_NEKTAR_EXECUTABLE(Basis1D Basis1DSource )
 #ADD_NEKTAR_EXECUTABLE(HMatrix1D HMatrix1DSource )
 #ADD_NEKTAR_EXECUTABLE(MMatrix1D MMatrix1DSource )
@@ -23,3 +23,4 @@ ADD_NEKTAR_EXECUTABLE(NodalBasis NodalBasisSource)
 ADD_NEKTAR_EXECUTABLE(Project1D Project1DSource)
 ADD_NEKTAR_EXECUTABLE(Project2D Project2DSource)
 ADD_NEKTAR_EXECUTABLE(Project_Diff2D Project_Diff2DSource)
+

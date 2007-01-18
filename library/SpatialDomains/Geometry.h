@@ -48,6 +48,8 @@ namespace Nektar
     {
         class Geometry; // Forward declaration for typedef.
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
+        typedef std::vector< GeometrySharedPtr > GeometryVector;
+        typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
 
         class Geometry
         {
@@ -108,6 +110,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.4  2006/08/18 19:37:17  jfrazier
+// *** empty log message ***
+//
 // Revision 1.3  2006/08/17 22:55:00  jfrazier
 // Continued adding code to process composites in the mesh2d.
 //

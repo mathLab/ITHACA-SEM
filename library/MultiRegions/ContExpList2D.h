@@ -39,7 +39,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/LocalToGlobalMap2D.h>
-
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.h>
 #include <StdRegions/StdMatrix.h>
 
 namespace Nektar
@@ -115,7 +115,11 @@ namespace Nektar
 	    
 	    boost::shared_ptr<LocalToGlobalMap2D> m_locToGloMap;
 
+#ifdef NEKMAT
+	    boost::shared_ptr< DNekMat > m_mass;
+#else
 	    StdRegions::StdMatContainer *m_mass;
+#endif
 	    
 	    virtual void v_BwdTrans(double *outarray)
 	    {

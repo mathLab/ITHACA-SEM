@@ -42,7 +42,9 @@ namespace Nektar
 	
 	ContExpList2D::ContExpList2D()
 	{
+#ifndef NEKMAT
 	    m_mass = (StdRegions::StdMatContainer *)NULL;
+#endif
 	}
 	
 	ContExpList2D::~ContExpList2D()
@@ -81,7 +83,9 @@ namespace Nektar
 			 "Quad and Tri Expansions are not of the same type");
 	    }
 	    
+#ifndef NEKMAT
 	    m_mass = (StdRegions::StdMatContainer *)NULL;
+#endif
 	    
 	    // setup mapping array 
 	    m_locToGloMap.reset(new LocalToGlobalMap2D(m_ncoeffs, m_exp_shapes,
@@ -123,7 +127,9 @@ namespace Nektar
 			 "Quad and Tri Expansions are not of the same type");
 	    }
 	    
+#ifndef NEKMAT	    
 	    m_mass = (StdRegions::StdMatContainer *)NULL;
+#endif
 	    
 	    // setup mapping array 
 	    m_locToGloMap.reset(new LocalToGlobalMap2D(m_ncoeffs, m_exp_shapes,
@@ -144,17 +150,26 @@ namespace Nektar
 	void ContExpList2D::FwdTrans(const double *inarray)
 	{
 	    IProductWRTBase(inarray,m_contCoeffs);
+
 	    if(!m_mass)
 	    {
 		GenMassMatrix();
 	    }
 	    
+#ifdef NEKMAT
+	    DNekVec    contCoeffs(m_contNcoeffs,m_contCoeffs);
+	    LinearSystem< NekMatrix<double, eFull>, NekVector<double> > 
+		linsys(m_mass,contCoeffs);
+	    // DNekLinSys linsys(m_mass,contCoeffs);
+	    contCoeffs = linsys.Solve();
+#else
 	    m_mass->ShowMatrixStructure(stdout);
 	    fflush(stdout);
 
 	    m_mass->Solve(m_contCoeffs,1);
 	    m_transState = eContinuous;
 	    m_physState = false;
+#endif
 	}
 
 	void ContExpList2D::BwdTrans(double *outarray)
@@ -182,10 +197,15 @@ namespace Nektar
 		double *mmat = new double [m_contNcoeffs*m_contNcoeffs];
 		Vmath::Zero(m_contNcoeffs*m_contNcoeffs,mmat,1);
 		
+#ifdef NEKMAT
+		m_mass.reset(new DNekMat (m_contNcoeffs,m_contNcoeffs));
+#else
 		m_mass = new StdRegions::StdMatContainer(mmat);
 		m_mass->SetLda     (m_contNcoeffs);
 		m_mass->SetMatForm (StdRegions::eSymmetric_Positive);
-		
+#endif
+
+	
 		// fill global matrix 
 		for(cnt = 0, sdef = m_exp_shapes.begin(); sdef != m_exp_shapes.end();
 		    ++sdef)
@@ -208,8 +228,13 @@ namespace Nektar
 				gid2 = m_locToGloMap->GetMap(j+cnt);	
 				sign2 = m_locToGloMap->GetSign(j+cnt);
 				
+#ifdef NEKMAT
+				(*m_mass)(gid1,gid2)
+				+= sign1*sign2*loc_mat[i*loc_lda + j];
+#else
 				mmat[gid1*m_contNcoeffs + gid2] 
 				+= sign1*sign2*loc_mat[i*loc_lda + j];
+#endif
 			    }
 			}
 			cnt+=(*def)->GetNcoeffs();

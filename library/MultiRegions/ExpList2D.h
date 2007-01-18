@@ -59,18 +59,15 @@ namespace Nektar
 	    ExpList2D();
 	    ~ExpList2D();
 	    
-	    ExpList2D(const StdRegions::BasisKey &TriBa, 
-		      const StdRegions::BasisKey &TriBb, 
-		      const StdRegions::BasisKey &QuadBa, 
-		      const StdRegions::BasisKey &QuadBb, 
-		      SpatialDomains::MeshGraph2D &graph2D);
 	    
 	    ExpList2D(const StdRegions::BasisKey &TriBa, 
 		      const StdRegions::BasisKey &TriBb, 
-		      const StdRegions::NodalBasisType TriNb,
 		      const StdRegions::BasisKey &QuadBa, 
 		      const StdRegions::BasisKey &QuadBb, 
-		      SpatialDomains::MeshGraph2D &graph2D);
+		      SpatialDomains::MeshGraph2D &graph2D,
+		      SpatialDomains::Domain &domain = NULL,
+		      const StdRegions::NodalBasisType 
+		              TriNb = StdRegions::SIZE_NodalBasisType);
 	    
 	protected:
 	    

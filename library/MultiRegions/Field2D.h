@@ -40,6 +40,8 @@
 #include <MultiRegions/Field.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
+#include "SpatialDomains/MeshGraph2D.h"
+#include "SpatialDomains/Domain.h"
 
 namespace Nektar
 {
@@ -57,9 +59,9 @@ namespace Nektar
 		
 	    private:
 
-		ExpList2D        m_field;
-		ExpList1DVector  m_bndContraint;
-		BndTypesVector   m_bndTypes;
+		ExpList2DSharedPtr m_field;
+		ExpList1DVector    m_bndContraint;
+		BndTypesVector     m_bndTypes;
 	    };
 	
     } //end of namespace

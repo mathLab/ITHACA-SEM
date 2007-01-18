@@ -39,6 +39,10 @@
 #include <LocalRegions/LocalRegions.hpp>
 #include <vector>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
+//#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
+//#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
 namespace Nektar
 {

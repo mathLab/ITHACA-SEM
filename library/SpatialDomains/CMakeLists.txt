@@ -49,11 +49,24 @@ TriGeom.h
 SpatialDomains.hpp
 )
 
+SET(TINYXML_SOURCES
+../../ThirdParty/tinyxml/tinyxml.cpp
+../../ThirdParty/tinyxml/tinyxmlparser.cpp 
+../../ThirdParty/tinyxml/xmltest.cpp
+../../ThirdParty/tinyxml/tinyxmlerror.cpp 
+../../ThirdParty/tinyxml/tinystr.cpp
+)
+
+SET(TINYXML_HEADERS
+../../ThirdParty/tinyxml/tinystr.h
+../../ThirdParty/tinyxml/tinyxml.h
+)
+
 
 ADD_NEKTAR_LIBRARY(SpatialDomains STATIC ${SPATIAL_DOMAINS_SOURCES} ${SPATIAL_DOMAINS_HEADERS})
 
 INSTALL_FILES(${NEKTAR_INCLUDE_DIR}/SpatialDomains FILES ${SPATIAL_DOMAINS_HEADERS})
 
-
+ADD_LIBRARY(tinyxml STATIC ${TINYXML_SOURCES} ${TINYXML_HEADERS})
 
 

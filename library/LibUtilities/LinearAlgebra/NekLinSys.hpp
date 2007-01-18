@@ -50,7 +50,7 @@ namespace Nektar
     class NekObjectAccessor
     {
         public:
-            explicit NekObjectAccessor(DataType& obj) :
+	explicit NekObjectAccessor(DataType& obj) :
                 m_object(obj)
             {
             }

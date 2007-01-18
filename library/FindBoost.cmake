@@ -1,4 +1,4 @@
-SET(BOOST_INCLUDE_SEARCH_PATH /usr/include /usr/local/include)
+SET(BOOST_INCLUDE_SEARCH_PATH /usr/include /usr/local/include ${CMAKE_SOURCE_DIR}/../ThirdParty/include )
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
     SET(BOOST_INCLUDE_SEARCH_PATH ${BOOST_INCLUDE_SEARCH_PATH}
@@ -32,10 +32,10 @@ ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles" )
     IF( ${CMAKE_COMPILER_IS_GNUCXX} )
-        SET(BoostFileSystemName "boost_filesystem-gcc-mt")
-        SET(BoostFileSystemDebugName "boost_filesystem-gcc-mt-d")
-        SET(BoostThreadName "boost_thread-gcc-mt")
-        SET(BoostThreadDebugName "boost_thread-gcc-mt-d")
+        SET(BoostFileSystemName "boost_filesystem-gcc")
+        SET(BoostFileSystemDebugName "boost_filesystem-gcc-d")
+        SET(BoostThreadName "boost_thread")
+        SET(BoostThreadDebugName "boost_thread-d")
     ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
 ENDIF( ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles" )
 
@@ -71,6 +71,8 @@ FIND_LIBRARY( BOOST_THREAD_DEBUG_LIB NAMES ${BoostThreadDebugName}
 IF (BOOST_INCLUDE_DIR)
   SET(BOOST_FOUND TRUE)
 ENDIF (BOOST_INCLUDE_DIR)
+
+SET (BOOST_LIB_DIR ${BOOST_INCLUDE_DIR}../lib )
 
 IF (BOOST_FOUND)
   IF (NOT Boost_FIND_QUIETLY)

@@ -7,192 +7,227 @@
 #include <LibUtilities/NekVector.hpp>
 
 #include <boost/shared_ptr.hpp> 
-  
-namespace LibUtilities{
-  namespace NekLinAlg{
 
-    class NekLinSys{
-    private:
-      boost::shared_ptr<NekMatrix<double> > _matrix;
-      
-      bool    _factored;      ///< Flag to identify if matrix is factored
-      int    *_ipiv;          ///< Pivoting array   
-      int     _lda;           ///< leading diagonal of matrix
-      int     _bwidth;        ///< Bandwdith for positive banded matrix \n
-                              ///< Upper sug diagonals plus one for general
-                              ///< banded matrix
-      int     _ldiag;         ///< Low sub diagonals for general banded matrix
-      double* _packed_matrix; ///< Inverse/Factorisation of Matrix pointer 
+namespace LibUtilities
+{
+    namespace NekLinAlg
+    {
 
-
-
-      // --------------------------------------------------------------------      
-      // Private Methods
-      // --------------------------------------------------------------------
+	class NekLinSys
+	{
+	private:
+	    boost::shared_ptr<NekMatrix<double> > _matrix;
+	    
+	    bool    _factored;      ///< Flag to identify if matrix is factored
+	    int    *_ipiv;          ///< Pivoting array   
+	    int     _lda;           ///< leading diagonal of matrix
+	    int     _bwidth;        ///< Bandwdith for positive banded matrix \n
+	    ///< Upper sug diagonals plus one for general
+	    ///< banded matrix
+	    int     _ldiag;         ///< Low sub diagonals for general banded matrix
+	    double* _packed_matrix; ///< Inverse/Factorisation of Matrix pointer 
+	    
+	    
+	    
+	    // --------------------------------------------------------------------      
+	    // Private Methods
+	    // --------------------------------------------------------------------
+	    
+	    inline void Initiate()
+	    {
+		_factored = false;
+		_ipiv = (int*)NULL;
+		_packed_matrix = (double *)NULL;
+		_bwidth = 0; _ldiag = 0;
+	    }
+	    
+	    // declare the memory of _packed_matrix depending upon its definition
+	    void SetMemPackedMatrix()
+	    {
+		
+		if(_packed_matrix) 
+		{
+		    return;
+		}
+		
+		ASSERTL0((_lda > 0), "NekLinSys::SetMemPackedMatrix","_lda not defined ");
+		
+		switch(_matrix->matform()){
+		case Symmetric:     case Symmetric_Positive:
+		    _packed_matrix = new double [_lda*(_lda+1)/2];
+		    Vmath::zero(_lda*(_lda+1)/2,_packed_matrix,1);
+		    break;
+		case Symmetric_Positive_Banded:
+		    ASSERTL0((_bwidth > 0 ), "NekLinSys::SetMemPackedMatrix",
+			     "_bwidth  not set");
+		    _packed_matrix = new double [_lda*_bwidth];
+		    Vmath::zero(_lda*_bwidth,_packed_matrix,1);
+		    break;
+		case General_Banded:
+		    ASSERTL0((_bwidth > 0 )&&(_ldiag > 0),
+			     "NekLinSys::SetMemPackedMatrix","_bwidth or _ldiag is  not set");
+		    _packed_matrix = new double [_lda*2*(_ldiag+_bwidth)];
+		    Vmath::zero(_lda*2*(_ldiag+_bwidth),_packed_matrix,1);
+		    break;
+		case General_Full:
+		    _packed_matrix = new double [_lda*_lda];
+		    Vmath::zero(_lda*_lda,_packed_matrix,1);
+		    break;
+		} 
+	    }
       
-      inline void Initiate(){
-    _factored = false;
-    _ipiv = (int*)NULL;
-    _packed_matrix = (double *)NULL;
-    _bwidth = 0; _ldiag = 0;
-      }
-
-      // declare the memory of _packed_matrix depending upon its definition
-      void SetMemPackedMatrix(){
+	    /** \brief factorise matrix depending upon definition stored in _mat_form.
+		
+	    Options for mat_from are: 
+	    
+	    - _mat_form = Symmetric-Positive implies Cholesky factorization using
+	    Lapack::dpptrf.
+	    
+	    - _mat_form = Symmetric implies Factorisation using Bunch-Kaufman
+	    pivoting using Lapack::dsptrf.
+	    
+	    - _mat_form = Symmetric-Positive-Banded implies lower diagonal banded
+	    cholesky factorisation using Lapack::dpbtrf.
+	    
+	    - _mat_form = General-Banded implies factoring using Lapack::dgbtrf.
+	    
+	    - _mat_form = General-Full implies factoring using Lapack::dgetrf.
+	    
+	    */
+	    void Factor()
+	    {
+		int info;
+		
+		if(_factored)
+		{
+		    return;
+		}
     
-    if(_packed_matrix) return;
+		ASSERTL1(_lda, "NekLinSys::Factor","_lda is not set");
+		
+		if(!_packed_matrix)
+		{
+		    FillPackedMatrix();
+		}
+		
+		switch(_matrix->matform())
+		{
+		case Symmetric:
+		    _ipiv = new int[_lda];
+		    Lapack::dsptrf('L',_lda,_packed_matrix,_ipiv,info);
+		    ASSERTL0(info==0, "NekLinSys::Factor","matrix did not factor");
+		    break;
+		case Symmetric_Positive:
+		    Lapack::dpptrf('L', _lda, _packed_matrix, info);
+		    ASSERTL0(info==0, "NekLinSys::Factor","matrix did not factor");
+		    break;
+		case Symmetric_Positive_Banded:
+		    Lapack::dpbtrf('L',_lda,_bwidth-1,_packed_matrix,_bwidth,info);
+		    ASSERTL0(info==0, "NekLinSys::Factor","matrix did not factor");
+		    break;
+		case General_Banded:
+		    _ipiv = new int[_lda];
+		    Lapack::dgbtrf(_lda,_lda,_ldiag,_bwidth-1,_packed_matrix,
+				   2*_ldiag+_bwidth,_ipiv,info);
+		    ASSERTL0(info==0, "NekLinSys::Factor","matrix did not factor");
+		    break;
+		case General_Full:
+		    _ipiv = new int[_lda];
+		    Lapack::dgetrf(_lda,_lda,_packed_matrix,_lda,_ipiv,info);     
+		    ASSERTL0(info==0, "NekLinSys::Factor","matrix did not factor");
+		    break;
+		}
+		
+		_factored = true;    
+	    }
+      
+      
+	    /** \brief Fill _packed_matrix from _matrix 
+		
+	    Note: Assume input matrix is stored in RowMajor 'C' type format. The
+	    packed matrix however is stored in Column Major Fortran type format
+	    so that the appropriate Lapack routines can be called. This is only
+	    important for the General Matrix forms.
+	    
+	    */
+	    
+	    void FillPackedMatrix()
+	    {
+		int i,j,cnt;
+		
+		ASSERTL1(_lda, "NekLinSys::FillPackedMatrix",
+			 "lda is not set");
+		
+		// check to see if memory is declared and if not setup
+		if(!_packed_matrix)
+		{
+		    SetMemPackedMatrix();
+		}
     
-    ASSERTL0((_lda > 0), "NekLinSys::SetMemPackedMatrix","_lda not defined ");
-    
-    switch(_matrix->matform()){
-    case Symmetric:     case Symmetric_Positive:
-      _packed_matrix = new double [_lda*(_lda+1)/2];
-      Vmath::zero(_lda*(_lda+1)/2,_packed_matrix,1);
-      break;
-    case Symmetric_Positive_Banded:
-      ASSERTL0((_bwidth > 0 ), "NekLinSys::SetMemPackedMatrix",
-           "_bwidth  not set");
-      _packed_matrix = new double [_lda*_bwidth];
-      Vmath::zero(_lda*_bwidth,_packed_matrix,1);
-      break;
-    case General_Banded:
-      ASSERTL0((_bwidth > 0 )&&(_ldiag > 0),
-           "NekLinSys::SetMemPackedMatrix","_bwidth or _ldiag is  not set");
-      _packed_matrix = new double [_lda*2*(_ldiag+_bwidth)];
-      Vmath::zero(_lda*2*(_ldiag+_bwidth),_packed_matrix,1);
-      break;
-    case General_Full:
-      _packed_matrix = new double [_lda*_lda];
-      Vmath::zero(_lda*_lda,_packed_matrix,1);
-      break;
-    } 
-      }
+		switch(_matrix->matform())
+		{
+		case Symmetric_Positive: case Symmetric:
+		    // store matrix in symmetric form 
+		    cnt = 0;
+		    for(i = 0; i < _lda; ++i)
+		    {
+			for(j = i; j < _lda; ++j)
+			{
+			    _packed_matrix[cnt++] = (*_matrix)(i,j);
+			}
+		    }
+		    break;
+		case Symmetric_Positive_Banded:
+		    // store matrix in symmetric banded 
+		    cnt = 0;
+		    for(i = 0; i < _lda; ++i)
+		    {
+			for(j  = i; j < i+_bwidth; ++j)
+			{
+			    _packed_matrix[cnt++] = (*_matrix)(i,j);
+			}
+		    }
+		    break;
+		case General_Banded:
+		    for(i = 0; i < _lda; ++i)
+		    {
+			for(j  = max(i-_ldiag,0); j < i+_bwidth; ++j)
+			{
+			    _packed_matrix[j*(2*_ldiag+_bwidth)+_ldiag+_bwidth-1+(i-j)]
+				= (*_matrix)(i,j);
+			}
+		    }
+		    break;
+		case General_Full:
+		    // pack full matrix transposing matrix 
+		    for(i = 0; i < _lda; ++i)
+		    {
+			for(j = 0; j < _lda; ++j)
+			{
+			    _packed_matrix[j+i*_lda] = (*_matrix)(i,j);
+			}
+		    }
+		    
+		    break;
+		}
+	    }
+	    
+	    
+	public:
       
-      /** \brief factorise matrix depending upon definition stored in _mat_form.
-      
-      Options for mat_from are: 
-      
-      - _mat_form = Symmetric-Positive implies Cholesky factorization using
-      Lapack::dpptrf.
-      
-      - _mat_form = Symmetric implies Factorisation using Bunch-Kaufman
-      pivoting using Lapack::dsptrf.
-      
-      - _mat_form = Symmetric-Positive-Banded implies lower diagonal banded
-      cholesky factorisation using Lapack::dpbtrf.
-      
-      - _mat_form = General-Banded implies factoring using Lapack::dgbtrf.
-      
-      - _mat_form = General-Full implies factoring using Lapack::dgetrf.
-      
-      */
-      void Factor(){
-    int info;
-    
-    if(_factored) return;
-    
-    ASSERTL1(_lda, "NekLinSys::Factor","_lda is not set");
-    
-    if(!_packed_matrix)
-      FillPackedMatrix();
-    
-    switch(_matrix->matform()){
-    case Symmetric:
-      _ipiv = new int[_lda];
-      Lapack::dsptrf('L',_lda,_packed_matrix,_ipiv,info);
-      ASSERTL0(info==0, "NekLinSys::Factor","matrix did not factor");
-      break;
-    case Symmetric_Positive:
-      Lapack::dpptrf('L', _lda, _packed_matrix, info);
-      ASSERTL0(info==0, "NekLinSys::Factor","matrix did not factor");
-      break;
-    case Symmetric_Positive_Banded:
-      Lapack::dpbtrf('L',_lda,_bwidth-1,_packed_matrix,_bwidth,info);
-      ASSERTL0(info==0, "NekLinSys::Factor","matrix did not factor");
-      break;
-    case General_Banded:
-      _ipiv = new int[_lda];
-      Lapack::dgbtrf(_lda,_lda,_ldiag,_bwidth-1,_packed_matrix,
-             2*_ldiag+_bwidth,_ipiv,info);
-      ASSERTL0(info==0, "NekLinSys::Factor","matrix did not factor");
-      break;
-    case General_Full:
-      _ipiv = new int[_lda];
-      Lapack::dgetrf(_lda,_lda,_packed_matrix,_lda,_ipiv,info);     
-      ASSERTL0(info==0, "NekLinSys::Factor","matrix did not factor");
-      break;
-    }
-    
-    _factored = true;    
-      }
-      
-      
-      /** \brief Fill _packed_matrix from _matrix 
-      
-      Note: Assume input matrix is stored in RowMajor 'C' type format. The
-      packed matrix however is stored in Column Major Fortran type format
-      so that the appropriate Lapack routines can be called. This is only
-      important for the General Matrix forms.
-      
-      */
-      
-      void FillPackedMatrix(){
-    int i,j,cnt;
-    
-    ASSERTL1(_lda, "NekLinSys::FillPackedMatrix",
-         "lda is not set");
-    
-    // check to see if memory is declared and if not setup
-    if(!_packed_matrix)
-      SetMemPackedMatrix();
-    
-    switch(_matrix->matform()){
-    case Symmetric_Positive: case Symmetric:
-      // store matrix in symmetric form 
-      cnt = 0;
-      for(i = 0; i < _lda; ++i)
-        for(j = i; j < _lda; ++j)
-          _packed_matrix[cnt++] = (*_matrix)(i,j);
-      break;
-    case Symmetric_Positive_Banded:
-      // store matrix in symmetric banded 
-      cnt = 0;
-      for(i = 0; i < _lda; ++i)
-        for(j  = i; j < i+_bwidth; ++j)
-          _packed_matrix[cnt++] = (*_matrix)(i,j);
-      break;
-    case General_Banded:
-      for(i = 0; i < _lda; ++i)
-        for(j  = max(i-_ldiag,0); j < i+_bwidth; ++j)
-          _packed_matrix[j*(2*_ldiag+_bwidth)+_ldiag+_bwidth-1+(i-j)]
-        = (*_matrix)(i,j);
-      break;
-    case General_Full:
-      // pack full matrix transposing matrix 
-      for(i = 0; i < _lda; ++i)
-        for(j = 0; j < _lda; ++j)
-          _packed_matrix[j+i*_lda] = (*_matrix)(i,j);
-      
-      break;
-    }
-      }
-      
-      
-    public:
-      
-      NekLinSys(int rows): _matrix(new NekMatrix<double>(rows,rows)){
-    Initiate();
-    _lda = rows;  
-      }
-      
-�     NekLinSys(int rows, int columns): _matrix(new NekMatrix<double>(rows,columns)){
-    Initiate();
-    _lda = rows;      
-      }
-      
-      NekLinSys(MatrixForm matform, int rows): _matrix(new NekMatrix<double>(matform,rows,rows)){
-        Initiate();
-    _lda = rows;  
+	    NekLinSys(int rows): _matrix(new NekMatrix<double>(rows,rows)){
+		Initiate();
+		_lda = rows;  
+	    }
+	    
+	    NekLinSys(int rows, int columns): _matrix(new NekMatrix<double>(rows,columns)){
+		Initiate();
+		_lda = rows;      
+	    }
+	    
+	    NekLinSys(MatrixForm matform, int rows): _matrix(new NekMatrix<double>(matform,rows,rows)){
+		Initiate();
+		_lda = rows;  
       }
       
       

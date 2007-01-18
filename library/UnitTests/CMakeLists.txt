@@ -39,25 +39,12 @@ TARGET_LINK_LIBRARIES(UnitTests
     optimized ${BoostThreadName} debug ${BoostThreadDebugName}
 )
 
-#MESSAGE(${USE_MKL})
-#MESSAGE(${MKL_FOUND})
-#IF( USE_MKL )
-#    IF( MKL_FOUND )
-#        MESSAGE("Using MKL>>>>>")
-#    ENDIF( MKL_FOUND )
-#ENDIF( USE_MKL )
 
 IF( USE_MKL AND MKL_FOUND )
-#        MESSAGE("Using MKL")
         TARGET_LINK_LIBRARIES(UnitTests
             ${MKL_LAPACK}
             optimized ${MKL} debug ${MKL}
             ${MKL_GUIDE}
-
-#optimized mkl_ia32 debug mkl_ia32
-#            optimized mkl debug mkl
-#            optimized vml debug vml
-#            optimized guide debug guide
         )
 ENDIF( USE_MKL AND MKL_FOUND )
 

@@ -73,7 +73,7 @@ namespace Nektar
                     }
                 }
             }
-
+	    
             {
 
                 NekMatrix<float> dynamic_matrix(7, 3, (float)7.8);
@@ -687,6 +687,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.19  2007/01/16 05:31:34  bnelson
+    Major improvements for expression templates.
+
     Revision 1.18  2006/10/30 05:08:13  bnelson
     Added preliminary linear system and block matrix support.
 

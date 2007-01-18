@@ -117,7 +117,7 @@ int main(int argc, char *argv[]){
     const BasisKey T_Bb(Tri_btype2, order,  eLobatto, order+1, 1,0);
     const BasisKey Q_Ba(Quad_btype ,order,  eLobatto, order+1,0,0);
     
-    Exp = new ExpList2D (T_Ba,T_Bb,Tri_Nb,Q_Ba,Q_Ba,graph2D);
+    Exp = new ExpList2D (T_Ba,T_Bb,Q_Ba,Q_Ba,graph2D, Tri_Nb);
     
     //----------------------------------------------
     // Define solution to be projected 

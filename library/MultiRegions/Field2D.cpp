@@ -44,6 +44,37 @@ namespace Nektar
 	{
 	}
 
+	Field2D::Field2D(const StdRegions::BasisKey &TriBa, 
+			 const StdRegions::BasisKey &TriBb, 
+			 const StdRegions::NodalBasisType  TriNb,
+			 const StdRegions::BasisKey &QuadBa, 
+			 const StdRegions::BasisKey &QuadBb, 
+			 SpatialDomains::Domain &Domain2D)
+	{
+	    int i,nbnd;
+	    ExpList1DSharedPtr  bndry;
+	    BoundaryVectorIter def;
+	    BoundaryVector Bndry = Domain2D.getBoundaries();
+
+	    m_field.reset(new ContExpList2D(TriBa,TriBb,TriNb,QuadBa,QuadBa,
+					    Domain2D.GetGraph2D()));
+
+	    nbnd = Domain2D.GetBoundaries().size();
+
+	    for(def = Bndry.begin(); def < Bndry.end(); ++def)
+	    {
+		bndry.reset(new ExpList1D(Ba,graph1D));
+		m_bndConstraint.push_back(Bndry);
+		m_bndType(Def of Bndry Type);/////////////////////////
+	    } 
+
+ -- Get element and fac id's from graph - ask joe
+
+Set up numbering to local and global definition. 
+
+	}
+
+
 	Field2D::~Field2D()
 	{
 	}

@@ -56,7 +56,7 @@ namespace Vmath
     
     
     /// \brief Multiply vector z = x*y
-    template<class T>  void Vmul( int n, const T *x, const int incx, T*y,
+    template<class T>  void Vmul( int n, const T *x, const int incx, T *y,
 				  const int incy,  T*z, const int incz)
     {
 	while( n-- )
@@ -70,7 +70,7 @@ namespace Vmath
     
     /// \brief Scalar multiply  y = alpha*y
     template<class T>  void Smul( int n, const T alpha, T*x, const int incx,
-				  T*y, const int incy)
+				  T *y, const int incy)
     {
 	while( n-- )
 	{
@@ -81,7 +81,7 @@ namespace Vmath
     }
     
     /// \brief Multiply vector z = x/y
-    template<class T>  void Vdiv( int n, const T *x, const int incx, T*y,
+    template<class T>  void Vdiv( int n, const T *x, const int incx, T *y,
 				  const int incy,  T*z, const int incz)
     {
 	while( n-- )
@@ -95,7 +95,7 @@ namespace Vmath
     
     /// \brief Scalar multiply  y = alpha/y
     template<class T>  void Sdiv( int n, const T alpha, T*x, const int incx,
-				  T*y, const int incy)
+				  T *y, const int incy)
     {
 	while( n-- )
 	{
@@ -107,7 +107,7 @@ namespace Vmath
     
     /// \brief Add vector z = x+y
     template<class T>  void Vadd( int n, const T *x, const int incx, const T *y,
-				  const int incy,  T*z, const int incz)
+				  const int incy,  T *z, const int incz)
     {
 	while( n-- )
 	{
@@ -131,8 +131,8 @@ namespace Vmath
     }
     
     /// \brief Subtract vector z = x-y
-    template<class T>  void Vsub( int n, const T *x, const int incx, T*y,
-				  const int incy,  T*z, const int incz)
+    template<class T>  void Vsub( int n, const T *x, const int incx, T *y,
+				  const int incy,  T *z, const int incz)
     {
 	while( n-- )
 	{
@@ -437,6 +437,10 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.3  2006/07/02 17:16:16  sherwin
+
+Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+
 Revision 1.2  2006/06/01 13:44:28  kirby
 *** empty log message ***
 

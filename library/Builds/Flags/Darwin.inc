@@ -18,9 +18,10 @@ LD	= $(CXX)
 #turn of long-double warning associated with singleton
   CPPFLAGS += -Wno-long-double
   CPPFLAGS += -Wno-deprecated
+  CPPFLAGS += -DNEKTAR_USE_EXPRESSION_TEMPLATES 
 
 #define Third party include directories
-BOOST_VERSION = boost_1_33_0
+BOOST_VERSION = boost_1_33_1
 LOKI_VERSION = loki-0.1.3
 
   CPPFLAGS += -I${NEK_LIB_ROOT}					\

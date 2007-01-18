@@ -51,7 +51,10 @@ namespace Nektar
         typedef boost::shared_ptr<InterfaceComponent> SharedInterfaceCompPtr;
         typedef std::vector< VertexComponentSharedPtr >  VertexVector;
         typedef std::list< SharedInterfaceCompPtr > InterfaceCompList;
-        typedef boost::shared_ptr< std::vector<GeometrySharedPtr> > Composite;
+
+        typedef boost::shared_ptr< GeometryVector > Composite;
+        typedef std::vector< Composite >            CompositeVector;
+        typedef std::vector< Composite >::iterator  CompositeVectorIter;
 
         class MeshGraph
         {
@@ -122,6 +125,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.5  2006/09/26 23:41:53  jfrazier
+// Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
+//
 // Revision 1.4  2006/06/02 18:48:40  sherwin
 // Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
 //

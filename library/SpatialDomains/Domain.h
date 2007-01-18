@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/MeshGraph2D.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/Domain.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -80,7 +80,9 @@ namespace Nektar
     
         typedef boost::shared_ptr< BoundaryEntry > BoundarySharedPtr;
         typedef std::vector< BoundarySharedPtr > BoundaryVector;
+        typedef std::vector< BoundarySharedPtr >::iterator BoundaryVectorIter;
         typedef std::vector< Composite > CompositeVector;
+        typedef std::vector< Composite >::iterator CompositeVectorIter;
 
         class Domain
         {
@@ -97,7 +99,7 @@ namespace Nektar
             void Write(std::string &outfilename);
 
             CompositeVector GetDomain(void) { return m_Domain; };
-            BoundaryVector GetBoundaries(void) { return m_Boundaries; };
+            BoundaryVector  GetBoundaries(void) { return m_Boundaries; };
 
             inline void SetFileName(const std::string &inString)
             {

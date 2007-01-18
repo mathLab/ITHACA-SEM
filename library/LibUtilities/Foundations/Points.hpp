@@ -45,8 +45,11 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        // Need to add method to compute total number of points given dimension
+        // and number of points.
+
         class PointsKey;
-        
+
         // Use for looking up the creator.  The creator for number of points
         // can generate for any number, so we want the same creator called
         // for all number.
@@ -54,17 +57,17 @@ namespace Nektar
         {
             bool operator()(const PointsKey &lhs, const PointsKey &rhs);
         };
-       
+
 
         class PointsKey
         {
         public:
             PointsKey(const unsigned int &pointsdim, const int &numpoints,
-                      const PointsType &pointstype, const PointsIdentifier &pointsid = eWildcard): 
-                m_pointsdim(pointsdim),
-                m_numpoints(numpoints), 
-                m_pointstype(pointstype),
-                m_pointsid(pointsid)
+                const PointsType &pointstype, const PointsIdentifier &pointsid = eWildcard): 
+                    m_pointsdim(pointsdim),
+                    m_numpoints(numpoints), 
+                    m_pointstype(pointstype),
+                    m_pointsid(pointsid)
             {
             }
 
@@ -92,7 +95,7 @@ namespace Nektar
                 return m_pointsdim;
             }
 
-            inline int GetNumPoints() const
+            inline unsigned int GetNumPoints() const
             {
                 return m_numpoints;
             }
@@ -110,9 +113,9 @@ namespace Nektar
             bool operator==(const PointsKey &key)
             {
                 return (m_pointsdim == key.m_pointsdim &&
-                        m_numpoints == key.m_numpoints &&
-                        m_pointstype == key.m_pointstype &&
-                        m_pointsid == key.m_pointsid);
+                    m_numpoints == key.m_numpoints &&
+                    m_pointstype == key.m_pointstype &&
+                    m_pointsid == key.m_pointsid);
             }
 
 
@@ -136,7 +139,7 @@ namespace Nektar
 
         protected:
             unsigned int m_pointsdim;     //!< dimension of the points
-            int m_numpoints;              //!< number of the points (as appropriately defined for PointsType)
+            unsigned int m_numpoints;     //!< number of the points (as appropriately defined for PointsType)
             PointsType m_pointstype;      //!< Type of Points
             PointsIdentifier m_pointsid;  //!< Unique indentifier (when needed)
 
@@ -151,39 +154,45 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const PointsKey& rhs);
 
-        template<typename DataType>
+        template<typename DataT>
         class Points
         {
         public:
+            typedef DataT DataType;
+
             Points(const PointsKey &key): m_pkey(key)
             {
             }
 
-
             virtual ~Points()
-
             {
                 if(m_pkey.GetNumPoints())
                 {
-                    //unsigned int dim = m_pkey.GetPointsDim();
+                    unsigned int dim = m_pkey.GetPointsDim();
 
-                    //for(unsigned int i = 0; i < dim; ++i)
-                    //{
-                    //    delete[] m_points[i];
-                    //}
+                    for(unsigned int i = 0; i < dim; ++i)
+                    {
+                        delete[] m_points[i];
+                    }
 
-                    //delete[] m_points;
-                    //delete[] m_weights;
+                    delete[] m_points;
+                    delete[] m_weights;
                 }
             }
 
+            void Initialize(void)
+            {
+                CalculatePoints();
+                CalculateWeights();
+                CalculateDerivMatrix();
+            }
 
-            inline int GetPointsDim() const
+            inline unsigned int GetPointsDim() const
             {
                 return m_pkey.GetPointsDim();
             }
 
-            inline int GetNumPoints() const
+            inline unsigned int GetNumPoints() const
             {
                 return m_pkey.GetNumPoints();
             }
@@ -251,11 +260,28 @@ namespace Nektar
             DataType *m_weights;
             boost::shared_ptr<NekMatrix<DataType> > m_derivmatrix;
 
-        private:
-            virtual void CalculatePoints() = 0;
-            virtual void CalculateWeights() = 0;
-            virtual void CalculateDerivMatrix() = 0;
+            virtual void CalculatePoints()
+            {
+                unsigned int pointsDim = GetPointsDim();
 
+                m_points = new Points::DataType*[pointsDim];
+
+                for (unsigned int i=0; i<pointsDim; ++i)
+                {
+                    m_points[i] = new Points::DataType[GetNumPoints()];
+                }
+            }
+
+            virtual void CalculateWeights()
+            {
+                m_weights = new Points::DataType[GetNumPoints()];
+            }
+
+            virtual void CalculateDerivMatrix()
+            {
+            }
+
+        private:
             // This should never be called.
             Points()
             {

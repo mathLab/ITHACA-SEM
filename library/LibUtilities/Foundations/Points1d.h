@@ -48,24 +48,37 @@ namespace Nektar
         class GaussPolyPoints: public Points<double>
         {
         public:
-        GaussPolyPoints::GaussPolyPoints(const PointsKey &key, 
-            const double alpha, const double beta);
+            GaussPolyPoints(const PointsKey &key,
+                const double alpha, const double beta);
 
             virtual ~GaussPolyPoints()
             {
             }
 
-            // Not sure what to return here for the create function.
-            // Since this function will be registered in a manager with 
-            // other points types, it needs to return a base type.
-            // I am not sure if Points<> will work because of its type
-            // obtained from the template parameters.  That would make
-            // it so the given manager can only hold, say, Points<double>.
             static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
 
         protected:
             double m_alpha;
             double m_beta;
+
+        private:
+            void CalculatePoints();
+            void CalculateWeights();
+            void CalculateDerivMatrix();
+        };
+
+        class FourierPoints: public Points<double>
+        {
+        public:
+            FourierPoints(const PointsKey &key);
+
+            virtual ~FourierPoints()
+            {
+            }
+
+            static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
+
+        protected:
 
         private:
             void CalculatePoints();

@@ -54,7 +54,20 @@ namespace Nektar
             eChebyshev,   //!< Chebyshev Polynomials \f$ T_p(z_i) = P^{-1/2,-1/2}_p(z_i)\f$
             SIZE_BasisType //!< Length of enum list
         };
-    
+
+        const char* const BasisTypeMap[] = 
+        {
+            "Ortho_A",
+            "Ortho_B",
+            "Ortho_C",
+            "Modified_A",
+            "Modified_B",
+            "Modified_C",
+            "Fourier",
+            "GLL_Lagrange",
+            "Legendre",
+            "Chebyshev"
+        };
 
         enum PointsType
         {
@@ -71,6 +84,19 @@ namespace Nektar
             SIZE_PointsType       //!< Length of enum list
         };
 
+        const char* const PointsTypeMap[] = 
+        {
+            "Gauss",
+            "Lobatto",
+            "RadauM",
+            "RadauP",
+            "PolyEvenSp",
+            "FourierEvenSp",
+            "Arbitrary",
+            "NodalTriElec",
+            "NodalTriFekete",
+            "NodalTetElec"
+        };
 
         enum PointsIdentifier
         {
@@ -83,6 +109,15 @@ namespace Nektar
             SIZE_PointsIdentifier       //!< Length of enum list
         };
 
+        const char* const PointsIdentifierMap[] = 
+        {
+            "Wildcard",
+            "GaussChebyshevFirstKind",
+            "GaussChebyshevSecondKind",
+            "GaussLegendre",
+            "GaussAlpha0Beta1",
+            "GaussAlpha0Beta2"
+        };
     } // end of namespace
 } // end of namespace
 

@@ -1,93 +1,143 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.10"
+	Version="8.00"
 	Name="LibUtilities"
 	ProjectGUID="{8E141027-06D5-47AF-B7E2-FCE2956A137A}"
-	Keyword="Win32Proj">
+	Keyword="Win32Proj"
+	>
 	<Platforms>
 		<Platform
-			Name="Win32"/>
+			Name="Win32"
+		/>
 	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="4"
-			CharacterSet="2">
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../LibUtilities"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_USE_MATH_DEFINES"
-				MinimalRebuild="TRUE"
+				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="TRUE"
+				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
-				DisableSpecificWarnings="4018;4267"/>
+				DisableSpecificWarnings="4018;4267"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
 			<Tool
-				Name="VCLibrarianTool"/>
+				Name="VCResourceCompilerTool"
+			/>
 			<Tool
-				Name="VCMIDLTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCLibrarianTool"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCALinkTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCXDCMakeTool"
+			/>
 			<Tool
-				Name="VCResourceCompilerTool"/>
+				Name="VCBscMakeTool"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCFxCopTool"
+			/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				Name="VCPostBuildEventTool"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="Release"
 			IntermediateDirectory="Release"
 			ConfigurationType="4"
-			CharacterSet="2">
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="_USE_MATH_DEFINES"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="TRUE"
-				DebugInformationFormat="3"/>
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
 			<Tool
-				Name="VCLibrarianTool"/>
+				Name="VCResourceCompilerTool"
+			/>
 			<Tool
-				Name="VCMIDLTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCLibrarianTool"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCALinkTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCXDCMakeTool"
+			/>
 			<Tool
-				Name="VCResourceCompilerTool"/>
+				Name="VCBscMakeTool"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCFxCopTool"
+			/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				Name="VCPostBuildEventTool"
+			/>
 		</Configuration>
 	</Configurations>
 	<References>
@@ -96,134 +146,175 @@
 		<Filter
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			>
 			<File
-				RelativePath="..\..\LibUtilities\Foundations\Graph.cpp">
+				RelativePath="..\..\LibUtilities\Foundations\Graph.cpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Polylib\Polylib.cpp">
+				RelativePath="..\..\LibUtilities\Polylib\Polylib.cpp"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ArithmeticConcepts.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ArithmeticConcepts.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Foundations\Basis.h">
+				RelativePath="..\..\LibUtilities\Foundations\Basis.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpression.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpression.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionTraits.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionTraits.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\Blas.hpp">
+				RelativePath="..\..\LibUtilities\BasicUtils\Blas.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\BlockMat.h">
+				RelativePath="..\..\LibUtilities\LinearAlgebra\BlockMat.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\BoostUtil.hpp">
+				RelativePath="..\..\LibUtilities\BasicUtils\BoostUtil.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\Concepts.hpp">
+				RelativePath="..\..\LibUtilities\BasicUtils\Concepts.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ConstantExpression.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ConstantExpression.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\ErrorUtil.hpp">
+				RelativePath="..\..\LibUtilities\BasicUtils\ErrorUtil.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionReturnType.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionReturnType.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplateConcepts.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplateConcepts.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplateOperators.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplateOperators.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplates.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplates.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Foundations\Graph.h">
+				RelativePath="..\..\LibUtilities\Foundations\Graph.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\Lapack.hpp">
+				RelativePath="..\..\LibUtilities\BasicUtils\Lapack.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinAlg.h">
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinAlg.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinSys.h">
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinSys.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\NekManager.hpp">
+				RelativePath="..\..\LibUtilities\BasicUtils\NekManager.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrix.hpp">
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrix.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Memory\NekMemoryManager.hpp">
+				RelativePath="..\..\LibUtilities\Memory\NekMemoryManager.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekPoint.hpp">
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekPoint.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekVector.hpp">
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekVector.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Foundations\NodalTriFekete.h">
+				RelativePath="..\..\LibUtilities\Foundations\NodalTriFekete.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Foundations\Points1d.h">
+				RelativePath="..\..\LibUtilities\Foundations\Points1d.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Polylib\Polylib.h">
+				RelativePath="..\..\LibUtilities\Polylib\Polylib.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\Memory\ThreadSpecificPool.hpp">
+				RelativePath="..\..\LibUtilities\Memory\ThreadSpecificPool.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\TransF77.hpp">
+				RelativePath="..\..\LibUtilities\BasicUtils\TransF77.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\Vmath.hpp">
+				RelativePath="..\..\LibUtilities\BasicUtils\Vmath.hpp"
+				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
+			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+			>
 		</Filter>
 		<Filter
 			Name="ExpressionTemplates"
-			Filter="">
+			>
 			<File
-				RelativePath="..\..\LibUtilities\BinaryExpression.hpp">
+				RelativePath="..\..\LibUtilities\BinaryExpression.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\BinaryExpressionTraits.hpp">
+				RelativePath="..\..\LibUtilities\BinaryExpressionTraits.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ConstantExpression.hpp">
+				RelativePath="..\..\LibUtilities\ConstantExpression.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionReturnType.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionReturnType.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplateConcepts.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplateConcepts.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplateOperators.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplateOperators.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates.hpp">
+				RelativePath="..\..\LibUtilities\ExpressionTemplates.hpp"
+				>
 			</File>
 		</Filter>
 	</Files>

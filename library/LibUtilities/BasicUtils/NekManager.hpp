@@ -53,7 +53,16 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-        template <typename KeyType, typename ValueT>
+        template <typename KeyType>
+        struct defOpLessCreator
+        {
+            bool operator()(const KeyType &lhs, const KeyType &rhs)
+            {
+                return ::operator<(lhs, rhs);
+            }
+        };
+
+        template <typename KeyType, typename ValueT, typename opLessCreator = defOpLessCreator<KeyType> >
         class NekManager
         {
             public:
@@ -62,7 +71,7 @@ namespace Nektar
                 typedef boost::shared_ptr<ValueT> ValueType;
                 typedef boost::function<ValueType (const KeyType& key)> CreateFuncType;
                 typedef std::map<KeyType, ValueType> ValueContainer;
-                typedef std::map<KeyType, CreateFuncType, opLess> CreateFuncContainer;
+                typedef std::map<KeyType, CreateFuncType, opLessCreator> CreateFuncContainer;
 
                 NekManager() :
                     m_values(), 
@@ -123,8 +132,8 @@ namespace Nektar
                 }
                 
             private:
-                NekManager(const NekManager<KeyType, ValueType>& rhs);
-                NekManager<KeyType, ValueType>& operator=(const NekManager<KeyType, ValueType>& rhs);
+                NekManager(const NekManager<KeyType, ValueType, opLessCreator>& rhs);
+                NekManager<KeyType, ValueType, opLessCreator>& operator=(const NekManager<KeyType, ValueType, opLessCreator>& rhs);
 
                 ValueContainer m_values;
                 CreateFuncType m_globalCreateFunc;

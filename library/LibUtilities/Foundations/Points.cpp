@@ -58,7 +58,7 @@ namespace Nektar
             return (lhs.m_pointsid < rhs.m_pointsid);
         }
 
-        bool opLess::operator()(const PointsKey &lhs, const PointsKey &rhs)
+        bool PointsKey::opLess::operator()(const PointsKey &lhs, const PointsKey &rhs)
         {
             if (lhs.m_pointsdim < rhs.m_pointsdim) return true;
             if (lhs.m_pointsdim > rhs.m_pointsdim) return false;

@@ -48,21 +48,18 @@ namespace Nektar
         // Need to add method to compute total number of points given dimension
         // and number of points.
 
-        class PointsKey;
-
-        // Use for looking up the creator.  The creator for number of points
-        // can generate for any number, so we want the same creator called
-        // for all number.
-        struct opLess
-        {
-            bool operator()(const PointsKey &lhs, const PointsKey &rhs);
-        };
-
-
         class PointsKey
         {
         public:
-            PointsKey(const unsigned int &pointsdim, const int &numpoints,
+             // Use for looking up the creator.  The creator for number of points
+            // can generate for any number, so we want the same creator called
+            // for all number.
+            struct opLess
+            {
+                bool operator()(const PointsKey &lhs, const PointsKey &rhs);
+            };
+
+           PointsKey(const unsigned int &pointsdim, const int &numpoints,
                 const PointsType &pointstype, const PointsIdentifier &pointsid = eWildcard): 
                     m_pointsdim(pointsdim),
                     m_numpoints(numpoints), 

@@ -105,7 +105,7 @@ namespace Nektar
             /** \brief return type of quadrature */
             inline PointsType GetPointsType() const
             {
-                return m_pointskey.GetPointsType();
+                return m_pointsKey.GetPointsType();
             }    
 
             /** \brief Check to see if the quadrature of expansions x is the
@@ -113,14 +113,14 @@ namespace Nektar
 	     */
             inline bool SamePoints(const BasisKey &x) const
             {
-                if(x.m_pointskey == m_pointskey)
+               /* if(x.m_pointsKey == m_pointsKey)
                 {
                     return true;
                 }
                 else
                 {
                     return false;
-                }
+                }*/
             }
 
             /** \brief Check to see if basis expansions x is the same as the
@@ -147,9 +147,9 @@ namespace Nektar
             friend bool operator  != (const BasisKey& x, const BasisKey *y);
 
         protected:
-            int        m_nummodes;  /**< Expansion Order */
-            BasisType  m_basistype;   /**< Expansion Type */
-	        PointKey   m_pointsKey;
+            int        m_nummodes;   /**< Expansion Order */
+            BasisType  m_basistype;  /**< Expansion Type */
+	        PointsKey  m_pointsKey;
 
         private:
         };
@@ -222,12 +222,12 @@ namespace Nektar
             /** \brief return type of expansion basis */
             inline BasisType GetBasisType() const
             {
-                return m_basistype;
+                return m_basisKey.GetBasisType();
             }
 
             inline PointsKey GetPointsKey() const
             {
-                return m_pointsKey;
+                return m_basisKey.GetPointsKey();
             }
 
 
@@ -269,11 +269,10 @@ namespace Nektar
 
 
         protected:
-            //double    *m_bdata;       /**< Basis definition */
-            //double    *m_dbdata;      /**< Derivative Basis definition */
+            BasisKey m_basisKey;
+            double    *m_bdata;       /**< Basis definition */
+            double    *m_dbdata;      /**< Derivative Basis definition */
 
-
-        private:
 
         private:
 

@@ -51,7 +51,7 @@ namespace Nektar
         class PointsKey
         {
         public:
-             // Use for looking up the creator.  The creator for number of points
+            // Use for looking up the creator.  The creator for number of points
             // can generate for any number, so we want the same creator called
             // for all number.
             struct opLess

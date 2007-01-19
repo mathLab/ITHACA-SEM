@@ -39,7 +39,7 @@
 #include <math.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
-//#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 namespace Nektar
 {
@@ -59,9 +59,15 @@ namespace Nektar
                 bool operator()(const PointsKey &lhs, const PointsKey &rhs);
             };
 
+            PointsKey()
+            {
+                NEKERROR(ErrorUtil::efatal,"Default Constructor for PointsKey should not be called");
+            }
+
+
            PointsKey(const int &numpoints, const PointsType &pointstype): 
                     m_numpoints(numpoints), 
-                    m_pointstype(pointstype);
+                    m_pointstype(pointstype)
             {
             }
 
@@ -128,10 +134,6 @@ namespace Nektar
             PointsType m_pointstype;      //!< Type of Points
 
         private:
-            PointsKey()
-            {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for PointsKey should not be called");
-            }
         };
 
         bool operator<(const PointsKey &lhs, const PointsKey &rhs);
@@ -236,22 +238,22 @@ namespace Nektar
 
             inline const boost::shared_ptr<NekMatrix<DataType> > GetD() const
             {
-                return m_derivmatrix;
+                //return m_derivmatrix;
             }
 
             inline const boost::shared_ptr<NekMatrix<DataType> > GetI(double x) const
             {
-                return m_derivmatrix;
+                //return m_derivmatrix;
             }
 
             inline const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, double *x) const
             {
-                return m_derivmatrix;
+                //return m_derivmatrix;
             }
 
-            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(PoinstsKey pkey) const
+            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(PointsKey pkey) const
             {
-                return m_derivmatrix;
+                //return m_derivmatrix;
             }
 
         protected:
@@ -275,7 +277,7 @@ namespace Nektar
             virtual void CalculateWeights()
             {
                 //m_weights = new Points::DataType[GetNumPoints()];
-            }
+	    }
 
             virtual void CalculateDerivMatrix()
             {

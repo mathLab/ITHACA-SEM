@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Points.cpp
+// File Points1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,50 +29,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: 1D Points definitions 
+// Description: Header file of 1D Points definition 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <LibUtilities/Foundations/Points.hpp>
-#include <LibUtilities/Foundations/Foundations.hpp>
+#ifndef POINTS1D_H
+#define POINTS1D_H
 
+#include <math.h>
+#include <boost/shared_ptr.hpp>
+#include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/Polylib/Polylib.h>
+#include <LibUtilities/Foundations/Points.hpp>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        bool operator<(const PointsKey &lhs, const PointsKey &rhs)
+        class GaussPolyPoints: public Points<double>
         {
-            if (lhs.m_pointsdim < rhs.m_pointsdim) return true;
-            if (lhs.m_pointsdim > rhs.m_pointsdim) return false;
+        public:
+            GaussPolyPoints(const PointsKey &key,
+                const double alpha, const double beta);
 
-            if (lhs.m_numpoints < rhs.m_numpoints) return true;
-            if (lhs.m_numpoints > rhs.m_numpoints) return false;
+            virtual ~GaussPolyPoints()
+            {
+            }
 
-            if (lhs.m_pointstype < rhs.m_pointstype) return true;
-            if (lhs.m_pointstype > rhs.m_pointstype) return false;
+            static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
 
-            return (lhs.m_pointsid < rhs.m_pointsid);
-        }
+        protected:
+            double m_alpha;
+            double m_beta;
 
-        bool opLess::operator()(const PointsKey &lhs, const PointsKey &rhs)
-        {
-            if (lhs.m_pointsdim < rhs.m_pointsdim) return true;
-            if (lhs.m_pointsdim > rhs.m_pointsdim) return false;
+        private:
+            void CalculatePoints();
+            void CalculateWeights();
+            void CalculateDerivMatrix();
+        };
+    } // end of namespace
+} // end of namespace 
 
-            if (lhs.m_pointstype < rhs.m_pointstype) return true;
-            if (lhs.m_pointstype > rhs.m_pointstype) return false;
-
-            return (lhs.m_pointsid < rhs.m_pointsid);
-        }
-
-        std::ostream& operator<<(std::ostream& os, const PointsKey& rhs)
-        {
-            return os;
-        }
-    }
-}
-
+#endif //POINTS1D_H

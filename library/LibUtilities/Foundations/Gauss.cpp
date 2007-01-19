@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Points.cpp
+// File Points1D.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -39,40 +39,52 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Polylib/Polylib.h>
+#include <LibUtilities/Foundations/Gauss.h>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        bool operator<(const PointsKey &lhs, const PointsKey &rhs)
+        void GaussPolyPoints::CalculatePoints()
         {
-            if (lhs.m_pointsdim < rhs.m_pointsdim) return true;
-            if (lhs.m_pointsdim > rhs.m_pointsdim) return false;
+            // Allocate the points.
+            Points<double>::CalculatePoints();
 
-            if (lhs.m_numpoints < rhs.m_numpoints) return true;
-            if (lhs.m_numpoints > rhs.m_numpoints) return false;
-
-            if (lhs.m_pointstype < rhs.m_pointstype) return true;
-            if (lhs.m_pointstype > rhs.m_pointstype) return false;
-
-            return (lhs.m_pointsid < rhs.m_pointsid);
+            // Now set the points.
         }
 
-        bool opLess::operator()(const PointsKey &lhs, const PointsKey &rhs)
+        void GaussPolyPoints::CalculateWeights()
         {
-            if (lhs.m_pointsdim < rhs.m_pointsdim) return true;
-            if (lhs.m_pointsdim > rhs.m_pointsdim) return false;
-
-            if (lhs.m_pointstype < rhs.m_pointstype) return true;
-            if (lhs.m_pointstype > rhs.m_pointstype) return false;
-
-            return (lhs.m_pointsid < rhs.m_pointsid);
+            // Allocate the weights.
+            Points<double>::CalculateWeights();
         }
 
-        std::ostream& operator<<(std::ostream& os, const PointsKey& rhs)
+        void GaussPolyPoints::CalculateDerivMatrix()
         {
-            return os;
+            // Allocate the derivative matrix.
+            Points<double>::CalculateDerivMatrix();
         }
-    }
-}
+
+        GaussPolyPoints::GaussPolyPoints(const PointsKey &key, 
+            const double alpha, const double beta):
+        Points<double>(key),
+            m_alpha(alpha),
+            m_beta(beta)
+        {
+        }
+
+        boost::shared_ptr< Points<double> > GaussPolyPoints::Create(const PointsKey &key)
+        {
+            boost::shared_ptr< Points<double> > returnval(new GaussPolyPoints(key, 1.0, 1.0));
+
+            returnval->Initialize();
+
+            return returnval;
+        }
+
+    } // end of namespace stdregion
+} // end of namespace stdregion
+
+
+
 

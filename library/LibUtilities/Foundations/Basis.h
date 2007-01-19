@@ -38,6 +38,7 @@
 
 #include <math.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
+#include <Libutilities/Foundations/Points.hpp>
 
 namespace Nektar
 {
@@ -52,14 +53,15 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Default Constructor BasisKey should never be called");
             }
 
-            BasisKey(const BasisType btype, const int border, const PointKey pkey): m_basistype(btype), 
-                m_basisorder(border),
+            BasisKey(const BasisType btype, const int nummodes, const PointsKey pkey):
+		m_basistype(btype), 
+                m_nummodes(nummodes),
                 m_pointskey(pkey)
-            {
+	    {
             }
 
             BasisKey(const BasisKey &B): m_basistype(B.m_basistype),
-                m_basisorder(B.m_basisorder),
+                m_nummodes(B.m_nummodes),
                 m_pointskey(B.m_pointskey)
             {
             }
@@ -69,15 +71,15 @@ namespace Nektar
             }
 
             /** \brief return order of basis */
-            inline int GetBasisOrder() const
+            inline int GetBasisNumModes() const
             {
-                return m_basisorder;
+                return m_nummodes;
             }
 
             /** \brief return points order at which  basis is defined */
-            inline int GetPointsOrder() const
+            inline int GetNumPoints() const
             {
-                return m_pointskey.m_numpoints;
+                return m_pointskey.GetNumPoints();
             }
 
             /** \brief return type of expansion basis */
@@ -89,7 +91,7 @@ namespace Nektar
             /** \brief return type of quadrature */
             inline PointsType GetPointsType() const
             {
-                return m_pointskey.m_pointstype;
+                return m_pointskey.GetPointsType();
             }    
 
             /** \brief Check to see if the quadrature of expansions x is the
@@ -112,7 +114,7 @@ namespace Nektar
 	     */
             inline bool SameExp(const BasisKey &x) const
             {
-                if((x.m_basisorder == m_basisorder)&&(x.m_basistype == m_basistype))
+                if((x.m_nummodes == m_nummodes)&&(x.m_basistype == m_basistype))
                 {
                     return true;
                 }
@@ -131,10 +133,10 @@ namespace Nektar
             friend bool operator  != (const BasisKey& x, const BasisKey *y);
 
         protected:
-            int        m_basisorder;  /**< Expansion Order */
+            int        m_nummodes;  /**< Expansion Order */
             BasisType  m_basistype;   /**< Expansion Type */
 	    /** Point Key identifying points at which basis is evaluated */
-            PointKey   m_pointskey;
+            PointsKey   m_pointskey;
 
         private:
         };
@@ -155,15 +157,11 @@ namespace Nektar
             }
 
 
-
-
-
-
             //Copy Constructor
             Basis(const Basis &B)
             {
                 m_basistype   = B.m_basistype;
-                m_basisorder  = B.m_basisorder;
+                m_nummodes    = B.m_nummodes;
                 m_pointstype  = B.m_pointstype;
                 m_pointsorder = B.m_pointsorder;
                 m_alpha       = B.m_alpha;
@@ -199,9 +197,9 @@ namespace Nektar
                 m_dbdata = NULL;
             };
 
-            void ResetBasisOrder(int order)
+            void ResetBasisNumModes(int nummodes)
             {
-                m_basisorder = order;
+                m_nummodes = nummodes;
 
                 if(m_bdata)
                 {
@@ -246,6 +244,8 @@ namespace Nektar
         private:
 
         };
+
+	typedef boost::shared_ptr<Basis> BasisSharedPtr;
 
     } // end of namespace
 } // end of namespace

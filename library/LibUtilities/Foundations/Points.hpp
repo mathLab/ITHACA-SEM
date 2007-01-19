@@ -206,8 +206,6 @@ namespace Nektar
 
             inline double *GetZ() const
             {
-                BOOST_STATIC_ASSERT(dim == 1);
-
                 return m_points[0];
             }
 
@@ -219,28 +217,23 @@ namespace Nektar
 
             inline void GetZW(const double *&z, const double *&w) const 
             {
-                BOOST_STATIC_ASSERT(dim == 1);
                 z = m_points[0];
                 w = m_weights;
             }
 
             inline void GetPoints(const double *&x) const
             {
-                BOOST_STATIC_ASSERT(dim == 1);
                 x = m_points[0];
             }
 
             inline void GetPoints(const double *&x, const double *&y) const
             {
-                BOOST_STATIC_ASSERT(dim == 2);
                 x = m_points[0];
                 y = m_points[1];
             }
 
             inline void GetPoints(const double *&x, const double *&y, const double *&z) const
             {
-                BOOST_STATIC_ASSERT(dim == 3);
-
                 x = m_points[0];
                 y = m_points[1];
                 z = m_points[2];

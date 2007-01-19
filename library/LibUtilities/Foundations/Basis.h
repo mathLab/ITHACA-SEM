@@ -48,21 +48,29 @@ namespace Nektar
         class BasisKey
         {
         public:
+            // Use for looking up the creator.  The creator for number of points
+            // can generate for any number, so we want the same creator called
+            // for all number.
+            struct opLess
+            {
+                bool operator()(const BasisKey &lhs, const BasisKey &rhs);
+            };
+
             BasisKey()
             {
                 NEKERROR(ErrorUtil::efatal,"Default Constructor BasisKey should never be called");
             }
 
             BasisKey(const BasisType btype, const int nummodes, const PointsKey pkey):
-		m_basistype(btype), 
+		        m_basistype(btype), 
                 m_nummodes(nummodes),
-                m_pointskey(pkey)
-	    {
+                m_pointsKey(pkey)
+	        {
             }
 
             BasisKey(const BasisKey &B): m_basistype(B.m_basistype),
                 m_nummodes(B.m_nummodes),
-                m_pointskey(B.m_pointskey)
+                m_pointsKey(B.m_pointsKey)
             {
             }
 
@@ -79,7 +87,7 @@ namespace Nektar
             /** \brief return points order at which  basis is defined */
             inline int GetNumPoints() const
             {
-                return m_pointskey.GetNumPoints();
+                return m_pointsKey.GetNumPoints();
             }
 
             /** \brief return type of expansion basis */
@@ -87,6 +95,12 @@ namespace Nektar
             {
                 return m_basistype;
             }
+
+            inline PointsKey GetPointsKey() const
+            {
+                return m_pointsKey;
+            }
+
 
             /** \brief return type of quadrature */
             inline PointsType GetPointsType() const
@@ -135,8 +149,7 @@ namespace Nektar
         protected:
             int        m_nummodes;  /**< Expansion Order */
             BasisType  m_basistype;   /**< Expansion Type */
-	    /** Point Key identifying points at which basis is evaluated */
-            PointsKey   m_pointskey;
+	        PointKey   m_pointsKey;
 
         private:
         };
@@ -151,7 +164,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Default Constructor for Basis should not be called");
             }
 
-            Basis(const BasisKey &bkey): m_bkey(bkey)
+            Basis(const BasisKey &bkey): m_basisKey(bkey)
             {
 
             }
@@ -160,24 +173,21 @@ namespace Nektar
             //Copy Constructor
             Basis(const Basis &B)
             {
-                m_basistype   = B.m_basistype;
-                m_nummodes    = B.m_nummodes;
-                m_pointstype  = B.m_pointstype;
-                m_pointsorder = B.m_pointsorder;
-                m_alpha       = B.m_alpha;
-                m_beta        = B.m_beta;
+                //m_basistype   = B.m_basistype;
+                //m_nummodes    = B.m_nummodes;
+                //m_pointstype  = B.m_pointstype;
+                //
+                //int size = BasisMem();
 
-                int size = BasisMem();
+                //// Allocate Memory
+                //m_bdata  = new double [size];
+                //m_dbdata = new double [size];
 
-                // Allocate Memory
-                m_bdata  = new double [size];
-                m_dbdata = new double [size];
-
-                for(int i=0;i<size;i++)
-                {
-                    m_bdata[i]  = B.m_bdata[i];
-                    m_dbdata[i] = B.m_dbdata[i];
-                }
+                //for(int i=0;i<size;i++)
+                //{
+                //    m_bdata[i]  = B.m_bdata[i];
+                //    m_dbdata[i] = B.m_dbdata[i];
+                //}
             };
 
             // default destructor()
@@ -197,26 +207,50 @@ namespace Nektar
                 m_dbdata = NULL;
             };
 
+            /** \brief return order of basis */
+            inline int GetBasisNumModes() const
+            {
+                return m_basisKey.GetBasisNumModes();
+            }
+
+            /** \brief return points order at which  basis is defined */
+            inline int GetNumPoints() const
+            {
+                return m_basisKey.GetNumPoints();
+            }
+
+            /** \brief return type of expansion basis */
+            inline BasisType GetBasisType() const
+            {
+                return m_basistype;
+            }
+
+            inline PointsKey GetPointsKey() const
+            {
+                return m_pointsKey;
+            }
+
+
             void ResetBasisNumModes(int nummodes)
             {
-                m_nummodes = nummodes;
+                //m_nummodes = nummodes;
 
-                if(m_bdata)
-                {
-                    delete[] m_bdata;  //delete old space
-                    m_bdata = NULL;
-                }
+                //if(m_bdata)
+                //{
+                //    delete[] m_bdata;  //delete old space
+                //    m_bdata = NULL;
+                //}
 
-                if(m_dbdata)
-                {
-                    delete[] m_dbdata;  //delete old space
-                    m_bdata = NULL;
-                }
+                //if(m_dbdata)
+                //{
+                //    delete[] m_dbdata;  //delete old space
+                //    m_bdata = NULL;
+                //}
 
-                m_bdata  = new double[BasisMem()]; //allocate new space
-                m_dbdata = new double[BasisMem()]; //allocate new space
+                //m_bdata  = new double[BasisMem()]; //allocate new space
+                //m_dbdata = new double[BasisMem()]; //allocate new space
 
-                GenBasis();
+                //GenBasis();
             }
 
             /** \brief return basis definition array m_bdata */
@@ -235,8 +269,8 @@ namespace Nektar
 
 
         protected:
-            double    *m_bdata;       /**< Basis definition */
-            double    *m_dbdata;      /**< Derivative Basis definition */
+            //double    *m_bdata;       /**< Basis definition */
+            //double    *m_dbdata;      /**< Derivative Basis definition */
 
 
         private:

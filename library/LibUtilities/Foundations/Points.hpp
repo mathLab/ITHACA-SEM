@@ -59,12 +59,9 @@ namespace Nektar
                 bool operator()(const PointsKey &lhs, const PointsKey &rhs);
             };
 
-           PointsKey(const unsigned int &pointsdim, const int &numpoints,
-                const PointsType &pointstype, const PointsIdentifier &pointsid = eWildcard): 
-                    m_pointsdim(pointsdim),
+           PointsKey(const int &numpoints, const PointsType &pointstype): 
                     m_numpoints(numpoints), 
-                    m_pointstype(pointstype),
-                    m_pointsid(pointsid)
+                    m_pointstype(pointstype);
             {
             }
 
@@ -237,12 +234,25 @@ namespace Nektar
 //                return m_derivmatrix;
 //            }
 
+            inline const boost::shared_ptr<NekMatrix<DataType> > GetD() const
+            {
+                return m_derivmatrix;
+            }
 
+            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(double x) const
+            {
+                return m_derivmatrix;
+            }
 
-            //inline const boost::shared_ptr<NekMatrix<DataType> > GetD() const
-            //{
-            //    return m_derivmatrix;
-            //}
+            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, double *x) const
+            {
+                return m_derivmatrix;
+            }
+
+            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(PoinstsKey pkey) const
+            {
+                return m_derivmatrix;
+            }
 
         protected:
             PointsKey m_pointsKey;
@@ -264,7 +274,7 @@ namespace Nektar
 
             virtual void CalculateWeights()
             {
-                m_weights = new Points::DataType[GetNumPoints()];
+                //m_weights = new Points::DataType[GetNumPoints()];
             }
 
             virtual void CalculateDerivMatrix()

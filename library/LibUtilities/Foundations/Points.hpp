@@ -79,17 +79,10 @@ namespace Nektar
 
             PointsKey& operator=(const PointsKey &key)
             {
-                m_pointsdim = key.m_pointsdim;
                 m_numpoints = key.m_numpoints;
                 m_pointstype  = key.m_pointstype;
-                m_pointsid    = key.m_pointsid;
 
                 return *this;
-            }
-
-            inline unsigned int GetPointsDim() const
-            {
-                return m_pointsdim;
             }
 
             inline unsigned int GetNumPoints() const
@@ -97,22 +90,21 @@ namespace Nektar
                 return m_numpoints;
             }
 
+            inline unsigned int GetTotNumPoints() const
+            {
+                exit(0);//return m_numpoints;
+            }
+
             inline PointsType GetPointsType() const
             {
                 return m_pointstype;
             }
 
-            inline PointsIdentifier GetPointsId() const
-            {
-                return m_pointsid;
-            }
 
             bool operator==(const PointsKey &key)
             {
-                return (m_pointsdim == key.m_pointsdim &&
-                    m_numpoints == key.m_numpoints &&
-                    m_pointstype == key.m_pointstype &&
-                    m_pointsid == key.m_pointsid);
+                return (m_numpoints == key.m_numpoints &&
+                        m_pointstype == key.m_pointstype);
             }
 
 
@@ -135,10 +127,8 @@ namespace Nektar
             friend bool opLess::operator()(const PointsKey &lhs, const PointsKey &rhs);
 
         protected:
-            unsigned int m_pointsdim;     //!< dimension of the points
             unsigned int m_numpoints;     //!< number of the points (as appropriately defined for PointsType)
             PointsType m_pointstype;      //!< Type of Points
-            PointsIdentifier m_pointsid;  //!< Unique indentifier (when needed)
 
         private:
             PointsKey()
@@ -157,24 +147,24 @@ namespace Nektar
         public:
             typedef DataT DataType;
 
-            Points(const PointsKey &key): m_pkey(key)
+            Points(const PointsKey &key): m_pointsKey(key)
             {
             }
 
             virtual ~Points()
             {
-                if(m_pkey.GetNumPoints())
-                {
-                    unsigned int dim = m_pkey.GetPointsDim();
+                //if(m_pointsKey.GetNumPoints())
+                //{
+                //    unsigned int dim = m_pkey.GetPointsDim();
 
-                    for(unsigned int i = 0; i < dim; ++i)
-                    {
-                        delete[] m_points[i];
-                    }
+                //    for(unsigned int i = 0; i < dim; ++i)
+                //    {
+                //        delete[] m_points[i];
+                //    }
 
-                    delete[] m_points;
-                    delete[] m_weights;
-                }
+                //    delete[] m_points;
+                //    delete[] m_weights;
+                //}
             }
 
             void Initialize(void)
@@ -186,23 +176,19 @@ namespace Nektar
 
             inline unsigned int GetPointsDim() const
             {
-                return m_pkey.GetPointsDim();
+                return 1;
             }
 
             inline unsigned int GetNumPoints() const
             {
-                return m_pkey.GetNumPoints();
+                return m_pointsKey.GetNumPoints();
             }
 
             inline PointsType GetPointsType() const
             {
-                return m_pkey.GetPointsType();
+                return m_pointsKey.GetPointsType();
             }
 
-            inline PointsIdentifier GetPointsId() const
-            {
-                return m_pkey.GetPointsId();
-            }
 
             inline double *GetZ() const
             {
@@ -239,27 +225,41 @@ namespace Nektar
                 z = m_points[2];
             }
 
+
+            //inline const boost::shared_ptr<NekMatrix<DataType> > GetI(PointsKey)
+            //{
+            //    return m_derivmatrix;
+            //}
+
+
+//            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(PointsKey)
+//            {
+//                return m_derivmatrix;
+//            }
+
+
+
             //inline const boost::shared_ptr<NekMatrix<DataType> > GetD() const
             //{
             //    return m_derivmatrix;
             //}
 
         protected:
-            PointsKey m_pkey;
+            PointsKey m_pointsKey;
             DataType **m_points;
             DataType *m_weights;
 //            boost::shared_ptr<NekMatrix<DataType> > m_derivmatrix;
 
             virtual void CalculatePoints()
             {
-                unsigned int pointsDim = GetPointsDim();
+ /*               unsigned int pointsDim = GetPointsDim();
 
                 m_points = new Points::DataType*[pointsDim];
 
                 for (unsigned int i=0; i<pointsDim; ++i)
                 {
                     m_points[i] = new Points::DataType[GetNumPoints()];
-                }
+                }*/
             }
 
             virtual void CalculateWeights()

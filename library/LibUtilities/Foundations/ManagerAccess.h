@@ -48,14 +48,17 @@ namespace Nektar
         typedef NekManager<PointsKey, Points<double>, PointsKey::opLess> PointsManagerT;
         PointsManagerT &PointsManager(void);
 
-        typedef NekManager<BasisKey, Basis<double>, BasisKey::opLess> BasisManagerT;
-        BasisManagerT &BasisManager(void);
+	// typedef NekManager<BasisKey, Basis<double> > BasisManagerT;
+        // BasisManagerT &BasisManager(void);
 
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 
 /**
 $Log: ManagerAccess.h,v $
+Revision 1.2  2007/01/19 21:59:27  sherwin
+Some SJS mods - still does not compile yet
+
 Revision 1.1  2007/01/19 18:02:26  jfrazier
 Initial checkin.
 

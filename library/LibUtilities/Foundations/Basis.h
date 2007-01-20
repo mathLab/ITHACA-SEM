@@ -62,7 +62,7 @@ namespace Nektar
             }
 
             BasisKey(const BasisType btype, const int nummodes, const PointsKey pkey):
-		        m_basistype(btype), 
+		m_basistype(btype), 
                 m_nummodes(nummodes),
                 m_pointsKey(pkey)
 	        {
@@ -79,7 +79,7 @@ namespace Nektar
             }
 
             /** \brief return order of basis */
-            inline int GetBasisNumModes() const
+            inline int GetNumModes() const
             {
                 return m_nummodes;
             }
@@ -149,12 +149,12 @@ namespace Nektar
         protected:
             int        m_nummodes;   /**< Expansion Order */
             BasisType  m_basistype;  /**< Expansion Type */
-	        PointsKey  m_pointsKey;
+	    PointsKey  m_pointsKey;
 
         private:
         };
 
-        ///////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////
         class Basis
         {
         public:    
@@ -208,9 +208,9 @@ namespace Nektar
             };
 
             /** \brief return order of basis */
-            inline int GetBasisNumModes() const
+            inline int GetNumModes() const
             {
-                return m_basisKey.GetBasisNumModes();
+                return m_basisKey.GetNumModes();
             }
 
             /** \brief return points order at which  basis is defined */
@@ -229,6 +229,13 @@ namespace Nektar
             {
                 return m_basisKey.GetPointsKey();
             }
+
+
+            /** \brief return type of quadrature */
+            inline PointsType GetPointsType() const
+            {
+                return m_basisKey.GetPointsType();
+            }    
 
 
             void ResetBasisNumModes(int nummodes)
@@ -272,9 +279,6 @@ namespace Nektar
             BasisKey m_basisKey;
             double    *m_bdata;       /**< Basis definition */
             double    *m_dbdata;      /**< Derivative Basis definition */
-
-
-        private:
 
         };
 

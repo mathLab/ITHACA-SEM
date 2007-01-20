@@ -40,9 +40,37 @@
 
 namespace Nektar
 {
-    namespace StdRegions 
+    namespace LibUtilities 
     {
-        
+        bool operator<(const BasisKey &lhs, const BasisKey &rhs)
+        {
+            //if (lhs.m_pointsKey < rhs.m_pointsKey) return true;
+            //if (lhs.m_pointsKey > rhs.m_pointsKey) return false;
+
+            //if (lhs.m_nummodes < rhs.m_nummodes) return true;
+            //if (lhs.m_nummodes > rhs.m_nummodes) return false;
+
+            //if (lhs.m_basistype < rhs.m_basistype) return true;
+            //if (lhs.m_basistype > rhs.m_basistype) return false;
+        }
+
+        bool BasisKey::opLess::operator()(const BasisKey &lhs, const BasisKey &rhs)
+        {
+            /*if (lhs.m_pointsKey < rhs.m_pointsKey) return true;
+            if (lhs.m_pointsKey > rhs.m_pointsKey) return false;
+
+            if (lhs.m_pointstype < rhs.m_pointstype) return true;
+            if (lhs.m_pointstype > rhs.m_pointstype) return false;
+
+            return (lhs.m_pointsid < rhs.m_pointsid);*/
+        }
+
+        std::ostream& operator<<(std::ostream& os, const BasisKey& rhs)
+        {
+            return os;
+        }
+
+
         int Basis::BasisMem()
         {
 	        switch(m_basistype)
@@ -589,6 +617,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.2  2007/01/17 11:35:52  pvos
+* updating doxygen documentation
+*
 * Revision 1.1  2006/06/06 18:45:14  kirby
 * *** empty log message ***
 *

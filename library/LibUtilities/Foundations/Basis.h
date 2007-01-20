@@ -149,7 +149,7 @@ namespace Nektar
         protected:
             int        m_nummodes;   /**< Expansion Order */
             BasisType  m_basistype;  /**< Expansion Type */
-	    PointsKey  m_pointsKey;
+	        PointsKey  m_pointsKey;
 
         private:
         };

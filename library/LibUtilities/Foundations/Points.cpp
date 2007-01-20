@@ -46,7 +46,7 @@ namespace Nektar
     {
         bool operator<(const PointsKey &lhs, const PointsKey &rhs)
         {
-            if (lhs.m_pointsdim < rhs.m_pointsdim) return true;
+           /* if (lhs.m_pointsdim < rhs.m_pointsdim) return true;
             if (lhs.m_pointsdim > rhs.m_pointsdim) return false;
 
             if (lhs.m_numpoints < rhs.m_numpoints) return true;
@@ -55,18 +55,18 @@ namespace Nektar
             if (lhs.m_pointstype < rhs.m_pointstype) return true;
             if (lhs.m_pointstype > rhs.m_pointstype) return false;
 
-            return (lhs.m_pointsid < rhs.m_pointsid);
+            return (lhs.m_pointsid < rhs.m_pointsid);*/
         }
 
         bool PointsKey::opLess::operator()(const PointsKey &lhs, const PointsKey &rhs)
         {
-            if (lhs.m_pointsdim < rhs.m_pointsdim) return true;
+           /* if (lhs.m_pointsdim < rhs.m_pointsdim) return true;
             if (lhs.m_pointsdim > rhs.m_pointsdim) return false;
 
             if (lhs.m_pointstype < rhs.m_pointstype) return true;
             if (lhs.m_pointstype > rhs.m_pointstype) return false;
 
-            return (lhs.m_pointsid < rhs.m_pointsid);
+            return (lhs.m_pointsid < rhs.m_pointsid);*/
         }
 
         std::ostream& operator<<(std::ostream& os, const PointsKey& rhs)

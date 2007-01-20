@@ -36,7 +36,7 @@
 #include <iostream>
 #include <loki/Singleton.h>
 #include <LibUtilities/BasicUtils/NekManager.hpp>
-#include <LibUtilities/Foundations/Points.hpp>
+#include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -48,14 +48,17 @@ namespace Nektar
         typedef NekManager<PointsKey, Points<double>, PointsKey::opLess> PointsManagerT;
         PointsManagerT &PointsManager(void);
 
-	// typedef NekManager<BasisKey, Basis<double> > BasisManagerT;
-        // BasisManagerT &BasisManager(void);
+	typedef NekManager<BasisKey, Basis<double>, BasisKey::opLess > BasisManagerT;
+        BasisManagerT &BasisManager(void);
 
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 
 /**
 $Log: ManagerAccess.h,v $
+Revision 1.3  2007/01/20 21:33:58  sherwin
+Added method
+
 Revision 1.2  2007/01/19 21:59:27  sherwin
 Some SJS mods - still does not compile yet
 

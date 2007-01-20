@@ -34,7 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <LibUtilities/Foundations/Points.hpp>
+#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
@@ -48,12 +49,21 @@ namespace Nektar
         {
             return Loki::SingletonHolder<PointsManagerT>::Instance();
         }
+
+        BasisManagerT &BasisManager(void)
+        {
+            return Loki::SingletonHolder<BasisManagerT>::Instance();
+        }
+
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 
 
 /**
-$Log$
+$Log: ManagerAccess.cpp,v $
+Revision 1.1  2007/01/19 18:02:26  jfrazier
+Initial checkin.
+
 **/
 
 

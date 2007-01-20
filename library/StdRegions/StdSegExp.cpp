@@ -44,12 +44,12 @@ namespace Nektar
     StdMatrix StdSegExp::s_elmtmats;
     
     StdSegExp::StdSegExp(const BasisKey &Ba):
-      StdExpansion1D(Ba,Ba.GetBasisOrder(),NULL,NULL,true)
+      StdExpansion1D(Ba,Ba.GetNumBasis(),NULL,NULL,true)
     {    
     }
 
     StdSegExp::StdSegExp(const BasisKey &Ba,double *coeffs, double *phys):
-      StdExpansion1D(Ba,Ba.GetBasisOrder(),coeffs,phys,false)
+      StdExpansion1D(Ba,Ba.GetNumBasis(),coeffs,phys,false)
     {
     }
 
@@ -74,9 +74,9 @@ namespace Nektar
       int    nquad0 = m_base[0]->GetPointsOrder();
       BstShrDArray tmp  = GetDoubleTmpSpace(nquad0);
     
-      BasisManagerSingleton::Instance().GetZW(m_base[0],z,w0);
+      PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(z,w0);
 
-    // multiply by integration constants 
+      // multiply by integration constants 
       Vmath::Vmul(nquad0,(double*)inarray,1,(double*)w0,1,tmp.get(),1);
     
       Int = Vmath::Vsum(nquad0,tmp.get(),1);
@@ -95,8 +95,8 @@ namespace Nektar
     ASSERTL2(m_base[0]->GetAlpha() == 0.0,"Basis[0] has non-zero alpha weight");
     ASSERTL2(m_base[0]->GetBeta() == 0.0,"Basis[1] has non-zero beta weight");
 
-    BasisManagerSingleton::Instance().GetZW(m_base[0],z,w);
-    
+    PointsManager()[m_base[0].m_basiskey..m_pointskey]->GetZW(z,w0);
+
     Vmath::Vmul(nquad,(double*)inarray,1,(double*)w,1,tmp.get(),1);
 
     if(coll_check&&m_base[0]->Collocation())
@@ -105,7 +105,7 @@ namespace Nektar
     }
     else
     {
-      Blas::Dgemv('T',nquad,m_base[0]->GetBasisOrder(),1.0,base,nquad,
+      Blas::Dgemv('T',nquad,m_base[0]->GetNumBasis(),1.0,base,nquad,
 		  tmp.get(),1,0.0,outarray,1);
     }
     
@@ -135,7 +135,7 @@ namespace Nektar
     // to have a unit diagonal component in mass matrix 
     if(m_base[0]->GetBasisType() == eFourier)
     {
-      outarray[m_base[0]->GetBasisOrder()+1] = 1.0;
+      outarray[m_base[0]->GetNumBasis()+1] = 1.0;
     }
   }
  
@@ -149,11 +149,11 @@ namespace Nektar
     
     BasisManagerSingleton::Instance().GetZW(m_base[0],z,w);
     
-    for(i = 0; i < m_base[0]->GetBasisOrder(); ++i)
+    for(i = 0; i < m_base[0]->GetNumBasis(); ++i)
     {
       Vmath::Vcopy(nquad,(double *)dbase+i*nquad,1, tmp.get(),1);
       IProductWRTBase(m_base[0]->GetDbdata(), tmp.get(),
-		      outarray+i*m_base[0]->GetBasisOrder(),0);
+		      outarray+i*m_base[0]->GetNumBasis(),0);
     }
 
   }
@@ -201,7 +201,7 @@ namespace Nektar
     }
     else
     {
-      Blas::Dgemv('N',nquad,m_base[0]->GetBasisOrder(),1.0,base,nquad,
+      Blas::Dgemv('N',nquad,m_base[0]->GetNumBasis(),1.0,base,nquad,
 		  m_coeffs,1,0.0,outarray,1);
     }
   }
@@ -239,7 +239,7 @@ namespace Nektar
     {
     case eGLL_Lagrange:
     {
-      int order = m_base[0]->GetBasisOrder();
+      int order = m_base[0]->GetNumBasis();
       if(dir == eForwards)
       {
 	Map[0] = 0;
@@ -296,7 +296,7 @@ namespace Nektar
 		case eModified_A:
 		    // Banded matrix. Note only makes sense to use banded storage
 		    // when rank > 2*bandwidth-1
-		    if((m_base[0]->ExactIprodInt())&&(m_base[0]->GetBasisOrder()>7))
+		    if((m_base[0]->ExactIprodInt())&&(m_base[0]->GetNumBasis()>7))
 		    { 
 			mat->SetMatForm(eSymmetric_Positive_Banded);
 			mat->SetBwidth(4);
@@ -308,7 +308,7 @@ namespace Nektar
 		    break;	
 		case eGLL_Lagrange:
 		    // diagonal matrix 
-		    if(m_base[0]->GetPointsOrder() == m_base[0]->GetBasisOrder()) 
+		    if(m_base[0]->GetPointsOrder() == m_base[0]->GetNumBasis()) 
 		    {
 			mat->SetMatForm(eSymmetric_Positive_Banded);
 			mat->SetBwidth(1);
@@ -343,6 +343,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.7  2007/01/15 15:07:20  pvos
+ * updating doxygen documentation
+ *
  * Revision 1.6  2006/12/10 19:00:54  sherwin
  * Modifications to handle nodal expansions
  *

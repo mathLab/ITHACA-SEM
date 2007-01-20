@@ -30,7 +30,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // Description: Daughter of StdExpansion. This class contains routine
-// which are common to 1d expansion. Typically this inolves physiocal
+// which are common to 1d expansion. Typically this inolves physical
 // space operations.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,7 +66,6 @@ namespace Nektar
             {
                 v_GetCoords(coords);
             }
-
 
 	    virtual int v_GetCoordim(void)
 	    {
@@ -192,6 +191,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.4  2007/01/15 11:30:22  pvos
+* Updating doxygen documentation
+*
 * Revision 1.3  2006/07/02 17:16:18  sherwin
 *
 * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

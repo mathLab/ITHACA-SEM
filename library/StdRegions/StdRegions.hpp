@@ -44,6 +44,9 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
+#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+
 
 #include <string>
 #include <loki/Factory.h>
@@ -203,6 +206,9 @@ namespace Nektar
 
 /**
  * $Log: StdRegions.hpp,v $
+ * Revision 1.3  2007/01/17 16:05:41  pvos
+ * updated doxygen documentation
+ *
  * Revision 1.2  2006/06/01 13:43:20  kirby
  * *** empty log message ***
  *

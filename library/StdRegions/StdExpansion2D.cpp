@@ -69,8 +69,8 @@ namespace Nektar
         void StdExpansion2D::TensorDeriv(const double *inarray, 
             double *outarray_d0,double *outarray_d1)
         {
-            int    nquad0 = m_base[0]->GetPointsOrder();
-            int    nquad1 = m_base[1]->GetPointsOrder();
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
             const double *D0,*D1;
             BstShrDArray wsp = GetDoubleTmpSpace(nquad0*nquad1);
             double *tmp = wsp.get();
@@ -85,8 +85,8 @@ namespace Nektar
                 tmp =  (double *)inarray;
             }
 
-            BasisManagerSingleton::Instance().GetD(m_base[0],D0);
-            BasisManagerSingleton::Instance().GetD(m_base[1],D1);
+	    PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetD(D0);
+	    PointsManager()[m_base[1].m_basiskey.m_pointskey]->GetD(D1);
 
             if(outarray_d0) // calculate du/dx_0
             {
@@ -113,8 +113,8 @@ namespace Nektar
         {
             double  val;
             int i;
-            int nq0 = m_base[0]->GetPointsOrder();
-            int nq1 = m_base[1]->GetPointsOrder();
+            int nq0 = m_base[0]->GetNumPoints();
+            int nq1 = m_base[1]->GetNumPoints();
             BstShrDArray tmp  = GetDoubleTmpSpace(std::max(nq0,nq1));
             BstShrDArray wsp1 = GetDoubleTmpSpace(nq1);
             double  *tmp1 = wsp1.get();
@@ -124,7 +124,8 @@ namespace Nektar
             ASSERTL2(coord[1] < -1,"coord[1] < -1");
             ASSERTL2(coord[1] >  1,"coord[1] >  1");
 
-            m_base[0]->GetInterpVec(coords[0],tmp.get());
+
+	    PointsManager()[m_base[0]->GetInterpVec(coords[0],tmp.get());
 
             // interpolate first coordinate direction
             for(i = 0; i < nq1;++i)
@@ -150,8 +151,8 @@ namespace Nektar
         {
             int    i;
             double Int = 0.0;
-            int    nquad0 = m_base[0]->GetPointsOrder();
-            int    nquad1 = m_base[1]->GetPointsOrder();
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
             BstShrDArray tmp  = GetDoubleTmpSpace(nquad0*nquad1);
 
             // multiply by integration constants 
@@ -177,6 +178,9 @@ namespace Nektar
 
 /** 
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.4  2007/01/18 18:44:45  bnelson
+* Updates to compile on Visual Studio 2005.
+*
 * Revision 1.3  2007/01/17 16:05:35  pvos
 * updated doxygen documentation
 *

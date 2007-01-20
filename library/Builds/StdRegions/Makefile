@@ -14,11 +14,12 @@ include ../Flags/${ARCH}.inc
 
 # These are the module names:
 
-ALL  =  BasisManager NodalBasisManager PolyManager StdBasis  \
-	StdExpansion  StdMatrix StdExpansion1D    \
-	StdExpansion2D StdExpansion3D StdExpMap StdHexExp    \
-	StdNodalTriExp  StdNodalTetExp  StdPrismExp StdPyrExp \
-	StdSegExp StdTetExp  StdTriExp StdQuadExp 
+ALL   = StdExpansion
+
+# ALL  =  StdExpansion  StdMatrix StdExpansion1D    \
+# 	  StdExpansion2D StdExpansion3D StdExpMap StdHexExp    \
+# 	  StdNodalTriExp  StdNodalTetExp  StdPrismExp StdPyrExp \
+#	  StdSegExp StdTetExp  StdTriExp StdQuadExp 
 
 # ---------------------------------------------------------------- #
 # The following expand to give the names of all sections (ALL),    #

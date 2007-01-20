@@ -37,8 +37,6 @@
 #ifndef NEKTAR_LIB_STDREGIONS_STANDARDEXPANSION_H
 #define NEKTAR_LIB_STDREGIONS_STANDARDEXPANSION_H
 
-#include <StdRegions/BasisManager.h>
-#include <loki/Factory.h>
 #include <fstream>
 
 #include <StdRegions/StdRegions.hpp>
@@ -46,20 +44,22 @@
 #include <StdRegions/LocalRegionsDeclarations.hpp>
 
 #include <StdRegions/StdExpMap.h>
-
 namespace Nektar
 {
     namespace StdRegions
     {
-
+    
         class StdMatContainer;
 	class StdSegExp;
 
-        // We do this so that we can have an array of 'const Basis *'
-        // const Basis** is ambiguous; using a typedef resolves the
-        // ambiguity in a clean manner
-        typedef const Basis* constbasis;
-
+	
+	/// This is a macro which is used to encapsulating the points
+	/// properties at which a given expansion basis is evaluated.
+	/// The i index refers to the ith basis definition of a given expansion.
+	///
+	/// This should/could be a typdef expression when such a thing
+	/// comes into the convention.
+#define ExpPointsProperties(i) LibUtilities::PointsManager()[m_base[i]->GetPointsKey()] 
 
         /** \brief The base class for all shapes
 	 *   
@@ -67,7 +67,8 @@ namespace Nektar
          *  contains the defintiion of common data and common routine to all
          *  elements
          */
-        class StdExpansion{
+        class StdExpansion
+	{
 
         public:
 
@@ -75,9 +76,10 @@ namespace Nektar
             StdExpansion();
 	    
             /** \brief Constructor */
-            StdExpansion(const int numbases, const BasisKey &Ba, const BasisKey &Bb,
-                const BasisKey &Bc, int numcoeffs, double *coeffs,
-                double *phys, bool spaceowner);
+            StdExpansion(const int numbases, const LibUtilities::BasisKey &Ba, 
+			 const LibUtilities::BasisKey &Bb,
+			 const LibUtilities::BasisKey &Bc, 
+			 int numcoeffs, double *coeffs, double *phys);
 
             /** \brief Copy Constructor */
             StdExpansion(const StdExpansion &T);
@@ -86,52 +88,6 @@ namespace Nektar
             virtual ~StdExpansion();
 
             // Standard Expansion Routines Applicable Regardless of Region
-
-            /**  \brief Quadrature zeros and weights in direction \a dir
-	     * 
-             *    Get the quadrature zeros, \a z, and weights, \a w, of the
-	     *    quadrature points in the \a dir direction
-	     *
-	     *  \param dir direction of points and weights
-	     *  \param z   quadrature zeros
-	     *  \param w   quadrature weights
-	     *  \return provides the constant pointer to the zeros and weights
-	     *  in directions \a dir
-	     */
-            inline void GetZW(int dir, const double * &z, const double * &w)
-            {
-                ASSERTL1(dir <= m_numbases,"Base_id was larger than _numbasis");
-                BasisManagerSingleton::Instance().GetZW(m_base[dir], z, w);
-            }
-
-            /**  \brief Quadrature zeros and weights in direction \a dir
-	     *
-	     *   Get the quadrature zeros, \a z, and weights, \a w, of the
-	     *   quadrature points using BasisKey \a b
-	     *
-	     *   \param b   BasisKeycontaining zero quadrature information
-	     *   \param z   quadrature zeros
-	     *   \param w   quadrature weights
-             *   \return provides the constant pointer to the zeros and weights
-	     *   associated with \a b
-	     */
-            inline void GetZW(const BasisKey *b, const double * &z, 
-                const double * &w)
-            {
-                BasisManagerSingleton::Instance().GetZW(b, z, w);
-            }
-
-            inline void GetI(const int dir, const Basis *Base, const double * &I)
-            {
-                ASSERTL1(dir <= m_numbases,"Base_id was larger than _numbasis");
-                BasisManagerSingleton::Instance().GetI(Base->GetPointsType(),
-                    Base->GetPointsOrder(), Base->GetAlpha(),
-                    Base->GetBeta(), m_base[dir]->GetPointsType(),
-                    m_base[dir]->GetPointsOrder(),m_base[dir]->GetAlpha(),
-                    m_base[dir]->GetBeta(), I);
-            }
-	    
-
 
             /** \brief Return the number of 1D basis used in expansion */
             inline int GetNumBases() const
@@ -142,7 +98,7 @@ namespace Nektar
             /** \brief Return a double pointer to the basis in the \a dir 
 	     *  direction 
 	     */
-            inline const Basis * GetBasis(const int dir) const
+            inline const LibUtilities::BasisSharedPtr GetBasis(const int dir) const
             {
                 ASSERTL1(dir <= m_numbases,"Base_id was larger than _numbases");
                 return(m_base[dir]);
@@ -159,7 +115,7 @@ namespace Nektar
             /** \brief Return the double pointer to the coefficient array 
 	     *  \a m_coeffs 
 	     */
-            inline double *GetCoeffs(void)
+            inline BstShrDArray GetCoeffs(void)
             {
                 return(m_coeffs);
             }
@@ -169,7 +125,7 @@ namespace Nektar
 	     */
             inline void SetCoeffs(double *coeffs)
             {
-                Vmath::Vcopy(m_ncoeffs, coeffs, 1, m_coeffs, 1);
+                Vmath::Vcopy(m_ncoeffs, coeffs, 1, &m_coeffs[0], 1);
             }
 
             /** \brief Set the \a i th coefficient \a (this).m_coeffs[i] to the
@@ -183,9 +139,22 @@ namespace Nektar
             /** \brief Return the double pointer to the physical quarature points
 	     *  array \a m_phys
 	     */
-            inline double * GetPhys(void)
+            inline BstShrDArray  GetPhys(void)
             {
                 return(m_phys);
+            }
+
+            inline int GetTotPoints()
+            {
+                int i;
+                int nqtot = 1;
+
+                for(i=0; i<m_numbases; ++i)
+                {
+                    nqtot *= ExpPointsProperties(i)->GetNumPoints();
+                }
+
+                return  nqtot;
             }
 
             /** \brief Sets the value of \a m_phys to the input argument 
@@ -193,29 +162,16 @@ namespace Nektar
 	     */
             inline void  SetPhys(const double *phys)
             {
-                int nqtot = GetPointsTot();
+                int nqtot = GetTotPoints();
 
-                Vmath::Vcopy(nqtot, phys, 1, m_phys, 1);
+                Vmath::Vcopy(nqtot, phys, 1, &m_phys[0], 1);
             }
 
-
-            inline int GetPointsTot()
-            {
-                int i;
-                int nqtot = 1;
-
-                for(i=0; i<m_numbases; ++i)
-                {
-                    nqtot *= m_base[i]->GetPointsOrder();
-                }
-
-                return  nqtot;
-            }
 
             /** Return the basis type in the \a dir direction using the enum
 	     *  BasisType list
 	     */
-            inline BasisType GetBasisType(const int dir) const
+            inline LibUtilities::BasisType GetBasisType(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisType());
@@ -224,16 +180,16 @@ namespace Nektar
             /** Return the expansion order of the 1D expansion in the \a dir
 	     *  direction
 	     */
-            inline int GetBasisOrder(const int dir) const
+            inline int GetBasisNumModes(const int dir) const
             {
                 ASSERTL1(dir < m_numbases,"dir is larger than m_numbases");
-                return(m_base[dir]->GetBasisOrder());
+                return(m_base[dir]->GetNumModes());
             }
 
             /** Return the quadrature type in the \a dir direction using the
 	     *  enum PointType list
 	     */
-            inline PointsType GetPointsType(const int dir) const
+            inline LibUtilities::PointsType GetPointsType(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(m_base[dir]->GetPointsType());
@@ -242,10 +198,10 @@ namespace Nektar
             /** Return the number of quadrature points in the \a dir
 	     *  direction
 	     */
-            inline int GetPointsOrder(const int dir) const
+            inline int GetNumPoints(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
-                return(m_base[dir]->GetPointsOrder());
+                return(ExpPointsProperties(dir)->GetNumPoints());
             }
 
             double operator[] (const int i) const
@@ -278,7 +234,7 @@ namespace Nektar
 		return v_GetEdgeNcoeffs(i);
 	    }
 
-	    BasisType GetEdgeBasisType(const int i)
+	    LibUtilities::BasisType GetEdgeBasisType(const int i)
 	    {
 		return v_GetEdgeBasisType(i);
 	    }
@@ -398,7 +354,8 @@ namespace Nektar
 	    }
 
 	    // EdgeTo2D mapping 
-	    void  MapTo(const int edge_ncoeff, const BasisType Btype, 
+	    void  MapTo(const int edge_ncoeff, 
+			const LibUtilities::BasisType Btype, 
 			const int eid, const EdgeOrientation eorient, 
 			StdExpMap &Map)
 	    {
@@ -407,7 +364,7 @@ namespace Nektar
 
 	    // EdgeTo2D mapping 
 	    void  MapTo_ModalFormat(const int edge_ncoeff, 
-				    const BasisType Btype, 
+				    const LibUtilities::BasisType Btype, 
 				    const int eid, 
 				    const EdgeOrientation eorient, 
 				    StdExpMap &Map)
@@ -428,24 +385,17 @@ namespace Nektar
                 v_GenLapMatrix(outarray);
             }
 
-            void Deriv (const int dim, double **outarray) 
+            void PhysDeriv (const int dim, double **outarray) 
             {
-                v_Deriv (dim, outarray);
+                v_PhysDeriv (dim, outarray);
             }
 
-            void Deriv (const int dim, const double *inarray, 
+            void PhysDeriv (const int dim, const double *inarray, 
                 double **outarray)
             {
-                v_Deriv (dim, inarray, outarray);
+                v_PhysDeriv (dim, inarray, outarray);
             }
 
-
-
-	    void SetInvInfo(StdMatContainer *mat, const MatrixType Mform)
-	    {
-		v_SetInvInfo(mat,Mform);
-	    }
-	    
 
             // Overloaded Operators
             friend bool operator == (const StdExpansion &x,const StdMatContainer *y);
@@ -454,12 +404,12 @@ namespace Nektar
             friend bool operator != (const StdMatContainer *x,const StdExpansion &y);
 
 
-            void Interp1D(const BasisKey *fbasis0, const double *from,
-                const BasisKey *tbasis0, double *to);
+            void Interp1D(const LibUtilities::BasisKey *fbasis0, const double *from,
+                const LibUtilities::BasisKey *tbasis0, double *to);
 
-            void Interp2D(const BasisKey *fbasis0, const BasisKey *fbasis1,
-                const double *from,   const BasisKey *tbasis0,
-                const BasisKey* tbasis1, double *to);
+            void Interp2D(const LibUtilities::BasisKey *fbasis0, const LibUtilities::BasisKey *fbasis1,
+                const double *from,   const LibUtilities::BasisKey *tbasis0,
+                const LibUtilities::BasisKey* tbasis1, double *to);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
 	     *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
@@ -514,19 +464,13 @@ namespace Nektar
         protected:
 
             int   m_numbases;   /**< Number of 1D basis defined in expansion */
-	    boost::shared_ptr<const Basis> 
-            constbasis *m_base; /**< Bases needed for the expansion */
+	    LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */
 
             /** Total number of coefficients used in the expansion*/
             int  m_ncoeffs;
-            /**  Boolean indicating whether object owns the coeff array */
-            bool    m_owncoeffs;
-            double *m_coeffs;   /**< Array containing expansion coefficients */
-
-            /** Boolean indicating whether object owns the phys array */
-            bool  m_ownphys;
+            BstShrDArray m_coeffs;   /**< Array containing expansion coefficients */
             /** Array containing expansion evaluated at the quad points */
-            double *m_phys;
+            BstShrDArray m_phys;
 
         private:
 
@@ -543,10 +487,10 @@ namespace Nektar
 	    }
 
 
-	    virtual BasisType v_GetEdgeBasisType(const int i)
+	    virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
 	    {
                 ASSERTL0(false, "This function is not valid or not defined");
-		return (BasisType) NULL;
+		return (LibUtilities::BasisType) NULL;
 	    }
 
 
@@ -570,14 +514,14 @@ namespace Nektar
             virtual double v_Integral(const double *inarray ) = 0;
             virtual double v_Evaluate(const double * coords)  = 0;
 
-            virtual void   v_Deriv (const int dim, double **outarray)
+            virtual void   v_PhysDeriv (const int dim, double **outarray)
             {
                 ASSERTL0(false, "This function is only valid for "
 			 " local expansions");
             }
 	    
 
-            virtual void   v_Deriv (const int dim, const double *inarray,
+            virtual void   v_PhysDeriv (const int dim, const double *inarray,
                 double **outarray)
             {
                 ASSERTL0(false, "This function is only valid for "
@@ -643,7 +587,8 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
 	    }
 	    
-	    virtual void  v_MapTo(const int edge_ncoeffs, const BasisType Btype,
+	    virtual void  v_MapTo(const int edge_ncoeffs, 
+				  const LibUtilities::BasisType Btype,
 				  const int eid, const EdgeOrientation eorient, 
 				  StdExpMap &Map)
 	    {
@@ -651,7 +596,7 @@ namespace Nektar
 	    }
 
 	    virtual void  v_MapTo_ModalFormat(const int edge_ncoeffs, 
-					      const BasisType Btype,
+					      const LibUtilities::BasisType Btype,
 					      const int eid, 
 					      const EdgeOrientation eorient, 
 					      StdExpMap &Map)
@@ -709,6 +654,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.11  2007/01/18 23:03:56  sherwin
+* Removed for repository update in utah 07
+*
 * Revision 1.10  2007/01/15 11:08:40  pvos
 * Updating doxygen documentation
 *

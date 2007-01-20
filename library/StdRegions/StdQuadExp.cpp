@@ -51,13 +51,13 @@ namespace Nektar
         }
 
         StdQuadExp::StdQuadExp(const BasisKey &Ba, const BasisKey &Bb):
-        StdExpansion2D(Ba,Bb,Ba.GetBasisOrder()*Bb.GetBasisOrder(),NULL,NULL,true)
+        StdExpansion2D(Ba,Bb,Ba.GetNumBasis()*Bb.GetNumBasis(),NULL,NULL,true)
         { 
         }
 
         StdQuadExp::StdQuadExp(const BasisKey &Ba, const BasisKey &Bb,
             double *coeffs, double *phys):
-        StdExpansion2D(Ba,Bb,Ba.GetBasisOrder()*Bb.GetBasisOrder(),coeffs,phys,false)
+        StdExpansion2D(Ba,Bb,Ba.GetNumBasis()*Bb.GetNumBasis(),coeffs,phys,false)
         { 
         }
 
@@ -80,8 +80,8 @@ namespace Nektar
         {
             const double *z, *w0, *w1;
 
-            BasisManagerSingleton::Instance().GetZW(m_base[0],z,w0);
-            BasisManagerSingleton::Instance().GetZW(m_base[1],z,w1);
+	    PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w0);
+	    PointsManager()[m_base[1].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w1);
 
             return StdExpansion2D::Integral(inarray,w0,w1);
         }
@@ -97,10 +97,10 @@ namespace Nektar
             const double *inarray, double *outarray,
             int coll_check){
                 int i;
-                int    nquad0 = m_base[0]->GetPointsOrder();
-                int    nquad1 = m_base[1]->GetPointsOrder();
-                int    order0 = m_base[0]->GetBasisOrder();
-                int    order1 = m_base[1]->GetBasisOrder();
+                int    nquad0 = m_base[0]->GetNumPoints();
+                int    nquad1 = m_base[1]->GetNumPoints();
+                int    order0 = m_base[0]->GetNumBasis();
+                int    order1 = m_base[1]->GetNumBasis();
                 const double *z,*w0,*w1;
                 BstShrDArray tmp  = GetDoubleTmpSpace(nquad0*nquad1);
                 BstShrDArray tmp1 = GetDoubleTmpSpace(nquad0*nquad1);
@@ -119,9 +119,8 @@ namespace Nektar
                 }
 #endif
 
-                BasisManagerSingleton::Instance().GetZW(m_base[0],z,w0);
-                BasisManagerSingleton::Instance().GetZW(m_base[1],z,w1);
-
+		PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w0);
+		PointsManager()[m_base[2].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w1);
                 // Note cannot use outarray as tmp space since dimensions are not always
                 // guarenteed to be sufficient 
 
@@ -163,11 +162,11 @@ namespace Nektar
 	void StdQuadExp::FillMode(const int mode, double *outarray)
 	{
 	    int    i;
-	    int   nquad0 = m_base[0]->GetPointsOrder();
-	    int   nquad1 = m_base[1]->GetPointsOrder();
+	    int   nquad0 = m_base[0]->GetNumPoints();
+	    int   nquad1 = m_base[1]->GetNumPoints();
 	    const double * base0  = m_base[0]->GetBdata();
 	    const double * base1  = m_base[1]->GetBdata();
-	    int   btmp0 = m_base[0]->GetBasisOrder();
+	    int   btmp0 = m_base[0]->GetNumBasis();
 	    int   mode0 = mode%btmp0;
 	    int   mode1 = mode/btmp0;
 	    
@@ -194,8 +193,8 @@ namespace Nektar
 	void StdQuadExp::GenMassMatrix(double * outarray)
 	{
 	    int      i;
-	    int      order0    = GetBasisOrder(0);
-	    int      order1    = GetBasisOrder(1);
+	    int      order0    = GetNumBasis(0);
+	    int      order1    = GetNumBasis(1);
 
 	    StdExpansion::GenerateMassMatrix(outarray);
 	    
@@ -259,10 +258,10 @@ namespace Nektar
 	
 	void StdQuadExp::BwdTrans(double * outarray)
 	{
-	    int           nquad0 = m_base[0]->GetPointsOrder();
-	    int           nquad1 = m_base[1]->GetPointsOrder();
-	    int           order0 = m_base[0]->GetBasisOrder();
-	    int           order1 = m_base[1]->GetBasisOrder();
+	    int           nquad0 = m_base[0]->GetNumPoints();
+	    int           nquad1 = m_base[1]->GetNumPoints();
+	    int           order0 = m_base[0]->GetNumBasis();
+	    int           order1 = m_base[1]->GetNumBasis();
 	    const double *base0  = m_base[0]->GetBdata();
 	    const double *base1  = m_base[1]->GetBdata();
 	    BstShrDArray tmp  = GetDoubleTmpSpace(nquad0*std::max(order1,nquad1));
@@ -365,8 +364,8 @@ namespace Nektar
 		}
 	    }
 	    
-	    order0 = m_base[0]->GetBasisOrder();
-	    order1 = m_base[0]->GetBasisOrder();
+	    order0 = m_base[0]->GetNumBasis();
+	    order1 = m_base[0]->GetNumBasis();
 	    
 	    // Set up Mapping details
 	    if((eid == 0)||(eid == 2))
@@ -510,7 +509,7 @@ namespace Nektar
 			    break;
 			default:
 			    mat->SetMatForm(eSymmetric_Positive_Banded);
-			    mat->SetBwidth(m_base[0]->GetBasisOrder()*m_base[1]->GetBasisOrder());
+			    mat->SetBwidth(m_base[0]->GetNumBasis()*m_base[1]->GetNumBasis());
 			    break;
 			eQuadOrtho1:
 			    {
@@ -533,7 +532,7 @@ namespace Nektar
 				    break;
 				default:
 				    mat->SetMatForm(eSymmetric_Positive_Banded);
-				    mat->SetBwidth(m_base[0]->GetBasisOrder());
+				    mat->SetBwidth(m_base[0]->GetNumBasis());
 				    break;
 				eQuadOrtho2:
 				    {
@@ -562,6 +561,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.8  2007/01/18 18:44:45  bnelson
+* Updates to compile on Visual Studio 2005.
+*
 * Revision 1.7  2007/01/17 16:36:58  pvos
 * updating doxygen documentation
 *

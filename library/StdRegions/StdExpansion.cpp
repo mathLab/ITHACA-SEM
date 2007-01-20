@@ -41,7 +41,7 @@ namespace Nektar
 {
     namespace StdRegions
     {
-
+	
         /** define list of number of vertices corresponding to each ShapeType */
         const int g_shapenverts[SIZE_ShapeType] = {0,2,3,4,4,5,6,8};
 
@@ -53,43 +53,33 @@ namespace Nektar
 
         StdExpansion::StdExpansion(void): 
 	    m_numbases(0), 
-            m_ncoeffs(0),
-            m_coeffs(NULL),
-            m_owncoeffs(false),
-            m_phys(NULL),
-            m_ownphys(false)
+            m_ncoeffs(0)
         {
         }
 
 
-        StdExpansion::StdExpansion(int numbases, const BasisKey &Ba, 
-            const BasisKey &Bb, const BasisKey &Bc,int numcoeffs, double *coeffs, 
-            double *phys, bool spaceowner):
-        m_numbases(numbases)
-        {
-            m_base     = new const Basis*[m_numbases];
-
+        StdExpansion::StdExpansion(int numbases, const LibUtilities::BasisKey &Ba, 
+	   const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc,
+	   int numcoeffs, double *coeffs, double *phys):
+	    m_numbases(numbases)
+	{
+            m_base = new LibUtilities::BasisSharedPtr [m_numbases];
+	    
             switch(m_numbases)
             {
             case 3:
                 ASSERTL2(Bc==NULL,"NULL Basis attempting to be used.");
 
-                m_base[2] = BasisManagerSingleton::Instance().GetBasis(Bc.GetBasisType(),
-                    Bc.GetBasisOrder(),Bc.GetPointsType(), Bc.GetPointsOrder(),
-                    Bc.GetAlpha(), Bc.GetBeta());
+                m_base[2] = LibUtilities::BasisManager()[Bc];
 
             case 2:
                 ASSERTL2(Bb==NULL,"NULL Basis attempting to be used.");
 
-                m_base[1] = BasisManagerSingleton::Instance().GetBasis(Bb.GetBasisType(), 
-                    Bb.GetBasisOrder(),Bb.GetPointsType(), Bb.GetPointsOrder(),
-                    Bb.GetAlpha(), Bb.GetBeta());
+                m_base[1] = LibUtilities::BasisManager()[Bb];
             case 1:
                 ASSERTL2(Ba==NULL,"NULL Basis attempting to be used.");
 
-                m_base[0] = BasisManagerSingleton::Instance().GetBasis(Ba.GetBasisType(),
-                    Ba.GetBasisOrder(),Ba.GetPointsType(), Ba.GetPointsOrder(),
-                    Ba.GetAlpha(), Ba.GetBeta());
+                m_base[0] = LibUtilities::BasisManager()[Ba];
                 break;
             default:
                 ASSERTL0(false, "numbases incorrectly specified");
@@ -97,43 +87,21 @@ namespace Nektar
 
             //allocate memory for coeffs
             m_ncoeffs = numcoeffs;
+	    m_coeffs.reset(new double[m_ncoeffs]);
+	    Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
 
-            if(spaceowner)
-            {
-                int i,cnt;
+	    //allocate memory for phys
+	    m_phys.reset(new double[GetTotPoints()]);
+			 
 
-                m_coeffs = new double[m_ncoeffs];
-
-                Vmath::Zero(m_ncoeffs,m_coeffs,1);
-                m_owncoeffs = true;
-
-                //allocate memory for phys
-                cnt = GetPointsOrder(0);
-
-                for(i=1; i<numbases; ++i)
-                {
-                    cnt *= GetPointsOrder(i);
-                }
-
-                m_phys = new double[cnt];
-                m_ownphys = true;
-            }
-            else
-            {
-                m_coeffs = coeffs;
-                m_owncoeffs = false;
-                m_phys = phys;
-                m_ownphys = false;
-            }
-
-        }//end constructor
+        } //end constructor
 
 
         StdExpansion::StdExpansion(const StdExpansion &T):
         m_numbases(T.m_numbases)
         {
             int i,j;
-            m_base = new const Basis*[m_numbases];
+            m_base = new LibUtilities::BasisSharedPtr [m_numbases];
 
             for(j=0; j<m_numbases; j++)
             {
@@ -145,19 +113,15 @@ namespace Nektar
             // allocate memory for coeffs
             // need to check allocation for variable order. 
             m_ncoeffs = T.m_ncoeffs;
-            m_coeffs = new double[m_ncoeffs];
+            m_coeffs.reset(new double[m_ncoeffs]);
             for(i=0; i<m_ncoeffs; i++)
             {
                 m_coeffs[i] = T.m_coeffs[i];
             }
 
-            m_owncoeffs = true;  
-
-
             //allocate memory for phys
-            int numphys = GetPointsOrder(0)*GetPointsOrder(1);
-            m_phys = new double[numphys];
-            m_ownphys = true;
+            int numphys = GetTotPoints();
+            m_phys.reset(new double[numphys]);
             for(j=0; j < numphys; j++)
             {
                 m_phys[j] = T.m_phys[j];
@@ -166,41 +130,21 @@ namespace Nektar
 
         StdExpansion::~StdExpansion()
         {
-            if(m_base)
-            {
-                delete[] m_base;
-                m_base = NULL;
-            }
-
-            if(m_owncoeffs && m_coeffs)
-            {
-                delete[] m_coeffs;
-                m_coeffs = (double*)NULL;
-            }
-
-            if(m_ownphys && m_phys)
-            {
-                delete[] m_phys;
-                m_phys = (double*)NULL;
-            }
         }
 
         double StdExpansion::Linf(const double *sol)
         {
-            int     i,ntot = 1;
+            int     ntot;
             double  val;
             double *tmp;
             BstShrDArray  wsp;
 
-            for(i=0; i<m_numbases; ++i)
-            {
-                ntot *= m_base[i]->GetPointsOrder();
-            }
+	    ntot =  GetTotPoints();
 
             wsp = GetDoubleTmpSpace(ntot);
             tmp = wsp.get();
 
-            Vmath::Vsub(ntot,sol,1,m_phys,1,tmp,1);
+            Vmath::Vsub(ntot,sol,1,&m_phys[0],1,tmp,1);
             Vmath::Vabs(ntot,tmp,1,tmp,1);
             val = Vmath::Vamax(ntot,tmp,1);    
 
@@ -209,34 +153,22 @@ namespace Nektar
 
         double StdExpansion::Linf()
         {
-            int  i,ntot = 1;
-
-            for(i=0; i<m_numbases; ++i)
-            {
-                ntot *= m_base[i]->GetPointsOrder();
-            }
-
-            return Vmath::Vamax(ntot,m_phys,1);    
+            return Vmath::Vamax(GetTotPoints(),&m_phys[0],1);    
         }
 
         double StdExpansion::L2(const double *sol)
         {
-            int     i,ntot = 1;
+            int     ntot = GetTotPoints();
             double  val;
             double *tmp;
             BstShrDArray wsp;
 
-            for(i=0; i<m_numbases; ++i)
-            {
-                ntot *= m_base[i]->GetPointsOrder();
-            }
-
             wsp = GetDoubleTmpSpace(ntot);
             tmp = wsp.get();
 
-            Vmath::Vsub(ntot, sol, 1, m_phys, 1, tmp, 1);
+            Vmath::Vsub(ntot, sol, 1, &m_phys[0], 1, tmp, 1);
             Vmath::Vmul(ntot, tmp, 1, tmp, 1, tmp, 1);
-
+	    
             val = sqrt(v_Integral(tmp));
 
             return val;
@@ -244,20 +176,15 @@ namespace Nektar
 
         double StdExpansion::L2()
         {
-            int     i,ntot = 1;
+            int     ntot = GetTotPoints();
             double  val;
             double *tmp;
             BstShrDArray wsp;
 
-            for(i=0; i<m_numbases; ++i)
-            {
-                ntot *= m_base[i]->GetPointsOrder();
-            }
-
             wsp = GetDoubleTmpSpace(ntot);
             tmp = wsp.get();
 
-            Vmath::Vmul(ntot, m_phys, 1, m_phys, 1, tmp, 1);
+            Vmath::Vmul(ntot, &m_phys[0], 1, &m_phys[0], 1, tmp, 1);
             val   = sqrt(v_Integral(tmp));
 
             return val;
@@ -267,54 +194,60 @@ namespace Nektar
         {
             int     i;
             BstShrDArray store = GetDoubleTmpSpace(m_ncoeffs);
-            BstShrDArray tmp = GetDoubleTmpSpace(GetPointsTot());
+            BstShrDArray tmp   = GetDoubleTmpSpace(GetTotPoints());
 
-	    Blas::Dcopy(m_ncoeffs,m_coeffs,1,store.get(),1);
+	    Blas::Dcopy(m_ncoeffs,&m_coeffs[0],1,&store[0],1);
             for(i=0; i<m_ncoeffs; ++i)
             {
-                v_FillMode(i, tmp.get());
-                v_IProductWRTBase(tmp.get(), outarray+i*m_ncoeffs);
+                v_FillMode(i, &tmp[0]);
+                v_IProductWRTBase(&tmp[0], outarray+i*m_ncoeffs);
             }
-	    Blas::Dcopy(m_ncoeffs,store.get(),1,m_coeffs,1);
+	    Blas::Dcopy(m_ncoeffs,&store[0],1,&m_coeffs[0],1);
         }
 
 
 
         // 2D Interpolation
-        void StdExpansion::Interp2D(const  BasisKey *fbasis0, 
-            const BasisKey *fbasis1, const double *from,  const BasisKey *tbasis0,
-            const BasisKey* tbasis1, double *to)
+        void StdExpansion::Interp2D(const  LibUtilities::BasisKey *fbasis0, 
+            const LibUtilities::BasisKey *fbasis1, const double *from,  
+	    const LibUtilities::BasisKey *tbasis0,
+            const LibUtilities::BasisKey* tbasis1, double *to)
         {
-            const double *I0,*I1;
+	    DNekMatSharedPtr I0,I1;
             double *tmp;
-            BstShrDArray wsp = GetDoubleTmpSpace(tbasis1->GetPointsOrder()*
-                fbasis0->GetPointsOrder());
+            BstShrDArray wsp = GetDoubleTmpSpace(tbasis1->GetNumPoints()*
+                fbasis0->GetNumPoints());
             tmp = wsp.get();
 
-            BasisManagerSingleton::Instance().GetI(fbasis0, tbasis0, I0);
-            BasisManagerSingleton::Instance().GetI(fbasis1, tbasis1, I1);
+	    I0 = LibUtilities::PointsManager()[fbasis0->GetPointsKey()]
+		->GetI(tbasis0->GetPointsKey());
+	    I1 = LibUtilities::PointsManager()[fbasis1->GetPointsKey()]
+		->GetI(tbasis1->GetPointsKey());
 
-            Blas::Dgemm('T', 'T', tbasis1->GetPointsOrder(), fbasis0->GetPointsOrder(),
-                fbasis1->GetPointsOrder(), 1.0, I1,  fbasis1->GetPointsOrder(),
-                (double *) from,fbasis0->GetPointsOrder(), 0.0, tmp,
-                tbasis1->GetPointsOrder());
+            Blas::Dgemm('T', 'T', tbasis1->GetNumPoints(), fbasis0->GetNumPoints(),
+                fbasis1->GetNumPoints(), 1.0, &((*I1).GetPtr())[0],  
+			fbasis1->GetNumPoints(),
+			(double *) from,fbasis0->GetNumPoints(), 0.0, tmp,
+			tbasis1->GetNumPoints());
 
-            Blas::Dgemm('T', 'T',tbasis0->GetPointsOrder(),tbasis1->GetPointsOrder(),
-                fbasis0->GetPointsOrder(),1.0,I0, fbasis0->GetPointsOrder(),
-                tmp, tbasis1->GetPointsOrder(),0.0,to,
-                tbasis0->GetPointsOrder());
+            Blas::Dgemm('T', 'T',tbasis0->GetNumPoints(),tbasis1->GetNumPoints(),
+			fbasis0->GetNumPoints(),1.0,&((*I0).GetPtr())[0],
+			fbasis0->GetNumPoints(),tmp, tbasis1->GetNumPoints(),
+			0.0,to, tbasis0->GetNumPoints());
         }
 
         // 1D Interpolation
-        void StdExpansion::Interp1D(const  BasisKey *fbasis0, const double *from,  
-            const BasisKey *tbasis0, double *to)
+        void StdExpansion::Interp1D(const  LibUtilities::BasisKey *fbasis0, const double *from,  
+            const LibUtilities::BasisKey *tbasis0, double *to)
         {
-            const double *I0;
+	    DNekMatSharedPtr I0;
 
-            BasisManagerSingleton::Instance().GetI(fbasis0, tbasis0, I0);
+	    I0 = LibUtilities::PointsManager()[fbasis0->GetPointsKey()]
+		->GetI(tbasis0->GetPointsKey());
 
-            Blas::Dgemv('T', fbasis0->GetPointsOrder(), tbasis0->GetPointsOrder(), 
-                1.0, I0, fbasis0->GetPointsOrder(), from, 1, 0.0, to, 1);
+            Blas::Dgemv('T', fbasis0->GetNumPoints(), tbasis0->GetNumPoints(), 
+			1.0, &((*I0).GetPtr())[0], fbasis0->GetNumPoints(), 
+			from, 1, 0.0, to, 1);
         }
 
         //   I/O routine
@@ -332,6 +265,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.6  2007/01/15 11:08:37  pvos
+* Updating doxygen documentation
+*
 * Revision 1.5  2006/12/10 19:00:54  sherwin
 * Modifications to handle nodal expansions
 *

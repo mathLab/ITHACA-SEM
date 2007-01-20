@@ -72,8 +72,8 @@ namespace Nektar
 
      void StdExpansion1D::TensorDeriv(const double *inarray, double * outarray)
     {
-      int    nquad = m_base[0]->GetPointsOrder();
-      const double *D;
+      int    nquad = m_base[0]->GetNumPoints();
+      DNekMatSharedPtr D;
       double *tmp; 
       BstShrDArray  wsp;
       
@@ -88,15 +88,15 @@ namespace Nektar
 	tmp = (double *)inarray;
       }
 
-      BasisManagerSingleton::Instance().GetD(m_base[0],D);
+      ExpPointsProperties(0)->GetD(D);
       
-      Blas::Dgemv('T',nquad,nquad,1.0,D,nquad,tmp,1,0.0,outarray,1);
+      Blas::Dgemv('T',nquad,nquad,1.0,*D,nquad,tmp,1,0.0,outarray,1);
       
     }
     
     double StdExpansion1D::PhysEvaluate(const double *Lcoord)
     {
-      int    nquad = m_base[0]->GetPointsOrder();
+      int    nquad = m_base[0]->GetNumPoints();
       double  val;
       BstShrDArray wsp = GetDoubleTmpSpace(nquad);
       double *tmp = wsp.get();
@@ -104,8 +104,9 @@ namespace Nektar
       ASSERTL2(Lcoord[0] < -1,"Lcoord[0] < -1");
       ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1");
     
-      m_base[0]->GetInterpVec(Lcoord[0],tmp);
-      val = Blas::Ddot(m_base[0]->GetPointsOrder(),tmp,1,m_phys,1);
+      PointsManager()[m_base[0].m_baiskey.m_pointskey]-> 
+	  GetInterpVec(Lcoord[0],tmp);
+      val = Blas::Ddot(m_base[0]->GetNumPoints(),tmp,1,m_phys,1);
     
       return val;    
     }
@@ -114,8 +115,8 @@ namespace Nektar
     {
       const double *z,*w;
 
-      BasisManagerSingleton::Instance().GetZW(m_base[0],z,w);    
-      Blas::Dcopy(m_base[0]->GetPointsOrder(),z,1,coords[0],1);
+      PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w);
+      Blas::Dcopy(m_base[0]->GetNumPoints(),z,1,coords[0],1);
     }
     
   }//end namespace
@@ -123,6 +124,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.3  2007/01/15 11:30:20  pvos
+ * Updating doxygen documentation
+ *
  * Revision 1.2  2006/06/01 14:46:16  kirby
  * *** empty log message ***
  *

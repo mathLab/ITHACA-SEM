@@ -285,6 +285,10 @@ namespace Nektar
 
         };
 
+        bool operator<(const BasisKey &lhs, const BasisKey &rhs);
+
+        std::ostream& operator<<(std::ostream& os, const BasisKey& rhs);
+
 	typedef boost::shared_ptr<Basis> BasisSharedPtr;
 
     } // end of namespace

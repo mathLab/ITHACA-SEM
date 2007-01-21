@@ -48,12 +48,12 @@ namespace Nektar
 
         class StdExpansion1D: public StdExpansion
         {
-
+	    
         public:
 
             StdExpansion1D();
-            StdExpansion1D(const BasisKey &Ba, int numcoeffs, double *coeffs,
-                double *phys, bool spaceowner);
+            StdExpansion1D(const LibUtilities::BasisKey &Ba, int numcoeffs, 
+			   double *coeffs, double *phys);
             StdExpansion1D(const StdExpansion1D &T);
             ~StdExpansion1D();
 
@@ -66,11 +66,6 @@ namespace Nektar
             {
                 v_GetCoords(coords);
             }
-
-	    virtual int v_GetCoordim(void)
-	    {
-                return 1; 
-	    }
 
 	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical
 	     *  quadrature points in the expansion (i.e. \a (this)->m_phys)
@@ -86,8 +81,8 @@ namespace Nektar
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
 	     *  \a outarray as output of the function
 	     */
-            void TensorDeriv(double * outarray);
-
+            void PhysTensorDeriv(double * outarray);
+	    
 	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
 	     *  physical quadrature points given by \a inarray and return in
 	     *  \a outarray.
@@ -98,24 +93,24 @@ namespace Nektar
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
 	     *  \a outarray as output of the function
 	     */
-            void TensorDeriv(const double *inarray, double * outarray);
+            void PhysTensorDeriv(const double *inarray, double * outarray);
 
-            void Deriv  (double *outarray) 
+            void PhysDeriv  (double *outarray) 
             {
                 v_Deriv  (outarray);
             }
 
-            void StdDeriv (double *outarray)
+            void StdPhysDeriv (double *outarray)
             {
                 v_StdDeriv (outarray) ;
             }
 
-            void Deriv  (const double *inarray, double *outarray) 
+            void PhysDeriv  (const double *inarray, double *outarray) 
             {
                 v_Deriv (inarray, outarray);
             }
 
-            void StdDeriv (const double *inarray, double *outarray)
+            void StdPhysDeriv (const double *inarray, double *outarray)
             {
                 v_StdDeriv (inarray,outarray);
             }
@@ -166,6 +161,12 @@ namespace Nektar
                 return NULL;
             }
 
+
+	    virtual int v_GetCoordim(void)
+	    {
+                return 1; 
+	    }
+
             virtual void   v_BwdTrans (double *outarray)      = 0;
             virtual void   v_FwdTrans (const double *inarray) = 0;
 
@@ -191,6 +192,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.5  2007/01/20 22:35:21  sherwin
+* Version with StdExpansion compiling
+*
 * Revision 1.4  2007/01/15 11:30:22  pvos
 * Updating doxygen documentation
 *

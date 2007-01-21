@@ -39,91 +39,96 @@
 
 namespace Nektar
 {
-  namespace StdRegions
-  {
-
-    StdExpansion1D::StdExpansion1D()
+    namespace StdRegions
     {
-    }
+	
+	StdExpansion1D::StdExpansion1D()
+	{
+	}
+	
+	StdExpansion1D::StdExpansion1D(const LibUtilities::BasisKey &Ba, 
+				 int numcoeffs, double * coeffs,double *phys):
+	    StdExpansion(1,Ba,LibUtilities::BasisKey(),LibUtilities::BasisKey()
+			 ,numcoeffs,coeffs,phys)
+	{
+	}
+
+	StdExpansion1D::StdExpansion1D(const StdExpansion1D &T):StdExpansion(T)
+	{
+	}
+
+	StdExpansion1D::~StdExpansion1D()
+	{
+	}
+	
   
-    StdExpansion1D::StdExpansion1D(const BasisKey &Ba, int numcoeffs, 
-			   double * coeffs,double *phys, bool spaceowner):
-      StdExpansion(1,Ba,BasisKey(),BasisKey(),numcoeffs,coeffs,phys,spaceowner)
-    {
-    }
+	//----------------------------
+	// Differentiation Methods
+	//-----------------------------
+	
+	inline void StdExpansion1D::PhysTensorDeriv(double * outarray)
+	{
+	    PhysTensorDeriv(&m_phys[0],outarray);
+	}  
 
-    StdExpansion1D::StdExpansion1D(const StdExpansion1D &T):StdExpansion(T)
-    {
-    }
-
-    StdExpansion1D::~StdExpansion1D()
-    {
-    }
-
-  
-    //----------------------------
-    // Differentiation Methods
-    //-----------------------------
-
-    inline void StdExpansion1D::TensorDeriv(double * outarray)
-    {
-      TensorDeriv(m_phys,outarray);
-    }  
-
-     void StdExpansion1D::TensorDeriv(const double *inarray, double * outarray)
-    {
-      int    nquad = m_base[0]->GetNumPoints();
-      DNekMatSharedPtr D;
-      double *tmp; 
-      BstShrDArray  wsp;
+	void StdExpansion1D::PhysTensorDeriv(const double *inarray, 
+					     double * outarray)
+	{
+	    int    nquad = m_base[0]->GetNumPoints();
+	    DNekMatSharedPtr D;
+	    double *tmp; 
+	    BstShrDArray  wsp;
+	    
+	    if(outarray == inarray)
+	    {  // check to see if calling array is inarray
+		wsp = GetDoubleTmpSpace(nquad); 
+		tmp = wsp.get();
+		Vmath::Vcopy(nquad,inarray,1,tmp,1);
+	    }
+	    else
+	    {
+		tmp = (double *)inarray;
+	    }
+	    
+	    D = ExpPointsProperties(0)->GetD();
       
-      if(outarray == inarray)
-      {  // check to see if calling array is inarray
-	wsp = GetDoubleTmpSpace(nquad); 
-	tmp = wsp.get();
-	Vmath::Vcopy(nquad,inarray,1,tmp,1);
-      }
-      else
-      {
-	tmp = (double *)inarray;
-      }
+	    Blas::Dgemv('T',nquad,nquad,1.0,&((*D).GetPtr())[0],nquad,
+			tmp,1,0.0,outarray,1);
+	}
+    
+	double StdExpansion1D::PhysEvaluate(const double *Lcoord)
+	{
+	    int    nquad = m_base[0]->GetNumPoints();
+	    double  val;
+	    DNekMatSharedPtr I;
+	    
+	    ASSERTL2(Lcoord[0] < -1,"Lcoord[0] < -1");
+	    ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1");
+	    
+	    I = ExpPointsProperties(0)->GetI(Lcoord[0]);
 
-      ExpPointsProperties(0)->GetD(D);
-      
-      Blas::Dgemv('T',nquad,nquad,1.0,*D,nquad,tmp,1,0.0,outarray,1);
-      
-    }
+	    val = Blas::Ddot(m_base[0]->GetNumPoints(),&((*I).GetPtr())[0],
+			     1,&m_phys[0],1);
+	    
+	    return val;    
+	}
     
-    double StdExpansion1D::PhysEvaluate(const double *Lcoord)
-    {
-      int    nquad = m_base[0]->GetNumPoints();
-      double  val;
-      BstShrDArray wsp = GetDoubleTmpSpace(nquad);
-      double *tmp = wsp.get();
-    
-      ASSERTL2(Lcoord[0] < -1,"Lcoord[0] < -1");
-      ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1");
-    
-      PointsManager()[m_base[0].m_baiskey.m_pointskey]-> 
-	  GetInterpVec(Lcoord[0],tmp);
-      val = Blas::Ddot(m_base[0]->GetNumPoints(),tmp,1,m_phys,1);
-    
-      return val;    
-    }
-    
-    void StdExpansion1D::GetCoords1D(double **coords)
-    {
-      const double *z,*w;
+	void StdExpansion1D::GetCoords1D(double **coords)
+	{
+	    const double *z,*w;
 
-      PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w);
-      Blas::Dcopy(m_base[0]->GetNumPoints(),z,1,coords[0],1);
-    }
-    
-  }//end namespace
+	    ExpPointsProperties(0)->GetZW(z,w);
+	    Blas::Dcopy(m_base[0]->GetNumPoints(),z,1,coords[0],1);
+	}
+	
+    }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.4  2007/01/20 22:35:21  sherwin
+ * Version with StdExpansion compiling
+ *
  * Revision 1.3  2007/01/15 11:30:20  pvos
  * Updating doxygen documentation
  *

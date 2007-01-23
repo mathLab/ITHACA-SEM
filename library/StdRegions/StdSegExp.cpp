@@ -38,311 +38,234 @@
 
 namespace Nektar
 {
-  namespace StdRegions
-  {
-
-    StdMatrix StdSegExp::s_elmtmats;
-    
-    StdSegExp::StdSegExp(const BasisKey &Ba):
-      StdExpansion1D(Ba,Ba.GetNumBasis(),NULL,NULL,true)
-    {    
-    }
-
-    StdSegExp::StdSegExp(const BasisKey &Ba,double *coeffs, double *phys):
-      StdExpansion1D(Ba,Ba.GetNumBasis(),coeffs,phys,false)
+    namespace StdRegions
     {
-    }
 
-    StdSegExp::StdSegExp(const StdSegExp &T):StdExpansion1D(T)
-    {
-    }
-  
-
-    StdSegExp::~StdSegExp()
-    {    
-    }
+	StdSegExp::StdSegExp(const LibUtilities::BasisKey &Ba):
+	    StdExpansion1D(Ba,Ba.GetNumModes(),NULL,NULL)
+	{    
+	}
+	
+	StdSegExp::StdSegExp(const StdSegExp &T):
+	    StdExpansion1D(T)
+	{
+	}
+	
+	
+	StdSegExp::~StdSegExp()
+	{    
+	}
+	
+	
+	//----------------------------
+	// Integration Methods
+	//----------------------------
+	
+	double StdSegExp::Integral(const double *inarray)
+	{
+	    double Int = 0.0;
+	    const double *z,*w0;
+	    int    nquad0 = m_base[0]->GetNumPoints();
+	    BstShrDArray tmp = GetDoubleTmpSpace(nquad0);
     
-  
-    //----------------------------
-    // Integration Methods
-    //----------------------------
+	    ExpPointsProperties(0)->GetZW(z,w0);
 
-    double StdSegExp::Integral(const double *inarray)
-    {
-      double Int = 0.0;
-      const double *z,*w0;
-      int    nquad0 = m_base[0]->GetPointsOrder();
-      BstShrDArray tmp  = GetDoubleTmpSpace(nquad0);
+	    // multiply by integration constants 
+	    Vmath::Vmul(nquad0,(double*)inarray,1,(double*)w0,1,&tmp[0],1);
     
-      PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(z,w0);
-
-      // multiply by integration constants 
-      Vmath::Vmul(nquad0,(double*)inarray,1,(double*)w0,1,tmp.get(),1);
-    
-      Int = Vmath::Vsum(nquad0,tmp.get(),1);
+	    Int = Vmath::Vsum(nquad0,&tmp[0],1);
       
-      return Int;
-    }
+	    return Int;
+	}
+	
+	void StdSegExp::IProductWRTBase(const double *base, 
+					const double * inarray, 
+					double * outarray, int coll_check)
+	{
+	    int    nquad = m_base[0]->GetNumPoints();
+	    const double *z,*w;
+	    BstShrDArray tmp  = GetDoubleTmpSpace(nquad);
 
-  void StdSegExp::IProductWRTBase(const double *base, const double * inarray, 
-				 double * outarray, int coll_check)
-  {
-    int    nquad = m_base[0]->GetPointsOrder();
-    const double *z,*w;
-    BstShrDArray tmp  = GetDoubleTmpSpace(nquad);
+	    ExpPointsProperties(0)->GetZW(z,w);
 
-    
-    ASSERTL2(m_base[0]->GetAlpha() == 0.0,"Basis[0] has non-zero alpha weight");
-    ASSERTL2(m_base[0]->GetBeta() == 0.0,"Basis[1] has non-zero beta weight");
+	    Vmath::Vmul(nquad,(double*)inarray,1,(double*)w,1,&tmp[0],1);
 
-    PointsManager()[m_base[0].m_basiskey..m_pointskey]->GetZW(z,w0);
-
-    Vmath::Vmul(nquad,(double*)inarray,1,(double*)w,1,tmp.get(),1);
-
-    if(coll_check&&m_base[0]->Collocation())
-    {
-      Vmath::Vcopy(nquad,tmp.get(),1,outarray,1);
-    }
-    else
-    {
-      Blas::Dgemv('T',nquad,m_base[0]->GetNumBasis(),1.0,base,nquad,
-		  tmp.get(),1,0.0,outarray,1);
-    }
-    
-  }
+	    if(coll_check&&m_base[0]->Collocation())
+	    {
+		Vmath::Vcopy(nquad,&tmp[0],1,outarray,1);
+	    }
+	    else
+	    {
+		Blas::Dgemv('T',nquad,m_base[0]->GetNumModes(),1.0,base,nquad,
+			    &tmp[0],1,0.0,outarray,1);
+	    }
+	    
+	}
   
-  void StdSegExp::IProductWRTBase(const double * inarray, double * outarray)
-  {
-    IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
-  }
-
-  void StdSegExp::FillMode(const int mode, double *outarray)
-  {
-    int   nquad = m_base[0]->GetPointsOrder();
-    const double * base  = m_base[0]->GetBdata();
-
-    ASSERTL2(modes <= m_ncoeffs , 
+	void StdSegExp::IProductWRTBase(const double *inarray, double *outarray)
+	{
+	    IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
+	}
+	
+	void StdSegExp::FillMode(const int mode, double *outarray)
+	{
+	    int   nquad = m_base[0]->GetNumPoints();
+	    const double * base  = m_base[0]->GetBdata();
+	    
+	    ASSERTL2(modes <= m_ncoeffs , 
 	     "calling argument mode is larger than total expansion order");
 
-    Vmath::Vcopy(nquad,(double *)base+mode*nquad,1, outarray,1);
+	    Vmath::Vcopy(nquad,(double *)base+mode*nquad,1, outarray,1);
   }
-    
-  void StdSegExp::GenMassMatrix(double * outarray)
-  {
-    StdExpansion::GenerateMassMatrix(outarray);
+	
+	DNekMatSharedPtr StdSegExp::GenMassMatrix()
+	{
+	    DNekMatSharedPtr Mat = StdExpansion::GenerateMassMatrix();
 
-    // For Fourier basis set the imaginary component of mean mode
-    // to have a unit diagonal component in mass matrix 
-    if(m_base[0]->GetBasisType() == eFourier)
-    {
-      outarray[m_base[0]->GetNumBasis()+1] = 1.0;
-    }
-  }
- 
-  void StdSegExp::GenLapMatrix(double * outarray)
-  {
-    int    i;
-    int   nquad = m_base[0]->GetPointsOrder();
-    const double * dbase  = m_base[0]->GetDbdata();
-    const double *z,*w;
-    BstShrDArray tmp  = GetDoubleTmpSpace(nquad);
-    
-    BasisManagerSingleton::Instance().GetZW(m_base[0],z,w);
-    
-    for(i = 0; i < m_base[0]->GetNumBasis(); ++i)
-    {
-      Vmath::Vcopy(nquad,(double *)dbase+i*nquad,1, tmp.get(),1);
-      IProductWRTBase(m_base[0]->GetDbdata(), tmp.get(),
-		      outarray+i*m_base[0]->GetNumBasis(),0);
-    }
-
-  }
-
-  StdMatContainer * StdSegExp::GetMassMatrix() 
-  {
-    StdMatContainer * mat;
-    mat = s_elmtmats.GetLocalMass(this);
-    return mat;
-  }
-
-  StdMatContainer * StdSegExp::GetLapMatrix() 
-  {
-    StdMatContainer * mat;
-    mat = s_elmtmats.GetLocalLap(this);
-    return mat;
-  }
-
-  //----------------------------
-  // Differentiation Methods
-  //-----------------------------
-
-  inline void StdSegExp::Deriv(double * outarray)
-  {
-    TensorDeriv(outarray);
-  }  
-
-  void StdSegExp::Deriv(const double *inarray, double * outarray)
-  {
-    TensorDeriv(inarray,outarray);
-  }
-
-  //----------------------------
-  // Evaluation Methods
-  //----------------------------
-   
-    void StdSegExp::BwdTrans(double * outarray)
-    {
-    int           nquad = m_base[0]->GetPointsOrder();
-    const double *base  = m_base[0]->GetBdata();
-    
-    if(m_base[0]->Collocation())
-    {
-      Vmath::Vcopy(nquad,m_coeffs,1,outarray,1);
-    }
-    else
-    {
-      Blas::Dgemv('N',nquad,m_base[0]->GetNumBasis(),1.0,base,nquad,
-		  m_coeffs,1,0.0,outarray,1);
-    }
-  }
-
-  void StdSegExp::FwdTrans(const double *inarray)
-  {
-    StdMatContainer *M;
-
-    if(m_base[0]->Collocation())
-    {
-      Vmath::Vcopy(GetNcoeffs(),inarray,1,m_coeffs,1);
-    }
-    else{
-      IProductWRTBase(inarray,m_coeffs);
-      M = GetMassMatrix();
-      M->Solve(m_coeffs,1);
-    }
-  }
- 
-  double StdSegExp::Evaluate(const double *Lcoord)
-  {
-    return PhysEvaluate(Lcoord);
-  }
-    
-    
-  void StdSegExp::MapTo(EdgeOrientation dir, StdExpMap& Map)
-  {
-
-    if(Map.GetLen() < 2)
-    {
-      Map.SetMapMemory(2);
-    }
-    
-    switch(m_base[0]->GetBasisType())
-    {
-    case eGLL_Lagrange:
-    {
-      int order = m_base[0]->GetNumBasis();
-      if(dir == eForwards)
-      {
-	Map[0] = 0;
-	Map[1] = order-1;
-      }
-      else
-      {
-	Map[0] = order-1;
-	Map[1] = 0;
-      }
-    }
-    break;
-    case eModified_A:
-      
-      if(dir == eForwards)
-      {
-	Map[0] = 0;
-	Map[1] = 1;
-      }
-      else
-      {
-	Map[0] = 1;
-	Map[1] = 0;
-      }
-      break;
-    default:
-      ASSERTL0(0,"Mapping not defined for this expansion");
-    }
-  }    
-  
-  void StdSegExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-  {
-      mat->SetLda(m_ncoeffs);
-      mat->SetMatForm(eSymmetric_Positive);
-      
-      if(GeoFacType() == eRegular)
-      {
-	  switch(Mform)
-	  {
-	  case eMassMatrix:
+	    // For Fourier basis set the imaginary component of mean mode
+	    // to have a unit diagonal component in mass matrix 
+	    if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
 	    {
-		// default setting  for this matrix 
-		mat->SetMatForm(eSymmetric_Positive);
-		
-		switch(m_base[0]->GetBasisType())
-		{
-		case eOrtho_A: case eLegendre: 
-		if(m_base[0]->ExactIprodInt()) // diagonal matrix 
-		{
-		    mat->SetMatForm(eSymmetric_Positive_Banded);
-		    mat->SetBwidth(1);
-		}	
-		break;
-		case eModified_A:
-		    // Banded matrix. Note only makes sense to use banded storage
-		    // when rank > 2*bandwidth-1
-		    if((m_base[0]->ExactIprodInt())&&(m_base[0]->GetNumBasis()>7))
-		    { 
-			mat->SetMatForm(eSymmetric_Positive_Banded);
-			mat->SetBwidth(4);
-		    }  
-		    break;
-		case eFourier:
-		    mat->SetMatForm(eSymmetric_Positive_Banded);
-		    mat->SetBwidth(1);
-		    break;	
-		case eGLL_Lagrange:
-		    // diagonal matrix 
-		    if(m_base[0]->GetPointsOrder() == m_base[0]->GetNumBasis()) 
-		    {
-			mat->SetMatForm(eSymmetric_Positive_Banded);
-			mat->SetBwidth(1);
-		    }
-		    break;
-		default:
-		    break;
-		}
-		break;
-	    case eLapMatrix:
-		mat->SetMatForm(eSymmetric);	
-		
-		break;
-	    default:
-		ASSERTL0(false, "MatrixType not known");
-                   break;
-	    
+		(*Mat)(1,1) = 1.0;
+	    }
+
+	    return Mat;
+	}
+	
+	DNekMatSharedPtr StdSegExp::GenLapMatrix()
+	{
+	    int    i;
+	    int   nquad = m_base[0]->GetNumPoints();
+	    const double * dbase  = m_base[0]->GetDbdata();
+	    const double *z,*w;
+	    BstShrDArray tmp  = GetDoubleTmpSpace(nquad);
+	    int nummodes = m_base[0]->GetNumModes();
+	    DNekMatSharedPtr Mat;
+
+	    Mat.reset(new DNekMat(nummodes,nummodes,
+				  new double [nummodes*nummodes]));
+		      
+	    ExpPointsProperties(0)->GetZW(z,w);
+    
+	    for(i = 0; i < nummodes; ++i)
+	    {
+		Vmath::Vcopy(nquad,(double *)dbase+i*nquad,1, &tmp[0],1);
+		IProductWRTBase(m_base[0]->GetDbdata(), &tmp[0],
+				&((*Mat).GetPtr())[0]+
+				i*m_base[0]->GetNumModes(),0);
 	    }
 	    
+	    return Mat;
+	}
+	
+	//----------------------------
+	// Differentiation Methods
+	//-----------------------------
+	
+	inline void StdSegExp::PhysDeriv(double * outarray)
+	{
+	    PhysTensorDeriv(outarray);
+	}  
+
+	void StdSegExp::PhysDeriv(const double *inarray, double * outarray)
+	{
+	    PhysTensorDeriv(inarray,outarray);
+	}
+	
+	//----------------------------
+	// Evaluation Methods
+	//----------------------------
+	
+	void StdSegExp::BwdTrans(double * outarray)
+	{
+	    int           nquad = m_base[0]->GetNumPoints();
+	    const double *base  = m_base[0]->GetBdata();
 	    
+	    if(m_base[0]->Collocation())
+	    {
+		Vmath::Vcopy(nquad,&m_coeffs[0],1,outarray,1);
+	    }
+	    else
+	    {
+		Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,base,nquad,
+			    &m_coeffs[0],1,0.0,outarray,1);
 	    }
 	}
-  }
+	
+	void StdSegExp::FwdTrans(const double *inarray)
+	{
+	    if(m_base[0]->Collocation())
+	    {
+		Vmath::Vcopy(GetNcoeffs(),inarray,1,&m_coeffs[0],1);
+	    }
+	    else{
+		IProductWRTBase(inarray,&m_coeffs[0]);
+
+		// this needs replacing with managed matrices
+		DNekLinSys matsys(GenMassMatrix(),
+	        boost::shared_ptr<DNekVec>(new DNekVec(m_ncoeffs,&m_coeffs[0])));
+		DNekVec(m_ncoeffs,&m_coeffs[0]) = matsys.Solve();
+	    }
+	}
+ 
+	double StdSegExp::Evaluate(const double *Lcoord)
+	{
+	    return PhysEvaluate(Lcoord);
+	}
+    
+    
+	void StdSegExp::MapTo(EdgeOrientation dir, StdExpMap& Map)
+	{
+	    
+	    if(Map.GetLen() < 2)
+	    {
+		Map.SetMapMemory(2);
+	    }
+    
+	    switch(m_base[0]->GetBasisType())
+	    {
+	    case eGLL_Lagrange:
+		{
+		    int order = m_base[0]->GetNumModes();
+		    if(dir == eForwards)
+		    {
+			Map[0] = 0;
+			Map[1] = order-1;
+		    }
+		    else
+		    {
+			Map[0] = order-1;
+			Map[1] = 0;
+		    }
+		}
+		break;
+	    case eModified_A:
+		
+		if(dir == eForwards)
+		{
+		    Map[0] = 0;
+		    Map[1] = 1;
+		}
+		else
+		{
+		    Map[0] = 1;
+		    Map[1] = 0;
+		}
+		break;
+	    default:
+		ASSERTL0(0,"Mapping not defined for this expansion");
+	    }
+	}    
+	
   
-  /** \brief Define an integer mapping vector to map to different types
-   */
-  
-  //  void StdSegExp::Mapto(int *map,  StdExpansion2D  &2DExp, int edge, enum Dir){
-  //  
-  }//end namespace
+    }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.8  2007/01/20 22:35:21  sherwin
+ * Version with StdExpansion compiling
+ *
  * Revision 1.7  2007/01/15 15:07:20  pvos
  * updating doxygen documentation
  *

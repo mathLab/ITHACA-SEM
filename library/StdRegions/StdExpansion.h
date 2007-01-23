@@ -250,16 +250,6 @@ namespace Nektar
                 return v_DetShapeType();
             }
 
-            StdMatContainer *GetMassMatrix()
-            {
-                return v_GetMassMatrix();
-            }
-
-            StdMatContainer *GetLapMatrix()
-            {
-                return v_GetLapMatrix();
-            }
-
             void  BwdTrans (double *outarray)
             {
                 v_BwdTrans (outarray);
@@ -290,14 +280,9 @@ namespace Nektar
                 v_IProductWRTBase(inarray, outarray);
             }
 
-            void GenNBasisTransMatrix(double * outarray)
+            DNekMatSharedPtr GenNBasisTransMatrix()
             {
-                v_GenNBasisTransMatrix(outarray);
-            }
-
-            StdMatContainer *GetNBasisTransMatrix(void)
-            {
-                return v_GetNBasisTransMatrix();
+                return v_GenNBasisTransMatrix();
             }
 
             void GetCoords(double **coords)
@@ -373,16 +358,16 @@ namespace Nektar
 	    }
 
             // Matrix Routines
-            void GenerateMassMatrix(double *outarray);
+            DNekMatSharedPtr GenerateMassMatrix();
 
-            void GenMassMatrix (double *outarray)
+            DNekMatSharedPtr GenMassMatrix ()
             {
-                v_GenMassMatrix(outarray);
+                return v_GenMassMatrix();
             }
 
-            void GenLapMatrix(double *outarray)
+            DNekMatSharedPtr GenLapMatrix()
             {
-                v_GenLapMatrix(outarray);
+                return v_GenLapMatrix();
             }
 
             void PhysDeriv (const int dim, double **outarray) 
@@ -496,17 +481,6 @@ namespace Nektar
 
             virtual ShapeType v_DetShapeType()                = 0;
 
-            virtual StdMatContainer *v_GetMassMatrix()
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not define for this class or inherited class ");
-                return NULL;
-            }
-
-            virtual StdMatContainer *v_GetLapMatrix()
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not define for this class or inherited class ");
-                return NULL;
-            }
 
             virtual void   v_BwdTrans (double *outarray)      = 0;
             virtual void   v_FwdTrans (const double *inarray) = 0;
@@ -540,19 +514,19 @@ namespace Nektar
 			 "been defined for this shape");
             }
 
-            virtual void v_GenMassMatrix(double * outarray)
+            virtual DNekMatSharedPtr v_GenMassMatrix()
             {
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
 			 "been defined for this element");
             }
 
-            virtual void v_GenLapMatrix(double * outarray)
+            virtual DNekMatSharedPtr v_GenLapMatrix()
             {
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
 			 "been defined for this element");
             }
 
-            virtual void v_GenNBasisTransMatrix(double * outarray)
+            virtual DNekMatSharedPtr v_GenNBasisTransMatrix()
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid "
 			 "for nodal expansions");
@@ -654,6 +628,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.12  2007/01/20 22:35:21  sherwin
+* Version with StdExpansion compiling
+*
 * Revision 1.11  2007/01/18 23:03:56  sherwin
 * Removed for repository update in utah 07
 *

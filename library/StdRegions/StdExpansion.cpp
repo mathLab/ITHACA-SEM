@@ -190,17 +190,22 @@ namespace Nektar
             return val;
         }
 
-        void StdExpansion::GenerateMassMatrix(double *outarray)
+        DNekMatSharedPtr StdExpansion::GenerateMassMatrix()
         {
             int     i;
             BstShrDArray store = GetDoubleTmpSpace(m_ncoeffs);
             BstShrDArray tmp   = GetDoubleTmpSpace(GetTotPoints());
 
+	    DNekMatSharedPtr  Mat;
+	    
+	    Mat.reset(new DNekMat(m_ncoeffs,m_ncoeffs,
+				  new double [m_ncoeffs*m_ncoeffs]));
+
 	    Blas::Dcopy(m_ncoeffs,&m_coeffs[0],1,&store[0],1);
             for(i=0; i<m_ncoeffs; ++i)
             {
                 v_FillMode(i, &tmp[0]);
-                v_IProductWRTBase(&tmp[0], outarray+i*m_ncoeffs);
+                v_IProductWRTBase(&tmp[0], &((*Mat).GetPtr())[0]+i*m_ncoeffs);
             }
 	    Blas::Dcopy(m_ncoeffs,&store[0],1,&m_coeffs[0],1);
         }
@@ -265,6 +270,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.7  2007/01/20 22:35:20  sherwin
+* Version with StdExpansion compiling
+*
 * Revision 1.6  2007/01/15 11:08:37  pvos
 * Updating doxygen documentation
 *

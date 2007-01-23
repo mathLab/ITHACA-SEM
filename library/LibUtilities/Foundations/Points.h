@@ -65,9 +65,9 @@ namespace Nektar
             }
 
 
-           PointsKey(const int &numpoints, const PointsType &pointstype): 
-                    m_numpoints(numpoints), 
-                    m_pointstype(pointstype)
+            PointsKey(const int &numpoints, const PointsType &pointstype): 
+            m_numpoints(numpoints), 
+                m_pointstype(pointstype)
             {
             }
 
@@ -103,13 +103,11 @@ namespace Nektar
                 return m_pointstype;
             }
 
-
             bool operator==(const PointsKey &key)
             {
                 return (m_numpoints == key.m_numpoints &&
-                        m_pointstype == key.m_pointstype);
+                    m_pointstype == key.m_pointstype);
             }
-
 
             bool operator == (const PointsKey *y)
             {
@@ -137,7 +135,6 @@ namespace Nektar
         };
 
         bool operator<(const PointsKey &lhs, const PointsKey &rhs);
-
         std::ostream& operator<<(std::ostream& os, const PointsKey& rhs);
 
         template<typename DataT>
@@ -188,7 +185,6 @@ namespace Nektar
                 return m_pointsKey.GetPointsType();
             }
 
-
             inline double *GetZ() const
             {
                 return m_points[0];
@@ -198,7 +194,6 @@ namespace Nektar
             {
                 return m_weights; 
             } 
-
 
             inline void GetZW(const double *&z, const double *&w) const 
             {
@@ -224,17 +219,10 @@ namespace Nektar
                 z = m_points[2];
             }
 
-
             //inline const boost::shared_ptr<NekMatrix<DataType> > GetI(PointsKey)
             //{
             //    return m_derivmatrix;
             //}
-
-
-//            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(PointsKey)
-//            {
-//                return m_derivmatrix;
-//            }
 
             inline const boost::shared_ptr<NekMatrix<DataType> > GetD() const
             {
@@ -260,24 +248,24 @@ namespace Nektar
             PointsKey m_pointsKey;
             DataType **m_points;
             DataType *m_weights;
-//            boost::shared_ptr<NekMatrix<DataType> > m_derivmatrix;
+            //            boost::shared_ptr<NekMatrix<DataType> > m_derivmatrix;
 
             virtual void CalculatePoints()
             {
- /*               unsigned int pointsDim = GetPointsDim();
+                /*               unsigned int pointsDim = GetPointsDim();
 
                 m_points = new Points::DataType*[pointsDim];
 
                 for (unsigned int i=0; i<pointsDim; ++i)
                 {
-                    m_points[i] = new Points::DataType[GetNumPoints()];
+                m_points[i] = new Points::DataType[GetNumPoints()];
                 }*/
             }
 
             virtual void CalculateWeights()
             {
                 //m_weights = new Points::DataType[GetNumPoints()];
-	    }
+            }
 
             virtual void CalculateDerivMatrix()
             {

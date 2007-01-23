@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <LibUtilities/Foundations/Points.hpp>
+#include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>

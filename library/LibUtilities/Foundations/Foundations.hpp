@@ -91,8 +91,21 @@ namespace Nektar
 
         const char* const PointsTypeMap[] = 
         {
-         
-            
+            "GaussGaussLegendre",
+            "GaussRadauMLegendre",
+            "GaussRadauPLegendre",
+            "GaussLobattoLegendre",
+            "GaussGaussChebyshev",
+            "GaussRadauMChebyshev",
+            "GaussRadauPChebyshev",
+            "GaussLobattoChebyshev",
+            "GaussRadauMAlpha0Beta1",
+            "GaussRadauMAlpha0Beta2",
+            "PolyEvenlySpaced",
+            "FourierEvenlySpaced",
+            "NodalTriElec",
+            "NodalTriFekete",
+            "NodalTetElec",
         };
     } // end of namespace
 } // end of namespace

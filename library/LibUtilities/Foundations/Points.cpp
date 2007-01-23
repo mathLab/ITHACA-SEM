@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <LibUtilities/Foundations/Points.hpp>
+#include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -46,31 +46,21 @@ namespace Nektar
     {
         bool operator<(const PointsKey &lhs, const PointsKey &rhs)
         {
-           /* if (lhs.m_pointsdim < rhs.m_pointsdim) return true;
-            if (lhs.m_pointsdim > rhs.m_pointsdim) return false;
-
             if (lhs.m_numpoints < rhs.m_numpoints) return true;
             if (lhs.m_numpoints > rhs.m_numpoints) return false;
 
-            if (lhs.m_pointstype < rhs.m_pointstype) return true;
-            if (lhs.m_pointstype > rhs.m_pointstype) return false;
-
-            return (lhs.m_pointsid < rhs.m_pointsid);*/
+            return (lhs.m_pointstype < rhs.m_pointstype);
         }
 
         bool PointsKey::opLess::operator()(const PointsKey &lhs, const PointsKey &rhs)
         {
-           /* if (lhs.m_pointsdim < rhs.m_pointsdim) return true;
-            if (lhs.m_pointsdim > rhs.m_pointsdim) return false;
-
-            if (lhs.m_pointstype < rhs.m_pointstype) return true;
-            if (lhs.m_pointstype > rhs.m_pointstype) return false;
-
-            return (lhs.m_pointsid < rhs.m_pointsid);*/
+            return (lhs.m_pointstype < rhs.m_pointstype);
         }
 
         std::ostream& operator<<(std::ostream& os, const PointsKey& rhs)
         {
+            os << "NumPoints: " << rhs.GetNumPoints() << " PointsType: " << PointsTypeMap[rhs.GetPointsType()] << std::endl;
+
             return os;
         }
     }

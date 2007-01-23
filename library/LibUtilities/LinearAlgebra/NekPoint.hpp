@@ -111,12 +111,14 @@ namespace Nektar
                 }
             }
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
             NekPoint(const expt::Expression<ExpressionPolicyType>& rhs)
             {
                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
                 rhs.Apply(*this);
             }
+#endif
 
             NekPoint(const NekPoint<DataType, dim, space>& rhs)
             {
@@ -130,14 +132,15 @@ namespace Nektar
             {
             }
 
-            template<typename ExpressionPolicyType>
+ #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+           template<typename ExpressionPolicyType>
             NekPoint<DataType, dim, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
             {
                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
                 rhs.Apply(*this);
                 return *this;
             }
-
+#endif
             NekPoint<DataType, dim, space>& operator=(const NekPoint<DataType, dim, space>& rhs)
             {
                 for(unsigned int i = 0; i < dim; ++i)
@@ -555,6 +558,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.13  2006/09/30 15:18:37  bnelson
+    no message
+
     Revision 1.12  2006/09/16 23:53:36  bnelson
     Modified the negation operation to reflect changes in the unary expression templates.
 

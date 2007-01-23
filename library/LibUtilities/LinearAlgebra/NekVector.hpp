@@ -134,6 +134,7 @@ namespace Nektar
             {
             }
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
             NekVector(const expt::Expression<ExpressionPolicyType>& rhs) :
                 m_impl(rhs.GetMetadata().Rows, DataType())
@@ -141,11 +142,12 @@ namespace Nektar
                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
                 rhs.Apply(*this);
             }
-
+#endif
             ~NekVector()
             {
             }
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
             NekVector<DataType, dim, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
             {
@@ -153,6 +155,7 @@ namespace Nektar
                 rhs.Apply(*this);
                 return *this;
             }
+#endif
 
             NekVector<DataType, dim, space>& operator=(const NekVector<DataType, dim, space>& rhs)
             {
@@ -635,6 +638,7 @@ namespace Nektar
     }
     
     
+ #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
     namespace expt
     {
         template<typename DataType, unsigned int dim, unsigned int space>
@@ -644,7 +648,7 @@ namespace Nektar
                 typedef NekVectorMetadata MetadataType;
         };
     }
-
+#endif
     template<typename DataType, unsigned int dim, unsigned int space>
     NekVector<DataType, dim, space>
     operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim>& rhs)
@@ -772,6 +776,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.12  2006/11/29 00:09:32  bnelson
+    Removed the LPNorm stub.
+
     Revision 1.11  2006/11/20 03:38:44  bnelson
     Added /= and /
 

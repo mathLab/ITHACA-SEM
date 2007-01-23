@@ -48,6 +48,8 @@
 
 namespace Nektar
 {
+
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
     // All of the expression interfaces for NekMatrix should go here.
     namespace expt
     {
@@ -121,12 +123,9 @@ namespace Nektar
         {
             public:
                 static const bool IsCommutative = false;
-        };
-
-
-    
+        };    
     }
-    
+#endif
     
     // Now define general purpose operators.
     
@@ -150,7 +149,6 @@ namespace Nektar
         return expt::CreateBinaryExpression<expt::AddOp>(lhs, rhs);
     }
     
-#else
     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
     typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::AdditionResultType 
     operator+(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
@@ -175,7 +173,7 @@ namespace Nektar
     {
         return expt::CreateBinaryExpression<expt::SubtractOp>(lhs, rhs);
     }
-#else
+
     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
     typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::SubtractionResultType 
     operator+(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
@@ -231,7 +229,6 @@ namespace Nektar
 
                
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-    
     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
     typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>,
                                          expt::MultiplyOp,
@@ -262,13 +259,13 @@ namespace Nektar
     }
 
     template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
-    NekVector<DataType, 0, BlockType, space> operator*(
-        const NekMatrix<DataType, form, BlockType, space>& lhs,
-        const NekVector<DataType, 0, BlockType, space>& rhs)
+    NekVector<DataType, 0, space> operator*(
+        const NekMatrix<DataType, form, space>& lhs,
+        const NekVector<DataType, 0, space>& rhs)
     {
         ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
 
-        NekVector<DataType, 0, BlockType, space> result(rhs.GetDimension(), DataType(0));
+        NekVector<DataType, 0, space> result(rhs.GetDimension(), DataType(0));
 
         for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
         {
@@ -349,6 +346,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.19  2007/01/17 01:11:21  bnelson
+    Removed old code.
+
     Revision 1.18  2007/01/16 05:30:33  bnelson
     Major improvements for expression templates.
 

@@ -95,7 +95,9 @@ namespace Nektar
                 Swap(temp);
                 return *this;
             }
-            
+
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
             template<typename ExpressionPolicyType>
             NekMatrix(const expt::Expression<ExpressionPolicyType>& rhs) :
                 m_numberOfElements(rhs.GetMetadata().Rows),
@@ -124,7 +126,7 @@ namespace Nektar
                 rhs.Apply(*this);
                 return *this;
             }
-                
+#endif              
             
             typename boost::call_traits<DataType>::reference operator()(unsigned int rowNumber, unsigned int colNumber)
             {
@@ -523,6 +525,9 @@ namespace Nektar
 
 /**
     $Log: NekBlockDiagonalMatrix.hpp,v $
+    Revision 1.2  2006/11/01 04:07:07  bnelson
+    Changed block matrices to use the ConsistentObjectAccess object to store matrices or pointers to matrices so that the same pointer syntax works for both.
+
     Revision 1.1  2006/10/30 05:11:15  bnelson
     Added preliminary linear system and block matrix support.
 

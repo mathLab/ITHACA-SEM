@@ -101,7 +101,9 @@ namespace Nektar
                 Swap(temp);
                 return *this;
             }
-            
+
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
             template<typename ExpressionPolicyType>
             NekMatrix(const expt::Expression<ExpressionPolicyType>& rhs) :
                 m_rows(rhs.GetMetadata().Rows),
@@ -128,7 +130,7 @@ namespace Nektar
                 rhs.Apply(*this);
                 return *this;
             }
-                
+#endif              
             
             typename boost::call_traits<DataType>::reference operator()(unsigned int rowNumber, unsigned int colNumber)
             {
@@ -227,6 +229,9 @@ namespace Nektar
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_BLOCK_FULL_MATRIX_HPP
 
 /**
-    $Log:$
+    $Log: NekBlockFullMatrix.hpp,v $
+    Revision 1.1  2006/10/30 05:11:16  bnelson
+    Added preliminary linear system and block matrix support.
+
  **/
  

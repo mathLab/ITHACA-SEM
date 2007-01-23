@@ -120,6 +120,8 @@ namespace Nektar
                 std::copy(rhs.begin(), rhs.end(), begin());
             }
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
             template<typename ExpressionPolicyType>
             NekMatrix(const expt::Expression<ExpressionPolicyType>& rhs) :
                 m_rows(rhs.GetMetadata().Rows),
@@ -129,6 +131,7 @@ namespace Nektar
             BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, eFull, eNormal, space> > ));
             rhs.Apply(*this);
         }
+#endif
 
         NekMatrix<DataType, eFull, eNormal, space>& operator=(const NekMatrix<DataType, eFull, eNormal, space>& rhs)
         {
@@ -151,7 +154,8 @@ namespace Nektar
             }
             return *this;
         }
-        
+
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
         template<typename ExpressionPolicyType>
         NekMatrix<DataType, eFull, eNormal, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
         {
@@ -162,6 +166,7 @@ namespace Nektar
             rhs.Apply(*this);
             return *this;
         }
+#endif
 
         ~NekMatrix() {}
 
@@ -227,12 +232,13 @@ namespace Nektar
             }
         }
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
         expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, eFull, eNormal, space> > >, expt::NegateOp> > operator-() const
         {
             return expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, eFull, eNormal, space> > >, expt::NegateOp> >(
                     expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, eFull, eNormal, space> > >(*this));
         }
-
+#endif
 
         NekMatrix<DataType, eFull, eNormal, space> operator+=(const NekMatrix<DataType, eFull, eNormal, space>& rhs)
         {
@@ -349,7 +355,10 @@ namespace Nektar
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_FULL_MATRIX_HPP
 
 /**
-    $Log: NekFullMatrix.hpp,v $
+    $Log$
+    Revision 1.3  2006/11/08 04:16:14  bnelson
+    Added subtraction operators.
+
     Revision 1.2  2006/11/01 04:07:08  bnelson
     Changed block matrices to use the ConsistentObjectAccess object to store matrices or pointers to matrices so that the same pointer syntax works for both.
 

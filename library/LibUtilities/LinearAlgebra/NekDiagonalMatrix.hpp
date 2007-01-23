@@ -114,6 +114,7 @@ namespace Nektar
                 std::copy(rhs.begin(), rhs.end(), begin());
             }
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
             template<typename ExpressionPolicyType>
             NekMatrix(const expt::Expression<ExpressionPolicyType>& rhs) :
@@ -122,13 +123,6 @@ namespace Nektar
             {
                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, eDiagonal, eNormal, space> > ));
                 rhs.Apply(*this);
-            }
-
-            NekMatrix<DataType, eDiagonal, eNormal, space>& operator=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
-            {
-                NekMatrix<DataType, eDiagonal, eNormal, space> temp(rhs);
-                Swap(temp);
-                return *this;
             }
 
             template<typename ExpressionPolicyType>
@@ -141,6 +135,15 @@ namespace Nektar
                 rhs.Apply(*this);
                 return *this;
             }
+#endif
+
+            NekMatrix<DataType, eDiagonal, eNormal, space>& operator=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
+            {
+                NekMatrix<DataType, eDiagonal, eNormal, space> temp(rhs);
+                Swap(temp);
+                return *this;
+            }
+
 
             ~NekMatrix() {}
 
@@ -227,12 +230,13 @@ namespace Nektar
                 // A diagonal matrix is its own transpose.
             }
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, eDiagonal, eNormal, space> > >, expt::NegateOp> > operator-() const
             {
                 return expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, eDiagonal, eNormal, space> > >, expt::NegateOp> >(
                         expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, eDiagonal, eNormal, space> > >(*this));
             }
-
+#endif
 
 //             NekMatrix<DataType, eFull, BlockType, space> operator+=(const NekMatrix<DataType, eFull, BlockType, space>& rhs)
 //             {
@@ -349,6 +353,9 @@ namespace Nektar
 
 /**
     $Log: NekDiagonalMatrix.hpp,v $
+    Revision 1.3  2006/11/08 04:16:13  bnelson
+    Added subtraction operators.
+
     Revision 1.2  2006/11/06 17:09:09  bnelson
     *** empty log message ***
 

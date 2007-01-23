@@ -43,6 +43,8 @@
 #include <string>
 #include <boost/lexical_cast.hpp>
 
+#include <LibUtilities/BasicUtils/Lapack.hpp>
+
 #ifdef max
 #undef max
 #endif
@@ -75,7 +77,7 @@ void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x)
 #ifdef NEKTAR_USING_ACML
     dgetrf(m, n, factoredMatrix.GetPtr().get(), m, ipivot.get(), &info);
 #else
-    dgetrf(&m, &n, factoredMatrix.GetPtr().get(), &m, ipivot.get(), &info);
+    Lapack::dgetrf('N',&m, &n, factoredMatrix.GetPtr().get(), &m, ipivot.get(), &info);
 #endif
     
     if( info < 0 )
@@ -98,7 +100,7 @@ void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x)
 #ifdef NEKTAR_USING_ACML
     dgetrs(trans, matrixRows, nrhs, factoredMatrix.GetPtr().get(), matrixRows, ipivot.get(), x, matrixRows, &info);
 #else
-    dgetrs(&trans, &matrixRows, &nrhs, factoredMatrix.GetPtr().get(), &matrixRows, ipivot.get(), x, &matrixRows, &info);
+    Lapack::Dgetrs(&trans, &matrixRows, &nrhs, factoredMatrix.GetPtr().get(), &matrixRows, ipivot.get(), x, &matrixRows, &info);
 #endif //NEKTAR_USING_ACML
     
     if( info < 0 )

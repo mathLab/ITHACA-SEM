@@ -36,12 +36,13 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_HPP
 
-//#include <LibUtilities/LinearAlgebra/lapack.h>
+#include <LibUtilities/LinearAlgebra/lapack.h.in>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
 #include <boost/shared_ptr.hpp> 
   
+
 #ifdef NEKTAR_USING_LAPACK
 namespace Nektar
 {
@@ -201,7 +202,8 @@ namespace Nektar
             {
 #ifdef NEKTAR_USING_LAPACK
                 ResultType result(*b);
-                dgetrs(A->GetRows(), A->GetColumns(), A->GetPtr().get(), result.GetPtr());
+		//             dgetrs(A->GetRows(), A->GetColumns(), A->GetPtr().get(), result.GetPtr());
+		dgetrs(A->GetRows(),A->GetColumns(),A->GetPtr().get(),result.GetPtr());
                 return result;
 #else
 #error NekLinSys::Solve not yet supported with without lapack support.

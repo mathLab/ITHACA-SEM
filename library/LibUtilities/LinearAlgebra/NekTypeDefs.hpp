@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: lapack.h
+// File: NekTypeDefs.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,41 +29,31 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description: TypeDefs for Nek Matrices and vector.
+// 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP
+#define NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_LAPACK_H
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_LAPACK_H
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 
-//#include <LibUtilities/LinearAlgebra/blas.h>
+namespace Nektar
+{
+    typedef NekMatrix<double,eFull>        DNekMat;
+    typedef NekVector<double>              DNekVec;
+    typedef LinearSystem <DNekMat,DNekVec> DNekLinSys;
 
-//#cmakedefine NEKTAR_USING_LAPACK
+    typedef boost::shared_ptr<DNekMat>     DNekMatSharedPtr;
+}
 
-#ifdef NEKTAR_USING_LAPACK
+#endif //NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP
 
-#ifdef NEKTAR_USING_MKL
-#include <@MKL_LAPACK_INCLUDE_FILE@>
-#endif //NEKTAR_USING_MKL
+/**
+    $Log:$
+ **/
 
-#ifdef NEKTAR_USING_ACML
-#include <@ACML_LAPACK_INCLUDE_FILE@>
-#endif //NEKTAR_USING_ACML
 
-// dgetrs is defined as normal in MKL.  We'll only need a common interface here
-// if things are different in other implementations.
-//void dgetrs(char *trans, int *n, int *nrhs, double *a, int *lda, int *ipiv, double *b, int *ldb, int *info)
-
-/// \brief A simplified interface to dgetrs.
-/// \param matrixRows The number of rows in matrix A.
-/// \param matrixColumns The number of columns in matrix A.
-/// \param A row major, 1D array of elements of A.
-/// \param b The input vector values b
-/// \param x The output vector x.
-///
-/// Solves the system Ax=b, where A is a general, full matrix.
-void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x);
-#endif //NEKTAR_USING_LAPACK
-
-#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_LAPACK_H

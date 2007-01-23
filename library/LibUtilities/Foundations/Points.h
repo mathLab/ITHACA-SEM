@@ -120,16 +120,17 @@ namespace Nektar
                 int dimpoints;
                 switch(m_pointstype)
                 {
-                case eNodalTriElec:
-                case eNodalTriFekete:
-                    dimpoints = 2;
-                    break;
-                case eNodalTetElec:
-                    dimpoints = 3;
-                    break;
+                    case eNodalTriElec:
+                    case eNodalTriFekete:
+                        dimpoints = 2;
+                        break;
 
-                default:
-                    dimpoints = 1;
+                    case eNodalTetElec:
+                        dimpoints = 3;
+                        break;
+
+                    default:
+                        dimpoints = 1;
                 }
                 return dimpoints;
             }
@@ -141,18 +142,17 @@ namespace Nektar
 
                 switch(m_pointstype)
                 {
-                case eNodalTriElec:
-                    totpoints = m_numpoints*(m_numpoints+1)/2;
-                    break;
-                case eNodalTriFekete:
-                    totpoints = m_numpoints*(m_numpoints+1)/2;
-                    break;
-                case eNodalTetElec:
-                    totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
-                    break;
-
-                default:
-                    totpoints = m_numpoints;
+                    case eNodalTriElec:
+                        totpoints = m_numpoints*(m_numpoints+1)/2;
+                        break;
+                    case eNodalTriFekete:
+                        totpoints = m_numpoints*(m_numpoints+1)/2;
+                        break;
+                    case eNodalTetElec:
+                        totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
+                        break;
+                    default:
+                        totpoints = m_numpoints;
                 }
                 return totpoints;
             }
@@ -217,7 +217,7 @@ namespace Nektar
                 return m_pointsKey.GetNumPoints();
             }
 
-            inline unsinged int GetTotNumPoints() const
+            inline unsigned int GetTotNumPoints() const
             {
                 return m_pointsKey.GetTotNumPoints();
             }

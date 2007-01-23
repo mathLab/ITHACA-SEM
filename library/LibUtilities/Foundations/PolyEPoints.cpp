@@ -39,13 +39,13 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Polylib/Polylib.h>
-#include <LibUtilities/Foundations/NodalTriFekete.h>
+#include <LibUtilities/Foundations/PolyEPoints.h>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        void NodalTriFekete::CalculatePoints()
+        void PolyEPoints::CalculatePoints()
         {
             // Allocate the storage for points
             Points<double>::CalculatePoints();
@@ -55,7 +55,7 @@ namespace Nektar
             
         }
 
-        void NodalTriFekete::CalculateWeights()
+        void PolyEPoints::CalculateWeights()
         {
             // Allocate the storage for weights
             Points<double>::CalculateWeights();
@@ -63,19 +63,19 @@ namespace Nektar
 
         }
 
-        void NodalTriFekete::CalculateDerivMatrix()
+        void PolyEPoints::CalculateDerivMatrix()
         {
             // Allocate the derivative matrix
             Points<double>::CalculateDerivMatrix();
         }
 
-        NodalTriFekete::NodalTriFekete(const PointsKey &key) : Points<double>(key)
+        PolyEPoints::PolyEPoints(const PointsKey &key) : Points<double>(key)
         {
         }
 
-        boost::shared_ptr< Points<double> > NodalTriFekete::Create(const PointsKey &key)
+        boost::shared_ptr< Points<double> > PolyEPoints::Create(const PointsKey &key)
         {
-            boost::shared_ptr< Points<double> > returnval(new NodalTriFekete(key);
+            boost::shared_ptr< Points<double> > returnval(new PolyEPoints(key);
 
             returnval->Initialize();
 

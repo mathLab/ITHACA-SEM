@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Points1D.cpp
+// File Points1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,62 +29,42 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: 1D Points definitions 
+// Description: Header file of 1D Points definition 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Foundations.hpp>
+#ifndef NODALTRIELEC_H
+#define NODALTRIELEC_H
 
+#include <math.h>
+#include <boost/shared_ptr.hpp>
+#include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/Polylib/Polylib.h>
-#include <LibUtilities/Foundations/NodalTriFekete.h>
+#include <LibUtilities/Foundations/Points.h>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        void NodalTriFekete::CalculatePoints()
+        class NodalTriElec: public Points<double>
         {
-            // Allocate the storage for points
-            Points<double>::CalculatePoints();
-            
-            ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
-                
-            
-        }
+        public:
+            NodalTriElec(const PointsKey &key)
 
-        void NodalTriFekete::CalculateWeights()
-        {
-            // Allocate the storage for weights
-            Points<double>::CalculateWeights();
+            virtual ~NodalTriElec()
+            {
+            }
 
+            static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
 
-        }
+        protected:
 
-        void NodalTriFekete::CalculateDerivMatrix()
-        {
-            // Allocate the derivative matrix
-            Points<double>::CalculateDerivMatrix();
-        }
+        private:
+            void CalculatePoints();
+            void CalculateWeights();
+            void CalculateDerivMatrix();
+        };
+    } // end of namespace
+} // end of namespace 
 
-        NodalTriFekete::NodalTriFekete(const PointsKey &key) : Points<double>(key)
-        {
-        }
-
-        boost::shared_ptr< Points<double> > NodalTriFekete::Create(const PointsKey &key)
-        {
-            boost::shared_ptr< Points<double> > returnval(new NodalTriFekete(key);
-
-            returnval->Initialize();
-
-            return returnval;
-        }
-
-    } // end of namespace stdregion
-} // end of namespace stdregion
-
-
-
-
+#endif //NODALTRIELEC_H

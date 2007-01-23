@@ -39,13 +39,13 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Polylib/Polylib.h>
-#include <LibUtilities/Foundations/NodalTriFekete.h>
+#include <LibUtilities/Foundations/FourierPoints.h>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        void NodalTriFekete::CalculatePoints()
+        void FourierPoints::CalculatePoints()
         {
             // Allocate the storage for points
             Points<double>::CalculatePoints();
@@ -55,7 +55,7 @@ namespace Nektar
             
         }
 
-        void NodalTriFekete::CalculateWeights()
+        void FourierPoints::CalculateWeights()
         {
             // Allocate the storage for weights
             Points<double>::CalculateWeights();
@@ -63,19 +63,19 @@ namespace Nektar
 
         }
 
-        void NodalTriFekete::CalculateDerivMatrix()
+        void FourierPoints::CalculateDerivMatrix()
         {
             // Allocate the derivative matrix
             Points<double>::CalculateDerivMatrix();
         }
 
-        NodalTriFekete::NodalTriFekete(const PointsKey &key) : Points<double>(key)
+        FourierPoints::FourierPoints(const PointsKey &key) : Points<double>(key)
         {
         }
 
-        boost::shared_ptr< Points<double> > NodalTriFekete::Create(const PointsKey &key)
+        boost::shared_ptr< Points<double> > FourierPoints::Create(const PointsKey &key)
         {
-            boost::shared_ptr< Points<double> > returnval(new NodalTriFekete(key);
+            boost::shared_ptr< Points<double> > returnval(new FourierPoints(key);
 
             returnval->Initialize();
 

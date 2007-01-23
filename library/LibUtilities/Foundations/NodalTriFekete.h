@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NodalTriFekete.h
+// File Points1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: Header for 2D Fekete Points on a Tri (in Barocentric Coordinates)
+// Description: Header file of 1D Points definition 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -37,47 +37,34 @@
 #define NODALTRIFEKETE_H
 
 #include <math.h>
+#include <boost/shared_ptr.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/Foundations/Points.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-
-const int NodalTriFeketeAvailable = 16;
-static const int NodalTriFeketeNPTS[] = {1,2,3,4,5,7,8,10,12,14,16,19,21,24,27,30};
+#include <LibUtilities/Foundations/Points.h>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        class NodalTriFekete: public Points<double,2>
+        class NodalTriFekete: public Points<double>
         {
         public:
-            NodalTriFekete()
-            {
-                NEKERROR(efatal, "This constructor should not be called");
-            }
- 
-            NodalTriFekete(const int &order): 
-                Points<double,2>(order,eNodalTriFekete,eWildcard)
-            {
-            }
+            NodalTriFekete(const PointsKey &key)
 
             virtual ~NodalTriFekete()
             {
             }
 
+            static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
 
         protected:
 
-
         private:
-            virtual void CalculateNumPoints();
-            virtual void CalculatePoints();
-            virtual void CalculateWeights();
-            virtual void CalculateDerivMatrix();
-        };  
-        
-
+            void CalculatePoints();
+            void CalculateWeights();
+            void CalculateDerivMatrix();
+        };
     } // end of namespace
 } // end of namespace 
 
-#endif
+#endif //NODALTRIFEKETE_H

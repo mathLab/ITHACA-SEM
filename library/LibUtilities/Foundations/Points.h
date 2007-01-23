@@ -219,14 +219,14 @@ namespace Nektar
                 z = m_points[2];
             }
 
-            //inline const boost::shared_ptr<NekMatrix<DataType> > GetI(PointsKey)
-            //{
-            //    return m_derivmatrix;
-            //}
+            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(PointsKey)
+            {
+                return m_derivmatrix;
+            }
 
             inline const boost::shared_ptr<NekMatrix<DataType> > GetD() const
             {
-                //return m_derivmatrix;
+                return m_derivmatrix;
             }
 
             inline const boost::shared_ptr<NekMatrix<DataType> > GetI(double x) const
@@ -248,7 +248,7 @@ namespace Nektar
             PointsKey m_pointsKey;
             DataType **m_points;
             DataType *m_weights;
-            //            boost::shared_ptr<NekMatrix<DataType> > m_derivmatrix;
+            boost::shared_ptr<NekMatrix<DataType> > m_derivmatrix;
 
             virtual void CalculatePoints()
             {

@@ -113,14 +113,7 @@ namespace Nektar
 	     */
             inline bool SamePoints(const BasisKey &x) const
             {
-               /* if(x.m_pointsKey == m_pointsKey)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }*/
+               return (x.m_pointsKey == m_pointsKey);
             }
 
             /** \brief Check to see if basis expansions x is the same as the

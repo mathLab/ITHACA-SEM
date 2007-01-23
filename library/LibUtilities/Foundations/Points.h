@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef POINTS_HPP
-#define POINTS_HPP
+#ifndef POINTS_H
+#define POINTS_H
 
 #include <math.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -51,7 +51,7 @@ namespace Nektar
         class PointsKey
         {
         public:
-            // Use for looking up the creator.  The creator for number of points
+            // Used for looking up the creator.  The creator for number of points
             // can generate for any number, so we want the same creator called
             // for all number.
             struct opLess
@@ -59,14 +59,9 @@ namespace Nektar
                 bool operator()(const PointsKey &lhs, const PointsKey &rhs);
             };
 
-            PointsKey()
-            {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for PointsKey should not be called");
-            }
-
-
+           
             PointsKey(const int &numpoints, const PointsType &pointstype): 
-            m_numpoints(numpoints), 
+                m_numpoints(numpoints), 
                 m_pointstype(pointstype)
             {
             }
@@ -91,11 +86,6 @@ namespace Nektar
             inline unsigned int GetNumPoints() const
             {
                 return m_numpoints;
-            }
-
-            inline unsigned int GetTotNumPoints() const
-            {
-                exit(0);//return m_numpoints;
             }
 
             inline PointsType GetPointsType() const
@@ -124,6 +114,49 @@ namespace Nektar
                 return (!(*this == *y));
             }
 
+            // If new points are added, this function must be modified
+            inline unsigned int GetPointsDim()
+            {
+                int dimpoints;
+                switch(m_pointstype)
+                {
+                case eNodalTriElec:
+                case eNodalTriFekete:
+                    dimpoints = 2;
+                    break;
+                case eNodalTetElec:
+                    dimpoints = 3;
+                    break;
+
+                default:
+                    dimpoints = 1;
+                }
+                return dimpoints;
+            }
+
+            // If new points are added, this function must be modified
+            inline unsigned int GetTotNumPoints()
+            {
+                int totpoints;
+
+                switch(m_pointstype)
+                {
+                case eNodalTriElec:
+                    totpoints = m_numpoints*(m_numpoints+1)/2;
+                    break;
+                case eNodalTriFekete:
+                    totpoints = m_numpoints*(m_numpoints+1)/2;
+                    break;
+                case eNodalTetElec:
+                    totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
+                    break;
+
+                default:
+                    totpoints = m_numpoints;
+                }
+                return totpoints;
+            }
+
             friend bool operator<(const PointsKey &lhs, const PointsKey &rhs);
             friend bool opLess::operator()(const PointsKey &lhs, const PointsKey &rhs);
 
@@ -132,6 +165,13 @@ namespace Nektar
             PointsType m_pointstype;      //!< Type of Points
 
         private:
+
+            // This should never be called
+            PointsKey()
+            {
+                NEKERROR(ErrorUtil::efatal,"Default Constructor for PointsKey should not be called");
+            }
+
         };
 
         bool operator<(const PointsKey &lhs, const PointsKey &rhs);
@@ -149,18 +189,15 @@ namespace Nektar
 
             virtual ~Points()
             {
-                //if(m_pointsKey.GetNumPoints())
-                //{
-                //    unsigned int dim = m_pkey.GetPointsDim();
+                unsigned int dim = m_pointsKey.GetPointsDim();
+                
+                for(unsigned int i = 0; i < dim; ++i)
+                {
+                    delete[] m_points[i];
+                }
 
-                //    for(unsigned int i = 0; i < dim; ++i)
-                //    {
-                //        delete[] m_points[i];
-                //    }
-
-                //    delete[] m_points;
-                //    delete[] m_weights;
-                //}
+                delete[] m_points;
+                delete[] m_weights;
             }
 
             void Initialize(void)
@@ -172,12 +209,17 @@ namespace Nektar
 
             inline unsigned int GetPointsDim() const
             {
-                return 1;
+                return m_pointsKey.GetPointsDim();
             }
 
             inline unsigned int GetNumPoints() const
             {
                 return m_pointsKey.GetNumPoints();
+            }
+
+            inline unsinged int GetTotNumPoints() const
+            {
+                return m_pointsKey.GetTotNumPoints();
             }
 
             inline PointsType GetPointsType() const
@@ -219,29 +261,24 @@ namespace Nektar
                 z = m_points[2];
             }
 
-            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(PointsKey)
-            {
-                return m_derivmatrix;
-            }
-
             inline const boost::shared_ptr<NekMatrix<DataType> > GetD() const
             {
                 return m_derivmatrix;
             }
 
-            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(double x) const
+            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(const PointsKey &pkey)
             {
-                //return m_derivmatrix;
+                return m_derivmatrix;
             }
 
-            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, double *x) const
+            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(double x)
             {
-                //return m_derivmatrix;
+                return m_derivmatrix;
             }
 
-            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(PointsKey pkey) const
+            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, const double *x)
             {
-                //return m_derivmatrix;
+                return m_derivmatrix;
             }
 
         protected:
@@ -252,19 +289,19 @@ namespace Nektar
 
             virtual void CalculatePoints()
             {
-                /*               unsigned int pointsDim = GetPointsDim();
+                unsigned int pointsDim = GetPointsDim();
 
                 m_points = new Points::DataType*[pointsDim];
 
                 for (unsigned int i=0; i<pointsDim; ++i)
                 {
-                m_points[i] = new Points::DataType[GetNumPoints()];
-                }*/
+                    m_points[i] = new Points::DataType[GetTotNumPoints()];
+                }
             }
-
+      
             virtual void CalculateWeights()
             {
-                //m_weights = new Points::DataType[GetNumPoints()];
+                m_weights = new Points::DataType[GetTotNumPoints()];
             }
 
             virtual void CalculateDerivMatrix()
@@ -272,7 +309,7 @@ namespace Nektar
             }
 
         private:
-            // This should never be called.
+            // This should never be called
             Points()
             {
                 NEKERROR(ErrorUtil::efatal,"Default Constructor for Points should not be called");
@@ -282,4 +319,4 @@ namespace Nektar
     }; // end of namespace
 } // end of namespace 
 
-#endif //POINTS_HPP
+#endif //POINTS_H

@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef POINTS1D_H
-#define POINTS1D_H
+#ifndef GAUSSPOINTS_H
+#define GAUSSPOINTS_H
 
 #include <math.h>
 #include <boost/shared_ptr.hpp>
@@ -46,11 +46,10 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        class GaussPolyPoints: public Points<double>
+        class GaussPoints: public Points<double>
         {
         public:
-            GaussPolyPoints(const PointsKey &key,
-                const double alpha, const double beta);
+            GaussPolyPoints(const PointsKey &key)
 
             virtual ~GaussPolyPoints()
             {

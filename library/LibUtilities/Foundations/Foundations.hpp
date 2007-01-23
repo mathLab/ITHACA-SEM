@@ -71,22 +71,22 @@ namespace Nektar
 
         enum PointsType
         {
-            eGaussGaussLegendre,     //!< 1D Gauss quadrature points
-            eGaussRadauMLegendre,
-            eGaussRadauPLegendre,
-            eGaussLobattoLegendre,  //!< 1D Gauss quadrature points
-            eGaussGaussChebyshev,
-            eGaussRadauMChebyshev,
-            eGaussRadauPChebyshev,
-            eGaussLobattoChebyshev,  //!< 1D Gauss quadrature points
-            eGaussRadauMAlpha0Beta1,          //!< Gauss \f$ \alpha =    0, \beta =    1 \f$
-            eGaussRadauMAlpha0Beta2,          //!< Gauss \f$ \alpha =    0, \beta =    2 \f$
-            ePolyEvenlySpaced,          //!< 1D Evenly-spaced points using Lagrange polynomial
-            eFourierEvenlySpaced,       //!< 1D Evenly-spaced points using Fourier Fit
-            eNodalTriElec,        //!< 2D Nodal Electrostatic Points on a Triangle
-            eNodalTriFekete,      //!< 2D Nodal Fekete Points on a Triangle
-            eNodalTetElec,        //!< 3D Nodal Electrostatic Points on a Tetrahedron
-            SIZE_PointsType       //!< Length of enum list
+            eGaussGaussLegendre,     //!< 1D Gauss-Gauss-Legendre quadrature points
+            eGaussRadauMLegendre,    //!< 1D Gauss-Radau-Legendre quadrature points, pinned at x=-1
+            eGaussRadauPLegendre,    //!< 1D Gauss-Radau-Legendre quadrature points, pinned at x=1
+            eGaussLobattoLegendre,   //!< 1D Gauss-Lobatto-Legendre quadrature points
+            eGaussGaussChebyshev,    //!< 1D Gauss-Gauss-Chebyshev quadrature points
+            eGaussRadauMChebyshev,   //!< 1D Gauss-Radau-Chebyshev quadrature points, pinned at x=-1
+            eGaussRadauPChebyshev,   //!< 1D Gauss-Radau-Chebyshev quadrature points, pinned at x=1
+            eGaussLobattoChebyshev,  //!< 1D Gauss-Lobatto-Legendre quadrature points
+            eGaussRadauMAlpha0Beta1, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    1 \f$
+            eGaussRadauMAlpha0Beta2, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    2 \f$
+            ePolyEvenlySpaced,       //!< 1D Evenly-spaced points using Lagrange polynomial
+            eFourierEvenlySpaced,    //!< 1D Evenly-spaced points using Fourier Fit
+            eNodalTriElec,           //!< 2D Nodal Electrostatic Points on a Triangle
+            eNodalTriFekete,         //!< 2D Nodal Fekete Points on a Triangle
+            eNodalTetElec,           //!< 3D Nodal Electrostatic Points on a Tetrahedron
+            SIZE_PointsType          //!< Length of enum list
         };
 
         const char* const PointsTypeMap[] = 

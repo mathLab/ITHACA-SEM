@@ -45,7 +45,7 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        void GaussPolyPoints::CalculatePoints()
+        void GaussPoints::CalculatePoints()
         {
             // Allocate the points.
             Points<double>::CalculatePoints();
@@ -53,29 +53,25 @@ namespace Nektar
             // Now set the points.
         }
 
-        void GaussPolyPoints::CalculateWeights()
+        void GaussPoints::CalculateWeights()
         {
             // Allocate the weights.
             Points<double>::CalculateWeights();
         }
 
-        void GaussPolyPoints::CalculateDerivMatrix()
+        void GaussPoints::CalculateDerivMatrix()
         {
             // Allocate the derivative matrix.
             Points<double>::CalculateDerivMatrix();
         }
 
-        GaussPolyPoints::GaussPolyPoints(const PointsKey &key, 
-            const double alpha, const double beta):
-        Points<double>(key),
-            m_alpha(alpha),
-            m_beta(beta)
+        GaussPoints::GaussPoints(const PointsKey &key) : Points<double>(key)
         {
         }
 
-        boost::shared_ptr< Points<double> > GaussPolyPoints::Create(const PointsKey &key)
+        boost::shared_ptr< Points<double> > GaussPoints::Create(const PointsKey &key)
         {
-            boost::shared_ptr< Points<double> > returnval(new GaussPolyPoints(key, 1.0, 1.0));
+            boost::shared_ptr< Points<double> > returnval(new GaussPolyPoints(key);
 
             returnval->Initialize();
 

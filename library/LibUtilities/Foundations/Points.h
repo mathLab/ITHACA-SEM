@@ -93,23 +93,23 @@ namespace Nektar
                 return m_pointstype;
             }
 
-            bool operator==(const PointsKey &key)
+            inline bool operator==(const PointsKey &key)
             {
                 return (m_numpoints == key.m_numpoints &&
                     m_pointstype == key.m_pointstype);
             }
 
-            bool operator == (const PointsKey *y)
+            inline bool operator== (const PointsKey *y)
             {
                 return (*this == *y);
             }
 
-            bool operator != (const PointsKey& y)
+            inline bool operator != (const PointsKey& y)
             {
                 return (!(*this == y));
             }
 
-            bool operator != (const PointsKey *y)
+            inline bool operator != (const PointsKey *y)
             {
                 return (!(*this == *y));
             }
@@ -157,6 +157,7 @@ namespace Nektar
                 return totpoints;
             }
 
+            friend bool operator==(const PointsKey &lhs, const PointsKey &rhs);
             friend bool operator<(const PointsKey &lhs, const PointsKey &rhs);
             friend bool opLess::operator()(const PointsKey &lhs, const PointsKey &rhs);
 
@@ -174,6 +175,7 @@ namespace Nektar
 
         };
 
+        bool operator==(const PointsKey &lhs, const PointsKey &rhs);
         bool operator<(const PointsKey &lhs, const PointsKey &rhs);
         std::ostream& operator<<(std::ostream& os, const PointsKey& rhs);
 

@@ -42,6 +42,7 @@ namespace Nektar
     {
         enum BasisType
         {
+            eNoBasisType,
             eOrtho_A,      //!< Principle Orthogonal Functions \f$\widetilde{\psi}^a_p(z_i)\f$
             eOrtho_B,      //!< Principle Orthogonal Functions \f$\widetilde{\psi}^b_{pq}(z_i)\f$
             eOrtho_C,      //!< Principle Orthogonal Functions \f$\widetilde{\psi}^c_{pqr}(z_i)\f$
@@ -57,6 +58,7 @@ namespace Nektar
 
         const char* const BasisTypeMap[] = 
         {
+            "NoBasisType",
             "Ortho_A",
             "Ortho_B",
             "Ortho_C",
@@ -71,6 +73,7 @@ namespace Nektar
 
         enum PointsType
         {
+            eNoPointsType,
             eGaussGaussLegendre,     //!< 1D Gauss-Gauss-Legendre quadrature points
             eGaussRadauMLegendre,    //!< 1D Gauss-Radau-Legendre quadrature points, pinned at x=-1
             eGaussRadauPLegendre,    //!< 1D Gauss-Radau-Legendre quadrature points, pinned at x=1
@@ -91,6 +94,7 @@ namespace Nektar
 
         const char* const PointsTypeMap[] = 
         {
+            "NoPointsType",
             "GaussGaussLegendre",
             "GaussRadauMLegendre",
             "GaussRadauPLegendre",

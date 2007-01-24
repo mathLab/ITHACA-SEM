@@ -56,11 +56,6 @@ namespace Nektar
                 bool operator()(const BasisKey &lhs, const BasisKey &rhs);
             };
 
-            BasisKey()
-            {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor BasisKey should never be called");
-            }
-
             BasisKey(const BasisType btype, const int nummodes, const PointsKey pkey):
 		m_basistype(btype), 
                 m_nummodes(nummodes),
@@ -100,7 +95,6 @@ namespace Nektar
             {
                 return m_pointsKey;
             }
-
 
             /** \brief return type of quadrature */
             inline PointsType GetPointsType() const
@@ -148,17 +142,18 @@ namespace Nektar
 	        PointsKey  m_pointsKey;
 
         private:
+            BasisKey():m_pointsKey(NullPointsKey)
+            {
+                NEKERROR(ErrorUtil::efatal,"Default Constructor BasisKey should never be called");
+            }
         };
+
+        static const BasisKey NullBasisKey(eNoBasisType, 0, NullPointsKey);
 
         /////////////////////////////////////////////////////////////////////////
         class Basis
         {
         public:    
-
-            Basis()
-            {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for Basis should not be called");
-            }
 
             Basis(const BasisKey &bkey): m_basisKey(bkey)
             {
@@ -167,7 +162,7 @@ namespace Nektar
 
 
             //Copy Constructor
-            Basis(const Basis &B)
+            Basis(const Basis &B):m_basisKey(B.m_basisKey)
             {
                 //m_basistype   = B.m_basistype;
                 //m_nummodes    = B.m_nummodes;
@@ -276,6 +271,11 @@ namespace Nektar
             double    *m_bdata;       /**< Basis definition */
             double    *m_dbdata;      /**< Derivative Basis definition */
 
+        private:
+            Basis():m_basisKey(NullBasisKey)
+            {
+                NEKERROR(ErrorUtil::efatal,"Default Constructor for Basis should not be called");
+            }
         };
 
         bool operator<(const BasisKey &lhs, const BasisKey &rhs);

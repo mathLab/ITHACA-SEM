@@ -46,10 +46,12 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        class GaussPoints: public Points<double>
+        typedef Points<double> PointsBaseType;
+
+        class GaussPoints: public PointsBaseType
         {
         public:
-            GaussPoints(const PointsKey &key)
+            GaussPoints(const PointsKey &key):PointsBaseType(key)
             {
             }
 
@@ -57,7 +59,7 @@ namespace Nektar
             {
             }
 
-            static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
+            static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
 
         protected:
 

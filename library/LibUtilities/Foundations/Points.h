@@ -115,9 +115,10 @@ namespace Nektar
             }
 
             // If new points are added, this function must be modified
-            inline unsigned int GetPointsDim()
+            inline unsigned int GetPointsDim() const
             {
-                int dimpoints;
+                int dimpoints = 1;
+
                 switch(m_pointstype)
                 {
                     case eNodalTriElec:
@@ -128,32 +129,31 @@ namespace Nektar
                     case eNodalTetElec:
                         dimpoints = 3;
                         break;
-
-                    default:
-                        dimpoints = 1;
                 }
+
                 return dimpoints;
             }
 
             // If new points are added, this function must be modified
-            inline unsigned int GetTotNumPoints()
+            inline unsigned int GetTotNumPoints() const
             {
-                int totpoints;
+                int totpoints = m_numpoints;
 
                 switch(m_pointstype)
                 {
                     case eNodalTriElec:
                         totpoints = m_numpoints*(m_numpoints+1)/2;
                         break;
+
                     case eNodalTriFekete:
                         totpoints = m_numpoints*(m_numpoints+1)/2;
                         break;
+
                     case eNodalTetElec:
                         totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
                         break;
-                    default:
-                        totpoints = m_numpoints;
                 }
+
                 return totpoints;
             }
 
@@ -174,6 +174,8 @@ namespace Nektar
             }
 
         };
+
+        static const PointsKey NullPointsKey(0, eNoPointsType);
 
         bool operator==(const PointsKey &lhs, const PointsKey &rhs);
         bool operator<(const PointsKey &lhs, const PointsKey &rhs);

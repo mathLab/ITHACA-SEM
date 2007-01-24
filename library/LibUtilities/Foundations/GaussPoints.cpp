@@ -48,56 +48,55 @@ namespace Nektar
         void GaussPoints::CalculatePoints()
         {
             // Allocate the storage for points and weights
-            Points<double>::CalculatePoints();
-            Points<double>::CalculateWeights();
-            
+            PointsBaseType::CalculatePoints();
+            PointsBaseType::CalculateWeights();
+
             int numpoints = m_pointsKey.GetNumPoints();
 
             switch(m_pointsKey.GetPointsType())
             {
-                case eGaussGaussLegendre:
-                    Polylib::zwgj(m_points[0],m_weights,numpoints,0.0,0.0);
-                    break;
+            case eGaussGaussLegendre:
+                Polylib::zwgj(m_points[0],m_weights,numpoints,0.0,0.0);
+                break;
 
-                case eGaussRadauMLegendre:
-                    Polylib::zwgrjm(m_points[0],m_weights,numpoints,0.0,0.0);
-                    break;
+            case eGaussRadauMLegendre:
+                Polylib::zwgrjm(m_points[0],m_weights,numpoints,0.0,0.0);
+                break;
 
-                case eGaussRadauPLegendre:
-                    Polylib::zwgrjp(m_points[0],m_weights,numpoints,0.0,0.0);
-                    break;
+            case eGaussRadauPLegendre:
+                Polylib::zwgrjp(m_points[0],m_weights,numpoints,0.0,0.0);
+                break;
 
-                case eGaussLobattoLegendre: 
-                    Polylib::zwglj(m_points[0],m_weights,numpoints,0.0,0.0);
-                    break;
+            case eGaussLobattoLegendre: 
+                Polylib::zwglj(m_points[0],m_weights,numpoints,0.0,0.0);
+                break;
 
-                case eGaussGaussChebyshev:
-                    Polylib::zwgj(m_points[0],m_weights,numpoints,-0.5,-0.5);
-                    break;
+            case eGaussGaussChebyshev:
+                Polylib::zwgj(m_points[0],m_weights,numpoints,-0.5,-0.5);
+                break;
 
-                case eGaussRadauMChebyshev:
-                    Polylib::zwgrjm(m_points[0],m_weights,numpoints,-0.5,-0.5);
-                    break;
+            case eGaussRadauMChebyshev:
+                Polylib::zwgrjm(m_points[0],m_weights,numpoints,-0.5,-0.5);
+                break;
 
-                case eGaussRadauPChebyshev:
-                    Polylib::zwgrjp(m_points[0],m_weights,numpoints,-0.5,-0.5);
-                    break;
+            case eGaussRadauPChebyshev:
+                Polylib::zwgrjp(m_points[0],m_weights,numpoints,-0.5,-0.5);
+                break;
 
-                case eGaussLobattoChebyshev: 
-                    Polylib::zwglj(m_points[0],m_weights,numpoints,-0.5,-0.5);
-                    break;
+            case eGaussLobattoChebyshev: 
+                Polylib::zwglj(m_points[0],m_weights,numpoints,-0.5,-0.5);
+                break;
 
-                case eGaussRadauMAlpha0Beta1:
-                    Polylib::zwgrjm(m_points[0],m_weights,numpoints,0.0,1.0);
-                    break;
-                    
-                case eGaussRadauMAlpha0Beta2:
-                    Polylib::zwgrjm(m_points[0],m_weights,numpoints,0.0,2.0);
-                    break;
+            case eGaussRadauMAlpha0Beta1:
+                Polylib::zwgrjm(m_points[0],m_weights,numpoints,0.0,1.0);
+                break;
 
-                default:
-                    ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
-                }
+            case eGaussRadauMAlpha0Beta2:
+                Polylib::zwgrjm(m_points[0],m_weights,numpoints,0.0,2.0);
+                break;
+
+            default:
+                ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
             }
         }
 
@@ -112,21 +111,17 @@ namespace Nektar
             Points<double>::CalculateDerivMatrix();
         }
 
-        GaussPoints::GaussPoints(const PointsKey &key) : Points<double>(key)
+        boost::shared_ptr< PointsBaseType > GaussPoints::Create(const PointsKey &key)
         {
-        }
-
-        boost::shared_ptr< Points<double> > GaussPoints::Create(const PointsKey &key)
-        {
-            boost::shared_ptr< Points<double> > returnval(new GaussPoints(key);
+            boost::shared_ptr< PointsBaseType > returnval(new GaussPoints(key));
 
             returnval->Initialize();
 
             return returnval;
         }
 
-    } // end of namespace stdregion
-} // end of namespace stdregion
+    } // end of namespace LibUtilities
+} // end of namespace Nektar
 
 
 

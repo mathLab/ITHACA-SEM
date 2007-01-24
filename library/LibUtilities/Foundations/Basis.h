@@ -57,7 +57,7 @@ namespace Nektar
             };
 
             BasisKey(const BasisType btype, const int nummodes, const PointsKey pkey):
-		m_basistype(btype), 
+		        m_basistype(btype), 
                 m_nummodes(nummodes),
                 m_pointsKey(pkey)
 	        {
@@ -85,6 +85,11 @@ namespace Nektar
                 return m_pointsKey.GetNumPoints();
             }
 
+            inline int GetTotNumPoints() const
+            {
+                return m_pointsKey.GetTotNumPoints();
+            }
+
             /** \brief return type of expansion basis */
             inline BasisType GetBasisType() const
             {
@@ -102,17 +107,14 @@ namespace Nektar
                 return m_pointsKey.GetPointsType();
             }    
 
-            /** \brief Check to see if the quadrature of expansions x is the
-	     *  same as the calling basis
-	     */
+            /** \brief Check to see if the quadrature of expansions x is the same as the calling basis */
+
             inline bool SamePoints(const BasisKey &x) const
             {
                return (x.m_pointsKey == m_pointsKey);
             }
 
-            /** \brief Check to see if basis expansions x is the same as the
-	     *  calling basis
-	     */
+            /** \brief Check to see if basis expansions x is the same as the calling basis */
             inline bool SameExp(const BasisKey &x) const
             {
                 if((x.m_nummodes == m_nummodes)&&(x.m_basistype == m_basistype))
@@ -228,29 +230,6 @@ namespace Nektar
                 return m_basisKey.GetPointsType();
             }    
 
-
-            void ResetBasisNumModes(int nummodes)
-            {
-                //m_nummodes = nummodes;
-
-                //if(m_bdata)
-                //{
-                //    delete[] m_bdata;  //delete old space
-                //    m_bdata = NULL;
-                //}
-
-                //if(m_dbdata)
-                //{
-                //    delete[] m_dbdata;  //delete old space
-                //    m_bdata = NULL;
-                //}
-
-                //m_bdata  = new double[BasisMem()]; //allocate new space
-                //m_dbdata = new double[BasisMem()]; //allocate new space
-
-                //GenBasis();
-            }
-
             /** \brief return basis definition array m_bdata */
             inline const double * GetBdata() const
             {
@@ -262,8 +241,6 @@ namespace Nektar
             {
                 return m_dbdata;
             }
-
-
 
 
         protected:
@@ -282,7 +259,7 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const BasisKey& rhs);
 
-	typedef boost::shared_ptr<Basis> BasisSharedPtr;
+        typedef boost::shared_ptr<Basis> BasisSharedPtr;
 
     } // end of namespace
 } // end of namespace

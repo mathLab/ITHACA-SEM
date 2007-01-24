@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: Header file of 1D Points definition 
+// Description: Header file of GaussPoints Distributions
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -58,6 +58,8 @@ namespace Nektar
             virtual ~GaussPoints()
             {
             }
+
+            
 
             static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
 

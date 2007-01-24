@@ -310,6 +310,8 @@ namespace Nektar
 
             virtual void CalculateDerivMatrix()
             {
+                int totpoints = m_pointsKey.GetTotNumPoints();
+                m_derivmatrix.reset(new NekMatrix<DataType>(totpoints,totpoints));
             }
 
         private:

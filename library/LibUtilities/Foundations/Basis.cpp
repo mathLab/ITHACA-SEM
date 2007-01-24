@@ -100,7 +100,6 @@ namespace Nektar
       void GenBasis();
 
 
-
         void Basis::GenBasis(){
 
             ASSERTL0(m_basisorder>0, "Cannot call Basis initialisation with zero or negative order");
@@ -617,6 +616,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.3  2007/01/20 22:21:17  kirby
+* *** empty log message ***
+*
 * Revision 1.2  2007/01/17 11:35:52  pvos
 * updating doxygen documentation
 *

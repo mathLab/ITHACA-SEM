@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Points1D.h
+// File NodalTriFekete.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: Header file of 1D Points definition 
+// Description: Header file of 2D Nodal Triangle Fekete Points 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -46,10 +46,15 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        class NodalTriFekete: public Points<double>
+ 
+        typedef Points<double> PointsBaseType;
+
+        class NodalTriFekete: public PointsBaseType
         {
         public:
-            NodalTriFekete(const PointsKey &key)
+            NodalTriFekete(const PointsKey &key):PointsBaseType(key)
+            {
+            }
 
             virtual ~NodalTriFekete()
             {
@@ -63,6 +68,7 @@ namespace Nektar
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
+            void NodalPointReorder2d();
         };
     } // end of namespace
 } // end of namespace 

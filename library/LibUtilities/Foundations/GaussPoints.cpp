@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: 1D Points definitions 
+// Description: GaussPoints Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -109,7 +109,71 @@ namespace Nektar
         {
             // Allocate the derivative matrix.
             Points<double>::CalculateDerivMatrix();
+            
+            int numpoints = m_pointsKey.GetNumPoints();
+            int totpoints = m_pointsKey.GetTotNumPoints();
+            double * dmtemp = new double[totpoints*totpoints];
+
+            switch(m_pointsKey.GetPointsType())
+            {
+                case eGaussGaussLegendre:
+                    Polylib::Dgj(dmtemp,m_points[0],numpoints,0.0,0.0);
+                    break;
+
+                case eGaussRadauMLegendre:
+                    Polylib::Dgrjm(dmtemp,m_points[0],numpoints,0.0,0.0);
+                    break;
+
+                case eGaussRadauPLegendre:
+                    Polylib::Dgrjp(dmtemp,m_points[0],numpoints,0.0,0.0);
+                    break;
+
+                case eGaussLobattoLegendre:
+                    Polylib::Dglj(dmtemp,m_points[0],numpoints,0.0,0.0);
+                    break;
+
+                case eGaussGaussChebyshev:
+                    Polylib::Dgj(dmtemp,m_points[0],numpoints,-0.5,-0.5);
+                    break;
+
+                case eGaussRadauMChebyshev:
+                    Polylib::Dgrjm(dmtemp,m_points[0],numpoints,-0.5,-0.5);
+                    break;
+
+                case eGaussRadauPChebyshev:
+                    Polylib::Dgrjp(dmtemp,m_points[0],numpoints,-0.5,-0.5);
+                    break;
+
+                case eGaussLobattoChebyshev:
+                    Polylib::Dglj(dmtemp,m_points[0],numpoints,-0.5,-0.5);
+                    break;
+
+                case eGaussRadauMAlpha0Beta1:
+                    Polylib::Dgrjm(dmtemp,m_points[0],numpoints,0.0,1.0);
+                    break;
+
+                case eGaussRadauMAlpha0Beta2:
+                    Polylib::Dgrjm(dmtemp,m_points[0],numpoints,0.0,2.0);
+                    break;
+
+                default:
+                    ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
+            }
+
+            for(int i=0; i<totpoints; ++i)
+            {
+                for(int j=0; j<totpoints; ++j)
+                {
+                    (*m_derivmatrix)(i,j) = dmtemp[j+i*totpoints];
+                }
+            }
+
+            delete[] dmtemp;
+
         }
+
+
+
 
         boost::shared_ptr< PointsBaseType > GaussPoints::Create(const PointsKey &key)
         {

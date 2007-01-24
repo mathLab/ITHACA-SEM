@@ -44,6 +44,12 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+        bool operator==(const PointsKey &lhs, const PointsKey &rhs)
+        {
+            return (lhs.m_numpoints == rhs.m_numpoints &&
+                lhs.m_pointstype == rhs.m_pointstype);
+        }
+
         bool operator<(const PointsKey &lhs, const PointsKey &rhs)
         {
             if (lhs.m_numpoints < rhs.m_numpoints) return true;

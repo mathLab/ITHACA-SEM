@@ -89,13 +89,17 @@ namespace Nektar
                 
                 ~NekManager() {}
         	
-                void RegisterCreator(typename boost::call_traits<KeyType>::const_reference key, 
+                /// Register the given function and associate it with the key.
+                /// The return value is just to facilitate calling statically.
+                bool RegisterCreator(typename boost::call_traits<KeyType>::const_reference key, 
                                      const CreateFuncType& createFunc)
                 {
                     m_keySpecificCreateFuncs[key] = createFunc;
+
+                    return true;
                 }
 
-                ValueType operator[](typename boost::call_traits<KeyType>::const_reference key)
+                ValueType &operator[](typename boost::call_traits<KeyType>::const_reference key)
                 {
                     typename ValueContainer::iterator found = m_values.find(key);
                     if( found != m_values.end() )

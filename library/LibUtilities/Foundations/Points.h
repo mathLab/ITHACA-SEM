@@ -142,9 +142,6 @@ namespace Nektar
                 switch(m_pointstype)
                 {
                     case eNodalTriElec:
-                        totpoints = m_numpoints*(m_numpoints+1)/2;
-                        break;
-
                     case eNodalTriFekete:
                         totpoints = m_numpoints*(m_numpoints+1)/2;
                         break;
@@ -294,24 +291,25 @@ namespace Nektar
             virtual void CalculatePoints()
             {
                 unsigned int pointsDim = GetPointsDim();
+                unsigned int totNumPoints = GetTotNumPoints();
 
-                m_points = new Points::DataType*[pointsDim];
+                m_points = new DataType*[pointsDim];
 
                 for (unsigned int i=0; i<pointsDim; ++i)
                 {
-                    m_points[i] = new Points::DataType[GetTotNumPoints()];
+                    m_points[i] = new DataType[totNumPoints];
                 }
             }
       
             virtual void CalculateWeights()
             {
-                m_weights = new Points::DataType[GetTotNumPoints()];
+                m_weights = new DataType[GetTotNumPoints()];
             }
 
             virtual void CalculateDerivMatrix()
             {
-                int totpoints = m_pointsKey.GetTotNumPoints();
-                m_derivmatrix.reset(new NekMatrix<DataType>(totpoints,totpoints));
+                int totNumPoints = GetTotNumPoints();
+                m_derivmatrix.reset(new NekMatrix<DataType>(totNumPoints,totNumPoints));
             }
 
         private:

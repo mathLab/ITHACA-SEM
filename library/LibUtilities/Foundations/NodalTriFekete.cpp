@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <algorithm>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 
@@ -50,19 +51,18 @@ namespace Nektar
         {
             // Allocate the storage for points
             Points<double>::CalculatePoints();
-            
-            int index,isum;
+
+            int index=0,isum=0;
             double a,b,c;
+            unsigned int numPoints = GetNumPoints();
 
             // initialize values
-            isum = 0;
-            index = 0;
-            for(unsigned int i=0; i < m_pointsKey.GetNumPoints()-1; ++i)
+            for(unsigned int i=0; i < numPoints-2; ++i)
             {
                 index += NodalTriFeketeNPTS[i];
             }
 
-            for(unsigned int i=0; i < NodalTriFeketeNPTS[m_pointsKey.GetNumPoints()]; ++i, ++index)
+            for(unsigned int i=0; i < NodalTriFeketeNPTS[numPoints-2]; ++i, ++index)
             {
                 if(int(NodalTriFeketeData[index][0]))
                 {
@@ -90,7 +90,6 @@ namespace Nektar
                     }//end j
                     continue;
                 }//end symmetry3a
-
 
                 if(int(NodalTriFeketeData[index][1]) == 2)
                 {
@@ -139,13 +138,10 @@ namespace Nektar
             Points<double>::CalculateDerivMatrix();
         }
 
-    
         boost::shared_ptr< Points<double> > NodalTriFekete::Create(const PointsKey &key)
         {
             boost::shared_ptr< Points<double> > returnval(new NodalTriFekete(key));
-
             returnval->Initialize();
-
             return returnval;
         }
 
@@ -153,8 +149,7 @@ namespace Nektar
         {
             int istart,iend,isum=0;
             const int numvert = 3;
-            const int numepoints = m_pointsKey.GetNumPoints()-1;
-            double tmpdouble;
+            const int numepoints = GetNumPoints()-2;
 
             if(numepoints==0)
             {
@@ -168,15 +163,10 @@ namespace Nektar
             {
                 for(int j=istart; j<iend-1; ++j)
                 {
-                    if(m_points[j+1][0] < m_points[j][0])
+                    if(m_points[0][j+1] < m_points[0][j])
                     {
-                        tmpdouble = m_points[j+1][0];
-                        m_points[j+1][0] = m_points[j][0];
-                        m_points[j][0] = tmpdouble;
-
-                        tmpdouble = m_points[j+1][1];
-                        m_points[j+1][1] = m_points[j][1];
-                        m_points[j][1] = tmpdouble;
+                        std::swap(m_points[0][j+1], m_points[0][j]);
+                        std::swap(m_points[1][j+1], m_points[1][j]);
                     }
                 }
             }
@@ -189,15 +179,10 @@ namespace Nektar
             {
                 for(int j=istart;j<iend-1; ++j)
                 {
-                    if(m_points[j+1][0] > m_points[j][0])
+                    if(m_points[0][j+1] > m_points[0][j])
                     {
-                        tmpdouble = m_points[j+1][0];
-                        m_points[j+1][0] = m_points[j][0];
-                        m_points[j][0] = tmpdouble;
-
-                        tmpdouble = m_points[j+1][1];
-                        m_points[j+1][1] = m_points[j][1];
-                        m_points[j][1] = tmpdouble;
+                        std::swap(m_points[0][j+1], m_points[0][j]);
+                        std::swap(m_points[1][j+1], m_points[1][j]);
                     }
                 }
             }
@@ -210,27 +195,20 @@ namespace Nektar
             {
                 for(int j=istart; j<iend-1; ++j)
                 {
-                    if(m_points[j+1][1] > m_points[j][1])
+                    if(m_points[1][j+1] > m_points[1][j])
                     {
-                        tmpdouble = m_points[j+1][0];
-                        m_points[j+1][0] = m_points[j][0];
-                        m_points[j][0] = tmpdouble;
-
-                        tmpdouble = m_points[j+1][1];
-                        m_points[j+1][1] = m_points[j][1];
-                        m_points[j][1] = tmpdouble;
+                        std::swap(m_points[0][j+1], m_points[0][j]);
+                        std::swap(m_points[1][j+1], m_points[1][j]);
                     }
                 }
             }
-            
+
             return;
-
         }     
-
-
     } // end of namespace stdregion
 } // end of namespace stdregion
 
 
-
-
+/**
+* %Log%
+*/

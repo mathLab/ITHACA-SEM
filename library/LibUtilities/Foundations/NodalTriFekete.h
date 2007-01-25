@@ -41,6 +41,7 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
@@ -52,10 +53,6 @@ namespace Nektar
         class NodalTriFekete: public PointsBaseType
         {
         public:
-            NodalTriFekete(const PointsKey &key):PointsBaseType(key)
-            {
-            }
-
             virtual ~NodalTriFekete()
             {
             }
@@ -65,12 +62,26 @@ namespace Nektar
         protected:
 
         private:
+            NodalTriFekete():PointsBaseType(NullPointsKey)
+            {
+            }
+
+            NodalTriFekete(const PointsKey &key):PointsBaseType(key)
+            {
+            }
+
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
             void NodalPointReorder2d();
         };
-    } // end of namespace
+ 
+        namespace
+        {
+            const bool nodalTriFeketeInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTriFekete), NodalTriFekete::Create);
+        }
+
+   } // end of namespace
 } // end of namespace 
 
 #endif //NODALTRIFEKETE_H

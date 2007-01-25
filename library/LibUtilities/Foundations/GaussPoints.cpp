@@ -169,11 +169,7 @@ namespace Nektar
             }
 
             delete[] dmtemp;
-
         }
-
-
-
 
         boost::shared_ptr< PointsBaseType > GaussPoints::Create(const PointsKey &key)
         {
@@ -187,6 +183,7 @@ namespace Nektar
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 
-
-
+/**
+* %Log%
+*/
 

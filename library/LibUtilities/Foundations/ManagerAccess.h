@@ -48,7 +48,7 @@ namespace Nektar
         typedef NekManager<PointsKey, Points<double>, PointsKey::opLess> PointsManagerT;
         PointsManagerT &PointsManager(void);
 
-	typedef NekManager<BasisKey, Basis, BasisKey::opLess > BasisManagerT;
+	    typedef NekManager<BasisKey, Basis, BasisKey::opLess > BasisManagerT;
         BasisManagerT &BasisManager(void);
 
     } // end of namespace LibUtilities
@@ -56,6 +56,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.h,v $
+Revision 1.5  2007/01/20 21:52:34  sherwin
+Remove Basis template class definitino
+
 Revision 1.4  2007/01/20 21:45:59  kirby
 *** empty log message ***
 

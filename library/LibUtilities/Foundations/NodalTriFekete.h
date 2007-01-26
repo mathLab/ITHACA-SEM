@@ -59,6 +59,28 @@ namespace Nektar
 
             static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
 
+#pragma message("Fix these")
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(const PointsKey &pkey)
+            {
+                boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+
+                return returnval;
+            }
+
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(double x)
+            {
+                boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+
+                return returnval;
+            }
+
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, const double *x)
+            {
+                 boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+
+                return returnval;
+           }
+
         protected:
 
         private:

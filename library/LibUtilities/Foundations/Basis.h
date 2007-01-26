@@ -117,15 +117,12 @@ namespace Nektar
             /** \brief Check to see if basis expansions x is the same as the calling basis */
             inline bool SameExp(const BasisKey &x) const
             {
-                if((x.m_nummodes == m_nummodes)&&(x.m_basistype == m_basistype))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return ((x.m_nummodes == m_nummodes)&&(x.m_basistype == m_basistype));
             }
+
+            int ExactIprodInt(void) const;
+            int Collocation() const;
+            void GetInterpVec(const double zi, double *I) const;
 
             //Overloaded Operators
             friend bool operator  == (const BasisKey& x, const BasisKey& y);
@@ -156,12 +153,6 @@ namespace Nektar
         class Basis
         {
         public:    
-
-            Basis(const BasisKey &bkey): m_basisKey(bkey)
-            {
-
-            }
-
 
             //Copy Constructor
             Basis(const Basis &B):m_basisKey(B.m_basisKey)
@@ -223,7 +214,6 @@ namespace Nektar
                 return m_basisKey.GetPointsKey();
             }
 
-
             /** \brief return type of quadrature */
             inline PointsType GetPointsType() const
             {
@@ -241,14 +231,22 @@ namespace Nektar
             {
                 return m_dbdata;
             }
-
+        
+            int BasisMem();
+            virtual void Initialize();
+            void GenBasis();
 
         protected:
-            BasisKey m_basisKey;
-            double    *m_bdata;       /**< Basis definition */
-            double    *m_dbdata;      /**< Derivative Basis definition */
+            BasisKey    m_basisKey;
+            double      *m_bdata;       /**< Basis definition */
+            double      *m_dbdata;      /**< Derivative Basis definition */
 
         private:
+        
+            Basis(const BasisKey &bkey): m_basisKey(bkey)
+            {
+            }
+
             Basis():m_basisKey(NullBasisKey)
             {
                 NEKERROR(ErrorUtil::efatal,"Default Constructor for Basis should not be called");

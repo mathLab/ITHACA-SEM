@@ -58,6 +58,27 @@ namespace Nektar
 
             static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
 
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(const PointsKey &pkey)
+            {
+                boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+
+                return returnval;
+            }
+
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(double x)
+            {
+                 boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+
+                return returnval;
+           }
+
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, const double *x)
+            {
+                 boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+
+                return returnval;
+           }
+
         protected:
 
         private:
@@ -74,6 +95,7 @@ namespace Nektar
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
+
         }; // class GaussPoints
 
         namespace
@@ -89,7 +111,6 @@ namespace Nektar
             const bool gaussInited9 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre), GaussPoints::Create);
             const bool gaussInited10 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2), GaussPoints::Create);
         }
-
     } // end of namespace
 } // end of namespace 
 

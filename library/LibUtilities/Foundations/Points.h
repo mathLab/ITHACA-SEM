@@ -59,9 +59,9 @@ namespace Nektar
                 bool operator()(const PointsKey &lhs, const PointsKey &rhs);
             };
 
-           
+
             PointsKey(const int &numpoints, const PointsType &pointstype): 
-                m_numpoints(numpoints), 
+            m_numpoints(numpoints), 
                 m_pointstype(pointstype)
             {
             }
@@ -121,14 +121,14 @@ namespace Nektar
 
                 switch(m_pointstype)
                 {
-                    case eNodalTriElec:
-                    case eNodalTriFekete:
-                        dimpoints = 2;
-                        break;
+                case eNodalTriElec:
+                case eNodalTriFekete:
+                    dimpoints = 2;
+                    break;
 
-                    case eNodalTetElec:
-                        dimpoints = 3;
-                        break;
+                case eNodalTetElec:
+                    dimpoints = 3;
+                    break;
                 }
 
                 return dimpoints;
@@ -141,14 +141,14 @@ namespace Nektar
 
                 switch(m_pointstype)
                 {
-                    case eNodalTriElec:
-                    case eNodalTriFekete:
-                        totpoints = m_numpoints*(m_numpoints+1)/2;
-                        break;
+                case eNodalTriElec:
+                case eNodalTriFekete:
+                    totpoints = m_numpoints*(m_numpoints+1)/2;
+                    break;
 
-                    case eNodalTetElec:
-                        totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
-                        break;
+                case eNodalTetElec:
+                    totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
+                    break;
                 }
 
                 return totpoints;
@@ -184,14 +184,10 @@ namespace Nektar
         public:
             typedef DataT DataType;
 
-            Points(const PointsKey &key): m_pointsKey(key)
-            {
-            }
-
             virtual ~Points()
             {
                 unsigned int dim = m_pointsKey.GetPointsDim();
-                
+
                 for(unsigned int i = 0; i < dim; ++i)
                 {
                     delete[] m_points[i];
@@ -201,7 +197,7 @@ namespace Nektar
                 delete[] m_weights;
             }
 
-            void Initialize(void)
+            virtual void Initialize(void)
             {
                 CalculatePoints();
                 CalculateWeights();
@@ -267,20 +263,9 @@ namespace Nektar
                 return m_derivmatrix;
             }
 
-            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(const PointsKey &pkey)
-            {
-                return m_derivmatrix;
-            }
-
-            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(double x)
-            {
-                return m_derivmatrix;
-            }
-
-            inline const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, const double *x)
-            {
-                return m_derivmatrix;
-            }
+            virtual const boost::shared_ptr< NekMatrix<DataType> > GetI(const PointsKey &pkey)=0;
+            virtual const boost::shared_ptr< NekMatrix<DataType> > GetI(double x) = 0;
+            virtual const boost::shared_ptr< NekMatrix<DataType> > GetI(unsigned int numpoints, const double *x) = 0;
 
         protected:
             PointsKey m_pointsKey;
@@ -300,7 +285,7 @@ namespace Nektar
                     m_points[i] = new DataType[totNumPoints];
                 }
             }
-      
+
             virtual void CalculateWeights()
             {
                 m_weights = new DataType[GetTotNumPoints()];
@@ -312,12 +297,21 @@ namespace Nektar
                 m_derivmatrix.reset(new NekMatrix<DataType>(totNumPoints,totNumPoints));
             }
 
-        private:
-            // This should never be called
+            Points(const Points &pts):m_pointskey(pts.m_pointskey)
+            {
+            }
+
+            Points(const PointsKey &key):m_pointsKey(key)
+            {
+            }
+
+       private:
+            // These should never be called
             Points()
             {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for Points should not be called");
+                NEKERROR(ErrorUtil::efatal, "Default Constructor for Points should not be called");
             }
+
         };
 
     }; // end of namespace

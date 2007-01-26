@@ -37,6 +37,7 @@
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/Blas.hpp>
 
 namespace Nektar
 {
@@ -44,18 +45,21 @@ namespace Nektar
     {
         bool operator<(const BasisKey &lhs, const BasisKey &rhs)
         {
-            //if (lhs.m_pointsKey < rhs.m_pointsKey) return true;
-            //if (lhs.m_pointsKey > rhs.m_pointsKey) return false;
+            PointsKey lhsPointsKey = lhs.GetPointsKey();
+            PointsKey rhsPointsKey = rhs.GetPointsKey();
 
-            //if (lhs.m_nummodes < rhs.m_nummodes) return true;
-            //if (lhs.m_nummodes > rhs.m_nummodes) return false;
+            if (lhsPointsKey < rhsPointsKey) return true;
+            if (lhsPointsKey != rhsPointsKey) return false;
 
-            //if (lhs.m_basistype < rhs.m_basistype) return true;
-            //if (lhs.m_basistype > rhs.m_basistype) return false;
+            if (lhs.m_nummodes < rhs.m_nummodes) return true;
+            if (lhs.m_nummodes > rhs.m_nummodes) return false;
+
+            return (lhs.m_basistype < rhs.m_basistype);
         }
 
         bool BasisKey::opLess::operator()(const BasisKey &lhs, const BasisKey &rhs)
         {
+#pragma message("Address this operator")
             /*if (lhs.m_pointsKey < rhs.m_pointsKey) return true;
             if (lhs.m_pointsKey > rhs.m_pointsKey) return false;
 
@@ -63,6 +67,8 @@ namespace Nektar
             if (lhs.m_pointstype > rhs.m_pointstype) return false;
 
             return (lhs.m_pointsid < rhs.m_pointsid);*/
+
+            return true;
         }
 
         std::ostream& operator<<(std::ostream& os, const BasisKey& rhs)
@@ -70,113 +76,123 @@ namespace Nektar
             return os;
         }
 
-
         int Basis::BasisMem()
         {
-	        switch(m_basistype)
+            unsigned int numModes = GetNumModes();
+            unsigned int numPoints = GetNumPoints();
+
+            switch(GetBasisType())
             {
-            case eOrtho_B: case eModified_B: case eModified_C:
-                return  m_basisorder*(m_basisorder+1)/2*m_pointsorder;
+            case eOrtho_B:
+            case eModified_B:
+            case eModified_C:
+                return  numModes*(numModes+1)/2*numPoints;
                 break;
-	        case eOrtho_C:
-                return  m_basisorder*(m_basisorder+1)*(m_basisorder+2)/6*m_pointsorder;
+
+            case eOrtho_C:
+                return  numModes*(numModes+1)*(numModes+2)/6*numPoints;
                 break;
-        	default:
-                return m_basisorder*m_pointsorder;
-        	}       
+
+            default:
+                return numModes*numModes;
+            }       
         }  
-      
-      void Initialize()
-      {
-	// Allocate Memory
-	int size = BasisMem();
-	m_bdata  = new double [size];
-	m_dbdata = new double [size];
-	
-	GenBasis();
-      };
 
-      // Method used to generate appropriate basis
-      void GenBasis();
+        void Basis::Initialize()
+        {
+            // Allocate Memory
+            int size = BasisMem();
+            m_bdata  = new double [size];
+            m_dbdata = new double [size];
 
+            GenBasis();
+        };
 
+        // Method used to generate appropriate basis
         void Basis::GenBasis(){
 
-            ASSERTL0(m_basisorder>0, "Cannot call Basis initialisation with zero or negative order");
+            ASSERTL0(GetNumModes()>0, "Cannot call Basis initialisation with zero or negative order");
 
             int i,p,q;
             double scal,*mode;
-            const double *z,*w,*D;
+            const double *z, *D;//,*w,*D;
             int localPManager = 0;
 
-            PolyManagerSingleton::Instance().GetZW(m_pointstype, m_pointsorder, 
-                z, w, m_alpha, m_beta);
+            //PolyManagerSingleton::Instance().GetZW(m_pointstype, m_pointsorder, 
+            //    z, w, m_alpha, m_beta);
 
-            if(m_basistype != eFourier)
+            BasisType basisType = GetBasisType();
+            int numModes = GetNumModes();
+            int numPoints = GetNumPoints();
+
+            if(basisType != eFourier)
             {
-                PolyManagerSingleton::Instance().GetD (m_pointstype,m_pointsorder,
-                    D,m_alpha,m_beta);
+                //PolyManagerSingleton::Instance().GetD (m_pointstype,m_pointsorder,
+                //    D,m_alpha,m_beta);
             }
 
-            switch(m_basistype)
+#pragma message("Don't get what is going on with this!!!")
+
+            switch(basisType)
             {
-            case eOrtho_A: case eLegendre:
+            case eOrtho_A:
+            case eLegendre:
                 mode = m_bdata;
 
-                for (p=0; p<m_basisorder; ++p, mode += m_pointsorder)
+                for (p=0; p<numModes; ++p, mode += numPoints)
                 {
-                    Polylib::jacobfd(m_pointsorder, z, mode, NULL, p, 0.0, 0.0);
+                    Polylib::jacobfd(numPoints, z, mode, NULL, p, 0.0, 0.0);
 
                     // normalise 
                     scal = sqrt(0.5*(2.0*p+1.0));
-                    for(i = 0; i < m_pointsorder; ++i)
+                    for(i = 0; i < numPoints; ++i)
                     {
                         mode[i] *= scal;
                     }
                 }
 
                 // define derivative basis
-                Blas::Dgemm('t','n',m_pointsorder,m_basisorder,m_pointsorder,1.0,D,
-                    m_pointsorder,m_bdata,m_pointsorder,0.0,
-                    m_dbdata,m_pointsorder);
+                Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
+                    numPoints,m_bdata,numPoints,0.0,
+                    m_dbdata,numPoints);
                 break;
 
 
             case eOrtho_B:
                 {
-                    double *one_m_z_pow,fac;
+                    double *one_m_z_pow;//,fac;
 
                     // bdata should be of size order*(order+1)/2*zorder;
 
                     mode = m_bdata;
 
-                    for(i = 0; i < m_pointsorder; ++i)
+                    for(i = 0; i < numPoints; ++i)
                         mode[i] = 1.0;
 
-                    mode += m_pointsorder;
+                    mode += numPoints;
 
-                    for (q = 1; q < m_basisorder; ++q, mode += m_pointsorder)
+                    for (q = 1; q < numModes; ++q, mode += numPoints)
                     {
-                        Polylib::jacobfd(m_pointsorder, z, mode, NULL, q, 1.0, 0.0);
+                        Polylib::jacobfd(numPoints, z, mode, NULL, q, 1.0, 0.0);
                     }
 
                     one_m_z_pow = m_bdata;
 
-                    for(p = 1; p < m_basisorder; ++p)
+                    for(p = 1; p < numModes; ++p)
                     {
 
-                        for(i = 0; i < m_pointsorder; ++i)
+                        for(i = 0; i < numPoints; ++i)
                         {
                             mode[i] = 0.5*(1-z[i])*one_m_z_pow[i];
                         }
 
                         one_m_z_pow = mode;
-                        mode += m_pointsorder;
+                        mode += numPoints;
 
-                        for(q = 1; q < m_basisorder-p; ++q, mode+=m_pointsorder){
-                            Polylib::jacobfd(m_pointsorder, z, mode, NULL, q, 2.0*p+1.0, 0.0);
+                        for(q = 1; q < numModes-p; ++q, mode+=numPoints){
+                            Polylib::jacobfd(numPoints, z, mode, NULL, q, 2.0*p+1.0, 0.0);
 
-                            for(i = 0; i < m_pointsorder; ++i)
+                            for(i = 0; i < numPoints; ++i)
                             {
                                 mode[i] *= one_m_z_pow[i];
                             }
@@ -184,12 +200,12 @@ namespace Nektar
                     }
 
                     // normalise (recalling factor of 2 for weight (1-b)/2) 
-                    for(p = 0, mode=m_bdata; p < m_basisorder; ++p)
+                    for(p = 0, mode=m_bdata; p < numModes; ++p)
                     {
-                        for(q = 0; q < m_basisorder-p; ++q,mode+=m_pointsorder)
+                        for(q = 0; q < numModes-p; ++q,mode+=numPoints)
                         {
                             scal = sqrt((p+q+1.0));
-                            for(i = 0; i < m_pointsorder; ++i)
+                            for(i = 0; i < numPoints; ++i)
                             {
                                 mode[i] *= scal;
                             }
@@ -197,45 +213,46 @@ namespace Nektar
                     }
 
                     // define derivative basis 
-                    Blas::Dgemm('t','n',m_pointsorder,m_basisorder*(m_basisorder+1)/2,m_pointsorder,1.0,D,m_pointsorder,
-                        m_bdata,m_pointsorder,0.0,m_dbdata,m_pointsorder);
+                    Blas::Dgemm('t','n',numPoints,numModes*(numModes+1)/2,numPoints,1.0,D,numPoints,
+                        m_bdata,numPoints,0.0,m_dbdata,numPoints);
                 }
                 break; 
+
             case eOrtho_C:
                 {
 
-                    double *one_m_z_pow,scal,fac;
+                    double *one_m_z_pow,scal;//,fac;
 
                     // bdata should be of size _order*(order+1)*(order+2)/6*zorder;
 
                     mode = m_bdata;
-                    for(i = 0; i < m_pointsorder; ++i)
+                    for(i = 0; i < numPoints; ++i)
                     {
                         mode[0] = 1.0;
                     }
 
-                    mode += m_pointsorder;
-                    for (q = 1; q < m_basisorder; ++q, mode += m_pointsorder)
+                    mode += numPoints;
+                    for (q = 1; q < numModes; ++q, mode += numPoints)
                     {
-                        Polylib::jacobfd(m_pointsorder, z, mode, NULL, q, 2.0, 0.0);
+                        Polylib::jacobfd(numPoints, z, mode, NULL, q, 2.0, 0.0);
                     }
 
                     one_m_z_pow = m_bdata;
-                    for(p = 1; p < m_basisorder; ++p)
+                    for(p = 1; p < numModes; ++p)
                     {
-                        for(i = 0; i < m_pointsorder; ++i)
+                        for(i = 0; i < numPoints; ++i)
                         {
                             mode[i] = 0.5*(1-z[i])*one_m_z_pow[i];
                         }
 
                         one_m_z_pow = mode;
-                        mode += m_pointsorder;
+                        mode += numPoints;
 
-                        for(q = 1; q < m_basisorder-p; ++q,mode+=m_pointsorder)
+                        for(q = 1; q < numModes-p; ++q,mode+=numPoints)
                         {
-                            Polylib::jacobfd(m_pointsorder, z, mode, NULL, q, 2.0*p+2.0, 0.0);
+                            Polylib::jacobfd(numPoints, z, mode, NULL, q, 2.0*p+2.0, 0.0);
 
-                            for(i = 0; i < m_pointsorder; ++i)
+                            for(i = 0; i < numPoints; ++i)
                             {
                                 mode[i] *= one_m_z_pow[i];
                             }
@@ -244,12 +261,12 @@ namespace Nektar
 
                     ASSERTL2(false, "Normalisation might need fixing");
 
-                    for(p = 0, mode=m_bdata; p < m_basisorder; ++p)
+                    for(p = 0, mode=m_bdata; p < numModes; ++p)
                     {
-                        for(q = 0; q < m_basisorder-p; ++q,mode+=m_pointsorder)
+                        for(q = 0; q < numModes-p; ++q,mode+=numPoints)
                         {
                             scal = sqrt((p+q+1.5));
-                            for(i = 0; i < m_pointsorder; ++i)
+                            for(i = 0; i < numPoints; ++i)
                             {
                                 mode[i] *= scal;
                             }
@@ -257,36 +274,36 @@ namespace Nektar
                     }
 
                     // define derivative basis 
-                    Blas::Dgemm('t','n',m_pointsorder,m_basisorder*(m_basisorder+1)*
-                        (m_basisorder+2)/6,m_pointsorder,1.0,D,m_pointsorder,
-                        m_bdata,m_pointsorder,0.0,m_dbdata,m_pointsorder);
+                    Blas::Dgemm('t','n',numPoints,numModes*(numModes+1)*
+                        (numModes+2)/6,numPoints,1.0,D,numPoints,
+                        m_bdata,numPoints,0.0,m_dbdata,numPoints);
                 }       
                 break;
 
             case eModified_A:
 
-                for(i = 0; i < m_pointsorder; ++i)
+                for(i = 0; i < numPoints; ++i)
                 {
                     m_bdata[i] = 0.5*(1-z[i]);
-                    m_bdata[m_pointsorder + i] = 0.5*(1+z[i]);
+                    m_bdata[numPoints + i] = 0.5*(1+z[i]);
                 }
 
-                mode = m_bdata + 2*m_pointsorder;
+                mode = m_bdata + 2*numPoints;
 
-                for(p = 2; p < m_basisorder; ++p, mode += m_pointsorder)
+                for(p = 2; p < numModes; ++p, mode += numPoints)
                 {
-                    Polylib::jacobfd(m_pointsorder, z, mode, NULL, p-2,1.0,1.0);
+                    Polylib::jacobfd(numPoints, z, mode, NULL, p-2,1.0,1.0);
 
-                    for(i = 0; i < m_pointsorder; ++i)
+                    for(i = 0; i < numPoints; ++i)
                     {
-                        mode[i] *= m_bdata[i]*m_bdata[m_pointsorder+i];
+                        mode[i] *= m_bdata[i]*m_bdata[numPoints+i];
                     }
                 }
 
                 // define derivative basis 
-                Blas::Dgemm('t','n',m_pointsorder,m_basisorder,m_pointsorder,1.0,D,
-                    m_pointsorder,m_bdata,m_pointsorder,0.0,m_dbdata,
-                    m_pointsorder);
+                Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
+                    numPoints,m_bdata,numPoints,0.0,m_dbdata,
+                    numPoints);
                 break;
             case eModified_B: case eModified_C:
                 {
@@ -296,119 +313,119 @@ namespace Nektar
                     // bdata should be of size order*(order+1)/2*zorder
 
                     // first fow 
-                    for(i = 0; i < m_pointsorder; ++i)
+                    for(i = 0; i < numPoints; ++i)
                     {
-                        m_bdata[0*m_pointsorder + i] = 0.5*(1-z[i]);
-                        m_bdata[1*m_pointsorder + i] = 0.5*(1+z[i]);
+                        m_bdata[0*numPoints + i] = 0.5*(1-z[i]);
+                        m_bdata[1*numPoints + i] = 0.5*(1+z[i]);
                     }
 
-                    mode = m_bdata + 2*m_pointsorder;
+                    mode = m_bdata + 2*numPoints;
 
-                    for(q = 2; q < m_basisorder; ++q, mode+=m_pointsorder)
+                    for(q = 2; q < numModes; ++q, mode+=numPoints)
                     {
-                        Polylib::jacobfd(m_pointsorder, z, mode, NULL, q-2,1.0,1.0);
+                        Polylib::jacobfd(numPoints, z, mode, NULL, q-2,1.0,1.0);
 
-                        for(i = 0; i < m_pointsorder; ++i)
+                        for(i = 0; i < numPoints; ++i)
                         {
-                            mode[i] *= m_bdata[i]*m_bdata[m_pointsorder+i];
+                            mode[i] *= m_bdata[i]*m_bdata[numPoints+i];
                         }
                     }
 
                     // second row
-                    for(i = 0; i < m_pointsorder; ++i)
+                    for(i = 0; i < numPoints; ++i)
                     {
                         mode[i] = 0.5*(1-z[i]);
                     }
 
-                    mode += m_pointsorder;
+                    mode += numPoints;
 
-                    for(q = 2; q < m_basisorder; ++q, mode+=m_pointsorder)
+                    for(q = 2; q < numModes; ++q, mode+=numPoints)
                     {
-                        Polylib::jacobfd(m_pointsorder, z, mode, NULL, q-2,1.0,1.0);
+                        Polylib::jacobfd(numPoints, z, mode, NULL, q-2,1.0,1.0);
 
-                        for(i = 0; i < m_pointsorder; ++i)
+                        for(i = 0; i < numPoints; ++i)
                         {
-                            mode[i] *= m_bdata[i]*m_bdata[m_pointsorder+i];
+                            mode[i] *= m_bdata[i]*m_bdata[numPoints+i];
                         }
                     }
 
                     // third and higher rows 
                     one_m_z_pow = m_bdata;
-                    one_p_z     = m_bdata+m_pointsorder;
+                    one_p_z     = m_bdata+numPoints;
 
-                    for(p = 2; p < m_basisorder; ++p)
+                    for(p = 2; p < numModes; ++p)
                     {
-                        for(i = 0; i < m_pointsorder; ++i)
+                        for(i = 0; i < numPoints; ++i)
                         {
                             mode[i] = m_bdata[i]*one_m_z_pow[i];
                         }
 
                         one_m_z_pow  = mode;
-                        mode        += m_pointsorder;
+                        mode        += numPoints;
 
-                        for(q = 1; q < m_basisorder-p; ++q, mode+=m_pointsorder)
+                        for(q = 1; q < numModes-p; ++q, mode+=numPoints)
                         {
-                            Polylib::jacobfd(m_pointsorder,z,mode,NULL, q-1,2*p+1,1.0);
+                            Polylib::jacobfd(numPoints,z,mode,NULL, q-1,2*p+1,1.0);
 
-                            for(i = 0; i <  m_pointsorder; ++i)
+                            for(i = 0; i <  numPoints; ++i)
                             {
                                 mode[i] *= one_m_z_pow[i]*one_p_z[i];
                             }
                         }
                     }
 
-                    Blas::Dgemm('t','n',m_pointsorder,m_basisorder*(m_basisorder+1)/2,
-                        m_pointsorder,1.0,D,m_pointsorder,
-                        m_bdata,m_pointsorder,0.0,m_dbdata,m_pointsorder);
+                    Blas::Dgemm('t','n',numPoints,numModes*(numModes+1)/2,
+                        numPoints,1.0,D,numPoints,
+                        m_bdata,numPoints,0.0,m_dbdata,numPoints);
                 }
                 break;
 
             case eGLL_Lagrange: 
                 {
-                    const double *zp,*wp;
+                    const double *zp;//,*wp;
 
                     mode = m_bdata;
 
                     // get zeros and weights  of GLL points
-                    PolyManagerSingleton::Instance().GetZW((PointsType)eLobatto,m_basisorder,
-                        zp, wp, 0.0 ,0.0);
+                    //PolyManagerSingleton::Instance().GetZW(eGaussLobattoLegendre,m_basisorder,
+                    //    zp, wp, 0.0 ,0.0);
 
-                    for (p=0; p<m_basisorder; ++p,mode += m_pointsorder)
+                    for (p=0; p<numModes; ++p,mode += numPoints)
                     {
-                        for(q = 0; q < m_pointsorder; ++q)
+                        for(q = 0; q < numPoints; ++q)
                         {
-                            mode[q] = Polylib::hglj(p,z[q],zp,m_basisorder,0.0,0.0);
+                            mode[q] = Polylib::hglj(p,z[q],zp,numModes,0.0,0.0);
                         }
                     }
 
                     // define derivative basis 
-                    Blas::Dgemm('t','n',m_pointsorder,m_basisorder,m_pointsorder,1.0,D,
-                        m_pointsorder, m_bdata,m_pointsorder,0.0,
-                        m_dbdata,m_pointsorder);
+                    Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
+                        numPoints, m_bdata,numPoints,0.0,
+                        m_dbdata,numPoints);
 
                 }//end scope
                 break;
             case eFourier:
 
-                ASSERTL0(m_basisorder%2==0, "Fourier modes should be a factor of 2");
+                ASSERTL0(numModes%2==0, "Fourier modes should be a factor of 2");
 
-                for(i = 0; i < m_pointsorder; ++i)
+                for(i = 0; i < numPoints; ++i)
                 {
                     m_bdata[i] = 1.0;
-                    m_bdata[m_pointsorder+i] = 0.0; 
+                    m_bdata[numPoints+i] = 0.0; 
 
-                    m_dbdata[i] = m_dbdata[m_pointsorder+i] = 0.0; 
+                    m_dbdata[i] = m_dbdata[numPoints+i] = 0.0; 
                 }
 
-                for (p=1; p < m_basisorder/2; ++p)
+                for (p=1; p < numModes/2; ++p)
                 {
-                    for(i = 0; i < m_pointsorder; ++i)
+                    for(i = 0; i < numPoints; ++i)
                     {
-                        m_bdata[ 2*p   *m_pointsorder+i] = cos(p*M_PI*z[i]);
-                        m_bdata[(2*p+1)*m_pointsorder+i] = sin(p*M_PI*z[i]);
+                        m_bdata[ 2*p   *numPoints+i] = cos(p*M_PI*z[i]);
+                        m_bdata[(2*p+1)*numPoints+i] = sin(p*M_PI*z[i]);
 
-                        m_dbdata[ 2*p   *m_pointsorder+i] = -p*M_PI*sin(p*M_PI*z[i]);
-                        m_dbdata[(2*p+1)*m_pointsorder+i] =  p*M_PI*cos(p*M_PI*z[i]);
+                        m_dbdata[ 2*p   *numPoints+i] = -p*M_PI*sin(p*M_PI*z[i]);
+                        m_dbdata[(2*p+1)*numPoints+i] =  p*M_PI*cos(p*M_PI*z[i]);
                     }
                 }
 
@@ -418,11 +435,11 @@ namespace Nektar
 
                 mode = m_bdata;
 
-                for (p=0,scal = 1; p<m_basisorder; ++p,mode += m_pointsorder)
+                for (p=0,scal = 1; p<numModes; ++p,mode += numPoints)
                 {
-                    Polylib::jacobfd(m_pointsorder, z, mode, NULL, p, -0.5, -0.5);
+                    Polylib::jacobfd(numPoints, z, mode, NULL, p, -0.5, -0.5);
 
-                    for(i = 0; i < m_pointsorder; ++i)
+                    for(i = 0; i < numPoints; ++i)
                     {
                         mode[i] *= scal;
                     }
@@ -431,9 +448,9 @@ namespace Nektar
                 }
 
                 // define derivative basis 
-                Blas::Dgemm('t','n',m_pointsorder,m_basisorder,m_pointsorder,1.0,D,
-                    m_pointsorder, m_bdata,m_pointsorder,0.0,m_dbdata,
-                    m_pointsorder);
+                Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
+                    numPoints, m_bdata,numPoints,0.0,m_dbdata,
+                    numPoints);
                 break;
 
             default:
@@ -443,172 +460,84 @@ namespace Nektar
         }
 
         /** \brief Determine if polynomial basis can be eactly integrated
-	 *  with itself
-	 */
+        *  with itself
+        */
         int BasisKey::ExactIprodInt(void) const 
         {
+            bool returnval = false;
 
-            switch(m_pointstype)
+            switch(GetPointsType())
             {
-            case eGauss:
-                if(m_pointsorder >= m_basisorder)
-                {
-                    return true;
-                }
-                break;
-            case eRadauM: case eRadauP:
-                if(m_pointsorder >= m_basisorder)
-                {
-                    return true;
-                }
-                break;
-            case eLobatto:
-                if(m_pointsorder > m_basisorder)
-                {
-                    return true;
-                }
+            case eGaussGaussLegendre:
+            case eGaussRadauMLegendre:
+            case eGaussRadauPLegendre:
+            case eGaussLobattoLegendre:
+                returnval = (GetNumPoints() >= GetNumModes());
                 break;
             }
 
-            return false;
+            return returnval;
         }
 
 
         /** \brief Determine if basis has collocation property,
-	 *  i.e. GLL_Lagrange with Lobatto integration of appropriate order.
-	 */
+        *  i.e. GLL_Lagrange with Lobatto integration of appropriate order.
+        */
         int BasisKey::Collocation() const 
         {
-
-            if(m_basistype == eGLL_Lagrange)
-            {
-                if((m_pointstype == eLobatto)&&(m_alpha == 0.0)&&(m_beta == 0.0))
-                {
-                    if(m_basisorder == m_pointsorder)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            return (m_basistype == eGLL_Lagrange &&
+                    GetPointsType() == eGaussLobattoLegendre &&
+                    GetNumModes() == GetNumPoints());
         }
 
         void BasisKey::GetInterpVec(const double zi, double *I) const
         {
-            const double *z,*w;
+            //const double *z,*w;
 
-            PolyManagerSingleton::Instance().GetZW(m_pointstype, m_pointsorder, z, w, 
-                m_alpha, m_beta);
-            PolyManagerSingleton::Instance().GetInterpVec(zi, m_pointstype, z,
-                m_pointsorder, m_alpha, m_beta, I);
+            //PolyManagerSingleton::Instance().GetZW(m_pointstype, m_pointsorder, z, w, 
+            //    m_alpha, m_beta);
+            //PolyManagerSingleton::Instance().GetInterpVec(zi, m_pointstype, z,
+            //    m_pointsorder, m_alpha, m_beta, I);
         }
 
         // BasisKey compared to BasisKey
         bool operator  == (const BasisKey& x, const BasisKey& y)
         {
-
-            ASSERTL0(x.m_basistype == y.m_basistype, "Basis type not the same");
-
-            if((x.m_pointsorder == y.m_pointsorder)&&(x.m_pointstype == y.m_pointstype) &&
-                (x.m_alpha == y.m_alpha)&&(x.m_beta  == y.m_beta) && 
-                (x.m_basisorder == y.m_basisorder))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return (x.GetPointsKey() == y.GetPointsKey() &&
+                    x.m_basistype == y.m_basistype &&
+                    x.GetNumModes() == y.GetNumModes());
         }
 
 
         // BasisKey* compared to BasisKey
         bool operator  == (const BasisKey* x, const BasisKey& y)
         {
-            ASSERTL0((*x).m_basistype == y.m_basistype, "Basis type not the same");
-
-            if(((*x).m_pointsorder == y.m_pointsorder)&&((*x).m_pointstype == y.m_pointstype) &&
-                ((*x).m_alpha == y.m_alpha)&&((*x).m_beta  == y.m_beta) && 
-                ((*x).m_basisorder == y.m_basisorder))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return (*x == y);
         }
 
         // \brief BasisKey compared to BasisKey*
         bool operator  == (const BasisKey& x, const BasisKey *y)
         {
-            ASSERTL0(x.m_basistype == (*y).m_basistype,"Basis type not the same");
-
-            if((x.m_pointsorder == (*y).m_pointsorder)&&(x.m_pointstype == (*y).m_pointstype) &&
-                (x.m_alpha == (*y).m_alpha)&&(x.m_beta  == (*y).m_beta)  && 
-                (x.m_basisorder == (*y).m_basisorder))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return (x == *y);
         }
 
         // \brief BasisKey compared to BasisKey
         bool operator  != (const BasisKey& x, const BasisKey& y)
         {
-            ASSERTL0(x.m_basistype == y.m_basistype, "Basis type not the same");
-
-            if((x.m_pointsorder == y.m_pointsorder)&&(x.m_pointstype == y.m_pointstype) &&
-                (x.m_alpha == y.m_alpha)&&(x.m_beta  ==  y.m_beta) && 
-                (x.m_basisorder == y.m_basisorder))
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            return (!(x == y));
         }
-
 
         // BasisKey* compared to BasisKey
         bool operator  != (const BasisKey* x, const BasisKey& y)
         {
-
-            ASSERTL0((*x).m_basistype == y.m_basistype, "Basis type not the same");
-
-            if(((*x).m_pointsorder == y.m_pointsorder)&&((*x).m_pointstype == y.m_pointstype) &&
-                ((*x).m_alpha == y.m_alpha)&&((*x).m_beta  == y.m_beta)  && 
-                ((*x).m_basisorder == y.m_basisorder))
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            return (!(*x == y));
         }
 
 
         // BasisKey compared to BasisKey*
         bool operator  != (const BasisKey& x, const BasisKey* y)
         {
-            ASSERTL0(x.m_basistype == y->m_basistype, "Basis type not the same");
-
-            if((x.m_pointsorder == y->m_pointsorder)&&(x.m_pointstype == y->m_pointstype) &&
-                (x.m_alpha == y->m_alpha)&&(x.m_beta  == y->m_beta)  && 
-                (x.m_basisorder == y->m_basisorder))
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            return (!(x == *y));
         }
 
     } // end of namespace stdregion
@@ -616,6 +545,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.4  2007/01/24 23:43:01  kirby
+* *** empty log message ***
+*
 * Revision 1.3  2007/01/20 22:21:17  kirby
 * *** empty log message ***
 *

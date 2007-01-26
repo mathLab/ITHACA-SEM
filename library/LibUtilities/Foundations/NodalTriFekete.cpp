@@ -53,6 +53,7 @@ namespace Nektar
             Points<double>::CalculatePoints();
 
             int index=0,isum=0;
+            const int offset = 3; //offset to match Datafile
             double a,b,c;
             unsigned int numPoints = GetNumPoints();
 
@@ -81,9 +82,9 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 3; ++j)
                     {
-                        a = NodalTriFeketeData[index][perm3A_2d[j][0]];
-                        b = NodalTriFeketeData[index][perm3A_2d[j][1]];
-                        c = NodalTriFeketeData[index][perm3A_2d[j][2]];
+                        a = NodalTriFeketeData[index][offset+perm3A_2d[j][0]];
+                        b = NodalTriFeketeData[index][offset+perm3A_2d[j][1]];
+                        c = NodalTriFeketeData[index][offset+perm3A_2d[j][2]];
                         m_points[0][isum] = 2.0*b - 1.0;
                         m_points[1][isum] = 2.0*c - 1.0;
                         isum++;
@@ -95,9 +96,9 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 3; ++j)
                     {
-                        a = NodalTriFeketeData[index][perm3B_2d[j][0]];
-                        b = NodalTriFeketeData[index][perm3B_2d[j][1]];
-                        c = NodalTriFeketeData[index][perm3B_2d[j][2]];
+                        a = NodalTriFeketeData[index][offset+perm3B_2d[j][0]];
+                        b = NodalTriFeketeData[index][offset+perm3B_2d[j][1]];
+                        c = NodalTriFeketeData[index][offset+perm3B_2d[j][2]];
                         m_points[0][isum] = 2.0*b - 1.0;
                         m_points[1][isum] = 2.0*c - 1.0;
                         isum++;
@@ -110,9 +111,9 @@ namespace Nektar
                 {
                     for(unsigned int j=0; j < 6; ++j)
                     {
-                        a = NodalTriFeketeData[index][perm6_2d[j][0]];
-                        b = NodalTriFeketeData[index][perm6_2d[j][1]];
-                        c = NodalTriFeketeData[index][perm6_2d[j][2]];
+                        a = NodalTriFeketeData[index][offset+perm6_2d[j][0]];
+                        b = NodalTriFeketeData[index][offset+perm6_2d[j][1]];
+                        c = NodalTriFeketeData[index][offset+perm6_2d[j][2]];
                         m_points[0][isum] = 2.0*b - 1.0;
                         m_points[1][isum] = 2.0*c - 1.0;
                         isum++;

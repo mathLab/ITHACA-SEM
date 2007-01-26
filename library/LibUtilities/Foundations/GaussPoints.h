@@ -61,7 +61,7 @@ namespace Nektar
             const boost::shared_ptr<NekMatrix<DataType> > GetI(const PointsKey &pkey)
             {
                 
-                ASSERTL0(pkey.GetPointsDim()!=1, "Gauss Points can only interp to other 1d point distributions");
+                ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
 
                 int numpoints = pkey.GetNumPoints();
                 double * interp = new double[GetNumPoints()*numpoints];

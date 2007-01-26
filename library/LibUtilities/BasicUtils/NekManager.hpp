@@ -58,7 +58,7 @@ namespace Nektar
         {
             bool operator()(const KeyType &lhs, const KeyType &rhs)
             {
-                return ::operator<(lhs, rhs);
+                return lhs < rhs;
             }
         };
 

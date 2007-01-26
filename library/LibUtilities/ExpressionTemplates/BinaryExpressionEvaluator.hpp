@@ -55,6 +55,9 @@ namespace Nektar
         // Visual Studio 2005 has a hard time with a construct such as
         // OpType<LhsType, RhsType>::Traits::HasOpEqual.  
         // This class is simply a level of indirection to get this to work.
+        // This has the unfortunate side effect of forcing the user to define 
+        // HasOpEqual and HasOpLeftEqual in each traits class, where in the past
+        // they could just ignore it if they didn't have it.
         template<typename TraitsType>
         class GetTraitsValues
         {

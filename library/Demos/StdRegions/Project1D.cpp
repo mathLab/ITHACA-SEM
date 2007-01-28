@@ -1,11 +1,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include "StdRegions/StdSegExp.h"
-
 #include "StdRegions/StdRegions.hpp"
+#include "LibUtilities/Foundations/Foundations.hpp"
 
 using namespace Nektar;
 using namespace StdRegions; 
+using namespace LibUtilities;
 using namespace std;
 
 // compile using Builds/Demos/StdRegions -> make DEBUG=1 Project1D
@@ -17,7 +18,6 @@ int main(int argc, char *argv[])
 {
   int i,j;
   int order, nq;
-  const double *z,*w;
   double *sol;
   PointsType Qtype;
   BasisType  btype;
@@ -58,22 +58,27 @@ int main(int argc, char *argv[])
   
   if(btype != eFourier)
   {
-    Qtype = eLobatto; 
+      Qtype = eGaussLobattoLegendre; 
   }
   else
   {
-    Qtype = eFourierEvenSp;
+      Qtype = eFourierEvenlySpaced;
   }
   
   //-----------------------------------------------
   // Define a segment expansion based on basis definition
-  const BasisKey b1(btype,order, Qtype, nq,0,0);
-  E = new StdSegExp(b1);
+  const PointsKey Pkey(nq,Qtype);
+  const BasisKey Bkey(btype,order,Pkey);
+  E = new StdSegExp(Bkey);
   //-----------------------------------------------
   
   //----------------------------------------------
   // Define solution to be projected
-  E->GetZW(0,z,w);
+  BstShrDArray z = GetDoubleTmpSpace(nq);
+  double * tmp[1];
+  tmp[0] = z.get();
+  E->GetCoords(tmp);
+
   if(btype != eFourier)
   {
     for(i = 0; i < nq; ++i)
@@ -105,7 +110,7 @@ int main(int argc, char *argv[])
 
   //-------------------------------------------
   // Backward Transform Solution to get projected values
-  E->BwdTrans(E->GetPhys());
+  E->BwdTrans(&(E->GetPhys())[0]);
   //-------------------------------------------  
 
   //--------------------------------------------

@@ -142,8 +142,9 @@ namespace Nektar
 	    int nummodes = m_base[0]->GetNumModes();
 	    DNekMatSharedPtr Mat;
 
-	    Mat.reset(new DNekMat(nummodes,nummodes,
-				  new double [nummodes*nummodes]));
+	    //	    Mat.reset(new DNekMat(nummodes,nummodes,
+	    // new double [nummodes*nummodes]));
+	    Mat = MemoryManager::AllocateSharedPtr<DNekMat>(nummodes,nummodes,MemoryManager::AllocateArray<double>(nummodes*nummodes));
 		      
 	    ExpPointsProperties(0)->GetZW(z,w);
     
@@ -224,7 +225,7 @@ namespace Nektar
     
 	    switch(m_base[0]->GetBasisType())
 	    {
-	    case eGLL_Lagrange:
+	    case LibUtilities::eGLL_Lagrange:
 		{
 		    int order = m_base[0]->GetNumModes();
 		    if(dir == eForwards)
@@ -239,7 +240,7 @@ namespace Nektar
 		    }
 		}
 		break;
-	    case eModified_A:
+	    case LibUtilities::eModified_A:
 		
 		if(dir == eForwards)
 		{
@@ -257,12 +258,20 @@ namespace Nektar
 	    }
 	}    
 	
-  
+	void StdSegExp::GetCoords(double **coords)
+	{
+	    Blas::Dcopy(GetNumPoints(0),ExpPointsProperties(0)->GetZ(),
+			1,coords[0],1);
+	}
+    
     }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.9  2007/01/23 23:20:21  sherwin
+ * New version after Jan 07 update
+ *
  * Revision 1.8  2007/01/20 22:35:21  sherwin
  * Version with StdExpansion compiling
  *

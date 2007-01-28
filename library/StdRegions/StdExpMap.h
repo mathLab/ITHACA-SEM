@@ -66,7 +66,7 @@ namespace Nektar
 		return m_len;
 	    }
 	    
-	    inline int* GetMap() const
+	    inline BstShrIArray GetMap() const
 	    {
 		return m_map;
 	    }
@@ -100,8 +100,7 @@ namespace Nektar
 	private:
 	    
 	    int m_len;
-	    int *m_map;
-	    
+	    BstShrIArray m_map;
 	};
 	
     } // end of namespace
@@ -111,6 +110,9 @@ namespace Nektar
 
 /**
  * $Log: StdExpMap.h,v $
+ * Revision 1.4  2006/08/05 19:03:48  sherwin
+ * Update to make the multiregions 2D expansion in connected regions work
+ *
  * Revision 1.3  2006/07/02 17:16:18  sherwin
  *
  * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

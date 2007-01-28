@@ -87,11 +87,11 @@ namespace Nektar
 
             //allocate memory for coeffs
             m_ncoeffs = numcoeffs;
-	    m_coeffs.reset(new double[m_ncoeffs]);
+	    m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
 	    Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
 
 	    //allocate memory for phys
-	    m_phys.reset(new double[GetTotPoints()]);
+	    m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
 			 
 
         } //end constructor
@@ -101,7 +101,9 @@ namespace Nektar
         m_numbases(T.m_numbases)
         {
             int i,j;
-            m_base = new LibUtilities::BasisSharedPtr [m_numbases];
+
+	    m_base = new LibUtilities::BasisSharedPtr [m_numbases];
+	    //	    m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
 
             for(j=0; j<m_numbases; j++)
             {
@@ -113,7 +115,7 @@ namespace Nektar
             // allocate memory for coeffs
             // need to check allocation for variable order. 
             m_ncoeffs = T.m_ncoeffs;
-            m_coeffs.reset(new double[m_ncoeffs]);
+	    m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
             for(i=0; i<m_ncoeffs; i++)
             {
                 m_coeffs[i] = T.m_coeffs[i];
@@ -121,7 +123,7 @@ namespace Nektar
 
             //allocate memory for phys
             int numphys = GetTotPoints();
-            m_phys.reset(new double[numphys]);
+	    m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
             for(j=0; j < numphys; j++)
             {
                 m_phys[j] = T.m_phys[j];
@@ -198,9 +200,10 @@ namespace Nektar
 
 	    DNekMatSharedPtr  Mat;
 	    
-	    Mat.reset(new DNekMat(m_ncoeffs,m_ncoeffs,
-				  new double [m_ncoeffs*m_ncoeffs]));
-
+	    //	    Mat.reset(new DNekMat(m_ncoeffs,m_ncoeffs,
+	    // new double [m_ncoeffs*m_ncoeffs]));
+	    Mat = MemoryManager::AllocateSharedPtr<DNekMat>(m_ncoeffs,m_ncoeffs,MemoryManager::AllocateArray<double>(m_ncoeffs*m_ncoeffs));
+	    
 	    Blas::Dcopy(m_ncoeffs,&m_coeffs[0],1,&store[0],1);
             for(i=0; i<m_ncoeffs; ++i)
             {
@@ -270,6 +273,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.8  2007/01/23 23:20:20  sherwin
+* New version after Jan 07 update
+*
 * Revision 1.7  2007/01/20 22:35:20  sherwin
 * Version with StdExpansion compiling
 *

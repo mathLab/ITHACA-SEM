@@ -97,24 +97,24 @@ namespace Nektar
 
             void PhysDeriv  (double *outarray) 
             {
-                v_Deriv  (outarray);
+                v_PhysDeriv  (outarray);
             }
 
             void StdPhysDeriv (double *outarray)
             {
-                v_StdDeriv (outarray) ;
+                v_StdPhysDeriv (outarray) ;
             }
 
             void PhysDeriv  (const double *inarray, double *outarray) 
             {
-                v_Deriv (inarray, outarray);
+                v_PhysDeriv (inarray, outarray);
             }
 
             void StdPhysDeriv (const double *inarray, double *outarray)
             {
-                v_StdDeriv (inarray,outarray);
+                v_StdPhysDeriv (inarray,outarray);
             }
-
+	    
             /** \brief Evaluate a function at points coords which is assumed
 	     *  to be in local collapsed coordinate format. The function is
 	     *  assumed to be in physical space
@@ -140,9 +140,6 @@ namespace Nektar
 	    }
 
             virtual ShapeType v_DetShapeType()                = 0;
-
-            virtual StdMatContainer *v_GetMassMatrix()        = 0;
-            virtual StdMatContainer *v_GetLapMatrix()         = 0;
 
             virtual int v_get_nodalpoints(const double *x, const double *y)
             {
@@ -173,14 +170,14 @@ namespace Nektar
             virtual double v_Integral(const double *inarray ) = 0;
             virtual double v_Evaluate(const double * coords) = 0;
 
-            virtual void   v_Deriv    (double *outarray) = 0;
-            virtual void   v_StdDeriv (double *outarray) = 0;
-            virtual void   v_Deriv    (const double *inarray, double *outarray) = 0;
-            virtual void   v_StdDeriv (const double *inarray, double *outarray) = 0;
+            virtual void   v_PhysDeriv    (double *outarray) = 0;
+            virtual void   v_StdPhysDeriv (double *outarray) = 0;
+            virtual void   v_PhysDeriv    (const double *inarray, double *outarray) = 0;
+            virtual void   v_StdPhysDeriv (const double *inarray, double *outarray) = 0;
 
             virtual void v_GetCoords(double **coords)
             {
-                GetCoords1D(coords);
+                GetCoords(coords);
             }
 
         };
@@ -192,6 +189,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.6  2007/01/21 02:28:07  sherwin
+* Compiling under new revision
+*
 * Revision 1.5  2007/01/20 22:35:21  sherwin
 * Version with StdExpansion compiling
 *

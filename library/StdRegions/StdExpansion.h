@@ -204,6 +204,12 @@ namespace Nektar
                 return(ExpPointsProperties(dir)->GetNumPoints());
             }
 
+            inline double *GetPoints(const int dir) const
+	    {
+		return ExpPointsProperties(dir)->GetZ();
+            }
+
+
             double operator[] (const int i) const
             {
                 ASSERTL1((i >= 0) && (i < m_ncoeffs),
@@ -449,7 +455,7 @@ namespace Nektar
         protected:
 
             int   m_numbases;   /**< Number of 1D basis defined in expansion */
-	    LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */
+	    LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */	    
 
             /** Total number of coefficients used in the expansion*/
             int  m_ncoeffs;
@@ -628,6 +634,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.13  2007/01/23 23:20:21  sherwin
+* New version after Jan 07 update
+*
 * Revision 1.12  2007/01/20 22:35:21  sherwin
 * Version with StdExpansion compiling
 *

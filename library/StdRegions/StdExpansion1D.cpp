@@ -113,19 +113,14 @@ namespace Nektar
 	    return val;    
 	}
     
-	void StdExpansion1D::GetCoords1D(double **coords)
-	{
-	    const double *z,*w;
-
-	    ExpPointsProperties(0)->GetZW(z,w);
-	    Blas::Dcopy(m_base[0]->GetNumPoints(),z,1,coords[0],1);
-	}
-	
     }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.5  2007/01/21 02:28:08  sherwin
+ * Compiling under new revision
+ *
  * Revision 1.4  2007/01/20 22:35:21  sherwin
  * Version with StdExpansion compiling
  *

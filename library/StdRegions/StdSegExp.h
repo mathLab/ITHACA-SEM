@@ -211,6 +211,8 @@ namespace Nektar
 	    double Evaluate(const double *Lcoords);
 	    
 	    void MapTo(EdgeOrientation dir, StdExpMap& Map);
+
+	    void GetCoords(double **coords);
 	    
 	protected:
 	    
@@ -325,6 +327,7 @@ namespace Nektar
 	    {
 		MapTo(dir,Map);
 	    }
+	    
 	};
 	
     } //end of namespace
@@ -334,6 +337,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.6  2007/01/23 23:20:22  sherwin
+ * New version after Jan 07 update
+ *
  * Revision 1.5  2007/01/15 15:07:26  pvos
  * updating doxygen documentation
  *

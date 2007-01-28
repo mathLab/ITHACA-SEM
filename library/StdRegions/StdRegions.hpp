@@ -47,6 +47,8 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
+#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/Basis.h>
 
 #include <string>
 #include <loki/Factory.h>
@@ -83,52 +85,6 @@ namespace Nektar
       eMovingRegular,
     };
     
-    enum BasisType
-    {
-      eOrtho_A,     /**< Principle Orthogonal Functions \f$\widetilde{\psi}^a_p(z_i)\f$ */
-      eOrtho_B,     /**< Principle Orthogonal Functions \f$\widetilde{\psi}^b_{pq}(z_i)\f$ */
-      eOrtho_C,     /**< Principle Orthogonal Functions \f$\widetilde{\psi}^c_{pqr}(z_i)\f$ */
-      eModified_A,  /**< Principle Modified Functions \f$ \phi^a_p(z_i) \f$ */
-      eModified_B,  /**< Principle Modified Functions \f$ \phi^b_{pq}(z_i) \f$ */
-      eModified_C,  /**< Principle Modified Functions \f$ \phi^c_{pqr}(z_i) \f$ */
-      eFourier,     /**< Fourier Expansion \f$ \exp(i p\pi  z_i)\f$ */
-      eGLL_Lagrange,/**< Lagrange for SEM basis \f$ h_p(z_i) \f$ */
-      eLegendre,    /**< Legendre Polynomials \f$ L_p(z_i) = P^{0,0}_p(z_i)\f$. Same as Ortho_A */
-      eChebyshev,   /**< Chebyshev Polynomials \f$ T_p(z_i) = P^{-1/2,-1/2}_p(z_i)\f$ */
-      SIZE_BasisType /**< Length of enum list */
-    };
-    
-
-    enum PointsType
-    {
-      eGauss,             /**< Gauss quadrature points */
-      eLobatto,           /**< Gauss Lobatto quadrature points */
-      eRadauM,            /**< Gauss Radau quadrature points including (z=-1) */
-      eRadauP,            /**< Gauss Radau quadrature points including (z=+1) */
-      ePolyEvenSp,        /**< Evenly-spaced points using Lagrange polynomial */
-      eFourierEvenSp,     /**< Evenly-spaced points using Fourier Fit */
-      eArbitrary,         /**< Arbitrary point distribution */
-      SIZE_PointsType     /**< Length of enum list */
-    };
-
-    enum NodalBasisType
-    {
-      eNodalTriElec,      /**< 2D Nodal Electrostatic Points on a Triangle */
-      eNodalTriFekete,    /**< 2D Nodal Fekete Points on a Triangle */
-      eNodalTetElec,      /**< 3D Nodal Electrostatic Points on a Tetrahedron */
-      SIZE_NodalBasisType /**< Length of enum list */
-    };
-    
-    /** Enumerator list for different types of matrix type supported by LAPACK */
-    enum MatrixForm
-    {
-      eSymmetric,                 /**< Symmetric matrix */
-      eSymmetric_Positive,        /**< Symmetric positive definite matrix */
-      eSymmetric_Positive_Banded, /**< Symmetric positive definite banded matrix */
-      eGeneral_Banded,            /**< General banded matrix */
-      eGeneral_Full               /**< General full */
-    };
-
     enum MatrixType
     {
       eMassMatrix,
@@ -206,6 +162,9 @@ namespace Nektar
 
 /**
  * $Log: StdRegions.hpp,v $
+ * Revision 1.4  2007/01/20 22:35:21  sherwin
+ * Version with StdExpansion compiling
+ *
  * Revision 1.3  2007/01/17 16:05:41  pvos
  * updated doxygen documentation
  *

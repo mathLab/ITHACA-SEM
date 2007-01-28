@@ -43,7 +43,7 @@ namespace Nektar
 	
 	StdExpMap::StdExpMap():
 	    m_len(0),
-	    m_map((int *)NULL)
+	    m_map(NULL)
 	{
 	}
 	
@@ -51,31 +51,21 @@ namespace Nektar
 	{
 	    m_len = len;
 	    ASSERTL2(len > 0,"called with zero length");
-	    m_map = new int [m_len];
+	    m_map = MemoryManager::AllocateSharedArray<int>(m_len);
 	}
 	
 	
 	StdExpMap::~StdExpMap()
 	{
-	    if(m_map)
-	    {
-		delete[] m_map;
-	    }
 	}
 	
 	void StdExpMap::SetMapMemory(const int len)
-	{
-	    
+	{	    
 	    if(m_len != len)
 	    {
+		//MemoryManager::DeallocateArray<int> (m_map,m_len);
 		m_len = len;
-		
-		if(m_map)
-		{
-		    delete[] m_map;      
-		}
-		
-		m_map = new int [m_len];
+		m_map = MemoryManager::AllocateSharedArray<int> (m_len);
 	    }
 	}
 	
@@ -84,6 +74,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpMap.cpp,v $
+ * Revision 1.2  2006/08/05 19:03:48  sherwin
+ * Update to make the multiregions 2D expansion in connected regions work
+ *
  * Revision 1.1  2006/05/04 18:58:31  kirby
  * *** empty log message ***
  *

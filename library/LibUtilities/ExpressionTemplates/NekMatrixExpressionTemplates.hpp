@@ -33,23 +33,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-#ifndef NEKTAR_LIB_UTILITIES_NEK_MATRIX_EXPRESSION_TEMPLATES_HPP
-#define NEKTAR_LIB_UTILITIES_NEK_MATRIX_EXPRESSION_TEMPLATES_HPP
+#error No Longer Used
 
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <LibUtilities/ExpressionTemplates/ExpressionTraits.hpp>
-
-namespace Nektar
-{
-
-}
-
-#endif //NEKTAR_LIB_UTILITIES_NEK_MATRIX_EXPRESSION_TEMPLATES_HPP
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 /**
     $Log: NekMatrixExpressionTemplates.hpp,v $
+    Revision 1.2  2007/01/16 17:37:56  bnelson
+    Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
     Revision 1.1  2006/09/14 02:09:00  bnelson
     Fixed gcc compile errors
 

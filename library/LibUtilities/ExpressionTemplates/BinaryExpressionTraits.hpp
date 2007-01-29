@@ -10,7 +10,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_TRAITS_H
 #define NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_TRAITS_H
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #include <LibUtilities/ExpressionTemplates/AssociativeTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/CommutativeTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicyFwd.hpp>
@@ -40,27 +39,6 @@ namespace Nektar
                 
         };
 
-//         template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy> 
-//         class BinaryExpressionTraits<LhsPolicy, OpType, RhsPolicy, 
-//                                      typename boost::disable_if_c
-//                                      <
-//                                         AssociativeExpressionTraits<LhsPolicy, OpType, RhsPolicy>::IsAssociativeWithOpChange,
-//                                         void
-//                                      >::type > :
-//             public CommutativeExpressionTraits<LhsPolicy, OpType, RhsPolicy>, 
-//             public AssociativeExpressionTraits<LhsPolicy, OpType, RhsPolicy>
-//         {
-//             public:
-//                 typedef BinaryExpressionPolicy<LhsPolicy, RhsPolicy, OpType> ResultPolicy;
-//                 typedef Expression<ResultPolicy> ResultType;
-//                 
-//                 static ResultType Apply(const Expression<LhsPolicy>& lhs, const Expression<RhsPolicy>& rhs)
-//                 {
-//                     typename ResultPolicy::DataType d(lhs, rhs);
-//                     return ResultType(d);
-//                 }
-//         };
-        
         
         // Just need two more specializations.        
         // Binary rhs, non-constant rhs rhs
@@ -207,11 +185,13 @@ namespace Nektar
     }
 }
 
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_TRAITS_H
 
 /**
     $Log: BinaryExpressionTraits.hpp,v $
+    Revision 1.7  2007/01/16 17:37:55  bnelson
+    Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
     Revision 1.6  2007/01/16 05:29:50  bnelson
     Major improvements for expression templates.
 

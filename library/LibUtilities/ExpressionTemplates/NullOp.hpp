@@ -68,6 +68,7 @@ namespace Nektar
         {
             public:
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
         };
         
         template<typename LhsType, typename RhsType>
@@ -99,6 +100,9 @@ namespace Nektar
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 /**
     $Log: NullOp.hpp,v $
+    Revision 1.3  2007/01/16 17:37:56  bnelson
+    Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
     Revision 1.2  2007/01/16 05:29:50  bnelson
     Major improvements for expression templates.
 

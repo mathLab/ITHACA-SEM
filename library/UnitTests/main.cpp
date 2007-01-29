@@ -23,11 +23,18 @@ using boost::unit_test_framework::test_suite;
 
 #include <UnitTests/testNekManager.h>
 
+#include <UnitTests/Memory/TestNekMemoryManager.h>
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
 test_suite* init_unit_test_suite( int, char* [] )
 {
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
+
+    // Memory Manager
+    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testParameterizedConstructors), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testSmartPointerAllocation), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testArrayAllocation), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testSharedArrayAllocation), 0);
 
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointConstruction), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointArithmetic), 0);
@@ -93,6 +100,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.19  2006/12/17 21:47:16  bnelson
+    Added NekManager tests.
+
     Revision 1.18  2006/11/20 03:39:41  bnelson
     Added Gram-Schmidt tests
 

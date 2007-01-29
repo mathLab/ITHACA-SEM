@@ -553,6 +553,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Add(A& result, const A& lhs, const A& rhs)
                 {
@@ -566,6 +567,8 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
+
                 static void Subtract(A& result, const A& lhs, const A& rhs)
                 {
                     result.val = lhs.val - rhs.val;
@@ -584,6 +587,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Multiply(A& result, const A& lhs, const A& rhs)
                 {
@@ -603,6 +607,8 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
+
                 static void Divide(A& result, const A& lhs, const A& rhs)
                 {
                     result.val = lhs.val / rhs.val;
@@ -624,6 +630,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Add(A& result, const A& lhs, const C& rhs)
                 {
@@ -643,6 +650,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Subtract(A& result, const A& lhs, const C& rhs)
                 {
@@ -662,6 +670,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Multiply(A& result, const A& lhs, const C& rhs)
                 {
@@ -681,6 +690,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Divide(A& result, const A& lhs, const C& rhs)
                 {
@@ -704,6 +714,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Add(A& result, const B& lhs, const A& rhs)
                 {
@@ -723,6 +734,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Subtract(A& result, const B& lhs, const A& rhs)
                 {
@@ -742,6 +754,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Multiply(A& result, const B& lhs, const A& rhs)
                 {
@@ -761,6 +774,8 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
+
                 static void Divide(A& result, const B& lhs, const A& rhs)
                 {
                     result.val = lhs.val / rhs.val;
@@ -779,6 +794,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Add(A& result, const B& lhs, const C& rhs)
                 {
@@ -798,6 +814,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Subtract(A& result, const B& lhs, const C& rhs)
                 {
@@ -817,6 +834,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Multiply(A& result, const B& lhs, const C& rhs)
                 {
@@ -836,6 +854,7 @@ namespace Nektar
             public:
                 typedef A result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Divide(A& result, const B& lhs, const C& rhs)
                 {
@@ -882,16 +901,19 @@ namespace Nektar
         std::ostream& operator<<(std::ostream& os, const A& rhs)
         {
             os << rhs.val;
+            return os;
         }
         
         std::ostream& operator<<(std::ostream& os, const B& rhs)
         {
             os << rhs.val;
+            return os;
         }
         
         std::ostream& operator<<(std::ostream& os, const C& rhs)
         {
             os << rhs.val;
+            return os;
         }
                 
         typedef expt::BinaryExpressionPolicy<expt::ConstantExpressionPolicy<A>, 
@@ -1073,6 +1095,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.12  2007/01/16 05:31:33  bnelson
+    Major improvements for expression templates.
+
     Revision 1.11  2006/11/12 17:59:47  bnelson
     *** empty log message ***
 

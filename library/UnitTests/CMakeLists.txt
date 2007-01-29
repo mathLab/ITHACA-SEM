@@ -10,6 +10,7 @@ testNekManager.cpp
 testNekMatrix.cpp
 testNekPoint.cpp
 testNekVector.cpp
+Memory/TestNekMemoryManager.cpp
 )
 
 SET(UnitTestHeaders
@@ -22,6 +23,7 @@ testNekManager.h
 testNekMatrix.h
 testNekPoint.h
 testNekVector.h
+Memory/TestNekMemoryManager.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
@@ -49,7 +51,7 @@ IF( USE_MKL AND MKL_FOUND )
 ENDIF( USE_MKL AND MKL_FOUND )
 
 IF( USE_ACML AND ACML_FOUND )
-    TARGET_LINK_LIBRARIES(UnitTests ${ACML} gfortran )
+    TARGET_LINK_LIBRARIES(UnitTests ${ACML_TARGET_LINK_LIBRARIES}  )
 ENDIF( USE_ACML AND ACML_FOUND )
 
 IF( USE_ATLAS AND ATLAS_FOUND )

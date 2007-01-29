@@ -55,6 +55,19 @@ namespace Nektar
                 value(v)
             {
                 ++numberConstructedFromInt;
+                ++numberOf1ParameterConstructions;
+            }
+
+            CountedObject(unsigned int a1, unsigned int a2) :
+                value(a1 + a2)
+            {
+                ++numberOf2ParameterConstructions;
+            }
+
+            CountedObject(unsigned int a1, unsigned int a2, unsigned int a3) :
+                value(a1 + a2 + a3)
+            {
+                ++numberOf3ParameterConstructions;
             }
 
             CountedObject(const CountedObject<DerivedType>& rhs) :
@@ -91,7 +104,7 @@ namespace Nektar
                 return new CountedObject<DerivedType>(*this);
             }
 
-            static void clearCounters()
+            static void ClearCounters()
             {
                 numberDefaultConstructed = 0;
                 numberConstructedFromInt = 0;
@@ -99,6 +112,9 @@ namespace Nektar
                 numberCopied = 0;
                 numberAssigned = 0;
                 numberCloned = 0;
+                numberOf1ParameterConstructions = 0;
+                numberOf2ParameterConstructions = 0;
+                numberOf3ParameterConstructions = 0;
             }
 
             static void check(unsigned int expectedDefaultConstructed, unsigned int expectedConstructedFromInt,
@@ -121,6 +137,9 @@ namespace Nektar
             static unsigned int numberCopied;
             static unsigned int numberAssigned;
             static unsigned int numberCloned;
+            static unsigned int numberOf1ParameterConstructions;
+            static unsigned int numberOf2ParameterConstructions;
+            static unsigned int numberOf3ParameterConstructions;
     };
     
     template<typename DerivedType>
@@ -140,12 +159,24 @@ namespace Nektar
     
     template<typename DerivedType>
     unsigned int CountedObject<DerivedType>::numberCloned = 0;
+
+    template<typename DerivedType>
+    unsigned int CountedObject<DerivedType>::numberOf1ParameterConstructions = 0;
+
+    template<typename DerivedType>
+    unsigned int CountedObject<DerivedType>::numberOf2ParameterConstructions = 0;
+
+    template<typename DerivedType>
+    unsigned int CountedObject<DerivedType>::numberOf3ParameterConstructions = 0;
 }
 
 #endif //NEKTAR_UNIT_TESTS_COUNTED_OBJECT_H
 
 /**
     $Log: CountedObject.h,v $
+    Revision 1.2  2006/11/12 17:59:47  bnelson
+    *** empty log message ***
+
     Revision 1.1  2006/11/11 01:32:52  bnelson
     *** empty log message ***
 

@@ -63,7 +63,6 @@ namespace Nektar
 	{	    
 	    if(m_len != len)
 	    {
-		//MemoryManager::DeallocateArray<int> (m_map,m_len);
 		m_len = len;
 		m_map = MemoryManager::AllocateSharedArray<int> (m_len);
 	    }
@@ -74,6 +73,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpMap.cpp,v $
+ * Revision 1.3  2007/01/28 18:34:16  sherwin
+ * More modifications to make Demo Project1D compile
+ *
  * Revision 1.2  2006/08/05 19:03:48  sherwin
  * Update to make the multiregions 2D expansion in connected regions work
  *

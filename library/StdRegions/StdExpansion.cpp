@@ -63,7 +63,7 @@ namespace Nektar
 	   int numcoeffs, double *coeffs, double *phys):
 	    m_numbases(numbases)
 	{
-            m_base = new LibUtilities::BasisSharedPtr [m_numbases];
+	    m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
 	    
             switch(m_numbases)
             {
@@ -102,8 +102,7 @@ namespace Nektar
         {
             int i,j;
 
-	    m_base = new LibUtilities::BasisSharedPtr [m_numbases];
-	    //	    m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
+	    m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
 
             for(j=0; j<m_numbases; j++)
             {
@@ -200,8 +199,6 @@ namespace Nektar
 
 	    DNekMatSharedPtr  Mat;
 	    
-	    //	    Mat.reset(new DNekMat(m_ncoeffs,m_ncoeffs,
-	    // new double [m_ncoeffs*m_ncoeffs]));
 	    Mat = MemoryManager::AllocateSharedPtr<DNekMat>(m_ncoeffs,m_ncoeffs,MemoryManager::AllocateArray<double>(m_ncoeffs*m_ncoeffs));
 	    
 	    Blas::Dcopy(m_ncoeffs,&m_coeffs[0],1,&store[0],1);
@@ -273,6 +270,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.9  2007/01/28 18:34:18  sherwin
+* More modifications to make Demo Project1D compile
+*
 * Revision 1.8  2007/01/23 23:20:20  sherwin
 * New version after Jan 07 update
 *

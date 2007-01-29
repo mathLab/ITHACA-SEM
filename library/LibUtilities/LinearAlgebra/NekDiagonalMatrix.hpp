@@ -54,11 +54,6 @@ namespace Nektar
         public:
             typedef NekMatrix<DataType, eDiagonal, eNormal, space> ThisType;
 
-
-            /// Necessary to allow construction of default constructed matrices.
-            friend class MemoryManager;
-            static const MemoryManager::MemoryPoolEnabler MemoryPoolEnabled = MemoryManager::eEnabled;
-
         public:
 
             NekMatrix() :
@@ -353,6 +348,9 @@ namespace Nektar
 
 /**
     $Log: NekDiagonalMatrix.hpp,v $
+    Revision 1.4  2007/01/23 03:12:49  jfrazier
+    Added more conditional compilation directives for expression templates.
+
     Revision 1.3  2006/11/08 04:16:13  bnelson
     Added subtraction operators.
 

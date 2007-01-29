@@ -52,11 +52,6 @@ namespace Nektar
         public:
             typedef NekMatrix<DataType, eFull, eNormal, space> ThisType;
 
-
-            /// Necessary to allow construction of default constructed matrices.
-            friend class MemoryManager;
-            static const MemoryManager::MemoryPoolEnabler MemoryPoolEnabled = MemoryManager::eEnabled;
-
         public:
             /// \brief Creates an empty, 0x0 matrix.  
             NekMatrix() :
@@ -355,7 +350,10 @@ namespace Nektar
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_FULL_MATRIX_HPP
 
 /**
-    $Log$
+    $Log: NekFullMatrix.hpp,v $
+    Revision 1.4  2007/01/23 03:12:50  jfrazier
+    Added more conditional compilation directives for expression templates.
+
     Revision 1.3  2006/11/08 04:16:14  bnelson
     Added subtraction operators.
 

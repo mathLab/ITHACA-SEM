@@ -48,10 +48,7 @@ namespace Nektar
 {
     template<typename DataType>
     class ConsistentObjectAccess
-    {
-        public:
-            static const MemoryManager::MemoryPoolEnabler MemoryPoolEnabled = MemoryManager::eEnabled;
-            
+    {            
         public:
             ConsistentObjectAccess() :
                 m_obj()
@@ -131,10 +128,7 @@ namespace Nektar
     
     template<typename DataType>
     class ConsistentObjectAccess<boost::shared_ptr<DataType> >
-    {
-        public:
-            static const MemoryManager::MemoryPoolEnabler MemoryPoolEnabled = MemoryManager::eEnabled;
-            
+    {            
         public:
             ConsistentObjectAccess() :
                 m_obj(new DataType())
@@ -259,6 +253,9 @@ namespace Nektar
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_CONSISTENT_ACCESS_OBJECT_HPP
 
 /**
-    $Log: $
+    $Log: ConsistentObjectAccess.hpp,v $
+    Revision 1.1  2006/11/06 17:06:20  bnelson
+    *** empty log message ***
+
  **/
  

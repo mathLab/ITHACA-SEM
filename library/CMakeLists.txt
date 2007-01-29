@@ -13,6 +13,8 @@ SET(USE_MKL OFF CACHE BOOL "Use the Intel Math Kernel Library (MKL) for BLAS and
 SET(USE_FRAMEWORK OFF CACHE BOOL "Use the Mac Framework system for BLAS and Lapack support." )
 SET(USE_ACML OFF CACHE BOOL "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." )
 SET(USE_ATLAS OFF CACHE BOOL "Use ATLAS for BLAS and Lapack support." )
+SET(USE_WIN32_LAPACK OFF CACHE BOOL "Use Win32 Lapack provided with the Third Party Distribution.")
+SET(USE_NEKTAR_MEMORY_POOLS ON CACHE BOOL "Use memory pools to accelerate memory allocation.")
 
 SET(USE_EXPRESSION_TEMPLATES ON CACHE BOOL "")
 
@@ -35,6 +37,11 @@ ENDIF( USE_ATLAS )
 IF( USE_ACML )
     INCLUDE (FindACML)
 ENDIF( USE_ACML )
+
+IF( USE_WIN32_LAPACK )
+	INCLUDE (FindWin32Lapack.cmake)
+ENDIF( USE_WIN32_LAPACK )
+
 
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${BOOST_INCLUDE_DIR} ${LOKI_INCLUDE_DIR} ${PROJECT_BINARY_DIR} ${TINYXML_INCLUDE_DIR})
 
@@ -71,6 +78,10 @@ ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
 IF( USE_EXPRESSION_TEMPLATES )
     ADD_DEFINITIONS(-DNEKTAR_USE_EXPRESSION_TEMPLATES -DNEKTAR_USING_CMAKE)
 ENDIF( USE_EXPRESSION_TEMPLATES )
+
+IF( USE_NEKTAR_MEMORY_POOLS )
+        ADD_DEFINITIONS(-DNEKTAR_MEMORY_POOL_ENABLED)
+ENDIF( USE_NEKTAR_MEMORY_POOLS )
 
 IF( USE_MKL )
     SET(NEKTAR_USING_BLAS TRUE)
@@ -126,10 +137,9 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
             TARGET_LINK_LIBRARIES(${name} gcov)
         ENDIF( USE_GCOV )
     ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
-    
+
     TARGET_LINK_LIBRARIES(${name}
         optimized LibUtilities debug LibUtilities-g
-        optimized StdRegions debug StdRegions-g
         optimized ${BoostThreadName} debug ${BoostThreadDebugName})
         
     INSTALL_TARGETS(${NEKTAR_BIN_DIR} ${name})

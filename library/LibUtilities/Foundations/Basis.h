@@ -48,7 +48,7 @@ namespace Nektar
         class BasisKey
         {
         public:
-            // Use for looking up the creator.  The creator for number of points
+            // Use for looking up the creator. The creator for number of points
             // can generate for any number, so we want the same creator called
             // for all number.
             struct opLess
@@ -56,12 +56,18 @@ namespace Nektar
                 bool operator()(const BasisKey &lhs, const BasisKey &rhs);
             };
 
-            BasisKey(const BasisType btype, const int nummodes, const PointsKey pkey):
-		        m_basistype(btype), 
+	    BasisKey():m_pointsKey(NullPointsKey)
+            {
+                NEKERROR(ErrorUtil::efatal,"Default Constructor BasisKey should never be called");
+            }
+
+            BasisKey(const BasisType btype, const int nummodes, 
+		     const PointsKey pkey):
+		m_basistype(btype), 
                 m_nummodes(nummodes),
                 m_pointsKey(pkey)
-	        {
-            }
+	    {
+	    }
 
             BasisKey(const BasisKey &B): m_basistype(B.m_basistype),
                 m_nummodes(B.m_nummodes),
@@ -120,9 +126,16 @@ namespace Nektar
                 return ((x.m_nummodes == m_nummodes)&&(x.m_basistype == m_basistype));
             }
 
-            int ExactIprodInt(void) const;
-            int Collocation() const;
-            void GetInterpVec(const double zi, double *I) const;
+	    
+	    /** \brief determine if basis definition has exact integration for
+	     *  inner product
+	     */
+	    inline bool ExactIprodInt() const;
+	    
+	    /** \brief Determine if basis has collocation properties,
+	     *  i.e. GLL_Lagrange with appropriate quadrature
+	     */
+	    inline bool  Collocation() const;
 
             //Overloaded Operators
             friend bool operator  == (const BasisKey& x, const BasisKey& y);
@@ -138,13 +151,10 @@ namespace Nektar
         protected:
             int        m_nummodes;   /**< Expansion Order */
             BasisType  m_basistype;  /**< Expansion Type */
-	        PointsKey  m_pointsKey;
+	    PointsKey  m_pointsKey;
 
         private:
-            BasisKey():m_pointsKey(NullPointsKey)
-            {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor BasisKey should never be called");
-            }
+
         };
 
         static const BasisKey NullBasisKey(eNoBasisType, 0, NullPointsKey);
@@ -219,6 +229,39 @@ namespace Nektar
             {
                 return m_basisKey.GetPointsType();
             }    
+
+
+	    /** \brief determine if basis definition has exact integration for
+	     *  inner product
+	     */
+	    inline bool ExactIprodInt() const;
+	    
+	    /** \brief Determine if basis has collocation properties,
+	     *  i.e. GLL_Lagrange with appropriate quadrature
+	     */
+	    inline bool  Collocation() const;
+
+            void ResetBasisNumModes(int nummodes)
+            {
+                //m_nummodes = nummodes;
+
+                //if(m_bdata)
+                //{
+                //    delete[] m_bdata;  //delete old space
+                //    m_bdata = NULL;
+                //}
+
+                //if(m_dbdata)
+                //{
+                //    delete[] m_dbdata;  //delete old space
+                //    m_bdata = NULL;
+                //}
+
+                //m_bdata  = new double[BasisMem()]; //allocate new space
+                //m_dbdata = new double[BasisMem()]; //allocate new space
+
+                //GenBasis();
+            }
 
             /** \brief return basis definition array m_bdata */
             inline const double * GetBdata() const

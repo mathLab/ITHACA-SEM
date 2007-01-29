@@ -306,6 +306,8 @@ namespace Nektar
             }
 
        private:
+	    PointsKey m_pointskey;
+
             // These should never be called
             Points()
             {

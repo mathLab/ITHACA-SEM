@@ -59,7 +59,6 @@ namespace Nektar
                 bool operator()(const PointsKey &lhs, const PointsKey &rhs);
             };
 
-
             PointsKey(const int &numpoints, const PointsType &pointstype): 
             m_numpoints(numpoints), 
                 m_pointstype(pointstype)
@@ -297,19 +296,17 @@ namespace Nektar
                 m_derivmatrix.reset(new NekMatrix<DataType>(totNumPoints,totNumPoints));
             }
 
-            Points(const Points &pts):m_pointskey(pts.m_pointskey)
-            {
-            }
-
             Points(const PointsKey &key):m_pointsKey(key)
             {
             }
 
-       private:
-	    PointsKey m_pointskey;
-
+        private:
             // These should never be called
-            Points()
+            Points(const Points &pts):m_pointskey(pts.m_pointskey)
+            {
+            }
+
+            Points():m_pointskey(NullPointsKey)
             {
                 NEKERROR(ErrorUtil::efatal, "Default Constructor for Points should not be called");
             }

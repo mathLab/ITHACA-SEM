@@ -56,18 +56,18 @@ namespace Nektar
                 bool operator()(const BasisKey &lhs, const BasisKey &rhs);
             };
 
-	    BasisKey():m_pointsKey(NullPointsKey)
+            BasisKey():m_pointsKey(NullPointsKey)
             {
                 NEKERROR(ErrorUtil::efatal,"Default Constructor BasisKey should never be called");
             }
 
             BasisKey(const BasisType btype, const int nummodes, 
-		     const PointsKey pkey):
-		m_basistype(btype), 
+                const PointsKey pkey):
+            m_basistype(btype), 
                 m_nummodes(nummodes),
                 m_pointsKey(pkey)
-	    {
-	    }
+            {
+            }
 
             BasisKey(const BasisKey &B): m_basistype(B.m_basistype),
                 m_nummodes(B.m_nummodes),
@@ -117,7 +117,7 @@ namespace Nektar
 
             inline bool SamePoints(const BasisKey &x) const
             {
-               return (x.m_pointsKey == m_pointsKey);
+                return (x.m_pointsKey == m_pointsKey);
             }
 
             /** \brief Check to see if basis expansions x is the same as the calling basis */
@@ -126,16 +126,18 @@ namespace Nektar
                 return ((x.m_nummodes == m_nummodes)&&(x.m_basistype == m_basistype));
             }
 
-	    
-	    /** \brief determine if basis definition has exact integration for
-	     *  inner product
-	     */
-	    inline bool ExactIprodInt() const;
-	    
-	    /** \brief Determine if basis has collocation properties,
-	     *  i.e. GLL_Lagrange with appropriate quadrature
-	     */
-	    inline bool  Collocation() const;
+
+            /** \brief determine if basis definition has exact integration for
+            *  inner product
+            */
+            inline bool ExactIprodInt() const;
+
+            /** \brief Determine if basis has collocation properties,
+            *  i.e. GLL_Lagrange with appropriate quadrature
+            */
+            inline bool  Collocation() const;
+
+            void GetInterpVec(const double zi, double *I) const;
 
             //Overloaded Operators
             friend bool operator  == (const BasisKey& x, const BasisKey& y);
@@ -151,7 +153,7 @@ namespace Nektar
         protected:
             int        m_nummodes;   /**< Expansion Order */
             BasisType  m_basistype;  /**< Expansion Type */
-	    PointsKey  m_pointsKey;
+            PointsKey  m_pointsKey;
 
         private:
 
@@ -164,41 +166,20 @@ namespace Nektar
         {
         public:    
 
-            //Copy Constructor
-            Basis(const Basis &B):m_basisKey(B.m_basisKey)
-            {
-                //m_basistype   = B.m_basistype;
-                //m_nummodes    = B.m_nummodes;
-                //m_pointstype  = B.m_pointstype;
-                //
-                //int size = BasisMem();
-
-                //// Allocate Memory
-                //m_bdata  = new double [size];
-                //m_dbdata = new double [size];
-
-                //for(int i=0;i<size;i++)
-                //{
-                //    m_bdata[i]  = B.m_bdata[i];
-                //    m_dbdata[i] = B.m_dbdata[i];
-                //}
-            };
-
             // default destructor()
             ~Basis()
             {
                 if(m_bdata)
                 {
                     delete [] m_bdata;  
-                }
+                    m_bdata  = NULL;
+               }
 
                 if(m_dbdata)
                 {
                     delete [] m_dbdata;  
-                }
-
-                m_bdata  = NULL;
-                m_dbdata = NULL;
+                    m_dbdata = NULL;
+               }
             };
 
             /** \brief return order of basis */
@@ -231,15 +212,15 @@ namespace Nektar
             }    
 
 
-	    /** \brief determine if basis definition has exact integration for
-	     *  inner product
-	     */
-	    inline bool ExactIprodInt() const;
-	    
-	    /** \brief Determine if basis has collocation properties,
-	     *  i.e. GLL_Lagrange with appropriate quadrature
-	     */
-	    inline bool  Collocation() const;
+            /** \brief determine if basis definition has exact integration for
+            *  inner product
+            */
+            bool ExactIprodInt() const;
+
+            /** \brief Determine if basis has collocation properties,
+            *  i.e. GLL_Lagrange with appropriate quadrature
+            */
+            inline bool  Collocation() const;
 
             void ResetBasisNumModes(int nummodes)
             {
@@ -274,7 +255,7 @@ namespace Nektar
             {
                 return m_dbdata;
             }
-        
+
             int BasisMem();
             virtual void Initialize();
             void GenBasis();
@@ -285,7 +266,7 @@ namespace Nektar
             double      *m_dbdata;      /**< Derivative Basis definition */
 
         private:
-        
+
             Basis(const BasisKey &bkey): m_basisKey(bkey)
             {
             }

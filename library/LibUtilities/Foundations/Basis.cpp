@@ -60,15 +60,7 @@ namespace Nektar
         bool BasisKey::opLess::operator()(const BasisKey &lhs, const BasisKey &rhs)
         {
 #pragma message("Address this operator")
-            /*if (lhs.m_pointsKey < rhs.m_pointsKey) return true;
-            if (lhs.m_pointsKey > rhs.m_pointsKey) return false;
-
-            if (lhs.m_pointstype < rhs.m_pointstype) return true;
-            if (lhs.m_pointstype > rhs.m_pointstype) return false;
-
-            return (lhs.m_pointsid < rhs.m_pointsid);*/
-
-            return true;
+            return (lhs<rhs);
         }
 
         std::ostream& operator<<(std::ostream& os, const BasisKey& rhs)
@@ -462,7 +454,7 @@ namespace Nektar
         /** \brief Determine if polynomial basis can be eactly integrated
         *  with itself
         */
-        int BasisKey::ExactIprodInt(void) const 
+        bool BasisKey::ExactIprodInt(void) const 
         {
             bool returnval = false;
 
@@ -483,7 +475,7 @@ namespace Nektar
         /** \brief Determine if basis has collocation property,
         *  i.e. GLL_Lagrange with Lobatto integration of appropriate order.
         */
-        int BasisKey::Collocation() const 
+        bool BasisKey::Collocation() const 
         {
             return (m_basistype == eGLL_Lagrange &&
                     GetPointsType() == eGaussLobattoLegendre &&
@@ -545,6 +537,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.5  2007/01/26 04:00:54  jfrazier
+* Cleanup after initial creation.
+*
 * Revision 1.4  2007/01/24 23:43:01  kirby
 * *** empty log message ***
 *

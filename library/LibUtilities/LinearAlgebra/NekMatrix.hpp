@@ -70,6 +70,7 @@ namespace Nektar
                 typedef Nektar::NekMatrixAdditionAndSubtractionMetadata MetadataType;
                 typedef Nektar::NekMatrix<DataType, Nektar::eFull, BlockType, space> result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Add(result_type& result, const LhsType& lhs, const RhsType& rhs)
                 {
@@ -87,6 +88,7 @@ namespace Nektar
                 typedef Nektar::NekMatrixAdditionAndSubtractionMetadata MetadataType;
                 typedef Nektar::NekMatrix<DataType, Nektar::eFull, BlockType, space> result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Subtract(result_type& result, const LhsType& lhs, const RhsType& rhs)
                 {
@@ -104,6 +106,7 @@ namespace Nektar
                 typedef Nektar::NekMatrixMultiplicationMetadata MetadataType;
                 typedef Nektar::NekMatrix<DataType, Nektar::eFull, BlockType, space> result_type;
                 static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = false;
                 
                 static void Multiply(result_type& result, const LhsType& lhs, const RhsType& rhs)
                 {
@@ -148,7 +151,8 @@ namespace Nektar
     {
         return expt::CreateBinaryExpression<expt::AddOp>(lhs, rhs);
     }
-    
+
+#else
     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
     typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::AdditionResultType 
     operator+(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
@@ -173,7 +177,7 @@ namespace Nektar
     {
         return expt::CreateBinaryExpression<expt::SubtractOp>(lhs, rhs);
     }
-
+#else
     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
     typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::SubtractionResultType 
     operator+(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
@@ -346,6 +350,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.20  2007/01/23 03:12:50  jfrazier
+    Added more conditional compilation directives for expression templates.
+
     Revision 1.19  2007/01/17 01:11:21  bnelson
     Removed old code.
 

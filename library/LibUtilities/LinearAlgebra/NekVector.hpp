@@ -612,6 +612,8 @@ namespace Nektar
         {
             result += NekVectorTypeTraits<DataType>::abs(*iter);
         }
+
+        return result;
     }
     
     template<typename DataType, unsigned int dim, unsigned int space>
@@ -776,6 +778,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.13  2007/01/23 03:12:50  jfrazier
+    Added more conditional compilation directives for expression templates.
+
     Revision 1.12  2006/11/29 00:09:32  bnelson
     Removed the LPNorm stub.
 

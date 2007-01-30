@@ -63,7 +63,7 @@ namespace Nektar
 
                 static void Apply(typename boost::call_traits<ParameterType>::reference result)
                 {
-                    negate(result);
+                    TraitsType::negate(result);
                 }
 
 //                 static MetadataType CreateUnaryMetadata(const MetadataType& rhs)
@@ -89,6 +89,9 @@ namespace Nektar
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 /**
     $Log: NegateOp.hpp,v $
+    Revision 1.8  2007/01/16 17:37:56  bnelson
+    Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
     Revision 1.7  2007/01/16 05:29:50  bnelson
     Major improvements for expression templates.
 

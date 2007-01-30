@@ -48,8 +48,9 @@ namespace Nektar
 	
 	StdExpansion1D::StdExpansion1D(const LibUtilities::BasisKey &Ba, 
 				 int numcoeffs, double * coeffs,double *phys):
-	    StdExpansion(1,Ba,LibUtilities::BasisKey(),LibUtilities::BasisKey()
-			 ,numcoeffs,coeffs,phys)
+	    StdExpansion(1,Ba, LibUtilities::NullBasisKey, 
+			 LibUtilities::NullBasisKey, numcoeffs,
+			 coeffs,phys)
 	{
 	}
 
@@ -105,7 +106,7 @@ namespace Nektar
 	    ASSERTL2(Lcoord[0] < -1,"Lcoord[0] < -1");
 	    ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1");
 	    
-	    I = ExpPointsProperties(0)->GetI(Lcoord[0]);
+	    I = ExpPointsProperties(0)->GetI(Lcoord);
 
 	    val = Blas::Ddot(m_base[0]->GetNumPoints(),&((*I).GetPtr())[0],
 			     1,&m_phys[0],1);
@@ -118,6 +119,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.6  2007/01/28 18:34:22  sherwin
+ * More modifications to make Demo Project1D compile
+ *
  * Revision 1.5  2007/01/21 02:28:08  sherwin
  * Compiling under new revision
  *

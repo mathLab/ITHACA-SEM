@@ -199,7 +199,8 @@ namespace Nektar
 
 	    DNekMatSharedPtr  Mat;
 	    
-	    Mat = MemoryManager::AllocateSharedPtr<DNekMat>(m_ncoeffs,m_ncoeffs,MemoryManager::AllocateArray<double>(m_ncoeffs*m_ncoeffs));
+	    Mat = MemoryManager::AllocateSharedPtr<DNekMat>(m_ncoeffs,m_ncoeffs,
+				      MemoryManager::AllocateArray<double>(m_ncoeffs*m_ncoeffs));
 	    
 	    Blas::Dcopy(m_ncoeffs,&m_coeffs[0],1,&store[0],1);
             for(i=0; i<m_ncoeffs; ++i)
@@ -270,6 +271,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.10  2007/01/29 15:04:53  sherwin
+* StdBasis.h moved to LibUtilities. Other minor mods
+*
 * Revision 1.9  2007/01/28 18:34:18  sherwin
 * More modifications to make Demo Project1D compile
 *

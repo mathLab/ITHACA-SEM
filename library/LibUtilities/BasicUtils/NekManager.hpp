@@ -44,7 +44,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/concept_check.hpp>
 
-#include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 using namespace std;

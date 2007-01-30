@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Points1D.h
+// File PolyEPoints.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: Header file of 1D Points definition 
+// Description: Header file of 1D Evenly-Spaced Point Definitions 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -41,30 +41,57 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        class PolyEPoints: public Points<double>
+        typedef Points<double> PointsBaseType;
+
+        class PolyEPoints: public PointsBaseType
         {
         public:
-            PolyEPoints(const PointsKey &key)
-
             virtual ~PolyEPoints()
             {
-            }
+            }            
 
-            static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
+            static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
+
+            const boost::shared_ptr<NekMatrix<double> > GetI(const PointsKey &pkey);
+            const boost::shared_ptr<NekMatrix<double> > GetI(double x);
+            const boost::shared_ptr<NekMatrix<double> > GetI(unsigned int numpoints, const double *x);
 
         protected:
 
         private:
+            /// Default constructor should not be called except by Create method.
+            PolyEPoints():PointsBaseType(NullPointsKey)
+            {
+            }
+
+            /// Copy constructor should not be called.
+            PolyEPoints(const PointsKey &key):PointsBaseType(key)
+            {
+            }
+
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
-        };
+            void CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp);
+
+            double LagrangeInterpolant(double x, int npts, double *xpts, double * funcvals);
+            double LagrangePoly(double x, int pt, int npts, double * xpts);     
+            double LagrangePolyDeriv(double x, int pt, int npts, double * xpts);
+
+        }; // class PolyEPoints
+
+        namespace
+        {
+            const bool PolyEPointsInited1 = PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), PolyEPoints::Create);
+        }
     } // end of namespace
 } // end of namespace 
+
 
 #endif //POLYEPOINTS_H

@@ -216,7 +216,6 @@ namespace Nektar
                 
         }
 
-
         boost::shared_ptr< PointsBaseType > GaussPoints::Create(const PointsKey &key)
         {
             boost::shared_ptr< PointsBaseType > returnval(new GaussPoints(key));
@@ -226,6 +225,52 @@ namespace Nektar
             return returnval;
         }
 
+        const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(const PointsKey &pkey)
+        {
+
+            ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
+
+            int numpoints = pkey.GetNumPoints();
+            double * interp = new double[GetNumPoints()*numpoints];
+            const double * xpoints;
+
+            PointsManager()[pkey]->GetPoints(xpoints);
+
+            CalculateInterpMatrix(numpoints, xpoints, interp);
+
+            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp));
+
+            delete[] interp;
+
+            return returnval;
+        }
+
+        const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(double x)
+        {
+            int numpoints = 1;
+            double * interp = new double[GetNumPoints()*numpoints];
+
+            CalculateInterpMatrix(numpoints, &x, interp);
+
+            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp));
+
+            delete[] interp;
+
+            return returnval;
+        }
+
+        const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(unsigned int numpoints, const double *x)
+        {
+            double * interp = new double[GetNumPoints()*numpoints];
+
+            CalculateInterpMatrix(numpoints, x, interp);
+
+            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp));
+
+            delete[] interp;
+
+            return returnval;
+        }
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 

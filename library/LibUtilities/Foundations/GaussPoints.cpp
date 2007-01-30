@@ -213,7 +213,6 @@ namespace Nektar
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
             }
-                
         }
 
         boost::shared_ptr< PointsBaseType > GaussPoints::Create(const PointsKey &key)
@@ -228,35 +227,24 @@ namespace Nektar
         const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(const PointsKey &pkey)
         {
 
-            ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
+                ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
 
-            int numpoints = pkey.GetNumPoints();
-            double * interp = new double[GetNumPoints()*numpoints];
-            const double * xpoints;
+                int numpoints = pkey.GetNumPoints();
+                double * interp = new double[GetNumPoints()*numpoints];
+                const double * xpoints;
+                
+                PointsManager()[pkey]->GetPoints(xpoints);
 
-            PointsManager()[pkey]->GetPoints(xpoints);
-
-            CalculateInterpMatrix(numpoints, xpoints, interp);
-
-            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp));
-
-            delete[] interp;
-
-            return returnval;
+                /// Delegate to function below.
+                return GetI(numpoints, xpoints);
         }
 
-        const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(double x)
+        const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(const double* x)
         {
-            int numpoints = 1;
-            double * interp = new double[GetNumPoints()*numpoints];
+                int numpoints = 1;
 
-            CalculateInterpMatrix(numpoints, &x, interp);
-
-            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp));
-
-            delete[] interp;
-
-            return returnval;
+                /// Delegate to function below.
+                return GetI(numpoints, x);
         }
 
         const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(unsigned int numpoints, const double *x)

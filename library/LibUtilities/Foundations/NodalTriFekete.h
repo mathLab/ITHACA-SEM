@@ -67,7 +67,7 @@ namespace Nektar
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<DataType> > GetI(double x)
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(const double *x)
             {
                 boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
 

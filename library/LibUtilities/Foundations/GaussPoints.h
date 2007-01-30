@@ -57,11 +57,16 @@ namespace Nektar
             }            
 
             static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
+            static boost::shared_ptr< NekMatrix<DataType> > CreateMatrix(const PointsKey &key);
+
             const boost::shared_ptr<NekMatrix<double> > GetI(const PointsKey &pkey);
-            const boost::shared_ptr<NekMatrix<double> > GetI(double x);
+            const boost::shared_ptr<NekMatrix<double> > GetI(const double *x);
             const boost::shared_ptr<NekMatrix<double> > GetI(unsigned int numpoints, const double *x);
 
         protected:
+            GaussPoints(const PointsKey &key):PointsBaseType(key)
+            {
+            }
 
         private:
             /// Default constructor should not be called except by Create method.
@@ -70,7 +75,7 @@ namespace Nektar
             }
 
             /// Copy constructor should not be called.
-            GaussPoints(const PointsKey &key):PointsBaseType(key)
+            GaussPoints(const GaussPoints &points):PointsBaseType(points.m_pointsKey)
             {
             }
 
@@ -78,7 +83,6 @@ namespace Nektar
             void CalculateWeights();
             void CalculateDerivMatrix();
             void CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp);
-
         }; // class GaussPoints
 
         namespace

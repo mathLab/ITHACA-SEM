@@ -33,13 +33,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef POINTS_H
-#define POINTS_H
+#ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H
+#define NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H
 
 #include <math.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/BasicUtils/NekManager.hpp>
 
 namespace Nektar
 {
@@ -182,6 +183,7 @@ namespace Nektar
         {
         public:
             typedef DataT DataType;
+            typedef boost::shared_ptr<NekMatrix<DataType> > MatrixSharedPtrType;
 
             virtual ~Points()
             {
@@ -257,20 +259,21 @@ namespace Nektar
                 z = m_points[2];
             }
 
-            inline const boost::shared_ptr<NekMatrix<DataType> > GetD() const
+            inline const MatrixSharedPtrType GetD() const
             {
                 return m_derivmatrix;
             }
 
-            virtual const boost::shared_ptr< NekMatrix<DataType> > GetI(const PointsKey &pkey)=0;
-            virtual const boost::shared_ptr< NekMatrix<DataType> > GetI(double x) = 0;
-            virtual const boost::shared_ptr< NekMatrix<DataType> > GetI(unsigned int numpoints, const double *x) = 0;
+            virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)=0;
+            virtual const MatrixSharedPtrType GetI(const double *x) = 0;
+            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const double *x) = 0;
 
         protected:
             PointsKey m_pointsKey;
             DataType **m_points;
             DataType *m_weights;
-            boost::shared_ptr<NekMatrix<DataType> > m_derivmatrix;
+            MatrixSharedPtrType m_derivmatrix;
+            NekManager<PointsKey, NekMatrix<DataType> > m_InterpManager;
 
             virtual void CalculatePoints()
             {
@@ -316,4 +319,4 @@ namespace Nektar
     }; // end of namespace
 } // end of namespace 
 
-#endif //POINTS_H
+#endif //NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H

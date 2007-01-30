@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
 #ifndef NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
 #define NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
 
@@ -59,17 +59,10 @@ namespace Nektar
                 typedef ParameterType InputType;
                 typedef NegateTraits<ParameterType> TraitsType;
                 
-                //typedef typename ExpressionMetadataChooser<ParameterType>::MetadataType MetadataType;
-
                 static void Apply(typename boost::call_traits<ParameterType>::reference result)
                 {
                     TraitsType::negate(result);
                 }
-
-//                 static MetadataType CreateUnaryMetadata(const MetadataType& rhs)
-//                 {
-//                     return MetadataType::CreateForNegation(rhs);
-//                 }
 
                 static const std::string& AsString()
                 {
@@ -86,9 +79,12 @@ namespace Nektar
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+
 /**
     $Log: NegateOp.hpp,v $
+    Revision 1.9  2007/01/30 22:34:13  bnelson
+    Fixed the call to negate so it goes through the traits.
+
     Revision 1.8  2007/01/16 17:37:56  bnelson
     Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 

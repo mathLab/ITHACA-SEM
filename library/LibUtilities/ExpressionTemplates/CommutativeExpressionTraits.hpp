@@ -36,8 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_COMMUTATIVE_EXPRESSION_TRAITS_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_COMMUTATIVE_EXPRESSION_TRAITS_HPP
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-
 #include <LibUtilities/ExpressionTemplates/AssociativeTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/CommutativeTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
@@ -61,6 +59,5 @@ namespace Nektar
     }
 }
 
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_COMMUTATIVE_EXPRESSION_TRAITS_HPP
 

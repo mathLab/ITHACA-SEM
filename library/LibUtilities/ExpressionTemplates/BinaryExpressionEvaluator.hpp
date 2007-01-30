@@ -36,7 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_EVALUATOR_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_EVALUATOR_HPP
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp>
 #include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
@@ -100,8 +99,7 @@ namespace Nektar
                                        ResultType, OpType, BinaryNullOp>
         {
             public:
-                //typedef typename ChooseOpType<BinaryNullOp, OpType, LhsDataType, RhsDataType, ResultType>::type ExpressionOpType;
-                
+               
                 static void Eval(const Expression<ConstantExpressionPolicy<LhsDataType> >& lhs, 
                                  const Expression<ConstantExpressionPolicy<RhsDataType> >& rhs,
                                  Accumulator<ResultType>& result)
@@ -127,7 +125,6 @@ namespace Nektar
                                        >::type >
         {
             public:
-                //typedef typename ChooseOpType<ParentOpType, OpType, LhsDataType, RhsDataType, ResultType>::type ExpressionOpType;
                 
                 static void Eval(const Expression<ConstantExpressionPolicy<LhsDataType> >& lhs, 
                                  const Expression<ConstantExpressionPolicy<RhsDataType> >& rhs,
@@ -705,6 +702,5 @@ namespace Nektar
     }
 }
 
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_EVALUATOR_HPP
 

@@ -36,8 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_OPERATORS_HPP
 #define NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_OPERATORS_HPP
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-
 #include <LibUtilities/ExpressionTemplates/ArithmeticTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/Expression.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
@@ -310,11 +308,13 @@ namespace Nektar
     }
 }
 
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_OPERATORS_HPP
 
 /**
     $Log: BinaryExpressionOperators.hpp,v $
+    Revision 1.7  2007/01/16 17:37:55  bnelson
+    Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
     Revision 1.6  2007/01/16 05:29:50  bnelson
     Major improvements for expression templates.
 

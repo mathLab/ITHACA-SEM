@@ -2,21 +2,20 @@
 FIND_PATH(ACML_INCLUDE_PATH acml.h /usr/include /usr/local/include
 			/opt/acml3.5.0/gnu64/include
                         /opt/acml3.5.0/gfortran64_int64/include
-                        /opt/acml3.5.0/gfortran64_mp_int64/include )
-
-#FIND_LIBRARY( BOOST_UNIT_TEST_LIB NAMES boost_unit_test_framework
-#	      PATHS /usr/lib /usr/local/lib C:\\Boost\\lib )
-#FIND_LIBRARY( BOOST_PROGRAM_OPTIONS_LIB NAMES boost_program_options
-#	      PATHS /usr/lib /usr/local/lib C:\\Boost\\lib )
-#FIND_LIBRARY( BOOST_FILESYSTEM_LIB NAMES boost_filesystem
-#	      PATHS /usr/lib /usr/local/lib C:\\Boost\\lib )
+                        /opt/acml3.5.0/gfortran64_mp_int64/include
+				"C:\\Program Files\\AMD\\acml3.6.0\\ifort32\\include" )
 
 SET(ACML_LIB_PATH ${ACML_INCLUDE_PATH}/../lib)
-
-FIND_LIBRARY( ACML NAMES acml PATHS ${ACML_LIB_PATH} )
+FIND_LIBRARY( ACML NAMES acml libacml PATHS ${ACML_LIB_PATH} )
 
 SET( ACML_BLAS_INCLUDE_FILE ${ACML_INCLUDE_PATH}/acml.h )
 SET( ACML_LAPACK_INCLUDE_FILE ${ACML_INCLUDE_PATH}/acml.h )
+
+IF( ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles" )
+	SET( ACML_TARGET_LINK_LIBRARIES ${ACML} gfortran )
+ELSE( ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles" )
+	SET( ACML_TARGET_LINK_LIBRARIES ${ACML} )
+ENDIF( ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles" )
 
 IF (ACML_INCLUDE_PATH)
   SET(ACML_FOUND ON)

@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #ifndef NEKTAR_LIB_UTILITIES_CONSTANT_EXPRESSION_HPP
 #define NEKTAR_LIB_UTILITIES_CONSTANT_EXPRESSION_HPP
 
@@ -59,7 +58,6 @@ namespace Nektar
                 typedef Type ResultType;
                 typedef typename boost::call_traits<Type>::const_reference DataType;
                 typedef ConstantNullOp NullOp;
-                //typedef typename ExpressionMetadataChooser<ConstantExpressionTraits<DataType> >::MetadataType MetadataType;
                 typedef typename ConstantExpressionTraits<Type>::MetadataType MetadataType;
                 
                 
@@ -78,101 +76,17 @@ namespace Nektar
                 {
                     os << data;
                 }
-                
-//                 template<template <typename, typename> class ParentOpType>
-//                 static void Apply(Accumulator<ResultType>& accum, const DataType& d)
-//                 {
-//                     EvaluateBinaryExpression<LhsExpressionPolicyType, RhsExpressionPolicyType, 
-//                                              ResultType, OpType, ParentOpType>::Eval(d.first, d.second, accum);
-//                 }
-//                 
-//                 static void InitializeMetadata(const DataType& data, MetadataType& m)
-//                 {
-//                     m = MetadataType(data.first.GetMetadata(), data.second.GetMetadata());
-//                 }
-//                 
-//                 static void Print(std::ostream& os, const DataType& data)
-//                 {
-//                     os << "(" << data.first << OpType<LhsResultType, RhsResultType>::AsString() << data.second << ")";
-//                 }
         };
-
-//         template<typename DataType>
-//         class Expression<ConstantExpressionPolicy<DataType> >
-//         {
-//             public:
-//                 typedef ConstantExpressionPolicy<DataType> PolicyType;
-//                 typedef DataType ResultType;
-//                 typedef typename ExpressionMetadataChooser<ConstantExpressionTraits<DataType> >::MetadataType MetadataType;
-//                 typedef Expression<ConstantExpressionPolicy<DataType> > ThisType;
-// 
-//             public:
-//                 /// \note The parameter must not be a temporary or strange behavior will result.
-//                 explicit Expression(typename boost::call_traits<ResultType>::const_reference value) :
-//                     m_value(value),
-//                     m_metadata(value)
-//                 {
-//                 }
-// 
-//                 Expression(const ThisType& rhs) :
-//                     m_value(rhs.m_value),
-//                     m_metadata(rhs.m_metadata)
-//                 {
-//                 }
-// 
-//                 ~Expression() {}
-// 
-//                 typename boost::call_traits<ResultType>::const_reference operator*() const { return m_value; }
-//                 typename boost::call_traits<ResultType>::const_reference GetValue() const { return m_value; }
-// 
-//                 void Apply(typename boost::call_traits<ResultType>::reference result) const
-//                 {
-//                     Accumulator<ResultType> accum(result);
-//                     Apply(accum);
-//                 }
-// 
-//                 void Apply(Accumulator<ResultType>& accum) const
-//                 {
-//                     accum = m_value;
-//                 }
-//                 
-//                 template<typename OpType>
-//                 void ApplyEqual(typename boost::call_traits<ResultType>::reference result) const
-//                 {
-//                     OpType::ApplyEqual(result, m_value);
-//                 }
-// 
-//                 template<typename OpType>
-//                 void ApplyEqual(Accumulator<ResultType>& accum) const
-//                 {
-//                     ASSERTL1(accum.IsInitialized(), "The accumulator passed to ConstantExpression::ApplyEqual must already have been initialized.");
-//                     OpType::ApplyEqual(accum.GetData(), m_value);
-//                 }
-//                 
-//                 const MetadataType& GetMetadata() const
-//                 {
-//                     return m_metadata;
-//                 }
-// 
-//                 void Print(std::ostream& os) const
-//                 {
-//                     os << m_value;
-//                 }
-//                 
-//             private:
-//                 ThisType& operator=(const ThisType& rhs);
-// 
-//                 typename boost::call_traits<ResultType>::const_reference m_value;
-//                 MetadataType m_metadata;
-//         };
     }
 }
 
 #endif // NEKTAR_LIB_UTILITIES_CONSTANT_EXPRESSION_HPP
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.7  2007/01/16 17:37:55  bnelson
+    Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
     Revision 1.6  2007/01/16 05:29:50  bnelson
     Major improvements for expression templates.
 

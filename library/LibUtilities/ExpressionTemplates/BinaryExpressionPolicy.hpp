@@ -36,8 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_POLICY_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_POLICY_HPP
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicyFwd.hpp>
 #include <LibUtilities/ExpressionTemplates/Expression.hpp>
 #include <LibUtilities/ExpressionTemplates/Accumulator.hpp>
@@ -96,5 +94,4 @@ namespace Nektar
     }
 }
 
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_POLICY_HPP

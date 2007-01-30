@@ -10,7 +10,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_HPP
 #define NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_HPP
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/mpl/and.hpp>
@@ -469,11 +468,13 @@ namespace Nektar
 
 }
 
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_HPP
 
 /**
     $Log: BinaryExpression.hpp,v $
+    Revision 1.10  2007/01/16 17:37:55  bnelson
+    Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
     Revision 1.9  2007/01/16 05:29:50  bnelson
     Major improvements for expression templates.
 

@@ -1,4 +1,4 @@
-SET(BOOST_INCLUDE_SEARCH_PATH ${CMAKE_SOURCE_DIR}/../ThirdParty/include )
+SET(BOOST_INCLUDE_SEARCH_PATH /usr/include /usr/local/include ${CMAKE_SOURCE_DIR}/../ThirdParty/include )
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
     SET(BOOST_INCLUDE_SEARCH_PATH ${BOOST_INCLUDE_SEARCH_PATH}
@@ -46,6 +46,7 @@ ENDIF( ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles" )
 FIND_LIBRARY( BOOST_FILESYSTEM_LIB NAMES ${BoostFileSystemName}
           PATHS
           ${BOOST_BASE_DIR}/lib
+	    ${BOOST_BASE_DIR}/../lib
           /usr/local/lib
           /usr/lib
           C:\\Boost\\lib )
@@ -53,6 +54,7 @@ FIND_LIBRARY( BOOST_FILESYSTEM_LIB NAMES ${BoostFileSystemName}
 FIND_LIBRARY( BOOST_FILESYSTEM_DEBUG_LIB NAMES ${BoostFileSystemDebugName}
           PATHS
           ${BOOST_BASE_DIR}/lib
+          ${BOOST_BASE_DIR}/../lib
           /usr/local/lib
           /usr/lib
           C:\\Boost\\lib )
@@ -60,6 +62,7 @@ FIND_LIBRARY( BOOST_FILESYSTEM_DEBUG_LIB NAMES ${BoostFileSystemDebugName}
 FIND_LIBRARY( BOOST_THREAD_LIB NAMES ${BoostThreadName}
           PATHS
           ${BOOST_BASE_DIR}/lib
+	    ${BOOST_BASE_DIR}/../lib
           /usr/local/lib
           /usr/lib
           C:\\Boost\\lib )
@@ -67,6 +70,7 @@ FIND_LIBRARY( BOOST_THREAD_LIB NAMES ${BoostThreadName}
 FIND_LIBRARY( BOOST_THREAD_DEBUG_LIB NAMES ${BoostThreadDebugName}
           PATHS
           ${BOOST_BASE_DIR}/lib
+          ${BOOST_BASE_DIR}/../lib
           /usr/local/lib
           /usr/lib
           C:\\Boost\\lib )
@@ -75,7 +79,8 @@ IF (BOOST_INCLUDE_DIR)
   SET(BOOST_FOUND TRUE)
 ENDIF (BOOST_INCLUDE_DIR)
 
-SET (BOOST_LIB_DIR ${BOOST_BASE_DIR}/lib )
+#SET (BOOST_LIB_DIR ${BOOST_BASE_DIR}/lib )
+GET_FILENAME_COMPONENT(BOOST_LIB_DIR ${BOOST_THREAD_LIB} PATH CACHE)
 LINK_DIRECTORIES(${BOOST_LIB_DIR})
     
 IF (BOOST_FOUND)

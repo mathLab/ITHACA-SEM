@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #ifndef NEKTAR_LIB_UTILITIES_NULL_OP_HPP
 #define NEKTAR_LIB_UTILITIES_NULL_OP_HPP
 
@@ -97,9 +96,12 @@ namespace Nektar
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NULL_OP_HPP
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+
 /**
     $Log: NullOp.hpp,v $
+    Revision 1.4  2007/01/29 01:34:05  bnelson
+    Updates to compile in windows.
+
     Revision 1.3  2007/01/16 17:37:56  bnelson
     Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 

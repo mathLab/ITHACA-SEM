@@ -29,6 +29,8 @@ ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
 IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
     SET(BoostFileSystemName "libboost_filesystem-vc80-mt")
     SET(BoostFileSystemDebugName "libboost_filesystem-vc80-mt-gd")
+    SET(BoostThreadName "boost_thread-vc80-mt")
+    SET(BoostThreadDebugName "boost_thread-vc80-mt-gd")
 ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles" )

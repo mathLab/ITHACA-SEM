@@ -129,14 +129,13 @@ namespace Nektar
 
         void NodalTriFekete::CalculateWeights()
         {
-            // Allocate the storage for weights
-            Points<double>::CalculateWeights();
+            m_weights = (double*)NULL;
+            // No weights computed
         }
 
         void NodalTriFekete::CalculateDerivMatrix()
         {
-            // Allocate the derivative matrix
-            Points<double>::CalculateDerivMatrix();
+            // No derivative matrix computed
         }
 
         boost::shared_ptr< Points<double> > NodalTriFekete::Create(const PointsKey &key)

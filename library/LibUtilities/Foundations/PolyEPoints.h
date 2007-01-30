@@ -59,10 +59,13 @@ namespace Nektar
             static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
 
             const boost::shared_ptr<NekMatrix<double> > GetI(const PointsKey &pkey);
-            const boost::shared_ptr<NekMatrix<double> > GetI(double x);
+            const boost::shared_ptr<NekMatrix<double> > GetI(const double * x);
             const boost::shared_ptr<NekMatrix<double> > GetI(unsigned int numpoints, const double *x);
 
         protected:
+            PolyEPoints(const PointsKey &key):PointsBaseType(key)
+            {
+            }
 
         private:
             /// Default constructor should not be called except by Create method.
@@ -71,10 +74,10 @@ namespace Nektar
             }
 
             /// Copy constructor should not be called.
-            PolyEPoints(const PointsKey &key):PointsBaseType(key)
+            PolyEPoints(const PolyEPoints &points):PointsBaseType(points.m_pointsKey)
             {
             }
-
+            
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();

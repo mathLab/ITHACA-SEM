@@ -150,18 +150,12 @@ namespace Nektar
             return returnval;
         }
 
-        const boost::shared_ptr<NekMatrix<double> > PolyEPoints::GetI(double x)
+        const boost::shared_ptr<NekMatrix<double> > PolyEPoints::GetI(const double * x)
         {
             int numpoints = 1;
-            double * interp = new double[GetNumPoints()*numpoints];
 
-            CalculateInterpMatrix(numpoints, &x, interp);
-
-            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp));
-
-            delete[] interp;
-
-            return returnval;
+            /// Delegate to function below.
+            return GetI(numpoints, x);
         }
 
         const boost::shared_ptr<NekMatrix<double> > PolyEPoints::GetI(unsigned int numpoints, const double *x)

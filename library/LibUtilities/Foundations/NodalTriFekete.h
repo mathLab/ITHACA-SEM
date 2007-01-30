@@ -59,9 +59,10 @@ namespace Nektar
 
             static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
 
-#pragma message("Fix these")
+
             const boost::shared_ptr<NekMatrix<DataType> > GetI(const PointsKey &pkey)
             {
+                ASSERTL0(false, "NodalTriFekete Method not implemented");
                 boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
 
                 return returnval;
@@ -69,6 +70,8 @@ namespace Nektar
 
             const boost::shared_ptr<NekMatrix<DataType> > GetI(const double *x)
             {
+                ASSERTL0(false, "NodalTriFekete Method not implemented");
+
                 boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
 
                 return returnval;
@@ -76,7 +79,9 @@ namespace Nektar
 
             const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, const double *x)
             {
-                 boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+                ASSERTL0(false, "NodalTriFekete Method not implemented");
+
+                boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
 
                 return returnval;
            }

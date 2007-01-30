@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Points1D.cpp
+// File NodalTriElec.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,17 +29,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: 1D Points definitions 
+// Description: 2D Nodal Triangle Fekete Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <algorithm>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/Foundations/NodalTriElec.h>
+#include <LibUtilities/Foundations/NodalTriElecData.h>
 
 namespace Nektar
 {
@@ -49,42 +51,164 @@ namespace Nektar
         {
             // Allocate the storage for points
             Points<double>::CalculatePoints();
-            
-            ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
-                
-            
+
+            int index=0,isum=0;
+            const int offset = 3; //offset to match Datafile
+            double a,b,c;
+            unsigned int numPoints = GetNumPoints();
+
+            // initialize values
+            for(unsigned int i=0; i < numPoints-2; ++i)
+            {
+                index += NodalTriElecNPTS[i];
+            }
+
+            for(unsigned int i=0; i < NodalTriElecNPTS[numPoints-2]; ++i, ++index)
+            {
+                if(int(NodalTriElecData[index][0]))
+                {
+                    a = NodalTriElecData[index][3]; 
+                    b = NodalTriElecData[index][4]; 
+                    c = NodalTriElecData[index][5]; 
+
+                    m_points[0][isum] = 2.0*b - 1.0;
+                    m_points[1][isum] = 2.0*c - 1.0;
+                    isum++;
+                    continue;
+                }//end symmetry1
+
+
+                if(int(NodalTriElecData[index][1]) == 1)
+                {
+                    for(unsigned int j=0; j < 3; ++j)
+                    {
+                        a = NodalTriElecData[index][offset+perm3A_2d[j][0]];
+                        b = NodalTriElecData[index][offset+perm3A_2d[j][1]];
+                        c = NodalTriElecData[index][offset+perm3A_2d[j][2]];
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
+                        isum++;
+                    }//end j
+                    continue;
+                }//end symmetry3a
+
+                if(int(NodalTriElecData[index][1]) == 2)
+                {
+                    for(unsigned int j=0; j < 3; ++j)
+                    {
+                        a = NodalTriElecData[index][offset+perm3B_2d[j][0]];
+                        b = NodalTriElecData[index][offset+perm3B_2d[j][1]];
+                        c = NodalTriElecData[index][offset+perm3B_2d[j][2]];
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
+                        isum++;
+                    }//end j
+                    continue;   
+                }//end symmetry3b
+
+
+                if(int(NodalTriElecData[index][2]))
+                {
+                    for(unsigned int j=0; j < 6; ++j)
+                    {
+                        a = NodalTriElecData[index][offset+perm6_2d[j][0]];
+                        b = NodalTriElecData[index][offset+perm6_2d[j][1]];
+                        c = NodalTriElecData[index][offset+perm6_2d[j][2]];
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
+                        isum++;
+                    }//end j
+                    continue;   
+                }//end symmetry6
+            }//end npts
+
+            NodalPointReorder2d();
+
+            ASSERTL1((isum==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
         }
 
         void NodalTriElec::CalculateWeights()
         {
-            // Allocate the storage for weights
-            Points<double>::CalculateWeights();
-
-
+            m_weights = (double*)NULL;
+            // No weights computed
         }
 
         void NodalTriElec::CalculateDerivMatrix()
         {
-            // Allocate the derivative matrix
-            Points<double>::CalculateDerivMatrix();
-        }
-
-        NodalTriElec::NodalTriElec(const PointsKey &key) : Points<double>(key)
-        {
+            // No derivative matrix computed
         }
 
         boost::shared_ptr< Points<double> > NodalTriElec::Create(const PointsKey &key)
         {
-            boost::shared_ptr< Points<double> > returnval(new NodalTriElec(key);
-
+            boost::shared_ptr< Points<double> > returnval(new NodalTriElec(key));
             returnval->Initialize();
-
             return returnval;
         }
 
+        void NodalTriElec::NodalPointReorder2d()
+        {
+            int istart,iend,isum=0;
+            const int numvert = 3;
+            const int numepoints = GetNumPoints()-2;
+
+            if(numepoints==0)
+            {
+                return;
+            }
+
+            // bubble sort for first edge
+            istart = numvert + isum;
+            iend = istart + numepoints;
+            for(int i=istart; i<iend; ++i)
+            {
+                for(int j=istart; j<iend-1; ++j)
+                {
+                    if(m_points[0][j+1] < m_points[0][j])
+                    {
+                        std::swap(m_points[0][j+1], m_points[0][j]);
+                        std::swap(m_points[1][j+1], m_points[1][j]);
+                    }
+                }
+            }
+            isum += numepoints;
+
+            // bubble sort for second edge
+            istart = numvert + isum;
+            iend = istart + numepoints;
+            for(int i=istart; i<iend; ++i)
+            {
+                for(int j=istart;j<iend-1; ++j)
+                {
+                    if(m_points[0][j+1] > m_points[0][j])
+                    {
+                        std::swap(m_points[0][j+1], m_points[0][j]);
+                        std::swap(m_points[1][j+1], m_points[1][j]);
+                    }
+                }
+            }
+            isum += numepoints;
+
+            // bubble sort for third edge
+            istart = numvert + isum;
+            iend = istart + numepoints;
+            for(int i=istart; i<iend; ++i)
+            {
+                for(int j=istart; j<iend-1; ++j)
+                {
+                    if(m_points[1][j+1] > m_points[1][j])
+                    {
+                        std::swap(m_points[0][j+1], m_points[0][j]);
+                        std::swap(m_points[1][j+1], m_points[1][j]);
+                    }
+                }
+            }
+
+            return;
+        }     
     } // end of namespace stdregion
 } // end of namespace stdregion
 
 
-
-
+/**
+* %Log%
+*/

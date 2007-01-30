@@ -61,7 +61,7 @@ namespace Nektar
             };
 
             PointsKey(const int &numpoints, const PointsType &pointstype): 
-            m_numpoints(numpoints), 
+                m_numpoints(numpoints), 
                 m_pointstype(pointstype)
             {
             }
@@ -194,8 +194,11 @@ namespace Nektar
                     delete[] m_points[i];
                 }
 
-                delete[] m_points;
-                delete[] m_weights;
+                /// Only delete weights if they have been allocated
+                if(m_weights != (DataType*)NULL)
+                {
+                    delete[] m_weights;
+                }
             }
 
             virtual void Initialize(void)

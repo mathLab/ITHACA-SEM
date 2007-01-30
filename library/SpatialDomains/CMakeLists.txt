@@ -50,16 +50,16 @@ SpatialDomains.hpp
 )
 
 SET(TINYXML_SOURCES
-../../ThirdParty/tinyxml/tinyxml.cpp
-../../ThirdParty/tinyxml/tinyxmlparser.cpp 
-../../ThirdParty/tinyxml/xmltest.cpp
-../../ThirdParty/tinyxml/tinyxmlerror.cpp 
-../../ThirdParty/tinyxml/tinystr.cpp
+${TINYXML_SRC_DIR}/tinyxml.cpp
+${TINYXML_SRC_DIR}/tinyxmlparser.cpp 
+${TINYXML_SRC_DIR}/xmltest.cpp
+${TINYXML_SRC_DIR}/tinyxmlerror.cpp 
+${TINYXML_SRC_DIR}/tinystr.cpp
 )
 
 SET(TINYXML_HEADERS
-../../ThirdParty/tinyxml/tinystr.h
-../../ThirdParty/tinyxml/tinyxml.h
+${TINYXML_INCLUDE_DIR}/tinystr.h
+${TINYXML_INCLUDE_DIR}/tinyxml.h
 )
 
 

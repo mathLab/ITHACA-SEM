@@ -17,7 +17,6 @@ StdTriExp.cpp
 
 SET(STD_REGIONS_HEADERS
 SpatialDomainsDeclarations.h
-StdBasis.h
 StdExpansion1D.h
 StdExpansion2D.h
 StdExpansion3D.h

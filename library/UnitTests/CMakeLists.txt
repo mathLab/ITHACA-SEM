@@ -38,7 +38,7 @@ ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
 
 TARGET_LINK_LIBRARIES(UnitTests
     optimized LibUtilities debug LibUtilities-g
-    optimized ${BoostThreadName} debug ${BoostThreadDebugName}
+    optimized ${BOOST_THREAD_LIB} debug ${BOOST_THREAD_DEBUG_LIB}
 )
 
 

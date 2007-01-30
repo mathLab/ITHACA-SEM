@@ -140,7 +140,7 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
 
     TARGET_LINK_LIBRARIES(${name}
         optimized LibUtilities debug LibUtilities-g
-        optimized ${BoostThreadName} debug ${BoostThreadDebugName})
+        optimized ${BOOST_THREAD_LIB} debug ${BOOST_THREAD_DEBUG_LIB})
         
     INSTALL_TARGETS(${NEKTAR_BIN_DIR} ${name})
 ENDMACRO(ADD_NEKTAR_EXECUTABLE name)

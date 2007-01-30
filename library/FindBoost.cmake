@@ -1,4 +1,4 @@
-SET(BOOST_INCLUDE_SEARCH_PATH /usr/include /usr/local/include ${CMAKE_SOURCE_DIR}/../ThirdParty/include )
+SET(BOOST_INCLUDE_SEARCH_PATH ${CMAKE_SOURCE_DIR}/../ThirdParty/include )
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
     SET(BOOST_INCLUDE_SEARCH_PATH ${BOOST_INCLUDE_SEARCH_PATH}
@@ -13,8 +13,9 @@ IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
         c:\\Boost\\include)
 ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
 
-FIND_PATH(BOOST_INCLUDE_DIR boost/weak_ptr.hpp ${BOOST_INCLUDE_SEARCH_PATH} )
-
+FIND_PATH(BOOST_BASE_DIR boost/weak_ptr.hpp ${BOOST_INCLUDE_SEARCH_PATH} )
+SET(BOOST_INCLUDE_DIR ${BOOST_BASE_DIR}/boost})
+    
 SET(BoostFileSystemName "")
 SET(BoostFileSystemDebugName "")
 
@@ -32,38 +33,38 @@ ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles" )
     IF( ${CMAKE_COMPILER_IS_GNUCXX} )
-        SET(BoostFileSystemName "boost_filesystem-gcc")
-        SET(BoostFileSystemDebugName "boost_filesystem-gcc-d")
-        SET(BoostThreadName "boost_thread")
-        SET(BoostThreadDebugName "boost_thread-d")
+        SET(BoostFileSystemName boost_filesystem-gcc boost_filesystem )
+        SET(BoostFileSystemDebugName boost_filesystem-gcc-d boost_filesystem-d )
+        SET(BoostThreadName boost_thread-gcc-mt boost_thread-gcc boost_thread-mt boost_thread  )
+        SET(BoostThreadDebugName boost_thread-gcc-mt-d boost_thread-gcc-d  boost_thread-mt-d boost_thread-d )
     ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
 ENDIF( ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles" )
 
 
 FIND_LIBRARY( BOOST_FILESYSTEM_LIB NAMES ${BoostFileSystemName}
           PATHS
-          ${BOOST_INCLUDE_DIR}/../lib
+          ${BOOST_BASE_DIR}/lib
           /usr/local/lib
           /usr/lib
           C:\\Boost\\lib )
 
 FIND_LIBRARY( BOOST_FILESYSTEM_DEBUG_LIB NAMES ${BoostFileSystemDebugName}
           PATHS
-          ${BOOST_INCLUDE_DIR}/../lib
+          ${BOOST_BASE_DIR}/lib
           /usr/local/lib
           /usr/lib
           C:\\Boost\\lib )
 
 FIND_LIBRARY( BOOST_THREAD_LIB NAMES ${BoostThreadName}
           PATHS
-          ${BOOST_INCLUDE_DIR}/../lib
+          ${BOOST_BASE_DIR}/lib
           /usr/local/lib
           /usr/lib
           C:\\Boost\\lib )
 
 FIND_LIBRARY( BOOST_THREAD_DEBUG_LIB NAMES ${BoostThreadDebugName}
           PATHS
-          ${BOOST_INCLUDE_DIR}/../lib
+          ${BOOST_BASE_DIR}/lib
           /usr/local/lib
           /usr/lib
           C:\\Boost\\lib )
@@ -72,8 +73,9 @@ IF (BOOST_INCLUDE_DIR)
   SET(BOOST_FOUND TRUE)
 ENDIF (BOOST_INCLUDE_DIR)
 
-SET (BOOST_LIB_DIR ${BOOST_INCLUDE_DIR}../lib )
-
+SET (BOOST_LIB_DIR ${BOOST_BASE_DIR}/lib )
+LINK_DIRECTORIES(${BOOST_LIB_DIR})
+    
 IF (BOOST_FOUND)
   IF (NOT Boost_FIND_QUIETLY)
      MESSAGE(STATUS "Found Boost: ${BOOST_INCLUDE_DIR}")

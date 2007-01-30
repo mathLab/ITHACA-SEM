@@ -305,11 +305,11 @@ namespace Nektar
 
         private:
             // These should never be called
-            Points(const Points &pts):m_pointskey(pts.m_pointskey)
+            Points(const Points &pts):m_pointsKey(pts.m_pointsKey)
             {
             }
 
-            Points():m_pointskey(NullPointsKey)
+            Points():m_pointsKey(NullPointsKey)
             {
                 NEKERROR(ErrorUtil::efatal, "Default Constructor for Points should not be called");
             }

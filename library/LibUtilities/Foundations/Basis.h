@@ -56,10 +56,6 @@ namespace Nektar
                 bool operator()(const BasisKey &lhs, const BasisKey &rhs);
             };
 
-            BasisKey():m_pointsKey(NullPointsKey)
-            {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor BasisKey should never be called");
-            }
 
             BasisKey(const BasisType btype, const int nummodes, 
                 const PointsKey pkey):
@@ -130,12 +126,12 @@ namespace Nektar
             /** \brief determine if basis definition has exact integration for
             *  inner product
             */
-            inline bool ExactIprodInt() const;
+            bool ExactIprodInt() const;
 
             /** \brief Determine if basis has collocation properties,
             *  i.e. GLL_Lagrange with appropriate quadrature
             */
-            inline bool  Collocation() const;
+            bool  Collocation() const;
 
             void GetInterpVec(const double zi, double *I) const;
 
@@ -156,6 +152,10 @@ namespace Nektar
             PointsKey  m_pointsKey;
 
         private:
+	    BasisKey():m_pointsKey(NullPointsKey)
+            {
+                NEKERROR(ErrorUtil::efatal,"Default Constructor BasisKey should never be called");
+            }
 
         };
 
@@ -215,12 +215,18 @@ namespace Nektar
             /** \brief determine if basis definition has exact integration for
             *  inner product
             */
-            bool ExactIprodInt() const;
+            inline bool ExactIprodInt() const
+	    {
+		return m_basisKey.ExactIprodInt();
+	    }
 
             /** \brief Determine if basis has collocation properties,
             *  i.e. GLL_Lagrange with appropriate quadrature
             */
-            inline bool  Collocation() const;
+            inline bool  Collocation() const
+	    {
+		return m_basisKey.Collocation();
+	    }
 
             void ResetBasisNumModes(int nummodes)
             {

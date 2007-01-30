@@ -1,5 +1,5 @@
 ARCH	 = $(shell uname)
-VPATH	 = ../../LibUtilities/BasicUtils ../../LibUtilities/Foundations ../../LibUtilities/Polylib
+VPATH	 = ../../LibUtilities/BasicUtils ../../LibUtilities/Foundations ../../LibUtilities/Polylib ../../LibUtilities/LinearAlgebra
 LIB	 = libNekUtilities.a
 
 # Must provide (relative) location or root director of libraries,i.e
@@ -13,7 +13,7 @@ include ../Flags/${ARCH}.inc
 
 # These are the module names:
 
-ALL   =  Graph Polylib 
+ALL = Graph Polylib Basis GaussPoints ManagerAccess NodalTriFekete Points 
 
 # ---------------------------------------------------------------- #
 # The following expand to give the names of all sections (ALL),    #

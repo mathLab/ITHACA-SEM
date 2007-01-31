@@ -84,10 +84,14 @@ namespace Nektar
         };
 
         // Method used to generate appropriate basis
-        void Basis::GenBasis(){
+        void Basis::GenBasis()
+        {
             int i,p,q;
             double scal,*mode;
             const double *z, *w, *D;
+
+            std::cout << "I AM HERE" << std::endl;
+
 
             boost::shared_ptr<Points<double> > pointsptr = PointsManager()[GetPointsKey()];
             pointsptr->GetZW(z,w);
@@ -496,6 +500,11 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.7  2007/01/31 18:37:32  kirby
+*
+* fully compiling but not fully tested update to Foundations
+* Basis now should work (Compiles but not tested yet)
+*
 * Revision 1.6  2007/01/29 19:47:29  jfrazier
 * Cleanup and restructuring to accommodate private default and copy constructors.
 *

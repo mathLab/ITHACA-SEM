@@ -55,7 +55,7 @@ namespace Nektar
         template <typename KeyType>
         struct defOpLessCreator
         {
-            bool operator()(const KeyType &lhs, const KeyType &rhs)
+            bool operator()(const KeyType &lhs, const KeyType &rhs) const
             {
                 return lhs < rhs;
             }

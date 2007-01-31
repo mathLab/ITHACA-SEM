@@ -105,7 +105,7 @@ namespace Nektar
  
         namespace
         {
-            const bool nodalTriFeketeInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTriElec), NodalTriElec::Create);
+            const bool nodalTriElecInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTriElec), NodalTriElec::Create);
         }
 
    } // end of namespace

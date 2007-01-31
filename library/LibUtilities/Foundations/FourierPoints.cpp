@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Points1D.cpp
+// File FourierPoints.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: 1D Points definitions 
+// Description: 1D Evenly-Spaced Points 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -45,46 +45,85 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+
         void FourierPoints::CalculatePoints()
         {
             // Allocate the storage for points
-            Points<double>::CalculatePoints();
-            
-            ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
-                
-            
+            PointsBaseType::CalculatePoints();
+
+            unsigned int npts = m_pointsKey.GetNumPoints();
+            if(npts==1)
+            {
+                m_points[0][0] = 0.0;
+            }
+            else
+            {
+                double dx = 2.0/(double)(npts-1);
+                for(int i=0;i<npts;++i)
+                {
+                    m_points[0][i] = -1.0 + i*dx;
+                }
+            }
         }
 
         void FourierPoints::CalculateWeights()
         {
-            // Allocate the storage for weights
-            Points<double>::CalculateWeights();
+            // Allocate the storage for points
+            PointsBaseType::CalculateWeights();
 
-
+            unsigned int npts = m_pointsKey.GetNumPoints();
+            if(npts==1)
+            {
+                m_weights[0] = 2.0; //midpoint rule
+            }
+            else
+            {
+                
+            }
         }
 
         void FourierPoints::CalculateDerivMatrix()
         {
-            // Allocate the derivative matrix
+            // Allocate the derivative matrix.
             Points<double>::CalculateDerivMatrix();
+            
         }
 
-        FourierPoints::FourierPoints(const PointsKey &key) : Points<double>(key)
-        {
-        }
 
-        boost::shared_ptr< Points<double> > FourierPoints::Create(const PointsKey &key)
+        boost::shared_ptr< PointsBaseType > FourierPoints::Create(const PointsKey &key)
         {
-            boost::shared_ptr< Points<double> > returnval(new FourierPoints(key);
+            boost::shared_ptr< PointsBaseType > returnval(new FourierPoints(key));
 
             returnval->Initialize();
 
             return returnval;
         }
 
-    } // end of namespace stdregion
-} // end of namespace stdregion
+        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(const PointsKey &pkey)
+        {
 
+            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(pkey.GetNumPoints(),GetNumPoints()));
+            return returnval;
+        }
+
+        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(const double * x)
+        {
+            int numpoints = 1;
+
+            /// Delegate to function below.
+            return GetI(numpoints, x);
+        }
+
+        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(unsigned int numpoints, const double *x)
+        {
+
+            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints()));
+
+            return returnval;
+        }        
+
+    } // end of namespace LibUtilities
+} // end of namespace Nektar
 
 
 

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Points1D.h
+// File FourierPoints.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: Header file of 1D Points definition 
+// Description: Header file of 1D Evenly-Spaced Point Definitions 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -41,30 +41,55 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        class FourierPoints: public Points<double>
+        typedef Points<double> PointsBaseType;
+
+        class FourierPoints: public PointsBaseType
         {
         public:
-            FourierPoints(const PointsKey &key)
-
             virtual ~FourierPoints()
+            {
+            }            
+
+            static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
+
+            const boost::shared_ptr<NekMatrix<double> > GetI(const PointsKey &pkey);
+            const boost::shared_ptr<NekMatrix<double> > GetI(const double * x);
+            const boost::shared_ptr<NekMatrix<double> > GetI(unsigned int numpoints, const double *x);
+
+        protected:
+            FourierPoints(const PointsKey &key):PointsBaseType(key)
             {
             }
 
-            static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
-
-        protected:
-
         private:
+            /// Default constructor should not be called except by Create method.
+            FourierPoints():PointsBaseType(NullPointsKey)
+            {
+            }
+
+            /// Copy constructor should not be called.
+            FourierPoints(const FourierPoints &points):PointsBaseType(points.m_pointsKey)
+            {
+            }
+            
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
-        };
+
+        }; // class FourierPoints
+
+        namespace
+        {
+            const bool FourierPointsInited1 = PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), FourierPoints::Create);
+        }
     } // end of namespace
 } // end of namespace 
+
 
 #endif //FOURIERPOINTS_H

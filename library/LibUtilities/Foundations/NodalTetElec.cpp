@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Points1D.cpp
+// File NodalTetElec.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,17 +29,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: 1D Points definitions 
+// Description: 3D Nodal Tet Electrostatic Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <algorithm>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/Foundations/NodalTetElec.h>
+#include <LibUtilities/Foundations/NodalTetElecData.h>
 
 namespace Nektar
 {
@@ -49,42 +51,35 @@ namespace Nektar
         {
             // Allocate the storage for points
             Points<double>::CalculatePoints();
-            
-            ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
-                
-            
+            ASSERTL0(false, "3D Point Expansion Not Implemented Yet");
         }
 
         void NodalTetElec::CalculateWeights()
         {
-            // Allocate the storage for weights
-            Points<double>::CalculateWeights();
-
-
+            m_weights = (double*)NULL;
+            // No weights computed
         }
 
         void NodalTetElec::CalculateDerivMatrix()
         {
-            // Allocate the derivative matrix
-            Points<double>::CalculateDerivMatrix();
-        }
-
-        NodalTetElec::NodalTetElec(const PointsKey &key) : Points<double>(key)
-        {
+            // No derivative matrix computed
         }
 
         boost::shared_ptr< Points<double> > NodalTetElec::Create(const PointsKey &key)
         {
-            boost::shared_ptr< Points<double> > returnval(new NodalTetElec(key);
-
+            boost::shared_ptr< Points<double> > returnval(new NodalTetElec(key));
             returnval->Initialize();
-
             return returnval;
         }
+
+        void NodalTetElec::NodalPointReorder3d()
+        {
+        }     
 
     } // end of namespace stdregion
 } // end of namespace stdregion
 
 
-
-
+/**
+* %Log%
+*/

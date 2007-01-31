@@ -57,9 +57,8 @@ namespace Nektar
             };
 
 
-            BasisKey(const BasisType btype, const int nummodes, 
-                const PointsKey pkey):
-            m_basistype(btype), 
+            BasisKey(const BasisType btype, const int nummodes, const PointsKey pkey):
+                m_basistype(btype), 
                 m_nummodes(nummodes),
                 m_pointsKey(pkey)
             {
@@ -80,6 +79,38 @@ namespace Nektar
             {
                 return m_nummodes;
             }
+
+            inline int GetTotNumModes() const
+            {
+                int value;
+
+                switch(m_basistype)
+                {
+                case eOrtho_B:
+                case eModified_B:
+                case eModified_C:
+                    value = m_nummodes*(m_nummodes+1)/2;
+                    break;
+
+                case eOrtho_C:
+                    value = m_nummodes*(m_nummodes+1)*(m_nummodes+2)/6;
+                    break;
+
+                case eOrtho_A:      
+                case eModified_A:   
+                case eFourier:      
+                case eGLL_Lagrange: 
+                case eLegendre:    
+                case eChebyshev:  
+                    value = m_nummodes;
+                    break;
+
+                default:
+                    NEKERROR(ErrorUtil::efatal,"Unknown basis being used");
+                }
+                return value;
+            }
+
 
             /** \brief return points order at which  basis is defined */
             inline int GetNumPoints() const
@@ -132,8 +163,6 @@ namespace Nektar
             *  i.e. GLL_Lagrange with appropriate quadrature
             */
             bool  Collocation() const;
-
-            void GetInterpVec(const double zi, double *I) const;
 
             //Overloaded Operators
             friend bool operator  == (const BasisKey& x, const BasisKey& y);
@@ -188,10 +217,21 @@ namespace Nektar
                 return m_basisKey.GetNumModes();
             }
 
+            inline int GetTotNumModes() const
+            {
+                return m_basisKey.GetTotNumModes();
+            }
+
             /** \brief return points order at which  basis is defined */
             inline int GetNumPoints() const
             {
                 return m_basisKey.GetNumPoints();
+            }
+
+            /** \brief return points order at which  basis is defined */
+            inline int GetTotNumPoints() const
+            {
+                return m_basisKey.GetTotNumPoints();
             }
 
             /** \brief return type of expansion basis */
@@ -211,43 +251,20 @@ namespace Nektar
                 return m_basisKey.GetPointsType();
             }    
 
-
             /** \brief determine if basis definition has exact integration for
             *  inner product
             */
             inline bool ExactIprodInt() const
-	    {
-		return m_basisKey.ExactIprodInt();
-	    }
+            {
+                return m_basisKey.ExactIprodInt();
+            }
 
             /** \brief Determine if basis has collocation properties,
             *  i.e. GLL_Lagrange with appropriate quadrature
             */
             inline bool  Collocation() const
-	    {
-		return m_basisKey.Collocation();
-	    }
-
-            void ResetBasisNumModes(int nummodes)
             {
-                //m_nummodes = nummodes;
-
-                //if(m_bdata)
-                //{
-                //    delete[] m_bdata;  //delete old space
-                //    m_bdata = NULL;
-                //}
-
-                //if(m_dbdata)
-                //{
-                //    delete[] m_dbdata;  //delete old space
-                //    m_bdata = NULL;
-                //}
-
-                //m_bdata  = new double[BasisMem()]; //allocate new space
-                //m_dbdata = new double[BasisMem()]; //allocate new space
-
-                //GenBasis();
+                return m_basisKey.Collocation();
             }
 
             /** \brief return basis definition array m_bdata */
@@ -262,9 +279,7 @@ namespace Nektar
                 return m_dbdata;
             }
 
-            int BasisMem();
             virtual void Initialize();
-            void GenBasis();
 
         protected:
             BasisKey    m_basisKey;
@@ -281,6 +296,9 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal,"Default Constructor for Basis should not be called");
             }
+
+            void GenBasis();
+
         };
 
         bool operator<(const BasisKey &lhs, const BasisKey &rhs);

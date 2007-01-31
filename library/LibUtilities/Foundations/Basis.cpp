@@ -38,6 +38,7 @@
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Blas.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
@@ -68,32 +69,14 @@ namespace Nektar
             return os;
         }
 
-        int Basis::BasisMem()
-        {
-            unsigned int numModes = GetNumModes();
-            unsigned int numPoints = GetNumPoints();
-
-            switch(GetBasisType())
-            {
-            case eOrtho_B:
-            case eModified_B:
-            case eModified_C:
-                return  numModes*(numModes+1)/2*numPoints;
-                break;
-
-            case eOrtho_C:
-                return  numModes*(numModes+1)*(numModes+2)/6*numPoints;
-                break;
-
-            default:
-                return numModes*numModes;
-            }       
-        }  
-
+        
         void Basis::Initialize()
         {
+            ASSERTL0(GetNumModes()>0, "Cannot call Basis initialisation with zero or negative order");
+            ASSERTL0(GetTotNumPoints()>0, "Cannot call Basis initialisation with zero or negative numbers of points");
+
             // Allocate Memory
-            int size = BasisMem();
+            int size = GetTotNumModes()*GetTotNumPoints();
             m_bdata  = new double [size];
             m_dbdata = new double [size];
 
@@ -102,30 +85,18 @@ namespace Nektar
 
         // Method used to generate appropriate basis
         void Basis::GenBasis(){
-
-            ASSERTL0(GetNumModes()>0, "Cannot call Basis initialisation with zero or negative order");
-
             int i,p,q;
             double scal,*mode;
-            const double *z, *D;//,*w,*D;
-            int localPManager = 0;
+            const double *z, *w, *D;
 
-            //PolyManagerSingleton::Instance().GetZW(m_pointstype, m_pointsorder, 
-            //    z, w, m_alpha, m_beta);
+            boost::shared_ptr<Points<double> > pointsptr = PointsManager()[GetPointsKey()];
+            pointsptr->GetZW(z,w);
+            D = &(pointsptr->GetD()->GetPtr())[0];
 
-            BasisType basisType = GetBasisType();
             int numModes = GetNumModes();
             int numPoints = GetNumPoints();
 
-            if(basisType != eFourier)
-            {
-                //PolyManagerSingleton::Instance().GetD (m_pointstype,m_pointsorder,
-                //    D,m_alpha,m_beta);
-            }
-
-#pragma message("Don't get what is going on with this!!!")
-
-            switch(basisType)
+            switch(GetBasisType())
             {
             case eOrtho_A:
             case eLegendre:
@@ -374,13 +345,10 @@ namespace Nektar
 
             case eGLL_Lagrange: 
                 {
-                    const double *zp;//,*wp;
+                    const double *zp,*wp;
 
                     mode = m_bdata;
-
-                    // get zeros and weights  of GLL points
-                    //PolyManagerSingleton::Instance().GetZW(eGaussLobattoLegendre,m_basisorder,
-                    //    zp, wp, 0.0 ,0.0);
+                    (PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)])->GetZW(zp,wp);
 
                     for (p=0; p<numModes; ++p,mode += numPoints)
                     {
@@ -482,15 +450,6 @@ namespace Nektar
                     GetNumModes() == GetNumPoints());
         }
 
-        void BasisKey::GetInterpVec(const double zi, double *I) const
-        {
-            //const double *z,*w;
-
-            //PolyManagerSingleton::Instance().GetZW(m_pointstype, m_pointsorder, z, w, 
-            //    m_alpha, m_beta);
-            //PolyManagerSingleton::Instance().GetInterpVec(zi, m_pointstype, z,
-            //    m_pointsorder, m_alpha, m_beta, I);
-        }
 
         // BasisKey compared to BasisKey
         bool operator  == (const BasisKey& x, const BasisKey& y)
@@ -537,6 +496,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.6  2007/01/29 19:47:29  jfrazier
+* Cleanup and restructuring to accommodate private default and copy constructors.
+*
 * Revision 1.5  2007/01/26 04:00:54  jfrazier
 * Cleanup after initial creation.
 *

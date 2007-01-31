@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Points1D.h
+// File NodalTetElec.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: Header file of 1D Points definition 
+// Description: Header file of 2D Nodal Triangle Fekete Points 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -41,30 +41,74 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        class NodalTetElec: public Points<double>
+ 
+        typedef Points<double> PointsBaseType;
+
+        class NodalTetElec: public PointsBaseType
         {
         public:
-            NodalTetElec(const PointsKey &key)
-
             virtual ~NodalTetElec()
             {
             }
 
             static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
 
+
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(const PointsKey &pkey)
+            {
+                ASSERTL0(false, "NodalTetElec Method not implemented");
+                boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+
+                return returnval;
+            }
+
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(const double *x)
+            {
+                ASSERTL0(false, "NodalTetElec Method not implemented");
+
+                boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+
+                return returnval;
+            }
+
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, const double *x)
+            {
+                ASSERTL0(false, "NodalTetElec Method not implemented");
+
+                boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+
+                return returnval;
+           }
+
         protected:
 
         private:
+            NodalTetElec():PointsBaseType(NullPointsKey)
+            {
+            }
+
+            NodalTetElec(const PointsKey &key):PointsBaseType(key)
+            {
+            }
+
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
+            void NodalPointReorder3d();
         };
-    } // end of namespace
+ 
+        namespace
+        {
+            const bool nodalTetElecInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTetElec), NodalTetElec::Create);
+        }
+
+   } // end of namespace
 } // end of namespace 
 
 #endif //NODALTETELEC_H

@@ -92,7 +92,6 @@ namespace Nektar
 
             std::cout << "I AM HERE" << std::endl;
 
-
             boost::shared_ptr<Points<double> > pointsptr = PointsManager()[GetPointsKey()];
             pointsptr->GetZW(z,w);
             D = &(pointsptr->GetD()->GetPtr())[0];
@@ -500,6 +499,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+ Revision 1.8  2007/01/31 23:27:56  kirby
+ *** empty log message ***
+
 * Revision 1.7  2007/01/31 18:37:32  kirby
 *
 * fully compiling but not fully tested update to Foundations
@@ -554,7 +556,4 @@ namespace Nektar
 * Coding standard revisions so that libraries compile
 *
 **/ 
-
-
-
 

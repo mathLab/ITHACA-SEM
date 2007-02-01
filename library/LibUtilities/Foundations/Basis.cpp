@@ -33,17 +33,43 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
+#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Blas.hpp>
-#include <LibUtilities/Foundations/ManagerAccess.h>
+
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
+        namespace
+        {
+            //eOrtho_A,      //!< Principle Orthogonal Functions \f$\widetilde{\psi}^a_p(z_i)\f$
+            //eOrtho_B,      //!< Principle Orthogonal Functions \f$\widetilde{\psi}^b_{pq}(z_i)\f$
+            //eOrtho_C,      //!< Principle Orthogonal Functions \f$\widetilde{\psi}^c_{pqr}(z_i)\f$
+            //eModified_A,   //!< Principle Modified Functions \f$ \phi^a_p(z_i) \f$
+            //eModified_B,   //!< Principle Modified Functions \f$ \phi^b_{pq}(z_i) \f$
+            //eModified_C,   //!< Principle Modified Functions \f$ \phi^c_{pqr}(z_i) \f$
+            //eFourier,      //!< Fourier Expansion \f$ \exp(i p\pi  z_i)\f$
+            //eGLL_Lagrange, //!< Lagrange for SEM basis \f$ h_p(z_i) \f$
+            //eLegendre,     //!< Legendre Polynomials \f$ L_p(z_i) = P^{0,0}_p(z_i)\f$. Same as Ortho_A
+            //eChebyshev,    //!< Chebyshev Polynomials \f$ T_p(z_i) = P^{-1/2,-1/2}_p(z_i)\f$
+
+            const bool Ortho_A_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_A, 0, NullPointsKey), Basis::Create);
+            const bool Ortho_B_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_B, 0, NullPointsKey), Basis::Create);
+            const bool Ortho_C_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_C, 0, NullPointsKey), Basis::Create);
+            const bool Modified_A_Inited = BasisManager().RegisterCreator(BasisKey(eModified_A, 0, NullPointsKey), Basis::Create);
+            const bool Modified_B_Inited = BasisManager().RegisterCreator(BasisKey(eModified_B, 0, NullPointsKey), Basis::Create);
+            const bool Modified_C_Inited = BasisManager().RegisterCreator(BasisKey(eModified_C, 0, NullPointsKey), Basis::Create);
+            const bool Fourier_Inited = BasisManager().RegisterCreator(BasisKey(eFourier, 0, NullPointsKey), Basis::Create);
+            const bool GLL_Lagrange_Inited = BasisManager().RegisterCreator(BasisKey(eGLL_Lagrange, 0, NullPointsKey), Basis::Create);
+            const bool Legendre_Inited = BasisManager().RegisterCreator(BasisKey(eLegendre, 0, NullPointsKey), Basis::Create);
+            const bool Chebyshev_Inited = BasisManager().RegisterCreator(BasisKey(eChebyshev, 0, NullPointsKey), Basis::Create);
+        };
+
         bool operator<(const BasisKey &lhs, const BasisKey &rhs)
         {
             PointsKey lhsPointsKey = lhs.GetPointsKey();
@@ -60,16 +86,26 @@ namespace Nektar
 
         bool BasisKey::opLess::operator()(const BasisKey &lhs, const BasisKey &rhs)
         {
-#pragma message("Address this operator")
-            return (lhs<rhs);
+            return (lhs.m_basistype < rhs.m_basistype);
         }
 
         std::ostream& operator<<(std::ostream& os, const BasisKey& rhs)
         {
+            os << "NumModes: " << rhs.GetNumModes() << " BasisType: " << BasisTypeMap[rhs.GetBasisType()];
+            os << " " << rhs.GetPointsKey() << std::endl;
+
             return os;
         }
 
-        
+        boost::shared_ptr<Basis> Basis::Create(const BasisKey &bkey)
+        {
+            boost::shared_ptr<Basis> returnval(new Basis(bkey));
+
+            returnval->Initialize();
+
+            return returnval;
+        }
+
         void Basis::Initialize()
         {
             ASSERTL0(GetNumModes()>0, "Cannot call Basis initialisation with zero or negative order");
@@ -89,8 +125,6 @@ namespace Nektar
             int i,p,q;
             double scal,*mode;
             const double *z, *w, *D;
-
-            std::cout << "I AM HERE" << std::endl;
 
             boost::shared_ptr<Points<double> > pointsptr = PointsManager()[GetPointsKey()];
             pointsptr->GetZW(z,w);
@@ -449,8 +483,8 @@ namespace Nektar
         bool BasisKey::Collocation() const 
         {
             return (m_basistype == eGLL_Lagrange &&
-                    GetPointsType() == eGaussLobattoLegendre &&
-                    GetNumModes() == GetNumPoints());
+                GetPointsType() == eGaussLobattoLegendre &&
+                GetNumModes() == GetNumPoints());
         }
 
 
@@ -458,8 +492,8 @@ namespace Nektar
         bool operator  == (const BasisKey& x, const BasisKey& y)
         {
             return (x.GetPointsKey() == y.GetPointsKey() &&
-                    x.m_basistype == y.m_basistype &&
-                    x.GetNumModes() == y.GetNumModes());
+                x.m_basistype == y.m_basistype &&
+                x.GetNumModes() == y.GetNumModes());
         }
 
 
@@ -499,8 +533,11 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
- Revision 1.8  2007/01/31 23:27:56  kirby
- *** empty log message ***
+* Revision 1.9  2007/02/01 15:30:07  jfrazier
+* Reformatted.
+*
+Revision 1.8  2007/01/31 23:27:56  kirby
+*** empty log message ***
 
 * Revision 1.7  2007/01/31 18:37:32  kirby
 *

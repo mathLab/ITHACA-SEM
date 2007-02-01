@@ -308,15 +308,8 @@ namespace Nektar
 
         private:
             // These should never be called
-            Points(const Points &pts):m_pointsKey(pts.m_pointsKey)
-            {
-            }
-
-            Points():m_pointsKey(NullPointsKey)
-            {
-                NEKERROR(ErrorUtil::efatal, "Default Constructor for Points should not be called");
-            }
-
+            Points(const Points &pts);
+            Points();
         };
 
     }; // end of namespace

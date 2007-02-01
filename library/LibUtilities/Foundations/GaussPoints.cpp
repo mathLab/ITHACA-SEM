@@ -40,11 +40,26 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/Foundations/GaussPoints.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
     namespace LibUtilities 
-    {
+    {  
+        namespace
+        {
+            const bool gaussInited1 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre), GaussPoints::Create);
+            const bool gaussInited2 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMLegendre), GaussPoints::Create);
+            const bool gaussInited3 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPLegendre), GaussPoints::Create);
+            const bool gaussInited4 = PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoLegendre), GaussPoints::Create);
+            const bool gaussInited5 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussChebyshev), GaussPoints::Create);
+            const bool gaussInited6 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMChebyshev), GaussPoints::Create);
+            const bool gaussInited7 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPChebyshev), GaussPoints::Create);
+            const bool gaussInited8 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1), GaussPoints::Create);
+            const bool gaussInited9 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre), GaussPoints::Create);
+            const bool gaussInited10 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2), GaussPoints::Create);
+        }
+
         void GaussPoints::CalculatePoints()
         {
             // Allocate the storage for points and weights
@@ -109,7 +124,7 @@ namespace Nektar
         {
             // Allocate the derivative matrix.
             Points<double>::CalculateDerivMatrix();
-            
+
             int numpoints = m_pointsKey.GetNumPoints();
             int totpoints = m_pointsKey.GetTotNumPoints();
             double * dmtemp = new double[totpoints*totpoints];
@@ -173,7 +188,7 @@ namespace Nektar
             case eGaussGaussLegendre:
                 Polylib::Imgj(interp,m_points[0],xpoints,GetNumPoints(),npts,0.0,0.0);
                 break;
- 
+
             case eGaussRadauMLegendre:
                 Polylib::Imgrjm(interp,m_points[0],xpoints,GetNumPoints(),npts,0.0,0.0);
                 break;
@@ -189,7 +204,7 @@ namespace Nektar
             case eGaussGaussChebyshev:
                 Polylib::Imgj(interp,m_points[0],xpoints,GetNumPoints(),npts,-0.5,-0.5);
                 break;
- 
+
             case eGaussRadauMChebyshev:
                 Polylib::Imgrjm(interp,m_points[0],xpoints,GetNumPoints(),npts,-0.5,-0.5);
                 break;
@@ -215,36 +230,39 @@ namespace Nektar
             }
         }
 
-        boost::shared_ptr< PointsBaseType > GaussPoints::Create(const PointsKey &key)
+        boost::shared_ptr< PointsBaseType > GaussPoints::Create(const PointsKey &pkey)
         {
-            boost::shared_ptr< PointsBaseType > returnval(new GaussPoints(key));
+            boost::shared_ptr< PointsBaseType > returnval(new GaussPoints(pkey));
 
             returnval->Initialize();
 
             return returnval;
         }
 
+        boost::shared_ptr< NekMatrix<double> > GaussPoints::CreateMatrix(const PointsKey &ownpkey, const PointsKey &pkey)
+        {
+            int numpoints = pkey.GetNumPoints();
+            const double * xpoints;
+
+            PointsManager()[pkey]->GetPoints(xpoints);
+
+            /// Delegate to function below.
+            return PointsManager()[ownpkey]->GetI(numpoints, xpoints);
+        }
+
         const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(const PointsKey &pkey)
         {
+            ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
 
-                ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
-
-                int numpoints = pkey.GetNumPoints();
-                double * interp = new double[GetNumPoints()*numpoints];
-                const double * xpoints;
-                
-                PointsManager()[pkey]->GetPoints(xpoints);
-
-                /// Delegate to function below.
-                return GetI(numpoints, xpoints);
+            return m_InterpManager[pkey];
         }
 
         const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(const double* x)
         {
-                int numpoints = 1;
+            int numpoints = 1;
 
-                /// Delegate to function below.
-                return GetI(numpoints, x);
+            /// Delegate to function below.
+            return GetI(numpoints, x);
         }
 
         const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(unsigned int numpoints, const double *x)

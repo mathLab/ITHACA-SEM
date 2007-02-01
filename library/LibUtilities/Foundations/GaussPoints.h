@@ -38,10 +38,10 @@
 
 #include <math.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
@@ -56,48 +56,43 @@ namespace Nektar
             {
             }            
 
-            static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
-            static boost::shared_ptr< NekMatrix<DataType> > CreateMatrix(const PointsKey &key);
+            static boost::shared_ptr< PointsBaseType > Create(const PointsKey &pkey);
+            static boost::shared_ptr< NekMatrix<double> > CreateMatrix(const PointsKey &ownpkey, const PointsKey &pkey);
 
             const boost::shared_ptr<NekMatrix<double> > GetI(const PointsKey &pkey);
             const boost::shared_ptr<NekMatrix<double> > GetI(const double *x);
             const boost::shared_ptr<NekMatrix<double> > GetI(unsigned int numpoints, const double *x);
 
         protected:
-            GaussPoints(const PointsKey &key):PointsBaseType(key)
+            GaussPoints(const PointsKey &pkey):PointsBaseType(pkey)
             {
+            //eGaussGaussLegendre,     //!< 1D Gauss-Gauss-Legendre quadrature points
+            //eGaussRadauMLegendre,    //!< 1D Gauss-Radau-Legendre quadrature points, pinned at x=-1
+            //eGaussRadauPLegendre,    //!< 1D Gauss-Radau-Legendre quadrature points, pinned at x=1
+            //eGaussLobattoLegendre,   //!< 1D Gauss-Lobatto-Legendre quadrature points
+            //eGaussGaussChebyshev,    //!< 1D Gauss-Gauss-Chebyshev quadrature points
+            //eGaussRadauMChebyshev,   //!< 1D Gauss-Radau-Chebyshev quadrature points, pinned at x=-1
+            //eGaussRadauPChebyshev,   //!< 1D Gauss-Radau-Chebyshev quadrature points, pinned at x=1
+            //eGaussLobattoChebyshev,  //!< 1D Gauss-Lobatto-Legendre quadrature points
+            //eGaussRadauMAlpha0Beta1, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    1 \f$
+            //eGaussRadauMAlpha0Beta2, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    2 \f$
+            //ePolyEvenlySpaced,       //!< 1D Evenly-spaced points using Lagrange polynomial
+
+                //m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
+                //    boost::bind(&GaussPoints::CreateMatrix, this, _1, _2)(pkey));
             }
 
         private:
-            /// Default constructor should not be called except by Create method.
-            GaussPoints():PointsBaseType(NullPointsKey)
-            {
-            }
-
-            /// Copy constructor should not be called.
-            GaussPoints(const GaussPoints &points):PointsBaseType(points.m_pointsKey)
-            {
-            }
+            /// These should not be called.  All creation is done using the constructor
+            /// requiring the key, declared above.
+            GaussPoints();
+            GaussPoints(const GaussPoints &points);
 
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
             void CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp);
         }; // class GaussPoints
-
-        namespace
-        {
-            const bool gaussInited1 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre), GaussPoints::Create);
-            const bool gaussInited2 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMLegendre), GaussPoints::Create);
-            const bool gaussInited3 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPLegendre), GaussPoints::Create);
-            const bool gaussInited4 = PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoLegendre), GaussPoints::Create);
-            const bool gaussInited5 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussChebyshev), GaussPoints::Create);
-            const bool gaussInited6 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMChebyshev), GaussPoints::Create);
-            const bool gaussInited7 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPChebyshev), GaussPoints::Create);
-            const bool gaussInited8 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1), GaussPoints::Create);
-            const bool gaussInited9 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre), GaussPoints::Create);
-            const bool gaussInited10 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2), GaussPoints::Create);
-        }
     } // end of namespace
 } // end of namespace 
 

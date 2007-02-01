@@ -34,11 +34,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <Loki/Singleton.h>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
@@ -61,6 +61,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.2  2007/01/20 21:45:59  kirby
+*** empty log message ***
+
 Revision 1.1  2007/01/19 18:02:26  jfrazier
 Initial checkin.
 

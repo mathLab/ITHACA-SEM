@@ -33,13 +33,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <loki/Singleton.h>
+#ifndef NEKTAR_LIB_UTILIITIES_FOUNDATIONS_MANAGER_ACCESS_H
+#define NEKTAR_LIB_UTILIITIES_FOUNDATIONS_MANAGER_ACCESS_H
+
 #include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Basis.h>
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
 {
@@ -48,14 +47,18 @@ namespace Nektar
         typedef NekManager<PointsKey, Points<double>, PointsKey::opLess> PointsManagerT;
         PointsManagerT &PointsManager(void);
 
-	    typedef NekManager<BasisKey, Basis, BasisKey::opLess > BasisManagerT;
+        typedef NekManager<BasisKey, Basis, BasisKey::opLess> BasisManagerT;
         BasisManagerT &BasisManager(void);
 
     } // end of namespace LibUtilities
 } // end of namespace Nektar
+#endif //#NEKTAR_LIB_UTILIITIES_FOUNDATIONS_MANAGER_ACCESS_H
 
 /**
 $Log: ManagerAccess.h,v $
+Revision 1.6  2007/01/25 21:31:46  jfrazier
+Format change.
+
 Revision 1.5  2007/01/20 21:52:34  sherwin
 Remove Basis template class definitino
 

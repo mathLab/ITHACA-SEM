@@ -33,18 +33,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef BASIS_H
-#define BASIS_H
+#ifndef NEKTAR_LIB_UTILIITIES_FOUNDATIONS_BASIS_H
+#define NEKTAR_LIB_UTILIITIES_FOUNDATIONS_BASIS_H
 
 #include <math.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
-#include <Libutilities/Foundations/Points.h>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-
         class BasisKey
         {
         public:
@@ -193,7 +191,9 @@ namespace Nektar
         /////////////////////////////////////////////////////////////////////////
         class Basis
         {
-        public:    
+        public:
+
+            static boost::shared_ptr<Basis> Create(const BasisKey &bkey);
 
             // default destructor()
             ~Basis()
@@ -310,6 +310,6 @@ namespace Nektar
     } // end of namespace
 } // end of namespace
 
-#endif //BASIS_H
+#endif //NEKTAR_LIB_UTILIITIES_FOUNDATIONS_BASIS_H
 
 

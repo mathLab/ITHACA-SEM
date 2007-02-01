@@ -28,8 +28,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: 1D Evenly-Spaced Points 
+//
+// Description: 1D Evenly-Spaced Points
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +43,7 @@
 
 namespace Nektar
 {
-    namespace LibUtilities 
+    namespace LibUtilities
     {
 
         void PolyEPoints::CalculatePoints()
@@ -59,7 +59,7 @@ namespace Nektar
             else
             {
                 double dx = 2.0/(double)(npts-1);
-                for(int i=0;i<npts;++i)
+                for(unsigned int i=0;i<npts;++i)
                 {
                     m_points[0][i] = -1.0 + i*dx;
                 }
@@ -87,7 +87,7 @@ namespace Nektar
                     m_weights[i] = 0.0;
                     for(unsigned j=0;j<npts;++j)
                     {
-                         m_weights[i] += w[j]*LagrangePoly(z[j],i,npts,m_points[0]);
+                        m_weights[i] += w[j]*LagrangePoly(z[j],i,npts,m_points[0]);
                     }
                 }
             }
@@ -97,7 +97,7 @@ namespace Nektar
         {
             // Allocate the derivative matrix.
             Points<double>::CalculateDerivMatrix();
-            
+
             for(unsigned int i=0;i<m_pointsKey.GetNumPoints();++i)
             {
                 for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
@@ -105,7 +105,7 @@ namespace Nektar
                     (*m_derivmatrix)(i,j) = LagrangePolyDeriv(m_points[0][i],j,m_pointsKey.GetNumPoints(),m_points[0]);
                 }
             }
-            
+
         }
 
         void PolyEPoints::CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp)
@@ -117,9 +117,8 @@ namespace Nektar
                     interp[i*m_pointsKey.GetNumPoints()+j] = LagrangePoly(xpoints[i],j,m_pointsKey.GetNumPoints(),m_points[0]);
                 }
             }
-    
-        }
 
+        }
 
         boost::shared_ptr< PointsBaseType > PolyEPoints::Create(const PointsKey &key)
         {
@@ -136,18 +135,11 @@ namespace Nektar
             ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
 
             int numpoints = pkey.GetNumPoints();
-            double * interp = new double[GetNumPoints()*numpoints];
             const double * xpoints;
 
             PointsManager()[pkey]->GetPoints(xpoints);
 
-            CalculateInterpMatrix(numpoints, xpoints, interp);
-
-            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp));
-
-            delete[] interp;
-
-            return returnval;
+            return GetI(numpoints, xpoints);
         }
 
         const boost::shared_ptr<NekMatrix<double> > PolyEPoints::GetI(const double * x)
@@ -171,16 +163,16 @@ namespace Nektar
             return returnval;
         }
 
-        
+
         double PolyEPoints::LagrangeInterpolant(double x, int npts, double *xpts, double * funcvals)
         {
-                double sum = 0.0;
+            double sum = 0.0;
 
-                for(unsigned int i=0;i<npts;++i)
-                {
-                    sum = sum + funcvals[i]*LagrangePoly(x,i,npts,xpts);
-                }
-                return sum;
+            for(int i=0;i<npts;++i)
+            {
+                sum = sum + funcvals[i]*LagrangePoly(x,i,npts,xpts);
+            }
+            return sum;
         }
 
 
@@ -188,12 +180,12 @@ namespace Nektar
         {
             double h=1.0;
 
-            for(unsigned int i=0;i<pt; ++i)
+            for(int i=0;i<pt; ++i)
             {
                 h = h * (x - xpts[i])/(xpts[pt]-xpts[i]);
             }
 
-            for(unsigned int i=pt+1;i<npts;++i)
+            for(int i=pt+1;i<npts;++i)
             {
                 h = h * (x - xpts[i])/(xpts[pt]-xpts[i]);
             }
@@ -206,12 +198,12 @@ namespace Nektar
             double h;
             double y=0.0;
 
-            for(unsigned int j=0;j<npts;++j)
+            for(int j=0;j<npts;++j)
             {
                 if(j!=pt)
                 {
                     h=1.0;
-                    for(unsigned int i=0;i<npts;++i)
+                    for(int i=0;i<npts;++i)
                     {
                         if(i!=pt)
                         {

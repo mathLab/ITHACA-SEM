@@ -239,7 +239,7 @@ namespace Nektar
             return returnval;
         }
 
-        boost::shared_ptr< NekMatrix<double> > GaussPoints::CreateMatrix(const PointsKey &ownpkey, const PointsKey &pkey)
+        boost::shared_ptr< NekMatrix<double> > GaussPoints::CreateMatrix(const PointsKey &pkey)
         {
             int numpoints = pkey.GetNumPoints();
             const double * xpoints;
@@ -247,7 +247,7 @@ namespace Nektar
             PointsManager()[pkey]->GetPoints(xpoints);
 
             /// Delegate to function below.
-            return PointsManager()[ownpkey]->GetI(numpoints, xpoints);
+            return GetI(numpoints, xpoints);
         }
 
         const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(const PointsKey &pkey)

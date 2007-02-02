@@ -39,6 +39,7 @@
 #include <math.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
+#include <boost/mem_fn.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
@@ -57,7 +58,7 @@ namespace Nektar
             }            
 
             static boost::shared_ptr< PointsBaseType > Create(const PointsKey &pkey);
-            static boost::shared_ptr< NekMatrix<double> > CreateMatrix(const PointsKey &ownpkey, const PointsKey &pkey);
+            boost::shared_ptr< NekMatrix<double> > CreateMatrix(const PointsKey &pkey);
 
             const boost::shared_ptr<NekMatrix<double> > GetI(const PointsKey &pkey);
             const boost::shared_ptr<NekMatrix<double> > GetI(const double *x);
@@ -66,20 +67,28 @@ namespace Nektar
         protected:
             GaussPoints(const PointsKey &pkey):PointsBaseType(pkey)
             {
-            //eGaussGaussLegendre,     //!< 1D Gauss-Gauss-Legendre quadrature points
-            //eGaussRadauMLegendre,    //!< 1D Gauss-Radau-Legendre quadrature points, pinned at x=-1
-            //eGaussRadauPLegendre,    //!< 1D Gauss-Radau-Legendre quadrature points, pinned at x=1
-            //eGaussLobattoLegendre,   //!< 1D Gauss-Lobatto-Legendre quadrature points
-            //eGaussGaussChebyshev,    //!< 1D Gauss-Gauss-Chebyshev quadrature points
-            //eGaussRadauMChebyshev,   //!< 1D Gauss-Radau-Chebyshev quadrature points, pinned at x=-1
-            //eGaussRadauPChebyshev,   //!< 1D Gauss-Radau-Chebyshev quadrature points, pinned at x=1
-            //eGaussLobattoChebyshev,  //!< 1D Gauss-Lobatto-Legendre quadrature points
-            //eGaussRadauMAlpha0Beta1, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    1 \f$
-            //eGaussRadauMAlpha0Beta2, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    2 \f$
-            //ePolyEvenlySpaced,       //!< 1D Evenly-spaced points using Lagrange polynomial
-
-                //m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
-                //    boost::bind(&GaussPoints::CreateMatrix, this, _1, _2)(pkey));
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPLegendre),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoLegendre),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussChebyshev),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
             }
 
         private:

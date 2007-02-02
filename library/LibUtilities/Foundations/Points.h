@@ -276,7 +276,7 @@ namespace Nektar
             DataType **m_points;
             DataType *m_weights;
             MatrixSharedPtrType m_derivmatrix;
-            NekManager<PointsKey, NekMatrix<DataType> > m_InterpManager;
+            NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_InterpManager;
 
             virtual void CalculatePoints()
             {

@@ -24,24 +24,19 @@ IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
     SET(BoostFileSystemDebugName "libboost_filesystem-vc71-mt-gd")
     SET(BoostThreadName "boost_thread-vc71-mt")
     SET(BoostThreadDebugName "boost_thread-vc71-mt-gd")
-ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
-
-IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
+ELSEIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
     SET(BoostFileSystemName "libboost_filesystem-vc80-mt")
     SET(BoostFileSystemDebugName "libboost_filesystem-vc80-mt-gd")
     SET(BoostThreadName "boost_thread-vc80-mt")
     SET(BoostThreadDebugName "boost_thread-vc80-mt-gd")
-ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
-
-IF( ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles" )
+ELSE( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
     IF( ${CMAKE_COMPILER_IS_GNUCXX} )
         SET(BoostFileSystemName boost_filesystem-gcc boost_filesystem )
         SET(BoostFileSystemDebugName boost_filesystem-gcc-d boost_filesystem-d )
         SET(BoostThreadName boost_thread-gcc-mt boost_thread-gcc boost_thread-mt boost_thread  )
         SET(BoostThreadDebugName boost_thread-gcc-mt-d boost_thread-gcc-d  boost_thread-mt-d boost_thread-d )
     ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
-ENDIF( ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles" )
-
+ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
 
 FIND_LIBRARY( BOOST_FILESYSTEM_LIB NAMES ${BoostFileSystemName}
           PATHS

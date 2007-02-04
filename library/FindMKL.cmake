@@ -1,21 +1,16 @@
 
-FIND_PATH(MKL_INCLUDE_DIR mkl_cblas.h /usr/include /usr/local/include
-			/opt/intel/mk1/8.1.1/include )
+FIND_PATH(MKL_INCLUDE_DIR mkl_cblas.h /usr/include 
+				      /usr/local/include
+				      /opt/intel/mkl/8.1.1/include)
 
-#FIND_LIBRARY( BOOST_UNIT_TEST_LIB NAMES boost_unit_test_framework
-#	      PATHS /usr/lib /usr/local/lib C:\\Boost\\lib )
-#FIND_LIBRARY( BOOST_PROGRAM_OPTIONS_LIB NAMES boost_program_options
-#	      PATHS /usr/lib /usr/local/lib C:\\Boost\\lib )
-#FIND_LIBRARY( BOOST_FILESYSTEM_LIB NAMES boost_filesystem
-#	      PATHS /usr/lib /usr/local/lib C:\\Boost\\lib )
-
-SET(MKL_LIB_PATH /opt/intel/mkl/8.1.1/lib/32)
+#Todo - dynamic detection and switching for 32 and 64 bit.
+GET_FILENAME_COMPONENT(MKL_LIB_PATH ${MKL_INCLUDE_DIR}/../lib/32 ABSOLUTE)
 
 FIND_LIBRARY( MKL_LAPACK NAMES mkl_lapack PATHS ${MKL_LIB_PATH} )
 FIND_LIBRARY( MKL NAMES mkl_ia32 PATHS ${MKL_LIB_PATH} )
-FIND_LIBRARY( MKL_GUIDE NAMES GUIDE PATHS ${MKL_LIB_PATH} )
+FIND_LIBRARY( MKL_GUIDE NAMES guide PATHS ${MKL_LIB_PATH} )
 
-SET( MKL_BLAS_INCLUDE_FILE ${MKL_INCLUDE_DIR}/mkl_cblas.h )
+SET( MKL_BLAS_INCLUDE_FILE ${MKL_INCLUDE_DIR}/mkl_blas.h )
 SET( MKL_LAPACK_INCLUDE_FILE ${MKL_INCLUDE_DIR}/mkl_lapack.h )
 
 IF (MKL_INCLUDE_DIR)

@@ -33,62 +33,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/LinearAlgebra/blas.h>
+#include <LibUtilities/BasicUtils/Blas.hpp>
 
-#ifdef NEKTAR_USING_BLAS
-
-namespace Nektar
-{
-#if defined(NEKTAR_USING_MKL) || defined(NEKTAR_USING_ATLAS)
-    CBLAS_ORDER OrderMapping[] = { CblasRowMajor, CblasColMajor };
-    CBLAS_TRANSPOSE TransposeMapping[] = { CblasNoTrans, CblasTrans, CblasConjTrans };
-#endif
-
-#ifdef NEKTAR_USING_ACML
-    char AcmlTransposeMapping[] = { 'N', 'T', 'C' };
-#endif
-
-   void dgemm(const MatrixOrder order, const Transpose MatrixATranspose, const Transpose MatrixBTranspose,
-              const int M, const int N, const int K,
-              const double alpha, const double* A, const int lda, const double* B,
-              const int ldb, const double beta, double* C, const int ldc)
-    {
-#ifdef NEKTAR_USING_MKL
-        cblas_dgemm(OrderMapping[order], TransposeMapping[MatrixATranspose], TransposeMapping[MatrixBTranspose],
-                    M, N, K,
-                    alpha, A, lda, B, ldb, beta, C, ldc);
-#endif
-
-#ifdef NEKTAR_USING_ATLAS
-        cblas_dgemm(OrderMapping[order], TransposeMapping[MatrixATranspose], TransposeMapping[MatrixBTranspose],
-           M, N, K,
-           alpha, A, lda, B, ldb, beta, C, ldc);
-#endif
-
-#ifdef NEKTAR_USING_ACML
-        // The const_cast is necessary here because ACML has a broken interface.  The BLAS contract specifies
-        // that A and B are not modified, so this should be safe.
-        ::dgemm(AcmlTransposeMapping[MatrixATranspose], AcmlTransposeMapping[MatrixBTranspose],
-                M, N, K, alpha, const_cast<double*>(A), lda, const_cast<double*>(B), ldb, beta, C, ldc);
-#endif
-
-    }
-    
-    void dgemm(const int rowsInA, const int columnsInA, const int columnsInB, 
-               const double* A, const double* B, double* result)
-    {
-        //dgemm(eROW_MAJOR, eNO_TRANSPOSE, eNO_TRANSPOSE, rowsInA, columnsInB, columnsInA,
-        //      1.0, A, columnsInA, B, columnsInB, 0.0, result, columnsInB);
-        
-        dgemm(eCOLUMN_MAJOR, eNO_TRANSPOSE, eNO_TRANSPOSE, rowsInA, columnsInB, columnsInA,
-              1.0, A, rowsInA, B, columnsInA, 0.0, result, rowsInA);
-    }
-}
-
-#endif //NEKTAR_USING_BLAS
 
 /**
     $Log: blas.cpp,v $
+    Revision 1.4  2006/11/18 16:19:27  bnelson
+    Added the gfortran version of ACML.
+
     Revision 1.3  2006/11/06 17:09:09  bnelson
     *** empty log message ***
 

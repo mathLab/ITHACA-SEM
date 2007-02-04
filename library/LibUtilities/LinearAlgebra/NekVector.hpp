@@ -632,7 +632,7 @@ namespace Nektar
     DataType NekVector<DataType, dim, space>::InfinityNorm() const
     {
         DataType result = NekVectorTypeTraits<DataType>::abs((*this)[0]);
-        for(int i = 1; i < GetDimension(); ++i)
+        for(unsigned int i = 1; i < GetDimension(); ++i)
         {
             result = std::max(NekVectorTypeTraits<DataType>::abs((*this)[i]), result);
         }
@@ -778,6 +778,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.14  2007/01/29 01:31:08  bnelson
+    *** empty log message ***
+
     Revision 1.13  2007/01/23 03:12:50  jfrazier
     Added more conditional compilation directives for expression templates.
 

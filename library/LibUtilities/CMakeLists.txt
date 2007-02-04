@@ -2,6 +2,8 @@ SET(LibUtilitySources
 ./LinearAlgebra/BlockMat.cpp
 ./Foundations/Graph.cpp
 ./Polylib/Polylib.cpp
+./LinearAlgebra/blas.cpp
+./LinearAlgebra/lapack.cpp
 )
 
 SET(LibUtilityHeaders
@@ -18,8 +20,6 @@ SET(LibUtilityHeaders
 ./LinearAlgebra/NekVector.hpp
 ./LinearAlgebra/NekVectorMetadata.hpp
 ./LinearAlgebra/NekPoint.hpp
-./LinearAlgebra/blas.cpp
-./LinearAlgebra/lapack.cpp
 ./ExpressionTemplates/Accumulator.hpp
 ./ExpressionTemplates/ArithmeticConcepts.hpp
 ./ExpressionTemplates/ArithmeticTraits.hpp
@@ -60,20 +60,7 @@ SET(LibUtilityHeaders
 ./Memory/NekMemoryManager.hpp
 )
 
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/LibUtilities/LinearAlgebra/blas.h.in ${PROJECT_BINARY_DIR}/LibUtilities/LinearAlgebra/blas.h)
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/LibUtilities/LinearAlgebra/lapack.h.in ${PROJECT_BINARY_DIR}/LibUtilities/LinearAlgebra/lapack.h)
-
 ADD_NEKTAR_LIBRARY(LibUtilities STATIC ${LibUtilitySources} ${LibUtilityHeaders})
-
-IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
-	# Needed for M_PI to be visible in visual studio.
-	ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
-
-IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
-	# Needed for M_PI to be visible in visual studio.
-	ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
 
 #IF( ${USE_MKL} AND ${MKL_FOUND} )
 #        TARGET_LINK_LIBRARIES(${name}
@@ -89,8 +76,8 @@ IF( USE_ATLAS AND ATLAS_FOUND )
 ENDIF( USE_ATLAS AND ATLAS_FOUND )
 
 # This doesn't preserve the BasicUtils, Memory, etc. Find a way to fix this.
-INSTALL_FILES(${NEKTAR_INCLUDE_DIR} FILES ${LibUtilityHeaders})
-
+INSTALL(FILES ${LibUtilityHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR})
+#INSTALL(TARGETS LibUtilities ARCHIVE DESTINATION ${NEKTAR_LIB_DIR})
 
 
 

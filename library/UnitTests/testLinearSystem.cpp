@@ -47,7 +47,6 @@ namespace Nektar
     {
         void testDiagonalSystem()
         {
-#ifdef NEKTAR_USING_LAPACK
             unsigned int matrix_buf[] = { 10, 5, 2 };
 
             unsigned int result_buf[] = { 20, 50, 10 };
@@ -63,12 +62,10 @@ namespace Nektar
             NekVector<unsigned int, 3> expectedResult(expected_result_buf);
 
             BOOST_CHECK_EQUAL(result, expectedResult);
-#endif //NEKTAR_USING_LAPACK
         }
         
         void testFullSystem()
         {
-#ifdef NEKTAR_USING_LAPACK
             {
                 double matrix_buf[] = { 10, 0, 0,
                                         0, 5, 0, 
@@ -150,42 +147,39 @@ namespace Nektar
                 //double b_buf[] = {12719, -3169, -16810, 7408, -14945, -6822, 10166, 7023, 8679, -11826};
                 //boost::shared_ptr<NekVector<double> > b(new NekVector<double>(10, b_buf));
             }
-#endif //NEKTAR_USING_LAPACK
         }
         
         void testSolvingBlockDiagonalMatrices()
         {
-#ifdef NEKTAR_USING_LAPACK
-            typedef NekMatrix<double, eDiagonal, eBlock> BlockMatrix;
-            typedef BlockMatrix::InnerMatrixType InnerMatrixType;
-                
-            boost::shared_ptr<BlockMatrix> m1(new BlockMatrix(4, 2, 2));
-            const double m1_buf0[] = {-91, -47, 94, 83};
-            const double m1_buf1[] = {49, 78, 80, 72};
-            const double m1_buf2[] = {87, 79, 31, -34};
-            const double m1_buf3[] = {9, 29, -17, -98};
-                
-            m1->GetBlock(0,0) = InnerMatrixType(2, 2, m1_buf0);
-            m1->GetBlock(1,1) = InnerMatrixType(2, 2, m1_buf1);
-            m1->GetBlock(2,2) = InnerMatrixType(2, 2, m1_buf2);
-            m1->GetBlock(3,3) = InnerMatrixType(2, 2, m1_buf3);
-            
-            double b_vals[] = {-7198, 7642, 1344, 3744, -9968, 115, -2469, 8424};
-            boost::shared_ptr<NekVector<double> > b(new NekVector<double>(8, b_vals));
-            
-            LinearSystem<BlockMatrix, NekVector<double> > linsys(m1, b);
-            
-            NekVector<double> result = linsys.Solve();
-            double epsilon = 1e-11;
-            BOOST_CHECK_CLOSE(result[0], 76.0, epsilon);
-            BOOST_CHECK_CLOSE(result[1], 6.0, epsilon);
-            BOOST_CHECK_CLOSE(result[2], 72.0, epsilon);
-            BOOST_CHECK_CLOSE(result[3], -28.0, epsilon);
-            BOOST_CHECK_CLOSE(result[4], -61.0, epsilon);
-            BOOST_CHECK_CLOSE(result[5], -59.0, epsilon);
-            BOOST_CHECK_CLOSE(result[6], 6.0, epsilon);
-            BOOST_CHECK_CLOSE(result[7], -87.0, epsilon);
-#endif //NEKTAR_USING_LAPACK
+            //typedef NekMatrix<double, eDiagonal, eBlock> BlockMatrix;
+            //typedef BlockMatrix::InnerMatrixType InnerMatrixType;
+            //    
+            //boost::shared_ptr<BlockMatrix> m1(new BlockMatrix(4, 2, 2));
+            //const double m1_buf0[] = {-91, -47, 94, 83};
+            //const double m1_buf1[] = {49, 78, 80, 72};
+            //const double m1_buf2[] = {87, 79, 31, -34};
+            //const double m1_buf3[] = {9, 29, -17, -98};
+            //    
+            //m1->GetBlock(0,0) = InnerMatrixType(2, 2, m1_buf0);
+            //m1->GetBlock(1,1) = InnerMatrixType(2, 2, m1_buf1);
+            //m1->GetBlock(2,2) = InnerMatrixType(2, 2, m1_buf2);
+            //m1->GetBlock(3,3) = InnerMatrixType(2, 2, m1_buf3);
+            //
+            //double b_vals[] = {-7198, 7642, 1344, 3744, -9968, 115, -2469, 8424};
+            //boost::shared_ptr<NekVector<double> > b(new NekVector<double>(8, b_vals));
+            //
+            //LinearSystem<BlockMatrix, NekVector<double> > linsys(m1, b);
+            //
+            //NekVector<double> result = linsys.Solve();
+            //double epsilon = 1e-11;
+            //BOOST_CHECK_CLOSE(result[0], 76.0, epsilon);
+            //BOOST_CHECK_CLOSE(result[1], 6.0, epsilon);
+            //BOOST_CHECK_CLOSE(result[2], 72.0, epsilon);
+            //BOOST_CHECK_CLOSE(result[3], -28.0, epsilon);
+            //BOOST_CHECK_CLOSE(result[4], -61.0, epsilon);
+            //BOOST_CHECK_CLOSE(result[5], -59.0, epsilon);
+            //BOOST_CHECK_CLOSE(result[6], 6.0, epsilon);
+            //BOOST_CHECK_CLOSE(result[7], -87.0, epsilon);
         }
     }
 }

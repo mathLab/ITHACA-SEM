@@ -36,22 +36,19 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_HPP
 
-#include <LibUtilities/LinearAlgebra/lapack.h.in>
+#include <LibUtilities/BasicUtils/lapack.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
 #include <boost/shared_ptr.hpp> 
   
-
-#ifdef NEKTAR_USING_LAPACK
 namespace Nektar
 {
-
     template<typename DataType>
     class NekObjectAccessor
     {
         public:
-	explicit NekObjectAccessor(DataType& obj) :
+            explicit NekObjectAccessor(DataType& obj) :
                 m_object(obj)
             {
             }
@@ -67,7 +64,6 @@ namespace Nektar
                 return &m_object;
             }
            
-            
         private:
             NekObjectAccessor<DataType>& operator=(const NekObjectAccessor<DataType>& rhs);
             DataType& m_object;
@@ -99,17 +95,8 @@ namespace Nektar
             DataType* m_object;
     };
             
-    // Linear system object.
-    // A linear system is one 
-
     template<typename MatrixType, typename VectorType>
-    class LinearSystem
-    {
-        public:
-
-        private:
-
-    };
+    class LinearSystem;
 
     // Ax=b
     template<typename DataType, unsigned int space, unsigned int vectorDim>
@@ -200,14 +187,9 @@ namespace Nektar
 
             ResultType Solve() const
             {
-#ifdef NEKTAR_USING_LAPACK
                 ResultType result(*b);
-		//             dgetrs(A->GetRows(), A->GetColumns(), A->GetPtr().get(), result.GetPtr());
-		dgetrs(A->GetRows(),A->GetColumns(),A->GetPtr().get(),result.GetPtr());
+                Lapack::dgetrs(A->GetRows(),A->GetColumns(),A->GetPtr().get(),result.GetPtr());
                 return result;
-#else
-#error NekLinSys::Solve not yet supported with without lapack support.
-#endif //NEKTAR_USING_LAPACK
             }
 
         private:
@@ -222,5 +204,5 @@ namespace Nektar
 
     };
 }
-#endif //NEKTAR_USING_LAPACK
+
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_HPP

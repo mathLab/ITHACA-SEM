@@ -1,12 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
-#include <LibUtilities/NekLinAlg.h>
-
-
 
 const int size = 10;
-
-using namespace LibUtilities::NekLinAlg;
 
 int main(int argc, char *argv[])
 {

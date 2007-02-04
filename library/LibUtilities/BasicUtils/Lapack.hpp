@@ -32,195 +32,203 @@
 // Description: wrapper of functions around standard LAPACK routines
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef  LAPACK_HPP
-#define  LAPACK_HPP
+#ifndef  NEKTAR_LIB_UTILITIES_LAPACK_HPP
+#define  NEKTAR_LIB_UTILITIES_LAPACK_HPP
 
 #include <LibUtilities/BasicUtils/TransF77.hpp>
 
 namespace Lapack
 {
+    extern "C"
+    {
+        // Matrix factorisation and solves
+        void F77NAME(dsptrf) (const char& uplo, const int& n,
+                  double* ap, int *ipiv, int& info);
+        void F77NAME(dsptrs) (const char& uplo, const int& n,
+                  const int& nrhs, const double* ap,
+                  const int  *ipiv, double* b,
+                  const int& ldb, int& info);
+        void F77NAME(dpptrf) (const char& uplo, const int& n,
+                  double* ap, int& info);
+        void F77NAME(dpptrs) (const char& uplo, const int& n,
+                  const int& nrhs, const double* ap,
+                  double* b, const int& ldb, int& info);
+        void F77NAME(dpbtrf) (const char& uplo, const int& n, const int& kd,
+                  double* ab, const int& ldab, int& info);
+        void F77NAME(dpbtrs) (const char& uplo, const int& n,
+                  const int& kd, const int& nrhs,
+                  const double* ab, const int& ldab,
+                  double* b, const int& ldb, int& info);
+        void F77NAME(dgbtrf) (const int& m, const int& n, const int& kl,
+                  const int& ku, double* a, const int& lda,
+                  int* ipiv, int& info);
+        void F77NAME(dgbtrs) (const char& trans, const int& n, const int& kl,
+                  const int &ku, const int& nrhs,   const double* a,
+                  const int& lda, int* ipiv, double* b,
+                  const int& ldb, int& info);
+        void F77NAME(dgetrf) (const int& m, const int& n, double* a,
+                  const int& lda, int* ipiv, int& info);
+        void F77NAME(dgetrs) (const char& trans, const int& n, const int& nrhs,
+                  const double* a,   const int& lda, int* ipiv,
+                  double* b, const int& ldb, int& info);
+        void F77NAME(dgetri) (const int& n, double *a, const int& lda,
+                const int *ipiv, double *wk,  const int& lwk,
+                  int& info);
+        void F77NAME(dsterf) (const int& n, double *d, double *e, int& info);
+        void F77NAME(dgeev)  (const char& uplo, const char& lrev, const int& n,
+                  double* a, const int& lda, double* wr, double* wi,
+                  double* rev,  const int& ldr,
+                  double* lev,  const int& ldv,
+                  double* work, const int& lwork, int& info);
 
-  extern "C"
-  {
-    // Matrix factorisation and solves
-    void F77NAME(dsptrf) (const char& uplo, const int& n,
-              double* ap, int *ipiv, int& info);
-    void F77NAME(dsptrs) (const char& uplo, const int& n,
-              const int& nrhs, const double* ap,
-              const int  *ipiv, double* b,
-              const int& ldb, int& info);
-    void F77NAME(dpptrf) (const char& uplo, const int& n,
-              double* ap, int& info);
-    void F77NAME(dpptrs) (const char& uplo, const int& n,
-              const int& nrhs, const double* ap,
-              double* b, const int& ldb, int& info);
-    void F77NAME(dpbtrf) (const char& uplo, const int& n, const int& kd,
-              double* ab, const int& ldab, int& info);
-    void F77NAME(dpbtrs) (const char& uplo, const int& n,
-              const int& kd, const int& nrhs,
-              const double* ab, const int& ldab,
-              double* b, const int& ldb, int& info);
-    void F77NAME(dgbtrf) (const int& m, const int& n, const int& kl,
-              const int& ku, double* a, const int& lda,
-              int* ipiv, int& info);
-    void F77NAME(dgbtrs) (const char& trans, const int& n, const int& kl,
-              const int &ku, const int& nrhs,   const double* a,
-              const int& lda, int* ipiv, double* b,
-              const int& ldb, int& info);
-    void F77NAME(dgetrf) (const int& m, const int& n, double* a,
-              const int& lda, int* ipiv, int& info);
-    void F77NAME(dgetrs) (const char& trans, const int& n, const int& nrhs,
-              const double* a,   const int& lda, int* ipiv,
-              double* b, const int& ldb, int& info);
-    void F77NAME(dgetri) (const int& n, double *a, const int& lda,
-            const int *ipiv, double *wk,  const int& lwk,
-              int& info);
-    void F77NAME(dsterf) (const int& n, double *d, double *e, int& info);
-    void F77NAME(dgeev)  (const char& uplo, const char& lrev, const int& n,
-              double* a, const int& lda, double* wr, double* wi,
-              double* rev,  const int& ldr,
-              double* lev,  const int& ldv,
-              double* work, const int& lwork, int& info);
+        void F77NAME(dspev)  (const char& jobz, const char& uplo, const int& n,
+                  double* ap, double* w, double* z, const int& ldz,
+                  double* work, int& info);
+        void F77NAME(dsbev)  (const char& jobz, const char& uplo, const int& kl,
+                  const int& ku,  double* ap, const int& lda,
+                  double* w, double* z, const int& ldz,
+                  double* work, int& info);
+    }
 
-    void F77NAME(dspev)  (const char& jobz, const char& uplo, const int& n,
-              double* ap, double* w, double* z, const int& ldz,
-              double* work, int& info);
-    void F77NAME(dsbev)  (const char& jobz, const char& uplo, const int& kl,
-              const int& ku,  double* ap, const int& lda,
-              double* w, double* z, const int& ldz,
-              double* work, int& info);
-  }
+    // Non-standard versions.
+    void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x);
 
+#ifdef NEKTAR_USING_LAPACK
 
-  /// \brief factor a real packed-symmetric matrix using Bunch-Kaufman
-  /// pivoting.
-  static void Dsptrf (const char& uplo, const int& n,
+    /// \brief factor a real packed-symmetric matrix using Bunch-Kaufman
+    /// pivoting.
+    static void Dsptrf (const char& uplo, const int& n,
               double* ap, int *ipiv, int& info)
-  {
-    F77NAME(dsptrf) (uplo,n,ap,ipiv,info);
-  }
+    {
+        F77NAME(dsptrf) (uplo,n,ap,ipiv,info);
+    }
 
-  /// \brief Solve a real symmetric matrix problem using Bunch-Kaufman
-  /// pivoting.
-  static void Dsptrs (const char& uplo, const int& n, const int& nrhs,
+    /// \brief Solve a real symmetric matrix problem using Bunch-Kaufman
+    /// pivoting.
+    static void Dsptrs (const char& uplo, const int& n, const int& nrhs,
               const double* ap, const int  *ipiv, double* b,
               const int& ldb, int& info)
-  {
-    F77NAME(dsptrs) (uplo,n,nrhs,ap,ipiv,b,ldb,info);
-  }
+    {
+        F77NAME(dsptrs) (uplo,n,nrhs,ap,ipiv,b,ldb,info);
+    }
 
-  /// \brief Cholesky factor a real Positive Definite packed-symmetric matrix.
-  static void Dpptrf (const char& uplo, const int& n,
+    /// \brief Cholesky factor a real Positive Definite packed-symmetric matrix.
+    static void Dpptrf (const char& uplo, const int& n,
               double *ap, int& info)
-  {
-    F77NAME(dpptrf) (uplo,n,ap,info);
-  }
+    {
+        F77NAME(dpptrf) (uplo,n,ap,info);
+    }
 
-  /// \brief Solve a real Positive defiinte symmetric matrix problem
-  /// using Cholesky factorization.
-  static void Dpptrs (const char& uplo, const int& n, const int& nrhs,
+    /// \brief Solve a real Positive defiinte symmetric matrix problem
+    /// using Cholesky factorization.
+    static void Dpptrs (const char& uplo, const int& n, const int& nrhs,
               const double *ap, double *b, const int& ldb,
               int& info)
-  {
-    F77NAME(dpptrs) (uplo,n,nrhs,ap,b,ldb,info);
-  }
+    {
+        F77NAME(dpptrs) (uplo,n,nrhs,ap,b,ldb,info);
+    }
 
-  /// \brief Cholesky factorize a real positive-definite
-  /// banded-symmetric matrix
-  static void Dpbtrf (const char& uplo, const int& n, const int& kd,
+    /// \brief Cholesky factorize a real positive-definite
+    /// banded-symmetric matrix
+    static void Dpbtrf (const char& uplo, const int& n, const int& kd,
              double *ab, const int& ldab, int& info)
-  {
-    F77NAME(dpbtrf) (uplo,n,kd,ab,ldab,info);
-  }
+    {
+        F77NAME(dpbtrf) (uplo,n,kd,ab,ldab,info);
+    }
 
 
-  /// \brief Solve a real, Positive definite banded symmetric matrix
-  /// problem using Cholesky factorization.
-  static void Dpbtrs (const char& uplo, const int& n,
+    /// \brief Solve a real, Positive definite banded symmetric matrix
+    /// problem using Cholesky factorization.
+    static void Dpbtrs (const char& uplo, const int& n,
               const int& kd, const int& nrhs,
               const double *ab, const int& ldab,
               double *b, const int& ldb, int& info)
-  {
-    F77NAME(dpbtrs) (uplo,n,kd,nrhs,ab,ldab,b,ldb,info);
-  }
+    {
+        F77NAME(dpbtrs) (uplo,n,kd,nrhs,ab,ldab,b,ldb,info);
+    }
 
-  /// \brief General banded matrix LU factorisation
-  static void Dgbtrf (const int& m, const int& n, const int& kl,
+    /// \brief General banded matrix LU factorisation
+    static void Dgbtrf (const int& m, const int& n, const int& kl,
               const int& ku, double* a, const int& lda,
               int* ipiv, int& info)
-  {
-    F77NAME(dgbtrf)(m,n,kl,ku,a,lda,ipiv,info);
-  }
+    {
+        F77NAME(dgbtrf)(m,n,kl,ku,a,lda,ipiv,info);
+    }
 
-  /// \brief Solve general banded matrix using LU factorisation
-  static void Dgbtrs (const char& trans, const int& n, const int& kl,
+    /// \brief Solve general banded matrix using LU factorisation
+    static void Dgbtrs (const char& trans, const int& n, const int& kl,
               const int &ku, const int& nrhs,   const double* a,
               const int& lda, int* ipiv, double* b,
               const int& ldb, int& info)
-  {
-    F77NAME(dgbtrs)(trans,n,kl,ku,nrhs,a,lda,ipiv,b,ldb,info);
-  }
+    {
+        F77NAME(dgbtrs)(trans,n,kl,ku,nrhs,a,lda,ipiv,b,ldb,info);
+    }
 
-  /// \brief General matrix LU factorisation
-  static void Dgetrf (const int& m, const int& n, double *a,
+    /// \brief General matrix LU factorisation
+    static void Dgetrf (const int& m, const int& n, double *a,
               const int& lda, int *ipiv, int& info)
-  {
-    F77NAME(dgetrf) (m,n,a,lda,ipiv,info);
-  }
+    {
+        F77NAME(dgetrf) (m,n,a,lda,ipiv,info);
+    }
 
-  /// \brief General matrix LU backsolve
-  static void Dgetrs (const char& trans, const int& n, const int& nrhs,
+    /// \brief General matrix LU backsolve
+    static void Dgetrs (const char& trans, const int& n, const int& nrhs,
               const double* a, const int& lda, int* ipiv,
               double* b, const int& ldb, int& info)
-  {
-    F77NAME(dgetrs) (trans,n,nrhs,a,lda,ipiv,b,ldb,info);
-  }
+    {
+        F77NAME(dgetrs) (trans,n,nrhs,a,lda,ipiv,b,ldb,info);
+    }
 
-  /// \brief Generate matrix inverse
-  static void Dgetri (const int& n, double *a, const int& lda,
+    /// \brief Generate matrix inverse
+    static void Dgetri (const int& n, double *a, const int& lda,
            const int *ipiv, double *wk,  const int& lwk, int& info)
-  {
-    F77NAME(dgetri) (n, a, lda, ipiv, wk, lwk,info);
-  }
+    {
+        F77NAME(dgetri) (n, a, lda, ipiv, wk, lwk,info);
+    }
 
-  /// \brief Find eigenvalues of symmetric tridiagonal matrix
-  static void Dsterf(const int& n, double *d, double *e, int& info)
-  {
-    F77NAME(dsterf)(n,d,e,info);
-  }
+    /// \brief Find eigenvalues of symmetric tridiagonal matrix
+    static void Dsterf(const int& n, double *d, double *e, int& info)
+    {
+        F77NAME(dsterf)(n,d,e,info);
+    }
 
-  /// \brief Solve general real matrix eigenproblem.
-  static void Dgeev (const char& uplo, const char& lrev, const int& n,
+    /// \brief Solve general real matrix eigenproblem.
+    static void Dgeev (const char& uplo, const char& lrev, const int& n,
              double* a, const int& lda, double* wr, double* wi,
              double* rev,  const int& ldr,
              double* lev,  const int& ldv,
              double* work, const int& lwork, int& info)
-  {
-    F77NAME(dgeev) (uplo, lrev, n, a, lda, wr, wi, rev,
+    {
+        F77NAME(dgeev) (uplo, lrev, n, a, lda, wr, wi, rev,
             ldr, lev, ldv, work, lwork, info);
-  }
+    }
 
-  /// \brief Solve packed-symmetric real matrix eigenproblem.
-  static void Dspev (const char& jobz, const char& uplo, const int& n,
+    /// \brief Solve packed-symmetric real matrix eigenproblem.
+    static void Dspev (const char& jobz, const char& uplo, const int& n,
              double* ap, double* w, double* z, const int& ldz,
              double* work, int& info)
-  {
-    F77NAME(dspev) (jobz, uplo, n, ap, w, z, ldz, work, info);
-  }
+    {
+        F77NAME(dspev) (jobz, uplo, n, ap, w, z, ldz, work, info);
+    }
 
-  /// \brief Solve packed-banded real matrix eigenproblem.
-  static void Dsbev (const char& jobz, const char& uplo, const int& kl,
+    /// \brief Solve packed-banded real matrix eigenproblem.
+    static void Dsbev (const char& jobz, const char& uplo, const int& kl,
              const int& ku,  double* ap, const int& lda,
              double* w, double* z, const int& ldz,
              double* work, int& info)
-  {
-    F77NAME(dsbev) (jobz, uplo, kl, ku, ap, lda, w, z, ldz, work, info);
-  }
+    {
+        F77NAME(dsbev) (jobz, uplo, kl, ku, ap, lda, w, z, ldz, work, info);
+    }
+    
+#endif //NEKTAR_USING_LAPACK
 }
-#endif //LAPACK_HPP
+#endif //NEKTAR_LIB_UTILITIES_LAPACK_HPP
 
 /***
 $Log: Lapack.hpp,v $
+Revision 1.2  2006/06/01 13:44:28  kirby
+*** empty log message ***
+
 Revision 1.1  2006/06/01 11:07:52  kirby
 *** empty log message ***
 

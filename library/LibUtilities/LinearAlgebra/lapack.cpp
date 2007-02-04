@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: lapack.h
+// File: lapack.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,17 +33,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef NEKTAR_USING_CMAKE
-
-#include <LibUtilities/LinearAlgebra/lapack.h>
+#include <LibUtilities/BasicUtils/Lapack.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 #include <algorithm>
 #include <string>
 #include <boost/lexical_cast.hpp>
-
-#include <LibUtilities/BasicUtils/Lapack.hpp>
 
 #ifdef max
 #undef max
@@ -53,63 +49,53 @@
 #undef min
 #endif
 
-#ifdef NEKTAR_USING_LAPACK
-
-void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x)
+namespace Lapack
 {
-    // The factorization step replaces the input matrix, which we can't allow 
-    // (because A is a NekMatrix object and the user will not expect it to be changed).
-    // So we need to copy.
-    
-    Nektar::NekMatrix<double, Nektar::eFull> factoredMatrix(matrixRows, matrixColumns, A);
-    factoredMatrix.Transpose();
-    
-    // Step 1 - Obtain the LU factorization of the matrix.
-    // dgetrf expects a general m by n matrix.
-    int m = matrixRows;
-    int n = matrixColumns;
-    
-    // Pivot information
-    int pivotSize = std::max(1, std::min(m, n));
-    int info = 0;
-    boost::shared_array<int> ipivot = Nektar::MemoryManager::AllocateSharedArray<int>(pivotSize);
-    
-#ifdef NEKTAR_USING_ACML
-    dgetrf(m, n, factoredMatrix.GetPtr().get(), m, ipivot.get(), &info);
-#else
-    Lapack::dgetrf('N',&m, &n, factoredMatrix.GetPtr().get(), &m, ipivot.get(), &info);
-#endif
-    
-    if( info < 0 )
+    void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x)
     {
-        std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + 
-                "th parameter had an illegal parameter for dgetrf";
-        ASSERTL0(false, message.c_str());
-    }
-    else if( info > 0 )
-    {
-        std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
-                boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
-        ASSERTL0(false, message.c_str());
-    }
-    // Now that we have a factored matrix, solve it.
-    //void    dgetrs(char *trans,int *n,int *nrhs,double *a,int *lda,int *ipiv,double *b,int *ldb,int *info);
-    char trans = 'N';
-    int nrhs = 1; // ONly 1 right hand side.
-    
-#ifdef NEKTAR_USING_ACML
-    dgetrs(trans, matrixRows, nrhs, factoredMatrix.GetPtr().get(), matrixRows, ipivot.get(), x, matrixRows, &info);
-#else
-    Lapack::Dgetrs(&trans, &matrixRows, &nrhs, factoredMatrix.GetPtr().get(), &matrixRows, ipivot.get(), x, &matrixRows, &info);
-#endif //NEKTAR_USING_ACML
-    
-    if( info < 0 )
-    {
-        std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + 
-                "th parameter had an illegal parameter for dgetrs";
-        ASSERTL0(false, message.c_str());
+        // The factorization step replaces the input matrix, which we can't allow 
+        // (because A is a NekMatrix object and the user will not expect it to be changed).
+        // So we need to copy.
+        
+        Nektar::NekMatrix<double, Nektar::eFull> factoredMatrix(matrixRows, matrixColumns, A);
+        factoredMatrix.Transpose();
+        
+        // Step 1 - Obtain the LU factorization of the matrix.
+        // dgetrf expects a general m by n matrix.
+        int m = matrixRows;
+        int n = matrixColumns;
+        
+        // Pivot information
+        int pivotSize = std::max(1, std::min(m, n));
+        int info = 0;
+        boost::shared_array<int> ipivot = Nektar::MemoryManager::AllocateSharedArray<int>(pivotSize);
+        Lapack::Dgetrf(m, n, factoredMatrix.GetPtr().get(), m, ipivot.get(), info);
+
+        if( info < 0 )
+        {
+            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + 
+                    "th parameter had an illegal parameter for dgetrf";
+            ASSERTL0(false, message.c_str());
+        }
+        else if( info > 0 )
+        {
+            std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
+                    boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
+            ASSERTL0(false, message.c_str());
+        }
+        // Now that we have a factored matrix, solve it.
+        //void    dgetrs(char *trans,int *n,int *nrhs,double *a,int *lda,int *ipiv,double *b,int *ldb,int *info);
+        char trans = 'N';
+        int nrhs = 1; // ONly 1 right hand side.
+
+        Lapack::Dgetrs('N', matrixRows, 1, factoredMatrix.GetPtr().get(), matrixRows, ipivot.get(), x, matrixRows, info);
+        
+        if( info < 0 )
+        {
+            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + 
+                    "th parameter had an illegal parameter for dgetrs";
+            ASSERTL0(false, message.c_str());
+        }
     }
 }
 
-#endif //NEKTAR_USING_LAPACK
-#endif //NEKTAR_USING_CMAKE

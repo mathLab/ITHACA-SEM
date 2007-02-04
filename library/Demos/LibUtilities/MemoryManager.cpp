@@ -1,6 +1,6 @@
 
-#include <LibUtilities/ThreadSpecificPool.hpp>
-#include <LibUtilities/NekMemoryManager.hpp>
+#include <LibUtilities/Memory/ThreadSpecificPool.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -28,8 +28,6 @@ class Disabled
         {
             cout << "Destroying a disabled." << endl;
         }
-
-        static const MemoryManager::MemoryPoolEnabler MemoryPoolEnabled = MemoryManager::eDisabled;
 };
 
 class Enabled
@@ -44,8 +42,6 @@ class Enabled
         {
             cout << "Destroying a Enabled." << endl;
         }
-
-        static const MemoryManager::MemoryPoolEnabler MemoryPoolEnabled = MemoryManager::eEnabled;
 };
 
 

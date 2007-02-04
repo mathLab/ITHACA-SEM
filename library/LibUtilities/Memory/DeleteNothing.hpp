@@ -48,6 +48,7 @@ namespace Nektar
     {
         public:
             void operator()(DataType* p) {}
+            void operator()(const DataType* p) {}
     };
             
 };
@@ -55,6 +56,9 @@ namespace Nektar
 #endif //NEKTAR_LIB_UTILITIES_MEMORY_DELETE_NOTHING_HPP
 
 /**
-    $Log:$
+    $Log: DeleteNothing.hpp,v $
+    Revision 1.1  2006/10/30 05:10:13  bnelson
+    Object to use when creating a shared array and you don't want to delete the pointer.
+
  **/
 

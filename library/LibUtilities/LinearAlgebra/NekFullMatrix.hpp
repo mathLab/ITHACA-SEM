@@ -192,10 +192,12 @@ namespace Nektar
             return m_data;
         }
 
-        boost::shared_array<const DataType> GetPtr() const
-        {
-            return m_data.get();
-        }
+        // I can't figure out a way to return a constant pointer to the data 
+        // in a shared array.
+        //boost::shared_array<const DataType> GetPtr() const
+        //{
+        //    return boost::shared_array<const DataType>(m_data);
+        //}
 
         typedef DataType* iterator;
         typedef const DataType* const_iterator;
@@ -351,6 +353,9 @@ namespace Nektar
 
 /**
     $Log: NekFullMatrix.hpp,v $
+    Revision 1.5  2007/01/29 01:30:20  bnelson
+    Removed memory manager requirements.
+
     Revision 1.4  2007/01/23 03:12:50  jfrazier
     Added more conditional compilation directives for expression templates.
 

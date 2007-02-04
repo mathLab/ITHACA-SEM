@@ -36,7 +36,7 @@
 #ifndef  TRANSF77_HPP
 #define  TRANSF77_HPP
 
-#if defined (_AIX) || defined (__hpux) || defined (_CRAY) || defined(USE_ACML)
+#if defined (_AIX) || defined (__hpux) || defined (_CRAY) 
 
 /// Fortran routines need no underscore
 #define F77NAME(x) x
@@ -51,6 +51,9 @@
 
 /***
 $Log: TransF77.hpp,v $
+Revision 1.2  2007/02/04 00:15:40  bnelson
+*** empty log message ***
+
 Revision 1.1  2006/06/01 11:07:52  kirby
 *** empty log message ***
 

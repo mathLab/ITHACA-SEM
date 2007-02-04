@@ -34,9 +34,9 @@ RESET_VAR_IF_CHANGED( ACML ACML_USE_SHARED_LIBRARIES)
 
 
 IF( ACML_USE_OPENMP_LIBRARIES )
-	SET(ACML_SEARCH_PATHS /opt/acml3.5.0/gfortran64_mp_int64/include "C:\\Program Files\\AMD\\acml3.6.0\\ifort32_mp\\include" )
+	SET(ACML_SEARCH_PATHS /opt/acml3.5.0/gfortran64_mp_int64/include "C:\\Program Files\\AMD\\acml3.6.0\\pgi32_mp\\include" )
 ELSE( ACML_USE_OPENMP_LIBRARIES )
-	SET(ACML_SEARCH_PATHS /opt/acml3.5.0/gfortran64_int64/include "C:\\Program Files\\AMD\\acml3.6.0\\ifort32\\include" )
+	SET(ACML_SEARCH_PATHS /opt/acml3.5.0/gfortran64_int64/include "C:\\Program Files\\AMD\\acml3.6.0\\pgi32\\include" )
 ENDIF( ACML_USE_OPENMP_LIBRARIES )
 
 

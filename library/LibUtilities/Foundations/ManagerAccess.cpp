@@ -35,7 +35,7 @@
 
 #include <iostream>
 #include <Loki/Singleton.h>
-#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/GaussPoints.h>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -45,6 +45,32 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+		// Register all points and basis creators.
+		namespace
+        {
+            const bool gaussInited1 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre), GaussPoints::Create);
+            const bool gaussInited2 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMLegendre), GaussPoints::Create);
+            const bool gaussInited3 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPLegendre), GaussPoints::Create);
+            const bool gaussInited4 = PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoLegendre), GaussPoints::Create);
+            const bool gaussInited5 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussChebyshev), GaussPoints::Create);
+            const bool gaussInited6 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMChebyshev), GaussPoints::Create);
+            const bool gaussInited7 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauPChebyshev), GaussPoints::Create);
+            const bool gaussInited8 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1), GaussPoints::Create);
+            const bool gaussInited9 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre), GaussPoints::Create);
+            const bool gaussInited10 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2), GaussPoints::Create);
+
+			const bool Ortho_A_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_A, 0, NullPointsKey), Basis::Create);
+            const bool Ortho_B_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_B, 0, NullPointsKey), Basis::Create);
+            const bool Ortho_C_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_C, 0, NullPointsKey), Basis::Create);
+            const bool Modified_A_Inited = BasisManager().RegisterCreator(BasisKey(eModified_A, 0, NullPointsKey), Basis::Create);
+            const bool Modified_B_Inited = BasisManager().RegisterCreator(BasisKey(eModified_B, 0, NullPointsKey), Basis::Create);
+            const bool Modified_C_Inited = BasisManager().RegisterCreator(BasisKey(eModified_C, 0, NullPointsKey), Basis::Create);
+            const bool Fourier_Inited = BasisManager().RegisterCreator(BasisKey(eFourier, 0, NullPointsKey), Basis::Create);
+            const bool GLL_Lagrange_Inited = BasisManager().RegisterCreator(BasisKey(eGLL_Lagrange, 0, NullPointsKey), Basis::Create);
+            const bool Legendre_Inited = BasisManager().RegisterCreator(BasisKey(eLegendre, 0, NullPointsKey), Basis::Create);
+            const bool Chebyshev_Inited = BasisManager().RegisterCreator(BasisKey(eChebyshev, 0, NullPointsKey), Basis::Create);
+        };
+
         PointsManagerT &PointsManager(void)
         {
             return Loki::SingletonHolder<PointsManagerT>::Instance();
@@ -61,6 +87,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.3  2007/02/01 23:28:42  jfrazier
+Basis is not working, but not fully tested.
+
 Revision 1.2  2007/01/20 21:45:59  kirby
 *** empty log message ***
 

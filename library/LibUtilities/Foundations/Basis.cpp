@@ -32,6 +32,7 @@
 // Description: Basis definition 
 //
 ///////////////////////////////////////////////////////////////////////////////
+#include <math.h>
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/Points.h>
@@ -45,30 +46,6 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        namespace
-        {
-            //eOrtho_A,      //!< Principle Orthogonal Functions \f$\widetilde{\psi}^a_p(z_i)\f$
-            //eOrtho_B,      //!< Principle Orthogonal Functions \f$\widetilde{\psi}^b_{pq}(z_i)\f$
-            //eOrtho_C,      //!< Principle Orthogonal Functions \f$\widetilde{\psi}^c_{pqr}(z_i)\f$
-            //eModified_A,   //!< Principle Modified Functions \f$ \phi^a_p(z_i) \f$
-            //eModified_B,   //!< Principle Modified Functions \f$ \phi^b_{pq}(z_i) \f$
-            //eModified_C,   //!< Principle Modified Functions \f$ \phi^c_{pqr}(z_i) \f$
-            //eFourier,      //!< Fourier Expansion \f$ \exp(i p\pi  z_i)\f$
-            //eGLL_Lagrange, //!< Lagrange for SEM basis \f$ h_p(z_i) \f$
-            //eLegendre,     //!< Legendre Polynomials \f$ L_p(z_i) = P^{0,0}_p(z_i)\f$. Same as Ortho_A
-            //eChebyshev,    //!< Chebyshev Polynomials \f$ T_p(z_i) = P^{-1/2,-1/2}_p(z_i)\f$
-
-            const bool Ortho_A_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_A, 0, NullPointsKey), Basis::Create);
-            const bool Ortho_B_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_B, 0, NullPointsKey), Basis::Create);
-            const bool Ortho_C_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_C, 0, NullPointsKey), Basis::Create);
-            const bool Modified_A_Inited = BasisManager().RegisterCreator(BasisKey(eModified_A, 0, NullPointsKey), Basis::Create);
-            const bool Modified_B_Inited = BasisManager().RegisterCreator(BasisKey(eModified_B, 0, NullPointsKey), Basis::Create);
-            const bool Modified_C_Inited = BasisManager().RegisterCreator(BasisKey(eModified_C, 0, NullPointsKey), Basis::Create);
-            const bool Fourier_Inited = BasisManager().RegisterCreator(BasisKey(eFourier, 0, NullPointsKey), Basis::Create);
-            const bool GLL_Lagrange_Inited = BasisManager().RegisterCreator(BasisKey(eGLL_Lagrange, 0, NullPointsKey), Basis::Create);
-            const bool Legendre_Inited = BasisManager().RegisterCreator(BasisKey(eLegendre, 0, NullPointsKey), Basis::Create);
-            const bool Chebyshev_Inited = BasisManager().RegisterCreator(BasisKey(eChebyshev, 0, NullPointsKey), Basis::Create);
-        };
 
         bool operator<(const BasisKey &lhs, const BasisKey &rhs)
         {
@@ -533,6 +510,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.10  2007/02/01 23:28:41  jfrazier
+* Basis is not working, but not fully tested.
+*
 * Revision 1.9  2007/02/01 15:30:07  jfrazier
 * Reformatted.
 *

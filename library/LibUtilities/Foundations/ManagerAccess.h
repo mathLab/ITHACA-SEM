@@ -56,6 +56,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.h,v $
+Revision 1.7  2007/02/01 23:28:42  jfrazier
+Basis is working, but not fully tested.
+
 Revision 1.6  2007/01/25 21:31:46  jfrazier
 Format change.
 

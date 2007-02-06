@@ -29,12 +29,12 @@ int main(int argc, char *argv[])
 
     fprintf(stderr,"Where type is an integer value which "
 	    "dictates the basis as:\n");
-    fprintf(stderr,"\t Ortho_A    = 0\n");
-    fprintf(stderr,"\t Modified_A = 3\n");
-    fprintf(stderr,"\t Fourier    = 6\n");
-    fprintf(stderr,"\t Lagrange   = 7\n");
-    fprintf(stderr,"\t Legendre   = 8\n"); 
-    fprintf(stderr,"\t Chebyshev  = 9\n");
+    fprintf(stderr,"\t Ortho_A    = 1\n");
+    fprintf(stderr,"\t Modified_A = 4\n");
+    fprintf(stderr,"\t Fourier    = 7\n");
+    fprintf(stderr,"\t Lagrange   = 8\n");
+    fprintf(stderr,"\t Legendre   = 9\n"); 
+    fprintf(stderr,"\t Chebyshev  = 10\n");
  
     fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
 

@@ -41,7 +41,7 @@ namespace Nektar
 {
     namespace StdRegions
     {
-	
+
         /** define list of number of vertices corresponding to each ShapeType */
         const int g_shapenverts[SIZE_ShapeType] = {0,2,3,4,4,5,6,8};
 
@@ -52,32 +52,32 @@ namespace Nektar
         const int g_shapenfaces[SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
 
         StdExpansion::StdExpansion(void): 
-	    m_numbases(0), 
+        m_numbases(0), 
             m_ncoeffs(0)
         {
         }
 
 
         StdExpansion::StdExpansion(int numbases, const LibUtilities::BasisKey &Ba, 
-	   const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc,
-	   int numcoeffs, double *coeffs, double *phys):
-	    m_numbases(numbases)
-	{
-	    m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
-	    
+            const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc,
+            int numcoeffs, double *coeffs, double *phys):
+        m_numbases(numbases)
+        {
+            m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
+
             switch(m_numbases)
             {
             case 3:
-                ASSERTL2(Bc==NULL,"NULL Basis attempting to be used.");
+                ASSERTL2(Bc==LibUtilities::NullBasisKey,"NULL Basis attempting to be used.");
 
                 m_base[2] = LibUtilities::BasisManager()[Bc];
 
             case 2:
-                ASSERTL2(Bb==NULL,"NULL Basis attempting to be used.");
+                ASSERTL2(Bb==LibUtilities::NullBasisKey,"NULL Basis attempting to be used.");
 
                 m_base[1] = LibUtilities::BasisManager()[Bb];
             case 1:
-                ASSERTL2(Ba==NULL,"NULL Basis attempting to be used.");
+                ASSERTL2(Ba==LibUtilities::NullBasisKey,"NULL Basis attempting to be used.");
 
                 m_base[0] = LibUtilities::BasisManager()[Ba];
                 break;
@@ -87,12 +87,12 @@ namespace Nektar
 
             //allocate memory for coeffs
             m_ncoeffs = numcoeffs;
-	    m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
-	    Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
+            m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
+            Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
 
-	    //allocate memory for phys
-	    m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
-			 
+            //allocate memory for phys
+            m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
+
 
         } //end constructor
 
@@ -102,7 +102,7 @@ namespace Nektar
         {
             int i,j;
 
-	    m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
+            m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
 
             for(j=0; j<m_numbases; j++)
             {
@@ -114,7 +114,7 @@ namespace Nektar
             // allocate memory for coeffs
             // need to check allocation for variable order. 
             m_ncoeffs = T.m_ncoeffs;
-	    m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
+            m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
             for(i=0; i<m_ncoeffs; i++)
             {
                 m_coeffs[i] = T.m_coeffs[i];
@@ -122,7 +122,7 @@ namespace Nektar
 
             //allocate memory for phys
             int numphys = GetTotPoints();
-	    m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
+            m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
             for(j=0; j < numphys; j++)
             {
                 m_phys[j] = T.m_phys[j];
@@ -140,7 +140,7 @@ namespace Nektar
             double *tmp;
             BstShrDArray  wsp;
 
-	    ntot =  GetTotPoints();
+            ntot =  GetTotPoints();
 
             wsp = GetDoubleTmpSpace(ntot);
             tmp = wsp.get();
@@ -169,7 +169,7 @@ namespace Nektar
 
             Vmath::Vsub(ntot, sol, 1, &m_phys[0], 1, tmp, 1);
             Vmath::Vmul(ntot, tmp, 1, tmp, 1, tmp, 1);
-	    
+
             val = sqrt(v_Integral(tmp));
 
             return val;
@@ -197,18 +197,20 @@ namespace Nektar
             BstShrDArray store = GetDoubleTmpSpace(m_ncoeffs);
             BstShrDArray tmp   = GetDoubleTmpSpace(GetTotPoints());
 
-	    DNekMatSharedPtr  Mat;
-	    
-	    Mat = MemoryManager::AllocateSharedPtr<DNekMat>(m_ncoeffs,m_ncoeffs,
-				      MemoryManager::AllocateArray<double>(m_ncoeffs*m_ncoeffs));
-	    
-	    Blas::Dcopy(m_ncoeffs,&m_coeffs[0],1,&store[0],1);
+            DNekMatSharedPtr  Mat;
+
+            Mat = MemoryManager::AllocateSharedPtr<DNekMat>(m_ncoeffs,m_ncoeffs,
+                MemoryManager::AllocateArray<double>(m_ncoeffs*m_ncoeffs));
+
+            Blas::Dcopy(m_ncoeffs,&m_coeffs[0],1,&store[0],1);
             for(i=0; i<m_ncoeffs; ++i)
             {
                 v_FillMode(i, &tmp[0]);
                 v_IProductWRTBase(&tmp[0], &((*Mat).GetPtr())[0]+i*m_ncoeffs);
             }
-	    Blas::Dcopy(m_ncoeffs,&store[0],1,&m_coeffs[0],1);
+            Blas::Dcopy(m_ncoeffs,&store[0],1,&m_coeffs[0],1);
+
+            return Mat;
         }
 
 
@@ -216,44 +218,44 @@ namespace Nektar
         // 2D Interpolation
         void StdExpansion::Interp2D(const  LibUtilities::BasisKey *fbasis0, 
             const LibUtilities::BasisKey *fbasis1, const double *from,  
-	    const LibUtilities::BasisKey *tbasis0,
+            const LibUtilities::BasisKey *tbasis0,
             const LibUtilities::BasisKey* tbasis1, double *to)
         {
-	    DNekMatSharedPtr I0,I1;
+            DNekMatSharedPtr I0,I1;
             double *tmp;
             BstShrDArray wsp = GetDoubleTmpSpace(tbasis1->GetNumPoints()*
                 fbasis0->GetNumPoints());
             tmp = wsp.get();
 
-	    I0 = LibUtilities::PointsManager()[fbasis0->GetPointsKey()]
-		->GetI(tbasis0->GetPointsKey());
-	    I1 = LibUtilities::PointsManager()[fbasis1->GetPointsKey()]
-		->GetI(tbasis1->GetPointsKey());
+            I0 = LibUtilities::PointsManager()[fbasis0->GetPointsKey()]
+            ->GetI(tbasis0->GetPointsKey());
+            I1 = LibUtilities::PointsManager()[fbasis1->GetPointsKey()]
+            ->GetI(tbasis1->GetPointsKey());
 
             Blas::Dgemm('T', 'T', tbasis1->GetNumPoints(), fbasis0->GetNumPoints(),
                 fbasis1->GetNumPoints(), 1.0, &((*I1).GetPtr())[0],  
-			fbasis1->GetNumPoints(),
-			(double *) from,fbasis0->GetNumPoints(), 0.0, tmp,
-			tbasis1->GetNumPoints());
+                fbasis1->GetNumPoints(),
+                (double *) from,fbasis0->GetNumPoints(), 0.0, tmp,
+                tbasis1->GetNumPoints());
 
             Blas::Dgemm('T', 'T',tbasis0->GetNumPoints(),tbasis1->GetNumPoints(),
-			fbasis0->GetNumPoints(),1.0,&((*I0).GetPtr())[0],
-			fbasis0->GetNumPoints(),tmp, tbasis1->GetNumPoints(),
-			0.0,to, tbasis0->GetNumPoints());
+                fbasis0->GetNumPoints(),1.0,&((*I0).GetPtr())[0],
+                fbasis0->GetNumPoints(),tmp, tbasis1->GetNumPoints(),
+                0.0,to, tbasis0->GetNumPoints());
         }
 
         // 1D Interpolation
         void StdExpansion::Interp1D(const  LibUtilities::BasisKey *fbasis0, const double *from,  
             const LibUtilities::BasisKey *tbasis0, double *to)
         {
-	    DNekMatSharedPtr I0;
+            DNekMatSharedPtr I0;
 
-	    I0 = LibUtilities::PointsManager()[fbasis0->GetPointsKey()]
-		->GetI(tbasis0->GetPointsKey());
+            I0 = LibUtilities::PointsManager()[fbasis0->GetPointsKey()]
+            ->GetI(tbasis0->GetPointsKey());
 
             Blas::Dgemv('T', fbasis0->GetNumPoints(), tbasis0->GetNumPoints(), 
-			1.0, &((*I0).GetPtr())[0], fbasis0->GetNumPoints(), 
-			from, 1, 0.0, to, 1);
+                1.0, &((*I0).GetPtr())[0], fbasis0->GetNumPoints(), 
+                from, 1, 0.0, to, 1);
         }
 
         //   I/O routine
@@ -271,6 +273,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.11  2007/01/30 20:01:35  sherwin
+* Update for first compiling Project1D routine
+*
 * Revision 1.10  2007/01/29 15:04:53  sherwin
 * StdBasis.h moved to LibUtilities. Other minor mods
 *

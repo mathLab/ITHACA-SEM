@@ -522,20 +522,32 @@ namespace Nektar
 
             virtual DNekMatSharedPtr v_GenMassMatrix()
             {
+                DNekMatSharedPtr returnval;
+
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
 			 "been defined for this element");
+
+                return returnval;
             }
 
             virtual DNekMatSharedPtr v_GenLapMatrix()
             {
+                DNekMatSharedPtr returnval;
+
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
 			 "been defined for this element");
+
+                return returnval;
             }
 
             virtual DNekMatSharedPtr v_GenNBasisTransMatrix()
             {
+                DNekMatSharedPtr returnval;
+
                 NEKERROR(ErrorUtil::efatal, "This function is only valid "
 			 "for nodal expansions");
+
+                return returnval;
             }
 
             virtual StdMatContainer *v_GetNBasisTransMatrix()
@@ -634,6 +646,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.14  2007/01/28 18:34:21  sherwin
+* More modifications to make Demo Project1D compile
+*
 * Revision 1.13  2007/01/23 23:20:21  sherwin
 * New version after Jan 07 update
 *

@@ -14,7 +14,7 @@ include ../Flags/${ARCH}.inc
 
 # These are the module names:
 
-ALL   = StdExpansion StdExpansion1D StdSegExp
+ALL   = StdExpansion StdExpansion1D StdExpMap StdSegExp 
 
 # ALL  =  SStdExpansion2D StdExpansion3D StdExpMap StdHexExp    \
 # 	  StdNodalTriExp  StdNodalTetExp  StdPrismExp StdPyrExp \

@@ -47,10 +47,9 @@ namespace Nektar
 	}
 	
 	StdExpansion1D::StdExpansion1D(const LibUtilities::BasisKey &Ba, 
-				 int numcoeffs, double * coeffs,double *phys):
+				       int numcoeffs):
 	    StdExpansion(1,Ba, LibUtilities::NullBasisKey, 
-			 LibUtilities::NullBasisKey, numcoeffs,
-			 coeffs,phys)
+			 LibUtilities::NullBasisKey, numcoeffs)
 	{
 	}
 
@@ -119,6 +118,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.7  2007/01/30 20:01:35  sherwin
+ * Update for first compiling Project1D routine
+ *
  * Revision 1.6  2007/01/28 18:34:22  sherwin
  * More modifications to make Demo Project1D compile
  *

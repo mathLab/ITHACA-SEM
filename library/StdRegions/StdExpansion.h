@@ -78,8 +78,7 @@ namespace Nektar
             /** \brief Constructor */
             StdExpansion(const int numbases, const LibUtilities::BasisKey &Ba, 
 			 const LibUtilities::BasisKey &Bb,
-			 const LibUtilities::BasisKey &Bc, 
-			 int numcoeffs, double *coeffs, double *phys);
+			 const LibUtilities::BasisKey &Bc, int numcoeffs);
 
             /** \brief Copy Constructor */
             StdExpansion(const StdExpansion &T);
@@ -646,6 +645,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.15  2007/02/06 02:23:31  jfrazier
+* Minor cleanup.
+*
 * Revision 1.14  2007/01/28 18:34:21  sherwin
 * More modifications to make Demo Project1D compile
 *

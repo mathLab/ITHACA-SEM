@@ -58,15 +58,6 @@ namespace Nektar
 	     *  points.
 	     */
 	    StdSegExp(const LibUtilities::BasisKey &Ba);
-	    
-	    /** \brief Constructor using BasisKey class for quadrature
-	     *  points and order definition where m_coeffs and m_phys are all set.
-	     *
-	     *  \param Ba BasisKey definition containing order and quadrature points.
-	     *  \param coeffs list of expansions coefficient to be set in m_coeffs
-	     *  \param phys list of physical values to be set in m_phys
-	     */
-	    StdSegExp(const LibUtilities::BasisKey &Ba, double *coeffs, double *phys);
 
 	    /** \brief Copy Constructor */
 	    StdSegExp(const StdSegExp &T);
@@ -259,6 +250,11 @@ namespace Nektar
 		return Integral(inarray);
 	    } 
 	    
+	    virtual void v_GetCoords(double **coords)
+	    {
+		GetCoords(coords);
+	    }
+
 	    /** \brief Virtual call to StdSegExp::IProduct_WRT_B */
 	    virtual void v_IProductWRTBase(const double * inarray, double * outarray)
 	    {
@@ -337,6 +333,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.7  2007/01/28 18:34:24  sherwin
+ * More modifications to make Demo Project1D compile
+ *
  * Revision 1.6  2007/01/23 23:20:22  sherwin
  * New version after Jan 07 update
  *

@@ -42,7 +42,7 @@ namespace Nektar
     {
 
 	StdSegExp::StdSegExp(const LibUtilities::BasisKey &Ba):
-	    StdExpansion1D(Ba,Ba.GetNumModes(),NULL,NULL)
+	    StdExpansion1D(Ba,Ba.GetNumModes())
 	{    
 	}
 	
@@ -202,10 +202,13 @@ namespace Nektar
 	    else{
 		IProductWRTBase(inarray,&m_coeffs[0]);
 
-		// this needs replacing with managed matrices
-		DNekLinSys matsys(GenMassMatrix(),
-	        boost::shared_ptr<DNekVec>(new DNekVec(m_ncoeffs,&m_coeffs[0])));
-		DNekVec(m_ncoeffs,&m_coeffs[0]) = matsys.Solve();
+		DNekVec v(m_ncoeffs,&m_coeffs[0]);
+		DNekLinSys matsys(*GenMassMatrix(),v);
+
+		BstShrDArray tmp = GetDoubleTmpSpace(m_ncoeffs);
+		DNekVec sol(m_ncoeffs,&tmp[0]);
+		sol = matsys.Solve();
+		Blas::Dcopy(m_ncoeffs,&tmp[0],1,&m_coeffs[0],1);
 	    }
 	}
  
@@ -269,6 +272,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.10  2007/01/28 18:34:24  sherwin
+ * More modifications to make Demo Project1D compile
+ *
  * Revision 1.9  2007/01/23 23:20:21  sherwin
  * New version after Jan 07 update
  *

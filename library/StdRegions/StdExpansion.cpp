@@ -58,27 +58,30 @@ namespace Nektar
         }
 
 
-        StdExpansion::StdExpansion(int numbases, const LibUtilities::BasisKey &Ba, 
-            const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc,
-            int numcoeffs, double *coeffs, double *phys):
-        m_numbases(numbases)
-        {
-            m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
-
+        StdExpansion::StdExpansion(int numbases, 
+				   const LibUtilities::BasisKey &Ba, 
+				   const LibUtilities::BasisKey &Bb, 
+				   const LibUtilities::BasisKey &Bc,
+				   int numcoeffs):
+	    m_numbases(numbases)
+	{
+	    m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
+	    
             switch(m_numbases)
             {
             case 3:
-                ASSERTL2(Bc==LibUtilities::NullBasisKey,"NULL Basis attempting to be used.");
-
+                ASSERTL2(Bc==LibUtilities::NullBasisKey,
+			 "NULL Basis attempting to be used.");
                 m_base[2] = LibUtilities::BasisManager()[Bc];
 
             case 2:
-                ASSERTL2(Bb==LibUtilities::NullBasisKey,"NULL Basis attempting to be used.");
+                ASSERTL2(Bb==LibUtilities::NullBasisKey,
+			 "NULL Basis attempting to be used.");
 
                 m_base[1] = LibUtilities::BasisManager()[Bb];
             case 1:
-                ASSERTL2(Ba==LibUtilities::NullBasisKey,"NULL Basis attempting to be used.");
-
+                ASSERTL2(Ba==LibUtilities::NullBasisKey,
+			 "NULL Basis attempting to be used.");
                 m_base[0] = LibUtilities::BasisManager()[Ba];
                 break;
             default:
@@ -93,7 +96,8 @@ namespace Nektar
             //allocate memory for phys
             m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
 
-
+	    //allocate memory for phys
+	    m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
         } //end constructor
 
 
@@ -273,6 +277,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.12  2007/02/06 02:23:28  jfrazier
+* Minor cleanup.
+*
 * Revision 1.11  2007/01/30 20:01:35  sherwin
 * Update for first compiling Project1D routine
 *

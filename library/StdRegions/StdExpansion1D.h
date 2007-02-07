@@ -52,20 +52,10 @@ namespace Nektar
         public:
 
             StdExpansion1D();
-            StdExpansion1D(const LibUtilities::BasisKey &Ba, int numcoeffs, 
-			   double *coeffs, double *phys);
+            StdExpansion1D(const LibUtilities::BasisKey &Ba, int numcoeffs);
             StdExpansion1D(const StdExpansion1D &T);
             ~StdExpansion1D();
 
-
-            void GetCoords1D(double **coords);
-
-            // wrapper call to GetCoords of given expansion,i.e. StdSegExp or
-	    // SegExp
-            void GetCoords(double **coords)
-            {
-                v_GetCoords(coords);
-            }
 
 	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical
 	     *  quadrature points in the expansion (i.e. \a (this)->m_phys)
@@ -175,11 +165,6 @@ namespace Nektar
             virtual void   v_PhysDeriv    (const double *inarray, double *outarray) = 0;
             virtual void   v_StdPhysDeriv (const double *inarray, double *outarray) = 0;
 
-            virtual void v_GetCoords(double **coords)
-            {
-                GetCoords(coords);
-            }
-
         };
 
     } //end of namespace
@@ -189,6 +174,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.7  2007/01/28 18:34:23  sherwin
+* More modifications to make Demo Project1D compile
+*
 * Revision 1.6  2007/01/21 02:28:07  sherwin
 * Compiling under new revision
 *

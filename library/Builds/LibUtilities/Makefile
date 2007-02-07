@@ -13,7 +13,7 @@ include ../Flags/${ARCH}.inc
 
 # These are the module names:
 
-ALL = Graph Polylib Basis GaussPoints ManagerAccess NodalTriFekete Points 
+ALL = Basis FourierPoints GaussPoints Graph ManagerAccess NodalTetElec NodalTriElec NodalTriFekete  Points PolyEPoints Polylib lapack
 
 # ---------------------------------------------------------------- #
 # The following expand to give the names of all sections (ALL),    #

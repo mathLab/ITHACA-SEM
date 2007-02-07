@@ -43,6 +43,13 @@ int main(int argc, char *argv[])
   
   btype =   (BasisType) atoi(argv[1]);
   
+
+  if(btype == eNoBasisType)
+  {
+      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+		     "No Basis Type requested");
+  }
+
   // Check to see that only 1D Expansions are used
   if((btype == eOrtho_B)||(btype == eOrtho_B)||
      (btype == eModified_B)||(btype == eModified_C))

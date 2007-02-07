@@ -1,18 +1,18 @@
 SET(STD_REGIONS_SOURCES
-StdExpansion1D.cpp
-StdExpansion2D.cpp
-StdExpansion3D.cpp
 StdExpansion.cpp
+StdExpansion1D.cpp
+#StdExpansion2D.cpp
+#StdExpansion3D.cpp
 StdExpMap.cpp
-StdHexExp.cpp
-StdNodalTetExp.cpp
-StdNodalTriExp.cpp
-StdPrismExp.cpp
-StdPyrExp.cpp
-StdQuadExp.cpp
+#StdHexExp.cpp
+#StdNodalTetExp.cpp
+#StdNodalTriExp.cpp
+#StdPrismExp.cpp
+#StdPyrExp.cpp
+#StdQuadExp.cpp
 StdSegExp.cpp
-StdTetExp.cpp
-StdTriExp.cpp
+#StdTetExp.cpp
+#StdTriExp.cpp
 )
 
 SET(STD_REGIONS_HEADERS
@@ -34,7 +34,6 @@ StdTriExp.h
 LocalRegionsDeclarations.hpp
 SpatialDomainsDeclarations.hpp
 StdRegions.hpp
-
 )
 
 

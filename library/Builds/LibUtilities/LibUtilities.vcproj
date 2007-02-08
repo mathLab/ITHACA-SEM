@@ -41,15 +41,15 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../LibUtilities"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_USE_MATH_DEFINES"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_USE_MATH_DEFINES;NEKTAR_USE_EXPRESSION_TEMPLATES;NEKTAR_USING_BLAS;NEKTAR_USING_LAPACK"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
-				DisableSpecificWarnings="4018;4267"
+				DisableSpecificWarnings="4018;4267;4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -104,7 +104,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="_USE_MATH_DEFINES"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;NEKTAR_USE_EXPRESSION_TEMPLATES;NEKTAR_USING_BLAS;NEKTAR_USING_LAPACK"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -149,7 +149,51 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\LibUtilities\Foundations\Graph.cpp"
+				RelativePath="..\..\LibUtilities\Foundations\Basis.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\blas.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\BlockMat.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\FourierPoints.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\GaussPoints.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\lapack.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\ManagerAccess.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\NodalTetElec.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\NodalTriElec.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\NodalTriFekete.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\Points.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\PolyEPoints.cpp"
 				>
 			</File>
 			<File
@@ -163,7 +207,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\Accumulator.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\LibUtilities\ExpressionTemplates\ArithmeticConcepts.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ArithmeticTraits.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\AssignableTraits.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\AssociativeExpressionTraits.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\AssociativeTraits.hpp"
 				>
 			</File>
 			<File
@@ -172,6 +236,26 @@
 			</File>
 			<File
 				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpression.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionEvaluator.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionEvaluatorFwd.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionOperators.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionPolicy.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionPolicyFwd.hpp"
 				>
 			</File>
 			<File
@@ -191,7 +275,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\CommutativeExpressionTraits.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\CommutativeTraits.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\LibUtilities\BasicUtils\Concepts.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\BasicUtils\ConsistentObjectAccess.hpp"
 				>
 			</File>
 			<File
@@ -199,7 +295,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ConstantExpressionTraits.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Memory\DeleteNothing.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\LibUtilities\BasicUtils\ErrorUtil.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\Expression.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionConcepts.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionMetadata.hpp"
 				>
 			</File>
 			<File
@@ -219,6 +335,22 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTraits.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\Foundations.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\FourierPoints.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\GaussPoints.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\LibUtilities\Foundations\Graph.h"
 				>
 			</File>
@@ -227,11 +359,51 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\LibUtilities\Foundations\ManagerAccess.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\MatrixBlockType.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\NegateOp.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekBlockDiagonalMatrix.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekBlockFullMatrix.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekBlockMatrix.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekDiagonalMatrix.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekFullMatrix.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinAlg.h"
 				>
 			</File>
 			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinAlgAlgorithms.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinSys.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinSys.hpp"
 				>
 			</File>
 			<File
@@ -243,6 +415,26 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\NekMatrixExpressionTemplates.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrixForm.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrixFwd.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrixImpl.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrixMetadata.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\LibUtilities\Memory\NekMemoryManager.hpp"
 				>
 			</File>
@@ -251,7 +443,31 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekTypeDefs.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\LibUtilities\LinearAlgebra\NekVector.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\LinearAlgebra\NekVectorMetadata.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\NodalTetElec.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\NodalTetElecData.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\NodalTriElec.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\NodalTriElecData.h"
 				>
 			</File>
 			<File
@@ -259,7 +475,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\LibUtilities\Foundations\NodalTriFeketeData.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\NullOp.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\Points.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\LibUtilities\Foundations\Points1d.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Foundations\PolyEPoints.h"
 				>
 			</File>
 			<File
@@ -272,6 +504,14 @@
 			</File>
 			<File
 				RelativePath="..\..\LibUtilities\BasicUtils\TransF77.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\UnaryExpression.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\ExpressionTemplates\UnaryExpressionTraits.hpp"
 				>
 			</File>
 			<File

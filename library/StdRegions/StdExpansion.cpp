@@ -203,8 +203,7 @@ namespace Nektar
 
             DNekMatSharedPtr  Mat;
 
-            Mat = MemoryManager::AllocateSharedPtr<DNekMat>(m_ncoeffs,m_ncoeffs,
-                MemoryManager::AllocateArray<double>(m_ncoeffs*m_ncoeffs));
+            Mat = MemoryManager::AllocateSharedPtr<DNekMat>(m_ncoeffs,m_ncoeffs);
 
             Blas::Dcopy(m_ncoeffs,&m_coeffs[0],1,&store[0],1);
             for(i=0; i<m_ncoeffs; ++i)
@@ -277,6 +276,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.13  2007/02/07 12:51:52  sherwin
+* Compiling version of Project1D
+*
 * Revision 1.12  2007/02/06 02:23:28  jfrazier
 * Minor cleanup.
 *

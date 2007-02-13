@@ -202,17 +202,12 @@ namespace Nektar
 	    else{
 		IProductWRTBase(inarray,&m_coeffs[0]);
 
-		DNekVec          v(m_ncoeffs,&m_coeffs[0]);
-#if 1
-		DNekMatSharedPtr mass = GenMassMatrix();
-		DNekLinSys       matsys(*mass,v);
-#else
-		
-		DNekLinSys       matsys(*(GenMassMatrix()),v);
-#endif
+		// Replace first line with the following when implemented:
+		// DNekVec  v(m_ncoeffs,&m_coeffs[0],eWrapper);
+		DNekVec     v(m_ncoeffs,&m_coeffs[0]);
+		DNekLinSys  matsys(GenMassMatrix(),v);
 
-		BstShrDArray tmp = GetDoubleTmpSpace(m_ncoeffs);
-		DNekVec sol(m_ncoeffs,&tmp[0]);
+		DNekVec sol(m_ncoeffs);
 		sol = matsys.Solve();
 		Blas::Dcopy(m_ncoeffs,&sol[0],1,&m_coeffs[0],1);
 	    }
@@ -278,6 +273,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.12  2007/02/12 17:00:20  sherwin
+ * Modifcations to make a working version of Project1D
+ *
  * Revision 1.11  2007/02/07 12:51:53  sherwin
  * Compiling version of Project1D
  *

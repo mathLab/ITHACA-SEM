@@ -91,6 +91,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testDiagonalSystem), 0);
     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testFullSystem), 0);
     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testSolvingBlockDiagonalMatrices), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testMixedInputParameterTypes), 0);
 
     /// Linear algebra algorithsm.
     test->add(BOOST_TEST_CASE(&Nektar::NekLinAlgTests::testGramSchmidtOrthogonalizationBookExample), 0);
@@ -100,6 +101,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.20  2007/01/29 01:37:16  bnelson
+    *** empty log message ***
+
     Revision 1.19  2006/12/17 21:47:16  bnelson
     Added NekManager tests.
 

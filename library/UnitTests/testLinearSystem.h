@@ -44,6 +44,7 @@ namespace Nektar
         void testDiagonalSystem();
         void testFullSystem();
         void testSolvingBlockDiagonalMatrices();
+        void testMixedInputParameterTypes();
     }
 }
 
@@ -51,6 +52,9 @@ namespace Nektar
 
 /**
     $Log: testLinearSystem.h,v $
+    Revision 1.3  2006/10/30 05:08:13  bnelson
+    Added preliminary linear system and block matrix support.
+
     Revision 1.2  2006/10/02 01:20:38  bnelson
     Started working on adding BLAS and LAPACK
 

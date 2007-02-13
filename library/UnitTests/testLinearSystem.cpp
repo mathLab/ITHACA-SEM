@@ -45,6 +45,63 @@ namespace Nektar
 {
     namespace LinearSystemUnitTests
     {
+        void testMixedInputParameterTypes()
+        {
+            {
+                unsigned int matrix_buf[] = { 10, 5, 2 };
+
+                unsigned int result_buf[] = { 20, 50, 10 };
+
+                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,matrix_buf));
+                NekVector<unsigned int, 3> b(result_buf);
+
+                LinearSystem<NekMatrix<unsigned int, eDiagonal>, NekVector<unsigned int, 3> > linsys(A, b);
+
+                NekVector<unsigned int, 3> result = linsys.Solve();
+                
+                unsigned int expected_result_buf[] = { 2, 10, 5 };
+                NekVector<unsigned int, 3> expectedResult(expected_result_buf);
+
+                BOOST_CHECK_EQUAL(result, expectedResult);
+            }
+
+            {
+                unsigned int matrix_buf[] = { 10, 5, 2 };
+
+                unsigned int result_buf[] = { 20, 50, 10 };
+
+                NekMatrix<unsigned int, eDiagonal> A(3,matrix_buf);
+                NekVector<unsigned int, 3> b(result_buf);
+
+                LinearSystem<NekMatrix<unsigned int, eDiagonal>, NekVector<unsigned int, 3> > linsys(A, b);
+
+                NekVector<unsigned int, 3> result = linsys.Solve();
+                
+                unsigned int expected_result_buf[] = { 2, 10, 5 };
+                NekVector<unsigned int, 3> expectedResult(expected_result_buf);
+
+                BOOST_CHECK_EQUAL(result, expectedResult);
+            }
+
+            {
+                unsigned int matrix_buf[] = { 10, 5, 2 };
+
+                unsigned int result_buf[] = { 20, 50, 10 };
+
+                NekMatrix<unsigned int, eDiagonal> A(3,matrix_buf);
+                boost::shared_ptr<NekVector<unsigned int, 3> > b(new NekVector<unsigned int, 3>(result_buf));
+
+                LinearSystem<NekMatrix<unsigned int, eDiagonal>, NekVector<unsigned int, 3> > linsys(A, b);
+
+                NekVector<unsigned int, 3> result = linsys.Solve();
+                
+                unsigned int expected_result_buf[] = { 2, 10, 5 };
+                NekVector<unsigned int, 3> expectedResult(expected_result_buf);
+
+                BOOST_CHECK_EQUAL(result, expectedResult);
+            }
+        }
+
         void testDiagonalSystem()
         {
             unsigned int matrix_buf[] = { 10, 5, 2 };

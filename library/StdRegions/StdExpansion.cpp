@@ -93,9 +93,6 @@ namespace Nektar
             m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
             Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
 
-            //allocate memory for phys
-            m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
-
 	    //allocate memory for phys
 	    m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
         } //end constructor
@@ -276,6 +273,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.14  2007/02/13 09:52:27  sherwin
+* Updates to fix mass matrix inverse issues
+*
 * Revision 1.13  2007/02/07 12:51:52  sherwin
 * Compiling version of Project1D
 *

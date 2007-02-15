@@ -109,21 +109,39 @@ namespace Nektar
 
 
             template<typename VectorType>
-            VectorType Solve(const boost::shared_ptr<const VectorType>& b) const
+            VectorType Solve(const boost::shared_ptr<VectorType>& b) const
             {
                 VectorType x(*b);
                 LinearSystemSolver<MatrixType, VectorType>::Solve(A, *b, x);
                 return x;
             }
 
-            template<unsigned int dim>
-            NekVector<DataType, dim, space> Solve(const NekVector<DataType, dim, space>& b) const
+            template<typename VectorType>
+            void Solve(const boost::shared_ptr<VectorType>& b,
+                       const boost::shared_ptr<VectorType>& x) const
             {
-                typedef NekVector<DataType, dim, space> VectorType;
-                VectorType x(b);
-                LinearSystemSolver<MatrixType, VectorType>::Solve(A, b, x);
-                return x;
+                LinearSystemSolver<MatrixType, VectorType>::Solve(A, *b, *x);
             }
+
+            // TODO - I want the methods below, and with these signature.  There are a lot of compiler
+            // errors on both windows and linux.
+
+            //template<typename VectorType>
+            //VectorType Solve(const boost::shared_ptr<const VectorType>& b) const
+            //{
+            //    VectorType x(*b);
+            //    LinearSystemSolver<MatrixType, VectorType>::Solve(A, *b, x);
+            //    return x;
+            //}
+
+            //template<unsigned int dim>
+            //NekVector<DataType, dim, space> Solve(const NekVector<DataType, dim, space>& b) const
+            //{
+            //    typedef NekVector<DataType, dim, space> VectorType;
+            //    VectorType x(b);
+            //    LinearSystemSolver<MatrixType, VectorType>::Solve(A, b, x);
+            //    return x;
+            //}
 
             //template<typename VectorType>
             //VectorType Solve(const boost::shared_ptr<const VectorType>& b,

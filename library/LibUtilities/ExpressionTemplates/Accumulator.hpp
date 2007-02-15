@@ -40,6 +40,8 @@
 
 namespace Nektar
 {
+
+    /// \brief A wrapper for a piece of data to be passed through the expression templates.
     template<typename DataType>
     class Accumulator
     {
@@ -50,23 +52,22 @@ namespace Nektar
             {
             }
             
-            void operator=(typename boost::call_traits<DataType>::const_reference rhs)
-            {
-                m_isInitialized = true;
-                m_data = rhs;
-            }
-            
+            /// \brief Returns true if the accumulator contains valid data, false otherwise.
+            ///
+            /// When starting an expression evaluation, the accumulator starts out in an uninitialized
+            /// state and this method will return false.  At some point the accumulator will obtain
+            /// valid values, and after this point this method will return true.
             bool IsInitialized() const 
             {
                 return m_isInitialized; 
             }
             
-            typename boost::call_traits<DataType>::reference GetData() const
-            {
-                m_isInitialized = true;
-                return m_data;
-            }
-            
+            /// \brief Returns the data held by the accumulator.
+            ///
+            /// Without a little more infrastructure, it is impossible to determine 
+            /// if the data has been modified after this call is made.  Therefore, 
+            /// pessimistically, we will assume that it will be modified so all 
+            /// subsequent calls to IsInitialized will return true.
             typename boost::call_traits<DataType>::reference operator*() const
             {
                 m_isInitialized = true;
@@ -74,6 +75,9 @@ namespace Nektar
             }
 
         private:
+            /// By definition an accumulator stores a particular value and updates 
+            /// it as the expression is being evaluated.  So a copy constructor and 
+            /// assignment operator don't really make much sense.
             Accumulator(const Accumulator<DataType>& rhs);
             Accumulator<DataType>& operator=(const Accumulator<DataType>& rhs);
             
@@ -87,6 +91,9 @@ namespace Nektar
 
 /**
     $Log: Accumulator.hpp,v $
+    Revision 1.3  2007/01/30 23:37:15  bnelson
+    *** empty log message ***
+
     Revision 1.2  2007/01/16 17:37:55  bnelson
     Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 

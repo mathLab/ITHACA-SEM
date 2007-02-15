@@ -86,7 +86,7 @@ namespace Nektar
                 {
                     std::vector<DataType> values = fromString<DataType>(vectorValues);
                     m_dimension = values.size();
-                    m_impl = MemoryManager::AllocateSharedArray<DataType>(m_dimension);
+                    m_data = MemoryManager::AllocateSharedArray<DataType>(m_dimension);
                     std::copy(values.begin(), values.end(), m_data);
 
                     ASSERTL1(m_dimension > 0, "Error converting string values to vector");
@@ -275,7 +275,7 @@ namespace Nektar
             typename boost::call_traits<DataType>::const_reference operator()(unsigned int i) const
             {
                 ASSERTL1(( i >= 0) && (i < GetDimension()), "Invalid access to m_data via parenthesis operator");
-                return m_[i];
+                return m_data[i];
             }
 
             typename boost::call_traits<DataType>::reference operator[](unsigned int i)

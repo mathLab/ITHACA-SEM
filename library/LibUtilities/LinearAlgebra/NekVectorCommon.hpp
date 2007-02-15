@@ -59,6 +59,9 @@ namespace Nektar
                 result.push_back(boost::lexical_cast<DataType>(*strIter));
             }
         }
+        catch(boost::bad_lexical_cast&)
+        {
+        }
 
         return result;
     }
@@ -70,7 +73,7 @@ namespace Nektar
         typedef NekVector<DataType, dim, space> VectorType;
 
         DataType result(0);
-        for(VectorType::const_iterator iter = v.begin(); iter != v.end(); ++iter)
+        for(typename VectorType::const_iterator iter = v.begin(); iter != v.end(); ++iter)
         {
             result += NekVectorTypeTraits<DataType>::abs(*iter);
         }
@@ -84,7 +87,7 @@ namespace Nektar
         typedef NekVector<DataType, dim, space> VectorType;
 
         DataType result(0);
-        for(VectorType::const_iterator iter = v.begin(); iter != v.end(); ++iter)
+        for(typename VectorType::const_iterator iter = v.begin(); iter != v.end(); ++iter)
         {
             DataType v = NekVectorTypeTraits<DataType>::abs(*iter);
             result += v*v;
@@ -225,5 +228,5 @@ namespace Nektar
 
 }
 
-#endif NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_COMMON_HPP
+#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_COMMON_HPP
 

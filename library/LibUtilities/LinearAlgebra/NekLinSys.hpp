@@ -108,10 +108,9 @@ namespace Nektar
             ~LinearSystem() {}
 
 
-            template<unsigned int dim>
-            NekVector<DataType, dim, space> Solve(boost::shared_ptr<NekVector<DataType, dim, space> > b) const
+            template<typename VectorType>
+            VectorType Solve(const boost::shared_ptr<const VectorType>& b) const
             {
-                typedef NekVector<DataType, dim, space> VectorType;
                 VectorType x(*b);
                 LinearSystemSolver<MatrixType, VectorType>::Solve(A, *b, x);
                 return x;

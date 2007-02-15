@@ -43,7 +43,7 @@ namespace Nektar
     enum PointerWrapper { eWrapper, eCopy };
 }
 
-#endif NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_POINTER_WRAPPER_H
+#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_POINTER_WRAPPER_H
 
 
 

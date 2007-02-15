@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: NekMatrixFwd.hpp
+// File: NekVectorFwd.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,39 +29,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Matrix Forward Declarations
-//
-// 
+// Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
-
-#include <LibUtilities/LinearAlgebra/MatrixBlockType.h>
-#include <LibUtilities/LinearAlgebra/PointerWrapper.h>
-
-#include <boost/shared_ptr.hpp>
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP
 
 namespace Nektar
 {
-  
-    /// \brief Enumeration used internally to determine if a pointer can be deleted or not.
-    //enum MatrixDataDeltetableType { eDeletable, eNotDeletable };
-    
-    template<typename DataType, NekMatrixForm form = eFull, MatrixBlockType BlockType = eNormal, unsigned int space = 0, typename enabled=void>
-    class NekMatrix;
-    
-    typedef boost::shared_ptr<NekMatrix<double> > SharedNekMatrixPtr;
-};
-    
-#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
+    // \param DataType The type of data held by each element of the vector.
+    // \param dim The number of elements in the vector.  If set to 0, the vector
+    //            will have a variable number of elements.
+    // \param space The space of the vector.
+    template<typename DataType, unsigned int dim = 0, unsigned int space = 0>
+    class NekVector;
+}
 
-/**
-    $Log: NekMatrixFwd.hpp,v $
-    Revision 1.5  2006/12/17 22:36:35  bnelson
-    Removed Macintosh line endings.
-
-**/
-
+#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP
 

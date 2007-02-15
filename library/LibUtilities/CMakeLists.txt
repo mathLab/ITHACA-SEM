@@ -35,7 +35,12 @@ SET(LibUtilityHeaders
 ./LinearAlgebra/NekMatrixImpl.hpp
 ./LinearAlgebra/NekMatrixMetadata.hpp
 ./LinearAlgebra/NekVector.hpp
+./LinearAlgebra/NekVectorFwd.hpp
+./LinearAlgebra/NekVectorConstantSized.hpp
+./LinearAlgebra/NekVectorVariableSized.hpp
 ./LinearAlgebra/NekVectorMetadata.hpp
+./LinearAlgebra/NekVectorTypeTraits.hpp
+./LinearAlgebra/NekVectorCommon.hpp
 ./LinearAlgebra/NekPoint.hpp
 ./ExpressionTemplates/Accumulator.hpp
 ./ExpressionTemplates/ArithmeticConcepts.hpp

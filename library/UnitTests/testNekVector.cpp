@@ -95,7 +95,7 @@ namespace Nektar
                     BOOST_CHECK(p1[i] == 2.7);
                 }
 
-                NekVector<double> p2;
+                NekVector<double> p2(1,0.0);
                 BOOST_CHECK(p2.GetDimension() == 1);
                 BOOST_CHECK(p2(0) == 0.0);
 
@@ -111,8 +111,8 @@ namespace Nektar
                 BOOST_CHECK(p2.GetDimension() == 10);
                 for(unsigned int i = 0; i < p2.GetDimension(); ++i)
                 {
-                    BOOST_CHECK(p2(i) == 2.7);
-                    BOOST_CHECK(p2[i] == 2.7);
+                    BOOST_CHECK_EQUAL(p2(i), 2.7);
+                    BOOST_CHECK_EQUAL(p2[i], 2.7);
                 }
 
                 NekVector<int> v10(10, -2);
@@ -300,9 +300,10 @@ namespace Nektar
                 v1(1) = 6.0;
                 v1(2) = 9.0;
 
-                NekVector<double, 3> v2 = normalize(v1);
-                BOOST_CHECK(v1.magnitude() == 11.0);
-                v1.normalize();
+                NekVector<double, 3> v2 = v1;
+                Normalize(v2);
+                BOOST_CHECK(v1.Magnitude() == 11.0);
+                v1.Normalize();
                 BOOST_CHECK(v1(0) == 2.0/11.0);
                 BOOST_CHECK(v1(1) == 6.0/11.0);
                 BOOST_CHECK(v1(2) == 9.0/11.0);
@@ -315,10 +316,10 @@ namespace Nektar
                 v1(1) = 10.0;
                 v1(2) = -3.4;
 
-                BOOST_CHECK(v1.magnitude() == sqrt((1.0*1.0) + (10.0*10.0) + (-3.4*-3.4)));
+                BOOST_CHECK(v1.Magnitude() == sqrt((1.0*1.0) + (10.0*10.0) + (-3.4*-3.4)));
 
-                NekVector<double> v2;
-                BOOST_CHECK(v2.magnitude() == 0.0);
+                //NekVector<double> v2;
+                //BOOST_CHECK(v2.magnitude() == 0.0);
             }
 
             {
@@ -332,7 +333,7 @@ namespace Nektar
                 v2(1) = -4.5;
                 v2(2) = 9.12;
 
-                BOOST_CHECK(v1.dot(v2) == 1.0*8.9 + 10.0*-4.5 + 9.12*-3.4);
+                BOOST_CHECK(v1.Dot(v2) == 1.0*8.9 + 10.0*-4.5 + 9.12*-3.4);
             }
 
         }
@@ -352,6 +353,9 @@ namespace Nektar
 
 /**
     $Log: testNekVector.cpp,v $
+    Revision 1.5  2006/11/18 17:18:46  bnelson
+    Added L1, L2, and Infinity norm tests.
+
     Revision 1.4  2006/09/30 15:38:29  bnelson
     no message
 

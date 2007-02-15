@@ -48,7 +48,7 @@ namespace Nektar
     {
         public:
             void operator()(DataType* p) {}
-            void operator()(const DataType* p) {}
+            void operator()(const DataType* p) const {}
     };
             
 };
@@ -57,6 +57,9 @@ namespace Nektar
 
 /**
     $Log: DeleteNothing.hpp,v $
+    Revision 1.2  2007/02/04 04:27:49  bnelson
+    Updated linear systems to work with normal objects instead of only shared pointers.
+
     Revision 1.1  2006/10/30 05:10:13  bnelson
     Object to use when creating a shared array and you don't want to delete the pointer.
 

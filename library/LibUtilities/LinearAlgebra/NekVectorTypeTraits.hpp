@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: NekMatrixFwd.hpp
+// File: NekVectorTypeTraits.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,39 +29,48 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Matrix Forward Declarations
-//
-// 
+// Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_TYPE_TRAITS_HPP
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_TYPE_TRAITS_HPP
 
-#include <LibUtilities/LinearAlgebra/MatrixBlockType.h>
-#include <LibUtilities/LinearAlgebra/PointerWrapper.h>
+#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <boost/type_traits.hpp>
+#include <boost/call_traits.hpp>
+#include <boost/utility/enable_if.hpp>
 
 namespace Nektar
 {
-  
-    /// \brief Enumeration used internally to determine if a pointer can be deleted or not.
-    //enum MatrixDataDeltetableType { eDeletable, eNotDeletable };
+    template<typename DataType, typename enabled = void>
+    class NekVectorTypeTraits;
+
+    template<typename DataType>
+    class NekVectorTypeTraits<DataType, typename boost::enable_if<boost::is_floating_point<DataType> >::type >
+    {
+        public:
+            static 
+            typename boost::call_traits<DataType>::value_type 
+            abs(typename boost::call_traits<DataType>::const_reference v)
+            {
+                return fabs(v);
+            }
+    };
     
-    template<typename DataType, NekMatrixForm form = eFull, MatrixBlockType BlockType = eNormal, unsigned int space = 0, typename enabled=void>
-    class NekMatrix;
+    template<typename DataType>
+    class NekVectorTypeTraits<DataType, typename boost::enable_if<boost::is_integral<DataType> >::type >
+    {
+        public:
+            static 
+            typename boost::call_traits<DataType>::value_type 
+            abs(typename boost::call_traits<DataType>::const_reference v)
+            {
+                return abs(v);
+            }
+    };
     
-    typedef boost::shared_ptr<NekMatrix<double> > SharedNekMatrixPtr;
-};
-    
-#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
+}
 
-/**
-    $Log: NekMatrixFwd.hpp,v $
-    Revision 1.5  2006/12/17 22:36:35  bnelson
-    Removed Macintosh line endings.
-
-**/
-
-
+#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_TYPE_TRAITS_HPP

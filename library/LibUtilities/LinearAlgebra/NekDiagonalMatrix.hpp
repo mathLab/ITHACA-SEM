@@ -79,7 +79,7 @@ namespace Nektar
                 std::copy(ptr, ptr+m_numberOfElements, begin());
             }
 
-            NekMatrix(unsigned int numberOfElements, DataType* ptr, MatrixDataHolderType t = eCopy) :
+            NekMatrix(unsigned int numberOfElements, DataType* ptr, PointerWrapper t = eCopy) :
                 m_numberOfElements(numberOfElements),
                 m_data()
             {
@@ -348,6 +348,9 @@ namespace Nektar
 
 /**
     $Log: NekDiagonalMatrix.hpp,v $
+    Revision 1.5  2007/01/29 01:30:19  bnelson
+    Removed memory manager requirements.
+
     Revision 1.4  2007/01/23 03:12:49  jfrazier
     Added more conditional compilation directives for expression templates.
 

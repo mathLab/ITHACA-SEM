@@ -72,7 +72,7 @@ namespace Nektar
                 Initialize(rows, columns, DataType(0));
             }
 
-            NekMatrix(unsigned int rows, unsigned int columns, DataType* ptr, MatrixDataHolderType t = eCopy) :
+            NekMatrix(unsigned int rows, unsigned int columns, DataType* ptr, PointerWrapper t = eCopy) :
                 m_rows(rows),
                 m_columns(columns),
                 m_data()
@@ -163,7 +163,13 @@ namespace Nektar
         }
 #endif
 
-        ~NekMatrix() {}
+        ~NekMatrix() 
+        {
+            m_rows = 0;
+            m_columns = 0;
+            m_data.reset();
+        }
+
 
         unsigned int GetRows() const { return m_rows; }
         unsigned int GetColumns() const { return m_columns; }
@@ -353,6 +359,9 @@ namespace Nektar
 
 /**
     $Log: NekFullMatrix.hpp,v $
+    Revision 1.6  2007/02/04 04:27:43  bnelson
+    Updated linear systems to work with normal objects instead of only shared pointers.
+
     Revision 1.5  2007/01/29 01:30:20  bnelson
     Removed memory manager requirements.
 

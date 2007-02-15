@@ -73,7 +73,7 @@ namespace Nektar
         {
             for(unsigned int i = 0; i <= j-1; ++i)
             {
-                r(i,j) = q[i].dot(x[j]);
+                r(i,j) = q[i].Dot(x[j]);
             }
             
             VectorType y = x[j];
@@ -98,5 +98,8 @@ namespace Nektar
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LIN_ALG_ALGORITHMS_HPP
 
 /**
-    $Log: $
+    $Log: NekLinAlgAlgorithms.hpp,v $
+    Revision 1.1  2006/11/20 03:39:06  bnelson
+    Initial Revision
+
 **/

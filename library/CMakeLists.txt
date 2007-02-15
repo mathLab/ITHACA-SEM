@@ -157,7 +157,6 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
 
     TARGET_LINK_LIBRARIES(${name}
         optimized LibUtilities debug LibUtilities-g
-        optimized StdRegions debug StdRegions-g
         optimized ${BOOST_THREAD_LIB} debug ${BOOST_THREAD_DEBUG_LIB})
         
     INSTALL(TARGETS ${name} RUNTIME DESTINATION ${NEKTAR_BIN_DIR} OPTIONAL

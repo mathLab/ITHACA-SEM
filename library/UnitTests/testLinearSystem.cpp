@@ -55,9 +55,9 @@ namespace Nektar
                 boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,matrix_buf));
                 NekVector<unsigned int, 3> b(result_buf);
 
-                LinearSystem<NekMatrix<unsigned int, eDiagonal>, NekVector<unsigned int, 3> > linsys(A, b);
+                LinearSystem<NekMatrix<unsigned int, eDiagonal> > linsys(A);
 
-                NekVector<unsigned int, 3> result = linsys.Solve();
+                NekVector<unsigned int, 3> result = linsys.Solve(b);
                 
                 unsigned int expected_result_buf[] = { 2, 10, 5 };
                 NekVector<unsigned int, 3> expectedResult(expected_result_buf);
@@ -70,30 +70,12 @@ namespace Nektar
 
                 unsigned int result_buf[] = { 20, 50, 10 };
 
-                NekMatrix<unsigned int, eDiagonal> A(3,matrix_buf);
-                NekVector<unsigned int, 3> b(result_buf);
-
-                LinearSystem<NekMatrix<unsigned int, eDiagonal>, NekVector<unsigned int, 3> > linsys(A, b);
-
-                NekVector<unsigned int, 3> result = linsys.Solve();
-                
-                unsigned int expected_result_buf[] = { 2, 10, 5 };
-                NekVector<unsigned int, 3> expectedResult(expected_result_buf);
-
-                BOOST_CHECK_EQUAL(result, expectedResult);
-            }
-
-            {
-                unsigned int matrix_buf[] = { 10, 5, 2 };
-
-                unsigned int result_buf[] = { 20, 50, 10 };
-
-                NekMatrix<unsigned int, eDiagonal> A(3,matrix_buf);
+                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,matrix_buf));
                 boost::shared_ptr<NekVector<unsigned int, 3> > b(new NekVector<unsigned int, 3>(result_buf));
 
-                LinearSystem<NekMatrix<unsigned int, eDiagonal>, NekVector<unsigned int, 3> > linsys(A, b);
+                LinearSystem<NekMatrix<unsigned int, eDiagonal> > linsys(A);
 
-                NekVector<unsigned int, 3> result = linsys.Solve();
+                NekVector<unsigned int, 3> result = linsys.Solve(b);
                 
                 unsigned int expected_result_buf[] = { 2, 10, 5 };
                 NekVector<unsigned int, 3> expectedResult(expected_result_buf);
@@ -111,9 +93,9 @@ namespace Nektar
             boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,matrix_buf));
             boost::shared_ptr<NekVector<unsigned int, 3> > b(new NekVector<unsigned int, 3>(result_buf));
 
-            LinearSystem<NekMatrix<unsigned int, eDiagonal>, NekVector<unsigned int, 3> > linsys(A, b);
+            LinearSystem<NekMatrix<unsigned int, eDiagonal> > linsys(A);
 
-            NekVector<unsigned int, 3> result = linsys.Solve();
+            NekVector<unsigned int, 3> result = linsys.Solve(b);
             
             unsigned int expected_result_buf[] = { 2, 10, 5 };
             NekVector<unsigned int, 3> expectedResult(expected_result_buf);
@@ -133,9 +115,9 @@ namespace Nektar
                 boost::shared_ptr<NekMatrix<double, eFull> >  A(new NekMatrix<double, eFull>(3,3,matrix_buf));
                 boost::shared_ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
     
-                LinearSystem<NekMatrix<double, eFull>, NekVector<double, 3> > linsys(A, b);
+                LinearSystem<NekMatrix<double, eFull> > linsys(A);
     
-                NekVector<double, 3> result = linsys.Solve();
+                NekVector<double, 3> result = linsys.Solve(b);
                 
                 unsigned int expected_result_buf[] = { 2, 10, 5 };
                 NekVector<unsigned int, 3> expectedResult(expected_result_buf);
@@ -155,9 +137,9 @@ namespace Nektar
                 
                 boost::shared_ptr<NekMatrix<double, eFull> > A(new NekMatrix<double, eFull>(2, 2, matrix_buf));
                 boost::shared_ptr<NekVector<double> > b(new NekVector<double>(2, b_buf));
-                LinearSystem<NekMatrix<double, eFull>, NekVector<double> > linsys(A, b);
+                LinearSystem<NekMatrix<double, eFull> > linsys(A);
             
-                NekVector<double> result = linsys.Solve();
+                NekVector<double> result = linsys.Solve(b);
                 double epsilon = 1e-11;
                 BOOST_CHECK_CLOSE(result[0], -11.0, epsilon);
                 BOOST_CHECK_CLOSE(result[1], 10.0, epsilon);
@@ -181,9 +163,9 @@ namespace Nektar
                 
                 boost::shared_ptr<NekMatrix<double, eFull> > A(new NekMatrix<double, eFull>(10, 10, matrix_buf));
                 boost::shared_ptr<NekVector<double> > b(new NekVector<double>(10, b_buf));
-                LinearSystem<NekMatrix<double, eFull>, NekVector<double> > linsys(A, b);
+                LinearSystem<NekMatrix<double, eFull> > linsys(A);
                 
-                NekVector<double> result = linsys.Solve();
+                NekVector<double> result = linsys.Solve(b);
                 double epsilon = 1e-11;
                 BOOST_CHECK_CLOSE(result[0], -88.0, epsilon);
                 BOOST_CHECK_CLOSE(result[1], -43.0, epsilon);

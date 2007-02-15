@@ -54,17 +54,14 @@ namespace Nektar
         typedef NekVector<DataType, vectorDim, space> VectorType;
         typedef NekMatrix<DataType, eDiagonal, eNormal, space> MatrixType;
 
-        static VectorType Solve(const boost::shared_ptr<MatrixType>& A, const boost::shared_ptr<const VectorType>& b)
+        static void Solve(const boost::shared_ptr<MatrixType>& A, const VectorType& b, VectorType& x)
         {
-            ASSERTL0(A->GetColumns() == b->GetRows(), "ERROR: NekLinSys::Solve matrix columns must equal vector rows");
-            VectorType result(*b);
+            ASSERTL0(A->GetColumns() == b.GetRows(), "ERROR: NekLinSys::Solve matrix columns must equal vector rows");
 
             for(unsigned int i = 0; i < A->GetColumns(); ++i)
             {
-                result[i] = (*b)[i]/(*A)(i,i);
+                x[i] = b[i]/(*A)(i,i);
             }
-
-            return result;
         }
     };
 
@@ -74,53 +71,30 @@ namespace Nektar
         typedef NekMatrix<DataType, form, BlockType, space> MatrixType;
         typedef NekVector<DataType, vectorDim, space> VectorType;
 
-        static VectorType Solve(const boost::shared_ptr<MatrixType>& A, const boost::shared_ptr<const VectorType>& b)
+        static void Solve(const boost::shared_ptr<MatrixType>& A, const VectorType& b, VectorType& x)
         {
-            VectorType result(*b);
-            Lapack::dgetrs(A->GetRows(),A->GetColumns(),A->GetPtr().get(),result.GetPtr());
-            return result;
+            Lapack::dgetrs(A->GetRows(),A->GetColumns(),A->GetPtr().get(),x.GetPtr());
         }
     };
 
-    template<typename MatrixType, typename VectorType>
-    class LinearSystem
+    template<typename MatrixType>
+    class LinearSystem;
+
+    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
+    class LinearSystem<NekMatrix<DataType, form, BlockType, space> >
     {
         public:
-            typedef LinearSystem<MatrixType, VectorType> ThisType;
-            typedef VectorType ResultType; 
+            typedef NekMatrix<DataType, form, BlockType, space> MatrixType;
+            typedef LinearSystem<MatrixType> ThisType;
 
         public:
-            LinearSystem(const boost::shared_ptr<MatrixType>& theA,
-                         const boost::shared_ptr<const VectorType>& theB) :
-                A(theA),
-                b(theB)
-            {
-            }
-
-            LinearSystem(const boost::shared_ptr<MatrixType>& theA,
-                         const VectorType& theB) :
-                A(theA),
-                b(&theB, DeleteNothing<VectorType>())
-            {
-            }
-
-            LinearSystem(MatrixType& theA,
-                         const boost::shared_ptr<const VectorType>& theB) :
-                A(&theA, DeleteNothing<MatrixType>()),
-                b(theB)
-            {
-            }
-
-            LinearSystem(MatrixType& theA,
-                         const VectorType& theB) :
-                A(&theA, DeleteNothing<MatrixType>()),
-                b(&theB, DeleteNothing<VectorType>())
+            explicit LinearSystem(const boost::shared_ptr<MatrixType>& theA) :
+                A(theA)
             {
             }
 
             LinearSystem(const ThisType& rhs) :
-                A(rhs.A),
-                b(rhs.b)
+                A(rhs.A)
             {
             }
 
@@ -134,20 +108,59 @@ namespace Nektar
             ~LinearSystem() {}
 
 
-            ResultType Solve() const
+            template<unsigned int dim>
+            NekVector<DataType, dim, space> Solve(boost::shared_ptr<NekVector<DataType, dim, space> > b) const
             {
-                return LinearSystemSolver<MatrixType, VectorType>::Solve(A, b);
+                typedef NekVector<DataType, dim, space> VectorType;
+                VectorType x(*b);
+                LinearSystemSolver<MatrixType, VectorType>::Solve(A, *b, x);
+                return x;
             }
+
+            template<unsigned int dim>
+            NekVector<DataType, dim, space> Solve(const NekVector<DataType, dim, space>& b) const
+            {
+                typedef NekVector<DataType, dim, space> VectorType;
+                VectorType x(b);
+                LinearSystemSolver<MatrixType, VectorType>::Solve(A, b, x);
+                return x;
+            }
+
+            //template<typename VectorType>
+            //VectorType Solve(const boost::shared_ptr<const VectorType>& b,
+            //                 const boost::shared_ptr<VectorType>& x) const
+            //{
+            //    return LinearSystemSolver<MatrixType, VectorType>::Solve(A, *b, *x);
+            //}
+
+            //template<typename VectorType>
+            //VectorType Solve(const boost::shared_ptr<const VectorType>& b,
+            //                 const VectorType& x) const
+            //{
+            //    return LinearSystemSolver<MatrixType, VectorType>::Solve(A, *b, x);
+            //}
+
+            //template<typename VectorType>
+            //VectorType Solve(const VectorType& b,
+            //                 const boost::shared_ptr<VectorType>& x) const
+            //{
+            //    return LinearSystemSolver<MatrixType, VectorType>::Solve(A, b, *x);
+            //}
+
+            //template<typename VectorType>
+            //VectorType Solve(const VectorType& b,
+            //                 const VectorType& x) const
+            //{
+            //    return LinearSystemSolver<MatrixType, VectorType>::Solve(A, b, *x);
+            //}
 
         private:
             void swap(ThisType& rhs)
             {
                 std::swap(A, rhs.A);
-                std::swap(b, rhs.b);
             }
 
             boost::shared_ptr<MatrixType> A;
-            boost::shared_ptr<const VectorType> b;
     };
 }
 

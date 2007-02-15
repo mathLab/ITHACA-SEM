@@ -333,8 +333,11 @@ namespace Nektar
     NekVector<DataType, dim, space>::NekVector(const std::string& vectorValues) :
         m_impl()
     {
-        bool result = fromString(vectorValues, &m_impl[0], m_impl+dim);
-        ASSERTL1(result, "Error converting string values to vector");
+        std::vector<DataType> values = FromString<DataType>(vectorValues);
+
+        ASSERTL0(values.size() == dim, "Error converting string values to vector");
+
+        std::copy(values.begin(), values.end(), &m_impl[0]);
     }
 
     template<typename DataType, unsigned int dim, unsigned int space>

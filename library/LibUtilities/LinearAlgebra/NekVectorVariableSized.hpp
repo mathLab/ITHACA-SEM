@@ -84,12 +84,12 @@ namespace Nektar
             {
                 try
                 {
-                    std::vector<DataType> values = fromString<DataType>(vectorValues);
+                    std::vector<DataType> values = FromString<DataType>(vectorValues);
                     m_dimension = values.size();
                     m_data = MemoryManager::AllocateSharedArray<DataType>(m_dimension);
                     std::copy(values.begin(), values.end(), m_data);
 
-                    ASSERTL1(m_dimension > 0, "Error converting string values to vector");
+                    ASSERTL0(m_dimension > 0, "Error converting string values to vector");
                 }
                 catch(std::runtime_error& e)
                 {

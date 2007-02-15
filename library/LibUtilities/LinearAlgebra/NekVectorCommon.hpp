@@ -45,7 +45,7 @@
 namespace Nektar
 {
     template<typename DataType>
-    std::vector<DataType> fromString(const std::string& str)
+    std::vector<DataType> FromString(const std::string& str)
     {
         std::vector<DataType> result;
 

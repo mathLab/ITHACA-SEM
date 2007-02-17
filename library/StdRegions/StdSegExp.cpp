@@ -205,10 +205,9 @@ namespace Nektar
 		// Replace first line with the following when implemented:
 		// DNekVec  v(m_ncoeffs,&m_coeffs[0],eWrapper);
 		DNekVec     v(m_ncoeffs,&m_coeffs[0]);
-		DNekLinSys  matsys(GenMassMatrix(),v);
+		DNekLinSys  matsys(GenMassMatrix());
 
-		DNekVec sol(m_ncoeffs);
-		sol = matsys.Solve();
+		DNekVec sol(matsys.Solve(v));
 		Blas::Dcopy(m_ncoeffs,&sol[0],1,&m_coeffs[0],1);
 	    }
 	}
@@ -273,6 +272,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.13  2007/02/13 09:52:28  sherwin
+ * Updates to fix mass matrix inverse issues
+ *
  * Revision 1.12  2007/02/12 17:00:20  sherwin
  * Modifcations to make a working version of Project1D
  *

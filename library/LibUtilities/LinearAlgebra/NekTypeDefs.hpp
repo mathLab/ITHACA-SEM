@@ -45,7 +45,7 @@ namespace Nektar
 {
     typedef NekMatrix<double,eFull>        DNekMat;
     typedef NekVector<double>              DNekVec;
-    typedef LinearSystem <DNekMat,DNekVec> DNekLinSys;
+    typedef LinearSystem <DNekMat>         DNekLinSys;
 
     typedef boost::shared_ptr<DNekMat>     DNekMatSharedPtr;
 }
@@ -53,7 +53,10 @@ namespace Nektar
 #endif //NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP
 
 /**
-    $Log:$
+    $Log: NekTypeDefs.hpp,v $
+    Revision 1.1  2007/01/23 23:21:26  sherwin
+    Modes so that we can use Lapack: definitions and added NekTypeDefs.hpp
+
  **/
 
 

@@ -51,12 +51,19 @@ namespace Nektar
         /** define list of number of faces corresponding to each ShapeType */
         const int g_shapenfaces[SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
 
+#pragma message("*******Finish this function********")
+        boost::shared_ptr<NekMatrix<double> > StdExpansion::Create(const MatrixKey &mkey)
+        {
+            boost::shared_ptr<NekMatrix<double> > returnval(new NekMatrix<double>);
+
+            return returnval;
+        }
+
         StdExpansion::StdExpansion(void): 
         m_numbases(0), 
             m_ncoeffs(0)
         {
         }
-
 
         StdExpansion::StdExpansion(int numbases, 
 				   const LibUtilities::BasisKey &Ba, 
@@ -64,8 +71,8 @@ namespace Nektar
 				   const LibUtilities::BasisKey &Bc,
 				   int numcoeffs):
 	    m_numbases(numbases)
-	{
-	    m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
+	    {
+	        m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
 	    
             switch(m_numbases)
             {
@@ -273,6 +280,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.15  2007/02/14 16:35:50  pvos
+* Corrected an error in the code
+*
 * Revision 1.14  2007/02/13 09:52:27  sherwin
 * Updates to fix mass matrix inverse issues
 *

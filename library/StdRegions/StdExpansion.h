@@ -48,37 +48,37 @@ namespace Nektar
 {
     namespace StdRegions
     {
-    
-        class StdMatContainer;
-	class StdSegExp;
 
-	
-	/// This is a macro which is used to encapsulating the points
-	/// properties at which a given expansion basis is evaluated.
-	/// The i index refers to the ith basis definition of a given expansion.
-	///
-	/// This should/could be a typdef expression when such a thing
-	/// comes into the convention.
+        class StdMatContainer;
+        class StdSegExp;
+
+
+        /// This is a macro which is used to encapsulating the points
+        /// properties at which a given expansion basis is evaluated.
+        /// The i index refers to the ith basis definition of a given expansion.
+        ///
+        /// This should/could be a typdef expression when such a thing
+        /// comes into the convention.
 #define ExpPointsProperties(i) LibUtilities::PointsManager()[m_base[i]->GetPointsKey()] 
 
         /** \brief The base class for all shapes
-	 *   
-         *  This is the lowest level basic class for all shapes and so
-         *  contains the definition of common data and common routine to all
-         *  elements
-         */
+        *   
+        *  This is the lowest level basic class for all shapes and so
+        *  contains the definition of common data and common routine to all
+        *  elements
+        */
         class StdExpansion
-	{
+        {
 
         public:
 
-	    /** \brief Default Constructor */
+            /** \brief Default Constructor */
             StdExpansion();
-	    
+
             /** \brief Constructor */
             StdExpansion(const int numbases, const LibUtilities::BasisKey &Ba, 
-			 const LibUtilities::BasisKey &Bb,
-			 const LibUtilities::BasisKey &Bc, int numcoeffs);
+                const LibUtilities::BasisKey &Bb,
+                const LibUtilities::BasisKey &Bc, int numcoeffs);
 
             /** \brief Copy Constructor */
             StdExpansion(const StdExpansion &T);
@@ -89,21 +89,21 @@ namespace Nektar
             // Standard Expansion Routines Applicable Regardless of Region
 
             /** \brief This function returns the number of 1D bases used in 
-	     *  the expansion 
-	     *
-	     *  \return returns the number of 1D bases used in the expansion, 
-	     *  which is equal to number dimension of the expansion
-	     */
+            *  the expansion 
+            *
+            *  \return returns the number of 1D bases used in the expansion, 
+            *  which is equal to number dimension of the expansion
+            */
             inline int GetNumBases() const
             {
                 return m_numbases;
             }
 
             /** \brief This function gets the basis in the \a dir direction
-	     *  
-	     *  \param dir the direction 
-	     *  \return returns a pointer to the basis in the \a dir direction 
-	     */
+            *  
+            *  \param dir the direction 
+            *  \return returns a pointer to the basis in the \a dir direction 
+            */
             inline const LibUtilities::BasisSharedPtr GetBasis(const int dir) const
             {
                 ASSERTL1(dir <= m_numbases,"Base_id was larger than _numbases");
@@ -111,77 +111,77 @@ namespace Nektar
             }
 
             /** \brief This function returns the total number of coefficients 
-	     *  used in the expansion 
-	     *  
-	     *  \return returns the total number of coefficients (which is 
-	     *  equivalent to the total number of modes) used in the expansion
-	     */
+            *  used in the expansion 
+            *  
+            *  \return returns the total number of coefficients (which is 
+            *  equivalent to the total number of modes) used in the expansion
+            */
             inline int GetNcoeffs(void)
             {
                 return(m_ncoeffs);
             }
 
             /** \brief This function returns a pointer to the coefficient array
-	     *  \f$ \mathbf{\hat{u}}\f$ 
-	     *
-	     *  The coefficient array \f$ \mathbf{\hat{u}}\f$ corresponds to the 
-	     *  class attribute #m_coeffs (which is in coefficient space)
-	     *
-	     *  \return returns a pointer to the coefficient array 
-	     *  \f$ \mathbf{\hat{u}}\f$ 
-	     */
+            *  \f$ \mathbf{\hat{u}}\f$ 
+            *
+            *  The coefficient array \f$ \mathbf{\hat{u}}\f$ corresponds to the 
+            *  class attribute #m_coeffs (which is in coefficient space)
+            *
+            *  \return returns a pointer to the coefficient array 
+            *  \f$ \mathbf{\hat{u}}\f$ 
+            */
             inline BstShrDArray GetCoeffs(void)
             {
                 return(m_coeffs);
             }
 
             /** \brief This function sets the coefficient array 
-	     *  \f$ \mathbf{\hat{u}}\f$ (implemented as the class attribute 
-	     *  #m_coeffs) to the values given by \a coeffs
-	     *
-	     *  Using this function actually determines the entire expansion
-	     *
-	     *  \param coeffs the array of values to which #m_coeffs should 
-	     *  be set
-	     */
+            *  \f$ \mathbf{\hat{u}}\f$ (implemented as the class attribute 
+            *  #m_coeffs) to the values given by \a coeffs
+            *
+            *  Using this function actually determines the entire expansion
+            *
+            *  \param coeffs the array of values to which #m_coeffs should 
+            *  be set
+            */
             inline void SetCoeffs(double *coeffs)
             {
                 Vmath::Vcopy(m_ncoeffs, coeffs, 1, &m_coeffs[0], 1);
             }
 
             /** \brief This function sets the i th coefficient  
-	     *  \f$ \mathbf{\hat{u}}[i]\f$ to the value given by \a coeff
-	     *
-	     *  #m_coeffs[i] will be set to the  value given by \a coeff
-	     *
-	     *  \param i the index of the coefficient to be set
-	     *  \param coeff the value of the coefficient to be set
-	     */
+            *  \f$ \mathbf{\hat{u}}[i]\f$ to the value given by \a coeff
+            *
+            *  #m_coeffs[i] will be set to the  value given by \a coeff
+            *
+            *  \param i the index of the coefficient to be set
+            *  \param coeff the value of the coefficient to be set
+            */
             inline void SetCoeff(const int i, double coeff)
             {
                 m_coeffs[i] = coeff;
             }
 
             /** \brief This function returns a pointer to the array
-	     *  \f$\mathbf{u}\f$ (which is in physical space)
-	     *
-	     *  The array \f$ \mathbf{u}\f$ corresponds to the 
-	     *  class attribute #m_phys and contains the values of a function
-	     *  evaluates at the quadrature points, 
-	     *  i.e. \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
-	     *
-	     *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
-	     */
+            *  \f$\mathbf{u}\f$ (which is in physical space)
+            *
+            *  The array \f$ \mathbf{u}\f$ corresponds to the 
+            *  class attribute #m_phys and contains the values of a function
+            *  evaluates at the quadrature points, 
+            *  i.e. \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
+            *
+            *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
+            */
             inline BstShrDArray  GetPhys(void)
             {
                 return(m_phys);
             }
 
             /** \brief This function returns the total number of quadrature
-	     *  points used in the element 
-	     *  
-	     *  \return returns the total number of quadrature points
-	     */
+            *  points used in the element 
+            *  
+            *  \return returns the total number of quadrature points
+            */
             inline int GetTotPoints()
             {
                 int i;
@@ -196,15 +196,15 @@ namespace Nektar
             }
 
             /** \brief This function sets the array 
-	     *  \f$ \mathbf{u}\f$ (implemented as the class attribute 
-	     *  #m_phys) to the values given by \a phys
-	     *
-	     *  Using this function corresponds to storing a function \f$u\f$
-	     *  (evaluated at the quadrature points) in the class attribute
-	     *  #m_phys 
-	     *
-	     *  \param phys the array of values to which #m_phys should be set
-	     */
+            *  \f$ \mathbf{u}\f$ (implemented as the class attribute 
+            *  #m_phys) to the values given by \a phys
+            *
+            *  Using this function corresponds to storing a function \f$u\f$
+            *  (evaluated at the quadrature points) in the class attribute
+            *  #m_phys 
+            *
+            *  \param phys the array of values to which #m_phys should be set
+            */
             inline void  SetPhys(const double *phys)
             {
                 int nqtot = GetTotPoints();
@@ -213,15 +213,15 @@ namespace Nektar
             }
 
             /** \brief This function returns the type of basis used in the \a dir
-	     *  direction
-	     *  
-	     *  The different types of bases implemented in the code are defined 
-	     *  in the LibUtilities::BasisType enumeration list. As a result, the
-	     *  funcion will return one of the types of this enumeration list.
-	     *  
-	     *  \param dir the direction
-	     *  \return returns the type of basis used in the \a dir direction
-	     */
+            *  direction
+            *  
+            *  The different types of bases implemented in the code are defined 
+            *  in the LibUtilities::BasisType enumeration list. As a result, the
+            *  funcion will return one of the types of this enumeration list.
+            *  
+            *  \param dir the direction
+            *  \return returns the type of basis used in the \a dir direction
+            */
             inline LibUtilities::BasisType GetBasisType(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
@@ -229,12 +229,12 @@ namespace Nektar
             }
 
             /** \brief This function returns the number of expansion modes 
-	     *  in the \a dir direction
-	     *  
-	     *  \param dir the direction
-	     *  \return returns the number of expansion modes in the \a dir 
-	     *  direction
-	     */
+            *  in the \a dir direction
+            *  
+            *  \param dir the direction
+            *  \return returns the number of expansion modes in the \a dir 
+            *  direction
+            */
             inline int GetBasisNumModes(const int dir) const
             {
                 ASSERTL1(dir < m_numbases,"dir is larger than m_numbases");
@@ -242,17 +242,17 @@ namespace Nektar
             }
 
             /** \brief This function returns the type of quadrature points used 
-	     *  in the \a dir direction
-	     *  
-	     *  The different types of quadrature points implemented in the code
-	     *  are defined in the LibUtilities::PointsType enumeration list. 
-	     *  As a result, the funcion will return one of the types of this 
-	     *  enumeration list.
-	     *  
-	     *  \param dir the direction
-	     *  \return returns the type of quadrature points  used in the \a dir
-	     *  direction
-	     */
+            *  in the \a dir direction
+            *  
+            *  The different types of quadrature points implemented in the code
+            *  are defined in the LibUtilities::PointsType enumeration list. 
+            *  As a result, the funcion will return one of the types of this 
+            *  enumeration list.
+            *  
+            *  \param dir the direction
+            *  \return returns the type of quadrature points  used in the \a dir
+            *  direction
+            */
             inline LibUtilities::PointsType GetPointsType(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
@@ -260,12 +260,12 @@ namespace Nektar
             }
 
             /** \brief This function returns the number of quadrature points 
-	     *  in the \a dir direction
-	     *  
-	     *  \param dir the direction
-	     *  \return returns the number of quadrature points in the \a dir 
-	     *  direction
-	     */
+            *  in the \a dir direction
+            *  
+            *  \param dir the direction
+            *  \return returns the number of quadrature points in the \a dir 
+            *  direction
+            */
             inline int GetNumPoints(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
@@ -273,15 +273,15 @@ namespace Nektar
             }
 
             /** \brief This function returns a pointer to the array containing
-	     *  the quadrature points in \a dir direction
-	     *
-	     *  \param dir the direction
-	     *  \return returns a pointer to the array containing
-	     *  the quadrature points in \a dir direction 
-	     */
+            *  the quadrature points in \a dir direction
+            *
+            *  \param dir the direction
+            *  \return returns a pointer to the array containing
+            *  the quadrature points in \a dir direction 
+            */
             inline double *GetPoints(const int dir) const
-	    {
-		return ExpPointsProperties(dir)->GetZ();
+            {
+                return ExpPointsProperties(dir)->GetZ();
             }
 
 
@@ -302,174 +302,174 @@ namespace Nektar
             // Wrappers around virtual Functions
 
             /** \brief This function returns the number of vertices of the 
-	     *  expansion domain
-	     *  
-	     *  This function is a wrapper around the virtual function 
-	     *  \a v_GetNverts() 
-	     * 
-	     *  \return returns the number of vertices of the expansion domain
-	     */
-	    int GetNverts()
-	    {
-		return v_GetNverts();
-	    }
+            *  expansion domain
+            *  
+            *  This function is a wrapper around the virtual function 
+            *  \a v_GetNverts() 
+            * 
+            *  \return returns the number of vertices of the expansion domain
+            */
+            int GetNverts()
+            {
+                return v_GetNverts();
+            }
 
             /** \brief This function returns the number of edges of the 
-	     *  expansion domain
-	     *  
-	     *  This function is a wrapper around the virtual function 
-	     *  \a v_GetNedges() 
-	     * 
-	     *  \return returns the number of edges of the expansion domain
-	     */
-	    int GetNedges()
-	    {
-		return v_GetNedges();
-	    }
+            *  expansion domain
+            *  
+            *  This function is a wrapper around the virtual function 
+            *  \a v_GetNedges() 
+            * 
+            *  \return returns the number of edges of the expansion domain
+            */
+            int GetNedges()
+            {
+                return v_GetNedges();
+            }
 
             /** \brief This function returns the number of expansion coefficients
-	     *  belonging to the \a i-th edge  
-	     *  
-	     *  This function is a wrapper around the virtual function 
-	     *  \a v_GetEdgeNcoeffs() 
-	     * 
-	     *  \param i specifies which edge
-	     *  \return returns the number of expansion coefficients belonging to
-	     *  the \a i-th edge
-	     */
-	    int GetEdgeNcoeffs(const int i)
-	    {
-		return v_GetEdgeNcoeffs(i);
-	    }
+            *  belonging to the \a i-th edge  
+            *  
+            *  This function is a wrapper around the virtual function 
+            *  \a v_GetEdgeNcoeffs() 
+            * 
+            *  \param i specifies which edge
+            *  \return returns the number of expansion coefficients belonging to
+            *  the \a i-th edge
+            */
+            int GetEdgeNcoeffs(const int i)
+            {
+                return v_GetEdgeNcoeffs(i);
+            }
 
             /** \brief This function returns the type of expansion basis on the
-	     *  \a i-th edge  
-	     *  
-	     *  This function is a wrapper around the virtual function 
-	     *  \a v_GetEdgeBasisType() 
-	     *
-	     *  The different types of bases implemented in the code are defined 
-	     *  in the LibUtilities::BasisType enumeration list. As a result, the
-	     *  funcion will return one of the types of this enumeration list.
-	     * 
-	     *  \param i specifies which edge
-	     *  \return returns the expansion basis on the \a i-th edge
-	     */
-	    LibUtilities::BasisType GetEdgeBasisType(const int i)
-	    {
-		return v_GetEdgeBasisType(i);
-	    }
+            *  \a i-th edge  
+            *  
+            *  This function is a wrapper around the virtual function 
+            *  \a v_GetEdgeBasisType() 
+            *
+            *  The different types of bases implemented in the code are defined 
+            *  in the LibUtilities::BasisType enumeration list. As a result, the
+            *  funcion will return one of the types of this enumeration list.
+            * 
+            *  \param i specifies which edge
+            *  \return returns the expansion basis on the \a i-th edge
+            */
+            LibUtilities::BasisType GetEdgeBasisType(const int i)
+            {
+                return v_GetEdgeBasisType(i);
+            }
 
             /** \brief This function returns the number of faces of the 
-	     *  expansion domain
-	     *  
-	     *  This function is a wrapper around the virtual function 
-	     *  \a v_GetNFaces() 
-	     * 
-	     *  \return returns the number of faces of the expansion domain
-	     */
-	    int GetNfaces()
-	    {
-		return v_GetNfaces();
-	    }
+            *  expansion domain
+            *  
+            *  This function is a wrapper around the virtual function 
+            *  \a v_GetNFaces() 
+            * 
+            *  \return returns the number of faces of the expansion domain
+            */
+            int GetNfaces()
+            {
+                return v_GetNfaces();
+            }
 
             /** \brief This function returns the shape of the expansion domain 
-	     *  
-	     *  This function is a wrapper around the virtual function 
-	     *  \a v_DetShapeType() 
-	     *
-	     *  The different shape types implemented in the code are defined 
-	     *  in the ::ShapeType enumeration list. As a result, the
-	     *  funcion will return one of the types of this enumeration list.
-	     *  
-	     *  \return returns the shape of the expansion domain
-	     */	    
+            *  
+            *  This function is a wrapper around the virtual function 
+            *  \a v_DetShapeType() 
+            *
+            *  The different shape types implemented in the code are defined 
+            *  in the ::ShapeType enumeration list. As a result, the
+            *  funcion will return one of the types of this enumeration list.
+            *  
+            *  \return returns the shape of the expansion domain
+            */	    
             ShapeType DetShapeType()
             {
                 return v_DetShapeType();
             }
 
-	    /** \brief This function performs the Backward transformation from 
-	     *  coefficient space to physical space
-	     *
-	     *  This function is a wrapper around the virtual function 
-	     *  \a v_BwdTrans() 
-	     *
-	     *  Based on the expansion coefficients, this function evaluates the
-	     *  expansion at the quadrature points. This is equivalent to the 
-	     *  operation \f[ u(\xi_{1i}) =
-	     *  \sum_{p=0}^{P-1} \hat{u}_p \phi_p(\xi_{1i}) \f] which can be 
-	     *  evaluated as \f$ {\bf u} = {\bf B}^T {\bf \hat{u}} \f$ with 
-	     *  \f${\bf B}[i][j] = \phi_i(\xi_{j})\f$
-	     *
-	     *  This function requires that the coefficient array 
-	     *  \f$\mathbf{\hat{u}}\f$ (implemented as the attribute #m_coeffs) 
-	     *  is set.
-	     *
-	     *  The resulting array \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
-	     *  containing the expansion 
-	     *  evaluated at the quadrature points, is stored in the 
-	     *  \a outarray. (Note that the class attribute #m_phys
-	     *  provides a suitable location to store this result) 
-	     *
-	     *  \param outarray contains the values of the expansion evaluated
-	     *  at the quadrature points
-	     */
+            /** \brief This function performs the Backward transformation from 
+            *  coefficient space to physical space
+            *
+            *  This function is a wrapper around the virtual function 
+            *  \a v_BwdTrans() 
+            *
+            *  Based on the expansion coefficients, this function evaluates the
+            *  expansion at the quadrature points. This is equivalent to the 
+            *  operation \f[ u(\xi_{1i}) =
+            *  \sum_{p=0}^{P-1} \hat{u}_p \phi_p(\xi_{1i}) \f] which can be 
+            *  evaluated as \f$ {\bf u} = {\bf B}^T {\bf \hat{u}} \f$ with 
+            *  \f${\bf B}[i][j] = \phi_i(\xi_{j})\f$
+            *
+            *  This function requires that the coefficient array 
+            *  \f$\mathbf{\hat{u}}\f$ (implemented as the attribute #m_coeffs) 
+            *  is set.
+            *
+            *  The resulting array \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
+            *  containing the expansion 
+            *  evaluated at the quadrature points, is stored in the 
+            *  \a outarray. (Note that the class attribute #m_phys
+            *  provides a suitable location to store this result) 
+            *
+            *  \param outarray contains the values of the expansion evaluated
+            *  at the quadrature points
+            */
             void  BwdTrans (double *outarray)
             {
                 v_BwdTrans (outarray);
             }
 
-	    /** \brief This function performs the Forward transformation from 
-	     *  physical space to coefficient space
-	     *
-	     *  This function is a wrapper around the virtual function 
-	     *  \a v_FwdTrans() 
-	     *
-	     *  Given a function evaluated at the quadrature points, this 
-	     *  function calculates the expansion coefficients such that the 
-	     *  resulting expansion approximates the original function.
-	     *
-	     *  The calculation of the expansion coefficients is done using a 
-	     *  Galerkin projection. This is equivalent to the operation:
-	     *  \f[ \mathbf{\hat{u}} = \mathbf{M}^{-1} \mathbf{I}\f]
-	     *  where
-	     *  - \f$\mathbf{M}[p][q]= \int\phi_p(\mathbf{\xi})\phi_q(
-	     *  \mathbf{\xi}) d\mathbf{\xi}\f$ is the Mass matrix
-	     *  - \f$\mathbf{I}[p] = \int\phi_p(\mathbf{\xi}) u(\mathbf{\xi})    
-	     *  d\mathbf{\xi}\f$
-	     *
-	     *  This function takes the array \a inarray as the values of the 
-	     *  function evaluated at the quadrature points 
-	     *  (i.e. \f$\mathbf{u}\f$),
-	     *  and stores the resulting coefficients \f$\mathbf{\hat{u}}\f$  
-	     *  in the class attribute #m_coeffs 
-	     *  
-	     *  \param inarray array of the function discretely evaluated at the
-	     *  quadrature points
-	     */
+            /** \brief This function performs the Forward transformation from 
+            *  physical space to coefficient space
+            *
+            *  This function is a wrapper around the virtual function 
+            *  \a v_FwdTrans() 
+            *
+            *  Given a function evaluated at the quadrature points, this 
+            *  function calculates the expansion coefficients such that the 
+            *  resulting expansion approximates the original function.
+            *
+            *  The calculation of the expansion coefficients is done using a 
+            *  Galerkin projection. This is equivalent to the operation:
+            *  \f[ \mathbf{\hat{u}} = \mathbf{M}^{-1} \mathbf{I}\f]
+            *  where
+            *  - \f$\mathbf{M}[p][q]= \int\phi_p(\mathbf{\xi})\phi_q(
+            *  \mathbf{\xi}) d\mathbf{\xi}\f$ is the Mass matrix
+            *  - \f$\mathbf{I}[p] = \int\phi_p(\mathbf{\xi}) u(\mathbf{\xi})    
+            *  d\mathbf{\xi}\f$
+            *
+            *  This function takes the array \a inarray as the values of the 
+            *  function evaluated at the quadrature points 
+            *  (i.e. \f$\mathbf{u}\f$),
+            *  and stores the resulting coefficients \f$\mathbf{\hat{u}}\f$  
+            *  in the class attribute #m_coeffs 
+            *  
+            *  \param inarray array of the function discretely evaluated at the
+            *  quadrature points
+            */
             void  FwdTrans (const double *inarray)
             {
                 v_FwdTrans(inarray);
             }
 
-	    /** \brief This function integrates the specified function over the 
-	     *  domain 
-	     *
-	     *  This function is a wrapper around the virtual function 
-	     *  \a v_Integral()
-	     *
-	     *  Based on the values of the function evaluated at the quadrature
-	     *  points (which are stored in \a inarray), this function calculates
-	     *  the integral of this function over the domain.  This is 
-	     *  equivalent to the numerical evaluation of the operation
-	     *  \f[ I=\int u(\mathbf{\xi})d \mathbf{\xi}\f]
-	     *
-	     *  \param inarray values of the function to be integrated evaluated
-	     *  at the quadrature points (i.e. 
-	     *  \a inarray[m]=\f$u(\mathbf{\xi}_m)\f$)
-	     *  \return returns the value of the calculated integral
-   	     */
+            /** \brief This function integrates the specified function over the 
+            *  domain 
+            *
+            *  This function is a wrapper around the virtual function 
+            *  \a v_Integral()
+            *
+            *  Based on the values of the function evaluated at the quadrature
+            *  points (which are stored in \a inarray), this function calculates
+            *  the integral of this function over the domain.  This is 
+            *  equivalent to the numerical evaluation of the operation
+            *  \f[ I=\int u(\mathbf{\xi})d \mathbf{\xi}\f]
+            *
+            *  \param inarray values of the function to be integrated evaluated
+            *  at the quadrature points (i.e. 
+            *  \a inarray[m]=\f$u(\mathbf{\xi}_m)\f$)
+            *  \return returns the value of the calculated integral
+            */
             double Integral(const double *inarray )
             {
                 return v_Integral(inarray);
@@ -528,7 +528,7 @@ namespace Nektar
             // virtual functions related to LocalRegions
             boost::shared_ptr<LocalRegions::MetricRelatedInfo> GenGeoFac(void)
             {
-		return v_GenGeoFac();
+                return v_GenGeoFac();
             }
 
             void SetGeoFac(boost::shared_ptr<LocalRegions::MetricRelatedInfo> minfo)
@@ -536,36 +536,36 @@ namespace Nektar
                 v_SetGeoFac(minfo);
             }
 
-	    int GetCoordim()
-	    {
-		return v_GetCoordim(); 
-	    }
+            int GetCoordim()
+            {
+                return v_GetCoordim(); 
+            }
 
-	    // element boundary ordering 
-	    // Segment mapping: Vertex to Seg
-	    void MapTo(EdgeOrientation dir, StdExpMap &Map)
-	    {
-		v_MapTo(dir,Map);
-	    }
+            // element boundary ordering 
+            // Segment mapping: Vertex to Seg
+            void MapTo(EdgeOrientation dir, StdExpMap &Map)
+            {
+                v_MapTo(dir,Map);
+            }
 
-	    // EdgeTo2D mapping 
-	    void  MapTo(const int edge_ncoeff, 
-			const LibUtilities::BasisType Btype, 
-			const int eid, const EdgeOrientation eorient, 
-			StdExpMap &Map)
-	    {
-		v_MapTo(edge_ncoeff,Btype,eid,eorient,Map);
-	    }
+            // EdgeTo2D mapping 
+            void  MapTo(const int edge_ncoeff, 
+                const LibUtilities::BasisType Btype, 
+                const int eid, const EdgeOrientation eorient, 
+                StdExpMap &Map)
+            {
+                v_MapTo(edge_ncoeff,Btype,eid,eorient,Map);
+            }
 
-	    // EdgeTo2D mapping 
-	    void  MapTo_ModalFormat(const int edge_ncoeff, 
-				    const LibUtilities::BasisType Btype, 
-				    const int eid, 
-				    const EdgeOrientation eorient, 
-				    StdExpMap &Map)
-	    {
-		v_MapTo_ModalFormat(edge_ncoeff,Btype,eid,eorient,Map);
-	    }
+            // EdgeTo2D mapping 
+            void  MapTo_ModalFormat(const int edge_ncoeff, 
+                const LibUtilities::BasisType Btype, 
+                const int eid, 
+                const EdgeOrientation eorient, 
+                StdExpMap &Map)
+            {
+                v_MapTo_ModalFormat(edge_ncoeff,Btype,eid,eorient,Map);
+            }
 
             // Matrix Routines
             DNekMatSharedPtr GenerateMassMatrix();
@@ -607,50 +607,50 @@ namespace Nektar
                 const LibUtilities::BasisKey* tbasis1, double *to);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
-	     *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
-	     *	u_{exact}\f$ is given by the array \a sol. 
-	     *
-	     *	This function takes the physical value space array \a m_phys as
-	     *  approximate solution
-	     *
-	     *  \param sol array of solution function  at physical quadrature
-	     *  points
-	     *  \return returns the \f$ L_\infty \f$ error as a double. 
-	     */
+            *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
+            *	u_{exact}\f$ is given by the array \a sol. 
+            *
+            *	This function takes the physical value space array \a m_phys as
+            *  approximate solution
+            *
+            *  \param sol array of solution function  at physical quadrature
+            *  points
+            *  \return returns the \f$ L_\infty \f$ error as a double. 
+            */
             double Linf(const double *sol);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty \f$ norm of
-	     *  the function defined at the physical points \a (this)->m_phys. 
-	     *
-	     *	This function takes the physical value space array \a m_phys as
-	     *  discrete function to be evaluated
-	     *
-	     *  \return returns the \f$ L_\infty \f$ norm as a double.
-	     */
+            *  the function defined at the physical points \a (this)->m_phys. 
+            *
+            *	This function takes the physical value space array \a m_phys as
+            *  discrete function to be evaluated
+            *
+            *  \return returns the \f$ L_\infty \f$ norm as a double.
+            */
             double Linf();
 
             /** \brief Function to evaluate the discrete \f$ L_2\f$ error,
-	     *  \f$ | \epsilon |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2
-	     *  dx \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by 
-	     *  the array \a sol.
-	     *
-	     *	This function takes the physical value space array \a m_phys as
-	     *  approximate solution
-	     *
-	     *  \param sol array of solution function  at physical quadrature
-	     *  points
-	     *  \return returns the \f$ L_2 \f$ error as a double. 
-	     */
+            *  \f$ | \epsilon |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2
+            *  dx \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by 
+            *  the array \a sol.
+            *
+            *	This function takes the physical value space array \a m_phys as
+            *  approximate solution
+            *
+            *  \param sol array of solution function  at physical quadrature
+            *  points
+            *  \return returns the \f$ L_2 \f$ error as a double. 
+            */
             double L2(const double *sol);
 
-	    /** \brief Function to evaluate the discrete \f$ L_2\f$ norm of the
-	     *  function defined at the physical points \a (this)->m_phys.
-	     *
-	     *	This function takes the physical value space array \a m_phys as
-	     *  discrete function to be evaluated
-	     *
-	     *  \return returns the \f$ L_2 \f$ norm as a double
-	     */
+            /** \brief Function to evaluate the discrete \f$ L_2\f$ norm of the
+            *  function defined at the physical points \a (this)->m_phys.
+            *
+            *	This function takes the physical value space array \a m_phys as
+            *  discrete function to be evaluated
+            *
+            *  \return returns the \f$ L_2 \f$ norm as a double
+            */
             double L2();
 
             // I/O routines
@@ -658,8 +658,12 @@ namespace Nektar
 
         protected:
 
+            static boost::shared_ptr<NekMatrix<double> > Create(const MatrixKey &mkey);
+
             int   m_numbases;   /**< Number of 1D basis defined in expansion */
-	    LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */	    
+            LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */
+
+            LibUtilities::NekManager<MatrixKey, NekMatrix<double>, MatrixKey::opLess> MatrixManager;
 
             /** Total number of coefficients used in the expansion*/
             int  m_ncoeffs;
@@ -671,22 +675,22 @@ namespace Nektar
 
             // Virtual functions
 
-	    virtual int v_GetNverts() = 0;
-	    virtual int v_GetNedges() = 0;
-	    virtual int v_GetNfaces() = 0;
+            virtual int v_GetNverts() = 0;
+            virtual int v_GetNedges() = 0;
+            virtual int v_GetNfaces() = 0;
 
-	    virtual int v_GetEdgeNcoeffs(const int i)
-	    {
+            virtual int v_GetEdgeNcoeffs(const int i)
+            {
                 ASSERTL0(false, "This function is not valid or not defined");
-		return 0;
-	    }
+                return 0;
+            }
 
 
-	    virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
-	    {
+            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
+            {
                 ASSERTL0(false, "This function is not valid or not defined");
-		return (LibUtilities::BasisType) NULL;
-	    }
+                return (LibUtilities::BasisType) NULL;
+            }
 
 
             virtual ShapeType v_DetShapeType()                = 0;
@@ -701,27 +705,27 @@ namespace Nektar
             virtual void   v_PhysDeriv (const int dim, double **outarray)
             {
                 ASSERTL0(false, "This function is only valid for "
-			 " local expansions");
+                    " local expansions");
             }
-	    
+
 
             virtual void   v_PhysDeriv (const int dim, const double *inarray,
                 double **outarray)
             {
                 ASSERTL0(false, "This function is only valid for "
-			 "local expansions");
+                    "local expansions");
             }
 
             virtual void v_FillMode(const int mode, double * outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
-			 "been defined for this shape");
+                    "been defined for this shape");
             }
 
             virtual void v_IProductWRTBase(const double *inarray, double * outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
-			 "been defined for this shape");
+                    "been defined for this shape");
             }
 
             virtual DNekMatSharedPtr v_GenMassMatrix()
@@ -729,7 +733,7 @@ namespace Nektar
                 DNekMatSharedPtr returnval;
 
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
-			 "been defined for this element");
+                    "been defined for this element");
 
                 return returnval;
             }
@@ -739,7 +743,7 @@ namespace Nektar
                 DNekMatSharedPtr returnval;
 
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
-			 "been defined for this element");
+                    "been defined for this element");
 
                 return returnval;
             }
@@ -749,7 +753,7 @@ namespace Nektar
                 DNekMatSharedPtr returnval;
 
                 NEKERROR(ErrorUtil::efatal, "This function is only valid "
-			 "for nodal expansions");
+                    "for nodal expansions");
 
                 return returnval;
             }
@@ -757,7 +761,7 @@ namespace Nektar
             virtual StdMatContainer *v_GetNBasisTransMatrix()
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid "
-			 "for nodal expansions");
+                    "for nodal expansions");
                 return NULL;
             }
 
@@ -771,36 +775,36 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
 
-	    virtual int v_GetCoordim(void)
-	    {
+            virtual int v_GetCoordim(void)
+            {
                 NEKERROR(ErrorUtil::efatal, "Write method");		
-		return -1;
-	    }
+                return -1;
+            }
 
-	    // element boundary ordering 
-	    virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
-	    {
+            // element boundary ordering 
+            virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
+            {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
-	    }
-	    
-	    virtual void  v_MapTo(const int edge_ncoeffs, 
-				  const LibUtilities::BasisType Btype,
-				  const int eid, const EdgeOrientation eorient, 
-				  StdExpMap &Map)
-	    {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
-	    }
+            }
 
-	    virtual void  v_MapTo_ModalFormat(const int edge_ncoeffs, 
-					      const LibUtilities::BasisType Btype,
-					      const int eid, 
-					      const EdgeOrientation eorient, 
-					      StdExpMap &Map)
-	    {
+            virtual void  v_MapTo(const int edge_ncoeffs, 
+                const LibUtilities::BasisType Btype,
+                const int eid, const EdgeOrientation eorient, 
+                StdExpMap &Map)
+            {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
-	    }
+            }
 
-	    
+            virtual void  v_MapTo_ModalFormat(const int edge_ncoeffs, 
+                const LibUtilities::BasisType Btype,
+                const int eid, 
+                const EdgeOrientation eorient, 
+                StdExpMap &Map)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
+            }
+
+
             virtual void v_WriteToFile(FILE *outfile)
             {
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
@@ -811,7 +815,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "WriteToFile:Write method");
             }
 
-	    virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
+            virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
             {
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
             }
@@ -827,29 +831,32 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return boost::shared_ptr<LocalRegions::MetricRelatedInfo>();
             }
-	    
+
             virtual void v_SetGeoFac(boost::shared_ptr<LocalRegions::MetricRelatedInfo>
-				     minfo)
+                minfo)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             }
 
-	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-	    {
-		NEKERROR(ErrorUtil::efatal,"SetInvInfo not set for this expansion type");
-	    }
+            virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+            {
+                NEKERROR(ErrorUtil::efatal,"SetInvInfo not set for this expansion type");
+            }
         };
 
-	typedef boost::shared_ptr<StdExpansion> StdExpansionSharedPtr;
-	typedef std::vector< StdExpansionSharedPtr > StdExpansionVector;
-	typedef std::vector< StdExpansionSharedPtr >::iterator StdExpansionVectorIter;
-	
+        typedef boost::shared_ptr<StdExpansion> StdExpansionSharedPtr;
+        typedef std::vector< StdExpansionSharedPtr > StdExpansionVector;
+        typedef std::vector< StdExpansionSharedPtr >::iterator StdExpansionVectorIter;
+
     } //end of namespace
 } //end of namespace
 
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.17  2007/02/16 17:14:39  pvos
+* Added documentation
+*
 * Revision 1.16  2007/02/07 12:51:53  sherwin
 * Compiling version of Project1D
 *

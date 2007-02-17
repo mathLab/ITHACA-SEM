@@ -279,6 +279,11 @@ namespace Nektar
                 return m_dbdata;
             }
 
+            inline const BasisKey GetBasisKey() const
+            {
+                return m_basisKey;
+            }
+
             virtual void Initialize();
 
         protected:
@@ -302,6 +307,7 @@ namespace Nektar
         };
 
         bool operator<(const BasisKey &lhs, const BasisKey &rhs);
+        bool operator>(const BasisKey &lhs, const BasisKey &rhs);
 
         std::ostream& operator<<(std::ostream& os, const BasisKey& rhs);
 

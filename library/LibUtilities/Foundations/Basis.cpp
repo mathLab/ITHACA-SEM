@@ -61,6 +61,11 @@ namespace Nektar
             return (lhs.m_basistype < rhs.m_basistype);
         }
 
+        bool operator>(const BasisKey &lhs, const BasisKey &rhs)
+        {
+            return (rhs < lhs);
+        }
+
         bool BasisKey::opLess::operator()(const BasisKey &lhs, const BasisKey &rhs)
         {
             return (lhs.m_basistype < rhs.m_basistype);
@@ -510,6 +515,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.11  2007/02/06 17:12:27  jfrazier
+* Fixed a problem with global initialization in libraries.
+*
 * Revision 1.10  2007/02/01 23:28:41  jfrazier
 * Basis is not working, but not fully tested.
 *

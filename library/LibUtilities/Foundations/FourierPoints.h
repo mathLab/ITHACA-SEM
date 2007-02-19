@@ -82,11 +82,13 @@ namespace Nektar
             void CalculateWeights();
             void CalculateDerivMatrix();
 
+            void FourierPoints::CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp);
+            double PeriodicSincFunction(const double h, const double x);
         }; // class FourierPoints
 
         namespace
         {
-            const bool FourierPointsInited1 = PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), FourierPoints::Create);
+            const bool FourierPointsInited1 = PointsManager().RegisterCreator(PointsKey(0, eFourierEvenlySpaced), FourierPoints::Create);
         }
     } // end of namespace
 } // end of namespace 

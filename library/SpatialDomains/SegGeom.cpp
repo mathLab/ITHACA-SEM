@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/SegGeom.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/SegGeom.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -96,7 +96,7 @@ namespace Nektar
             }
 
             FillGeom();
-            if(m_xmap[0]->GetBasisOrder(0)==2)
+            if(m_xmap[0]->GetBasisNumModes(0)==2)
             {// assumes all direction have same order
                 gfac.reset( new GeoFac(StdRegions::eRegular, m_coordim, 
                     (const StdRegions::StdExpansion1D **) xmaptemp));
@@ -124,7 +124,7 @@ namespace Nektar
                 for(i = 0; i < m_coordim; ++i){
 		    m_xmap[i]->SetCoeff(0,(*m_verts[0])[i]);
                     m_xmap[i]->SetCoeff(1,(*m_verts[1])[i]);
-                    m_xmap[i]->BwdTrans(m_xmap[i]->GetPhys());
+                    m_xmap[i]->BwdTrans(&(m_xmap[i]->GetPhys())[0]);
                 }
                 m_state = ePtsFilled;
             }
@@ -149,8 +149,8 @@ namespace Nektar
                 //find end points 
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    nq   = m_xmap[i]->GetPointsOrder(0);
-                    pts  = m_xmap[i]->GetPhys();
+                    nq   = m_xmap[i]->GetNumPoints(0);
+                    pts  = &(m_xmap[i]->GetPhys())[0];
                     len  += (pts[nq-1]-pts[0])*(pts[nq-1]-pts[0]);	
                     xi   += (coords[i]-pts[0])*(coords[i]-pts[0]);
                 }
@@ -171,14 +171,14 @@ namespace Nektar
         {
 
             int i,j;
-            int  nquad = m_xmap[0]->GetPointsOrder(0);
+            int  nquad = m_xmap[0]->GetNumPoints(0);
             double *coords[3];
 
             FillGeom();
 
             for(i = 0; i < m_coordim; ++i)
             {
-                coords[i] =m_xmap[i]->GetPhys();
+                coords[i] = &(m_xmap[i]->GetPhys())[0];
             }
 
             if(dumpVar)
@@ -211,6 +211,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.6  2006/06/01 14:15:30  sherwin
+// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
+//
 // Revision 1.5  2006/05/30 14:00:04  sherwin
 // Updates to make MultiRegions and its Demos work
 //

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/GeoFac.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/GeoFac.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -66,14 +66,14 @@ namespace Nektar
       {
 	double    *der[3];
 	int        i,nquad;
-	StdRegions::PointsType  ptype;
+	LibUtilities::PointsType  ptype;
 
 	ASSERTL1(coordim <= 3, "Only understand up to 3 Coordinate for this routine");
 	
 	m_gtype  = gtype;
 	m_gmat = new double* [coordim];
 
-	nquad = Coords[0]->GetPointsOrder(0);
+	nquad = Coords[0]->GetNumPoints(0);
 	ptype = Coords[0]->GetPointsType(0);
 
 	// setup temp storage
@@ -90,7 +90,7 @@ namespace Nektar
 		   "Points type are different for each coordinate");
 	  
 	  ((StdRegions::StdExpansion1D**) Coords)[i]->GetPhys();
-	  ((StdRegions::StdExpansion1D**) Coords)[i]->StdDeriv(der[i]);
+	  ((StdRegions::StdExpansion1D**) Coords)[i]->StdPhysDeriv(der[i]);
 	}
 
 	if((m_gtype == StdRegions::eRegular)||
@@ -189,7 +189,7 @@ namespace Nektar
 	 \frac{\partial {\bf x}}{\partial \xi_2} \right | = \sqrt{J_{3D}} \f$
 	 
       **/
-
+#ifdef HIGH_D_FUNCTIONS
       GeoFac::GeoFac(const StdRegions::GeomType gtype, const int n, 
 		     const StdRegions::StdExpansion2D **Coords)
       {
@@ -577,12 +577,16 @@ namespace Nektar
 	delete[] m_gmat[0];
 	delete[] m_gmat;
       }
+#endif
       
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: GeoFac.cpp,v $
+// Revision 1.2  2006/06/02 18:48:40  sherwin
+// Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
+//
 // Revision 1.1  2006/05/04 18:58:59  kirby
 // *** empty log message ***
 //

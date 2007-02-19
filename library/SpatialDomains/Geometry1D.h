@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/Geometry1D.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Geometry1D.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -41,8 +41,6 @@
 #include <SpatialDomains/GeoFac.h>
 #include <SpatialDomains/Geometry.h>
 
-#include <StdRegions/StdBasis.h>
-
 namespace Nektar
 {
     namespace SpatialDomains
@@ -66,6 +64,9 @@ namespace Nektar
 
 //
 // $Log: Geometry1D.h,v $
+// Revision 1.1  2006/05/04 18:58:59  kirby
+// *** empty log message ***
+//
 // Revision 1.19  2006/03/25 00:58:28  jfrazier
 // Many changes dealing with fundamental structure and reading/writing.
 //

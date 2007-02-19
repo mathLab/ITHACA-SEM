@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/EdgeComponent.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/EdgeComponent.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -49,8 +49,8 @@ namespace Nektar
         Geometry1D(coordim)
         {
 
-            const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
-                StdRegions::eLobatto, 3,0,0);
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
+	       LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
             m_eid = id;
 
             m_xmap = new StdRegions::StdSegExp * [m_coordim];
@@ -70,8 +70,8 @@ namespace Nektar
 
             if (coordim > 0)
             {
-                const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
-                    StdRegions::eLobatto, 3,0,0);
+                const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
+	       LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
                 m_xmap = new StdRegions::StdSegExp * [m_coordim];
 
@@ -90,8 +90,9 @@ namespace Nektar
         Geometry1D(coordim)
         {
 
-            const StdRegions::BasisKey B(StdRegions::eModified_A, order,
-                StdRegions::eLobatto, nquad,0,0);
+            
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, order,
+					   LibUtilities::PointsKey(nquad,LibUtilities::eGaussLobattoLegendre));
 
             m_xmap = new StdRegions::StdSegExp * [m_coordim];
 
@@ -211,6 +212,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.11  2006/08/17 21:02:50  jfrazier
+*    Eliminated bug where an array was indexed after it was deleted.
+*
 *    Revision 1.10  2006/08/16 23:34:42  jfrazier
 *    *** empty log message ***
 *

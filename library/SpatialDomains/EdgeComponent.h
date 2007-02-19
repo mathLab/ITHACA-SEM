@@ -42,7 +42,7 @@
 #include <SpatialDomains/Geometry1D.h>
 
 #include <StdRegions/StdSegExp.h>
-
+#include <LibUtilities/Foundations/Basis.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -68,7 +68,7 @@ namespace Nektar
                 return m_eid;
             }
 
-            inline const StdRegions::Basis *GetBasis(int i, int j)
+            inline const LibUtilities::BasisSharedPtr GetBasis(int i, int j)
             {
                 return m_xmap[i]->GetBasis(j);
             }
@@ -78,7 +78,7 @@ namespace Nektar
                 return m_xmap[i];
             }
 
-            inline double *GetPhys(int i){
+            inline BstShrDArray GetPhys(int i){
                 return m_xmap[i]->GetPhys();
             }
 
@@ -135,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.3  2006/05/09 13:37:01  jfrazier
+// Removed duplicate definition of shared vertex pointer.
+//
 // Revision 1.2  2006/05/06 20:36:16  sherwin
 // Modifications to get LocalRegions/Project1D working
 //

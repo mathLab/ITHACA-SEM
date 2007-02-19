@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/GeoFac.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/GeoFac.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -39,8 +39,8 @@
 #include <SpatialDomains/SpatialDomains.hpp>
 
 #include <StdRegions/StdExpansion1D.h>
-#include <StdRegions/StdExpansion2D.h>
-#include <StdRegions/StdExpansion3D.h>
+//#include <StdRegions/StdExpansion2D.h>
+//#include <StdRegions/StdExpansion3D.h>
 
 namespace Nektar
 {
@@ -58,16 +58,19 @@ namespace Nektar
             GeoFac(const StdRegions::GeomType gtype, const int coordim,
                 const StdRegions::StdExpansion1D **Coords);
 
+
+#if 0 
             /**  \brief Two dimensional geometric factors based on two
             or three dimensional coordinate description
             **/
             GeoFac(const StdRegions::GeomType gtype, const int coordim,
-                const StdRegions::StdExpansion2D **Coords);
+		   const StdRegions::StdExpansion2D **Coords);
 
             /**  \brief Three dimensional geometric factors and Jacobian
             **/
             GeoFac(const StdRegions::GeomType gtype, 
                 const StdRegions::StdExpansion3D **Coords);
+#endif
 
             ~GeoFac();
 
@@ -131,6 +134,9 @@ namespace Nektar
 
 //
 // $Log: GeoFac.h,v $
+// Revision 1.4  2006/06/02 18:48:40  sherwin
+// Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
+//
 // Revision 1.3  2006/06/01 14:15:30  sherwin
 // Added typdef of boost wrappers and made GeoFac a boost shared pointer.
 //

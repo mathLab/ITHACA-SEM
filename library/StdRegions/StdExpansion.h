@@ -44,14 +44,14 @@
 #include <StdRegions/LocalRegionsDeclarations.hpp>
 
 #include <StdRegions/StdExpMap.h>
+#include <StdRegions/StdExpManagers.h>
+
 namespace Nektar
 {
     namespace StdRegions
     {
 
-        class StdMatContainer;
         class StdSegExp;
-
 
         /// This is a macro which is used to encapsulating the points
         /// properties at which a given expansion basis is evaluated.
@@ -99,15 +99,13 @@ namespace Nektar
                 return m_numbases;
             }
 
-            /** \brief This function gets the basis in the \a dir direction
-            *  
-            *  \param dir the direction 
-            *  \return returns a pointer to the basis in the \a dir direction 
+            /** \brief This function gets the shared point to basis 
+	     *  
+	     *  \return returns the shared pointer to the bases  
             */
-            inline const LibUtilities::BasisSharedPtr GetBasis(const int dir) const
+            inline const boost::shared_array<LibUtilities::BasisSharedPtr> GetBase() const
             {
-                ASSERTL1(dir <= m_numbases,"Base_id was larger than _numbases");
-                return(m_base[dir]);
+                return(m_base);
             }
 
             /** \brief This function returns the total number of coefficients 
@@ -591,14 +589,6 @@ namespace Nektar
                 v_PhysDeriv (dim, inarray, outarray);
             }
 
-
-            // Overloaded Operators
-            friend bool operator == (const StdExpansion &x,const StdMatContainer *y);
-            friend bool operator != (const StdExpansion &x,const StdMatContainer *y);
-            friend bool operator == (const StdMatContainer *x,const StdExpansion &y);
-            friend bool operator != (const StdMatContainer *x,const StdExpansion &y);
-
-
             void Interp1D(const LibUtilities::BasisKey *fbasis0, const double *from,
                 const LibUtilities::BasisKey *tbasis0, double *to);
 
@@ -658,13 +648,15 @@ namespace Nektar
 
         protected:
 
-            static boost::shared_ptr<NekMatrix<double> > Create(const MatrixKey &mkey);
+            DNekMatSharedPtr Create(const StdMatrixKey &mkey);
 
-            int   m_numbases;   /**< Number of 1D basis defined in expansion */
-            LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */
+            int   m_numbases;       /**< Number of 1D basis defined in expansion */
+	    boost::shared_array<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
+	    //LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */
 
-            LibUtilities::NekManager<MatrixKey, NekMatrix<double>, MatrixKey::opLess> MatrixManager;
-
+            LibUtilities::NekManager<StdMatrixKey, NekMatrix<double>, 
+		StdMatrixKey::opLess> StdMatrixManager;
+	    
             /** Total number of coefficients used in the expansion*/
             int  m_ncoeffs;
             BstShrDArray m_coeffs;   /**< Array containing expansion coefficients */
@@ -758,13 +750,6 @@ namespace Nektar
                 return returnval;
             }
 
-            virtual StdMatContainer *v_GetNBasisTransMatrix()
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid "
-                    "for nodal expansions");
-                return NULL;
-            }
-
             virtual void v_GetCoords(double **coords)
             {
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
@@ -837,11 +822,6 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             }
-
-            virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-            {
-                NEKERROR(ErrorUtil::efatal,"SetInvInfo not set for this expansion type");
-            }
         };
 
         typedef boost::shared_ptr<StdExpansion> StdExpansionSharedPtr;
@@ -854,6 +834,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.18  2007/02/17 04:03:23  jfrazier
+* Added NekManager for holding matrices.  Need to finish the create function.
+*
 * Revision 1.17  2007/02/16 17:14:39  pvos
 * Added documentation
 *

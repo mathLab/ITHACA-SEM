@@ -51,7 +51,6 @@ namespace Nektar
 	{
 	}
 	
-	
 	StdSegExp::~StdSegExp()
 	{    
 	}
@@ -202,13 +201,10 @@ namespace Nektar
 	    else{
 		IProductWRTBase(inarray,&m_coeffs[0]);
 
-		// Replace first line with the following when implemented:
-		// DNekVec  v(m_ncoeffs,&m_coeffs[0],eWrapper);
-		DNekVec     v(m_ncoeffs,&m_coeffs[0]);
-		DNekLinSys  matsys(GenMassMatrix());
+		DNekLinSys matsys(GenMassMatrix());
 
-		DNekVec sol(matsys.Solve(v));
-		Blas::Dcopy(m_ncoeffs,&sol[0],1,&m_coeffs[0],1);
+		DNekVec    v(m_ncoeffs,m_coeffs,eWrapper);
+		matsys.Solve(v,v);
 	    }
 	}
  
@@ -272,6 +268,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.14  2007/02/17 03:40:21  jfrazier
+ * Couple changes to reflect additions and corrections to reflect linear algebra calls.
+ *
  * Revision 1.13  2007/02/13 09:52:28  sherwin
  * Updates to fix mass matrix inverse issues
  *

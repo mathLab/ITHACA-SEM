@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Stdexpansion.cpp
+// File StdExpansion.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -51,11 +51,20 @@ namespace Nektar
         /** define list of number of faces corresponding to each ShapeType */
         const int g_shapenfaces[SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
 
-#pragma message("*******Finish this function********")
-        boost::shared_ptr<NekMatrix<double> > StdExpansion::Create(const MatrixKey &mkey)
+        DNekMatSharedPtr StdExpansion::Create(const StdMatrixKey &mkey)
         {
-            boost::shared_ptr<NekMatrix<double> > returnval(new NekMatrix<double>);
+            DNekMatSharedPtr returnval;
 
+	    switch(mkey.GetMatrixType())
+	    {
+	    case eMassMatrix:
+		returnval = this->GenMassMatrix();
+		break;
+	    default:
+		NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
+		break;
+	    }
+	    
             return returnval;
         }
 
@@ -72,7 +81,7 @@ namespace Nektar
 				   int numcoeffs):
 	    m_numbases(numbases)
 	    {
-	        m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
+	        m_base = MemoryManager::AllocateSharedArray<LibUtilities::BasisSharedPtr>(m_numbases);
 	    
             switch(m_numbases)
             {
@@ -110,7 +119,7 @@ namespace Nektar
         {
             int i,j;
 
-            m_base = MemoryManager::AllocateArray<LibUtilities::BasisSharedPtr>(m_numbases);
+            m_base = MemoryManager::AllocateSharedArray<LibUtilities::BasisSharedPtr>(m_numbases);
 
             for(j=0; j<m_numbases; j++)
             {
@@ -145,17 +154,14 @@ namespace Nektar
         {
             int     ntot;
             double  val;
-            double *tmp;
             BstShrDArray  wsp;
 
             ntot =  GetTotPoints();
-
             wsp = GetDoubleTmpSpace(ntot);
-            tmp = wsp.get();
 
-            Vmath::Vsub(ntot,sol,1,&m_phys[0],1,tmp,1);
-            Vmath::Vabs(ntot,tmp,1,tmp,1);
-            val = Vmath::Vamax(ntot,tmp,1);    
+            Vmath::Vsub(ntot,sol,1,&m_phys[0],1,&wsp[0],1);
+            Vmath::Vabs(ntot,&wsp[0],1,&wsp[0],1);
+            val = Vmath::Vamax(ntot,&wsp[0],1);    
 
             return  val;
         }
@@ -169,16 +175,14 @@ namespace Nektar
         {
             int     ntot = GetTotPoints();
             double  val;
-            double *tmp;
             BstShrDArray wsp;
 
             wsp = GetDoubleTmpSpace(ntot);
-            tmp = wsp.get();
 
-            Vmath::Vsub(ntot, sol, 1, &m_phys[0], 1, tmp, 1);
-            Vmath::Vmul(ntot, tmp, 1, tmp, 1, tmp, 1);
+            Vmath::Vsub(ntot, sol, 1, &m_phys[0], 1, &wsp[0], 1);
+            Vmath::Vmul(ntot, &wsp[0], 1, &wsp[0], 1, &wsp[0], 1);
 
-            val = sqrt(v_Integral(tmp));
+            val = sqrt(v_Integral(&wsp[0]));
 
             return val;
         }
@@ -187,14 +191,12 @@ namespace Nektar
         {
             int     ntot = GetTotPoints();
             double  val;
-            double *tmp;
             BstShrDArray wsp;
 
             wsp = GetDoubleTmpSpace(ntot);
-            tmp = wsp.get();
 
-            Vmath::Vmul(ntot, &m_phys[0], 1, &m_phys[0], 1, tmp, 1);
-            val   = sqrt(v_Integral(tmp));
+            Vmath::Vmul(ntot, &m_phys[0], 1, &m_phys[0], 1, &wsp[0], 1);
+            val   = sqrt(v_Integral(&wsp[0]));
 
             return val;
         }
@@ -232,7 +234,6 @@ namespace Nektar
             double *tmp;
             BstShrDArray wsp = GetDoubleTmpSpace(tbasis1->GetNumPoints()*
                 fbasis0->GetNumPoints());
-            tmp = wsp.get();
 
             I0 = LibUtilities::PointsManager()[fbasis0->GetPointsKey()]
             ->GetI(tbasis0->GetPointsKey());
@@ -242,12 +243,12 @@ namespace Nektar
             Blas::Dgemm('T', 'T', tbasis1->GetNumPoints(), fbasis0->GetNumPoints(),
                 fbasis1->GetNumPoints(), 1.0, &((*I1).GetPtr())[0],  
                 fbasis1->GetNumPoints(),
-                (double *) from,fbasis0->GetNumPoints(), 0.0, tmp,
+                (double *) from,fbasis0->GetNumPoints(), 0.0, &wsp[0],
                 tbasis1->GetNumPoints());
 
             Blas::Dgemm('T', 'T',tbasis0->GetNumPoints(),tbasis1->GetNumPoints(),
                 fbasis0->GetNumPoints(),1.0,&((*I0).GetPtr())[0],
-                fbasis0->GetNumPoints(),tmp, tbasis1->GetNumPoints(),
+                fbasis0->GetNumPoints(),&wsp[0], tbasis1->GetNumPoints(),
                 0.0,to, tbasis0->GetNumPoints());
         }
 
@@ -280,6 +281,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.16  2007/02/17 04:03:22  jfrazier
+* Added NekManager for holding matrices.  Need to finish the create function.
+*
 * Revision 1.15  2007/02/14 16:35:50  pvos
 * Corrected an error in the code
 *

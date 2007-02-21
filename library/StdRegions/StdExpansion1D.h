@@ -142,12 +142,6 @@ namespace Nektar
                 ASSERTL0(false, "This function is only valid for nodal expansions");
             }
 
-            virtual StdMatContainer *v_GetNBasisTransMatrix()
-            {
-                ASSERTL0(false, "This function is only valid for nodal expansions");
-                return NULL;
-            }
-
 
 	    virtual int v_GetCoordim(void)
 	    {
@@ -161,6 +155,8 @@ namespace Nektar
             virtual double v_Evaluate(const double * coords) = 0;
 
             virtual void   v_PhysDeriv    (double *outarray) = 0;
+
+
             virtual void   v_StdPhysDeriv (double *outarray) = 0;
             virtual void   v_PhysDeriv    (const double *inarray, double *outarray) = 0;
             virtual void   v_StdPhysDeriv (const double *inarray, double *outarray) = 0;
@@ -174,6 +170,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.8  2007/02/07 12:51:53  sherwin
+* Compiling version of Project1D
+*
 * Revision 1.7  2007/01/28 18:34:23  sherwin
 * More modifications to make Demo Project1D compile
 *

@@ -105,7 +105,7 @@ namespace Nektar
             eHexahedron,
             SIZE_ShapeType
         };
-
+	
         // Hold the dimension of each of the types of shapes.
         const unsigned int ShapeTypeDimMap[SIZE_ShapeType] =
         {
@@ -117,40 +117,6 @@ namespace Nektar
             3,  // ePyramid
             3,  // ePrism
             3,  // eHexahedron
-        };
-
-        class StdExpansion;
-
-        class MatrixKey
-        {
-        public:
-            MatrixKey(ShapeType shapeType, unsigned int numModes, MatrixType matrixType,
-                const StdExpansion &stdExpansion);
-
-            virtual ~MatrixKey()
-            {
-            }
-
-            /// Used to lookup the create function in NekManager.
-            struct opLess
-            {
-                bool operator()(const MatrixKey &lhs, const MatrixKey &rhs)
-                {
-                    return (lhs<rhs);
-                }
-            };
-
-            /// Used for finding value given the key in NekManager.
-            friend bool operator<(const MatrixKey &lhs, const MatrixKey &rhs);
-
-        private:
-            MatrixKey();
-
-            ShapeType m_ShapeType;
-            LibUtilities::BasisSharedPtr *m_base;
-
-            unsigned int m_NumModes;
-            MatrixType m_MatrixType;
         };
 
         enum EdgeOrientation
@@ -209,6 +175,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.6  2007/02/17 03:40:20  jfrazier
+* Couple changes to reflect additions and corrections to reflect linear algebra calls.
+*
 * Revision 1.5  2007/01/28 18:34:24  sherwin
 * More modifications to make Demo Project1D compile
 *

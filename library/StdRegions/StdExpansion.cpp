@@ -51,7 +51,7 @@ namespace Nektar
         /** define list of number of faces corresponding to each ShapeType */
         const int g_shapenfaces[SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
 
-        DNekMatSharedPtr StdExpansion::Create(const StdMatrixKey &mkey)
+        DNekMatSharedPtr StdExpansion::CreateMatrix(const StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
 
@@ -111,6 +111,11 @@ namespace Nektar
 
 	    //allocate memory for phys
 	    m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
+
+	    // Register Creators for Managers
+	    //m_stdMatrixManager.RegisterCreator(StdMatrixKey(eMassMatrix,*this),
+	    //boost::bind(&StdExpansion::CreateMatrix, this, _1));
+
         } //end constructor
 
 
@@ -281,6 +286,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.17  2007/02/21 22:55:16  sherwin
+* First integration of StdMatrixManagers
+*
 * Revision 1.16  2007/02/17 04:03:22  jfrazier
 * Added NekManager for holding matrices.  Need to finish the create function.
 *

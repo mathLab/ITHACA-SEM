@@ -41,6 +41,7 @@ namespace Nektar
     namespace StdRegions
     {
 	
+	// Register Mass Matrix creator. 
 	StdMatrixKey::StdMatrixKey(MatrixType matrixType,
 				   StdExpansion &stdExpansion)
 	{
@@ -55,7 +56,7 @@ namespace Nektar
         {
 	    
 	    {
-		return (lhs<rhs);
+		return (lhs.m_matrixType < rhs.m_matrixType);
 	    }
 	}
 
@@ -98,5 +99,8 @@ namespace Nektar
 
 /**
 * $Log: StdExpManagers.cpp,v $
+* Revision 1.1  2007/02/21 22:55:16  sherwin
+* First integration of StdMatrixManagers
+*
 ***/
 

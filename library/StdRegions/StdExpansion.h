@@ -648,15 +648,13 @@ namespace Nektar
 
         protected:
 
-            DNekMatSharedPtr Create(const StdMatrixKey &mkey);
+            DNekMatSharedPtr CreateMatrix(const StdMatrixKey &mkey);
 
             int   m_numbases;       /**< Number of 1D basis defined in expansion */
 	    boost::shared_array<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
 	    //LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */
 
-            LibUtilities::NekManager<StdMatrixKey, NekMatrix<double>, 
-		StdMatrixKey::opLess> StdMatrixManager;
-	    
+            LibUtilities::NekManager<StdMatrixKey, NekMatrix<double>, StdMatrixKey::opLess> m_stdMatrixManager;
             /** Total number of coefficients used in the expansion*/
             int  m_ncoeffs;
             BstShrDArray m_coeffs;   /**< Array containing expansion coefficients */
@@ -834,6 +832,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.19  2007/02/21 22:55:16  sherwin
+* First integration of StdMatrixManagers
+*
 * Revision 1.18  2007/02/17 04:03:23  jfrazier
 * Added NekManager for holding matrices.  Need to finish the create function.
 *

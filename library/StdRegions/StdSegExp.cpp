@@ -201,6 +201,9 @@ namespace Nektar
 	    else{
 		IProductWRTBase(inarray,&m_coeffs[0]);
 
+		//StdMatrixKey masskey(eMassMatrix,*this);
+		//DNekMatSharedPtr mass = m_stdMatrixManager[masskey];
+		//DNekLinSys matsys(mass);
 		DNekLinSys matsys(GenMassMatrix());
 
 		DNekVec    v(m_ncoeffs,m_coeffs,eWrapper);
@@ -268,6 +271,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.15  2007/02/21 22:55:16  sherwin
+ * First integration of StdMatrixManagers
+ *
  * Revision 1.14  2007/02/17 03:40:21  jfrazier
  * Couple changes to reflect additions and corrections to reflect linear algebra calls.
  *

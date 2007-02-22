@@ -675,16 +675,16 @@ namespace Nektar
                 return 0;
             }
 
-
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
             {
                 ASSERTL0(false, "This function is not valid or not defined");
                 return (LibUtilities::BasisType) NULL;
             }
 
-
-            virtual ShapeType v_DetShapeType()                = 0;
-
+            virtual ShapeType v_DetShapeType()  
+	    {
+		ASSERTL0(false, "This expansion does not have a shape type defined");
+	    }
 
             virtual void   v_BwdTrans (double *outarray)      = 0;
             virtual void   v_FwdTrans (const double *inarray) = 0;
@@ -832,6 +832,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.20  2007/02/22 18:11:31  sherwin
+* Version with some create functions introduced for StdMatManagers
+*
 * Revision 1.19  2007/02/21 22:55:16  sherwin
 * First integration of StdMatrixManagers
 *

@@ -58,7 +58,7 @@ namespace Nektar
 	    switch(mkey.GetMatrixType())
 	    {
 	    case eMassMatrix:
-		returnval = this->GenMassMatrix();
+		returnval = GenMassMatrix();
 		break;
 	    default:
 		NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
@@ -113,8 +113,8 @@ namespace Nektar
 	    m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
 
 	    // Register Creators for Managers
-	    //m_stdMatrixManager.RegisterCreator(StdMatrixKey(eMassMatrix,*this),
-	    //boost::bind(&StdExpansion::CreateMatrix, this, _1));
+	    m_stdMatrixManager.RegisterCreator(StdMatrixKey(eMassMatrix,eUnknown,*this),
+			    boost::bind(&StdExpansion::CreateMatrix, this, _1));
 
         } //end constructor
 
@@ -286,6 +286,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.18  2007/02/22 18:11:31  sherwin
+* Version with some create functions introduced for StdMatManagers
+*
 * Revision 1.17  2007/02/21 22:55:16  sherwin
 * First integration of StdMatrixManagers
 *

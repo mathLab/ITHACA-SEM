@@ -55,11 +55,11 @@ namespace Nektar
 	{    
 	}
 	
-	
+
 	//----------------------------
 	// Integration Methods
 	//----------------------------
-	
+    
 	double StdSegExp::Integral(const double *inarray)
 	{
 	    double Int = 0.0;
@@ -97,8 +97,7 @@ namespace Nektar
 	    {
 		Blas::Dgemv('T',nquad,m_base[0]->GetNumModes(),1.0,base,nquad,
 			    &tmp[0],1,0.0,outarray,1);
-	    }
-	    
+	    }    
 	}
   
 	void StdSegExp::IProductWRTBase(const double *inarray, double *outarray)
@@ -115,7 +114,7 @@ namespace Nektar
 	     "calling argument mode is larger than total expansion order");
 
 	    Vmath::Vcopy(nquad,(double *)base+mode*nquad,1, outarray,1);
-  }
+	}
 	
 	DNekMatSharedPtr StdSegExp::GenMassMatrix()
 	{
@@ -143,7 +142,8 @@ namespace Nektar
 
 	    //	    Mat.reset(new DNekMat(nummodes,nummodes,
 	    // new double [nummodes*nummodes]));
-	    Mat = MemoryManager::AllocateSharedPtr<DNekMat>(nummodes,nummodes,MemoryManager::AllocateArray<double>(nummodes*nummodes));
+	    Mat = MemoryManager::AllocateSharedPtr<DNekMat>(nummodes,
+		  nummodes,MemoryManager::AllocateArray<double>(nummodes*nummodes));
 		      
 	    ExpPointsProperties(0)->GetZW(z,w);
     
@@ -201,10 +201,13 @@ namespace Nektar
 	    else{
 		IProductWRTBase(inarray,&m_coeffs[0]);
 
-		//StdMatrixKey masskey(eMassMatrix,*this);
-		//DNekMatSharedPtr mass = m_stdMatrixManager[masskey];
-		//DNekLinSys matsys(mass);
+#if 0
+		StdMatrixKey masskey(eMassMatrix,DetShapeType(),*this);
+		DNekMatSharedPtr mass = m_stdMatrixManager[masskey];
+		DNekLinSys matsys(mass);
+#else
 		DNekLinSys matsys(GenMassMatrix());
+#endif
 
 		DNekVec    v(m_ncoeffs,m_coeffs,eWrapper);
 		matsys.Solve(v,v);
@@ -271,6 +274,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.16  2007/02/22 18:11:32  sherwin
+ * Version with some create functions introduced for StdMatManagers
+ *
  * Revision 1.15  2007/02/21 22:55:16  sherwin
  * First integration of StdMatrixManagers
  *

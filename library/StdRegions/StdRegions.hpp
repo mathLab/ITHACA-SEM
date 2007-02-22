@@ -92,6 +92,13 @@ namespace Nektar
             eNBasisTrans
         };
 
+        const char* const MatrixTypeMap[] = 
+	{
+            "MassMatrix",
+            "LapMatrix",
+            "NBasisTrans"
+        };
+
         /** enum list of StdExpansion regions */
         enum ShapeType
         {
@@ -106,6 +113,22 @@ namespace Nektar
             SIZE_ShapeType
         };
 	
+
+        const char* const ShapeTypeMap[] = 
+        {
+            "Unknown",
+            "Segment",
+            "Triangle",
+            "Quadrilateral",
+            "Tetrahedron",
+            "Pyramid",
+            "Prism",
+            "Hexahedron"
+        };
+	
+
+
+
         // Hold the dimension of each of the types of shapes.
         const unsigned int ShapeTypeDimMap[SIZE_ShapeType] =
         {
@@ -175,6 +198,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.7  2007/02/21 22:55:16  sherwin
+* First integration of StdMatrixManagers
+*
 * Revision 1.6  2007/02/17 03:40:20  jfrazier
 * Couple changes to reflect additions and corrections to reflect linear algebra calls.
 *

@@ -49,7 +49,7 @@ namespace Nektar
         class StdMatrixKey
         {
         public:
-            StdMatrixKey( MatrixType matrixType, StdExpansion &stdExpansion);
+            StdMatrixKey( MatrixType matrixType, ShapeType shapeType, StdExpansion &stdExpansion);
 	    
             virtual ~StdMatrixKey()
             {
@@ -70,6 +70,21 @@ namespace Nektar
 		return m_matrixType;
 	    }
 
+	    ShapeType GetShapeType() const
+	    {
+		return m_shapeType;
+	    }
+	    
+	    int GetNcoeffs() const
+	    {
+		return m_ncoeffs;
+	    }
+
+	    boost::shared_array<LibUtilities::BasisSharedPtr> GetBase() const
+	    {
+		return m_base;
+	    }
+	    
         private:
 
             StdMatrixKey();
@@ -81,6 +96,7 @@ namespace Nektar
             MatrixType   m_matrixType;
         };
 
+        std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs);
 
     } // end of namespace
 } // end of namespace
@@ -89,4 +105,7 @@ namespace Nektar
 
 /**
 * $Log: StdExpManagers.h,v $
+* Revision 1.1  2007/02/21 22:55:16  sherwin
+* First integration of StdMatrixManagers
+*
 ***/

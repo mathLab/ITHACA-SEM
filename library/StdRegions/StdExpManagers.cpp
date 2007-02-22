@@ -42,10 +42,10 @@ namespace Nektar
     {
 	
 	// Register Mass Matrix creator. 
-	StdMatrixKey::StdMatrixKey(MatrixType matrixType,
-				   StdExpansion &stdExpansion)
+	StdMatrixKey::StdMatrixKey(MatrixType matrixType,ShapeType shapeType,
+				   StdExpansion &stdExpansion):
+	    m_shapeType(shapeType)
 	{
-	    m_shapeType = stdExpansion.DetShapeType();
 	    m_ncoeffs   = stdExpansion.GetNcoeffs();
 	    m_base      = stdExpansion.GetBase();
 	}
@@ -94,11 +94,33 @@ namespace Nektar
 	    
 	    return false;
 	}
+
+        std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs)
+        {
+
+	    int i;
+
+            os << "MatrixType: " << MatrixTypeMap[rhs.GetMatrixType()] << ", ShapeType: " 
+	       << ShapeTypeMap[rhs.GetShapeType()] << ", Ncoeffs: " << rhs.GetNcoeffs() 
+	       << std::endl;
+	    
+	    for(i = 0; i < ShapeTypeDimMap[rhs.GetShapeType()]; ++i)
+	    {
+		os << rhs.GetBase()[i];
+	    }
+
+            return os;
+        }
+
+
     }
 }
 
 /**
 * $Log: StdExpManagers.cpp,v $
+* Revision 1.2  2007/02/22 18:11:31  sherwin
+* Version with some create functions introduced for StdMatManagers
+*
 * Revision 1.1  2007/02/21 22:55:16  sherwin
 * First integration of StdMatrixManagers
 *

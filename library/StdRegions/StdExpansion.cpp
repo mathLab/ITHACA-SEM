@@ -55,16 +55,16 @@ namespace Nektar
         {
             DNekMatSharedPtr returnval;
 
-	    switch(mkey.GetMatrixType())
-	    {
-	    case eMassMatrix:
-		returnval = GenMassMatrix();
-		break;
-	    default:
-		NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
-		break;
-	    }
-	    
+            switch(mkey.GetMatrixType())
+            {
+            case eMassMatrix:
+                returnval = GenMassMatrix();
+                break;
+            default:
+                NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
+                break;
+            }
+
             return returnval;
         }
 
@@ -75,29 +75,29 @@ namespace Nektar
         }
 
         StdExpansion::StdExpansion(int numbases, 
-				   const LibUtilities::BasisKey &Ba, 
-				   const LibUtilities::BasisKey &Bb, 
-				   const LibUtilities::BasisKey &Bc,
-				   int numcoeffs):
-	    m_numbases(numbases)
-	    {
-	        m_base = MemoryManager::AllocateSharedArray<LibUtilities::BasisSharedPtr>(m_numbases);
-	    
+            const LibUtilities::BasisKey &Ba, 
+            const LibUtilities::BasisKey &Bb, 
+            const LibUtilities::BasisKey &Bc,
+            int numcoeffs):
+        m_numbases(numbases)
+        {
+            m_base = MemoryManager::AllocateSharedArray<LibUtilities::BasisSharedPtr>(m_numbases);
+
             switch(m_numbases)
             {
             case 3:
                 ASSERTL2(Bc==LibUtilities::NullBasisKey,
-			 "NULL Basis attempting to be used.");
+                    "NULL Basis attempting to be used.");
                 m_base[2] = LibUtilities::BasisManager()[Bc];
 
             case 2:
                 ASSERTL2(Bb==LibUtilities::NullBasisKey,
-			 "NULL Basis attempting to be used.");
+                    "NULL Basis attempting to be used.");
 
                 m_base[1] = LibUtilities::BasisManager()[Bb];
             case 1:
                 ASSERTL2(Ba==LibUtilities::NullBasisKey,
-			 "NULL Basis attempting to be used.");
+                    "NULL Basis attempting to be used.");
                 m_base[0] = LibUtilities::BasisManager()[Ba];
                 break;
             default:
@@ -109,12 +109,12 @@ namespace Nektar
             m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
             Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
 
-	    //allocate memory for phys
-	    m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
+            //allocate memory for phys
+            m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
 
-	    // Register Creators for Managers
-	    m_stdMatrixManager.RegisterCreator(StdMatrixKey(eMassMatrix,eUnknown,*this),
-			    boost::bind(&StdExpansion::CreateMatrix, this, _1));
+            // Register Creators for Managers
+            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eMassMatrix,eNoShapeType,*this),
+                boost::bind(&StdExpansion::CreateMatrix, this, _1));
 
         } //end constructor
 
@@ -286,6 +286,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.19  2007/02/22 22:02:27  sherwin
+* Update with executing StdMatManager
+*
 * Revision 1.18  2007/02/22 18:11:31  sherwin
 * Version with some create functions introduced for StdMatManagers
 *

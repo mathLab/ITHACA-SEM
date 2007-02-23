@@ -201,7 +201,7 @@ namespace Nektar
 	    else{
 		IProductWRTBase(inarray,&m_coeffs[0]);
 
-#if 0
+#if 1
 		StdMatrixKey masskey(eMassMatrix,DetShapeType(),*this);
 		DNekMatSharedPtr mass = m_stdMatrixManager[masskey];
 		DNekLinSys matsys(mass);
@@ -274,6 +274,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.17  2007/02/22 22:02:28  sherwin
+ * Update with executing StdMatManager
+ *
  * Revision 1.16  2007/02/22 18:11:32  sherwin
  * Version with some create functions introduced for StdMatManagers
  *

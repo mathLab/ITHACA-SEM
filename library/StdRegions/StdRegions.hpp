@@ -102,7 +102,7 @@ namespace Nektar
         /** enum list of StdExpansion regions */
         enum ShapeType
         {
-            eUnknown,
+            eNoShapeType,
             eSegment,
             eTriangle,
             eQuadrilateral,
@@ -198,6 +198,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.8  2007/02/22 22:02:28  sherwin
+* Update with executing StdMatManager
+*
 * Revision 1.7  2007/02/21 22:55:16  sherwin
 * First integration of StdMatrixManagers
 *

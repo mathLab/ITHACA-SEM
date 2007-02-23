@@ -100,8 +100,8 @@ namespace Nektar
             }
 
             /** \brief This function gets the shared point to basis 
-	     *  
-	     *  \return returns the shared pointer to the bases  
+            *  
+            *  \return returns the shared pointer to the bases  
             */
             inline const boost::shared_array<LibUtilities::BasisSharedPtr> GetBase() const
             {
@@ -651,8 +651,8 @@ namespace Nektar
             DNekMatSharedPtr CreateMatrix(const StdMatrixKey &mkey);
 
             int   m_numbases;       /**< Number of 1D basis defined in expansion */
-	    boost::shared_array<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
-	    //LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */
+            boost::shared_array<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
+            //LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */
 
             LibUtilities::NekManager<StdMatrixKey, NekMatrix<double>, StdMatrixKey::opLess> m_stdMatrixManager;
             /** Total number of coefficients used in the expansion*/
@@ -678,13 +678,14 @@ namespace Nektar
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
             {
                 ASSERTL0(false, "This function is not valid or not defined");
-                return (LibUtilities::BasisType) NULL;
+                return LibUtilities::eNoBasisType;
             }
 
             virtual ShapeType v_DetShapeType()  
-	    {
-		ASSERTL0(false, "This expansion does not have a shape type defined");
-	    }
+            {
+                ASSERTL0(false, "This expansion does not have a shape type defined");
+                return eNoShapeType;
+            }
 
             virtual void   v_BwdTrans (double *outarray)      = 0;
             virtual void   v_FwdTrans (const double *inarray) = 0;
@@ -832,6 +833,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.21  2007/02/22 22:02:28  sherwin
+* Update with executing StdMatManager
+*
 * Revision 1.20  2007/02/22 18:11:31  sherwin
 * Version with some create functions introduced for StdMatManagers
 *

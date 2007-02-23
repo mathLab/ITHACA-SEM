@@ -42,8 +42,9 @@ namespace Nektar
     {
 	
 	// Register Mass Matrix creator. 
-	StdMatrixKey::StdMatrixKey(MatrixType matrixType,ShapeType shapeType,
+	StdMatrixKey::StdMatrixKey(MatrixType matrixType, ShapeType shapeType,
 				   StdExpansion &stdExpansion):
+        m_matrixType(matrixType),
 	    m_shapeType(shapeType)
 	{
 	    m_ncoeffs   = stdExpansion.GetNcoeffs();
@@ -118,6 +119,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpManagers.cpp,v $
+* Revision 1.3  2007/02/22 22:02:27  sherwin
+* Update with executing StdMatManager
+*
 * Revision 1.2  2007/02/22 18:11:31  sherwin
 * Version with some create functions introduced for StdMatManagers
 *

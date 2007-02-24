@@ -116,7 +116,7 @@ namespace Nektar
 
         const char* const ShapeTypeMap[] = 
         {
-            "Unknown",
+            "NoShapeType",
             "Segment",
             "Triangle",
             "Quadrilateral",
@@ -198,6 +198,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.9  2007/02/23 19:26:08  jfrazier
+* General bug fix and formatting.
+*
 * Revision 1.8  2007/02/22 22:02:28  sherwin
 * Update with executing StdMatManager
 *

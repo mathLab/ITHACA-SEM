@@ -648,13 +648,16 @@ namespace Nektar
 
         protected:
 
-            DNekMatSharedPtr CreateMatrix(const StdMatrixKey &mkey);
+            DNekMatSharedPtr    CreateMatrix(const StdMatrixKey &mkey);
+            DNekLinSysSharedPtr CreateLinSys(const StdLinSysKey &mkey);
 
             int   m_numbases;       /**< Number of 1D basis defined in expansion */
             boost::shared_array<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
             //LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */
 
-            LibUtilities::NekManager<StdMatrixKey, NekMatrix<double>, StdMatrixKey::opLess> m_stdMatrixManager;
+            LibUtilities::NekManager<StdMatrixKey, DNekMat,    StdMatrixKey::opLess> m_stdMatrixManager;
+
+            LibUtilities::NekManager<StdLinSysKey, DNekLinSys, StdLinSysKey::opLess> m_stdLinSysManager;
             /** Total number of coefficients used in the expansion*/
             int  m_ncoeffs;
             BstShrDArray m_coeffs;   /**< Array containing expansion coefficients */
@@ -833,6 +836,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.22  2007/02/23 19:26:08  jfrazier
+* General bug fix and formatting.
+*
 * Revision 1.21  2007/02/22 22:02:28  sherwin
 * Update with executing StdMatManager
 *

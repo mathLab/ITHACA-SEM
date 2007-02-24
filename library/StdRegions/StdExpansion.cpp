@@ -51,22 +51,6 @@ namespace Nektar
         /** define list of number of faces corresponding to each ShapeType */
         const int g_shapenfaces[SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
 
-        DNekMatSharedPtr StdExpansion::CreateMatrix(const StdMatrixKey &mkey)
-        {
-            DNekMatSharedPtr returnval;
-
-            switch(mkey.GetMatrixType())
-            {
-            case eMassMatrix:
-                returnval = GenMassMatrix();
-                break;
-            default:
-                NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
-                break;
-            }
-
-            return returnval;
-        }
 
         StdExpansion::StdExpansion(void): 
         m_numbases(0), 
@@ -116,6 +100,9 @@ namespace Nektar
             m_stdMatrixManager.RegisterCreator(StdMatrixKey(eMassMatrix,eNoShapeType,*this),
                 boost::bind(&StdExpansion::CreateMatrix, this, _1));
 
+            m_stdLinSysManager.RegisterCreator(StdLinSysKey(eMassMatrix,eNoShapeType,*this),
+		boost::bind(&StdExpansion::CreateLinSys, this, _1));
+
         } //end constructor
 
 
@@ -154,6 +141,42 @@ namespace Nektar
         StdExpansion::~StdExpansion()
         {
         }
+
+        DNekMatSharedPtr StdExpansion::CreateMatrix(const StdMatrixKey &mkey)
+        {
+            DNekMatSharedPtr returnval;
+
+            switch(mkey.GetMatrixType())
+            {
+            case eMassMatrix:
+                returnval = GenMassMatrix();
+                break;
+            default:
+                NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
+                break;
+            }
+
+            return returnval;
+        }
+
+
+        DNekLinSysSharedPtr StdExpansion::CreateLinSys(const StdLinSysKey &mkey)
+        {
+            DNekLinSysSharedPtr returnval;
+
+            switch(mkey.GetMatrixType())
+            {
+            case eMassMatrix:
+                returnval = MemoryManager::AllocateSharedPtr<DNekLinSys> (m_stdMatrixManager[mkey]);
+                break;
+            default:
+                NEKERROR(ErrorUtil::efatal, "Linear System creation not defined");
+                break;
+            }
+
+            return returnval;
+        }
+
 
         double StdExpansion::Linf(const double *sol)
         {
@@ -286,6 +309,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.20  2007/02/23 19:26:07  jfrazier
+* General bug fix and formatting.
+*
 * Revision 1.19  2007/02/22 22:02:27  sherwin
 * Update with executing StdMatManager
 *

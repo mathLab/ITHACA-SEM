@@ -54,8 +54,7 @@ namespace Nektar
 
         bool StdMatrixKey::opLess::operator()(const StdMatrixKey &lhs, 
 					      const StdMatrixKey &rhs)
-        {
-	    
+        {	    
 	    {
 		return (lhs.m_matrixType < rhs.m_matrixType);
 	    }
@@ -112,13 +111,14 @@ namespace Nektar
 
             return os;
         }
-
-
     }
 }
 
 /**
 * $Log: StdExpManagers.cpp,v $
+* Revision 1.4  2007/02/23 19:26:04  jfrazier
+* General bug fix and formatting.
+*
 * Revision 1.3  2007/02/22 22:02:27  sherwin
 * Update with executing StdMatManager
 *

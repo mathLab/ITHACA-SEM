@@ -85,8 +85,7 @@ namespace Nektar
 		return m_base;
 	    }
 	    
-        private:
-
+	protected:
             StdMatrixKey();
 	    
             ShapeType   m_shapeType;
@@ -94,9 +93,28 @@ namespace Nektar
 
             unsigned int m_ncoeffs;
             MatrixType   m_matrixType;
+        private:
         };
 
         std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs);
+
+        class StdLinSysKey: public StdMatrixKey
+        {  
+        public:
+            StdLinSysKey( MatrixType matrixType, ShapeType shapeType, 
+			  StdExpansion &stdExpansion):
+		StdMatrixKey(matrixType,shapeType,stdExpansion)
+	     {
+	     };
+;
+	    
+            virtual ~StdLinSysKey()
+            {
+            }
+	    
+        private:
+
+        };
 
     } // end of namespace
 } // end of namespace
@@ -105,6 +123,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpManagers.h,v $
+* Revision 1.2  2007/02/22 22:02:27  sherwin
+* Update with executing StdMatManager
+*
 * Revision 1.1  2007/02/21 22:55:16  sherwin
 * First integration of StdMatrixManagers
 *

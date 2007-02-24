@@ -201,16 +201,11 @@ namespace Nektar
 	    else{
 		IProductWRTBase(inarray,&m_coeffs[0]);
 
-#if 1
-		StdMatrixKey masskey(eMassMatrix,DetShapeType(),*this);
-		DNekMatSharedPtr mass = m_stdMatrixManager[masskey];
-		DNekLinSys matsys(mass);
-#else
-		DNekLinSys matsys(GenMassMatrix());
-#endif
+		StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
+		DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
 
-		DNekVec    v(m_ncoeffs,m_coeffs,eWrapper);
-		matsys.Solve(v,v);
+		DNekVec   v(m_ncoeffs,m_coeffs,eWrapper);
+		matsys->Solve(v,v);
 	    }
 	}
  
@@ -274,6 +269,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.18  2007/02/23 19:26:08  jfrazier
+ * General bug fix and formatting.
+ *
  * Revision 1.17  2007/02/22 22:02:28  sherwin
  * Update with executing StdMatManager
  *

@@ -52,11 +52,23 @@ namespace Nektar
             PointsKey lhsPointsKey = lhs.GetPointsKey();
             PointsKey rhsPointsKey = rhs.GetPointsKey();
 
-            if (lhsPointsKey < rhsPointsKey) return true;
-            if (lhsPointsKey != rhsPointsKey) return false;
+            if (lhsPointsKey  < rhsPointsKey) 
+	    {
+		return true;
+	    }
+            if (lhsPointsKey != rhsPointsKey) 
+	    {
+		return false;
+	    }
 
-            if (lhs.m_nummodes < rhs.m_nummodes) return true;
-            if (lhs.m_nummodes > rhs.m_nummodes) return false;
+            if (lhs.m_nummodes < rhs.m_nummodes)
+	    {
+		return true;
+	    }
+            if (lhs.m_nummodes > rhs.m_nummodes) 
+	    {
+		return false;
+	    }
 
             return (lhs.m_basistype < rhs.m_basistype);
         }
@@ -464,7 +476,7 @@ namespace Nektar
         */
         bool BasisKey::Collocation() const 
         {
-            return (m_basistype == eGLL_Lagrange &&
+            return ( m_basistype == eGLL_Lagrange &&
                 GetPointsType() == eGaussLobattoLegendre &&
                 GetNumModes() == GetNumPoints());
         }
@@ -515,6 +527,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.12  2007/02/17 04:06:47  jfrazier
+* Added greater-than operator for easy comparison when using keys that use a basis and provided a method to access the basiskey.
+*
 * Revision 1.11  2007/02/06 17:12:27  jfrazier
 * Fixed a problem with global initialization in libraries.
 *

@@ -36,6 +36,8 @@
 #include <iostream>
 #include <Loki/Singleton.h>
 #include <LibUtilities/Foundations/GaussPoints.h>
+#include <LibUtilities/Foundations/FourierPoints.h>
+#include <LibUtilities/Foundations/PolyEPoints.h>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -45,8 +47,8 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-		// Register all points and basis creators.
-		namespace
+	// Register all points and basis creators.
+	namespace
         {
             const bool gaussInited1 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre), GaussPoints::Create);
             const bool gaussInited2 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMLegendre), GaussPoints::Create);
@@ -58,8 +60,10 @@ namespace Nektar
             const bool gaussInited8 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1), GaussPoints::Create);
             const bool gaussInited9 = PointsManager().RegisterCreator(PointsKey(0, eGaussGaussLegendre), GaussPoints::Create);
             const bool gaussInited10 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2), GaussPoints::Create);
+            const bool fourierInited0 = PointsManager().RegisterCreator(PointsKey(0, eFourierEvenlySpaced), FourierPoints::Create);
+            const bool polyeInited10 =  PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), PolyEPoints::Create);
 
-			const bool Ortho_A_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_A, 0, NullPointsKey), Basis::Create);
+	    const bool Ortho_A_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_A, 0, NullPointsKey), Basis::Create);
             const bool Ortho_B_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_B, 0, NullPointsKey), Basis::Create);
             const bool Ortho_C_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_C, 0, NullPointsKey), Basis::Create);
             const bool Modified_A_Inited = BasisManager().RegisterCreator(BasisKey(eModified_A, 0, NullPointsKey), Basis::Create);
@@ -87,6 +91,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.4  2007/02/06 17:12:31  jfrazier
+Fixed a problem with global initialization in libraries.
+
 Revision 1.3  2007/02/01 23:28:42  jfrazier
 Basis is not working, but not fully tested.
 

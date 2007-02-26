@@ -68,7 +68,7 @@ namespace Nektar
             GaussPoints(const PointsKey &pkey):PointsBaseType(pkey)
             {
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
-                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+		    boost::bind(&GaussPoints::CreateMatrix, this, _1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPLegendre),
@@ -92,8 +92,9 @@ namespace Nektar
             }
 
         private:
-            /// These should not be called.  All creation is done using the constructor
-            /// requiring the key, declared above.
+            /// These should not be called.  All creation is done
+            /// using the constructor requiring the key, declared
+            /// above.
             GaussPoints();
             GaussPoints(const GaussPoints &points);
 

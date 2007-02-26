@@ -94,24 +94,24 @@ namespace Nektar
 
             int npts = m_pointsKey.GetNumPoints();
 
-            for(unsigned int i=0;i<npts;++i)
+            for(unsigned int i=1;i<npts;++i)
+            {
+                (*m_derivmatrix)(i,i) = 0.0;
+            }
+
+            for(unsigned int i=1;i<npts;++i)
+            {
+                (*m_derivmatrix)(0,i) = -0.5*M_PI*pow(-1.0,double(i))*cos(M_PI*i/npts)/sin(M_PI*i/npts);
+            }
+
+            for(unsigned int i=1;i<npts;++i)
             {
                 for(unsigned int j=0;j<npts;++j)
                 {
-                    if(i==j)
-                    {
-                        (*m_derivmatrix)(i,j) = 0.0;
-                    }
-                    else
-                    {
-                        int k = (-2*((i+j)%2)) + 1;
-                        (*m_derivmatrix)(i,j) = M_PI*(double(k)/2.0)*(cos(M_PI*double(i-j)/double(npts)))/sin(M_PI*double(i-j)/double(npts));
-                    }
+                    (*m_derivmatrix)(i,j) = (*m_derivmatrix)(0,(j-i)%npts);
                 }
-            }
+            }           
         }
-
-
 
         boost::shared_ptr< PointsBaseType > FourierPoints::Create(const PointsKey &key)
         {
@@ -122,14 +122,26 @@ namespace Nektar
             return returnval;
         }
 
-        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(const PointsKey &pkey)
-        {
 
-            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(pkey.GetNumPoints(),GetNumPoints()));
-            return returnval;
+        boost::shared_ptr< NekMatrix<double> > FourierPoints::CreateMatrix(const PointsKey &pkey)
+        {
+            int numpoints = pkey.GetNumPoints();
+            const double * xpoints;
+
+            PointsManager()[pkey]->GetPoints(xpoints);
+
+            /// Delegate to function below.
+            return GetI(numpoints, xpoints);
         }
 
-        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(const double * x)
+        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(const PointsKey &pkey)
+        {
+            ASSERTL0(pkey.GetPointsDim()==1, "Fourier Points can only interp to other 1d point distributions");
+
+            return m_InterpManager[pkey];
+        }
+
+        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(const double* x)
         {
             int numpoints = 1;
 
@@ -139,16 +151,20 @@ namespace Nektar
 
         const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(unsigned int numpoints, const double *x)
         {
+            double * interp = new double[GetNumPoints()*numpoints];
 
-            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints()));
+            CalculateInterpMatrix(numpoints, x, interp);
+
+            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp));
+
+            delete[] interp;
 
             return returnval;
-        }       
-
+        }
 
         void FourierPoints::CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp)
         {
-            const double h = 2.0/m_pointsKey.GetNumPoints();
+            const double h = 2.0*M_PI/m_pointsKey.GetNumPoints();
             for(unsigned int i=0;i<npts;++i)
             {
                 for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
@@ -165,7 +181,7 @@ namespace Nektar
             // in Matlab"
 
             double xi = -M_PI*(x+1.0)+2*M_PI;
-            return sin(M_PI*xi/h)/((2.0*M_PI/h)*tan(x/2.0));
+            return sin(M_PI*xi/h)/((2.0*M_PI/h)*tan((M_PI*(x+1.0))/2.0));
         }
     } // end of namespace LibUtilities
 } // end of namespace Nektar

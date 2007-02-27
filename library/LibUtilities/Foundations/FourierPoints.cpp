@@ -164,7 +164,7 @@ namespace Nektar
 
         void FourierPoints::CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp)
         {
-            const double h = 2.0*M_PI/m_pointsKey.GetNumPoints();
+            const double h = 2.0/m_pointsKey.GetNumPoints();
             for(unsigned int i=0;i<npts;++i)
             {
                 for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
@@ -174,15 +174,24 @@ namespace Nektar
             }
         }
 
-        double FourierPoints::PeriodicSincFunction(const double h, const double x)
+        double FourierPoints::PeriodicSincFunction(const double x, const double h)
         {
             // This formula is based upon a mapped version of 
             // the periodic sinc presented in Trefethen's "Spectral Methods
             // in Matlab"
 
-            double xi = -M_PI*(x+1.0)+2*M_PI;
-            return sin(M_PI*xi/h)/((2.0*M_PI/h)*tan((M_PI*(x+1.0))/2.0));
+            double xi = M_PI*(x+1.0);
+            double y = 1.0;
+            
+            
+            if(fabs(xi)>1.0e-12)
+            {
+                y = sin(M_PI*xi/(M_PI*h))/((2.0/h)*tan(0.5*xi));
+            }
+
+            return y;
         }
+            
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 

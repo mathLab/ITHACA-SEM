@@ -253,44 +253,46 @@ namespace Nektar
 
 
         // 2D Interpolation
-        void StdExpansion::Interp2D(const  LibUtilities::BasisKey *fbasis0, 
-            const LibUtilities::BasisKey *fbasis1, const double *from,  
-            const LibUtilities::BasisKey *tbasis0,
-            const LibUtilities::BasisKey* tbasis1, double *to)
+        void StdExpansion::Interp2D(const  LibUtilities::BasisKey &fbasis0, 
+            const LibUtilities::BasisKey &fbasis1, const double *from,  
+            const LibUtilities::BasisKey &tbasis0,
+            const LibUtilities::BasisKey &tbasis1, double *to)
         {
             DNekMatSharedPtr I0,I1;
             double *tmp;
-            BstShrDArray wsp = GetDoubleTmpSpace(tbasis1->GetNumPoints()*
-                fbasis0->GetNumPoints());
+            BstShrDArray wsp = GetDoubleTmpSpace(tbasis1.GetNumPoints()*
+						 fbasis0.GetNumPoints());
 
-            I0 = LibUtilities::PointsManager()[fbasis0->GetPointsKey()]
-            ->GetI(tbasis0->GetPointsKey());
-            I1 = LibUtilities::PointsManager()[fbasis1->GetPointsKey()]
-            ->GetI(tbasis1->GetPointsKey());
+            I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]
+            ->GetI(tbasis0.GetPointsKey());
+            I1 = LibUtilities::PointsManager()[fbasis1.GetPointsKey()]
+            ->GetI(tbasis1.GetPointsKey());
 
-            Blas::Dgemm('T', 'T', tbasis1->GetNumPoints(), fbasis0->GetNumPoints(),
-                fbasis1->GetNumPoints(), 1.0, &((*I1).GetPtr())[0],  
-                fbasis1->GetNumPoints(),
-                (double *) from,fbasis0->GetNumPoints(), 0.0, &wsp[0],
-                tbasis1->GetNumPoints());
+            Blas::Dgemm('T', 'T', tbasis1.GetNumPoints(), fbasis0.GetNumPoints(),
+                fbasis1.GetNumPoints(), 1.0, &((*I1).GetPtr())[0],  
+                fbasis1.GetNumPoints(),
+                (double *) from,fbasis0.GetNumPoints(), 0.0, &wsp[0],
+                tbasis1.GetNumPoints());
 
-            Blas::Dgemm('T', 'T',tbasis0->GetNumPoints(),tbasis1->GetNumPoints(),
-                fbasis0->GetNumPoints(),1.0,&((*I0).GetPtr())[0],
-                fbasis0->GetNumPoints(),&wsp[0], tbasis1->GetNumPoints(),
-                0.0,to, tbasis0->GetNumPoints());
+            Blas::Dgemm('T', 'T',tbasis0.GetNumPoints(),tbasis1.GetNumPoints(),
+                fbasis0.GetNumPoints(),1.0,&((*I0).GetPtr())[0],
+                fbasis0.GetNumPoints(),&wsp[0], tbasis1.GetNumPoints(),
+                0.0,to, tbasis0.GetNumPoints());
         }
 
         // 1D Interpolation
-        void StdExpansion::Interp1D(const  LibUtilities::BasisKey *fbasis0, const double *from,  
-            const LibUtilities::BasisKey *tbasis0, double *to)
+        void StdExpansion::Interp1D(const  LibUtilities::BasisKey &fbasis0, 
+				    const double *from,  
+				    const LibUtilities::BasisKey &tbasis0, 
+				    double *to)
         {
             DNekMatSharedPtr I0;
 
-            I0 = LibUtilities::PointsManager()[fbasis0->GetPointsKey()]
-            ->GetI(tbasis0->GetPointsKey());
+            I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]
+            ->GetI(tbasis0.GetPointsKey());
 
-            Blas::Dgemv('T', fbasis0->GetNumPoints(), tbasis0->GetNumPoints(), 
-                1.0, &((*I0).GetPtr())[0], fbasis0->GetNumPoints(), 
+            Blas::Dgemv('T', fbasis0.GetNumPoints(), tbasis0.GetNumPoints(), 
+                1.0, &((*I0).GetPtr())[0], fbasis0.GetNumPoints(), 
                 from, 1, 0.0, to, 1);
         }
 
@@ -309,6 +311,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.21  2007/02/24 09:07:25  sherwin
+* Working version of stdMatrixManager and stdLinSysMatrix
+*
 * Revision 1.20  2007/02/23 19:26:07  jfrazier
 * General bug fix and formatting.
 *

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File StdExpManagers.h
+// File StdLinSysKey.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,75 +29,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Headers for StdExpansion Managers
+// Description: Headers/definitions of StdLinSysKey
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef STDEXPMANAGERS_H
-#define STDEXPMANAGERS_H
+#ifndef STDLINSYSKEY_HPP
+#define STDLINSYSKEY_HPP
 
 
 #include <StdRegions/StdRegions.hpp>
+#include <StdRegions/StdMatrixKey.h>
 
 namespace Nektar
 {
     namespace StdRegions
     {
 	
-        class StdExpansion;
-
-        class StdMatrixKey
-        {
-        public:
-            StdMatrixKey( MatrixType matrixType, ShapeType shapeType, StdExpansion &stdExpansion);
-	    
-            virtual ~StdMatrixKey()
-            {
-            }
-
-            /// Used to lookup the create function in NekManager.
-            struct opLess
-            {
-                bool operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
-            };
-
-            /// Used for finding value given the key in NekManager.
-            friend bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
-            friend bool opLess::operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
-
-	    MatrixType GetMatrixType() const
-	    {
-		return m_matrixType;
-	    }
-
-	    ShapeType GetShapeType() const
-	    {
-		return m_shapeType;
-	    }
-	    
-	    int GetNcoeffs() const
-	    {
-		return m_ncoeffs;
-	    }
-
-	    boost::shared_array<LibUtilities::BasisSharedPtr> GetBase() const
-	    {
-		return m_base;
-	    }
-	    
-	protected:
-            StdMatrixKey();
-	    
-            ShapeType   m_shapeType;
-            boost::shared_array<LibUtilities::BasisSharedPtr> m_base;
-
-            unsigned int m_ncoeffs;
-            MatrixType   m_matrixType;
-        private:
-        };
-
-        std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs);
-
         class StdLinSysKey: public StdMatrixKey
         {  
         public:
@@ -119,14 +66,9 @@ namespace Nektar
     } // end of namespace
 } // end of namespace
 
-#endif //STDEXPMANAGERSS_H
+#endif //STDLINSYSKEY_HPP
 
 /**
-* $Log: StdExpManagers.h,v $
-* Revision 1.2  2007/02/22 22:02:27  sherwin
-* Update with executing StdMatManager
-*
-* Revision 1.1  2007/02/21 22:55:16  sherwin
-* First integration of StdMatrixManagers
+* $Log:$
 *
 ***/

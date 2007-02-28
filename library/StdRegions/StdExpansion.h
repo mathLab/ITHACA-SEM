@@ -44,7 +44,8 @@
 #include <StdRegions/LocalRegionsDeclarations.hpp>
 
 #include <StdRegions/StdExpMap.h>
-#include <StdRegions/StdExpManagers.h>
+#include <StdRegions/StdMatrixKey.h>
+#include <StdRegions/StdLinSysKey.hpp>
 
 namespace Nektar
 {
@@ -603,12 +604,15 @@ namespace Nektar
                 v_PhysDeriv (dim, inarray, outarray);
             }
 
-            void Interp1D(const LibUtilities::BasisKey *fbasis0, const double *from,
-                const LibUtilities::BasisKey *tbasis0, double *to);
+            void Interp1D(const LibUtilities::BasisKey &fbasis0,
+			  const double *from,
+			  const LibUtilities::BasisKey &tbasis0, double *to);
 
-            void Interp2D(const LibUtilities::BasisKey *fbasis0, const LibUtilities::BasisKey *fbasis1,
-                const double *from,   const LibUtilities::BasisKey *tbasis0,
-                const LibUtilities::BasisKey* tbasis1, double *to);
+            void Interp2D(const LibUtilities::BasisKey &fbasis0, 
+			  const LibUtilities::BasisKey &fbasis1,
+			  const double *from,   
+			  const LibUtilities::BasisKey &tbasis0,
+			  const LibUtilities::BasisKey &tbasis1, double *to);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
             *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
@@ -850,6 +854,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.24  2007/02/28 09:53:17  sherwin
+* Update including adding GetBasis call to StdExpansion
+*
 * Revision 1.23  2007/02/24 09:07:25  sherwin
 * Working version of stdMatrixManager and stdLinSysMatrix
 *

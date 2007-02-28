@@ -1,7 +1,7 @@
 SET(STD_REGIONS_SOURCES
 StdExpansion.cpp
 StdExpansion1D.cpp
-StdExpManagers.cpp
+StdMatrixKey.cpp
 #StdExpansion2D.cpp
 #StdExpansion3D.cpp
 StdExpMap.cpp
@@ -22,9 +22,10 @@ StdExpansion1D.h
 StdExpansion2D.h
 StdExpansion3D.h
 StdExpansion.h
-StdExpManagers.h
 StdExpMap.h
 StdHexExp.h
+StdLinSysKey.hpp
+StdMatrixKey.h
 StdNodalTetExp.h
 StdNodalTriExp.h
 StdPrismExp.h

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File StdExpManagers.cpp
+// File StdMatrixKey.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Definition of managers in StdExpansions
+// Description: Definition of StdMatrixKey
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "StdRegions/StdExpManagers.h"
 #include "StdRegions/StdExpansion.h"
+#include "StdRegions/StdMatrixKey.h"
 
 namespace Nektar
 {
@@ -116,6 +116,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpManagers.cpp,v $
+* Revision 1.6  2007/02/28 09:53:17  sherwin
+* Update including adding GetBasis call to StdExpansion
+*
 * Revision 1.5  2007/02/24 09:07:25  sherwin
 * Working version of stdMatrixManager and stdLinSysMatrix
 *

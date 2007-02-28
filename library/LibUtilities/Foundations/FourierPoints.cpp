@@ -169,7 +169,7 @@ namespace Nektar
             {
                 for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
                 {
-                    interp[i*m_pointsKey.GetNumPoints()+j] = PeriodicSincFunction(xpoints[i]-m_points[0][j],h);
+                    interp[i*m_pointsKey.GetNumPoints()+j] = PeriodicSincFunction(M_PI*(xpoints[i]-m_points[0][j]),h);
                 }
             }
         }
@@ -180,13 +180,11 @@ namespace Nektar
             // the periodic sinc presented in Trefethen's "Spectral Methods
             // in Matlab"
 
-            double xi = M_PI*(x+1.0);
             double y = 1.0;
-            
             
             if(fabs(xi)>1.0e-12)
             {
-                y = sin(M_PI*xi/(M_PI*h))/((2.0/h)*tan(0.5*xi));
+                y = sin(M_PI*x/(M_PI*h))/((2.0/h)*tan(0.5*x));
             }
 
             return y;

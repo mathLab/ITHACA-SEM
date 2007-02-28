@@ -106,7 +106,7 @@ namespace Nektar
 	    
 	    for(i = 0; i < ShapeTypeDimMap[rhs.GetShapeType()]; ++i)
 	    {
-		os << rhs.GetBase()[i];
+		os << rhs.GetBase()[i]->GetBasisKey();
 	    }
 
             return os;
@@ -116,6 +116,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpManagers.cpp,v $
+* Revision 1.5  2007/02/24 09:07:25  sherwin
+* Working version of stdMatrixManager and stdLinSysMatrix
+*
 * Revision 1.4  2007/02/23 19:26:04  jfrazier
 * General bug fix and formatting.
 *

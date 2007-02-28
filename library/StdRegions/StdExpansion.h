@@ -108,6 +108,20 @@ namespace Nektar
                 return(m_base);
             }
 
+            /** \brief This function gets the shared point to basis in
+            *  the \a dir direction
+            *  
+            *  \return returns the shared pointer to the basis in
+            *  directin \a dir
+            */
+            inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
+            {
+                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
+                return(m_base[dir]);
+            }
+
+
+
             /** \brief This function returns the total number of coefficients 
             *  used in the expansion 
             *  
@@ -836,6 +850,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.23  2007/02/24 09:07:25  sherwin
+* Working version of stdMatrixManager and stdLinSysMatrix
+*
 * Revision 1.22  2007/02/23 19:26:08  jfrazier
 * General bug fix and formatting.
 *

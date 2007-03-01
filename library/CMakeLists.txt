@@ -164,5 +164,5 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
 		LIBRARY DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL)
 ENDMACRO(ADD_NEKTAR_EXECUTABLE name)
 
-SUBDIRS(LibUtilities LocalRegions MultiRegions SpatialDomains StdRegions Stochastic UnitTests Demos)
+SUBDIRS(LibUtilities LocalRegions MultiRegions SpatialDomains StdRegions Stochastic UnitTests NewUnitTests Demos)
 

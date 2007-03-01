@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/Domain.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Domain.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -39,9 +39,6 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <SpatialDomains/MeshGraph.h>
-#include <SpatialDomains/EdgeComponent.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/QuadGeom.h>
 
 class TiXmlDocument;
 

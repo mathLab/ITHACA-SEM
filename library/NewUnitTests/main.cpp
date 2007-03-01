@@ -13,6 +13,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/included/unit_test_framework.hpp>
+#include <boost/test/floating_point_comparison.hpp>
 
 using boost::unit_test_framework::test_suite;
 
@@ -20,8 +21,7 @@ using boost::unit_test_framework::test_suite;
 #include <iostream>
 using namespace std;
 
-// FoundationsTest.cpp : Defines the entry point for the console application.
-//
+
 
 #include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/Foundations/Points.h>
@@ -38,236 +38,164 @@ using namespace Nektar::LibUtilities;
 namespace Nektar
 {
     namespace MyNewUnitTests
-    {        
+    {
         void simpleTest();
-		//double polyFunc(double);
-	}
+        void testPolyFunc();
+    }
 }
 
-// #include <UnitTests/testNekPoint.h>
-// #include <UnitTests/testNekVector.h>
-// #include <UnitTests/testBoostUtil.h>
-// #include <UnitTests/testNekMatrix.h>
-// #include <UnitTests/testExpressionTemplates.h>
-// #include <UnitTests/testLinearSystem.h>
-// #include <UnitTests/testNekLinAlgAlgorithms.h>
-// 
-// #include <UnitTests/testNekManager.h>
-// 
-// #include <UnitTests/Memory/TestNekMemoryManager.h>
+
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
 test_suite* init_unit_test_suite( int, char* [] )
 {
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
-	
-	//test->add(BOOST_TEST_CASE(&Nektar::MyNewUnitTests::simpleTest), 0);
-	//test->add(BOOST_TEST_CASE(&Nektar::MyNewUnitTests::polyFunc(2)), 0);
 
-//     // Memory Manager
-//     test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testParameterizedConstructors), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testSmartPointerAllocation), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testArrayAllocation), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testSharedArrayAllocation), 0);
-// 
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointConstruction), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointArithmetic), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointDataAccess), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointMisc), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointAssignment), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointPointerManipulation), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointComparison), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointOperators), 0);
-// 
-// 
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekVectorConstruction), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekVectorOperators), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekVectorArithmetic), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNorms), 0);
-// 
-// 
-//     //test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testMakePtr), 0);
-// 
-// 
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixConstruction), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixAccess), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixBasicMath), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixFullDiagonalOperations), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUserManagedMatrixData), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockMatrices), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockDiagonalMatrices), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockDiagonalTimesEqual), 0);
-//     
-// 
-//     // These tests were originally added because it appeared that a NekObjectFactory
-//     // would be needed instead of the LokiObject factory so that the factory would
-//     // play nice with the NekMemoryManager.  This may not be the case, but in case
-//     // it comes along in the near future I'll leave these statements in.
-// //     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNoParameterConstruction), 0);
-// //     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testSingleParameterConstruction), 0);
-// 
-//     // Unit tests for NekManager
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekManager), 0);
-// 
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testConstantExpressions), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testUnaryExpressions), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixMetadata), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBinaryExpressions), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixMultiplication), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixSomewhatComplicatedExpression), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixComplicatedExpression), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testTemporaryGenerationFromSingleLevelBinaryExpressions), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testExhaustiveSingleLevelBinaryExpressions), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testExhaustive2OpBinaryExpressions), 0);
-// 
-// 
-//     /// Linear system tests.
-//     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testDiagonalSystem), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testFullSystem), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testSolvingBlockDiagonalMatrices), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testMixedInputParameterTypes), 0);
-// 
-//     /// Linear algebra algorithsm.
-//     test->add(BOOST_TEST_CASE(&Nektar::NekLinAlgTests::testGramSchmidtOrthogonalizationBookExample), 0);
-//     
+    test->add(BOOST_TEST_CASE(&Nektar::MyNewUnitTests::simpleTest), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MyNewUnitTests::testPolyFunc),0);
+
     return test;
 }
 
 namespace Nektar
 {
     namespace MyNewUnitTests
-    {        
+    {
         void simpleTest()
         {
-			int size = 10;
-			
-			//PointsKey gaussKey(size, eGaussLobattoLegendre);
-			
-			PointsKey gaussKey(size, eGaussGaussLegendre);			
-	    	PointsKey polyKey(size, ePolyEvenlySpaced);
-    		boost::shared_ptr<Points<double> > ptr = PointsManager()[gaussKey];
-			boost::shared_ptr<NekMatrix<double> > mat = ptr->GetI(gaussKey);
-			
-			int m = mat->GetRows();
-			int n = mat->GetColumns();
-			cout << "(m, n) = (" << m << ", " << n << ")" <<  endl;
-			
-			
-			BOOST_CHECK(mat->GetRows() == size); // Fails here
-			BOOST_CHECK(mat->GetColumns() == size);
-			
-			
-			
-			Points<double> & points = *ptr;
-			cout << "points.GetPointsDim()    = " << points.GetPointsDim() << endl;
-			cout << "points.GetNumPoints()    = " << points.GetNumPoints() << endl;
-			cout << "points.GetTotNumPoints() = " << points.GetTotNumPoints() << endl;
-			double *z = points.GetZ();
-			for( int i=0; i<size; ++i ) {
-				cout << "z[i] = " << z[i] <<  endl;
-			}
-			cout << endl;
-			double *w = points.GetW();
-			for( int i=0; i<size; ++i ) {
-				cout << "w[i] = " << w[i] <<  endl;
-			}
-			
-			cout << "Happy Testing!" << endl;
-			
+            int size = 10;
+
+            //PointsKey gaussKey(size, eGaussLobattoLegendre);
+
+            PointsKey gaussKey(size, eGaussGaussLegendre);
+            PointsKey polyKey(size, ePolyEvenlySpaced);
+            boost::shared_ptr<Points<double> > ptr = PointsManager()[gaussKey];
+            boost::shared_ptr<NekMatrix<double> > mat = ptr->GetI(gaussKey);
+
+            int m = mat->GetRows();
+            int n = mat->GetColumns();
+            cout << "(m, n) = (" << m << ", " << n << ")" <<  endl;
+
+
+            BOOST_CHECK(mat->GetRows() == size); // Fails here
+            BOOST_CHECK(mat->GetColumns() == size);
+
+
+
+            Points<double> & points = *ptr;
+            cout << "points.GetPointsDim()    = " << points.GetPointsDim() << endl;
+            cout << "points.GetNumPoints()    = " << points.GetNumPoints() << endl;
+            cout << "points.GetTotNumPoints() = " << points.GetTotNumPoints() << endl;
+            double *z = points.GetZ();
+            for( int i=0; i<size; ++i )
+            {
+                cout << "z[i] = " << z[i] <<  endl;
+            }
+            cout << endl;
+            double *w = points.GetW();
+            for( int i=0; i<size; ++i )
+            {
+                cout << "w[i] = " << w[i] <<  endl;
+            }
+
+            cout << "Happy Testing!" << endl;
+
         }
-		
-// 	}
-// 	
-// 	namespace MyNewUnitTests
-// 	  {	
-		
-// 		double polyFunc(double x)
-// 		{
-// 		  return (3 + x * (4 - 5 * x));
-// 		  {
-// 		    const double *z, *w;
-// 			double Area = 0.0;			
-// 			//int numPoints = GetNumPoints();
-// 		    PointsKey key(5, eGaussGaussLegendre);
-// 			boost::shared_ptr<Points<double> > ptr = PointsManager()[key];
-// 			Points<double> & points = *ptr;
-// 			int numPoints = points.GetNumPoints();
-// 			ptr->GetZW(z, w);
-// 			for(int i =0; i<numPoints; ++i)
-// 			{
-// 			  Area += w[i]*polyFunc(z[i]);
-// 			   {
-// 			     BOOST_CHECK(Area == 20.567);
-// 			   }
-// 			}
-// 		  }
-// 		}
-			
-//         void testParameterizedConstructors()
-//         {
-//             CountedObject<int>::ClearCounters();
-// 
-//             CountedObject<int>* ob1 = MemoryManager::Allocate<CountedObject<int> >();
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 0);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 0);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf3ParameterConstructions, 0);
-// 
-//             CountedObject<int>* ob2 = MemoryManager::Allocate<CountedObject<int> >(1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 0);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf3ParameterConstructions, 0);
-// 
-//             CountedObject<int>* ob3 = MemoryManager::Allocate<CountedObject<int> >(1, 2);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf3ParameterConstructions, 0);
-// 
-//             CountedObject<int>* ob4 = MemoryManager::Allocate<CountedObject<int> >(1, 2, 3);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf3ParameterConstructions, 1);
-//             BOOST_CHECK_EQUAL(ob4->value, 6);
-// 
-//             MemoryManager::Deallocate<CountedObject<int> >(ob1);
-//             MemoryManager::Deallocate<CountedObject<int> >(ob2);
-//             MemoryManager::Deallocate<CountedObject<int> >(ob3);
-//             MemoryManager::Deallocate<CountedObject<int> >(ob4);
-// 
-//             BOOST_CHECK(ob1 == NULL);
-//             BOOST_CHECK(ob2 == NULL);
-//             BOOST_CHECK(ob3 == NULL);
-//             BOOST_CHECK(ob4 == NULL);
-// 
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf3ParameterConstructions, 1);
-//             BOOST_CHECK_EQUAL(CountedObject<int>::numberDestroyed, 4);
-//         }
-	}
+
+    }
+
+    namespace TestUtilities
+    {
+        
+        vector<double> generatePolynomial(int degree) {
+            double a[] = { 
+                -1.3, 1.4, -1.5, 1.2, -1.3, 1.5, -0.1, 1.4, -3.2, 2.4, -1.0, 1.6, -1.3, 4.5,
+                1.3, 2.9, 1.6, 1.3, 1.4, 1.7, 1.9, 6.3, 4.6, // 23
+                5.2, 3.5, 1.0, 6.3, 2.5, 9.7, 2.4, 3.6 }; // 31
+            vector<double> coefficients(a, a + degree + 1);
+            return coefficients;
+        }
+        
+        // Evaluates at x the polynomial that is given by the coefficents
+        double evaluatePolynomial(double x, const vector<double> & coefficients) {
+            int N = coefficients.size();
+            double y = coefficients[N];
+            for( int i = N-1; i >= 0; --i ) {
+                y = coefficients[i] + x*y;                
+            }
+            return y;
+        }
+        
+        // Integrates the polynomial from [-1,1]
+        double integrate(const vector<double> & coefficients) {
+            int N = coefficients.size();
+            double integral = 0;
+            for( int i = 0; i <= N/2; ++i ) {
+                integral += 2.0 * coefficients[2*i] / (2*i + 1);
+            }
+            return integral;
+        }
+        
+        
+    }
+    namespace MyNewUnitTests
+    {
+        void testPolynomialOnWeights(const boost::shared_ptr<Points<double> > points, const vector<double> & polynomialCoefficients) {
+            const double *z, *w;
+            points->GetZW(z, w);
+            int numPoints = points->GetNumPoints();
+            
+            for(int i = 0; i < polynomialCoefficients.size(); ++i) {
+                vector<double> a(polynomialCoefficients.begin(), polynomialCoefficients.begin() + i + 1);
+                double analyticIntegral = TestUtilities::integrate(a);
+                double numericIntegral = 0;
+                for(int j = 0; j < numPoints; ++j) {
+                    numericIntegral += w[j] * TestUtilities::evaluatePolynomial( z[j], a ); 
+                }
+                cout << "Points = " << numPoints << ", Polynomial degree = " << i;
+                cout << ", Integral = " << analyticIntegral << ", Computed area = " << numericIntegral << endl;
+                
+                BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-11 );
+            }
+        }
+        const int MaxNumberOfPoints = 15;
+        void testPolyFunc()
+        {
+            int P[] = {2,4,8,12};
+            int N[] = {2,3,5,7};
+
+            vector<double> coefficients;
+            PointsType type;
+
+            BOOST_CHECKPOINT("Testing eGaussGaussLegendre");
+            type = eGaussGaussLegendre;
+            for( int i = 1; i < MaxNumberOfPoints; ++i ) {
+                int nPts = i, degree = 2*i - 1;
+                coefficients = TestUtilities::generatePolynomial(degree);
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
+            }
+
+            BOOST_CHECKPOINT("Testing eGaussLobattoLegendre");
+            type = eGaussLobattoLegendre;
+            for( int i = 1; i < MaxNumberOfPoints; ++i ) {
+                int nPts = i, degree = max(1, 2*i - 3);
+                coefficients = TestUtilities::generatePolynomial(degree);
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
+            }
+        }
+    }
+
 }
-// int main(int argc, char* argv[])
-// {
-//   
-//     PointsKey gaussKey(10, eGaussLobattoLegendre);
-//     PointsKey polyKey(10,ePolyEvenlySpaced);
-// 
-//     boost::shared_ptr<Points<double> > ptr = PointsManager()[gaussKey];
-// 
-//     boost::shared_ptr<NekMatrix<double> > mat = ptr->GetI(gaussKey);
-//  
-//     return 0;
-// }
+
+
 
 /**
     $Log: main.cpp,v $
-
+    Revision 1.1  2007/03/01 04:36:20  ehan
+    Kdevelop for UnitTest
+ 
+ 
     Revision 1.1  2007/2/26 04:05:23  ehan
     Added the NewUnitTest project.
-
+ 
 **/
-

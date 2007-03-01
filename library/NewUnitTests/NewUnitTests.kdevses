@@ -1,16 +1,13 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 <!DOCTYPE KDevPrjSession>
 <KDevPrjSession>
- <DocsAndViews NumberOfDocuments="3" >
-  <Doc0 NumberOfViews="1" URL="file:/home/ehan/newWorkSpace/NektarProject/nektarproject/Nektar%2B%2B/library/NewUnitTests/main.cpp" >
-   <View0 line="179" Type="Source" />
+ <DocsAndViews NumberOfDocuments="2" >
+  <Doc0 NumberOfViews="1" URL="file:/home/ehan/newWorkSpace/ehan/Nektar%2B%2B/library/NewUnitTests/main.cpp" >
+   <View0 line="110" Type="Source" />
   </Doc0>
-  <Doc1 NumberOfViews="1" URL="file:/home/ehan/newWorkSpace/NektarProject/nektarproject/Nektar%2B%2B/library/NewUnitTests/CMakeLists.txt" >
-   <View0 line="2" Type="Source" />
+  <Doc1 NumberOfViews="1" URL="file:/usr/include/c%2B%2B/3.4.3/bits/stl_tree.h" >
+   <View0 line="1099" Type="Source" />
   </Doc1>
-  <Doc2 NumberOfViews="1" URL="file:/home/ehan/root/usr/local/include/boost/test/utils/callback.hpp" >
-   <View0 line="55" Type="Source" />
-  </Doc2>
  </DocsAndViews>
  <pluginList>
   <kdevbookmarks>

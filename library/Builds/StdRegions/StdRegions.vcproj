@@ -160,11 +160,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\StdRegions\StdExpManagers.cpp"
+				RelativePath="..\..\StdRegions\StdExpMap.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\StdRegions\StdExpMap.cpp"
+				RelativePath="..\..\StdRegions\StdMatrixKey.cpp"
 				>
 			</File>
 			<File
@@ -198,11 +198,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\StdRegions\StdExpManagers.h"
+				RelativePath="..\..\StdRegions\StdExpMap.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\StdRegions\StdExpMap.h"
+				RelativePath="..\..\StdRegions\StdLinSysKey.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\StdRegions\StdMatrixKey.h"
 				>
 			</File>
 			<File

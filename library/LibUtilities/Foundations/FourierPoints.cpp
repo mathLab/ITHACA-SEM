@@ -182,7 +182,7 @@ namespace Nektar
 
             double y = 1.0;
             
-            if(fabs(xi)>1.0e-12)
+            if(fabs(x)>1.0e-12)
             {
                 y = sin(M_PI*x/(M_PI*h))/((2.0/h)*tan(0.5*x));
             }
@@ -192,6 +192,4 @@ namespace Nektar
             
     } // end of namespace LibUtilities
 } // end of namespace Nektar
-
-
 

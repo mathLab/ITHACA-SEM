@@ -108,10 +108,17 @@ namespace Nektar
     {
         
         vector<double> generatePolynomial(int degree) {
-            double a[] = { 
-                -1.3, 1.4, -1.5, 1.2, -1.3, 1.5, -0.1, 1.4, -3.2, 2.4, -1.0, 1.6, -1.3, 4.5,
-                1.3, 2.9, 1.6, 1.3, 1.4, 1.7, 1.9, 6.3, 4.6, // 23
-                5.2, 3.5, 1.0, 6.3, 2.5, 9.7, 2.4, 3.6 }; // 31
+//             double a[] = { 
+//                 -1.3, 1.4, -1.5, 1.2, -1.3, 1.5, -0.1, 1.4, -3.2, 2.4, -1.0, 1.6, -1.3, 4.5,
+//                 1.3, 1.9, 1.6, 1.3, 1.4, 1.7, 1.9, 0.3, 1.6, // 23
+//                 1.2, 0.5, 1.0, 0.3, 0.5, 0.7, 0.4, 0.6 }; // 31
+            double a[] = {
+                1, 1,  3,  3, 5, 5,  7, 7, 9,  9,
+                11,11,13, 13,15,15, 17,17,19, 19,
+                21,21,23, 23,25,25, 27,27,29, 29,
+                31
+            };
+
             vector<double> coefficients(a, a + degree + 1);
             return coefficients;
         }
@@ -130,15 +137,18 @@ namespace Nektar
         double integrate(const vector<double> & coefficients) {
             int N = coefficients.size();
             double integral = 0;
-            for( int i = 0; i <= N/2; ++i ) {
-                integral += 2.0 * coefficients[2*i] / (2*i + 1);
+            for( int i = 0; i <= (N-1)/2; ++i ) {
+                integral += coefficients[2*i] / (2*i + 1);
+                if( N == 8 ) {
+                    cout << "N/2 = " << N/2 << ", 2*i = " << 2*i << ", coefficients[2*i] = " << coefficients[2*i] << ", (2*i + 1) = " << (2*i + 1) << ", coefficients[2*i] / (2*i + 1) = " << coefficients[2*i] / (2*i + 1) << endl;
+                }
             }
-            return integral;
+            return  2.0 * integral;
         }
         
         
     }
-    namespace MyNewUnitTests
+        namespace MyNewUnitTests
     {
         void testPolynomialOnWeights(const boost::shared_ptr<Points<double> > points, const vector<double> & polynomialCoefficients) {
             const double *z, *w;
@@ -158,11 +168,12 @@ namespace Nektar
                 BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-11 );
             }
         }
-        const int MaxNumberOfPoints = 15;
+//         const int MaxNumberOfPoints = 15;
+        const int MaxNumberOfPoints = 31;
         void testPolyFunc()
         {
-            int P[] = {2,4,8,12};
-            int N[] = {2,3,5,7};
+//             int P[] = {2,4,8,12};
+//             int N[] = {2,3,5,7};
 
             vector<double> coefficients;
             PointsType type;
@@ -170,7 +181,10 @@ namespace Nektar
             BOOST_CHECKPOINT("Testing eGaussGaussLegendre");
             type = eGaussGaussLegendre;
             for( int i = 1; i < MaxNumberOfPoints; ++i ) {
-                int nPts = i, degree = 2*i - 1;
+                int nPts = i;
+              //  int degree = 2*i - 2;                
+               int degree = 2*i - 1;
+//                 int degree = 2*int(i/2);
                 coefficients = TestUtilities::generatePolynomial(degree);
                 testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
             }
@@ -191,6 +205,9 @@ namespace Nektar
 
 /**
     $Log: main.cpp,v $
+    Revision 1.2  2007/03/01 14:09:14  ehan
+    *** empty log message ***
+
     Revision 1.1  2007/03/01 04:36:20  ehan
     Kdevelop for UnitTest
  

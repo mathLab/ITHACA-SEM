@@ -160,6 +160,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\StdRegions\StdExpManagers.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\StdRegions\StdExpMap.cpp"
 				>
 			</File>
@@ -187,6 +191,14 @@
 			</File>
 			<File
 				RelativePath="..\..\StdRegions\StdExpansion.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\StdRegions\StdExpansion1D.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\StdRegions\StdExpManagers.h"
 				>
 			</File>
 			<File

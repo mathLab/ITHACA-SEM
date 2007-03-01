@@ -207,59 +207,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\Accumulator.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ArithmeticConcepts.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ArithmeticTraits.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\AssignableTraits.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\AssociativeExpressionTraits.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\AssociativeTraits.hpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\LibUtilities\Foundations\Basis.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpression.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionEvaluator.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionEvaluatorFwd.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionOperators.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionPolicy.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionPolicyFwd.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\BinaryExpressionTraits.hpp"
 				>
 			</File>
 			<File
@@ -267,75 +215,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\BlockMat.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\BoostUtil.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\CommutativeExpressionTraits.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\CommutativeTraits.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\Concepts.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\ConsistentObjectAccess.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ConstantExpression.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ConstantExpressionTraits.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\Memory\DeleteNothing.hpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\LibUtilities\BasicUtils\ErrorUtil.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\Expression.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionConcepts.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionMetadata.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionReturnType.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplateConcepts.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplateOperators.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTemplates.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\ExpressionTraits.hpp"
 				>
 			</File>
 			<File
@@ -363,95 +243,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\MatrixBlockType.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\NegateOp.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekBlockDiagonalMatrix.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekBlockFullMatrix.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekBlockMatrix.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekDiagonalMatrix.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekFullMatrix.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinAlg.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinAlgAlgorithms.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinSys.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekLinSys.hpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\LibUtilities\BasicUtils\NekManager.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrix.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\NekMatrixExpressionTemplates.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrixForm.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrixFwd.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrixImpl.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekMatrixMetadata.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\Memory\NekMemoryManager.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekPoint.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekTypeDefs.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekVector.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\NekVectorMetadata.hpp"
 				>
 			</File>
 			<File
@@ -479,10 +271,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\NullOp.hpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\LibUtilities\Foundations\Points.h"
 				>
 			</File>
@@ -496,26 +284,6 @@
 			</File>
 			<File
 				RelativePath="..\..\LibUtilities\Polylib\Polylib.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\Memory\ThreadSpecificPool.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\TransF77.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\UnaryExpression.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\ExpressionTemplates\UnaryExpressionTraits.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\BasicUtils\Vmath.hpp"
 				>
 			</File>
 		</Filter>

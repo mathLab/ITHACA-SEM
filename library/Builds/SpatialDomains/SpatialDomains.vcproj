@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_USE_MATH_DEFINES"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_USE_MATH_DEFINES;NEKTAR_USE_EXPRESSION_TEMPLATES;NEKTAR_USING_BLAS;NEKTAR_USING_LAPACK"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -105,7 +105,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;SPATIALDOMAINS_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;SPATIALDOMAINS_EXPORTS;_USE_MATH_DEFINES;NEKTAR_USE_EXPRESSION_TEMPLATES;NEKTAR_USING_BLAS;NEKTAR_USING_LAPACK"
 				RuntimeLibrary="0"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
@@ -171,18 +171,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\SpatialDomains\Geometry2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\SpatialDomains\Geometry3D.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\SpatialDomains\HexGeom.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\SpatialDomains\InterfaceComponent.cpp"
 				>
 			</File>
@@ -199,14 +187,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\SpatialDomains\MeshGraph2D.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\SpatialDomains\MeshGraph3D.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\SpatialDomains\pchSpatialDomains.cpp"
 				>
 				<FileConfiguration
@@ -220,43 +200,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\SpatialDomains\PrismGeom.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\SpatialDomains\PyrGeom.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\SpatialDomains\QuadFaceComponent.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\SpatialDomains\QuadGeom.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ShowIncludes="false"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\..\SpatialDomains\SegGeom.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\SpatialDomains\TetGeom.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\SpatialDomains\TriFaceComponent.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\SpatialDomains\TriGeom.cpp"
 				>
 			</File>
 		</Filter>

@@ -664,11 +664,6 @@ namespace Nektar
             // I/O routines
             void WriteCoeffsToFile(std::ofstream &outfile);
 
-            LibUtilities::BasisSharedPtr GetBasis(unsigned int basisIndx)
-            {
-                return m_base[basisIndx];
-            }
-
         protected:
 
             DNekMatSharedPtr    CreateMatrix(const StdMatrixKey &mkey);
@@ -859,6 +854,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.26  2007/03/01 03:52:10  jfrazier
+* Added GetBasis function.
+*
 * Revision 1.25  2007/02/28 19:05:11  sherwin
 * Moved key definitions to their own files to make things more transparent
 *

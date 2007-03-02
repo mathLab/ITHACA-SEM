@@ -426,7 +426,7 @@ namespace Nektar
             *  provides a suitable location to store this result) 
             *
             *  \param outarray contains the values of the expansion evaluated
-            *  at the quadrature points
+            *  at the quadrature points (output of the function)
             */
             void  BwdTrans (double *outarray)
             {
@@ -487,17 +487,67 @@ namespace Nektar
             {
                 return v_Integral(inarray);
             }
-
+	    
+	    /** \brief This function evaluates the expansion at a single
+	     *  (arbitrary) point of the domain
+	     *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_Evaluate()
+	     *
+	     *  Based on the value of the expansion at the quadrature points,
+	     *  this function calculates the value of the expansion at an 
+	     *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
+	     *  given by the pointer \a coords). This operation, equivalent to
+	     *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
+	     *  is evaluated using Lagrangian interpolants through the quadrature
+	     *  points:
+	     *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
+	     *
+             *  This function requires that the physical value array 
+             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys) 
+             *  is set.
+	     * 
+	     *  \param coords the coordinates of the single point
+	     *  \return returns the value of the expansion at the single point
+	     */
             double Evaluate(const double * coords)
             {
                 return v_Evaluate(coords);
             }
 
+	    /** \brief This function fills the array \a outarray with the 
+	     *  \a mode-th mode of the expansion 
+	     *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_FillMode()
+	     *
+	     *  The requested mode is evaluated at the quadrature points
+	     *
+	     *  \param mode the mode that should be filled
+	     *  \param outarray contains the values of the \a mode-th mode of the
+	     *  expansion evaluated at the quadrature points (output of the 
+	     *  function)
+	     */
             void FillMode(const int mode, double * outarray)
             {
                 v_FillMode(mode, outarray);
             }
 
+	    /** \brief this function calculates the inner product of a given 
+	     *  function \a f with the different modes of the expansion
+	     *  
+             *  This function is a wrapper around the virtual function 
+             *  \a v_IProductWRTBase()
+	     * 
+	     *  This is equivalent to the numerical evaluation of 
+	     *  \f[ I[p] = \int \phi_p(\mathbf{x}) f(\mathbf{x}) d\mathbf{x}\f]
+	     *
+	     *  \param inarray contains the values of the function \a f 
+	     *  evaluated at the quadrature points
+	     *  \param outarray contains the values of the inner product of \a f
+	     *  with the different modes, i.e. \f$ outarray[p] = I[p]\f$ 
+	     *  (output of the function) 
+	     */
             void IProductWRTBase(const double *inarray, double * outarray)
             {
                 v_IProductWRTBase(inarray, outarray);
@@ -867,6 +917,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.28  2007/03/02 12:01:52  sherwin
+* Update for working version of LocalRegions/Project1D
+*
 * Revision 1.27  2007/03/01 17:04:07  jfrazier
 * Removed extraneous basis.
 *

@@ -38,21 +38,17 @@
  
 namespace Nektar
 {
-  namespace LocalRegions
-  {
-    
-    StdRegions::StdMatContainer * MetricRelatedInfo::GetMassMatrix(SegExp *S)
+    namespace LocalRegions
     {
-      StdRegions::StdMatContainer * tmp;
-      tmp = m_elmtmats.GetLocalMass(S);
-      return tmp;
-    }
-  
-  } //end of namespace
+	
+    } //end of namespace
 } //end of namespace
 
 /** 
  *    $Log: MetricRelatedInfo.cpp,v $
+ *    Revision 1.1  2006/05/04 18:58:45  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.4  2006/03/12 21:59:48  sherwin
  *
  *    compiling version of LocalRegions

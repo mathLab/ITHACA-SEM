@@ -68,7 +68,7 @@ namespace Nektar
                 return m_eid;
             }
 
-            inline const LibUtilities::BasisSharedPtr GetBasis(int i, int j)
+            inline const LibUtilities::BasisSharedPtr GetBasis(int i, int j) 
             {
                 return m_xmap[i]->GetBasis(j);
             }
@@ -135,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.4  2007/02/19 08:06:25  sherwin
+// Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
+//
 // Revision 1.3  2006/05/09 13:37:01  jfrazier
 // Removed duplicate definition of shared vertex pointer.
 //

@@ -572,18 +572,22 @@ namespace Nektar
 	delete [] d3[0];
       }
 
+#endif
+
       GeoFac::~GeoFac(){
 	delete[] m_jac;
 	delete[] m_gmat[0];
 	delete[] m_gmat;
       }
-#endif
       
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: GeoFac.cpp,v $
+// Revision 1.3  2007/02/19 08:06:25  sherwin
+// Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
+//
 // Revision 1.2  2006/06/02 18:48:40  sherwin
 // Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
 //

@@ -5,9 +5,6 @@
 #include "LibUtilities/Foundations/Foundations.hpp"
 
 using namespace Nektar;
-using namespace StdRegions; 
-using namespace LibUtilities;
-using namespace std;
 
 // compile using Builds/Demos/StdRegions -> make DEBUG=1 Project1D
 
@@ -19,9 +16,9 @@ int main(int argc, char *argv[])
   int i,j;
   int order, nq;
   double *sol;
-  PointsType Qtype;
-  BasisType  btype;
-  StdExpansion1D  *E;
+  LibUtilities::PointsType Qtype;
+  LibUtilities::BasisType  btype;
+  StdRegions::StdExpansion1D  *E;
   
   if(argc != 4)
   {
@@ -41,42 +38,43 @@ int main(int argc, char *argv[])
     exit(1);
   }
   
-  btype =   (BasisType) atoi(argv[1]);
+  btype = (LibUtilities::BasisType) atoi(argv[1]);
   
 
-  if(btype == eNoBasisType)
+  if(btype == LibUtilities::eNoBasisType)
   {
       ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		     "No Basis Type requested");
   }
 
   // Check to see that only 1D Expansions are used
-  if((btype == eOrtho_B)||(btype == eOrtho_B)||
-     (btype == eModified_B)||(btype == eModified_C))
+  if((btype == LibUtilities::eOrtho_B)||(btype == LibUtilities::eOrtho_B)||
+     (btype == LibUtilities::eModified_B)||(btype == LibUtilities::eModified_C))
   {
-    ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		     "This basis is for 2 or 3D expansions");
   }
   
   order =   atoi(argv[2]);
   nq    =   atoi(argv[3]);
 
-  sol = new double [nq];
+  BstShrDArray stmp = GetDoubleTmpSpace(nq);
+  sol = stmp.get();
   
-  if(btype != eFourier)
+  if(btype != LibUtilities::eFourier)
   {
-      Qtype = eGaussLobattoLegendre; 
+      Qtype = LibUtilities::eGaussLobattoLegendre; 
   }
   else
   {
-      Qtype = eFourierEvenlySpaced;
+      Qtype = LibUtilities::eFourierEvenlySpaced;
   }
   
   //-----------------------------------------------
   // Define a segment expansion based on basis definition
-  const PointsKey Pkey(nq,Qtype);
-  const BasisKey Bkey(btype,order,Pkey);
-  E = new StdSegExp(Bkey);
+  const LibUtilities::PointsKey Pkey(nq,Qtype);
+  const LibUtilities::BasisKey Bkey(btype,order,Pkey);
+  E = new StdRegions::StdSegExp(Bkey);
   //-----------------------------------------------
   
   //----------------------------------------------
@@ -86,7 +84,7 @@ int main(int argc, char *argv[])
   tmp[0] = z.get();
   E->GetCoords(tmp);
 
-  if(btype != eFourier)
+  if(btype != LibUtilities::eFourier)
   {
     for(i = 0; i < nq; ++i)
     {
@@ -128,13 +126,13 @@ int main(int argc, char *argv[])
 
   //-------------------------------------------
   // Evaulate solution at mid point and print error
-  if(btype != eFourier)
+  if(btype != LibUtilities::eFourier)
   {
     sol[0] = 1;
   }
   else
   {
-    sol[0] =  order/2;
+      sol[0] =  order/2;
   }
 
   double x = 0;
@@ -142,6 +140,5 @@ int main(int argc, char *argv[])
   cout << "error at x = 0: " << nsol - sol[0] << endl;
   //-------------------------------------------
 
-  delete[] sol; 
   return 0;	
 }

@@ -37,59 +37,58 @@
 #define METRICINFO_H
 
 #include <SpatialDomains/GeoFac.h>
-#include <StdRegions/StdMatrix.h>
 
 namespace Nektar
 {
-  namespace LocalRegions 
-  {
-  
-    class SegExp;
-
-    class MetricRelatedInfo: public SpatialDomains::GeoFac
+    namespace LocalRegions 
     {
+	    
+	class SegExp;
+	
+	class MetricRelatedInfo: public SpatialDomains::GeoFac
+	{
+	    
+	public:
+	    
+	    MetricRelatedInfo(const StdRegions::GeomType gtype, 
+			      const int expdim, const int coordim):  
+		GeoFac(gtype,expdim,coordim) 
+	    { 
+	    } 
+
+	    /** \brief One dimensional geometric factors based on one,
+		two or three dimensional coordinate description
+	    **/
+	    MetricRelatedInfo(const StdRegions::GeomType gtype, 
+			      const int coordim, 
+			      const StdRegions::StdExpansion1D **Coords):  
+		GeoFac(gtype,coordim,Coords)  
+	    {  
+	    }  
+
+	    ~MetricRelatedInfo() 
+	    { 
+	    } 
     
-    public:
-
-      MetricRelatedInfo(const StdRegions::GeomType gtype, const int expdim, 
-			const int coordim):  
-	GeoFac(gtype,expdim,coordim) 
-      { 
-      } 
-
-      /** \brief One dimensional geometric factors based on one, two or three
-	  dimensional coordinate description 
-      **/
-      MetricRelatedInfo(const StdRegions::GeomType gtype, const int coordim,   
-  			const StdRegions::StdExpansion1D **Coords):  
-  	GeoFac(gtype,coordim,Coords)  
-      {  
-      }  
-
-      ~MetricRelatedInfo() 
-      { 
-      } 
-    
-       StdRegions::StdMatContainer *GetMassMatrix(SegExp *S);
+	protected: 
+	    
+	private: 
        
-    protected: 
-    
-    private: 
-       StdRegions::StdMatrix m_elmtmats; 
-       
-    }; 
+	}; 
 
-    // shorthand (?) for boost pointer
-    typedef boost::shared_ptr<MetricRelatedInfo> MetricRelatedInfoSharedPtr;
+	// shorthand for boost pointer
+	typedef boost::shared_ptr<MetricRelatedInfo> MetricRelatedInfoSharedPtr;
 
-      
-  } //end of namespace
+    } //end of namespace
 } //end of namespace
 
 #endif // METRICINFO_H
 
 /** 
  *    $Log: MetricRelatedInfo.h,v $
+ *    Revision 1.3  2006/05/30 14:00:03  sherwin
+ *    Updates to make MultiRegions and its Demos work
+ *
  *    Revision 1.2  2006/05/29 17:05:49  sherwin
  *    Modified to put shared_ptr around geom definitions
  *

@@ -98,10 +98,10 @@ namespace Nektar
 
             // Register Creators for Managers
             m_stdMatrixManager.RegisterCreator(StdMatrixKey(eMassMatrix,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateMatrix, this, _1));
+                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
 
             m_stdLinSysManager.RegisterCreator(StdLinSysKey(eMassMatrix,eNoShapeType,*this),
-		boost::bind(&StdExpansion::CreateLinSys, this, _1));
+		boost::bind(&StdExpansion::CreateStdLinSys, this, _1));
 
         } //end constructor
 
@@ -142,7 +142,7 @@ namespace Nektar
         {
         }
 
-        DNekMatSharedPtr StdExpansion::CreateMatrix(const StdMatrixKey &mkey)
+        DNekMatSharedPtr StdExpansion::CreateStdMatrix(const StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
 
@@ -160,7 +160,7 @@ namespace Nektar
         }
 
 
-        DNekLinSysSharedPtr StdExpansion::CreateLinSys(const StdLinSysKey &mkey)
+        DNekLinSysSharedPtr StdExpansion::CreateStdLinSys(const StdLinSysKey &mkey)
         {
             DNekLinSysSharedPtr returnval;
 
@@ -311,6 +311,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.22  2007/02/28 19:05:11  sherwin
+* Moved key definitions to their own files to make things more transparent
+*
 * Revision 1.21  2007/02/24 09:07:25  sherwin
 * Working version of stdMatrixManager and stdLinSysMatrix
 *

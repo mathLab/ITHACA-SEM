@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Headers for StdExpansion Managers
+// Description: Headers for StdMatrixKey
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +48,9 @@ namespace Nektar
         class StdMatrixKey
         {
         public:
-            StdMatrixKey( MatrixType matrixType, ShapeType shapeType, StdExpansion &stdExpansion);
+            StdMatrixKey( StdRegions::MatrixType matrixType, 
+			  StdRegions::ShapeType shapeType, 
+			  StdRegions::StdExpansion &stdExpansion);
 	    
             virtual ~StdMatrixKey()
             {
@@ -97,12 +99,17 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs);
 
+	typedef  boost::shared_ptr<StdMatrixKey> StdMatrixKeySharedPtr;
+
     } // end of namespace
 } // end of namespace
 
 #endif //STDMATRIXKEY_H
 
 /**
-* $Log: v $
+* $Log: StdMatrixKey.h,v $
+* Revision 1.1  2007/02/28 19:05:11  sherwin
+* Moved key definitions to their own files to make things more transparent
+*
 *
 ***/

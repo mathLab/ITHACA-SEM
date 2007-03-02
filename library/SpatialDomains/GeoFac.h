@@ -122,18 +122,21 @@ namespace Nektar
             StdRegions::GeomType m_gtype;
         };
 
-	typedef boost::shared_ptr<GeoFac> GeoFacSharedPtr;
+	typedef boost::shared_ptr<GeoFac>      GeoFacSharedPtr;
         typedef std::vector< GeoFacSharedPtr > GeoFacVector;
         typedef std::vector< GeoFacSharedPtr >::iterator GeoFacVectorIter;
 	
 
-    }; //end of namespace
-}; //end of namespace
+    } //end of namespace
+} //end of namespace
 
 #endif //NEKTAR_SPATIALDOMAINS_GEOFAC_H
 
 //
 // $Log: GeoFac.h,v $
+// Revision 1.5  2007/02/19 08:06:25  sherwin
+// Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
+//
 // Revision 1.4  2006/06/02 18:48:40  sherwin
 // Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
 //

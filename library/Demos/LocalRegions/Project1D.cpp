@@ -6,12 +6,8 @@
 #include <SpatialDomains/SegGeom.h>
 
 using namespace Nektar;
-using namespace StdRegions; 
-using namespace LocalRegions; 
-using namespace SpatialDomains; 
-using namespace std;
   
-// compile using Builds/Demos/StdRegions -> make DEBUG=1 ProjectS1D
+static double solution(double x, int order, LibUtilities::BasisType btype);
 
 // This routine projects a polynomial or trigonmetric functions which 
 // has energy in all mdoes of the expansions and report an error.
@@ -23,9 +19,9 @@ main(int argc, char *argv[])
   const double *z,*w;
   double *sol,*phys,L2_err;
   double x[2];
-  PointsType Qtype;
-  BasisType  btype;
-  StdExpansion1D  *E;
+  LibUtilities::PointsType Qtype;
+  LibUtilities::BasisType  btype;
+  StdRegions::StdExpansion1D  *E;
   
   if(argc != 6)
   {
@@ -33,23 +29,23 @@ main(int argc, char *argv[])
 
     fprintf(stderr,"Where type is an integer value which "
 	    "dictates the basis as:\n");
-    fprintf(stderr,"\t Ortho_A    = 0\n");
-    fprintf(stderr,"\t Modified_A = 3\n");
-    fprintf(stderr,"\t Fourier    = 6\n");
-    fprintf(stderr,"\t Lagrange   = 7\n");
-    fprintf(stderr,"\t Legendre   = 8\n"); 
-    fprintf(stderr,"\t Chebyshev  = 9\n");
+    fprintf(stderr,"\t Ortho_A    = 1\n");
+    fprintf(stderr,"\t Modified_A = 4\n");
+    fprintf(stderr,"\t Fourier    = 7\n");
+    fprintf(stderr,"\t Lagrange   = 8\n");
+    fprintf(stderr,"\t Legendre   = 9\n"); 
+    fprintf(stderr,"\t Chebyshev  = 10\n");
  
     fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
 
     exit(1);
   }
   
-  btype =   (BasisType) atoi(argv[1]);
+  btype =   (LibUtilities::BasisType) atoi(argv[1]);
   
   // Check to see that only 1D Expansions are used
-  if((btype == eOrtho_B)||(btype == eOrtho_B)||
-     (btype == eModified_B)||(btype == eModified_C))
+  if((btype == LibUtilities::eOrtho_B)||(btype == LibUtilities::eOrtho_B)||
+     (btype == LibUtilities::eModified_B)||(btype == LibUtilities::eModified_C))
   {
     ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 		     "This basis is for 2 or 3D expansions");
@@ -60,61 +56,42 @@ main(int argc, char *argv[])
   x[0]  =   atof(argv[4]);
   x[1]  =   atof(argv[5]);
 
-  sol = new double [nq];
+  BstShrDArray stmp = GetDoubleTmpSpace(nq);
+  sol = stmp.get();
   
-  if(btype != eFourier)
+  if(btype != LibUtilities::eFourier)
   {
-    Qtype = eLobatto; 
+      Qtype = LibUtilities::eGaussLobattoLegendre;
   }
   else
   {
-    Qtype = eFourierEvenSp;
+      Qtype = LibUtilities::eFourierEvenlySpaced;
   }
   
   //-----------------------------------------------
   // Define a segment expansion based on basis definition
-  const BasisKey b1(btype,order, Qtype, nq,0,0);
-
-  VertexComponentSharedPtr  vert1(new VertexComponent(1,0,x[0],0,0));
-  VertexComponentSharedPtr  vert2(new VertexComponent(1,0,x[1],0,0));
-  SegGeomSharedPtr geom(new SegGeom(0,vert1,vert2));
+  SpatialDomains::VertexComponentSharedPtr  vert1(new SpatialDomains::VertexComponent(1,0,x[0],0,0));
+  SpatialDomains::VertexComponentSharedPtr  vert2(new SpatialDomains::VertexComponent(1,0,x[1],0,0));
+  SpatialDomains::SegGeomSharedPtr geom(new SpatialDomains::SegGeom(0,vert1,vert2));
   geom->SetOwnData();
 
-  E = new SegExp(b1,geom);
-  E->SetGeoFac(E->GenGeoFac());
+  const LibUtilities::PointsKey Pkey(nq,Qtype);
+  const LibUtilities::BasisKey Bkey(btype,order,Pkey);
+  E = new LocalRegions::SegExp(Bkey,geom);
+  E->SetMinfo(E->GenMinfo());
   
   //-----------------------------------------------
   
   //----------------------------------------------
   // Define solution to be projected 
-  E->GetZW(0,z,w); 
-
-  double *xc = new double [nq];    
+  BstShrDArray tmp = GetDoubleTmpSpace(nq);
+  double  *xc =  tmp.get();
   E->GetCoords(&xc);
-  
-  if(btype != eFourier)
+  for(i = 0; i < nq; ++i)
   {
-    for(i = 0; i < nq; ++i)
-    {
-      sol[i] = 0.0;
-      for(j = 0; j < order; ++j)
-      {
-	sol[i] += pow(xc[i],j);
-      }
-    }
+      sol[i] = solution(xc[i],order,btype);
   }
-  else
-  {
-    for(i = 0; i < nq; ++i)
-    {
-      sol[i] = 0.0;
-      for(j = 0; j < order/2; ++j)
-      {
-	sol[i] += sin(j*M_PI*xc[i]/(x[1]-x[0])) +
-	  cos(j*M_PI*xc[i]/(x[1]-x[0]));
-      }
-    }
-  }
+
   //---------------------------------------------
 
   //---------------------------------------------
@@ -124,7 +101,7 @@ main(int argc, char *argv[])
 
   //-------------------------------------------
   // Backward Transform Solution to get projected values
-  E->BwdTrans(E->GetPhys());
+  E->BwdTrans(&E->GetPhys()[0]);
   //-------------------------------------------  
 
   //--------------------------------------------
@@ -142,33 +119,34 @@ main(int argc, char *argv[])
 
   //-------------------------------------------
   // Evaulate solution at mid point and print error
-  //xc[0] = 0.5*(x[1]+x[0]);
+  sol[0] = solution(0.5*(x[1]+x[0]),order,btype);
   double lcoord = 0;
-  
   E->GetCoord(&lcoord,xc);
-  
-  if(btype != eFourier)
-  {
-    sol[0] = 0.0;
-    for(j = 0; j < order; ++j)
-    {
-      sol[0] += pow(xc[0],j);
-    }
-  }
-  else
-  {
-    sol[0] = 0.0;
-    for(j = 0; j < order/2; ++j)
-    {
-      sol[0] += sin(j*M_PI*xc[0]/(x[1]-x[0])) +
-	cos(j*M_PI*0.5*(x[1]+x[0])/(x[1]-x[0]));
-    }
-  }
-
   double nsol = E->Evaluate(xc);
   cout << "error at (xi = 0) x = " << xc[0] << " : " << nsol - sol[0] << endl;
 
   //-------------------------------------------
+}
 
-  delete[] sol; 
+static double solution(double x, int order, LibUtilities::BasisType btype)
+{
+    int j;
+    double sol;
+    
+    if(btype != LibUtilities::eFourier)
+    {
+	sol = 0.0;
+	for(j = 0; j < order; ++j)
+	{
+	    sol += pow(x,j);
+	}
+    }
+    else
+    {
+	sol = 0.0;
+	for(j = 0; j < order/2; ++j)
+	{
+	    sol += sin(j*M_PI*x) + cos(j*M_PI*0.5*x);
+	}
+    }
 }

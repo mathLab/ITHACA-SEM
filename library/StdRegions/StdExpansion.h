@@ -533,20 +533,27 @@ namespace Nektar
                 v_WriteToFile(outfile,dumpVar);
             }
 
-            GeomType GeoFacType(void)
+            GeomType MinfoType(void)
             {
-                return v_GeoFacType();
+                return v_MinfoType();
             }
+
 
             // virtual functions related to LocalRegions
-            boost::shared_ptr<LocalRegions::MetricRelatedInfo> GenGeoFac(void)
+
+            boost::shared_ptr<LocalRegions::MetricRelatedInfo> GenMinfo(void)
             {
-                return v_GenGeoFac();
+                return v_GenMinfo();
             }
 
-            void SetGeoFac(boost::shared_ptr<LocalRegions::MetricRelatedInfo> minfo)
+            boost::shared_ptr<LocalRegions::MetricRelatedInfo> GetMinfo(void)
             {
-                v_SetGeoFac(minfo);
+                return v_GetMinfo();
+            }
+
+            void SetMinfo(boost::shared_ptr<LocalRegions::MetricRelatedInfo> minfo)
+            {
+                v_SetMinfo(minfo);
             }
 
             int GetCoordim()
@@ -666,8 +673,8 @@ namespace Nektar
 
         protected:
 
-            DNekMatSharedPtr    CreateMatrix(const StdMatrixKey &mkey);
-            DNekLinSysSharedPtr CreateLinSys(const StdLinSysKey &mkey);
+            DNekMatSharedPtr    CreateStdMatrix(const StdMatrixKey &mkey);
+            DNekLinSysSharedPtr CreateStdLinSys(const StdLinSysKey &mkey);
 
             int   m_numbases;       /**< Number of 1D basis defined in expansion */
             boost::shared_array<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
@@ -825,19 +832,25 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
             }
 
-            virtual GeomType v_GeoFacType()
+            virtual GeomType v_MinfoType()
             {
                 return eRegular;
             }
 
             // virtual functions related to LocalRegions
-            virtual boost::shared_ptr<LocalRegions::MetricRelatedInfo> v_GenGeoFac()
+            virtual boost::shared_ptr<LocalRegions::MetricRelatedInfo> v_GenMinfo()
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return boost::shared_ptr<LocalRegions::MetricRelatedInfo>();
             }
 
-            virtual void v_SetGeoFac(boost::shared_ptr<LocalRegions::MetricRelatedInfo>
+            virtual boost::shared_ptr<LocalRegions::MetricRelatedInfo> v_GetMinfo()
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return boost::shared_ptr<LocalRegions::MetricRelatedInfo>();
+            }
+
+            virtual void v_SetMinfo(boost::shared_ptr<LocalRegions::MetricRelatedInfo>
                 minfo)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
@@ -854,6 +867,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.27  2007/03/01 17:04:07  jfrazier
+* Removed extraneous basis.
+*
 * Revision 1.26  2007/03/01 03:52:10  jfrazier
 * Added GetBasis function.
 *

@@ -108,16 +108,19 @@ namespace Nektar
     {
         
         vector<double> generatePolynomial(int degree) {
-//             double a[] = { 
-//                 -1.3, 1.4, -1.5, 1.2, -1.3, 1.5, -0.1, 1.4, -3.2, 2.4, -1.0, 1.6, -1.3, 4.5,
-//                 1.3, 1.9, 1.6, 1.3, 1.4, 1.7, 1.9, 0.3, 1.6, // 23
-//                 1.2, 0.5, 1.0, 0.3, 0.5, 0.7, 0.4, 0.6 }; // 31
             double a[] = {
-                1, 1,  3,  3, 5, 5,  7, 7, 9,  9,
-                11,11,13, 13,15,15, 17,17,19, 19,
-                21,21,23, 23,25,25, 27,27,29, 29,
-                31
-            };
+                -1.3, 1.4, -1.5, 1.2, -1.3, 1.5, -0.1, 1.4, -3.2, 2.4, -1.0, 1.6, -1.3, 4.5,
+                1.3, 1.9, 1.6, 1.3, 1.4, 1.7, 1.9, 0.3, 1.6, // 23
+                1.2, 0.5, 1.0, 0.3, 0.5, 0.7, 0.4, 0.6 }; // 31
+//             double a[] = {
+//                 1, 1,  3,  3, 5, 5,  7, 7, 9,  9,
+//                 11,11,13, 13,15,15, 17,17,19, 19,
+//                 21,21,23, 23,25,25, 27,27,29, 29,
+//                 31,31,33, 33,35,35, 37,37,39, 39,
+//                 41,41,43, 43,45,45, 47,47,49, 49,
+//                 51,51,53, 53,55,55, 57,57,59, 59,
+//                 61
+//             };
 
             vector<double> coefficients(a, a + degree + 1);
             return coefficients;
@@ -126,8 +129,8 @@ namespace Nektar
         // Evaluates at x the polynomial that is given by the coefficents
         double evaluatePolynomial(double x, const vector<double> & coefficients) {
             int N = coefficients.size();
-            double y = coefficients[N];
-            for( int i = N-1; i >= 0; --i ) {
+            double y = coefficients[N-1];
+            for( int i = N-2; i >= 0; --i ) {
                 y = coefficients[i] + x*y;                
             }
             return y;
@@ -135,18 +138,26 @@ namespace Nektar
         
         // Integrates the polynomial from [-1,1]
         double integrate(const vector<double> & coefficients) {
-            int N = coefficients.size();
+            int M = coefficients.size(), N = M - 1;
             double integral = 0;
-            for( int i = 0; i <= (N-1)/2; ++i ) {
-                integral += coefficients[2*i] / (2*i + 1);
-                if( N == 8 ) {
-                    cout << "N/2 = " << N/2 << ", 2*i = " << 2*i << ", coefficients[2*i] = " << coefficients[2*i] << ", (2*i + 1) = " << (2*i + 1) << ", coefficients[2*i] / (2*i + 1) = " << coefficients[2*i] / (2*i + 1) << endl;
-                }
+            for( int n = 0; n <= N/2; ++n ) {
+                integral += coefficients[2*n] / (2.0*n + 1.0);
+//                 if( N == 4 ) {
+//                     cout << "N/2 = " << N/2 << ", 2*n = " << 2*n << ", coefficients[2*n] = " << coefficients[2*n] << ", (2*n + 1) = " << (2*n + 1) << ", coefficients[2*n] / (2*n + 1) = " << coefficients[2*n] / (2*n + 1) << endl;
+//                 }
             }
             return  2.0 * integral;
         }
         
-        
+        void printPolynomial(const vector<double> & a) {
+            cout << a[0];
+            if( a.size() > 1 ) {
+                cout << " + " << a[1] << "x";
+            }
+            for( int n = 2; n < a.size(); ++n ) {
+                cout << " + " << a[n] << "x^" << n;
+            }
+        }
     }
         namespace MyNewUnitTests
     {
@@ -156,20 +167,22 @@ namespace Nektar
             int numPoints = points->GetNumPoints();
             
             for(int i = 0; i < polynomialCoefficients.size(); ++i) {
-                vector<double> a(polynomialCoefficients.begin(), polynomialCoefficients.begin() + i + 1);
+                vector<double> a( polynomialCoefficients.begin(), polynomialCoefficients.begin() + i + 1 );
                 double analyticIntegral = TestUtilities::integrate(a);
                 double numericIntegral = 0;
                 for(int j = 0; j < numPoints; ++j) {
                     numericIntegral += w[j] * TestUtilities::evaluatePolynomial( z[j], a ); 
                 }
-                cout << "Points = " << numPoints << ", Polynomial degree = " << i;
-                cout << ", Integral = " << analyticIntegral << ", Computed area = " << numericIntegral << endl;
+                cout << "Points = " << numPoints << ", Polynomial degree = " << i << ", nCoef = " << a.size();
+                cout << ", Integral = " << analyticIntegral << ", Computed area = " << numericIntegral;
+//                 cout << ", P_" << i << " = "; TestUtilities::printPolynomial(a);
+                cout << endl;
                 
-                BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-11 );
+                BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-12 );
             }
         }
-//         const int MaxNumberOfPoints = 15;
-        const int MaxNumberOfPoints = 31;
+        const int MaxNumberOfPoints = 15;
+//         const int MaxNumberOfPoints = 31;
         void testPolyFunc()
         {
 //             int P[] = {2,4,8,12};
@@ -181,10 +194,7 @@ namespace Nektar
             BOOST_CHECKPOINT("Testing eGaussGaussLegendre");
             type = eGaussGaussLegendre;
             for( int i = 1; i < MaxNumberOfPoints; ++i ) {
-                int nPts = i;
-              //  int degree = 2*i - 2;                
-               int degree = 2*i - 1;
-//                 int degree = 2*int(i/2);
+                int nPts = i, degree = 2*i - 1;
                 coefficients = TestUtilities::generatePolynomial(degree);
                 testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
             }
@@ -192,7 +202,7 @@ namespace Nektar
             BOOST_CHECKPOINT("Testing eGaussLobattoLegendre");
             type = eGaussLobattoLegendre;
             for( int i = 1; i < MaxNumberOfPoints; ++i ) {
-                int nPts = i, degree = max(1, 2*i - 3);
+                int nPts = i, degree = 2*i - 3;
                 coefficients = TestUtilities::generatePolynomial(degree);
                 testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
             }

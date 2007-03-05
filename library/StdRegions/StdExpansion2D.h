@@ -47,179 +47,173 @@ namespace Nektar
 
         class StdExpansion2D: public StdExpansion
         {
-        public:
-            StdExpansion2D();
-            StdExpansion2D(const BasisKey &Ba, const BasisKey &Bb, int numcoeffs,
-                double *coeffs, double *phys, bool spaceowner);
-            StdExpansion2D(const StdExpansion2D &T);
-            ~StdExpansion2D();
+            public:
+                StdExpansion2D();
+                StdExpansion2D(const LibUtilities::BasisKey &Ba,
+                               const LibUtilities::BasisKey &Bb, int numcoeffs);
+                StdExpansion2D(const StdExpansion2D &T);
+                ~StdExpansion2D();
 
             // Generic operations in different elements
 
-	    /** \brief Calculate the 2D derivative in the local
-	     *  tensor/collapsed coordinate  at the physical points 
-	     *
-	     *  This is mainly a wrapper around StdExpansion2D::Tensor_Deriv
-	     *
-	     *  This function is independent of the expansion basis and can
-	     *  therefore be defined for all tensor product distribution of
-	     *  quadrature points in a generic manner.  The key operations are:
-	     *
-	     *  - \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
-	     *  - \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
-	     *  
-	     *  This function takes the physical value space array \a m_phys
-	     *  as discrete function to be evaluated
-	     * 
-	     *  \param  outarray_d0 the resulting array of derivative in the 
-	     *  \f$\eta_1\f$ direction will be stored in outarray_d0 as output
-	     *  of the function
-	     *  \param outarray_d1 the resulting array of derivative in the 
-	     *  \f$\eta_2\f$ direction will be stored in outarray_d1 as output 
-	     *  of the function
-	     *
-	     *  Recall that: 
-	     *  \f$
-	     *  \hspace{1cm} \begin{array}{llll}
-	     *  \mbox{Shape}    & \mbox{Cartesian coordinate range} &
-	     *  \mbox{Collapsed coord.}      & 
-	     *  \mbox{Collapsed coordinate definition}\\
-	     *  \mbox{Quadrilateral}  & -1 \leq \xi_1,\xi_2 \leq  1   
-	     *  & -1 \leq \eta_1,\eta_2 \leq 1 
-	     *  & \eta_1 = \xi_1, \eta_2 = \xi_2\\
-	     *  \mbox{Triangle}  & -1 \leq \xi_1,\xi_2; \xi_1+\xi_2 \leq  0   
-	     *  & -1 \leq \eta_1,\eta_2 \leq 1  
-	     *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
-	     *  \end{array} \f$
-	     */
-            void  TensorDeriv(double *outarray_d0,double *outarray_d1);
+            /** \brief Calculate the 2D derivative in the local
+             *  tensor/collapsed coordinate  at the physical points 
+             *
+             *  This is mainly a wrapper around StdExpansion2D::Tensor_Deriv
+             *
+             *  This function is independent of the expansion basis and can
+             *  therefore be defined for all tensor product distribution of
+             *  quadrature points in a generic manner.  The key operations are:
+             *
+             *  - \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
+             *  - \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
+             *  
+             *  This function takes the physical value space array \a m_phys
+             *  as discrete function to be evaluated
+             * 
+             *  \param  outarray_d0 the resulting array of derivative in the 
+             *  \f$\eta_1\f$ direction will be stored in outarray_d0 as output
+             *  of the function
+             *  \param outarray_d1 the resulting array of derivative in the 
+             *  \f$\eta_2\f$ direction will be stored in outarray_d1 as output 
+             *  of the function
+             *
+             *  Recall that: 
+             *  \f$
+             *  \hspace{1cm} \begin{array}{llll}
+             *  \mbox{Shape}    & \mbox{Cartesian coordinate range} &
+             *  \mbox{Collapsed coord.}      & 
+             *  \mbox{Collapsed coordinate definition}\\
+             *  \mbox{Quadrilateral}  & -1 \leq \xi_1,\xi_2 \leq  1   
+             *  & -1 \leq \eta_1,\eta_2 \leq 1 
+             *  & \eta_1 = \xi_1, \eta_2 = \xi_2\\
+             *  \mbox{Triangle}  & -1 \leq \xi_1,\xi_2; \xi_1+\xi_2 \leq  0   
+             *  & -1 \leq \eta_1,\eta_2 \leq 1  
+             *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
+             *  \end{array} \f$
+             */
+                void PhysTensorDeriv(double *outarray_d0, double *outarray_d1);
 
-	    /** \brief Calculate the 2D derivative in the local 
-	     *  tensor/collapsed coordinate at the physical points 
-	     *
-	     *  This function is independent of the expansion basis and can
-	     *  therefore be defined for all tensor product distribution of
-	     *  quadrature points in a generic manner.  The key operations are:
-	     *
-	     *  - \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
-	     *  - \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
-	     *
-	     *  \param inarray array of physical points to be differentiated
-	     *  \param  outarray_d0 the resulting array of derivative in the 
-	     *  \f$\eta_1\f$ direction will be stored in outarray_d0 as output
-	     *  of the function
-	     *  \param outarray_d1 the resulting array of derivative in the 
-	     *  \f$\eta_2\f$ direction will be stored in outarray_d1 as output 
-	     *  of the function
-	     *
-	     *  Recall that: 
-	     *  \f$
-	     *  \hspace{1cm} \begin{array}{llll}
-	     *  \mbox{Shape}    & \mbox{Cartesian coordinate range} &
-	     *  \mbox{Collapsed coord.}      & 
-	     *  \mbox{Collapsed coordinate definition}\\
-	     *  \mbox{Quadrilateral}  & -1 \leq \xi_1,\xi_2 \leq  1   
-	     *  & -1 \leq \eta_1,\eta_2 \leq 1 
-	     *  & \eta_1 = \xi_1, \eta_2 = \xi_2\\
-	     *  \mbox{Triangle}  & -1 \leq \xi_1,\xi_2; \xi_1+\xi_2 \leq  0   
-	     *  & -1 \leq \eta_1,\eta_2 \leq 1  
-	     *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
-	     *  \end{array} \f$
-	     */
-            void  TensorDeriv(const double *inarray, double *outarray_d0,
-                double *outarray_d1);
+            /** \brief Calculate the 2D derivative in the local
+             *  tensor/collapsed coordinate at the physical points 
+             *
+             *  This function is independent of the expansion basis and can
+             *  therefore be defined for all tensor product distribution of
+             *  quadrature points in a generic manner.  The key operations are:
+             *
+             *  - \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
+             *  - \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
+             *
+             *  \param inarray array of physical points to be differentiated
+             *  \param  outarray_d0 the resulting array of derivative in the 
+             *  \f$\eta_1\f$ direction will be stored in outarray_d0 as output
+             *  of the function
+             *  \param outarray_d1 the resulting array of derivative in the 
+             *  \f$\eta_2\f$ direction will be stored in outarray_d1 as output 
+             *  of the function
+             *
+             *  Recall that: 
+             *  \f$
+             *  \hspace{1cm} \begin{array}{llll}
+             *  \mbox{Shape}    & \mbox{Cartesian coordinate range} &
+             *  \mbox{Collapsed coord.}      & 
+             *  \mbox{Collapsed coordinate definition}\\
+             *  \mbox{Quadrilateral}  & -1 \leq \xi_1,\xi_2 \leq  1   
+             *  & -1 \leq \eta_1,\eta_2 \leq 1 
+             *  & \eta_1 = \xi_1, \eta_2 = \xi_2\\
+             *  \mbox{Triangle}  & -1 \leq \xi_1,\xi_2; \xi_1+\xi_2 \leq  0   
+             *  & -1 \leq \eta_1,\eta_2 \leq 1  
+             *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
+             *  \end{array} \f$
+             */
+                void PhysTensorDeriv(const double *inarray, double *outarray_d0,
+                                     double *outarray_d1);
 
-            void  Deriv(double *outarray_d1, double *outarray_d2)
-            {
-                v_Deriv(outarray_d1, outarray_d2);
-            }
+                // Change names from Deriv to PhysDeriv
+                void PhysDeriv(double *outarray_d1, double *outarray_d2)
+                {
+                    v_PhysDeriv(outarray_d1, outarray_d2);
+                }
 
-            void  StdDeriv(double *outarray_d1, double *outarray_d2)
-            {
-                v_StdDeriv(outarray_d1, outarray_d2);
-            }
+                void StdPhysDeriv(double *outarray_d1, double *outarray_d2)
+                {
+                    v_StdPhysDeriv(outarray_d1, outarray_d2);
+                }
 
-            void Deriv(const double *inarray, double *outarray_d1,
-                double *outarray_d2)
-            {
-                v_Deriv(inarray, outarray_d1, outarray_d2);
-            }
+                void PhysDeriv(const double *inarray, double *outarray_d1,
+                               double *outarray_d2)
+                {
+                    v_PhysDeriv(inarray, outarray_d1, outarray_d2);
+                }
 
-            void StdDeriv(const double *inarray, double *outarray_d1,
-                double *outarray_d2)
-            {
-                v_StdDeriv(inarray, outarray_d1, outarray_d2);
-            }
+                void StdPhysDeriv(const double *inarray, double *outarray_d1,
+                                  double *outarray_d2)
+                {
+                    v_StdPhysDeriv(inarray, outarray_d1, outarray_d2);
+                }
 
             /** \brief Evaluate a function at points coords which is assumed
-	     *  to be in local collapsed coordinate format. The function is
-	     *  assumed to be in physical space 
-	     */
-            double PhysEvaluate(const double *coords);
+            *  to be in local collapsed coordinate format. The function is
+            *  assumed to be in physical space 
+            */
+                double PhysEvaluate(const double *coords);
 
-            double Integral(const double *inarray, const double *w0, const double* w1);
+                double Integral(const double *inarray, const double *w0, const double* w1);
 
-            int GetNodalPoints(const double * &x, const double * &y)
-            {
-                return v_GetNodalPoints(x,y);
-            }
+                int GetNodalPoints(const double * &x, const double * &y)
+                {
+                    return v_GetNodalPoints(x, y);
+                }
 
-        protected:
+            protected:
 
-        private:
+            private:
 
-            // Virtual Functions ----------------------------------------
+                // Virtual Functions ----------------------------------------
 
-	    virtual int v_GetNverts() = 0;
-	    virtual int v_GetNedges() = 0;
-	    virtual int v_GetNfaces()
-	    {
-		ASSERTL0(false,"This function is only valid for 3D expansions");
-		return 0;
-	    }
+                virtual int v_GetNverts() = 0;
+                virtual int v_GetNedges() = 0;
+                virtual int v_GetNfaces()
+                {
+                    ASSERTL0(false, "This function is only valid for 3D "
+                                    "expansions");
+                    return 0;
+                }
 
-            virtual ShapeType v_DetShapeType()                = 0;
+                virtual ShapeType v_DetShapeType() = 0;
+                virtual int v_GetNodalPoints(const double * &x,
+                                             const double * &y)
+                {
+                    ASSERTL0(false, "This function is only valid for nodal "
+                                    "expansions");
+                    return 0;
+                }
 
-            virtual StdMatContainer *v_GetMassMatrix()        = 0;
-            virtual StdMatContainer *v_GetLapMatrix()         = 0;
+                virtual void v_GenNBasisTransMatrix(double * outarray)
+                {
+                    ASSERTL0(false, "This function is only valid for nodal "
+                                    "expansions");
+                }
 
-            virtual int v_GetNodalPoints(const double * &x, const double * &y)
-            {
-                ASSERTL0(false, "This function is only valid for nodal expansions");
-                return 0;
-            }
+                virtual int v_GetCoordim(void)
+                {
+                    return 2;
+                }
 
-            virtual void v_GenNBasisTransMatrix(double * outarray)
-            {
-                ASSERTL0(false, "This function is only valid for nodal expansions");
-            }
+                virtual void v_BwdTrans(double *outarray) = 0;
+                virtual void v_FwdTrans(const double *inarray) = 0;
 
-            virtual StdMatContainer *v_GetNBasisTransMatrix()
-            {
-                ASSERTL0(false, "This function is only valid for nodal expansions");
-                return NULL;
-            }
+                virtual double v_Integral(const double *inarray ) = 0;
+                virtual double v_Evaluate(const double * coords) = 0;
 
-
-            virtual void   v_BwdTrans (double *outarray)      = 0;
-            virtual void   v_FwdTrans (const double *inarray) = 0;
-
-            virtual double v_Integral(const double *inarray ) = 0;
-            virtual double v_Evaluate(const double * coords) = 0;
-
-            virtual void   v_Deriv(double *outarray_d1, double *outarray_d2)    = 0;
-            virtual void   v_StdDeriv(double *outarray_d1, double *outarray_d2) = 0;
-            virtual void   v_Deriv(const double *inarray, double *outarray_d1,
-                double *outarray_d2) = 0;
-            virtual void   v_StdDeriv(const double *inarray, double *outarray_d1,
-                double *outarray_d2) = 0;
-
-
-	    virtual int v_GetCoordim(void)
-	    {
-                return 2; 
-	    }
-
+                virtual void v_PhysDeriv(double *outarray_d1,
+                                         double *outarray_d2) = 0;
+                virtual void v_StdPhysDeriv(double *outarray_d1,
+                                            double *outarray_d2) = 0;
+                virtual void v_PhysDeriv(const double *inarray,
+                                double *outarray_d1, double *outarray_d2) = 0;
+                virtual void v_StdPhysDeriv(const double *inarray,
+                                double *outarray_d1, double *outarray_d2) = 0;
 
         };
 
@@ -230,6 +224,12 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.6  2007/01/17 16:05:39  bcarmo
+* Version with StdExpansion2D compiling
+*
+* Revision 1.5  2007/01/17 16:05:39  pvos
+* updated doxygen documentation
+*
 * Revision 1.4  2006/08/05 19:03:48  sherwin
 * Update to make the multiregions 2D expansion in connected regions work
 *

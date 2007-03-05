@@ -129,7 +129,7 @@ namespace Nektar
             *  \return returns the total number of coefficients (which is 
             *  equivalent to the total number of modes) used in the expansion
             */
-            inline int GetNcoeffs(void)
+            inline const int GetNcoeffs(void) const
             {
                 return(m_ncoeffs);
             }
@@ -235,7 +235,7 @@ namespace Nektar
             *  \param dir the direction
             *  \return returns the type of basis used in the \a dir direction
             */
-            inline LibUtilities::BasisType GetBasisType(const int dir) const
+            inline const LibUtilities::BasisType GetBasisType(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisType());
@@ -917,6 +917,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.29  2007/03/02 16:43:44  pvos
+* Added some documentation
+*
 * Revision 1.28  2007/03/02 12:01:52  sherwin
 * Update for working version of LocalRegions/Project1D
 *

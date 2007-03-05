@@ -42,8 +42,9 @@ namespace Nektar
     {
 	
 	// Register Mass Matrix creator. 
-	StdMatrixKey::StdMatrixKey(MatrixType matrixType, ShapeType shapeType,
-				   StdExpansion &stdExpansion):
+	StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+				   const ShapeType shapeType,
+				   const StdExpansion &stdExpansion):
         m_matrixType(matrixType),
 	    m_shapeType(shapeType)
 	{
@@ -115,7 +116,10 @@ namespace Nektar
 }
 
 /**
-* $Log: StdExpManagers.cpp,v $
+* $Log: StdMatrixKey.cpp,v $
+* Revision 1.1  2007/02/28 19:05:11  sherwin
+* Moved key definitions to their own files to make things more transparent
+*
 * Revision 1.6  2007/02/28 09:53:17  sherwin
 * Update including adding GetBasis call to StdExpansion
 *

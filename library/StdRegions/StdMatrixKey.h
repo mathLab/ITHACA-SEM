@@ -48,9 +48,9 @@ namespace Nektar
         class StdMatrixKey
         {
         public:
-            StdMatrixKey( StdRegions::MatrixType matrixType, 
-			  StdRegions::ShapeType shapeType, 
-			  StdRegions::StdExpansion &stdExpansion);
+            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+			  const StdRegions::ShapeType shapeType, 
+			  const StdRegions::StdExpansion &stdExpansion);
 	    
             virtual ~StdMatrixKey()
             {
@@ -108,6 +108,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.2  2007/03/02 12:01:53  sherwin
+* Update for working version of LocalRegions/Project1D
+*
 * Revision 1.1  2007/02/28 19:05:11  sherwin
 * Moved key definitions to their own files to make things more transparent
 *

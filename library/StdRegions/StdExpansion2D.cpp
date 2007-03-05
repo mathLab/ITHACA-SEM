@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Daughter of StdExpansion. This class contains routine
 // which are common to 2D expansion. Typically this inolves physiocal
 // space operations.
@@ -50,134 +50,143 @@ namespace Nektar
         {
         }
 
-        StdExpansion2D::StdExpansion2D(const BasisKey &Ba, const BasisKey &Bb, 
-            int numcoeffs, double *coeffs, double *phys, 
-            bool spaceowner):
-        StdExpansion(2,Ba,Bb,BasisKey(),numcoeffs,coeffs,phys,spaceowner)
+        StdExpansion2D::StdExpansion2D(const LibUtilities::BasisKey &Ba,
+                                       const LibUtilities::BasisKey &Bb,
+                                       int numcoeffs):
+                StdExpansion(2, Ba, Bb, LibUtilities::NullBasisKey, numcoeffs)
         {
         }
 
         StdExpansion2D::StdExpansion2D(const StdExpansion2D &T):
-        StdExpansion(T)
+                StdExpansion(T)
         {
         }
 
         StdExpansion2D::~StdExpansion2D()
-        { 
+        {
         }
 
-        void StdExpansion2D::TensorDeriv(const double *inarray, 
-            double *outarray_d0,double *outarray_d1)
+        //----------------------------
+        // Differentiation Methods
+        //----------------------------
+
+        inline void StdExpansion2D::PhysTensorDeriv(double *outarray_d0,
+                double *outarray_d1)
         {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            const double *D0,*D1;
-            BstShrDArray wsp = GetDoubleTmpSpace(nquad0*nquad1);
+            PhysTensorDeriv(&m_phys[0], outarray_d0, outarray_d1);
+        }
+
+        void StdExpansion2D::PhysTensorDeriv(const double *inarray,
+                                     double *outarray_d0, double *outarray_d1)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            DNekMatSharedPtr D0, D1;
+            BstShrDArray wsp = GetDoubleTmpSpace(nquad0 * nquad1);
             double *tmp = wsp.get();
 
             // check to see if either calling array is inarray
-            if((outarray_d0 == inarray)||(outarray_d1 == inarray))
-            { 
-                Vmath::Vcopy(nquad0*nquad1,inarray,1,tmp,1);
+            if ((outarray_d0 == inarray) || (outarray_d1 == inarray))
+            {
+                Vmath::Vcopy(nquad0*nquad1, inarray, 1, tmp, 1);
             }
             else
             {
-                tmp =  (double *)inarray;
+                tmp = (double *)inarray;
             }
 
-	    PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetD(D0);
-	    PointsManager()[m_base[1].m_basiskey.m_pointskey]->GetD(D1);
+            D0 = ExpPointsProperties(0)->GetD();
+            D1 = ExpPointsProperties(1)->GetD();
 
-            if(outarray_d0) // calculate du/dx_0
+            if (outarray_d0) // calculate du/dx_0
             {
-                Blas::Dgemm('T','N',nquad0,nquad1,nquad0,1.0,D0,nquad0,tmp,
-                    nquad0,0.0,outarray_d0,nquad0);
+                Blas::Dgemm('T', 'N', nquad0, nquad1, nquad0, 1.0,
+                            &(D0->GetPtr())[0], nquad0, tmp, nquad0, 0.0,
+                            outarray_d0, nquad0);
             }
 
             // calculate du/dx_1
-            if(outarray_d1)
+            if (outarray_d1)
             {
-                Blas:: Dgemm('N','N',nquad0,nquad1,nquad1,1.0,tmp,nquad0,D1,
-                    nquad1,0.0,outarray_d1,nquad0);
+                Blas:: Dgemm('N', 'N', nquad0, nquad1, nquad1, 1.0, tmp, nquad0,
+                         &(D1->GetPtr())[0], nquad1, 0.0, outarray_d1, nquad0);
             }
 
-        }
-
-        void StdExpansion2D::TensorDeriv(double *outarray_d0, 
-            double *outarray_d1)
-        {
-            TensorDeriv(this->m_phys,outarray_d0,outarray_d1);
         }
 
         double StdExpansion2D::PhysEvaluate(const double *coords)
         {
-            double  val;
+            double val;
             int i;
             int nq0 = m_base[0]->GetNumPoints();
             int nq1 = m_base[1]->GetNumPoints();
-            BstShrDArray tmp  = GetDoubleTmpSpace(std::max(nq0,nq1));
             BstShrDArray wsp1 = GetDoubleTmpSpace(nq1);
-            double  *tmp1 = wsp1.get();
+            double *tmp1 = wsp1.get();
 
-            ASSERTL2(coord[0] < -1,"coord[0] < -1");
-            ASSERTL2(coord[0] >  1,"coord[0] >  1");
-            ASSERTL2(coord[1] < -1,"coord[1] < -1");
-            ASSERTL2(coord[1] >  1,"coord[1] >  1");
+            DNekMatSharedPtr I;
 
-
-	    PointsManager()[m_base[0]->GetInterpVec(coords[0],tmp.get());
+            ASSERTL2(coord[0] < -1, "coord[0] < -1");
+            ASSERTL2(coord[0] > 1, "coord[0] >  1");
+            ASSERTL2(coord[1] < -1, "coord[1] < -1");
+            ASSERTL2(coord[1] > 1, "coord[1] >  1");
 
             // interpolate first coordinate direction
-            for(i = 0; i < nq1;++i)
-            {
-                tmp1[i] =  Blas::Ddot(nq0,tmp.get(),1,m_phys+i*nq0,1);
-            }
+            I = ExpPointsProperties(0)->GetI(coords);
+            for (i = 0; i < nq1;++i)
+                tmp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1, 
+                                        &m_phys[i * nq0], 1);
 
-            // interpolate in second coordinate direction 
-            m_base[1]->GetInterpVec(coords[1],tmp.get());
+            // interpolate in second coordinate direction
+            I = ExpPointsProperties(1)->GetI(&coords[1]);
 
-            val = Blas::Ddot(nq1,tmp.get(),1,tmp1,1);
+            val = Blas::Ddot(nq1, &(I->GetPtr())[0], 1, tmp1, 1);
 
-            return val;    
+            return val;
         }
-
 
         //////////////////////////////
         /// Integration Methods
         //////////////////////////////
 
-        double StdExpansion2D::Integral(const double *inarray, const double *w0, 
-            const double* w1)
+        double StdExpansion2D::Integral(const double *inarray, const double *w0,
+                                        const double* w1)
         {
-            int    i;
+            int i;
             double Int = 0.0;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            BstShrDArray tmp  = GetDoubleTmpSpace(nquad0*nquad1);
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            BstShrDArray tmp = GetDoubleTmpSpace(nquad0 * nquad1);
 
-            // multiply by integration constants 
-            for(i = 0; i < nquad1; ++i)
+            // multiply by integration constants
+            for (i = 0; i < nquad1; ++i)
             {
-                Vmath::Vmul(nquad0,(double*)inarray+i*nquad0,1,(double*)w0,1,
-                    tmp.get()+i*nquad0,1);
+                Vmath::Vmul(nquad0, (double*)inarray + i*nquad0, 1, (double*)w0,
+                            1, tmp.get() + i*nquad0, 1);
             }
 
-            for(i = 0; i < nquad0; ++i)
+            for (i = 0; i < nquad0; ++i)
             {
-                Vmath::Vmul(nquad1,tmp.get()+i,nquad0,(double*)w1,1,tmp.get()+i, nquad0);
+                Vmath::Vmul(nquad1, tmp.get() + i, nquad0, (double*)w1, 1,
+                            tmp.get() + i, nquad0);
             }
 
-            Int = Vmath::Vsum(nquad0*nquad1,tmp.get(),1);
+            Int = Vmath::Vsum(nquad0 * nquad1, tmp.get(), 1);
 
             return Int;
         }
 
-    }//end namespace
-}//end namespace
+    } //end namespace
+} //end namespace
 
 
-/** 
+/**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.6  2007/03/05 22:35:21  bcarmo
+* Version with StdExpansion2D compiling
+*
+* Revision 1.5  2007/01/20 22:35:21  sherwin
+* Version with StdExpansion compiling
+*
 * Revision 1.4  2007/01/18 18:44:45  bnelson
 * Updates to compile on Visual Studio 2005.
 *
@@ -207,6 +216,6 @@ namespace Nektar
 *
 * Updates and compiling checks upto StdExpansions1D
 *
-**/ 
+**/
 
 

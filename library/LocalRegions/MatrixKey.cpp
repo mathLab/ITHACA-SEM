@@ -49,7 +49,6 @@ namespace Nektar
 	    
 	    m_stdMatKey =  MemoryManager::AllocateSharedPtr<StdRegions::StdMatrixKey>(matrixType,shapeType,stdExpansion);
 
-	    //m_stdMatKey.reset(new StdRegions::StdMatrixKey(matrixType,shapeType,stdExpansion));	    
 	    m_minfo = stdExpansion.GetMinfo(); 
 
 	}
@@ -114,6 +113,9 @@ namespace Nektar
 }
 
 /**
-* $Log: $
+* $Log: MatrixKey.cpp,v $
+* Revision 1.1  2007/03/04 20:42:14  sherwin
+* Keys for matrix managers
+*
 ***/
 

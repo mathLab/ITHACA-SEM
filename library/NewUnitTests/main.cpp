@@ -161,7 +161,9 @@ namespace Nektar
     }
         namespace MyNewUnitTests
     {
-        void testPolynomialOnWeights(const boost::shared_ptr<Points<double> > points, const vector<double> & polynomialCoefficients) {
+        void testPolynomialOnWeights(const boost::shared_ptr<Points<double> > points, const vector<double> & polynomialCoefficients, bool isVerbose = false) {
+            //bool isVerbose = false;
+            
             const double *z, *w;
             points->GetZW(z, w);
             int numPoints = points->GetNumPoints();
@@ -173,48 +175,104 @@ namespace Nektar
                 for(int j = 0; j < numPoints; ++j) {
                     numericIntegral += w[j] * TestUtilities::evaluatePolynomial( z[j], a ); 
                 }
-                cout << "Points = " << numPoints << ", Polynomial degree = " << i << ", nCoef = " << a.size();
-                cout << ", Integral = " << analyticIntegral << ", Computed area = " << numericIntegral;
-//                 cout << ", P_" << i << " = "; TestUtilities::printPolynomial(a);
-                cout << endl;
+                if( isVerbose ) {
+                    cout << "Points = " << numPoints << ", Polynomial degree = " << i << ", nCoef = " << a.size();
+                    cout << ", Integral = " << analyticIntegral << ", Computed area = " << numericIntegral;
+                    // cout << ", P_" << i << " = "; TestUtilities::printPolynomial(a);
+                    cout << ", z[0] = " << z[0] << ", w[0] = " << w[0] << ", z[n-1] = " << z[numPoints-1] << ", w[n-1] = " << w[numPoints-1];
+                    cout << endl;
+                }
                 
-                BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-12 );
+                //BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-12 );
+                BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-11 );
+            }
+
+            if( isVerbose ) {
+                cout << " End of the polynomial Unit Test" << endl;
             }
         }
+       
+        
         const int MaxNumberOfPoints = 15;
-//         const int MaxNumberOfPoints = 31;
+        
         void testPolyFunc()
         {
-//             int P[] = {2,4,8,12};
-//             int N[] = {2,3,5,7};
-
             vector<double> coefficients;
             PointsType type;
+            const char * cp = "";
 
-            BOOST_CHECKPOINT("Testing eGaussGaussLegendre");
+
+
             type = eGaussGaussLegendre;
+            cp = "Testing eGaussGaussLegendre";
+            cout << cp << endl;
+            BOOST_CHECKPOINT(cp);
             for( int i = 1; i < MaxNumberOfPoints; ++i ) {
-                int nPts = i, degree = 2*i - 1;
+                int nPts = i, n = nPts - 1, degree = 2*n + 1;
                 coefficients = TestUtilities::generatePolynomial(degree);
                 testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
             }
-
-            BOOST_CHECKPOINT("Testing eGaussLobattoLegendre");
+            
             type = eGaussLobattoLegendre;
+            cp = "Testing eGaussLobattoLegendre";
+            cout << cp << endl;
+            BOOST_CHECKPOINT(cp);
             for( int i = 1; i < MaxNumberOfPoints; ++i ) {
-                int nPts = i, degree = 2*i - 3;
+                int nPts = i, n = nPts - 1, degree = 2*n - 1;
                 coefficients = TestUtilities::generatePolynomial(degree);
                 testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
+            }
+            
+            type = eGaussRadauMLegendre;
+            cp = "Testing eGaussRadauMLegendre";
+            cout << cp << endl;
+            BOOST_CHECKPOINT(cp);
+            for( int i = 1; i< MaxNumberOfPoints; ++i) {
+                int nPts = i, n = nPts - 1, degree = 2*n - 1;
+                coefficients = TestUtilities::generatePolynomial(degree);
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
+            }
+            
+            type = eGaussRadauPLegendre;
+            cp = "Testing eGaussRadauPLegendre";
+            cout << cp << endl;
+            BOOST_CHECKPOINT(cp);
+            for( int i=1; i<MaxNumberOfPoints; ++i){
+                int nPts = i, n = nPts - 1, degree = 2*n;
+                coefficients = TestUtilities::generatePolynomial(degree);
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients, true );
             }
         }
     }
 
 }
 
-
+//    enum PointsType
+// 00075         {
+// 00076             eNoPointsType,
+// 00077             eGaussGaussLegendre,     
+// 00078             eGaussRadauMLegendre,    
+// 00079             eGaussRadauPLegendre,    
+// 00080             eGaussLobattoLegendre,   
+// 00081             eGaussGaussChebyshev,    
+// 00082             eGaussRadauMChebyshev,   
+// 00083             eGaussRadauPChebyshev,   
+// 00084             eGaussLobattoChebyshev,  
+// 00085             eGaussRadauMAlpha0Beta1, 
+// 00086             eGaussRadauMAlpha0Beta2, 
+// 00087             ePolyEvenlySpaced,       
+// 00088             eFourierEvenlySpaced,    
+// 00089             eNodalTriElec,           
+// 00090             eNodalTriFekete,         
+// 00091             eNodalTetElec,           
+// 00092             SIZE_PointsType          
+// 00093         };
 
 /**
     $Log: main.cpp,v $
+    Revision 1.4  2007/03/02 01:10:44  ehan
+    fixed some bugs
+
     Revision 1.2  2007/03/01 14:09:14  ehan
     *** empty log message ***
 

@@ -24,11 +24,23 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/testNekManager.h>
 
 #include <UnitTests/Memory/TestNekMemoryManager.h>
+
+#include <UnitTests/StdRegions/testStdSegExp.h>
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
 test_suite* init_unit_test_suite( int, char* [] )
 {
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
+
+    // StdSegExp algorithms
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIntegration), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testDifferentation), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIProductWRTBase), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testFwdTrans), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testBwdTrans), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testEvaluate), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testNorms), 0);
 
     // Memory Manager
     test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testParameterizedConstructors), 0);
@@ -101,6 +113,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.21  2007/02/13 02:47:20  bnelson
+    *** empty log message ***
+
     Revision 1.20  2007/01/29 01:37:16  bnelson
     *** empty log message ***
 

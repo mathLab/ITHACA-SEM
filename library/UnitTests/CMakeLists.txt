@@ -11,6 +11,7 @@ testNekMatrix.cpp
 testNekPoint.cpp
 testNekVector.cpp
 Memory/TestNekMemoryManager.cpp
+StdRegions/testStdSegExp.cpp
 )
 
 SET(UnitTestHeaders
@@ -24,6 +25,7 @@ testNekMatrix.h
 testNekPoint.h
 testNekVector.h
 Memory/TestNekMemoryManager.h
+StdRegions/testStdSegExp.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
@@ -39,6 +41,7 @@ ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
 
 TARGET_LINK_LIBRARIES(UnitTests
     optimized LibUtilities debug LibUtilities-g
+    optimized StdRegions debug StdRegions-g
     optimized ${BOOST_THREAD_LIB} debug ${BOOST_THREAD_DEBUG_LIB}
 )
 

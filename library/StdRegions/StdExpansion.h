@@ -230,7 +230,7 @@ namespace Nektar
             *  
             *  The different types of bases implemented in the code are defined 
             *  in the LibUtilities::BasisType enumeration list. As a result, the
-            *  funcion will return one of the types of this enumeration list.
+            *  function will return one of the types of this enumeration list.
             *  
             *  \param dir the direction
             *  \return returns the type of basis used in the \a dir direction
@@ -259,7 +259,7 @@ namespace Nektar
             *  
             *  The different types of quadrature points implemented in the code
             *  are defined in the LibUtilities::PointsType enumeration list. 
-            *  As a result, the funcion will return one of the types of this 
+            *  As a result, the function will return one of the types of this 
             *  enumeration list.
             *  
             *  \param dir the direction
@@ -363,7 +363,7 @@ namespace Nektar
             *
             *  The different types of bases implemented in the code are defined 
             *  in the LibUtilities::BasisType enumeration list. As a result, the
-            *  funcion will return one of the types of this enumeration list.
+            *  function will return one of the types of this enumeration list.
             * 
             *  \param i specifies which edge
             *  \return returns the expansion basis on the \a i-th edge
@@ -393,7 +393,7 @@ namespace Nektar
             *
             *  The different shape types implemented in the code are defined 
             *  in the ::ShapeType enumeration list. As a result, the
-            *  funcion will return one of the types of this enumeration list.
+            *  function will return one of the types of this enumeration list.
             *  
             *  \return returns the shape of the expansion domain
             */	    
@@ -553,36 +553,140 @@ namespace Nektar
                 v_IProductWRTBase(inarray, outarray);
             }
 
+	    /** \brief for the non-tensorial nodal expansions, this function 
+	     *  generates the transformation matrix needed for the 
+	     *  transformation between this non-tensorial 
+	     *  expansion and the tensor product expansion	      
+	     *  
+             *  This function is a wrapper around the virtual function 
+             *  \a v_GenNBasisTransMatrix()
+	     * 
+	     *  This function generates the generalized Vandermonde matrix 
+	     *  \f[ \mathbf{V}^T[i][j]=\phi_i(\mathbf{\xi_j})\f]
+	     *  where
+	     *  - \f$\phi_i\f$ is the tensor product expansion base
+	     *  - \f$\mathbf{\xi_j}\f$ are the arbitrary nodal points (Fekete 
+	     *  or Electrostatic)
+	     *
+	     *  This transformation matrix is needed for the definition of the 
+	     *  non-tensorial nodal expansion base, which exist out of 
+	     *  Lagrange polynomials \f$L_i\f$ through the nodal points
+	     *  \f$\mathbf{\xi_j}\f$. These Lagrange
+	     *  polynomials are expressed in terms of the tensor product 
+	     *  expansion base \f$\phi_i\f$, as:
+	     *  \f[ \left[ \begin{array}{c}
+	     *  L_0(\mathbf{\xi}) \\
+	     *  \vdots \\
+	     *  L_P(\mathbf{\xi}) \end{array} \right]
+	     *  = 
+	     *  \mathbf{V}^T
+	     *  \left[ \begin{array}{c}
+	     *  \phi_0(\mathbf{\xi}) \\
+	     *  \vdots \\
+	     *  \phi_P(\mathbf{\xi}) \end{array} \right]
+	     *  \f]
+	     *
+	     *  \return returns the nodal basis transformation matrix 
+	     *  \f$ \mathbf{V}^T \f$
+	     */
             DNekMatSharedPtr GenNBasisTransMatrix()
             {
                 return v_GenNBasisTransMatrix();
             }
 
+	    /** \brief this function returns the physical coordinates of the
+	     *  quadrature points of the expansion
+	     *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_GetCoords()
+	     *
+	     *  \param coords an array containing the coordinates of the
+	     *  quadrature points (output of the function)
+	     */
             void GetCoords(double **coords)
             {
                 v_GetCoords(coords);
             }
 
+	    /** \brief given the coordinates of a point of the element in the 
+	     *  local collapsed coordinate system, this function calculates the 
+	     *  physical coordinates of the point
+	     *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_GetCoord()	     
+	     *
+	     *  \param Lcoords the coordinates in the local collapsed 
+	     *  coordinate system
+	     *  \param coords the physical coordinates (output of the function)
+	     */
             void GetCoord(const double *Lcoords, double *coords)
             {
                 v_GetCoord(Lcoords, coords);
             }
 
+	    /** \brief this function writes the solution to the file \a outfile
+	     *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_WriteToFile()
+	     *
+	     *  The expansion evaluated at the quadrature points (stored as 
+	     *  #m_phys), together with 
+	     *  the coordinates of the quadrature points, are written to the 
+	     *  file \a outfile
+	     *  
+	     *  \param outfile the file to which the solution is written
+	     */
             void WriteToFile(FILE *outfile)
             {
                 v_WriteToFile(outfile);
             }
 
+	    /** \brief this function writes the solution to the file \a outfile
+	     *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_WriteToFile()
+	     *
+	     *  The expansion evaluated at the quadrature points (stored as 
+	     *  #m_phys), together with 
+	     *  the coordinates of the quadrature points, are written to the 
+	     *  file \a outfile
+	     *  
+	     *  \param outfile the file to which the solution is written
+	     */
             void WriteToFile(std::ofstream &outfile)
             {
                 v_WriteToFile(outfile);
             }
 
+	    /** \brief this function writes the solution to the file \a outfile
+	     *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_WriteToFile()
+	     *
+	     *  The expansion evaluated at the quadrature points (stored as 
+	     *  #m_phys), together with 
+	     *  the coordinates of the quadrature points, are written to the 
+	     *  file \a outfile
+	     *  
+	     *  \param outfile the file to which the solution is written
+	     */
             void WriteToFile(std::ofstream &outfile, const int dumpVar)
             {
                 v_WriteToFile(outfile,dumpVar);
             }
 
+            /** \brief this function returns the type of elemental geometry
+             *  
+             *  This function is a wrapper around the virtual function 
+             *  \a v_MinfoType()
+	     *
+             *  The different types of geometry implemented in the code are 
+	     *  defined in the StdRegions::Geomtype enumeration list. 
+	     *  As a result, the function will return one of the types of this 
+	     *  enumeration list.
+             *  
+             *  \return returns the type of geometry
+             */
             GeomType MinfoType(void)
             {
                 return v_MinfoType();
@@ -606,6 +710,14 @@ namespace Nektar
                 v_SetMinfo(minfo);
             }
 
+            /** \brief this function returns the dimension of the coordinates 
+	     *  used in the calculations
+             *  
+             *  This function is a wrapper around the virtual function 
+             *  \a v_GetCoordim()
+             *  
+             *  \return returns dimension of the coordinates
+             */
             int GetCoordim()
             {
                 return v_GetCoordim(); 
@@ -638,13 +750,38 @@ namespace Nektar
             }
 
             // Matrix Routines
+
+	    /** \brief this function generates the mass matrix 
+	     *  \f$\mathbf{M}[i][j] =
+	     *  \int \phi_i(\mathbf{x}) \phi_j(\mathbf{x}) d\mathbf{x}\f$
+	     * 
+	     *  \return returns the mass matrix
+	     */
             DNekMatSharedPtr GenerateMassMatrix();
 
+	    /** \brief this function returns the mass matrix 
+	     *  \f$\mathbf{M}[i][j] =
+	     *  \int \phi_i(\mathbf{x}) \phi_j(\mathbf{x}) d\mathbf{x}\f$
+	     *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_GenMassMatrix()
+	     * 
+	     *  \return returns the mass matrix
+	     */
             DNekMatSharedPtr GenMassMatrix ()
             {
                 return v_GenMassMatrix();
             }
 
+	    /** \brief this function generates the laplacian matrix 
+	     *  \f$\mathbf{L}[i][j] = \int \nabla\phi_i(\mathbf{x}) 
+	     *  \nabla\phi_j(\mathbf{x}) d\mathbf{x}\f$
+	     *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_GenLapMatrix()
+	     * 
+	     *  \return returns the laplacian matrix
+	     */
             DNekMatSharedPtr GenLapMatrix()
             {
                 return v_GenLapMatrix();
@@ -661,10 +798,48 @@ namespace Nektar
                 v_PhysDeriv (dim, inarray, outarray);
             }
 
+	    /** \brief this function interpolates a 1D function \f$f\f$ evaluated
+	     *  at the quadrature points of the basis \a fbasis0 to the 
+	     *  function values at the quadrature points of the basis \a tbasis0
+	     *
+	     *  Given a function \f$ f\f$ evaluated at the \a Q quadrature points
+	     *  of the basis \a fbasis0, this routine calculates, using 
+	     *  \a (Q-1)th order polynomial interpolation, the function values
+	     *  at the \a Q2 quadrature points of the basis \a tbasis0.
+	     *
+	     *  \param fbasis0 the basis at which's quadrature points the 
+	     *  function is given
+	     *  \param from the array containg the function \f$ f\f$  evaluated
+	     *   at the quadrature points of \a fbasis0
+	     *  \param tbasis0 the basis to which's quadrature points the 
+	     *  function should be interpolated
+	     *  \param to the array containg the function \f$ f\f$  evaluated
+	     *   at the quadrature points of \a tbasis0 (output of the function)
+	     */
             void Interp1D(const LibUtilities::BasisKey &fbasis0,
 			  const double *from,
 			  const LibUtilities::BasisKey &tbasis0, double *to);
 
+	    /** \brief this function interpolates a 2D function \f$f\f$ evaluated
+	     *  at the quadrature points of the 2D basis, constructed by 
+	     *  \a fbasis0 and \a fbasis1, to the function values at the 
+	     *  quadrature points of the 2D basis, constructed by \a tbasis0 and 
+	     *  \a tbasis1
+	     *
+	     *  Given a function \f$ f\f$ evaluated at the \a Q quadrature points
+	     *  of the first expansion basis, this routine calculates, using 
+	     *  \a (Q-1)th order polynomial interpolation, the function values
+	     *  at the \a Q2 quadrature points of the second basis.
+	     *
+	     *  \param fbasis0 the basis at which's quadrature points the 
+	     *  function is given
+	     *  \param from the array containg the function \f$ f\f$  evaluated
+	     *   at the quadrature points of \a fbasis0
+	     *  \param tbasis0 the basis to which's quadrature points the 
+	     *  function should be interpolated
+	     *  \param to the array containg the function \f$ f\f$  evaluated
+	     *   at the quadrature points of \a tbasis0 (output of the function)
+	     */
             void Interp2D(const LibUtilities::BasisKey &fbasis0, 
 			  const LibUtilities::BasisKey &fbasis1,
 			  const double *from,   
@@ -917,6 +1092,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.30  2007/03/05 08:07:12  sherwin
+* Modified so that StdMatrixKey has const calling arguments in its constructor.
+*
 * Revision 1.29  2007/03/02 16:43:44  pvos
 * Added some documentation
 *

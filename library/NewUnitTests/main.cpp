@@ -208,8 +208,8 @@ namespace Nektar
                     cout << endl;
                 }
                 
-                BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-16 );
-              //   BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-11 );
+//                 BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-16 );
+                BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-12 );
             }
 
 //             if( isVerbose ) {
@@ -233,7 +233,7 @@ namespace Nektar
             for( int i = 1; i < MaxNumberOfPoints; ++i ) {
                 int nPts = i, n = nPts - 1, degree = 2*n + 1;
                 coefficients = TestUtilities::generatePolynomial(degree);
-                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients, true );
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
             }
             cout << "End of testing eGaussGaussLegendre" <<endl;
             cout << " " << endl;
@@ -245,7 +245,7 @@ namespace Nektar
             for( int i = 1; i < MaxNumberOfPoints; ++i ) {
                 int nPts = i, n = nPts - 1, degree = 2*n - 1;
                 coefficients = TestUtilities::generatePolynomial(degree);
-                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients, true );
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
             }
             cout << "End of testing eGaussLobattoLegendre" <<endl;
             cout << " " << endl;
@@ -257,7 +257,7 @@ namespace Nektar
             for( int i = 1; i< MaxNumberOfPoints; ++i) {
                 int nPts = i, n = nPts - 1, degree = 2*n - 1;
                 coefficients = TestUtilities::generatePolynomial(degree);
-                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients, true );
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
             }
             cout << "End of testing eGaussRadauMLegendre" << endl;
             cout << " " << endl;
@@ -269,7 +269,7 @@ namespace Nektar
             for( int i=1; i<MaxNumberOfPoints; ++i){
                 int nPts = i, n = nPts - 1, degree = 2*n;
                 coefficients = TestUtilities::generatePolynomial(degree);
-                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients, true );
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
             }
             cout << "End of testing eGaussRadauPLegendre" << endl;
             cout << " " <<endl;

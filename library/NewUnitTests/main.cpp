@@ -2,9 +2,8 @@
 //
 // main.cpp
 // Sophia
-// Blake Nelson
-//
-// Driver for the unit tests.
+
+// Main class for the LibUtilities::Points unit tests.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -80,8 +79,6 @@ namespace Nektar
             BOOST_CHECK(mat->GetRows() == size); // Fails here
             BOOST_CHECK(mat->GetColumns() == size);
 
-
-
             Points<double> & points = *ptr;
             cout << "points.GetPointsDim()    = " << points.GetPointsDim() << endl;
             cout << "points.GetNumPoints()    = " << points.GetNumPoints() << endl;
@@ -108,28 +105,46 @@ namespace Nektar
     {
         
         vector<double> generatePolynomial(int degree) {
-            double a[] = {
-                -1.3, 1.4, -1.5, 1.2, -1.3, 1.5, -0.1, 1.4, -3.2, 2.4, -1.0, 1.6, -1.3, 4.5,
-                1.3, 1.9, 1.6, 1.3, 1.4, 1.7, 1.9, 0.3, 1.6, // 23
-                1.2, 0.5, 1.0, 0.3, 0.5, 0.7, 0.4, 0.6 }; // 31
 //             double a[] = {
-//                 1, 1,  3,  3, 5, 5,  7, 7, 9,  9,
-//                 11,11,13, 13,15,15, 17,17,19, 19,
-//                 21,21,23, 23,25,25, 27,27,29, 29,
-//                 31,31,33, 33,35,35, 37,37,39, 39,
-//                 41,41,43, 43,45,45, 47,47,49, 49,
-//                 51,51,53, 53,55,55, 57,57,59, 59,
-//                 61
-//             };
+//                 1.0, 1.4, -1.5, 1.2, -1.3, 1.5, -0.1, 1.4, -3.2, 2.4, -1.0, 1.6, -1.3, 4.5,
+//                 1.3, 1.9, 1.6, 1.3, 1.4, 1.7, 1.9, 0.3, 1.6, // 23
+//                 1.2, 0.5, 1.0, 0.3, 0.5, 0.7, 0.4, 0.6 }; // 31
+            double a[] = {
+                1, 1,  3,  3, 5, 5,  7, 7, 9,  9,
+                11,11,13, 13,15,15, 17,17,19, 19,
+                21,21,23, 23,25,25, 27,27,29, 29,
+                31,31,33, 33,35,35, 37,37,39, 39,
+                41,41,43, 43,45,45, 47,47,49, 49,
+                51,51,53, 53,55,55, 57,57,59, 59,
+                61
+            };
 
             vector<double> coefficients(a, a + degree + 1);
             return coefficients;
         }
         
+        /// Taylor's expansion for sqrt(1-x^2)
+        vector<double> generateChebyshevPolynomial(int degree) {
+            vector<double> coefficients;
+
+            // Set up the basis cases
+            coefficients.push_back(1);
+            if( degree > 0 ) {
+                coefficients.push_back(0);
+            }
+            
+            // Recursively define the coefficients
+            for(int n=2; n <= degree; ++n ) {
+                coefficients.push_back( (1.0 - 3.0/n) * coefficients[n-2] );
+            }
+            
+            return coefficients;
+        }
+        
         // Evaluates at x the polynomial that is given by the coefficents
-        double evaluatePolynomial(double x, const vector<double> & coefficients) {
+        long double evaluatePolynomial(long double x, const vector<double> & coefficients) {
             int N = coefficients.size();
-            double y = coefficients[N-1];
+            long double y = coefficients[N-1];
             for( int i = N-2; i >= 0; --i ) {
                 y = coefficients[i] + x*y;                
             }
@@ -137,9 +152,9 @@ namespace Nektar
         }
         
         // Integrates the polynomial from [-1,1]
-        double integrate(const vector<double> & coefficients) {
+        long double integrate(const vector<double> & coefficients) {
             int M = coefficients.size(), N = M - 1;
-            double integral = 0;
+            long double integral = 0;
             for( int n = 0; n <= N/2; ++n ) {
                 integral += coefficients[2*n] / (2.0*n + 1.0);
 //                 if( N == 4 ) {
@@ -162,34 +177,44 @@ namespace Nektar
         namespace MyNewUnitTests
     {
         void testPolynomialOnWeights(const boost::shared_ptr<Points<double> > points, const vector<double> & polynomialCoefficients, bool isVerbose = false) {
-            //bool isVerbose = false;
-            
+
             const double *z, *w;
             points->GetZW(z, w);
             int numPoints = points->GetNumPoints();
+            int startDegree = 0;
+            if( points->GetPointsType() == eGaussGaussChebyshev ) {
+                startDegree = polynomialCoefficients.size() - 1;
+            }
             
-            for(int i = 0; i < polynomialCoefficients.size(); ++i) {
+            for(int i = startDegree; i < polynomialCoefficients.size(); ++i) {
                 vector<double> a( polynomialCoefficients.begin(), polynomialCoefficients.begin() + i + 1 );
-                double analyticIntegral = TestUtilities::integrate(a);
-                double numericIntegral = 0;
+                //long double analyticIntegral = round(TestUtilities::integrate(a));
+                long double analyticIntegral = TestUtilities::integrate(a);
+                long double numericIntegral = 0;
                 for(int j = 0; j < numPoints; ++j) {
-                    numericIntegral += w[j] * TestUtilities::evaluatePolynomial( z[j], a ); 
+                    long double summand = w[j] * TestUtilities::evaluatePolynomial( z[j], a );
+                    if( points->GetPointsType() == eGaussGaussChebyshev ) {
+                        summand *= sqrt(1.0 - z[j]*z[j]);
+                    }
+                    numericIntegral += summand;
+                    //if( isVerbose ) cout << "w["<<j<<"] = " << w[j] << ", z["<<j<<"] = " << z[j] << endl;
                 }
                 if( isVerbose ) {
                     cout << "Points = " << numPoints << ", Polynomial degree = " << i << ", nCoef = " << a.size();
-                    cout << ", Integral = " << analyticIntegral << ", Computed area = " << numericIntegral;
-                    // cout << ", P_" << i << " = "; TestUtilities::printPolynomial(a);
+                    printf(", Integral = %1.20f, Computed area = %1.20f", (double)analyticIntegral, (double)numericIntegral);
+                    cout << ", Error = " << analyticIntegral - numericIntegral;
+                    if( polynomialCoefficients.size() < 10 ) {cout << ", P_" << i << " = "; TestUtilities::printPolynomial(a);}
                     cout << ", z[0] = " << z[0] << ", w[0] = " << w[0] << ", z[n-1] = " << z[numPoints-1] << ", w[n-1] = " << w[numPoints-1];
                     cout << endl;
                 }
                 
-                //BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-12 );
-                BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-11 );
+                BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-16 );
+              //   BOOST_CHECK_CLOSE( numericIntegral, analyticIntegral, 1e-11 );
             }
 
-            if( isVerbose ) {
-                cout << " End of the polynomial Unit Test" << endl;
-            }
+//             if( isVerbose ) {
+//                 cout << " End of the polynomial Unit Test" << endl;
+//             }
         }
        
         
@@ -201,8 +226,6 @@ namespace Nektar
             PointsType type;
             const char * cp = "";
 
-
-
             type = eGaussGaussLegendre;
             cp = "Testing eGaussGaussLegendre";
             cout << cp << endl;
@@ -210,9 +233,11 @@ namespace Nektar
             for( int i = 1; i < MaxNumberOfPoints; ++i ) {
                 int nPts = i, n = nPts - 1, degree = 2*n + 1;
                 coefficients = TestUtilities::generatePolynomial(degree);
-                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients, true );
             }
-            
+            cout << "End of testing eGaussGaussLegendre" <<endl;
+            cout << " " << endl;
+             
             type = eGaussLobattoLegendre;
             cp = "Testing eGaussLobattoLegendre";
             cout << cp << endl;
@@ -220,8 +245,10 @@ namespace Nektar
             for( int i = 1; i < MaxNumberOfPoints; ++i ) {
                 int nPts = i, n = nPts - 1, degree = 2*n - 1;
                 coefficients = TestUtilities::generatePolynomial(degree);
-                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients, true );
             }
+            cout << "End of testing eGaussLobattoLegendre" <<endl;
+            cout << " " << endl;
             
             type = eGaussRadauMLegendre;
             cp = "Testing eGaussRadauMLegendre";
@@ -230,8 +257,10 @@ namespace Nektar
             for( int i = 1; i< MaxNumberOfPoints; ++i) {
                 int nPts = i, n = nPts - 1, degree = 2*n - 1;
                 coefficients = TestUtilities::generatePolynomial(degree);
-                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients );
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients, true );
             }
+            cout << "End of testing eGaussRadauMLegendre" << endl;
+            cout << " " << endl;
             
             type = eGaussRadauPLegendre;
             cp = "Testing eGaussRadauPLegendre";
@@ -242,6 +271,27 @@ namespace Nektar
                 coefficients = TestUtilities::generatePolynomial(degree);
                 testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients, true );
             }
+            cout << "End of testing eGaussRadauPLegendre" << endl;
+            cout << " " <<endl;
+            
+
+            type = eGaussGaussChebyshev;
+            cp = "Testing eGaussGaussChebyshev";
+            cout << cp << endl;
+            BOOST_CHECKPOINT(cp);
+            //for( int i=1; i<MaxNumberOfPoints; ++i){
+            {
+                int i = 90;
+                //int nPts = i, n = nPts - 1, degree = max(0, 2*n - 3);
+                int nPts = i, n = nPts - 1, degree = 500000;
+                coefficients = TestUtilities::generateChebyshevPolynomial(degree);
+                testPolynomialOnWeights( PointsManager()[PointsKey(nPts, type)], coefficients, true );
+            }
+            cout << "End of testing eGaussGaussChebyshev" << endl;
+            cout << " " << endl;
+
+
+            
         }
     }
 
@@ -270,6 +320,9 @@ namespace Nektar
 
 /**
     $Log: main.cpp,v $
+    Revision 1.5  2007/03/06 20:29:23  ehan
+    test passed eGaussRadauMLegendre, eGaussRadauPLegendre,         eGaussGaussLegendre, eGaussLobattoLegendre
+
     Revision 1.4  2007/03/02 01:10:44  ehan
     fixed some bugs
 

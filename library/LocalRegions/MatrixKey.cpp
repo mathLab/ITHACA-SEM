@@ -40,73 +40,69 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-	
-	// Register Mass Matrix creator. 
-	MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
-			     StdRegions::ShapeType shapeType,
-			     StdRegions::StdExpansion &stdExpansion)
-	{
-	    
-	    m_stdMatKey =  MemoryManager::AllocateSharedPtr<StdRegions::StdMatrixKey>(matrixType,shapeType,stdExpansion);
 
-	    m_minfo = stdExpansion.GetMinfo(); 
+        // Register Mass Matrix creator. 
+        MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
+            StdRegions::ShapeType shapeType,
+            StdRegions::StdExpansion &stdExpansion)
+        {
 
-	}
-	    
+            m_stdMatKey =  MemoryManager::AllocateSharedPtr<StdRegions::StdMatrixKey>(matrixType,shapeType,stdExpansion);
+
+            m_minfo = stdExpansion.GetMinfo(); 
+
+        }
+
 
         bool MatrixKey::opLess::operator()(const MatrixKey &lhs, const MatrixKey &rhs)
         {	    
-	    {
-		return (lhs.GetMatrixType() < rhs.GetMatrixType());
-	    }
-	}
+            {
+                return (lhs.GetMatrixType() < rhs.GetMatrixType());
+            }
+        }
 
-	bool operator<(const MatrixKey &lhs, const MatrixKey &rhs)
-	{
-	    int i;
+        bool operator<(const MatrixKey &lhs, const MatrixKey &rhs)
+        {
+            if(lhs.GetMatrixType() < rhs.GetMatrixType())
+            {
+                return true;
+            }
 
-	    
-	    if(lhs.GetMatrixType() < rhs.GetMatrixType())
-	    {
-		return true;
-	    }
+            if(lhs.GetMatrixType() > rhs.GetMatrixType())
+            {
+                return false;
+            }
 
-	    if(lhs.GetMatrixType() > rhs.GetMatrixType())
-	    {
-		return false;
-	    }
-	    
-	    if(lhs.GetNcoeffs() < rhs.GetNcoeffs())
-	    {
-		return true;
-	    }
-	    
-	    if(lhs.GetNcoeffs() > rhs.GetNcoeffs())
-	    {
-		return false;
-	    }
-	    
-	    if(lhs.m_minfo < rhs.m_minfo)
-	    {
-		return true;
-	    }
+            if(lhs.GetNcoeffs() < rhs.GetNcoeffs())
+            {
+                return true;
+            }
 
-	    for(i = 0; i < StdRegions::ShapeTypeDimMap[lhs.GetShapeType()]; ++i)
-	    {
-		if(lhs.GetBase()[i] < rhs.GetBase()[i])
-		{
-		    return true;
-		}
-	    }
-	    
-	    return false;
-	}
+            if(lhs.GetNcoeffs() > rhs.GetNcoeffs())
+            {
+                return false;
+            }
+
+            if(lhs.m_minfo < rhs.m_minfo)
+            {
+                return true;
+            }
+
+            for(unsigned int i = 0; i < StdRegions::ShapeTypeDimMap[lhs.GetShapeType()]; ++i)
+            {
+                if(lhs.GetBase()[i] < rhs.GetBase()[i])
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         std::ostream& operator<<(std::ostream& os, const MatrixKey& rhs)
         {
-
             os << *rhs.GetStdMatKey();
-	    
+
             return os;
         }
     }
@@ -114,6 +110,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.2  2007/03/05 08:06:07  sherwin
+* Updated to use MemoryManager
+*
 * Revision 1.1  2007/03/04 20:42:14  sherwin
 * Keys for matrix managers
 *

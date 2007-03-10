@@ -67,47 +67,47 @@ namespace Nektar
 		double *result =  &((*massmatrix).GetPtr())[0];
 
 		double epsilon = 1e-12;
-                BOOST_CHECK_CLOSE(result[0], 2.0/3.0, epsilon);
-                BOOST_CHECK_CLOSE(result[1], 1.0/3.0, epsilon);
-                BOOST_CHECK_CLOSE(result[2], 1.0/6.0, epsilon);
-                BOOST_CHECK_CLOSE(result[3], -1.0/15.0, epsilon);
-                BOOST_CHECK_CLOSE(result[4], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[5], 0.0, epsilon);
+                BOOST_CHECK_SMALL(2.0/3.0 - result[0], epsilon);
+                BOOST_CHECK_SMALL(1.0/3.0 - result[1], epsilon);
+                BOOST_CHECK_SMALL(1.0/6.0 - result[2], epsilon);
+                BOOST_CHECK_SMALL(-1.0/15.0 - result[3], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[4], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[5], epsilon);
 
-                BOOST_CHECK_CLOSE(result[6], 1.0/3.0, epsilon);
-                BOOST_CHECK_CLOSE(result[7], 2.0/3.0, epsilon);
-                BOOST_CHECK_CLOSE(result[8], 1.0/6.0, epsilon);
-                BOOST_CHECK_CLOSE(result[9], 1.0/15.0, epsilon);
-                BOOST_CHECK_CLOSE(result[10], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[11], 0.0, epsilon);
+                BOOST_CHECK_SMALL(1.0/3.0 - result[6], epsilon);
+                BOOST_CHECK_SMALL(2.0/3.0 - result[7], epsilon);
+                BOOST_CHECK_SMALL(1.0/6.0 - result[8], epsilon);
+                BOOST_CHECK_SMALL(1.0/15.0 - result[9], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[10], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[11], epsilon);
 
-                BOOST_CHECK_CLOSE(result[12], 1.0/6.0, epsilon);
-                BOOST_CHECK_CLOSE(result[13], 1.0/6.0, epsilon);
-                BOOST_CHECK_CLOSE(result[14], 1.0/15.0, epsilon);
-                BOOST_CHECK_CLOSE(result[15], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[16], -1.0/70.0, epsilon);
-                BOOST_CHECK_CLOSE(result[17], 0.0, epsilon);
+                BOOST_CHECK_SMALL(1.0/6.0 - result[12], epsilon);
+                BOOST_CHECK_SMALL(1.0/6.0 - result[13], epsilon);
+                BOOST_CHECK_SMALL(1.0/15.0 - result[14], epsilon);
+                BOOST_CHECK_SMALL(0.0 -  result[15], epsilon);
+                BOOST_CHECK_SMALL(-1.0/70.0 - result[16], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[17], epsilon);
 
-                BOOST_CHECK_CLOSE(result[18], -1.0/15.0, epsilon);
-                BOOST_CHECK_CLOSE(result[19], 1.0/15.0, epsilon);
-                BOOST_CHECK_CLOSE(result[20], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[21], 4.0/105.0, epsilon);
-                BOOST_CHECK_CLOSE(result[22], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[23], -4.0/315.0, epsilon);
+                BOOST_CHECK_SMALL(-1.0/15.0 - result[18], epsilon);
+                BOOST_CHECK_SMALL(1.0/15.0 - result[19], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[20], epsilon);
+                BOOST_CHECK_SMALL(4.0/105.0 - result[21], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[22], epsilon);
+                BOOST_CHECK_SMALL(-4.0/315.0 - result[23], epsilon);
 
-                BOOST_CHECK_CLOSE(result[24], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[25], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[26], -1.0/70.0, epsilon);
-                BOOST_CHECK_CLOSE(result[27], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[28], 2.0/70.0, epsilon);
-                BOOST_CHECK_CLOSE(result[29], 0.0, epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[24], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[25], epsilon);
+                BOOST_CHECK_SMALL(-1.0/70.0 - result[26], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[27], epsilon);
+                BOOST_CHECK_SMALL(2.0/70.0 - result[28], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[29], epsilon);
 
-                BOOST_CHECK_CLOSE(result[30], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[31], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[32], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[33], -4.0/315.0, epsilon);
-                BOOST_CHECK_CLOSE(result[34], 0.0, epsilon);
-                BOOST_CHECK_CLOSE(result[35], 16.0/693.0, epsilon);		
+                BOOST_CHECK_SMALL(0.0 - result[30], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[31], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[32], epsilon);
+                BOOST_CHECK_SMALL(-4.0/315.0 - result[33], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[34], epsilon);
+                BOOST_CHECK_SMALL(16.0/693.0 - result[35], epsilon);		
 	    }
 	}
 
@@ -115,6 +115,59 @@ namespace Nektar
 	{
 	    // test the combination of Modified_A BasisType with GLL quad points
 	    {
+		LibUtilities::PointsType Qtype = LibUtilities::eGaussLobattoLegendre;
+		LibUtilities::BasisType btype = LibUtilities::eModified_A;
+		int nq = 7;
+		int nummodes = 6;
+		const LibUtilities::PointsKey Pkey(nq,Qtype);
+		const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
+		StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); //or StdExpansion(1D)?
+		
+		DNekMatSharedPtr lapmatrix = E->GenLapMatrix();
+		double *result =  &((*lapmatrix).GetPtr())[0];
+
+		double epsilon = 1e-12;
+                BOOST_CHECK_SMALL(1.0/2.0 - result[0], epsilon);
+                BOOST_CHECK_SMALL(-1.0/2.0 - result[1], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[2], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[3], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[4], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[5], epsilon);
+
+                BOOST_CHECK_SMALL(-1.0/2.0 - result[6], epsilon);
+                BOOST_CHECK_SMALL(1.0/2.0 - result[7], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[8], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[9], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[10], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[11], epsilon);
+
+                BOOST_CHECK_SMALL(0.0 - result[12], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[13], epsilon);
+                BOOST_CHECK_SMALL(1.0/6.0 - result[14], epsilon);
+                BOOST_CHECK_SMALL(0.0 -  result[15], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[16], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[17], epsilon);
+
+                BOOST_CHECK_SMALL(0.0 - result[18], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[19], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[20], epsilon);
+                BOOST_CHECK_SMALL(2.0/5.0 - result[21], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[22], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[23], epsilon);
+
+                BOOST_CHECK_SMALL(0.0 - result[24], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[25], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[26], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[27], epsilon);
+                BOOST_CHECK_SMALL(9.0/14.0 - result[28], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[29], epsilon);
+
+                BOOST_CHECK_SMALL(0.0 - result[30], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[31], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[32], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[33], epsilon);
+                BOOST_CHECK_SMALL(0.0 - result[34], epsilon);
+                BOOST_CHECK_SMALL(8.0/9.0 - result[35], epsilon);
 	    }
 	}
 
@@ -144,24 +197,25 @@ namespace Nektar
 		    result[nq] = E->Integral(&(f.get())[0]);
 		}
 		
+		double expected_result = -4.0/3.0;
 		double epsilon = 1e-12;	
-		BOOST_CHECK_CLOSE(result[4], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[5], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[6], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[7], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[8], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[9], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[10], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[11], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[12], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[13], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[14], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[15], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[16], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[17], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[18], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[19], -4.0/3.0, epsilon);
-		BOOST_CHECK_CLOSE(result[20], -4.0/3.0, epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[4], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[5], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[6], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[7], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[8], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[9], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[10], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[11], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[12], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[13], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[14], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[15], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[16], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[17], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[18], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[19], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[20], epsilon);
 	    }
 	}
 
@@ -193,22 +247,23 @@ namespace Nektar
 		    result[nq] = E->Integral(&(df.get())[0]);
 		}
 		
+		double expected_result = -4.0;
 		double epsilon = 1e-12;	
-		BOOST_CHECK_CLOSE(result[6], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[7], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[8], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[9], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[10], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[11], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[12], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[13], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[14], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[15], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[16], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[17], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[18], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[19], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[20], -4.0, epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[6], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[7], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[8], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[9], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[10], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[11], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[12], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[13], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[14], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[15], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[16], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[17], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[18], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[19], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[20], epsilon);
 	    }
 	}
 
@@ -237,12 +292,12 @@ namespace Nektar
 		E->IProductWRTBase(&(f.get())[0],result);
 		
 		double epsilon = 1e-12;	
-		BOOST_CHECK_CLOSE(result[0], -2.0/21.0, epsilon);
-		BOOST_CHECK_CLOSE(result[1], -26.0/21.0, epsilon);
-		BOOST_CHECK_CLOSE(result[2], -4.0/15.0, epsilon);
-		BOOST_CHECK_CLOSE(result[3], -4.0/21.0, epsilon);
-		BOOST_CHECK_CLOSE(result[4], 2.0/35.0, epsilon);
-		BOOST_CHECK_CLOSE(result[5], -40.0/693.0, epsilon);
+		BOOST_CHECK_SMALL(-2.0/21.0 - result[0], epsilon);
+		BOOST_CHECK_SMALL(-26.0/21.0 - result[1], epsilon);
+		BOOST_CHECK_SMALL(-4.0/15.0 - result[2], epsilon);
+		BOOST_CHECK_SMALL(-4.0/21.0 - result[3], epsilon);
+		BOOST_CHECK_SMALL(2.0/35.0 - result[4], epsilon);
+		BOOST_CHECK_SMALL(-40.0/693.0 - result[5], epsilon);
 	    }
 	}
 
@@ -271,12 +326,12 @@ namespace Nektar
 		double *result = &(E->GetCoeffs())[0];
 		
 		double epsilon = 1e-12;	
-		BOOST_CHECK_CLOSE(result[0], 2.0, epsilon);
-		BOOST_CHECK_CLOSE(result[1], -2.0, epsilon);
-		BOOST_CHECK_CLOSE(result[2], -4.0, epsilon);
-		BOOST_CHECK_CLOSE(result[3], 10.0/7.0, epsilon);
-		BOOST_CHECK_CLOSE(result[4], 0.0, epsilon);
-		BOOST_CHECK_CLOSE(result[5], -12.0/7.0, epsilon);
+		BOOST_CHECK_SMALL(2.0 - result[0], epsilon);
+		BOOST_CHECK_SMALL(-2.0 - result[1], epsilon);
+		BOOST_CHECK_SMALL(-4.0 - result[2], epsilon);
+		BOOST_CHECK_SMALL(10.0/7.0 - result[3], epsilon);
+		BOOST_CHECK_SMALL(0.0 - result[4],epsilon);
+		BOOST_CHECK_SMALL(-12.0/7.0 - result[5], epsilon);
 	    }
 	}
 
@@ -306,13 +361,13 @@ namespace Nektar
 		E->BwdTrans(result);
 
 		double epsilon = 1e-12;	
-		BOOST_CHECK_CLOSE(result[0], f[0], epsilon);
-		BOOST_CHECK_CLOSE(result[1], f[1], epsilon);
-		BOOST_CHECK_CLOSE(result[2], f[2], epsilon);
-		BOOST_CHECK_CLOSE(result[3], f[3], epsilon);
-		BOOST_CHECK_CLOSE(result[4], f[4], epsilon);
-		BOOST_CHECK_CLOSE(result[5], f[5], epsilon);
-		BOOST_CHECK_CLOSE(result[6], f[6], epsilon);
+		BOOST_CHECK_SMALL(f[0] - result[0], epsilon);
+		BOOST_CHECK_SMALL(f[1] - result[1], epsilon);
+		BOOST_CHECK_SMALL(f[2] - result[2], epsilon);
+		BOOST_CHECK_SMALL(f[3] - result[3], epsilon);
+		BOOST_CHECK_SMALL(f[4] - result[4], epsilon);
+		BOOST_CHECK_SMALL(f[5] - result[5], epsilon);
+		BOOST_CHECK_SMALL(f[6] - result[6], epsilon);
 	    }
 	}
 
@@ -344,23 +399,24 @@ namespace Nektar
 		    double x = -0.5;
 		    result[nq] = E->Evaluate(&x);
 		}
-		
+
+		double expected_result = -7.0/32.0;		
 		double epsilon = 1e-12;	
-		BOOST_CHECK_CLOSE(result[6], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[7], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[8], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[9], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[10], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[11], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[12], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[13], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[14], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[15], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[16], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[17], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[18], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[19], -7.0/32.0, epsilon);
-		BOOST_CHECK_CLOSE(result[20], -7.0/32.0, epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[6], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[7], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[8], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[9], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[10], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[11], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[12], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[13], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[14], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[15], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[16], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[17], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[18], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[19], epsilon);
+		BOOST_CHECK_SMALL(expected_result - result[20], epsilon);
 	    }
 	}
 
@@ -398,53 +454,56 @@ namespace Nektar
 		}
 		
 		double epsilon = 1e-12;	
-		BOOST_CHECK_CLOSE(resultL2[6], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[7], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[8], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[9], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[10], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[11], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[12], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[13], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[14], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[15], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[16], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[17], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[18], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[19], sqrt(1224.0/385.0), epsilon);
-		BOOST_CHECK_CLOSE(resultL2[20], sqrt(1224.0/385.0), epsilon);
+		double expected_result = sqrt(1224.0/385.0);
+		BOOST_CHECK_SMALL(expected_result - resultL2[6], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[7], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[8], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[9], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[10], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[11], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[12], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[13], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[14], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[15], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[16], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[17], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[18], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[19], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2[20], epsilon);
 
-		BOOST_CHECK_SMALL(resultL2err[6], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[7], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[8], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[9], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[10], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[11], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[12], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[13], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[14], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[15], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[16], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[17], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[18], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[19], epsilon);
-		BOOST_CHECK_SMALL(resultL2err[20], epsilon);
+		expected_result = 0.0;
+		BOOST_CHECK_SMALL(expected_result - resultL2err[6], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[7], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[8], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[9], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[10], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[11], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[12], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[13], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[14], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[15], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[16], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[17], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[18], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[19], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultL2err[20], epsilon);
 
-		BOOST_CHECK_SMALL(resultLinferr[6], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[7], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[8], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[9], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[10], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[11], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[12], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[13], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[14], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[15], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[16], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[17], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[18], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[19], epsilon);
-		BOOST_CHECK_SMALL(resultLinferr[20], epsilon);
+		expected_result = 0.0;
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[6], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[7], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[8], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[9], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[10], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[11], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[12], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[13], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[14], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[15], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[16], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[17], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[18], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[19], epsilon);
+		BOOST_CHECK_SMALL(expected_result - resultLinferr[20], epsilon);
 	    }
 	}
 
@@ -497,5 +556,8 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.cpp,v $
+    Revision 1.1  2007/03/08 17:06:41  pvos
+    added to repository
+
 
  **/

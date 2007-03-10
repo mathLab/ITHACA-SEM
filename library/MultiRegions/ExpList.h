@@ -60,16 +60,6 @@ namespace Nektar
 	return m_npoints;
       }
       
-      inline double *GetCoeffs(void)
-      {
-	return (m_coeffs);
-      }
-      
-      inline double *GetPhys(void)
-      {
-	return (m_phys);
-      }
-      
       inline void SetTransState(TransState transState)
       {
 	m_transState = transState;
@@ -79,47 +69,57 @@ namespace Nektar
       {
 	m_physState = physState;
       }
-  
+
+      inline bool GetPhysState(void)
+      {
+	return m_physState;
+      }
+      
       double Integral(const double *inarray);
       void   IProductWRTBase(const double *inarray, double *outarray);
       void   IProductWRTBase(ExpList &S1, ExpList &S2);
       void   IProductWRTBase(ExpList &S1, double * outarray);
-      void   Deriv    (const int n, double **outarray);
-      void   Deriv    (const int n, const double *inarray, double ** outarray);
+      void   PhysDeriv  (const int n, double **outarray);
+      void   PhysDeriv  (const int n, const double *inarray, double ** outarray);
+      void   PhysDeriv  (ExpList &Sin, ExpList &S_x);
       void   FwdTrans (const double *inarray);
+      void   FwdTrans (ExpList &Sin);
       void   BwdTrans (double *outarray); 
+      void   BwdTrans (ExpList &Sout); 
       
       void   GetCoords(double **coords);
       void   WriteToFile(std::ofstream &out);
     
       inline int GetCoordim(int eid)
       {
-	ASSERTL2(eid <= m_seg.size(),"eid is larger than number of elements");
+	  ASSERTL2(eid <= m_exp.size(),"eid is larger than number of elements");
 	
-	for(int i = 0; i < m_exp_shapes.size(); ++i)
-	    if((m_exp_shapes[i]).size()){
-		return m_exp_shapes[i][0]->GetCoordim();
-		break;
-	    }
-	    
-	// should not get to this point
-	return -1;
+	  return m_exp[eid]->GetCoordim();
       }
       
       double Linf (const double *sol);
       double L2   (const double *sol);
+
+
+      inline int GetNexp(void)
+      {
+	  return m_exp.size();
+      }
+      
+
+      inline StdRegions::StdExpansionSharedPtr GetExp(int n)
+      {
+	  return m_exp[n];
+      }
       
     protected:
       int m_ncoeffs; 
       int m_npoints;
-      
-      double *m_coeffs;
-      double *m_phys;
-      
+
       TransState m_transState;
       bool       m_physState;
      
-      std::vector<StdRegions::StdExpansionVector> m_exp_shapes;
+      StdRegions::StdExpansionVector m_exp;
       
     private:
       
@@ -128,6 +128,7 @@ namespace Nektar
 	  BwdTrans(outarray);
       }
     };
+
     
   } //end of namespace
 } //end of namespace

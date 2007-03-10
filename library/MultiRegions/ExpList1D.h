@@ -41,7 +41,6 @@
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
-#include <StdRegions/StdBasis.h>
 #include <LocalRegions/SegExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
 
@@ -58,7 +57,7 @@ namespace Nektar
 	    
 	    ExpList1D();
 	    
-	    ExpList1D(const StdRegions::BasisKey &Ba, 
+	    ExpList1D(const LibUtilities::BasisKey &Ba, 
 		      SpatialDomains::MeshGraph1D &graph1D);
 	    
 	    ~ExpList1D();

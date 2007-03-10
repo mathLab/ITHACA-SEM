@@ -41,14 +41,12 @@ namespace Nektar
     {
 
 	ExpList::ExpList(void):
-	    m_ncoeffs(0),
-	    m_npoints(0),
 	    m_transState(eNotSet),
 	    m_physState(false)
-
+	    
 	{
 	}
-    
+	
 	ExpList::~ExpList()
 	{
 	}
@@ -68,157 +66,194 @@ namespace Nektar
 	*/
 	double ExpList::Integral(const double *inarray)
 	{
-	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-	    StdRegions::StdExpansionVectorIter def;
-	    
+	    int    i;
 	    int    cnt = 0;
 	    double sum = 0.0;
 	    
 	    
-	    for(sdef = m_exp_shapes.begin(); sdef != m_exp_shapes.end(); ++sdef)
+	    for(i = 0; i < GetNexp(); ++i)
 	    {
-		for(def = (*sdef).begin(); def != (*sdef).end(); ++def)
-		{
-		    sum += (*def)->Integral(inarray+cnt);
-		    cnt += (*def)->GetPointsTot();
-		}
+		sum += GetExp(i)->Integral(inarray+cnt);
+		cnt += GetExp(i)->GetTotPoints();
 	    }
+
 	    return sum; 
 	}
 	
 	
 	void ExpList::IProductWRTBase(const double *inarray, double *outarray)
 	{
-	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-	    StdRegions::StdExpansionVectorIter def;
+	    int    i;
 	    int    cnt  = 0;
 	    int    cnt1 = 0;
 	  
-	    for(sdef = m_exp_shapes.begin(); sdef != m_exp_shapes.end(); ++sdef)
+	    for(i = 0; i < GetNexp(); ++i)
 	    {
-		for(def = (*sdef).begin(); def != (*sdef).end(); ++def)
-		{
-		    (*def)->IProductWRTBase(inarray+cnt,outarray+cnt1);
-		    cnt  += (*def)->GetPointsTot();
-		    cnt1 += (*def)->GetNcoeffs();
-		}
+		    GetExp(i)->IProductWRTBase(inarray+cnt,outarray+cnt1);
+		    cnt  += GetExp(i)->GetTotPoints();
+		    cnt1 += GetExp(i)->GetNcoeffs();
 	    }
 	    m_transState = eLocal;
 	}
 	
 	void ExpList::IProductWRTBase(ExpList &S1, ExpList &S2)
 	{
-	    IProductWRTBase(S1.GetPhys(),S2.GetCoeffs());
-	}
-	
-	void ExpList::IProductWRTBase(ExpList &S1, double * outarray)
-	{
-	    IProductWRTBase( S1.GetPhys(),outarray);
-	}
-	
-	void ExpList::Deriv(const int n, double **outarray)
-	{
-	    Deriv(n,m_phys,outarray);
-	}
-      
-	void ExpList::Deriv(const int n, const double *inarray,
-			      double **outarray)
-	{
-	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-	    StdRegions::StdExpansionVectorIter def;
-	    int    cnt = 0;
+	    int i;
 	    
+	    for(i = 0; i < GetNexp(); ++i)
+	    {
+		GetExp(i)->IProductWRTBase(&S1.GetExp(i)->GetPhys()[0],
+					   &S2.GetExp(i)->GetCoeffs()[0]);
+	    }
+	}
+	
+       void ExpList::IProductWRTBase(ExpList &S1, double * outarray)
+	{
+	    int cnt = 0;
+	    int i;
+
+	    for(i= 0; i < GetNexp(); ++i)
+	    {
+		GetExp(i)->IProductWRTBase(&S1.GetExp(i)->GetPhys()[0],
+					   outarray+cnt);
+		cnt += GetExp(i)->GetNcoeffs();
+	    }
+	}
+	
+	void ExpList::PhysDeriv(const int n, double **outarray)
+	{
+	    int  cnt = 0;
+	    int  i;
+
 	    if(m_physState == false)
 	    {
-		BwdTrans(m_phys);
+		BwdTrans(*this);
 	    }
 	    
-	    for(sdef = m_exp_shapes.begin(); sdef != m_exp_shapes.end(); ++sdef)
+	    for(i= 0; i < GetNexp(); ++i)
 	    {
-		for(def = (*sdef).begin(); def != (*sdef).end(); ++def)
-		{
-		    (*def)->Deriv(n,inarray+cnt,outarray+cnt);
-		    cnt  += (*def)->GetPointsTot();
-		}
+		GetExp(i)->PhysDeriv(n,&GetExp(i)->GetPhys()[0],outarray+cnt);
+		cnt  += GetExp(i) ->GetTotPoints();
 	    }
-	}	    
+	}
+      
+	void ExpList::PhysDeriv(const int n, const double *inarray,
+				double **outarray)
+	{
+	    int cnt = 0;
+	    int i;
+	    
+	    
+	    for(i= 0; i < GetNexp(); ++i)
+	    {
+		GetExp(i)->PhysDeriv(n,inarray+cnt,outarray+cnt);
+		cnt += GetExp(i)->GetTotPoints();
+	    }
+	}    
+
+	void ExpList::PhysDeriv(ExpList &Sin, ExpList &S_x)
+	{
+	    int i;
+	    double *out[1];
+
+	    if(Sin.GetPhysState() == false)
+	    {
+		BwdTrans(Sin);
+	    }
+	    
+	    for(i= 0; i < GetNexp(); ++i)
+	    {
+		out[0] = &S_x.GetExp(i)->GetPhys()[0];
+		GetExp(i)->PhysDeriv(1,&Sin.GetExp(i)->GetPhys()[0],out);
+	    }
+	}    
 
 	void ExpList::FwdTrans(const double *inarray)
 	{
-	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-	    StdRegions::StdExpansionVectorIter def;
-	    int    cnt = 0;
-	    
-	    for(sdef = m_exp_shapes.begin(); sdef != m_exp_shapes.end(); ++sdef)
+	    int cnt = 0;
+	    int i;
+
+	    for(i= 0; i < GetNexp(); ++i)
 	    {
-		for(def = (*sdef).begin(); def != (*sdef).end(); ++def)
-		{
-		    (*def)->FwdTrans(inarray+cnt);
-		    cnt  += (*def)->GetPointsTot();
-		}
+		GetExp(i)->FwdTrans(inarray+cnt);
+		cnt  += GetExp(i)->GetTotPoints();
 	    }
 	    
 	    m_transState = eLocal;
 	}
-	
-	
+
+
+	void ExpList::FwdTrans(ExpList &Sin)
+	{
+	    int i;
+
+	    for(i= 0; i < GetNexp(); ++i)
+	    {
+		GetExp(i)->FwdTrans(&Sin.GetExp(i)->GetPhys()[0]);
+	    }
+	    
+	    m_transState = eLocal;
+	}
+		
 	void ExpList::BwdTrans(double *outarray)
 	{
-	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-	    StdRegions::StdExpansionVectorIter def;
-	    int    cnt = 0;
+	    int  i;
+	    int  cnt = 0;
 	    
-	    for(sdef = m_exp_shapes.begin(); sdef != m_exp_shapes.end(); ++sdef)
+	    for(i= 0; i < GetNexp(); ++i)
 	    {
-		for(def = (*sdef).begin(); def != (*sdef).end(); ++def)
-		{
-		    (*def)->BwdTrans(outarray+cnt);
-		    cnt  += (*def)->GetPointsTot();
-		}
+		GetExp(i)->BwdTrans(outarray+cnt);
+		cnt  += GetExp(i)->GetTotPoints();
 	    }
+	    
+	    m_physState = true;
+	}
+
+	void ExpList::BwdTrans(ExpList &Sout)
+	{
+	    int  i;
+	    
+	    for(i= 0; i < GetNexp(); ++i)
+	    {
+		GetExp(i)->BwdTrans(&Sout.GetExp(i)->GetPhys()[0]);
+	    }
+	    
 	    m_physState = true;
 	}
 	
 	void ExpList::GetCoords(double **coords)
 	{
-	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-	    StdRegions::StdExpansionVectorIter def;
-	    int    i, cnt = 0;
+	    int    i, j, cnt = 0;
 	    double *E_coords[3];
 	    
-	    for(sdef = m_exp_shapes.begin(); sdef != m_exp_shapes.end(); ++sdef)
+	    for(i= 0; i < GetNexp(); ++i)
 	    {
-		for(def = (*sdef).begin(); def != (*sdef).end(); ++def)
+		for(j = 0; j < GetExp(i)->GetCoordim(); ++j)
 		{
-		    for(i = 0 ; i < (*def)->GetCoordim(); ++i)
-		    {
-			    E_coords[i] = coords[i]+cnt;
-		    }
-		    
-		    (*def)->GetCoords(E_coords);
-		    cnt  += (*def)->GetPointsTot();
+		    E_coords[j] = coords[j]+cnt;
 		}
+		
+		GetExp(i)->GetCoords(E_coords);
+		cnt  += GetExp(i)->GetTotPoints();
 	    }
 	}
 	
 	void ExpList::WriteToFile(std::ofstream &out)
 	{
+	    int i;
 	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
 	    StdRegions::StdExpansionVectorIter def;
 	    
 	    if(m_physState == false)
 	    {
-		BwdTrans(m_phys);
+		BwdTrans(*this);
 	    }
 	    
-	    m_exp_shapes[0][0]->WriteToFile(out,1);
+	    m_exp[0]->WriteToFile(out,1);
 	    
-	    for(sdef = m_exp_shapes.begin(); sdef != m_exp_shapes.end(); ++sdef)
+	    for(i= 1; i < GetNexp(); ++i)
 	    {
-		for(def = (*sdef).begin(); def != (*sdef).end(); ++def)
-		{
-		    (*def)->WriteToFile(out,0);
-		}
+		GetExp(i)->WriteToFile(out,0);
 	    }
 	}
 	
@@ -227,46 +262,37 @@ namespace Nektar
 	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
 	    StdRegions::StdExpansionVectorIter def;
 	    double err = 0.0;
-	    int    cnt = 0;
+	    int    i,cnt = 0;
 	    
 	    if(m_physState == false)
 	    {
-		v_BwdTrans(m_phys);
+		BwdTrans(*this);
 	    }
 	    
-	    for(sdef = m_exp_shapes.begin(); sdef != m_exp_shapes.end(); ++sdef)
+	    for(i= 0; i < GetNexp(); ++i)
 	    {
-		for(def = (*sdef).begin(); def != (*sdef).end(); ++def)
-		{
-		    err  = std::max(err,(*def)->Linf(sol+cnt));
-		    cnt  += (*def)->GetPointsTot();
-		}
+		err  = std::max(err,GetExp(i)->Linf(sol+cnt));
+		cnt  += GetExp(i)->GetTotPoints();
 	    }
 	    
 	    return err;
 	}
 	
-	
 	double  ExpList::L2(const double *sol)
 	{
-	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-	    StdRegions::StdExpansionVectorIter def;
 	    double err = 0.0,errl2;
-	    int    cnt = 0;
+	    int    i,cnt = 0;
 	    
 	    if(m_physState == false)
 	    {
-		BwdTrans(m_phys);
+		BwdTrans(*this);
 	    }
 	    
-	    for(sdef = m_exp_shapes.begin(); sdef != m_exp_shapes.end(); ++sdef)
+	    for(i= 0; i < GetNexp(); ++i)
 	    {
-		for(def = (*sdef).begin(); def != (*sdef).end(); ++def)
-		{
-		    errl2 = (*def)->L2(sol+cnt);
-		    err += errl2*errl2;
-		    cnt  += (*def)->GetPointsTot();
-		}
+		errl2 = GetExp(i)->L2(sol+cnt);
+		err += errl2*errl2;
+		cnt  += GetExp(i)->GetTotPoints();
 	    }
 	    
 	    return sqrt(err);

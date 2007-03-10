@@ -48,19 +48,16 @@ namespace Nektar
 	{
 	}
 	
-	ExpList1D::ExpList1D(const StdRegions::BasisKey &Ba, 
+	ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
 			     SpatialDomains::MeshGraph1D &graph1D)
 	{
 	    LocalRegions::SegExpSharedPtr seg;
 	    SpatialDomains::SegGeomVector SegGeoms = graph1D.GetSeggeoms();
 	    
-	    m_ncoeffs = SegGeoms.size()*Ba.GetBasisOrder();
-	    m_npoints = SegGeoms.size()*Ba.GetPointsOrder();
+	    m_ncoeffs = SegGeoms.size()*Ba.GetNumModes();
+	    m_npoints = SegGeoms.size()*Ba.GetNumPoints();
 	    
-	    m_coeffs = new double [m_ncoeffs];
 	    m_transState = eNotSet; 
-	    
-	    m_phys   = new double [m_npoints];
 	    m_physState  = false;
 	    
 	    // make sure Geofacs are defined in MeshGraph1D
@@ -76,17 +73,13 @@ namespace Nektar
 	    cnt = cnt1 = 0;
 	    for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
 	    {
-		seg.reset( new LocalRegions::SegExp(Ba, m_coeffs+cnt,
-						    m_phys+cnt1, *def));
-		seg->SetGeoFac(seg->GenGeoFac());
-		seglist.push_back(seg);
+		seg.reset( new LocalRegions::SegExp(Ba, *def));
+		seg->SetMinfo(seg->GenMinfo());
+		m_exp.push_back(seg);
 		
-		cnt  += Ba.GetBasisOrder();
-		cnt1 += Ba.GetPointsOrder();
+		cnt  += Ba.GetNumModes();
+		cnt1 += Ba.GetNumPoints();
 	    }
-	    m_exp_shapes.push_back(seglist);
 	}
-	
-	
     } //end of namespace
 } //end of namespace

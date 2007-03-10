@@ -1,14 +1,14 @@
 SET(MULTI_REGIONS_SOURCES
-ContExpList1D.cpp
-DisContExpList1D.cpp
+#ContExpList1D.cpp
+#DisContExpList1D.cpp
 ExpList1D.cpp
-ExpList2D.cpp
-ExpList3D.cpp
+#ExpList2D.cpp
+#ExpList3D.cpp
 ExpList.cpp
-LocalToGlobalMap1D.cpp
-LocalToGlobalMap2D.cpp
-LocalToGlobalMap3D.cpp
-LocalToGlobalMap.cpp
+#LocalToGlobalMap1D.cpp
+#LocalToGlobalMap2D.cpp
+#LocalToGlobalMap3D.cpp
+#sLocalToGlobalMap.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS

@@ -43,7 +43,7 @@ namespace Nektar
         void testMassMatrix();
 	void testLapMatrix();
 	void testIntegration();
-	void testDifferentation();
+	void testDifferentiation();
 	void testIProductWRTBase();
 	void testFwdTrans();
 	void testBwdTrans();
@@ -57,5 +57,8 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.h,v $
+    Revision 1.1  2007/03/08 17:07:27  pvos
+    added to the repository
+
 
  **/

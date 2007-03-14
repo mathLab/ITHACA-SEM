@@ -34,8 +34,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
     // StdSegExp algorithms
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testLapMatrix), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIntegration), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testDifferentation), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testDifferentiation), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIProductWRTBase), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testFwdTrans), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testBwdTrans), 0);
@@ -113,6 +114,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.22  2007/03/08 17:09:03  pvos
+    added StdSegExp tests
+
     Revision 1.21  2007/02/13 02:47:20  bnelson
     *** empty log message ***
 

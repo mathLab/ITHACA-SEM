@@ -10,8 +10,8 @@ testNekManager.cpp
 testNekMatrix.cpp
 testNekPoint.cpp
 testNekVector.cpp
-Memory/TestNekMemoryManager.cpp
-StdRegions/testStdSegExp.cpp
+#Memory/TestNekMemoryManager.cpp
+#StdRegions/testStdSegExp.cpp
 )
 
 SET(UnitTestHeaders
@@ -24,8 +24,8 @@ testNekManager.h
 testNekMatrix.h
 testNekPoint.h
 testNekVector.h
-Memory/TestNekMemoryManager.h
-StdRegions/testStdSegExp.h
+#Memory/TestNekMemoryManager.h
+#StdRegions/testStdSegExp.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
@@ -70,5 +70,9 @@ IF( ${CMAKE_COMPILER_IS_GNUCXX} )
         TARGET_LINK_LIBRARIES(UnitTests gcov)
     ENDIF( USE_GCOV )
 ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
+
+IF( USE_FRAMEWORK )
+    TARGET_LINK_LIBRARIES(UnitTests ${FRAMEWORK_LINK_FLAGS})
+ENDIF ( USE_FRAMEWORK )
 
 INSTALL(TARGETS UnitTests RUNTIME DESTINATION ${NEKTAR_BIN_DIR})

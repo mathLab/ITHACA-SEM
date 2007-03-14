@@ -110,12 +110,12 @@ int main(int argc, char *argv[])
 
   //---------------------------------------------
   // Project onto Expansion 
-  E->FwdTrans(sol);
+  E->FwdTrans(sol,&(E->GetCoeffs())[0]);
   //---------------------------------------------
 
   //-------------------------------------------
   // Backward Transform Solution to get projected values
-  E->BwdTrans(&(E->GetPhys())[0]);
+  E->BwdTrans(E->GetCoeffs(),E->GetPhys());
   //-------------------------------------------  
 
   //--------------------------------------------
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
   }
 
   double x = 0;
-  double nsol = E->Evaluate(&x);
+  double nsol = E->PhysEvaluate(&x);
   cout << "error at x = 0: " << nsol - sol[0] << endl;
   //-------------------------------------------
 

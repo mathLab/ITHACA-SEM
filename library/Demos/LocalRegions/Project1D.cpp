@@ -78,8 +78,6 @@ int main(int argc, char *argv[])
     const LibUtilities::PointsKey Pkey(nq,Qtype);
     const LibUtilities::BasisKey Bkey(btype,order,Pkey);
     E = new LocalRegions::SegExp(Bkey,geom);
-    E->SetMinfo(E->GenMinfo());
-
     //-----------------------------------------------
 
     //----------------------------------------------
@@ -96,12 +94,12 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion 
-    E->FwdTrans(sol);
+    E->FwdTrans(sol,&E->GetCoeffs()[0]);
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(&E->GetPhys()[0]);
+    E->BwdTrans(E->GetCoeffs(),E->GetPhys());
     //-------------------------------------------  
 
     //--------------------------------------------
@@ -122,7 +120,7 @@ int main(int argc, char *argv[])
     sol[0] = solution(0.5*(x[1]+x[0]),order,btype);
     double lcoord = 0;
     E->GetCoord(&lcoord,xc);
-    double nsol = E->Evaluate(xc);
+    double nsol = E->PhysEvaluate(xc);
     cout << "error at (xi = 0) x = " << xc[0] << " : " << nsol - sol[0] << endl;
 
     //-------------------------------------------

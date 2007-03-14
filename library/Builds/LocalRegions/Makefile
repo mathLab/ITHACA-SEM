@@ -13,7 +13,7 @@ include ../Flags/${ARCH}.inc
 
 # These are the module names:
 
-ALL   =  HexExp MetricRelatedInfo NodalTriExp NodalTetExp PointExp PrismExp PyrExp QuadExp SegExp TriExp TetExp 
+ALL   =  MetricRelatedInfo SegExp MatrixKey 
 
 # ---------------------------------------------------------------- #
 # The following expand to give the names of all sections (ALL),    #

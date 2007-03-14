@@ -66,11 +66,6 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	inline void StdExpansion1D::PhysTensorDeriv(double * outarray)
-	{
-	    PhysTensorDeriv(&m_phys[0],outarray);
-	}  
-
 	void StdExpansion1D::PhysTensorDeriv(const double *inarray, 
 					     double * outarray)
 	{
@@ -96,7 +91,7 @@ namespace Nektar
 			tmp,1,0.0,outarray,1);
 	}
     
-	double StdExpansion1D::PhysEvaluate(const double *Lcoord)
+	double StdExpansion1D::PhysEvaluate1D(const double *Lcoord)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
 	    double  val;
@@ -118,6 +113,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.8  2007/02/07 12:51:53  sherwin
+ * Compiling version of Project1D
+ *
  * Revision 1.7  2007/01/30 20:01:35  sherwin
  * Update for first compiling Project1D routine
  *

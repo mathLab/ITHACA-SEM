@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/MeshGraph1D.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph1D.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -68,13 +68,6 @@ namespace Nektar
 		return m_seggeoms;
             }
 
-            inline bool GetGeofac_defined(void)
-            {
-                return m_geofac_defined;
-            }
-
-            void GenXGeoFac();
-
 	    inline int GetVidFromElmt(const int vert, const int elmt)
 	    {
 		ASSERTL2((elmt >=0)&&(elmt < m_seggeoms.size()),
@@ -84,7 +77,7 @@ namespace Nektar
 	    }
 	    
         protected:
-            bool   m_geofac_defined;
+
 
         private:
             SegGeomVector m_seggeoms;
@@ -96,6 +89,10 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.h,v $
+// Revision 1.4  2006/07/02 17:16:17  sherwin
+//
+// Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+//
 // Revision 1.3  2006/06/01 14:15:30  sherwin
 // Added typdef of boost wrappers and made GeoFac a boost shared pointer.
 //

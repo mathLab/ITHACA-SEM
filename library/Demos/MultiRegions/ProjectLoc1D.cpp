@@ -40,7 +40,7 @@ main(int argc, char *argv[])
 	exit(1);
     }
     
-    btype =   (BasisType) atoi(argv[1]);
+    btype =   (LibUtilities::BasisType) atoi(argv[1]);
     
     // Check to see that only 1D Expansions are used
     if((btype == LibUtilities::eOrtho_B)||(btype == LibUtilities::eOrtho_B)||
@@ -65,14 +65,14 @@ main(int argc, char *argv[])
     }
     else
     {
-	Qtype = LibUtilities::eFourierEvenSp;
+	Qtype = LibUtilities::eFourierEvenlySpaced;
     }
   
     // read in mesh
     string  in(infile);
     SpatialDomains::MeshGraph1D graph1D;
     
-    SpatialDomains::graph1D.Read(in);
+    graph1D.Read(in);
     
     // Define Expansion
     const LibUtilities::PointsKey Pkey(nq,Qtype);
@@ -110,12 +110,12 @@ main(int argc, char *argv[])
     
     //---------------------------------------------
     // Project onto Expansion 
-    Exp->FwdTrans(sol);
+    Exp->FwdTrans(sol,*Exp);
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    Exp->BwdTrans(Exp);
+    Exp->BwdTrans(*Exp);
     //-------------------------------------------  
     
     //--------------------------------------------

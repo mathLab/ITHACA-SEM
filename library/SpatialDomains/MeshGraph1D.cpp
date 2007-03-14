@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/MeshGraph1D.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph1D.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -42,8 +42,7 @@ namespace Nektar
     namespace SpatialDomains
     {
 	
-    MeshGraph1D::MeshGraph1D():
-	    m_geofac_defined(false)
+    MeshGraph1D::MeshGraph1D()
     {
     }
 
@@ -183,28 +182,19 @@ namespace Nektar
             node = node->NextSibling();
         }
     }
-
-    void MeshGraph1D::Write(std::string &outfilename)
-    {
-    }
-
-    // generate geometric factors based on MeshGraph information. 
-    void MeshGraph1D::GenXGeoFac()
-    {
-        SegGeomVector::const_iterator def; 
-
-        for(def = m_seggeoms.begin(); def != m_seggeoms.end(); ++def)
-        {
-            (*def)->SetXGeoFac((*def)->GenXGeoFac());
-        }
-
-        m_geofac_defined = true;
-    }
+	
+	void MeshGraph1D::Write(std::string &outfilename)
+	{
+	}
+	
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.7  2006/10/15 06:18:58  sherwin
+// Moved NekPoint out of namespace LibUtilities
+//
 // Revision 1.6  2006/09/26 23:41:53  jfrazier
 // Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
 //

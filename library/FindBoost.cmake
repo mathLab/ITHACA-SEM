@@ -1,4 +1,4 @@
-SET(BOOST_INCLUDE_SEARCH_PATH /usr/include /usr/local/include ${CMAKE_SOURCE_DIR}/../ThirdParty/include )
+SET(BOOST_INCLUDE_SEARCH_PATH /usr/include /usr/local/include /sw/include ${CMAKE_SOURCE_DIR}/../ThirdParty/include )
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
     SET(BOOST_INCLUDE_SEARCH_PATH ${BOOST_INCLUDE_SEARCH_PATH}
@@ -33,8 +33,10 @@ ELSE( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
     IF( ${CMAKE_COMPILER_IS_GNUCXX} )
         SET(BoostFileSystemName boost_filesystem-gcc boost_filesystem )
         SET(BoostFileSystemDebugName boost_filesystem-gcc-d boost_filesystem-d )
-        SET(BoostThreadName boost_thread-gcc-mt boost_thread-gcc boost_thread-mt boost_thread  )
-        SET(BoostThreadDebugName boost_thread-gcc-mt-d boost_thread-gcc-d  boost_thread-mt-d boost_thread-d )
+#        SET(BoostThreadName boost_thread-gcc-mt boost_thread-gcc boost_thread-mt boost_thread  )
+#        SET(BoostThreadDebugName boost_thread-gcc-mt-d  boost_thread-mt-d boost_thread-d )
+        SET(BoostThreadName boost_thread-gcc boost_thread  )
+        SET(BoostThreadDebugName  boost_thread-d )
     ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
 ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
 

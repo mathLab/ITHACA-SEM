@@ -83,7 +83,7 @@ namespace Nektar
         }
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
-        GeoFacSharedPtr SegGeom::GenXGeoFac(void)
+        void SegGeom::GenXGeoFac(void)
 	{
             GeoFacSharedPtr gfac;
 
@@ -96,19 +96,19 @@ namespace Nektar
             }
 
             FillGeom();
+
             if(m_xmap[0]->GetBasisNumModes(0)==2)
             {// assumes all direction have same order
-                gfac.reset( new GeoFac(StdRegions::eRegular, m_coordim, 
+                m_xgeofac.reset( new GeoFac(eRegular, m_coordim, 
                     (const StdRegions::StdExpansion1D **) xmaptemp));
             }
             else
             {
-                gfac.reset(new GeoFac(StdRegions::eDeformed, m_coordim, 
+                m_xgeofac.reset(new GeoFac(eDeformed, m_coordim, 
   	            (const StdRegions::StdExpansion1D **) xmaptemp));
             }
 
             delete[] xmaptemp;
-            return gfac; 
         }
 
 
@@ -124,7 +124,7 @@ namespace Nektar
                 for(i = 0; i < m_coordim; ++i){
 		    m_xmap[i]->SetCoeff(0,(*m_verts[0])[i]);
                     m_xmap[i]->SetCoeff(1,(*m_verts[1])[i]);
-                    m_xmap[i]->BwdTrans(&(m_xmap[i]->GetPhys())[0]);
+                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),m_xmap[i]->GetPhys());
                 }
                 m_state = ePtsFilled;
             }
@@ -138,7 +138,7 @@ namespace Nektar
             FillGeom();
 	    
             // calculate local coordinate for coord
-            if(GetGtype() == StdRegions::eRegular)
+            if(GetGtype() == eRegular)
             {
                 const double *pts;
                 double len = 0.0;
@@ -211,6 +211,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.7  2007/02/19 08:06:25  sherwin
+// Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
+//
 // Revision 1.6  2006/06/01 14:15:30  sherwin
 // Added typdef of boost wrappers and made GeoFac a boost shared pointer.
 //

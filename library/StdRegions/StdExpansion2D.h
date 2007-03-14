@@ -56,6 +56,7 @@ namespace Nektar
 
             // Generic operations in different elements
 
+
             /** \brief Calculate the 2D derivative in the local
              *  tensor/collapsed coordinate  at the physical points 
              *
@@ -130,16 +131,6 @@ namespace Nektar
                                      double *outarray_d1);
 
                 // Change names from Deriv to PhysDeriv
-                void PhysDeriv(double *outarray_d1, double *outarray_d2)
-                {
-                    v_PhysDeriv(outarray_d1, outarray_d2);
-                }
-
-                void StdPhysDeriv(double *outarray_d1, double *outarray_d2)
-                {
-                    v_StdPhysDeriv(outarray_d1, outarray_d2);
-                }
-
                 void PhysDeriv(const double *inarray, double *outarray_d1,
                                double *outarray_d2)
                 {
@@ -152,11 +143,38 @@ namespace Nektar
                     v_StdPhysDeriv(inarray, outarray_d1, outarray_d2);
                 }
 
+	    /** \brief This function evaluates the expansion at a single
+	     *  (arbitrary) point of the domain
+	     *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_PhysEvaluate()
+	     *
+	     *  Based on the value of the expansion at the quadrature points,
+	     *  this function calculates the value of the expansion at an 
+	     *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
+	     *  given by the pointer \a coords). This operation, equivalent to
+	     *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
+	     *  is evaluated using Lagrangian interpolants through the quadrature
+	     *  points:
+	     *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
+	     *
+             *  This function requires that the physical value array 
+             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys) 
+             *  is set.
+	     * 
+	     *  \param coords the coordinates of the single point
+	     *  \return returns the value of the expansion at the single point
+	     */
+            double PhysEvaluate(const double * coords)
+            {
+                return v_PhysEvaluate(coords);
+            }
+
             /** \brief Evaluate a function at points coords which is assumed
-            *  to be in local collapsed coordinate format. The function is
-            *  assumed to be in physical space 
-            */
-                double PhysEvaluate(const double *coords);
+	     *  to be in local collapsed coordinate format. The function is
+	     *  assumed to be in physical space 
+	     */
+	    double PhysEvaluate2D(const double *coords);
 
                 double Integral(const double *inarray, const double *w0, const double* w1);
 
@@ -200,20 +218,22 @@ namespace Nektar
                     return 2;
                 }
 
-                virtual void v_BwdTrans(double *outarray) = 0;
-                virtual void v_FwdTrans(const double *inarray) = 0;
+                virtual void v_BwdTrans(const double *inarray, double *outarray) = 0;
+                virtual void v_FwdTrans(const double *inarray, double *outarray) = 0;
 
                 virtual double v_Integral(const double *inarray ) = 0;
                 virtual double v_Evaluate(const double * coords) = 0;
 
-                virtual void v_PhysDeriv(double *outarray_d1,
-                                         double *outarray_d2) = 0;
-                virtual void v_StdPhysDeriv(double *outarray_d1,
-                                            double *outarray_d2) = 0;
                 virtual void v_PhysDeriv(const double *inarray,
                                 double *outarray_d1, double *outarray_d2) = 0;
                 virtual void v_StdPhysDeriv(const double *inarray,
                                 double *outarray_d1, double *outarray_d2) = 0;
+
+		virtual double v_PhysEvaluate(const double * coords)
+		{
+		    NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+			     "local expansions");
+		}
 
         };
 
@@ -224,6 +244,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.6  2007/03/05 19:26:56  bcarmo
+* StdExpansion2D.h modified according to StdExpansion1D. Compiles.
+*
 * Revision 1.6  2007/01/17 16:05:39  bcarmo
 * Version with StdExpansion2D compiling
 *

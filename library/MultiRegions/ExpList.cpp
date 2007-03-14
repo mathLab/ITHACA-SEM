@@ -96,25 +96,25 @@ namespace Nektar
 	    m_transState = eLocal;
 	}
 	
-	void ExpList::IProductWRTBase(ExpList &S1, ExpList &S2)
+	void ExpList::IProductWRTBase(const ExpList &S1)
 	{
 	    int i;
 	    
 	    for(i = 0; i < GetNexp(); ++i)
 	    {
-		GetExp(i)->IProductWRTBase(&S1.GetExp(i)->GetPhys()[0],
-					   &S2.GetExp(i)->GetCoeffs()[0]);
+		GetExp(i)->IProductWRTBase(((ExpList) S1).GetExp(i)->GetPhys(),
+					   GetExp(i)->GetCoeffs());
 	    }
 	}
 	
-       void ExpList::IProductWRTBase(ExpList &S1, double * outarray)
+       void ExpList::IProductWRTBase(const ExpList &S1, double * outarray)
 	{
 	    int cnt = 0;
 	    int i;
 
 	    for(i= 0; i < GetNexp(); ++i)
 	    {
-		GetExp(i)->IProductWRTBase(&S1.GetExp(i)->GetPhys()[0],
+		GetExp(i)->IProductWRTBase(&(((ExpList)S1).GetExp(i)->GetPhys())[0],
 					   outarray+cnt);
 		cnt += GetExp(i)->GetNcoeffs();
 	    }
@@ -151,7 +151,7 @@ namespace Nektar
 	    }
 	}    
 
-	void ExpList::PhysDeriv(ExpList &Sin, ExpList &S_x)
+	void ExpList::PhysDeriv(const ExpList &Sin, ExpList &S_x)
 	{
 	    int i;
 	    double *out[1];
@@ -164,18 +164,34 @@ namespace Nektar
 	    for(i= 0; i < GetNexp(); ++i)
 	    {
 		out[0] = &S_x.GetExp(i)->GetPhys()[0];
-		GetExp(i)->PhysDeriv(1,&Sin.GetExp(i)->GetPhys()[0],out);
+		GetExp(i)->PhysDeriv(1,&(((ExpList)Sin).GetExp(i)->GetPhys())[0],out);
 	    }
 	}    
 
-	void ExpList::FwdTrans(const double *inarray)
+	void ExpList::FwdTrans(const double *inarray, double *outarray)
 	{
-	    int cnt = 0;
+	    int cnt  = 0;
+	    int cnt1 = 0;
 	    int i;
 
 	    for(i= 0; i < GetNexp(); ++i)
 	    {
-		GetExp(i)->FwdTrans(inarray+cnt);
+		GetExp(i)->FwdTrans(inarray+cnt, outarray + cnt1);
+		cnt  += GetExp(i)->GetTotPoints();
+		cnt1 += GetExp(i)->GetNcoeffs();
+	    }
+	    
+	    m_transState = eLocal;
+	}
+
+	void ExpList::FwdTrans(const double *inarray, ExpList &Sout)
+	{
+	    int cnt  = 0;
+	    int i;
+
+	    for(i= 0; i < GetNexp(); ++i)
+	    {
+		GetExp(i)->FwdTrans(inarray+cnt, &Sout.GetExp(i)->GetCoeffs()[0]);
 		cnt  += GetExp(i)->GetTotPoints();
 	    }
 	    
@@ -183,39 +199,41 @@ namespace Nektar
 	}
 
 
-	void ExpList::FwdTrans(ExpList &Sin)
+	void ExpList::FwdTrans(const ExpList &Sin)
 	{
 	    int i;
 
 	    for(i= 0; i < GetNexp(); ++i)
 	    {
-		GetExp(i)->FwdTrans(&Sin.GetExp(i)->GetPhys()[0]);
+		GetExp(i)->FwdTrans( ((ExpList )Sin).GetExp(i)->GetPhys(), GetExp(i)->GetCoeffs());
 	    }
 	    
 	    m_transState = eLocal;
 	}
 		
-	void ExpList::BwdTrans(double *outarray)
+	void ExpList::BwdTrans(const double *inarray, double *outarray)
 	{
 	    int  i;
 	    int  cnt = 0;
+	    int  cnt1 = 0;
 	    
 	    for(i= 0; i < GetNexp(); ++i)
 	    {
-		GetExp(i)->BwdTrans(outarray+cnt);
-		cnt  += GetExp(i)->GetTotPoints();
+		GetExp(i)->BwdTrans(inarray + cnt, outarray+cnt1);
+		cnt   += GetExp(i)->GetNcoeffs();
+		cnt1  += GetExp(i)->GetTotPoints();
 	    }
 	    
 	    m_physState = true;
 	}
 
-	void ExpList::BwdTrans(ExpList &Sout)
+	void ExpList::BwdTrans(const ExpList &Sin)
 	{
 	    int  i;
 	    
 	    for(i= 0; i < GetNexp(); ++i)
 	    {
-		GetExp(i)->BwdTrans(&Sout.GetExp(i)->GetPhys()[0]);
+		GetExp(i)->BwdTrans(((ExpList) Sin).GetExp(i)->GetCoeffs(),GetExp(i)->GetPhys());
 	    }
 	    
 	    m_physState = true;

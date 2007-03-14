@@ -41,7 +41,7 @@
 #include <StdRegions/StdSegExp.h>
 #include <SpatialDomains/SegGeom.h>
 
-#include <LocalRegions/MetricRelatedInfo.h>
+#include <SpatialDomains/GeoFac.h>
 
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/LinSys.hpp>
@@ -74,13 +74,8 @@ namespace Nektar
 	return StdRegions::eSegment;
       }    
 
-      MetricRelatedInfoSharedPtr GenMinfo();    
+      void GenMinfo();    
 
-      inline void SetMinfo(MetricRelatedInfoSharedPtr minfo)
-      {
-	m_minfo = minfo;
-      }
-    
       void GetCoords(double **coords);
       
       void GetCoord(const double *Lcoords, double *coords);
@@ -112,11 +107,6 @@ namespace Nektar
       // Differentiation Methods
       //-----------------------------
     
-      /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
-	  physical quadrature points in the expansion (i.e. (this)->_phys)
-	  and return in \a outarray. */
-      void PhysDeriv(double * outarray);
-
       
       /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
 	  physical quadrature points given by \a inarray and return in \a
@@ -126,8 +116,6 @@ namespace Nektar
 	PhysDeriv(1,inarray,&outarray);
       }
 
-
-      void PhysDeriv(const int n, double **outarray);
       void PhysDeriv(const int n, const double *inarray, double ** outarray);
 
     //----------------------------
@@ -137,18 +125,17 @@ namespace Nektar
     /** \brief Forward transform from physical quadrature space
 	stored in \a inarray and evaluate the expansion coefficients and
 	store in \a (this)->_coeffs  */
-      void FwdTrans(const double * inarray);
-    
+      void FwdTrans(const double * inarray, double *outarray);
 
-      double Evaluate(const double *coord);
-
+      double PhysEvaluate(const double *coord);
+      
     protected:
     
       DNekMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
       DNekLinSysSharedPtr CreateLinSys(const LinSysKey &mkey);
 
       SpatialDomains::SegGeomSharedPtr m_geom;
-      MetricRelatedInfoSharedPtr       m_minfo;
+      SpatialDomains::GeoFacSharedPtr  m_minfo;
 
       LibUtilities::NekManager<MatrixKey, DNekMat, MatrixKey::opLess> m_matrixManager;
       
@@ -166,20 +153,10 @@ namespace Nektar
 		return DetShapeType();
       }
 
-      virtual MetricRelatedInfoSharedPtr v_GenMinfo()
-      {
-		return GenMinfo();
-      }
-
-      virtual MetricRelatedInfoSharedPtr v_GetMinfo()
+      virtual SpatialDomains::GeoFacSharedPtr v_GetMinfo()
       {
 		return m_minfo;
       }
-
-      virtual void  v_SetMinfo(MetricRelatedInfoSharedPtr minfo)
-      {
-	  SetMinfo(minfo);
-      } 
 
       virtual void v_GetCoord(const double *Lcoords, double *coords)
       {
@@ -191,7 +168,7 @@ namespace Nektar
 		GetCoords(coords);
       }
 
-      virtual int GetCoordim()
+      virtual int v_GetCoordim()
       {
 		return m_geom->GetCoordim();
       }
@@ -206,7 +183,7 @@ namespace Nektar
 		WriteToFile(outfile,dumpVar);
       }
 
-      virtual StdRegions::GeomType v_MinfoType()
+      virtual SpatialDomains::GeomType v_MinfoType()
       {
 		return m_minfo->GetGtype();
       }
@@ -224,23 +201,22 @@ namespace Nektar
 	  IProductWRTBase(inarray,outarray);
       }
 
-
-      /// Virtual call to SegExp::PhysDeriv
-      virtual void v_PhysDeriv(double *outarray)
+      /** \brief Virtual call to SegExp::IProduct_WRT_B */
+      virtual void v_IProductWRTBase(const BstShrDArray &inarray, BstShrDArray &outarray)
       {
-	  PhysDeriv(1, &(this->m_phys)[0], &outarray);
-      }
-
-      /// Virtual call to SegExp::PhysDeriv
-      virtual void v_StdPhysDeriv(double * outarray)
-      {
-	  StdSegExp::PhysDeriv(&(this->m_phys)[0], outarray);
+	  IProductWRTBase(&inarray[0],&outarray[0]);
       }
 
       /// Virtual call to SegExp::PhysDeriv
       virtual void v_PhysDeriv(const double *inarray, double * outarray)
       {
 	  PhysDeriv(inarray, outarray);
+      }
+ 
+      /// Virtual call to SegExp::PhysDeriv
+      virtual void v_PhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
+      {
+	  PhysDeriv(&inarray[0], &outarray[0]);
       }
 
       /// Virtual call to SegExp::PhysDeriv
@@ -249,9 +225,10 @@ namespace Nektar
 	  StdSegExp::PhysDeriv(inarray, outarray);
       }
 
-      virtual void v_PhysDeriv(const int n,  double ** outarray)
+      /// Virtual call to SegExp::PhysDeriv
+      virtual void v_StdPhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
       {
-	  PhysDeriv(n, outarray);
+	  StdSegExp::PhysDeriv(&inarray[0], &outarray[0]);
       }
 
       virtual void v_PhysDeriv(const int n, const double *inarray, 
@@ -261,15 +238,21 @@ namespace Nektar
       }
 
       /// Virtual call to SegExp::FwdTrans
-      virtual void v_FwdTrans(const double * inarray)
+      virtual void v_FwdTrans(const double * inarray, double * outarray)
       {
-	  FwdTrans(inarray);
+	  FwdTrans(inarray,outarray);
+      }
+
+      /// Virtual call to SegExp::FwdTrans
+      virtual void v_FwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
+      {
+	  FwdTrans(&inarray[0],&outarray[0]);
       }
 
       /// Virtual call to SegExp::Evaluate
-      virtual double v_Evaluate(const double * coords)
+      virtual double v_PhysEvaluate(const double * coords)
       {
-	  return Evaluate(coords);
+	  return PhysEvaluate(coords);
       }
 
       /** \brief Virtual function to evaluate the discrete \f$ L_\infty\f$
@@ -367,6 +350,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.6  2007/03/02 12:01:55  sherwin
+// Update for working version of LocalRegions/Project1D
+//
 // Revision 1.5  2007/01/15 21:12:26  sherwin
 // First definition
 //

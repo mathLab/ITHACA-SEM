@@ -53,6 +53,7 @@ namespace Nektar
 	{
 	    LocalRegions::SegExpSharedPtr seg;
 	    SpatialDomains::SegGeomVector SegGeoms = graph1D.GetSeggeoms();
+	    SpatialDomains::SegGeomVectorIter def;
 	    
 	    m_ncoeffs = SegGeoms.size()*Ba.GetNumModes();
 	    m_npoints = SegGeoms.size()*Ba.GetNumPoints();
@@ -60,25 +61,10 @@ namespace Nektar
 	    m_transState = eNotSet; 
 	    m_physState  = false;
 	    
-	    // make sure Geofacs are defined in MeshGraph1D
-	    if(graph1D.GetGeofac_defined() != true)
-	    {
-		graph1D.GenXGeoFac();
-	    }
-	    
-	    StdRegions::StdExpansionVector seglist;
-	    SpatialDomains::SegGeomVectorIter def;
-	    int cnt,cnt1;
-	    
-	    cnt = cnt1 = 0;
 	    for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
 	    {
 		seg.reset( new LocalRegions::SegExp(Ba, *def));
-		seg->SetMinfo(seg->GenMinfo());
 		m_exp.push_back(seg);
-		
-		cnt  += Ba.GetNumModes();
-		cnt1 += Ba.GetNumPoints();
 	    }
 	}
     } //end of namespace

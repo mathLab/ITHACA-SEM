@@ -70,22 +70,23 @@ namespace Nektar
 	m_physState = physState;
       }
 
-      inline bool GetPhysState(void)
+      inline bool GetPhysState(void) const
       {
 	return m_physState;
       }
       
       double Integral(const double *inarray);
       void   IProductWRTBase(const double *inarray, double *outarray);
-      void   IProductWRTBase(ExpList &S1, ExpList &S2);
-      void   IProductWRTBase(ExpList &S1, double * outarray);
+      void   IProductWRTBase(const ExpList &S1);
+      void   IProductWRTBase(const ExpList &S1, double * outarray);
       void   PhysDeriv  (const int n, double **outarray);
       void   PhysDeriv  (const int n, const double *inarray, double ** outarray);
-      void   PhysDeriv  (ExpList &Sin, ExpList &S_x);
-      void   FwdTrans (const double *inarray);
-      void   FwdTrans (ExpList &Sin);
-      void   BwdTrans (double *outarray); 
-      void   BwdTrans (ExpList &Sout); 
+      void   PhysDeriv  (const ExpList &Sin, ExpList &S_x);
+      void   FwdTrans (const double *inarray, double *outarray);
+      void   FwdTrans (const double *inarray, ExpList &Sout);
+      void   FwdTrans (const ExpList &Sin);
+      void   BwdTrans (const double *inarray, double *outarray); 
+      void   BwdTrans (const ExpList &Sin); 
       
       void   GetCoords(double **coords);
       void   WriteToFile(std::ofstream &out);
@@ -107,7 +108,7 @@ namespace Nektar
       }
       
 
-      inline StdRegions::StdExpansionSharedPtr GetExp(int n)
+      inline StdRegions::StdExpansionSharedPtr& GetExp(int n)
       {
 	  return m_exp[n];
       }
@@ -123,10 +124,6 @@ namespace Nektar
       
     private:
       
-      virtual void v_BwdTrans(double *outarray)
-      {
-	  BwdTrans(outarray);
-      }
     };
 
     

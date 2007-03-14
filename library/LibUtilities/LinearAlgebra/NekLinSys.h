@@ -133,7 +133,7 @@ namespace LibUtilities
 		    break;
 		case General_Full:
 		    _ipiv = new int[_lda];
-		    Lapack::dgetrf(_lda,_lda,_packed_matrix,_lda,_ipiv,info);     
+		    Lapack::Dgetrf(_lda,_lda,_packed_matrix,_lda,_ipiv,info);     
 		    ASSERTL0(info==0, "NekLinSys::Factor","matrix did not factor");
 		    break;
 		}
@@ -325,7 +325,7 @@ namespace LibUtilities
       ASSERTL0(info==0, "NekLinSys::Solve","matrix did not solve");
       break;
     case General_Full:
-      Lapack::dgetrs('N',_lda,nrhs,_packed_matrix,_lda,_ipiv,u,_lda,info);     
+      Lapack::Dgetrs('N',_lda,nrhs,_packed_matrix,_lda,_ipiv,u,_lda,info);     
       ASSERTL0(info==0, "NekLinSys::Solve","matrix did not solve");
       break;
     }

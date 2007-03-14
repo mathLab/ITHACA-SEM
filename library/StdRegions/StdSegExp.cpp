@@ -162,11 +162,6 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	inline void StdSegExp::PhysDeriv(double * outarray)
-	{
-	    PhysTensorDeriv(outarray);
-	}  
-
 	void StdSegExp::PhysDeriv(const double *inarray, double * outarray)
 	{
 	    PhysTensorDeriv(inarray,outarray);
@@ -176,42 +171,45 @@ namespace Nektar
 	// Evaluation Methods
 	//----------------------------
 	
-	void StdSegExp::BwdTrans(double * outarray)
+	void StdSegExp::BwdTrans(const double *inarray, double *outarray)
 	{
 	    int           nquad = m_base[0]->GetNumPoints();
-	    const double *base  = m_base[0]->GetBdata();
 	    
 	    if(m_base[0]->Collocation())
 	    {
-		Vmath::Vcopy(nquad,&m_coeffs[0],1,outarray,1);
+		Vmath::Vcopy(nquad,inarray,1,outarray,1);
 	    }
 	    else
 	    {
+		const double *base  = m_base[0]->GetBdata();
+
 		Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,base,nquad,
-			    &m_coeffs[0],1,0.0,outarray,1);
+			    inarray,1,0.0,outarray,1);
 	    }
 	}
 	
-	void StdSegExp::FwdTrans(const double *inarray)
+	void StdSegExp::FwdTrans(const double *inarray, double *outarray)
 	{
 	    if(m_base[0]->Collocation())
 	    {
-		Vmath::Vcopy(GetNcoeffs(),inarray,1,&m_coeffs[0],1);
+		Vmath::Vcopy(GetNcoeffs(),inarray,1,outarray,1);
 	    }
 	    else{
-		IProductWRTBase(inarray,&m_coeffs[0]);
+		IProductWRTBase(inarray,outarray);
 
+		// get Mass matrix
 		StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
 		DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
 
-		DNekVec   v(m_ncoeffs,m_coeffs,eWrapper);
+		// solve inverse of system
+		DNekVec   v(m_ncoeffs,outarray,eWrapper);
 		matsys->Solve(v,v);
 	    }
 	}
  
-	double StdSegExp::Evaluate(const double *Lcoord)
+	double StdSegExp::PhysEvaluate(const double *Lcoord)
 	{
-	    return PhysEvaluate(Lcoord);
+	    return StdExpansion1D::PhysEvaluate1D(Lcoord);
 	}
     
     
@@ -269,6 +267,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.19  2007/02/24 09:07:25  sherwin
+ * Working version of stdMatrixManager and stdLinSysMatrix
+ *
  * Revision 1.18  2007/02/23 19:26:08  jfrazier
  * General bug fix and formatting.
  *

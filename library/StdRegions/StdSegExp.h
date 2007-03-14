@@ -130,21 +130,7 @@ namespace Nektar
 	    //-----------------------------
 	    // Differentiation Methods
 	    //-----------------------------
-	    
-	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical 
-	     *  quadrature opoints in the expansion (i.e. (this)->m_phys) and return 
-	     *  in \a outarray.
-	     *
-	     *  This is a wrapper function around StdExpansion1D::TensorDeriv
-	     *
-	     *  This function takes the physical value space array \a m_phys as 
-	     *  discrete function to be evaluated
-	     *  \param outarray the resulting array of the derivative \f$
-	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarray
-	     */
-	    
-	    void PhysDeriv(double * outarray);
-	    
+	    	    
 	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical 
 	     *  quadrature points given by \a inarray and return in \a outarray.
 	     *
@@ -160,9 +146,9 @@ namespace Nektar
 	    // Evaluations Methods
 	    //---------------------------
 	    
-	    /** \brief Backward transform from coefficient space (stored in \a
-	     *  (this)->m_coeffs) and evaluate at the physical quadrature points 
-	     *  \a  outarray 
+	    /** \brief Backward transform from coefficient space given
+	     *  in \a inarray and evaluate at the physical quadrature
+	     *  points \a outarray
 	     *
 	     *  Operation can be evaluated as \f$ u(\xi_{1i}) =
 	     *  \sum_{p=0}^{order-1} \hat{u}_p \phi_p(\xi_{1i}) \f$ or equivalently 
@@ -170,17 +156,25 @@ namespace Nektar
 	     *  \f${\bf B}[i][j] = \phi_i(\xi_{1j}), \mbox{\_coeffs}[p] = {\bf
 	     *  \hat{u}}[p] \f$
 	     *
-	     *  The function takes the coefficient space array \a m_coeffs as input
-	     *  for the transformation
+	     *  The function takes the coefficient array \a inarray as
+	     *  input for the transformation
 	     *
-	     *  \param outarray the resulting array of the values of the function at 
+	     *  \param inarray: the coeffficients of the expansion 
+	     *
+	     *  \param outarray: the resulting array of the values of the function at 
 	     *  the physical quadrature points will be stored in the array \a outarray
 	     */
-	    void BwdTrans(double * outarray);
+	    void BwdTrans(const double *inarray, double * outarray);
+
+	    /** \brief Wrapper call to BwdTrans */
+	    void BwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
+	    {
+		BwdTrans(&inarray[0],&outarray[0]);
+	    }
 	    
 	    /** \brief Forward transform from physical quadrature space stored in 
 	     *  \a inarray and evaluate the expansion coefficients and store in 
-	     *  \a (this)->m_coeffs
+	     *  \a outarray
 	     *
 	     *  Perform a forward transform using a Galerkin projection by taking the 
 	     *  inner product of the physical points and multiplying by the inverse of
@@ -190,16 +184,24 @@ namespace Nektar
 	     *  \phi_p(\xi_1) u(\xi_1) d\xi_1 \f$
 	     *
 	     *  This function stores the expansion coefficients calculated by the 
-	     *  transformation in the coefficient space array \a m_coeffs
+	     *  transformation in the coefficient space array \a outarray
 	     *
-	     *  \param inarray array of physical quadrature points to be transformed
+	     *  \param inarray: array of physical quadrature points to be transformed
+	     *
+	     *  \param outarray: the coeffficients of the expansion 
 	     */ 
-	    void FwdTrans(const double * inarray);
+	    void FwdTrans(const double * inarray, double *outarray);
+
+	    /** \brief Wrapper call to BwdTrans */
+	    void FwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
+	    {
+		FwdTrans(&inarray[0],&outarray[0]);
+	    }
 	    
 	    /** \brief Single Point Evaluation: \f$ u(x) = \sum_p \phi_p(x) \hat{u}_p 
 	     *  = \sum_p h_p(x) u(x_p)\f$
 	     */
-	    double Evaluate(const double *Lcoords);
+	    double PhysEvaluate(const double *Lcoords);
 	    
 	    void MapTo(EdgeOrientation dir, StdExpMap& Map);
 
@@ -260,6 +262,12 @@ namespace Nektar
 	    {
 		IProductWRTBase(inarray,outarray);
 	    } 
+	
+	    /** \brief Virtual call to StdSegExp::IProduct_WRT_B */
+	    virtual void v_IProductWRTBase(const BstShrDArray &inarray, BstShrDArray &outarray)
+	    {
+		IProductWRTBase(&inarray[0],&outarray[0]);
+	    } 
 	    
 	    virtual void v_FillMode(const int mode, double *outarray)
 	    {
@@ -276,23 +284,17 @@ namespace Nektar
 	    {
 		return GenLapMatrix();
 	    }
-
-	    /** \brief Virtual call to StdSegExp::Deriv */
-	    virtual void v_PhysDeriv(double * outarray)
-	    {
-		PhysDeriv(&m_phys[0], outarray);
-	    }
 	    
-	    /** \brief Virtual call to StdSegExp::Deriv */
-	    virtual void v_StdPhysDeriv(double * outarray)
-	    {
-		PhysDeriv(&m_phys[0], outarray);
-	    }
-      
 	    /** \brief Virtual call to StdSegExp::Deriv */
 	    virtual void v_PhysDeriv(const double *inarray, double * outarray)
 	    {
 		PhysDeriv(inarray, outarray);
+	    }
+
+	    /** \brief Virtual call to StdSegExp::Deriv */
+	    virtual void v_PhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
+	    {
+		PhysDeriv(&inarray[0], &outarray[0]);
 	    }
       
 	    /** \brief Virtual call to StdSegExp::Deriv */
@@ -300,23 +302,41 @@ namespace Nektar
             {
 		PhysDeriv(inarray, outarray);
 	    }
+
+	    /** \brief Virtual call to StdSegExp::Deriv */
+	    virtual void v_StdPhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
+            {
+		PhysDeriv(&inarray[0], &outarray[0]);
+	    }
 	    
 	    /** \brief Virtual call to StdSegExp::BwdTrans */
-	    virtual void v_BwdTrans(double * outarray)
+	    virtual void v_BwdTrans(const double *inarray, double * outarray)
 	    {
-		BwdTrans(outarray);
+		BwdTrans(inarray, outarray);
+	    }
+      
+	    /** \brief Virtual call to StdSegExp::BwdTrans */
+	    virtual void v_BwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
+	    {
+		BwdTrans(inarray, outarray);
 	    }
       
 	    /** \brief Virtual call to StdSegExp::FwdTrans */
-	    virtual void v_FwdTrans(const double * inarray)
+	    virtual void v_FwdTrans(const double * inarray, double *outarray)
 	    {
-		FwdTrans(inarray);
+		FwdTrans(inarray, outarray);
+	    }
+
+	    /** \brief Virtual call to StdSegExp::FwdTrans */
+	    virtual void v_FwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
+	    {
+		FwdTrans(inarray, outarray);
 	    }
       
 	    /** \brief Virtual call to StdSegExp::Evaluate */
-	    virtual double v_Evaluate(const double * Lcoords)
+	    virtual double v_PhysEvaluate(const double * Lcoords)
 	    {
-		return Evaluate(Lcoords);
+		return PhysEvaluate(Lcoords);
 	    }
       
 	    virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
@@ -333,6 +353,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.8  2007/02/07 12:51:53  sherwin
+ * Compiling version of Project1D
+ *
  * Revision 1.7  2007/01/28 18:34:24  sherwin
  * More modifications to make Demo Project1D compile
  *

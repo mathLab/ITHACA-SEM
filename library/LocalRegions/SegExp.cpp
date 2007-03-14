@@ -41,12 +41,12 @@ namespace Nektar
     namespace LocalRegions 
     {
 	
+	// constructor
 	SegExp::SegExp(const LibUtilities::BasisKey &Ba, 
 		       SpatialDomains::SegGeomSharedPtr geom): 
 	    StdRegions::StdSegExp(Ba)
 	{
 	    m_geom = geom;    
-
 
             m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMassMatrix,
 		StdRegions::eNoShapeType,*this),
@@ -55,9 +55,11 @@ namespace Nektar
             m_linSysManager.RegisterCreator(LinSysKey(StdRegions::eMassMatrix,
 		StdRegions::eNoShapeType,*this),
 		boost::bind(&SegExp::CreateLinSys, this, _1));
+
+	    GenMinfo();
 	}
 	
-  
+	// copy constructor
 	SegExp::SegExp(const SegExp &S):StdRegions::StdSegExp(S)
 	{
 	    m_geom   = S.m_geom;
@@ -71,32 +73,28 @@ namespace Nektar
 	}
 
 	// interpolate and possibly generate geometric factors. 
-	MetricRelatedInfoSharedPtr SegExp::GenMinfo()
+	void SegExp::GenMinfo()
 	{
-	    MetricRelatedInfoSharedPtr minfo;
 	    SpatialDomains::GeoFacSharedPtr Xgfac;
-	    double *ndata;
-	    const double **gmat, *odata;
+
+	    Xgfac = m_geom->GetXGeoFac();
 	    
-	    if((Xgfac = m_geom->GetXGeoFac()).get() == NULL) //define geometric version 
+	    if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
 	    {
-		Xgfac = m_geom->GenXGeoFac();
-		m_geom->SetXGeoFac(Xgfac);
+		m_minfo = Xgfac;
 	    }
-	    
-	    int coordim = m_geom->GetCoordim();
-	    StdRegions::GeomType gtype = Xgfac->GetGtype();
-	    
-	    minfo.reset(new MetricRelatedInfo (gtype,1,coordim));
-	    
-	    // interp gfac to 
-	    if(gtype == StdRegions::eDeformed)
+	    else
 	    {
+		SpatialDomains::GeoFac *minfo  = new SpatialDomains::GeoFac [1];
 		LibUtilities::BasisSharedPtr CBasis0;
+		double *ndata;
+		const double **gmat, *odata;
+		int coordim = m_geom->GetCoordim();
+
+		// assume all directiosn of geombasis are same
+		CBasis0 = m_geom->GetBasis(0,0); 
 		
-		CBasis0 = m_geom->GetBasis(0,0); // this assumes all geombasis are same
-		
-		// basis are different distributions
+		// check to see if basis are different distributions
 		if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey())))
 		{
 		    int i, nq = m_base[0]->GetNumPoints();
@@ -126,25 +124,26 @@ namespace Nektar
 		    ErrorUtil::Error(ErrorUtil::ewarning,__FILE__,__LINE__,
 			 "Need to check/debug routine for deformed elements");
 		}
+		else  // Same data can be used 
+		{
+		    // Copy Geometric data
+		    ndata = MemoryManager::AllocateArray<double>(coordim); 
+		    gmat  = Xgfac->GetGmat();
+		    Blas::Dcopy(coordim,gmat[0],1,ndata,1);
+		    
+		    minfo->ResetGmat(ndata,1,1,coordim);
+		    
+		    // Copy Jacobian
+		    ndata = MemoryManager::AllocateArray<double>(1);	
+		    
+		    odata = Xgfac->GetJac();
+		    ndata[0] = odata[0];
+		    
+		    minfo->ResetJac(ndata);
+		}   
+		
+		m_minfo.reset(minfo);
 	    }
-	    else    // regular geometry
-	    {
-		// interpolate Geometric data
-		ndata = new double [coordim];	
-		gmat  = Xgfac->GetGmat();
-		
-		Blas::Dcopy(coordim,gmat[0],1,ndata,1);
-		minfo->ResetGmat(ndata,1,1,coordim);
-		
-		// interpolate Jacobian
-		ndata = new double [1];	
-		odata = Xgfac->GetJac();
-		
-		ndata[0] = odata[0];
-		minfo->ResetJac(ndata);
-	    }      
-	    
-	    return minfo;
 	}
 	
 	
@@ -176,7 +175,7 @@ namespace Nektar
 	    
 	    // multiply inarray with Jacobian
 	    
-	    if(m_minfo->GetGtype() == StdRegions::eDeformed)
+	    if(m_minfo->GetGtype() == SpatialDomains::eDeformed)
 	    {
 		Vmath::Vmul(nquad0,jac,1,(double*)inarray,1,&tmp[0],1);
 	    }
@@ -230,7 +229,7 @@ namespace Nektar
 	    
 	    // multiply inarray with Jacobian
 	    
-	    if(m_minfo->GetGtype() == StdRegions::eDeformed)
+	    if(m_minfo->GetGtype() == SpatialDomains::eDeformed)
 	    {
 		Vmath::Vmul(nquad0,jac,1,(double*)inarray,1,&tmp[0],1);
 	    }
@@ -271,34 +270,6 @@ namespace Nektar
 	//-----------------------------
 	
 	/** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
-	    physical quadrature opoints in the expansion (i.e. (this)->_phys)
-	    and return in \a outarray. 
-	    
-	    This is a wrapper function around SegExp::Deriv(dim,inarray,outarray)
-	    
-	    Input:\n
-	    
-	    - \a n: number of derivatives to be evaluated where \f$ n \leq  dim\f$
-	
-	    - \a (this)->_phys: array of function evaluated at the
-	    quadrature points
-	    
-	    Output: \n
-	    
-	    - \a outarray: array of the derivatives \f$
-	    du/d_{\xi_1}|_{\xi_{1i}} d\xi_1/dx, 
-	    du/d_{\xi_1}|_{\xi_{1i}} d\xi_1/dy, 
-	    du/d_{\xi_1}|_{\xi_{1i}} d\xi_1/dz, 
-	    \f$ depending on value of \a dim
-	*/
-	
-	
-	void SegExp::PhysDeriv(const int n, double **outarray)
-	{
-	    PhysDeriv(n,&m_phys[0],outarray);
-	}
-	
-	/** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
 	    physical quadrature points given by \a inarray and return in \a
 	    outarray.
 	    
@@ -334,7 +305,7 @@ namespace Nektar
 	    
 	    StdExpansion1D::PhysTensorDeriv(inarray,outarray[n-1]);
 	    
-	    if(m_minfo->GetGtype() == StdRegions::eDeformed)
+	    if(m_minfo->GetGtype() == SpatialDomains::eDeformed)
 	    {
 		for(i = 0; i < n; ++i)
 		{
@@ -357,7 +328,7 @@ namespace Nektar
 	
 	/** \brief Forward transform from physical quadrature space
 	    stored in \a inarray and evaluate the expansion coefficients and
-	    store in \a (this)->_coeffs  
+	    store in \a outarray
 	    
 	    Perform a forward transform using a Galerkin projection by
 	    taking the inner product of the physical points and multiplying
@@ -372,27 +343,26 @@ namespace Nektar
 	    
 	    Outputs:\n
 	    
-	    - (this)->m_coeffs: updated array of expansion coefficients. 
+	    - \a outarray: updated array of expansion coefficients. 
 	    
 	*/ 
 	
 	
 	// need to sort out family of matrices 
-	void SegExp::FwdTrans(const double *inarray)
+	void SegExp::FwdTrans(const double *inarray, double *outarray)
 	{
 	    if(m_base[0]->Collocation())
 	    {
-		Vmath::Vcopy(GetNcoeffs(),inarray,1,&m_coeffs[0],1);
+		Vmath::Vcopy(GetNcoeffs(),inarray,1,outarray,1);
 	    }
 	    else
 	    {
-		IProductWRTBase(inarray,&m_coeffs[0]);
+		IProductWRTBase(inarray,outarray);
 
-		LinSysKey   masskey(StdRegions::eMassMatrix,DetShapeType(),
-				    *this);
+		LinSysKey   masskey(StdRegions::eMassMatrix,DetShapeType(),*this);
 		DNekLinSysSharedPtr matsys = m_linSysManager[masskey];
 
-		DNekVec   v(m_ncoeffs,m_coeffs,eWrapper);
+		DNekVec   v(m_ncoeffs,outarray,eWrapper);
 		matsys->Solve(v,v);
 	    }
 	}
@@ -541,7 +511,7 @@ namespace Nektar
 	    }
 	}
 	
-	double SegExp::Evaluate(const double *coord)
+	double SegExp::PhysEvaluate(const double *coord)
 	{
 	    double val;
 	    double Lcoord;
@@ -549,7 +519,7 @@ namespace Nektar
 	    ASSERTL0(m_geom,"_geom not defined");
 	    m_geom->GetLocCoords(&Lcoord,coord);
 	    
-	    return val = StdSegExp::Evaluate(&Lcoord);
+	    return val = StdSegExp::PhysEvaluate(&Lcoord);
 	}
 	
         DNekMatSharedPtr SegExp::CreateMatrix(const MatrixKey &mkey)
@@ -593,6 +563,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.7  2007/03/02 12:01:54  sherwin
+// Update for working version of LocalRegions/Project1D
+//
 // Revision 1.6  2006/06/01 15:27:27  sherwin
 // Modifications to account for LibUtilities reshuffle
 //

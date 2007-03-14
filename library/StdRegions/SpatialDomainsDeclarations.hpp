@@ -41,6 +41,8 @@ namespace Nektar
   namespace SpatialDomains
   {
 
+      class GeoFac;
+
   } // end of namespace
 } // end of namespace
 
@@ -48,6 +50,9 @@ namespace Nektar
 
 /**
  * $Log: SpatialDomainsDeclarations.hpp,v $
+ * Revision 1.1  2006/05/04 18:58:30  kirby
+ * *** empty log message ***
+ *
  * Revision 1.2  2006/03/04 20:26:54  bnelson
  * Added comments after #endif.
  *

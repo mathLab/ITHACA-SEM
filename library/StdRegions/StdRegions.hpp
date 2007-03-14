@@ -78,13 +78,6 @@ namespace Nektar
             const int kBufSize = 1000;
         };
 
-        enum GeomType
-        {
-            eRegular,
-            eDeformed,
-            eMovingRegular,
-        };
-
         enum MatrixType
         {
             eMassMatrix,
@@ -198,6 +191,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.10  2007/02/24 09:07:25  sherwin
+* Working version of stdMatrixManager and stdLinSysMatrix
+*
 * Revision 1.9  2007/02/23 19:26:08  jfrazier
 * General bug fix and formatting.
 *

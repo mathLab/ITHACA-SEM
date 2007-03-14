@@ -59,7 +59,7 @@ namespace Nektar
 
             virtual ~Geometry();
 
-            inline StdRegions::GeomType GetGtype()
+            inline GeomType GetGtype()
             {
                 return m_xgeofac->GetGtype();
             }
@@ -79,16 +79,22 @@ namespace Nektar
                 return m_coordim;
             }
 
-            inline void SetXGeoFac(GeoFacSharedPtr gfac)
+            inline GeoFacSharedPtr GetXGeoFac(void)
             {
-                m_xgeofac = gfac;
-            }
+		if(!(m_xgeofac.get()))
+		{
+		    GenXGeoFac();
+		}
 
-            inline GeoFacSharedPtr GetXGeoFac()
-            {
                 return m_xgeofac;
             }
 
+
+            // Wrappers around virtual Functions
+	    void GenXGeoFac(void)
+	    {
+		return v_GenXGeoFac();
+	    }
 
         protected:
             int             m_coordim;     // coordinate dimension
@@ -110,6 +116,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.5  2007/01/18 20:59:28  sherwin
+// Before new configuration
+//
 // Revision 1.4  2006/08/18 19:37:17  jfrazier
 // *** empty log message ***
 //

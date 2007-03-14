@@ -40,8 +40,6 @@
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/LocalToGlobalMap1D.h>
 
-#include <StdRegions/StdMatrix.h>
-
 namespace Nektar
 {
     namespace MultiRegions
@@ -52,7 +50,7 @@ namespace Nektar
 	{
 	public:
 	    ContExpList1D();
-	    ContExpList1D(const StdRegions::BasisKey &Ba, 
+	    ContExpList1D(const LibUtilities::BasisKey &Ba, 
 			  SpatialDomains::MeshGraph1D &graph1D);
 	    ~ContExpList1D();
 	    
@@ -61,37 +59,33 @@ namespace Nektar
 		return m_contNcoeffs;
 	    }
 	    
-	    inline double *getContCoeffs()
+	    inline BstShrDArray &getContCoeffs()
 	    {
 		return m_contCoeffs;
 	    }
 	    
 	    inline void ContToLocal()
 	    {
-		m_locToGloMap->ContToLocal(m_contCoeffs,m_coeffs);
+		m_locToGloMap->ContToLocal(m_contCoeffs,this);
 	    }
 	    
 	    inline void LocalToCont()
 	    {
-		m_locToGloMap->LocalToCont(m_coeffs,m_contCoeffs);
+		m_locToGloMap->LocalToCont(this,m_contCoeffs);
 	    }
 	    
 	    
 	    inline void Assemble()
 	    {
-		Assemble(m_coeffs,m_contCoeffs);
+		m_locToGloMap->Assemble(this,m_contCoeffs);
 	    }
 	    
-	    inline void Assemble(const double *loc, double *cont)
-	    {
-		m_locToGloMap->Assemble(loc,cont);
-	    }
-
 	    void IProductWRTBase(const double *inarray, double *outarray);
+	    void IProductWRTBase(const ExpList &In);
 	    
-	    void FwdTrans(const double *inarray);
+	    void FwdTrans(const ExpList &In);
 	    
-	    void BwdTrans(double *outarray);
+	    void BwdTrans(const ExpList &In);
 	    
 	    void GenMassMatrix(void);
 	    
@@ -99,17 +93,13 @@ namespace Nektar
 	    
 	    
 	private:
-	    int      m_contNcoeffs;
-	    double  *m_contCoeffs;
+	    int          m_contNcoeffs;
+	    BstShrDArray m_contCoeffs;
 	    
 	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
 	    
-	    StdRegions::StdMatContainer *m_mass;
+	    DNekMatSharedPtr m_mass;
 	    
-	    virtual void v_BwdTrans(double *outarray)
-	    {
-		BwdTrans(outarray);
-	    }
 	};
     } //end of namespace
 } //end of namespace

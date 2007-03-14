@@ -5,7 +5,6 @@ ADD_NEKTAR_EXECUTABLE(ProjectLoc1D ProjectLoc1DSource)
     optimized LocalRegions debug LocalRegions-g    
     optimized SpatialDomains debug SpatialDomains-g    
     optimized StdRegions debug StdRegions-g    
-    optimized tinyxml debug tinyxml
     )
 
 IF( USE_FRAMEWORK )

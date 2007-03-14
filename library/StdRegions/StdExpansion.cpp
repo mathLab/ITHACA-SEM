@@ -251,7 +251,6 @@ namespace Nektar
         }
 
 
-
         // 2D Interpolation
         void StdExpansion::Interp2D(const  LibUtilities::BasisKey &fbasis0, 
             const LibUtilities::BasisKey &fbasis1, const double *from,  
@@ -311,6 +310,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.23  2007/03/02 12:01:51  sherwin
+* Update for working version of LocalRegions/Project1D
+*
 * Revision 1.22  2007/02/28 19:05:11  sherwin
 * Moved key definitions to their own files to make things more transparent
 *

@@ -49,13 +49,14 @@ namespace Nektar
         class GeoFac
         {
         public:
-            GeoFac(const StdRegions::GeomType gtype, const int expdim, 
-                const int coordim);
+            GeoFac(void);
+
+            GeoFac(const GeomType gtype, const int expdim, const int coordim);
 
             /** \brief One dimensional geometric factors based on one,
             two or three dimensional coordinate description
             **/
-            GeoFac(const StdRegions::GeomType gtype, const int coordim,
+            GeoFac(const GeomType gtype, const int coordim,
                 const StdRegions::StdExpansion1D **Coords);
 
 
@@ -63,18 +64,18 @@ namespace Nektar
             /**  \brief Two dimensional geometric factors based on two
             or three dimensional coordinate description
             **/
-            GeoFac(const StdRegions::GeomType gtype, const int coordim,
+            GeoFac(const GeomType gtype, const int coordim,
 		   const StdRegions::StdExpansion2D **Coords);
 
             /**  \brief Three dimensional geometric factors and Jacobian
             **/
-            GeoFac(const StdRegions::GeomType gtype, 
-                const StdRegions::StdExpansion3D **Coords);
+            GeoFac(const GeomType gtype, 
+		   const StdRegions::StdExpansion3D **Coords);
 #endif
 
             ~GeoFac();
 
-            inline StdRegions::GeomType GetGtype()
+            inline GeomType GetGtype()
             {
                 return m_gtype;
             }
@@ -92,6 +93,12 @@ namespace Nektar
             inline void ResetGmat(double *ndata, int nq, int expdim, 
                 int coordim)
             {
+		if(!m_gmat)
+		{
+		    m_gmat    = new double* [expdim*coordim];
+		    m_gmat[0] = (double *) NULL;
+		}
+
                 if(m_gmat[0])
                 {
                     delete[] m_gmat[0];
@@ -119,7 +126,7 @@ namespace Nektar
             double *  m_jac;
 
         private:
-            StdRegions::GeomType m_gtype;
+            GeomType m_gtype;
         };
 
 	typedef boost::shared_ptr<GeoFac>      GeoFacSharedPtr;
@@ -134,6 +141,9 @@ namespace Nektar
 
 //
 // $Log: GeoFac.h,v $
+// Revision 1.6  2007/03/02 12:01:59  sherwin
+// Update for working version of LocalRegions/Project1D
+//
 // Revision 1.5  2007/02/19 08:06:25  sherwin
 // Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
 //

@@ -182,9 +182,9 @@ namespace Nektar
         void testFullSystem()
         {
             {
-                double matrix_buf[] = { 10, 0, 0,
-                                        0, 5, 0, 
-                                        0, 0, 2 };
+                double matrix_buf[] = { 10.0, 0.0, 0.0,
+                                         0.0, 5.0, 0.0, 
+                                         0.0, 0.0, 2.0 };
     
                 double result_buf[] = { 20, 50, 10 };
     

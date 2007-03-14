@@ -1,7 +1,7 @@
 SET(LOCAL_REGIONS_SOURCES
 #HexExp.cpp
 MatrixKey.cpp
-MetricRelatedInfo.cpp
+#MetricRelatedInfo.cpp
 #NodalTetExp.cpp
 #NodalTriExp.cpp
 #PrismExp.cpp
@@ -16,7 +16,7 @@ SET(LOCAL_REGIONS_HEADERS
 HexExp.h
 LinSys.hpp
 MatrixKey.h
-MetricRelatedInfo.h
+#MetricRelatedInfo.h
 NodalTetExp.h
 NodalTriExp.h
 PrismExp.h

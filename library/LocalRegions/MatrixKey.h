@@ -38,7 +38,7 @@
 
 #include <LocalRegions/LocalRegions.hpp>
 #include <StdRegions/StdMatrixKey.h>
-#include <LocalRegions/MetricRelatedInfo.h>
+#include <SpatialDomains/GeoFac.h>
 
 namespace Nektar
 {
@@ -92,7 +92,7 @@ namespace Nektar
 		return m_stdMatKey;
 	    }
 
-	    MetricRelatedInfoSharedPtr GetMinfo() const
+	    SpatialDomains::GeoFacSharedPtr GetMinfo() const
 	    {
 		return m_minfo;
 	    }
@@ -101,7 +101,7 @@ namespace Nektar
             MatrixKey();
 	    
 	    StdRegions::StdMatrixKeySharedPtr  m_stdMatKey;
-	    MetricRelatedInfoSharedPtr  m_minfo; 
+	    SpatialDomains::GeoFacSharedPtr  m_minfo; 
 	    
         private:
         };
@@ -114,7 +114,10 @@ namespace Nektar
 #endif //STDMATRIXKEY_H
 
 /**
-* $Log: StdMatrixKey.h,v $
+* $Log: MatrixKey.h,v $
+* Revision 1.1  2007/03/04 20:42:14  sherwin
+* Keys for matrix managers
+*
 * Revision 1.1  2007/02/28 19:05:11  sherwin
 * Moved key definitions to their own files to make things more transparent
 *

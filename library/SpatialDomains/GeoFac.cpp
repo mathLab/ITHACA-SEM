@@ -41,10 +41,17 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-      GeoFac::GeoFac(const StdRegions::GeomType gtype, 
+      GeoFac::GeoFac(void):
+	m_gtype(eNoGeomType),
+	m_gmat((double **) NULL),
+	m_jac ((double *) NULL)
+      {
+      }
+
+      GeoFac::GeoFac(const GeomType gtype, 
 		     const int expdim, const int coordim):
 	m_gtype(gtype),
-	m_jac((double *) NULL)
+	  m_jac((double *) NULL)
       {
 	m_gmat    = new double* [expdim*coordim];
 	m_gmat[0] = (double *) NULL;
@@ -61,7 +68,7 @@ namespace Nektar
 	  \frac{d x_3}{d _\xi}\frac{d x_3}{d _\xi}} \f$
 
         **/
-      GeoFac::GeoFac(const StdRegions::GeomType gtype, const int coordim, 
+      GeoFac::GeoFac(const GeomType gtype, const int coordim, 
 		     const StdRegions::StdExpansion1D **Coords)
       {
 	double    *der[3];
@@ -89,12 +96,16 @@ namespace Nektar
 	  ASSERTL2(Coords[i]->GetPointsType(0)  == ptype,
 		   "Points type are different for each coordinate");
 	  
-	  ((StdRegions::StdExpansion1D**) Coords)[i]->GetPhys();
-	  ((StdRegions::StdExpansion1D**) Coords)[i]->StdPhysDeriv(der[i]);
+	  ((StdRegions::StdExpansion1D**) Coords)[i]->BwdTrans(
+					((StdRegions::StdExpansion1D**) Coords)[i]->GetCoeffs(), 
+					((StdRegions::StdExpansion1D**) Coords)[i]->GetPhys());
+
+	  ((StdRegions::StdExpansion1D**) Coords)[i]->StdPhysDeriv(
+			   &(((StdRegions::StdExpansion1D**) Coords)[i]->GetPhys())[0],
+			   der[i]);
 	}
 
-	if((m_gtype == StdRegions::eRegular)||
-	   (m_gtype== StdRegions::eMovingRegular))
+	if((m_gtype == eRegular)||(m_gtype== eMovingRegular))
 	{
 	  m_jac     = new double [1];
 	  m_gmat[0] = new double [coordim];
@@ -190,7 +201,7 @@ namespace Nektar
 	 
       **/
 #ifdef HIGH_D_FUNCTIONS
-      GeoFac::GeoFac(const StdRegions::GeomType gtype, const int n, 
+      GeoFac::GeoFac(const GeomType gtype, const int n, 
 		     const StdRegions::StdExpansion2D **Coords)
       {
 	int        i,nquad0,nquad1,nqtot;
@@ -406,7 +417,7 @@ namespace Nektar
 	 
       **/
       
-      GeoFac::GeoFac(const StdRegions::GeomType gtype, 
+      GeoFac::GeoFac(const GeomType gtype, 
 		     const StdRegions::StdExpansion3D **Coords)  
       {
 	
@@ -585,6 +596,9 @@ namespace Nektar
 
 //
 // $Log: GeoFac.cpp,v $
+// Revision 1.4  2007/03/02 12:01:58  sherwin
+// Update for working version of LocalRegions/Project1D
+//
 // Revision 1.3  2007/02/19 08:06:25  sherwin
 // Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
 //

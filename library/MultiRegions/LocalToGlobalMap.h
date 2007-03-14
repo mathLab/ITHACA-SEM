@@ -53,28 +53,42 @@ namespace Nektar
 	    
             ~LocalToGlobalMap();
 	    
-	    inline int GetMap(const int i) const
+	    inline int GetMap(const int n, const int i) const
 	    {
-		ASSERTL2((i>0)&&(i<m_totLocLen),"index is out of range");
-		
-		return (m_locToContMap.get())[i];
+		return m_locToContMap[n][i];
 	    }
 
-	    inline void LocalToCont(const double *loc, double *cont)
+	    inline void LocalToCont(ExpList &loc, double *cont)
 	    {
-		Vmath::Scatr(m_totLocLen,loc,m_locToContMap.get(),cont);
+		int i;
+		for(i = 0; i < loc.GetNexp(); ++i)
+		{
+		    Vmath::Scatr(loc.GetExp(i).GetNcoeffs(), loc.GetExp(i).GetCoeffs(),
+				 &m_locToContMap[i][0],cont);
+		}
 	    }
 	    
-	    inline void ContToLocal(const double *cont, double *loc)
+	    inline void ContToLocal(const double *cont, ExpList &loc)
 	    {
-		Vmath::Gathr(m_totLocLen,cont,m_locToContMap.get(),loc);
+		int i;
+		for(i = 0; i < loc.GetNexp(); ++i)
+		{
+		    Vmath::Gathr(loc.GetExp(i).GetNCoeffs,cont,&m_locToContMap[i][0],
+				 loc.GetExp(i).GetCoeffs());
+		}
 
 	    }
 	    
-	    inline void Assemble(const double *loc, double *cont)
+	    inline void Assemble(ExpList &loc, double *cont)
 	    {
+		int i;
+
 		Vmath::Zero(m_totGloLen,cont,1);
-		Vmath::Assmb(m_totLocLen,loc,m_locToContMap.get(),cont);
+		for(i = 0; i < loc.GetNexp(); ++i)
+		{
+		    Vmath::Assmb(loc.GetExp(i).GetNcoeffs(),loc.GetExp(i).GetCoeffs(),
+				 &m_locToContMap[i][0],cont);
+		}
 	    }
 	    
 	    inline int GetTotGloLen()
@@ -95,7 +109,11 @@ namespace Nektar
 #endif //LOC2GLOMAP_H
 
 
-/** $Log: Loc2GloMap.h,v $
+/** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.1  2006/07/02 17:16:17  sherwin
+/**
+/** Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+/**
 /** Revision 1.3  2006/06/05 00:14:33  bnelson
 /** Fixed a compiler error (couldn't find boost::shared_ptr) and a couple of formatting updates for the standard.
 /** */

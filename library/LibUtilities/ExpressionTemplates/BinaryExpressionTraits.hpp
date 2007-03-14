@@ -18,9 +18,9 @@
 
 namespace Nektar
 {
-    namespace expt
+	namespace expt
     {
-        // Aggregate information about types.
+		// Aggregate information about types.
         
         template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy, typename enabled = void>
         class BinaryExpressionTraits : 
@@ -189,6 +189,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpressionTraits.hpp,v $
+    Revision 1.8  2007/01/29 01:34:05  bnelson
+    Updates to compile in windows.
+
     Revision 1.7  2007/01/16 17:37:55  bnelson
     Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 

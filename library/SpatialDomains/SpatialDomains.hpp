@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/SpatialDomains.hpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/SpatialDomains.hpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -48,6 +48,14 @@ namespace Nektar
     {
         const double kGeomRightAngleTol = 1e-14;
 
+        enum GeomType
+        {
+            eNoGeomType,
+            eRegular,
+            eDeformed,
+            eMovingRegular,
+        };
+
         enum GeomState
         {
             eNotFilled,
@@ -69,6 +77,9 @@ namespace Nektar
 
 //
 // $Log: SpatialDomains.hpp,v $
+// Revision 1.3  2006/06/01 15:03:59  kirby
+// *** empty log message ***
+//
 // Revision 1.2  2006/06/01 13:42:26  kirby
 // *** empty log message ***
 //

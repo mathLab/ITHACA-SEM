@@ -70,12 +70,6 @@ namespace Nektar
         // Differentiation Methods
         //----------------------------
 
-        inline void StdExpansion2D::PhysTensorDeriv(double *outarray_d0,
-                double *outarray_d1)
-        {
-            PhysTensorDeriv(&m_phys[0], outarray_d0, outarray_d1);
-        }
-
         void StdExpansion2D::PhysTensorDeriv(const double *inarray,
                                      double *outarray_d0, double *outarray_d1)
         {
@@ -114,7 +108,7 @@ namespace Nektar
 
         }
 
-        double StdExpansion2D::PhysEvaluate(const double *coords)
+        double StdExpansion2D::PhysEvaluate2D(const double *coords)
         {
             double val;
             int i;
@@ -181,6 +175,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.6  2007/03/05 19:28:50  bcarmo
+* StdExpansion2D.cpp modified according to StdExpansion1D. Compiles.
+*
 * Revision 1.6  2007/03/05 22:35:21  bcarmo
 * Version with StdExpansion2D compiling
 *

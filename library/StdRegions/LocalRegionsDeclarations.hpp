@@ -41,7 +41,6 @@ namespace Nektar
   namespace LocalRegions
   {
 
-    class MetricRelatedInfo;
 
   } // end of namespace
 } // end of namespace
@@ -50,6 +49,9 @@ namespace Nektar
 
 /**
  * $Log: LocalRegionsDeclarations.hpp,v $
+ * Revision 1.1  2006/05/04 18:58:29  kirby
+ * *** empty log message ***
+ *
  * Revision 1.2  2006/03/04 20:26:54  bnelson
  * Added comments after #endif.
  *

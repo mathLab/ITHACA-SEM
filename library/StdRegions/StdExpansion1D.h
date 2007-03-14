@@ -56,7 +56,6 @@ namespace Nektar
             StdExpansion1D(const StdExpansion1D &T);
             ~StdExpansion1D();
 
-
 	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical
 	     *  quadrature points in the expansion (i.e. \a (this)->m_phys)
 	     *  and return in \a outarray. 
@@ -85,16 +84,6 @@ namespace Nektar
 	     */
             void PhysTensorDeriv(const double *inarray, double * outarray);
 
-            void PhysDeriv  (double *outarray) 
-            {
-                v_PhysDeriv  (outarray);
-            }
-
-            void StdPhysDeriv (double *outarray)
-            {
-                v_StdPhysDeriv (outarray) ;
-            }
-
             void PhysDeriv  (const double *inarray, double *outarray) 
             {
                 v_PhysDeriv (inarray, outarray);
@@ -105,12 +94,41 @@ namespace Nektar
                 v_StdPhysDeriv (inarray,outarray);
             }
 	    
+	    /** \brief This function evaluates the expansion at a single
+	     *  (arbitrary) point of the domain
+	     *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_PhysEvaluate()
+	     *
+	     *  Based on the value of the expansion at the quadrature points,
+	     *  this function calculates the value of the expansion at an 
+	     *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
+	     *  given by the pointer \a coords). This operation, equivalent to
+	     *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
+	     *  is evaluated using Lagrangian interpolants through the quadrature
+	     *  points:
+	     *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
+	     *
+             *  This function requires that the physical value array 
+             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys) 
+             *  is set.
+	     * 
+	     *  \param coords the coordinates of the single point
+	     *  \return returns the value of the expansion at the single point
+	     */
+            double PhysEvaluate(const double * coords)
+            {
+                return v_PhysEvaluate(coords);
+            }
+
+
+
             /** \brief Evaluate a function at points coords which is assumed
 	     *  to be in local collapsed coordinate format. The function is
 	     *  assumed to be in physical space
 	     */
-            double PhysEvaluate(const double *coords);
-
+            double PhysEvaluate1D(const double *coords);
+            
         protected:
 
         private:
@@ -148,19 +166,17 @@ namespace Nektar
                 return 1; 
 	    }
 
-            virtual void   v_BwdTrans (double *outarray)      = 0;
-            virtual void   v_FwdTrans (const double *inarray) = 0;
-
-            virtual double v_Integral(const double *inarray ) = 0;
-            virtual double v_Evaluate(const double * coords) = 0;
-
-            virtual void   v_PhysDeriv    (double *outarray) = 0;
-
-
-            virtual void   v_StdPhysDeriv (double *outarray) = 0;
             virtual void   v_PhysDeriv    (const double *inarray, double *outarray) = 0;
             virtual void   v_StdPhysDeriv (const double *inarray, double *outarray) = 0;
 
+	    virtual void   v_PhysDeriv    (const BstShrDArray &inarray, BstShrDArray &outarray) = 0;
+            virtual void   v_StdPhysDeriv (const BstShrDArray &inarray, BstShrDArray &outarray) = 0;
+
+            virtual double v_PhysEvaluate(const double * coords)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                    "local expansions");
+            }
         };
 
     } //end of namespace
@@ -170,6 +186,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.9  2007/02/21 22:55:16  sherwin
+* First integration of StdMatrixManagers
+*
 * Revision 1.8  2007/02/07 12:51:53  sherwin
 * Compiling version of Project1D
 *

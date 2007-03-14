@@ -42,108 +42,102 @@ namespace Nektar
 	
 	ContExpList1D::ContExpList1D()
 	{
-	    m_mass = (StdRegions::StdMatContainer *)NULL;
 	}
 	
 	ContExpList1D::~ContExpList1D()
 	{
-	    if(m_contCoeffs)
-	    {
-		delete[] m_contCoeffs;
-	    }
-	    
 	}
 
-	ContExpList1D::ContExpList1D(const StdRegions::BasisKey &Ba, 
+	ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba, 
 				     SpatialDomains::MeshGraph1D &graph1D):
 	    ExpList1D(Ba,graph1D)
 	{
 	    
-	    ASSERTL1((Ba.GetBasisType() == StdRegions::Modified_A)
-		     ||(Ba.GetBasisType() == StdRegions::GLL_Lagrange),
+	    ASSERTL1((Ba.GetBasisType() == LibUtilities::Modified_A)
+		     ||(Ba.GetBasisType() == LibUtilities::GLL_Lagrange),
 		     "Expansion not of an boundary-interior type");
 	    
-	    m_mass = (StdRegions::StdMatContainer *)NULL;
-	
 	    // setup mapping array 
-	    m_locToGloMap.reset(new LocalToGlobalMap1D(m_ncoeffs, m_exp_shapes, 
+	    m_locToGloMap.reset(new LocalToGlobalMap1D(m_ncoeffs, 
+						       m_exp_shapes, 
 						       graph1D));
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
-	    m_contCoeffs = new double [m_contNcoeffs];
+	    m_contCoeffs  = MemoryManager::AllocateSharedArray<double> 
+		(m_contNcoeffs);
 	}
-      
-    
-    void ContExpList1D::IProductWRTBase(const double *inarray, double *outarray)
-    {
-      ExpList1D::IProductWRTBase(inarray,m_coeffs);
-      Assemble(m_coeffs,outarray);
-      m_transState = eLocalCont;
-    }
-
-    void ContExpList1D::FwdTrans(const double *inarray)
-    {
-      IProductWRTBase(inarray,m_contCoeffs);
-      if(!m_mass)
-      {
-	GenMassMatrix();
-      }
-      m_mass->Solve(m_contCoeffs,1);
-      m_transState = eContinuous;
-      m_physState = false;
-    }
-
-    void ContExpList1D::BwdTrans(double *outarray)
-    {
-
-      if(m_transState == eContinuous)
-      {
-	ContToLocal();
-      }
-
-      ExpList1D::BwdTrans(outarray);
-    }
-    
-
-    void ContExpList1D::GenMassMatrix(void)
-    {
-	if(!m_mass)
+              
+	void ContExpList1D::IProductWRTBase(const ExpList &In)
 	{
-	    int   i,j,cnt,gid1,gid2,loc_lda;
-	    double *loc_mat;
-	    StdRegions::StdMatContainer *loc_mass;
-	    StdRegions::StdExpansionVectorIter def;
-	    
-	    double *mmat = new double [m_contNcoeffs*m_contNcoeffs];
-	    Vmath::Zero(m_contNcoeffs*m_contNcoeffs,mmat,1);
-	    
-	    m_mass = new StdRegions::StdMatContainer(mmat);
-	    m_mass->SetLda     (m_contNcoeffs);
-	    m_mass->SetMatForm (StdRegions::eSymmetric_Positive);
-	    
-	    // fill global matrix 
-	    for(cnt = 0, def = m_exp_shapes[0].begin(); 
-		def != m_exp_shapes[0].end(); ++def)
+	    ExpList1D::IProductWRTBase(In);
+	    Assemble();
+	    m_transState = eLocalCont;
+	}
+	
+	void ContExpList1D::FwdTrans(const ExpList &In)
+	{
+	    IProductWRTBase(In,*this);
+
+	    if(!(m_mass.get()))
 	    {
-		loc_mass = (*def)->GetMassMatrix();
-		loc_lda = loc_mass->GetLda();
-		loc_mat = loc_mass->GetMatrix();
+		GenMassMatrix();
+	    }
+
+	    m_mass->Solve(m_contCoeffs,1);
+	    m_transState = eContinuous;
+	    m_physState = false;
+	}
+	
+	void ContExpList1D::BwdTrans(ExpList &In)
+	{
+	    
+	    if(m_transState == eContinuous)
+	    {
+		ContToLocal();
+	    }
+	    
+	    ExpList1D::BwdTrans(In);
+	}
+	
+	
+	void ContExpList1D::GenMassMatrix(void)
+	{
+	    if(!(m_mass.get()))
+	    {
+		int   i,j,cnt,gid1,gid2,loc_lda;
+		double *loc_mat;
+		NekMatsharedPtr loc_mass;
+		StdRegions::StdExpansionVectorIter def;
 		
-		for(i = 0; i < loc_lda; ++i)
+		double *mmat = MemoryManager::AllocateArray<double>(m_contNcoeffs*m_contNcoeffs);
+		Vmath::Zero(m_contNcoeffs*m_contNcoeffs,&mmat[0],1);
+		
+		DNekMat Gmass(m_contNCoeffs,m_contNCoeffs);
+		m_mass.reset(Gmass);
+		
+		// fill global matrix 
+		for(cnt = 0, def = m_exp_shapes[0].begin(); 
+		    def != m_exp_shapes[0].end(); ++def)
 		{
-		    gid1 = m_locToGloMap->GetMap(i+cnt);
+		    loc_mass = (*def)->GetMassMatrix();
+		    loc_lda = loc_mass->GetLda();
+		    loc_mat = loc_mass->GetMatrix();
 		    
-		    for(j = 0; j < loc_lda; ++j)
+		    for(i = 0; i < loc_lda; ++i)
 		    {
-			gid2 = m_locToGloMap->GetMap(j+cnt);
-			mmat[gid1*m_contNcoeffs+gid2] += loc_mat[i*loc_lda+j];
+			gid1 = m_locToGloMap->GetMap(i+cnt);
+			
+			for(j = 0; j < loc_lda; ++j)
+			{
+			    gid2 = m_locToGloMap->GetMap(j+cnt);
+			    mmat(gid1*m_contNcoeffs,id2) += loc_mat[i*loc_lda+j];
+			}
 		    }
+		    cnt+=(*def)->GetNcoeffs();
 		}
-		cnt+=(*def)->GetNcoeffs();
 	    }
 	}
-    }
-  } //end of namespace
+    } //end of namespace
 } //end of namespace
 
 

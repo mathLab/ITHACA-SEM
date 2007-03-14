@@ -2,7 +2,7 @@ SET(STD_REGIONS_SOURCES
 StdExpansion.cpp
 StdExpansion1D.cpp
 StdMatrixKey.cpp
-#StdExpansion2D.cpp
+StdExpansion2D.cpp
 #StdExpansion3D.cpp
 StdExpMap.cpp
 #StdHexExp.cpp
@@ -17,7 +17,7 @@ StdSegExp.cpp
 )
 
 SET(STD_REGIONS_HEADERS
-SpatialDomainsDeclarations.h
+SpatialDomainsDeclarations.hpp
 StdExpansion1D.h
 StdExpansion2D.h
 StdExpansion3D.h

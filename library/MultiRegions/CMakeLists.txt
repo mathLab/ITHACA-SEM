@@ -8,7 +8,7 @@ ExpList.cpp
 #LocalToGlobalMap1D.cpp
 #LocalToGlobalMap2D.cpp
 #LocalToGlobalMap3D.cpp
-#sLocalToGlobalMap.cpp
+#LocalToGlobalMap.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS

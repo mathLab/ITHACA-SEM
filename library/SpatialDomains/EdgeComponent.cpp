@@ -140,7 +140,7 @@ namespace Nektar
 
             ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
 
-            return m_xmap[i]->Evaluate(Lcoord);
+            return m_xmap[i]->PhysEvaluate(Lcoord);
         }
 
         void EdgeComponent::AddElmtConnected(int gvo_id, int locid)
@@ -212,6 +212,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.12  2007/02/19 08:06:24  sherwin
+*    Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
+*
 *    Revision 1.11  2006/08/17 21:02:50  jfrazier
 *    Eliminated bug where an array was indexed after it was deleted.
 *

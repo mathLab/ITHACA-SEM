@@ -143,7 +143,7 @@ namespace Nektar
             *  \return returns a pointer to the coefficient array 
             *  \f$ \mathbf{\hat{u}}\f$ 
             */
-            inline BstShrDArray GetCoeffs(void)
+            inline BstShrDArray& GetCoeffs(void)
             {
                 return(m_coeffs);
             }
@@ -185,7 +185,7 @@ namespace Nektar
             *
             *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
             */
-            inline BstShrDArray  GetPhys(void)
+            inline BstShrDArray& GetPhys(void)
             {
                 return(m_phys);
             }
@@ -416,21 +416,30 @@ namespace Nektar
             *  \f${\bf B}[i][j] = \phi_i(\xi_{j})\f$
             *
             *  This function requires that the coefficient array 
-            *  \f$\mathbf{\hat{u}}\f$ (implemented as the attribute #m_coeffs) 
-            *  is set.
+            *  \f$\mathbf{\hat{u}}\f$ provided as \a inarray. 
             *
-            *  The resulting array \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
-            *  containing the expansion 
-            *  evaluated at the quadrature points, is stored in the 
-            *  \a outarray. (Note that the class attribute #m_phys
-            *  provides a suitable location to store this result) 
+            *  The resulting array
+            *  \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$ containing the
+            *  expansion evaluated at the quadrature points, is stored
+            *  in the \a outarray. (Note that the class attribute
+            *  #m_phys provides a suitable location to store this
+            *  result)
             *
-            *  \param outarray contains the values of the expansion evaluated
+            *  \param inarray contains the values of the expansion
+            *  coefficients (input of the function)
+            *
+	    *  \param outarray contains the values of the expansion evaluated
             *  at the quadrature points (output of the function)
             */
-            void  BwdTrans (double *outarray)
+
+            void  BwdTrans (const double *inarray, double *outarray)
             {
-                v_BwdTrans (outarray);
+                v_BwdTrans (inarray, outarray);
+            }
+
+            void  BwdTrans (const BstShrDArray &inarray, BstShrDArray &outarray)
+            {
+                v_BwdTrans (&inarray[0], &outarray[0]);
             }
 
             /** \brief This function performs the Forward transformation from 
@@ -456,14 +465,21 @@ namespace Nektar
             *  function evaluated at the quadrature points 
             *  (i.e. \f$\mathbf{u}\f$),
             *  and stores the resulting coefficients \f$\mathbf{\hat{u}}\f$  
-            *  in the class attribute #m_coeffs 
+            *  in the \a outarray
             *  
             *  \param inarray array of the function discretely evaluated at the
             *  quadrature points
+	    *
+            *  \param outarray array of the function coefficieints 
             */
-            void  FwdTrans (const double *inarray)
+            void  FwdTrans (const double *inarray, double *outarray)
             {
-                v_FwdTrans(inarray);
+                v_FwdTrans(inarray,outarray);
+            }
+
+            void  FwdTrans (const BstShrDArray &inarray, BstShrDArray &outarray)
+            {
+                v_FwdTrans(&inarray[0],&outarray[0]);
             }
 
             /** \brief This function integrates the specified function over the 
@@ -488,33 +504,6 @@ namespace Nektar
                 return v_Integral(inarray);
             }
 	    
-	    /** \brief This function evaluates the expansion at a single
-	     *  (arbitrary) point of the domain
-	     *
-             *  This function is a wrapper around the virtual function 
-             *  \a v_Evaluate()
-	     *
-	     *  Based on the value of the expansion at the quadrature points,
-	     *  this function calculates the value of the expansion at an 
-	     *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
-	     *  given by the pointer \a coords). This operation, equivalent to
-	     *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
-	     *  is evaluated using Lagrangian interpolants through the quadrature
-	     *  points:
-	     *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
-	     *
-             *  This function requires that the physical value array 
-             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys) 
-             *  is set.
-	     * 
-	     *  \param coords the coordinates of the single point
-	     *  \return returns the value of the expansion at the single point
-	     */
-            double Evaluate(const double * coords)
-            {
-                return v_Evaluate(coords);
-            }
-
 	    /** \brief This function fills the array \a outarray with the 
 	     *  \a mode-th mode of the expansion 
 	     *
@@ -552,6 +541,12 @@ namespace Nektar
             {
                 v_IProductWRTBase(inarray, outarray);
             }
+
+            void IProductWRTBase(const BstShrDArray &inarray, BstShrDArray &outarray)
+            {
+                v_IProductWRTBase(&inarray[0], &outarray[0]);
+            }
+
 
 	    /** \brief for the non-tensorial nodal expansions, this function 
 	     *  generates the transformation matrix needed for the 
@@ -675,49 +670,13 @@ namespace Nektar
                 v_WriteToFile(outfile,dumpVar);
             }
 
-            /** \brief this function returns the type of elemental geometry
-             *  
-             *  This function is a wrapper around the virtual function 
-             *  \a v_MinfoType()
-	     *
-             *  The different types of geometry implemented in the code are 
-	     *  defined in the StdRegions::Geomtype enumeration list. 
-	     *  As a result, the function will return one of the types of this 
-	     *  enumeration list.
-             *  
-             *  \return returns the type of geometry
-             */
-            GeomType MinfoType(void)
-            {
-                return v_MinfoType();
-            }
-
-
             // virtual functions related to LocalRegions
 
-            boost::shared_ptr<LocalRegions::MetricRelatedInfo> GenMinfo(void)
-            {
-                return v_GenMinfo();
-            }
-
-            boost::shared_ptr<LocalRegions::MetricRelatedInfo> GetMinfo(void)
+            boost::shared_ptr<SpatialDomains::GeoFac> GetMinfo(void)
             {
                 return v_GetMinfo();
             }
 
-            void SetMinfo(boost::shared_ptr<LocalRegions::MetricRelatedInfo> minfo)
-            {
-                v_SetMinfo(minfo);
-            }
-
-            /** \brief this function returns the dimension of the coordinates 
-	     *  used in the calculations
-             *  
-             *  This function is a wrapper around the virtual function 
-             *  \a v_GetCoordim()
-             *  
-             *  \return returns dimension of the coordinates
-             */
             int GetCoordim()
             {
                 return v_GetCoordim(); 
@@ -785,11 +744,6 @@ namespace Nektar
             DNekMatSharedPtr GenLapMatrix()
             {
                 return v_GenLapMatrix();
-            }
-
-            void PhysDeriv (const int dim, double **outarray) 
-            {
-                v_PhysDeriv (dim, outarray);
             }
 
             void PhysDeriv (const int dim, const double *inarray, 
@@ -940,23 +894,25 @@ namespace Nektar
                 return eNoShapeType;
             }
 
-            virtual void   v_BwdTrans (double *outarray)      = 0;
-            virtual void   v_FwdTrans (const double *inarray) = 0;
+            virtual void   v_BwdTrans        (const double *inarray, double *outarray) = 0;
+            virtual void   v_FwdTrans        (const double *inarray, double *outarray) = 0;
+            virtual void   v_IProductWRTBase (const double *inarray, double *outarray) = 0;
 
-            virtual double v_Integral(const double *inarray ) = 0;
-            virtual double v_Evaluate(const double * coords)  = 0;
+            virtual void   v_BwdTrans        (const BstShrDArray &inarray, BstShrDArray &outarray) = 0;
+            virtual void   v_FwdTrans        (const BstShrDArray &inarray, BstShrDArray &outarray) = 0;
+            virtual void   v_IProductWRTBase (const BstShrDArray &inarray, BstShrDArray &outarray) = 0;
 
-            virtual void   v_PhysDeriv (const int dim, double **outarray)
-            {
-                ASSERTL0(false, "This function is only valid for "
-                    " local expansions");
+            virtual double v_Integral(const double *inarray )
+	    {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                    "local expansions");
             }
 
 
             virtual void   v_PhysDeriv (const int dim, const double *inarray,
-                double **outarray)
+					double **outarray)
             {
-                ASSERTL0(false, "This function is only valid for "
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                     "local expansions");
             }
 
@@ -966,11 +922,6 @@ namespace Nektar
                     "been defined for this shape");
             }
 
-            virtual void v_IProductWRTBase(const double *inarray, double * outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is has not "
-                    "been defined for this shape");
-            }
 
             virtual DNekMatSharedPtr v_GenMassMatrix()
             {
@@ -1057,28 +1008,10 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
             }
 
-            virtual GeomType v_MinfoType()
-            {
-                return eRegular;
-            }
-
-            // virtual functions related to LocalRegions
-            virtual boost::shared_ptr<LocalRegions::MetricRelatedInfo> v_GenMinfo()
+            virtual boost::shared_ptr<SpatialDomains::GeoFac> v_GetMinfo()
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return boost::shared_ptr<LocalRegions::MetricRelatedInfo>();
-            }
-
-            virtual boost::shared_ptr<LocalRegions::MetricRelatedInfo> v_GetMinfo()
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return boost::shared_ptr<LocalRegions::MetricRelatedInfo>();
-            }
-
-            virtual void v_SetMinfo(boost::shared_ptr<LocalRegions::MetricRelatedInfo>
-                minfo)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return boost::shared_ptr<SpatialDomains::GeoFac>();
             }
         };
 
@@ -1092,6 +1025,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.31  2007/03/08 09:34:18  pvos
+* added documentation
+*
 * Revision 1.30  2007/03/05 08:07:12  sherwin
 * Modified so that StdMatrixKey has const calling arguments in its constructor.
 *

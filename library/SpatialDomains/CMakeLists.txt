@@ -8,10 +8,10 @@ Geometry.cpp
 #HexGeom.cpp
 InterfaceComponent.cpp
 MeshComponents.cpp
+MeshGraph.cpp
 MeshGraph1D.cpp
 #MeshGraph2D.cpp
 #MeshGraph3D.cpp
-MeshGraph.cpp
 pchSpatialDomains.cpp
 #PrismGeom.cpp
 #PyrGeom.cpp

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/SegGeom.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/SegGeom.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -72,7 +72,7 @@ namespace Nektar
                 return StdRegions::eSegment;
             }
 
-            GeoFacSharedPtr GenXGeoFac(void);
+            void GenXGeoFac(void);
 
             void GetLocCoords(double *Lcoords, const double *coords);
             inline void SetOwnData()
@@ -92,6 +92,11 @@ namespace Nektar
             {
                 return DetShapeType();
             }
+
+            virtual void v_GenXGeoFac(void)
+            {
+		GenXGeoFac();
+	    }
         };
 
 	// shorthand for boost pointer
@@ -106,6 +111,10 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.6  2006/07/02 17:16:18  sherwin
+//
+// Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+//
 // Revision 1.5  2006/06/01 14:15:31  sherwin
 // Added typdef of boost wrappers and made GeoFac a boost shared pointer.
 //

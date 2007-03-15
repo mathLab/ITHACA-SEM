@@ -10,8 +10,8 @@ testNekManager.cpp
 testNekMatrix.cpp
 testNekPoint.cpp
 testNekVector.cpp
-#Memory/TestNekMemoryManager.cpp
-#StdRegions/testStdSegExp.cpp
+Memory/TestNekMemoryManager.cpp
+StdRegions/testStdSegExp.cpp
 )
 
 SET(UnitTestHeaders
@@ -24,8 +24,8 @@ testNekManager.h
 testNekMatrix.h
 testNekPoint.h
 testNekVector.h
-#Memory/TestNekMemoryManager.h
-#StdRegions/testStdSegExp.h
+Memory/TestNekMemoryManager.h
+StdRegions/testStdSegExp.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)

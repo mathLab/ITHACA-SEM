@@ -23,8 +23,8 @@ using boost::unit_test_framework::test_suite;
 
 #include <UnitTests/testNekManager.h>
 
-//#include <UnitTests/Memory/TestNekMemoryManager.h>
-//#include <UnitTests/StdRegions/testStdSegExp.h>
+#include <UnitTests/Memory/TestNekMemoryManager.h>
+#include <UnitTests/StdRegions/testStdSegExp.h>
 
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
@@ -40,14 +40,14 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIProductWRTBase), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testFwdTrans), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testBwdTrans), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testEvaluate), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testPhysEvaluate), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testNorms), 0);
 
     // Memory Manager
-    //    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testParameterizedConstructors), 0);
-    //    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testSmartPointerAllocation), 0);
-    //    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testArrayAllocation), 0);
-    //    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testSharedArrayAllocation), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testParameterizedConstructors), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testSmartPointerAllocation), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testArrayAllocation), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testSharedArrayAllocation), 0);
 
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointConstruction), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointArithmetic), 0);
@@ -114,6 +114,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.24  2007/03/14 21:24:09  sherwin
+    Update for working version of MultiRegions up to ExpList1D
+
     Revision 1.23  2007/03/14 11:59:45  pvos
     *** empty log message ***
 

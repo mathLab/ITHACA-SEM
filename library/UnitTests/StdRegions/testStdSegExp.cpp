@@ -453,7 +453,7 @@ namespace Nektar
 			{
 			    f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
 			}		
-			E->FwdTrans(&(f.get())[0]);
+			E->FwdTrans(&(f.get())[0],&(E->GetCoeffs())[0]);
 			double *result = &(E->GetCoeffs())[0];
 			double *expected_result = exactmatrices[i];
 
@@ -506,9 +506,9 @@ namespace Nektar
 			    {
 				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
 			    }
-			    E->FwdTrans(&(f.get())[0]);
+			    E->FwdTrans(&(f.get())[0],&(E->GetCoeffs())[0]);
 			    double *result = new double [nq];
-			    E->BwdTrans(result);
+			    E->BwdTrans(&(E->GetCoeffs())[0],result);
 			    double *expected_result = f.get();
 
 			    double epsilon = 1e-12;	
@@ -522,7 +522,7 @@ namespace Nektar
 	    }    
 	}
 
-        void testEvaluate()
+        void testPhysEvaluate()
 	{
 	    double expected_result = -7.0/32.0;
 	    
@@ -554,7 +554,7 @@ namespace Nektar
 			    }
 			    E->SetPhys(&(f.get())[0]);
 			    double x = -0.5;
-			    double result = E->Evaluate(&x);
+			    double result = E->PhysEvaluate(&x);
 
 			    double epsilon = 1e-12;
 			    CHECK_CLOSE_ABS_EXP(result, expected_result, epsilon, btype, nummodes, Qtype, nq);
@@ -607,8 +607,8 @@ namespace Nektar
 			    {
 				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
 			    }
-			    E->FwdTrans(&(f.get())[0]);
-			    E->BwdTrans(&(E->GetPhys())[0]);
+			    E->FwdTrans(&(f.get())[0],&(E->GetCoeffs())[0]);
+			    E->BwdTrans(&(E->GetCoeffs())[0],&(E->GetPhys())[0]);
 	       
 			    double resultL2 = E->L2();
 			    double resultL2err = E->L2(&(f.get())[0]);
@@ -628,6 +628,9 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.cpp,v $
+    Revision 1.3  2007/03/14 12:01:00  pvos
+    Added testcases
+
     Revision 1.2  2007/03/10 13:04:17  pvos
     *** empty log message ***
 

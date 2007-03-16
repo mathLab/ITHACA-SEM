@@ -47,7 +47,7 @@ namespace Nektar
 	void testIProductWRTBase();
 	void testFwdTrans();
 	void testBwdTrans();
-	void testEvaluate();
+	void testPhysEvaluate();
 	void testNorms();
 
     }
@@ -57,6 +57,9 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.h,v $
+    Revision 1.2  2007/03/14 12:01:25  pvos
+    *** empty log message ***
+
     Revision 1.1  2007/03/08 17:07:27  pvos
     added to the repository
 

@@ -83,8 +83,6 @@ namespace Nektar
 {   // IS THIS THE CORRECT NAMESPACE (or should it be StdRegionsUnitTests)
     namespace StdSegExpUnitTests
     {
-        using namespace Nektar;
-
 	const int max_nummodes = 15;
 	const int max_nq = 15;
 	/*	
@@ -628,6 +626,9 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.cpp,v $
+    Revision 1.4  2007/03/16 12:10:37  pvos
+    adapted to the new code
+
     Revision 1.3  2007/03/14 12:01:00  pvos
     Added testcases
 

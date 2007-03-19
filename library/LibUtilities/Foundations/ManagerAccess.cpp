@@ -64,7 +64,7 @@ namespace Nektar
             const bool fourierInited0 = PointsManager().RegisterCreator(PointsKey(0, eFourierEvenlySpaced), FourierPoints::Create);
             const bool polyeInited10 =  PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), PolyEPoints::Create);
 
-	    const bool Ortho_A_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_A, 0, NullPointsKey), Basis::Create);
+	        const bool Ortho_A_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_A, 0, NullPointsKey), Basis::Create);
             const bool Ortho_B_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_B, 0, NullPointsKey), Basis::Create);
             const bool Ortho_C_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_C, 0, NullPointsKey), Basis::Create);
             const bool Modified_A_Inited = BasisManager().RegisterCreator(BasisKey(eModified_A, 0, NullPointsKey), Basis::Create);
@@ -92,6 +92,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.7  2007/03/13 21:31:32  kirby
+ small update to the numbering.
+
 Revision 1.6  2007/03/13 16:59:04  kirby
  added GaussLobattoChebyshev -- we had forgotten it
 

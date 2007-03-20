@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/InterfaceComponent.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/InterfaceComponent.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,6 +33,7 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/InterfaceComponent.h>
@@ -47,6 +48,9 @@ namespace Nektar
 
 //
 // $Log: InterfaceComponent.cpp,v $
+// Revision 1.1  2006/05/04 18:59:00  kirby
+// *** empty log message ***
+//
 // Revision 1.5  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

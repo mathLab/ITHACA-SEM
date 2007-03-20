@@ -40,7 +40,7 @@
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/SpatialDomains.hpp>
-#include <SpatialDomains/GeoFac.h>
+#include <SpatialDomains/GeomFactors.h>
 
 namespace Nektar
 {
@@ -61,17 +61,17 @@ namespace Nektar
 
             inline GeomType GetGtype()
             {
-                return m_xgeofac->GetGtype();
+                return m_geomfactors->GetGtype();
             }
 
             inline const double* GetJac()
             {
-                return m_xgeofac->GetJac();
+                return m_geomfactors->GetJac();
             }
 
             inline const double** GetGmat()
             {
-                return m_xgeofac->GetGmat();
+                return m_geomfactors->GetGmat();
             }
 
             inline const int GetCoordim()
@@ -79,30 +79,30 @@ namespace Nektar
                 return m_coordim;
             }
 
-            inline GeoFacSharedPtr GetXGeoFac(void)
+            inline GeomFactorsSharedPtr GetGeomFactors(void)
             {
-		if(!(m_xgeofac.get()))
-		{
-		    GenXGeoFac();
-		}
+                if(!(m_geomfactors.get()))
+                {
+                    GenGeomFactors();
+                }
 
-                return m_xgeofac;
+                return m_geomfactors;
             }
 
 
             // Wrappers around virtual Functions
-	    void GenXGeoFac(void)
-	    {
-		return v_GenXGeoFac();
-	    }
+            void GenGeomFactors(void)
+            {
+                return v_GenGeomFactors();
+            }
 
         protected:
-            int             m_coordim;     // coordinate dimension
-            GeoFacSharedPtr m_xgeofac;
-            GeomState       m_state; // enum identifier to determine if quad points are filled
+            int                  m_coordim;     // coordinate dimension
+            GeomFactorsSharedPtr m_geomfactors;
+            GeomState            m_state;       // enum identifier to determine if quad points are filled
 
         private:
-            virtual void v_GenXGeoFac(void)
+            virtual void v_GenGeomFactors(void)
             {
                 ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
                     "This function is only valid for shape type geometries");
@@ -116,6 +116,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.6  2007/03/14 21:24:08  sherwin
+// Update for working version of MultiRegions up to ExpList1D
+//
 // Revision 1.5  2007/01/18 20:59:28  sherwin
 // Before new configuration
 //

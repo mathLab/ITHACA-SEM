@@ -33,8 +33,8 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_SPATIALDOMAINS_GEOFAC_H
-#define NEKTAR_SPATIALDOMAINS_GEOFAC_H
+#ifndef NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
+#define NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 
 #include <SpatialDomains/SpatialDomains.hpp>
 
@@ -46,17 +46,17 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        class GeoFac
+        class GeomFactors
         {
         public:
-            GeoFac(void);
+            GeomFactors(void);
 
-            GeoFac(const GeomType gtype, const int expdim, const int coordim);
+            GeomFactors(const GeomType gtype, const int expdim, const int coordim);
 
             /** \brief One dimensional geometric factors based on one,
             two or three dimensional coordinate description
             **/
-            GeoFac(const GeomType gtype, const int coordim,
+            GeomFactors(const GeomType gtype, const int coordim,
                 const StdRegions::StdExpansion1D **Coords);
 
 
@@ -64,16 +64,16 @@ namespace Nektar
             /**  \brief Two dimensional geometric factors based on two
             or three dimensional coordinate description
             **/
-            GeoFac(const GeomType gtype, const int coordim,
+            GeomFactors(const GeomType gtype, const int coordim,
 		   const StdRegions::StdExpansion2D **Coords);
 
             /**  \brief Three dimensional geometric factors and Jacobian
             **/
-            GeoFac(const GeomType gtype, 
+            GeomFactors(const GeomType gtype, 
 		   const StdRegions::StdExpansion3D **Coords);
 #endif
 
-            ~GeoFac();
+            ~GeomFactors();
 
             inline GeomType GetGtype()
             {
@@ -93,11 +93,11 @@ namespace Nektar
             inline void ResetGmat(double *ndata, int nq, int expdim, 
                 int coordim)
             {
-		if(!m_gmat)
-		{
-		    m_gmat    = new double* [expdim*coordim];
-		    m_gmat[0] = (double *) NULL;
-		}
+                if(!m_gmat)
+                {
+                    m_gmat    = new double* [expdim*coordim];
+                    m_gmat[0] = (double *) NULL;
+                }
 
                 if(m_gmat[0])
                 {
@@ -129,18 +129,21 @@ namespace Nektar
             GeomType m_gtype;
         };
 
-	typedef boost::shared_ptr<GeoFac>      GeoFacSharedPtr;
-        typedef std::vector< GeoFacSharedPtr > GeoFacVector;
-        typedef std::vector< GeoFacSharedPtr >::iterator GeoFacVectorIter;
+        typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
+        typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
+        typedef std::vector< GeomFactorsSharedPtr >::iterator GeomFactorsVectorIter;
 	
 
     } //end of namespace
 } //end of namespace
 
-#endif //NEKTAR_SPATIALDOMAINS_GEOFAC_H
+#endif //NEKTAR_SPATIALDOMAINS_GeomFactors_H
 
 //
 // $Log: GeoFac.h,v $
+// Revision 1.7  2007/03/14 21:24:08  sherwin
+// Update for working version of MultiRegions up to ExpList1D
+//
 // Revision 1.6  2007/03/02 12:01:59  sherwin
 // Update for working version of LocalRegions/Project1D
 //

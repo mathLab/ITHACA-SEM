@@ -40,7 +40,7 @@
 #include <SpatialDomains/SpatialDomains.hpp>
 
 #include <SpatialDomains/MeshGraph.h>
-#include <SpatialDomains/GeoFac.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry1D.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/EdgeComponent.h>
@@ -59,11 +59,11 @@ namespace Nektar
 
             ~SegGeom();
 
-	    inline int GetVid(int i){
-		ASSERTL2((i >=0) && (i <= 1),"Verted id must be between 0 and 1");
-		
-		return m_verts[i]->GetVid();
-	    }
+            inline int GetVid(int i){
+                ASSERTL2((i >=0) && (i <= 1),"Verted id must be between 0 and 1");
+
+                return m_verts[i]->GetVid();
+            }
 
             void    FillGeom ();
 
@@ -72,9 +72,8 @@ namespace Nektar
                 return StdRegions::eSegment;
             }
 
-            void GenXGeoFac(void);
-
             void GetLocCoords(double *Lcoords, const double *coords);
+
             inline void SetOwnData()
             {
                 m_owndata = true; 
@@ -84,7 +83,10 @@ namespace Nektar
 
         protected:
             static const int kNverts = 2;
+
             SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
+
+            void GenGeomFactors(void);
 
         private:
             bool m_owndata;   ///< Boolean indicating whether object owns the data
@@ -93,14 +95,14 @@ namespace Nektar
                 return DetShapeType();
             }
 
-            virtual void v_GenXGeoFac(void)
+            virtual void v_GenGeomFactors(void)
             {
-		GenXGeoFac();
-	    }
+        		GenGeomFactors();
+            }
         };
-
-	// shorthand for boost pointer
-	typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;
+        
+        // shorthand for boost pointer
+        typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;
         typedef std::vector< SegGeomSharedPtr > SegGeomVector;
         typedef std::vector< SegGeomSharedPtr >::iterator SegGeomVectorIter;
 
@@ -111,6 +113,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.7  2007/03/14 21:24:08  sherwin
+// Update for working version of MultiRegions up to ExpList1D
+//
 // Revision 1.6  2006/07/02 17:16:18  sherwin
 //
 // Modifications to make MultiRegions work for a connected domain in 2D (Tris)

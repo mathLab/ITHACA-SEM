@@ -38,7 +38,6 @@
 
 #include <SpatialDomains/SpatialDomains.hpp>
 
-#include <SpatialDomains/GeoFac.h>
 #include <SpatialDomains/Geometry.h>
 
 namespace Nektar
@@ -64,6 +63,9 @@ namespace Nektar
 
 //
 // $Log: Geometry1D.h,v $
+// Revision 1.2  2007/02/19 08:06:25  sherwin
+// Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
+//
 // Revision 1.1  2006/05/04 18:58:59  kirby
 // *** empty log message ***
 //

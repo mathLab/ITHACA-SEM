@@ -51,8 +51,8 @@ namespace Nektar
         {
         }
 
-      SegGeom::SegGeom(int id, VertexComponentSharedPtr vert1, VertexComponentSharedPtr  vert2):
-	EdgeComponent(id,vert1->GetCoordim())
+        SegGeom::SegGeom(int id, VertexComponentSharedPtr vert1, VertexComponentSharedPtr  vert2):
+            EdgeComponent(id,vert1->GetCoordim())
         {
             m_owndata = false;
             m_verts[0] = vert1; 
@@ -83,13 +83,13 @@ namespace Nektar
         }
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
-        void SegGeom::GenXGeoFac(void)
-	{
-            GeoFacSharedPtr gfac;
+        void SegGeom::GenGeomFactors(void)
+        {
+            GeomFactorsSharedPtr gfac;
 
             StdRegions::StdExpansion1D ** xmaptemp =
                 new StdRegions::StdExpansion1D*[m_coordim];
-	    
+
             for(int i=0;i<m_coordim;++i)
             {
                 xmaptemp[i] = m_xmap[i];
@@ -99,13 +99,13 @@ namespace Nektar
 
             if(m_xmap[0]->GetBasisNumModes(0)==2)
             {// assumes all direction have same order
-                m_xgeofac.reset( new GeoFac(eRegular, m_coordim, 
+                m_geomfactors.reset( new GeomFactors(eRegular, m_coordim, 
                     (const StdRegions::StdExpansion1D **) xmaptemp));
             }
             else
             {
-                m_xgeofac.reset(new GeoFac(eDeformed, m_coordim, 
-  	            (const StdRegions::StdExpansion1D **) xmaptemp));
+                m_geomfactors.reset(new GeomFactors(eDeformed, m_coordim, 
+                    (const StdRegions::StdExpansion1D **) xmaptemp));
             }
 
             delete[] xmaptemp;
@@ -117,20 +117,20 @@ namespace Nektar
 
         void SegGeom::FillGeom()
         {
-	    if(m_state != ePtsFilled)
+            if(m_state != ePtsFilled)
             {
                 int i;
-		
+
                 for(i = 0; i < m_coordim; ++i){
-		    m_xmap[i]->SetCoeff(0,(*m_verts[0])[i]);
+                    m_xmap[i]->SetCoeff(0,(*m_verts[0])[i]);
                     m_xmap[i]->SetCoeff(1,(*m_verts[1])[i]);
                     m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),m_xmap[i]->GetPhys());
                 }
                 m_state = ePtsFilled;
             }
         }
-	
-	
+
+
         void SegGeom::GetLocCoords(double *Lcoords,const double *coords)
         {
             int i;
@@ -162,7 +162,7 @@ namespace Nektar
             }
             else
             {
-	      ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
+                ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
                     "inverse mapping must be set up to use this call");
             }
         }
@@ -211,6 +211,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.8  2007/03/14 21:24:08  sherwin
+// Update for working version of MultiRegions up to ExpList1D
+//
 // Revision 1.7  2007/02/19 08:06:25  sherwin
 // Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
 //

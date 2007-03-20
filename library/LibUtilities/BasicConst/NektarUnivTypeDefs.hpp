@@ -36,11 +36,13 @@
 #ifndef  NEKTARUNIVTYPEDEF_HPP
 #define  NEKTARUNIVTYPEDEF_HPP
 
+#include <boost/shared_array.hpp>
+
 namespace Nektar
 {
 
     typedef double NekDouble;
-    typedef boost::shared_ptr<NekDouble> NekDoubleSharedPtr;
+    typedef boost::shared_array<NekDouble> NekDoubleSharedPtr;
     typedef std::vector< NekDoubleSharedPtr > NekDoubleVector;
     typedef std::vector< NekDoubleSharedPtr >::iterator NekDoubleVector;
 
@@ -49,5 +51,8 @@ namespace Nektar
 #endif
 
 /***
-$Log: $
+$Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.1  2007/03/20 11:56:25  sherwin
+.
+
 **/

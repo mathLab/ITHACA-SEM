@@ -103,7 +103,7 @@ namespace Nektar
 			void CalculateWeights();
 			void CalculateDerivMatrix();
 
-			void FourierPoints::CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp);
+			void CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp);
 			double PeriodicSincFunction(const double x, const double h);
 		}; // class FourierPoints
 	} // end of namespace

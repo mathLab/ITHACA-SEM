@@ -47,5 +47,5 @@ INSTALL_FILES(${NEKTAR_INCLUDE_DIR}/StdRegions FILES ${STD_REGIONS_HEADERS})
 
 TARGET_LINK_LIBRARIES(StdRegions
         optimized LibUtilities debug LibUtilities-g
-        optimized ${BoostThreadName} debug ${BoostThreadDebugName})
+        optimized ${BOOST_THREAD_LIB} debug ${BOOST_THREAD_DEBUG_LIB})
 

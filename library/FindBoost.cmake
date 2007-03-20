@@ -41,7 +41,7 @@ FIND_LIBRARY( BOOST_FILESYSTEM_LIB NAMES ${BoostFileSystemName}
           /usr/local/lib
           /usr/lib
           C:\\Boost\\lib )
-MESSAGE(${BOOST_FILESYSTEM_LIB})
+
 FIND_LIBRARY( BOOST_FILESYSTEM_DEBUG_LIB NAMES ${BoostFileSystemDebugName}
           PATHS
           ${BOOST_BASE_DIR}/lib

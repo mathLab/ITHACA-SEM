@@ -19,26 +19,20 @@ SET(BOOST_INCLUDE_DIR ${BOOST_BASE_DIR})
 SET(BoostFileSystemName "")
 SET(BoostFileSystemDebugName "")
 
-IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
-    SET(BoostFileSystemName "libboost_filesystem-vc71-mt")
-    SET(BoostFileSystemDebugName "libboost_filesystem-vc71-mt-gd")
-    SET(BoostThreadName "boost_thread-vc71-mt")
-    SET(BoostThreadDebugName "boost_thread-vc71-mt-gd")
-ELSEIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
-    SET(BoostFileSystemName "libboost_filesystem-vc80-mt")
-    SET(BoostFileSystemDebugName "libboost_filesystem-vc80-mt-gd")
-    SET(BoostThreadName "boost_thread-vc80-mt")
-    SET(BoostThreadDebugName "boost_thread-vc80-mt-gd")
-ELSE( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
-    IF( ${CMAKE_COMPILER_IS_GNUCXX} )
-        SET(BoostFileSystemName boost_filesystem-gcc boost_filesystem )
-        SET(BoostFileSystemDebugName boost_filesystem-gcc-d boost_filesystem-d )
-#        SET(BoostThreadName boost_thread-gcc-mt boost_thread-gcc boost_thread-mt boost_thread  )
-#        SET(BoostThreadDebugName boost_thread-gcc-mt-d  boost_thread-mt-d boost_thread-d )
-        SET(BoostThreadName boost_thread-gcc boost_thread  )
-        SET(BoostThreadDebugName  boost_thread-d )
-    ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
-ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
+SET(BoostFileSystemName "libboost_filesystem-vc71-mt" "libboost_filesystem-vc80-mt"
+ 				boost_filesystem-gcc boost_filesystem)
+
+SET(BoostFileSystemDebugName "libboost_filesystem-vc71-mt-gd" "libboost_filesystem-vc80-mt-gd"
+					boost_filesystem-gcc-d
+					boost_filesystem-d
+					${BoostFileSystemName} )
+
+SET(BoostThreadName "boost_thread-vc71-mt" "boost_thread-vc80-mt"
+			boost_thread-gcc-mt boost_thread-gcc boost_thread-mt boost_thread)
+
+SET(BoostThreadDebugName "boost_thread-vc71-mt-gd" "boost_thread-vc80-mt-gd"
+				boost_thread-gcc-mt-d  boost_thread-mt-d
+				boost_thread-d ${BoostThreadName} )
 
 FIND_LIBRARY( BOOST_FILESYSTEM_LIB NAMES ${BoostFileSystemName}
           PATHS
@@ -47,7 +41,7 @@ FIND_LIBRARY( BOOST_FILESYSTEM_LIB NAMES ${BoostFileSystemName}
           /usr/local/lib
           /usr/lib
           C:\\Boost\\lib )
-
+MESSAGE(${BOOST_FILESYSTEM_LIB})
 FIND_LIBRARY( BOOST_FILESYSTEM_DEBUG_LIB NAMES ${BoostFileSystemDebugName}
           PATHS
           ${BOOST_BASE_DIR}/lib

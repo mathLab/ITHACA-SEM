@@ -7,7 +7,8 @@
 
 using namespace Nektar;
 
-static double solution(double x, int order, LibUtilities::BasisType btype);
+static double solutionpoly(double x, int order);
+static double solutionfourier(double x, int order, double a, double b);
 
 // This routine projects a polynomial or trigonmetric functions which 
 // has energy in all mdoes of the expansions and report an error.
@@ -85,9 +86,20 @@ int main(int argc, char *argv[])
     BstShrDArray tmp = GetDoubleTmpSpace(nq);
     double  *xc =  tmp.get();
     E->GetCoords(&xc);
-    for(i = 0; i < nq; ++i)
+
+    if(btype != LibUtilities::eFourier)
     {
-        sol[i] = solution(xc[i],order,btype);
+        for(i = 0; i < nq; ++i)
+        {
+            sol[i] = solutionpoly(xc[i],order);
+        }
+    }
+    else
+    {
+        for(i = 0; i < nq; ++i)
+        {
+            sol[i] = solutionfourier(xc[i],order,x[0],x[1]);
+        }
     }
 
     //---------------------------------------------
@@ -117,7 +129,15 @@ int main(int argc, char *argv[])
 
     //-------------------------------------------
     // Evaulate solution at mid point and print error
-    sol[0] = solution(0.5*(x[1]+x[0]),order,btype);
+    if(btype != LibUtilities::eFourier)
+    {
+        sol[0] = solutionpoly(0.5*(x[1]+x[0]),order);
+    }
+    else
+    {
+        sol[0] = solutionfourier(0.5*(x[1]+x[0]),order,x[0],x[1]);
+    }
+
     double lcoord = 0;
     E->GetCoord(&lcoord,xc);
     double nsol = E->PhysEvaluate(xc);
@@ -128,26 +148,30 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-static double solution(double x, int order, LibUtilities::BasisType btype)
+static double solutionpoly(double x, int order)
 {
     int j;
     double sol;
 
-    if(btype != LibUtilities::eFourier)
+    sol = 0.0;
+    for(j = 0; j < order; ++j)
     {
-        sol = 0.0;
-        for(j = 0; j < order; ++j)
-        {
-            sol += pow(x,j);
-        }
+        sol += pow(x,j);
     }
-    else
+
+    return sol;
+}
+
+static double solutionfourier(double x, int order, double a, double b)
+{
+    int j;
+    double sol;
+    double xx = 2.0*(x-a)/(b-a) - 1.0;
+
+    sol = 0.0;
+    for(j = 0; j < order/2; ++j)
     {
-        sol = 0.0;
-        for(j = 0; j < order/2; ++j)
-        {
-            sol += sin(j*M_PI*x) + cos(j*M_PI*0.5*x);
-        }
+        sol += sin(j*M_PI*xx) + cos(j*M_PI*xx);
     }
 
     return sol;

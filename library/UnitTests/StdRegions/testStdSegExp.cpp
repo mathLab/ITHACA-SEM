@@ -151,17 +151,17 @@ namespace Nektar
 	    };
 
 	    int nummodes = 6;
-	    int nq_min[11]={ceil((2*(nummodes-1.0)+1.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+3.0)/2.0),
-			    ceil((2*(nummodes-1.0)+1.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+3.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    2.0*(nummodes-1.0)+1.0};
+	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)(2.0*(nummodes-1.0)+1.0)};
 	    
 	    for(int i = 0; i < num_BasisTypes; i++)
 	    {
@@ -215,17 +215,17 @@ namespace Nektar
 	    };
 
 	    int nummodes = 6;
-	    int nq_min[11]={ceil((2*(nummodes-1.0)+1.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+3.0)/2.0),
-			    ceil((2*(nummodes-1.0)+1.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+3.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    2.0*(nummodes-1.0)+1.0};
+	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)(2.0*(nummodes-1.0)+1.0)};
 	    
 	    for(int i = 0; i < num_BasisTypes; i++)
 	    {
@@ -260,17 +260,17 @@ namespace Nektar
 	    double expected_result = -4.0/3.0;
 
 	    int order_f = 5;
-	    int nq_min[11]={ceil((order_f+1.0)/2.0),
-			  ceil((order_f+2.0)/2.0),
-			  ceil((order_f+2.0)/2.0),
-			  ceil((order_f+3.0)/2.0),
-			  ceil((order_f+1.0)/2.0),
-			  ceil((order_f+2.0)/2.0),
-			  ceil((order_f+2.0)/2.0),
-			  ceil((order_f+3.0)/2.0),
-			  ceil((order_f+2.0)/2.0),
-			  ceil((order_f+2.0)/2.0),
-			  order_f+1.0};
+	    int nq_min[11]={(int)ceil((order_f+1.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)ceil((order_f+3.0)/2.0),
+			  (int)ceil((order_f+1.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)ceil((order_f+3.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)(order_f+1.0)};
 	    
 	    for(int i = 0; i < num_BasisTypes; i++)
 	    {
@@ -358,17 +358,17 @@ namespace Nektar
 	    };
 
 	    int nummodes = 6;
-	    int nq_min[11]={ceil((2*(nummodes-1.0)+1.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+3.0)/2.0),
-			    ceil((2*(nummodes-1.0)+1.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+3.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    2.0*(nummodes-1.0)+1.0};
+	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)(2.0*(nummodes-1.0)+1.0)};
 	    
 	    for(int i = 0; i < num_BasisTypes; i++)
 	    {
@@ -416,17 +416,17 @@ namespace Nektar
 	    };
 
 	    int nummodes = 6;
-	    int nq_min[11]={ceil((2*(nummodes-1.0)+1.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+3.0)/2.0),
-			    ceil((2*(nummodes-1.0)+1.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+3.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    ceil((2*(nummodes-1.0)+2.0)/2.0),
-			    2.0*(nummodes-1.0)+1.0};
+	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)(2.0*(nummodes-1.0)+1.0)};
 	    
 	    for(int i = 0; i < num_BasisTypes; i++)
 	    {
@@ -477,17 +477,17 @@ namespace Nektar
 
 		    for(int nummodes = 6; nummodes <= max_nummodes; nummodes++)
 		    {
-			int nq_min[11]={ceil((2*(nummodes-1.0)+1.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					ceil((2*(nummodes-1.0)+3.0)/2.0),
-					ceil((2*(nummodes-1.0)+1.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					ceil((2*(nummodes-1.0)+3.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					2.0*(nummodes-1.0)+1.0};
+			int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)(2.0*(nummodes-1.0)+1.0)};
 			
 			for(int nq = nq_min[j] ; nq <= max_nq; nq++)
 			{
@@ -578,17 +578,17 @@ namespace Nektar
 
 		    for(int nummodes = 6; nummodes <= max_nummodes; nummodes++)
 		    {
-			int nq_min[11]={ceil((2*(nummodes-1.0)+1.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					ceil((2*(nummodes-1.0)+3.0)/2.0),
-					ceil((2*(nummodes-1.0)+1.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					ceil((2*(nummodes-1.0)+3.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					ceil((2*(nummodes-1.0)+2.0)/2.0),
-					2.0*(nummodes-1.0)+1.0};
+			int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)(2.0*(nummodes-1.0)+1.0)};
 			
 			for(int nq = nq_min[j]; nq <= max_nq; nq++)
 			{
@@ -626,6 +626,9 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.cpp,v $
+    Revision 1.5  2007/03/16 14:47:56  pvos
+    *** empty log message ***
+
     Revision 1.4  2007/03/16 12:10:37  pvos
     adapted to the new code
 

@@ -61,9 +61,10 @@ namespace Nektar
 	    inline void LocalToCont(ExpList &loc, double *cont)
 	    {
 		int i;
-		for(i = 0; i < loc.GetNexp(); ++i)
+		for(i = 0; i < loc.GetExpSize(); ++i)
 		{
-		    Vmath::Scatr(loc.GetExp(i).GetNcoeffs(), loc.GetExp(i).GetCoeffs(),
+		    Vmath::Scatr(loc.GetExp(i)->GetNcoeffs(), 
+				 &loc.GetExp(i)->GetCoeffs()[0],
 				 &m_locToContMap[i][0],cont);
 		}
 	    }
@@ -71,10 +72,11 @@ namespace Nektar
 	    inline void ContToLocal(const double *cont, ExpList &loc)
 	    {
 		int i;
-		for(i = 0; i < loc.GetNexp(); ++i)
+		for(i = 0; i < loc.GetExpSize(); ++i)
 		{
-		    Vmath::Gathr(loc.GetExp(i).GetNCoeffs,cont,&m_locToContMap[i][0],
-				 loc.GetExp(i).GetCoeffs());
+		    Vmath::Gathr(loc.GetExp(i)->GetNcoeffs(),
+				 cont,&m_locToContMap[i][0],
+				 &loc.GetExp(i)->GetCoeffs()[0]);
 		}
 
 	    }
@@ -84,9 +86,10 @@ namespace Nektar
 		int i;
 
 		Vmath::Zero(m_totGloLen,cont,1);
-		for(i = 0; i < loc.GetNexp(); ++i)
+		for(i = 0; i < loc.GetExpSize(); ++i)
 		{
-		    Vmath::Assmb(loc.GetExp(i).GetNcoeffs(),loc.GetExp(i).GetCoeffs(),
+		    Vmath::Assmb(loc.GetExp(i)->GetNcoeffs(),
+				 &loc.GetExp(i)->GetCoeffs()[0],
 				 &m_locToContMap[i][0],cont);
 		}
 	    }
@@ -97,9 +100,8 @@ namespace Nektar
 	    }
 
         protected:
-            int m_totLocLen;    //< length of local mapping 
-	    int m_totGloLen;    //< length of global dofs
-            boost::shared_ptr<int> m_locToContMap;
+	    int        m_totGloLen;    //< length of global dofs
+	    IntVector  m_locToContMap; //< Vector of boost pointser to integer maps
         private:
 	};
 	
@@ -110,6 +112,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.2  2007/03/14 21:24:08  sherwin
+/** Update for working version of MultiRegions up to ExpList1D
+/**
 /** Revision 1.1  2006/07/02 17:16:17  sherwin
 /**
 /** Modifications to make MultiRegions work for a connected domain in 2D (Tris)

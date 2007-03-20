@@ -42,7 +42,7 @@ namespace Nektar
     {
 
 	StdSegExp::StdSegExp(const LibUtilities::BasisKey &Ba):
-	    StdExpansion1D(Ba,Ba.GetNumModes())
+	    StdExpansion1D(Ba.GetNumModes(),Ba)
 	{    
 	}
 	
@@ -60,63 +60,64 @@ namespace Nektar
 	// Integration Methods
 	//----------------------------
     
-	double StdSegExp::Integral(const double *inarray)
+	double StdSegExp::Integral(const NekDoubleSharedArray &inarray)
 	{
 	    double Int = 0.0;
-	    const double *z,*w0;
+	    const NekDouble *z,*w0;
 	    int    nquad0 = m_base[0]->GetNumPoints();
-	    BstShrDArray tmp = GetDoubleTmpSpace(nquad0);
+	    NekDoubleSharedArray tmp = GetDoubleTmpSpace(nquad0);
     
 	    ExpPointsProperties(0)->GetZW(z,w0);
 
 	    // multiply by integration constants 
-	    Vmath::Vmul(nquad0,(double*)inarray,1,(double*)w0,1,&tmp[0],1);
+	    Vmath::Vmul(nquad0,&inarray[0],1,(NekDouble*)w0,1,&tmp[0],1);
     
 	    Int = Vmath::Vsum(nquad0,&tmp[0],1);
       
 	    return Int;
 	}
 	
-	void StdSegExp::IProductWRTBase(const double *base, 
-					const double * inarray, 
-					double * outarray, int coll_check)
+	void StdSegExp::IProductWRTBase(const NekDouble *base, 
+					const NekDoubleSharedArray &inarray, 
+					NekDoubleSharedArray &outarray, int coll_check)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
-	    const double *z,*w;
-	    BstShrDArray tmp  = GetDoubleTmpSpace(nquad);
+	    const NekDouble *z,*w;
+	    NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad);
 
 	    ExpPointsProperties(0)->GetZW(z,w);
 
-	    Vmath::Vmul(nquad,(double*)inarray,1,(double*)w,1,&tmp[0],1);
+	    Vmath::Vmul(nquad,&inarray[0],1,(NekDouble*)w,1,&tmp[0],1);
 
 	    if(coll_check&&m_base[0]->Collocation())
 	    {
-		Vmath::Vcopy(nquad,&tmp[0],1,outarray,1);
+		Vmath::Vcopy(nquad,&tmp[0],1,&outarray[0],1);
 	    }
 	    else
 	    {
 		Blas::Dgemv('T',nquad,m_base[0]->GetNumModes(),1.0,base,nquad,
-			    &tmp[0],1,0.0,outarray,1);
+			    &tmp[0],1,0.0,&outarray[0],1);
 	    }    
 	}
   
-	void StdSegExp::IProductWRTBase(const double *inarray, double *outarray)
+	void StdSegExp::IProductWRTBase(const NekDoubleSharedArray &inarray, 
+					NekDoubleSharedArray &outarray)
 	{
 	    IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
 	}
 	
-	void StdSegExp::FillMode(const int mode, double *outarray)
+	void StdSegExp::FillMode(const int mode, NekDoubleSharedArray &outarray)
 	{
 	    int   nquad = m_base[0]->GetNumPoints();
-	    const double * base  = m_base[0]->GetBdata();
+	    const NekDouble * base  = m_base[0]->GetBdata();
 	    
 	    ASSERTL2(modes <= m_ncoeffs , 
 	     "calling argument mode is larger than total expansion order");
 
-	    Vmath::Vcopy(nquad,(double *)base+mode*nquad,1, outarray,1);
+	    Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
 	}
 	
-	DNekMatSharedPtr StdSegExp::GenMassMatrix()
+	DNekMatSharedPtr StdSegExp::GenMassMatrix() 
 	{
 	    DNekMatSharedPtr Mat = StdExpansion::GenerateMassMatrix();
 
@@ -130,29 +131,28 @@ namespace Nektar
 	    return Mat;
 	}
 	
-	DNekMatSharedPtr StdSegExp::GenLapMatrix()
+	DNekMatSharedPtr StdSegExp::GenLapMatrix() 
 	{
 	    int    i;
 	    int   nquad = m_base[0]->GetNumPoints();
-	    const double * dbase  = m_base[0]->GetDbdata();
-	    const double *z,*w;
-	    BstShrDArray tmp  = GetDoubleTmpSpace(nquad);
+	    const NekDouble * dbase  = m_base[0]->GetDbdata();
+	    const NekDouble *z,*w;
+	    NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad);
 	    int nummodes = m_base[0]->GetNumModes();
 	    DNekMatSharedPtr Mat;
 
 	    //	    Mat.reset(new DNekMat(nummodes,nummodes,
 	    // new double [nummodes*nummodes]));
 	    Mat = MemoryManager::AllocateSharedPtr<DNekMat>(nummodes,
-		  nummodes,MemoryManager::AllocateArray<double>(nummodes*nummodes));
+		  nummodes,MemoryManager::AllocateArray<NekDouble>(nummodes*nummodes));
 		      
 	    ExpPointsProperties(0)->GetZW(z,w);
     
 	    for(i = 0; i < nummodes; ++i)
 	    {
-		Vmath::Vcopy(nquad,(double *)dbase+i*nquad,1, &tmp[0],1);
-		IProductWRTBase(m_base[0]->GetDbdata(), &tmp[0],
-				&((*Mat).GetPtr())[0]+
-				i*m_base[0]->GetNumModes(),0);
+		Vmath::Vcopy(nquad,(NekDouble *)dbase+i*nquad,1, &tmp[0],1);
+		IProductWRTBase(m_base[0]->GetDbdata(), tmp, tmp, 0);
+		Vmath::Vcopy(nquad,&tmp[0],1,&((*Mat).GetPtr())[0]+ i*m_base[0]->GetNumModes(),1);
 	    }
 	    
 	    return Mat;
@@ -162,7 +162,7 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdSegExp::PhysDeriv(const double *inarray, double * outarray)
+	void StdSegExp::PhysDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray & outarray)
 	{
 	    PhysTensorDeriv(inarray,outarray);
 	}
@@ -171,28 +171,28 @@ namespace Nektar
 	// Evaluation Methods
 	//----------------------------
 	
-	void StdSegExp::BwdTrans(const double *inarray, double *outarray)
+	void StdSegExp::BwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
 	{
 	    int           nquad = m_base[0]->GetNumPoints();
 	    
 	    if(m_base[0]->Collocation())
 	    {
-		Vmath::Vcopy(nquad,inarray,1,outarray,1);
+		Vmath::Vcopy(nquad,&inarray[0],1,&outarray[0],1);
 	    }
 	    else
 	    {
-		const double *base  = m_base[0]->GetBdata();
+		const NekDouble *base  = m_base[0]->GetBdata();
 
 		Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,base,nquad,
-			    inarray,1,0.0,outarray,1);
+			    &inarray[0],1,0.0,&outarray[0],1);
 	    }
 	}
 	
-	void StdSegExp::FwdTrans(const double *inarray, double *outarray)
+	void StdSegExp::FwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
 	{
 	    if(m_base[0]->Collocation())
 	    {
-		Vmath::Vcopy(GetNcoeffs(),inarray,1,outarray,1);
+		Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
 	    }
 	    else{
 		IProductWRTBase(inarray,outarray);
@@ -207,7 +207,7 @@ namespace Nektar
 	    }
 	}
  
-	double StdSegExp::PhysEvaluate(const double *Lcoord)
+	NekDouble StdSegExp::PhysEvaluate(const NekDoubleSharedArray &Lcoord)
 	{
 	    return StdExpansion1D::PhysEvaluate1D(Lcoord);
 	}
@@ -256,10 +256,10 @@ namespace Nektar
 	    }
 	}    
 	
-	void StdSegExp::GetCoords(double **coords)
+	void StdSegExp::GetCoords(NekDoubleArrayVector &coords)
 	{
 	    Blas::Dcopy(GetNumPoints(0),ExpPointsProperties(0)->GetZ(),
-			1,coords[0],1);
+			1,&(coords[0])[0],1);
 	}
     
     }//end namespace
@@ -267,6 +267,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.20  2007/03/14 21:24:09  sherwin
+ * Update for working version of MultiRegions up to ExpList1D
+ *
  * Revision 1.19  2007/02/24 09:07:25  sherwin
  * Working version of stdMatrixManager and stdLinSysMatrix
  *

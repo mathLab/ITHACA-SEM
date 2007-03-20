@@ -49,7 +49,7 @@ namespace Nektar
 	{
         public:
             LocalToGlobalMap1D(){};
-	    LocalToGlobalMap1D(int loclen, std::vector<StdRegions::StdExpansionVector> &exp_shapes, SpatialDomains::MeshGraph1D &graph1D);
+	    LocalToGlobalMap1D(StdRegions::StdExpansionVector &locexp, SpatialDomains::MeshGraph1D &graph1D);
 
             virtual ~LocalToGlobalMap1D();
 	    
@@ -64,7 +64,11 @@ namespace Nektar
 #endif //LOC2GLOMAP1D_H
 
 
-/** $Log: Loc2GloMap.h,v $
+/** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.1  2006/07/02 17:16:17  sherwin
+/**
+/** Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+/**
 /** Revision 1.3  2006/06/05 00:14:33  bnelson
 /** Fixed a compiler error (couldn't find boost::shared_ptr) and a couple of formatting updates for the standard.
 /** */

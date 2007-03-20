@@ -45,7 +45,7 @@ namespace Nektar
 	StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
 				   const ShapeType shapeType,
 				   const StdExpansion &stdExpansion):
-        m_matrixType(matrixType),
+	    m_matrixType(matrixType),
 	    m_shapeType(shapeType)
 	{
 	    m_ncoeffs   = stdExpansion.GetNcoeffs();
@@ -117,6 +117,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.cpp,v $
+* Revision 1.2  2007/03/05 08:07:13  sherwin
+* Modified so that StdMatrixKey has const calling arguments in its constructor.
+*
 * Revision 1.1  2007/02/28 19:05:11  sherwin
 * Moved key definitions to their own files to make things more transparent
 *

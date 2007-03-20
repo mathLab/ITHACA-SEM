@@ -52,9 +52,10 @@ namespace Nektar
         public:
 
             StdExpansion1D();
-            StdExpansion1D(const LibUtilities::BasisKey &Ba, int numcoeffs);
+            StdExpansion1D(int numcoeffs, const LibUtilities::BasisKey &Ba);
             StdExpansion1D(const StdExpansion1D &T);
             ~StdExpansion1D();
+
 
 	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical
 	     *  quadrature points in the expansion (i.e. \a (this)->m_phys)
@@ -70,7 +71,7 @@ namespace Nektar
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
 	     *  \a outarray as output of the function
 	     */
-            void PhysTensorDeriv(double * outarray);
+            void PhysTensorDeriv(NekDoubleSharedArray & outarray);
 	    
 	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
 	     *  physical quadrature points given by \a inarray and return in
@@ -82,14 +83,14 @@ namespace Nektar
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
 	     *  \a outarray as output of the function
 	     */
-            void PhysTensorDeriv(const double *inarray, double * outarray);
+            void PhysTensorDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray & outarray);
 
-            void PhysDeriv  (const double *inarray, double *outarray) 
+            void PhysDeriv  (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray) 
             {
                 v_PhysDeriv (inarray, outarray);
             }
 
-            void StdPhysDeriv (const double *inarray, double *outarray)
+            void StdPhysDeriv (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
             {
                 v_StdPhysDeriv (inarray,outarray);
             }
@@ -116,7 +117,7 @@ namespace Nektar
 	     *  \param coords the coordinates of the single point
 	     *  \return returns the value of the expansion at the single point
 	     */
-            double PhysEvaluate(const double * coords)
+            NekDouble PhysEvaluate(const NekDoubleSharedArray & coords)
             {
                 return v_PhysEvaluate(coords);
             }
@@ -127,13 +128,30 @@ namespace Nektar
 	     *  to be in local collapsed coordinate format. The function is
 	     *  assumed to be in physical space
 	     */
-            double PhysEvaluate1D(const double *coords);
+            NekDouble PhysEvaluate1D(const NekDoubleSharedArray &coords);
+
+	    /** \brief wrapper around virtual call */
+	    void FwdTrans(const StdExpansion1D &in)
+	    {
+		v_FwdTrans(in);
+	    }
+
+	    void BwdTrans(const StdExpansion1D &in)
+	    {
+		v_BwdTrans(in);
+	    }
+
+
             
         protected:
 
         private:
 
             // Virtual Functions ----------------------------------------
+
+            virtual void v_FwdTrans(const StdExpansion1D &in) = 0;
+            virtual void v_BwdTrans(const StdExpansion1D &in) = 0;
+
 
 	    virtual int v_GetNverts() = 0;
 	    virtual int v_GetNedges()
@@ -149,13 +167,14 @@ namespace Nektar
 
             virtual ShapeType v_DetShapeType()                = 0;
 
-            virtual int v_get_nodalpoints(const double *x, const double *y)
+            virtual int v_get_nodalpoints(const NekDoubleSharedArray x, 
+					  const NekDoubleSharedArray y)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
                 return 0;
             }
 
-            virtual void v_GenNBasisTransMatrix(double * outarray)
+            virtual void v_GenNBasisTransMatrix(NekDoubleSharedArray & outarray)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
             }
@@ -166,13 +185,10 @@ namespace Nektar
                 return 1; 
 	    }
 
-            virtual void   v_PhysDeriv    (const double *inarray, double *outarray) = 0;
-            virtual void   v_StdPhysDeriv (const double *inarray, double *outarray) = 0;
+            virtual void   v_PhysDeriv    (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray) = 0;
+            virtual void   v_StdPhysDeriv (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray) = 0;
 
-	    virtual void   v_PhysDeriv    (const BstShrDArray &inarray, BstShrDArray &outarray) = 0;
-            virtual void   v_StdPhysDeriv (const BstShrDArray &inarray, BstShrDArray &outarray) = 0;
-
-            virtual double v_PhysEvaluate(const double * coords)
+            virtual NekDouble v_PhysEvaluate(const NekDoubleSharedArray &coords)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                     "local expansions");
@@ -187,6 +203,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.11  2007/03/20 09:12:47  kirby
+* update of geofac and metric info; fix style issues
+*
 * Revision 1.10  2007/03/14 21:24:09  sherwin
 * Update for working version of MultiRegions up to ExpList1D
 *

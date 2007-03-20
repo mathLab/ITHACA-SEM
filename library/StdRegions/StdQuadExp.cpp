@@ -35,9 +35,6 @@
 
 #include <StdRegions/StdQuadExp.h>
 
-#ifdef max
-#undef max
-#endif
 
 namespace Nektar
 {
@@ -561,6 +558,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.9  2007/01/20 22:35:21  sherwin
+* Version with StdExpansion compiling
+*
 * Revision 1.8  2007/01/18 18:44:45  bnelson
 * Updates to compile on Visual Studio 2005.
 *

@@ -50,9 +50,8 @@ namespace Nektar
 
         public:
             StdExpansion3D();
-            StdExpansion3D(const BasisKey &Ba, const BasisKey &Bb,
-                const BasisKey &Bc, int numcoeffs,
-                double *coeffs, double *phys, bool spaceowner);
+            StdExpansion3D(int numcoeffs, const LibUtilities::BasisKey &Ba, 
+			    const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc);
             StdExpansion3D(const StdExpansion3D &T);
             ~StdExpansion3D();
 
@@ -80,40 +79,29 @@ namespace Nektar
 	     *  \f$\eta_3\f$ direction will be stored in outarray_d3 as output 
 	     *  of the function
 	     */
-            void TensorDeriv(const double *inarray, double *outarray_d1,
-                double *outarray_d2, double *outarray_d3);
-
-            void TensorDeriv(double *outarray_d1, double *outarray_d2,
-                double *outarray_d3);
+            void PhysTensorDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray_d1,
+                NekDoubleSharedArray &outarray_d2, NekDoubleSharedArray &outarray_d3);
 
             /** \brief Evaluate a function at points coords which is assumed
 	     *  to be in local collapsed coordinate format. The function is
 	     *  assumed to be in physical space
 	     */
-            double PhysEvaluate(const double *coords);
+            double PhysEvaluate(const NekDoubleSharedArray &coords);
 
-            void  Deriv(double *outarray_d0, double *outarray_d1, 
-                double *outarray_d2)
+            void PhysDeriv(const NekDoubleSharedArray &inarray, 
+			   NekDoubleSharedArray &outarray_d0, 
+			   NekDoubleSharedArray &outarray_d1, 
+			   NekDoubleSharedArray &outarray_d2)
             {
-                v_Deriv(outarray_d0, outarray_d1, outarray_d2);
+                v_PhysDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
             }
 
-            void  StdDeriv(double *outarray_d0, double *outarray_d1, 
-                double *outarray_d2)
+            void StdPhysDeriv(const NekDoubleSharedArray &inarray,
+			  NekDoubleSharedArray &outarray_d0,
+			  NekDoubleSharedArray &outarray_d1,  
+			  NekDoubleSharedArray &outarray_d2)
             {
-                v_StdDeriv(outarray_d0, outarray_d1, outarray_d2);
-            }
-
-            void Deriv(const double *inarray, double *outarray_d0, 
-                double *outarray_d1, double *outarray_d2)
-            {
-                v_Deriv(inarray, outarray_d0, outarray_d1, outarray_d2);
-            }
-
-            void StdDeriv(const double *inarray, double *outarray_d0,
-                double *outarray_d1,   double *outarray_d2)
-            {
-                v_StdDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
+                v_StdPhysDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
             }
 
 
@@ -127,44 +115,40 @@ namespace Nektar
 	    virtual int v_GetNedges() = 0;
 	    virtual int v_GetNfaces() = 0;
 
-            virtual void v_GenMassMatrix(double * outarray)   = 0;
-            virtual void v_GenLapMatrix (double * outarray)   = 0;
+            virtual void v_GenMassMatrix(NekDoubleSharedArray & outarray)   = 0;
+            virtual void v_GenLapMatrix (NekDoubleSharedArray & outarray)   = 0;
             virtual ShapeType v_DetShapeType()                = 0;
 
-            virtual StdMatContainer *v_GetMassMatrix()        = 0;
-            virtual StdMatContainer *v_GetLapMatrix()         = 0;
+            virtual DNekMatSharedPtr v_GetMassMatrix()        = 0;
+            virtual DNekMatSharedPtr v_GetLapMatrix()         = 0;
 
-            virtual int v_get_nodalpoints(const double *x, const double *y)
+            virtual int v_get_nodalpoints(const NekDoubleSharedArray &x, const NekDoubleSharedArray &y)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
                 return 0;
             }
 
-            virtual void v_GenNBasisTransMatrix(double * outarray)
+            virtual void v_GenNBasisTransMatrix(NekDoubleSharedArray &outarray)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
             }
 
-            virtual StdMatContainer *v_GetNBasisTransMatrix()
-            {
-                ASSERTL0(false, "This function is only valid for nodal expansions");
-                return NULL;
-            }
+            virtual void   v_BwdTrans (const NekDoubleSharedArray &inarray, 
+				       NekDoubleSharedArray &outarray)      = 0;
+            virtual void   v_FwdTrans (const NekDoubleSharedArray &inarray,
+				       NekDoubleSharedArray &outarray)      = 0;
 
-            virtual void   v_BwdTrans (double *outarray)      = 0;
-            virtual void   v_FwdTrans (const double *inarray) = 0;
+            virtual NekDouble v_Integral(const NekDoubleSharedArray &inarray ) = 0;
+            virtual NekDouble v_Evaluate(const NekDoubleSharedArray &coords) = 0;
 
-            virtual double v_Integral(const double *inarray ) = 0;
-            virtual double v_Evaluate(const double * coords) = 0;
-
-            virtual void   v_Deriv(double *outarray_d0, double *outarray_d1,
-                double *outarray_d2) = 0;
-            virtual void   v_StdDeriv(double *outarray_d0, double *outarray_d1,
-                double *outarray_d2) = 0;
-            virtual void   v_Deriv(const double *inarray, double *outarray_d0,
-                double *outarray_d1, double *outarray_d2) = 0;
-            virtual void   v_StdDeriv(const double *inarray, double *outarray_d0,
-                double *outarray_d1, double *outarray_d2) = 0;
+            virtual void   v_PhysDeriv(const NekDoubleSharedArray &inarray, 
+				       NekDoubleSharedArray &outarray_d0,
+				       NekDoubleSharedArray &outarray_d1, 
+				       NekDoubleSharedArray &outarray_d2) = 0;
+            virtual void   v_StdPhysDeriv(const NekDoubleSharedArray &inarray, 
+					  NekDoubleSharedArray &outarray_d0,
+					  NekDoubleSharedArray &outarray_d1,
+					  NekDoubleSharedArray &outarray_d2) = 0;
 
 	    virtual int v_GetCoordim(void)
 	    {
@@ -180,6 +164,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.4  2007/01/17 16:05:40  pvos
+* updated doxygen documentation
+*
 * Revision 1.3  2006/07/02 17:16:18  sherwin
 *
 * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

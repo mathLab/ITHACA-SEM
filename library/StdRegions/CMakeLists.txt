@@ -3,7 +3,7 @@ StdExpansion.cpp
 StdExpansion1D.cpp
 StdMatrixKey.cpp
 StdExpansion2D.cpp
-#StdExpansion3D.cpp
+StdExpansion3D.cpp
 StdExpMap.cpp
 #StdHexExp.cpp
 #StdNodalTetExp.cpp

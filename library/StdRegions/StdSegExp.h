@@ -85,7 +85,7 @@ namespace Nektar
 	     *  \return returns \f$\int^1_{-1} u(\xi_1)d \xi_1 \f$ where \f$inarray[i]
 	     *  = u(\xi_{1i}) \f$
 	     */
-	    double Integral(const double *inarray);
+	    NekDouble Integral(const NekDoubleSharedArray &inarray);
 	    
 	    
 	    /** \brief Inner product of \a inarray over region with respect to the
@@ -98,9 +98,9 @@ namespace Nektar
 	     *  each basis over region will be stored in the array \a outarray as
 	     *  output of the function
 	     */
-	    void IProductWRTBase(const double * inarray, double * outarray);
+	    void IProductWRTBase(const NekDoubleSharedArray & inarray, NekDoubleSharedArray & outarray);
 	    
-	    void FillMode(const int mode, double *outarray);
+	    void FillMode(const int mode, NekDoubleSharedArray &outarray);
 	    
 	    //----------------------------------
 	    // Local Matrix Routines
@@ -139,7 +139,7 @@ namespace Nektar
 	     *  \param  outarray the resulting array of the derivative \f$
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
 	     */
-	    void PhysDeriv(const double *inarray, double * outarray);
+	    void PhysDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray & outarray);
 	    
 	    
 	    //----------------------------
@@ -164,14 +164,8 @@ namespace Nektar
 	     *  \param outarray: the resulting array of the values of the function at 
 	     *  the physical quadrature points will be stored in the array \a outarray
 	     */
-	    void BwdTrans(const double *inarray, double * outarray);
+	    void BwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray & outarray);
 
-	    /** \brief Wrapper call to BwdTrans */
-	    void BwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
-	    {
-		BwdTrans(&inarray[0],&outarray[0]);
-	    }
-	    
 	    /** \brief Forward transform from physical quadrature space stored in 
 	     *  \a inarray and evaluate the expansion coefficients and store in 
 	     *  \a outarray
@@ -190,22 +184,16 @@ namespace Nektar
 	     *
 	     *  \param outarray: the coeffficients of the expansion 
 	     */ 
-	    void FwdTrans(const double * inarray, double *outarray);
+	    void FwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray);
 
-	    /** \brief Wrapper call to BwdTrans */
-	    void FwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
-	    {
-		FwdTrans(&inarray[0],&outarray[0]);
-	    }
-	    
 	    /** \brief Single Point Evaluation: \f$ u(x) = \sum_p \phi_p(x) \hat{u}_p 
 	     *  = \sum_p h_p(x) u(x_p)\f$
 	     */
-	    double PhysEvaluate(const double *Lcoords);
+	    NekDouble PhysEvaluate(const NekDoubleSharedArray &Lcoords);
 	    
 	    void MapTo(EdgeOrientation dir, StdExpMap& Map);
 
-	    void GetCoords(double **coords);
+	    void GetCoords(NekDoubleArrayVector &coords);
 	    
 	protected:
 	    
@@ -229,8 +217,8 @@ namespace Nektar
 	     *  each basis over region will be stored in the array \a outarray as
 	     *  output of the function
 	     */
-	    void IProductWRTBase(const double *base, const double *inarray,
-				 double *outarray, int coll_check);
+	    void IProductWRTBase(const NekDouble *base, const NekDoubleSharedArray &inarray,
+				 NekDoubleSharedArray &outarray, int coll_check);
 	    
 	private:
 
@@ -247,94 +235,80 @@ namespace Nektar
 	    /** \brief Virtual call to integrate the physical point list \a inarray 
 	     *  over region (see StdSegExp::Integral)
 	     */
-	    virtual double v_Integral(const double *inarray )
+	    virtual NekDouble v_Integral(const NekDoubleSharedArray &inarray )
 	    {
 		return Integral(inarray);
 	    } 
 	    
-	    virtual void v_GetCoords(double **coords)
+	    virtual void v_GetCoords(NekDoubleArrayVector &coords)
 	    {
 		GetCoords(coords);
 	    }
 
 	    /** \brief Virtual call to StdSegExp::IProduct_WRT_B */
-	    virtual void v_IProductWRTBase(const double * inarray, double * outarray)
+	    virtual void v_IProductWRTBase(const NekDoubleSharedArray &inarray, 
+					   NekDoubleSharedArray &outarray)
 	    {
 		IProductWRTBase(inarray,outarray);
 	    } 
 	
-	    /** \brief Virtual call to StdSegExp::IProduct_WRT_B */
-	    virtual void v_IProductWRTBase(const BstShrDArray &inarray, BstShrDArray &outarray)
-	    {
-		IProductWRTBase(&inarray[0],&outarray[0]);
-	    } 
-	    
-	    virtual void v_FillMode(const int mode, double *outarray)
+	    virtual void v_FillMode(const int mode, NekDoubleSharedArray &outarray)
 	    {
 		FillMode(mode,outarray);
 	    } 
  
 	    /** \brief Virtual call to GenMassMatrix */
-	    virtual DNekMatSharedPtr v_GenMassMatrix()
+	    virtual DNekMatSharedPtr v_GenMassMatrix() 
 	    {
 		return GenMassMatrix();
 	    }
       
-	    virtual DNekMatSharedPtr v_GenLapMatrix()
+	    virtual DNekMatSharedPtr v_GenLapMatrix() 
 	    {
 		return GenLapMatrix();
 	    }
 	    
-	    /** \brief Virtual call to StdSegExp::Deriv */
-	    virtual void v_PhysDeriv(const double *inarray, double * outarray)
-	    {
-		PhysDeriv(inarray, outarray);
-	    }
 
 	    /** \brief Virtual call to StdSegExp::Deriv */
-	    virtual void v_PhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
+	    virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
 	    {
-		PhysDeriv(&inarray[0], &outarray[0]);
+		PhysDeriv(inarray, outarray);
 	    }
       
-	    /** \brief Virtual call to StdSegExp::Deriv */
-	    virtual void v_StdPhysDeriv(const double *inarray, double * outarray)
-            {
-		PhysDeriv(inarray, outarray);
-	    }
 
 	    /** \brief Virtual call to StdSegExp::Deriv */
-	    virtual void v_StdPhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
+	    virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
             {
-		PhysDeriv(&inarray[0], &outarray[0]);
+		PhysDeriv(inarray, outarray);
 	    }
 	    
 	    /** \brief Virtual call to StdSegExp::BwdTrans */
-	    virtual void v_BwdTrans(const double *inarray, double * outarray)
+	    virtual void v_BwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
 	    {
 		BwdTrans(inarray, outarray);
 	    }
-      
+
 	    /** \brief Virtual call to StdSegExp::BwdTrans */
-	    virtual void v_BwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
+	    virtual void v_BwdTrans(const StdExpansion1D &in)
 	    {
-		BwdTrans(inarray, outarray);
+		BwdTrans(((StdSegExp &)in).GetCoeffs(), m_phys);
 	    }
       
+
 	    /** \brief Virtual call to StdSegExp::FwdTrans */
-	    virtual void v_FwdTrans(const double * inarray, double *outarray)
+	    virtual void v_FwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
 	    {
 		FwdTrans(inarray, outarray);
 	    }
 
 	    /** \brief Virtual call to StdSegExp::FwdTrans */
-	    virtual void v_FwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
+	    virtual void v_FwdTrans(const StdExpansion1D &in)
 	    {
-		FwdTrans(inarray, outarray);
+		FwdTrans(((StdSegExp &) in).GetPhys(), m_coeffs);
 	    }
       
 	    /** \brief Virtual call to StdSegExp::Evaluate */
-	    virtual double v_PhysEvaluate(const double * Lcoords)
+	    virtual NekDouble v_PhysEvaluate(const NekDoubleSharedArray &Lcoords)
 	    {
 		return PhysEvaluate(Lcoords);
 	    }
@@ -353,6 +327,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.9  2007/03/14 21:24:09  sherwin
+ * Update for working version of MultiRegions up to ExpList1D
+ *
  * Revision 1.8  2007/02/07 12:51:53  sherwin
  * Compiling version of Project1D
  *

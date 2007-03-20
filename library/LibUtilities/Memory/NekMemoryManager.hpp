@@ -41,6 +41,8 @@
 #include <LibUtilities/Memory/ThreadSpecificPool.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+
 #include <boost/mpl/contains.hpp>
 #include <boost/mpl/list_c.hpp>
 #include <boost/shared_ptr.hpp>
@@ -56,6 +58,7 @@
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/enum_trailing_params.hpp>
 
+#include <vector>
 namespace Nektar
 {
 
@@ -385,20 +388,16 @@ namespace Nektar
 
     };
 
-  // typedef boost access for use in temporary memory allocation
-  typedef boost::shared_array<double> BstShrDArray;
-  typedef boost::shared_array<int>    BstShrIArray;
-
-  inline BstShrDArray  GetDoubleTmpSpace(const int size)
-  {
-    return MemoryManager::AllocateSharedArray<double>(size);
-  }
-
-  inline BstShrIArray  GetIntTmpSpace(const int size)
-  {
-    return MemoryManager::AllocateSharedArray<int>(size);
-  }
-  
+    inline NekDoubleSharedArray  GetDoubleTmpSpace(const int size)
+    {
+	return MemoryManager::AllocateSharedArray<double>(size);
+    }
+    
+    inline NekIntSharedArray  GetIntTmpSpace(const int size)
+    {
+	return MemoryManager::AllocateSharedArray<int>(size);
+    }
+    
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_MEMORY_MANAGER_H
@@ -406,6 +405,11 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.5  2007/01/29 01:27:49  bnelson
+    Added additional Allocate methods which take more parameters for the constructor.
+
+    Removed the requirement for the user to specify, for each class, whether it can use the memory manager or not.  The memory manager is now a cmake level variable.
+
     Revision 1.4  2006/10/30 05:09:36  bnelson
     Fixed an error deleting object in an array that were not being constructed.
 

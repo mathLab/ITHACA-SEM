@@ -93,9 +93,12 @@ namespace Nektar
             BasisManagerSingleton::Instance().GetZW(m_base[0],z0,w0);
             BasisManagerSingleton::Instance().GetZW(m_base[1],z1,w1);
 
-            switch((int)m_base[1]->GetAlpha())
+            switch(m_base[1]->GetPointsType())
+
+
+(int)m_base[1]->GetAlpha())
             {
-            case 0: // Legendre inner product 
+            case LL0: // Legendre inner product 
                 for(i = 0; i < nquad1; ++i)
                 {
                     w1_tmp[i] = 0.5*(1-z1[i])*w1[i];
@@ -606,6 +609,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.10  2007/01/17 16:36:58  pvos
+* updating doxygen documentation
+*
 * Revision 1.9  2007/01/17 16:05:41  pvos
 * updated doxygen documentation
 *

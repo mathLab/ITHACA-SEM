@@ -66,18 +66,18 @@ namespace Nektar
 	    
 	    inline void ContToLocal()
 	    {
-		m_locToGloMap->ContToLocal(m_contCoeffs,this);
+		m_locToGloMap->ContToLocal(&m_contCoeffs[0],*this);
 	    }
 	    
 	    inline void LocalToCont()
 	    {
-		m_locToGloMap->LocalToCont(this,m_contCoeffs);
+		m_locToGloMap->LocalToCont(*this,&m_contCoeffs[0]);
 	    }
 	    
 	    
 	    inline void Assemble()
 	    {
-		m_locToGloMap->Assemble(this,m_contCoeffs);
+		m_locToGloMap->Assemble(*this,&m_contCoeffs[0]);
 	    }
 	    
 	    void IProductWRTBase(const double *inarray, double *outarray);
@@ -98,7 +98,7 @@ namespace Nektar
 	    
 	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
 	    
-	    DNekMatSharedPtr m_mass;
+	    DNekLinSysSharedPtr m_mass;
 	    
 	};
     } //end of namespace

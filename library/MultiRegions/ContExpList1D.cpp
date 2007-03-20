@@ -58,9 +58,7 @@ namespace Nektar
 		     "Expansion not of an boundary-interior type");
 	    
 	    // setup mapping array 
-	    m_locToGloMap.reset(new LocalToGlobalMap1D(m_ncoeffs, 
-						       m_exp_shapes, 
-						       graph1D));
+	    m_locToGloMap.reset(new LocalToGlobalMap1D(m_exp,graph1D));
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
 	    m_contCoeffs  = MemoryManager::AllocateSharedArray<double> 
@@ -76,19 +74,20 @@ namespace Nektar
 	
 	void ContExpList1D::FwdTrans(const ExpList &In)
 	{
-	    IProductWRTBase(In,*this);
+	    IProductWRTBase(In);
 
 	    if(!(m_mass.get()))
 	    {
 		GenMassMatrix();
 	    }
 
-	    m_mass->Solve(m_contCoeffs,1);
+	    DNekVec v(m_ncoeffs,m_contCoeffs,eWrapper);
+	    m_mass->Solve(v,v);
 	    m_transState = eContinuous;
 	    m_physState = false;
 	}
 	
-	void ContExpList1D::BwdTrans(ExpList &In)
+	void ContExpList1D::BwdTrans(const ExpList &In)
 	{
 	    
 	    if(m_transState == eContinuous)
@@ -104,36 +103,31 @@ namespace Nektar
 	{
 	    if(!(m_mass.get()))
 	    {
-		int   i,j,cnt,gid1,gid2,loc_lda;
+		int   i,j,n,gid1,gid2,loc_lda;
 		double *loc_mat;
-		NekMatsharedPtr loc_mass;
+		DNekMatSharedPtr loc_mass;
 		StdRegions::StdExpansionVectorIter def;
 		
-		double *mmat = MemoryManager::AllocateArray<double>(m_contNcoeffs*m_contNcoeffs);
-		Vmath::Zero(m_contNcoeffs*m_contNcoeffs,&mmat[0],1);
-		
-		DNekMat Gmass(m_contNCoeffs,m_contNCoeffs);
+		DNekLinSys Gmass(m_contNcoeffs,m_contNcoeffs);
 		m_mass.reset(Gmass);
 		
 		// fill global matrix 
-		for(cnt = 0, def = m_exp_shapes[0].begin(); 
-		    def != m_exp_shapes[0].end(); ++def)
+		for(n = 0; n < m_exp.size(); ++n)
 		{
-		    loc_mass = (*def)->GetMassMatrix();
-		    loc_lda = loc_mass->GetLda();
+		    loc_mass = GetExp(n)->GetLocMass(StdRegions::eMassMatrix);
+		    loc_lda = loc_mass->GetColumns();
 		    loc_mat = loc_mass->GetMatrix();
 		    
 		    for(i = 0; i < loc_lda; ++i)
 		    {
-			gid1 = m_locToGloMap->GetMap(i+cnt);
+			gid1 = m_locToGloMap->GetMap(n,i);
 			
 			for(j = 0; j < loc_lda; ++j)
 			{
-			    gid2 = m_locToGloMap->GetMap(j+cnt);
-			    mmat(gid1*m_contNcoeffs,id2) += loc_mat[i*loc_lda+j];
+			    gid2 = m_locToGloMap->GetMap(n,j);
+			    Gmass(gid1*m_contNcoeffs,gid2) += loc_mat[i*loc_lda+j];
 			}
 		    }
-		    cnt+=(*def)->GetNcoeffs();
 		}
 	    }
 	}

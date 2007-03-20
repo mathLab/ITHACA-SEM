@@ -53,43 +53,49 @@ namespace Nektar
 
 
         StdExpansion::StdExpansion(void): 
-        m_numbases(0), 
             m_ncoeffs(0)
         {
         }
 
-        StdExpansion::StdExpansion(int numbases, 
-            const LibUtilities::BasisKey &Ba, 
-            const LibUtilities::BasisKey &Bb, 
-            const LibUtilities::BasisKey &Bc,
-            int numcoeffs):
-        m_numbases(numbases)
+        StdExpansion::StdExpansion(const int numcoeffs, const int numbases,
+				   const LibUtilities::BasisKey &Ba, 
+				   const LibUtilities::BasisKey &Bb, 
+				   const LibUtilities::BasisKey &Bc):
+	    m_ncoeffs(numcoeffs)
         {
-            m_base = MemoryManager::AllocateSharedArray<LibUtilities::BasisSharedPtr>(m_numbases);
-
-            switch(m_numbases)
+            switch(numbases)
             {
-            case 3:
-                ASSERTL2(Bc==LibUtilities::NullBasisKey,
-                    "NULL Basis attempting to be used.");
-                m_base[2] = LibUtilities::BasisManager()[Bc];
-
-            case 2:
-                ASSERTL2(Bb==LibUtilities::NullBasisKey,
-                    "NULL Basis attempting to be used.");
-
-                m_base[1] = LibUtilities::BasisManager()[Bb];
             case 1:
                 ASSERTL2(Ba==LibUtilities::NullBasisKey,
                     "NULL Basis attempting to be used.");
-                m_base[0] = LibUtilities::BasisManager()[Ba];
+                m_base.push_back(LibUtilities::BasisManager()[Ba]);
                 break;
+            case 2:
+                ASSERTL2(Ba==LibUtilities::NullBasisKey,
+                    "NULL Basis attempting to be used.");
+                ASSERTL2(Bb==LibUtilities::NullBasisKey,
+                    "NULL Basis attempting to be used.");
+
+                m_base.push_back(LibUtilities::BasisManager()[Ba]);
+                m_base.push_back(LibUtilities::BasisManager()[Bb]);
+		break;
+            case 3:
+                ASSERTL2(Ba==LibUtilities::NullBasisKey,
+                    "NULL Basis attempting to be used.");
+                ASSERTL2(Bb==LibUtilities::NullBasisKey,
+                    "NULL Basis attempting to be used.");
+                ASSERTL2(Bc==LibUtilities::NullBasisKey,
+                    "NULL Basis attempting to be used.");
+
+                m_base.push_back(LibUtilities::BasisManager()[Ba]);
+                m_base.push_back(LibUtilities::BasisManager()[Bb]);
+                m_base.push_back(LibUtilities::BasisManager()[Bc]);
+
             default:
                 ASSERTL0(false, "numbases incorrectly specified");
             };
 
             //allocate memory for coeffs
-            m_ncoeffs = numcoeffs;
             m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
             Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
 
@@ -106,43 +112,28 @@ namespace Nektar
         } //end constructor
 
 
-        StdExpansion::StdExpansion(const StdExpansion &T):
-        m_numbases(T.m_numbases)
+        StdExpansion::StdExpansion(const StdExpansion &T)
         {
-            int i,j;
-
-            m_base = MemoryManager::AllocateSharedArray<LibUtilities::BasisSharedPtr>(m_numbases);
-
-            for(j=0; j<m_numbases; j++)
-            {
-                m_base[j] = T.m_base[j];
-            }
-
+            m_base = T.m_base; 
 
             // NOTE: Copy Constructor produces a deep copy
             // allocate memory for coeffs
             // need to check allocation for variable order. 
             m_ncoeffs = T.m_ncoeffs;
             m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
-            for(i=0; i<m_ncoeffs; i++)
-            {
-                m_coeffs[i] = T.m_coeffs[i];
-            }
+	    Vmath::Vcopy(m_ncoeffs,&T.m_coeffs[0],1,&m_coeffs[0],1);
 
             //allocate memory for phys
-            int numphys = GetTotPoints();
             m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
-            for(j=0; j < numphys; j++)
-            {
-                m_phys[j] = T.m_phys[j];
-            }
+	    Vmath::Vcopy(GetTotPoints(),&T.m_phys[0],1,&m_phys[0],1);
         }
 
         StdExpansion::~StdExpansion()
         {
         }
 
-        DNekMatSharedPtr StdExpansion::CreateStdMatrix(const StdMatrixKey &mkey)
+
+        DNekMatSharedPtr StdExpansion::CreateStdMatrix(const StdMatrixKey &mkey) 
         {
             DNekMatSharedPtr returnval;
 
@@ -160,7 +151,7 @@ namespace Nektar
         }
 
 
-        DNekLinSysSharedPtr StdExpansion::CreateStdLinSys(const StdLinSysKey &mkey)
+        DNekLinSysSharedPtr StdExpansion::CreateStdLinSys(const StdLinSysKey &mkey) 
         {
             DNekLinSysSharedPtr returnval;
 
@@ -178,16 +169,16 @@ namespace Nektar
         }
 
 
-        double StdExpansion::Linf(const double *sol)
+        double StdExpansion::Linf(const NekDoubleSharedArray &sol)
         {
             int     ntot;
             double  val;
-            BstShrDArray  wsp;
+            NekDoubleSharedArray  wsp;
 
-            ntot =  GetTotPoints();
-            wsp = GetDoubleTmpSpace(ntot);
+            ntot = GetTotPoints();
+            wsp  = GetDoubleTmpSpace(ntot);
 
-            Vmath::Vsub(ntot,sol,1,&m_phys[0],1,&wsp[0],1);
+            Vmath::Vsub(ntot,&sol[0],1,&m_phys[0],1,&wsp[0],1);
             Vmath::Vabs(ntot,&wsp[0],1,&wsp[0],1);
             val = Vmath::Vamax(ntot,&wsp[0],1);    
 
@@ -199,18 +190,18 @@ namespace Nektar
             return Vmath::Vamax(GetTotPoints(),&m_phys[0],1);    
         }
 
-        double StdExpansion::L2(const double *sol)
+        double StdExpansion::L2(const NekDoubleSharedArray &sol)
         {
             int     ntot = GetTotPoints();
             double  val;
-            BstShrDArray wsp;
+            NekDoubleSharedArray wsp;
 
             wsp = GetDoubleTmpSpace(ntot);
 
-            Vmath::Vsub(ntot, sol, 1, &m_phys[0], 1, &wsp[0], 1);
-            Vmath::Vmul(ntot, &wsp[0], 1, &wsp[0], 1, &wsp[0], 1);
+            Vmath::Vsub(ntot, &sol[0], 1, &m_phys[0], 1, &wsp[0], 1);
+            Vmath::Vmul(ntot, &wsp[0], 1, &wsp[0],    1, &wsp[0], 1);
 
-            val = sqrt(v_Integral(&wsp[0]));
+            val = sqrt(v_Integral(wsp));
 
             return val;
         }
@@ -219,21 +210,21 @@ namespace Nektar
         {
             int     ntot = GetTotPoints();
             double  val;
-            BstShrDArray wsp;
+            NekDoubleSharedArray wsp;
 
             wsp = GetDoubleTmpSpace(ntot);
 
             Vmath::Vmul(ntot, &m_phys[0], 1, &m_phys[0], 1, &wsp[0], 1);
-            val   = sqrt(v_Integral(&wsp[0]));
+            val   = sqrt(v_Integral(wsp));
 
             return val;
         }
 
-        DNekMatSharedPtr StdExpansion::GenerateMassMatrix()
+        DNekMatSharedPtr StdExpansion::GenerateMassMatrix() 
         {
             int     i;
-            BstShrDArray store = GetDoubleTmpSpace(m_ncoeffs);
-            BstShrDArray tmp   = GetDoubleTmpSpace(GetTotPoints());
+            NekDoubleSharedArray store = GetDoubleTmpSpace(m_ncoeffs);
+            NekDoubleSharedArray tmp   = GetDoubleTmpSpace(GetTotPoints());
 
             DNekMatSharedPtr  Mat;
 
@@ -242,24 +233,23 @@ namespace Nektar
             Blas::Dcopy(m_ncoeffs,&m_coeffs[0],1,&store[0],1);
             for(i=0; i<m_ncoeffs; ++i)
             {
-                v_FillMode(i, &tmp[0]);
-                v_IProductWRTBase(&tmp[0], &((*Mat).GetPtr())[0]+i*m_ncoeffs);
+                v_FillMode(i, tmp);
+                v_IProductWRTBase(tmp, tmp);
+		Vmath::Vcopy(m_ncoeffs,&tmp[0],1,&((*Mat).GetPtr())[0]+i*m_ncoeffs,1);
             }
             Blas::Dcopy(m_ncoeffs,&store[0],1,&m_coeffs[0],1);
 
             return Mat;
         }
 
-
         // 2D Interpolation
         void StdExpansion::Interp2D(const  LibUtilities::BasisKey &fbasis0, 
-            const LibUtilities::BasisKey &fbasis1, const double *from,  
+            const LibUtilities::BasisKey &fbasis1, const NekDoubleSharedArray &from,  
             const LibUtilities::BasisKey &tbasis0,
-            const LibUtilities::BasisKey &tbasis1, double *to)
+            const LibUtilities::BasisKey &tbasis1, NekDoubleSharedArray &to)
         {
             DNekMatSharedPtr I0,I1;
-            double *tmp;
-            BstShrDArray wsp = GetDoubleTmpSpace(tbasis1.GetNumPoints()*
+            NekDoubleSharedArray wsp = GetDoubleTmpSpace(tbasis1.GetNumPoints()*
 						 fbasis0.GetNumPoints());
 
             I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]
@@ -270,29 +260,29 @@ namespace Nektar
             Blas::Dgemm('T', 'T', tbasis1.GetNumPoints(), fbasis0.GetNumPoints(),
                 fbasis1.GetNumPoints(), 1.0, &((*I1).GetPtr())[0],  
                 fbasis1.GetNumPoints(),
-                (double *) from,fbasis0.GetNumPoints(), 0.0, &wsp[0],
+			 &from[0],fbasis0.GetNumPoints(), 0.0, &wsp[0],
                 tbasis1.GetNumPoints());
 
             Blas::Dgemm('T', 'T',tbasis0.GetNumPoints(),tbasis1.GetNumPoints(),
                 fbasis0.GetNumPoints(),1.0,&((*I0).GetPtr())[0],
                 fbasis0.GetNumPoints(),&wsp[0], tbasis1.GetNumPoints(),
-                0.0,to, tbasis0.GetNumPoints());
+                0.0,&to[0], tbasis0.GetNumPoints());
         }
 
         // 1D Interpolation
         void StdExpansion::Interp1D(const  LibUtilities::BasisKey &fbasis0, 
-				    const double *from,  
+				    const NekDoubleSharedArray &from,  
 				    const LibUtilities::BasisKey &tbasis0, 
-				    double *to)
+				    NekDoubleSharedArray &to)
         {
             DNekMatSharedPtr I0;
 
             I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]
-            ->GetI(tbasis0.GetPointsKey());
-
+		->GetI(tbasis0.GetPointsKey());
+	    
             Blas::Dgemv('T', fbasis0.GetNumPoints(), tbasis0.GetNumPoints(), 
-                1.0, &((*I0).GetPtr())[0], fbasis0.GetNumPoints(), 
-                from, 1, 0.0, to, 1);
+			1.0, &((*I0).GetPtr())[0], fbasis0.GetNumPoints(), 
+			&from[0], 1, 0.0, &to[0], 1);
         }
 
         //   I/O routine
@@ -310,6 +300,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.24  2007/03/14 21:24:09  sherwin
+* Update for working version of MultiRegions up to ExpList1D
+*
 * Revision 1.23  2007/03/02 12:01:51  sherwin
 * Update for working version of LocalRegions/Project1D
 *

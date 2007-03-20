@@ -77,9 +77,10 @@ namespace Nektar
             StdExpansion();
 
             /** \brief Constructor */
-            StdExpansion(const int numbases, const LibUtilities::BasisKey &Ba, 
-                const LibUtilities::BasisKey &Bb,
-                const LibUtilities::BasisKey &Bc, int numcoeffs);
+            StdExpansion(const int numcoeffs, const int numbases, 
+			 const LibUtilities::BasisKey &Ba, 
+			 const LibUtilities::BasisKey &Bb = LibUtilities::NullBasisKey,
+			 const LibUtilities::BasisKey &Bc = LibUtilities::NullBasisKey);
 
             /** \brief Copy Constructor */
             StdExpansion(const StdExpansion &T);
@@ -96,15 +97,15 @@ namespace Nektar
             *  which is equal to number dimension of the expansion
             */
             inline int GetNumBases() const
-            {
-                return m_numbases;
+	    {
+		return m_base.size();
             }
 
             /** \brief This function gets the shared point to basis 
             *  
             *  \return returns the shared pointer to the bases  
             */
-            inline const boost::shared_array<LibUtilities::BasisSharedPtr> GetBase() const
+            inline const LibUtilities::BasisVector GetBase() const
             {
                 return(m_base);
             }
@@ -116,12 +117,10 @@ namespace Nektar
             *  directin \a dir
             */
             inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
-            {
-                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
+		{
+                ASSERTL1(dir < m_base.size(), "dir is larger than number of bases");
                 return(m_base[dir]);
             }
-
-
 
             /** \brief This function returns the total number of coefficients 
             *  used in the expansion 
@@ -129,23 +128,9 @@ namespace Nektar
             *  \return returns the total number of coefficients (which is 
             *  equivalent to the total number of modes) used in the expansion
             */
-            inline const int GetNcoeffs(void) const
+            inline int GetNcoeffs(void) const 
             {
                 return(m_ncoeffs);
-            }
-
-            /** \brief This function returns a pointer to the coefficient array
-            *  \f$ \mathbf{\hat{u}}\f$ 
-            *
-            *  The coefficient array \f$ \mathbf{\hat{u}}\f$ corresponds to the 
-            *  class attribute #m_coeffs (which is in coefficient space)
-            *
-            *  \return returns a pointer to the coefficient array 
-            *  \f$ \mathbf{\hat{u}}\f$ 
-            */
-            inline BstShrDArray& GetCoeffs(void)
-            {
-                return(m_coeffs);
             }
 
             /** \brief This function sets the coefficient array 
@@ -157,9 +142,9 @@ namespace Nektar
             *  \param coeffs the array of values to which #m_coeffs should 
             *  be set
             */
-            inline void SetCoeffs(double *coeffs)
+            inline void SetCoeffs(const NekDoubleSharedArray coeffs)
             {
-                Vmath::Vcopy(m_ncoeffs, coeffs, 1, &m_coeffs[0], 1);
+                Vmath::Vcopy(m_ncoeffs, &coeffs[0], 1, &m_coeffs[0], 1);
             }
 
             /** \brief This function sets the i th coefficient  
@@ -170,24 +155,9 @@ namespace Nektar
             *  \param i the index of the coefficient to be set
             *  \param coeff the value of the coefficient to be set
             */
-            inline void SetCoeff(const int i, double coeff)
+            inline void SetCoeff(const int i, const NekDouble coeff)
             {
                 m_coeffs[i] = coeff;
-            }
-
-            /** \brief This function returns a pointer to the array
-            *  \f$\mathbf{u}\f$ (which is in physical space)
-            *
-            *  The array \f$ \mathbf{u}\f$ corresponds to the 
-            *  class attribute #m_phys and contains the values of a function
-            *  evaluates at the quadrature points, 
-            *  i.e. \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
-            *
-            *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
-            */
-            inline BstShrDArray& GetPhys(void)
-            {
-                return(m_phys);
             }
 
             /** \brief This function returns the total number of quadrature
@@ -195,12 +165,12 @@ namespace Nektar
             *  
             *  \return returns the total number of quadrature points
             */
-            inline int GetTotPoints()
+            inline  int GetTotPoints() const
             {
                 int i;
                 int nqtot = 1;
 
-                for(i=0; i<m_numbases; ++i)
+                for(i=0; i<m_base.size(); ++i)
                 {
                     nqtot *= ExpPointsProperties(i)->GetNumPoints();
                 }
@@ -218,11 +188,11 @@ namespace Nektar
             *
             *  \param phys the array of values to which #m_phys should be set
             */
-            inline void  SetPhys(const double *phys)
+            inline void SetPhys(const NekDoubleSharedArray &phys)
             {
                 int nqtot = GetTotPoints();
 
-                Vmath::Vcopy(nqtot, phys, 1, &m_phys[0], 1);
+                Vmath::Vcopy(nqtot, &phys[0], 1, &m_phys[0], 1);
             }
 
             /** \brief This function returns the type of basis used in the \a dir
@@ -235,9 +205,9 @@ namespace Nektar
             *  \param dir the direction
             *  \return returns the type of basis used in the \a dir direction
             */
-            inline const LibUtilities::BasisType GetBasisType(const int dir) const
+            inline  LibUtilities::BasisType GetBasisType(const int dir) 
             {
-                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.size(), "dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisType());
             }
 
@@ -250,7 +220,7 @@ namespace Nektar
             */
             inline int GetBasisNumModes(const int dir) const
             {
-                ASSERTL1(dir < m_numbases,"dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.size(),"dir is larger than m_numbases");
                 return(m_base[dir]->GetNumModes());
             }
 
@@ -266,9 +236,9 @@ namespace Nektar
             *  \return returns the type of quadrature points  used in the \a dir
             *  direction
             */
-            inline LibUtilities::PointsType GetPointsType(const int dir) const
+            inline LibUtilities::PointsType GetPointsType(const int dir) 
             {
-                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.size(), "dir is larger than m_numbases");
                 return(m_base[dir]->GetPointsType());
             }
 
@@ -279,9 +249,9 @@ namespace Nektar
             *  \return returns the number of quadrature points in the \a dir 
             *  direction
             */
-            inline int GetNumPoints(const int dir) const
+            inline int GetNumPoints(const int dir) const 
             {
-                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.size(), "dir is larger than m_numbases");
                 return(ExpPointsProperties(dir)->GetNumPoints());
             }
 
@@ -292,20 +262,20 @@ namespace Nektar
             *  \return returns a pointer to the array containing
             *  the quadrature points in \a dir direction 
             */
-            inline double *GetPoints(const int dir) const
+            inline NekDouble *GetPoints(const int dir) const
             {
                 return ExpPointsProperties(dir)->GetZ();
             }
 
 
-            double operator[] (const int i) const
+            NekDouble operator[] (const int i) const
             {
                 ASSERTL1((i >= 0) && (i < m_ncoeffs),
                     "Invalid Index used in [] operator");
                 return m_coeffs[i];
             }
 
-            double& operator[](const int i)
+            NekDouble& operator[](const int i)
             {
                 ASSERTL1((i >= 0) && (i < m_ncoeffs),
                     "Invalid Index used in [] operator");
@@ -350,9 +320,9 @@ namespace Nektar
             *  \return returns the number of expansion coefficients belonging to
             *  the \a i-th edge
             */
-            int GetEdgeNcoeffs(const int i)
-            {
-                return v_GetEdgeNcoeffs(i);
+            int GetEdgeNcoeffs(const int i) 
+	    {
+		return v_GetEdgeNcoeffs(i);
             }
 
             /** \brief This function returns the type of expansion basis on the
@@ -381,7 +351,7 @@ namespace Nektar
             * 
             *  \return returns the number of faces of the expansion domain
             */
-            int GetNfaces()
+            int GetNfaces() 
             {
                 return v_GetNfaces();
             }
@@ -432,14 +402,9 @@ namespace Nektar
             *  at the quadrature points (output of the function)
             */
 
-            void  BwdTrans (const double *inarray, double *outarray)
+            void  BwdTrans (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
             {
                 v_BwdTrans (inarray, outarray);
-            }
-
-            void  BwdTrans (const BstShrDArray &inarray, BstShrDArray &outarray)
-            {
-                v_BwdTrans (&inarray[0], &outarray[0]);
             }
 
             /** \brief This function performs the Forward transformation from 
@@ -472,15 +437,11 @@ namespace Nektar
             *
             *  \param outarray array of the function coefficieints 
             */
-            void  FwdTrans (const double *inarray, double *outarray)
+            void  FwdTrans (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
             {
                 v_FwdTrans(inarray,outarray);
             }
 
-            void  FwdTrans (const BstShrDArray &inarray, BstShrDArray &outarray)
-            {
-                v_FwdTrans(&inarray[0],&outarray[0]);
-            }
 
             /** \brief This function integrates the specified function over the 
             *  domain 
@@ -499,7 +460,7 @@ namespace Nektar
             *  \a inarray[m]=\f$u(\mathbf{\xi}_m)\f$)
             *  \return returns the value of the calculated integral
             */
-            double Integral(const double *inarray )
+            NekDouble Integral(const NekDoubleSharedArray &inarray )
             {
                 return v_Integral(inarray);
             }
@@ -517,7 +478,7 @@ namespace Nektar
             *  expansion evaluated at the quadrature points (output of the 
             *  function)
             */
-            void FillMode(const int mode, double * outarray)
+            void FillMode(const int mode, NekDoubleSharedArray &outarray)
             {
                 v_FillMode(mode, outarray);
             }
@@ -537,14 +498,9 @@ namespace Nektar
             *  with the different modes, i.e. \f$ outarray[p] = I[p]\f$ 
             *  (output of the function) 
             */
-            void IProductWRTBase(const double *inarray, double * outarray)
+            void IProductWRTBase(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
             {
                 v_IProductWRTBase(inarray, outarray);
-            }
-
-            void IProductWRTBase(const BstShrDArray &inarray, BstShrDArray &outarray)
-            {
-                v_IProductWRTBase(&inarray[0], &outarray[0]);
             }
 
 
@@ -584,7 +540,7 @@ namespace Nektar
             *  \return returns the nodal basis transformation matrix 
             *  \f$ \mathbf{V}^T \f$
             */
-            DNekMatSharedPtr GenNBasisTransMatrix()
+            DNekMatSharedPtr GenNBasisTransMatrix() 
             {
                 return v_GenNBasisTransMatrix();
             }
@@ -598,7 +554,7 @@ namespace Nektar
             *  \param coords an array containing the coordinates of the
             *  quadrature points (output of the function)
             */
-            void GetCoords(double **coords)
+            void GetCoords(NekDoubleArrayVector &coords)
             {
                 v_GetCoords(coords);
             }
@@ -614,7 +570,7 @@ namespace Nektar
             *  coordinate system
             *  \param coords the physical coordinates (output of the function)
             */
-            void GetCoord(const double *Lcoords, double *coords)
+            void GetCoord(const NekDoubleSharedArray &Lcoords, NekDoubleSharedArray &coords)
             {
                 v_GetCoord(Lcoords, coords);
             }
@@ -671,11 +627,6 @@ namespace Nektar
             }
 
             // virtual functions related to LocalRegions
-
-            boost::shared_ptr<SpatialDomains::GeomFactors> GetMetricInfo(void)
-            {
-                return v_GetMetricInfo();
-            }
 
             int GetCoordim()
             {
@@ -741,13 +692,13 @@ namespace Nektar
             * 
             *  \return returns the laplacian matrix
             */
-            DNekMatSharedPtr GenLapMatrix()
+            DNekMatSharedPtr GenLapMatrix() 
             {
                 return v_GenLapMatrix();
             }
 
-            void PhysDeriv (const int dim, const double *inarray, 
-                double **outarray)
+            void PhysDeriv (const int dim, const NekDoubleSharedArray &inarray, 
+			    NekDoubleArrayVector  &outarray)
             {
                 v_PhysDeriv (dim, inarray, outarray);
             }
@@ -771,8 +722,9 @@ namespace Nektar
             *   at the quadrature points of \a tbasis0 (output of the function)
             */
             void Interp1D(const LibUtilities::BasisKey &fbasis0,
-                const double *from,
-                const LibUtilities::BasisKey &tbasis0, double *to);
+			  const NekDoubleSharedArray &from,
+			  const LibUtilities::BasisKey &tbasis0,
+			  NekDoubleSharedArray &to);
 
             /** \brief this function interpolates a 2D function \f$f\f$ evaluated
             *  at the quadrature points of the 2D basis, constructed by 
@@ -795,10 +747,11 @@ namespace Nektar
             *   at the quadrature points of \a tbasis0 (output of the function)
             */
             void Interp2D(const LibUtilities::BasisKey &fbasis0, 
-                const LibUtilities::BasisKey &fbasis1,
-                const double *from,   
-                const LibUtilities::BasisKey &tbasis0,
-                const LibUtilities::BasisKey &tbasis1, double *to);
+			  const LibUtilities::BasisKey &fbasis1,
+			  const NekDoubleSharedArray &from,   
+			  const LibUtilities::BasisKey &tbasis0,
+			  const LibUtilities::BasisKey &tbasis1, 
+			  NekDoubleSharedArray &to);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
             *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
@@ -809,9 +762,9 @@ namespace Nektar
             *
             *  \param sol array of solution function  at physical quadrature
             *  points
-            *  \return returns the \f$ L_\infty \f$ error as a double. 
+            *  \return returns the \f$ L_\infty \f$ error as a NekDouble. 
             */
-            double Linf(const double *sol);
+            NekDouble Linf(const NekDoubleSharedArray &sol);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty \f$ norm of
             *  the function defined at the physical points \a (this)->m_phys. 
@@ -821,7 +774,7 @@ namespace Nektar
             *
             *  \return returns the \f$ L_\infty \f$ norm as a double.
             */
-            double Linf();
+            NekDouble Linf();
 
             /** \brief Function to evaluate the discrete \f$ L_2\f$ error,
             *  \f$ | \epsilon |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2
@@ -835,7 +788,7 @@ namespace Nektar
             *  points
             *  \return returns the \f$ L_2 \f$ error as a double. 
             */
-            double L2(const double *sol);
+            NekDouble L2(const NekDoubleSharedArray &sol);
 
             /** \brief Function to evaluate the discrete \f$ L_2\f$ norm of the
             *  function defined at the physical points \a (this)->m_phys.
@@ -845,8 +798,8 @@ namespace Nektar
             *
             *  \return returns the \f$ L_2 \f$ norm as a double
             */
-            double L2();
-
+            NekDouble L2();
+	    
             // I/O routines
             void WriteCoeffsToFile(std::ofstream &outfile);
 
@@ -855,18 +808,53 @@ namespace Nektar
             DNekMatSharedPtr    CreateStdMatrix(const StdMatrixKey &mkey);
             DNekLinSysSharedPtr CreateStdLinSys(const StdLinSysKey &mkey);
 
-            int   m_numbases;       /**< Number of 1D basis defined in expansion */
-            boost::shared_array<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
-            //LibUtilities::BasisSharedPtr *m_base; /**< Bases needed for the expansion */
+            LibUtilities::BasisVector   m_base; /**< Bases needed for the expansion */
 
             LibUtilities::NekManager<StdMatrixKey, DNekMat,    StdMatrixKey::opLess> m_stdMatrixManager;
-
             LibUtilities::NekManager<StdLinSysKey, DNekLinSys, StdLinSysKey::opLess> m_stdLinSysManager;
+
             /** Total number of coefficients used in the expansion*/
             int  m_ncoeffs;
-            BstShrDArray m_coeffs;   /**< Array containing expansion coefficients */
+            NekDoubleSharedArray m_coeffs;   /**< Array containing expansion coefficients */
             /** Array containing expansion evaluated at the quad points */
-            BstShrDArray m_phys;
+            NekDoubleSharedArray m_phys;
+
+
+            /** \brief This function returns a pointer to the coefficient array
+            *  \f$ \mathbf{\hat{u}}\f$ 
+            *
+            *  The coefficient array \f$ \mathbf{\hat{u}}\f$ corresponds to the 
+            *  class attribute #m_coeffs (which is in coefficient space)
+            *
+            *  \return returns a pointer to the coefficient array 
+            *  \f$ \mathbf{\hat{u}}\f$ 
+            */
+            inline NekDoubleSharedArray& GetCoeffs(void)
+	    {
+                return(m_coeffs);
+            }
+
+            /** \brief This function returns a pointer to the array
+            *  \f$\mathbf{u}\f$ (which is in physical space)
+            *
+            *  The array \f$ \mathbf{u}\f$ corresponds to the 
+            *  class attribute #m_phys and contains the values of a function
+            *  evaluates at the quadrature points, 
+            *  i.e. \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
+            *
+            *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
+            */
+            inline NekDoubleSharedArray& GetPhys(void) 
+            {
+                return(m_phys);
+            }
+
+	    //protected virtual fucntions
+
+            boost::shared_ptr<SpatialDomains::GeomFactors> GetMetricInfo(void) 
+            {
+                return v_GetMetricInfo();
+            }
 
         private:
 
@@ -894,15 +882,14 @@ namespace Nektar
                 return eNoShapeType;
             }
 
-            virtual void   v_BwdTrans        (const double *inarray, double *outarray) = 0;
-            virtual void   v_FwdTrans        (const double *inarray, double *outarray) = 0;
-            virtual void   v_IProductWRTBase (const double *inarray, double *outarray) = 0;
+	    virtual void   v_BwdTrans        (const NekDoubleSharedArray &inarray, 
+					      NekDoubleSharedArray &outarray) = 0;
+            virtual void   v_FwdTrans        (const NekDoubleSharedArray &inarray, 
+					      NekDoubleSharedArray &outarray) = 0;
+            virtual void   v_IProductWRTBase (const NekDoubleSharedArray &inarray, 
+					      NekDoubleSharedArray &outarray) = 0;
 
-            virtual void   v_BwdTrans        (const BstShrDArray &inarray, BstShrDArray &outarray) = 0;
-            virtual void   v_FwdTrans        (const BstShrDArray &inarray, BstShrDArray &outarray) = 0;
-            virtual void   v_IProductWRTBase (const BstShrDArray &inarray, BstShrDArray &outarray) = 0;
-
-            virtual double v_Integral(const double *inarray )
+            virtual NekDouble v_Integral(const NekDoubleSharedArray &inarray )
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                     "local expansions");
@@ -910,21 +897,21 @@ namespace Nektar
             }
 
 
-            virtual void   v_PhysDeriv (const int dim, const double *inarray,
-                double **outarray)
+            virtual void   v_PhysDeriv (const int dim, const NekDoubleSharedArray &inarray,
+					NekDoubleArrayVector &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                     "local expansions");
             }
 
-            virtual void v_FillMode(const int mode, double * outarray)
+            virtual void v_FillMode(const int mode, NekDoubleSharedArray &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
                     "been defined for this shape");
             }
 
 
-            virtual DNekMatSharedPtr v_GenMassMatrix()
+            virtual DNekMatSharedPtr v_GenMassMatrix()  
             {
                 DNekMatSharedPtr returnval;
 
@@ -934,8 +921,8 @@ namespace Nektar
                 return returnval;
             }
 
-            virtual DNekMatSharedPtr v_GenLapMatrix()
-            {
+            virtual DNekMatSharedPtr v_GenLapMatrix() 
+	    {
                 DNekMatSharedPtr returnval;
 
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
@@ -944,7 +931,7 @@ namespace Nektar
                 return returnval;
             }
 
-            virtual DNekMatSharedPtr v_GenNBasisTransMatrix()
+            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
             {
                 DNekMatSharedPtr returnval;
 
@@ -954,12 +941,12 @@ namespace Nektar
                 return returnval;
             }
 
-            virtual void v_GetCoords(double **coords)
+            virtual void v_GetCoords(NekDoubleArrayVector &coords)
             {
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
 
-            virtual void v_GetCoord(const double *Lcoords, double *coords)
+            virtual void v_GetCoord(const NekDoubleSharedArray &Lcoords, NekDoubleSharedArray &coords)
             {
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
@@ -1009,7 +996,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
             }
 
-            virtual boost::shared_ptr<SpatialDomains::GeomFactors> v_GetMetricInfo()
+            virtual boost::shared_ptr<SpatialDomains::GeomFactors> v_GetMetricInfo() const 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return boost::shared_ptr<SpatialDomains::GeomFactors>();
@@ -1026,6 +1013,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.33  2007/03/20 09:12:46  kirby
+* update of geofac and metric info; fix style issues
+*
 * Revision 1.32  2007/03/14 21:24:09  sherwin
 * Update for working version of MultiRegions up to ExpList1D
 *

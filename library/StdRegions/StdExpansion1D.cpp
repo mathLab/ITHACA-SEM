@@ -46,10 +46,8 @@ namespace Nektar
 	{
 	}
 	
-	StdExpansion1D::StdExpansion1D(const LibUtilities::BasisKey &Ba, 
-				       int numcoeffs):
-	    StdExpansion(1,Ba, LibUtilities::NullBasisKey, 
-			 LibUtilities::NullBasisKey, numcoeffs)
+	StdExpansion1D::StdExpansion1D(int numcoeffs, const LibUtilities::BasisKey &Ba):
+	    StdExpansion(numcoeffs,1,Ba)
 	{
 	}
 
@@ -66,41 +64,42 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdExpansion1D::PhysTensorDeriv(const double *inarray, 
-					     double * outarray)
+	void StdExpansion1D::PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
+					     NekDoubleSharedArray &outarray)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
-	    DNekMatSharedPtr D;
-	    double *tmp; 
-	    BstShrDArray  wsp;
+	    DNekMatSharedPtr     D;
+	    NekDoubleSharedArray wsp;
 	    
 	    if(outarray == inarray)
 	    {  // check to see if calling array is inarray
 		wsp = GetDoubleTmpSpace(nquad); 
-		tmp = wsp.get();
-		Vmath::Vcopy(nquad,inarray,1,tmp,1);
+		Vmath::Vcopy(nquad,&inarray[0],1,&wsp[0],1);
 	    }
 	    else
 	    {
-		tmp = (double *)inarray;
+		wsp = inarray;
 	    }
 	    
 	    D = ExpPointsProperties(0)->GetD();
       
 	    Blas::Dgemv('T',nquad,nquad,1.0,&((*D).GetPtr())[0],nquad,
-			tmp,1,0.0,outarray,1);
+			&wsp[0],1,0.0,&outarray[0],1);
 	}
     
-	double StdExpansion1D::PhysEvaluate1D(const double *Lcoord)
+	NekDouble StdExpansion1D::PhysEvaluate1D(const NekDoubleSharedArray &Lcoord)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
-	    double  val;
+	    NekDouble  val;
 	    DNekMatSharedPtr I;
 	    
 	    ASSERTL2(Lcoord[0] < -1,"Lcoord[0] < -1");
-	    ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1");
+	    ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1")
+
+
+;
 	    
-	    I = ExpPointsProperties(0)->GetI(Lcoord);
+	    I = ExpPointsProperties(0)->GetI(&Lcoord[0]);
 
 	    val = Blas::Ddot(m_base[0]->GetNumPoints(),&((*I).GetPtr())[0],
 			     1,&m_phys[0],1);
@@ -113,6 +112,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.9  2007/03/14 21:24:09  sherwin
+ * Update for working version of MultiRegions up to ExpList1D
+ *
  * Revision 1.8  2007/02/07 12:51:53  sherwin
  * Compiling version of Project1D
  *

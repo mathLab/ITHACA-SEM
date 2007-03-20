@@ -102,7 +102,7 @@ namespace Nektar
       double L2   (const double *sol);
 
 
-      inline int GetNexp(void)
+      inline int GetExpSize(void)
       {
 	  return m_exp.size();
       }

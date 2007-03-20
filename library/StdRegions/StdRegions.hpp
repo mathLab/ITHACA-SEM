@@ -50,11 +50,15 @@
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Basis.h>
 
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+
 #include <string>
 #include <loki/Factory.h>
 
 namespace Nektar
 {
+
     namespace StdRegions
     {
 
@@ -69,7 +73,7 @@ namespace Nektar
         namespace NekConstants
         {
             /** Tolerance to within which a point is considered to be located */
-            const double kEvaluateTol  = 1e-12;
+            const NekDouble kEvaluateTol  = 1e-12;
 
             // constants from NodalBasisManager.h & .cpp
             const int kMaxSym  = 5;
@@ -191,6 +195,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.11  2007/03/14 21:24:09  sherwin
+* Update for working version of MultiRegions up to ExpList1D
+*
 * Revision 1.10  2007/02/24 09:07:25  sherwin
 * Working version of stdMatrixManager and stdLinSysMatrix
 *

@@ -15,6 +15,8 @@ SET(LibUtilitySources
 )
 
 SET(LibUtilityHeaders
+./BasicConst/NektarUnivConsts.hpp
+./BasicConst/NektarUnivTypeDefs.hpp
 ./LinearAlgebra/NekLinSys.h
 ./LinearAlgebra/NekLinSys.hpp
 ./LinearAlgebra/NekLinAlg.h

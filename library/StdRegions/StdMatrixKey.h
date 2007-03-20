@@ -81,7 +81,7 @@ namespace Nektar
 		return m_ncoeffs;
 	    }
 
-	    boost::shared_array<LibUtilities::BasisSharedPtr> GetBase() const
+	    inline const LibUtilities::BasisVector GetBase() const
 	    {
 		return m_base;
 	    }
@@ -90,7 +90,7 @@ namespace Nektar
             StdMatrixKey();
 	    
             ShapeType   m_shapeType;
-            boost::shared_array<LibUtilities::BasisSharedPtr> m_base;
+            LibUtilities::BasisVector m_base;
 
             unsigned int m_ncoeffs;
             MatrixType   m_matrixType;
@@ -108,6 +108,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.3  2007/03/05 08:07:14  sherwin
+* Modified so that StdMatrixKey has const calling arguments in its constructor.
+*
 * Revision 1.2  2007/03/02 12:01:53  sherwin
 * Update for working version of LocalRegions/Project1D
 *

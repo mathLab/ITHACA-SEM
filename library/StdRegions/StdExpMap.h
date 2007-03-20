@@ -66,7 +66,7 @@ namespace Nektar
 		return m_len;
 	    }
 	    
-	    inline BstShrIArray GetMap() const
+	    inline NekIntSharedArray GetMap() const
 	    {
 		return m_map;
 	    }
@@ -100,7 +100,7 @@ namespace Nektar
 	private:
 	    
 	    int m_len;
-	    BstShrIArray m_map;
+	    NekIntSharedArray m_map;
 	};
 	
     } // end of namespace
@@ -110,6 +110,9 @@ namespace Nektar
 
 /**
  * $Log: StdExpMap.h,v $
+ * Revision 1.5  2007/01/28 18:34:17  sherwin
+ * More modifications to make Demo Project1D compile
+ *
  * Revision 1.4  2006/08/05 19:03:48  sherwin
  * Update to make the multiregions 2D expansion in connected regions work
  *

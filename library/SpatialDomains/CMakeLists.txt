@@ -1,6 +1,6 @@
 SET(SPATIAL_DOMAINS_SOURCES
 EdgeComponent.cpp
-GeoFac.cpp
+GeomFactors.cpp
 Geometry1D.cpp
 #Geometry2D.cpp
 #Geometry3D.cpp
@@ -25,7 +25,7 @@ SegGeom.cpp
 
 SET(SPATIAL_DOMAINS_HEADERS
 EdgeComponent.h
-GeoFac.h
+GeomFactors.h
 Geometry1D.h
 Geometry2D.h
 Geometry3D.h

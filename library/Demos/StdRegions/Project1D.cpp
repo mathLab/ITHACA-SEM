@@ -15,10 +15,10 @@ int main(int argc, char *argv[])
 {
   int i,j;
   int order, nq;
-  double *sol;
   LibUtilities::PointsType Qtype;
   LibUtilities::BasisType  btype;
   StdRegions::StdExpansion1D  *E;
+  NekDoubleSharedArray sol;
   
   if(argc != 4)
   {
@@ -58,8 +58,7 @@ int main(int argc, char *argv[])
   order =   atoi(argv[2]);
   nq    =   atoi(argv[3]);
 
-  BstShrDArray stmp = GetDoubleTmpSpace(nq);
-  sol = stmp.get();
+  sol = GetDoubleTmpSpace(nq);
   
   if(btype != LibUtilities::eFourier)
   {
@@ -79,10 +78,10 @@ int main(int argc, char *argv[])
   
   //----------------------------------------------
   // Define solution to be projected
-  BstShrDArray z = GetDoubleTmpSpace(nq);
-  double * tmp[1];
-  tmp[0] = z.get();
-  E->GetCoords(tmp);
+  NekDoubleArrayVector coords;
+  NekDoubleSharedArray z = GetDoubleTmpSpace(nq);
+  coords.push_back(z);
+  E->GetCoords(coords);
 
   if(btype != LibUtilities::eFourier)
   {
@@ -107,15 +106,18 @@ int main(int argc, char *argv[])
     }
   }
   //---------------------------------------------
-
+  // Set the physical solution into phys space
+  E->SetPhys(sol);
+  //---------------------------------------------
+  
   //---------------------------------------------
   // Project onto Expansion 
-  E->FwdTrans(sol,&(E->GetCoeffs())[0]);
+  E->FwdTrans(*E);
   //---------------------------------------------
 
   //-------------------------------------------
   // Backward Transform Solution to get projected values
-  E->BwdTrans(E->GetCoeffs(),E->GetPhys());
+  E->BwdTrans(*E);
   //-------------------------------------------  
 
   //--------------------------------------------
@@ -128,15 +130,16 @@ int main(int argc, char *argv[])
   // Evaulate solution at mid point and print error
   if(btype != LibUtilities::eFourier)
   {
-    sol[0] = 1;
+      sol[0] = 1;
   }
   else
   {
       sol[0] =  order/2;
   }
 
-  double x = 0;
-  double nsol = E->PhysEvaluate(&x);
+  NekDoubleSharedArray x = GetDoubleTmpSpace(1);
+  x[0] = 0;
+  NekDouble nsol = E->PhysEvaluate(x);
   cout << "error at x = 0: " << nsol - sol[0] << endl;
   //-------------------------------------------
 

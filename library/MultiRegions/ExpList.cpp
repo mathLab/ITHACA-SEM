@@ -71,7 +71,7 @@ namespace Nektar
 	    double sum = 0.0;
 	    
 	    
-	    for(i = 0; i < GetNexp(); ++i)
+	    for(i = 0; i < GetExpSize(); ++i)
 	    {
 		sum += GetExp(i)->Integral(inarray+cnt);
 		cnt += GetExp(i)->GetTotPoints();
@@ -87,7 +87,7 @@ namespace Nektar
 	    int    cnt  = 0;
 	    int    cnt1 = 0;
 	  
-	    for(i = 0; i < GetNexp(); ++i)
+	    for(i = 0; i < GetExpSize(); ++i)
 	    {
 		    GetExp(i)->IProductWRTBase(inarray+cnt,outarray+cnt1);
 		    cnt  += GetExp(i)->GetTotPoints();
@@ -100,7 +100,7 @@ namespace Nektar
 	{
 	    int i;
 	    
-	    for(i = 0; i < GetNexp(); ++i)
+	    for(i = 0; i < GetExpSize(); ++i)
 	    {
 		GetExp(i)->IProductWRTBase(((ExpList) S1).GetExp(i)->GetPhys(),
 					   GetExp(i)->GetCoeffs());
@@ -112,7 +112,7 @@ namespace Nektar
 	    int cnt = 0;
 	    int i;
 
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		GetExp(i)->IProductWRTBase(&(((ExpList)S1).GetExp(i)->GetPhys())[0],
 					   outarray+cnt);
@@ -130,7 +130,7 @@ namespace Nektar
 		BwdTrans(*this);
 	    }
 	    
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		GetExp(i)->PhysDeriv(n,&GetExp(i)->GetPhys()[0],outarray+cnt);
 		cnt  += GetExp(i) ->GetTotPoints();
@@ -144,7 +144,7 @@ namespace Nektar
 	    int i;
 	    
 	    
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		GetExp(i)->PhysDeriv(n,inarray+cnt,outarray+cnt);
 		cnt += GetExp(i)->GetTotPoints();
@@ -161,7 +161,7 @@ namespace Nektar
 		BwdTrans(Sin);
 	    }
 	    
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		out[0] = &S_x.GetExp(i)->GetPhys()[0];
 		GetExp(i)->PhysDeriv(1,&(((ExpList)Sin).GetExp(i)->GetPhys())[0],out);
@@ -174,7 +174,7 @@ namespace Nektar
 	    int cnt1 = 0;
 	    int i;
 
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		GetExp(i)->FwdTrans(inarray+cnt, outarray + cnt1);
 		cnt  += GetExp(i)->GetTotPoints();
@@ -189,7 +189,7 @@ namespace Nektar
 	    int cnt  = 0;
 	    int i;
 
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		GetExp(i)->FwdTrans(inarray+cnt, &Sout.GetExp(i)->GetCoeffs()[0]);
 		cnt  += GetExp(i)->GetTotPoints();
@@ -203,7 +203,7 @@ namespace Nektar
 	{
 	    int i;
 
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		GetExp(i)->FwdTrans( ((ExpList )Sin).GetExp(i)->GetPhys(), GetExp(i)->GetCoeffs());
 	    }
@@ -217,7 +217,7 @@ namespace Nektar
 	    int  cnt = 0;
 	    int  cnt1 = 0;
 	    
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		GetExp(i)->BwdTrans(inarray + cnt, outarray+cnt1);
 		cnt   += GetExp(i)->GetNcoeffs();
@@ -231,7 +231,7 @@ namespace Nektar
 	{
 	    int  i;
 	    
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		GetExp(i)->BwdTrans(((ExpList) Sin).GetExp(i)->GetCoeffs(),GetExp(i)->GetPhys());
 	    }
@@ -244,7 +244,7 @@ namespace Nektar
 	    int    i, j, cnt = 0;
 	    double *E_coords[3];
 	    
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		for(j = 0; j < GetExp(i)->GetCoordim(); ++j)
 		{
@@ -269,7 +269,7 @@ namespace Nektar
 	    
 	    m_exp[0]->WriteToFile(out,1);
 	    
-	    for(i= 1; i < GetNexp(); ++i)
+	    for(i= 1; i < GetExpSize(); ++i)
 	    {
 		GetExp(i)->WriteToFile(out,0);
 	    }
@@ -287,7 +287,7 @@ namespace Nektar
 		BwdTrans(*this);
 	    }
 	    
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		err  = std::max(err,GetExp(i)->Linf(sol+cnt));
 		cnt  += GetExp(i)->GetTotPoints();
@@ -306,7 +306,7 @@ namespace Nektar
 		BwdTrans(*this);
 	    }
 	    
-	    for(i= 0; i < GetNexp(); ++i)
+	    for(i= 0; i < GetExpSize(); ++i)
 	    {
 		errl2 = GetExp(i)->L2(sol+cnt);
 		err += errl2*errl2;

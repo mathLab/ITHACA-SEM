@@ -50,10 +50,9 @@ namespace Nektar
         {
         }
 
-        StdExpansion2D::StdExpansion2D(const LibUtilities::BasisKey &Ba,
-                                       const LibUtilities::BasisKey &Bb,
-                                       int numcoeffs):
-                StdExpansion(2, Ba, Bb, LibUtilities::NullBasisKey, numcoeffs)
+        StdExpansion2D::StdExpansion2D(int numcoeffs, const LibUtilities::BasisKey &Ba,
+                                       const LibUtilities::BasisKey &Bb):
+                StdExpansion(numcoeffs,2, Ba, Bb)
         {
         }
 
@@ -70,23 +69,23 @@ namespace Nektar
         // Differentiation Methods
         //----------------------------
 
-        void StdExpansion2D::PhysTensorDeriv(const double *inarray,
-                                     double *outarray_d0, double *outarray_d1)
+        void StdExpansion2D::PhysTensorDeriv(const NekDoubleSharedArray &inarray,
+					     NekDoubleSharedArray &outarray_d0, 
+					     NekDoubleSharedArray &outarray_d1)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             DNekMatSharedPtr D0, D1;
-            BstShrDArray wsp = GetDoubleTmpSpace(nquad0 * nquad1);
-            double *tmp = wsp.get();
+            NekDoubleSharedArray wsp = GetDoubleTmpSpace(nquad0 * nquad1);
 
             // check to see if either calling array is inarray
             if ((outarray_d0 == inarray) || (outarray_d1 == inarray))
             {
-                Vmath::Vcopy(nquad0*nquad1, inarray, 1, tmp, 1);
+                Vmath::Vcopy(nquad0*nquad1, &inarray[0], 1, &wsp[0], 1);
             }
             else
             {
-                tmp = (double *)inarray;
+                wsp = inarray;
             }
 
             D0 = ExpPointsProperties(0)->GetD();
@@ -95,27 +94,26 @@ namespace Nektar
             if (outarray_d0) // calculate du/dx_0
             {
                 Blas::Dgemm('T', 'N', nquad0, nquad1, nquad0, 1.0,
-                            &(D0->GetPtr())[0], nquad0, tmp, nquad0, 0.0,
-                            outarray_d0, nquad0);
+                            &(D0->GetPtr())[0], nquad0, &wsp[0], nquad0, 0.0,
+                            &outarray_d0[0], nquad0);
             }
 
             // calculate du/dx_1
             if (outarray_d1)
             {
-                Blas:: Dgemm('N', 'N', nquad0, nquad1, nquad1, 1.0, tmp, nquad0,
-                         &(D1->GetPtr())[0], nquad1, 0.0, outarray_d1, nquad0);
+                Blas:: Dgemm('N', 'N', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,
+                         &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
             }
 
         }
 
-        double StdExpansion2D::PhysEvaluate2D(const double *coords)
+        NekDouble StdExpansion2D::PhysEvaluate2D(const NekDoubleSharedArray &coords)
         {
-            double val;
+            NekDouble val;
             int i;
             int nq0 = m_base[0]->GetNumPoints();
             int nq1 = m_base[1]->GetNumPoints();
-            BstShrDArray wsp1 = GetDoubleTmpSpace(nq1);
-            double *tmp1 = wsp1.get();
+            NekDoubleSharedArray wsp1 = GetDoubleTmpSpace(nq1);
 
             DNekMatSharedPtr I;
 
@@ -125,15 +123,17 @@ namespace Nektar
             ASSERTL2(coord[1] > 1, "coord[1] >  1");
 
             // interpolate first coordinate direction
-            I = ExpPointsProperties(0)->GetI(coords);
+            I = ExpPointsProperties(0)->GetI(&coords[0]);
             for (i = 0; i < nq1;++i)
-                tmp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1, 
-                                        &m_phys[i * nq0], 1);
+	    {
+                wsp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1, 
+				     &m_phys[i * nq0], 1);
+	    }
 
             // interpolate in second coordinate direction
             I = ExpPointsProperties(1)->GetI(&coords[1]);
 
-            val = Blas::Ddot(nq1, &(I->GetPtr())[0], 1, tmp1, 1);
+            val = Blas::Ddot(nq1, &(I->GetPtr())[0], 1, &wsp1[0], 1);
 
             return val;
         }
@@ -142,29 +142,29 @@ namespace Nektar
         /// Integration Methods
         //////////////////////////////
 
-        double StdExpansion2D::Integral(const double *inarray, const double *w0,
-                                        const double* w1)
+        NekDouble StdExpansion2D::Integral(const NekDoubleSharedArray &inarray, 
+					   const NekDouble *w0,const NekDouble *w1)
         {
             int i;
-            double Int = 0.0;
+            NekDouble Int = 0.0;
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
-            BstShrDArray tmp = GetDoubleTmpSpace(nquad0 * nquad1);
+            NekDoubleSharedArray tmp = GetDoubleTmpSpace(nquad0 * nquad1);
 
             // multiply by integration constants
             for (i = 0; i < nquad1; ++i)
             {
-                Vmath::Vmul(nquad0, (double*)inarray + i*nquad0, 1, (double*)w0,
-                            1, tmp.get() + i*nquad0, 1);
+                Vmath::Vmul(nquad0, &inarray[0] + i*nquad0, 1, (NekDouble*)w0,
+                            1, &tmp[0] + i*nquad0, 1);
             }
 
             for (i = 0; i < nquad0; ++i)
             {
-                Vmath::Vmul(nquad1, tmp.get() + i, nquad0, (double*)w1, 1,
-                            tmp.get() + i, nquad0);
+                Vmath::Vmul(nquad1, &tmp[0]+ i, nquad0, (NekDouble*)w1, 1,
+                            &tmp[0] + i, nquad0);
             }
 
-            Int = Vmath::Vsum(nquad0 * nquad1, tmp.get(), 1);
+            Int = Vmath::Vsum(nquad0 * nquad1, &tmp[0], 1);
 
             return Int;
         }
@@ -175,6 +175,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.7  2007/03/14 21:24:09  sherwin
+* Update for working version of MultiRegions up to ExpList1D
+*
 * Revision 1.6  2007/03/05 19:28:50  bcarmo
 * StdExpansion2D.cpp modified according to StdExpansion1D. Compiles.
 *

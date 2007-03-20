@@ -312,6 +312,8 @@ namespace Nektar
         std::ostream& operator<<(std::ostream& os, const BasisKey& rhs);
 
         typedef boost::shared_ptr<Basis> BasisSharedPtr;
+        typedef std::vector< BasisSharedPtr > BasisVector; 
+        typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter; 
 
     } // end of namespace
 } // end of namespace

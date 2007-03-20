@@ -37,14 +37,19 @@
 #define  NEKTARUNIVTYPEDEF_HPP
 
 #include <boost/shared_array.hpp>
+#include <vector>
 
 namespace Nektar
 {
 
     typedef double NekDouble;
-    typedef boost::shared_array<NekDouble> NekDoubleSharedPtr;
-    typedef std::vector< NekDoubleSharedPtr > NekDoubleVector;
-    typedef std::vector< NekDoubleSharedPtr >::iterator NekDoubleVector;
+    typedef boost::shared_array<NekDouble> NekDoubleSharedArray;
+    typedef std::vector< NekDoubleSharedArray > NekDoubleArrayVector;
+    typedef std::vector< NekDoubleSharedArray >::iterator NekDoubleArrayVectorIter;
+ 
+    typedef boost::shared_array<int>  NekIntSharedArray;
+    typedef std::vector< NekIntSharedArray > NekIntArrayVector;
+    typedef std::vector< NekIntSharedArray >::iterator NekIntArrayVectorIter;
 
 } //end of namespace 
 
@@ -52,6 +57,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.2  2007/03/20 12:27:39  sherwin
+Changed shared_ptr to shared_array
+
 Revision 1.1  2007/03/20 11:56:25  sherwin
 .
 

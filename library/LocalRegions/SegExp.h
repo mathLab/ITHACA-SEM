@@ -41,7 +41,7 @@
 #include <StdRegions/StdSegExp.h>
 #include <SpatialDomains/SegGeom.h>
 
-#include <SpatialDomains/GeoFac.h>
+#include <SpatialDomains/GeomFactors.h>
 
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/LinSys.hpp>
@@ -50,306 +50,309 @@
 
 namespace Nektar
 {
-  namespace LocalRegions 
-  {
-
-    class SegExp: public StdRegions::StdSegExp
+    namespace LocalRegions 
     {
 
-    public:
-      
-      /// \brief Constructor using BasisKey class for quadrature
-      /// points and order definition 
-      SegExp(const LibUtilities::BasisKey &Ba, SpatialDomains::SegGeomSharedPtr geom);
-    
-      ///Copy Constructor
-      SegExp(const SegExp &S);
-    
-      ///Destructor
-      ~SegExp();
-    
-      /// Return Shape of region, using  ShapeType enum list. i.e. Segment  
-      StdRegions::ShapeType DetShapeType() 
-      { 
-	return StdRegions::eSegment;
-      }    
+        class SegExp: public StdRegions::StdSegExp
+        {
 
-      void GenMinfo();    
+        public:
 
-      void GetCoords(double **coords);
-      
-      void GetCoord(const double *Lcoords, double *coords);
-    
+            /// \brief Constructor using BasisKey class for quadrature
+            /// points and order definition 
+            SegExp(const LibUtilities::BasisKey &Ba, SpatialDomains::SegGeomSharedPtr geom);
 
-      SpatialDomains::SegGeomSharedPtr GetGeom()
-      {
-	return m_geom;
-      }
+            ///Copy Constructor
+            SegExp(const SegExp &S);
 
-      void WriteToFile(FILE *outfile);
-      void WriteToFile(std::ofstream &outfile, const int dumpVar);
-    
-    
-      //----------------------------
-      // Integration Methods
-      //----------------------------
+            ///Destructor
+            ~SegExp();
 
-      /// \brief Integrate the physical point list \a inarray over region
-      double Integral(const double *inarray);
+            /// Return Shape of region, using  ShapeType enum list. i.e. Segment  
+            StdRegions::ShapeType DetShapeType() 
+            { 
+                return StdRegions::eSegment;
+            }    
 
-    
-      /// \brief  Inner product of \a inarray over region with respect to the 
-      /// expansion basis (this)->_Base[0] and return in \a outarray 
-      void IProductWRTBase(const double * inarray, double * outarray);
+            void GetCoords(double **coords);
+
+            void GetCoord(const double *Lcoords, double *coords);
 
 
-      //-----------------------------
-      // Differentiation Methods
-      //-----------------------------
-    
-      
-      /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
-	  physical quadrature points given by \a inarray and return in \a
-	  outarray. */
-      void PhysDeriv(const double *inarray, double * outarray)
-      {
-	PhysDeriv(1,inarray,&outarray);
-      }
+            SpatialDomains::SegGeomSharedPtr GetGeom()
+            {
+                return m_geom;
+            }
 
-      void PhysDeriv(const int n, const double *inarray, double ** outarray);
+            void WriteToFile(FILE *outfile);
+            void WriteToFile(std::ofstream &outfile, const int dumpVar);
 
-    //----------------------------
-    // Evaluations Methods
-    //---------------------------
-    
-    /** \brief Forward transform from physical quadrature space
-	stored in \a inarray and evaluate the expansion coefficients and
-	store in \a (this)->_coeffs  */
-      void FwdTrans(const double * inarray, double *outarray);
 
-      double PhysEvaluate(const double *coord);
-      
-    protected:
-    
-      DNekMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
-      DNekLinSysSharedPtr CreateLinSys(const LinSysKey &mkey);
+            //----------------------------
+            // Integration Methods
+            //----------------------------
 
-      SpatialDomains::SegGeomSharedPtr m_geom;
-      SpatialDomains::GeoFacSharedPtr  m_minfo;
+            /// \brief Integrate the physical point list \a inarray over region
+            double Integral(const double *inarray);
 
-      LibUtilities::NekManager<MatrixKey, DNekMat, MatrixKey::opLess> m_matrixManager;
-      
-      LibUtilities::NekManager<LinSysKey, DNekLinSys, LinSysKey::opLess> m_linSysManager;
-      
-      /// \brief  Inner product of \a inarray over region with respect to
-      /// the expansion basis \a base and return in \a outarray 
-      inline void IProductWRTBase(const double *base, const double *inarray, 
-				  double *outarray, int coll_check);
-    
-    private:
-    
-      virtual StdRegions::ShapeType v_DetShapeType() 
-      {
-		return DetShapeType();
-      }
 
-      virtual SpatialDomains::GeoFacSharedPtr v_GetMinfo()
-      {
-		return m_minfo;
-      }
+            /// \brief  Inner product of \a inarray over region with respect to the 
+            /// expansion basis (this)->_Base[0] and return in \a outarray 
+            void IProductWRTBase(const double * inarray, double * outarray);
 
-      virtual void v_GetCoord(const double *Lcoords, double *coords)
-      {
-		GetCoord(Lcoords, coords);
-      }
 
-      virtual void v_GetCoords(double **coords)
-      {
-		GetCoords(coords);
-      }
+            //-----------------------------
+            // Differentiation Methods
+            //-----------------------------
 
-      virtual int v_GetCoordim()
-      {
-		return m_geom->GetCoordim();
-      }
 
-      virtual void v_WriteToFile(FILE *outfile)
-      {
-		WriteToFile(outfile);
-      }
+            /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
+            physical quadrature points given by \a inarray and return in \a
+            outarray. */
+            void PhysDeriv(const double *inarray, double * outarray)
+            {
+                PhysDeriv(1,inarray,&outarray);
+            }
 
-      virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
-      {
-		WriteToFile(outfile,dumpVar);
-      }
+            void PhysDeriv(const int n, const double *inarray, double ** outarray);
 
-      virtual SpatialDomains::GeomType v_MinfoType()
-      {
-		return m_minfo->GetGtype();
-      }
+            //----------------------------
+            // Evaluations Methods
+            //---------------------------
 
-      /// \brief Virtual call to integrate the physical point list \a inarray
-      /// over region (see SegExp::Integral) 
-      virtual double v_Integral(const double *inarray )
-      {
-	  return Integral(inarray);
-      }
+            /** \brief Forward transform from physical quadrature space
+            stored in \a inarray and evaluate the expansion coefficients and
+            store in \a (this)->_coeffs  */
+            void FwdTrans(const double * inarray, double *outarray);
 
-      /** \brief Virtual call to SegExp::IProduct_WRT_B */
-      virtual void v_IProductWRTBase(const double * inarray, double * outarray)
-      {
-	  IProductWRTBase(inarray,outarray);
-      }
+            double PhysEvaluate(const double *coord);
 
-      /** \brief Virtual call to SegExp::IProduct_WRT_B */
-      virtual void v_IProductWRTBase(const BstShrDArray &inarray, BstShrDArray &outarray)
-      {
-	  IProductWRTBase(&inarray[0],&outarray[0]);
-      }
+        protected:
 
-      /// Virtual call to SegExp::PhysDeriv
-      virtual void v_PhysDeriv(const double *inarray, double * outarray)
-      {
-	  PhysDeriv(inarray, outarray);
-      }
- 
-      /// Virtual call to SegExp::PhysDeriv
-      virtual void v_PhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
-      {
-	  PhysDeriv(&inarray[0], &outarray[0]);
-      }
+            void GenMetricInfo();    
 
-      /// Virtual call to SegExp::PhysDeriv
-      virtual void v_StdPhysDeriv(const double *inarray, double * outarray)
-      {
-	  StdSegExp::PhysDeriv(inarray, outarray);
-      }
+            DNekMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
+            DNekLinSysSharedPtr CreateLinSys(const LinSysKey &mkey);
 
-      /// Virtual call to SegExp::PhysDeriv
-      virtual void v_StdPhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
-      {
-	  StdSegExp::PhysDeriv(&inarray[0], &outarray[0]);
-      }
+            SpatialDomains::SegGeomSharedPtr m_geom;
+            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
-      virtual void v_PhysDeriv(const int n, const double *inarray, 
-			   double **outarray)
-      {
-	  PhysDeriv(n, inarray, outarray);
-      }
+            LibUtilities::NekManager<MatrixKey, DNekMat, MatrixKey::opLess> m_matrixManager;
 
-      /// Virtual call to SegExp::FwdTrans
-      virtual void v_FwdTrans(const double * inarray, double * outarray)
-      {
-	  FwdTrans(inarray,outarray);
-      }
+            LibUtilities::NekManager<LinSysKey, DNekLinSys, LinSysKey::opLess> m_linSysManager;
 
-      /// Virtual call to SegExp::FwdTrans
-      virtual void v_FwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
-      {
-	  FwdTrans(&inarray[0],&outarray[0]);
-      }
+            /// \brief  Inner product of \a inarray over region with respect to
+            /// the expansion basis \a base and return in \a outarray 
+            inline void IProductWRTBase(const double *base, const double *inarray, 
+                double *outarray, int coll_check);
 
-      /// Virtual call to SegExp::Evaluate
-      virtual double v_PhysEvaluate(const double * coords)
-      {
-	  return PhysEvaluate(coords);
-      }
+        private:
 
-      /** \brief Virtual function to evaluate the discrete \f$ L_\infty\f$
-	  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
-	  u_{exact}\f$ is given by the array \a sol. 
-	  
-	  The full function is defined in StdExpansion::Linf 
-	  
-	  Input: 
-	  
-	  - \a _phys: takes the physical value space array as
-          approximate solution
+            virtual StdRegions::ShapeType v_DetShapeType() 
+            {
+                return DetShapeType();
+            }
 
-	  - \a sol: array of solution function  at physical quadrature points
-	  
-	  output: 
-	  
-	  - returns the \f$ L_\infty \f$ error as a double. 
-      */
-      virtual double v_Linf(const double *sol)
-      {
-	return Linf(sol);
-      }
+            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo()
+            {
+                return m_metricinfo;
+            }
 
-      /** \brief Virtual function to evaluate the \f$ L_\infty \f$ norm of
-	  the function defined at the physical points \a (this)->_phys. 
-	  
-	  The full function is defined in StdExpansion::Linf 
-	  
-	  Input: 
-	  
-	  - \a _phys: uses the physical value space array as discrete
-          function to be evaulated.
-	  
-	  output: 
-	  
-	  - returns the \f$ L_\infty \f$  as a double. 
-      */
-      virtual double v_Linf()
-      {
-	return Linf();
-      }
-    
-      /** \brief Virtual function to evaluate the \f$ L_2\f$, \f$ |
-	  \epsilon |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2 dx
-	  \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by the
-	  array sol.
-	  
-	  The full function is defined in StdExpansion::L2 
-	  
-	  Input: 
-	  
-	  - \a _phys: takes the physical value space array as
-          approximate solution
-	  - \a sol: array of solution function  at physical quadrature points
-	  
-	  output: 
-	  
-	  - returns the \f$ L_2 \f$ error as a double. 
-      */
-      virtual double v_L2(const double *sol)
-      {
-	return StdExpansion::L2(sol);
-      }
+            virtual void v_GetCoord(const double *Lcoords, double *coords)
+            {
+                GetCoord(Lcoords, coords);
+            }
 
-      /** \brief Virtual function to evaluate the \f$ L_2\f$ norm of the
-	  function defined at the physical points \a (this)->_phys.  
-	  
-	  The full function is defined in StdExpansion::L2 
-	
-	  Input: 
-	  
-	  - \a _phys: uses the physical value space array as discrete
-          function to be evaulated.
-	  
-	  output: 
-	
-	  - returns the \f$ L_2 \f$  as a double. 
-      */
-      virtual double v_L2()
-      {
-	return StdExpansion::L2();
-      }
-    };
+            virtual void v_GetCoords(double **coords)
+            {
+                GetCoords(coords);
+            }
 
-    // type defines for use of SegExp in a boost vector
-    typedef boost::shared_ptr<SegExp> SegExpSharedPtr;
-    typedef std::vector< SegExpSharedPtr > SegExpVector;
-    typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
-    
-  } //end of namespace
+            virtual int v_GetCoordim()
+            {
+                return m_geom->GetCoordim();
+            }
+
+            virtual void v_WriteToFile(FILE *outfile)
+            {
+                WriteToFile(outfile);
+            }
+
+            virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
+            {
+                WriteToFile(outfile,dumpVar);
+            }
+
+            virtual SpatialDomains::GeomType v_MetricInfoType()
+            {
+                return m_metricinfo->GetGtype();
+            }
+
+            /// \brief Virtual call to integrate the physical point list \a inarray
+            /// over region (see SegExp::Integral) 
+            virtual double v_Integral(const double *inarray )
+            {
+                return Integral(inarray);
+            }
+
+            /** \brief Virtual call to SegExp::IProduct_WRT_B */
+            virtual void v_IProductWRTBase(const double * inarray, double * outarray)
+            {
+                IProductWRTBase(inarray,outarray);
+            }
+
+            /** \brief Virtual call to SegExp::IProduct_WRT_B */
+            virtual void v_IProductWRTBase(const BstShrDArray &inarray, BstShrDArray &outarray)
+            {
+                IProductWRTBase(&inarray[0],&outarray[0]);
+            }
+
+            /// Virtual call to SegExp::PhysDeriv
+            virtual void v_PhysDeriv(const double *inarray, double * outarray)
+            {
+                PhysDeriv(inarray, outarray);
+            }
+
+            /// Virtual call to SegExp::PhysDeriv
+            virtual void v_PhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
+            {
+                PhysDeriv(&inarray[0], &outarray[0]);
+            }
+
+            /// Virtual call to SegExp::PhysDeriv
+            virtual void v_StdPhysDeriv(const double *inarray, double * outarray)
+            {
+                StdSegExp::PhysDeriv(inarray, outarray);
+            }
+
+            /// Virtual call to SegExp::PhysDeriv
+            virtual void v_StdPhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
+            {
+                StdSegExp::PhysDeriv(&inarray[0], &outarray[0]);
+            }
+
+            virtual void v_PhysDeriv(const int n, const double *inarray, 
+                double **outarray)
+            {
+                PhysDeriv(n, inarray, outarray);
+            }
+
+            /// Virtual call to SegExp::FwdTrans
+            virtual void v_FwdTrans(const double * inarray, double * outarray)
+            {
+                FwdTrans(inarray,outarray);
+            }
+
+            /// Virtual call to SegExp::FwdTrans
+            virtual void v_FwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
+            {
+                FwdTrans(&inarray[0],&outarray[0]);
+            }
+
+            /// Virtual call to SegExp::Evaluate
+            virtual double v_PhysEvaluate(const double * coords)
+            {
+                return PhysEvaluate(coords);
+            }
+
+            /** \brief Virtual function to evaluate the discrete \f$ L_\infty\f$
+            error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
+            u_{exact}\f$ is given by the array \a sol. 
+
+            The full function is defined in StdExpansion::Linf 
+
+            Input: 
+
+            - \a _phys: takes the physical value space array as
+            approximate solution
+
+            - \a sol: array of solution function  at physical quadrature points
+
+            output: 
+
+            - returns the \f$ L_\infty \f$ error as a double. 
+            */
+            virtual double v_Linf(const double *sol)
+            {
+                return Linf(sol);
+            }
+
+            /** \brief Virtual function to evaluate the \f$ L_\infty \f$ norm of
+            the function defined at the physical points \a (this)->_phys. 
+
+            The full function is defined in StdExpansion::Linf 
+
+            Input: 
+
+            - \a _phys: uses the physical value space array as discrete
+            function to be evaulated.
+
+            output: 
+
+            - returns the \f$ L_\infty \f$  as a double. 
+            */
+            virtual double v_Linf()
+            {
+                return Linf();
+            }
+
+            /** \brief Virtual function to evaluate the \f$ L_2\f$, \f$ |
+            \epsilon |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2 dx
+            \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by the
+            array sol.
+
+            The full function is defined in StdExpansion::L2 
+
+            Input: 
+
+            - \a _phys: takes the physical value space array as
+            approximate solution
+            - \a sol: array of solution function  at physical quadrature points
+
+            output: 
+
+            - returns the \f$ L_2 \f$ error as a double. 
+            */
+            virtual double v_L2(const double *sol)
+            {
+                return StdExpansion::L2(sol);
+            }
+
+            /** \brief Virtual function to evaluate the \f$ L_2\f$ norm of the
+            function defined at the physical points \a (this)->_phys.  
+
+            The full function is defined in StdExpansion::L2 
+
+            Input: 
+
+            - \a _phys: uses the physical value space array as discrete
+            function to be evaulated.
+
+            output: 
+
+            - returns the \f$ L_2 \f$  as a double. 
+            */
+            virtual double v_L2()
+            {
+                return StdExpansion::L2();
+            }
+        };
+
+        // type defines for use of SegExp in a boost vector
+        typedef boost::shared_ptr<SegExp> SegExpSharedPtr;
+        typedef std::vector< SegExpSharedPtr > SegExpVector;
+        typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
+
+    } //end of namespace
 } //end of namespace
 
 #endif // SEGEXP_H
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.7  2007/03/14 21:24:07  sherwin
+// Update for working version of MultiRegions up to ExpList1D
+//
 // Revision 1.6  2007/03/02 12:01:55  sherwin
 // Update for working version of LocalRegions/Project1D
 //

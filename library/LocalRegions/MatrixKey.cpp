@@ -49,7 +49,7 @@ namespace Nektar
 
             m_stdMatKey =  MemoryManager::AllocateSharedPtr<StdRegions::StdMatrixKey>(matrixType,shapeType,stdExpansion);
 
-            m_minfo = stdExpansion.GetMinfo(); 
+            m_metricinfo = stdExpansion.GetMetricInfo(); 
 
         }
 
@@ -83,7 +83,7 @@ namespace Nektar
                 return false;
             }
 
-            if(lhs.m_minfo < rhs.m_minfo)
+            if(lhs.m_metricinfo < rhs.m_metricinfo)
             {
                 return true;
             }
@@ -110,6 +110,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.3  2007/03/09 20:41:50  jfrazier
+* *** empty log message ***
+*
 * Revision 1.2  2007/03/05 08:06:07  sherwin
 * Updated to use MemoryManager
 *

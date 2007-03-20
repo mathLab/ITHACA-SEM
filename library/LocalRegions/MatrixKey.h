@@ -38,20 +38,20 @@
 
 #include <LocalRegions/LocalRegions.hpp>
 #include <StdRegions/StdMatrixKey.h>
-#include <SpatialDomains/GeoFac.h>
+#include <SpatialDomains/GeomFactors.h>
 
 namespace Nektar
 {
     namespace LocalRegions
     {
-	
+
         class MatrixKey
         {
         public:
             MatrixKey( StdRegions::MatrixType matrixType, 
-		       StdRegions::ShapeType shapeType, 
-		       StdRegions::StdExpansion &stdExpansion);
-	    
+                StdRegions::ShapeType shapeType, 
+                StdRegions::StdExpansion &stdExpansion);
+
             virtual ~MatrixKey()
             {
             }
@@ -65,49 +65,49 @@ namespace Nektar
             /// Used for finding value given the key in NekManager.
             friend bool operator<(const MatrixKey &lhs, const MatrixKey &rhs);
             friend bool opLess::operator()(const MatrixKey &lhs, 
-					   const MatrixKey &rhs);
+                const MatrixKey &rhs);
 
-	    StdRegions::MatrixType GetMatrixType() const
-	    {
-		return m_stdMatKey->GetMatrixType(); 
-	    }
+            StdRegions::MatrixType GetMatrixType() const
+            {
+                return m_stdMatKey->GetMatrixType(); 
+            }
 
-	    StdRegions::ShapeType GetShapeType() const
-	    {
-		return m_stdMatKey->GetShapeType();
-	    }
-	    
-	    int GetNcoeffs() const
-	    {
-		return m_stdMatKey->GetNcoeffs();
-	    }
+            StdRegions::ShapeType GetShapeType() const
+            {
+                return m_stdMatKey->GetShapeType();
+            }
 
-	    boost::shared_array<LibUtilities::BasisSharedPtr> GetBase() const
-	    {
-		return m_stdMatKey->GetBase();
-	    }
-	    
-	    StdRegions::StdMatrixKeySharedPtr GetStdMatKey() const 
-	    {
-		return m_stdMatKey;
-	    }
+            int GetNcoeffs() const
+            {
+                return m_stdMatKey->GetNcoeffs();
+            }
 
-	    SpatialDomains::GeoFacSharedPtr GetMinfo() const
-	    {
-		return m_minfo;
-	    }
+            boost::shared_array<LibUtilities::BasisSharedPtr> GetBase() const
+            {
+                return m_stdMatKey->GetBase();
+            }
 
-	protected:
+            StdRegions::StdMatrixKeySharedPtr GetStdMatKey() const 
+            {
+                return m_stdMatKey;
+            }
+
+            SpatialDomains::GeomFactorsSharedPtr GetMetricInfo() const
+            {
+                return m_metricinfo;
+            }
+
+        protected:
             MatrixKey();
-	    
-	    StdRegions::StdMatrixKeySharedPtr  m_stdMatKey;
-	    SpatialDomains::GeoFacSharedPtr  m_minfo; 
-	    
+
+            StdRegions::StdMatrixKeySharedPtr  m_stdMatKey;
+            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo; 
+
         private:
         };
 
         std::ostream& operator<<(std::ostream& os, const MatrixKey& rhs);
-	
+
     } // end of namespace
 } // end of namespace
 
@@ -115,6 +115,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.2  2007/03/14 21:24:07  sherwin
+* Update for working version of MultiRegions up to ExpList1D
+*
 * Revision 1.1  2007/03/04 20:42:14  sherwin
 * Keys for matrix managers
 *

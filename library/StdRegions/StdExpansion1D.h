@@ -176,6 +176,7 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                     "local expansions");
+                return 0;
             }
         };
 
@@ -186,6 +187,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.10  2007/03/14 21:24:09  sherwin
+* Update for working version of MultiRegions up to ExpList1D
+*
 * Revision 1.9  2007/02/21 22:55:16  sherwin
 * First integration of StdMatrixManagers
 *

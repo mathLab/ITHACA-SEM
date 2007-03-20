@@ -41,7 +41,7 @@ namespace Nektar
   namespace SpatialDomains
   {
 
-      class GeoFac;
+      class GeomFactors;
 
   } // end of namespace
 } // end of namespace
@@ -50,6 +50,9 @@ namespace Nektar
 
 /**
  * $Log: SpatialDomainsDeclarations.hpp,v $
+ * Revision 1.2  2007/03/14 21:24:09  sherwin
+ * Update for working version of MultiRegions up to ExpList1D
+ *
  * Revision 1.1  2006/05/04 18:58:30  kirby
  * *** empty log message ***
  *

@@ -53,7 +53,8 @@ namespace Nektar
 
 
         StdExpansion::StdExpansion(void): 
-            m_ncoeffs(0)
+            m_ncoeffs(0),
+	    m_numbases(0)
         {
         }
 
@@ -61,36 +62,29 @@ namespace Nektar
 				   const LibUtilities::BasisKey &Ba, 
 				   const LibUtilities::BasisKey &Bb, 
 				   const LibUtilities::BasisKey &Bc):
-	    m_ncoeffs(numcoeffs)
+	    m_ncoeffs(numcoeffs),
+	    m_numbases(numbases)
         {
-            switch(numbases)
+	    
+	    m_base = MemoryManager::AllocateSharedArray<LibUtilities::BasisSharedPtr>(m_numbases);
+            
+            switch(m_numbases)
             {
+            case 3:
+                ASSERTL2(Bc==LibUtilities::NullBasisKey,
+                         "NULL Basis attempting to be used.");
+                m_base[2] = LibUtilities::BasisManager()[Bc];
+
+            case 2:
+                ASSERTL2(Bb==LibUtilities::NullBasisKey,
+                     "NULL Basis attempting to be used.");
+
+                m_base[1] = LibUtilities::BasisManager()[Bb];
             case 1:
                 ASSERTL2(Ba==LibUtilities::NullBasisKey,
-                    "NULL Basis attempting to be used.");
-                m_base.push_back(LibUtilities::BasisManager()[Ba]);
+                         "NULL Basis attempting to be used.");
+                m_base[0] = LibUtilities::BasisManager()[Ba];
                 break;
-            case 2:
-                ASSERTL2(Ba==LibUtilities::NullBasisKey,
-                    "NULL Basis attempting to be used.");
-                ASSERTL2(Bb==LibUtilities::NullBasisKey,
-                    "NULL Basis attempting to be used.");
-
-                m_base.push_back(LibUtilities::BasisManager()[Ba]);
-                m_base.push_back(LibUtilities::BasisManager()[Bb]);
-		break;
-            case 3:
-                ASSERTL2(Ba==LibUtilities::NullBasisKey,
-                    "NULL Basis attempting to be used.");
-                ASSERTL2(Bb==LibUtilities::NullBasisKey,
-                    "NULL Basis attempting to be used.");
-                ASSERTL2(Bc==LibUtilities::NullBasisKey,
-                    "NULL Basis attempting to be used.");
-
-                m_base.push_back(LibUtilities::BasisManager()[Ba]);
-                m_base.push_back(LibUtilities::BasisManager()[Bb]);
-                m_base.push_back(LibUtilities::BasisManager()[Bc]);
-
             default:
                 ASSERTL0(false, "numbases incorrectly specified");
             };
@@ -300,6 +294,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.25  2007/03/20 16:58:42  sherwin
+* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+*
 * Revision 1.24  2007/03/14 21:24:09  sherwin
 * Update for working version of MultiRegions up to ExpList1D
 *

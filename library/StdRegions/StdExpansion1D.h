@@ -83,14 +83,17 @@ namespace Nektar
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
 	     *  \a outarray as output of the function
 	     */
-            void PhysTensorDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray & outarray);
+            void PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
+				 NekDoubleSharedArray & outarray);
 
-            void PhysDeriv  (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray) 
+            void PhysDeriv  (const NekDoubleSharedArray &inarray, 
+			     NekDoubleSharedArray &outarray) 
             {
                 v_PhysDeriv (inarray, outarray);
             }
 
-            void StdPhysDeriv (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
+            void StdPhysDeriv (const NekDoubleSharedArray &inarray, 
+			       NekDoubleSharedArray &outarray)
             {
                 v_StdPhysDeriv (inarray,outarray);
             }
@@ -203,6 +206,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.12  2007/03/20 16:58:42  sherwin
+* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+*
 * Revision 1.11  2007/03/20 09:12:47  kirby
 * update of geofac and metric info; fix style issues
 *

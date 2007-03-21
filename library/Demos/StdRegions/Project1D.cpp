@@ -78,10 +78,8 @@ int main(int argc, char *argv[])
   
   //----------------------------------------------
   // Define solution to be projected
-  NekDoubleArrayVector coords;
   NekDoubleSharedArray z = GetDoubleTmpSpace(nq);
-  coords.push_back(z);
-  E->GetCoords(coords);
+  E->GetCoords(z);
 
   if(btype != LibUtilities::eFourier)
   {

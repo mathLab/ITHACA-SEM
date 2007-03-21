@@ -139,7 +139,8 @@ namespace Nektar
 	     *  \param  outarray the resulting array of the derivative \f$
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
 	     */
-	    void PhysDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray & outarray);
+	    void PhysDeriv(const NekDoubleSharedArray &inarray,
+			   NekDoubleSharedArray &outarray);
 	    
 	    
 	    //----------------------------
@@ -193,7 +194,7 @@ namespace Nektar
 	    
 	    void MapTo(EdgeOrientation dir, StdExpMap& Map);
 
-	    void GetCoords(NekDoubleArrayVector &coords);
+	    void GetCoords(NekDoubleSharedArray &coords_1);
 	    
 	protected:
 	    
@@ -240,9 +241,11 @@ namespace Nektar
 		return Integral(inarray);
 	    } 
 	    
-	    virtual void v_GetCoords(NekDoubleArrayVector &coords)
+            virtual void v_GetCoords(NekDoubleSharedArray &coords_1,
+				     NekDoubleSharedArray &coords_2 = NULL,
+				     NekDoubleSharedArray &coords_3 = NULL)
 	    {
-		GetCoords(coords);
+		GetCoords(coords_1);
 	    }
 
 	    /** \brief Virtual call to StdSegExp::IProduct_WRT_B */
@@ -253,7 +256,7 @@ namespace Nektar
 	    } 
 	
 	    virtual void v_FillMode(const int mode, NekDoubleSharedArray &outarray)
-	    {
+	   {
 		FillMode(mode,outarray);
 	    } 
  
@@ -270,20 +273,23 @@ namespace Nektar
 	    
 
 	    /** \brief Virtual call to StdSegExp::Deriv */
-	    virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
+	    virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray, 
+				     NekDoubleSharedArray &outarray)
 	    {
 		PhysDeriv(inarray, outarray);
 	    }
       
 
 	    /** \brief Virtual call to StdSegExp::Deriv */
-	    virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
-            {
-		PhysDeriv(inarray, outarray);
+	    virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray, 
+					NekDoubleSharedArray &outarray)
+	    {
+		    PhysDeriv(inarray, outarray);
 	    }
 	    
 	    /** \brief Virtual call to StdSegExp::BwdTrans */
-	    virtual void v_BwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
+	    virtual void v_BwdTrans(const NekDoubleSharedArray &inarray, 
+				    NekDoubleSharedArray &outarray)
 	    {
 		BwdTrans(inarray, outarray);
 	    }
@@ -296,7 +302,8 @@ namespace Nektar
       
 
 	    /** \brief Virtual call to StdSegExp::FwdTrans */
-	    virtual void v_FwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
+	    virtual void v_FwdTrans(const NekDoubleSharedArray &inarray, 
+				    NekDoubleSharedArray &outarray)
 	    {
 		FwdTrans(inarray, outarray);
 	    }
@@ -327,6 +334,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.10  2007/03/20 16:58:43  sherwin
+ * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+ *
  * Revision 1.9  2007/03/14 21:24:09  sherwin
  * Update for working version of MultiRegions up to ExpList1D
  *

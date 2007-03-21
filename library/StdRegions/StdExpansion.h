@@ -98,14 +98,14 @@ namespace Nektar
             */
             inline int GetNumBases() const
 	    {
-		return m_base.size();
+		return m_numbases;
             }
 
             /** \brief This function gets the shared point to basis 
             *  
             *  \return returns the shared pointer to the bases  
             */
-            inline const LibUtilities::BasisVector GetBase() const
+            inline const boost::shared_array<LibUtilities::BasisSharedPtr> GetBase() const
             {
                 return(m_base);
             }
@@ -118,7 +118,7 @@ namespace Nektar
             */
             inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
 		{
-                ASSERTL1(dir < m_base.size(), "dir is larger than number of bases");
+                ASSERTL1(dir < m_numbases, "dir is larger than number of bases");
                 return(m_base[dir]);
             }
 
@@ -170,7 +170,7 @@ namespace Nektar
                 int i;
                 int nqtot = 1;
 
-                for(i=0; i<m_base.size(); ++i)
+                for(i=0; i<m_numbases; ++i)
                 {
                     nqtot *= ExpPointsProperties(i)->GetNumPoints();
                 }
@@ -207,7 +207,7 @@ namespace Nektar
             */
             inline  LibUtilities::BasisType GetBasisType(const int dir) 
             {
-                ASSERTL1(dir < m_base.size(), "dir is larger than m_numbases");
+                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisType());
             }
 
@@ -220,7 +220,7 @@ namespace Nektar
             */
             inline int GetBasisNumModes(const int dir) const
             {
-                ASSERTL1(dir < m_base.size(),"dir is larger than m_numbases");
+                ASSERTL1(dir < m_numbases,"dir is larger than m_numbases");
                 return(m_base[dir]->GetNumModes());
             }
 
@@ -238,7 +238,7 @@ namespace Nektar
             */
             inline LibUtilities::PointsType GetPointsType(const int dir) 
             {
-                ASSERTL1(dir < m_base.size(), "dir is larger than m_numbases");
+                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(m_base[dir]->GetPointsType());
             }
 
@@ -251,7 +251,7 @@ namespace Nektar
             */
             inline int GetNumPoints(const int dir) const 
             {
-                ASSERTL1(dir < m_base.size(), "dir is larger than m_numbases");
+                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(ExpPointsProperties(dir)->GetNumPoints());
             }
 
@@ -554,9 +554,11 @@ namespace Nektar
             *  \param coords an array containing the coordinates of the
             *  quadrature points (output of the function)
             */
-            void GetCoords(NekDoubleArrayVector &coords)
+            void GetCoords(NekDoubleSharedArray &coords_1,
+			   NekDoubleSharedArray &coords_2 = NullNekDoubleSharedArray,
+			   NekDoubleSharedArray &coords_3 = NullNekDoubleSharedArray)
             {
-                v_GetCoords(coords);
+                v_GetCoords(coords_1,coords_2,coords_3);
             }
 
             /** \brief given the coordinates of a point of the element in the 
@@ -570,9 +572,10 @@ namespace Nektar
             *  coordinate system
             *  \param coords the physical coordinates (output of the function)
             */
-            void GetCoord(const NekDoubleSharedArray &Lcoords, NekDoubleSharedArray &coords)
+            void GetCoord(const NekDoubleSharedArray &Lcoord, 
+			  NekDoubleSharedArray &coord)
             {
-                v_GetCoord(Lcoords, coords);
+                v_GetCoord(Lcoord, coord);
             }
 
             /** \brief this function writes the solution to the file \a outfile
@@ -697,10 +700,12 @@ namespace Nektar
                 return v_GenLapMatrix();
             }
 
-            void PhysDeriv (const int dim, const NekDoubleSharedArray &inarray, 
-			    NekDoubleArrayVector  &outarray)
+            void PhysDeriv (const int dim, const NekDoubleSharedArray &inarray,
+			    NekDoubleSharedArray &out_d1,
+			    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
+			    NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
             {
-                v_PhysDeriv (dim, inarray, outarray);
+                v_PhysDeriv (dim, inarray, out_d1, out_d2, out_d3);
             }
 
             /** \brief this function interpolates a 1D function \f$f\f$ evaluated
@@ -808,7 +813,8 @@ namespace Nektar
             DNekMatSharedPtr    CreateStdMatrix(const StdMatrixKey &mkey);
             DNekLinSysSharedPtr CreateStdLinSys(const StdLinSysKey &mkey);
 
-            LibUtilities::BasisVector   m_base; /**< Bases needed for the expansion */
+            int   m_numbases;   /**< Number of 1D basis defined in expansion */
+	    boost::shared_array<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
 
             LibUtilities::NekManager<StdMatrixKey, DNekMat,    StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdLinSysKey, DNekLinSys, StdLinSysKey::opLess> m_stdLinSysManager;
@@ -897,8 +903,11 @@ namespace Nektar
             }
 
 
-            virtual void   v_PhysDeriv (const int dim, const NekDoubleSharedArray &inarray,
-					NekDoubleArrayVector &outarray)
+            virtual void   v_PhysDeriv (const int dim, 
+					const NekDoubleSharedArray &inarray,
+					NekDoubleSharedArray out_d1,
+					NekDoubleSharedArray out_d2,
+					NekDoubleSharedArray out_d3)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                     "local expansions");
@@ -941,12 +950,15 @@ namespace Nektar
                 return returnval;
             }
 
-            virtual void v_GetCoords(NekDoubleArrayVector &coords)
-            {
+            virtual void v_GetCoords(NekDoubleSharedArray &coords_1,
+				     NekDoubleSharedArray &coords_2,
+				     NekDoubleSharedArray &coords_3)
+	    {
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
 
-            virtual void v_GetCoord(const NekDoubleSharedArray &Lcoords, NekDoubleSharedArray &coords)
+            virtual void v_GetCoord(const NekDoubleSharedArray &Lcoord, 
+				    NekDoubleSharedArray &coord)
             {
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
@@ -1013,6 +1025,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.34  2007/03/20 16:58:42  sherwin
+* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+*
 * Revision 1.33  2007/03/20 09:12:46  kirby
 * update of geofac and metric info; fix style issues
 *

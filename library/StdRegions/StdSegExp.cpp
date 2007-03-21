@@ -256,10 +256,10 @@ namespace Nektar
 	    }
 	}    
 	
-	void StdSegExp::GetCoords(NekDoubleArrayVector &coords)
+	void StdSegExp::GetCoords(NekDoubleSharedArray &coords)
 	{
 	    Blas::Dcopy(GetNumPoints(0),ExpPointsProperties(0)->GetZ(),
-			1,&(coords[0])[0],1);
+			1,&coords[0],1);
 	}
     
     }//end namespace
@@ -267,6 +267,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.21  2007/03/20 16:58:43  sherwin
+ * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+ *
  * Revision 1.20  2007/03/14 21:24:09  sherwin
  * Update for working version of MultiRegions up to ExpList1D
  *

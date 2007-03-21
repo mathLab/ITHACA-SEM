@@ -38,6 +38,8 @@
 
 namespace Nektar
 {
+    // Null defintion of NekDoubleSharedArray
+    static NekDoubleSharedArray NullNekDoubleSharedArray;
 
 
 } //end of namespace 
@@ -45,5 +47,8 @@ namespace Nektar
 #endif
 
 /***
-$Log: $
+$Log: NektarUnivConsts.hpp,v $
+Revision 1.1  2007/03/20 11:56:25  sherwin
+.
+
 **/

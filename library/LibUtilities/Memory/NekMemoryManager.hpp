@@ -390,7 +390,7 @@ namespace Nektar
 
     inline NekDoubleSharedArray  GetDoubleTmpSpace(const int size)
     {
-	return MemoryManager::AllocateSharedArray<double>(size);
+	return MemoryManager::AllocateSharedArray<NekDouble>(size);
     }
     
     inline NekIntSharedArray  GetIntTmpSpace(const int size)
@@ -405,6 +405,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.6  2007/03/20 16:58:41  sherwin
+    Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+
     Revision 1.5  2007/01/29 01:27:49  bnelson
     Added additional Allocate methods which take more parameters for the constructor.
 

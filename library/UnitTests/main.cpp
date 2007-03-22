@@ -25,6 +25,7 @@ using boost::unit_test_framework::test_suite;
 
 #include <UnitTests/Memory/TestNekMemoryManager.h>
 #include <UnitTests/StdRegions/testStdSegExp.h>
+#include <UnitTests/testFoundation/testFoundation.h>
 
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
@@ -32,6 +33,20 @@ test_suite* init_unit_test_suite( int, char* [] )
 {
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
 
+   // Test Foundation
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussGaussLegendre),0);
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMLegendre),0);
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauPLegendre),0);
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussLobattoLegendre),0);
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussGaussChebyshev),0);
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMChebyshev),0);
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauPChebyshev),0);
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussLobattoChebyshev),0);
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMAlpha0Beta1),0);
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMAlpha0Beta2),0);
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testPolyEvenlySpaced),0);
+   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testFourierEvenlySpaced),0);
+		
     // StdSegExp algorithms
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testLapMatrix), 0);
@@ -114,6 +129,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.25  2007/03/16 12:09:49  pvos
+    switched testStdSegExp and testNekMemoryManager back on
+
     Revision 1.24  2007/03/14 21:24:09  sherwin
     Update for working version of MultiRegions up to ExpList1D
 

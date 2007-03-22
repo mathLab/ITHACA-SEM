@@ -400,14 +400,13 @@
                 cout<<"" << endl;
             }
 
-             long double polyFunc4(int N, long double x){
-               return cos((N/2 + 1)*x) + sin((N/2 - 1)*x);
+             long double fourierFunc(int N, long double x){
+               return cos(N/2*x) + sin((N/2 - 2)*x);
             }
             void testFourierEvenlySpaced(){
             
                 PointsType type = eFourierEvenlySpaced;
-               long double exact[] = {0.0, 0.0, sin(2), 0.0, (2*sin(3))/3, 0.0, sin(4)/2, 0.0, (2*sin(5))/5, 0.0, sin(6)/3};
-
+               long double exact[] = {0.0, 0.0, 2*sin(1), 0.0, sin(2), 0.0, (2*sin(3))/3, 0.0, sin(4)/2, 0.0, (2*sin(5))/5};
                
                 for(int nPts = 2; nPts<=10; nPts += 2){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
@@ -419,7 +418,7 @@
                     long double numericIntegral = 0.0;
 
                       for(int j = 0; j < numPoints; ++j) {
-                         numericIntegral += w[j] * polyFunc4(nPts, z[j]);
+                         numericIntegral += w[j] * fourierFunc(nPts, z[j]);
 
                         cout << "w["<<j<<"] = " << w[j] << ", z["<<j<<"] = " << z[j] << endl;
                     }

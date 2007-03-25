@@ -139,9 +139,11 @@ namespace Nektar
 	     *  \param  outarray the resulting array of the derivative \f$
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
 	     */
-	    void PhysDeriv(const NekDoubleSharedArray &inarray,
-			   NekDoubleSharedArray &outarray);
-	    
+	    void PhysDeriv(const NekDoubleSharedArray &inarray, 
+			   NekDoubleSharedArray &out_d0,
+			   NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
+			   NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray);
+
 	    
 	    //----------------------------
 	    // Evaluations Methods
@@ -165,7 +167,7 @@ namespace Nektar
 	     *  \param outarray: the resulting array of the values of the function at 
 	     *  the physical quadrature points will be stored in the array \a outarray
 	     */
-	    void BwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray & outarray);
+	      void BwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray & outarray);
 
 	    /** \brief Forward transform from physical quadrature space stored in 
 	     *  \a inarray and evaluate the expansion coefficients and store in 
@@ -273,10 +275,13 @@ namespace Nektar
 	    
 
 	    /** \brief Virtual call to StdSegExp::Deriv */
-	    virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray, 
-				     NekDoubleSharedArray &outarray)
+
+            virtual void   v_PhysDeriv (const NekDoubleSharedArray &inarray,
+		    NekDoubleSharedArray &out_d0,
+		    NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+		    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
 	    {
-		PhysDeriv(inarray, outarray);
+		PhysDeriv(inarray,out_d0);
 	    }
       
 
@@ -284,7 +289,7 @@ namespace Nektar
 	    virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray, 
 					NekDoubleSharedArray &outarray)
 	    {
-		    PhysDeriv(inarray, outarray);
+		PhysDeriv(inarray, outarray);
 	    }
 	    
 	    /** \brief Virtual call to StdSegExp::BwdTrans */
@@ -334,6 +339,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.11  2007/03/21 20:56:43  sherwin
+ * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
+ *
  * Revision 1.10  2007/03/20 16:58:43  sherwin
  * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
  *

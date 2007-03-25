@@ -73,12 +73,12 @@ namespace Nektar
                 return m_xmap[i]->GetBasis(j);
             }
 
-            inline const StdRegions::StdSegExp*  GetXmap(int i)
+            inline const StdRegions::StdExpansion1DSharedPtr &GetXmap(int i)
             {
                 return m_xmap[i];
             }
 
-            inline BstShrDArray GetPhys(int i){
+            inline NekDoubleSharedArray &GetPhys(int i){
                 return m_xmap[i]->GetPhys();
             }
 
@@ -95,7 +95,7 @@ namespace Nektar
             }
 
 
-            StdRegions::StdSegExp* operator[](const int i) const
+            StdRegions::StdExpansion1DSharedPtr operator[](const int i) const
             {
                 if((i>=0)&& (i<m_coordim))
                 {
@@ -107,7 +107,7 @@ namespace Nektar
                 return m_xmap[0]; //should never be reached
             }
 
-            double GetCoord(const int i, const double *Lcoord);
+            double GetCoord(const int i, const NekDoubleSharedArray Lcoord);
                     
             /// \brief Get the orientation of edge1.
             ///
@@ -120,7 +120,7 @@ namespace Nektar
             int m_eid;
             std::list<CompToElmt> m_elmtmap;
 
-            StdRegions::StdSegExp** m_xmap;
+	    boost::shared_array<StdRegions::StdExpansion1DSharedPtr> m_xmap;
 
             VertexVector m_vertex;
         private:
@@ -135,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.5  2007/03/02 12:01:58  sherwin
+// Update for working version of LocalRegions/Project1D
+//
 // Revision 1.4  2007/02/19 08:06:25  sherwin
 // Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
 //

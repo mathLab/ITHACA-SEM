@@ -97,15 +97,21 @@ int main(int argc, char *argv[])
       sol[i] = 1.0;
       for(j = 0; j < order/2-1; ++j)
       {
-		sol[i] += sin(j*M_PI*z[i]) + cos(j*M_PI*z[i]);
+	  sol[i] += sin(j*M_PI*z[i]) + cos(j*M_PI*z[i]);
       }
     }
   }
+
+  //--------------------------------------------
+  // Take the numerical derivative of the solutiion
+  E->PhysDeriv(sol,sol);
+  //---------------------------------------------
+  
   //---------------------------------------------
   // Set the physical solution into phys space
   E->SetPhys(sol);
   //---------------------------------------------
-  
+
   //---------------------------------------------
   // Project onto Expansion 
   E->FwdTrans(*E);
@@ -116,28 +122,35 @@ int main(int argc, char *argv[])
   E->BwdTrans(*E);
   //-------------------------------------------  
 
+  // Define Exact differential of soluiton 
+  if(btype != LibUtilities::eFourier)
+  {
+    for(i = 0; i < nq; ++i)
+    {
+      sol[i] = 0.0;
+      for(j = 1; j < order; ++j)
+      {
+	sol[i] += j*pow(z[i],j-1);
+      }
+    }
+  }
+  else
+  {
+    for(i = 0; i < nq; ++i)
+    {
+      sol[i] = 0.0;
+      for(j = 0; j < order/2-1; ++j)
+      {
+	  sol[i] += j*M_PI*(cos(j*M_PI*z[i]) - sin(j*M_PI*z[i]));
+      }
+    }
+  }
   //--------------------------------------------
   // Calculate L_inf error 
   cout << "L infinity error: " << E->Linf(sol) << endl;
   cout << "L 2 error:        " << E->L2  (sol) << endl;
   //--------------------------------------------
 
-  //-------------------------------------------
-  // Evaulate solution at mid point and print error
-  if(btype != LibUtilities::eFourier)
-  {
-      sol[0] = 1;
-  }
-  else
-  {
-      sol[0] =  order/2;
-  }
-
-  NekDoubleSharedArray x = GetDoubleTmpSpace(1);
-  x[0] = 0;
-  NekDouble nsol = E->PhysEvaluate(x);
-  cout << "error at x = 0: " << nsol - sol[0] << endl;
-  //-------------------------------------------
 
   return 0;	
 }

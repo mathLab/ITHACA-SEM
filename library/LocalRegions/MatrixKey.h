@@ -49,8 +49,8 @@ namespace Nektar
         {
         public:
             MatrixKey( StdRegions::MatrixType matrixType, 
-                StdRegions::ShapeType shapeType, 
-                StdRegions::StdExpansion &stdExpansion);
+		       StdRegions::ShapeType shapeType, 
+		       StdRegions::StdExpansion &stdExpansion);
 
             virtual ~MatrixKey()
             {
@@ -65,7 +65,7 @@ namespace Nektar
             /// Used for finding value given the key in NekManager.
             friend bool operator<(const MatrixKey &lhs, const MatrixKey &rhs);
             friend bool opLess::operator()(const MatrixKey &lhs, 
-                const MatrixKey &rhs);
+					   const MatrixKey &rhs);
 
             StdRegions::MatrixType GetMatrixType() const
             {
@@ -73,7 +73,7 @@ namespace Nektar
             }
 
             StdRegions::ShapeType GetShapeType() const
-            {
+		{
                 return m_stdMatKey->GetShapeType();
             }
 
@@ -88,7 +88,7 @@ namespace Nektar
             }
 
             StdRegions::StdMatrixKeySharedPtr GetStdMatKey() const 
-            {
+		{
                 return m_stdMatKey;
             }
 
@@ -115,6 +115,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.3  2007/03/20 09:13:37  kirby
+* new geomfactor routines; update for metricinfo; update style
+*
 * Revision 1.2  2007/03/14 21:24:07  sherwin
 * Update for working version of MultiRegions up to ExpList1D
 *

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/GeoFac.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/GeomFactors.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -57,7 +57,7 @@ namespace Nektar
             two or three dimensional coordinate description
             **/
             GeomFactors(const GeomType gtype, const int coordim,
-                const StdRegions::StdExpansion1D **Coords);
+		boost::shared_array<StdRegions::StdExpansion1DSharedPtr> Coords);
 
 
 #if 0 
@@ -140,7 +140,11 @@ namespace Nektar
 #endif //NEKTAR_SPATIALDOMAINS_GeomFactors_H
 
 //
-// $Log: GeoFac.h,v $
+// $Log: GeomFactors.h,v $
+// Revision 1.1  2007/03/20 09:17:39  kirby
+//
+// GeomFactors now added; metricinfo used instead of minfo; styles updated
+//
 // Revision 1.7  2007/03/14 21:24:08  sherwin
 // Update for working version of MultiRegions up to ExpList1D
 //

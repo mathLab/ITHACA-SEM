@@ -53,11 +53,12 @@ namespace Nektar
 	       LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
             m_eid = id;
 
-            m_xmap = new StdRegions::StdSegExp * [m_coordim];
+	    m_xmap = MemoryManager::AllocateSharedArray<StdRegions::StdExpansion1DSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] =  new StdRegions::StdSegExp(B);
+                m_xmap[i] = MemoryManager::AllocateSharedPtr<StdRegions::StdSegExp>(B);
+		
             }
         }
 
@@ -73,11 +74,11 @@ namespace Nektar
                 const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
 	       LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
-                m_xmap = new StdRegions::StdSegExp * [m_coordim];
+		m_xmap = MemoryManager::AllocateSharedArray<StdRegions::StdExpansion1DSharedPtr>(m_coordim);
 
                 for(int i = 0; i < m_coordim; ++i)
                 {
-                    m_xmap[i] = new StdRegions::StdSegExp(B);
+                m_xmap[i] = MemoryManager::AllocateSharedPtr<StdRegions::StdSegExp>(B);
                 }
             }
 
@@ -94,11 +95,11 @@ namespace Nektar
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, order,
 					   LibUtilities::PointsKey(nquad,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap = new StdRegions::StdSegExp * [m_coordim];
+	    m_xmap = MemoryManager::AllocateSharedArray<StdRegions::StdExpansion1DSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = new StdRegions::StdSegExp(B);
+                m_xmap[i] = MemoryManager::AllocateSharedPtr<StdRegions::StdSegExp>(B);
             }
 
             m_state = eNotFilled;
@@ -107,16 +108,6 @@ namespace Nektar
 
         EdgeComponent::~EdgeComponent()
         {
-            if(m_xmap)
-            {
-                for(int i =0; i < m_coordim; ++i)
-                {
-                    delete m_xmap[i];
-                }
-
-                delete[] m_xmap;
-                m_xmap = NULL;
-            }
         }
 
 
@@ -135,7 +126,7 @@ namespace Nektar
         /** given local collapsed coordinate Lcoord return the value of
         physical coordinate in direction i **/
 
-        double EdgeComponent::GetCoord(const int i, const double *Lcoord) 
+        double EdgeComponent::GetCoord(const int i, const NekDoubleSharedArray Lcoord) 
         {
 
             ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
@@ -212,6 +203,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.13  2007/03/14 21:24:08  sherwin
+*    Update for working version of MultiRegions up to ExpList1D
+*
 *    Revision 1.12  2007/02/19 08:06:24  sherwin
 *    Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
 *

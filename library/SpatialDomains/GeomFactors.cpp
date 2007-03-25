@@ -66,9 +66,9 @@ namespace Nektar
         **/
 
         GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
-            const StdRegions::StdExpansion1D **Coords)
+	  boost::shared_array<StdRegions::StdExpansion1DSharedPtr>  Coords)
         {
-            double    *der[3];
+            NekDoubleSharedArray der[3];
             int        i,nquad;
             LibUtilities::PointsType  ptype;
 
@@ -81,9 +81,9 @@ namespace Nektar
             ptype = Coords[0]->GetPointsType(0);
 
             // setup temp storage
-            der[0] = new double [3*nquad];
-            der[1] = der[0] + nquad;
-            der[2] = der[1] + nquad;
+            der[0] = GetDoubleTmpSpace(nquad);
+            der[1] = GetDoubleTmpSpace(nquad);
+            der[2] = GetDoubleTmpSpace(nquad);
 
             // Calculate local derivatives using physical space storage
             for(i = 0; i < coordim; ++i)
@@ -93,13 +93,10 @@ namespace Nektar
                 ASSERTL2(Coords[i]->GetPointsType(0)  == ptype,
                     "Points type are different for each coordinate");
 
-                ((StdRegions::StdExpansion1D**) Coords)[i]->BwdTrans(
-                    ((StdRegions::StdExpansion1D**) Coords)[i]->GetCoeffs(), 
-                    ((StdRegions::StdExpansion1D**) Coords)[i]->GetPhys());
+                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), 
+				    Coords[i]->GetPhys());
 
-                ((StdRegions::StdExpansion1D**) Coords)[i]->StdPhysDeriv(
-                    &(((StdRegions::StdExpansion1D**) Coords)[i]->GetPhys())[0],
-                    der[i]);
+                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(), der[i]);
             }
 
             if((m_gtype == eRegular)||(m_gtype== eMovingRegular))
@@ -134,12 +131,11 @@ namespace Nektar
                 // invert local derivative for gmat;
                 for(i = 0; i < coordim; ++i)
                 {
-                    Vmath::Sdiv(nquad,1.0,der[i],1,m_gmat[i],1);
-                    Vmath::Vmul(nquad,der[i],1,der[i],1,m_jac,1);
+                    Vmath::Sdiv(nquad,1.0,&der[i][0],1,m_gmat[i],1);
+                    Vmath::Vmul(nquad,&der[i][0],1,&der[i][0],1,m_jac,1);
                 }
                 Vmath::Vsqrt(nquad,m_jac,1,m_jac,1);
             }
-            delete[] der[0];
         }
 
 
@@ -592,7 +588,11 @@ namespace Nektar
 }; //end of namespace
 
 //
-// $Log: GeoFac.cpp,v $
+// $Log: GeomFactors.cpp,v $
+// Revision 1.1  2007/03/20 09:17:39  kirby
+//
+// GeomFactors now added; metricinfo used instead of minfo; styles updated
+//
 // Revision 1.5  2007/03/14 21:24:08  sherwin
 // Update for working version of MultiRegions up to ExpList1D
 //

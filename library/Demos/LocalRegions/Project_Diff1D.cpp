@@ -10,6 +10,9 @@ using namespace Nektar;
 static double solutionpoly(double x, int order);
 static double solutionfourier(double x, int order, double a, double b);
 
+static double deriv_solutionpoly(double x, int order);
+static double deriv_solutionfourier(double x, int order, double a, double b);
+
 // This routine projects a polynomial or trigonmetric functions which 
 // has energy in all mdoes of the expansions and report an error.
 
@@ -99,9 +102,13 @@ int main(int argc, char *argv[])
             sol[i] = solutionfourier(xc[i],order,x[0],x[1]);
         }
     }
-
     //---------------------------------------------
 
+    //--------------------------------------------
+    // Take the numerical derivative of the solutiion
+    E->PhysDeriv(sol,sol);
+    //---------------------------------------------
+    
     //---------------------------------------------
     // Set the physical solution into phys space
     E->SetPhys(sol);
@@ -124,30 +131,29 @@ int main(int argc, char *argv[])
     fclose(outfile);
     //-------------------------------------------
 
+    //-------------------------------------------------
+    // Define derivative of the solution
+    if(btype != LibUtilities::eFourier)
+    {
+        for(i = 0; i < nq; ++i)
+        {
+            sol[i] = deriv_solutionpoly(xc[i],order);
+        }
+    }
+    else
+    {
+        for(i = 0; i < nq; ++i)
+        {
+            sol[i] = deriv_solutionfourier(xc[i],order,x[0],x[1]);
+        }
+    }
+    //---------------------------------------------------
+
     //--------------------------------------------
     // Calculate L_inf error 
     cout << "L infinity error: " << E->Linf(sol) << endl;
     cout << "L 2 error:        " << E->L2  (sol) << endl;
     //--------------------------------------------
-
-    //-------------------------------------------
-    // Evaulate solution at mid point and print error
-    if(btype != LibUtilities::eFourier)
-    {
-        sol[0] = solutionpoly(0.5*(x[1]+x[0]),order);
-    }
-    else
-    {
-        sol[0] = solutionfourier(0.5*(x[1]+x[0]),order,x[0],x[1]);
-    }
-
-    NekDoubleSharedArray lcoord = GetDoubleTmpSpace(1);
-    lcoord[0] = 0;
-    E->GetCoord(lcoord,xc);
-    double nsol = E->PhysEvaluate(xc);
-    cout << "error at (xi = 0) x = " << xc[0] << " : " << nsol - sol[0] << endl;
-
-    //-------------------------------------------
 
     return 0;
 }
@@ -176,6 +182,36 @@ static double solutionfourier(double x, int order, double a, double b)
     for(j = 0; j < order/2-1; ++j)
     {
         sol += sin(j*M_PI*xx) + cos(j*M_PI*xx);
+    }
+
+    return sol;
+}
+
+
+static double deriv_solutionpoly(double x, int order)
+{
+    int j;
+    double sol;
+
+    sol = 0.0;
+    for(j = 1; j < order; ++j)
+    {
+        sol += j*pow(x,j-1);
+    }
+
+    return sol;
+}
+
+static double deriv_solutionfourier(double x, int order, double a, double b)
+{
+    int j;
+    double sol;
+    double xx = 2.0*(x-a)/(b-a) - 1.0;
+
+    sol = 0.0;
+    for(j = 0; j < order/2-1; ++j)
+    {
+        sol += j*M_PI*(cos(j*M_PI*xx) - sin(j*M_PI*xx));
     }
 
     return sol;

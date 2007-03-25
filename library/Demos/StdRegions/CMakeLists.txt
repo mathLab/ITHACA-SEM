@@ -4,32 +4,14 @@ ADD_NEKTAR_EXECUTABLE(Project1D Project1DSource)
     optimized StdRegions debug StdRegions-g    
     )
 
+SET(Project_Diff1DSource  Project_Diff1D.cpp)
+ADD_NEKTAR_EXECUTABLE(Project_Diff1D Project_Diff1DSource)
+    TARGET_LINK_LIBRARIES(Project_Diff1D
+    optimized StdRegions debug StdRegions-g    
+    )
+
 IF( USE_FRAMEWORK )
     TARGET_LINK_LIBRARIES(Project1D ${FRAMEWORK_LINK_FLAGS})
+    TARGET_LINK_LIBRARIES(Project_Diff1D ${FRAMEWORK_LINK_FLAGS})
 ENDIF ( USE_FRAMEWORK )
-
-
-
-#SET(AliasingProject2DSource  AliasingProject2D.cpp)
-#SET(Basis1DSource  Basis1D.cpp)
-#SET(HMatrix1DSource  HMatrix1D.cpp)
-#SET(MMatrix1DSource  MMatrix1D.cpp)
-#SET(MMatrix2DSource  MMatrix2D.cpp)
-#SET(MMatrix3DSource  MMatrix3D.cpp)
-#SET(NBasisTrans2DSource  NBasisTrans2D.cpp)
-#SET(NodalBasisSource  NodalBasis.cpp)
-#SET(Project2DSource  Project2D.cpp)
-#SET(Project_Diff2DSource  Project_Diff2D.cpp)
-
-
-#ADD_NEKTAR_EXECUTABLE(AliasingProject2D AliasingProject2DSource )
-#ADD_NEKTAR_EXECUTABLE(Basis1D Basis1DSource )
-#ADD_NEKTAR_EXECUTABLE(HMatrix1D HMatrix1DSource )
-#ADD_NEKTAR_EXECUTABLE(MMatrix1D MMatrix1DSource )
-#ADD_NEKTAR_EXECUTABLE(MMatrix2D MMatrix2DSource )
-#ADD_NEKTAR_EXECUTABLE(MMatrix3D MMatrix3DSource )
-#ADD_NEKTAR_EXECUTABLE(NBasisTrans2D NBasisTrans2DSource )
-#ADD_NEKTAR_EXECUTABLE(NodalBasis NodalBasisSource)
-#ADD_NEKTAR_EXECUTABLE(Project2D Project2DSource)
-#ADD_NEKTAR_EXECUTABLE(Project_Diff2D Project_Diff2DSource)
 

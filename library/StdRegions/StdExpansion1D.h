@@ -86,10 +86,12 @@ namespace Nektar
             void PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
 				 NekDoubleSharedArray & outarray);
 
-            void PhysDeriv  (const NekDoubleSharedArray &inarray, 
-			     NekDoubleSharedArray &outarray) 
+            void PhysDeriv (const NekDoubleSharedArray &inarray,
+			    NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+			    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
+			    NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
             {
-                v_PhysDeriv (inarray, outarray);
+                v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
             }
 
             void StdPhysDeriv (const NekDoubleSharedArray &inarray, 
@@ -144,6 +146,12 @@ namespace Nektar
 		v_BwdTrans(in);
 	    }
 
+            void  BwdTrans (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
+            {
+                v_BwdTrans (inarray, outarray);
+            }
+
+
 
             
         protected:
@@ -154,6 +162,9 @@ namespace Nektar
 
             virtual void v_FwdTrans(const StdExpansion1D &in) = 0;
             virtual void v_BwdTrans(const StdExpansion1D &in) = 0;
+
+	    virtual void v_BwdTrans(const NekDoubleSharedArray &inarray, 
+				    NekDoubleSharedArray &outarray) = 0;
 
 
 	    virtual int v_GetNverts() = 0;
@@ -188,7 +199,11 @@ namespace Nektar
                 return 1; 
 	    }
 
-            virtual void   v_PhysDeriv    (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray) = 0;
+            virtual void   v_PhysDeriv (const NekDoubleSharedArray &inarray,
+					NekDoubleSharedArray &out_d0,
+					NekDoubleSharedArray &out_d1,
+					NekDoubleSharedArray &out_d2) = 0;
+
             virtual void   v_StdPhysDeriv (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray) = 0;
 
             virtual NekDouble v_PhysEvaluate(const NekDoubleSharedArray &coords)
@@ -199,6 +214,8 @@ namespace Nektar
             }
         };
 
+        typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
+
     } //end of namespace
 } //end of namespace
 
@@ -206,6 +223,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.13  2007/03/21 20:56:43  sherwin
+* Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
+*
 * Revision 1.12  2007/03/20 16:58:42  sherwin
 * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *

@@ -70,7 +70,9 @@ namespace Nektar
         */
         class StdExpansion
         {
-
+	    friend class SpatialDomains::EdgeComponent;
+	    friend class SpatialDomains::SegGeom;
+	    friend class SpatialDomains::GeomFactors;
         public:
 
             /** \brief Default Constructor */
@@ -236,7 +238,7 @@ namespace Nektar
             *  \return returns the type of quadrature points  used in the \a dir
             *  direction
             */
-            inline LibUtilities::PointsType GetPointsType(const int dir) 
+            inline LibUtilities::PointsType GetPointsType(const int dir)  const 
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(m_base[dir]->GetPointsType());
@@ -700,12 +702,18 @@ namespace Nektar
                 return v_GenLapMatrix();
             }
 
-            void PhysDeriv (const int dim, const NekDoubleSharedArray &inarray,
-			    NekDoubleSharedArray &out_d1,
+            void PhysDeriv (const NekDoubleSharedArray &inarray,
+			    NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
 			    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
 			    NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
             {
-                v_PhysDeriv (dim, inarray, out_d1, out_d2, out_d3);
+                v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
+            }
+
+
+            boost::shared_ptr<SpatialDomains::GeomFactors> GetMetricInfo(void) const
+            {
+                return v_GetMetricInfo();
             }
 
             /** \brief this function interpolates a 1D function \f$f\f$ evaluated
@@ -729,7 +737,15 @@ namespace Nektar
             void Interp1D(const LibUtilities::BasisKey &fbasis0,
 			  const NekDoubleSharedArray &from,
 			  const LibUtilities::BasisKey &tbasis0,
-			  NekDoubleSharedArray &to);
+			  NekDoubleSharedArray &to)
+	    {
+		Interp1D(fbasis0,&from[0],tbasis0,&to[0]);
+	    }
+
+            void Interp1D(const LibUtilities::BasisKey &fbasis0,
+			  const NekDouble *from,
+			  const LibUtilities::BasisKey &tbasis0,
+			  NekDouble *to);
 
             /** \brief this function interpolates a 2D function \f$f\f$ evaluated
             *  at the quadrature points of the 2D basis, constructed by 
@@ -855,12 +871,6 @@ namespace Nektar
                 return(m_phys);
             }
 
-	    //protected virtual fucntions
-
-            boost::shared_ptr<SpatialDomains::GeomFactors> GetMetricInfo(void) 
-            {
-                return v_GetMetricInfo();
-            }
 
         private:
 
@@ -903,8 +913,7 @@ namespace Nektar
             }
 
 
-            virtual void   v_PhysDeriv (const int dim, 
-					const NekDoubleSharedArray &inarray,
+            virtual void   v_PhysDeriv (const NekDoubleSharedArray &inarray,
 					NekDoubleSharedArray out_d1,
 					NekDoubleSharedArray out_d2,
 					NekDoubleSharedArray out_d3)
@@ -950,9 +959,9 @@ namespace Nektar
                 return returnval;
             }
 
-            virtual void v_GetCoords(NekDoubleSharedArray &coords_1,
-				     NekDoubleSharedArray &coords_2,
-				     NekDoubleSharedArray &coords_3)
+            virtual void v_GetCoords(NekDoubleSharedArray &coords_0,
+				     NekDoubleSharedArray &coords_1,
+				     NekDoubleSharedArray &coords_2)
 	    {
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
@@ -1025,6 +1034,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.35  2007/03/21 20:56:43  sherwin
+* Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
+*
 * Revision 1.34  2007/03/20 16:58:42  sherwin
 * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *

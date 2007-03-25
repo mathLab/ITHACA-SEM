@@ -52,15 +52,16 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-
-        class SegExp: public StdRegions::StdSegExp
+    
+	class SegExp: public StdRegions::StdSegExp
         {
 
         public:
 
             /// \brief Constructor using BasisKey class for quadrature
             /// points and order definition 
-            SegExp(const LibUtilities::BasisKey &Ba, SpatialDomains::SegGeomSharedPtr geom);
+            SegExp(const LibUtilities::BasisKey &Ba, 
+		   SpatialDomains::SegGeomSharedPtr &geom);
 
             ///Copy Constructor
             SegExp(const SegExp &S);
@@ -74,9 +75,11 @@ namespace Nektar
                 return StdRegions::eSegment;
             }    
 
-            void GetCoords(double **coords);
-
-            void GetCoord(const double *Lcoords, double *coords);
+            void GetCoords(NekDoubleSharedArray &coords_1,
+			   NekDoubleSharedArray &coords_2 = NullNekDoubleSharedArray,
+			   NekDoubleSharedArray &coords_3 = NullNekDoubleSharedArray);
+            void GetCoord(const NekDoubleSharedArray &Lcoords, 
+			  NekDoubleSharedArray &coords);
 
 
             SpatialDomains::SegGeomSharedPtr GetGeom()
@@ -93,12 +96,13 @@ namespace Nektar
             //----------------------------
 
             /// \brief Integrate the physical point list \a inarray over region
-            double Integral(const double *inarray);
+            double Integral(const NekDoubleSharedArray &inarray);
 
 
             /// \brief  Inner product of \a inarray over region with respect to the 
             /// expansion basis (this)->_Base[0] and return in \a outarray 
-            void IProductWRTBase(const double * inarray, double * outarray);
+            void IProductWRTBase(const NekDoubleSharedArray &inarray, 
+				 NekDoubleSharedArray &outarray);
 
 
             //-----------------------------
@@ -109,12 +113,10 @@ namespace Nektar
             /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
             physical quadrature points given by \a inarray and return in \a
             outarray. */
-            void PhysDeriv(const double *inarray, double * outarray)
-            {
-                PhysDeriv(1,inarray,&outarray);
-            }
-
-            void PhysDeriv(const int n, const double *inarray, double ** outarray);
+            void PhysDeriv(const NekDoubleSharedArray &inarray, 
+			   NekDoubleSharedArray &out_d0 = NullNekDoubleSharedArray,
+			   NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+			   NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
 
             //----------------------------
             // Evaluations Methods
@@ -123,9 +125,10 @@ namespace Nektar
             /** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
             store in \a (this)->_coeffs  */
-            void FwdTrans(const double * inarray, double *outarray);
+            void FwdTrans(const NekDoubleSharedArray &inarray, 
+			  NekDoubleSharedArray &outarray);
 
-            double PhysEvaluate(const double *coord);
+            double PhysEvaluate(const NekDoubleSharedArray &coord);
 
         protected:
 
@@ -143,8 +146,10 @@ namespace Nektar
 
             /// \brief  Inner product of \a inarray over region with respect to
             /// the expansion basis \a base and return in \a outarray 
-            inline void IProductWRTBase(const double *base, const double *inarray, 
-                double *outarray, int coll_check);
+            inline void IProductWRTBase(const NekDouble *base, 
+					const NekDoubleSharedArray &inarray, 
+					NekDoubleSharedArray &outarray, 
+					const int coll_check);
 
         private:
 
@@ -153,19 +158,22 @@ namespace Nektar
                 return DetShapeType();
             }
 
-            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo()
+            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
             {
                 return m_metricinfo;
             }
 
-            virtual void v_GetCoord(const double *Lcoords, double *coords)
-            {
-                GetCoord(Lcoords, coords);
+            virtual void v_GetCoords(NekDoubleSharedArray &coords_0,
+				     NekDoubleSharedArray &coords_1 = NullNekDoubleSharedArray,
+				     NekDoubleSharedArray &coords_2 = NullNekDoubleSharedArray)
+	    {
+                GetCoords(coords_0, coords_1, coords_2);
             }
 
-            virtual void v_GetCoords(double **coords)
+            virtual void v_GetCoord(const NekDoubleSharedArray &lcoord, 
+				     NekDoubleSharedArray &coord)
             {
-                GetCoords(coords);
+                GetCoord(lcoord, coord);
             }
 
             virtual int v_GetCoordim()
@@ -190,67 +198,49 @@ namespace Nektar
 
             /// \brief Virtual call to integrate the physical point list \a inarray
             /// over region (see SegExp::Integral) 
-            virtual double v_Integral(const double *inarray )
+            virtual NekDouble v_Integral(const NekDoubleSharedArray &inarray )
             {
                 return Integral(inarray);
             }
 
             /** \brief Virtual call to SegExp::IProduct_WRT_B */
-            virtual void v_IProductWRTBase(const double * inarray, double * outarray)
+            virtual void v_IProductWRTBase(const NekDoubleSharedArray &inarray,
+					   NekDoubleSharedArray &outarray)
             {
                 IProductWRTBase(inarray,outarray);
             }
 
-            /** \brief Virtual call to SegExp::IProduct_WRT_B */
-            virtual void v_IProductWRTBase(const BstShrDArray &inarray, BstShrDArray &outarray)
-            {
-                IProductWRTBase(&inarray[0],&outarray[0]);
-            }
-
             /// Virtual call to SegExp::PhysDeriv
-            virtual void v_PhysDeriv(const double *inarray, double * outarray)
-            {
-                PhysDeriv(inarray, outarray);
-            }
-
-            /// Virtual call to SegExp::PhysDeriv
-            virtual void v_PhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
-            {
-                PhysDeriv(&inarray[0], &outarray[0]);
-            }
-
-            /// Virtual call to SegExp::PhysDeriv
-            virtual void v_StdPhysDeriv(const double *inarray, double * outarray)
+            virtual void v_StdPhysDeriv(const NekDoubleSharedArray & inarray, 
+					NekDoubleSharedArray &outarray)
             {
                 StdSegExp::PhysDeriv(inarray, outarray);
             }
 
-            /// Virtual call to SegExp::PhysDeriv
-            virtual void v_StdPhysDeriv(const BstShrDArray &inarray, BstShrDArray &outarray)
-            {
-                StdSegExp::PhysDeriv(&inarray[0], &outarray[0]);
-            }
-
-            virtual void v_PhysDeriv(const int n, const double *inarray, 
-                double **outarray)
-            {
-                PhysDeriv(n, inarray, outarray);
+            virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray, 
+				     NekDoubleSharedArray &out_d0 = NullNekDoubleSharedArray,
+				     NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+				     NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
+	    {
+                PhysDeriv(inarray, out_d0, out_d1, out_d2);
             }
 
             /// Virtual call to SegExp::FwdTrans
-            virtual void v_FwdTrans(const double * inarray, double * outarray)
+            virtual void v_FwdTrans(const NekDoubleSharedArray &inarray, 
+				    NekDoubleSharedArray &outarray)
             {
                 FwdTrans(inarray,outarray);
             }
 
-            /// Virtual call to SegExp::FwdTrans
-            virtual void v_FwdTrans(const BstShrDArray &inarray, BstShrDArray &outarray)
-            {
-                FwdTrans(&inarray[0],&outarray[0]);
-            }
+	    /** \brief Virtual call to SegExp::FwdTrans */
+	    virtual void v_FwdTrans(const StdExpansion1D &in)
+	    {
+		FwdTrans(((SegExp &) in).GetPhys(), m_coeffs);
+	    }
+      
 
             /// Virtual call to SegExp::Evaluate
-            virtual double v_PhysEvaluate(const double * coords)
+            virtual double v_PhysEvaluate(const NekDoubleSharedArray &coords)
             {
                 return PhysEvaluate(coords);
             }
@@ -272,7 +262,7 @@ namespace Nektar
 
             - returns the \f$ L_\infty \f$ error as a double. 
             */
-            virtual double v_Linf(const double *sol)
+            virtual double v_Linf(const NekDoubleSharedArray &sol)
             {
                 return Linf(sol);
             }
@@ -313,7 +303,7 @@ namespace Nektar
 
             - returns the \f$ L_2 \f$ error as a double. 
             */
-            virtual double v_L2(const double *sol)
+            virtual double v_L2(const NekDoubleSharedArray &sol)
             {
                 return StdExpansion::L2(sol);
             }
@@ -350,6 +340,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.8  2007/03/20 09:13:38  kirby
+// new geomfactor routines; update for metricinfo; update style
+//
 // Revision 1.7  2007/03/14 21:24:07  sherwin
 // Update for working version of MultiRegions up to ExpList1D
 //

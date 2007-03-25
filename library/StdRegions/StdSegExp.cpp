@@ -162,18 +162,22 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdSegExp::PhysDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray & outarray)
+	void StdSegExp::PhysDeriv(const NekDoubleSharedArray &inarray, 
+				  NekDoubleSharedArray &out_d0,
+				  NekDoubleSharedArray &out_d2,
+				  NekDoubleSharedArray &out_d3)
 	{
-	    PhysTensorDeriv(inarray,outarray);
+	    PhysTensorDeriv(inarray,out_d0);
 	}
 	
 	//----------------------------
 	// Evaluation Methods
 	//----------------------------
-	
-	void StdSegExp::BwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
+
+	void StdSegExp::BwdTrans(const NekDoubleSharedArray &inarray, 
+				 NekDoubleSharedArray &outarray)
 	{
-	    int           nquad = m_base[0]->GetNumPoints();
+	    int  nquad = m_base[0]->GetNumPoints();
 	    
 	    if(m_base[0]->Collocation())
 	    {
@@ -267,6 +271,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.22  2007/03/21 20:56:43  sherwin
+ * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
+ *
  * Revision 1.21  2007/03/20 16:58:43  sherwin
  * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
  *

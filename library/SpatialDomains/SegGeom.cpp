@@ -87,28 +87,18 @@ namespace Nektar
         {
             GeomFactorsSharedPtr gfac;
 
-            StdRegions::StdExpansion1D ** xmaptemp =
-                new StdRegions::StdExpansion1D*[m_coordim];
-
-            for(int i=0;i<m_coordim;++i)
-            {
-                xmaptemp[i] = m_xmap[i];
-            }
-
             FillGeom();
 
             if(m_xmap[0]->GetBasisNumModes(0)==2)
             {// assumes all direction have same order
-                m_geomfactors.reset( new GeomFactors(eRegular, m_coordim, 
-                    (const StdRegions::StdExpansion1D **) xmaptemp));
+		m_geomfactors = MemoryManager::AllocateSharedPtr<GeomFactors>
+		    (eRegular, m_coordim, m_xmap);
             }
             else
             {
-                m_geomfactors.reset(new GeomFactors(eDeformed, m_coordim, 
-                    (const StdRegions::StdExpansion1D **) xmaptemp));
+                m_geomfactors = MemoryManager::AllocateSharedPtr<GeomFactors>
+		    (eDeformed, m_coordim, m_xmap);
             }
-
-            delete[] xmaptemp;
         }
 
 
@@ -211,6 +201,10 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.9  2007/03/20 09:17:40  kirby
+//
+// GeomFactors now added; metricinfo used instead of minfo; styles updated
+//
 // Revision 1.8  2007/03/14 21:24:08  sherwin
 // Update for working version of MultiRegions up to ExpList1D
 //

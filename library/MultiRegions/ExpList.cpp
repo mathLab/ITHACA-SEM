@@ -64,16 +64,16 @@ namespace Nektar
 	    
 	    - returns \f$ \sum_{i=1}^{n_{el}} \int_{\Omega_i} u(\xi_1)d \xi_1 \f$ 
 	*/
-	double ExpList::Integral(const double *inarray)
+	double ExpList::Integral(const NekDoubleSharedArray &inarray)
 	{
 	    int    i;
 	    int    cnt = 0;
 	    double sum = 0.0;
-	    
+	    NekDoubleSharedArray offset;
 	    
 	    for(i = 0; i < GetExpSize(); ++i)
 	    {
-		sum += GetExp(i)->Integral(inarray+cnt);
+		sum += GetExp(i)->Integral(offset.reset(inarray[cnt]));
 		cnt += GetExp(i)->GetTotPoints();
 	    }
 
@@ -81,7 +81,8 @@ namespace Nektar
 	}
 	
 	
-	void ExpList::IProductWRTBase(const double *inarray, double *outarray)
+	void ExpList::IProductWRTBase(const NekDoubleSharedArray &inarray, 
+				      NekDoubleSharedArray &outarray)
 	{
 	    int    i;
 	    int    cnt  = 0;
@@ -107,68 +108,45 @@ namespace Nektar
 	    }
 	}
 	
-       void ExpList::IProductWRTBase(const ExpList &S1, double * outarray)
+       void ExpList::IProductWRTBase(const ExpList &S1, 
+				     NekDoubleSharedArray &outarray)
 	{
 	    int cnt = 0;
 	    int i;
 
 	    for(i= 0; i < GetExpSize(); ++i)
 	    {
-		GetExp(i)->IProductWRTBase(&(((ExpList)S1).GetExp(i)->GetPhys())[0],
+		GetExp(i)->IProductWRTBase(&(((ExpList)S1).
+					     GetExp(i)->GetPhys())[0],
 					   outarray+cnt);
 		cnt += GetExp(i)->GetNcoeffs();
 	    }
 	}
 	
-	void ExpList::PhysDeriv(const int n, double **outarray)
+	void ExpList::PhysDeriv(NekDoubleSharedArray out_0,
+				NekDoubleSharedArray out_1,
+				NekDoubleSharedArray out_2)
 	{
 	    int  cnt = 0;
 	    int  i;
 
+	    
 	    if(m_physState == false)
 	    {
 		BwdTrans(*this);
 	    }
 	    
+
 	    for(i= 0; i < GetExpSize(); ++i)
 	    {
-		GetExp(i)->PhysDeriv(n,&GetExp(i)->GetPhys()[0],outarray+cnt);
-		cnt  += GetExp(i) ->GetTotPoints();
+		GetExp(i)->PhysDeriv(&GetExp(i)->GetPhys()[0],
+				     out_0+cnt,out_1+cnt,out_2+cnt);
+		cnt  += GetExp(i)->GetTotPoints();
 	    }
 	}
+
       
-	void ExpList::PhysDeriv(const int n, const double *inarray,
-				double **outarray)
-	{
-	    int cnt = 0;
-	    int i;
-	    
-	    
-	    for(i= 0; i < GetExpSize(); ++i)
-	    {
-		GetExp(i)->PhysDeriv(n,inarray+cnt,outarray+cnt);
-		cnt += GetExp(i)->GetTotPoints();
-	    }
-	}    
-
-	void ExpList::PhysDeriv(const ExpList &Sin, ExpList &S_x)
-	{
-	    int i;
-	    double *out[1];
-
-	    if(Sin.GetPhysState() == false)
-	    {
-		BwdTrans(Sin);
-	    }
-	    
-	    for(i= 0; i < GetExpSize(); ++i)
-	    {
-		out[0] = &S_x.GetExp(i)->GetPhys()[0];
-		GetExp(i)->PhysDeriv(1,&(((ExpList)Sin).GetExp(i)->GetPhys())[0],out);
-	    }
-	}    
-
-	void ExpList::FwdTrans(const double *inarray, double *outarray)
+	void ExpList::FwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
 	{
 	    int cnt  = 0;
 	    int cnt1 = 0;
@@ -184,14 +162,14 @@ namespace Nektar
 	    m_transState = eLocal;
 	}
 
-	void ExpList::FwdTrans(const double *inarray, ExpList &Sout)
+	void ExpList::FwdTrans(const NekDoubleSharedArray &inarray, ExpList &Sout)
 	{
 	    int cnt  = 0;
 	    int i;
 
 	    for(i= 0; i < GetExpSize(); ++i)
 	    {
-		GetExp(i)->FwdTrans(inarray+cnt, &Sout.GetExp(i)->GetCoeffs()[0]);
+		GetExp(i)->FwdTrans(inarray+cnt, Sout.GetExp(i)->GetCoeffs());
 		cnt  += GetExp(i)->GetTotPoints();
 	    }
 	    
@@ -205,13 +183,15 @@ namespace Nektar
 
 	    for(i= 0; i < GetExpSize(); ++i)
 	    {
-		GetExp(i)->FwdTrans( ((ExpList )Sin).GetExp(i)->GetPhys(), GetExp(i)->GetCoeffs());
+		GetExp(i)->FwdTrans( ((ExpList )Sin).GetExp(i)->GetPhys(),
+				     GetExp(i)->GetCoeffs());
 	    }
 	    
 	    m_transState = eLocal;
 	}
 		
-	void ExpList::BwdTrans(const double *inarray, double *outarray)
+	void ExpList::BwdTrans(const NekDoubleSharedArray &inarray,
+			       NekDoubleSharedArray &outarray)
 	{
 	    int  i;
 	    int  cnt = 0;
@@ -233,27 +213,55 @@ namespace Nektar
 	    
 	    for(i= 0; i < GetExpSize(); ++i)
 	    {
-		GetExp(i)->BwdTrans(((ExpList) Sin).GetExp(i)->GetCoeffs(),GetExp(i)->GetPhys());
+		GetExp(i)->BwdTrans(((ExpList) Sin).GetExp(i)->GetCoeffs(),
+				    GetExp(i)->GetPhys());
 	    }
 	    
 	    m_physState = true;
 	}
 	
-	void ExpList::GetCoords(double **coords)
+	void ExpList::GetCoords(NekDoubleSharedArray &coord_0,
+				NekDoubleSharedArray &coord_1,
+				NekDoubleSharedArray &coord_2)
 	{
 	    int    i, j, cnt = 0;
-	    double *E_coords[3];
+	    NekDoubleSharedArray &E_coords[3];
 	    
-	    for(i= 0; i < GetExpSize(); ++i)
+	    
+	    switch(GetExp(0)->GetCoordim())
 	    {
-		for(j = 0; j < GetExp(i)->GetCoordim(); ++j)
+	    case 1:
+		for(i= 0; i < GetExpSize(); ++i)
 		{
-		    E_coords[j] = coords[j]+cnt;
+		    
+		    GetExp(i)->GetCoords(coord_0+cnt);
+		    cnt  += GetExp(i)->GetTotPoints();
 		}
-		
-		GetExp(i)->GetCoords(E_coords);
-		cnt  += GetExp(i)->GetTotPoints();
-	    }
+		break;
+	    case 2: 
+		ASSERTL0(coord_1 != NullNekDoubleSharedArray, 
+			 "output coord_1 is not defined");
+    
+		for(i= 0; i < GetExpSize(); ++i)
+		{
+		    GetExp(i)->GetCoords(coord_0+cnt,coord_1+cnt);
+		    cnt  += GetExp(i)->GetTotPoints();
+		}
+		break;
+
+	    case 2: 
+		ASSERTL0(coord_1 != NullNekDoubleSharedArray, 
+			 "output coord_1 is not defined");
+		ASSERTL0(coord_2 != NullNekDoubleSharedArray, 
+			 "output coord_2 is not defined");
+    
+		for(i= 0; i < GetExpSize(); ++i)
+		{
+		    GetExp(i)->GetCoords(coord_0+cnt,coord_1+cnt,coord_2+cnt);
+		    cnt  += GetExp(i)->GetTotPoints();
+		}
+		break;
+
 	}
 	
 	void ExpList::WriteToFile(std::ofstream &out)
@@ -275,7 +283,7 @@ namespace Nektar
 	    }
 	}
 	
-	double  ExpList::Linf(const double *sol)
+	double  ExpList::Linf(const NekDoubleSharedArray &sol)
 	{
 	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
 	    StdRegions::StdExpansionVectorIter def;
@@ -296,7 +304,7 @@ namespace Nektar
 	    return err;
 	}
 	
-	double  ExpList::L2(const double *sol)
+	double  ExpList::L2(const NekDoubleSharedArray &sol)
 	{
 	    double err = 0.0,errl2;
 	    int    i,cnt = 0;

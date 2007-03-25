@@ -72,7 +72,7 @@ namespace Nektar
             {
             case 3:
                 ASSERTL2(Bc==LibUtilities::NullBasisKey,
-                         "NULL Basis attempting to be used.");
+n                         "NULL Basis attempting to be used.");
                 m_base[2] = LibUtilities::BasisManager()[Bc];
 
             case 2:
@@ -265,9 +265,9 @@ namespace Nektar
 
         // 1D Interpolation
         void StdExpansion::Interp1D(const  LibUtilities::BasisKey &fbasis0, 
-				    const NekDoubleSharedArray &from,  
+				    const NekDouble *from,  
 				    const LibUtilities::BasisKey &tbasis0, 
-				    NekDoubleSharedArray &to)
+				    NekDouble *to)
         {
             DNekMatSharedPtr I0;
 
@@ -276,7 +276,7 @@ namespace Nektar
 	    
             Blas::Dgemv('T', fbasis0.GetNumPoints(), tbasis0.GetNumPoints(), 
 			1.0, &((*I0).GetPtr())[0], fbasis0.GetNumPoints(), 
-			&from[0], 1, 0.0, &to[0], 1);
+			from, 1, 0.0, to, 1);
         }
 
         //   I/O routine
@@ -294,6 +294,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.26  2007/03/21 20:56:42  sherwin
+* Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
+*
 * Revision 1.25  2007/03/20 16:58:42  sherwin
 * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *

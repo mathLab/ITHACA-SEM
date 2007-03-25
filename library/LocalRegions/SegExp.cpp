@@ -43,7 +43,8 @@ namespace Nektar
 
         // constructor
         SegExp::SegExp(const LibUtilities::BasisKey &Ba, 
-            SpatialDomains::SegGeomSharedPtr geom):StdRegions::StdSegExp(Ba)
+            SpatialDomains::SegGeomSharedPtr &geom):
+	    StdRegions::StdSegExp(Ba)
         {
             m_geom = geom;    
 
@@ -59,9 +60,10 @@ namespace Nektar
         }
 
         // copy constructor
-        SegExp::SegExp(const SegExp &S):StdRegions::StdSegExp(S)
+        SegExp::SegExp(const SegExp &S):
+	    StdRegions::StdSegExp(S)
         {
-            m_geom   = S.m_geom;
+            m_geom        = S.m_geom;
             m_metricinfo  = S.m_metricinfo;
         }
 
@@ -84,15 +86,16 @@ namespace Nektar
             }
             else
             {
-                SpatialDomains::GeomFactors *metricinfo  = new SpatialDomains::GeomFactors [1];
                 LibUtilities::BasisSharedPtr CBasis0;
-                double *ndata;
-                const double **gmat, *odata;
+                NekDouble *ndata;
+                const NekDouble **gmat, *odata;
                 int coordim = m_geom->GetCoordim();
 
                 // assume all directiosn of geombasis are same
                 CBasis0 = m_geom->GetBasis(0,0); 
-
+		
+                m_metricinfo.reset(MemoryManager::AllocateArray<SpatialDomains::GeomFactors>(1)); 
+		
                 // check to see if basis are different distributions
                 if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey())))
                 {
@@ -105,11 +108,11 @@ namespace Nektar
                     for(i = 0; i < 2*coordim; ++i)
                     {
                         Interp1D(CBasis0->GetBasisKey(), gmat[i], 
-                            m_base[0]->GetBasisKey(), 
-                            ndata + i*nq);
+				 m_base[0]->GetBasisKey(), 
+				 &ndata[0] + i*nq);
                     }
-
-                    metricinfo->ResetGmat(ndata,nq,1,coordim);
+		    
+                    m_metricinfo->ResetGmat(ndata,nq,1,coordim);
 
                     // interpolate Jacobian
                     ndata = MemoryManager::AllocateArray<double>(nq);	
@@ -118,7 +121,7 @@ namespace Nektar
                     Interp1D(CBasis0->GetBasisKey(),odata,
                         m_base[0]->GetBasisKey(), ndata);
 
-                    metricinfo->ResetJac(ndata);
+                    m_metricinfo->ResetJac(ndata);
 
                     ErrorUtil::Error(ErrorUtil::ewarning,__FILE__,__LINE__,
                         "Need to check/debug routine for deformed elements");
@@ -130,7 +133,7 @@ namespace Nektar
                     gmat  = Xgfac->GetGmat();
                     Blas::Dcopy(coordim,gmat[0],1,ndata,1);
 
-                    metricinfo->ResetGmat(ndata,1,1,coordim);
+                    m_metricinfo->ResetGmat(ndata,1,1,coordim);
 
                     // Copy Jacobian
                     ndata = MemoryManager::AllocateArray<double>(1);	
@@ -138,10 +141,9 @@ namespace Nektar
                     odata = Xgfac->GetJac();
                     ndata[0] = odata[0];
 
-                    metricinfo->ResetJac(ndata);
+                    m_metricinfo->ResetJac(ndata);
                 }   
 
-                m_metricinfo.reset(metricinfo);
             }
         }
 
@@ -164,27 +166,27 @@ namespace Nektar
         = u(\xi_{1i}) \f$
         */
 
-        double SegExp::Integral(const double *inarray)
+        double SegExp::Integral(const NekDoubleSharedArray &inarray)
         {
 
             int    nquad0 = m_base[0]->GetNumPoints();
-            const double *jac = m_metricinfo->GetJac();
-            double  ival;
-            BstShrDArray tmp   = GetDoubleTmpSpace(nquad0);
+            const NekDouble *jac = m_metricinfo->GetJac();
+            NekDouble  ival;
+            NekDoubleSharedArray tmp   = GetDoubleTmpSpace(nquad0);
 
             // multiply inarray with Jacobian
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul(nquad0,jac,1,(double*)inarray,1,&tmp[0],1);
+                Vmath::Vmul(nquad0,jac,1,&inarray[0],1,&tmp[0],1);
             }
             else
             {
-                Vmath::Smul(nquad0,(double)jac[0],(double*)inarray,1,&tmp[0],1);
+                Vmath::Smul(nquad0,(double)jac[0],&inarray[0],1,&tmp[0],1);
             }
 
             // call StdSegExp version;
-            ival = StdSegExp::Integral(&tmp[0]);
+            ival = StdSegExp::Integral(tmp);
 
             return ival;
         }
@@ -218,26 +220,28 @@ namespace Nektar
         **/
 
 
-        void SegExp::IProductWRTBase(const double *base, const double *inarray,
-            double * outarray, int coll_check)
+        void SegExp::IProductWRTBase(const NekDouble *base, 
+				     const NekDoubleSharedArray &inarray,
+				     NekDoubleSharedArray &outarray, 
+				     const int coll_check)
         {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            const double *jac = m_metricinfo->GetJac();
-            BstShrDArray tmp   = GetDoubleTmpSpace(nquad0);
+            int        nquad0 = m_base[0]->GetNumPoints();
+            const NekDouble *jac = m_metricinfo->GetJac();
+            NekDoubleSharedArray tmp = GetDoubleTmpSpace(nquad0);
 
 
             // multiply inarray with Jacobian
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul(nquad0,jac,1,(double*)inarray,1,&tmp[0],1);
+                Vmath::Vmul(nquad0,jac,1,&inarray[0],1,&tmp[0],1);
             }
             else
             {
-                Vmath::Smul(nquad0,jac[0],(double*)inarray,1,&tmp[0],1);
+                Vmath::Smul(nquad0,jac[0],&inarray[0],1,&tmp[0],1);
             }
 
-            StdSegExp::IProductWRTBase(base,&tmp[0],outarray,coll_check);
+            StdSegExp::IProductWRTBase(base,tmp,outarray,coll_check);
         }
 
 
@@ -258,7 +262,8 @@ namespace Nektar
         */
 
 
-        void SegExp::IProductWRTBase(const double * inarray, double * outarray)
+        void SegExp::IProductWRTBase(const NekDoubleSharedArray &inarray, 
+				     NekDoubleSharedArray &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
         }
@@ -290,35 +295,66 @@ namespace Nektar
         */
 
 
-        void SegExp::PhysDeriv(const int n, const double *inarray, double ** outarray)
+        void SegExp::PhysDeriv(const NekDoubleSharedArray &inarray,
+			       NekDoubleSharedArray &out_d0,
+			       NekDoubleSharedArray &out_d1,
+			       NekDoubleSharedArray &out_d2)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
-            const double **gmat = m_metricinfo->GetGmat();
-
+            const NekDouble **gmat = m_metricinfo->GetGmat();
+	    NekDoubleSharedArray Diff = GetDoubleTmpSpace(nquad0);
+	    
             if(m_geom)
             {
                 ASSERTL2(n <= m_geom->GetCoordim(),
                     "value of n is larger than the number of coordinates");
             }
 
-            StdExpansion1D::PhysTensorDeriv(inarray,outarray[n-1]);
-
+            StdExpansion1D::PhysTensorDeriv(inarray,Diff);
+	    
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                for(i = 0; i < n; ++i)
-                {
-                    Vmath::Vmul(nquad0,gmat[i],1,outarray[n-1],1,outarray[i],1);
+	    {
+		if(out_d0 != NullNekDoubleSharedArray)
+		{
+		    Vmath::Vmul(nquad0,gmat[0],1,&Diff[0],1,
+				&out_d0[0],1);
                 }
-            }
-            else
-            {
-                for(i = 0; i < n; ++i)
-                {
-                    Vmath::Smul(nquad0,gmat[i][0],outarray[n-1],1,outarray[i],1);
+
+		if(out_d1 != NullNekDoubleSharedArray)
+		{
+		    Vmath::Vmul(nquad0,gmat[1],1,&Diff[0],1,
+				&out_d1[0],1);
                 }
+
+		if(out_d2 != NullNekDoubleSharedArray)
+		{
+		    Vmath::Vmul(nquad0,gmat[2],1,&Diff[0],1,
+				&out_d2[0],1);
+                }
+
             }
-        }
+            else 
+            {
+		if(out_d0 != NullNekDoubleSharedArray)
+		{
+		    Vmath::Smul(nquad0,gmat[0][0],&Diff[0],1,
+				&out_d0[0],1);
+                }
+
+		if(out_d1 != NullNekDoubleSharedArray)
+		{
+		    Vmath::Smul(nquad0,gmat[1][0],&Diff[0],1,
+				&out_d0[1],1);
+                }
+
+		if(out_d2 != NullNekDoubleSharedArray)
+		{
+		    Vmath::Smul(nquad0,gmat[2][0],&Diff[0],1,
+				&out_d0[2],1);
+                }
+            } 
+        } 
 
         //----------------------------
         // Evaluation Methods
@@ -348,67 +384,120 @@ namespace Nektar
 
 
         // need to sort out family of matrices 
-        void SegExp::FwdTrans(const double *inarray, double *outarray)
+        void SegExp::FwdTrans(const NekDoubleSharedArray &inarray, 
+			      NekDoubleSharedArray &outarray)
         {
-            if(m_base[0]->Collocation())
+	    if(m_base[0]->Collocation())
             {
-                Vmath::Vcopy(GetNcoeffs(),inarray,1,outarray,1);
+                Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
             }
-            else
+            else 
             {
                 IProductWRTBase(inarray,outarray);
 
-                LinSysKey   masskey(StdRegions::eMassMatrix,DetShapeType(),*this);
+                LinSysKey  masskey(StdRegions::eMassMatrix,DetShapeType(),*this);
                 DNekLinSysSharedPtr matsys = m_linSysManager[masskey];
 
-                DNekVec   v(m_ncoeffs,outarray,eWrapper);
-                matsys->Solve(v,v);
+		DNekVec   v(m_ncoeffs,outarray,eWrapper);
+		matsys->Solve(v,v);
             }
         }
 
-        void SegExp::GetCoords(double **coords)
-        {
+        void SegExp::GetCoords(NekDoubleSharedArray &coords_0,
+			       NekDoubleSharedArray &coords_1,
+			       NekDoubleSharedArray &coords_2)
+        { 
             int  i;
-            BstShrDArray x;
-            DNekMatSharedPtr   I;
-            LibUtilities::BasisSharedPtr CBasis;
-
+            NekDoubleSharedArray  x;
+            DNekMatSharedPtr      I; 
+            LibUtilities::BasisSharedPtr CBasis; 
+	    
             ASSERTL0(m_geom, "m_geom not define");
-
+	    
             // get physical points defined in Geom
             m_geom->FillGeom();
-
-            for(i = 0; i < m_geom->GetCoordim(); ++i)
-            {
-                CBasis = m_geom->GetBasis(i,0);
+	    
+	    switch(m_geom->GetCoordim())
+	    {
+	    case 3:
+		ASSERTL0(coords_2 != NullNekDoubleSharedArray, 
+			 "output coords_2 is not defined");
+                CBasis = m_geom->GetBasis(2,0);
 
                 if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
                 {
-                    x = m_geom->GetPhys(i);
-                    Blas::Dcopy(m_base[0]->GetNumPoints(),&x[0],1,coords[i],1);
+                    x = m_geom->GetPhys(2);
+                    Blas::Dcopy(m_base[0]->GetNumPoints(),&x[0],1,&coords_2[0],1);
                 }
                 else // Interpolate to Expansion point distribution
                 {
                     I = LibUtilities::PointsManager()[CBasis->GetPointsKey()]
-                    ->GetI(m_base[0]->GetPointsKey());
+			->GetI(m_base[0]->GetPointsKey());
 
-                    for(i = 0; i < m_geom->GetCoordim(); ++i)
-                    {
-                        x = m_geom->GetPhys(i);
-                        Blas::Dgemv('T',CBasis->GetNumPoints(),
-                            m_base[0]->GetNumPoints(),1.0,
-                            &((*I).GetPtr())[0],
-                            CBasis->GetNumPoints(),&x[0],1,
-                            0.0,coords[i],1);
-                    }
+		    x = m_geom->GetPhys(2);
+		    Blas::Dgemv('T',CBasis->GetNumPoints(),
+				m_base[0]->GetNumPoints(),1.0,
+				&((*I).GetPtr())[0],
+				CBasis->GetNumPoints(),&x[0],1,
+				0.0,&coords_2[0],1);
+		}
+	    case 2:
+		ASSERTL0(coords_1 != NullNekDoubleSharedArray, 
+			 "output coords_1 is not defined");
+                CBasis = m_geom->GetBasis(1,0);
+
+                if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
+                {
+                    x = m_geom->GetPhys(1);
+                    Blas::Dcopy(m_base[0]->GetNumPoints(),&x[0],1,&coords_1[0],1);
                 }
-            }
-        }
+                else // Interpolate to Expansion point distribution
+                {
+                    I = LibUtilities::PointsManager()[CBasis->GetPointsKey()]
+			->GetI(m_base[0]->GetPointsKey());
 
-        void SegExp::GetCoord(const double *Lcoords, double *coords)
+		    x = m_geom->GetPhys(1);
+		    Blas::Dgemv('T',CBasis->GetNumPoints(),
+				m_base[0]->GetNumPoints(),1.0,
+				&((*I).GetPtr())[0],
+				CBasis->GetNumPoints(),&x[0],1,
+				0.0,&coords_1[0],1);
+		}
+	    case 1:
+		ASSERTL0(coords_0 != NullNekDoubleSharedArray, 
+			 "output coords_2 is not defined");
+                CBasis = m_geom->GetBasis(0,0);
+		
+                if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
+                {
+                    x = m_geom->GetPhys(0);
+                    Blas::Dcopy(m_base[0]->GetNumPoints(),&x[0],1,&coords_0[0],1);
+                }
+                else // Interpolate to Expansion point distribution
+                {
+                    I = LibUtilities::PointsManager()[CBasis->GetPointsKey()]
+			->GetI(m_base[0]->GetPointsKey());
+		    
+		    x = m_geom->GetPhys(0);
+		    Blas::Dgemv('T',CBasis->GetNumPoints(),
+				m_base[0]->GetNumPoints(),1.0,
+				&((*I).GetPtr())[0],
+				CBasis->GetNumPoints(),&x[0],1,
+				0.0,&coords_0[0],1);
+		}
+		break;
+		default:
+		    ASSERTL0(1,"Number of dimensions are greater than 2");
+		    break;
+	    }
+	}
+    
+
+	void SegExp::GetCoord(const NekDoubleSharedArray &Lcoords, 
+			      NekDoubleSharedArray &coords)
         {
             int  i;
-
+	    
             ASSERTL1(Lcoords[0] >= -1.0&& Lcoords[1] <= 1.0,
                 "Local coordinates are not in region [-1,1]");
 
@@ -424,29 +513,32 @@ namespace Nektar
         void SegExp::WriteToFile(FILE *outfile)
         {
             int i,j;
-            double *coords[3];
+	    NekDoubleSharedArray coords[3];
             int  nquad = m_base[0]->GetNumPoints();
 
             ASSERTL0(m_geom,"_geom not defined");
 
             int  coordim  = m_geom->GetCoordim();
 
-
-            coords[0] = new double [3*nquad];
-            coords[1] = coords[0] + nquad;
-            coords[2] = coords[1] + nquad;
-
-            GetCoords(coords);
+	    coords[0] = GetDoubleTmpSpace(nquad);
+	    coords[1] = GetDoubleTmpSpace(nquad);
+	    coords[2] = GetDoubleTmpSpace(nquad);
 
             fprintf(outfile,"Variables = x");
             if(coordim == 2)
             {
+		GetCoords(coords[0],coords[1]);
                 fprintf(outfile,", y");
             }
             else if (coordim == 3)
             {
+		GetCoords(coords[0],coords[1], coords[2]);
                 fprintf(outfile,", y, z");
             }
+	    else
+	    {
+		GetCoords(coords[0]);
+	    }
             fprintf(outfile,", v\n");
 
             fprintf(outfile,"Zone, I=%d, F=Point\n",nquad);
@@ -459,29 +551,22 @@ namespace Nektar
                 }
                 fprintf(outfile,"%lf \n",m_phys[i]);
             }
-
-            delete[] coords[0];
         }
 
         void SegExp::WriteToFile(std::ofstream &outfile, const int dumpVar)
         {
             int i,j;
-            double *coords[3];
             int     nquad = m_base[0]->GetNumPoints();
-
+	    NekDoubleSharedArray coords[3];
             ASSERTL0(m_geom,"m_geom not defined");
 
             int     coordim  = m_geom->GetCoordim();
 
+	    coords[0] = GetDoubleTmpSpace(nquad);
+	    coords[1] = GetDoubleTmpSpace(nquad);
+	    coords[2] = GetDoubleTmpSpace(nquad);
 
-            BstShrDArray tmp   = GetDoubleTmpSpace(3*nquad);
-
-
-            coords[0] = &tmp[0];
-            coords[1] = coords[0] + nquad;
-            coords[2] = coords[1] + nquad;
-
-            GetCoords(coords);
+	    GetCoords(coords[0],coords[1],coords[2]);
 
             if(dumpVar)
             {
@@ -489,6 +574,7 @@ namespace Nektar
 
                 if(coordim == 2)
                 {
+
                     outfile << ", y";
                 }
                 else if (coordim == 3)
@@ -499,7 +585,7 @@ namespace Nektar
             }
 
             outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
-
+	    
             for(i = 0; i < nquad; ++i)
             {
                 for(j = 0; j < coordim; ++j)
@@ -510,15 +596,15 @@ namespace Nektar
             }
         }
 
-        double SegExp::PhysEvaluate(const double *coord)
+        NekDouble SegExp::PhysEvaluate(const NekDoubleSharedArray &coord)
         {
-            double val;
-            double Lcoord;
+            NekDouble val;
+            NekDoubleSharedArray Lcoord = GetDoubleTmpSpace(1);
 
             ASSERTL0(m_geom,"_geom not defined");
-            m_geom->GetLocCoords(&Lcoord,coord);
+            m_geom->GetLocCoords(&Lcoord[0],&coord[0]);
 
-            return val = StdSegExp::PhysEvaluate(&Lcoord);
+            return val = StdSegExp::PhysEvaluate(Lcoord);
         }
 
         DNekMatSharedPtr SegExp::CreateMatrix(const MatrixKey &mkey)
@@ -562,6 +648,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.9  2007/03/20 09:13:37  kirby
+// new geomfactor routines; update for metricinfo; update style
+//
 // Revision 1.8  2007/03/14 21:24:07  sherwin
 // Update for working version of MultiRegions up to ExpList1D
 //

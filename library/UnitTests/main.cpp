@@ -49,7 +49,7 @@ test_suite* init_unit_test_suite( int, char* [] )
 		
     // StdSegExp algorithms
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testLapMatrix), 0);
+    //test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testLapMatrix), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIntegration), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testDifferentiation), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIProductWRTBase), 0);
@@ -72,7 +72,6 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointPointerManipulation), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointComparison), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekPointOperators), 0);
-
 
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekVectorConstruction), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekVectorOperators), 0);
@@ -129,6 +128,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.26  2007/03/22 05:31:09  ehan
+    create testFoundation
+
     Revision 1.25  2007/03/16 12:09:49  pvos
     switched testStdSegExp and testNekMemoryManager back on
 

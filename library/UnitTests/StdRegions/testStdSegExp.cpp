@@ -117,7 +117,7 @@ namespace Nektar
 								       LibUtilities::eGaussRadauMLegendre,
 								       LibUtilities::eGaussRadauPLegendre,
 								       LibUtilities::eGaussLobattoLegendre};
-	/*
+	/*	
 								       LibUtilities::eGaussGaussChebyshev,
 								       LibUtilities::eGaussRadauMChebyshev,
 								       LibUtilities::eGaussRadauPChebyshev,
@@ -125,17 +125,18 @@ namespace Nektar
 								       LibUtilities::eGaussRadauMAlpha0Beta1,
 								       LibUtilities::eGaussRadauMAlpha0Beta2,
 								       LibUtilities::ePolyEvenlySpaced};
-	*/	
+	*/
+		
 
         void testMassMatrix()
 	{
-	    double exactmatrices[3][36] = {
+	    NekDouble exactmatrices[3][36] = {
 		{1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
 		 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
 		 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
 		 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-		 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,},
+		 0.0, 0.0, 0.0, 0.0, 0.0, 1.0},
 		{2.0/3.0, 1.0/3.0, 1.0/6.0, -1.0/15.0, 0.0, 0.0,
 		 1.0/3.0, 2.0/3.0, 1.0/6.0, 1.0/15.0, 0.0, 0.0,
 		 1.0/6.0, 1.0/6.0, 1.0/15.0, 0.0, -1.0/70.0, 0.0,
@@ -147,7 +148,7 @@ namespace Nektar
 		 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
 		 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
 		 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-		 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,}
+		 0.0, 0.0, 0.0, 0.0, 0.0, 1.0}
 	    };
 
 	    int nummodes = 6;
@@ -178,10 +179,10 @@ namespace Nektar
 			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
 
 			DNekMatSharedPtr matrix = E->GenMassMatrix();
-			double *result =  &((*matrix).GetPtr())[0];
-			double *expected_result = exactmatrices[i];
+			NekDouble *result =  &((*matrix).GetPtr())[0];
+			NekDouble *expected_result = exactmatrices[i];
 
-			double epsilon = 1e-12;
+			NekDouble epsilon = 1e-12;
 			for(int k = 0; k < 36; k++)
 			{ 
 			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
@@ -193,13 +194,13 @@ namespace Nektar
 
         void testLapMatrix()
 	{
-	    double exactmatrices[3][36] = {
+	    NekDouble exactmatrices[3][36] = {
 		{0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		 0.0, 3.0, 0.0, sqrt(21.0), 0.0, sqrt(33.0),
 		 0.0, 0.0, 15.0, 0.0, sqrt(5.0)*9.0, 0.0,
 		 0.0, sqrt(21.0), 0.0, 42.0, 0.0, sqrt(77.0)*6.0,
 		 0.0, 0.0, sqrt(5.0)*9.0, 0.0, 90.0, 0.0,
-		 0.0, sqrt(33.0), 0.0, sqrt(77.0)*6.0, 0.0, 165.0,},
+		 0.0, sqrt(33.0), 0.0, sqrt(77.0)*6.0, 0.0, 165.0},
 		{1.0/2.0, -1.0/2.0, 0.0, 0.0, 0.0, 0.0,
 		 -1.0/2.0, 1.0/2.0, 0.0, 0.0, 0.0, 0.0,
 		 0.0, 0.0, 1.0/6.0, 0.0, 0.0, 0.0,
@@ -211,8 +212,8 @@ namespace Nektar
 		 0.0, 0.0, 15.0, 0.0, sqrt(5.0)*9.0, 0.0,
 		 0.0, sqrt(21.0), 0.0, 42.0, 0.0, sqrt(77.0)*6.0,
 		 0.0, 0.0, sqrt(5.0)*9.0, 0.0, 90.0, 0.0,
-		 0.0, sqrt(33.0), 0.0, sqrt(77.0)*6.0, 0.0, 165.0,}
-	    };
+		 0.0, sqrt(33.0), 0.0, sqrt(77.0)*6.0, 0.0, 165.0}
+		 };
 
 	    int nummodes = 6;
 	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
@@ -242,22 +243,22 @@ namespace Nektar
 			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
 
 			DNekMatSharedPtr matrix = E->GenLapMatrix();
-			double *result =  &((*matrix).GetPtr())[0];
-			double *expected_result = exactmatrices[i];
+			NekDouble *result =  &((*matrix).GetPtr())[0];
+			NekDouble *expected_result = exactmatrices[i];
 
-			double epsilon = 1e-11;
+			NekDouble epsilon = 1e-122;
 			for(int k = 0; k < 36; k++)
 			{ 
 			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
 			}
 		    }
 		}	
-	    }    
+	    }  	
 	}
 
         void testIntegration()
 	{
-	    double expected_result = -4.0/3.0;
+	    NekDouble expected_result = 2.0;//-4.0/3.0;
 
 	    int order_f = 5;
 	    int nq_min[11]={(int)ceil((order_f+1.0)/2.0),
@@ -289,17 +290,15 @@ namespace Nektar
 			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
 			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
 
-			    BstShrDArray z = GetDoubleTmpSpace(nq);
-			    BstShrDArray f = GetDoubleTmpSpace(nq);
-			    double * tmp[1];
-			    tmp[0] = z.get();
-			    E->GetCoords(tmp);
+			    NekDoubleSharedArray z = GetDoubleTmpSpace(nq);
+			    NekDoubleSharedArray f = GetDoubleTmpSpace(nq);
+			    E->GetCoords(z);
 			    for(int r = 0; r < nq; ++r)
 			    {
-				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
+				f[r] = 1.0;//3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
 			    }
-			    double result = E->Integral(&(f.get())[0]);
-			    double epsilon = 1e-12;
+			    NekDouble result = E->Integral(f);
+			    NekDouble epsilon = 1e-12;
 			    CHECK_CLOSE_ABS_EXP(result, expected_result, epsilon, btype, nummodes, Qtype, nq);
 			}
 		    }
@@ -309,7 +308,7 @@ namespace Nektar
 
         void testDifferentiation()
 	{
-	    double expected_result = -4.0;
+	    NekDouble expected_result = -4.0;
 	    
 	    for(int i = 0; i < num_BasisTypes; i++)
 	    {
@@ -329,19 +328,17 @@ namespace Nektar
 			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
 			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
 
-			    BstShrDArray z = GetDoubleTmpSpace(nq);
-			    BstShrDArray f = GetDoubleTmpSpace(nq);
-			    BstShrDArray df = GetDoubleTmpSpace(nq);
-			    double * tmp[1];
-			    tmp[0] = z.get();
-			    E->GetCoords(tmp);
+			    NekDoubleSharedArray z = GetDoubleTmpSpace(nq);
+			    NekDoubleSharedArray f = GetDoubleTmpSpace(nq);
+			    NekDoubleSharedArray df = GetDoubleTmpSpace(nq);
+			    E->GetCoords(z);
 			    for(int r = 0; r < nq; r++)
 			    {
 				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
 			    }
-			    E->PhysDeriv(&(f.get())[0],&(df.get())[0]);
-			    double result = E->Integral(&(df.get())[0]);
-			    double epsilon = 1e-12;
+			    E->PhysDeriv(f,df);
+			    NekDouble result = E->Integral(df);
+			    NekDouble epsilon = 1e-12;
 			    CHECK_CLOSE_ABS_EXP(result, expected_result, epsilon, btype, nummodes, Qtype, nq);
 			}
 		    }
@@ -351,7 +348,7 @@ namespace Nektar
 
         void testIProductWRTBase()
 	{
-	    double exactmatrices[3][6] = {
+	    NekDouble exactmatrices[3][6] = {
 		{-sqrt(0.5)*4.0/3.0, -sqrt(1.5)*8.0/7.0, sqrt(2.5)*4.0/15.0, -sqrt(3.5)*4.0/21.0, 0.0, sqrt(5.5)*16.0/231.0},
 		{-2.0/21.0, -26.0/21.0, -4.0/15.0, -4.0/21.0, 2.0/35.0, -40.0/693.0},
 		{-sqrt(0.5)*4.0/3.0, -sqrt(1.5)*8.0/7.0, sqrt(2.5)*4.0/15.0, -sqrt(3.5)*4.0/21.0, 0.0, sqrt(5.5)*16.0/231.0}
@@ -384,20 +381,18 @@ namespace Nektar
 			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
 			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
 
-			BstShrDArray z = GetDoubleTmpSpace(nq);
-			BstShrDArray f = GetDoubleTmpSpace(nq);
-			double * tmp[1];
-			tmp[0] = z.get();
-			E->GetCoords(tmp);
+			NekDoubleSharedArray z = GetDoubleTmpSpace(nq);
+			NekDoubleSharedArray f = GetDoubleTmpSpace(nq);
+			E->GetCoords(z);
 			for(int r = 0; r < nq; r++)
 			{
 			    f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
 			}		
-			double result[6];
-			E->IProductWRTBase(&(f.get())[0],result);
-			double *expected_result = exactmatrices[i];
+			NekDoubleSharedArray result = GetDoubleTmpSpace(6);
+			E->IProductWRTBase(f,result);
+			NekDouble *expected_result = exactmatrices[i];
 			
-			double epsilon = 1e-12;	
+			NekDouble epsilon = 1e-12;	
 			for(int k = 0; k < 6; k++)
 			{ 
 			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
@@ -409,7 +404,7 @@ namespace Nektar
 
         void testFwdTrans()
 	{
-	    double exactmatrices[3][6] = {
+	    NekDouble exactmatrices[3][6] = {
 		{-sqrt(2)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)},
 		{2.0, -2.0, -4.0, 10.0/7.0, 0.0, -12.0/7.0},
 		{-sqrt(2)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)}
@@ -442,20 +437,18 @@ namespace Nektar
 			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
 			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
 
-			BstShrDArray z = GetDoubleTmpSpace(nq);
-			BstShrDArray f = GetDoubleTmpSpace(nq);
-			double * tmp[1];
-			tmp[0] = z.get();
-			E->GetCoords(tmp);
+			NekDoubleSharedArray z = GetDoubleTmpSpace(nq);
+			NekDoubleSharedArray f = GetDoubleTmpSpace(nq);
+			E->GetCoords(z);
 			for(int r = 0; r < nq; r++)
 			{
 			    f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
-			}		
-			E->FwdTrans(&(f.get())[0],&(E->GetCoeffs())[0]);
-			double *result = &(E->GetCoeffs())[0];
-			double *expected_result = exactmatrices[i];
+			}	
+			NekDoubleSharedArray result = GetDoubleTmpSpace(nummodes);	
+			E->FwdTrans(f,result);
+			NekDouble *expected_result = exactmatrices[i];
 
-			double epsilon = 1e-12;	
+			NekDouble epsilon = 1e-12;	
 			for(int k = 0; k < 6; k++)
 			{ 
 			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
@@ -495,21 +488,20 @@ namespace Nektar
 			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
 			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
 
-			    BstShrDArray z = GetDoubleTmpSpace(nq);
-			    BstShrDArray f = GetDoubleTmpSpace(nq);
-			    double * tmp[1];
-			    tmp[0] = z.get();
-			    E->GetCoords(tmp);
+			    NekDoubleSharedArray z = GetDoubleTmpSpace(nq);
+			    NekDoubleSharedArray f = GetDoubleTmpSpace(nq);
+			    E->GetCoords(z);
 			    for(int r = 0; r < nq; ++r)
 			    {
 				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
 			    }
-			    E->FwdTrans(&(f.get())[0],&(E->GetCoeffs())[0]);
-			    double *result = new double [nq];
-			    E->BwdTrans(&(E->GetCoeffs())[0],result);
-			    double *expected_result = f.get();
+			    NekDoubleSharedArray tmp = GetDoubleTmpSpace(nummodes);
+			    NekDoubleSharedArray result = GetDoubleTmpSpace(nq);
+			    E->FwdTrans(f,tmp);
+			    E->BwdTrans(tmp,result);
+			    NekDouble *expected_result = f.get();
 
-			    double epsilon = 1e-12;	
+			    NekDouble epsilon = 1e-12;	
 			    for(int k = 0; k < nq; k++)
 			    { 
 				CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
@@ -522,7 +514,7 @@ namespace Nektar
 
         void testPhysEvaluate()
 	{
-	    double expected_result = -7.0/32.0;
+	    NekDouble expected_result = -7.0/32.0;
 	    
 	    for(int i = 0; i < num_BasisTypes; i++)
 	    {
@@ -541,20 +533,19 @@ namespace Nektar
 			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
 			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
 
-			    BstShrDArray z = GetDoubleTmpSpace(nq);
-			    BstShrDArray f = GetDoubleTmpSpace(nq);
-			    double * tmp[1];
-			    tmp[0] = z.get();
-			    E->GetCoords(tmp);
+			    NekDoubleSharedArray z = GetDoubleTmpSpace(nq);
+			    NekDoubleSharedArray f = GetDoubleTmpSpace(nq);
+			    E->GetCoords(z);
 			    for(int r = 0; r < nq; ++r)
 			    {
 				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
 			    }
-			    E->SetPhys(&(f.get())[0]);
-			    double x = -0.5;
-			    double result = E->PhysEvaluate(&x);
+			    E->SetPhys(f);
+			    NekDoubleSharedArray x = GetDoubleTmpSpace(1);
+			    x[0] = -0.5;
+			    NekDouble result = E->PhysEvaluate(x);
 
-			    double epsilon = 1e-12;
+			    NekDouble epsilon = 1e-12;
 			    CHECK_CLOSE_ABS_EXP(result, expected_result, epsilon, btype, nummodes, Qtype, nq);
 			}
 		    }
@@ -564,9 +555,9 @@ namespace Nektar
 
         void testNorms()
 	{
-	    double expected_resultL2 = sqrt(1224.0/385.0);
-	    double expected_resultL2err = 0.0;
-	    double expected_resultLinferr = 0.0;
+	    NekDouble expected_resultL2 = sqrt(1224.0/385.0);
+	    NekDouble expected_resultL2err = 0.0;
+	    NekDouble expected_resultLinferr = 0.0;
 	    
 	    for(int i = 0; i < num_BasisTypes; i++)
 	    {
@@ -594,25 +585,24 @@ namespace Nektar
 			{
 			    const LibUtilities::PointsKey Pkey(nq,Qtype);
 			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
+			    StdRegions::StdExpansion1D *E = new StdRegions::StdSegExp(Bkey); 
 
-			    BstShrDArray z = GetDoubleTmpSpace(nq);
-			    BstShrDArray f = GetDoubleTmpSpace(nq);
-			    double * tmp[1];
-			    tmp[0] = z.get();
-			    E->GetCoords(tmp);
+			    NekDoubleSharedArray z = GetDoubleTmpSpace(nq);
+			    NekDoubleSharedArray f = GetDoubleTmpSpace(nq);
+			    E->GetCoords(z);
 			    for(int r = 0; r < nq; ++r)
 			    {
 				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
 			    }
-			    E->FwdTrans(&(f.get())[0],&(E->GetCoeffs())[0]);
-			    E->BwdTrans(&(E->GetCoeffs())[0],&(E->GetPhys())[0]);
+			    E->SetPhys(f);
+			    E->FwdTrans(*E);
+			    E->BwdTrans(*E);
 	       
-			    double resultL2 = E->L2();
-			    double resultL2err = E->L2(&(f.get())[0]);
-			    double resultLinferr = E->Linf(&(f.get())[0]);
+			    NekDouble resultL2 = E->L2();
+			    NekDouble resultL2err = E->L2(f);
+			    NekDouble resultLinferr = E->Linf(f);
 
-			    double epsilon = 1e-12;
+			    NekDouble epsilon = 1e-12;
 			    CHECK_CLOSE_ABS_EXP(resultL2, expected_resultL2, epsilon, btype, nummodes, Qtype, nq);
 			    CHECK_CLOSE_ABS_EXP(resultL2err, expected_resultL2err, epsilon, btype, nummodes, Qtype, nq);
 			    CHECK_CLOSE_ABS_EXP(resultLinferr, expected_resultLinferr, epsilon, btype, nummodes, Qtype, nq);
@@ -626,6 +616,9 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.cpp,v $
+    Revision 1.6  2007/03/20 03:50:28  bnelson
+    Removed a lot of warning messages.
+
     Revision 1.5  2007/03/16 14:47:56  pvos
     *** empty log message ***
 

@@ -11,7 +11,7 @@ using namespace Nektar;
 // This routine projects a polynomial which has energy in all mdoes of
 // the expansions and report an error.
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     MultiRegions::ExpList1D  *Exp;
     int i,j,k;

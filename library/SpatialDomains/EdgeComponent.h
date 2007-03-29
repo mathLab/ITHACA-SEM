@@ -120,7 +120,7 @@ namespace Nektar
             int m_eid;
             std::list<CompToElmt> m_elmtmap;
 
-	    boost::shared_array<StdRegions::StdExpansion1DSharedPtr> m_xmap;
+	    SharedArray<StdRegions::StdExpansion1DSharedPtr> m_xmap;
 
             VertexVector m_vertex;
         private:
@@ -135,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.6  2007/03/25 15:48:22  sherwin
+// UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+//
 // Revision 1.5  2007/03/02 12:01:58  sherwin
 // Update for working version of LocalRegions/Project1D
 //

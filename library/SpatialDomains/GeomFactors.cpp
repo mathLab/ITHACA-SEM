@@ -66,7 +66,7 @@ namespace Nektar
         **/
 
         GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
-	  boost::shared_array<StdRegions::StdExpansion1DSharedPtr>  Coords)
+	  SharedArray<StdRegions::StdExpansion1DSharedPtr>  Coords)
         {
             NekDoubleSharedArray der[3];
             int        i,nquad;
@@ -81,7 +81,7 @@ namespace Nektar
             ptype = Coords[0]->GetPointsType(0);
 
             // setup temp storage
-            der[0] = GetDoubleTmpSpace(nquad);
+            der[0]= GetDoubleTmpSpace(nquad);
             der[1] = GetDoubleTmpSpace(nquad);
             der[2] = GetDoubleTmpSpace(nquad);
 
@@ -589,6 +589,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.2  2007/03/25 15:48:22  sherwin
+// UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+//
 // Revision 1.1  2007/03/20 09:17:39  kirby
 //
 // GeomFactors now added; metricinfo used instead of minfo; styles updated

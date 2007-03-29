@@ -213,8 +213,8 @@ namespace Nektar
                             }
                             h = h/(xpts[pt]-xpts[i]);
                         }
-                        y = y + h;
                     }
+                    y = y + h;
                 }
             }
             return y;

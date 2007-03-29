@@ -10,6 +10,7 @@ testNekManager.cpp
 testNekMatrix.cpp
 testNekPoint.cpp
 testNekVector.cpp
+testNekSharedArray.cpp
 Memory/TestNekMemoryManager.cpp
 StdRegions/testStdSegExp.cpp
 testFoundation/testFoundation.cpp
@@ -25,6 +26,7 @@ testNekManager.h
 testNekMatrix.h
 testNekPoint.h
 testNekVector.h
+testNekSharedArray.h
 Memory/TestNekMemoryManager.h
 StdRegions/testStdSegExp.h
 testFoundation/testFoundation.h
@@ -33,6 +35,7 @@ testFoundation/testFoundation.h
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
 
 ADD_NEKTAR_EXECUTABLE(UnitTests UnitTestSources UnitTestHeaders)
+
 #ADD_NEKTAR_EXECUTABLE(UnitTests UnitTestSources)
 
 IF( ${CMAKE_COMPILER_IS_GNUCXX} )
@@ -76,5 +79,9 @@ ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
 IF( USE_FRAMEWORK )
     TARGET_LINK_LIBRARIES(UnitTests ${FRAMEWORK_LINK_FLAGS})
 ENDIF ( USE_FRAMEWORK )
+
+IF( USE_WIN32_LAPACK )
+	TARGET_LINK_LIBRARIES(UnitTests ${WIN32_LAPACK} ${WIN32_BLAS})	
+ENDIF( USE_WIN32_LAPACK )
 
 INSTALL(TARGETS UnitTests RUNTIME DESTINATION ${NEKTAR_BIN_DIR})

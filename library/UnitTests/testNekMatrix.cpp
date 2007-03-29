@@ -324,7 +324,7 @@ namespace Nektar
              NekMatrix<unsigned int> full(3, 3, fullValues);
  
              unsigned int diagonalValues[] = {6, 12, 5};
-             NekMatrix<unsigned int, eDiagonal> diag(3, diagonalValues);
+             NekMatrix<unsigned int, eDiagonal> diag(3, 3, diagonalValues);
  
              NekMatrix<unsigned int> result1 = full+diag;
              NekMatrix<unsigned int> result2 = diag+full;
@@ -680,12 +680,21 @@ namespace Nektar
 //             BlockMatrix m1(3, 3, rowSizes, columnSizes);
 
         }
+
+        void testNekMatrixTemp()
+        {
+            //NekMatrixTemp<double> m1(1,2);
+            //NekMatrixTemp<double, eFull, eBlock> m2(1,2);
+        }
     }
 }
 
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.21  2007/02/13 02:47:23  bnelson
+    *** empty log message ***
+
     Revision 1.20  2007/01/18 20:59:28  sherwin
     Before new configuration
 

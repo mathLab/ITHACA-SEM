@@ -306,27 +306,17 @@ namespace Nektar
 	    }    
 	}
 
-        void testDifferentiation()
+    void testDifferentiation()
 	{
 	    NekDouble expected_result = -4.0;
 	    
 	    for(int i = 0; i < num_BasisTypes; i++)
 	    {
-		LibUtilities::BasisType btype = TestedBasisTypes[i];
+		    LibUtilities::BasisType btype = TestedBasisTypes[i];
 
-		for(int j = 0; j < num_PointsTypes; j++)
-		{
-		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-
-		    for(int nummodes = 2; nummodes <= max_nummodes; nummodes++)
+		    for(int j = 0; j < num_PointsTypes; j++)
 		    {
-			
-			for(int nq = 6 ; nq <= max_nq; nq++)
-			{
-
-			    const LibUtilities::PointsKey Pkey(nq,Qtype);
-			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
+		        LibUtilities::PointsType Qtype = TestedPointsTypes[j];
 
 			    NekDoubleSharedArray z = GetDoubleTmpSpace(nq);
 			    NekDoubleSharedArray f = GetDoubleTmpSpace(nq);
@@ -407,7 +397,7 @@ namespace Nektar
 	    NekDouble exactmatrices[3][6] = {
 		{-sqrt(2)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)},
 		{2.0, -2.0, -4.0, 10.0/7.0, 0.0, -12.0/7.0},
-		{-sqrt(2)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)}
+		{-sqrt(2.0)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)}
 	    };
 
 	    int nummodes = 6;
@@ -616,6 +606,9 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.cpp,v $
+    Revision 1.7  2007/03/26 11:17:03  pvos
+    made testStdRegions back working
+
     Revision 1.6  2007/03/20 03:50:28  bnelson
     Removed a lot of warning messages.
 

@@ -20,6 +20,7 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/testExpressionTemplates.h>
 #include <UnitTests/testLinearSystem.h>
 #include <UnitTests/testNekLinAlgAlgorithms.h>
+#include <UnitTests/testNekSharedArray.h>
 
 #include <UnitTests/testNekManager.h>
 
@@ -33,19 +34,26 @@ test_suite* init_unit_test_suite( int, char* [] )
 {
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
 
-   // Test Foundation
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussGaussLegendre),0);
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMLegendre),0);
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauPLegendre),0);
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussLobattoLegendre),0);
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussGaussChebyshev),0);
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMChebyshev),0);
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauPChebyshev),0);
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussLobattoChebyshev),0);
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMAlpha0Beta1),0);
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMAlpha0Beta2),0);
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testPolyEvenlySpaced),0);
-   test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testFourierEvenlySpaced),0);
+    // shared array
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testGet), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testAccessOperator), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testOffset), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testConstruction), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testAssignment), 0);
+
+    // Test Foundation
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussGaussLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauPLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussLobattoLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussGaussChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauPChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussLobattoChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMAlpha0Beta1),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMAlpha0Beta2),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testPolyEvenlySpaced),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testFourierEvenlySpaced),0);
 		
     // StdSegExp algorithms
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
@@ -90,6 +98,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockMatrices), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockDiagonalMatrices), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockDiagonalTimesEqual), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixTemp), 0);
     
 
     // These tests were originally added because it appeared that a NekObjectFactory
@@ -123,11 +132,16 @@ test_suite* init_unit_test_suite( int, char* [] )
     /// Linear algebra algorithsm.
     test->add(BOOST_TEST_CASE(&Nektar::NekLinAlgTests::testGramSchmidtOrthogonalizationBookExample), 0);
     
+
+    
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.27  2007/03/26 11:16:12  pvos
+    made testStdRegions back working
+
     Revision 1.26  2007/03/22 05:31:09  ehan
     create testFoundation
 

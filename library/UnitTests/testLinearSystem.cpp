@@ -52,7 +52,7 @@ namespace Nektar
 
                 unsigned int result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,matrix_buf));
+                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,3,matrix_buf));
                 NekVector<unsigned int, 3> b(result_buf);
 
                 LinearSystem<NekMatrix<unsigned int, eDiagonal> > linsys(A);
@@ -70,7 +70,7 @@ namespace Nektar
 
                 unsigned int result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,matrix_buf));
+                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,3,matrix_buf));
                 boost::shared_ptr<NekVector<unsigned int, 3> > b(new NekVector<unsigned int, 3>(result_buf));
 
                 LinearSystem<NekMatrix<unsigned int, eDiagonal> > linsys(A);
@@ -88,7 +88,7 @@ namespace Nektar
 
                 unsigned int result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,matrix_buf));
+                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,3,matrix_buf));
                 boost::shared_ptr<NekVector<unsigned int, 3> > b(new NekVector<unsigned int, 3>(result_buf));
                 boost::shared_ptr<NekVector<unsigned int, 3> > result(new NekVector<unsigned int, 3>());
 
@@ -107,7 +107,7 @@ namespace Nektar
 
                 unsigned int result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,matrix_buf));
+                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,3,matrix_buf));
                 NekVector<unsigned int, 3> b(result_buf);
                 NekVector<unsigned int, 3> result;
 
@@ -126,7 +126,7 @@ namespace Nektar
 
                 unsigned int result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,matrix_buf));
+                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,3,matrix_buf));
                 boost::shared_ptr<NekVector<unsigned int, 3> > b(new NekVector<unsigned int, 3>(result_buf));
                 NekVector<unsigned int, 3> result;
 
@@ -145,7 +145,7 @@ namespace Nektar
 
                 unsigned int result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,matrix_buf));
+                boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,3,matrix_buf));
                 NekVector<unsigned int, 3> b(result_buf);
                 boost::shared_ptr<NekVector<unsigned int, 3> > result(new NekVector<unsigned int, 3>());
 
@@ -166,7 +166,7 @@ namespace Nektar
 
             unsigned int result_buf[] = { 20, 50, 10 };
 
-            boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,matrix_buf));
+            boost::shared_ptr<NekMatrix<unsigned int, eDiagonal> >  A(new NekMatrix<unsigned int, eDiagonal>(3,3,matrix_buf));
             boost::shared_ptr<NekVector<unsigned int, 3> > b(new NekVector<unsigned int, 3>(result_buf));
 
             LinearSystem<NekMatrix<unsigned int, eDiagonal> > linsys(A);

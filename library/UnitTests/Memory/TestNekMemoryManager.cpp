@@ -174,15 +174,15 @@ namespace Nektar
         {
             // Fundamental Types
             {
-                boost::shared_array<int> a = MemoryManager::AllocateSharedArray<10, int>();
+                SharedArray<int> a = MemoryManager::AllocateSharedArray<10, int>();
 
-                boost::shared_array<int> b = MemoryManager::AllocateSharedArray<int>(120);
+                SharedArray<int> b = MemoryManager::AllocateSharedArray<int>(120);
             }
 
             // User Defined types
             {
                 CountedObject<int>::ClearCounters();
-                boost::shared_array<CountedObject<int> > a = MemoryManager::AllocateSharedArray<10, CountedObject<int> >();
+                SharedArray<CountedObject<int> > a = MemoryManager::AllocateSharedArray<10, CountedObject<int> >();
 
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 10);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 0);
@@ -194,7 +194,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(CountedObject<int>::numberDestroyed, 10);
 
             {
-                boost::shared_array<CountedObject<int> >  b = MemoryManager::AllocateSharedArray<CountedObject<int> >(17);
+                SharedArray<CountedObject<int> >  b = MemoryManager::AllocateSharedArray<CountedObject<int> >(17);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 27);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 0);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 0);

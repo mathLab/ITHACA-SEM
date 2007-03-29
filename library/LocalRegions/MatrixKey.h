@@ -82,7 +82,7 @@ namespace Nektar
                 return m_stdMatKey->GetNcoeffs();
             }
 
-            boost::shared_array<LibUtilities::BasisSharedPtr> GetBase() const
+            SharedArray<LibUtilities::BasisSharedPtr> GetBase() const
             {
                 return m_stdMatKey->GetBase();
             }
@@ -115,6 +115,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.4  2007/03/25 15:48:21  sherwin
+* UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+*
 * Revision 1.3  2007/03/20 09:13:37  kirby
 * new geomfactor routines; update for metricinfo; update style
 *

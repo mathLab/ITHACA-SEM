@@ -278,7 +278,7 @@ namespace LibUtilities
     return (*_matrix)(i,j); 
       }
       
-      inline boost::shared_array<double> getdata() const {return _matrix->getdata();}
+      inline SharedArray<double> getdata() const {return _matrix->getdata();}
       inline double * getdataptr() const {return _matrix->getdataptr();}
       inline bool unique() const {return _matrix->unique();}
       

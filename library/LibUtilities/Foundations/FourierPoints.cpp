@@ -61,7 +61,7 @@ namespace Nektar
             else
             {
                 double dx = 2.0/(double)(npts);
-                for(int i=0;i<npts;++i)
+                for(unsigned int i=0;i<npts;++i)
                 {
                     m_points[0][i] = -1.0 + i*dx;
                 }
@@ -92,7 +92,7 @@ namespace Nektar
             //// Allocate the derivative matrix.
             Points<double>::CalculateDerivMatrix();
 
-            int npts = m_pointsKey.GetNumPoints();
+            unsigned int npts = m_pointsKey.GetNumPoints();
 
             for(unsigned int i=1;i<npts;++i)
             {

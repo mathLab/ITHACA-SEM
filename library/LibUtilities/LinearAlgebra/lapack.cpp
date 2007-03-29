@@ -36,6 +36,7 @@
 #include <LibUtilities/BasicUtils/Lapack.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 #include <algorithm>
 #include <string>
@@ -68,7 +69,7 @@ namespace Lapack
         // Pivot information
         int pivotSize = std::max(1, std::min(m, n));
         int info = 0;
-        boost::shared_array<int> ipivot = Nektar::MemoryManager::AllocateSharedArray<int>(pivotSize);
+        Nektar::NekIntSharedArray ipivot = Nektar::MemoryManager::AllocateSharedArray<int>(pivotSize);
         Lapack::Dgetrf(m, n, factoredMatrix.GetPtr().get(), m, ipivot.get(), info);
 
         if( info < 0 )

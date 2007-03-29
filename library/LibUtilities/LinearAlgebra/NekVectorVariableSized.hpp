@@ -109,7 +109,7 @@ namespace Nektar
                 m_data[2] = z;
             }
 
-            NekVector(const NekVector<DataType, 0, space>& rhs) :
+            NekVector(NekVector<DataType, 0, space>& rhs) :
                 m_data(),
                 m_dimension(rhs.m_dimension),
                 m_wrapperType(rhs.m_wrapperType)
@@ -125,6 +125,16 @@ namespace Nektar
                 }
             }
 
+            NekVector(const NekVector<DataType, 0, space>& rhs) :
+                m_data(),
+                m_dimension(rhs.m_dimension),
+                m_wrapperType(eCopy)
+            {
+                // A copy of a wrapped vector must make a copy when passed a constant input vector.
+                m_data = MemoryManager::AllocateSharedArray<DataType>(m_dimension);
+                std::copy(rhs.m_data.get(), rhs.m_data.get() + m_dimension, m_data.get());
+            }
+
             NekVector(unsigned int size, const DataType* const ptr) :
                 m_data(),
                 m_dimension(size),
@@ -134,7 +144,7 @@ namespace Nektar
                 std::copy(ptr, ptr+size, m_data.get());
             }
 
-            NekVector(unsigned int size, const boost::shared_array<const DataType>& ptr) :
+            NekVector(unsigned int size, const SharedArray<const DataType>& ptr) :
                 m_data(),
                 m_dimension(size),
                 m_wrapperType(eCopy)
@@ -155,11 +165,11 @@ namespace Nektar
                 }
                 else
                 {
-                    m_data = boost::shared_array<DataType>(ptr, DeleteNothing<DataType>());
+                    m_data = SharedArray<DataType>(ptr, size, DeleteNothing<DataType>());
                 }
             }
 
-            NekVector(unsigned int size, const boost::shared_array<DataType>& ptr, PointerWrapper h = eCopy) :
+            NekVector(unsigned int size, SharedArray<DataType>& ptr, PointerWrapper h = eCopy) :
                 m_data(),
                 m_dimension(size),
                 m_wrapperType(h)
@@ -200,7 +210,7 @@ namespace Nektar
             {
                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, 0, space> > ));
 
-                m_data = boost::shared_array<DataType>(rhs.GetMetadata().Rows);
+                m_data = SharedArray<DataType>(rhs.GetMetadata().Rows);
                 m_wrapperType = eCopy;
                 m_dimension = rhs.GetMetadata().Rows;
 
@@ -209,7 +219,9 @@ namespace Nektar
             }
 #endif
 
-            NekVector<DataType, 0, space>& operator=(const NekVector<DataType, 0, space>& rhs)
+            /// TODO - Use the lessons from SharedArray - the const
+            /// assignment operator may be the only one ever called.
+            NekVector<DataType, 0, space>& operator=(NekVector<DataType, 0, space>& rhs)
             {
                 m_dimension = rhs.m_dimension;
                 m_wrapperType = rhs.m_wrapperType;
@@ -224,6 +236,17 @@ namespace Nektar
                     m_data = rhs.m_data;
                 }
 
+                return *this;
+            }
+
+            NekVector<DataType, 0, space>& operator=(const NekVector<DataType, 0, space>& rhs)
+            {
+                m_dimension = rhs.m_dimension;
+                m_wrapperType = eCopy;
+                
+                m_data = MemoryManager::AllocateSharedArray<DataType>(m_dimension);
+                std::copy(rhs.m_data.get(), rhs.m_data.get() + m_dimension, m_data.get());
+         
                 return *this;
             }
 
@@ -405,7 +428,7 @@ namespace Nektar
             DataType InfinityNorm() const { return Nektar::InfinityNorm(*this); }
             
         private:
-            boost::shared_array<DataType> m_data;
+            SharedArray<DataType> m_data;
             unsigned int m_dimension;
             PointerWrapper m_wrapperType;
     };    

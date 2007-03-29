@@ -52,6 +52,15 @@ namespace Nektar
     template<typename DataType, NekMatrixForm form = eFull, MatrixBlockType BlockType = eNormal, unsigned int space = 0, typename enabled=void>
     class NekMatrix;
     
+    template<typename DataType, NekMatrixForm form>
+    class NekMatrixStoragePolicy;
+
+    template<typename DataType, NekMatrixForm form>
+    class NekMatrixArithmeticPolicy;
+
+    template<typename DataType, NekMatrixForm form>
+    class NekMatrixAssignmentPolicy;
+
     typedef boost::shared_ptr<NekMatrix<double> > SharedNekMatrixPtr;
 };
     
@@ -59,6 +68,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrixFwd.hpp,v $
+    Revision 1.6  2007/02/15 06:56:55  bnelson
+    *** empty log message ***
+
     Revision 1.5  2006/12/17 22:36:35  bnelson
     Removed Macintosh line endings.
 

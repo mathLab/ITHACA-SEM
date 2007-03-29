@@ -48,7 +48,323 @@
 
 namespace Nektar
 {
+    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space, typename enabled>
+    class NekMatrix
+    {
+        public:
+            typedef NekMatrix<DataType, form, BlockType, space, void> ThisType;
+            typedef NekMatrixStoragePolicy<DataType, form> StoragePolicy;
+            typedef NekMatrixArithmeticPolicy<DataType, form> ArtihmeticPolicy;
+            typedef NekMatrixAssignmentPolicy<DataType, form> AssignmentPolicy;
 
+        public:
+            /// \brief Creates an empty, 0x0 matrix.  
+            NekMatrix() :
+                m_rows(0),
+                m_columns(0),
+                m_data()
+            {
+            }
+    
+            /// \brief Create a matrix with the given size, initialized to the default value of DataType.
+            ///
+            /// It is not possible to create a block matrix with this constructor since the block size is not specified.
+            NekMatrix(unsigned int rows, unsigned int columns) :
+                m_rows(rows),
+                m_columns(columns),
+                m_data()
+            {
+                // If you get a compiler error here, then you are trying to use this constructor with a block matrix.
+                BOOST_STATIC_ASSERT(BlockType == eNormal);
+                DataType d(0);
+                Initialize(rows, columns, d);
+            }
+
+            NekMatrix(unsigned int rows, unsigned int columns, DataType* ptr, PointerWrapper t = eCopy) :
+                m_rows(rows),
+                m_columns(columns),
+                m_data()
+            {
+                BOOST_STATIC_ASSERT(BlockType == eNormal);
+                Initialize(rows, columns, ptr, t);
+            }
+
+            NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
+                m_rows(rows),
+                m_columns(columns),
+                m_data()
+            {
+                BOOST_STATIC_ASSERT(BlockType == eNormal);
+                Initialize(rows, columns, ptr);
+            }
+
+            NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference d) :
+                m_rows(),
+                m_columns(),
+                m_data()
+            {
+                BOOST_STATIC_ASSERT(BlockType == eNormal);
+                Initialize(rows, columns, d);
+            }
+
+            NekMatrix(const ThisType& rhs) :
+                m_rows(rhs.m_rows),
+                m_columns(rhs.m_columns),
+                m_data()
+            {
+                BOOST_STATIC_ASSERT(BlockType == eNormal);
+                Initialize(m_rows, m_columns, rhs.m_data.get());
+            }
+
+            ThisType& operator=(const ThisType& rhs)
+            {
+                ThisType temp(rhs);
+                Swap(temp);
+                return *this;
+            }
+
+            template<NekMatrixForm rhs_form>
+            ThisType& operator=(const NekMatrix<DataType, rhs_form, BlockType, space>& rhs)
+            {
+                AssignmentPolicy::Assign(*this, rhs);
+                return *this;
+            }
+
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
+            template<typename ExpressionPolicyType>
+            NekMatrix(const expt::Expression<ExpressionPolicyType>& rhs) :
+                m_rows(rhs.GetMetadata().Rows),
+                m_columns(rhs.GetMetadata().Columns),
+                m_data()
+            {
+                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, ThisType> ));
+                Initialize(m_rows, m_columns);
+                rhs.Apply(*this);
+            }
+
+            template<typename ExpressionPolicyType>
+            NekMatrix& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
+            {
+                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, ThisType> ));
+                m_rows = rhs.GetMetadata().Rows;
+                m_columns = rhs.GetMetadata().Columns;
+                Initialize(m_rows, m_columns);
+                rhs.Apply(*this);
+                return *this;
+            }
+#endif
+
+            ~NekMatrix() 
+            {
+                m_rows = 0;
+                m_columns = 0;
+                m_data.reset();
+            }
+
+
+            unsigned int GetRows() const { return m_rows; }
+            unsigned int GetColumns() const { return m_columns; }
+
+            typename boost::call_traits<DataType>::reference operator()(unsigned int rowNumber, unsigned int colNumber)
+            {
+                ASSERTL2(rowNumber < m_rows, "Invalid row number to NekMatrix::operator()");
+                ASSERTL2(colNumber < m_columns, "Invalid column number to NekMatrix::operator()");
+                return StoragePolicy::GetData(rowNumber, colNumber, m_rows, m_columns, m_data);
+            }
+
+            typename boost::call_traits<DataType>::const_reference operator()(unsigned int rowNumber, unsigned int colNumber) const
+            {
+                ASSERTL2(rowNumber < m_rows, "Invalid row number to NekMatrix::operator()");
+                ASSERTL2(colNumber < m_columns, "Invalid column number to NekMatrix::operator()");
+                return StoragePolicy::GetConstData(rowNumber, colNumber, m_rows, m_columns, m_data);
+            }
+
+            //DataType* GetPtr(unsigned int rowNumber, unsigned int colNumber)
+            //{
+            //    return m_data.get() + rowNumber*m_columns + colNumber;
+            //}
+
+            SharedArray<DataType>& GetPtr()
+            {
+                return m_data;
+            }
+
+            const SharedArray<DataType>& GetPtr() const
+            {
+                return m_data;
+            }
+
+            typedef DataType* iterator;
+            typedef const DataType* const_iterator;
+
+            iterator begin() 
+            { 
+                return m_data.get();
+            }
+
+            iterator end() 
+            { 
+                return m_data.get() + StoragePolicy::NumStorageElements(m_rows, m_columns);
+            }
+
+            const_iterator begin() const 
+            { 
+                return m_data.get();
+            }
+
+            const_iterator end() const 
+            { 
+                return m_data.get() + StoragePolicy::NumStorageElements(m_rows, m_columns);
+            }
+
+            void Negate()
+            {
+                for(iterator iter = begin(); iter != end(); ++iter)
+                {
+                    *iter = -*iter;
+                }
+            }
+            
+            void Transpose()
+            {
+                StoragePolicy::Transpose(m_data, m_rows, m_columns);
+            }
+
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+            expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<ThisType> >, expt::NegateOp> > operator-() const
+            {
+                return expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<ThisType> >, expt::NegateOp> >(
+                        expt::Expression<expt::ConstantExpressionPolicy<ThisType> >(*this));
+            }
+#endif
+            template<NekMatrixForm rhs_form>
+            ThisType& operator+=(const NekMatrix<DataType, rhs_form, BlockType, space>& rhs)
+            {
+                ArtihmeticPolicy::PlusEqual(*this, rhs);
+                return *this;
+            }
+
+            //// This is wrong as well.  What if this is diagonal?
+            //// enable if on the output.
+            //NekMatrix<DataType, eFull, eNormal, space> operator+=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
+            //{
+            //    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+=");
+
+            //    for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+            //    {
+            //        (*this)(i,i) += rhs(i, i);
+            //    }
+
+            //    return *this;
+            //}
+
+            ThisType& operator-=(const ThisType& rhs)
+            {
+                ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator-=");
+                DataType* lhs_data = begin();
+                const DataType* rhs_data = rhs.begin();
+
+                for( ; lhs_data < end(); ++lhs_data, ++rhs_data )
+                {
+                    *lhs_data -= *rhs_data;
+                }
+
+                return *this;
+            }
+
+            //// This is wrong as well.  What if this is diagonal?
+            //// enable if on the output.
+            //NekMatrix<DataType, eFull, eNormal, space> operator-=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
+            //{
+            //    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator-=");
+
+            //    for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+            //    {
+            //        (*this)(i,i) -= rhs(i, i);
+            //    }
+
+            //    return *this;
+            //}
+
+            ThisType& operator*=(const ThisType& rhs)
+            {
+                ASSERTL0(GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
+
+                NekMatrix<DataType, eFull, eNormal, space> result(GetRows(), rhs.GetColumns());
+
+                for(unsigned int i = 0; i < result.GetRows(); ++i)
+                {
+                    for(unsigned int j = 0; j < result.GetColumns(); ++j)
+                    {
+                        DataType t = DataType(0);
+
+                        // Set the result(i,j) element.
+                        for(unsigned int k = 0; k < GetColumns(); ++k)
+                        {
+                            t += (*this)(i,k)*rhs(k,j);
+                        }
+                        result(i,j) = t;
+                    }
+                }
+
+                Swap(result);
+
+                return *this;
+            }
+
+            
+
+        private:
+            void Initialize(unsigned int rows, unsigned int columns)
+            {
+                m_rows = rows;
+                m_columns = columns;
+                unsigned int storageSize = StoragePolicy::NumStorageElements(m_rows, m_columns);
+                m_data = MemoryManager::AllocateSharedArray<DataType>(storageSize);
+            }
+            
+            void Initialize(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference d)
+            {
+                Initialize(rows, columns);
+                std::fill(begin(), end(), d);
+            }
+
+            void Initialize(unsigned int rows, unsigned int columns, DataType* ptr, 
+                                   PointerWrapper t)
+            {
+                m_rows = rows;
+                m_columns = columns;
+                if( t == eCopy )
+                {
+                    Initialize(rows, columns, ptr);
+                }
+                else
+                {
+                    m_data = SharedArray<DataType>(ptr, StoragePolicy::NumStorageElements(rows, columns),
+                        DeleteNothing<DataType>());
+                }
+            }
+
+            void Initialize(unsigned int rows, unsigned int columns, const DataType* const ptr)
+            {
+                Initialize(rows, columns);
+                std::copy(ptr, ptr + StoragePolicy::NumStorageElements(rows, columns), begin());
+            }
+
+            void Swap(NekMatrix<DataType, eFull, eNormal, space>& rhs)
+            {
+                std::swap(m_rows, rhs.m_rows);
+                std::swap(m_columns, rhs.m_columns);
+                std::swap(m_data, rhs.m_data);
+            }
+
+            unsigned int m_rows;
+            unsigned int m_columns;
+            SharedArray<DataType> m_data;
+    };
+    
+    
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
     // All of the expression interfaces for NekMatrix should go here.
     namespace expt
@@ -350,6 +666,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.21  2007/01/29 01:31:07  bnelson
+    *** empty log message ***
+
     Revision 1.20  2007/01/23 03:12:50  jfrazier
     Added more conditional compilation directives for expression templates.
 

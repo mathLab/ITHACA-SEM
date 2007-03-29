@@ -53,6 +53,7 @@ namespace Nektar
         public:
             typedef typename MatrixDataType<DataType, eFull, BlockType, space>::Type BlockDataType;
             
+
         public:
             //static void CopyMatrixValues(DataType* data, const NekMatrix<DataType, eDiagonal, space>& rhs, unsigned int rows, unsigned int columns)
             static void CopyMatrixValues(BlockDataType* data, const NekMatrix<DataType, eDiagonal, BlockType, space>& rhs, unsigned int rows, unsigned int columns)
@@ -256,6 +257,9 @@ namespace Nektar
 
 
 /**
-    $Log:$
+    $Log: NekMatrixImpl.hpp,v $
+    Revision 1.1  2006/10/30 05:11:16  bnelson
+    Added preliminary linear system and block matrix support.
+
 
 **/

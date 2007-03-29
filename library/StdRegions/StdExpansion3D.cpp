@@ -66,7 +66,7 @@ namespace Nektar
 	{ 
 	}
 	
-	void StdExpansion3D::PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
+	void StdExpansion3D::PhysTensorDeriv(NekDoubleSharedArray &inarray, 
 					     NekDoubleSharedArray &outarray_d0, 
 					     NekDoubleSharedArray &outarray_d1, 
 					     NekDoubleSharedArray &outarray_d2)
@@ -82,17 +82,17 @@ namespace Nektar
 	    if((outarray_d0 == inarray)||(outarray_d1 == inarray)||
 	       (outarray_d2 == inarray))
 	    { 
-		wsp = GetDoubleTmpSpace(nquad0*nquad1*nquad2);
-		Vmath::Vcopy(nquad0*nquad1*nquad2,&inarray[0],1,&wsp[0],1);
+            wsp = GetDoubleTmpSpace(nquad0*nquad1*nquad2);
+            Vmath::Vcopy(nquad0*nquad1*nquad2,&inarray[0],1,&wsp[0],1);
 	    }
-	    else
-	    {
-		wsp = inarray;
-	    }
+        else
+        {
+            wsp = inarray;
+        }
 	    
-            D0 = ExpPointsProperties(0)->GetD();
-            D1 = ExpPointsProperties(1)->GetD();
-            D2 = ExpPointsProperties(2)->GetD();
+        D0 = ExpPointsProperties(0)->GetD();
+        D1 = ExpPointsProperties(1)->GetD();
+        D2 = ExpPointsProperties(2)->GetD();
 
 	    // calculate du/dx_0
 	    if(outarray_d0)
@@ -175,6 +175,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.5  2007/03/20 16:58:43  sherwin
+ * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+ *
  * Revision 1.4  2007/01/18 18:44:45  bnelson
  * Updates to compile on Visual Studio 2005.
  *

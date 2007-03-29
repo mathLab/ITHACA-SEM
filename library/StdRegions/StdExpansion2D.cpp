@@ -69,7 +69,7 @@ namespace Nektar
         // Differentiation Methods
         //----------------------------
 
-        void StdExpansion2D::PhysTensorDeriv(const NekDoubleSharedArray &inarray,
+        void StdExpansion2D::PhysTensorDeriv(NekDoubleSharedArray &inarray,
 					     NekDoubleSharedArray &outarray_d0, 
 					     NekDoubleSharedArray &outarray_d1)
         {
@@ -175,6 +175,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.8  2007/03/20 16:58:42  sherwin
+* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+*
 * Revision 1.7  2007/03/14 21:24:09  sherwin
 * Update for working version of MultiRegions up to ExpList1D
 *

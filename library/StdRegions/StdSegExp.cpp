@@ -162,7 +162,7 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdSegExp::PhysDeriv(const NekDoubleSharedArray &inarray, 
+	void StdSegExp::PhysDeriv(NekDoubleSharedArray &inarray, 
 				  NekDoubleSharedArray &out_d0,
 				  NekDoubleSharedArray &out_d2,
 				  NekDoubleSharedArray &out_d3)
@@ -194,21 +194,22 @@ namespace Nektar
 	
 	void StdSegExp::FwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
 	{
-	    if(m_base[0]->Collocation())
-	    {
-		Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
-	    }
-	    else{
-		IProductWRTBase(inarray,outarray);
+        if(m_base[0]->Collocation())
+        {
+            Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
+        }
+        else
+        {
+            IProductWRTBase(inarray,outarray);
 
-		// get Mass matrix
-		StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
-		DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
+            // get Mass matrix
+            StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
+            DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
 
-		// solve inverse of system
-		DNekVec   v(m_ncoeffs,outarray,eWrapper);
-		matsys->Solve(v,v);
-	    }
+            // solve inverse of system
+            DNekVec   v(m_ncoeffs,outarray,eWrapper);
+            matsys->Solve(v,v);
+        }
 	}
  
 	NekDouble StdSegExp::PhysEvaluate(const NekDoubleSharedArray &Lcoord)
@@ -271,6 +272,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.23  2007/03/25 15:48:22  sherwin
+ * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+ *
  * Revision 1.22  2007/03/21 20:56:43  sherwin
  * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
  *

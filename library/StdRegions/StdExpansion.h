@@ -107,7 +107,7 @@ namespace Nektar
             *  
             *  \return returns the shared pointer to the bases  
             */
-            inline const boost::shared_array<LibUtilities::BasisSharedPtr> GetBase() const
+            inline const SharedArray<LibUtilities::BasisSharedPtr>& GetBase() const
             {
                 return(m_base);
             }
@@ -830,7 +830,7 @@ namespace Nektar
             DNekLinSysSharedPtr CreateStdLinSys(const StdLinSysKey &mkey);
 
             int   m_numbases;   /**< Number of 1D basis defined in expansion */
-	    boost::shared_array<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
+	        SharedArray<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
 
             LibUtilities::NekManager<StdMatrixKey, DNekMat,    StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdLinSysKey, DNekLinSys, StdLinSysKey::opLess> m_stdLinSysManager;
@@ -1034,6 +1034,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.36  2007/03/25 15:48:22  sherwin
+* UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+*
 * Revision 1.35  2007/03/21 20:56:43  sherwin
 * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
 *

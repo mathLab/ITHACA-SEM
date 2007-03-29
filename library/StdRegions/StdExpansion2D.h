@@ -127,7 +127,7 @@ namespace Nektar
              *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
              *  \end{array} \f$
              */
-                void PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
+                void PhysTensorDeriv(NekDoubleSharedArray &inarray, 
 				     NekDoubleSharedArray &outarray_d0,
                                      NekDoubleSharedArray &outarray_d1);
 
@@ -242,6 +242,7 @@ namespace Nektar
 	     {
 		 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
 			  "local expansions");
+            return 0.0;
 	     }
 
         };
@@ -253,6 +254,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.8  2007/03/20 16:58:43  sherwin
+* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+*
 * Revision 1.7  2007/03/14 21:24:09  sherwin
 * Update for working version of MultiRegions up to ExpList1D
 *

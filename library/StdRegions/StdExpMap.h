@@ -66,33 +66,32 @@ namespace Nektar
 		return m_len;
 	    }
 	    
-	    inline NekIntSharedArray GetMap() const
+	    inline const NekIntSharedArray& GetMap() const
 	    {
-		return m_map;
+            return m_map;
 	    }
 	    
 	    int operator[](const int i) const
 	    {
 		
-		if((i>=0) && (i<m_len))
-		{
-		    return m_map[i];
-		}
-		ASSERTL0(false, "Invalid Index used in [] operator");
+		    if((i>=0) && (i<m_len))
+		    {
+		        return m_map[i];
+		    }
+		    ASSERTL0(false, "Invalid Index used in [] operator");
 		
-		return m_map[0]; //should never be reached
+		    return m_map[0]; //should never be reached
 	    }
 	    
 	    int& operator[](const int i)
 	    {
-		
-		if((i>=0) && (i<m_len))
-		{
-		    return m_map[i];
-		}
-		
-		ASSERTL0(false, "Invalid Index used in [] operator");
-		return m_map[0]; //should never be reached
+		    if((i>=0) && (i<m_len))
+		    {
+		        return m_map[i];
+		    }
+    		
+		    ASSERTL0(false, "Invalid Index used in [] operator");
+		    return m_map[0]; //should never be reached
 	    }
 	    
 	protected:
@@ -110,6 +109,9 @@ namespace Nektar
 
 /**
  * $Log: StdExpMap.h,v $
+ * Revision 1.6  2007/03/20 16:58:42  sherwin
+ * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+ *
  * Revision 1.5  2007/01/28 18:34:17  sherwin
  * More modifications to make Demo Project1D compile
  *

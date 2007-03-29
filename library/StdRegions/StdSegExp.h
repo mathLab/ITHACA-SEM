@@ -139,7 +139,7 @@ namespace Nektar
 	     *  \param  outarray the resulting array of the derivative \f$
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
 	     */
-	    void PhysDeriv(const NekDoubleSharedArray &inarray, 
+	    void PhysDeriv(NekDoubleSharedArray &inarray, 
 			   NekDoubleSharedArray &out_d0,
 			   NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
 			   NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray);
@@ -244,8 +244,8 @@ namespace Nektar
 	    } 
 	    
             virtual void v_GetCoords(NekDoubleSharedArray &coords_1,
-				     NekDoubleSharedArray &coords_2 = NULL,
-				     NekDoubleSharedArray &coords_3 = NULL)
+				     NekDoubleSharedArray &coords_2 = NekDoubleSharedArray(),
+				     NekDoubleSharedArray &coords_3 = NekDoubleSharedArray())
 	    {
 		GetCoords(coords_1);
 	    }
@@ -276,20 +276,20 @@ namespace Nektar
 
 	    /** \brief Virtual call to StdSegExp::Deriv */
 
-            virtual void   v_PhysDeriv (const NekDoubleSharedArray &inarray,
+        virtual void v_PhysDeriv(NekDoubleSharedArray &inarray,
 		    NekDoubleSharedArray &out_d0,
 		    NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
 		    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
 	    {
-		PhysDeriv(inarray,out_d0);
+    		PhysDeriv(inarray,out_d0);
 	    }
       
 
 	    /** \brief Virtual call to StdSegExp::Deriv */
-	    virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray, 
+	    virtual void v_StdPhysDeriv(NekDoubleSharedArray &inarray, 
 					NekDoubleSharedArray &outarray)
 	    {
-		PhysDeriv(inarray, outarray);
+    		PhysDeriv(inarray, outarray);
 	    }
 	    
 	    /** \brief Virtual call to StdSegExp::BwdTrans */
@@ -339,6 +339,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.12  2007/03/25 15:48:22  sherwin
+ * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+ *
  * Revision 1.11  2007/03/21 20:56:43  sherwin
  * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
  *

@@ -43,7 +43,7 @@ namespace Nektar
 	
 	StdExpMap::StdExpMap():
 	    m_len(0),
-	    m_map(NULL)
+	    m_map()
 	{
 	}
 	
@@ -73,6 +73,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpMap.cpp,v $
+ * Revision 1.4  2007/01/29 15:04:53  sherwin
+ * StdBasis.h moved to LibUtilities. Other minor mods
+ *
  * Revision 1.3  2007/01/28 18:34:16  sherwin
  * More modifications to make Demo Project1D compile
  *

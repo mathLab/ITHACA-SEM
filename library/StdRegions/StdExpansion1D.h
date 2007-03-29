@@ -83,10 +83,10 @@ namespace Nektar
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
 	     *  \a outarray as output of the function
 	     */
-            void PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
+            void PhysTensorDeriv(NekDoubleSharedArray &inarray, 
 				 NekDoubleSharedArray & outarray);
 
-            void PhysDeriv (const NekDoubleSharedArray &inarray,
+            void PhysDeriv (NekDoubleSharedArray &inarray,
 			    NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
 			    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
 			    NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
@@ -94,7 +94,7 @@ namespace Nektar
                 v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
             }
 
-            void StdPhysDeriv (const NekDoubleSharedArray &inarray, 
+            void StdPhysDeriv (NekDoubleSharedArray &inarray, 
 			       NekDoubleSharedArray &outarray)
             {
                 v_StdPhysDeriv (inarray,outarray);
@@ -199,12 +199,12 @@ namespace Nektar
                 return 1; 
 	    }
 
-            virtual void   v_PhysDeriv (const NekDoubleSharedArray &inarray,
+            virtual void   v_PhysDeriv (NekDoubleSharedArray &inarray,
 					NekDoubleSharedArray &out_d0,
 					NekDoubleSharedArray &out_d1,
 					NekDoubleSharedArray &out_d2) = 0;
 
-            virtual void   v_StdPhysDeriv (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray) = 0;
+            virtual void   v_StdPhysDeriv (NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray) = 0;
 
             virtual NekDouble v_PhysEvaluate(const NekDoubleSharedArray &coords)
             {
@@ -223,6 +223,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.14  2007/03/25 15:48:22  sherwin
+* UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+*
 * Revision 1.13  2007/03/21 20:56:43  sherwin
 * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
 *

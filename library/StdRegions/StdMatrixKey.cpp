@@ -41,74 +41,75 @@ namespace Nektar
     namespace StdRegions
     {
 	
-	// Register Mass Matrix creator. 
-	StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
-				   const ShapeType shapeType,
-				   const StdExpansion &stdExpansion):
-	    m_matrixType(matrixType),
-	    m_shapeType(shapeType)
-	{
-	    m_ncoeffs   = stdExpansion.GetNcoeffs();
-	    m_base      = stdExpansion.GetBase();
-	}
-	    
+	    // Register Mass Matrix creator. 
+	    StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+				                   const ShapeType shapeType,
+				                   const StdExpansion &stdExpansion) :
+            m_shapeType(shapeType),
+            m_base(stdExpansion.GetBase()),
+            m_ncoeffs(stdExpansion.GetNcoeffs()),
+	        m_matrixType(matrixType)
+	    {
+	    }
+    	    
+
+        StdMatrixKey::StdMatrixKey(const StdMatrixKey& rhs) :
+            m_shapeType(rhs.m_shapeType),
+            m_base(rhs.m_base),
+            m_ncoeffs(rhs.m_ncoeffs),
+            m_matrixType(rhs.m_matrixType)
+        {
+        }
 
         bool StdMatrixKey::opLess::operator()(const StdMatrixKey &lhs, 
-					      const StdMatrixKey &rhs)
+				          const StdMatrixKey &rhs)
         {	    
-	    {
-		return (lhs.m_matrixType < rhs.m_matrixType);
-	    }
-	}
-
-	bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs)
-	{
-	    int i;
-	    
-	    if(lhs.m_matrixType < rhs.m_matrixType)
-	    {
-		return true;
+	        return (lhs.m_matrixType < rhs.m_matrixType);
 	    }
 
-	    if(lhs.m_matrixType > rhs.m_matrixType)
-	    {
-		return false;
+	    bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs)
+	    {   
+	        if(lhs.m_matrixType < rhs.m_matrixType)
+	        {
+		        return true;
+	        }
+
+	        if(lhs.m_matrixType > rhs.m_matrixType)
+	        {
+		        return false;
+	        }
+    	    
+	        if(lhs.m_ncoeffs < rhs.m_ncoeffs)
+	        {
+		        return true;
+	        }
+    	    
+	        if(lhs.m_ncoeffs > rhs.m_ncoeffs)
+	        {
+		        return false;
+	        }
+    	    
+	        for(unsigned int i = 0; i < ShapeTypeDimMap[lhs.m_shapeType]; ++i)
+	        {
+		        if(lhs.m_base[i] < rhs.m_base[i])
+		        {
+		            return true;
+		        }
+	        }
+    	    
+	        return false;
 	    }
-	    
-	    if(lhs.m_ncoeffs < rhs.m_ncoeffs)
-	    {
-		return true;
-	    }
-	    
-	    if(lhs.m_ncoeffs > rhs.m_ncoeffs)
-	    {
-		return false;
-	    }
-	    
-	    for(i = 0; i < ShapeTypeDimMap[lhs.m_shapeType]; ++i)
-	    {
-		if(lhs.m_base[i] < rhs.m_base[i])
-		{
-		    return true;
-		}
-	    }
-	    
-	    return false;
-	}
 
         std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs)
         {
-
-	    int i;
-
             os << "MatrixType: " << MatrixTypeMap[rhs.GetMatrixType()] << ", ShapeType: " 
-	       << ShapeTypeMap[rhs.GetShapeType()] << ", Ncoeffs: " << rhs.GetNcoeffs() 
-	       << std::endl;
+                << ShapeTypeMap[rhs.GetShapeType()] << ", Ncoeffs: " << rhs.GetNcoeffs() 
+                << std::endl;
 	    
-	    for(i = 0; i < ShapeTypeDimMap[rhs.GetShapeType()]; ++i)
-	    {
-		os << rhs.GetBase()[i]->GetBasisKey();
-	    }
+            for(unsigned int i = 0; i < ShapeTypeDimMap[rhs.GetShapeType()]; ++i)
+            {
+                os << rhs.GetBase()[i]->GetBasisKey();
+            }
 
             return os;
         }
@@ -117,6 +118,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.cpp,v $
+* Revision 1.3  2007/03/20 16:58:43  sherwin
+* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+*
 * Revision 1.2  2007/03/05 08:07:13  sherwin
 * Modified so that StdMatrixKey has const calling arguments in its constructor.
 *

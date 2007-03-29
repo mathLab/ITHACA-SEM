@@ -62,17 +62,17 @@ namespace Nektar
 				   const LibUtilities::BasisKey &Ba, 
 				   const LibUtilities::BasisKey &Bb, 
 				   const LibUtilities::BasisKey &Bc):
-	    m_ncoeffs(numcoeffs),
-	    m_numbases(numbases)
+	        m_ncoeffs(numcoeffs),
+	        m_numbases(numbases)
         {
 	    
-	    m_base = MemoryManager::AllocateSharedArray<LibUtilities::BasisSharedPtr>(m_numbases);
+    	    m_base = MemoryManager::AllocateSharedArray<LibUtilities::BasisSharedPtr>(m_numbases);
             
             switch(m_numbases)
             {
             case 3:
                 ASSERTL2(Bc==LibUtilities::NullBasisKey,
-n                         "NULL Basis attempting to be used.");
+                         "NULL Basis attempting to be used.");
                 m_base[2] = LibUtilities::BasisManager()[Bc];
 
             case 2:
@@ -108,7 +108,7 @@ n                         "NULL Basis attempting to be used.");
 
         StdExpansion::StdExpansion(const StdExpansion &T)
         {
-            m_base = T.m_base; 
+            m_base = SharedArray<LibUtilities::BasisSharedPtr>(T.m_base); 
 
             // NOTE: Copy Constructor produces a deep copy
             // allocate memory for coeffs
@@ -294,6 +294,9 @@ n                         "NULL Basis attempting to be used.");
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.27  2007/03/25 15:48:22  sherwin
+* UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+*
 * Revision 1.26  2007/03/21 20:56:42  sherwin
 * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
 *

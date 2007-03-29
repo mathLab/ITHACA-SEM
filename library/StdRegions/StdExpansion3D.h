@@ -79,7 +79,7 @@ namespace Nektar
 	     *  \f$\eta_3\f$ direction will be stored in outarray_d3 as output 
 	     *  of the function
 	     */
-            void PhysTensorDeriv(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray_d1,
+            void PhysTensorDeriv(NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray_d1,
                 NekDoubleSharedArray &outarray_d2, NekDoubleSharedArray &outarray_d3);
 
             /** \brief Evaluate a function at points coords which is assumed
@@ -164,6 +164,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.5  2007/03/20 16:58:43  sherwin
+* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+*
 * Revision 1.4  2007/01/17 16:05:40  pvos
 * updated doxygen documentation
 *

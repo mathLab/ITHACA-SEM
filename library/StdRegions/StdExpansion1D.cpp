@@ -64,7 +64,7 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdExpansion1D::PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
+	void StdExpansion1D::PhysTensorDeriv(NekDoubleSharedArray &inarray, 
 					     NekDoubleSharedArray &outarray)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
@@ -112,6 +112,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.10  2007/03/20 16:58:42  sherwin
+ * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+ *
  * Revision 1.9  2007/03/14 21:24:09  sherwin
  * Update for working version of MultiRegions up to ExpList1D
  *

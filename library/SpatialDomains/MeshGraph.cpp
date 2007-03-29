@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/MeshGraph.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -38,7 +38,10 @@
 #include <SpatialDomains/MeshGraph.h>
 
 // Use the stl version, primarily for string.
+#ifndef TIXML_USE_STL
 #define TIXML_USE_STL
+#endif
+
 #include <tinyxml/tinyxml.h>
 #include <string>
 #include <strstream>
@@ -214,6 +217,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.5  2006/10/17 18:42:54  jfrazier
+// Removed "NUMBER" attribute in items.
+//
 // Revision 1.4  2006/09/26 23:41:52  jfrazier
 // Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
 //

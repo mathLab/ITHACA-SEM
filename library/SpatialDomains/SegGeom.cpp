@@ -67,7 +67,7 @@ namespace Nektar
             // info from EdgeComponent class
             m_eid     = in.m_eid;
             m_elmtmap = in.m_elmtmap;
-            m_xmap    = in.m_xmap;
+            m_xmap = in.m_xmap;
 
             // info from SegGeom class
             m_owndata  = false; 
@@ -201,6 +201,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.10  2007/03/25 15:48:22  sherwin
+// UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+//
 // Revision 1.9  2007/03/20 09:17:40  kirby
 //
 // GeomFactors now added; metricinfo used instead of minfo; styles updated

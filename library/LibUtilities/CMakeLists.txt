@@ -80,6 +80,7 @@ SET(LibUtilityHeaders
 ./BasicUtils/Vmath.hpp
 ./BasicUtils/Blas.hpp
 ./BasicUtils/TransF77.hpp
+./BasicUtils/SharedArray.hpp
 ./Memory/ThreadSpecificPool.hpp
 ./Memory/NekMemoryManager.hpp
 )

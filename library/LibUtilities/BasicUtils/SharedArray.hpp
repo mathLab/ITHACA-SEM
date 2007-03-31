@@ -45,6 +45,7 @@
 
 #include <boost/detail/shared_count.hpp>
 #include <boost/detail/workaround.hpp>
+#include <boost/bind.hpp>
 
 #include <cstddef>            // for std::ptrdiff_t
 #include <algorithm>          // for std::swap
@@ -143,8 +144,8 @@ namespace Nektar
             }
 
             explicit SharedArray(unsigned int s) :
-                px(MemoryManager::AllocateArray<T>(s)),
-                pn(px, boost::bind(MemoryManager::DeallocateArray<T>, _1, s)),
+                px(new T[s]),
+                pn(px, deleter()),
                 m_offset(0),
                 m_size(0)
             {
@@ -190,14 +191,14 @@ namespace Nektar
             {
             }
 
-            SharedArray(const SharedArray<T>& rhs) :
-                px(MemoryManager::AllocateArray<T>(rhs.m_size)),
-                pn(px, boost::bind(MemoryManager::DeallocateArray<T>, _1, rhs.m_size)),
-                m_offset(rhs.m_offset),
-                m_size(rhs.m_size)
-            {
-                std::copy(rhs.px, rhs.px + rhs.m_size, px);
-            }
+//             SharedArray(const SharedArray<T>& rhs) :
+//                 px(new T[rhs.m_size]),
+//                 pn(px, deleter()),
+//                 m_offset(rhs.m_offset),
+//                 m_size(rhs.m_size)
+//             {
+//                 std::copy(rhs.px, rhs.px + rhs.m_size, px);
+//             }
 
             SharedArray<T>& operator=(SharedArray<T>& rhs)
             {
@@ -212,17 +213,17 @@ namespace Nektar
                 return *this;
             }
 
-            void Assign(const SharedArray<T>& rhs)
-            {
-                if( this != &rhs )
-                {
-                    px = MemoryManager::AllocateArray<T>(rhs.m_size);
-                    pn = boost::detail::shared_count(px, boost::bind(MemoryManager::DeallocateArray<T>, _1, rhs.m_size));
-                    m_offset = rhs.m_offset;
-                    m_size = rhs.m_size;
-                    std::copy(rhs.px, rhs.px + rhs.m_size, px);
-                }
-            }
+//             void Assign(const SharedArray<T>& rhs)
+//             {
+//                 if( this != &rhs )
+//                 {
+//                     px = new T[rhs.m_size];
+//                     pn = boost::detail::shared_count(px, deleter());
+//                     m_offset = rhs.m_offset;
+//                     m_size = rhs.m_size;
+//                     std::copy(rhs.px, rhs.px + rhs.m_size, px);
+//                 }
+//             }
 
 
             void reset()
@@ -264,6 +265,8 @@ namespace Nektar
             {
                 return px + m_offset;
             }
+            
+            unsigned int GetSize() const { return m_size; }
 
             // implicit conversion to "bool"
 

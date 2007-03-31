@@ -144,83 +144,83 @@ namespace Nektar
         
         void testConstruction()
         {
-            {
-                CountedObject<double>::ClearCounters();
+            //{
+            //    CountedObject<double>::ClearCounters();
 
-                SharedArray<CountedObject<double> > non_const_array = 
-                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
-                const SharedArray<CountedObject<double> > const_array = 
-                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
+            //    SharedArray<CountedObject<double> > non_const_array = 
+            //        MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
+            //    const SharedArray<CountedObject<double> > const_array = 
+            //        MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
 
-                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
-                {
-                    SharedArray<CountedObject<double> > a1(non_const_array);
-                    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
-                }
-                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
-                {
-                    SharedArray<CountedObject<double> > a2(const_array);
-                    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
-                }
+            //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
+            //    {
+            //        SharedArray<CountedObject<double> > a1(non_const_array);
+            //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
+            //    }
+            //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
+            //    {
+            //        //SharedArray<CountedObject<double> > a2(const_array);
+            //        //BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
+            //    }
 
-                // 10 should be destroyed from the copy of the const_array.
-                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
+            //    // 10 should be destroyed from the copy of the const_array.
+            //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
 
-                {
-                    const SharedArray<CountedObject<double> > a1(non_const_array);
-                    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
-                }
-                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
-                {
-                    const SharedArray<CountedObject<double> > a2(const_array);
-                    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
-                }
+            //    {
+            //        const SharedArray<CountedObject<double> > a1(non_const_array);
+            //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
+            //    }
+            //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
+            //    {
+            //        //const SharedArray<CountedObject<double> > a2(const_array);
+            //        //BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
+            //    }
 
-                // TODO - Ideally we could detect that a const object is being 
-                // created and avoid the copy.
-                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 20);
-            }
+            //    // TODO - Ideally we could detect that a const object is being 
+            //    // created and avoid the copy.
+            //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 20);
+            //}
         }
 
         void testAssignment()
         {
-            {
-                CountedObject<double>::ClearCounters();
+        //    {
+        //        CountedObject<double>::ClearCounters();
 
-                SharedArray<CountedObject<double> > non_const_array = 
-                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
-                const SharedArray<CountedObject<double> > const_array = 
-                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
+        //        SharedArray<CountedObject<double> > non_const_array = 
+        //            MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
+        //        const SharedArray<CountedObject<double> > const_array = 
+        //            MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
 
-                {
-                    SharedArray<CountedObject<double> > a1;
-                    a1 = non_const_array;
-                    //a1 = const_array;
-                }
+        //        {
+        //            SharedArray<CountedObject<double> > a1;
+        //            a1 = non_const_array;
+        //            //a1 = const_array;
+        //        }
 
-                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
+        //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
 
-                {
-                    SharedArray<CountedObject<double> > a2;
-                    a2.Assign(const_array);
-                }
+        //        {
+        //            SharedArray<CountedObject<double> > a2;
+        //            a2.Assign(const_array);
+        //        }
 
-                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
+        //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
 
-                {
-                    const SharedArray<CountedObject<double> > a2;
-                    //a2 = SharedArray<CountedObject<double> >(non_const_array);
-                }
-                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
+        //        {
+        //            const SharedArray<CountedObject<double> > a2;
+        //            //a2 = SharedArray<CountedObject<double> >(non_const_array);
+        //        }
+        //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
 
-                {
-                    const SharedArray<CountedObject<double> > a3;
-                    //a3 = SharedArray<CountedObject<double> >(const_array);
-                }
-                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
-            }
-            BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 30);
-        }
+        //        {
+        //            const SharedArray<CountedObject<double> > a3;
+        //            //a3 = SharedArray<CountedObject<double> >(const_array);
+        //        }
+        //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
+        //    }
+        //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 30);
+        //}
     }
 }
 

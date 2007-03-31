@@ -81,6 +81,7 @@ SET(LibUtilityHeaders
 ./BasicUtils/Blas.hpp
 ./BasicUtils/TransF77.hpp
 ./BasicUtils/SharedArray.hpp
+./BasicUtils/SharedArrayUtil.hpp
 ./Memory/ThreadSpecificPool.hpp
 ./Memory/NekMemoryManager.hpp
 )

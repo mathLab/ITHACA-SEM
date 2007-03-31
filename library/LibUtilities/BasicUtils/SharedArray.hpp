@@ -191,15 +191,6 @@ namespace Nektar
             {
             }
 
-//             SharedArray(const SharedArray<T>& rhs) :
-//                 px(new T[rhs.m_size]),
-//                 pn(px, deleter()),
-//                 m_offset(rhs.m_offset),
-//                 m_size(rhs.m_size)
-//             {
-//                 std::copy(rhs.px, rhs.px + rhs.m_size, px);
-//             }
-
             SharedArray<T>& operator=(SharedArray<T>& rhs)
             {
                 if( this != &rhs )
@@ -212,19 +203,6 @@ namespace Nektar
 
                 return *this;
             }
-
-//             void Assign(const SharedArray<T>& rhs)
-//             {
-//                 if( this != &rhs )
-//                 {
-//                     px = new T[rhs.m_size];
-//                     pn = boost::detail::shared_count(px, deleter());
-//                     m_offset = rhs.m_offset;
-//                     m_size = rhs.m_size;
-//                     std::copy(rhs.px, rhs.px + rhs.m_size, px);
-//                 }
-//             }
-
 
             void reset()
             {
@@ -318,6 +296,15 @@ namespace Nektar
                 std::swap(m_offset, other.m_offset);
                 std::swap(m_size, other.m_size);
             }
+
+            typedef T* iterator;
+            typedef const T* const_iterator;
+
+            iterator begin() { return px + m_offset; }
+            iterator end() { return px + m_size; }
+
+            const_iterator begin() const { return px + m_offset; }
+            const_iterator end() const { return px + m_size; }
 
         private:
             //SharedArray<T>& operator=(const SharedArray<T>& rhs);

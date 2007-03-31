@@ -34,10 +34,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <UnitTests/StdRegions/testStdSegExp.h>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
 #include <StdRegions/StdSegExp.h>
-#include "StdRegions/StdRegions.hpp"
-#include "LibUtilities/Foundations/Foundations.hpp"
+#include <StdRegions/StdRegions.hpp>
+#include <LibUtilities/Foundations/Foundations.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -606,6 +607,9 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.cpp,v $
+    Revision 1.8  2007/03/29 19:45:46  bnelson
+    *** empty log message ***
+
     Revision 1.7  2007/03/26 11:17:03  pvos
     made testStdRegions back working
 

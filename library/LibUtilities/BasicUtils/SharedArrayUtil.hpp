@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NektarUnivConsts.hpp
+// File SharedArrayUtil.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,31 +29,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Universal constants in the Nektar Library 
+// Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef  NEKTARUNIVCONSTS_HPP
-#define  NEKTARUNIVCONSTS_HPP
+#ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHARED_ARRAY_UTIL_HPP
+#define NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHARED_ARRAY_UTIL_HPP
 
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <algorithm>
 
 namespace Nektar
 {
-    // Null defintion of NekDoubleSharedArray
-    static NekDoubleSharedArray NullNekDoubleSharedArray;
+    template<typename DataType>
+    SharedArray<DataType> Copy(const SharedArray<DataType>& a)
+    {
+        SharedArray<DataType> c = MemoryManager::AllocateSharedArray<DataType>(a.GetSize());
+        std::copy(a.begin(), a.end(), c.begin());
+        return c;
+    }
 
+}
 
-} //end of namespace 
-
-#endif
-
-/***
-$Log: NektarUnivConsts.hpp,v $
-Revision 1.2  2007/03/21 20:56:42  sherwin
-Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
-
-Revision 1.1  2007/03/20 11:56:25  sherwin
-.
-
-**/
+#endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHARED_ARRAY_UTIL_HPP

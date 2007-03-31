@@ -36,6 +36,7 @@
 
 
 #include <StdRegions/StdExpansion.h>
+#include <LibUtilities/BasicUtils/SharedArrayUtil.hpp>
 
 namespace Nektar
 {
@@ -108,7 +109,7 @@ namespace Nektar
 
         StdExpansion::StdExpansion(const StdExpansion &T)
         {
-            m_base = SharedArray<LibUtilities::BasisSharedPtr>(T.m_base); 
+            m_base = Copy(T.m_base);
 
             // NOTE: Copy Constructor produces a deep copy
             // allocate memory for coeffs
@@ -294,6 +295,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.28  2007/03/29 19:35:08  bnelson
+* Replaced boost::shared_array with SharedArray
+*
 * Revision 1.27  2007/03/25 15:48:22  sherwin
 * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
 *

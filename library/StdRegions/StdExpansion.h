@@ -830,7 +830,7 @@ namespace Nektar
             DNekLinSysSharedPtr CreateStdLinSys(const StdLinSysKey &mkey);
 
             int   m_numbases;   /**< Number of 1D basis defined in expansion */
-	        SharedArray<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
+            SharedArray<LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
 
             LibUtilities::NekManager<StdMatrixKey, DNekMat,    StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdLinSysKey, DNekLinSys, StdLinSysKey::opLess> m_stdLinSysManager;
@@ -1034,6 +1034,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.37  2007/03/29 19:35:09  bnelson
+* Replaced boost::shared_array with SharedArray
+*
 * Revision 1.36  2007/03/25 15:48:22  sherwin
 * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
 *

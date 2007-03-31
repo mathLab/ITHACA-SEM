@@ -123,6 +123,8 @@ namespace Nektar
     /// 
     /// coeffs and offset point to the same underlying array, so if coeffs goes out of scope the array
     /// is not deleted until offset goes out of scope.  
+    ///
+    
     template<class T> 
     class SharedArray
     {
@@ -182,7 +184,6 @@ namespace Nektar
             {
             }
 
-            //  generated destructor is fine
             SharedArray(SharedArray<T>& rhs) :
                 px(rhs.px),
                 pn(rhs.pn),

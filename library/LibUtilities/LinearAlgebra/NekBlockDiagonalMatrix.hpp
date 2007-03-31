@@ -200,9 +200,9 @@ namespace Nektar
             const std::vector<unsigned int> GetBlockColumns() const { return m_blockColumns; }
 
             /// \brief Return a full matrix version.
-            boost::shared_array<DataType> GetPtr()
+            SharedArray<DataType> GetPtr()
             {
-                boost::shared_array<DataType> result(new DataType[GetRows()*GetColumns()]);
+                SharedArray<DataType> result(new DataType[GetRows()*GetColumns()]);
                 //std::fill(result, result+GetRows()*GetColumns(), DataType(0));
                 
                 for(unsigned int i = 0; i < GetRows(); ++i)
@@ -261,7 +261,7 @@ namespace Nektar
             // For row i, the number of rows in that block.
             std::vector<unsigned int> m_blockRows;
             
-            boost::shared_array<InnerDataType> m_data;
+            SharedArray<InnerDataType> m_data;
             
     };
 /*                public:
@@ -525,6 +525,9 @@ namespace Nektar
 
 /**
     $Log: NekBlockDiagonalMatrix.hpp,v $
+    Revision 1.3  2007/01/23 03:12:49  jfrazier
+    Added more conditional compilation directives for expression templates.
+
     Revision 1.2  2006/11/01 04:07:07  bnelson
     Changed block matrices to use the ConsistentObjectAccess object to store matrices or pointers to matrices so that the same pointer syntax works for both.
 

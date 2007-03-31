@@ -38,320 +38,344 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
-#include <StdRegions/StdMatrix.h>
+#include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/StdSegExp.h>
 
 namespace Nektar
 {
     namespace StdRegions
     {
-	
-	class StdTriExp: public StdExpansion2D
-	{
-	    
-	public:
-	    
-	    StdTriExp();
-	    
-	    /** \brief Constructor using BasisKey class for quadrature 
-	     *  points and order definition 
-	     */
-	    StdTriExp(const BasisKey &Ba, const BasisKey &Bb);
-	    
-	    /** \brief Constructor using BasisKey class for quadrature points 
-	     *  and order definition where m_coeffs and m_phys are all set.
-	     */
-	    StdTriExp(const BasisKey &Ba, const BasisKey &Bb, double *coeffs,
-		      double *phys);
-	    
-	    /** \brief Copy Constructor */
-	    StdTriExp(const StdTriExp &T);
-	    
-	    /** \brief Destructor */
-	    ~StdTriExp();
-	    
-	    /** \brief Return Shape of region, using  ShapeType enum list. 
-	     *  i.e. Triangle
-	     */
-	    ShapeType DetShapeType()
-	    {
-		return eTriangle;
-	    };
-	    
-	    //////////////////////////////
-	    // Integration Methods
-	    //////////////////////////////
-	    /** 
-	     *  This is just a wrapper around StdExpansoin2D which multiplies by
-	     *  0.5 which is due to the factor \f$ (1-\xi_2)/2 \f$ in the 
-	     *  integral weight
-	     */	    
-	    double Integral(const double *inarray);
-	    
-	    void IProductWRTBase(const double * inarray, double * outarray);
-	    
-	    /** \brief Fill outarray with mode \a mode of expansion
-	     *
-	     *	Note for quadrilateral expansions _base[0] (i.e. p)  modes run 
-	     *  fastest
-	     */
-	    void FillMode(const int mode, double *outarray);
-	    
-	    ///////////////////////////////////
-	    // Differentiation Methods
-	    //////////////////////////////////
-	 
-	    /** \brief Calculate the deritive of the physical points 
-	     *
-	     *  \f$ \frac{\partial u}{\partial  x_1} =  \left . 
-	     *  \frac{2.0}{1-\eta_2} \frac{\partial u}{\partial d\eta_1}
-	     *  \right |_{\eta_2}\f$
-	     * 
-	     *  \f$ \frac{\partial u}{\partial  x_2} =  \left . 
-	     *  \frac{1+\eta_1}{1-\eta_2} \frac{\partial u}{\partial d\eta_1}
-	     *  \right |_{\eta_2}  + \left . \frac{\partial u}{\partial d\eta_2}
-	     *  \right |_{\eta_1}  \f$
-	     */   
-	    void Deriv(const double *inarray, double * outarray_d1,
-		       double *outarray_d2);
-	    
-	    /** \brief Calculate the deritive of the physical points */
-	    void Deriv(double * outarray_d1, double *outarray_d2);
-	    
-	    //-----------------------------
-	    // Evaluations Methods
-	    //-----------------------------
-	    
-	    /** \brief Backward tranform for triangular elements
-	     *
-	     *  \b Note: That 'q' (base[1]) runs fastest in this element 
-	     */
-	    void BwdTrans(double * outarray);
-	    void FwdTrans(const double * inarray);
 
-	    /** \brief Single Point Evaluation */
-	    double Evaluate(const double * coords);
-	    
-	    StdMatContainer * GetMassMatrix();
-	    StdMatContainer * GetLapMatrix();
-	    
-	    void  MapTo(const int edge_ncoeffs, const BasisType Btype, 
-			const int eid, const EdgeOrientation eorient,
-			StdExpMap &Map);
+        class StdTriExp: public StdExpansion2D
+        {
 
-	    void  MapTo_ModalFormat(const int edge_ncoeffs, 
-				    const BasisType Btype, 
-				    const int eid, 
-				    const EdgeOrientation eorient,
-				    StdExpMap &Map);
-	    
-	    void WriteToFile(std::ofstream &outfile);
-	    void WriteCoeffsToFile(std::ofstream &outfile);
-	    
-	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
+            public:
 
-	    int GetEdgeNcoeffs(const int i)
-	    {
-		ASSERTL2((i > 0)&&(i < 2),"edge id is out of range");
+                StdTriExp();
 
-		if(i ==0)
-		{
-		    return  GetBasisOrder(0);
-		}
-		else
-		{
-		    return  GetBasisOrder(1); 
-		}
-		    
-	    }
+            /** \brief Constructor using BasisKey class for quadrature
+             *  points and order definition 
+             */
+                StdTriExp(const LibUtilities::BasisKey &Ba,
+						  const LibUtilities::BasisKey &Bb);
 
-	    BasisType  GetEdgeBasisType(const int i)
-	    {
-		ASSERTL2((i > 0)&&(i < 2),"edge id is out of range");
+            /** \brief Constructor using BasisKey class for quadrature points
+             *  and order definition where m_coeffs and m_phys are all set.
+             */
+/*                StdTriExp(const LibUtilities::BasisKey &Ba,
+						  const LibUtilities::BasisKey &Bb, double *coeffs,
+						  double *phys);
+*/
+            /** \brief Copy Constructor */
+                StdTriExp(const StdTriExp &T);
 
-		if(i == 0)
-		{
-		    return  GetBasisType(0);
-		}
-		else
-		{
-		    return  GetBasisType(1);
-		}
-		    
-	    }
+            /** \brief Destructor */
+                ~StdTriExp();
 
-	protected:
-	    
-	    static StdMatrix s_elmtmats;
-	    
+            /** \brief Return Shape of region, using  ShapeType enum list.
+             *  i.e. Triangle
+             */
+                ShapeType DetShapeType()
+                {
+                    return eTriangle;
+                }
 
-	    /** \brief Calculate the inner product of inarray with respect to
-	     *  the basis B=base0[p]*base1[pq] and put into outarray.
-	     *
-	     *  \f$ 
-	     *  \begin{array}{rcl}
-	     *  I_{pq} = (\phi^A_q \phi^B_{pq}, u) &=& 
-	     *  \sum_{i=0}^{nq_0}\sum_{j=0}^{nq_1}
-	     *  \phi^A_p(\eta_{0,i})\phi^B_{pq}(\eta_{1,j}) w^0_i w^1_j 
-	     *  u(\xi_{0,i} \xi_{1,j})\\
-	     *  & = & \sum_{i=0}^{nq_0} \phi^A_p(\eta_{0,i})
-	     *  \sum_{j=0}^{nq_1} \phi^B_{pq}(\eta_{1,j}) \tilde{u}_{i,j} 
-	     *  \end{array}
-	     *  \f$ 
-	     *
-	     *  where
-	     *
-	     *  \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
-	     *
-	     *  which can be implemented as
-	     *
-	     *  \f$  f_{pj} = \sum_{i=0}^{nq_0} \phi^A_p(\eta_{0,i}) 
-	     *  \tilde{u}_{i,j} 
-	     *  \rightarrow {\bf B_1 U}  \f$
-	     *  \f$  I_{pq} = \sum_{j=0}^{nq_1} \phi^B_{pq}(\eta_{1,j}) f_{pj} 
-	     *  \rightarrow {\bf B_2[p*skip] f[skip]}  \f$
-	     *
-	     *  \b Recall: \f$ \eta_{1} = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \, 
-	     *  \eta_2 = \xi_2\f$
-	     *
-	     *  \b Note: For the orthgonality of this expansion to be realised
-	     *  the 'q' ordering must run fastest in contrast to the Quad and
-	     *  Hex ordering where 'p' index runs fastest to be consistent with
-	     *  the quadrature ordering. 
-	     *
-	     *  In the triangular space the i (i.e. \f$\eta_1\f$ direction)
-	     *  ordering still runs fastest by convention.
-	     */
-	    void IProductWRTBase(const double *base0, const double *base1,
-				 const double *inarray, double *outarray);
-	private:
-	    
-	    virtual int v_GetNverts()
-	    {
-		return 3;
-	    }
-	    
-	    virtual int v_GetNedges()
-	    {
-		return 3;
-	    }
-	    
-	    virtual int v_GetEdgeNcoeffs(const int i)
-	    {
-		return GetEdgeNcoeffs(i);
-	    }
+            //////////////////////////////
+            // Integration Methods
+            //////////////////////////////
+            /**
+             *  This is just a wrapper around StdExpansoin2D which multiplies by
+             *  0.5 which is due to the factor \f$ (1-\xi_2)/2 \f$ in the 
+             *  integral weight
+             */
+                double Integral(const double *inarray);
 
-	    virtual BasisType v_GetEdgeBasisType(const int i)
-	    {
-		return GetEdgeBasisType(i);
-	    }
+                void IProductWRTBase(const double * inarray, double * outarray);
 
-	    virtual ShapeType v_DetShapeType()
-	    {
-		return DetShapeType();
-	    };
-	    
-	    virtual double v_Integral(const double *inarray )
-	    {
-		return Integral(inarray);
-	    }
-	    
-	    virtual void v_IProductWRTBase(const double * inarray, double * outarray)
-	    {
-		IProductWRTBase(inarray,outarray);
-	    }
-	    
-	    virtual void v_FillMode(const int mode, double *outarray)
-	    {
-		FillMode(mode,outarray);
-	    }
-	    
-	    virtual void  v_GenMassMatrix(double *outarray) 
-	    {
-		StdExpansion::GenerateMassMatrix(outarray);
-	    }
-	    
-	    
-	    virtual StdMatContainer *v_GetMassMatrix() 
-	    {
-		return GetMassMatrix();
-	    }
-	    
-	    virtual StdMatContainer *v_GetLapMatrix() 
-	    {
-		return GetLapMatrix();
-	    }
-	    
-	    virtual void v_Deriv(const double *inarray, double * outarray_d1,
-				 double *outarray_d2)
-	    {
-		Deriv(inarray,outarray_d1,outarray_d2);
-	    }
-	    
-	    virtual void v_StdDeriv(const double *inarray, double * outarray_d1,
-				    double *outarray_d2)
-	    {
-		Deriv(inarray,outarray_d1,outarray_d2);
-	    }
-	    
-	    virtual void v_Deriv(double * outarray_d1, double *outarray_d2)
-	    {
-		Deriv(this->m_phys,outarray_d1,outarray_d2);
-	    }
-	    
-	    virtual void v_StdDeriv(double * outarray_d1, double *outarray_d2)
-	    {
-		Deriv(this->m_phys,outarray_d1,outarray_d2);
-	    }
-	    
-	    virtual void v_BwdTrans(double * outarray)
-	    {
-		BwdTrans(outarray);
-	    }
-	    
-	    virtual void v_FwdTrans(const double * inarray)
-	    {
-		FwdTrans(inarray);
-	    }
-	    
-	    virtual double v_Evaluate(const double * coords)
-	    {
-		return Evaluate(coords);
-	    }
-	    
-	    virtual void v_MapTo(const int edge_ncoeffs, const BasisType Btype, 
-				 const int eid, const EdgeOrientation eorient,
-				 StdExpMap &Map)
-	    {
-		MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
-	    }
+            /** \brief Fill outarray with mode \a mode of expansion
+             *
+             * Note for quadrilateral expansions _base[0] (i.e. p)  modes run 
+             *  fastest
+             */
+                void FillMode(const int mode, double *outarray);
 
-	    virtual void v_MapTo_ModalFormat(const int edge_ncoeffs, 
-					     const BasisType Btype, 
-					     const int eid, 
-					     const EdgeOrientation eorient,
-					     StdExpMap &Map)
-	    {
-		MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
-	    }
-	    
-	    virtual void v_WriteToFile(std::ofstream &outfile)
-	    {
-		WriteToFile(outfile);
-	    }
-	    
-	    virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
-	    {
-		WriteCoeffsToFile(outfile);
-	    }
+            ///////////////////////////////////
+            // Differentiation Methods
+            //////////////////////////////////
 
-	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-	    {
-		SetInvInfo(mat,Mform);
-	    }
-	    
-	};
-	
+            /** \brief Calculate the deritive of the physical points
+             *
+             *  \f$ \frac{\partial u}{\partial  x_1} =  \left . 
+             *  \frac{2.0}{1-\eta_2} \frac{\partial u}{\partial d\eta_1}
+             *  \right |_{\eta_2}\f$
+             * 
+             *  \f$ \frac{\partial u}{\partial  x_2} =  \left . 
+             *  \frac{1+\eta_1}{1-\eta_2} \frac{\partial u}{\partial d\eta_1}
+             *  \right |_{\eta_2}  + \left . \frac{\partial u}{\partial d\eta_2}
+             *  \right |_{\eta_1}  \f$
+             */
+	            void PhysDeriv(const double *inarray, double * outarray_d1,
+                           	   double *outarray_d2);
+
+            /** \brief Calculate the derivative of the physical points */
+                void PhysDeriv(double * outarray_d1, double *outarray_d2);
+
+            //-----------------------------
+            // Evaluations Methods
+            //-----------------------------
+
+            /** \brief Backward tranform for triangular elements
+             *
+             *  \b Note: That 'q' (base[1]) runs fastest in this element 
+             */
+                void BwdTrans(double * outarray);
+                void FwdTrans(const double * inarray);
+
+            /** \brief Single Point Evaluation */
+                double Evaluate(const double * coords);
+
+                DNekMatSharedPtr GenMassMatrix();
+                DNekMatSharedPtr GenLapMatrix();
+/*
+                void MapTo(const int edge_ncoeffs,
+						   const LibUtilities::BasisType Btype, const int eid,
+						   const EdgeOrientation eorient, StdExpMap &Map);
+
+                void MapTo_ModalFormat(const int edge_ncoeffs,
+                                       const LibUtilities::BasisType Btype,
+                                       const int eid,
+                                       const EdgeOrientation eorient,
+                                       StdExpMap &Map);
+*/
+                void WriteToFile(std::ofstream &outfile);
+                void WriteCoeffsToFile(std::ofstream &outfile);
+
+//                void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
+                void SetInvInfo(DNekMatSharedPtr mat, MatrixType Mform);
+
+                int GetEdgeNcoeffs(const int i)
+                {
+                    ASSERTL2((i > 0) && (i < 2), "edge id is out of range");
+
+                    if (i == 0)
+                    {
+//                        return GetBasisOrder(0);
+						return GetBasisNumModes(0);
+                    }
+                    else
+                    {
+//                        return GetBasisOrder(1);
+                        return GetBasisNumModes(1);
+                    }
+
+                }
+
+                LibUtilities::BasisType GetEdgeBasisType(const int i)
+                {
+                    ASSERTL2((i > 0) && (i < 2), "edge id is out of range");
+
+                    if (i == 0)
+                    {
+                        return GetBasisType(0);
+                    }
+                    else
+                    {
+                        return GetBasisType(1);
+                    }
+
+                }
+
+            protected:
+
+//                static StdMatrix s_elmtmats;
+                static DNekMat s_elmtmats;
+
+
+            /** \brief Calculate the inner product of inarray with respect to
+             *  the basis B=base0[p]*base1[pq] and put into outarray.
+             *
+             *  \f$ 
+             *  \begin{array}{rcl}
+             *  I_{pq} = (\phi^A_q \phi^B_{pq}, u) &=& 
+             *  \sum_{i=0}^{nq_0}\sum_{j=0}^{nq_1}
+             *  \phi^A_p(\eta_{0,i})\phi^B_{pq}(\eta_{1,j}) w^0_i w^1_j 
+             *  u(\xi_{0,i} \xi_{1,j})\\
+             *  & = & \sum_{i=0}^{nq_0} \phi^A_p(\eta_{0,i})
+             *  \sum_{j=0}^{nq_1} \phi^B_{pq}(\eta_{1,j}) \tilde{u}_{i,j} 
+             *  \end{array}
+             *  \f$ 
+             *
+             *  where
+             *
+             *  \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
+             *
+             *  which can be implemented as
+             *
+             *  \f$  f_{pj} = \sum_{i=0}^{nq_0} \phi^A_p(\eta_{0,i}) 
+             *  \tilde{u}_{i,j} 
+             *  \rightarrow {\bf B_1 U}  \f$
+             *  \f$  I_{pq} = \sum_{j=0}^{nq_1} \phi^B_{pq}(\eta_{1,j}) f_{pj} 
+             *  \rightarrow {\bf B_2[p*skip] f[skip]}  \f$
+             *
+             *  \b Recall: \f$ \eta_{1} = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \, 
+             *  \eta_2 = \xi_2\f$
+             *
+             *  \b Note: For the orthgonality of this expansion to be realised
+             *  the 'q' ordering must run fastest in contrast to the Quad and
+             *  Hex ordering where 'p' index runs fastest to be consistent with
+             *  the quadrature ordering. 
+             *
+             *  In the triangular space the i (i.e. \f$\eta_1\f$ direction)
+             *  ordering still runs fastest by convention.
+             */
+                void IProductWRTBase(const double *base0, const double *base1,
+                                     const double *inarray, double *outarray);
+            private:
+
+                virtual int v_GetNverts()
+                {
+                    return 3;
+                }
+
+                virtual int v_GetNedges()
+                {
+                    return 3;
+                }
+
+                virtual int v_GetEdgeNcoeffs(const int i)
+                {
+                    return GetEdgeNcoeffs(i);
+                }
+
+                virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
+                {
+                    return GetEdgeBasisType(i);
+                }
+
+                virtual ShapeType v_DetShapeType()
+                {
+                    return DetShapeType();
+                };
+
+                virtual double v_Integral(const double *inarray )
+                {
+                    return Integral(inarray);
+                }
+
+                virtual void v_IProductWRTBase(const double * inarray,
+											   double * outarray)
+                {
+                    IProductWRTBase(inarray, outarray);
+                }
+
+                virtual void v_FillMode(const int mode, double *outarray)
+                {
+                    FillMode(mode, outarray);
+                }
+
+/*                virtual void v_GenMassMatrix(double *outarray)
+                {
+                    StdExpansion::GenerateMassMatrix(outarray);
+                }
+                
+				virtual StdMatContainer *v_GetMassMatrix()
+                {
+                    return GetMassMatrix();
+                }
+
+                virtual StdMatContainer *v_GetLapMatrix()
+                {
+                    return GetLapMatrix();
+                }
+*/
+				
+				/** \brief Virtual call to GenMassMatrix */
+				virtual DNekMatSharedPtr v_GenMassMatrix()
+				{
+					return GenMassMatrix();
+				}
+				
+				/** \brief Virtual call to GenLapMatrix */
+				virtual DNekMatSharedPtr v_GenLapMatrix()
+				{
+					return GenLapMatrix();
+				}
+
+                virtual void v_PhysDeriv(const double *inarray,
+									double *outarray_d1, double *outarray_d2)
+                {
+                    PhysDeriv(inarray, outarray_d1, outarray_d2);
+                }
+
+                virtual void v_StdPhysDeriv(const double *inarray,
+									double *outarray_d1, double *outarray_d2)
+                {
+                    PhysDeriv(inarray, outarray_d1, outarray_d2);
+                }
+
+                virtual void v_PhysDeriv(double *outarray_d1,
+										 double *outarray_d2)
+                {
+                    PhysDeriv(&m_phys[0], outarray_d1, outarray_d2);
+                }
+
+                virtual void v_StdPhysDeriv(double *outarray_d1,
+											double *outarray_d2)
+                {
+                    PhysDeriv(&m_phys[0], outarray_d1, outarray_d2);
+                }
+
+                /** \brief Virtual call to StdTriExp::BwdTrans */
+				virtual void v_BwdTrans(double *outarray)
+                {
+                    BwdTrans(outarray);
+                }
+
+                /** \brief Virtual call to StdTriExp::FwdTrans */
+                virtual void v_FwdTrans(const double *inarray)
+                {
+                    FwdTrans(inarray);
+                }
+
+                virtual double v_Evaluate(const double *coords)
+                {
+                    return Evaluate(coords);
+                }
+/*
+                virtual void v_MapTo(const int edge_ncoeffs,
+								 const LibUtilities::BasisType Btype, 
+								 const int eid, const EdgeOrientation eorient,
+								 StdExpMap &Map)
+                {
+                    MapTo(edge_ncoeffs, Btype, eid, eorient, Map);
+                }
+
+                virtual void v_MapTo_ModalFormat(const int edge_ncoeffs,
+                             const LibUtilities::BasisType Btype,const int eid,
+                             const EdgeOrientation eorient, StdExpMap &Map)
+                {
+                    MapTo_ModalFormat(edge_ncoeffs, Btype, eid, eorient, Map);
+                }
+*/
+                virtual void v_WriteToFile(std::ofstream &outfile)
+                {
+                    WriteToFile(outfile);
+                }
+
+                virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
+                {
+                    WriteCoeffsToFile(outfile);
+                }
+
+//				According to SetInvInfo                
+				virtual void v_SetInvInfo(DNekMatSharedPtr mat,
+										  MatrixType Mform)
+                {
+                    SetInvInfo(mat, Mform);
+                }
+
+        };
+
     } //end of namespace
 } //end of namespace
 #endif //STDTRIEXP_H
@@ -359,6 +383,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.7  2007/01/17 16:36:58  pvos
+ * updating doxygen documentation
+ *
  * Revision 1.6  2007/01/17 16:05:41  pvos
  * updated doxygen documentation
  *

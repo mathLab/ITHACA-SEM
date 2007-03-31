@@ -36,7 +36,6 @@
 #ifndef  NEKTARUNIVTYPEDEF_HPP
 #define  NEKTARUNIVTYPEDEF_HPP
 
-#include <boost/shared_array.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <vector>
 
@@ -58,6 +57,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.4  2007/03/29 18:44:11  bnelson
+Replaced boost::shared_array with SharedArray
+
 Revision 1.3  2007/03/20 13:48:05  sherwin
 Compiling version
 

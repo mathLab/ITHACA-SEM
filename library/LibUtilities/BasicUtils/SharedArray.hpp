@@ -51,6 +51,8 @@
 #include <algorithm>          // for std::swap
 #include <functional>         // for std::less
 
+#include <LibUtilities/BasicUtils/mojo.hpp>
+
 namespace Nektar
 {
 
@@ -126,7 +128,7 @@ namespace Nektar
     ///
     
     template<class T> 
-    class SharedArray
+    class SharedArray : public MojoEnabled<SharedArray<T> >
     {
         private:
 
@@ -192,19 +194,32 @@ namespace Nektar
             {
             }
 
+            SharedArray(Temporary<SharedArray<T> > rhs) :
+                px(rhs.GetValue().px),
+                pn(rhs.GetValue().pn),
+                m_offset(rhs.GetValue().m_offset),
+                m_size(rhs.GetValue().m_size)
+            {
+            }
+            
+/*            SharedArray(Constant<SharedArray<T> > rhs) :
+            {
+            }*/
+            
             SharedArray<T>& operator=(SharedArray<T>& rhs)
             {
-                if( this != &rhs )
-                {
-                    px = rhs.px;
-                    pn = rhs.pn;
-                    m_offset = rhs.m_offset;
-                    m_size = rhs.m_size;
-                }
-
+                SharedArray<T> temp(rhs);
+                swap(temp);
                 return *this;
             }
 
+            SharedArray<T>& operator=(Temporary<SharedArray<T> > rhs)
+            {
+                SharedArray<T> temp(rhs.GetValue());
+                swap(temp);
+                return *this;
+            }
+            
             void reset()
             {
                 this_type().swap(*this);

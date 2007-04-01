@@ -70,54 +70,9 @@ namespace Nektar
     /// a[0] = 1.0;
     ///
     /// With SharedArrays, a "const SharedArray" will not allow you to modify the 
-    /// underlying data.  This has some unusual implications.  Consider the following:
+    /// underlying data.  
     ///
-    /// const SharedArray<double>& foo();
-    ///
-    /// SharedArray<double> obj = foo();
-    ///
-    /// The variable obj now contains a <em>copy</em> of the SharedArray returned by foo.
-    /// Why?  If it were not a copy, then, since obj is not a constant variable, we could
-    /// do the following:
-    ///
-    /// obj[0] = 1.0;
-    ///
-    /// This is an error - we shouldn't be able to modify the underlying array since we returned 
-    /// it as a constant.
-    ///
-    /// The solution is to write your call as follows:
-    ///
-    /// const SharedArray<double>& obj = foo();
-    ///
-    /// Note that this is a reference and therefore the internal reference count is not updated
-    /// and the reference will be invalid if the SharedArray returned by foo is ever destroyed.  In 
-    /// other words, it behaves just like any other C++ reference object.
-    ///
-    /// If you are returning a non-const shared array, such as
-    ///
-    /// SharedArray<double> bar();
-    ///
-    /// Then the following:
-    ///
-    /// SharedArray<double> obj = bar();
-    ///
-    /// Creates a new shared array which refers to the original array and updates the internal 
-    /// reference count just as the boost::shared_array does.
-    ///
-    /// Additionally, it is no longer possible to assign a const SharedArray to a non-const SharedArray.
-    ///
-    /// const SharedArray<double> rhs;
-    /// SharedArray<double> lhs;
-    ///
-    /// lhs = rhs; // Compile error.
-    ///
-    /// To do this, call the Assign method:
-    ///
-    /// lhs.Assign(rhs);
-    ///
-    /// This creates a copy of the underlying array and gives it to lhs.
-    ///
-    /// An additional features of a SharedArray is the ability to create a new shared array
+    /// An additional feature of a SharedArray is the ability to create a new shared array
     /// with an offset:
     ///
     /// SharedArray<double> coeffs = MemoryManager::AllocateSharedArray<double>(10);
@@ -126,7 +81,6 @@ namespace Nektar
     /// coeffs and offset point to the same underlying array, so if coeffs goes out of scope the array
     /// is not deleted until offset goes out of scope.  
     ///
-    
     template<class T> 
     class SharedArray : public MojoEnabled<SharedArray<T> >
     {
@@ -201,11 +155,7 @@ namespace Nektar
                 m_size(rhs.GetValue().m_size)
             {
             }
-            
-/*            SharedArray(Constant<SharedArray<T> > rhs) :
-            {
-            }*/
-            
+                       
             SharedArray<T>& operator=(SharedArray<T>& rhs)
             {
                 SharedArray<T> temp(rhs);

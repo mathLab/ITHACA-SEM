@@ -1,90 +1,152 @@
-SET(LibUtilitySources
-./Foundations/Basis.cpp
-./Foundations/Graph.cpp
-./Foundations/FourierPoints.cpp
-./Foundations/GaussPoints.cpp
-./Foundations/ManagerAccess.cpp
-./Foundations/NodalTetElec.cpp
-./Foundations/NodalTriElec.cpp
-./Foundations/NodalTriFekete.cpp
-./Foundations/Points.cpp
-./Foundations/PolyEPoints.cpp
-./Polylib/Polylib.cpp
-./LinearAlgebra/blas.cpp
-./LinearAlgebra/lapack.cpp
+
+SET(BasicConstHeaders
+	./BasicConst/NektarUnivConsts.hpp
+	./BasicConst/NektarUnivTypeDefs.hpp
 )
 
-SET(LibUtilityHeaders
-./BasicConst/NektarUnivConsts.hpp
-./BasicConst/NektarUnivTypeDefs.hpp
-./LinearAlgebra/NekLinSys.h
-./LinearAlgebra/NekLinSys.hpp
-./LinearAlgebra/NekLinAlg.h
-./LinearAlgebra/NekLinAlgAlgorithms.hpp
-./LinearAlgebra/BlockMat.h
-./Foundations/Graph.h
-./Foundations/Basis.h
-./Foundations/FourierPoints.h
-./Foundations/GaussPoints.h
-./Foundations/ManagerAccess.h
-./Foundations/NodalTetElec.h
-./Foundations/NodalTriElec.h
-./Foundations/NodalTriFekete.h
-./Foundations/Points.h
-./Foundations/PolyEPoints.h
-./Polylib/Polylib.h
-./LinearAlgebra/NekMatrix.hpp
-./LinearAlgebra/NekMatrixImpl.hpp
-./LinearAlgebra/NekMatrixMetadata.hpp
-./LinearAlgebra/NekVector.hpp
-./LinearAlgebra/NekVectorFwd.hpp
-./LinearAlgebra/NekVectorConstantSized.hpp
-./LinearAlgebra/NekVectorVariableSized.hpp
-./LinearAlgebra/NekVectorMetadata.hpp
-./LinearAlgebra/NekVectorTypeTraits.hpp
-./LinearAlgebra/NekVectorCommon.hpp
-./LinearAlgebra/NekPoint.hpp
-./ExpressionTemplates/Accumulator.hpp
-./ExpressionTemplates/ArithmeticConcepts.hpp
-./ExpressionTemplates/ArithmeticTraits.hpp
-./ExpressionTemplates/AssignableTraits.hpp
-./ExpressionTemplates/AssociativeExpressionTraits.hpp
-./ExpressionTemplates/AssociativeTraits.hpp
-./ExpressionTemplates/BinaryExpression.hpp
-./ExpressionTemplates/BinaryExpressionEvaluator.hpp
-./ExpressionTemplates/BinaryExpressionOperators.hpp
-./ExpressionTemplates/BinaryExpressionPolicy.hpp
-./ExpressionTemplates/BinaryExpressionPolicyFwd.hpp
-./ExpressionTemplates/BinaryExpressionTraits.hpp
-./ExpressionTemplates/CommutativeExpressionTraits.hpp
-./ExpressionTemplates/CommutativeTraits.hpp
-./ExpressionTemplates/ConstantExpression.hpp
-./ExpressionTemplates/ConstantExpressionTraits.hpp
-./ExpressionTemplates/Expression.hpp
-./ExpressionTemplates/ExpressionConcepts.hpp
-./ExpressionTemplates/ExpressionMetadata.hpp
-./ExpressionTemplates/ExpressionReturnType.hpp
-./ExpressionTemplates/ExpressionTemplateConcepts.hpp
-./ExpressionTemplates/ExpressionTemplateOperators.hpp
-./ExpressionTemplates/ExpressionTemplates.hpp
-./ExpressionTemplates/ExpressionTraits.hpp
-./ExpressionTemplates/NegateOp.hpp
-./ExpressionTemplates/NullOp.hpp
-./ExpressionTemplates/UnaryExpression.hpp
-./ExpressionTemplates/UnaryExpressionTraits.hpp
-./BasicUtils/BoostUtil.hpp
-./BasicUtils/ConsistentObjectAccess.hpp
-./BasicUtils/ErrorUtil.hpp
-./BasicUtils/Lapack.hpp
-./BasicUtils/Concepts.hpp
-./BasicUtils/Vmath.hpp
-./BasicUtils/Blas.hpp
-./BasicUtils/TransF77.hpp
-./BasicUtils/SharedArray.hpp
-./BasicUtils/SharedArrayUtil.hpp
-./Memory/ThreadSpecificPool.hpp
-./Memory/NekMemoryManager.hpp
+SET(LinearAlgebraHeaders
+	./LinearAlgebra/Blas.hpp
+	./LinearAlgebra/Lapack.hpp
+	./LinearAlgebra/MatrixBlockType.h
+	./LinearAlgebra/NekBlockDiagonalMatrix.hpp
+	./LinearAlgebra/NekBlockFullMatrix.hpp
+	./LinearAlgebra/NekBlockMatrix.hpp
+	./LinearAlgebra/NekDiagonalMatrix.hpp
+	./LinearAlgebra/NekFullMatrix.hpp
+	./LinearAlgebra/NekLinAlgAlgorithms.hpp
+	./LinearAlgebra/NekLinSys.hpp
+	./LinearAlgebra/NekMatrix.hpp
+	./LinearAlgebra/NekMatrixForm.h
+	./LinearAlgebra/NekMatrixFwd.hpp
+	./LinearAlgebra/NekMatrixImpl.hpp
+	./LinearAlgebra/NekMatrixMetadata.hpp
+	./LinearAlgebra/NekPoint.hpp
+	./LinearAlgebra/NekVector.hpp
+	./LinearAlgebra/NekVectorCommon.hpp
+	./LinearAlgebra/NekVectorConstantSized.hpp
+	./LinearAlgebra/NekVectorFwd.hpp
+	./LinearAlgebra/NekVectorMetadata.hpp
+	./LinearAlgebra/NekVectorTypeTraits.hpp
+	./LinearAlgebra/NekVectorVariableSized.hpp
+	./LinearAlgebra/PointerWrapper.h
+	./LinearAlgebra/TransF77.hpp
 )
+
+SET(FoundationHeaders
+	./Foundations/Graph.h
+	./Foundations/Basis.h
+	./Foundations/FourierPoints.h
+	./Foundations/GaussPoints.h
+	./Foundations/ManagerAccess.h
+	./Foundations/NodalTetElec.h
+	./Foundations/NodalTriElec.h
+	./Foundations/NodalTriFekete.h
+	./Foundations/Points.h
+	./Foundations/PolyEPoints.h
+)
+
+SET(PolyLibHeaders
+	./Polylib/Polylib.h
+)	
+
+SET(ExpressionTemplates
+	./ExpressionTemplates/Accumulator.hpp
+	./ExpressionTemplates/ArithmeticConcepts.hpp
+	./ExpressionTemplates/ArithmeticTraits.hpp
+	./ExpressionTemplates/AssignableTraits.hpp
+	./ExpressionTemplates/AssociativeExpressionTraits.hpp
+	./ExpressionTemplates/AssociativeTraits.hpp
+	./ExpressionTemplates/BinaryExpression.hpp
+	./ExpressionTemplates/BinaryExpressionEvaluator.hpp
+	./ExpressionTemplates/BinaryExpressionOperators.hpp
+	./ExpressionTemplates/BinaryExpressionPolicy.hpp
+	./ExpressionTemplates/BinaryExpressionPolicyFwd.hpp
+	./ExpressionTemplates/BinaryExpressionTraits.hpp
+	./ExpressionTemplates/CommutativeExpressionTraits.hpp
+	./ExpressionTemplates/CommutativeTraits.hpp
+	./ExpressionTemplates/ConstantExpression.hpp
+	./ExpressionTemplates/ConstantExpressionTraits.hpp
+	./ExpressionTemplates/Expression.hpp
+	./ExpressionTemplates/ExpressionConcepts.hpp
+	./ExpressionTemplates/ExpressionMetadata.hpp
+	./ExpressionTemplates/ExpressionReturnType.hpp
+	./ExpressionTemplates/ExpressionTemplateConcepts.hpp
+	./ExpressionTemplates/ExpressionTemplateOperators.hpp
+	./ExpressionTemplates/ExpressionTemplates.hpp
+	./ExpressionTemplates/ExpressionTraits.hpp
+	./ExpressionTemplates/NegateOp.hpp
+	./ExpressionTemplates/NullOp.hpp
+	./ExpressionTemplates/UnaryExpression.hpp
+	./ExpressionTemplates/UnaryExpressionTraits.hpp
+)
+
+SET(BasicUtils
+	./BasicUtils/BoostUtil.hpp
+	./BasicUtils/ConsistentObjectAccess.hpp
+	./BasicUtils/ErrorUtil.hpp
+	./BasicUtils/Concepts.hpp
+	./BasicUtils/Vmath.hpp
+	./BasicUtils/SharedArray.hpp
+	./BasicUtils/SharedArrayUtil.hpp
+)
+
+SET(Memory
+	./Memory/ThreadSpecificPool.hpp
+	./Memory/NekMemoryManager.hpp	
+)
+
+
+SET(FoundationSources
+	./Foundations/Basis.cpp
+	./Foundations/Graph.cpp
+	./Foundations/FourierPoints.cpp
+	./Foundations/GaussPoints.cpp
+	./Foundations/ManagerAccess.cpp
+	./Foundations/NodalTetElec.cpp
+	./Foundations/NodalTriElec.cpp
+	./Foundations/NodalTriFekete.cpp
+	./Foundations/Points.cpp
+	./Foundations/PolyEPoints.cpp
+)
+
+SET(PolylibSources
+	./Polylib/Polylib.cpp
+)
+
+SET(LinearAlgebraSources
+	./LinearAlgebra/blas.cpp
+	./LinearAlgebra/lapack.cpp
+)
+
+SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
+SOURCE_GROUP("Basic Utils" FILES ${BasicUtils})
+SOURCE_GROUP("Expression Templates" FILES ${ExpressionTemplates})
+SOURCE_GROUP("Foundation Headers" FILES ${FoundationHeaders})
+SOURCE_GROUP("Foundation Sources" FILES ${FoundationSources})
+SOURCE_GROUP("Linear Algebra Headers" FILES ${LinearAlgebraHeaders})
+SOURCE_GROUP("Linear Algebra Sources" FILES ${LinearAlgebraSources})
+SOURCE_GROUP("Memory" FILES ${Memory})
+
+SOURCE_GROUP("Polylib Headers" FILES ${PolyLibHeaders})
+SOURCE_GROUP("Polylib Sources" FILES ${PolylibSources})
+
+
+SET(LibUtilityHeaders
+	${Memory}
+	${BasicUtils}
+	${ExpressionTemplates}
+	${PolyLibHeaders}
+	${FoundationHeaders}
+	${LinearAlgebraHeaders}
+	${BasicConstHeaders}
+)
+
+SET(LibUtilitySources
+	${FoundationSources}
+	${PolylibSources}
+	${LinearAlgebraSources}
+)
+
 
 ADD_NEKTAR_LIBRARY(LibUtilities STATIC ${LibUtilitySources} ${LibUtilityHeaders})
 

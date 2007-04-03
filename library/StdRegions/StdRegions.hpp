@@ -40,7 +40,7 @@
 // Headers from LibUtilities needed in StdRegions
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
-#include <LibUtilities/BasicUtils/Lapack.hpp>
+#include <LibUtilities/LinearAlgebra/Lapack.hpp>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -196,6 +196,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.13  2007/03/21 20:56:43  sherwin
+* Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
+*
 * Revision 1.12  2007/03/20 16:58:43  sherwin
 * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *

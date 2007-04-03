@@ -37,7 +37,7 @@
 #define NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_VECTORMATH_HPP
 
 #include <string>
-#include <LibUtilities/BasicUtils/Blas.hpp>
+#include <LibUtilities/LinearAlgebra/Blas.hpp>
 
 namespace Vmath 
 {
@@ -437,6 +437,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.4  2007/01/18 20:59:26  sherwin
+Before new configuration
+
 Revision 1.3  2006/07/02 17:16:16  sherwin
 
 Modifications to make MultiRegions work for a connected domain in 2D (Tris)

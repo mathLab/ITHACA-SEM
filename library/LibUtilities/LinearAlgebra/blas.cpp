@@ -33,12 +33,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/Blas.hpp>
+#include <LibUtilities/LinearAlgebra/Blas.hpp>
 
 
 
 /**
     $Log: blas.cpp,v $
+    Revision 1.6  2007/02/15 06:56:55  bnelson
+    *** empty log message ***
+
     Revision 1.5  2007/02/04 00:15:41  bnelson
     *** empty log message ***
 

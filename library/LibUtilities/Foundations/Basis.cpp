@@ -39,7 +39,7 @@
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/Blas.hpp>
+#include <LibUtilities/LinearAlgebra/Blas.hpp>
 
 
 namespace Nektar
@@ -527,6 +527,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.13  2007/02/26 15:52:30  sherwin
+* Working version for Fourier points calling from StdRegions. Fourier interpolations not working yet
+*
 * Revision 1.12  2007/02/17 04:06:47  jfrazier
 * Added greater-than operator for easy comparison when using keys that use a basis and provided a method to access the basiskey.
 *

@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/Lapack.hpp>
+#include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>

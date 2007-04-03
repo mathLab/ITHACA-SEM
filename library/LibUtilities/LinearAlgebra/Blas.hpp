@@ -36,7 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLAS_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLAS_HPP
 
-#include <LibUtilities/BasicUtils/TransF77.hpp>
+#include <LibUtilities/LinearAlgebra/TransF77.hpp>
 
 // Translations for using Fortran version of blas
 namespace Blas
@@ -191,6 +191,9 @@ namespace Blas
 
 /***
 $Log: Blas.hpp,v $
+Revision 1.3  2007/02/04 00:15:40  bnelson
+*** empty log message ***
+
 Revision 1.2  2006/06/01 13:44:28  kirby
 *** empty log message ***
 

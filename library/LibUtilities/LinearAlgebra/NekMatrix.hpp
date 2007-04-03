@@ -231,6 +231,11 @@ namespace Nektar
                 StoragePolicy::Transpose(m_data, m_rows, m_columns);
             }
 
+            void Invert()
+            {
+                StoragePolicy::Invert(m_data, m_rows, m_columns);
+            }
+
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<ThisType> >, expt::NegateOp> > operator-() const
             {
@@ -456,7 +461,17 @@ namespace Nektar
         
     
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
+#else
+    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
+    NekMatrix<DataType, form, BlockType, space> Invert(const NekMatrix<DataType, form, BlockType, space>& rhs)
+    {
+        NekMatrix<DataType, form, BlockType, space> result(rhs);
+        result.Invert();
+        return result;
+    }
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
@@ -666,6 +681,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.22  2007/03/29 18:59:05  bnelson
+    Refactoring in preparation for scaled matrices.  Fixed transpose problem.
+
     Revision 1.21  2007/01/29 01:31:07  bnelson
     *** empty log message ***
 

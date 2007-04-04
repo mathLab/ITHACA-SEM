@@ -78,7 +78,7 @@ namespace Nektar
             return (rhs < lhs);
         }
 
-        bool BasisKey::opLess::operator()(const BasisKey &lhs, const BasisKey &rhs)
+        bool BasisKey::opLess::operator()(const BasisKey &lhs, const BasisKey &rhs) const
         {
             return (lhs.m_basistype < rhs.m_basistype);
         }
@@ -527,6 +527,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.14  2007/04/03 03:58:24  bnelson
+* Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
+*
 * Revision 1.13  2007/02/26 15:52:30  sherwin
 * Working version for Fourier points calling from StdRegions. Fourier interpolations not working yet
 *

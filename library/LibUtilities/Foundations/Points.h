@@ -57,7 +57,7 @@ namespace Nektar
             // for all number.
             struct opLess
             {
-                bool operator()(const PointsKey &lhs, const PointsKey &rhs);
+                bool operator()(const PointsKey &lhs, const PointsKey &rhs) const;
             };
 
             PointsKey(const int &numpoints, const PointsType &pointstype): 
@@ -156,7 +156,7 @@ namespace Nektar
 
             friend bool operator==(const PointsKey &lhs, const PointsKey &rhs);
             friend bool operator<(const PointsKey &lhs, const PointsKey &rhs);
-            friend bool opLess::operator()(const PointsKey &lhs, const PointsKey &rhs);
+            friend bool opLess::operator()(const PointsKey &lhs, const PointsKey &rhs) const;
 
         protected:
             unsigned int m_numpoints;     //!< number of the points (as appropriately defined for PointsType)

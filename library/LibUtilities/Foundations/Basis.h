@@ -51,7 +51,7 @@ namespace Nektar
             // for all number.
             struct opLess
             {
-                bool operator()(const BasisKey &lhs, const BasisKey &rhs);
+                bool operator()(const BasisKey &lhs, const BasisKey &rhs) const;
             };
 
 
@@ -171,7 +171,7 @@ namespace Nektar
             friend bool operator  != (const BasisKey& x, const BasisKey *y);
 
             friend bool operator<(const BasisKey &lhs, const BasisKey &rhs);
-            friend bool opLess::operator()(const BasisKey &lhs, const BasisKey &rhs);
+            friend bool opLess::operator()(const BasisKey &lhs, const BasisKey &rhs) const;
 
         protected:
             int        m_nummodes;   /**< Expansion Order */

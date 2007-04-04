@@ -228,13 +228,21 @@ namespace Nektar
             
             void Transpose()
             {
-                StoragePolicy::Transpose(m_data, m_rows, m_columns);
+                StoragePolicy::Transpose(m_rows, m_columns, m_data);
             }
 
             void Invert()
             {
-                StoragePolicy::Invert(m_data, m_rows, m_columns);
+                StoragePolicy::Invert(m_rows, m_columns, m_data);
             }
+
+            /// \brief Performs an LU factorization of the matrix.
+            ///
+            /// See getrf.
+            //void Factorize()
+            //{
+            //    StoragePolicy::Factorize(m_data, m_rows, m_columns);
+            //}
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<ThisType> >, expt::NegateOp> > operator-() const
@@ -681,6 +689,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.23  2007/04/03 04:00:27  bnelson
+    Started adding inversion operations to NekMatrix.
+
     Revision 1.22  2007/03/29 18:59:05  bnelson
     Refactoring in preparation for scaled matrices.  Fixed transpose problem.
 

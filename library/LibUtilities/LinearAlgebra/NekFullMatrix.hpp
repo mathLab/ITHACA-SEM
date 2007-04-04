@@ -37,6 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_FULL_MATRIX_HPP
 
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+#include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -44,13 +45,23 @@
 
 #include <algorithm>
 
+#ifdef max
+#undef max
+#endif
+
+#ifdef min
+#undef min
+#endif
+
+
 namespace Nektar
 {
     template<typename DataType>
     class NekMatrixStoragePolicy<DataType, eFull> 
     {
         public: 
-            static void Transpose(SharedArray<DataType>& data, unsigned int& rows, unsigned int& columns)
+            static void Transpose(unsigned int rows, unsigned int columns,
+                                  SharedArray<DataType>& data)
             {
                 for(unsigned int row = 0; row < rows; ++row)
                 {
@@ -87,6 +98,63 @@ namespace Nektar
             static unsigned int NumStorageElements(unsigned int rows, unsigned int cols)
             {
                 return rows*cols;
+            }
+
+            static void Invert(unsigned int rows, unsigned int columns, SharedArray<DataType>& data)
+            {
+#ifdef NEKTAR_USING_LAPACK
+                ASSERTL0(rows == columns, "Matrix Inversion only works for square arrays.");
+
+                /// Incoming data is row major, make it column major for lapack calls.
+                Transpose(rows, columns, data);
+
+                int m = rows;
+                int n = columns;
+                int pivotSize = std::max(1, std::min(m, n));
+                Nektar::NekIntSharedArray ipivot = Nektar::MemoryManager::AllocateSharedArray<int>(pivotSize);
+                int info = 0;
+                Lapack::Dgetrf(m, n, data.get(), m, ipivot.get(), info);
+
+                if( info < 0 )
+                {
+                    std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + 
+                            "th parameter had an illegal parameter for dgetrf";
+                    ASSERTL0(false, message.c_str());
+                }
+                else if( info > 0 )
+                {
+                    std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
+                            boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
+                    ASSERTL0(false, message.c_str());
+                }
+
+                unsigned int workSize = 64*n;
+                Nektar::NekDoubleSharedArray work = Nektar::MemoryManager::AllocateSharedArray<NekDouble>(workSize);
+                Lapack::Dgetri(n, data.get(), n, ipivot.get(), work.get(), workSize, info);
+
+                if( info < 0 )
+                {
+                    std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + 
+                            "th parameter had an illegal parameter for dgetri";
+                    ASSERTL0(false, message.c_str());
+                }
+                else if( info > 0 )
+                {
+                    std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
+                            boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
+                    ASSERTL0(false, message.c_str());
+                }
+
+#else
+                // TODO
+                BOOST_STATIC_ASSERT(0);
+#endif NEKTAR_USING_LAPACK
+
+            }
+
+            static void Factorize(unsigned int rows, unsigned int columns, SharedArray<DataType>& data)
+            {
+
             }
 
         private:
@@ -453,6 +521,9 @@ namespace Nektar
 
 /**
     $Log: NekFullMatrix.hpp,v $
+    Revision 1.8  2007/03/29 18:59:05  bnelson
+    Refactoring in preparation for scaled matrices.  Fixed transpose problem.
+
     Revision 1.7  2007/02/15 06:56:54  bnelson
     *** empty log message ***
 

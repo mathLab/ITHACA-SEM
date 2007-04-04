@@ -162,7 +162,7 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdSegExp::PhysDeriv(NekDoubleSharedArray &inarray, 
+	void StdSegExp::PhysDeriv(const NekDoubleSharedArray &inarray, 
 				  NekDoubleSharedArray &out_d0,
 				  NekDoubleSharedArray &out_d2,
 				  NekDoubleSharedArray &out_d3)
@@ -272,6 +272,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.24  2007/03/29 19:35:09  bnelson
+ * Replaced boost::shared_array with SharedArray
+ *
  * Revision 1.23  2007/03/25 15:48:22  sherwin
  * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
  *

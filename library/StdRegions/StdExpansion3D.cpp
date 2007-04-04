@@ -125,7 +125,7 @@ namespace Nektar
 				 nquad2, &wsp[0]+i,nquad0*nquad1,0.0,
 				 &outarray_d2[0]+i,nquad0*nquad1);
 		}
-	    }    
+	    }   
 	}
 	
 	NekDouble StdExpansion3D::PhysEvaluate(const NekDoubleSharedArray &coords)
@@ -175,6 +175,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.6  2007/03/29 19:35:09  bnelson
+ * Replaced boost::shared_array with SharedArray
+ *
  * Revision 1.5  2007/03/20 16:58:43  sherwin
  * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
  *

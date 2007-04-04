@@ -70,9 +70,6 @@ namespace Nektar
         */
         class StdExpansion
         {
-	    friend class SpatialDomains::EdgeComponent;
-	    friend class SpatialDomains::SegGeom;
-	    friend class SpatialDomains::GeomFactors;
         public:
 
             /** \brief Default Constructor */
@@ -89,6 +86,66 @@ namespace Nektar
 
             /** \brief Destructor */
             virtual ~StdExpansion();
+
+
+            /** \brief This function returns a pointer to the coefficient array
+            *  \f$ \mathbf{\hat{u}}\f$ 
+            *
+            *  The coefficient array \f$ \mathbf{\hat{u}}\f$ corresponds to the 
+            *  class attribute #m_coeffs (which is in coefficient space)
+            *
+            *  \return returns a pointer to the coefficient array 
+            *  \f$ \mathbf{\hat{u}}\f$ 
+            */
+            inline const NekDoubleSharedArray& GetCoeffs(void)
+	    {
+                return(m_coeffs);
+            }
+
+            /** \brief This function returns a pointer to the array
+            *  \f$\mathbf{u}\f$ (which is in physical space)
+            *
+            *  The array \f$ \mathbf{u}\f$ corresponds to the 
+            *  class attribute #m_phys and contains the values of a function
+            *  evaluates at the quadrature points, 
+            *  i.e. \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
+            *
+            *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
+            */
+            inline const NekDoubleSharedArray& GetPhys(void) 
+            {
+                return(m_phys);
+            }
+
+
+            /** \brief This function returns a pointer to the coefficient array
+            *  \f$ \mathbf{\hat{u}}\f$ 
+            *
+            *  The coefficient array \f$ \mathbf{\hat{u}}\f$ corresponds to the 
+            *  class attribute #m_coeffs (which is in coefficient space)
+            *
+            *  \return returns a pointer to the coefficient array 
+            *  \f$ \mathbf{\hat{u}}\f$ 
+            */
+            inline NekDoubleSharedArray& UpdateCoeffs(void)
+	    {
+                return(m_coeffs);
+            }
+
+            /** \brief This function returns a pointer to the array
+            *  \f$\mathbf{u}\f$ (which is in physical space)
+            *
+            *  The array \f$ \mathbf{u}\f$ corresponds to the 
+            *  class attribute #m_phys and contains the values of a function
+            *  evaluates at the quadrature points, 
+            *  i.e. \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
+            *
+            *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
+            */
+            inline NekDoubleSharedArray& UpdatePhys(void) 
+            {
+                return(m_phys);
+            }
 
             // Standard Expansion Routines Applicable Regardless of Region
 
@@ -841,37 +898,6 @@ namespace Nektar
             /** Array containing expansion evaluated at the quad points */
             NekDoubleSharedArray m_phys;
 
-
-            /** \brief This function returns a pointer to the coefficient array
-            *  \f$ \mathbf{\hat{u}}\f$ 
-            *
-            *  The coefficient array \f$ \mathbf{\hat{u}}\f$ corresponds to the 
-            *  class attribute #m_coeffs (which is in coefficient space)
-            *
-            *  \return returns a pointer to the coefficient array 
-            *  \f$ \mathbf{\hat{u}}\f$ 
-            */
-            inline NekDoubleSharedArray& GetCoeffs(void)
-	    {
-                return(m_coeffs);
-            }
-
-            /** \brief This function returns a pointer to the array
-            *  \f$\mathbf{u}\f$ (which is in physical space)
-            *
-            *  The array \f$ \mathbf{u}\f$ corresponds to the 
-            *  class attribute #m_phys and contains the values of a function
-            *  evaluates at the quadrature points, 
-            *  i.e. \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
-            *
-            *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
-            */
-            inline NekDoubleSharedArray& GetPhys(void) 
-            {
-                return(m_phys);
-            }
-
-
         private:
 
             // Virtual functions
@@ -1034,6 +1060,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.38  2007/03/31 00:04:03  bnelson
+* *** empty log message ***
+*
 * Revision 1.37  2007/03/29 19:35:09  bnelson
 * Replaced boost::shared_array with SharedArray
 *

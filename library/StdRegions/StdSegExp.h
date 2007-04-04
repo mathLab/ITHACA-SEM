@@ -139,7 +139,7 @@ namespace Nektar
 	     *  \param  outarray the resulting array of the derivative \f$
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
 	     */
-	    void PhysDeriv(NekDoubleSharedArray &inarray, 
+	    void PhysDeriv(const NekDoubleSharedArray &inarray, 
 			   NekDoubleSharedArray &out_d0,
 			   NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
 			   NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray);
@@ -276,7 +276,7 @@ namespace Nektar
 
 	    /** \brief Virtual call to StdSegExp::Deriv */
 
-        virtual void v_PhysDeriv(NekDoubleSharedArray &inarray,
+        virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray,
 		    NekDoubleSharedArray &out_d0,
 		    NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
 		    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
@@ -286,7 +286,7 @@ namespace Nektar
       
 
 	    /** \brief Virtual call to StdSegExp::Deriv */
-	    virtual void v_StdPhysDeriv(NekDoubleSharedArray &inarray, 
+	    virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray, 
 					NekDoubleSharedArray &outarray)
 	    {
     		PhysDeriv(inarray, outarray);
@@ -339,6 +339,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.13  2007/03/29 19:35:09  bnelson
+ * Replaced boost::shared_array with SharedArray
+ *
  * Revision 1.12  2007/03/25 15:48:22  sherwin
  * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
  *

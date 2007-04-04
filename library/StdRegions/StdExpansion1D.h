@@ -56,22 +56,6 @@ namespace Nektar
             StdExpansion1D(const StdExpansion1D &T);
             ~StdExpansion1D();
 
-
-	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical
-	     *  quadrature points in the expansion (i.e. \a (this)->m_phys)
-	     *  and return in \a outarray. 
-	     *
-	     *  This is a wrapper function around
-	     *  StdSegExp::Tensor_Deriv(inarray,outarray)
-	     *
-	     *	This function takes the physical value space array \a m_phys as
-	     *  discrete function to be evaluated
-	     *
-	     *  \param outarray the resulting array of the derivative \f$
-	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
-	     *  \a outarray as output of the function
-	     */
-            void PhysTensorDeriv(NekDoubleSharedArray & outarray);
 	    
 	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
 	     *  physical quadrature points given by \a inarray and return in
@@ -83,10 +67,10 @@ namespace Nektar
 	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
 	     *  \a outarray as output of the function
 	     */
-            void PhysTensorDeriv(NekDoubleSharedArray &inarray, 
+            void PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
 				 NekDoubleSharedArray & outarray);
 
-            void PhysDeriv (NekDoubleSharedArray &inarray,
+            void PhysDeriv (const NekDoubleSharedArray &inarray,
 			    NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
 			    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
 			    NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
@@ -94,7 +78,7 @@ namespace Nektar
                 v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
             }
 
-            void StdPhysDeriv (NekDoubleSharedArray &inarray, 
+            void StdPhysDeriv (const NekDoubleSharedArray &inarray, 
 			       NekDoubleSharedArray &outarray)
             {
                 v_StdPhysDeriv (inarray,outarray);
@@ -199,12 +183,13 @@ namespace Nektar
                 return 1; 
 	    }
 
-            virtual void   v_PhysDeriv (NekDoubleSharedArray &inarray,
+            virtual void   v_PhysDeriv (const NekDoubleSharedArray &inarray,
 					NekDoubleSharedArray &out_d0,
 					NekDoubleSharedArray &out_d1,
 					NekDoubleSharedArray &out_d2) = 0;
 
-            virtual void   v_StdPhysDeriv (NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray) = 0;
+            virtual void   v_StdPhysDeriv (const NekDoubleSharedArray &inarray, 
+					   NekDoubleSharedArray &outarray) = 0;
 
             virtual NekDouble v_PhysEvaluate(const NekDoubleSharedArray &coords)
             {
@@ -223,6 +208,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.15  2007/03/29 19:35:09  bnelson
+* Replaced boost::shared_array with SharedArray
+*
 * Revision 1.14  2007/03/25 15:48:22  sherwin
 * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
 *

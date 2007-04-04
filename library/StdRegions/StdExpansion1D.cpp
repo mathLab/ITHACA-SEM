@@ -64,23 +64,16 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdExpansion1D::PhysTensorDeriv(NekDoubleSharedArray &inarray, 
+	void StdExpansion1D::PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
 					     NekDoubleSharedArray &outarray)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
 	    DNekMatSharedPtr     D;
-	    NekDoubleSharedArray wsp;
+	    NekDoubleSharedArray wsp = GetDoubleTmpSpace(nquad); 
 	    
-	    if(outarray == inarray)
-	    {  // check to see if calling array is inarray
-		wsp = GetDoubleTmpSpace(nquad); 
-		Vmath::Vcopy(nquad,&inarray[0],1,&wsp[0],1);
-	    }
-	    else
-	    {
-		wsp = inarray;
-	    }
-	    
+	    // check to see if calling array is inarray
+	    Vmath::Vcopy(nquad,&inarray[0],1,&wsp[0],1);
+
 	    D = ExpPointsProperties(0)->GetD();
       
 	    Blas::Dgemv('T',nquad,nquad,1.0,&((*D).GetPtr())[0],nquad,
@@ -112,6 +105,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.11  2007/03/29 19:35:09  bnelson
+ * Replaced boost::shared_array with SharedArray
+ *
  * Revision 1.10  2007/03/20 16:58:42  sherwin
  * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
  *

@@ -148,7 +148,7 @@ namespace Nektar
 #else
                 // TODO
                 BOOST_STATIC_ASSERT(0);
-#endif NEKTAR_USING_LAPACK
+#endif //NEKTAR_USING_LAPACK
 
             }
 
@@ -521,6 +521,9 @@ namespace Nektar
 
 /**
     $Log: NekFullMatrix.hpp,v $
+    Revision 1.9  2007/04/04 02:11:07  bnelson
+    Added inversion
+
     Revision 1.8  2007/03/29 18:59:05  bnelson
     Refactoring in preparation for scaled matrices.  Fixed transpose problem.
 

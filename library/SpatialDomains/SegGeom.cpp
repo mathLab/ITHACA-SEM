@@ -114,7 +114,7 @@ namespace Nektar
                 for(i = 0; i < m_coordim; ++i){
                     m_xmap[i]->SetCoeff(0,(*m_verts[0])[i]);
                     m_xmap[i]->SetCoeff(1,(*m_verts[1])[i]);
-                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),m_xmap[i]->GetPhys());
+                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),m_xmap[i]->UpdatePhys());
                 }
                 m_state = ePtsFilled;
             }
@@ -168,7 +168,7 @@ namespace Nektar
 
             for(i = 0; i < m_coordim; ++i)
             {
-                coords[i] = &(m_xmap[i]->GetPhys())[0];
+                coords[i] = &(m_xmap[i]->UpdatePhys())[0];
             }
 
             if(dumpVar)
@@ -201,6 +201,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.11  2007/03/29 19:26:36  bnelson
+// *** empty log message ***
+//
 // Revision 1.10  2007/03/25 15:48:22  sherwin
 // UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
 //

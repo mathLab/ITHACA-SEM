@@ -66,7 +66,7 @@ namespace Nektar
         **/
 
         GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
-	  SharedArray<StdRegions::StdExpansion1DSharedPtr>  Coords)
+				 const SharedArray<StdRegions::StdExpansion1DSharedPtr>  &Coords)
         {
             NekDoubleSharedArray der[3];
             int        i,nquad;
@@ -92,9 +92,9 @@ namespace Nektar
                     "Points order are different for each coordinate");
                 ASSERTL2(Coords[i]->GetPointsType(0)  == ptype,
                     "Points type are different for each coordinate");
-
+		
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), 
-				    Coords[i]->GetPhys());
+				    Coords[i]->UpdatePhys());
 
                 Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(), der[i]);
             }
@@ -162,7 +162,7 @@ namespace Nektar
         \frac{\partial x_1}{\partial \xi_1}   \frac{\partial x_2}{\partial \xi_2} - 
         \frac{\partial x_2}{\partial \xi_1}   \frac{\partial x_1}{\partial \xi_2}
         \end{array} \right ] \f$
-
+	
         The geometric factors are then given by:
 
         \f$ \begin{array}{cc}
@@ -589,6 +589,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.3  2007/03/29 19:23:59  bnelson
+// Replaced boost::shared_array with SharedArray
+//
 // Revision 1.2  2007/03/25 15:48:22  sherwin
 // UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
 //

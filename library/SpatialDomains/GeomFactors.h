@@ -47,7 +47,7 @@ namespace Nektar
     namespace SpatialDomains
     {
         class GeomFactors
-        {
+    {
         public:
             GeomFactors(void);
 
@@ -57,8 +57,7 @@ namespace Nektar
             two or three dimensional coordinate description
             **/
             GeomFactors(const GeomType gtype, const int coordim,
-		        SharedArray<StdRegions::StdExpansion1DSharedPtr> Coords);
-
+			const SharedArray<StdRegions::StdExpansion1DSharedPtr> &Coords);
 
 #if 0 
             /**  \brief Two dimensional geometric factors based on two
@@ -141,6 +140,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.3  2007/03/29 19:24:00  bnelson
+// Replaced boost::shared_array with SharedArray
+//
 // Revision 1.2  2007/03/25 15:48:22  sherwin
 // UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
 //

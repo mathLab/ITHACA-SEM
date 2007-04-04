@@ -178,11 +178,11 @@ namespace Nektar
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul(nquad0,jac,1,&inarray[0],1,&tmp[0],1);
+                Vmath::Vmul(nquad0,jac,1,(NekDouble *)&inarray[0],1,&tmp[0],1);
             }
             else
             {
-                Vmath::Smul(nquad0,(double)jac[0],&inarray[0],1,&tmp[0],1);
+                Vmath::Smul(nquad0,(double)jac[0],(NekDouble *)&inarray[0],1,&tmp[0],1);
             }
 
             // call StdSegExp version;
@@ -234,11 +234,11 @@ namespace Nektar
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul(nquad0,jac,1,&inarray[0],1,&tmp[0],1);
+                Vmath::Vmul(nquad0,jac,1,(NekDouble *)&inarray[0],1,&tmp[0],1);
             }
             else
             {
-                Vmath::Smul(nquad0,jac[0],&inarray[0],1,&tmp[0],1);
+                Vmath::Smul(nquad0,jac[0],(NekDouble *)&inarray[0],1,&tmp[0],1);
             }
 
             StdSegExp::IProductWRTBase(base,tmp,outarray,coll_check);
@@ -426,7 +426,7 @@ namespace Nektar
 
                 if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
                 {
-                    x = m_geom->GetPhys(2);
+                    x = m_geom->UpdatePhys(2);
                     Blas::Dcopy(m_base[0]->GetNumPoints(),&x[0],1,&coords_2[0],1);
                 }
                 else // Interpolate to Expansion point distribution
@@ -434,7 +434,7 @@ namespace Nektar
                     I = LibUtilities::PointsManager()[CBasis->GetPointsKey()]
 			->GetI(m_base[0]->GetPointsKey());
 
-		    x = m_geom->GetPhys(2);
+		    x = m_geom->UpdatePhys(2);
 		    Blas::Dgemv('T',CBasis->GetNumPoints(),
 				m_base[0]->GetNumPoints(),1.0,
 				&((*I).GetPtr())[0],
@@ -448,7 +448,7 @@ namespace Nektar
 
                 if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
                 {
-                    x = m_geom->GetPhys(1);
+                    x = m_geom->UpdatePhys(1);
                     Blas::Dcopy(m_base[0]->GetNumPoints(),&x[0],1,&coords_1[0],1);
                 }
                 else // Interpolate to Expansion point distribution
@@ -456,7 +456,7 @@ namespace Nektar
                     I = LibUtilities::PointsManager()[CBasis->GetPointsKey()]
 			->GetI(m_base[0]->GetPointsKey());
 
-		    x = m_geom->GetPhys(1);
+		    x = m_geom->UpdatePhys(1);
 		    Blas::Dgemv('T',CBasis->GetNumPoints(),
 				m_base[0]->GetNumPoints(),1.0,
 				&((*I).GetPtr())[0],
@@ -470,7 +470,7 @@ namespace Nektar
 		
                 if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
                 {
-                    x = m_geom->GetPhys(0);
+                    x = m_geom->UpdatePhys(0);
                     Blas::Dcopy(m_base[0]->GetNumPoints(),&x[0],1,&coords_0[0],1);
                 }
                 else // Interpolate to Expansion point distribution
@@ -478,7 +478,7 @@ namespace Nektar
                     I = LibUtilities::PointsManager()[CBasis->GetPointsKey()]
 			->GetI(m_base[0]->GetPointsKey());
 		    
-		    x = m_geom->GetPhys(0);
+		    x = m_geom->UpdatePhys(0);
 		    Blas::Dgemv('T',CBasis->GetNumPoints(),
 				m_base[0]->GetNumPoints(),1.0,
 				&((*I).GetPtr())[0],
@@ -506,7 +506,7 @@ namespace Nektar
             for(i = 0; i < m_geom->GetCoordim(); ++i)
             {
                 coords[i] = m_geom->GetCoord(i,Lcoords);
-            }
+            }     
         }
 
 
@@ -648,6 +648,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.10  2007/03/25 15:48:21  sherwin
+// UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+//
 // Revision 1.9  2007/03/20 09:13:37  kirby
 // new geomfactor routines; update for metricinfo; update style
 //

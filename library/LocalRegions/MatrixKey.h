@@ -82,15 +82,20 @@ namespace Nektar
                 return m_stdMatKey->GetNcoeffs();
             }
 
-            SharedArray<LibUtilities::BasisSharedPtr> GetBase() const
+            const SharedArray<LibUtilities::BasisSharedPtr> &GetBase()
             {
                 return m_stdMatKey->GetBase();
             }
 
-            StdRegions::StdMatrixKeySharedPtr GetStdMatKey() const 
-		{
+            inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
+	    {
+                return m_stdMatKey->GetBasis(dir);
+	    }
+
+            const StdRegions::StdMatrixKeySharedPtr &GetStdMatKey() const 
+	    {
                 return m_stdMatKey;
-            }
+	    }
 
             SpatialDomains::GeomFactorsSharedPtr GetMetricInfo() const
             {
@@ -115,6 +120,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.5  2007/03/29 19:02:05  bnelson
+* Replaced boost::shared_array with SharedArray
+*
 * Revision 1.4  2007/03/25 15:48:21  sherwin
 * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
 *

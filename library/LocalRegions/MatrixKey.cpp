@@ -90,7 +90,7 @@ namespace Nektar
 
             for(unsigned int i = 0; i < StdRegions::ShapeTypeDimMap[lhs.GetShapeType()]; ++i)
             {
-                if(lhs.GetBase()[i] < rhs.GetBase()[i])
+                if(lhs.GetBasis(i) < rhs.GetBasis(i))
                 {
                     return true;
                 }
@@ -110,6 +110,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.4  2007/03/20 09:13:37  kirby
+* new geomfactor routines; update for metricinfo; update style
+*
 * Revision 1.3  2007/03/09 20:41:50  jfrazier
 * *** empty log message ***
 *

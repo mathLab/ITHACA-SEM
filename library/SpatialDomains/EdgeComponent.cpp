@@ -72,13 +72,13 @@ namespace Nektar
             if (coordim > 0)
             {
                 const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-	       LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+	           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
 		m_xmap = MemoryManager::AllocateSharedArray<StdRegions::StdExpansion1DSharedPtr>(m_coordim);
 
                 for(int i = 0; i < m_coordim; ++i)
                 {
-                m_xmap[i] = MemoryManager::AllocateSharedPtr<StdRegions::StdSegExp>(B);
+		    m_xmap[i] = MemoryManager::AllocateSharedPtr<StdRegions::StdSegExp>(B);
                 }
             }
 
@@ -126,7 +126,7 @@ namespace Nektar
         /** given local collapsed coordinate Lcoord return the value of
         physical coordinate in direction i **/
 
-        double EdgeComponent::GetCoord(const int i, const NekDoubleSharedArray Lcoord) 
+        NekDouble EdgeComponent::GetCoord(const int i, const NekDoubleSharedArray &Lcoord) 
         {
 
             ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
@@ -203,6 +203,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.14  2007/03/25 15:48:21  sherwin
+*    UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+*
 *    Revision 1.13  2007/03/14 21:24:08  sherwin
 *    Update for working version of MultiRegions up to ExpList1D
 *

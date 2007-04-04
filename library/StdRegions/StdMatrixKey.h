@@ -70,23 +70,31 @@ namespace Nektar
 
 	            MatrixType GetMatrixType() const
 	            {
-		            return m_matrixType;
+			return m_matrixType;
 	            }
 
 	            ShapeType GetShapeType() const
 	            {
-		            return m_shapeType;
+			return m_shapeType;
 	            }
 	    
 	            int GetNcoeffs() const
 	            {
-		            return m_ncoeffs;
+			return m_ncoeffs;
 	            }
 
 	            inline const SharedArray<LibUtilities::BasisSharedPtr>& GetBase() const
 	            {
-		            return m_base;
+			return m_base;
 	            }
+	    
+
+		    inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
+		    {
+			ASSERTL1(dir < m_numbases, "dir is larger than number of bases");
+			return(m_base[dir]);
+		    }
+
 	    
 	    protected:
             ShapeType m_shapeType;
@@ -110,6 +118,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.6  2007/03/29 19:35:09  bnelson
+* Replaced boost::shared_array with SharedArray
+*
 * Revision 1.5  2007/03/21 20:56:43  sherwin
 * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
 *

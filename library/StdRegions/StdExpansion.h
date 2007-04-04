@@ -176,7 +176,7 @@ namespace Nektar
             *  directin \a dir
             */
             inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
-		{
+	    {
                 ASSERTL1(dir < m_numbases, "dir is larger than number of bases");
                 return(m_base[dir]);
             }
@@ -1060,6 +1060,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.39  2007/04/04 20:48:16  sherwin
+* Update to handle SharedArrays
+*
 * Revision 1.38  2007/03/31 00:04:03  bnelson
 * *** empty log message ***
 *

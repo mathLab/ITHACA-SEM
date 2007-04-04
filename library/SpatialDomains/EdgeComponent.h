@@ -78,8 +78,8 @@ namespace Nektar
                 return m_xmap[i];
             }
 
-            inline NekDoubleSharedArray &GetPhys(int i){
-                return m_xmap[i]->GetPhys();
+            inline NekDoubleSharedArray &UpdatePhys(int i){
+                return m_xmap[i]->UpdatePhys();
             }
 
             inline VertexComponentSharedPtr GetVertex(int i) const
@@ -107,7 +107,7 @@ namespace Nektar
                 return m_xmap[0]; //should never be reached
             }
 
-            double GetCoord(const int i, const NekDoubleSharedArray Lcoord);
+            NekDouble GetCoord(const int i, const NekDoubleSharedArray &Lcoord);
                     
             /// \brief Get the orientation of edge1.
             ///
@@ -135,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.7  2007/03/29 19:23:59  bnelson
+// Replaced boost::shared_array with SharedArray
+//
 // Revision 1.6  2007/03/25 15:48:22  sherwin
 // UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
 //

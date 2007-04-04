@@ -58,6 +58,7 @@ SET(ExpressionTemplates
 	./ExpressionTemplates/AssociativeTraits.hpp
 	./ExpressionTemplates/BinaryExpression.hpp
 	./ExpressionTemplates/BinaryExpressionEvaluator.hpp
+	./ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp
 	./ExpressionTemplates/BinaryExpressionOperators.hpp
 	./ExpressionTemplates/BinaryExpressionPolicy.hpp
 	./ExpressionTemplates/BinaryExpressionPolicyFwd.hpp
@@ -84,6 +85,7 @@ SET(BasicUtils
 	./BasicUtils/BoostUtil.hpp
 	./BasicUtils/ConsistentObjectAccess.hpp
 	./BasicUtils/ErrorUtil.hpp
+	./BasicUtils/mojo.hpp
 	./BasicUtils/Concepts.hpp
 	./BasicUtils/Vmath.hpp
 	./BasicUtils/SharedArray.hpp
@@ -93,6 +95,7 @@ SET(BasicUtils
 SET(Memory
 	./Memory/ThreadSpecificPool.hpp
 	./Memory/NekMemoryManager.hpp	
+	./Memory/DeleteNothing.hpp
 )
 
 
@@ -164,7 +167,14 @@ IF( USE_ATLAS AND ATLAS_FOUND )
 ENDIF( USE_ATLAS AND ATLAS_FOUND )
 
 # This doesn't preserve the BasicUtils, Memory, etc. Find a way to fix this.
-INSTALL(FILES ${LibUtilityHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR})
+INSTALL(FILES ${BasicConstHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicConst)
+INSTALL(FILES ${LinearAlgebraHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/LinearAlgebra)
+INSTALL(FILES ${FoundationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Foundations)
+INSTALL(FILES ${PolyLibHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Polylib)
+INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/ExpressionTemplates)
+INSTALL(FILES ${BasicUtils} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicUtils)
+INSTALL(FILES ${Memory} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Memory)
+	
 #INSTALL(TARGETS LibUtilities ARCHIVE DESTINATION ${NEKTAR_LIB_DIR})
 
 

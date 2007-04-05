@@ -40,20 +40,14 @@ namespace Nektar
     namespace StdRegions
     {
 
-        StdMatrix StdQuadExp::s_elmtmats;
 
         StdQuadExp::StdQuadExp()
         {
         }
-		
-		StdQuadExp::StdQuadExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb):
-        StdExpansion2D(Ba,Bb,Ba.GetNumModes()*Bb.GetNumModes(),NULL,NULL,true)
-        { 
-        }
-		
-		StdQuadExp::StdQuadExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb,
-            double *coeffs, double *phys):
-        StdExpansion2D(Ba,Bb,Ba.GetNumModes()*Bb.GetNumModes(),coeffs,phys,false)
+
+        StdQuadExp::StdQuadExp(const LibUtilities::BasisKey &Ba, 
+			       const LibUtilities::BasisKey &Bb):
+	    StdExpansion2D(Ba.GetNumModes()*Bb.GetNumModes(),Ba,Bb)
         { 
         }
 		
@@ -70,42 +64,42 @@ namespace Nektar
         // Integration Methods
         //////////////////////////////
 
-        double StdQuadExp::Integral(const double *inarray)
+        NekDouble StdQuadExp::Integral(const NekDoubleSharedArray &inarray)
         {
-            const double *z, *w0, *w1;
+            const NekDouble *z, *w0, *w1;
 
-	    ExpPointsProperties(0)->GetZW(m_base[0],z,w0);
-		ExpPointsProperties(1)->GetZW(m_base[0],z,w1);
-		
-		//PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w0);
-	    //PointsManager()[m_base[1].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w1);
+	    ExpPointsProperties(0)->GetZW(z,w0);
+	    ExpPointsProperties(1)->GetZW(z,w1);
 
             return StdExpansion2D::Integral(inarray,w0,w1);
         }
 
 
-        void StdQuadExp::IProductWRTBase(const double * inarray, double * outarray)
+        void StdQuadExp::IProductWRTBase(const NekDoubleSharedArray &inarray, 
+					 NekDoubleSharedArray &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
                 inarray,outarray,1);
         }
 
-        void StdQuadExp:: IProductWRTBase(const double *base0, const double *base1,
-            const double *inarray, double *outarray,
-            int coll_check){
-                int i;
-                int    nquad0 = m_base[0]->GetNumPoints();
-                int    nquad1 = m_base[1]->GetNumPoints();
-                int    order0 = m_base[0]->GetNumBasis();
-                int    order1 = m_base[1]->GetNumBasis();
-                const double *z,*w0,*w1;
-                BstShrDArray tmp  = GetDoubleTmpSpace(nquad0*nquad1);
-                BstShrDArray tmp1 = GetDoubleTmpSpace(nquad0*nquad1);
-
+        void StdQuadExp:: IProductWRTBase(const NekDouble *base0, const NekDouble*base1,
+					  const NekDoubleSharedArray &inarray, 
+					  NekDoubleSharedArray &outarray,
+					  int coll_check)
+	{
+	    int i;
+	    int    nquad0 = m_base[0]->GetNumPoints();
+	    int    nquad1 = m_base[1]->GetNumPoints();
+	    int    order0 = m_base[0]->GetNumModes();
+	    int    order1 = m_base[1]->GetNumModes();
+	    const NekDouble *z,*w0,*w1;
+	    NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad0*nquad1);
+	    NekDoubleSharedArray tmp1 = GetDoubleTmpSpace(nquad0*nquad1);
+	    
 #if FULLDEBUG
-                if((m_base[0]->GetAlpha() != 0.0)||(m_base[1]->GetAlpha() != 0.0))
-                {
-                    ErrorUtil::Error(ErrorUtil::ewarning,"StdQuadExp::IProduct_WRT_B",
+	    if((m_base[0]->GetAlpha() != 0.0)||(m_base[1]->GetAlpha() != 0.0))
+	    {
+		ErrorUtil::Error(ErrorUtil::ewarning,"StdQuadExp::IProduct_WRT_B",
                         "Basis has non-zero alpha weight");
                 }
 
@@ -116,58 +110,54 @@ namespace Nektar
                 }
 #endif
 
-		ExpPointsProperties(0)->GetZW(m_base[0],z,w0);
-		ExpPointsProperties(2)->GetZW(m_base[0],z,w1);
-		
-		//PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w0);
-		//PointsManager()[m_base[2].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w1);
-		
+		ExpPointsProperties(0)->GetZW(z,w0);
+		ExpPointsProperties(1)->GetZW(z,w1);
                 // Note cannot use outarray as tmp space since dimensions are not always
                 // guarenteed to be sufficient 
 
                 // multiply by integration constants 
                 for(i = 0; i < nquad1; ++i)
                 {
-                    Vmath::Vmul(nquad0,(double*)inarray+i*nquad0,1,(double*)w0,1,
-                        tmp.get()+i*nquad0,1);
+                    Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,(NekDouble*)w0,1,
+				&tmp[0]+i*nquad0,1);
                 }
 
                 for(i = 0; i < nquad0; ++i)
                 {
-                    Vmath::Vmul(nquad1,tmp.get()+i,nquad0,(double*)w1,1,
-                        tmp.get()+i,nquad0);
+                    Vmath::Vmul(nquad1,&tmp[0]+i,nquad0,(NekDouble*)w1,1,
+				&tmp[0]+i,nquad0);
                 }
 
                 if(coll_check&&m_base[0]->Collocation())
                 {
-                    Vmath::Vcopy(order0*nquad1,tmp.get(),1,tmp1.get(),1);
+                    Vmath::Vcopy(order0*nquad1,&tmp[0],1,&tmp1[0],1);
                 }
                 else
                 {
-                    Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0,nquad0,tmp.get(),
-                        nquad0,0.0,tmp1.get(),order0);
+                    Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0,nquad0,
+				&tmp[0],nquad0,0.0,&tmp1[0],order0);
                 }
 
                 if(coll_check&&m_base[1]->Collocation())
                 {
-                    Vmath::Vcopy(order0*order1,tmp1.get(),1,outarray,1);
+                    Vmath::Vcopy(order0*order1,&tmp1[0],1,&outarray[0],1);
                 }
                 else
                 {
-                    Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, tmp1.get(),order0, 
-                        base1, nquad1, 0.0, outarray,order0);
+                    Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, &tmp1[0],
+				order0, base1, nquad1, 0.0, &outarray[0],order0);
                 }
 
             }
 	
-	void StdQuadExp::FillMode(const int mode, double *outarray)
+	void StdQuadExp::FillMode(const int mode, NekDoubleSharedArray &outarray)
 	{
 	    int    i;
 	    int   nquad0 = m_base[0]->GetNumPoints();
 	    int   nquad1 = m_base[1]->GetNumPoints();
-	    const double * base0  = m_base[0]->GetBdata();
-	    const double * base1  = m_base[1]->GetBdata();
-	    int   btmp0 = m_base[0]->GetNumBasis();
+	    const NekDouble * base0  = m_base[0]->GetBdata();
+	    const NekDouble * base1  = m_base[1]->GetBdata();
+	    int   btmp0 = m_base[0]->GetNumModes();
 	    int   mode0 = mode%btmp0;
 	    int   mode1 = mode/btmp0;
 	    
@@ -180,134 +170,124 @@ namespace Nektar
 	    
 	    for(i = 0; i < nquad1; ++i)
 	    {
-		Vmath::Vcopy(nquad0,(double *)(base0 + mode0*nquad0),1,
-			     outarray+i*nquad0,1);
+		Vmath::Vcopy(nquad0,(NekDouble *)(base0 + mode0*nquad0),1,
+			     &outarray[0]+i*nquad0,1);
 	    }
 	    
 	    for(i = 0; i < nquad0; ++i)
 	    {
-		Vmath::Vmul(nquad1,(double *)(base1 + mode1*nquad1),1,
-			    outarray+i,nquad0,outarray+i,nquad0);
+		Vmath::Vmul(nquad1,(NekDouble *)(base1 + mode1*nquad1),1,
+			    &outarray[0]+i,nquad0,&outarray[0]+i,nquad0);
 	    }
 	}
 	
-	void StdQuadExp::GenMassMatrix(double * outarray)
+	DNekMatSharedPtr StdQuadExp::GenMassMatrix()
 	{
 	    int      i;
-	    int      order0    = GetNumBasis(0);
-	    int      order1    = GetNumBasis(1);
+	    int      order0    = GetBasisNumModes(0);
+	    int      order1    = GetBasisNumModes(1);
 
-	    StdExpansion::GenerateMassMatrix(outarray);
-	    
+	    DNekMatSharedPtr Mat = StdExpansion::GenerateMassMatrix();
+
 	    // For Fourier basis set the imaginary component of mean mode
 	    // to have a unit diagonal component in mass matrix 
-	    if(m_base[0]->GetBasisType() == eFourier)
+	    if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
 	    {
 		for(i = 0; i < order1; ++i)
 		{
-		    outarray[(order0*i+1)*m_ncoeffs+i*order0+1] = 1.0;
+		    (*Mat)(order0*i+1,i*order0+1) = 1.0;
 		}
 	    }
 	    
-	    if(m_base[1]->GetBasisType() == eFourier)
+	    if(m_base[1]->GetBasisType() == LibUtilities::eFourier)
 	    {
 		for(i = 0; i < order0; ++i)
 		{
-		    outarray[(order0+i)*m_ncoeffs+order0+i] = 1.0;
+		    (*Mat)(order0+i ,order0+i) = 1.0;
 		}
 	    }
+	    return Mat;
 	}
 
-	void StdQuadExp::GenLapMatrix(double * outarray)
+	DNekMatSharedPtr  StdQuadExp::GenLapMatrix()
 	{
 	    ASSERTL0(false, "Not implemented");
 	}
 	
-	StdMatContainer * StdQuadExp::GetMassMatrix() 
-	{
-	    StdMatContainer * mat;
-	    mat = s_elmtmats.GetLocalMass(this);
-	    return mat;
-	}
-
-	StdMatContainer * StdQuadExp::GetLapMatrix() 
-	{
-	    StdMatContainer * mat;
-	    mat = s_elmtmats.GetLocalLap(this);
-	    return mat;
-	}
-	
-
 	///////////////////////////////
 	/// Differentiation Methods
 	///////////////////////////////
 	
-	void StdQuadExp::Deriv(double *outarray_d0, double *outarray_d1)
+	void StdQuadExp::PhysDeriv(const NekDoubleSharedArray &inarray,
+				   NekDoubleSharedArray &out_d0,
+				   NekDoubleSharedArray &out_d1,
+				   NekDoubleSharedArray &out_d2)
 	{
-	    TensorDeriv(this->m_phys, outarray_d0, outarray_d1);
+	    PhysTensorDeriv(inarray, out_d0, out_d1);
 	}
 
-	void StdQuadExp::Deriv(const double *inarray, double *outarray_d0, 
-			       double *outarray_d1)
-	{
-	    TensorDeriv(inarray, outarray_d0, outarray_d1);
-	}
-	
 	//------------------------------
 	// Evaluation Methods
 	//-----------------------------
 	
-	void StdQuadExp::BwdTrans(double * outarray)
+	void StdQuadExp::BwdTrans(const NekDoubleSharedArray &inarray,
+				  NekDoubleSharedArray &outarray)
 	{
 	    int           nquad0 = m_base[0]->GetNumPoints();
 	    int           nquad1 = m_base[1]->GetNumPoints();
-	    int           order0 = m_base[0]->GetNumBasis();
-	    int           order1 = m_base[1]->GetNumBasis();
-	    const double *base0  = m_base[0]->GetBdata();
-	    const double *base1  = m_base[1]->GetBdata();
-	    BstShrDArray tmp  = GetDoubleTmpSpace(nquad0*std::max(order1,nquad1));
+	    int           order0 = m_base[0]->GetNumModes();
+	    int           order1 = m_base[1]->GetNumModes();
+	    const NekDouble *base0  = m_base[0]->GetBdata();
+	    const NekDouble *base1  = m_base[1]->GetBdata();
+	    NekDoubleSharedArray tmp = GetDoubleTmpSpace(nquad0*std::max(order1,nquad1));
 	    
 	    if(m_base[0]->Collocation())
 	    {
-		Vmath::Vcopy(nquad0*order1,m_coeffs,1,tmp.get(),1);
+		Vmath::Vcopy(nquad0*order1,&inarray[0],1,&tmp[0],1);
 	    }
 	    else
 	    {
 		Blas::Dgemm('N','N', nquad0,order1,order0,1.0, base0, nquad0, 
-			    m_coeffs, order0,0.0,tmp.get(), nquad0);
+			    &inarray[0], order0,0.0,&tmp[0], nquad0);
 	    }
 	    
 	    if(m_base[1]->Collocation())
 	    {
-		Vmath::Vcopy(nquad0*nquad1,tmp.get(),1,outarray,1);
+		Vmath::Vcopy(nquad0*nquad1,&tmp[0],1,&outarray[0],1);
 	    }
 	    else
 	    {
-		Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, tmp.get(), 
-			    nquad0, base1, nquad1, 0.0,outarray, nquad0);
+		Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &tmp[0], 
+			    nquad0, base1, nquad1, 0.0, &outarray[0], nquad0);
 	    }    
 	}
 
-	void StdQuadExp::FwdTrans(const double *inarray)
+	void StdQuadExp::FwdTrans(const NekDoubleSharedArray &inarray,
+				  NekDoubleSharedArray &outarray)
 	{
-	    StdMatContainer *M;
-	    
 	    if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
 	    {
-		Vmath::Vcopy(GetNcoeffs(),inarray,1,m_coeffs,1);
+		Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
 	    }
 	    else
 	    {
-		IProductWRTBase(inarray,m_coeffs);
-		M = GetMassMatrix();
-		M->Solve(m_coeffs,1);
+		IProductWRTBase(inarray,outarray);
+
+		// get Mass matrix
+		StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
+		DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
+
+		// solve inverse of system
+		DNekVec   v(m_ncoeffs,outarray,eWrapper);
+		matsys->Solve(v,v);
+
 	    }
 	}
 
 	/// Single Point Evaluation
-	double StdQuadExp::Evaluate(const double * coords)
+	NekDouble StdQuadExp::PhysEvaluate(const NekDoubleSharedArray &coords)
 	{
-	    return  PhysEvaluate(coords); 
+	    return  StdExpansion2D::PhysEvaluate(coords); 
 	}
 
 
@@ -320,14 +300,16 @@ namespace Nektar
 	// being considered, i.e. modal expansions the vertices will
 	// be first, nodal expansions the vertices will be the two
 	// end points
-	void StdQuadExp::MapTo(const int edge_ncoeffs, const BasisType Btype, 
-			       const int eid, const EdgeOrientation eorient,
+	void StdQuadExp::MapTo(const int edge_ncoeffs, 
+			       const LibUtilities::BasisType Btype, 
+			       const int eid, 
+			       const EdgeOrientation eorient,
 			       StdExpMap &Map)
 	{
 	    
 	    int i, start, skip;
 	    int *dir, order0,order1;
-	    BstShrIArray wsp; 
+	    NekIntSharedArray wsp; 
 	    
 	    ASSERTL2(eid>=0&&eid <=3,"eid must be between 0 and 3");
 	    // make sure have correct memory storage
@@ -348,7 +330,7 @@ namespace Nektar
 	    }
 	    else
 	    {
-		if(Btype == eGLL_Lagrange)
+		if(Btype == LibUtilities::eGLL_Lagrange)
 		{
 		    for(i = 0; i < edge_ncoeffs; ++i)
 		    {
@@ -365,8 +347,8 @@ namespace Nektar
 		}
 	    }
 	    
-	    order0 = m_base[0]->GetNumBasis();
-	    order1 = m_base[0]->GetNumBasis();
+	    order0 = m_base[0]->GetNumModes();
+	    order1 = m_base[0]->GetNumModes();
 	    
 	    // Set up Mapping details
 	    if((eid == 0)||(eid == 2))
@@ -376,7 +358,7 @@ namespace Nektar
 		
 		switch(Btype)
 		{
-		case eGLL_Lagrange:
+		case LibUtilities::eGLL_Lagrange:
 		    ASSERTL2(edge_ncoeffs == order0,
 		      "Expansion order of edge and StdQuadExp are different");
 		    
@@ -392,7 +374,7 @@ namespace Nektar
 		    }
 		    break;
 		    
-		case eModified_A:
+		case LibUtilities::eModified_A:
 		    if(eid == 0)
 		    {
 			start = 0;
@@ -416,7 +398,7 @@ namespace Nektar
 		
 		switch(Btype)
 		{
-		case eGLL_Lagrange:
+		case LibUtilities::eGLL_Lagrange:
 		    ASSERTL2(edge_ncoeffs == order1,
 			     "Expansion order of edge and StdQuadExp are different");
 		    if(eid == 1)
@@ -431,7 +413,7 @@ namespace Nektar
 		    }
 		    break;
 		    
-		case eModified_A:	
+		case LibUtilities::eModified_A:	
 		    if(eid == 1)
 		    {
 			start = 1;
@@ -461,14 +443,14 @@ namespace Nektar
 	// by edges degrees of freedom
 
 	void StdQuadExp::MapTo_ModalFormat(const int edge_ncoeffs, 
-					   const BasisType Btype, 
+					   const LibUtilities::BasisType Btype, 
 					   const int eid, 
 					   const EdgeOrientation eorient,
 					   StdExpMap &Map)
 	{
 	    MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
 	    
-	    if(Btype == eGLL_Lagrange)
+	    if(Btype == LibUtilities::eGLL_Lagrange)
 	    {
 		int i;
 		int vert = Map[edge_ncoeffs-1];
@@ -479,89 +461,14 @@ namespace Nektar
 		Map.SetMap(1,vert);
 	    }
 	}
-	
-	void StdQuadExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-	{
-	    mat->SetLda(m_ncoeffs);
-	    mat->SetMatForm(eSymmetric_Positive);
-      
-	    if(GeoFacType() == eRegular)
-	    {
-		switch(Mform)
-		{
-		case eMassMatrix:
-		    {
-			switch(m_base[1]->GetBasisType())
-			{
-			case eOrtho_A: case eLegendre:
-			    if(m_base[1]->ExactIprodInt())
-			    {
-				goto eQuadOrtho1;
-			    }
-			    break;
-			case eGLL_Lagrange:
-			    if(m_base[1]->Collocation())
-			    {
-				goto eQuadOrtho1;
-			    }
-			    break;
-			case eFourier:
-			    goto eQuadOrtho1;
-			    break;
-			default:
-			    mat->SetMatForm(eSymmetric_Positive_Banded);
-			    mat->SetBwidth(m_base[0]->GetNumBasis()*m_base[1]->GetNumBasis());
-			    break;
-			eQuadOrtho1:
-			    {
-				switch(m_base[0]->GetBasisType())
-				{
-				case eOrtho_A: case eLegendre:
-				    if(m_base[0]->ExactIprodInt())
-				    {
-					goto eQuadOrtho2;
-				    }
-				    break;
-				case eGLL_Lagrange:
-				    if(m_base[0]->Collocation())
-				    {
-					goto eQuadOrtho2;
-				    }
-				    break;
-				case eFourier:
-				    goto eQuadOrtho2;
-				    break;
-				default:
-				    mat->SetMatForm(eSymmetric_Positive_Banded);
-				    mat->SetBwidth(m_base[0]->GetNumBasis());
-				    break;
-				eQuadOrtho2:
-				    {
-					mat->SetMatForm(eSymmetric_Positive_Banded);
-					mat->SetBwidth(1);
-					break;
-				    }
-				}
-			    }
-			}
-		    }	    
-		    break;
-		case eLapMatrix:
-		    mat->SetMatForm(eSymmetric);	
-		    break;
-		default:
-		    ASSERTL0(false, "MatrixType not known");
-		    break;
-	    
-		}
-	    }
-	}
-  
     } //end namespace			
 }//end namespace
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.11  2007/04/05 11:39:47  pvincent
+* quad_edited
+*
 * Revision 1.10  2007/03/20 16:58:43  sherwin
 * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *

@@ -39,7 +39,6 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
-//#include <StdRegions/StdMatrix.h>
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdExpMap.h>
 
@@ -59,13 +58,6 @@ namespace Nektar
 	     *  points and order definition 
 	     */
             StdQuadExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb);
-
-            /** \brief Constructor using BasisKey class for quadrature
-	     *  points and order nition where m_coeffs and m_phys are all
-	     *  set. 
-	     */
-            StdQuadExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, double *coeffs,
-                double *phys);
 
             /** \brief Copy Constructor */
             StdQuadExp(const StdQuadExp &T);
@@ -87,15 +79,16 @@ namespace Nektar
 	     *	Note for quadrilateral expansions _base[0] (i.e. p)  modes run 
 	     *  fastest
 	     */
-            void FillMode(int mode, double *array);
+            void FillMode(const int mode, NekDoubleSharedArray &outarray);
 
             //////////////////////////////
             // Integration Methods
             //////////////////////////////
 
-            double Integral(const double *inarray);
+            NekDouble Integral(const NekDoubleSharedArray &inarray);
 
-            void IProductWRTBase(const double * inarray, double * outarray);
+            void IProductWRTBase(const NekDoubleSharedArray &inarray, 
+				 NekDoubleSharedArray &outarray);
 
 	    /** \brief Calculate the inner product of inarray with respect to
 	     *  the basis B=base0*base1 and put into outarray
@@ -122,22 +115,18 @@ namespace Nektar
 	     *  \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
 	     *  {\bf B_0 F}  \f$
 	     */
-            void IProductWRTBase(const double *base0, const double *base1,
-                const double *inarray, double *outarray,
-                int coll_check);
+            void IProductWRTBase(const NekDouble *base0, 
+				 const NekDouble *base1,
+				 const NekDoubleSharedArray &inarray, 
+				 NekDoubleSharedArray &outarray,
+				 int coll_check);
 
             //----------------------------------
             // Local Matrix Routines
             //----------------------------------
 
-			DNekMatSharedPtr GenMassMatrix();
-			DNekMatSharedPtr GenLapMatrix();
-
-            //void GenMassMatrix(double * outarray);
-            //void GenLapMatrix(double * outarray);
-
-            //StdMatContainer * GetMassMatrix();
-            //StdMatContainer * GetLapMatrix();
+            DNekMatSharedPtr GenMassMatrix();
+            DNekMatSharedPtr GenLapMatrix();
 
             //----------------------------
             // Differentiation Methods
@@ -148,52 +137,51 @@ namespace Nektar
 	     *  For quadrilateral region can use the Tensor_Deriv function
 	     *  defined under StdExpansion.
 	     */
-            void Deriv(double * outarray_d1, double *outarray_d2);
+            void PhysDeriv(const NekDoubleSharedArray &inarray, 
+			   NekDoubleSharedArray &out_d0, 
+			   NekDoubleSharedArray &out_d1,
+			   NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
 
 	
-	    /** \brief Calculate the derivative of the physical points 
-	     *
-	     *  For quadrilateral region can use the Tensor_Deriv funcion
-	     *  defined under StdExpansion.
-	     */
-            void Deriv(const double *inarray, double * outarray_d1,
-                double *outarray_d2);
-
             //----------------------------
             // Evaluations Methods
             //-----------------------------
 
-            void BwdTrans(double * outarray);
-            void FwdTrans(const double * inarray);
+            void BwdTrans(const NekDoubleSharedArray &inarray,
+			  NekDoubleSharedArray &outarray);
+            void FwdTrans(const NekDoubleSharedArray &inarray,
+			  NekDoubleSharedArray &outarray);
 
-            double Evaluate(const double * coords);
-            void MapTo(const int edge_ncoeffs, const LibUtilities::BasisType Btype, 
-		       const int eid, const EdgeOrientation eorient, 
+            double PhysEvaluate(const NekDoubleSharedArray &coords);
+
+            void MapTo(const int edge_ncoeffs, 
+		       const LibUtilities::BasisType Btype, 
+		       const int eid, 
+		       const EdgeOrientation eorient, 
 		       StdExpMap &Map);
 
             void MapTo_ModalFormat(const int edge_ncoeffs, 
-				   const LibUtilities::BasisType Btype, const int eid, 
+				   const LibUtilities::BasisType Btype, 
+				   const int eid, 
 				   const EdgeOrientation eorient, 
 				   StdExpMap &Map);
 	    
-	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
-
-	    const int GetEdgeNcoeffs( int i)
+	    const int GetEdgeNcoeffs(const int i)
 	    {
 		ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
 
 		if((i == 0)||(i == 2))
 		{
-		    return  GetBasisOrder(0);
+		    return  GetBasisNumModes(0);
 		}
 		else
 		{
-		    return  GetBasisOrder(1); 
+		    return  GetBasisNumModes(1); 
 		}
 		    
 	    }
 
-	    const BasisType  GetEdgeBasisType( int i)
+	    const LibUtilities::BasisType GetEdgeBasisType(const int i)
 	    {
 		ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
 
@@ -210,7 +198,6 @@ namespace Nektar
 
         protected:
 
-            static StdMatrix s_elmtmats;
 
         private:
 
@@ -229,108 +216,93 @@ namespace Nektar
 		return GetEdgeNcoeffs(i);
 	    }
 
-	    virtual BasisType v_GetEdgeBasisType(const int i)
+	    virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
 	    {
 		return GetEdgeBasisType(i);
 	    }
-
 
             virtual ShapeType v_DetShapeType()
             {
                 return DetShapeType();
             }
 
-            virtual void v_FillMode(const int mode, double *array)
+            virtual void v_FillMode(const int mode, NekDoubleSharedArray &array)
             {
                 FillMode(mode,array);
             }
 
-            virtual double v_Integral(const double *inarray )
+            virtual double v_Integral(const NekDoubleSharedArray &inarray )
             {
                 return Integral(inarray);
             }
 
-            virtual void v_IProductWRTBase(const double * inarray, double * outarray)
+            virtual void v_IProductWRTBase(const NekDoubleSharedArray &inarray,
+					   NekDoubleSharedArray &outarray)
             {
                 IProductWRTBase(inarray,outarray);
             }
 
-            virtual void v_GenMassMatrix(double * outarray)
+            virtual DNekMatSharedPtr v_GenMassMatrix()
             {
-                GenMassMatrix(outarray);
+                return GenMassMatrix();
             }
 
-            virtual void v_GenLapMatrix(double * outarray)
+            virtual DNekMatSharedPtr v_GenLapMatrix()
             {
-                GenLapMatrix(outarray);
+                GenLapMatrix();
             }
 
-            virtual StdMatContainer *v_GetMassMatrix()
-            {
-                return GetMassMatrix();
-            }
 
-            virtual StdMatContainer * v_GetLapMatrix()
-            {
-                return GetLapMatrix();
-            }
+	    virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray,
+		    NekDoubleSharedArray &out_d0,
+		    NekDoubleSharedArray &out_d1,
+		    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
+	    {
+    		PhysDeriv(inarray,out_d0, out_d1);
+	    }
+      
 
-            virtual void v_Deriv(double * outarray_d0, double *outarray_d1)
-            {
-                Deriv(this->m_phys, outarray_d0, outarray_d1);
-            }
+	    virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray, 
+					NekDoubleSharedArray &out_d0,
+					NekDoubleSharedArray &out_d1)
+	    {
+    		PhysDeriv(inarray, out_d0,  out_d1);
+	    }
 
-            virtual void v_StdDeriv(double * outarray_d0, double *outarray_d1)
-            {
-                Deriv(this->m_phys, outarray_d0, outarray_d1);
-            }
 
-            virtual void v_Deriv(const double *inarray, double * outarray_d0,
-                double *outarray_d1)
-            {
-                Deriv(inarray, outarray_d0, outarray_d1);
-            }
+	    virtual void v_BwdTrans(const NekDoubleSharedArray &inarray, 
+				    NekDoubleSharedArray &outarray)
+	    {
+		BwdTrans(inarray, outarray);
+	    }
 
-            virtual void v_StdDeriv(const double *inarray, double * outarray_d0,
-                double *outarray_d1)
-            {
-                Deriv(inarray, outarray_d0, outarray_d1);
-            }
+	    virtual void v_FwdTrans(const NekDoubleSharedArray &inarray, 
+				    NekDoubleSharedArray &outarray)
+	    {
+		FwdTrans(inarray, outarray);
+	    }
 
-            virtual void v_BwdTrans(double * outarray)
-            {
-                BwdTrans(outarray);
-            }
+	    virtual NekDouble v_PhysEvaluate(const NekDoubleSharedArray &Lcoords)
+	    {
+		return PhysEvaluate(Lcoords);
+	    }
 
-            virtual void v_FwdTrans(const double * inarray)
-            {
-                FwdTrans(inarray);
-            }
-
-            virtual double v_Evaluate(const double * coords)
-            {
-                return Evaluate(coords);
-            }
-
-	    virtual void v_MapTo(const int edge_ncoeffs, const BasisType Btype, 
-				 const int eid, const EdgeOrientation eorient,
+	    virtual void v_MapTo(const int edge_ncoeffs, 
+				 const LibUtilities::BasisType Btype, 
+				 const int eid, 
+				 const EdgeOrientation eorient,
 				 StdExpMap &Map)
 	    {
 		MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
 	    }
 
 	    virtual void v_MapTo_ModalFormat(const int edge_ncoeffs, 
-					     const BasisType Btype, 
+					     const LibUtilities::BasisType Btype, 
 					     const int eid, 
 					     const EdgeOrientation eorient,
 					     StdExpMap &Map)
-	    {
+	   {
 		MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
-	    }
-
-	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-	    {
-		SetInvInfo(mat,Mform);
 	    }
 
         };
@@ -342,6 +314,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.9  2007/04/05 11:40:21  pvincent
+* *** empty log message ***
+*
 * Revision 1.8  2007/01/17 16:36:58  pvos
 * updating doxygen documentation
 *

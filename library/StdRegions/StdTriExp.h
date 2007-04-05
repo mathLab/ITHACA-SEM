@@ -57,15 +57,12 @@ namespace Nektar
              *  points and order definition 
              */
                 StdTriExp(const LibUtilities::BasisKey &Ba,
-						  const LibUtilities::BasisKey &Bb);
+			  const LibUtilities::BasisKey &Bb);
 
             /** \brief Constructor using BasisKey class for quadrature points
              *  and order definition where m_coeffs and m_phys are all set.
              */
-/*                StdTriExp(const LibUtilities::BasisKey &Ba,
-						  const LibUtilities::BasisKey &Bb, double *coeffs,
-						  double *phys);
-*/
+
             /** \brief Copy Constructor */
                 StdTriExp(const StdTriExp &T);
 
@@ -76,10 +73,10 @@ namespace Nektar
              *  i.e. Triangle
              */
                 ShapeType DetShapeType()
-                {
-                    return eTriangle;
+		{
+		    return eTriangle;
                 }
-
+		
             //////////////////////////////
             // Integration Methods
             //////////////////////////////
@@ -88,16 +85,18 @@ namespace Nektar
              *  0.5 which is due to the factor \f$ (1-\xi_2)/2 \f$ in the 
              *  integral weight
              */
-                double Integral(const double *inarray);
+                NekDouble Integral(const NekDoubleSharedArray &inarray);
 
-                void IProductWRTBase(const double * inarray, double * outarray);
+                void IProductWRTBase(const NekDoubleSharedArray &inarray, 
+				     NekDoubleSharedArray &outarray);
 
             /** \brief Fill outarray with mode \a mode of expansion
              *
              * Note for quadrilateral expansions _base[0] (i.e. p)  modes run 
              *  fastest
              */
-                void FillMode(const int mode, double *outarray);
+                void FillMode(const int mode, 
+			      NekDoubleSharedArray &outarray);
 
             ///////////////////////////////////
             // Differentiation Methods
@@ -114,11 +113,9 @@ namespace Nektar
              *  \right |_{\eta_2}  + \left . \frac{\partial u}{\partial d\eta_2}
              *  \right |_{\eta_1}  \f$
              */
-	            void PhysDeriv(const double *inarray, double * outarray_d1,
-                           	   double *outarray_d2);
-
-            /** \brief Calculate the derivative of the physical points */
-                void PhysDeriv(double * outarray_d1, double *outarray_d2);
+		void PhysDeriv(const NekDoubleSharedArray &inarray, 
+			       NekDoubleSharedArray &outarray_d1,
+			       NekDoubleSharedArray &outarray_d2);
 
             //-----------------------------
             // Evaluations Methods
@@ -128,30 +125,28 @@ namespace Nektar
              *
              *  \b Note: That 'q' (base[1]) runs fastest in this element 
              */
-                void BwdTrans(double * outarray);
-                void FwdTrans(const double * inarray);
+                void BwdTrans(const NekDoubleSharedArray &inarray,
+			      NekDoubleSharedArray &outarray);
+                void FwdTrans(const NekDoubleSharedArray &inarray,
+			      NekDoubleSharedArray &outarray);
 
             /** \brief Single Point Evaluation */
-                double Evaluate(const double * coords);
+                NekDouble PhysEvaluate(const NekDoubleSharedArray &coords);
 
                 DNekMatSharedPtr GenMassMatrix();
                 DNekMatSharedPtr GenLapMatrix();
-/*
-                void MapTo(const int edge_ncoeffs,
-						   const LibUtilities::BasisType Btype, const int eid,
-						   const EdgeOrientation eorient, StdExpMap &Map);
-
+		void MapTo(const int edge_ncoeffs,
+			   const LibUtilities::BasisType Btype, const int eid,
+			   const EdgeOrientation eorient, StdExpMap &Map);
+		
                 void MapTo_ModalFormat(const int edge_ncoeffs,
                                        const LibUtilities::BasisType Btype,
                                        const int eid,
                                        const EdgeOrientation eorient,
                                        StdExpMap &Map);
-*/
+		
                 void WriteToFile(std::ofstream &outfile);
                 void WriteCoeffsToFile(std::ofstream &outfile);
-
-//                void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
-                void SetInvInfo(DNekMatSharedPtr mat, MatrixType Mform);
 
                 int GetEdgeNcoeffs(const int i)
                 {
@@ -159,12 +154,10 @@ namespace Nektar
 
                     if (i == 0)
                     {
-//                        return GetBasisOrder(0);
-						return GetBasisNumModes(0);
+			return GetBasisNumModes(0);
                     }
                     else
                     {
-//                        return GetBasisOrder(1);
                         return GetBasisNumModes(1);
                     }
 
@@ -186,9 +179,6 @@ namespace Nektar
                 }
 
             protected:
-
-//                static StdMatrix s_elmtmats;
-                static DNekMat s_elmtmats;
 
 
             /** \brief Calculate the inner product of inarray with respect to
@@ -228,8 +218,9 @@ namespace Nektar
              *  In the triangular space the i (i.e. \f$\eta_1\f$ direction)
              *  ordering still runs fastest by convention.
              */
-                void IProductWRTBase(const double *base0, const double *base1,
-                                     const double *inarray, double *outarray);
+                void IProductWRTBase(const NekDouble *base0, const NekDouble *base1,
+                                     const NekDoubleSharedArray &inarray, 
+				     NekDoubleSharedArray &outarray);
             private:
 
                 virtual int v_GetNverts()
@@ -257,108 +248,88 @@ namespace Nektar
                     return DetShapeType();
                 };
 
-                virtual double v_Integral(const double *inarray )
+                virtual NekDouble v_Integral(const NekDoubleSharedArray &inarray )
                 {
                     return Integral(inarray);
                 }
 
-                virtual void v_IProductWRTBase(const double * inarray,
-											   double * outarray)
-                {
-                    IProductWRTBase(inarray, outarray);
+                virtual void v_IProductWRTBase(const NekDoubleSharedArray &inarray,
+					       NekDoubleSharedArray &outarray)
+		{
+		    IProductWRTBase(inarray, outarray);
                 }
 
-                virtual void v_FillMode(const int mode, double *outarray)
+                virtual void v_FillMode(const int mode, NekDoubleSharedArray &outarray)
                 {
                     FillMode(mode, outarray);
                 }
 
-/*                virtual void v_GenMassMatrix(double *outarray)
-                {
-                    StdExpansion::GenerateMassMatrix(outarray);
-                }
-                
-				virtual StdMatContainer *v_GetMassMatrix()
-                {
-                    return GetMassMatrix();
-                }
-
-                virtual StdMatContainer *v_GetLapMatrix()
-                {
-                    return GetLapMatrix();
-                }
-*/
+		/** \brief Virtual call to GenMassMatrix */
+		virtual DNekMatSharedPtr v_GenMassMatrix()
+		{
+		    return GenMassMatrix();
+		}
 				
-				/** \brief Virtual call to GenMassMatrix */
-				virtual DNekMatSharedPtr v_GenMassMatrix()
-				{
-					return GenMassMatrix();
-				}
-				
-				/** \brief Virtual call to GenLapMatrix */
-				virtual DNekMatSharedPtr v_GenLapMatrix()
-				{
-					return GenLapMatrix();
-				}
+		/** \brief Virtual call to GenLapMatrix */
+		virtual DNekMatSharedPtr v_GenLapMatrix()
+	        {
+		    return GenLapMatrix();
+		}
 
-                virtual void v_PhysDeriv(const double *inarray,
-									double *outarray_d1, double *outarray_d2)
+                virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray,
+					 NekDoubleSharedArray &out_d0,
+					 NekDoubleSharedArray &out_d1,
+					 NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
                 {
-                    PhysDeriv(inarray, outarray_d1, outarray_d2);
+                    PhysDeriv(inarray, out_d1, out_d2);
                 }
 
-                virtual void v_StdPhysDeriv(const double *inarray,
-									double *outarray_d1, double *outarray_d2)
+                virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray,
+					    NekDoubleSharedArray &out_d0, 
+					    NekDoubleSharedArray &out_d1)
                 {
-                    PhysDeriv(inarray, outarray_d1, outarray_d2);
-                }
-
-                virtual void v_PhysDeriv(double *outarray_d1,
-										 double *outarray_d2)
-                {
-                    PhysDeriv(&m_phys[0], outarray_d1, outarray_d2);
-                }
-
-                virtual void v_StdPhysDeriv(double *outarray_d1,
-											double *outarray_d2)
-                {
-                    PhysDeriv(&m_phys[0], outarray_d1, outarray_d2);
+                    PhysDeriv(inarray, out_d0, out_d1);
                 }
 
                 /** \brief Virtual call to StdTriExp::BwdTrans */
-				virtual void v_BwdTrans(double *outarray)
+		virtual void v_BwdTrans(const NekDoubleSharedArray &inarray,
+					NekDoubleSharedArray &outarray)
                 {
-                    BwdTrans(outarray);
+                    BwdTrans(inarray,outarray);
                 }
 
                 /** \brief Virtual call to StdTriExp::FwdTrans */
-                virtual void v_FwdTrans(const double *inarray)
+                virtual void v_FwdTrans(const NekDoubleSharedArray &inarray,
+					NekDoubleSharedArray &outarray)
                 {
-                    FwdTrans(inarray);
+                    FwdTrans(inarray,outarray);
                 }
 
-                virtual double v_Evaluate(const double *coords)
+                virtual NekDouble v_Evaluate(const NekDoubleSharedArray &coords)
                 {
-                    return Evaluate(coords);
+                    return PhysEvaluate(coords);
                 }
-/*
+		
                 virtual void v_MapTo(const int edge_ncoeffs,
-								 const LibUtilities::BasisType Btype, 
-								 const int eid, const EdgeOrientation eorient,
-								 StdExpMap &Map)
+				     const LibUtilities::BasisType Btype, 
+				     const int eid, 
+				     const EdgeOrientation eorient,
+				     StdExpMap &Map)
                 {
                     MapTo(edge_ncoeffs, Btype, eid, eorient, Map);
                 }
 
                 virtual void v_MapTo_ModalFormat(const int edge_ncoeffs,
-                             const LibUtilities::BasisType Btype,const int eid,
-                             const EdgeOrientation eorient, StdExpMap &Map)
+						 const LibUtilities::BasisType Btype,
+						 const int eid,
+						 const EdgeOrientation eorient, 
+						 StdExpMap &Map)
                 {
                     MapTo_ModalFormat(edge_ncoeffs, Btype, eid, eorient, Map);
                 }
-*/
+		
                 virtual void v_WriteToFile(std::ofstream &outfile)
-                {
+		{
                     WriteToFile(outfile);
                 }
 
@@ -366,14 +337,6 @@ namespace Nektar
                 {
                     WriteCoeffsToFile(outfile);
                 }
-
-//				According to SetInvInfo                
-				virtual void v_SetInvInfo(DNekMatSharedPtr mat,
-										  MatrixType Mform)
-                {
-                    SetInvInfo(mat, Mform);
-                }
-
         };
 
     } //end of namespace
@@ -383,6 +346,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.8  2007/03/31 08:18:07  bcarmo
+ * Changes in order to make the code compile
+ *
  * Revision 1.7  2007/01/17 16:36:58  pvos
  * updating doxygen documentation
  *

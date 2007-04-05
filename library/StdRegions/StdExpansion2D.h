@@ -58,44 +58,6 @@ namespace Nektar
 
 
             /** \brief Calculate the 2D derivative in the local
-             *  tensor/collapsed coordinate  at the physical points 
-             *
-             *  This is mainly a wrapper around StdExpansion2D::Tensor_Deriv
-             *
-             *  This function is independent of the expansion basis and can
-             *  therefore be defined for all tensor product distribution of
-             *  quadrature points in a generic manner.  The key operations are:
-             *
-             *  - \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
-             *  - \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
-             *  
-             *  This function takes the physical value space array \a m_phys
-             *  as discrete function to be evaluated
-             * 
-             *  \param  outarray_d0 the resulting array of derivative in the 
-             *  \f$\eta_1\f$ direction will be stored in outarray_d0 as output
-             *  of the function
-             *  \param outarray_d1 the resulting array of derivative in the 
-             *  \f$\eta_2\f$ direction will be stored in outarray_d1 as output 
-             *  of the function
-             *
-             *  Recall that: 
-             *  \f$
-             *  \hspace{1cm} \begin{array}{llll}
-             *  \mbox{Shape}    & \mbox{Cartesian coordinate range} &
-             *  \mbox{Collapsed coord.}      & 
-             *  \mbox{Collapsed coordinate definition}\\
-             *  \mbox{Quadrilateral}  & -1 \leq \xi_1,\xi_2 \leq  1   
-             *  & -1 \leq \eta_1,\eta_2 \leq 1 
-             *  & \eta_1 = \xi_1, \eta_2 = \xi_2\\
-             *  \mbox{Triangle}  & -1 \leq \xi_1,\xi_2; \xi_1+\xi_2 \leq  0   
-             *  & -1 \leq \eta_1,\eta_2 \leq 1  
-             *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
-             *  \end{array} \f$
-             */
-                void PhysTensorDeriv(NekDoubleSharedArray &outarray_d0, NekDoubleSharedArray &outarray_d1);
-
-            /** \brief Calculate the 2D derivative in the local
              *  tensor/collapsed coordinate at the physical points 
              *
              *  This function is independent of the expansion basis and can
@@ -127,7 +89,7 @@ namespace Nektar
              *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
              *  \end{array} \f$
              */
-                void PhysTensorDeriv(NekDoubleSharedArray &inarray, 
+                void PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
 				     NekDoubleSharedArray &outarray_d0,
                                      NekDoubleSharedArray &outarray_d1);
 
@@ -254,6 +216,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.9  2007/03/29 19:35:09  bnelson
+* Replaced boost::shared_array with SharedArray
+*
 * Revision 1.8  2007/03/20 16:58:43  sherwin
 * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *

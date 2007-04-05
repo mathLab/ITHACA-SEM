@@ -98,9 +98,11 @@ namespace Nektar
 	     *  each basis over region will be stored in the array \a outarray as
 	     *  output of the function
 	     */
-	    void IProductWRTBase(const NekDoubleSharedArray & inarray, NekDoubleSharedArray & outarray);
+	    void IProductWRTBase(const NekDoubleSharedArray & inarray, 
+				 NekDoubleSharedArray & outarray);
 	    
-	    void FillMode(const int mode, NekDoubleSharedArray &outarray);
+	    void FillMode(const int mode, 
+			  NekDoubleSharedArray &outarray);
 	    
 	    //----------------------------------
 	    // Local Matrix Routines
@@ -141,8 +143,8 @@ namespace Nektar
 	     */
 	    void PhysDeriv(const NekDoubleSharedArray &inarray, 
 			   NekDoubleSharedArray &out_d0,
-			   NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
-			   NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray);
+			   NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+			   NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
 
 	    
 	    //----------------------------
@@ -339,6 +341,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.14  2007/04/04 20:48:17  sherwin
+ * Update to handle SharedArrays
+ *
  * Revision 1.13  2007/03/29 19:35:09  bnelson
  * Replaced boost::shared_array with SharedArray
  *

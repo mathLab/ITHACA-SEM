@@ -10,10 +10,10 @@ StdExpMap.cpp
 #StdNodalTriExp.cpp
 #StdPrismExp.cpp
 #StdPyrExp.cpp
-#StdQuadExp.cpp
+StdQuadExp.cpp
 StdSegExp.cpp
 #StdTetExp.cpp
-#StdTriExp.cpp
+StdTriExp.cpp
 )
 
 SET(STD_REGIONS_HEADERS

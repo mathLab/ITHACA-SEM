@@ -194,22 +194,22 @@ namespace Nektar
 	
 	void StdSegExp::FwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
 	{
-        if(m_base[0]->Collocation())
-        {
-            Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
-        }
-        else
-        {
-            IProductWRTBase(inarray,outarray);
-
-            // get Mass matrix
-            StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
-            DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
-
-            // solve inverse of system
-            DNekVec   v(m_ncoeffs,outarray,eWrapper);
-            matsys->Solve(v,v);
-        }
+	    if(m_base[0]->Collocation())
+	    {
+		Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
+	    }
+	    else
+	    {
+		IProductWRTBase(inarray,outarray);
+		
+		// get Mass matrix
+		StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
+		DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
+		
+		// solve inverse of system
+		DNekVec   v(m_ncoeffs,outarray,eWrapper);
+		matsys->Solve(v,v);
+	    }
 	}
  
 	NekDouble StdSegExp::PhysEvaluate(const NekDoubleSharedArray &Lcoord)
@@ -272,6 +272,9 @@ namespace Nektar
 
 /** 
  * $Log: StdSegExp.cpp,v $
+ * Revision 1.25  2007/04/04 20:48:17  sherwin
+ * Update to handle SharedArrays
+ *
  * Revision 1.24  2007/03/29 19:35:09  bnelson
  * Replaced boost::shared_array with SharedArray
  *

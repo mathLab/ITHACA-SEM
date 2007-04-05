@@ -50,9 +50,10 @@ namespace Nektar
         {
         }
 
-        StdExpansion2D::StdExpansion2D(int numcoeffs, const LibUtilities::BasisKey &Ba,
+        StdExpansion2D::StdExpansion2D(int numcoeffs, 
+				       const LibUtilities::BasisKey &Ba,
                                        const LibUtilities::BasisKey &Bb):
-                StdExpansion(numcoeffs,2, Ba, Bb)
+	    StdExpansion(numcoeffs,2, Ba, Bb)
         {
         }
 
@@ -69,7 +70,7 @@ namespace Nektar
         // Differentiation Methods
         //----------------------------
 
-        void StdExpansion2D::PhysTensorDeriv(NekDoubleSharedArray &inarray,
+        void StdExpansion2D::PhysTensorDeriv(const NekDoubleSharedArray &inarray,
 					     NekDoubleSharedArray &outarray_d0, 
 					     NekDoubleSharedArray &outarray_d1)
         {
@@ -78,15 +79,8 @@ namespace Nektar
             DNekMatSharedPtr D0, D1;
             NekDoubleSharedArray wsp = GetDoubleTmpSpace(nquad0 * nquad1);
 
-            // check to see if either calling array is inarray
-            if ((outarray_d0 == inarray) || (outarray_d1 == inarray))
-            {
-                Vmath::Vcopy(nquad0*nquad1, &inarray[0], 1, &wsp[0], 1);
-            }
-            else
-            {
-                wsp = inarray;
-            }
+            // copy inarray to wsp in case inarray is used as outarray 
+	    Vmath::Vcopy(nquad0*nquad1, &inarray[0], 1, &wsp[0], 1);
 
             D0 = ExpPointsProperties(0)->GetD();
             D1 = ExpPointsProperties(1)->GetD();
@@ -175,6 +169,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.9  2007/03/29 19:35:09  bnelson
+* Replaced boost::shared_array with SharedArray
+*
 * Revision 1.8  2007/03/20 16:58:42  sherwin
 * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *

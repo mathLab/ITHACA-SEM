@@ -35,7 +35,6 @@
 
 #include <StdRegions/StdQuadExp.h>
 
-
 namespace Nektar
 {
     namespace StdRegions
@@ -46,18 +45,18 @@ namespace Nektar
         StdQuadExp::StdQuadExp()
         {
         }
-
-        StdQuadExp::StdQuadExp(const BasisKey &Ba, const BasisKey &Bb):
-        StdExpansion2D(Ba,Bb,Ba.GetNumBasis()*Bb.GetNumBasis(),NULL,NULL,true)
+		
+		StdQuadExp::StdQuadExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb):
+        StdExpansion2D(Ba,Bb,Ba.GetNumModes()*Bb.GetNumModes(),NULL,NULL,true)
         { 
         }
-
-        StdQuadExp::StdQuadExp(const BasisKey &Ba, const BasisKey &Bb,
+		
+		StdQuadExp::StdQuadExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb,
             double *coeffs, double *phys):
-        StdExpansion2D(Ba,Bb,Ba.GetNumBasis()*Bb.GetNumBasis(),coeffs,phys,false)
+        StdExpansion2D(Ba,Bb,Ba.GetNumModes()*Bb.GetNumModes(),coeffs,phys,false)
         { 
         }
-
+		
         StdQuadExp::StdQuadExp(const StdQuadExp &T):
         StdExpansion2D(T)
         {
@@ -67,8 +66,6 @@ namespace Nektar
         {
         }
 
-
-
         //////////////////////////////
         // Integration Methods
         //////////////////////////////
@@ -77,8 +74,11 @@ namespace Nektar
         {
             const double *z, *w0, *w1;
 
-	    PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w0);
-	    PointsManager()[m_base[1].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w1);
+	    ExpPointsProperties(0)->GetZW(m_base[0],z,w0);
+		ExpPointsProperties(1)->GetZW(m_base[0],z,w1);
+		
+		//PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w0);
+	    //PointsManager()[m_base[1].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w1);
 
             return StdExpansion2D::Integral(inarray,w0,w1);
         }
@@ -116,8 +116,12 @@ namespace Nektar
                 }
 #endif
 
-		PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w0);
-		PointsManager()[m_base[2].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w1);
+		ExpPointsProperties(0)->GetZW(m_base[0],z,w0);
+		ExpPointsProperties(2)->GetZW(m_base[0],z,w1);
+		
+		//PointsManager()[m_base[0].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w0);
+		//PointsManager()[m_base[2].m_basiskey.m_pointskey]->GetZW(m_base[0],z,w1);
+		
                 // Note cannot use outarray as tmp space since dimensions are not always
                 // guarenteed to be sufficient 
 
@@ -558,6 +562,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.10  2007/03/20 16:58:43  sherwin
+* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+*
 * Revision 1.9  2007/01/20 22:35:21  sherwin
 * Version with StdExpansion compiling
 *

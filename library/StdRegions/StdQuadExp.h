@@ -39,7 +39,7 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
-#include <StdRegions/StdMatrix.h>
+//#include <StdRegions/StdMatrix.h>
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdExpMap.h>
 
@@ -58,13 +58,13 @@ namespace Nektar
             /** \brief Constructor using BasisKey class for quadrature
 	     *  points and order definition 
 	     */
-            StdQuadExp(const BasisKey &Ba, const BasisKey &Bb);
+            StdQuadExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb);
 
             /** \brief Constructor using BasisKey class for quadrature
 	     *  points and order nition where m_coeffs and m_phys are all
 	     *  set. 
 	     */
-            StdQuadExp(const BasisKey &Ba, const BasisKey &Bb, double *coeffs,
+            StdQuadExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, double *coeffs,
                 double *phys);
 
             /** \brief Copy Constructor */
@@ -130,11 +130,14 @@ namespace Nektar
             // Local Matrix Routines
             //----------------------------------
 
-            void GenMassMatrix(double * outarray);
-            void GenLapMatrix(double * outarray);
+			DNekMatSharedPtr GenMassMatrix();
+			DNekMatSharedPtr GenLapMatrix();
 
-            StdMatContainer * GetMassMatrix();
-            StdMatContainer * GetLapMatrix();
+            //void GenMassMatrix(double * outarray);
+            //void GenLapMatrix(double * outarray);
+
+            //StdMatContainer * GetMassMatrix();
+            //StdMatContainer * GetLapMatrix();
 
             //----------------------------
             // Differentiation Methods
@@ -164,12 +167,12 @@ namespace Nektar
             void FwdTrans(const double * inarray);
 
             double Evaluate(const double * coords);
-            void MapTo(const int edge_ncoeffs, const BasisType Btype, 
+            void MapTo(const int edge_ncoeffs, const LibUtilities::BasisType Btype, 
 		       const int eid, const EdgeOrientation eorient, 
 		       StdExpMap &Map);
 
             void MapTo_ModalFormat(const int edge_ncoeffs, 
-				   const BasisType Btype, const int eid, 
+				   const LibUtilities::BasisType Btype, const int eid, 
 				   const EdgeOrientation eorient, 
 				   StdExpMap &Map);
 	    
@@ -339,6 +342,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.8  2007/01/17 16:36:58  pvos
+* updating doxygen documentation
+*
 * Revision 1.7  2007/01/17 16:05:41  pvos
 * updated doxygen documentation
 *

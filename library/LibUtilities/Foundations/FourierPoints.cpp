@@ -108,7 +108,7 @@ namespace Nektar
             {
                 for(unsigned int j=0;j<npts;++j)
                 {
-                    (*m_derivmatrix)(i,j) = (*m_derivmatrix)(0,(j-i)%npts);
+                    (*m_derivmatrix)(i,j) = (*m_derivmatrix)(0,(j-i+npts)%npts);
                 }
             }           
         }

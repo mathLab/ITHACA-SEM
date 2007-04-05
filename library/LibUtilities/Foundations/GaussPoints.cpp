@@ -96,6 +96,14 @@ namespace Nektar
                 Polylib::zwgrjm(m_points[0],m_weights,numpoints,0.0,2.0);
                 break;
 
+            case eGaussRadauMAlpha1Beta0:
+                Polylib::zwgrjm(m_points[0],m_weights,numpoints,1.0,0.0);
+                break;
+
+            case eGaussRadauMAlpha2Beta0:
+                Polylib::zwgrjm(m_points[0],m_weights,numpoints,2.0,0.0);
+                break;
+
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
             }
@@ -157,6 +165,14 @@ namespace Nektar
                 Polylib::Dgrjm(dmtemp,m_points[0],numpoints,0.0,2.0);
                 break;
 
+            case eGaussRadauMAlpha1Beta0:
+                Polylib::Dgrjm(dmtemp,m_points[0],numpoints,1.0,0.0);
+                break;
+
+            case eGaussRadauMAlpha2Beta0:
+                Polylib::Dgrjm(dmtemp,m_points[0],numpoints,2.0,0.0);
+                break;
+
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
             }
@@ -209,6 +225,14 @@ namespace Nektar
 
             case eGaussRadauMAlpha0Beta2:
                 Polylib::Imgrjm(interp,m_points[0],xpoints,GetNumPoints(),npts,0.0,2.0);
+		break;
+
+            case eGaussRadauMAlpha1Beta0:
+                Polylib::Imgrjm(interp,m_points[0],xpoints,GetNumPoints(),npts,1.0,0.0);
+                break;
+
+            case eGaussRadauMAlpha2Beta0:
+                Polylib::Imgrjm(interp,m_points[0],xpoints,GetNumPoints(),npts,2.0,0.0);
                 break;
 
             default:

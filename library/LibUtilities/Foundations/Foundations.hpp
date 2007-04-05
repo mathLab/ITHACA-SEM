@@ -84,6 +84,8 @@ namespace Nektar
             eGaussLobattoChebyshev,  //!< 1D Gauss-Lobatto-Legendre quadrature points
             eGaussRadauMAlpha0Beta1, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    1 \f$
             eGaussRadauMAlpha0Beta2, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    2 \f$
+            eGaussRadauMAlpha1Beta0, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    1, \beta =    0 \f$
+            eGaussRadauMAlpha2Beta0, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    2, \beta =    0 \f$
             ePolyEvenlySpaced,       //!< 1D Evenly-spaced points using Lagrange polynomial
             eFourierEvenlySpaced,    //!< 1D Evenly-spaced points using Fourier Fit
             eNodalTriElec,           //!< 2D Nodal Electrostatic Points on a Triangle

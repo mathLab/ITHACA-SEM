@@ -16,12 +16,14 @@ SET(LinearAlgebraHeaders
 	./LinearAlgebra/NekLinAlgAlgorithms.hpp
 	./LinearAlgebra/NekLinSys.hpp
 	./LinearAlgebra/NekMatrix.hpp
+	./LinearAlgebra/NekMatrixObject.hpp
 	./LinearAlgebra/NekMatrixForm.h
 	./LinearAlgebra/NekMatrixFwd.hpp
 	./LinearAlgebra/NekMatrixImpl.hpp
 	./LinearAlgebra/NekMatrixMetadata.hpp
 	./LinearAlgebra/NekPoint.hpp
 	./LinearAlgebra/NekVector.hpp
+	./LinearAlgebra/NekVectorObject.hpp
 	./LinearAlgebra/NekVectorCommon.hpp
 	./LinearAlgebra/NekVectorConstantSized.hpp
 	./LinearAlgebra/NekVectorFwd.hpp

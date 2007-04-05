@@ -50,7 +50,7 @@
 
 namespace Nektar
 {
-   
+
     // \param DataType The type of data held by each element of the vector.
     // \param dim The number of elements in the vector.  If set to 0, the vector
     //            will have a variable number of elements.

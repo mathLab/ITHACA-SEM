@@ -60,7 +60,7 @@ namespace Nektar
     class NekMatrixStoragePolicy<DataType, eFull> 
     {
         public: 
-            static void Transpose(unsigned int rows, unsigned int columns,
+            static void Transpose(unsigned int& rows, unsigned int& columns,
                                   SharedArray<DataType>& data)
             {
                 for(unsigned int row = 0; row < rows; ++row)
@@ -521,6 +521,9 @@ namespace Nektar
 
 /**
     $Log: NekFullMatrix.hpp,v $
+    Revision 1.10  2007/04/04 02:26:41  bnelson
+    *** empty log message ***
+
     Revision 1.9  2007/04/04 02:11:07  bnelson
     Added inversion
 

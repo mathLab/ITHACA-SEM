@@ -36,14 +36,9 @@
 #ifndef NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 #define NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorMetadata.hpp>
-
-#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorConstantSized.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorObject.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixObject.hpp>
 
 #include <functional>
 #include <algorithm>
@@ -56,7 +51,6 @@
 
 namespace Nektar
 {
-    
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
     namespace expt
@@ -147,12 +141,79 @@ namespace Nektar
 
         return result;
     }
+
+
+    template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, unsigned int space, unsigned int dim>
+    NekVector<DataType, dim, space> operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs,
+                                              const NekVector<DataType, dim, space>& rhs)
+    {
+        NekVector<DataType, dim, space> result(lhs.GetRows(), DataType(0));
+        for(unsigned int i = 0; i < result.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < lhs.GetColumns(); ++j)
+            {
+                result[i] += lhs(i,j)*rhs(j);
+            }
+        }
+
+        return result;
+    }
+
+//#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+//    template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, unsigned int space, unsigned int dim>
+//    typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>, 
+//                                        expt::MultiplyOp,
+//                                        NekVector<DataType, dim, space> >::Type
+//    operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs,
+//              const NekVector<DataType, dim, space>& rhs)
+//    {
+//        return expt::CreateBinaryExpression<expt::MultiplyOp>(lhs, rhs);
+//    }
+//
+//    template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, unsigned int space, unsigned int dim>
+//    class MultiplicationTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, 
+//                               Nektar::NekVector<DataType, dim, space> >
+//    {
+//        public:
+//            typedef Nektar::NekMatrix<DataType, lhsForm, BlockType, space> LhsType;
+//            typedef Nektar::NekVector<DataType, dim, space> RhsType;
+//            typedef Nektar::NekVectorMetadata MetadataType;
+//            typedef Nektar::NekVector<DataType, dim, space> result_type;
+//            static const bool HasOpEqual = false;
+//            static const bool HasOpLeftEqual = false;
+//            
+//            static void Multiply(result_type& result, const LhsType& lhs, const RhsType& rhs)
+//            {
+//                ASSERTL0(result.GetRows() == lhs.GetColumns(), "Dimension error in matrix/vector multiply");
+//#ifdef NEKTAR_USING_LAPACK
+//                int m = lhs.GetRows();
+//                int n = lhs.GetColumns();
+//                Blas::Dgemv('T', m, n, 1.0, lhs.GetPtr().get(),  m, rhs.GetPtr().get(),
+//                            1. 1.0, result.GetPtr().get(), 1);
+//#else
+//                for(unsigned int i = 0; i < result.GetRows(); ++i)
+//                {
+//                    result[i] = DataType(0);
+//                    for(unsigned int j = 0; j < result.GetColumns(); ++j)
+//                    {
+//                        result[i] += lhs(i,j)*rhs(j);
+//                    }
+//                }
+//#endif //NEKTAR_USING_LAPACK
+//            }
+//
+//    };
+////#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.16  2007/02/15 06:56:55  bnelson
+    *** empty log message ***
+
     Revision 1.15  2007/02/04 00:15:41  bnelson
     *** empty log message ***
 

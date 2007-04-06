@@ -45,6 +45,7 @@ namespace Nektar
         void testOffset();
         void testConstruction();
         void testAssignment();
+        void testFunctionCall();
     }
 }
 

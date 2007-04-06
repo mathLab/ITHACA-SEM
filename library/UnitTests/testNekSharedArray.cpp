@@ -144,83 +144,175 @@ namespace Nektar
         
         void testConstruction()
         {
-            //{
-            //    CountedObject<double>::ClearCounters();
+            {
+                CountedObject<double>::ClearCounters();
 
-            //    SharedArray<CountedObject<double> > non_const_array = 
-            //        MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
-            //    const SharedArray<CountedObject<double> > const_array = 
-            //        MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
+                SharedArray<CountedObject<double> > a1 = 
+                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
+                SharedArray<const CountedObject<double> > a2 = 
+                    MemoryManager::AllocateSharedArray<const CountedObject<double> >(10);
+                const SharedArray<CountedObject<double> > a3 = 
+                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
+                const SharedArray<const CountedObject<double> > a4 = 
+                    MemoryManager::AllocateSharedArray<const CountedObject<double> >(10);
 
-            //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
-            //    {
-            //        SharedArray<CountedObject<double> > a1(non_const_array);
-            //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
-            //    }
-            //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
-            //    {
-            //        //SharedArray<CountedObject<double> > a2(const_array);
-            //        //BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
-            //    }
+                {
+                    // All should compile.
+                    SharedArray<const CountedObject<double> > b1(a1);
+                    SharedArray<const CountedObject<double> > b2(a2);
+                    SharedArray<const CountedObject<double> > b3(a3);
+                    SharedArray<const CountedObject<double> > b4(a4);
+                }
 
-            //    // 10 should be destroyed from the copy of the const_array.
-            //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
+                {
+                    // All should compile.
+                    const SharedArray<const CountedObject<double> > b1(a1);
+                    const SharedArray<const CountedObject<double> > b2(a2);
+                    const SharedArray<const CountedObject<double> > b3(a3);
+                    const SharedArray<const CountedObject<double> > b4(a4);
+                }
 
-            //    {
-            //        const SharedArray<CountedObject<double> > a1(non_const_array);
-            //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
-            //    }
-            //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
-            //    {
-            //        //const SharedArray<CountedObject<double> > a2(const_array);
-            //        //BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
-            //    }
+                {
+                    // Commented out should not compile
+                    SharedArray<CountedObject<double> > b1(a1);
+                    //SharedArray<CountedObject<double> > b2(a2);
+                    //SharedArray<CountedObject<double> > b3(a3);
+                    //SharedArray<CountedObject<double> > b4(a4);
+                }
 
-            //    // TODO - Ideally we could detect that a const object is being 
-            //    // created and avoid the copy.
-            //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 20);
-            //}
+                {
+                    // Commented out should not compile
+                    const SharedArray<CountedObject<double> > b1(a1);
+                    //const SharedArray<CountedObject<double> > b2(a2);
+                    //const SharedArray<CountedObject<double> > b3(a3);
+                    //const SharedArray<CountedObject<double> > b4(a4);
+                }
+                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
+            }
+            BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 40);
+
+            {
+                // TODO - Find a way to prohibit data not on the heap.
+                double* data1 = new double[10];
+                double* data2 = new double[10];
+                for(int i = 0; i < 10; ++i)
+                {
+                    data1[i] = i+1;
+                    data2[i] = i+1;
+                }
+                
+                SharedArray<double> a1(data1, 10);
+                SharedArray<const double> a2(data2, 10);
+                
+                {
+                    SharedArray<const double> b1(a1);
+                    a1[0] = 17.0;
+                    BOOST_CHECK_EQUAL(b1[0], 17.0);
+                    BOOST_CHECK_EQUAL(b1[0], a1[0]);
+
+                    // Should not compile.
+                    //b1[0] = 15;
+                    //b1.get()[1] = 15;
+                }
+
+                {
+                    SharedArray<double> b1(a1);
+                    b1[0] = 23.0;
+                    BOOST_CHECK_EQUAL(b1[0], 23.0);
+                    BOOST_CHECK_EQUAL(b1[0], a1[0]);
+                }
+            }
         }
 
         void testAssignment()
         {
-        //    {
-        //        CountedObject<double>::ClearCounters();
+            {
+                CountedObject<double>::ClearCounters();
 
-        //        SharedArray<CountedObject<double> > non_const_array = 
-        //            MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
-        //        const SharedArray<CountedObject<double> > const_array = 
-        //            MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
+                SharedArray<CountedObject<double> > a1 = 
+                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
+                SharedArray<const CountedObject<double> > a2 = 
+                    MemoryManager::AllocateSharedArray<const CountedObject<double> >(10);
+                const SharedArray<CountedObject<double> > a3 = 
+                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
+                const SharedArray<const CountedObject<double> > a4 = 
+                    MemoryManager::AllocateSharedArray<const CountedObject<double> >(10);
 
-        //        {
-        //            SharedArray<CountedObject<double> > a1;
-        //            a1 = non_const_array;
-        //            //a1 = const_array;
-        //        }
+                {
+                    // All should compile.
+                    SharedArray<const CountedObject<double> > b1;
+                    SharedArray<const CountedObject<double> > b2;
+                    SharedArray<const CountedObject<double> > b3;
+                    SharedArray<const CountedObject<double> > b4;
 
-        //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
+                    b1 = a1;
+                    b2 = a2;
+                    b3 = a3;
+                    b4 = a4;
+                }
 
-        //        {
-        //            SharedArray<CountedObject<double> > a2;
-        //            a2.Assign(const_array);
-        //        }
+                {
+                    // None should compile, we can't assign into a constant 
+                    // Shared Array
+                    const SharedArray<const CountedObject<double> > b1;
+                    const SharedArray<const CountedObject<double> > b2;
+                    const SharedArray<const CountedObject<double> > b3;
+                    const SharedArray<const CountedObject<double> > b4;
 
-        //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
+                    //b1 = a1;
+                    //b2 = a2;
+                    //b3 = a3;
+                    //b4 = a4;
+                }
 
-        //        {
-        //            const SharedArray<CountedObject<double> > a2;
-        //            //a2 = SharedArray<CountedObject<double> >(non_const_array);
-        //        }
-        //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
+                {
+                    // Commented out should not compile
+                    SharedArray<CountedObject<double> > b1;
+                    SharedArray<CountedObject<double> > b2;
+                    SharedArray<CountedObject<double> > b3;
+                    SharedArray<CountedObject<double> > b4;
 
-        //        {
-        //            const SharedArray<CountedObject<double> > a3;
-        //            //a3 = SharedArray<CountedObject<double> >(const_array);
-        //        }
-        //        BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 10);
-        //    }
-        //    BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 30);
-        //}
+                    b1 = a1;
+                    //b2 = a2;
+                    //b3 = a3;
+                    //b4 = a4;
+                }
+
+                {
+                    // None should compile, we can't assign into a constant 
+                    // Shared Array
+                    const SharedArray<CountedObject<double> > b1;
+                    const SharedArray<CountedObject<double> > b2;
+                    const SharedArray<CountedObject<double> > b3;
+                    const SharedArray<CountedObject<double> > b4;
+
+                    //b1 = a1;
+                    //b2 = a2;
+                    //b3 = a3;
+                    //b4 = a4;
+                }
+                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
+            }
+            BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 40);
+        }
+
+        void foo(SharedArray<double>& f)
+        {
+            SharedArray<double> d = MemoryManager::AllocateSharedArray<double>(10);
+            d[0] = 7.1;
+            d[1] = 8.2;
+
+            f = d;
+        }
+
+        void testFunctionCall()
+        {
+            SharedArray<double> a;
+            foo(a);
+
+            BOOST_CHECK_EQUAL(a[0], 7.1);
+            BOOST_CHECK_EQUAL(a[1], 8.2);
+        }
     }
 }
 

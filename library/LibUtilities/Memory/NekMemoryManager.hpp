@@ -169,7 +169,11 @@ namespace Nektar
             {
                 BOOST_STATIC_ASSERT(Capacity > 0);
 #ifdef NEKTAR_MEMORY_POOL_ENABLED
-                DataType* result = static_cast<DataType*>(ThreadSpecificPool<sizeof(DataType)*Capacity>::Allocate());
+                /// Remove the const from the actual array we allocate to prevent problems in the 
+                /// placement new.
+                typedef typename boost::remove_const<DataType>::type AllocateType;
+
+                AllocateType* result = static_cast<AllocateType*>(ThreadSpecificPool<sizeof(AllocateType)*Capacity>::Allocate());
 
                 if( result )
                 {
@@ -178,20 +182,21 @@ namespace Nektar
                     {
                         for(unsigned int i = 0; i < itemsToCreate; ++i)
                         {
-                            DataType* memLocation = &result[i];
-                            new (memLocation) DataType;
+                            AllocateType* memLocation = &result[i];
+                            new (memLocation) DataType();
                             ++nextObjectToCreate;
                         }
                     }
                     catch(...)
                     {
+                        /// TODO - Deallocate in the reverse order.
                         for(unsigned int i = 0; i < nextObjectToCreate; ++i)
                         {
-                            DataType* memLocation = &result[i];
+                            AllocateType* memLocation = &result[i];
                             memLocation->~DataType();
                         }
 
-                        ThreadSpecificPool<sizeof(DataType)*Capacity>::Deallocate(result);
+                        ThreadSpecificPool<sizeof(AllocateType)*Capacity>::Deallocate(result);
                         throw;
                     }
                 }
@@ -373,6 +378,7 @@ namespace Nektar
             {
 #ifdef NEKTAR_MEMORY_POOL_ENABLED
                 BOOST_STATIC_ASSERT(Capacity > 0);
+                /// TODO - To be more consistent with C++, delete in descending order.
                 for(unsigned int i = 0; i < numToDelete; ++i)
                 {
                     DataType* memLocation = &data[i];
@@ -405,6 +411,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.8  2007/03/29 18:42:58  bnelson
+    Replaced boost::shared_array with Nektar::SharedArray and fixed several problems where the compile time array size was being used instead of the run time array size.
+
     Revision 1.7  2007/03/21 16:13:19  sherwin
     Fixed double to NekDouble casting in GetDoubleTmpSpace
 

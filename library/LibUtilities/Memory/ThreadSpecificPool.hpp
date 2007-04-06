@@ -89,11 +89,11 @@ namespace Nektar
             ///
             /// \attention It is an error to deallocate memory not allocated
             /// from this pool.  Doing this will result in undefined behavior.
-            static void Deallocate(void* p)
+            static void Deallocate(const void* p)
             {
                 if( m_pool.get() )
                 {
-                    m_pool->free(p);
+                    m_pool->free(const_cast<void*>(p));
                 }
             }
 
@@ -112,6 +112,9 @@ namespace Nektar
 
 /**
     $Log: ThreadSpecificPool.hpp,v $
+    Revision 1.1  2006/06/01 09:17:24  kirby
+    *** empty log message ***
+
     Revision 1.1  2006/05/04 18:57:44  kirby
     *** empty log message ***
 

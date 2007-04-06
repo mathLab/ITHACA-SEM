@@ -52,6 +52,10 @@
 #include <functional>         // for std::less
 
 #include <LibUtilities/BasicUtils/mojo.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits.hpp>
+#include <boost/mpl/and.hpp>
+#include <boost/mpl/assert.hpp>
 
 namespace Nektar
 {
@@ -91,6 +95,8 @@ namespace Nektar
             typedef SharedArray<T> this_type;
 
         public:
+            template<typename U> friend class SharedArray;
+
             typedef T element_type;
 
             SharedArray() : 
@@ -140,14 +146,32 @@ namespace Nektar
             {
             }
 
-            SharedArray(SharedArray<T>& rhs) :
+            /// We need to have a constructor that takes a non-const and one that
+            /// takes a const, regardless of whether T is a const or not.
+
+            /// Creates a shared array from rhs, incrementing the reference count.
+            SharedArray(SharedArray<typename boost::remove_const<T>::type>& rhs) :
                 px(rhs.px),
                 pn(rhs.pn),
                 m_offset(rhs.m_offset),
                 m_size(rhs.m_size)
             {
+                
             }
 
+            SharedArray(SharedArray<typename boost::add_const<T>::type>& rhs) :
+                px(rhs.px),
+                pn(rhs.pn),
+                m_offset(rhs.m_offset),
+                m_size(rhs.m_size)
+            {
+                /// If you get a compile error pointing here then you have
+                /// tried to create a non-constant shared array with a constant
+                /// shared array as a parameter.  This is not allowed since it would 
+                /// allow you to modify the underlying data of the constant array.
+                BOOST_MPL_ASSERT( (boost::is_const<T>) );
+            }
+     
             SharedArray(Temporary<SharedArray<T> > rhs) :
                 px(rhs.GetValue().px),
                 pn(rhs.GetValue().pn),
@@ -155,15 +179,68 @@ namespace Nektar
                 m_size(rhs.GetValue().m_size)
             {
             }
-                       
-            SharedArray<T>& operator=(SharedArray<T>& rhs)
+
+            SharedArray(Constant<SharedArray<typename boost::add_const<T>::type> > rhs) :
+                px(rhs.GetValue().px),
+                pn(rhs.GetValue().pn),
+                m_offset(rhs.GetValue().m_offset),
+                m_size(rhs.GetValue().m_size)
+            {
+                /// If you get a compile error pointing here then you have
+                /// tried to create a non-constant shared array with a constant
+                /// shared array as a parameter.  This is not allowed since it would 
+                /// allow you to modify the underlying data of the constant array.
+                BOOST_MPL_ASSERT( (boost::is_const<T>) );
+            }
+
+            SharedArray(Constant<SharedArray<typename boost::remove_const<T>::type> > rhs) :
+                px(rhs.GetValue().px),
+                pn(rhs.GetValue().pn),
+                m_offset(rhs.GetValue().m_offset),
+                m_size(rhs.GetValue().m_size)
+            {
+                /// If you get a compile error pointing here then you have
+                /// tried to create a non-constant shared array with a constant
+                /// shared array as a parameter.  This is not allowed since it would 
+                /// allow you to modify the underlying data of the constant array.
+                BOOST_MPL_ASSERT( (boost::is_const<T>) );
+            }
+
+
+            SharedArray<T>& operator=(SharedArray<typename boost::remove_const<T>::type>& rhs)
             {
                 SharedArray<T> temp(rhs);
                 swap(temp);
                 return *this;
             }
 
+            SharedArray<T>& operator=(SharedArray<typename boost::add_const<T>::type>& rhs)
+            {
+                /// If you get a compile error pointing here then you have
+                /// tried to create a non-constant shared array with a constant
+                /// shared array as a parameter.  This is not allowed since it would 
+                /// allow you to modify the underlying data of the constant array.
+                
+                SharedArray<T> temp(rhs);
+                swap(temp);
+                return *this;
+            }
+
             SharedArray<T>& operator=(Temporary<SharedArray<T> > rhs)
+            {
+                SharedArray<T> temp(rhs.GetValue());
+                swap(temp);
+                return *this;
+            }
+
+            SharedArray<T>& operator=(Constant<SharedArray<typename boost::remove_const<T>::type> > rhs)
+            {
+                SharedArray<T> temp(rhs.GetValue());
+                swap(temp);
+                return *this;
+            }
+
+            SharedArray<T>& operator=(Constant<SharedArray<typename boost::add_const<T>::type> > rhs)
             {
                 SharedArray<T> temp(rhs.GetValue());
                 swap(temp);

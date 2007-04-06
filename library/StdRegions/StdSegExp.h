@@ -245,11 +245,11 @@ namespace Nektar
 		return Integral(inarray);
 	    } 
 	    
-            virtual void v_GetCoords(NekDoubleSharedArray &coords_1,
-				     NekDoubleSharedArray &coords_2 = NekDoubleSharedArray(),
-				     NekDoubleSharedArray &coords_3 = NekDoubleSharedArray())
+            virtual void v_GetCoords(NekDoubleSharedArray &coords_0,
+				     NekDoubleSharedArray &coords_1,
+				     NekDoubleSharedArray &coords_2)
 	    {
-		GetCoords(coords_1);
+		GetCoords(coords_0);
 	    }
 
 	    /** \brief Virtual call to StdSegExp::IProduct_WRT_B */
@@ -278,7 +278,7 @@ namespace Nektar
 
 	    /** \brief Virtual call to StdSegExp::Deriv */
 
-        virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray,
+	    virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray,
 		    NekDoubleSharedArray &out_d0,
 		    NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
 		    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
@@ -341,6 +341,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.15  2007/04/05 15:20:11  sherwin
+ * Updated 2D stuff to comply with SharedArray philosophy
+ *
  * Revision 1.14  2007/04/04 20:48:17  sherwin
  * Update to handle SharedArrays
  *

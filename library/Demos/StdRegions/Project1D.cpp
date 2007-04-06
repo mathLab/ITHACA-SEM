@@ -81,25 +81,25 @@ int main(int argc, char *argv[])
 
   if(btype != LibUtilities::eFourier)
   {
-    for(i = 0; i < nq; ++i)
-    {
-      sol[i] = 0.0;
-      for(j = 0; j < order; ++j)
+      for(i = 0; i < nq; ++i)
       {
-	sol[i] += pow(z[i],j);
+	  sol[i] = 0.0;
+	  for(j = 0; j < order; ++j)
+	  {
+	      sol[i] += pow(z[i],j);
+	  }
       }
-    }
   }
   else
   {
-    for(i = 0; i < nq; ++i)
-    {
-      sol[i] = 1.0;
-      for(j = 0; j < order/2-1; ++j)
+      for(i = 0; i < nq; ++i)
       {
-		sol[i] += sin(j*M_PI*z[i]) + cos(j*M_PI*z[i]);
+	  sol[i] = 1.0;
+	  for(j = 0; j < order/2-1; ++j)
+	  {
+	      sol[i] += sin(j*M_PI*z[i]) + cos(j*M_PI*z[i]);
+	  }
       }
-    }
   }
   //---------------------------------------------
   // Set the physical solution into phys space

@@ -196,6 +196,9 @@ namespace Nektar
 		    
 	    }
 
+	    void GetCoords(NekDoubleSharedArray &coords_0, 
+			   NekDoubleSharedArray &coords_1);
+
         protected:
 
 
@@ -226,6 +229,14 @@ namespace Nektar
                 return DetShapeType();
             }
 
+            virtual void v_GetCoords(NekDoubleSharedArray &coords_0,
+				     NekDoubleSharedArray &coords_1,
+				     NekDoubleSharedArray &coords_2)
+	    {
+		GetCoords(coords_0,coords_1);
+	    }
+
+
             virtual void v_FillMode(const int mode, NekDoubleSharedArray &array)
             {
                 FillMode(mode,array);
@@ -254,9 +265,9 @@ namespace Nektar
 
 
 	    virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray,
-		    NekDoubleSharedArray &out_d0,
-		    NekDoubleSharedArray &out_d1,
-		    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
+				     NekDoubleSharedArray &out_d0,
+				     NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+				     NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
 	    {
     		PhysDeriv(inarray,out_d0, out_d1);
 	    }
@@ -314,6 +325,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.10  2007/04/05 15:20:11  sherwin
+* Updated 2D stuff to comply with SharedArray philosophy
+*
 * Revision 1.9  2007/04/05 11:40:21  pvincent
 * *** empty log message ***
 *

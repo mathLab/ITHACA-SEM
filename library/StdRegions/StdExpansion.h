@@ -960,7 +960,7 @@ namespace Nektar
                 DNekMatSharedPtr returnval;
 
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
-                    "been defined for this element");
+			 "been defined for this element");
 
                 return returnval;
             }
@@ -1060,6 +1060,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.40  2007/04/04 21:49:25  sherwin
+* Update for SharedArray
+*
 * Revision 1.39  2007/04/04 20:48:16  sherwin
 * Update to handle SharedArrays
 *

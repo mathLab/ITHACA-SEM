@@ -71,12 +71,12 @@ namespace Nektar
         //////////////////////////////
         NekDouble StdTriExp::Integral(const NekDoubleSharedArray &inarray)
         {
-            const NekDouble *z0,*z1,*w0,*w1;
+            const NekDouble *z1,*w0,*w1;
             int    i,nquad1 = m_base[1]->GetNumPoints();
             NekDoubleSharedArray wsp = GetDoubleTmpSpace(nquad1);
             NekDouble  *w1_tmp  = wsp.get();
 
-	    ExpPointsProperties(0)->GetZW(z0,w0);
+	    w0 = ExpPointsProperties(0)->GetW();
 	    ExpPointsProperties(1)->GetZW(z1,w1);
 
             switch(m_base[1]->GetPointsType())
@@ -111,11 +111,11 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
-            const  NekDouble *z0,*z1,*w0,*w1;
+            const  NekDouble *z1,*w0,*w1;
             NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad0*nquad1);
             NekDoubleSharedArray tmp1 = GetDoubleTmpSpace(nquad0*nquad1);
 
-	    ExpPointsProperties(0)->GetZW(z0,w0);
+	    w0 = ExpPointsProperties(0)->GetW();
 	    ExpPointsProperties(1)->GetZW(z1,w1);
 
             ASSERTL2((m_base[1]->GetBasisType() == LibUtilities::eOrtho_B)||
@@ -229,13 +229,13 @@ namespace Nektar
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            const  NekDouble *z0,*z1,*w;
+            const  NekDouble *z0,*z1;
             NekDoubleSharedArray d0;
             NekDoubleSharedArray wsp1  = GetDoubleTmpSpace(nquad0*nquad1);
             NekDouble *gfac = wsp1.get();
 
-	    ExpPointsProperties(0)->GetZW(z0,w);
-	    ExpPointsProperties(1)->GetZW(z1,w);
+	    z0 = ExpPointsProperties(0)->GetZ();
+	    z1 = ExpPointsProperties(1)->GetZ();
 
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -350,7 +350,7 @@ namespace Nektar
                 coll[1] = coords[1]; 
             }
 
-            return  StdExpansion2D::PhysEvaluate(coll); 
+            return  StdExpansion2D::PhysEvaluate2D(coll); 
         }
 	
 
@@ -449,10 +449,10 @@ namespace Nektar
             int  i,j;
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
-            const NekDouble *z0,*z1,*w0,*w1;
+            const NekDouble *z0,*z1;
 
-	    ExpPointsProperties(0)->GetZW(z0,w0);
-	    ExpPointsProperties(1)->GetZW(z1,w1);
+	    z0 = ExpPointsProperties(0)->GetZ();
+	    z1 = ExpPointsProperties(1)->GetZ();
 
             outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
             outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
@@ -505,12 +505,34 @@ namespace Nektar
             outfile << "]" ; 
         }
 
+	void StdTriExp::GetCoords(NekDoubleSharedArray &coords_0, 
+				  NekDoubleSharedArray &coords_1)
+	{
+	    const NekDouble *z0 = ExpPointsProperties(0)->GetZ();
+	    const NekDouble *z1 = ExpPointsProperties(1)->GetZ();
+	    int nq0 = GetNumPoints(0);
+	    int nq1 = GetNumPoints(1);
+	    int i,j;
+
+	    for(i = 0; i < nq1; ++i)
+	    {
+		for(j = 0; j < nq0; ++j)
+		{
+		    coords_0[i*nq0+j] = (1+z0[j])*(1-z1[i])/2.0 - 1.0;
+		}
+		Vmath::Fill(nq0,z1[i],&coords_1[0] + i*nq0,1);
+	    }
+	}
+
     }//end namespace
 }//end namespace
 
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.12  2007/04/05 15:20:11  sherwin
+* Updated 2D stuff to comply with SharedArray philosophy
+*
 * Revision 1.11  2007/03/20 16:58:43  sherwin
 * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *

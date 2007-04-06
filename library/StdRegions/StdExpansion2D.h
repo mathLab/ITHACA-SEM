@@ -94,12 +94,13 @@ namespace Nektar
                                      NekDoubleSharedArray &outarray_d1);
 
                 // Change names from Deriv to PhysDeriv
-                void PhysDeriv(const NekDoubleSharedArray &inarray, 
-			       NekDoubleSharedArray &outarray_d1,
-                               NekDoubleSharedArray &outarray_d2)
-                {
-                    v_PhysDeriv(inarray, outarray_d1, outarray_d2);
-                }
+		void PhysDeriv (const NekDoubleSharedArray &inarray,
+				NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+				NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
+				NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
+		{
+		    v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
+		}
 
                 void StdPhysDeriv(const NekDoubleSharedArray &inarray, 
 				  NekDoubleSharedArray &outarray_d1,
@@ -191,20 +192,19 @@ namespace Nektar
 				     NekDoubleSharedArray &outarray) = 0;
 	     
 	     virtual double v_Integral(const NekDoubleSharedArray &inarray ) = 0;
-	     virtual double v_Evaluate(const NekDoubleSharedArray &coords) = 0;
 	     
-	     virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray,
-				      NekDoubleSharedArray &outarray_d1, 
-				      NekDoubleSharedArray &outarray_d2) = 0;
+	     virtual void   v_PhysDeriv (const NekDoubleSharedArray &inarray,
+					 NekDoubleSharedArray &out_d0,
+					 NekDoubleSharedArray &out_d1,
+					 NekDoubleSharedArray &out_d2) = 0;
+	     
 	     virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray,
 					 NekDoubleSharedArray &outarray_d1, 
 					 NekDoubleSharedArray &outarray_d2) = 0;
 	     
 	     virtual double v_PhysEvaluate(const NekDoubleSharedArray & coords)
 	     {
-		 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-			  "local expansions");
-            return 0.0;
+		 return PhysEvaluate2D(coords);
 	     }
 
         };
@@ -216,6 +216,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.10  2007/04/05 15:20:11  sherwin
+* Updated 2D stuff to comply with SharedArray philosophy
+*
 * Revision 1.9  2007/03/29 19:35:09  bnelson
 * Replaced boost::shared_array with SharedArray
 *

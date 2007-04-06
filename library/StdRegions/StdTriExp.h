@@ -114,8 +114,8 @@ namespace Nektar
              *  \right |_{\eta_1}  \f$
              */
 		void PhysDeriv(const NekDoubleSharedArray &inarray, 
-			       NekDoubleSharedArray &outarray_d1,
-			       NekDoubleSharedArray &outarray_d2);
+			       NekDoubleSharedArray &outarray_d0,
+			       NekDoubleSharedArray &outarray_d1);
 
             //-----------------------------
             // Evaluations Methods
@@ -133,8 +133,6 @@ namespace Nektar
             /** \brief Single Point Evaluation */
                 NekDouble PhysEvaluate(const NekDoubleSharedArray &coords);
 
-                DNekMatSharedPtr GenMassMatrix();
-                DNekMatSharedPtr GenLapMatrix();
 		void MapTo(const int edge_ncoeffs,
 			   const LibUtilities::BasisType Btype, const int eid,
 			   const EdgeOrientation eorient, StdExpMap &Map);
@@ -177,6 +175,9 @@ namespace Nektar
                     }
 
                 }
+
+		void GetCoords(NekDoubleSharedArray &coords_0, 
+			       NekDoubleSharedArray &coords_1);
 
             protected:
 
@@ -238,6 +239,17 @@ namespace Nektar
                     return GetEdgeNcoeffs(i);
                 }
 
+		/** \brief Virtual call to GenMassMatrix */
+		virtual DNekMatSharedPtr v_GenMassMatrix() 
+		{
+		    return StdExpansion::GenerateMassMatrix();
+		}
+      
+		virtual DNekMatSharedPtr v_GenLapMatrix() 
+		{
+		    return GenLapMatrix();
+		}	    
+
                 virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
                 {
                     return GetEdgeBasisType(i);
@@ -247,6 +259,13 @@ namespace Nektar
                 {
                     return DetShapeType();
                 };
+
+		virtual void v_GetCoords(NekDoubleSharedArray &coords_0,
+					 NekDoubleSharedArray &coords_1,
+					 NekDoubleSharedArray &coords_2)
+		{
+		    GetCoords(coords_0,coords_1);
+		}
 
                 virtual NekDouble v_Integral(const NekDoubleSharedArray &inarray )
                 {
@@ -264,21 +283,9 @@ namespace Nektar
                     FillMode(mode, outarray);
                 }
 
-		/** \brief Virtual call to GenMassMatrix */
-		virtual DNekMatSharedPtr v_GenMassMatrix()
-		{
-		    return GenMassMatrix();
-		}
-				
-		/** \brief Virtual call to GenLapMatrix */
-		virtual DNekMatSharedPtr v_GenLapMatrix()
-	        {
-		    return GenLapMatrix();
-		}
-
                 virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray,
 					 NekDoubleSharedArray &out_d0,
-					 NekDoubleSharedArray &out_d1,
+					 NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
 					 NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
                 {
                     PhysDeriv(inarray, out_d1, out_d2);
@@ -305,7 +312,7 @@ namespace Nektar
                     FwdTrans(inarray,outarray);
                 }
 
-                virtual NekDouble v_Evaluate(const NekDoubleSharedArray &coords)
+                virtual NekDouble v_PhysEvaluate(const NekDoubleSharedArray &coords)
                 {
                     return PhysEvaluate(coords);
                 }
@@ -346,6 +353,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.9  2007/04/05 15:20:11  sherwin
+ * Updated 2D stuff to comply with SharedArray philosophy
+ *
  * Revision 1.8  2007/03/31 08:18:07  bcarmo
  * Changes in order to make the code compile
  *

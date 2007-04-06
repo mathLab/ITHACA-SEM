@@ -66,10 +66,10 @@ namespace Nektar
 
         NekDouble StdQuadExp::Integral(const NekDoubleSharedArray &inarray)
         {
-            const NekDouble *z, *w0, *w1;
+            const NekDouble  *w0, *w1;
 
-	    ExpPointsProperties(0)->GetZW(z,w0);
-	    ExpPointsProperties(1)->GetZW(z,w1);
+	    w0 = ExpPointsProperties(0)->GetW();
+	    w1 = ExpPointsProperties(1)->GetW();
 
             return StdExpansion2D::Integral(inarray,w0,w1);
         }
@@ -92,7 +92,7 @@ namespace Nektar
 	    int    nquad1 = m_base[1]->GetNumPoints();
 	    int    order0 = m_base[0]->GetNumModes();
 	    int    order1 = m_base[1]->GetNumModes();
-	    const NekDouble *z,*w0,*w1;
+	    const NekDouble *w0,*w1;
 	    NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad0*nquad1);
 	    NekDoubleSharedArray tmp1 = GetDoubleTmpSpace(nquad0*nquad1);
 	    
@@ -110,8 +110,8 @@ namespace Nektar
                 }
 #endif
 
-		ExpPointsProperties(0)->GetZW(z,w0);
-		ExpPointsProperties(1)->GetZW(z,w1);
+		w0 = ExpPointsProperties(0)->GetW();
+		w1 = ExpPointsProperties(1)->GetW();
                 // Note cannot use outarray as tmp space since dimensions are not always
                 // guarenteed to be sufficient 
 
@@ -287,7 +287,7 @@ namespace Nektar
 	/// Single Point Evaluation
 	NekDouble StdQuadExp::PhysEvaluate(const NekDoubleSharedArray &coords)
 	{
-	    return  StdExpansion2D::PhysEvaluate(coords); 
+	    return  StdExpansion2D::PhysEvaluate2D(coords); 
 	}
 
 
@@ -461,11 +461,32 @@ namespace Nektar
 		Map.SetMap(1,vert);
 	    }
 	}
+
+	void StdQuadExp::GetCoords(NekDoubleSharedArray &coords_0, 
+				  NekDoubleSharedArray &coords_1)
+	{
+	    const NekDouble *z0 = ExpPointsProperties(0)->GetZ();
+	    const NekDouble *z1 = ExpPointsProperties(1)->GetZ();
+	    int nq0 = GetNumPoints(0);
+	    int nq1 = GetNumPoints(1);
+	    int i;
+
+	    for(i = 0; i < nq1; ++i)
+	    {
+		Blas::Dcopy(nq0,z0, 1,&coords_0[0] + i*nq0,1);
+		Vmath::Fill(nq0,z1[i],&coords_1[0] + i*nq0,1);
+	    }
+	}
+
+
     } //end namespace			
 }//end namespace
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.12  2007/04/05 15:20:11  sherwin
+* Updated 2D stuff to comply with SharedArray philosophy
+*
 * Revision 1.11  2007/04/05 11:39:47  pvincent
 * quad_edited
 *

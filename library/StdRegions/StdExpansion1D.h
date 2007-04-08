@@ -48,7 +48,7 @@ namespace Nektar
 
         class StdExpansion1D: public StdExpansion
         {
-	    
+
         public:
 
             StdExpansion1D();
@@ -56,57 +56,57 @@ namespace Nektar
             StdExpansion1D(const StdExpansion1D &T);
             ~StdExpansion1D();
 
-	    
-	    /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
-	     *  physical quadrature points given by \a inarray and return in
-	     *  \a outarray.
-	     *
-	     *  \param inarray array of a function evaluated at the quadrature
-	     *  points
-	     *  \param outarray the resulting array of the derivative \f$
-	     *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
-	     *  \a outarray as output of the function
-	     */
-            void PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
-				 NekDoubleSharedArray & outarray);
 
-            void PhysDeriv (const NekDoubleSharedArray &inarray,
-			    NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
-			    NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
-			    NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
+            /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
+            *  physical quadrature points given by \a inarray and return in
+            *  \a outarray.
+            *
+            *  \param inarray array of a function evaluated at the quadrature
+            *  points
+            *  \param outarray the resulting array of the derivative \f$
+            *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
+            *  \a outarray as output of the function
+            */
+            void PhysTensorDeriv(SharedArray<const NekDouble> inarray, 
+                NekDoubleSharedArray outarray);
+
+            void PhysDeriv (SharedArray<const NekDouble> inarray,
+                NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+                NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
+                NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
             {
                 v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
             }
 
-            void StdPhysDeriv (const NekDoubleSharedArray &inarray, 
-			       NekDoubleSharedArray &outarray)
+            void StdPhysDeriv (SharedArray<const NekDouble> inarray, 
+                NekDoubleSharedArray &outarray)
             {
                 v_StdPhysDeriv (inarray,outarray);
             }
-	    
-	    /** \brief This function evaluates the expansion at a single
-	     *  (arbitrary) point of the domain
-	     *
-             *  This function is a wrapper around the virtual function 
-             *  \a v_PhysEvaluate()
-	     *
-	     *  Based on the value of the expansion at the quadrature points,
-	     *  this function calculates the value of the expansion at an 
-	     *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
-	     *  given by the pointer \a coords). This operation, equivalent to
-	     *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
-	     *  is evaluated using Lagrangian interpolants through the quadrature
-	     *  points:
-	     *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
-	     *
-             *  This function requires that the physical value array 
-             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys) 
-             *  is set.
-	     * 
-	     *  \param coords the coordinates of the single point
-	     *  \return returns the value of the expansion at the single point
-	     */
-            NekDouble PhysEvaluate(const NekDoubleSharedArray & coords)
+
+            /** \brief This function evaluates the expansion at a single
+            *  (arbitrary) point of the domain
+            *
+            *  This function is a wrapper around the virtual function 
+            *  \a v_PhysEvaluate()
+            *
+            *  Based on the value of the expansion at the quadrature points,
+            *  this function calculates the value of the expansion at an 
+            *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
+            *  given by the pointer \a coords). This operation, equivalent to
+            *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
+            *  is evaluated using Lagrangian interpolants through the quadrature
+            *  points:
+            *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
+            *
+            *  This function requires that the physical value array 
+            *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys) 
+            *  is set.
+            * 
+            *  \param coords the coordinates of the single point
+            *  \return returns the value of the expansion at the single point
+            */
+            NekDouble PhysEvaluate(SharedArray<const NekDouble> coords)
             {
                 return v_PhysEvaluate(coords);
             }
@@ -114,30 +114,30 @@ namespace Nektar
 
 
             /** \brief Evaluate a function at points coords which is assumed
-	     *  to be in local collapsed coordinate format. The function is
-	     *  assumed to be in physical space
-	     */
-            NekDouble PhysEvaluate1D(const NekDoubleSharedArray &coords);
+            *  to be in local collapsed coordinate format. The function is
+            *  assumed to be in physical space
+            */
+            NekDouble PhysEvaluate1D(SharedArray<const NekDouble> coords);
 
-	    /** \brief wrapper around virtual call */
-	    void FwdTrans(const StdExpansion1D &in)
-	    {
-		v_FwdTrans(in);
-	    }
+            /** \brief wrapper around virtual call */
+            void FwdTrans(const StdExpansion1D &in)
+            {
+                v_FwdTrans(in);
+            }
 
-	    void BwdTrans(const StdExpansion1D &in)
-	    {
-		v_BwdTrans(in);
-	    }
+            void BwdTrans(const StdExpansion1D &in)
+            {
+                v_BwdTrans(in);
+            }
 
-            void  BwdTrans (const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
+            void  BwdTrans (SharedArray<const NekDouble> inarray, NekDoubleSharedArray &outarray)
             {
                 v_BwdTrans (inarray, outarray);
             }
 
 
 
-            
+
         protected:
 
         private:
@@ -147,26 +147,26 @@ namespace Nektar
             virtual void v_FwdTrans(const StdExpansion1D &in) = 0;
             virtual void v_BwdTrans(const StdExpansion1D &in) = 0;
 
-	    virtual void v_BwdTrans(const NekDoubleSharedArray &inarray, 
-				    NekDoubleSharedArray &outarray) = 0;
+            virtual void v_BwdTrans(SharedArray<const NekDouble> inarray, 
+                NekDoubleSharedArray &outarray) = 0;
 
 
-	    virtual int v_GetNverts() = 0;
-	    virtual int v_GetNedges()
-	    {
-		ASSERTL0(false,"This function is only valid for 2 and 3D expansions");
-		return 0;
-	    }
-	    virtual int v_GetNfaces()
-	    {
-		ASSERTL0(false,"This function is only valid for 2 and 3D expansions");
-		return 0;
-	    }
+            virtual int v_GetNverts() = 0;
+            virtual int v_GetNedges()
+            {
+                ASSERTL0(false,"This function is only valid for 2 and 3D expansions");
+                return 0;
+            }
+            virtual int v_GetNfaces()
+            {
+                ASSERTL0(false,"This function is only valid for 2 and 3D expansions");
+                return 0;
+            }
 
             virtual ShapeType v_DetShapeType()                = 0;
 
-            virtual int v_get_nodalpoints(const NekDoubleSharedArray x, 
-					  const NekDoubleSharedArray y)
+            virtual int v_get_nodalpoints(SharedArray<const NekDouble> x, 
+                SharedArray<const NekDoubleSharedArray> y)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
                 return 0;
@@ -178,20 +178,20 @@ namespace Nektar
             }
 
 
-	    virtual int v_GetCoordim(void)
-	    {
+            virtual int v_GetCoordim(void)
+            {
                 return 1; 
-	    }
+            }
 
-            virtual void   v_PhysDeriv (const NekDoubleSharedArray &inarray,
-					NekDoubleSharedArray &out_d0,
-					NekDoubleSharedArray &out_d1,
-					NekDoubleSharedArray &out_d2) = 0;
+            virtual void   v_PhysDeriv (SharedArray<const NekDouble> inarray,
+                NekDoubleSharedArray &out_d0,
+                NekDoubleSharedArray &out_d1,
+                NekDoubleSharedArray &out_d2) = 0;
 
-            virtual void   v_StdPhysDeriv (const NekDoubleSharedArray &inarray, 
-					   NekDoubleSharedArray &outarray) = 0;
+            virtual void   v_StdPhysDeriv (SharedArray<const NekDouble> inarray, 
+                NekDoubleSharedArray &outarray) = 0;
 
-            virtual NekDouble v_PhysEvaluate(const NekDoubleSharedArray &coords)
+            virtual NekDouble v_PhysEvaluate(SharedArray<const NekDouble> coords)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                     "local expansions");
@@ -208,6 +208,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.16  2007/04/04 20:48:17  sherwin
+* Update to handle SharedArrays
+*
 * Revision 1.15  2007/03/29 19:35:09  bnelson
 * Replaced boost::shared_array with SharedArray
 *

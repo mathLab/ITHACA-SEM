@@ -55,8 +55,8 @@ namespace Nektar
             StdQuadExp();
 
             /** \brief Constructor using BasisKey class for quadrature
-	     *  points and order definition 
-	     */
+            *  points and order definition 
+            */
             StdQuadExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb);
 
             /** \brief Copy Constructor */
@@ -66,19 +66,19 @@ namespace Nektar
             ~StdQuadExp();
 
             /** \brief Return Shape of region, using ShapeType enum list. 
-	     *  i.e. Quadrilateral
-	     */
+            *  i.e. Quadrilateral
+            */
             ShapeType DetShapeType()
             {
                 return eQuadrilateral;
             };
 
 
-	    /** \brief Fill outarray with mode \a mode of expansion
-	     *
-	     *	Note for quadrilateral expansions _base[0] (i.e. p)  modes run 
-	     *  fastest
-	     */
+            /** \brief Fill outarray with mode \a mode of expansion
+            *
+            *	Note for quadrilateral expansions _base[0] (i.e. p)  modes run 
+            *  fastest
+            */
             void FillMode(const int mode, NekDoubleSharedArray &outarray);
 
             //////////////////////////////
@@ -88,38 +88,38 @@ namespace Nektar
             NekDouble Integral(const NekDoubleSharedArray &inarray);
 
             void IProductWRTBase(const NekDoubleSharedArray &inarray, 
-				 NekDoubleSharedArray &outarray);
+                NekDoubleSharedArray &outarray);
 
-	    /** \brief Calculate the inner product of inarray with respect to
-	     *  the basis B=base0*base1 and put into outarray
-	     *
-	     *  \f$ 
-	     *  \begin{array}{rcl}
-	     *  I_{pq} = (\phi_q \phi_q, u) & = & \sum_{i=0}^{nq_0}
-	     *  \sum_{j=0}^{nq_1}
-	     *  \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} 
-	     *  \xi_{1,j}) \\
-	     *  & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
-	     *  \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} 
-	     *  \end{array}
-	     *  \f$ 
-	     *
-	     *  where
-	     *
-	     *  \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
-	     *
-	     *  which can be implemented as
-	     *
-	     *  \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) 
-	     *  \tilde{u}_{i,j} = {\bf B_1 U}  \f$
-	     *  \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
-	     *  {\bf B_0 F}  \f$
-	     */
+            /** \brief Calculate the inner product of inarray with respect to
+            *  the basis B=base0*base1 and put into outarray
+            *
+            *  \f$ 
+            *  \begin{array}{rcl}
+            *  I_{pq} = (\phi_q \phi_q, u) & = & \sum_{i=0}^{nq_0}
+            *  \sum_{j=0}^{nq_1}
+            *  \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} 
+            *  \xi_{1,j}) \\
+            *  & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
+            *  \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} 
+            *  \end{array}
+            *  \f$ 
+            *
+            *  where
+            *
+            *  \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
+            *
+            *  which can be implemented as
+            *
+            *  \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) 
+            *  \tilde{u}_{i,j} = {\bf B_1 U}  \f$
+            *  \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
+            *  {\bf B_0 F}  \f$
+            */
             void IProductWRTBase(const NekDouble *base0, 
-				 const NekDouble *base1,
-				 const NekDoubleSharedArray &inarray, 
-				 NekDoubleSharedArray &outarray,
-				 int coll_check);
+                const NekDouble *base1,
+                const NekDoubleSharedArray &inarray, 
+                NekDoubleSharedArray &outarray,
+                int coll_check);
 
             //----------------------------------
             // Local Matrix Routines
@@ -132,97 +132,97 @@ namespace Nektar
             // Differentiation Methods
             //----------------------------
 
-	    /** \brief Calculate the derivative of the physical points 
-	     *
-	     *  For quadrilateral region can use the Tensor_Deriv function
-	     *  defined under StdExpansion.
-	     */
+            /** \brief Calculate the derivative of the physical points 
+            *
+            *  For quadrilateral region can use the Tensor_Deriv function
+            *  defined under StdExpansion.
+            */
             void PhysDeriv(const NekDoubleSharedArray &inarray, 
-			   NekDoubleSharedArray &out_d0, 
-			   NekDoubleSharedArray &out_d1,
-			   NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
+                NekDoubleSharedArray &out_d0, 
+                NekDoubleSharedArray &out_d1,
+                NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
 
-	
+
             //----------------------------
             // Evaluations Methods
             //-----------------------------
 
             void BwdTrans(const NekDoubleSharedArray &inarray,
-			  NekDoubleSharedArray &outarray);
+                NekDoubleSharedArray &outarray);
             void FwdTrans(const NekDoubleSharedArray &inarray,
-			  NekDoubleSharedArray &outarray);
+                NekDoubleSharedArray &outarray);
 
             double PhysEvaluate(const NekDoubleSharedArray &coords);
 
             void MapTo(const int edge_ncoeffs, 
-		       const LibUtilities::BasisType Btype, 
-		       const int eid, 
-		       const EdgeOrientation eorient, 
-		       StdExpMap &Map);
+                const LibUtilities::BasisType Btype, 
+                const int eid, 
+                const EdgeOrientation eorient, 
+                StdExpMap &Map);
 
             void MapTo_ModalFormat(const int edge_ncoeffs, 
-				   const LibUtilities::BasisType Btype, 
-				   const int eid, 
-				   const EdgeOrientation eorient, 
-				   StdExpMap &Map);
-	    
-	    const int GetEdgeNcoeffs(const int i)
-	    {
-		ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
+                const LibUtilities::BasisType Btype, 
+                const int eid, 
+                const EdgeOrientation eorient, 
+                StdExpMap &Map);
 
-		if((i == 0)||(i == 2))
-		{
-		    return  GetBasisNumModes(0);
-		}
-		else
-		{
-		    return  GetBasisNumModes(1); 
-		}
-		    
-	    }
+            const int GetEdgeNcoeffs(const int i)
+            {
+                ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
 
-	    const LibUtilities::BasisType GetEdgeBasisType(const int i)
-	    {
-		ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
+                if((i == 0)||(i == 2))
+                {
+                    return  GetBasisNumModes(0);
+                }
+                else
+                {
+                    return  GetBasisNumModes(1); 
+                }
 
-		if((i == 0)||(i == 2))
-		{
-		    return  GetBasisType(0);
-		}
-		else
-		{
-		    return  GetBasisType(1);
-		}
-		    
-	    }
+            }
 
-	    void GetCoords(NekDoubleSharedArray &coords_0, 
-			   NekDoubleSharedArray &coords_1);
+            const LibUtilities::BasisType GetEdgeBasisType(const int i)
+            {
+                ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
+
+                if((i == 0)||(i == 2))
+                {
+                    return  GetBasisType(0);
+                }
+                else
+                {
+                    return  GetBasisType(1);
+                }
+
+            }
+
+            void GetCoords(NekDoubleSharedArray &coords_0, 
+                NekDoubleSharedArray &coords_1);
 
         protected:
 
 
         private:
 
-	    virtual int v_GetNverts()
-	    {
-		return 4;
-	    }
-	    
-	    virtual int v_GetNedges()
-	    {
-		return 4;
-	    }
-	    
-	    virtual int v_GetEdgeNcoeffs(const int i)
-	    {
-		return GetEdgeNcoeffs(i);
-	    }
+            virtual int v_GetNverts()
+            {
+                return 4;
+            }
 
-	    virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
-	    {
-		return GetEdgeBasisType(i);
-	    }
+            virtual int v_GetNedges()
+            {
+                return 4;
+            }
+
+            virtual int v_GetEdgeNcoeffs(const int i)
+            {
+                return GetEdgeNcoeffs(i);
+            }
+
+            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
+            {
+                return GetEdgeBasisType(i);
+            }
 
             virtual ShapeType v_DetShapeType()
             {
@@ -230,11 +230,11 @@ namespace Nektar
             }
 
             virtual void v_GetCoords(NekDoubleSharedArray &coords_0,
-				     NekDoubleSharedArray &coords_1,
-				     NekDoubleSharedArray &coords_2)
-	    {
-		GetCoords(coords_0,coords_1);
-	    }
+                NekDoubleSharedArray &coords_1,
+                NekDoubleSharedArray &coords_2)
+            {
+                GetCoords(coords_0,coords_1);
+            }
 
 
             virtual void v_FillMode(const int mode, NekDoubleSharedArray &array)
@@ -248,7 +248,7 @@ namespace Nektar
             }
 
             virtual void v_IProductWRTBase(const NekDoubleSharedArray &inarray,
-					   NekDoubleSharedArray &outarray)
+                NekDoubleSharedArray &outarray)
             {
                 IProductWRTBase(inarray,outarray);
             }
@@ -263,58 +263,55 @@ namespace Nektar
                 GenLapMatrix();
             }
 
+            virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray,
+                NekDoubleSharedArray &out_d0,
+                NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+                NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
+            {
+                PhysDeriv(inarray,out_d0, out_d1);
+            }
 
-	    virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray,
-				     NekDoubleSharedArray &out_d0,
-				     NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
-				     NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
-	    {
-    		PhysDeriv(inarray,out_d0, out_d1);
-	    }
-      
+            virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray, 
+                NekDoubleSharedArray &out_d0,
+                NekDoubleSharedArray &out_d1)
+            {
+                PhysDeriv(inarray, out_d0,  out_d1);
+            }
 
-	    virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray, 
-					NekDoubleSharedArray &out_d0,
-					NekDoubleSharedArray &out_d1)
-	    {
-    		PhysDeriv(inarray, out_d0,  out_d1);
-	    }
+            virtual void v_BwdTrans(const NekDoubleSharedArray &inarray, 
+                NekDoubleSharedArray &outarray)
+            {
+                BwdTrans(inarray, outarray);
+            }
 
+            virtual void v_FwdTrans(const NekDoubleSharedArray &inarray, 
+                NekDoubleSharedArray &outarray)
+            {
+                FwdTrans(inarray, outarray);
+            }
 
-	    virtual void v_BwdTrans(const NekDoubleSharedArray &inarray, 
-				    NekDoubleSharedArray &outarray)
-	    {
-		BwdTrans(inarray, outarray);
-	    }
+            virtual NekDouble v_PhysEvaluate(const NekDoubleSharedArray &Lcoords)
+            {
+                return PhysEvaluate(Lcoords);
+            }
 
-	    virtual void v_FwdTrans(const NekDoubleSharedArray &inarray, 
-				    NekDoubleSharedArray &outarray)
-	    {
-		FwdTrans(inarray, outarray);
-	    }
+            virtual void v_MapTo(const int edge_ncoeffs, 
+                const LibUtilities::BasisType Btype, 
+                const int eid, 
+                const EdgeOrientation eorient,
+                StdExpMap &Map)
+            {
+                MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
+            }
 
-	    virtual NekDouble v_PhysEvaluate(const NekDoubleSharedArray &Lcoords)
-	    {
-		return PhysEvaluate(Lcoords);
-	    }
-
-	    virtual void v_MapTo(const int edge_ncoeffs, 
-				 const LibUtilities::BasisType Btype, 
-				 const int eid, 
-				 const EdgeOrientation eorient,
-				 StdExpMap &Map)
-	    {
-		MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
-	    }
-
-	    virtual void v_MapTo_ModalFormat(const int edge_ncoeffs, 
-					     const LibUtilities::BasisType Btype, 
-					     const int eid, 
-					     const EdgeOrientation eorient,
-					     StdExpMap &Map)
-	   {
-		MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
-	    }
+            virtual void v_MapTo_ModalFormat(const int edge_ncoeffs, 
+                const LibUtilities::BasisType Btype, 
+                const int eid, 
+                const EdgeOrientation eorient,
+                StdExpMap &Map)
+            {
+                MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
+            }
 
         };
 
@@ -325,6 +322,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.11  2007/04/06 08:44:43  sherwin
+* Update to make 2D regions work at StdRegions level
+*
 * Revision 1.10  2007/04/05 15:20:11  sherwin
 * Updated 2D stuff to comply with SharedArray philosophy
 *

@@ -64,8 +64,8 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdExpansion1D::PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
-					     NekDoubleSharedArray &outarray)
+	void StdExpansion1D::PhysTensorDeriv(SharedArray<const NekDouble> inarray, 
+					     NekDoubleSharedArray outarray)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
 	    DNekMatSharedPtr     D;
@@ -80,19 +80,16 @@ namespace Nektar
 			&wsp[0],1,0.0,&outarray[0],1);
 	}
     
-	NekDouble StdExpansion1D::PhysEvaluate1D(const NekDoubleSharedArray &Lcoord)
+	NekDouble StdExpansion1D::PhysEvaluate1D(SharedArray<const NekDouble> Lcoord)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
 	    NekDouble  val;
 	    DNekMatSharedPtr I;
 	    
 	    ASSERTL2(Lcoord[0] < -1,"Lcoord[0] < -1");
-	    ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1")
-
-
-;
+	    ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1");
 	    
-	    I = ExpPointsProperties(0)->GetI(&Lcoord[0]);
+	    I = ExpPointsProperties(0)->GetI(Lcoord);
 
 	    val = Blas::Ddot(m_base[0]->GetNumPoints(),&((*I).GetPtr())[0],
 			     1,&m_phys[0],1);
@@ -105,6 +102,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.12  2007/04/04 20:48:17  sherwin
+ * Update to handle SharedArrays
+ *
  * Revision 1.11  2007/03/29 19:35:09  bnelson
  * Replaced boost::shared_array with SharedArray
  *

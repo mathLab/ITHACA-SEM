@@ -164,7 +164,7 @@ namespace Nektar
         }
 
 
-        double StdExpansion::Linf(const NekDoubleSharedArray &sol)
+        double StdExpansion::Linf(SharedArray<const NekDouble> sol)
         {
             int     ntot;
             double  val;
@@ -173,7 +173,7 @@ namespace Nektar
             ntot = GetTotPoints();
             wsp  = GetDoubleTmpSpace(ntot);
 
-            Vmath::Vsub(ntot,&sol[0],1,&m_phys[0],1,&wsp[0],1);
+            Vmath::Vsub(ntot,sol.get(),1,&m_phys[0],1,&wsp[0],1);
             Vmath::Vabs(ntot,&wsp[0],1,&wsp[0],1);
             val = Vmath::Vamax(ntot,&wsp[0],1);    
 
@@ -185,7 +185,7 @@ namespace Nektar
             return Vmath::Vamax(GetTotPoints(),&m_phys[0],1);    
         }
 
-        double StdExpansion::L2(const NekDoubleSharedArray &sol)
+        double StdExpansion::L2(SharedArray<const NekDouble> sol)
         {
             int     ntot = GetTotPoints();
             double  val;
@@ -193,8 +193,8 @@ namespace Nektar
 
             wsp = GetDoubleTmpSpace(ntot);
 
-            Vmath::Vsub(ntot, &sol[0], 1, &m_phys[0], 1, &wsp[0], 1);
-            Vmath::Vmul(ntot, &wsp[0], 1, &wsp[0],    1, &wsp[0], 1);
+            Vmath::Vsub(ntot, sol.get(), 1, m_phys.get(), 1, wsp.get(), 1);
+            Vmath::Vmul(ntot, wsp.get(), 1, wsp.get(),  1, wsp.get(), 1);
 
             val = sqrt(v_Integral(wsp));
 
@@ -239,7 +239,7 @@ namespace Nektar
 
         // 2D Interpolation
         void StdExpansion::Interp2D(const  LibUtilities::BasisKey &fbasis0, 
-            const LibUtilities::BasisKey &fbasis1, const NekDoubleSharedArray &from,  
+            const LibUtilities::BasisKey &fbasis1, SharedArray<const NekDouble> from,  
             const LibUtilities::BasisKey &tbasis0,
             const LibUtilities::BasisKey &tbasis1, NekDoubleSharedArray &to)
         {
@@ -253,15 +253,15 @@ namespace Nektar
             ->GetI(tbasis1.GetPointsKey());
 
             Blas::Dgemm('T', 'T', tbasis1.GetNumPoints(), fbasis0.GetNumPoints(),
-                fbasis1.GetNumPoints(), 1.0, &((*I1).GetPtr())[0],  
+                fbasis1.GetNumPoints(), 1.0, I1->GetPtr().get(),  
                 fbasis1.GetNumPoints(),
-			 &from[0],fbasis0.GetNumPoints(), 0.0, &wsp[0],
+			 from.get(),fbasis0.GetNumPoints(), 0.0, wsp.get(),
                 tbasis1.GetNumPoints());
 
             Blas::Dgemm('T', 'T',tbasis0.GetNumPoints(),tbasis1.GetNumPoints(),
-                fbasis0.GetNumPoints(),1.0,&((*I0).GetPtr())[0],
-                fbasis0.GetNumPoints(),&wsp[0], tbasis1.GetNumPoints(),
-                0.0,&to[0], tbasis0.GetNumPoints());
+                fbasis0.GetNumPoints(),1.0,I0->GetPtr().get(),
+                fbasis0.GetNumPoints(),wsp.get(), tbasis1.GetNumPoints(),
+                0.0,to.get(), tbasis0.GetNumPoints());
         }
 
         // 1D Interpolation
@@ -276,7 +276,7 @@ namespace Nektar
 		->GetI(tbasis0.GetPointsKey());
 	    
             Blas::Dgemv('T', fbasis0.GetNumPoints(), tbasis0.GetNumPoints(), 
-			1.0, &((*I0).GetPtr())[0], fbasis0.GetNumPoints(), 
+			1.0, I0->GetPtr().get(), fbasis0.GetNumPoints(), 
 			from, 1, 0.0, to, 1);
         }
 
@@ -295,6 +295,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.29  2007/03/31 00:40:02  bnelson
+* *** empty log message ***
+*
 * Revision 1.28  2007/03/29 19:35:08  bnelson
 * Replaced boost::shared_array with SharedArray
 *

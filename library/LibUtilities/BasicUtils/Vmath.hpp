@@ -56,7 +56,7 @@ namespace Vmath
     
     
     /// \brief Multiply vector z = x*y
-    template<class T>  void Vmul( int n, const T *x, const int incx, T *y,
+    template<class T>  void Vmul( int n, const T *x, const int incx, const T *y,
 				  const int incy,  T*z, const int incz)
     {
 	while( n-- )
@@ -437,6 +437,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.5  2007/04/03 03:51:44  bnelson
+Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
+
 Revision 1.4  2007/01/18 20:59:26  sherwin
 Before new configuration
 

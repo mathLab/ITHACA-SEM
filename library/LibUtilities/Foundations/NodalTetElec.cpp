@@ -56,7 +56,6 @@ namespace Nektar
 
         void NodalTetElec::CalculateWeights()
         {
-            m_weights = (double*)NULL;
             // No weights computed
         }
 

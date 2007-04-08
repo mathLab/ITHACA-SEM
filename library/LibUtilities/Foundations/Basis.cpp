@@ -53,22 +53,22 @@ namespace Nektar
             PointsKey rhsPointsKey = rhs.GetPointsKey();
 
             if (lhsPointsKey  < rhsPointsKey) 
-	    {
-		return true;
-	    }
+            {
+                return true;
+            }
             if (lhsPointsKey != rhsPointsKey) 
-	    {
-		return false;
-	    }
+            {
+                return false;
+            }
 
             if (lhs.m_nummodes < rhs.m_nummodes)
-	    {
-		return true;
-	    }
+            {
+                return true;
+            }
             if (lhs.m_nummodes > rhs.m_nummodes) 
-	    {
-		return false;
-	    }
+            {
+                return false;
+            }
 
             return (lhs.m_basistype < rhs.m_basistype);
         }
@@ -107,8 +107,8 @@ namespace Nektar
 
             // Allocate Memory
             int size = GetTotNumModes()*GetTotNumPoints();
-            m_bdata  = new double [size];
-            m_dbdata = new double [size];
+            m_bdata  = MemoryManager::AllocateSharedArray<double>(size);
+            m_dbdata = MemoryManager::AllocateSharedArray<double>(size);
 
             GenBasis();
         };
@@ -117,11 +117,15 @@ namespace Nektar
         void Basis::GenBasis()
         {
             int i,p,q;
-            double scal,*mode;
-            const double *z, *w, *D;
+            NekDouble scal;
+            SharedArray<NekDouble> mode;
+            SharedArray<const NekDouble> z;
+            SharedArray<const NekDouble> w;
+            const NekDouble *D;
 
-            boost::shared_ptr<Points<double> > pointsptr = PointsManager()[GetPointsKey()];
+            boost::shared_ptr< Points<NekDouble> > pointsptr = PointsManager()[GetPointsKey()];
             pointsptr->GetZW(z,w);
+
             D = &(pointsptr->GetD()->GetPtr())[0];
 
             int numModes = GetNumModes();
@@ -135,7 +139,7 @@ namespace Nektar
 
                 for (p=0; p<numModes; ++p, mode += numPoints)
                 {
-                    Polylib::jacobfd(numPoints, z, mode, NULL, p, 0.0, 0.0);
+                    Polylib::jacobfd(numPoints, z.get(), mode.get(), NULL, p, 0.0, 0.0);
 
                     // normalise 
                     scal = sqrt(0.5*(2.0*p+1.0));
@@ -147,14 +151,14 @@ namespace Nektar
 
                 // define derivative basis
                 Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
-                    numPoints,m_bdata,numPoints,0.0,
-                    m_dbdata,numPoints);
+                    numPoints,m_bdata.get(),numPoints,0.0,
+                    m_dbdata.get(),numPoints);
                 break;
 
 
             case eOrtho_B:
                 {
-                    double *one_m_z_pow;//,fac;
+                    SharedArray<double> one_m_z_pow;//,fac;
 
                     // bdata should be of size order*(order+1)/2*zorder;
 
@@ -167,7 +171,7 @@ namespace Nektar
 
                     for (q = 1; q < numModes; ++q, mode += numPoints)
                     {
-                        Polylib::jacobfd(numPoints, z, mode, NULL, q, 1.0, 0.0);
+                        Polylib::jacobfd(numPoints, z.get(), mode.get(), NULL, q, 1.0, 0.0);
                     }
 
                     one_m_z_pow = m_bdata;
@@ -184,7 +188,7 @@ namespace Nektar
                         mode += numPoints;
 
                         for(q = 1; q < numModes-p; ++q, mode+=numPoints){
-                            Polylib::jacobfd(numPoints, z, mode, NULL, q, 2.0*p+1.0, 0.0);
+                            Polylib::jacobfd(numPoints, z.get(), mode.get(), NULL, q, 2.0*p+1.0, 0.0);
 
                             for(i = 0; i < numPoints; ++i)
                             {
@@ -208,14 +212,15 @@ namespace Nektar
 
                     // define derivative basis 
                     Blas::Dgemm('t','n',numPoints,numModes*(numModes+1)/2,numPoints,1.0,D,numPoints,
-                        m_bdata,numPoints,0.0,m_dbdata,numPoints);
+                        m_bdata.get(),numPoints,0.0,m_dbdata.get(),numPoints);
                 }
                 break; 
 
             case eOrtho_C:
                 {
 
-                    double *one_m_z_pow,scal;//,fac;
+                    SharedArray<double> one_m_z_pow;
+                    double scal;//,fac;
 
                     // bdata should be of size _order*(order+1)*(order+2)/6*zorder;
 
@@ -228,7 +233,7 @@ namespace Nektar
                     mode += numPoints;
                     for (q = 1; q < numModes; ++q, mode += numPoints)
                     {
-                        Polylib::jacobfd(numPoints, z, mode, NULL, q, 2.0, 0.0);
+                        Polylib::jacobfd(numPoints, z.get(), mode.get(), NULL, q, 2.0, 0.0);
                     }
 
                     one_m_z_pow = m_bdata;
@@ -244,7 +249,7 @@ namespace Nektar
 
                         for(q = 1; q < numModes-p; ++q,mode+=numPoints)
                         {
-                            Polylib::jacobfd(numPoints, z, mode, NULL, q, 2.0*p+2.0, 0.0);
+                            Polylib::jacobfd(numPoints, z.get(), mode.get(), NULL, q, 2.0*p+2.0, 0.0);
 
                             for(i = 0; i < numPoints; ++i)
                             {
@@ -270,7 +275,7 @@ namespace Nektar
                     // define derivative basis 
                     Blas::Dgemm('t','n',numPoints,numModes*(numModes+1)*
                         (numModes+2)/6,numPoints,1.0,D,numPoints,
-                        m_bdata,numPoints,0.0,m_dbdata,numPoints);
+                        m_bdata.get(),numPoints,0.0,m_dbdata.get(),numPoints);
                 }       
                 break;
 
@@ -286,7 +291,7 @@ namespace Nektar
 
                 for(p = 2; p < numModes; ++p, mode += numPoints)
                 {
-                    Polylib::jacobfd(numPoints, z, mode, NULL, p-2,1.0,1.0);
+                    Polylib::jacobfd(numPoints, z.get(), mode.get(), NULL, p-2,1.0,1.0);
 
                     for(i = 0; i < numPoints; ++i)
                     {
@@ -296,13 +301,13 @@ namespace Nektar
 
                 // define derivative basis 
                 Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
-                    numPoints,m_bdata,numPoints,0.0,m_dbdata,
+                    numPoints,m_bdata.get(),numPoints,0.0,m_dbdata.get(),
                     numPoints);
                 break;
             case eModified_B: case eModified_C:
                 {
 
-                    double *one_m_z_pow,*one_p_z;
+                    SharedArray<double> one_m_z_pow, one_p_z;
 
                     // bdata should be of size order*(order+1)/2*zorder
 
@@ -317,7 +322,7 @@ namespace Nektar
 
                     for(q = 2; q < numModes; ++q, mode+=numPoints)
                     {
-                        Polylib::jacobfd(numPoints, z, mode, NULL, q-2,1.0,1.0);
+                        Polylib::jacobfd(numPoints, z.get(), mode.get(), NULL, q-2,1.0,1.0);
 
                         for(i = 0; i < numPoints; ++i)
                         {
@@ -335,7 +340,7 @@ namespace Nektar
 
                     for(q = 2; q < numModes; ++q, mode+=numPoints)
                     {
-                        Polylib::jacobfd(numPoints, z, mode, NULL, q-2,1.0,1.0);
+                        Polylib::jacobfd(numPoints, z.get(), mode.get(), NULL, q-2,1.0,1.0);
 
                         for(i = 0; i < numPoints; ++i)
                         {
@@ -359,7 +364,7 @@ namespace Nektar
 
                         for(q = 1; q < numModes-p; ++q, mode+=numPoints)
                         {
-                            Polylib::jacobfd(numPoints,z,mode,NULL, q-1,2*p+1,1.0);
+                            Polylib::jacobfd(numPoints,z.get(),mode.get(),NULL,q-1,2*p+1,1.0);
 
                             for(i = 0; i <  numPoints; ++i)
                             {
@@ -370,29 +375,28 @@ namespace Nektar
 
                     Blas::Dgemm('t','n',numPoints,numModes*(numModes+1)/2,
                         numPoints,1.0,D,numPoints,
-                        m_bdata,numPoints,0.0,m_dbdata,numPoints);
+                        m_bdata.get(),numPoints,0.0,m_dbdata.get(),numPoints);
                 }
                 break;
 
             case eGLL_Lagrange: 
                 {
-                    const double *zp,*wp;
-
                     mode = m_bdata;
-                    (PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)])->GetZW(zp,wp);
+                    boost::shared_ptr< Points<NekDouble> > pointsptr = PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)];
+                    SharedArray<const NekDouble> zp(pointsptr->GetZ());
 
                     for (p=0; p<numModes; ++p,mode += numPoints)
                     {
                         for(q = 0; q < numPoints; ++q)
                         {
-                            mode[q] = Polylib::hglj(p,z[q],zp,numModes,0.0,0.0);
+                            mode[q] = Polylib::hglj(p,z[q],zp.get(),numModes,0.0,0.0);
                         }
                     }
 
                     // define derivative basis 
                     Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
-                        numPoints, m_bdata,numPoints,0.0,
-                        m_dbdata,numPoints);
+                        numPoints, m_bdata.get(),numPoints,0.0,
+                        m_dbdata.get(),numPoints);
 
                 }//end scope
                 break;
@@ -428,7 +432,7 @@ namespace Nektar
 
                 for (p=0,scal = 1; p<numModes; ++p,mode += numPoints)
                 {
-                    Polylib::jacobfd(numPoints, z, mode, NULL, p, -0.5, -0.5);
+                    Polylib::jacobfd(numPoints, z.get(), mode.get(), NULL, p, -0.5, -0.5);
 
                     for(i = 0; i < numPoints; ++i)
                     {
@@ -440,7 +444,7 @@ namespace Nektar
 
                 // define derivative basis 
                 Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
-                    numPoints, m_bdata,numPoints,0.0,m_dbdata,
+                    numPoints, m_bdata.get(),numPoints,0.0,m_dbdata.get(),
                     numPoints);
                 break;
 
@@ -527,6 +531,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.15  2007/04/04 02:10:30  bnelson
+* Made comparison operators const correct.
+*
 * Revision 1.14  2007/04/03 03:58:24  bnelson
 * Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
 *

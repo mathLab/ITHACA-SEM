@@ -126,7 +126,7 @@ namespace Nektar
         boost::shared_ptr< NekMatrix<double> > FourierPoints::CreateMatrix(const PointsKey &pkey)
         {
             int numpoints = pkey.GetNumPoints();
-            const double * xpoints;
+            SharedArray<const NekDouble> xpoints;
 
             PointsManager()[pkey]->GetPoints(xpoints);
 
@@ -134,14 +134,14 @@ namespace Nektar
             return GetI(numpoints, xpoints);
         }
 
-        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(const PointsKey &pkey)
+        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(const PointsKey& pkey)
         {
             ASSERTL0(pkey.GetPointsDim()==1, "Fourier Points can only interp to other 1d point distributions");
 
             return m_InterpManager[pkey];
         }
 
-        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(const double* x)
+        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(SharedArray<const NekDouble> x)
         {
             int numpoints = 1;
 
@@ -149,20 +149,18 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(unsigned int numpoints, const double *x)
+        const boost::shared_ptr<NekMatrix<double> > FourierPoints::GetI(unsigned int numpoints, SharedArray<const NekDouble> x)
         {
-            double * interp = new double[GetNumPoints()*numpoints];
+            SharedArray<NekDouble> interp = MemoryManager::AllocateSharedArray<NekDouble>(GetNumPoints()*numpoints);
 
             CalculateInterpMatrix(numpoints, x, interp);
 
-            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp));
-
-            delete[] interp;
+            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp.get()));
 
             return returnval;
         }
 
-        void FourierPoints::CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp)
+        void FourierPoints::CalculateInterpMatrix(unsigned int npts, SharedArray<const NekDouble> xpoints, SharedArray<NekDouble> interp)
         {
             const double h = 2.0/m_pointsKey.GetNumPoints();
             for(unsigned int i=0;i<npts;++i)

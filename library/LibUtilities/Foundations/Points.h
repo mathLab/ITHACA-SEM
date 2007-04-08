@@ -187,18 +187,6 @@ namespace Nektar
 
             virtual ~Points()
             {
-                unsigned int dim = m_pointsKey.GetPointsDim();
-
-                for(unsigned int i = 0; i < dim; ++i)
-                {
-                    delete[] m_points[i];
-                }
-
-                /// Only delete weights if they have been allocated
-                if(m_weights != (DataType*)NULL)
-                {
-                    delete[] m_weights;
-                }
             }
 
             virtual void Initialize(void)
@@ -228,34 +216,38 @@ namespace Nektar
                 return m_pointsKey.GetPointsType();
             }
 
-            inline double *GetZ() const
+            inline SharedArray<const DataType> GetZ() const
             {
-                return m_points[0];
+                return SharedArray<const DataType>(m_points[0]);
             }
 
-            inline double *GetW() const 
+            inline SharedArray<const DataType> GetW() const 
             {
-                return m_weights; 
+                return SharedArray<const DataType>(m_weights); 
             } 
 
-            inline void GetZW(const double *&z, const double *&w) const 
+            inline void GetZW(SharedArray<const DataType> &z,
+                              SharedArray<const DataType> &w) const 
             {
                 z = m_points[0];
                 w = m_weights;
             }
 
-            inline void GetPoints(const double *&x) const
+            inline void GetPoints(SharedArray<const DataType> &x) const
             {
                 x = m_points[0];
             }
 
-            inline void GetPoints(const double *&x, const double *&y) const
+            inline void GetPoints(SharedArray<const DataType> &x,
+                                  SharedArray<const DataType> &y) const
             {
                 x = m_points[0];
                 y = m_points[1];
             }
 
-            inline void GetPoints(const double *&x, const double *&y, const double *&z) const
+            inline void GetPoints(SharedArray<const DataType> &x,
+                                  SharedArray<const DataType> &y,
+                                  SharedArray<const DataType> &z) const
             {
                 x = m_points[0];
                 y = m_points[1];
@@ -268,13 +260,13 @@ namespace Nektar
             }
 
             virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)=0;
-            virtual const MatrixSharedPtrType GetI(const double *x) = 0;
-            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const double *x) = 0;
+            virtual const MatrixSharedPtrType GetI(SharedArray<const NekDouble> x) = 0;
+            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, SharedArray<const NekDouble> x) = 0;
 
         protected:
             PointsKey m_pointsKey;
-            DataType **m_points;
-            DataType *m_weights;
+            SharedArray< SharedArray<DataType> > m_points;
+            SharedArray<DataType> m_weights;
             MatrixSharedPtrType m_derivmatrix;
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_InterpManager;
 
@@ -283,17 +275,17 @@ namespace Nektar
                 unsigned int pointsDim = GetPointsDim();
                 unsigned int totNumPoints = GetTotNumPoints();
 
-                m_points = new DataType*[pointsDim];
+                m_points = MemoryManager::AllocateSharedArray< SharedArray<DataType> >(pointsDim);
 
                 for (unsigned int i=0; i<pointsDim; ++i)
                 {
-                    m_points[i] = new DataType[totNumPoints];
+                    m_points[i] = MemoryManager::AllocateSharedArray< DataType >(totNumPoints);
                 }
             }
 
             virtual void CalculateWeights()
             {
-                m_weights = new DataType[GetTotNumPoints()];
+                m_weights =  MemoryManager::AllocateSharedArray<DataType>(GetTotNumPoints());
             }
 
             virtual void CalculateDerivMatrix()

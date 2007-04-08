@@ -57,11 +57,11 @@ namespace Nektar
 			}            
 
 			static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
-			boost::shared_ptr< NekMatrix<double> > CreateMatrix(const PointsKey &pkey);
+			boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
 
-			const boost::shared_ptr<NekMatrix<double> > GetI(const PointsKey &pkey);
-			const boost::shared_ptr<NekMatrix<double> > GetI(const double * x);
-			const boost::shared_ptr<NekMatrix<double> > GetI(unsigned int numpoints, const double *x);
+			const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
+			const boost::shared_ptr<NekMatrix<NekDouble> > GetI(SharedArray<const NekDouble> x);
+			const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, SharedArray<const NekDouble> x);
 
 		protected:
 			FourierPoints(const PointsKey &key):PointsBaseType(key)
@@ -103,7 +103,7 @@ namespace Nektar
 			void CalculateWeights();
 			void CalculateDerivMatrix();
 
-			void CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp);
+			void CalculateInterpMatrix(unsigned int npts, SharedArray<const NekDouble> xpoints, SharedArray<NekDouble> interp);
 			double PeriodicSincFunction(const double x, const double h);
 		}; // class FourierPoints
 	} // end of namespace

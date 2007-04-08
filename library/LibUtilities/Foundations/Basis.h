@@ -198,17 +198,6 @@ namespace Nektar
             // default destructor()
             ~Basis()
             {
-                if(m_bdata)
-                {
-                    delete [] m_bdata;  
-                    m_bdata  = NULL;
-               }
-
-                if(m_dbdata)
-                {
-                    delete [] m_dbdata;  
-                    m_dbdata = NULL;
-               }
             };
 
             /** \brief return order of basis */
@@ -268,13 +257,13 @@ namespace Nektar
             }
 
             /** \brief return basis definition array m_bdata */
-            inline const double * GetBdata() const
+            inline const SharedArray<const NekDouble> GetBdata() const
             {
                 return m_bdata;
             }
 
             /** \brief return basis definition array m_dbdata */
-            inline const double * GetDbdata() const
+            inline SharedArray<const NekDouble> GetDbdata() const
             {
                 return m_dbdata;
             }
@@ -288,8 +277,8 @@ namespace Nektar
 
         protected:
             BasisKey    m_basisKey;
-            double      *m_bdata;       /**< Basis definition */
-            double      *m_dbdata;      /**< Derivative Basis definition */
+            SharedArray<NekDouble> m_bdata; /**< Basis definition */
+            SharedArray<NekDouble> m_dbdata; /**< Derivative Basis definition */
 
         private:
 

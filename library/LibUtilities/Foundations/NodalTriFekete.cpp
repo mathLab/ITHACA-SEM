@@ -129,7 +129,6 @@ namespace Nektar
 
         void NodalTriFekete::CalculateWeights()
         {
-            m_weights = (double*)NULL;
             // No weights computed
         }
 

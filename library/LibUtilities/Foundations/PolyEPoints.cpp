@@ -80,7 +80,9 @@ namespace Nektar
             {
                 PointsKey gaussKey(npts, eGaussLobattoLegendre);
                 boost::shared_ptr<Points<double> > ptr = PointsManager()[gaussKey];
-                const double *z,*w;
+                SharedArray<const NekDouble> z;
+                SharedArray<const NekDouble> w;
+
                 ptr->GetZW(z,w);
                 for(unsigned int i=0; i<npts;++i)
                 {
@@ -105,10 +107,9 @@ namespace Nektar
                     (*m_derivmatrix)(i,j) = LagrangePolyDeriv(m_points[0][i],j,m_pointsKey.GetNumPoints(),m_points[0]);
                 }
             }
-
         }
 
-        void PolyEPoints::CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp)
+        void PolyEPoints::CalculateInterpMatrix(unsigned int npts, SharedArray<const NekDouble> xpoints, SharedArray<NekDouble> interp)
         {
             for(unsigned int i=0;i<npts;++i)
             {
@@ -135,14 +136,14 @@ namespace Nektar
             ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
 
             int numpoints = pkey.GetNumPoints();
-            const double * xpoints;
+            SharedArray<const NekDouble> xpoints;
 
             PointsManager()[pkey]->GetPoints(xpoints);
 
             return GetI(numpoints, xpoints);
         }
 
-        const boost::shared_ptr<NekMatrix<double> > PolyEPoints::GetI(const double * x)
+        const boost::shared_ptr<NekMatrix<double> > PolyEPoints::GetI(SharedArray<const NekDouble> x)
         {
             int numpoints = 1;
 
@@ -150,33 +151,32 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const boost::shared_ptr<NekMatrix<double> > PolyEPoints::GetI(unsigned int numpoints, const double *x)
+        const boost::shared_ptr<NekMatrix<double> > PolyEPoints::GetI(unsigned int numpoints, SharedArray<const NekDouble> x)
         {
-            double * interp = new double[GetNumPoints()*numpoints];
+            SharedArray<NekDouble> interp = MemoryManager::AllocateSharedArray<double>(GetNumPoints()*numpoints);
 
             CalculateInterpMatrix(numpoints, x, interp);
 
-            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp));
-
-            delete[] interp;
+            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp.get()));
 
             return returnval;
         }
 
 
-        double PolyEPoints::LagrangeInterpolant(double x, int npts, double *xpts, double * funcvals)
+        double PolyEPoints::LagrangeInterpolant(double x, int npts, SharedArray<const NekDouble> xpts,
+            SharedArray<const NekDouble> funcvals)
         {
             double sum = 0.0;
 
             for(int i=0;i<npts;++i)
             {
-                sum = sum + funcvals[i]*LagrangePoly(x,i,npts,xpts);
+                sum += funcvals[i]*LagrangePoly(x,i,npts,xpts);
             }
             return sum;
         }
 
 
-        double PolyEPoints::LagrangePoly(double x, int pt, int npts, double * xpts)
+        double PolyEPoints::LagrangePoly(double x, int pt, int npts, SharedArray<const NekDouble> xpts)
         {
             double h=1.0;
 
@@ -193,7 +193,7 @@ namespace Nektar
             return h;
         }
 
-        double PolyEPoints::LagrangePolyDeriv(double x, int pt, int npts, double * xpts)
+        double PolyEPoints::LagrangePolyDeriv(double x, int pt, int npts, SharedArray<const NekDouble> xpts)
         {
             double h;
             double y=0.0;

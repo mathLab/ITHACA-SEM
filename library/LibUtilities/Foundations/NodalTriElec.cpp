@@ -129,7 +129,6 @@ namespace Nektar
 
         void NodalTriElec::CalculateWeights()
         {
-            m_weights = (double*)NULL;
             // No weights computed
         }
 

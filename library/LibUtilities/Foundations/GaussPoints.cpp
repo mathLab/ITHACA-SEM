@@ -57,51 +57,51 @@ namespace Nektar
             switch(m_pointsKey.GetPointsType())
             {
             case eGaussGaussLegendre:
-                Polylib::zwgj(m_points[0],m_weights,numpoints,0.0,0.0);
+                Polylib::zwgj(m_points[0].get(),m_weights.get(),numpoints,0.0,0.0);
                 break;
 
             case eGaussRadauMLegendre:
-                Polylib::zwgrjm(m_points[0],m_weights,numpoints,0.0,0.0);
+                Polylib::zwgrjm(m_points[0].get(),m_weights.get(),numpoints,0.0,0.0);
                 break;
 
             case eGaussRadauPLegendre:
-                Polylib::zwgrjp(m_points[0],m_weights,numpoints,0.0,0.0);
+                Polylib::zwgrjp(m_points[0].get(),m_weights.get(),numpoints,0.0,0.0);
                 break;
 
             case eGaussLobattoLegendre: 
-                Polylib::zwglj(m_points[0],m_weights,numpoints,0.0,0.0);
+                Polylib::zwglj(m_points[0].get(),m_weights.get(),numpoints,0.0,0.0);
                 break;
 
             case eGaussGaussChebyshev:
-                Polylib::zwgj(m_points[0],m_weights,numpoints,-0.5,-0.5);
+                Polylib::zwgj(m_points[0].get(),m_weights.get(),numpoints,-0.5,-0.5);
                 break;
 
             case eGaussRadauMChebyshev:
-                Polylib::zwgrjm(m_points[0],m_weights,numpoints,-0.5,-0.5);
+                Polylib::zwgrjm(m_points[0].get(),m_weights.get(),numpoints,-0.5,-0.5);
                 break;
 
             case eGaussRadauPChebyshev:
-                Polylib::zwgrjp(m_points[0],m_weights,numpoints,-0.5,-0.5);
+                Polylib::zwgrjp(m_points[0].get(),m_weights.get(),numpoints,-0.5,-0.5);
                 break;
 
             case eGaussLobattoChebyshev: 
-                Polylib::zwglj(m_points[0],m_weights,numpoints,-0.5,-0.5);
+                Polylib::zwglj(m_points[0].get(),m_weights.get(),numpoints,-0.5,-0.5);
                 break;
 
             case eGaussRadauMAlpha0Beta1:
-                Polylib::zwgrjm(m_points[0],m_weights,numpoints,0.0,1.0);
+                Polylib::zwgrjm(m_points[0].get(),m_weights.get(),numpoints,0.0,1.0);
                 break;
 
             case eGaussRadauMAlpha0Beta2:
-                Polylib::zwgrjm(m_points[0],m_weights,numpoints,0.0,2.0);
+                Polylib::zwgrjm(m_points[0].get(),m_weights.get(),numpoints,0.0,2.0);
                 break;
 
             case eGaussRadauMAlpha1Beta0:
-                Polylib::zwgrjm(m_points[0],m_weights,numpoints,1.0,0.0);
+                Polylib::zwgrjm(m_points[0].get(),m_weights.get(),numpoints,1.0,0.0);
                 break;
 
             case eGaussRadauMAlpha2Beta0:
-                Polylib::zwgrjm(m_points[0],m_weights,numpoints,2.0,0.0);
+                Polylib::zwgrjm(m_points[0].get(),m_weights.get(),numpoints,2.0,0.0);
                 break;
 
             default:
@@ -117,60 +117,60 @@ namespace Nektar
         void GaussPoints::CalculateDerivMatrix()
         {
             // Allocate the derivative matrix.
-            Points<double>::CalculateDerivMatrix();
+            Points<NekDouble>::CalculateDerivMatrix();
 
             int numpoints = m_pointsKey.GetNumPoints();
             int totpoints = m_pointsKey.GetTotNumPoints();
-            double * dmtemp = new double[totpoints*totpoints];
+            double * dmtemp = new NekDouble[totpoints*totpoints];
 
             switch(m_pointsKey.GetPointsType())
             {
             case eGaussGaussLegendre:
-                Polylib::Dgj(dmtemp,m_points[0],numpoints,0.0,0.0);
+                Polylib::Dgj(dmtemp,m_points[0].get(),numpoints,0.0,0.0);
                 break;
 
             case eGaussRadauMLegendre:
-                Polylib::Dgrjm(dmtemp,m_points[0],numpoints,0.0,0.0);
+                Polylib::Dgrjm(dmtemp,m_points[0].get(),numpoints,0.0,0.0);
                 break;
 
             case eGaussRadauPLegendre:
-                Polylib::Dgrjp(dmtemp,m_points[0],numpoints,0.0,0.0);
+                Polylib::Dgrjp(dmtemp,m_points[0].get(),numpoints,0.0,0.0);
                 break;
 
             case eGaussLobattoLegendre:
-                Polylib::Dglj(dmtemp,m_points[0],numpoints,0.0,0.0);
+                Polylib::Dglj(dmtemp,m_points[0].get(),numpoints,0.0,0.0);
                 break;
 
             case eGaussGaussChebyshev:
-                Polylib::Dgj(dmtemp,m_points[0],numpoints,-0.5,-0.5);
+                Polylib::Dgj(dmtemp,m_points[0].get(),numpoints,-0.5,-0.5);
                 break;
 
             case eGaussRadauMChebyshev:
-                Polylib::Dgrjm(dmtemp,m_points[0],numpoints,-0.5,-0.5);
+                Polylib::Dgrjm(dmtemp,m_points[0].get(),numpoints,-0.5,-0.5);
                 break;
 
             case eGaussRadauPChebyshev:
-                Polylib::Dgrjp(dmtemp,m_points[0],numpoints,-0.5,-0.5);
+                Polylib::Dgrjp(dmtemp,m_points[0].get(),numpoints,-0.5,-0.5);
                 break;
 
             case eGaussLobattoChebyshev:
-                Polylib::Dglj(dmtemp,m_points[0],numpoints,-0.5,-0.5);
+                Polylib::Dglj(dmtemp,m_points[0].get(),numpoints,-0.5,-0.5);
                 break;
 
             case eGaussRadauMAlpha0Beta1:
-                Polylib::Dgrjm(dmtemp,m_points[0],numpoints,0.0,1.0);
+                Polylib::Dgrjm(dmtemp,m_points[0].get(),numpoints,0.0,1.0);
                 break;
 
             case eGaussRadauMAlpha0Beta2:
-                Polylib::Dgrjm(dmtemp,m_points[0],numpoints,0.0,2.0);
+                Polylib::Dgrjm(dmtemp,m_points[0].get(),numpoints,0.0,2.0);
                 break;
 
             case eGaussRadauMAlpha1Beta0:
-                Polylib::Dgrjm(dmtemp,m_points[0],numpoints,1.0,0.0);
+                Polylib::Dgrjm(dmtemp,m_points[0].get(),numpoints,1.0,0.0);
                 break;
 
             case eGaussRadauMAlpha2Beta0:
-                Polylib::Dgrjm(dmtemp,m_points[0],numpoints,2.0,0.0);
+                Polylib::Dgrjm(dmtemp,m_points[0].get(),numpoints,2.0,0.0);
                 break;
 
             default:
@@ -182,57 +182,57 @@ namespace Nektar
             delete[] dmtemp;
         }
 
-        void GaussPoints::CalculateInterpMatrix(unsigned int npts, const double * xpoints, double * interp)
+        void GaussPoints::CalculateInterpMatrix(unsigned int npts, SharedArray<const NekDouble> xpoints, SharedArray<NekDouble> interp)
         {
 
             switch(m_pointsKey.GetPointsType())
             {
             case eGaussGaussLegendre:
-                Polylib::Imgj(interp,m_points[0],xpoints,GetNumPoints(),npts,0.0,0.0);
+                Polylib::Imgj(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,0.0,0.0);
                 break;
 
             case eGaussRadauMLegendre:
-                Polylib::Imgrjm(interp,m_points[0],xpoints,GetNumPoints(),npts,0.0,0.0);
+                Polylib::Imgrjm(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,0.0,0.0);
                 break;
 
             case eGaussRadauPLegendre:
-                Polylib::Imgrjp(interp,m_points[0],xpoints,GetNumPoints(),npts,0.0,0.0);
+                Polylib::Imgrjp(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,0.0,0.0);
                 break;
 
             case eGaussLobattoLegendre:
-                Polylib::Imglj(interp,m_points[0],xpoints,GetNumPoints(),npts,0.0,0.0);
+                Polylib::Imglj(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,0.0,0.0);
                 break;
 
             case eGaussGaussChebyshev:
-                Polylib::Imgj(interp,m_points[0],xpoints,GetNumPoints(),npts,-0.5,-0.5);
+                Polylib::Imgj(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,-0.5,-0.5);
                 break;
 
             case eGaussRadauMChebyshev:
-                Polylib::Imgrjm(interp,m_points[0],xpoints,GetNumPoints(),npts,-0.5,-0.5);
+                Polylib::Imgrjm(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,-0.5,-0.5);
                 break;
 
             case eGaussRadauPChebyshev:
-                Polylib::Imgrjp(interp,m_points[0],xpoints,GetNumPoints(),npts,-0.5,-0.5);
+                Polylib::Imgrjp(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,-0.5,-0.5);
                 break;
 
             case eGaussLobattoChebyshev:
-                Polylib::Imglj(interp,m_points[0],xpoints,GetNumPoints(),npts,-0.5,-0.5);
+                Polylib::Imglj(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,-0.5,-0.5);
                 break;
 
             case eGaussRadauMAlpha0Beta1:
-                Polylib::Imgrjm(interp,m_points[0],xpoints,GetNumPoints(),npts,0.0,1.0);
+                Polylib::Imgrjm(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,0.0,1.0);
                 break;
 
             case eGaussRadauMAlpha0Beta2:
-                Polylib::Imgrjm(interp,m_points[0],xpoints,GetNumPoints(),npts,0.0,2.0);
+                Polylib::Imgrjm(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,0.0,2.0);
 		break;
 
             case eGaussRadauMAlpha1Beta0:
-                Polylib::Imgrjm(interp,m_points[0],xpoints,GetNumPoints(),npts,1.0,0.0);
+                Polylib::Imgrjm(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,1.0,0.0);
                 break;
 
             case eGaussRadauMAlpha2Beta0:
-                Polylib::Imgrjm(interp,m_points[0],xpoints,GetNumPoints(),npts,2.0,0.0);
+                Polylib::Imgrjm(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,2.0,0.0);
                 break;
 
             default:
@@ -252,7 +252,7 @@ namespace Nektar
         boost::shared_ptr< NekMatrix<double> > GaussPoints::CreateMatrix(const PointsKey &pkey)
         {
             int numpoints = pkey.GetNumPoints();
-            const double * xpoints;
+            SharedArray<const NekDouble> xpoints;
 
             PointsManager()[pkey]->GetPoints(xpoints);
 
@@ -267,7 +267,7 @@ namespace Nektar
             return m_InterpManager[pkey];
         }
 
-        const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(const double* x)
+        const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(SharedArray<const NekDouble> x)
         {
             int numpoints = 1;
 
@@ -275,15 +275,13 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(unsigned int numpoints, const double *x)
+        const boost::shared_ptr<NekMatrix<double> > GaussPoints::GetI(unsigned int numpoints, SharedArray<const NekDouble> x)
         {
-            double * interp = new double[GetNumPoints()*numpoints];
+            SharedArray<NekDouble> interp = MemoryManager::AllocateSharedArray<double>(GetNumPoints()*numpoints);
 
             CalculateInterpMatrix(numpoints, x, interp);
 
-            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp));
-
-            delete[] interp;
+            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp.get()));
 
             return returnval;
         }

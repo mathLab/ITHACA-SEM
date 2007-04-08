@@ -68,7 +68,7 @@ namespace Nektar
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<DataType> > GetI(const double *x)
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(SharedArray<const NekDouble> x)
             {
                 ASSERTL0(false, "NodalTriElec Method not implemented");
 
@@ -77,7 +77,7 @@ namespace Nektar
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, const double *x)
+            const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, SharedArray<const NekDouble> x)
             {
                 ASSERTL0(false, "NodalTriElec Method not implemented");
 

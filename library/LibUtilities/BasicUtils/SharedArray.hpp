@@ -247,6 +247,12 @@ namespace Nektar
                 return *this;
             }
             
+            SharedArray<T>& operator+=(unsigned int incr)
+            {
+                m_offset += incr;
+                return *this;
+            }
+            
             void reset()
             {
                 this_type().swap(*this);

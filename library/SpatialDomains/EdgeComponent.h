@@ -107,7 +107,7 @@ namespace Nektar
                 return m_xmap[0]; //should never be reached
             }
 
-            NekDouble GetCoord(const int i, const NekDoubleSharedArray &Lcoord);
+            NekDouble GetCoord(const int i, SharedArray<const NekDouble> Lcoord);
                     
             /// \brief Get the orientation of edge1.
             ///
@@ -135,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.8  2007/04/04 21:49:24  sherwin
+// Update for SharedArray
+//
 // Revision 1.7  2007/03/29 19:23:59  bnelson
 // Replaced boost::shared_array with SharedArray
 //

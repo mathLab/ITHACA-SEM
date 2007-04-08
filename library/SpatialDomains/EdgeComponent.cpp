@@ -126,7 +126,7 @@ namespace Nektar
         /** given local collapsed coordinate Lcoord return the value of
         physical coordinate in direction i **/
 
-        NekDouble EdgeComponent::GetCoord(const int i, const NekDoubleSharedArray &Lcoord) 
+        NekDouble EdgeComponent::GetCoord(const int i, SharedArray<const NekDouble> Lcoord) 
         {
 
             ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
@@ -203,6 +203,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.15  2007/04/04 21:49:24  sherwin
+*    Update for SharedArray
+*
 *    Revision 1.14  2007/03/25 15:48:21  sherwin
 *    UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
 *

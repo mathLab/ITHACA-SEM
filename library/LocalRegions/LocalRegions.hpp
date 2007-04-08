@@ -42,68 +42,71 @@
 
 // Definition of main page for doxygen for Local Region Library
 /**
- *\mainpage Local Regions Library
- */
+*\mainpage Local Regions Library
+*/
 
 namespace Nektar
 {
-  namespace LocalRegions
-  {
-
-    enum GeomState
-    {
-      eNotFilled,
-      ePtsFilled,
-    };
-
-  // Defines a "fast find"
-  // Assumes that first/last define the beginning/ending of
-  // a continuous range of classes, and that start is
-  // an iterator between first and last
-
-    template<class InputIterator, class EqualityComparable>
-    InputIterator find(InputIterator first, InputIterator last,
-		       InputIterator startingpoint,
-		       const EqualityComparable& value)
+    namespace LocalRegions
     {
 
-      InputIterator val;
-    
-      if(startingpoint == first)
-      {
-	val = find(first,last,value);
-      }
-      else
-      {
-	val = find(startingpoint,last,value);
-	if(val == last)
-	{
-	  val = find(first,startingpoint,value);
-	  if(val == startingpoint)
-	  {
-	    val = last;
-	  }
-	}
-      }
-      return val;
-    }
+        enum GeomState
+        {
+            eNotFilled,
+            ePtsFilled,
+        };
 
-  } // end of namespace
+        // Defines a "fast find"
+        // Assumes that first/last define the beginning/ending of
+        // a continuous range of classes, and that start is
+        // an iterator between first and last
+
+        template<class InputIterator, class EqualityComparable>
+        InputIterator find(InputIterator first, InputIterator last,
+            InputIterator startingpoint,
+            const EqualityComparable& value)
+        {
+
+            InputIterator val;
+
+            if(startingpoint == first)
+            {
+                val = find(first,last,value);
+            }
+            else
+            {
+                val = find(startingpoint,last,value);
+                if(val == last)
+                {
+                    val = find(first,startingpoint,value);
+                    if(val == startingpoint)
+                    {
+                        val = last;
+                    }
+                }
+            }
+            return val;
+        }
+
+    } // end of namespace
 } // end of namespace
 
 #endif //LOCALREGIONS_H
 
 /** 
- *    $Log: LocalRegions.hpp,v $
- *    Revision 1.1  2006/05/04 18:58:45  kirby
- *    *** empty log message ***
- *
- *    Revision 1.2  2006/03/13 11:17:03  sherwin
- *
- *    First compiing version of Demos in SpatialDomains and LocalRegions. However they do not currently seem to execute properly
- *
- *    Revision 1.1  2006/03/12 07:43:31  sherwin
- *
- *    First revision to meet coding standard. Needs to be compiled
- *
- **/
+*    $Log: LocalRegions.hpp,v $
+*    Revision 1.2  2006/05/06 20:36:16  sherwin
+*    Modifications to get LocalRegions/Project1D working
+*
+*    Revision 1.1  2006/05/04 18:58:45  kirby
+*    *** empty log message ***
+*
+*    Revision 1.2  2006/03/13 11:17:03  sherwin
+*
+*    First compiing version of Demos in SpatialDomains and LocalRegions. However they do not currently seem to execute properly
+*
+*    Revision 1.1  2006/03/12 07:43:31  sherwin
+*
+*    First revision to meet coding standard. Needs to be compiled
+*
+**/

@@ -40,19 +40,15 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-
         // Register Mass Matrix creator. 
         MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
             StdRegions::ShapeType shapeType,
             StdRegions::StdExpansion &stdExpansion)
         {
-
             m_stdMatKey =  MemoryManager::AllocateSharedPtr<StdRegions::StdMatrixKey>(matrixType,shapeType,stdExpansion);
 
             m_metricinfo = stdExpansion.GetMetricInfo(); 
-
         }
-
 
         bool MatrixKey::opLess::operator()(const MatrixKey &lhs, const MatrixKey &rhs)
         {	    
@@ -110,6 +106,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.5  2007/04/04 21:49:23  sherwin
+* Update for SharedArray
+*
 * Revision 1.4  2007/03/20 09:13:37  kirby
 * new geomfactor routines; update for metricinfo; update style
 *

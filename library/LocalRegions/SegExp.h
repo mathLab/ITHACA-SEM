@@ -78,7 +78,7 @@ namespace Nektar
             void GetCoords(NekDoubleSharedArray &coords_1,
 			   NekDoubleSharedArray &coords_2 = NullNekDoubleSharedArray,
 			   NekDoubleSharedArray &coords_3 = NullNekDoubleSharedArray);
-            void GetCoord(const NekDoubleSharedArray &Lcoords, 
+            void GetCoord(SharedArray<const NekDouble> Lcoords, 
 			  NekDoubleSharedArray &coords);
 
 
@@ -96,12 +96,12 @@ namespace Nektar
             //----------------------------
 
             /// \brief Integrate the physical point list \a inarray over region
-            double Integral(const NekDoubleSharedArray &inarray);
+            double Integral(SharedArray<const NekDouble> inarray);
 
 
             /// \brief  Inner product of \a inarray over region with respect to the 
             /// expansion basis (this)->_Base[0] and return in \a outarray 
-            void IProductWRTBase(const NekDoubleSharedArray &inarray, 
+            void IProductWRTBase(SharedArray<const NekDouble> inarray, 
 				 NekDoubleSharedArray &outarray);
 
 
@@ -113,7 +113,7 @@ namespace Nektar
             /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
             physical quadrature points given by \a inarray and return in \a
             outarray. */
-            void PhysDeriv(const NekDoubleSharedArray &inarray, 
+            void PhysDeriv(SharedArray<const NekDouble> inarray, 
 			   NekDoubleSharedArray &out_d0 = NullNekDoubleSharedArray,
 			   NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
 			   NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
@@ -125,10 +125,10 @@ namespace Nektar
             /** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
             store in \a (this)->_coeffs  */
-            void FwdTrans(const NekDoubleSharedArray &inarray, 
+            void FwdTrans(SharedArray<const NekDouble> inarray, 
 			  NekDoubleSharedArray &outarray);
 
-            double PhysEvaluate(const NekDoubleSharedArray &coord);
+            double PhysEvaluate(SharedArray<const NekDouble> coord);
 
         protected:
 
@@ -146,8 +146,8 @@ namespace Nektar
 
             /// \brief  Inner product of \a inarray over region with respect to
             /// the expansion basis \a base and return in \a outarray 
-            inline void IProductWRTBase(const NekDouble *base, 
-					const NekDoubleSharedArray &inarray, 
+            inline void IProductWRTBase(SharedArray<const NekDouble> base, 
+					SharedArray<const NekDouble> inarray, 
 					NekDoubleSharedArray &outarray, 
 					const int coll_check);
 
@@ -170,7 +170,7 @@ namespace Nektar
                 GetCoords(coords_0, coords_1, coords_2);
             }
 
-            virtual void v_GetCoord(const NekDoubleSharedArray &lcoord, 
+            virtual void v_GetCoord(SharedArray<const NekDouble> lcoord, 
 				     NekDoubleSharedArray &coord)
             {
                 GetCoord(lcoord, coord);
@@ -198,26 +198,26 @@ namespace Nektar
 
             /// \brief Virtual call to integrate the physical point list \a inarray
             /// over region (see SegExp::Integral) 
-            virtual NekDouble v_Integral(const NekDoubleSharedArray &inarray )
+            virtual NekDouble v_Integral(SharedArray<const NekDouble> inarray )
             {
                 return Integral(inarray);
             }
 
             /** \brief Virtual call to SegExp::IProduct_WRT_B */
-            virtual void v_IProductWRTBase(const NekDoubleSharedArray &inarray,
+            virtual void v_IProductWRTBase(SharedArray<const NekDouble> inarray,
 					   NekDoubleSharedArray &outarray)
             {
                 IProductWRTBase(inarray,outarray);
             }
 
             /// Virtual call to SegExp::PhysDeriv
-            virtual void v_StdPhysDeriv(const NekDoubleSharedArray & inarray, 
+            virtual void v_StdPhysDeriv(SharedArray<const NekDouble> inarray, 
 					NekDoubleSharedArray &outarray)
             {
                 StdSegExp::PhysDeriv(inarray, outarray);
             }
 
-            virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray, 
+            virtual void v_PhysDeriv(SharedArray<const NekDouble> inarray, 
 				     NekDoubleSharedArray &out_d0 = NullNekDoubleSharedArray,
 				     NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
 				     NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
@@ -226,7 +226,7 @@ namespace Nektar
             }
 
             /// Virtual call to SegExp::FwdTrans
-            virtual void v_FwdTrans(const NekDoubleSharedArray &inarray, 
+            virtual void v_FwdTrans(SharedArray<const NekDouble> inarray, 
 				    NekDoubleSharedArray &outarray)
             {
                 FwdTrans(inarray,outarray);
@@ -240,7 +240,7 @@ namespace Nektar
       
 
             /// Virtual call to SegExp::Evaluate
-            virtual double v_PhysEvaluate(const NekDoubleSharedArray &coords)
+            virtual double v_PhysEvaluate(SharedArray<const NekDouble> coords)
             {
                 return PhysEvaluate(coords);
             }
@@ -262,7 +262,7 @@ namespace Nektar
 
             - returns the \f$ L_\infty \f$ error as a double. 
             */
-            virtual double v_Linf(const NekDoubleSharedArray &sol)
+            virtual double v_Linf(SharedArray<const NekDouble> sol)
             {
                 return Linf(sol);
             }
@@ -303,7 +303,7 @@ namespace Nektar
 
             - returns the \f$ L_2 \f$ error as a double. 
             */
-            virtual double v_L2(const NekDoubleSharedArray &sol)
+            virtual double v_L2(SharedArray<const NekDouble> sol)
             {
                 return StdExpansion::L2(sol);
             }
@@ -340,6 +340,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.9  2007/03/25 15:48:21  sherwin
+// UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+//
 // Revision 1.8  2007/03/20 09:13:38  kirby
 // new geomfactor routines; update for metricinfo; update style
 //

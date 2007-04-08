@@ -49,8 +49,8 @@ namespace Nektar
         {
         public:
             MatrixKey( StdRegions::MatrixType matrixType, 
-		       StdRegions::ShapeType shapeType, 
-		       StdRegions::StdExpansion &stdExpansion);
+                StdRegions::ShapeType shapeType, 
+                StdRegions::StdExpansion &stdExpansion);
 
             virtual ~MatrixKey()
             {
@@ -65,7 +65,7 @@ namespace Nektar
             /// Used for finding value given the key in NekManager.
             friend bool operator<(const MatrixKey &lhs, const MatrixKey &rhs);
             friend bool opLess::operator()(const MatrixKey &lhs, 
-					   const MatrixKey &rhs);
+                const MatrixKey &rhs);
 
             StdRegions::MatrixType GetMatrixType() const
             {
@@ -73,7 +73,7 @@ namespace Nektar
             }
 
             StdRegions::ShapeType GetShapeType() const
-		{
+            {
                 return m_stdMatKey->GetShapeType();
             }
 
@@ -88,14 +88,14 @@ namespace Nektar
             }
 
             inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
-	    {
+            {
                 return m_stdMatKey->GetBasis(dir);
-	    }
+            }
 
             const StdRegions::StdMatrixKeySharedPtr &GetStdMatKey() const 
-	    {
+            {
                 return m_stdMatKey;
-	    }
+            }
 
             SpatialDomains::GeomFactorsSharedPtr GetMetricInfo() const
             {
@@ -120,6 +120,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.6  2007/04/04 21:49:23  sherwin
+* Update for SharedArray
+*
 * Revision 1.5  2007/03/29 19:02:05  bnelson
 * Replaced boost::shared_array with SharedArray
 *

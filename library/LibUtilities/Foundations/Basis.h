@@ -257,7 +257,7 @@ namespace Nektar
             }
 
             /** \brief return basis definition array m_bdata */
-            inline const SharedArray<const NekDouble> GetBdata() const
+            inline SharedArray<const NekDouble> GetBdata() const
             {
                 return m_bdata;
             }

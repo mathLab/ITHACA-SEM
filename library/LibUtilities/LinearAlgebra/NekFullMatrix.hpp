@@ -63,6 +63,7 @@ namespace Nektar
             static void Transpose(unsigned int& rows, unsigned int& columns,
                                   SharedArray<DataType>& data)
             {
+                // TODO - Still not right.
                 for(unsigned int row = 0; row < rows; ++row)
                 {
                     for(unsigned int column = row+1; column < columns; ++column)
@@ -144,6 +145,9 @@ namespace Nektar
                             boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
                     ASSERTL0(false, message.c_str());
                 }
+
+                // Put it back to row major form.
+                Transpose(rows, columns, data);
 
 #else
                 // TODO
@@ -521,6 +525,9 @@ namespace Nektar
 
 /**
     $Log: NekFullMatrix.hpp,v $
+    Revision 1.11  2007/04/05 05:12:44  bnelson
+    *** empty log message ***
+
     Revision 1.10  2007/04/04 02:26:41  bnelson
     *** empty log message ***
 

@@ -38,6 +38,8 @@
 #include <LibUtilities/Foundations/GaussPoints.h>
 #include <LibUtilities/Foundations/FourierPoints.h>
 #include <LibUtilities/Foundations/PolyEPoints.h>
+#include <LibUtilities/Foundations/NodalTriElec.h>
+#include <LibUtilities/Foundations/NodalTriFekete.h>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -60,9 +62,11 @@ namespace Nektar
             const bool gaussInited8 = PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoChebyshev), GaussPoints::Create);
             const bool gaussInited9 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1), GaussPoints::Create);
             const bool gaussInited10 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2), GaussPoints::Create);
-
+	    
             const bool fourierInited0 = PointsManager().RegisterCreator(PointsKey(0, eFourierEvenlySpaced), FourierPoints::Create);
             const bool polyeInited10 =  PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), PolyEPoints::Create);
+            const bool NodalTriInited0 =  PointsManager().RegisterCreator(PointsKey(0, eNodalTriElec), NodalTriElec::Create);
+            const bool NodalTriInited1 =  PointsManager().RegisterCreator(PointsKey(0, eNodalTriFekete), NodalTriFekete::Create);
 
 	        const bool Ortho_A_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_A, 0, NullPointsKey), Basis::Create);
             const bool Ortho_B_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_B, 0, NullPointsKey), Basis::Create);
@@ -92,6 +96,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.9  2007/04/10 02:40:53  bnelson
+Updated loki capitalization.
+
 Revision 1.8  2007/03/19 12:46:16  kirby
 *** empty log message ***
 

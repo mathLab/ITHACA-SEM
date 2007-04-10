@@ -69,12 +69,11 @@ namespace Nektar
         //////////////////////////////
         // Integration Methods
         //////////////////////////////
-        NekDouble StdTriExp::Integral(const NekDoubleSharedArray &inarray)
+        NekDouble StdTriExp::Integral(ConstNekDoubleSharedArray inarray)
         {
-            const NekDouble *z1,*w0,*w1;
+            ConstNekDoubleSharedArray w0,z1,w1;
             int    i,nquad1 = m_base[1]->GetNumPoints();
-            NekDoubleSharedArray wsp = GetDoubleTmpSpace(nquad1);
-            NekDouble  *w1_tmp  = wsp.get();
+            NekDoubleSharedArray w1_tmp = GetDoubleTmpSpace(nquad1);
 
 	    w0 = ExpPointsProperties(0)->GetW();
 	    ExpPointsProperties(1)->GetZW(z1,w1);
@@ -88,7 +87,7 @@ namespace Nektar
                 }
                 break;
             case LibUtilities::eGaussRadauMAlpha1Beta0: // (0,1) Jacobi Inner product 
-                Vmath::Smul(nquad1,0.5,(NekDouble *)w1,1,w1_tmp,1);      
+                Vmath::Smul(nquad1,0.5,(NekDouble *)w1.get(),1,w1_tmp.get(),1);      
                 break;
             }
 	    
@@ -96,14 +95,16 @@ namespace Nektar
         }
 
 
-	void StdTriExp::IProductWRTBase(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
+	void StdTriExp::IProductWRTBase(ConstNekDoubleSharedArray inarray, 
+					NekDoubleSharedArray &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),inarray,
                 outarray);
         }
     
-	void StdTriExp:: IProductWRTBase(const NekDouble *base0, const NekDouble *base1, 
-					 const NekDoubleSharedArray &inarray, 
+	void StdTriExp:: IProductWRTBase(ConstNekDoubleSharedArray base0, 
+					 ConstNekDoubleSharedArray base1, 
+					 ConstNekDoubleSharedArray inarray, 
 					 NekDoubleSharedArray & outarray)
         {
             int    i,mode;
@@ -111,7 +112,7 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
-            const  NekDouble *z1,*w0,*w1;
+            ConstNekDoubleSharedArray z1,w0,w1;
             NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad0*nquad1);
             NekDoubleSharedArray tmp1 = GetDoubleTmpSpace(nquad0*nquad1);
 
@@ -134,8 +135,8 @@ namespace Nektar
             // multiply by integration constants 
             for(i = 0; i < nquad1; ++i)
             {
-                Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,(NekDouble*)w0,1,
-			    &tmp[0]+i*nquad0,1);
+                Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
+			    w0.get(),1, &tmp[0]+i*nquad0,1);
             }
 
             switch(m_base[1]->GetPointsType())
@@ -155,21 +156,23 @@ namespace Nektar
             }
 	    
             // Inner product with respect to 'a' direction 
-            Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,base0,nquad0,
-                0.0,&tmp1[0],nquad1);
+            Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
+			base0.get(),nquad0,0.0,&tmp1[0],nquad1);
 
             // Inner product with respect to 'b' direction 
             for(mode=i=0; i < order0; ++i)
             {
-                Blas::Dgemv('T',nquad1,order1-i,1.0, base1+mode*nquad1,nquad1,
-			    &tmp1[0]+i*nquad1,1, 0.0, &outarray[0] + mode,1);
+                Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
+			    nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
+			    &outarray[0] + mode,1);
                 mode += order1-i;
             }
 
             // fix for modified basis by splitting top vertex mode
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
-                outarray[1] += Blas::Ddot(nquad1,base1+nquad1,1,&tmp1[0]+nquad1,1);
+                outarray[1] += Blas::Ddot(nquad1,base1.get()+nquad1,1,
+					  &tmp1[0]+nquad1,1);
             }
         }
     
@@ -180,8 +183,8 @@ namespace Nektar
             int   nquad1 = m_base[1]->GetNumPoints();
             int   order0 = m_base[0]->GetNumModes();
             int   order1 = m_base[1]->GetNumModes();
-            const NekDouble * base0  = m_base[0]->GetBdata();
-            const NekDouble * base1  = m_base[1]->GetBdata();
+            ConstNekDoubleSharedArray base0 = m_base[0]->GetBdata();
+            ConstNekDoubleSharedArray base1 = m_base[1]->GetBdata();
             int   mode0;
 
             ASSERTL2(mode >= m_ncoeffs, 
@@ -206,14 +209,14 @@ namespace Nektar
             {
                 for(i = 0; i < nquad1; ++i)
                 {
-                    Vmath::Vcopy(nquad0,(NekDouble *)(base0 + mode0*nquad0),1,
-				 &outarray[0]+i*nquad0,1);
+                    Vmath::Vcopy(nquad0,(NekDouble *)(base0.get()+mode0*nquad0),
+				 1,&outarray[0]+i*nquad0,1);
                 }
             }
 
             for(i = 0; i < nquad0; ++i)
             {
-                Vmath::Vmul(nquad1,(NekDouble *)(base1 + mode*nquad1),1,&outarray[0]+i,
+                Vmath::Vmul(nquad1,(NekDouble *)(base1.get() + mode*nquad1),1,&outarray[0]+i,
                     nquad0,&outarray[0]+i,nquad0);
             }
         }
@@ -222,14 +225,14 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdTriExp::PhysDeriv(const NekDoubleSharedArray &inarray, 
+	void StdTriExp::PhysDeriv(ConstNekDoubleSharedArray inarray, 
 				  NekDoubleSharedArray &out_d0, 
 				  NekDoubleSharedArray &out_d1)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            const  NekDouble *z0,*z1;
+            ConstNekDoubleSharedArray z0,z1;
             NekDoubleSharedArray d0;
             NekDoubleSharedArray wsp1  = GetDoubleTmpSpace(nquad0*nquad1);
             NekDouble *gfac = wsp1.get();
@@ -285,15 +288,16 @@ namespace Nektar
         // Evaluation Methods
         ///////////////////////////////
 
-        void StdTriExp::BwdTrans(const NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray)
+        void StdTriExp::BwdTrans(ConstNekDoubleSharedArray inarray, 
+				 NekDoubleSharedArray &outarray)
         {
             int           i,mode;
             int           nquad0 = m_base[0]->GetNumPoints();
             int           nquad1 = m_base[1]->GetNumPoints();
             int           order0 = m_base[0]->GetNumModes();
             int           order1 = m_base[1]->GetNumModes();
-            const NekDouble *base0  = m_base[0]->GetBdata();
-            const NekDouble *base1  = m_base[1]->GetBdata();
+            ConstNekDoubleSharedArray base0  = m_base[0]->GetBdata();
+            ConstNekDoubleSharedArray base1  = m_base[1]->GetBdata();
             NekDoubleSharedArray tmp  = GetDoubleTmpSpace(order0*nquad1);
 
 
@@ -303,7 +307,7 @@ namespace Nektar
 
             for(i = mode = 0; i < order0; ++i)
             {
-                Blas::Dgemv('N', nquad1,order1-i,1.0,base1+mode*nquad1,
+                Blas::Dgemv('N', nquad1,order1-i,1.0,base1.get()+mode*nquad1,
 			    nquad1,&inarray[0]+mode,1,0.0,&tmp[0]+i*nquad1,1);
                 mode += order1-i;
             }
@@ -311,18 +315,19 @@ namespace Nektar
             // fix for modified basis by splitting top vertex mode
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
-                Blas::Daxpy(nquad1,inarray[1],base1+nquad1,1,&tmp[0]+nquad1,1);
+                Blas::Daxpy(nquad1,inarray[1],base1.get()+nquad1,1,
+			    &tmp[0]+nquad1,1);
             }
 
-            Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0,nquad0, 
+            Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0.get(),nquad0, 
 			&tmp[0], nquad1,0.0, &outarray[0], nquad0);
         }
 
-        void StdTriExp::FwdTrans(const NekDoubleSharedArray &inarray, 
+        void StdTriExp::FwdTrans(ConstNekDoubleSharedArray inarray, 
 				 NekDoubleSharedArray &outarray)
         {
 	    
-            IProductWRTBase(inarray,m_coeffs);
+            IProductWRTBase(inarray,outarray);
 
 	    // get Mass matrix
 	    StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
@@ -333,7 +338,7 @@ namespace Nektar
 	    matsys->Solve(v,v);
 	}
 
-        NekDouble StdTriExp::PhysEvaluate(const NekDoubleSharedArray & coords)
+        NekDouble StdTriExp::PhysEvaluate(ConstNekDoubleSharedArray coords)
         {
             NekDoubleSharedArray coll = GetDoubleTmpSpace(2);
 
@@ -449,7 +454,7 @@ namespace Nektar
             int  i,j;
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
-            const NekDouble *z0,*z1;
+            ConstNekDoubleSharedArray z0,z1;
 
 	    z0 = ExpPointsProperties(0)->GetZ();
 	    z1 = ExpPointsProperties(1)->GetZ();
@@ -508,8 +513,8 @@ namespace Nektar
 	void StdTriExp::GetCoords(NekDoubleSharedArray &coords_0, 
 				  NekDoubleSharedArray &coords_1)
 	{
-	    const NekDouble *z0 = ExpPointsProperties(0)->GetZ();
-	    const NekDouble *z1 = ExpPointsProperties(1)->GetZ();
+	    ConstNekDoubleSharedArray z0 = ExpPointsProperties(0)->GetZ();
+	    ConstNekDoubleSharedArray z1 = ExpPointsProperties(1)->GetZ();
 	    int nq0 = GetNumPoints(0);
 	    int nq1 = GetNumPoints(1);
 	    int i,j;
@@ -530,6 +535,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.13  2007/04/06 08:44:43  sherwin
+* Update to make 2D regions work at StdRegions level
+*
 * Revision 1.12  2007/04/05 15:20:11  sherwin
 * Updated 2D stuff to comply with SharedArray philosophy
 *

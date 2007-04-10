@@ -40,34 +40,25 @@ namespace Nektar
     namespace StdRegions
     {
 
-        StdMatrix StdNodalTriExp::s_elmtmats;
-
-        StdNodalTriExp::StdNodalTriExp(const BasisKey &Ba, const BasisKey &Bb, 
-				       NodalBasisType Ntype):
+        StdNodalTriExp::StdNodalTriExp(const LibUtilities::BasisKey &Ba, 
+				       const LibUtilities::BasisKey &Bb, 
+				       LibUtilities::PointsType Ntype):
 	    StdTriExp(Ba,Bb)
         {
-            m_nbtype = Ntype;
 
-            ASSERTL0(m_base[0]->GetBasisOrder() == m_base[1]->GetBasisOrder(),
+            ASSERTL0(m_base[0]->GetNumModes() == m_base[1]->GetNumModes(),
                 "Nodal basis initiated with different orders in the a "
 		     "and b directions");
+
+            m_nodalPointsKey = MemoryManager::AllocateSharedPtr<LibUtilities::PointsKey> (Ba.GetNumModes(),Ntype);
+
         }
 
-        StdNodalTriExp::StdNodalTriExp(const BasisKey &Ba,  const BasisKey &Bb,
-		       NodalBasisType Ntype, double *coeffs,  double *phys):
-	    StdTriExp(Ba,Bb,coeffs,phys)
-        {    
-	    m_nbtype = Ntype;
-
-            ASSERTL0(m_base[0]->GetBasisOrder() == m_base[1]->GetBasisOrder(),
-		     "Nodal basis initiated with different "
-		     "orders in the a and b directions");
-        }
 	
         StdNodalTriExp::StdNodalTriExp(const StdNodalTriExp &T):
 	    StdTriExp(T)
         {
-	    m_nbtype = T.m_nbtype;
+	    m_nodalPointsKey = T.m_nodalPointsKey;
         }
 
         // Destructor
@@ -75,33 +66,33 @@ namespace Nektar
         { 
         }
 
-        void StdNodalTriExp::GenNBasisTransMatrix(double * outarray)
+        DNekMatSharedPtr StdNodalTriExp::GenNBasisTransMatrix()
         {
             int             i,j;
-            int             tot_order = GetNcoeffs();
-            const double*   r; 
-            const double*   s; 
-            const double*   t;
-            double          c[2];
+            ConstNekDoubleSharedArray  r, s; 
+            NekDoubleSharedArray c = GetDoubleTmpSpace(2);
+	    DNekMatSharedPtr Mat;
 
-            NBasisManagerSingleton::Instance().GetNodePoints(m_nbtype,
-                m_base[0]->GetBasisOrder(),r,s,t);
+            Mat = MemoryManager::AllocateSharedPtr<DNekMat>(m_ncoeffs,m_ncoeffs);
 
-            for(i = 0; i < tot_order; ++i)
+	    GetNodalPoints(r,s);
+
+            for(i = 0; i < m_ncoeffs; ++i)
             {
                 // fill physical space with mode i
                 StdTriExp::FillMode(i,m_phys);
 
                 // interpolate mode i to the Nodal points 'j' and store in outarray
-                for(j = 0; j < tot_order; ++j)
+                for(j = 0; j < m_ncoeffs; ++j)
                 {
                     c[0] = r[j];
                     c[1] = s[j];
                     // define matrix in row major format to have rows of 
                     // all the different expansion bases defined at the nodal point 
-                    outarray[j*tot_order+i] = StdTriExp::Evaluate(c);
+                    (*Mat)(j,i) = StdTriExp::PhysEvaluate(c);
                 }
             }
+	    return Mat;
         }
 
         void StdNodalTriExp::NodalToModal()
@@ -109,47 +100,53 @@ namespace Nektar
             NodalToModal(m_coeffs); 
         }
 
-        void StdNodalTriExp::NodalToModal(double *in_out_array)
+        void StdNodalTriExp::NodalToModal(NekDoubleSharedArray &in_out_array)
         {
-            StdMatContainer *M;
-
-            M = GetNBasisTransMatrix();
-            M->Solve(in_out_array,1);
+	    StdLinSysKey         Nkey(eNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
+	    DNekLinSysSharedPtr  matsys = m_stdLinSysManager[Nkey];
+	    
+	    // solve inverse of system
+	    DNekVec   v(m_ncoeffs,in_out_array,eWrapper);
+	    matsys->Solve(v,v);
         }
 
 
         void StdNodalTriExp::NodalToModalTranspose()
         {
-            NodalToModal(m_coeffs); 
+            NodalToModalTranspose(m_coeffs); 
         }
 
 	// Operate with transpose of NodalToModal transformation
-        void StdNodalTriExp::NodalToModalTranspose(double *in_out_array)
+        void StdNodalTriExp::NodalToModalTranspose(NekDoubleSharedArray &in_out_array)
         {
-            StdMatContainer *M;
-
-            M = GetNBasisTransMatrix();
-            M->SolveTranspose(in_out_array,1);
+	    StdLinSysKey         Nkey(eNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
+	    DNekLinSysSharedPtr  matsys = m_stdLinSysManager[Nkey];
+	    
+	    // solve inverse of system
+	    DNekVec   v(m_ncoeffs,in_out_array,eWrapper);
+	    matsys->SolveTranspose(v,v);
         }
 
-
-        StdMatContainer * StdNodalTriExp::GetNBasisTransMatrix() 
-        {
-            StdMatContainer * mat;
-            mat = s_elmtmats.GetNBasisTrans(this);
-            return mat;
-        }
 
         void StdNodalTriExp::ModalToNodal()
         {
 	    ModalToNodal(m_coeffs);
         }
 
-        void StdNodalTriExp::ModalToNodal(double *in_out_array)
+        void StdNodalTriExp::ModalToNodal(NekDoubleSharedArray &in_out_array)
         {
-            StdMatContainer *M;
-            M = GetNBasisTransMatrix();
-            M->Mxv(in_out_array,in_out_array);
+	    StdMatrixKey      Nkey(eNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
+	    DNekMatSharedPtr  mat = m_stdMatrixManager[Nkey];
+	    
+	    // Multiply out matrix
+	    DNekVec  v(m_ncoeffs,in_out_array,eWrapper);
+	    //v = (*mat)*v;
+
+	    // Not sure why the above is not working. Here is a direct call to dgemv
+	    NekDoubleSharedArray tmp = GetDoubleTmpSpace(m_ncoeffs);
+	    Vmath::Vcopy(m_ncoeffs,&in_out_array[0],1,&tmp[0],1);
+	    Blas::Dgemv('T',m_ncoeffs,m_ncoeffs,1.0,&(*mat).GetPtr()[0],m_ncoeffs,&tmp[0],1,0.0,
+			&in_out_array[0],1);
         }
 
 
@@ -158,17 +155,19 @@ namespace Nektar
         //////////////////////////////
 
 
-        void StdNodalTriExp::IProductWRTBase(const double * inarray, 
-            double * outarray)
+        void StdNodalTriExp::IProductWRTBase(ConstNekDoubleSharedArray inarray,
+					     NekDoubleSharedArray &outarray)
         {
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-                inarray,outarray);
+            IProductWRTBase(m_base[0]->GetBdata(),
+			    m_base[1]->GetBdata(),
+			    inarray, 
+			    outarray);
         }
 
-        void StdNodalTriExp:: IProductWRTBase(const double *base0, 
-            const double *base1, 
-            const double *inarray,
-            double *outarray)
+        void StdNodalTriExp:: IProductWRTBase(ConstNekDoubleSharedArray base0,
+					      ConstNekDoubleSharedArray base1,
+					      ConstNekDoubleSharedArray inarray,
+					      NekDoubleSharedArray &outarray)
         {
             // Take inner product with respect to Orthgonal basis using
             // StdTri routine
@@ -178,40 +177,17 @@ namespace Nektar
 	    NodalToModalTranspose(outarray);
         }
 
-        void StdNodalTriExp::FillMode(const int mode, double *outarray)
+        void StdNodalTriExp::FillMode(const int mode, 
+				      NekDoubleSharedArray &outarray)
         {
 
             ASSERTL2(mode >= m_ncoeffs, 
                 "calling argument mode is larger than total expansion order");
 
-            Vmath::Zero(m_ncoeffs,m_coeffs,1);
+            Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
 
             m_coeffs[mode] = 1.0;
-	    BwdTrans(outarray);
-        }
-
-        StdMatContainer * StdNodalTriExp::GetMassMatrix() 
-        {
-            StdMatContainer * tmp;
-            tmp = s_elmtmats.GetLocalMass(this);
-            return tmp;
-        }
-
-        StdMatContainer * StdNodalTriExp::GetLapMatrix() 
-        {
-            StdMatContainer * tmp;
-            tmp = s_elmtmats.GetLocalLap(this);
-            return tmp;
-        }
-
-        //-----------------------------
-        // Differentiation Methods
-        //-----------------------------
-
-        void StdNodalTriExp::Deriv(const double *inarray, double *outarray_d0, 
-            double *outarray_d1)
-        {
-            StdTriExp::Deriv(inarray, outarray_d0, outarray_d1);
+	    BwdTrans(outarray,outarray);
         }
 
         ///////////////////////////////
@@ -221,35 +197,33 @@ namespace Nektar
         // Currently convert nodal values into tranformed values and
         // backward transform
 
-        void StdNodalTriExp::BwdTrans(double * outarray)
+        void StdNodalTriExp::BwdTrans(ConstNekDoubleSharedArray inarray,
+				      NekDoubleSharedArray &outarray)
         {
-            BstShrDArray tmp  = GetDoubleTmpSpace(m_ncoeffs);
+            NekDoubleSharedArray tmp  = GetDoubleTmpSpace(m_ncoeffs);
 
             // save nodal values
-            Blas::Dcopy(m_ncoeffs,m_coeffs,1,tmp.get(),1);
-            NodalToModal();
-            StdTriExp::BwdTrans(outarray);
-            Blas::Dcopy(m_ncoeffs,tmp.get(),1,m_coeffs,1);
+            Blas::Dcopy(m_ncoeffs,&inarray[0],1,&tmp[0],1);
+	    NodalToModal(tmp);
+            StdTriExp::BwdTrans(tmp,outarray);
         }
 
-        void StdNodalTriExp::FwdTrans(const double * inarray)
+        void StdNodalTriExp::FwdTrans(ConstNekDoubleSharedArray inarray,
+				      NekDoubleSharedArray &outarray)
         {
-            StdMatContainer *M;
+            IProductWRTBase(inarray,outarray);
+
+	    StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
+	    DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
 	    
-            IProductWRTBase(inarray,m_coeffs);
-            M = GetMassMatrix();
-	    M->ShowMatrixStructure(stdout);
-            M->Solve(m_coeffs,1);
-        }
-
-        double StdNodalTriExp::Evaluate(const double * coords)
-        {
-            return StdTriExp::Evaluate(coords);
+	    // solve inverse of system
+	    DNekVec   v(m_ncoeffs,outarray,eWrapper);
+	    matsys->Solve(v,v);
         }
 
 
         void  StdNodalTriExp::MapTo(const int edge_ncoeffs, 
-				    const BasisType Btype,
+				    const LibUtilities::BasisType Btype,
 				    const int eid, 
 				    const EdgeOrientation eorient, 
 				    StdExpMap &Map)
@@ -257,7 +231,7 @@ namespace Nektar
 	    
             int i;
             int *dir, order0,order1;
-            BstShrIArray wsp; 
+            NekIntSharedArray wsp; 
 
             ASSERTL2(eid>=0&&eid<=2,"eid must be between 0 and 2");
 
@@ -270,8 +244,8 @@ namespace Nektar
                 Map.SetMapMemory(edge_ncoeffs);
             }
 
-            order0 = m_base[0]->GetBasisOrder();
-            order1 = m_base[1]->GetBasisOrder();
+            order0 = m_base[0]->GetNumModes();
+            order1 = m_base[1]->GetNumModes();
 
             wsp = GetIntTmpSpace(edge_ncoeffs);
             dir = wsp.get(); 
@@ -329,7 +303,7 @@ namespace Nektar
         }
 
 	void StdNodalTriExp::MapTo_ModalFormat(const int edge_ncoeffs, 
-						const BasisType Btype, 
+						const LibUtilities::BasisType Btype, 
 						const int eid, 
 						const EdgeOrientation eorient,
 						StdExpMap &Map)
@@ -338,37 +312,14 @@ namespace Nektar
 	}
 
 	
-	void StdNodalTriExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-	{
-	    mat->SetLda(m_ncoeffs);
-	    mat->SetMatForm(eSymmetric_Positive);
-	    
-	    if(GeoFacType() == eRegular)
-	    {
-		switch(Mform)
-		{
-		case eMassMatrix:
-		    // Nothing additional to be done 
-		    break;
-		case eLapMatrix:
-		    mat->SetMatForm(eSymmetric);	
-		    break;
-                case eNBasisTrans:
-                    mat->SetMatForm(eGeneral_Full);	
-                    break;
-		default:
-		    ASSERTL0(false, "MatrixType not known");
-		    break;
-		    
-		}
-	    }
-	}
-	
     } // end of namespace
 } // end of namespace
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.6  2007/01/17 16:05:40  pvos
+* updated doxygen documentation
+*
 * Revision 1.5  2007/01/15 21:13:46  sherwin
 * Nodal stuff correction and added Field Classes
 *

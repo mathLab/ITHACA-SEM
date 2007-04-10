@@ -7,7 +7,7 @@ StdExpansion3D.cpp
 StdExpMap.cpp
 #StdHexExp.cpp
 #StdNodalTetExp.cpp
-#StdNodalTriExp.cpp
+StdNodalTriExp.cpp
 #StdPrismExp.cpp
 #StdPyrExp.cpp
 StdQuadExp.cpp

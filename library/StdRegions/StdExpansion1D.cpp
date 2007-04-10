@@ -64,7 +64,7 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdExpansion1D::PhysTensorDeriv(SharedArray<const NekDouble> inarray, 
+	void StdExpansion1D::PhysTensorDeriv(ConstNekDoubleSharedArray inarray, 
 					     NekDoubleSharedArray outarray)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
@@ -80,7 +80,7 @@ namespace Nektar
 			&wsp[0],1,0.0,&outarray[0],1);
 	}
     
-	NekDouble StdExpansion1D::PhysEvaluate1D(SharedArray<const NekDouble> Lcoord)
+	NekDouble StdExpansion1D::PhysEvaluate1D(ConstNekDoubleSharedArray Lcoord)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
 	    NekDouble  val;
@@ -102,6 +102,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.13  2007/04/08 03:36:58  jfrazier
+ * Updated to use SharedArray consistently and minor reformatting.
+ *
  * Revision 1.12  2007/04/04 20:48:17  sherwin
  * Update to handle SharedArrays
  *

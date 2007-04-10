@@ -70,7 +70,7 @@ namespace Nektar
         // Differentiation Methods
         //----------------------------
 
-        void StdExpansion2D::PhysTensorDeriv(const NekDoubleSharedArray &inarray,
+        void StdExpansion2D::PhysTensorDeriv(ConstNekDoubleSharedArray inarray,
 					     NekDoubleSharedArray &outarray_d0, 
 					     NekDoubleSharedArray &outarray_d1)
         {
@@ -101,7 +101,7 @@ namespace Nektar
 
         }
 
-        NekDouble StdExpansion2D::PhysEvaluate2D(const NekDoubleSharedArray &coords)
+        NekDouble StdExpansion2D::PhysEvaluate2D(ConstNekDoubleSharedArray coords)
         {
             NekDouble val;
             int i;
@@ -117,7 +117,7 @@ namespace Nektar
             ASSERTL2(coord[1] > 1, "coord[1] >  1");
 
             // interpolate first coordinate direction
-            I = ExpPointsProperties(0)->GetI(&coords[0]);
+            I = ExpPointsProperties(0)->GetI(coords);
             for (i = 0; i < nq1;++i)
 	    {
                 wsp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1, 
@@ -125,7 +125,7 @@ namespace Nektar
 	    }
 
             // interpolate in second coordinate direction
-            I = ExpPointsProperties(1)->GetI(&coords[1]);
+            I = ExpPointsProperties(1)->GetI(coords+1);
 
             val = Blas::Ddot(nq1, &(I->GetPtr())[0], 1, &wsp1[0], 1);
 
@@ -136,8 +136,9 @@ namespace Nektar
         /// Integration Methods
         //////////////////////////////
 
-        NekDouble StdExpansion2D::Integral(const NekDoubleSharedArray &inarray, 
-					   const NekDouble *w0,const NekDouble *w1)
+        NekDouble StdExpansion2D::Integral(ConstNekDoubleSharedArray inarray, 
+					   ConstNekDoubleSharedArray w0,
+					   ConstNekDoubleSharedArray w1)
         {
             int i;
             NekDouble Int = 0.0;
@@ -148,13 +149,13 @@ namespace Nektar
             // multiply by integration constants
             for (i = 0; i < nquad1; ++i)
             {
-                Vmath::Vmul(nquad0, &inarray[0] + i*nquad0, 1, (NekDouble*)w0,
+                Vmath::Vmul(nquad0, &inarray[0] + i*nquad0, 1, w0.get(),
                             1, &tmp[0] + i*nquad0, 1);
             }
 
             for (i = 0; i < nquad0; ++i)
             {
-                Vmath::Vmul(nquad1, &tmp[0]+ i, nquad0, (NekDouble*)w1, 1,
+                Vmath::Vmul(nquad1, &tmp[0]+ i, nquad0, w1.get(), 1,
                             &tmp[0] + i, nquad0);
             }
 
@@ -169,6 +170,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.10  2007/04/05 15:20:11  sherwin
+* Updated 2D stuff to comply with SharedArray philosophy
+*
 * Revision 1.9  2007/03/29 19:35:09  bnelson
 * Replaced boost::shared_array with SharedArray
 *

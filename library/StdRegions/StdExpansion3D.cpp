@@ -66,7 +66,7 @@ namespace Nektar
 	{ 
 	}
 	
-	void StdExpansion3D::PhysTensorDeriv(NekDoubleSharedArray &inarray, 
+	void StdExpansion3D::PhysTensorDeriv(ConstNekDoubleSharedArray &inarray, 
 					     NekDoubleSharedArray &outarray_d0, 
 					     NekDoubleSharedArray &outarray_d1, 
 					     NekDoubleSharedArray &outarray_d2)
@@ -77,23 +77,15 @@ namespace Nektar
 	    int    nquad2 = m_base[2]->GetNumPoints();
 	    DNekMatSharedPtr D0,D1,D2;
 	    NekDoubleSharedArray wsp;
-	    
-	    // check to see if either calling array is inarray
-	    if((outarray_d0 == inarray)||(outarray_d1 == inarray)||
-	       (outarray_d2 == inarray))
-	    { 
             wsp = GetDoubleTmpSpace(nquad0*nquad1*nquad2);
-            Vmath::Vcopy(nquad0*nquad1*nquad2,&inarray[0],1,&wsp[0],1);
-	    }
-        else
-        {
-            wsp = inarray;
-        }
 	    
-        D0 = ExpPointsProperties(0)->GetD();
-        D1 = ExpPointsProperties(1)->GetD();
-        D2 = ExpPointsProperties(2)->GetD();
-
+	    // copy inarray to wsp in case inarray is used as outarray
+            Vmath::Vcopy(nquad0*nquad1*nquad2,&inarray[0],1,&wsp[0],1);
+	    
+	    D0 = ExpPointsProperties(0)->GetD();
+	    D1 = ExpPointsProperties(1)->GetD();
+	    D2 = ExpPointsProperties(2)->GetD();
+	    
 	    // calculate du/dx_0
 	    if(outarray_d0)
 	    {
@@ -128,7 +120,7 @@ namespace Nektar
 	    }   
 	}
 	
-	NekDouble StdExpansion3D::PhysEvaluate(const NekDoubleSharedArray &coords)
+	NekDouble StdExpansion3D::PhysEvaluate(ConstNekDoubleSharedArray &coords)
 	{
 	    NekDouble  val;
 	    int i;
@@ -149,7 +141,7 @@ namespace Nektar
 	    ASSERTL2(coord[2] >  1,"coord[2] >  1");
 	    
 	    // interpolate first coordinate direction
-            I = ExpPointsProperties(0)->GetI(&coords[0]);
+            I = ExpPointsProperties(0)->GetI(coords);
 
 	    for(i = 0; i < nq2*nq3;++i)
 	    {
@@ -157,14 +149,14 @@ namespace Nektar
 	    }
 	    
 	    // interpolate in second coordinate direction 
-            I = ExpPointsProperties(1)->GetI(&coords[1]);
+            I = ExpPointsProperties(1)->GetI(coords+1);
 	    for(i =0; i < nq3; ++i)
 	    {
 		wsp1[i] = Blas::Ddot(nq2,&wsp[0]+i*nq2,1,&(I->GetPtr())[0],1);
 	    }
 	    
 	    // interpolate in third coordinate direction 
-            I = ExpPointsProperties(2)->GetI(&coords[2]);
+            I = ExpPointsProperties(2)->GetI(coords+2);
 	    val = Blas::Ddot(nq3,&wsp1[0],1,&(I->GetPtr())[0],1);
 	    
 	    return val;    
@@ -175,6 +167,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.7  2007/04/04 20:48:17  sherwin
+ * Update to handle SharedArrays
+ *
  * Revision 1.6  2007/03/29 19:35:09  bnelson
  * Replaced boost::shared_array with SharedArray
  *

@@ -89,12 +89,12 @@ namespace Nektar
              *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
              *  \end{array} \f$
              */
-                void PhysTensorDeriv(const NekDoubleSharedArray &inarray, 
+                void PhysTensorDeriv(ConstNekDoubleSharedArray inarray, 
 				     NekDoubleSharedArray &outarray_d0,
                                      NekDoubleSharedArray &outarray_d1);
 
                 // Change names from Deriv to PhysDeriv
-		void PhysDeriv (const NekDoubleSharedArray &inarray,
+		void PhysDeriv (ConstNekDoubleSharedArray inarray,
 				NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
 				NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
 				NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
@@ -102,7 +102,7 @@ namespace Nektar
 		    v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
 		}
 
-                void StdPhysDeriv(const NekDoubleSharedArray &inarray, 
+                void StdPhysDeriv(ConstNekDoubleSharedArray inarray, 
 				  NekDoubleSharedArray &outarray_d1,
                                   NekDoubleSharedArray &outarray_d2)
                 {
@@ -131,7 +131,7 @@ namespace Nektar
 	     *  \param coords the coordinates of the single point
 	     *  \return returns the value of the expansion at the single point
 	     */
-	     NekDouble PhysEvaluate(const NekDoubleSharedArray & coords)
+	     NekDouble PhysEvaluate(ConstNekDoubleSharedArray coords)
              {
                  return v_PhysEvaluate(coords);
              }
@@ -140,13 +140,14 @@ namespace Nektar
 	     *  to be in local collapsed coordinate format. The function is
 	     *  assumed to be in physical space 
 	     */
-	     NekDouble PhysEvaluate2D(const NekDoubleSharedArray &coords);
+	     NekDouble PhysEvaluate2D(ConstNekDoubleSharedArray coords);
 
-	     NekDouble Integral(const NekDoubleSharedArray &inarray, 
-				const NekDouble *w0, 
-				const NekDouble *w1);
+	     NekDouble Integral(ConstNekDoubleSharedArray inarray, 
+				ConstNekDoubleSharedArray w0, 
+				ConstNekDoubleSharedArray w1);
 
-	     int GetNodalPoints(const NekDoubleArrayVector &x, const NekDoubleArrayVector &y)
+	     int GetNodalPoints(ConstNekDoubleSharedArray &x, 
+				ConstNekDoubleSharedArray &y)
 	     {
 		 return v_GetNodalPoints(x, y);
 	     }
@@ -167,15 +168,15 @@ namespace Nektar
 	     }
 	     
 	     virtual ShapeType v_DetShapeType() = 0;
-	     virtual int v_GetNodalPoints(const NekDoubleArrayVector &x,
-					  const NekDoubleArrayVector &y)
+	     virtual int v_GetNodalPoints(ConstNekDoubleSharedArray &x,
+					  ConstNekDoubleSharedArray &y)
              {
 		 ASSERTL0(false, "This function is only valid for nodal "
 			  "expansions");
 		 return 0;
 	     }
 	     
-	     virtual void v_GenNBasisTransMatrix(NekDoubleArrayVector &outarray)
+	     virtual DNekMatSharedPtr v_GenNBasisTransMatrix()
 	     {
 		 ASSERTL0(false, "This function is only valid for nodal "
 			  "expansions");
@@ -186,23 +187,23 @@ namespace Nektar
 		 return 2;
 	     }
 	     
-	     virtual void v_BwdTrans(const NekDoubleSharedArray &inarray, 
+	     virtual void v_BwdTrans(ConstNekDoubleSharedArray inarray, 
 				     NekDoubleSharedArray &outarray) = 0;
-	     virtual void v_FwdTrans(const NekDoubleSharedArray &inarray, 
+	     virtual void v_FwdTrans(ConstNekDoubleSharedArray inarray, 
 				     NekDoubleSharedArray &outarray) = 0;
 	     
-	     virtual double v_Integral(const NekDoubleSharedArray &inarray ) = 0;
+	     virtual NekDouble v_Integral(ConstNekDoubleSharedArray inarray ) = 0;
 	     
-	     virtual void   v_PhysDeriv (const NekDoubleSharedArray &inarray,
+	     virtual void   v_PhysDeriv (ConstNekDoubleSharedArray inarray,
 					 NekDoubleSharedArray &out_d0,
 					 NekDoubleSharedArray &out_d1,
 					 NekDoubleSharedArray &out_d2) = 0;
 	     
-	     virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray,
+	     virtual void v_StdPhysDeriv(ConstNekDoubleSharedArray inarray,
 					 NekDoubleSharedArray &outarray_d1, 
 					 NekDoubleSharedArray &outarray_d2) = 0;
 	     
-	     virtual double v_PhysEvaluate(const NekDoubleSharedArray & coords)
+	     virtual NekDouble v_PhysEvaluate(ConstNekDoubleSharedArray coords)
 	     {
 		 return PhysEvaluate2D(coords);
 	     }
@@ -216,6 +217,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.11  2007/04/06 08:44:43  sherwin
+* Update to make 2D regions work at StdRegions level
+*
 * Revision 1.10  2007/04/05 15:20:11  sherwin
 * Updated 2D stuff to comply with SharedArray philosophy
 *

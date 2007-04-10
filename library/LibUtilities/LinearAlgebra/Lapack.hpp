@@ -91,7 +91,7 @@ namespace Lapack
     }
 
     // Non-standard versions.
-    void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x);
+    void dgetrs(char trans, int matrixRows, int matrixColumns, const double* A, double* x);
 
 #ifdef NEKTAR_USING_LAPACK
 
@@ -226,6 +226,9 @@ namespace Lapack
 
 /***
 $Log: Lapack.hpp,v $
+Revision 1.1  2007/04/03 03:59:24  bnelson
+Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
+
 Revision 1.3  2007/02/04 00:15:40  bnelson
 *** empty log message ***
 

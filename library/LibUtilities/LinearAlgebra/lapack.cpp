@@ -52,7 +52,7 @@
 
 namespace Lapack
 {
-    void dgetrs(int matrixRows, int matrixColumns, const double* A, double* x)
+    void dgetrs(char trans, int matrixRows, int matrixColumns, const double* A, double* x)
     {
         // The factorization step replaces the input matrix, which we can't allow 
         // (because A is a NekMatrix object and the user will not expect it to be changed).
@@ -86,10 +86,9 @@ namespace Lapack
         }
         // Now that we have a factored matrix, solve it.
         //void    dgetrs(char *trans,int *n,int *nrhs,double *a,int *lda,int *ipiv,double *b,int *ldb,int *info);
-        char trans = 'N';
         int nrhs = 1; // ONly 1 right hand side.
 
-        Lapack::Dgetrs('N', matrixRows, 1, factoredMatrix.GetPtr().get(), matrixRows, ipivot.get(), x, matrixRows, info);
+        Lapack::Dgetrs(trans, matrixRows, 1, factoredMatrix.GetPtr().get(), matrixRows, ipivot.get(), x, matrixRows, info);
         
         if( info < 0 )
         {

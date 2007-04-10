@@ -91,17 +91,24 @@ namespace Nektar
             };
 
             //allocate memory for coeffs
-            m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
+            m_coeffs = MemoryManager::AllocateSharedArray<NekDouble>(m_ncoeffs);
             Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
 
             //allocate memory for phys
-            m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
+            m_phys = MemoryManager::AllocateSharedArray<NekDouble>(GetTotPoints());
 
-            // Register Creators for Managers
+            // Register Creators for  Managers
             m_stdMatrixManager.RegisterCreator(StdMatrixKey(eMassMatrix,eNoShapeType,*this),
                 boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
 
             m_stdLinSysManager.RegisterCreator(StdLinSysKey(eMassMatrix,eNoShapeType,*this),
+		boost::bind(&StdExpansion::CreateStdLinSys, this, _1));
+
+
+            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eNBasisTrans,eNoShapeType,*this),
+                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
+
+            m_stdLinSysManager.RegisterCreator(StdLinSysKey(eNBasisTrans,eNoShapeType,*this),
 		boost::bind(&StdExpansion::CreateStdLinSys, this, _1));
 
         } //end constructor
@@ -115,11 +122,11 @@ namespace Nektar
             // allocate memory for coeffs
             // need to check allocation for variable order. 
             m_ncoeffs = T.m_ncoeffs;
-            m_coeffs = MemoryManager::AllocateSharedArray<double>(m_ncoeffs);
+            m_coeffs = MemoryManager::AllocateSharedArray<NekDouble>(m_ncoeffs);
 	    Vmath::Vcopy(m_ncoeffs,&T.m_coeffs[0],1,&m_coeffs[0],1);
 
             //allocate memory for phys
-            m_phys = MemoryManager::AllocateSharedArray<double>(GetTotPoints());
+            m_phys = MemoryManager::AllocateSharedArray<NekDouble>(GetTotPoints());
 	    Vmath::Vcopy(GetTotPoints(),&T.m_phys[0],1,&m_phys[0],1);
         }
 
@@ -137,6 +144,9 @@ namespace Nektar
             case eMassMatrix:
                 returnval = GenMassMatrix();
                 break;
+	    case eNBasisTrans:
+		returnval = GenNBasisTransMatrix();
+		break;
             default:
                 NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
                 break;
@@ -149,25 +159,17 @@ namespace Nektar
         DNekLinSysSharedPtr StdExpansion::CreateStdLinSys(const StdLinSysKey &mkey) 
         {
             DNekLinSysSharedPtr returnval;
-
-            switch(mkey.GetMatrixType())
-            {
-            case eMassMatrix:
-                returnval = MemoryManager::AllocateSharedPtr<DNekLinSys> (m_stdMatrixManager[mkey]);
-                break;
-            default:
-                NEKERROR(ErrorUtil::efatal, "Linear System creation not defined");
-                break;
-            }
+	    
+	    returnval = MemoryManager::AllocateSharedPtr<DNekLinSys> (m_stdMatrixManager[mkey]);
 
             return returnval;
         }
 
 
-        double StdExpansion::Linf(SharedArray<const NekDouble> sol)
+        NekDouble StdExpansion::Linf(ConstNekDoubleSharedArray sol)
         {
             int     ntot;
-            double  val;
+            NekDouble  val;
             NekDoubleSharedArray  wsp;
 
             ntot = GetTotPoints();
@@ -180,15 +182,15 @@ namespace Nektar
             return  val;
         }
 
-        double StdExpansion::Linf()
+        NekDouble StdExpansion::Linf()
         {
             return Vmath::Vamax(GetTotPoints(),&m_phys[0],1);    
         }
 
-        double StdExpansion::L2(SharedArray<const NekDouble> sol)
+        NekDouble StdExpansion::L2(ConstNekDoubleSharedArray sol)
         {
             int     ntot = GetTotPoints();
-            double  val;
+            NekDouble  val;
             NekDoubleSharedArray wsp;
 
             wsp = GetDoubleTmpSpace(ntot);
@@ -201,10 +203,10 @@ namespace Nektar
             return val;
         }
 
-        double StdExpansion::L2()
+        NekDouble StdExpansion::L2()
         {
             int     ntot = GetTotPoints();
-            double  val;
+            NekDouble  val;
             NekDoubleSharedArray wsp;
 
             wsp = GetDoubleTmpSpace(ntot);
@@ -238,10 +240,12 @@ namespace Nektar
         }
 
         // 2D Interpolation
-        void StdExpansion::Interp2D(const  LibUtilities::BasisKey &fbasis0, 
-            const LibUtilities::BasisKey &fbasis1, SharedArray<const NekDouble> from,  
-            const LibUtilities::BasisKey &tbasis0,
-            const LibUtilities::BasisKey &tbasis1, NekDoubleSharedArray &to)
+        void StdExpansion::Interp2D(const LibUtilities::BasisKey &fbasis0, 
+				    const LibUtilities::BasisKey &fbasis1, 
+				    ConstNekDoubleSharedArray from,  
+				    const LibUtilities::BasisKey &tbasis0,
+				    const LibUtilities::BasisKey &tbasis1,
+				    NekDoubleSharedArray &to)
         {
             DNekMatSharedPtr I0,I1;
             NekDoubleSharedArray wsp = GetDoubleTmpSpace(tbasis1.GetNumPoints()*
@@ -257,7 +261,7 @@ namespace Nektar
                 fbasis1.GetNumPoints(),
 			 from.get(),fbasis0.GetNumPoints(), 0.0, wsp.get(),
                 tbasis1.GetNumPoints());
-
+	    
             Blas::Dgemm('T', 'T',tbasis0.GetNumPoints(),tbasis1.GetNumPoints(),
                 fbasis0.GetNumPoints(),1.0,I0->GetPtr().get(),
                 fbasis0.GetNumPoints(),wsp.get(), tbasis1.GetNumPoints(),
@@ -265,10 +269,10 @@ namespace Nektar
         }
 
         // 1D Interpolation
-        void StdExpansion::Interp1D(const  LibUtilities::BasisKey &fbasis0, 
-				    const NekDouble *from,  
+        void StdExpansion::Interp1D(const LibUtilities::BasisKey &fbasis0, 
+				    ConstNekDoubleSharedArray from,  
 				    const LibUtilities::BasisKey &tbasis0, 
-				    NekDouble *to)
+				    NekDoubleSharedArray &to)
         {
             DNekMatSharedPtr I0;
 
@@ -277,7 +281,7 @@ namespace Nektar
 	    
             Blas::Dgemv('T', fbasis0.GetNumPoints(), tbasis0.GetNumPoints(), 
 			1.0, I0->GetPtr().get(), fbasis0.GetNumPoints(), 
-			from, 1, 0.0, to, 1);
+			from.get(), 1, 0.0, to.get(), 1);
         }
 
         //   I/O routine
@@ -295,6 +299,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.30  2007/04/08 03:36:57  jfrazier
+* Updated to use SharedArray consistently and minor reformatting.
+*
 * Revision 1.29  2007/03/31 00:40:02  bnelson
 * *** empty log message ***
 *

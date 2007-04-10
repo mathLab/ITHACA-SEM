@@ -42,239 +42,242 @@ namespace Nektar
     {
 
         StdSegExp::StdSegExp(const LibUtilities::BasisKey &Ba):
-    StdExpansion1D(Ba.GetNumModes(),Ba)
-    {    
-    }
+	    StdExpansion1D(Ba.GetNumModes(),Ba)
+	{    
+	}
 
-    StdSegExp::StdSegExp(const StdSegExp &T):
-    StdExpansion1D(T)
-    {
-    }
+	StdSegExp::StdSegExp(const StdSegExp &T):
+	    StdExpansion1D(T)
+	{
+	}
 
-    StdSegExp::~StdSegExp()
-    {    
-    }
-
-
-    //----------------------------
-    // Integration Methods
-    //----------------------------
-
-    double StdSegExp::Integral(SharedArray<const NekDouble> inarray)
-    {
-        double Int = 0.0;
-        SharedArray<const NekDouble> z;
-        SharedArray<const NekDouble> w0;
-        int    nquad0 = m_base[0]->GetNumPoints();
-        NekDoubleSharedArray tmp = GetDoubleTmpSpace(nquad0);
-
-        ExpPointsProperties(0)->GetZW(z,w0);
-
-        // multiply by integration constants 
-        Vmath::Vmul(nquad0,inarray.get(),1,w0.get(),1,tmp.get(),1);
-
-        Int = Vmath::Vsum(nquad0, tmp.get(),1);
-
-        return Int;
-    }
-
-    void StdSegExp::IProductWRTBase(SharedArray<const NekDouble> base, 
-        SharedArray<const NekDouble> inarray, 
-        NekDoubleSharedArray &outarray, int coll_check)
-    {
-        int    nquad = m_base[0]->GetNumPoints();
-        SharedArray<const NekDouble> z;
-        SharedArray<const NekDouble> w;
-        NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad);
-
-        ExpPointsProperties(0)->GetZW(z,w);
-
-        Vmath::Vmul(nquad,inarray.get(),1,w.get(),1,tmp.get(),1);
-
-        if(coll_check&&m_base[0]->Collocation())
-        {
-            Vmath::Vcopy(nquad,&tmp[0],1,&outarray[0],1);
-        }
-        else
-        {
-            Blas::Dgemv('T',nquad,m_base[0]->GetNumModes(),1.0,base.get(),nquad,
-                &tmp[0],1,0.0,outarray.get(),1);
-        }    
-    }
-
-    void StdSegExp::IProductWRTBase(SharedArray<const NekDouble> inarray, 
-        NekDoubleSharedArray &outarray)
-    {
-        IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
-    }
-
-    void StdSegExp::FillMode(const int mode, NekDoubleSharedArray &outarray)
-    {
-        int   nquad = m_base[0]->GetNumPoints();
-        const NekDouble * base  = m_base[0]->GetBdata().get();
-
-        ASSERTL2(modes <= m_ncoeffs , 
-            "calling argument mode is larger than total expansion order");
-
-        Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
-    }
-
-    DNekMatSharedPtr StdSegExp::GenMassMatrix() 
-    {
-        DNekMatSharedPtr Mat = StdExpansion::GenerateMassMatrix();
-
-        // For Fourier basis set the imaginary component of mean mode
-        // to have a unit diagonal component in mass matrix 
-        if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
-        {
-            (*Mat)(1,1) = 1.0;
-        }
-
-        return Mat;
-    }
-
-    DNekMatSharedPtr StdSegExp::GenLapMatrix() 
-    {
-        int    i;
-        int   nquad = m_base[0]->GetNumPoints();
-        const NekDouble * dbase  = m_base[0]->GetDbdata().get();
-        SharedArray<const NekDouble> z;
-        SharedArray<const NekDouble> w;
-        NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad);
-        int nummodes = m_base[0]->GetNumModes();
-        DNekMatSharedPtr Mat;
-
-        //	    Mat.reset(new DNekMat(nummodes,nummodes,
-        // new double [nummodes*nummodes]));
-        Mat = MemoryManager::AllocateSharedPtr<DNekMat>(nummodes,
-            nummodes,MemoryManager::AllocateArray<NekDouble>(nummodes*nummodes));
-
-        ExpPointsProperties(0)->GetZW(z,w);
-
-        for(i = 0; i < nummodes; ++i)
-        {
-            Vmath::Vcopy(nquad,(NekDouble *)dbase+i*nquad,1, &tmp[0],1);
-            IProductWRTBase(m_base[0]->GetDbdata(), tmp, tmp, 0);
-            Vmath::Vcopy(nquad,tmp.get(),1,Mat->GetPtr().get()+ i*m_base[0]->GetNumModes(),1);
-        }
-
-        return Mat;
-    }
-
-    //----------------------------
-    // Differentiation Methods
-    //-----------------------------
-
-    void StdSegExp::PhysDeriv(SharedArray<const NekDouble> inarray, 
-        NekDoubleSharedArray &out_d0,
-        NekDoubleSharedArray &out_d2,
-        NekDoubleSharedArray &out_d3)
-    {
-        PhysTensorDeriv(inarray,out_d0);
-    }
-
-    //----------------------------
-    // Evaluation Methods
-    //----------------------------
-
-    void StdSegExp::BwdTrans(SharedArray<const NekDouble> inarray, 
-        NekDoubleSharedArray &outarray)
-    {
-        int  nquad = m_base[0]->GetNumPoints();
-
-        if(m_base[0]->Collocation())
-        {
-            Vmath::Vcopy(nquad,&inarray[0],1,&outarray[0],1);
-        }
-        else
-        {
-            const NekDouble *base  = m_base[0]->GetBdata().get();
-
-            Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,base,nquad,
-                &inarray[0],1,0.0,&outarray[0],1);
-        }
-    }
-
-    void StdSegExp::FwdTrans(SharedArray<const NekDouble> inarray, NekDoubleSharedArray &outarray)
-    {
-        if(m_base[0]->Collocation())
-        {
-            Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
-        }
-        else
-        {
-            IProductWRTBase(inarray,outarray);
-
-            // get Mass matrix
-            StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
-            DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
-
-            // solve inverse of system
-            DNekVec   v(m_ncoeffs,outarray,eWrapper);
-            matsys->Solve(v,v);
-        }
-    }
-
-    NekDouble StdSegExp::PhysEvaluate(SharedArray<const NekDouble> Lcoord)
-    {
-        return StdExpansion1D::PhysEvaluate1D(Lcoord);
-    }
-
-
-    void StdSegExp::MapTo(EdgeOrientation dir, StdExpMap& Map)
-    {
-
-        if(Map.GetLen() < 2)
-        {
-            Map.SetMapMemory(2);
-        }
-
-        switch(m_base[0]->GetBasisType())
-        {
-        case LibUtilities::eGLL_Lagrange:
-            {
-                int order = m_base[0]->GetNumModes();
-                if(dir == eForwards)
-                {
-                    Map[0] = 0;
-                    Map[1] = order-1;
-                }
-                else
-                {
-                    Map[0] = order-1;
-                    Map[1] = 0;
-                }
-            }
-            break;
-        case LibUtilities::eModified_A:
-
-            if(dir == eForwards)
-            {
-                Map[0] = 0;
-                Map[1] = 1;
-            }
-            else
-            {
-                Map[0] = 1;
-                Map[1] = 0;
-            }
-            break;
-        default:
-            ASSERTL0(0,"Mapping not defined for this expansion");
-        }
-    }    
-
-    void StdSegExp::GetCoords(NekDoubleSharedArray &coords)
-    {
-        Blas::Dcopy(GetNumPoints(0),ExpPointsProperties(0)->GetZ().get(),
-            1,&coords[0],1);
-    }
+	StdSegExp::~StdSegExp()
+	{    
+	}
+	
+	
+	//----------------------------
+	// Integration Methods
+	//----------------------------
+	
+	double StdSegExp::Integral(ConstNekDoubleSharedArray inarray)
+	{
+	    NekDouble Int = 0.0;
+	    ConstNekDoubleSharedArray z;
+	    ConstNekDoubleSharedArray w0;
+	    int    nquad0 = m_base[0]->GetNumPoints();
+	    NekDoubleSharedArray tmp = GetDoubleTmpSpace(nquad0);
+	    
+	    ExpPointsProperties(0)->GetZW(z,w0);
+	    
+	    // multiply by integration constants 
+	    Vmath::Vmul(nquad0,inarray.get(),1,w0.get(),1,tmp.get(),1);
+	    
+	    Int = Vmath::Vsum(nquad0, tmp.get(),1);
+	    
+	    return Int;
+	}
+	
+	void StdSegExp::IProductWRTBase(ConstNekDoubleSharedArray base, 
+					ConstNekDoubleSharedArray inarray, 
+					NekDoubleSharedArray &outarray, 
+					int coll_check)
+	{
+	    int    nquad = m_base[0]->GetNumPoints();
+	    ConstNekDoubleSharedArray z;
+	    ConstNekDoubleSharedArray w;
+	    NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad);
+	    
+	    ExpPointsProperties(0)->GetZW(z,w);
+	    
+	    Vmath::Vmul(nquad,inarray.get(),1,w.get(),1,tmp.get(),1);
+	    
+	    if(coll_check&&m_base[0]->Collocation())
+	    {
+		Vmath::Vcopy(nquad,&tmp[0],1,&outarray[0],1);
+	    }
+	    else
+	    {
+		Blas::Dgemv('T',nquad,m_base[0]->GetNumModes(),1.0,base.get(),nquad,
+			    &tmp[0],1,0.0,outarray.get(),1);
+	    }    
+	}
+	
+	void StdSegExp::IProductWRTBase(ConstNekDoubleSharedArray inarray, 
+					NekDoubleSharedArray &outarray)
+	{
+	    IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
+	}
+	
+	void StdSegExp::FillMode(const int mode, NekDoubleSharedArray &outarray)
+	{
+	    int   nquad = m_base[0]->GetNumPoints();
+	    const NekDouble * base  = m_base[0]->GetBdata().get();
+	    
+	    ASSERTL2(modes <= m_ncoeffs , 
+		     "calling argument mode is larger than total expansion order");
+	    
+	    Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
+	}
+	
+	DNekMatSharedPtr StdSegExp::GenMassMatrix() 
+	{
+	    DNekMatSharedPtr Mat = StdExpansion::GenerateMassMatrix();
+	    
+	    // For Fourier basis set the imaginary component of mean mode
+	    // to have a unit diagonal component in mass matrix 
+	    if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
+	    {
+		(*Mat)(1,1) = 1.0;
+	    }
+	    
+	    return Mat;
+	}
+	
+	DNekMatSharedPtr StdSegExp::GenLapMatrix() 
+	{
+	    int    i;
+	    int   nquad = m_base[0]->GetNumPoints();
+	    const NekDouble * dbase  = m_base[0]->GetDbdata().get();
+	    ConstNekDoubleSharedArray z;
+	    ConstNekDoubleSharedArray w;
+	    NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad);
+	    int nummodes = m_base[0]->GetNumModes();
+	    DNekMatSharedPtr Mat;
+	    
+	    Mat = MemoryManager::AllocateSharedPtr<DNekMat>(nummodes,
+							    nummodes,
+							    MemoryManager::AllocateArray<NekDouble>(nummodes*nummodes));
+	    
+	    ExpPointsProperties(0)->GetZW(z,w);
+	    
+	    for(i = 0; i < nummodes; ++i)
+	    {
+		Vmath::Vcopy(nquad,(NekDouble *)dbase+i*nquad,1, &tmp[0],1);
+		IProductWRTBase(m_base[0]->GetDbdata(), tmp, tmp, 0);
+		Vmath::Vcopy(nquad,tmp.get(),1,Mat->GetPtr().get()+ i*m_base[0]->GetNumModes(),1);
+	    }
+	    
+	    return Mat;
+	}
+	
+	//----------------------------
+	// Differentiation Methods
+	//-----------------------------
+	
+	void StdSegExp::PhysDeriv(ConstNekDoubleSharedArray inarray, 
+				  NekDoubleSharedArray &out_d0,
+				  NekDoubleSharedArray &out_d2,
+				  NekDoubleSharedArray &out_d3)
+	{
+	    PhysTensorDeriv(inarray,out_d0);
+	}
+	
+	//----------------------------
+	// Evaluation Methods
+	//----------------------------
+	
+	void StdSegExp::BwdTrans(ConstNekDoubleSharedArray inarray, 
+				 NekDoubleSharedArray &outarray)
+	{
+	    int  nquad = m_base[0]->GetNumPoints();
+	    
+	    if(m_base[0]->Collocation())
+	    {
+		Vmath::Vcopy(nquad,&inarray[0],1,&outarray[0],1);
+	    }
+	    else
+	    {
+		const NekDouble *base  = m_base[0]->GetBdata().get();
+		
+		Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,base,nquad,
+			    &inarray[0],1,0.0,&outarray[0],1);
+	    }
+	}
+	
+	void StdSegExp::FwdTrans(ConstNekDoubleSharedArray inarray, NekDoubleSharedArray &outarray)
+	{
+	    if(m_base[0]->Collocation())
+	    {
+		Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
+	    }
+	    else
+	    {
+		IProductWRTBase(inarray,outarray);
+		
+		// get Mass matrix
+		StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
+		DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
+		
+		// solve inverse of system
+		DNekVec   v(m_ncoeffs,outarray,eWrapper);
+		matsys->Solve(v,v);
+	    }
+	}
+	
+	NekDouble StdSegExp::PhysEvaluate(ConstNekDoubleSharedArray Lcoord)
+	{
+	    return StdExpansion1D::PhysEvaluate1D(Lcoord);
+	}
+	
+	
+	void StdSegExp::MapTo(EdgeOrientation dir, StdExpMap& Map)
+	{
+	    
+	    if(Map.GetLen() < 2)
+	    {
+		Map.SetMapMemory(2);
+	    }
+	    
+	    switch(m_base[0]->GetBasisType())
+	    {
+	    case LibUtilities::eGLL_Lagrange:
+		{
+		    int order = m_base[0]->GetNumModes();
+		    if(dir == eForwards)
+		    {
+			Map[0] = 0;
+			Map[1] = order-1;
+		    }
+		    else
+		    {
+			Map[0] = order-1;
+			Map[1] = 0;
+		    }
+		}
+		break;
+	    case LibUtilities::eModified_A:
+		
+		if(dir == eForwards)
+		{
+		    Map[0] = 0;
+		    Map[1] = 1;
+		}
+		else
+		{
+		    Map[0] = 1;
+		    Map[1] = 0;
+		}
+		break;
+	    default:
+		ASSERTL0(0,"Mapping not defined for this expansion");
+	    }
+	}    
+	
+	void StdSegExp::GetCoords(NekDoubleSharedArray &coords)
+	{
+	    Blas::Dcopy(GetNumPoints(0),ExpPointsProperties(0)->GetZ().get(),
+			1,&coords[0],1);
+	}
 
     }//end namespace
 }//end namespace
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.27  2007/04/08 03:36:58  jfrazier
+* Updated to use SharedArray consistently and minor reformatting.
+*
 * Revision 1.26  2007/04/05 15:20:11  sherwin
 * Updated 2D stuff to comply with SharedArray philosophy
 *

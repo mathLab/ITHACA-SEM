@@ -46,10 +46,13 @@ namespace Nektar
     typedef SharedArray<NekDouble> NekDoubleSharedArray;
     typedef std::vector< NekDoubleSharedArray > NekDoubleArrayVector;
     typedef std::vector< NekDoubleSharedArray >::iterator NekDoubleArrayVectorIter;
+    typedef SharedArray<const NekDouble> ConstNekDoubleSharedArray;
  
     typedef SharedArray<int>  NekIntSharedArray;
     typedef std::vector< NekIntSharedArray > NekIntArrayVector;
     typedef std::vector< NekIntSharedArray >::iterator NekIntArrayVectorIter;
+
+    typedef SharedArray<const int>  ConstNekIntSharedArray;
 
 } //end of namespace 
 
@@ -57,6 +60,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.5  2007/03/31 15:37:51  bnelson
+Removed boost::shared_array.hpp
+
 Revision 1.4  2007/03/29 18:44:11  bnelson
 Replaced boost::shared_array with SharedArray
 

@@ -38,7 +38,7 @@
 
 #include <math.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
-
+#include <LibUtilities/BasicUtils/SharedArrayUtil.hpp>
 namespace Nektar
 {
     namespace LibUtilities 
@@ -257,12 +257,13 @@ namespace Nektar
             }
 
             /** \brief return basis definition array m_bdata */
-            inline SharedArray<const NekDouble> GetBdata() const
+            inline SharedArray<const NekDouble> GetBdata() const 
             {
-                return m_bdata;
+		return m_bdata;
             }
 
             /** \brief return basis definition array m_dbdata */
+
             inline SharedArray<const NekDouble> GetDbdata() const
             {
                 return m_dbdata;

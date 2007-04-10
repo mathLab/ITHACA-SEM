@@ -5,7 +5,7 @@
 #include "StdRegions/StdExpansion2D.h"
 #include "StdRegions/StdQuadExp.h"
 #include "StdRegions/StdTriExp.h"
-//#include "StdRegions/StdNodalTriExp.h"
+#include "StdRegions/StdNodalTriExp.h"
 
 #include "StdRegions/StdRegions.hpp"
 #include "LibUtilities/Foundations/Foundations.hpp"
@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
   int           order1,order2, nq1,nq2;
   LibUtilities::PointsType    Qtype1,Qtype2;
   LibUtilities::BasisType     btype1,btype2;
-  LibUtilities::PointsType     NodalBtype;
+  LibUtilities::PointsType     NodalType;
   StdRegions::ShapeType       regionshape;
   StdRegions::StdExpansion2D *E;
   NekDoubleSharedArray  sol;
@@ -84,11 +84,11 @@ int main(int argc, char *argv[]){
       
       if(btype1_val == 11)
       {
-	  NodalBtype = LibUtilities::eNodalTriElec;
+	  NodalType = LibUtilities::eNodalTriElec;
       }
       else
       {
-	  NodalBtype = LibUtilities::eNodalTriFekete;
+	  NodalType = LibUtilities::eNodalTriFekete;
       }
 
   }
@@ -159,19 +159,14 @@ int main(int argc, char *argv[]){
 	  const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
 	  const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
 
-	  E = new StdRegions::StdTriExp(Bkey1,Bkey2);
-	  
-	  
-#if 0 
 	  if(btype1_val >= 10)
 	  {
-	      E = new StdNodalTriExp(b1,b2,NodalBtype); 
+	      E = new StdRegions::StdNodalTriExp(Bkey1,Bkey2,NodalType);
 	  }
 	  else
 	  {
-	      E = new StdTriExp (b1,b2);
+	      E = new StdRegions::StdTriExp(Bkey1,Bkey2);
 	  }
-#endif
 
 	  NekDoubleSharedArray x = GetDoubleTmpSpace(nq1*nq2);
 	  NekDoubleSharedArray y = GetDoubleTmpSpace(nq1*nq2);
@@ -263,7 +258,8 @@ NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2){
 	}
     }
     
-    return sol;
+    //return sol;
+    return 1.0;
 }
 
 NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, 

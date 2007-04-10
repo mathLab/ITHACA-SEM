@@ -54,6 +54,13 @@ namespace Nektar
 	     {
 	     };
 ;
+
+            StdLinSysKey( MatrixType matrixType, ShapeType shapeType, 
+			  StdExpansion &stdExpansion, LibUtilities::PointsType Ntype):
+		StdMatrixKey(matrixType,shapeType,stdExpansion,Ntype)
+	     {
+	     };
+;
 	    
             virtual ~StdLinSysKey()
             {
@@ -69,6 +76,9 @@ namespace Nektar
 #endif //STDLINSYSKEY_HPP
 
 /**
-* $Log:$
+* $Log: StdLinSysKey.hpp,v $
+* Revision 1.1  2007/02/28 19:05:11  sherwin
+* Moved key definitions to their own files to make things more transparent
+*
 *
 ***/

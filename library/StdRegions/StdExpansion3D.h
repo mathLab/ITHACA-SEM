@@ -79,16 +79,18 @@ namespace Nektar
 	     *  \f$\eta_3\f$ direction will be stored in outarray_d3 as output 
 	     *  of the function
 	     */
-            void PhysTensorDeriv(NekDoubleSharedArray &inarray, NekDoubleSharedArray &outarray_d1,
-                NekDoubleSharedArray &outarray_d2, NekDoubleSharedArray &outarray_d3);
+            void PhysTensorDeriv(ConstNekDoubleSharedArray &inarray, 
+				 NekDoubleSharedArray &outarray_d1,
+				 NekDoubleSharedArray &outarray_d2, 
+				 NekDoubleSharedArray &outarray_d3);
 
             /** \brief Evaluate a function at points coords which is assumed
 	     *  to be in local collapsed coordinate format. The function is
 	     *  assumed to be in physical space
 	     */
-            double PhysEvaluate(const NekDoubleSharedArray &coords);
+            NekDouble PhysEvaluate(ConstNekDoubleSharedArray &coords);
 
-            void PhysDeriv(const NekDoubleSharedArray &inarray, 
+            void PhysDeriv(ConstNekDoubleSharedArray &inarray, 
 			   NekDoubleSharedArray &outarray_d0, 
 			   NekDoubleSharedArray &outarray_d1, 
 			   NekDoubleSharedArray &outarray_d2)
@@ -96,7 +98,7 @@ namespace Nektar
                 v_PhysDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
             }
 
-            void StdPhysDeriv(const NekDoubleSharedArray &inarray,
+            void StdPhysDeriv(ConstNekDoubleSharedArray &inarray,
 			  NekDoubleSharedArray &outarray_d0,
 			  NekDoubleSharedArray &outarray_d1,  
 			  NekDoubleSharedArray &outarray_d2)
@@ -122,7 +124,7 @@ namespace Nektar
             virtual DNekMatSharedPtr v_GetMassMatrix()        = 0;
             virtual DNekMatSharedPtr v_GetLapMatrix()         = 0;
 
-            virtual int v_get_nodalpoints(const NekDoubleSharedArray &x, const NekDoubleSharedArray &y)
+            virtual int v_get_nodalpoints(ConstNekDoubleSharedArray &x, ConstNekDoubleSharedArray &y)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
                 return 0;
@@ -133,19 +135,19 @@ namespace Nektar
                 ASSERTL0(false, "This function is only valid for nodal expansions");
             }
 
-            virtual void   v_BwdTrans (const NekDoubleSharedArray &inarray, 
+            virtual void   v_BwdTrans (ConstNekDoubleSharedArray &inarray, 
 				       NekDoubleSharedArray &outarray)      = 0;
-            virtual void   v_FwdTrans (const NekDoubleSharedArray &inarray,
+            virtual void   v_FwdTrans (ConstNekDoubleSharedArray &inarray,
 				       NekDoubleSharedArray &outarray)      = 0;
 
-            virtual NekDouble v_Integral(const NekDoubleSharedArray &inarray ) = 0;
-            virtual NekDouble v_Evaluate(const NekDoubleSharedArray &coords) = 0;
+            virtual NekDouble v_Integral(ConstNekDoubleSharedArray &inarray ) = 0;
+            virtual NekDouble v_Evaluate(ConstNekDoubleSharedArray &coords) = 0;
 
-            virtual void   v_PhysDeriv(const NekDoubleSharedArray &inarray, 
+            virtual void   v_PhysDeriv(ConstNekDoubleSharedArray &inarray, 
 				       NekDoubleSharedArray &outarray_d0,
 				       NekDoubleSharedArray &outarray_d1, 
 				       NekDoubleSharedArray &outarray_d2) = 0;
-            virtual void   v_StdPhysDeriv(const NekDoubleSharedArray &inarray, 
+            virtual void   v_StdPhysDeriv(ConstNekDoubleSharedArray &inarray, 
 					  NekDoubleSharedArray &outarray_d0,
 					  NekDoubleSharedArray &outarray_d1,
 					  NekDoubleSharedArray &outarray_d2) = 0;
@@ -164,6 +166,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.6  2007/03/29 19:35:09  bnelson
+* Replaced boost::shared_array with SharedArray
+*
 * Revision 1.5  2007/03/20 16:58:43  sherwin
 * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *

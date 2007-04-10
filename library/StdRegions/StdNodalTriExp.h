@@ -40,9 +40,6 @@
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdTriExp.h>
-#include <StdRegions/StdMatrix.h>
-
-#include <StdRegions/NodalBasisManager.h>
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdTriExp.h>
@@ -59,14 +56,10 @@ namespace Nektar
         public:
 
             //Constructors
-            StdNodalTriExp(const BasisKey &Ba, const BasisKey &Bb,
-                NodalBasisType Ntype);
-
-	    StdNodalTriExp(const StdRegions::BasisKey &Ba, 
-			   const StdRegions::BasisKey &Bb, 
-			   StdRegions::NodalBasisType Ntype,
-			   double *coeffs, double *phys);
-
+            StdNodalTriExp(const LibUtilities::BasisKey &Ba, 
+			   const LibUtilities::BasisKey &Bb,
+			   const LibUtilities::PointsType Ntype);
+	    
             //Copy Constructor
             StdNodalTriExp(const StdNodalTriExp &T);
 
@@ -82,86 +75,59 @@ namespace Nektar
             /// Nodal basis specific routines
             ///////////////////////////
 
-            void GenNBasisTransMatrix(double * outarray);
-
-
-            StdMatContainer * GetNBasisTransMatrix();
+            DNekMatSharedPtr GenNBasisTransMatrix();
+	    
 
             void NodalToModal();
-            void NodalToModal(double *in_out_array);
+
+            void NodalToModal(NekDoubleSharedArray &in_out_array);
 
             void NodalToModalTranspose();
-            void NodalToModalTranspose(double *in_out_array);
+            void NodalToModalTranspose(NekDoubleSharedArray &in_out_array);
 
             void ModalToNodal();
-            void ModalToNodal(double *in_out_array);
+            void ModalToNodal(NekDoubleSharedArray &in_out_array);
 
-            int  GetNodalPoints(const double * &x, const double * &y)
-            {
-                const double *z;
-                return NBasisManagerSingleton::Instance().GetNodePoints(m_nbtype,
-                    m_base[0]->GetBasisOrder(),x,y,z);
+            void GetNodalPoints(ConstNekDoubleSharedArray x, 
+				ConstNekDoubleSharedArray y)
+	    {
+		LibUtilities::PointsManager()[*m_nodalPointsKey]->GetPoints(x,y);
             }
 
             //////////////////////////////
             /// Integration Methods
             //////////////////////////////
 
-            void IProductWRTBase(const double * inarray, double * outarray);
+            void IProductWRTBase(ConstNekDoubleSharedArray inarray, 
+				 NekDoubleSharedArray &outarray);
 
 	    /** \brief Fill outarray with nodal mode \a mode of expansion
 	     *   and put in m_phys
 	     */
-            void FillMode(const int mode, double *outarray);
+            void FillMode(const int mode, NekDoubleSharedArray &outarray);
 
-            StdMatContainer * GetMassMatrix();
-
-            StdMatContainer * GetLapMatrix();
-
-
-	    void  MapTo(const int edge_ncoeffs, const BasisType Btype, 
-			const int eid, const EdgeOrientation eorient,
+	    void  MapTo(const int edge_ncoeffs,
+			const LibUtilities::BasisType Btype, 
+			const int eid, 
+			const EdgeOrientation eorient,
 			StdExpMap &Map);
 
 	    void  MapTo_ModalFormat(const int edge_ncoeffs, 
-				    const BasisType Btype, 
+				    const LibUtilities::BasisType Btype, 
 				    const int eid, 
 				    const EdgeOrientation eorient,
 				    StdExpMap &Map);
-            //-----------------------------
-            // Differentiation Methods
-            //-----------------------------
-
-            void Deriv(const double *inarray, double * outarray_d0,
-                double *outarray_d1);
-
-            void Deriv(double * outarray_d0, double *outarray_d1);
 
             //-----------------------------
             // Evaluations Methods
             //-----------------------------
 
-            void BwdTrans(double * outarray);
-
-            void FwdTrans(const double * inarray);
-
-            double Evaluate(const double * coords);
-
-	    // matrix inverse information
-	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
-
-	    BasisType  GetEdgeBasisType(const int i)
-	    {
-		return eGLL_Lagrange;
-	    }
-
-
+	    void BwdTrans(ConstNekDoubleSharedArray inarray,
+			  NekDoubleSharedArray &outarray);
+	    void FwdTrans(ConstNekDoubleSharedArray inarray,
+			  NekDoubleSharedArray &outarray);
+	    
         protected:
-
-            static StdMatrix s_elmtmats;
-
-            // All Expansions share the same NodalBasisManager
-            typedef Loki::SingletonHolder<NodalBasisManager> NBasisManagerSingleton;
 
 	    /** \brief Calculate the inner product of inarray with respect to
 	     *  the basis B=base0[p]*base1[pq] and put into outarray
@@ -169,115 +135,100 @@ namespace Nektar
 	     *  This function uses the StdTriExp routine and then 
 	     *  calls ModalToNodal to transform to Nodal basis
 	     */
-            inline void IProductWRTBase(const double *base0, const double *base1,
-				     const double *inarray, double *outarray);
+	    void IProductWRTBase(ConstNekDoubleSharedArray base0, 
+				 ConstNekDoubleSharedArray base1,
+				 ConstNekDoubleSharedArray inarray, 
+				 NekDoubleSharedArray &outarray);
 
         private:
 
-            NodalBasisType m_nbtype;
+            boost::shared_ptr<LibUtilities::PointsKey> m_nodalPointsKey;
 
             virtual ShapeType v_DetShapeType()
             {
                 return DetShapeType();
             }
 
-	    virtual BasisType v_GetEdgeBasisType(const int i)
+	    virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
 	    {
 		return GetEdgeBasisType(i);
 	    }
 
-            virtual void v_GenNBasisTransMatrix(double * outarray)
+            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
             {
-                GenNBasisTransMatrix(outarray);
-            }
-
-            virtual StdMatContainer * v_GetNBasisTransMatrix()
-            {
-                return GetNBasisTransMatrix();
-            }
+		return GenNBasisTransMatrix();
+	    }
 
 
             //////////////////////////////
             /// Integration Methods
             //////////////////////////////
 
-            virtual double v_Integral(const double *inarray )
-            {
-                return Integral(inarray);
-            }
+	    virtual NekDouble v_Integral(ConstNekDoubleSharedArray inarray)
+	    {
+		return Integral(inarray);
+	    }
 
-            virtual void v_IProductWRTBase(const double * inarray, double * outarray)
-            {
-                IProductWRTBase(inarray,outarray);
-            }
+	    virtual void v_IProductWRTBase(ConstNekDoubleSharedArray inarray,
+					   NekDoubleSharedArray &outarray)
+	    {
+		IProductWRTBase(inarray, outarray);
+	    }
 
-            virtual void v_FillMode(const int mode, double *outarray)
-            {
-                FillMode(mode,outarray);
-            }
-
-            virtual StdMatContainer * v_GetMassMatrix()
-            {
-                return GetMassMatrix();
-            }
-
-            virtual StdMatContainer * v_GetLapMatrix()
-            {
-                return GetLapMatrix();
-            }
-
+	    virtual void v_FillMode(const int mode, NekDoubleSharedArray &outarray)
+	    {
+		FillMode(mode, outarray);
+	    }
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
-            virtual void v_Deriv(const double *inarray, double * outarray_d0,
-                double *outarray_d1)
+	    virtual void v_PhysDeriv(ConstNekDoubleSharedArray inarray,
+				     NekDoubleSharedArray &out_d0,
+				     NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+				     NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
             {
-                Deriv(inarray,outarray_d0,outarray_d1);
-            }
-
-            virtual void v_Deriv(double * outarray_d0, double *outarray_d1)
-            {
-                Deriv(this->m_phys,outarray_d0,outarray_d1);
-            }
+		PhysDeriv(inarray, out_d1, out_d2);
+	    }
 
             //-----------------------------
             // Evaluations Methods
             //-----------------------------
 
-            virtual void v_BwdTrans(double * outarray)
+	    virtual void v_BwdTrans(ConstNekDoubleSharedArray inarray,
+				    NekDoubleSharedArray &outarray)
             {
-                return BwdTrans(outarray);
-            }
+		BwdTrans(inarray,outarray);
+	    }
 
-            virtual void v_FwdTrans(const double * inarray)
+	    /** \brief Virtual call to StdTriExp::FwdTrans */
+	    virtual void v_FwdTrans(ConstNekDoubleSharedArray inarray,
+				    NekDoubleSharedArray &outarray)
             {
-                return FwdTrans(inarray);
-            }
+		FwdTrans(inarray,outarray);
+	    }
 
-            virtual double v_Evaluate(const double * coords)
-	    {
-                return Evaluate(coords);
+	    virtual NekDouble v_PhysEvaluate(ConstNekDoubleSharedArray coords)
+            {
+		return StdTriExp::PhysEvaluate(coords);
 	    }
 	    
-            virtual int v_GetNodalPoints(const double * &x, const double* &y)
-	    {
-                return GetNodalPoints(x,y);
-            }
-
+	    
 	    virtual void v_WriteToFile(std::ofstream &outfile)
 	    {
 		WriteToFile(outfile);
 	    }
 	    
-	    virtual void v_MapTo(const int edge_ncoeffs, const BasisType Btype, 
-				 const int eid, const EdgeOrientation eorient,
+	    virtual void v_MapTo(const int edge_ncoeffs, 
+				 const LibUtilities::BasisType Btype, 
+				 const int eid, 
+				 const EdgeOrientation eorient,
 				 StdExpMap &Map)
 	    {
 		MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
 	    }
 
 	    virtual void v_MapTo_ModalFormat(const int edge_ncoeffs, 
-					     const BasisType Btype, 
+					     const LibUtilities::BasisType Btype, 
 					     const int eid, 
 					     const EdgeOrientation eorient,
 					     StdExpMap &Map)
@@ -290,12 +241,6 @@ namespace Nektar
 	    {
 		WriteCoeffsToFile(outfile);
 	    }
-
-	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-	    {
-		SetInvInfo(mat,Mform);
-	    }
-
         };
 
     } //end of namespace
@@ -305,6 +250,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.6  2007/01/17 16:05:40  pvos
+* updated doxygen documentation
+*
 * Revision 1.5  2007/01/15 21:13:46  sherwin
 * Nodal stuff correction and added Field Classes
 *

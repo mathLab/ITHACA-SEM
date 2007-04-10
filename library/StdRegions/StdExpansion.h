@@ -97,7 +97,7 @@ namespace Nektar
             *  \return returns a pointer to the coefficient array 
             *  \f$ \mathbf{\hat{u}}\f$ 
             */
-            inline SharedArray<const NekDouble> GetCoeffs(void)
+            inline ConstNekDoubleSharedArray GetCoeffs(void)
             {
                 return(m_coeffs);
             }
@@ -112,7 +112,7 @@ namespace Nektar
             *
             *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
             */
-            inline SharedArray<const NekDouble> GetPhys(void) 
+            inline ConstNekDoubleSharedArray GetPhys(void) 
             {
                 return(m_phys);
             }
@@ -201,7 +201,7 @@ namespace Nektar
             *  \param coeffs the array of values to which #m_coeffs should 
             *  be set
             */
-            inline void SetCoeffs(SharedArray<const NekDouble> coeffs)
+            inline void SetCoeffs(ConstNekDoubleSharedArray coeffs)
             {
                 Vmath::Vcopy(m_ncoeffs, &coeffs[0], 1, &m_coeffs[0], 1);
             }
@@ -247,7 +247,7 @@ namespace Nektar
             *
             *  \param phys the array of values to which #m_phys should be set
             */
-            inline void SetPhys(const NekDoubleSharedArray &phys)
+            inline void SetPhys(ConstNekDoubleSharedArray phys)
             {
                 int nqtot = GetTotPoints();
 
@@ -321,7 +321,7 @@ namespace Nektar
             *  \return returns a pointer to the array containing
             *  the quadrature points in \a dir direction 
             */
-            inline SharedArray<const NekDouble> GetPoints(const int dir) const
+            inline ConstNekDoubleSharedArray GetPoints(const int dir) const
             {
                 return ExpPointsProperties(dir)->GetZ();
             }
@@ -461,7 +461,8 @@ namespace Nektar
             *  at the quadrature points (output of the function)
             */
 
-            void  BwdTrans (SharedArray<const NekDouble> inarray, NekDoubleSharedArray &outarray)
+            void  BwdTrans (ConstNekDoubleSharedArray inarray, 
+			    NekDoubleSharedArray &outarray)
             {
                 v_BwdTrans (inarray, outarray);
             }
@@ -496,8 +497,9 @@ namespace Nektar
             *
             *  \param outarray array of the function coefficieints 
             */
-            void  FwdTrans (SharedArray<const NekDouble> inarray, NekDoubleSharedArray &outarray)
-            {
+            void  FwdTrans (ConstNekDoubleSharedArray inarray, 
+			    NekDoubleSharedArray &outarray)
+		{
                 v_FwdTrans(inarray,outarray);
             }
 
@@ -519,7 +521,7 @@ namespace Nektar
             *  \a inarray[m]=\f$u(\mathbf{\xi}_m)\f$)
             *  \return returns the value of the calculated integral
             */
-            NekDouble Integral(SharedArray<const NekDouble> inarray )
+            NekDouble Integral(ConstNekDoubleSharedArray inarray )
             {
                 return v_Integral(inarray);
             }
@@ -557,7 +559,8 @@ namespace Nektar
             *  with the different modes, i.e. \f$ outarray[p] = I[p]\f$ 
             *  (output of the function) 
             */
-            void IProductWRTBase(SharedArray<const NekDouble> inarray, NekDoubleSharedArray &outarray)
+            void IProductWRTBase(ConstNekDoubleSharedArray inarray, 
+				 NekDoubleSharedArray &outarray)
             {
                 v_IProductWRTBase(inarray, outarray);
             }
@@ -631,8 +634,8 @@ namespace Nektar
             *  coordinate system
             *  \param coords the physical coordinates (output of the function)
             */
-            void GetCoord(SharedArray<const NekDouble> Lcoord, 
-                NekDoubleSharedArray &coord)
+            void GetCoord(ConstNekDoubleSharedArray Lcoord, 
+			  NekDoubleSharedArray &coord)
             {
                 v_GetCoord(Lcoord, coord);
             }
@@ -759,7 +762,7 @@ namespace Nektar
                 return v_GenLapMatrix();
             }
 
-            void PhysDeriv (SharedArray<const NekDouble> inarray,
+            void PhysDeriv (ConstNekDoubleSharedArray inarray,
                 NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
                 NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
                 NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
@@ -792,17 +795,10 @@ namespace Nektar
             *   at the quadrature points of \a tbasis0 (output of the function)
             */
             void Interp1D(const LibUtilities::BasisKey &fbasis0,
-                SharedArray<const NekDouble> from,
-                const LibUtilities::BasisKey &tbasis0,
-                NekDoubleSharedArray &to)
-            {
-                Interp1D(fbasis0,from.get(),tbasis0,to.get());
-            }
-
-            void Interp1D(const LibUtilities::BasisKey &fbasis0,
-                const NekDouble *from,
-                const LibUtilities::BasisKey &tbasis0,
-                NekDouble *to);
+			  ConstNekDoubleSharedArray from,
+			  const LibUtilities::BasisKey &tbasis0,
+			  NekDoubleSharedArray &to);
+	    
 
             /** \brief this function interpolates a 2D function \f$f\f$ evaluated
             *  at the quadrature points of the 2D basis, constructed by 
@@ -826,7 +822,7 @@ namespace Nektar
             */
             void Interp2D(const LibUtilities::BasisKey &fbasis0, 
                 const LibUtilities::BasisKey &fbasis1,
-                SharedArray<const NekDouble> from,   
+                ConstNekDoubleSharedArray from,   
                 const LibUtilities::BasisKey &tbasis0,
                 const LibUtilities::BasisKey &tbasis1, 
                 NekDoubleSharedArray &to);
@@ -842,7 +838,7 @@ namespace Nektar
             *  points
             *  \return returns the \f$ L_\infty \f$ error as a NekDouble. 
             */
-            NekDouble Linf(SharedArray<const NekDouble> sol);
+            NekDouble Linf(ConstNekDoubleSharedArray sol);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty \f$ norm of
             *  the function defined at the physical points \a (this)->m_phys. 
@@ -866,7 +862,7 @@ namespace Nektar
             *  points
             *  \return returns the \f$ L_2 \f$ error as a double. 
             */
-            NekDouble L2(SharedArray<const NekDouble> sol);
+            NekDouble L2(ConstNekDoubleSharedArray sol);
 
             /** \brief Function to evaluate the discrete \f$ L_2\f$ norm of the
             *  function defined at the physical points \a (this)->m_phys.
@@ -924,14 +920,14 @@ namespace Nektar
                 return eNoShapeType;
             }
 
-            virtual void   v_BwdTrans        (SharedArray<const NekDouble> inarray, 
+            virtual void   v_BwdTrans   (ConstNekDoubleSharedArray inarray, 
+					 NekDoubleSharedArray &outarray) = 0;
+            virtual void   v_FwdTrans   (ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray &outarray) = 0;
-            virtual void   v_FwdTrans        (SharedArray<const NekDouble> inarray, 
-                NekDoubleSharedArray &outarray) = 0;
-            virtual void   v_IProductWRTBase (SharedArray<const NekDouble> inarray, 
-                NekDoubleSharedArray &outarray) = 0;
+            virtual void   v_IProductWRTBase (ConstNekDoubleSharedArray inarray, 
+					      NekDoubleSharedArray &outarray) = 0;
 
-            virtual NekDouble v_Integral(SharedArray<const NekDouble> inarray )
+            virtual NekDouble v_Integral(ConstNekDoubleSharedArray inarray )
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                     "local expansions");
@@ -939,7 +935,7 @@ namespace Nektar
             }
 
 
-            virtual void   v_PhysDeriv (SharedArray<const NekDouble> inarray,
+            virtual void   v_PhysDeriv (ConstNekDoubleSharedArray inarray,
                 NekDoubleSharedArray &out_d1,
                 NekDoubleSharedArray &out_d2,
                 NekDoubleSharedArray &out_d3)
@@ -980,7 +976,7 @@ namespace Nektar
                 DNekMatSharedPtr returnval;
 
                 NEKERROR(ErrorUtil::efatal, "This function is only valid "
-                    "for nodal expansions");
+			 "for nodal expansions");
 
                 return returnval;
             }
@@ -992,7 +988,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
 
-            virtual void v_GetCoord(SharedArray<const NekDouble> Lcoord, 
+            virtual void v_GetCoord(ConstNekDoubleSharedArray Lcoord, 
                 NekDoubleSharedArray &coord)
             {
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
@@ -1060,6 +1056,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.42  2007/04/08 03:36:58  jfrazier
+* Updated to use SharedArray consistently and minor reformatting.
+*
 * Revision 1.41  2007/04/06 08:44:43  sherwin
 * Update to make 2D regions work at StdRegions level
 *

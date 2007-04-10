@@ -85,9 +85,9 @@ namespace Nektar
             // Integration Methods
             //////////////////////////////
 
-            NekDouble Integral(const NekDoubleSharedArray &inarray);
+            NekDouble Integral(ConstNekDoubleSharedArray inarray);
 
-            void IProductWRTBase(const NekDoubleSharedArray &inarray, 
+            void IProductWRTBase(ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray &outarray);
 
             /** \brief Calculate the inner product of inarray with respect to
@@ -115,11 +115,11 @@ namespace Nektar
             *  \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
             *  {\bf B_0 F}  \f$
             */
-            void IProductWRTBase(const NekDouble *base0, 
-                const NekDouble *base1,
-                const NekDoubleSharedArray &inarray, 
-                NekDoubleSharedArray &outarray,
-                int coll_check);
+            void IProductWRTBase(ConstNekDoubleSharedArray base0, 
+				 ConstNekDoubleSharedArray base1,
+				 ConstNekDoubleSharedArray inarray, 
+				 NekDoubleSharedArray &outarray,
+				 int coll_check);
 
             //----------------------------------
             // Local Matrix Routines
@@ -137,7 +137,7 @@ namespace Nektar
             *  For quadrilateral region can use the Tensor_Deriv function
             *  defined under StdExpansion.
             */
-            void PhysDeriv(const NekDoubleSharedArray &inarray, 
+            void PhysDeriv(ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray &out_d0, 
                 NekDoubleSharedArray &out_d1,
                 NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
@@ -147,12 +147,12 @@ namespace Nektar
             // Evaluations Methods
             //-----------------------------
 
-            void BwdTrans(const NekDoubleSharedArray &inarray,
+            void BwdTrans(ConstNekDoubleSharedArray inarray,
                 NekDoubleSharedArray &outarray);
-            void FwdTrans(const NekDoubleSharedArray &inarray,
+            void FwdTrans(ConstNekDoubleSharedArray inarray,
                 NekDoubleSharedArray &outarray);
 
-            double PhysEvaluate(const NekDoubleSharedArray &coords);
+            NekDouble PhysEvaluate(ConstNekDoubleSharedArray coords);
 
             void MapTo(const int edge_ncoeffs, 
                 const LibUtilities::BasisType Btype, 
@@ -242,12 +242,12 @@ namespace Nektar
                 FillMode(mode,array);
             }
 
-            virtual double v_Integral(const NekDoubleSharedArray &inarray )
+            virtual NekDouble v_Integral(ConstNekDoubleSharedArray inarray )
             {
                 return Integral(inarray);
             }
 
-            virtual void v_IProductWRTBase(const NekDoubleSharedArray &inarray,
+            virtual void v_IProductWRTBase(ConstNekDoubleSharedArray inarray,
                 NekDoubleSharedArray &outarray)
             {
                 IProductWRTBase(inarray,outarray);
@@ -263,7 +263,7 @@ namespace Nektar
                 GenLapMatrix();
             }
 
-            virtual void v_PhysDeriv(const NekDoubleSharedArray &inarray,
+            virtual void v_PhysDeriv(ConstNekDoubleSharedArray inarray,
                 NekDoubleSharedArray &out_d0,
                 NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
                 NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
@@ -271,26 +271,26 @@ namespace Nektar
                 PhysDeriv(inarray,out_d0, out_d1);
             }
 
-            virtual void v_StdPhysDeriv(const NekDoubleSharedArray &inarray, 
+            virtual void v_StdPhysDeriv(ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray &out_d0,
                 NekDoubleSharedArray &out_d1)
             {
                 PhysDeriv(inarray, out_d0,  out_d1);
             }
 
-            virtual void v_BwdTrans(const NekDoubleSharedArray &inarray, 
+            virtual void v_BwdTrans(ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray &outarray)
             {
                 BwdTrans(inarray, outarray);
             }
 
-            virtual void v_FwdTrans(const NekDoubleSharedArray &inarray, 
+            virtual void v_FwdTrans(ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray &outarray)
             {
                 FwdTrans(inarray, outarray);
             }
 
-            virtual NekDouble v_PhysEvaluate(const NekDoubleSharedArray &Lcoords)
+            virtual NekDouble v_PhysEvaluate(ConstNekDoubleSharedArray Lcoords)
             {
                 return PhysEvaluate(Lcoords);
             }
@@ -322,6 +322,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.12  2007/04/08 03:36:58  jfrazier
+* Updated to use SharedArray consistently and minor reformatting.
+*
 * Revision 1.11  2007/04/06 08:44:43  sherwin
 * Update to make 2D regions work at StdRegions level
 *

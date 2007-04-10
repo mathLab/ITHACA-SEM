@@ -85,7 +85,7 @@ namespace Nektar
             *  \return returns \f$\int^1_{-1} u(\xi_1)d \xi_1 \f$ where \f$inarray[i]
             *  = u(\xi_{1i}) \f$
             */
-            NekDouble Integral(SharedArray<const NekDouble> inarray);
+            NekDouble Integral(ConstNekDoubleSharedArray inarray);
 
 
             /** \brief Inner product of \a inarray over region with respect to the
@@ -98,7 +98,7 @@ namespace Nektar
             *  each basis over region will be stored in the array \a outarray as
             *  output of the function
             */
-            void IProductWRTBase(SharedArray<const NekDouble> inarray, 
+            void IProductWRTBase(ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray & outarray);
 
             void FillMode(const int mode, 
@@ -141,7 +141,7 @@ namespace Nektar
             *  \param  outarray the resulting array of the derivative \f$
             *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
             */
-            void PhysDeriv(SharedArray<const NekDouble> inarray, 
+            void PhysDeriv(ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray &out_d0,
                 NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
                 NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
@@ -169,7 +169,7 @@ namespace Nektar
             *  \param outarray: the resulting array of the values of the function at 
             *  the physical quadrature points will be stored in the array \a outarray
             */
-            void BwdTrans(SharedArray<const NekDouble> inarray, NekDoubleSharedArray & outarray);
+            void BwdTrans(ConstNekDoubleSharedArray inarray, NekDoubleSharedArray & outarray);
 
             /** \brief Forward transform from physical quadrature space stored in 
             *  \a inarray and evaluate the expansion coefficients and store in 
@@ -189,12 +189,12 @@ namespace Nektar
             *
             *  \param outarray: the coeffficients of the expansion 
             */ 
-            void FwdTrans(SharedArray<const NekDouble> inarray, NekDoubleSharedArray &outarray);
+            void FwdTrans(ConstNekDoubleSharedArray inarray, NekDoubleSharedArray &outarray);
 
             /** \brief Single Point Evaluation: \f$ u(x) = \sum_p \phi_p(x) \hat{u}_p 
             *  = \sum_p h_p(x) u(x_p)\f$
             */
-            NekDouble PhysEvaluate(SharedArray<const NekDouble> Lcoords);
+            NekDouble PhysEvaluate(ConstNekDoubleSharedArray Lcoords);
 
             void MapTo(EdgeOrientation dir, StdExpMap& Map);
 
@@ -222,8 +222,10 @@ namespace Nektar
             *  each basis over region will be stored in the array \a outarray as
             *  output of the function
             */
-            void IProductWRTBase(SharedArray<const NekDouble> base, SharedArray<const NekDouble> inarray,
-                NekDoubleSharedArray &outarray, int coll_check);
+            void IProductWRTBase(ConstNekDoubleSharedArray base, 
+				 ConstNekDoubleSharedArray inarray,
+				 NekDoubleSharedArray &outarray, 
+				 int coll_check);
 
         private:
 
@@ -240,7 +242,7 @@ namespace Nektar
             /** \brief Virtual call to integrate the physical point list \a inarray 
             *  over region (see StdSegExp::Integral)
             */
-            virtual NekDouble v_Integral(SharedArray<const NekDouble> inarray )
+            virtual NekDouble v_Integral(ConstNekDoubleSharedArray inarray )
             {
                 return Integral(inarray);
             } 
@@ -253,7 +255,7 @@ namespace Nektar
             }
 
             /** \brief Virtual call to StdSegExp::IProduct_WRT_B */
-            virtual void v_IProductWRTBase(SharedArray<const NekDouble> inarray, 
+            virtual void v_IProductWRTBase(ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray &outarray)
             {
                 IProductWRTBase(inarray,outarray);
@@ -278,7 +280,7 @@ namespace Nektar
 
             /** \brief Virtual call to StdSegExp::Deriv */
 
-            virtual void v_PhysDeriv(SharedArray<const NekDouble> inarray,
+            virtual void v_PhysDeriv(ConstNekDoubleSharedArray inarray,
                 NekDoubleSharedArray &out_d0,
                 NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
                 NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
@@ -288,14 +290,14 @@ namespace Nektar
 
 
             /** \brief Virtual call to StdSegExp::Deriv */
-            virtual void v_StdPhysDeriv(SharedArray<const NekDouble> inarray, 
+            virtual void v_StdPhysDeriv(ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray &outarray)
             {
                 PhysDeriv(inarray, outarray);
             }
 
             /** \brief Virtual call to StdSegExp::BwdTrans */
-            virtual void v_BwdTrans(SharedArray<const NekDouble> inarray, 
+            virtual void v_BwdTrans(ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray &outarray)
             {
                 BwdTrans(inarray, outarray);
@@ -309,7 +311,7 @@ namespace Nektar
 
 
             /** \brief Virtual call to StdSegExp::FwdTrans */
-            virtual void v_FwdTrans(SharedArray<const NekDouble> inarray, 
+            virtual void v_FwdTrans(ConstNekDoubleSharedArray inarray, 
                 NekDoubleSharedArray &outarray)
             {
                 FwdTrans(inarray, outarray);
@@ -322,7 +324,7 @@ namespace Nektar
             }
 
             /** \brief Virtual call to StdSegExp::Evaluate */
-            virtual NekDouble v_PhysEvaluate(SharedArray<const NekDouble> Lcoords)
+            virtual NekDouble v_PhysEvaluate(ConstNekDoubleSharedArray Lcoords)
             {
                 return PhysEvaluate(Lcoords);
             }
@@ -341,6 +343,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.17  2007/04/08 03:36:58  jfrazier
+* Updated to use SharedArray consistently and minor reformatting.
+*
 * Revision 1.16  2007/04/06 08:44:43  sherwin
 * Update to make 2D regions work at StdRegions level
 *

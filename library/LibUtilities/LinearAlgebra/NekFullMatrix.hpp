@@ -63,19 +63,22 @@ namespace Nektar
             static void Transpose(unsigned int& rows, unsigned int& columns,
                                   SharedArray<DataType>& data)
             {
-                // TODO - Still not right.
+                // TODO - Find a way to do this in-place.
+                SharedArray<DataType> temp = MemoryManager::AllocateSharedArray<DataType>(data.GetSize());
+
                 for(unsigned int row = 0; row < rows; ++row)
                 {
-                    for(unsigned int column = row+1; column < columns; ++column)
+                    for(unsigned int column = 0; column < columns; ++column)
                     {
                         unsigned int firstIndex = CalculateIndex(row, column, rows, columns);
                         unsigned int secondIndex = CalculateIndex(column, row, columns, rows);
 
-                        std::swap( data[firstIndex], data[secondIndex] );
+                        temp[secondIndex] = data[firstIndex];
                     }
                 }
 
                 std::swap(rows, columns);
+                std::swap(data, temp);
             }
 
 
@@ -525,6 +528,9 @@ namespace Nektar
 
 /**
     $Log: NekFullMatrix.hpp,v $
+    Revision 1.12  2007/04/09 03:16:53  bnelson
+    *** empty log message ***
+
     Revision 1.11  2007/04/05 05:12:44  bnelson
     *** empty log message ***
 

@@ -304,7 +304,25 @@ namespace Nektar
 
             f = d;
         }
-
+        
+        class Foo
+        {
+            public:
+                SharedArray<double const> GetData() const
+                {
+                    return m_data;
+                }
+                
+                SharedArray<double> GetNonConstData()
+                {
+                    SharedArray<double> result;
+                    return result;
+                }
+                
+            private:
+                SharedArray<double> m_data;
+        };
+        
         void testFunctionCall()
         {
             SharedArray<double> a;
@@ -312,6 +330,13 @@ namespace Nektar
 
             BOOST_CHECK_EQUAL(a[0], 7.1);
             BOOST_CHECK_EQUAL(a[1], 8.2);
+            
+            Foo obj1;
+            SharedArray<const double> const_data;
+            const_data = obj1.GetData();
+            
+            SharedArray<double> lhs = obj1.GetNonConstData();
+            lhs = obj1.GetNonConstData();
         }
     }
 }

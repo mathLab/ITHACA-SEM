@@ -85,21 +85,21 @@ namespace Nektar
     /// coeffs and offset point to the same underlying array, so if coeffs goes out of scope the array
     /// is not deleted until offset goes out of scope.  
     ///
+
     template<class T> 
-    class SharedArray : public MojoEnabled<SharedArray<T> >
+    class SharedArrayBase 
     {
-        private:
+        protected:
 
             // Borland 5.5.1 specific workarounds
             typedef boost::checked_array_deleter<T> deleter;
-            typedef SharedArray<T> this_type;
+            typedef SharedArrayBase<T> this_type;
 
         public:
+            template<typename U> friend class SharedArrayBase;
             template<typename U> friend class SharedArray;
 
-            typedef T element_type;
-
-            SharedArray() : 
+            SharedArrayBase() : 
                 px(0), 
                 pn((T*)0, deleter()),
                 m_offset(0),
@@ -107,7 +107,7 @@ namespace Nektar
             {
             }
 
-            explicit SharedArray(unsigned int s) :
+            explicit SharedArrayBase(unsigned int s) :
                 px(new T[s]),
                 pn(px, deleter()),
                 m_offset(0),
@@ -115,7 +115,7 @@ namespace Nektar
             {
             }
 
-            SharedArray(T* p, unsigned int s) : 
+            SharedArrayBase(T* p, unsigned int s) : 
                 px(p), 
                 pn(p, deleter()),
                 m_offset(0),
@@ -123,7 +123,7 @@ namespace Nektar
             {
             }
             
-            SharedArray(SharedArray<T>& rhs, unsigned int offset) :
+            SharedArrayBase(const SharedArrayBase<T>& rhs, unsigned int offset) :
                 px(rhs.px),
                 pn(rhs.pn),
                 m_offset(offset),
@@ -131,6 +131,23 @@ namespace Nektar
             {
             }
 
+            SharedArrayBase(const SharedArrayBase<T>& rhs) :
+                px(rhs.px),
+                pn(rhs.pn),
+                m_offset(rhs.m_offset),
+                m_size(rhs.m_size)
+            {
+            }
+            
+            SharedArrayBase(T* rhs_px, const boost::detail::shared_count& rhs_pn,
+                            unsigned int rhs_offset, unsigned int rhs_size) :
+                px(rhs_px),
+                pn(rhs_pn),
+                m_offset(rhs_offset),
+                m_size(rhs_size)
+            {
+            }
+                            
             //
             // Requirements: D's copy constructor must not throw
             //
@@ -138,7 +155,7 @@ namespace Nektar
             //
 
             template<class D> 
-            SharedArray(T* p, unsigned int s, D d) : 
+            SharedArrayBase(T* p, unsigned int s, D d) : 
                 px(p), 
                 pn(p, d),
                 m_offset(0),
@@ -146,108 +163,17 @@ namespace Nektar
             {
             }
 
-            /// We need to have a constructor that takes a non-const and one that
-            /// takes a const, regardless of whether T is a const or not.
-
-            /// Creates a shared array from rhs, incrementing the reference count.
-            SharedArray(SharedArray<typename boost::remove_const<T>::type>& rhs) :
-                px(rhs.px),
-                pn(rhs.pn),
-                m_offset(rhs.m_offset),
-                m_size(rhs.m_size)
+            
+            SharedArrayBase<T>& operator=(const SharedArrayBase<T>& rhs)
             {
-                
-            }
-
-            SharedArray(SharedArray<typename boost::add_const<T>::type>& rhs) :
-                px(rhs.px),
-                pn(rhs.pn),
-                m_offset(rhs.m_offset),
-                m_size(rhs.m_size)
-            {
-                /// If you get a compile error pointing here then you have
-                /// tried to create a non-constant shared array with a constant
-                /// shared array as a parameter.  This is not allowed since it would 
-                /// allow you to modify the underlying data of the constant array.
-                BOOST_MPL_ASSERT( (boost::is_const<T>) );
-            }
-     
-            SharedArray(Temporary<SharedArray<T> > rhs) :
-                px(rhs.GetValue().px),
-                pn(rhs.GetValue().pn),
-                m_offset(rhs.GetValue().m_offset),
-                m_size(rhs.GetValue().m_size)
-            {
-            }
-
-            SharedArray(Constant<SharedArray<typename boost::add_const<T>::type> > rhs) :
-                px(rhs.GetValue().px),
-                pn(rhs.GetValue().pn),
-                m_offset(rhs.GetValue().m_offset),
-                m_size(rhs.GetValue().m_size)
-            {
-                /// If you get a compile error pointing here then you have
-                /// tried to create a non-constant shared array with a constant
-                /// shared array as a parameter.  This is not allowed since it would 
-                /// allow you to modify the underlying data of the constant array.
-                BOOST_MPL_ASSERT( (boost::is_const<T>) );
-            }
-
-            SharedArray(Constant<SharedArray<typename boost::remove_const<T>::type> > rhs) :
-                px(rhs.GetValue().px),
-                pn(rhs.GetValue().pn),
-                m_offset(rhs.GetValue().m_offset),
-                m_size(rhs.GetValue().m_size)
-            {
-                /// If you get a compile error pointing here then you have
-                /// tried to create a non-constant shared array with a constant
-                /// shared array as a parameter.  This is not allowed since it would 
-                /// allow you to modify the underlying data of the constant array.
-                BOOST_MPL_ASSERT( (boost::is_const<T>) );
-            }
-
-
-            SharedArray<T>& operator=(SharedArray<typename boost::remove_const<T>::type>& rhs)
-            {
-                SharedArray<T> temp(rhs);
-                swap(temp);
-                return *this;
-            }
-
-            SharedArray<T>& operator=(SharedArray<typename boost::add_const<T>::type>& rhs)
-            {
-                /// If you get a compile error pointing here then you have
-                /// tried to create a non-constant shared array with a constant
-                /// shared array as a parameter.  This is not allowed since it would 
-                /// allow you to modify the underlying data of the constant array.
-                
-                SharedArray<T> temp(rhs);
-                swap(temp);
-                return *this;
-            }
-
-            SharedArray<T>& operator=(Temporary<SharedArray<T> > rhs)
-            {
-                SharedArray<T> temp(rhs.GetValue());
-                swap(temp);
-                return *this;
-            }
-
-            SharedArray<T>& operator=(Constant<SharedArray<typename boost::remove_const<T>::type> > rhs)
-            {
-                SharedArray<T> temp(rhs.GetValue());
-                swap(temp);
-                return *this;
-            }
-
-            SharedArray<T>& operator=(Constant<SharedArray<typename boost::add_const<T>::type> > rhs)
-            {
-                SharedArray<T> temp(rhs.GetValue());
-                swap(temp);
+                px = rhs.px;
+                pn = rhs.pn;
+                m_offset = rhs.m_offset;
+                m_size = rhs.m_size;
                 return *this;
             }
             
-            SharedArray<T>& operator+=(unsigned int incr)
+            SharedArrayBase<T>& operator+=(unsigned int incr)
             {
                 m_offset += incr;
                 return *this;
@@ -338,7 +264,7 @@ namespace Nektar
                 return pn.use_count();
             }
 
-            void swap(SharedArray<T>& other) // never throws
+            void swap(SharedArrayBase<T>& other) // never throws
             {
                 std::swap(px, other.px);
                 pn.swap(other.pn);
@@ -355,16 +281,133 @@ namespace Nektar
             const_iterator begin() const { return px + m_offset; }
             const_iterator end() const { return px + m_size; }
 
-        private:
-            //SharedArray<T>& operator=(const SharedArray<T>& rhs);
-
-            T* px;                     // contained pointer
-            boost::detail::shared_count pn;    // reference counter
+        protected:
+            T* px;                              
+            boost::detail::shared_count pn;    
             unsigned int m_offset;
             unsigned int m_size;
 
     };  
 
+
+    template<class T>
+    class SharedArray : public SharedArrayBase<T>, public MojoEnabled<SharedArray<T> >
+    {
+        public:
+            SharedArray() :
+                SharedArrayBase<T>()
+            {
+            }
+            
+            explicit SharedArray(unsigned int s) :
+                SharedArrayBase<T>(s)
+            {
+            }
+            
+            SharedArray(T* p, unsigned int s) : 
+                SharedArrayBase<T>(p, s)
+            {
+            }
+            
+            template<class D> 
+            SharedArray(T* p, unsigned int s, D d) : 
+                SharedArrayBase<T>(p, s, d)
+            {
+            }
+            
+            SharedArray(SharedArray<T>& rhs, unsigned int offset) :
+                SharedArrayBase<T>(rhs, offset)
+            {
+            }
+            
+            SharedArray(SharedArray<T>& rhs) :
+                SharedArrayBase<T>(rhs)
+            {
+            }
+            
+            SharedArray(Temporary<SharedArray<T> > rhs) :
+                SharedArrayBase<T>(rhs.GetValue().px, rhs.GetValue().pn, rhs.GetValue().m_offset, rhs.GetValue().m_size)
+            {
+            }
+            
+            SharedArray<T>& operator=(SharedArray<T>& rhs)
+            {
+                SharedArrayBase<T>::operator=(rhs);
+                return *this;
+            }
+            
+            SharedArray<T>& operator=(Temporary<SharedArray<T> > rhs)
+            {
+                this->px = rhs.GetValue().px;
+                this->pn = rhs.GetValue().pn;
+                this->m_offset = rhs.GetValue().m_offset;
+                this->m_size = rhs.GetValue().m_size;
+                return *this;
+            }
+        private:
+        
+    };
+    
+    template<class T>
+    class SharedArray<const T> : public SharedArrayBase<const T>
+    {
+        public:
+           
+            friend class SharedArray<T>;
+            
+            SharedArray() :
+                SharedArrayBase<const T>()
+            {
+            }
+            
+            explicit SharedArray(unsigned int s) :
+                SharedArrayBase<const T>(s)
+            {
+            }
+            
+            SharedArray(const T* p, unsigned int s) : 
+                SharedArrayBase<const T>(p, s)
+            {
+            }
+            
+            SharedArray(SharedArray<const T>& rhs, unsigned int offset) :
+                SharedArrayBase<const T>(rhs, offset)
+            {
+            }
+
+            template<class D> 
+            SharedArray(const T* p, unsigned int s, D d) : 
+                SharedArrayBase<const T>(p, s, d)
+            {
+            }
+
+            SharedArray(const SharedArray<const T>& rhs) :
+                SharedArrayBase<const T>(rhs)
+            {
+            }
+            
+            SharedArray(const SharedArray<T>& rhs) :
+                SharedArrayBase<const T>(rhs.px, rhs.pn, rhs.m_offset, rhs.m_size)
+            {
+                
+            }
+            
+            SharedArray<const T>& operator=(const SharedArray<const T>& rhs)
+            {
+                SharedArrayBase<const T>::operator=(rhs);
+                return *this;
+            }
+            
+            SharedArray<const T>& operator=(const SharedArray<T>& rhs)
+            {
+                this->px = rhs.px;
+                this->pn = rhs.pn;
+                this->m_offset = rhs.m_offset;
+                this->m_size = rhs.m_size;
+                return *this;
+            }
+    };
+            
     template<class T> inline bool operator==(SharedArray<T> const & a, SharedArray<T> const & b) // never throws
     {
         return a.get() == b.get();
@@ -396,6 +439,7 @@ namespace Nektar
     {
         return SharedArray<T>(rhs, offset);
     }
+
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHARED_ARRAY_HPP

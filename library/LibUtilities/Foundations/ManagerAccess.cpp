@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <Loki/Singleton.h>
+#include <loki/Singleton.h>
 #include <LibUtilities/Foundations/GaussPoints.h>
 #include <LibUtilities/Foundations/FourierPoints.h>
 #include <LibUtilities/Foundations/PolyEPoints.h>
@@ -92,6 +92,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.8  2007/03/19 12:46:16  kirby
+*** empty log message ***
+
 Revision 1.7  2007/03/13 21:31:32  kirby
  small update to the numbering.
 

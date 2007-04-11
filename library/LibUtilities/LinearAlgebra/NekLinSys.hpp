@@ -54,7 +54,6 @@ namespace Nektar
     template<typename DataType>
     class IsSharedPointer<boost::shared_ptr<DataType> > : public boost::true_type {};
     
-
     template<typename MatrixType, typename VectorType>
     struct LinearSystemSolver;
 
@@ -73,24 +72,24 @@ namespace Nektar
             {
                 x[i] = b[i]*(*A)(i,i);
             }
-        }
+       }
 
         static void SolveTranspose(const boost::shared_ptr<MatrixType>& A, const VectorType& b, VectorType& x)
         {
 	    Solve(A,b,x);
         }
 #else
-        static void Solve(const boost::shared_ptr<MatrixType>& A, const Nektar::NekIntSharedArray &ipivot, const VectorType& b, VectorType& x)
+        static void Solve(const MatrixType& A, const Nektar::NekIntSharedArray &ipivot, const VectorType& b, VectorType& x)
         {
-            ASSERTL0(A->GetColumns() == b.GetRows(), "ERROR: NekLinSys::Solve matrix columns must equal vector rows");
+            ASSERTL0(A.GetColumns() == b.GetRows(), "ERROR: NekLinSys::Solve matrix columns must equal vector rows");
 	    
-            for(unsigned int i = 0; i < A->GetColumns(); ++i)
+            for(unsigned int i = 0; i < A.GetColumns(); ++i)
             {
-                x[i] = b[i]*(*A)(i,i);
+                x[i] = b[i]*A(i,i);
             }
         }
 
-        static void SolveTranspose(const boost::shared_ptr<MatrixType>& A, const Nektar::NekIntSharedArray &ipivot, const VectorType& b, VectorType& x)
+        static void SolveTranspose(const MatrixType& A, const Nektar::NekIntSharedArray &ipivot, const VectorType& b, VectorType& x)
         {
 	    Solve(A,ipivot,b,x);
         }
@@ -109,10 +108,10 @@ namespace Nektar
             Lapack::dgetrs('N',A->GetRows(),A->GetColumns(),A->GetPtr().get(),x.GetPtr());
 	}
 #else
-        static void Solve(const boost::shared_ptr<MatrixType>& A, const Nektar::NekIntSharedArray &ipivot, const VectorType& b, VectorType& x)
+        static void Solve(const MatrixType& A, const Nektar::NekIntSharedArray &ipivot, const VectorType& b, VectorType& x)
         {
 	    int info = 0;
-            Lapack::Dgetrs('N',A->GetRows(),1,A->GetPtr().get(),A->GetRows(),(int *)ipivot.get(),x.GetPtr(),A->GetRows(),info);
+            Lapack::Dgetrs('N',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetPtr(),A.GetRows(),info);
 	    if( info < 0 )
 	    {
 		std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrs";
@@ -127,10 +126,10 @@ namespace Nektar
             Lapack::dgetrs('T',A->GetRows(),A->GetColumns(),A->GetPtr().get(),x.GetPtr());
         }
 #else
-        static void SolveTranspose(const boost::shared_ptr<MatrixType>& A, const Nektar::NekIntSharedArray &ipivot, const VectorType& b, VectorType& x)
+        static void SolveTranspose(const MatrixType& A, const Nektar::NekIntSharedArray &ipivot, const VectorType& b, VectorType& x)
         {
 	    int info = 0;
-            Lapack::Dgetrs('T',A->GetRows(),1,A->GetPtr().get(),A->GetRows(),(int *)ipivot.get(),x.GetPtr(),A->GetRows(),info);
+            Lapack::Dgetrs('T',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetPtr(),A.GetRows(),info);
 
 	    if( info < 0 )
 	    {
@@ -152,51 +151,18 @@ namespace Nektar
             typedef LinearSystem<MatrixType> ThisType;
 
         public:
-            explicit LinearSystem(const boost::shared_ptr<MatrixType>& theA) :
-                A(theA)
+            explicit LinearSystem(const boost::shared_ptr<MatrixType> &theA) :
+                A(*theA) 
             {
 #if OLD
 #else
-		switch(form)
-		{
-		case eFull:
-		{
-		    int m = A->GetRows();
-		    int n = A->GetColumns();
-		    int pivotSize = std::max(1, std::min(m, n));
-		    int info = 0;
-		    m_ipivot = Nektar::MemoryManager::AllocateSharedArray<int>(pivotSize);
-		    
-		    Lapack::Dgetrf(m, n, A->GetPtr().get(), m, m_ipivot.get(), info);
-
-		    if( info < 0 )
-		    {
-			std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrf";
-			ASSERTL0(false, message.c_str());
-		    }
-		    else if( info > 0 )
-		    {
-			std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
-			ASSERTL0(false, message.c_str());
-		    }
-		    
-		}
-		break;
-		case eDiagonal:
-		    for(unsigned int i = 0; i < A->GetColumns(); ++i)
-		    {
-			(*A)(i,i) = 1.0/(*A)(i,i);
-		    }
-		    break;
-		default:
-		    ASSERTL0(false,"factorisation routine not set up for this form of matrix");
-		    break;
-		}
+                FactorMatrix(A);
 #endif
             }
 
             LinearSystem(const ThisType& rhs) :
-                A(rhs.A)
+                A(rhs.A),
+                m_ipivot(rhs.m_ipivot)
             {
             }
 
@@ -358,12 +324,51 @@ namespace Nektar
 
 
     private:
+#if OLD
+#else
+        void FactorMatrix(NekMatrix<DataType,eDiagonal> &theA)
+	{
+	    for(unsigned int i = 0; i < A.GetColumns(); ++i)
+	    {
+		(theA)(i,i) = 1.0/(theA)(i,i);
+	    }
+
+	}
+
+        void FactorMatrix(NekMatrix<DataType,eFull> &theA)
+        {
+	    int m = theA.GetRows();
+	    int n = theA.GetColumns();
+	    int pivotSize = std::max(1, std::min(m, n));
+	    int info = 0;
+	    m_ipivot = Nektar::MemoryManager::AllocateSharedArray<int>(pivotSize);
+	    
+	    Lapack::Dgetrf(m, n, theA.GetPtr().get(), m, m_ipivot.get(), info);
+	    
+	    if( info < 0 )
+	    {
+		std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrf";
+		ASSERTL0(false, message.c_str());
+	    }
+	    else if( info > 0 )
+	    {
+		std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
+		ASSERTL0(false, message.c_str());
+	    }		    
+        }
+#endif
+
 	void swap(ThisType& rhs)
 	{
 	    std::swap(A, rhs.A);
+            std::swap(m_ipivot,rhs.m_ipivot);
 	}
 	
+#ifdef OLD
 	boost::shared_ptr<MatrixType> A;
+#else
+	MatrixType A;
+#endif
 	Nektar::NekIntSharedArray m_ipivot;	    
     };
 }

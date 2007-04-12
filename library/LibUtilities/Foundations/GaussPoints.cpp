@@ -225,7 +225,7 @@ namespace Nektar
 
             case eGaussRadauMAlpha0Beta2:
                 Polylib::Imgrjm(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,0.0,2.0);
-		break;
+		        break;
 
             case eGaussRadauMAlpha1Beta0:
                 Polylib::Imgrjm(interp.get(),m_points[0].get(),xpoints.get(),GetNumPoints(),npts,1.0,0.0);

@@ -107,6 +107,8 @@ namespace Nektar
             "GaussLobattoChebyshev",
             "GaussRadauMAlpha0Beta1",
             "GaussRadauMAlpha0Beta2",
+            "GaussRadauMAlpha1Beta0",
+            "GaussRadauMAlpha2Beta0",
             "PolyEvenlySpaced",
             "FourierEvenlySpaced",
             "NodalTriElec",

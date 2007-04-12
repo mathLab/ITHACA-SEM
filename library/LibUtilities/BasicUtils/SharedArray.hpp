@@ -111,7 +111,7 @@ namespace Nektar
                 px(new T[s]),
                 pn(px, deleter()),
                 m_offset(0),
-                m_size(0)
+                m_size(s)
             {
             }
 

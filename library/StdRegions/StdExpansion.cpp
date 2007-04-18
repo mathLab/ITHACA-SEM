@@ -111,6 +111,10 @@ namespace Nektar
             m_stdLinSysManager.RegisterCreator(StdLinSysKey(eNBasisTrans,eNoShapeType,*this),
 		boost::bind(&StdExpansion::CreateStdLinSys, this, _1));
 
+
+            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eBwdTransMatrix,eNoShapeType,*this),
+                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
+
         } //end constructor
 
 
@@ -147,6 +151,9 @@ namespace Nektar
 	    case eNBasisTrans:
 		returnval = GenNBasisTransMatrix();
 		break;
+            case eBwdTransMatrix:
+                returnval = GenBwdTransMatrix();
+                break;
             default:
                 NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
                 break;
@@ -239,6 +246,40 @@ namespace Nektar
             return Mat;
         }
 
+        DNekMatSharedPtr StdExpansion::GenBwdTransMatrix()
+        {
+            int     i;
+	    int     ntot = GetTotPoints();
+            NekDoubleSharedArray tmp   = GetDoubleTmpSpace(ntot);
+
+            DNekMatSharedPtr  Mat;
+
+            Mat = MemoryManager::AllocateSharedPtr<DNekMat>(ntot,m_ncoeffs);
+
+            for(i=0; i < m_ncoeffs; ++i)
+            {
+                v_FillMode(i, tmp);
+		Vmath::Vcopy(ntot,&tmp[0],1,&((*Mat).GetPtr())[0]+i,m_ncoeffs);
+            }
+
+            return Mat;
+        }
+
+        void StdExpansion::TensProdBwdTrans(ConstNekDoubleSharedArray inarray, 
+                              NekDoubleSharedArray &outarray)
+        {
+	    int nq = GetTotPoints();
+	    StdMatrixKey      bwdtransmatkey(eBwdTransMatrix,DetShapeType(),*this);
+	    DNekMatSharedPtr  bwdtransmat = m_stdMatrixManager[bwdtransmatkey];
+
+	    DNekVec v_in(m_ncoeffs,inarray);
+	    DNekVec v_out(nq,outarray,eWrapper);
+
+	    v_out = (*bwdtransmat) * v_in;
+            // This line below should be removed once the eWrapper method of NekVEctor works properly
+	    Vmath::Vcopy(nq,&((v_out).GetPtr())[0],1,&outarray[0],1);
+        }
+
         // 2D Interpolation
         void StdExpansion::Interp2D(const LibUtilities::BasisKey &fbasis0, 
 				    const LibUtilities::BasisKey &fbasis1, 
@@ -299,6 +340,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.31  2007/04/10 14:00:45  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.30  2007/04/08 03:36:57  jfrazier
 * Updated to use SharedArray consistently and minor reformatting.
 *

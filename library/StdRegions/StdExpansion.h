@@ -734,6 +734,16 @@ namespace Nektar
             */
             DNekMatSharedPtr GenerateMassMatrix();
 
+            DNekMatSharedPtr GenBwdTransMatrix();
+
+            void TensProdBwdTrans(ConstNekDoubleSharedArray inarray, 
+                                  NekDoubleSharedArray &outarray);
+
+            void TensProdBwdTrans(const StdExpansion &in)
+            {
+                TensProdBwdTrans(((StdExpansion &)in).GetCoeffs(), m_phys);
+            }
+
             /** \brief this function returns the mass matrix 
             *  \f$\mathbf{M}[i][j] =
             *  \int \phi_i(\mathbf{x}) \phi_j(\mathbf{x}) d\mathbf{x}\f$
@@ -1056,6 +1066,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.43  2007/04/10 14:00:45  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.42  2007/04/08 03:36:58  jfrazier
 * Updated to use SharedArray consistently and minor reformatting.
 *

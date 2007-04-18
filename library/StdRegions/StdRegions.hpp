@@ -87,14 +87,15 @@ namespace Nektar
             eMassMatrix,
             eLapMatrix,
             eNBasisTrans,
-	    eBwdTrans
+            eBwdTransMatrix
         };
 
         const char* const MatrixTypeMap[] = 
 	{
             "MassMatrix",
             "LapMatrix",
-            "NBasisTrans"
+            "NBasisTrans",
+            "BwdTransMatrix"
         };
 
         /** enum list of StdExpansion regions */
@@ -196,6 +197,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.14  2007/04/03 03:56:13  bnelson
+* Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
+*
 * Revision 1.13  2007/03/21 20:56:43  sherwin
 * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
 *

@@ -82,13 +82,15 @@ namespace Nektar
                 // fill physical space with mode i
                 StdTriExp::FillMode(i,m_phys);
 
-                // interpolate mode i to the Nodal points 'j' and store in outarray
+                // interpolate mode i to the Nodal points 'j' and
+                // store in outarray
                 for(j = 0; j < m_ncoeffs; ++j)
                 {
                     c[0] = r[j];
                     c[1] = s[j];
-                    // define matrix in row major format to have rows of 
-                    // all the different expansion bases defined at the nodal point 
+                    // define matrix in row major format to have rows
+                    // of all the different expansion bases defined at
+                    // the nodal point
                     (*Mat)(j,i) = StdTriExp::PhysEvaluate(c);
                 }
             }
@@ -119,7 +121,8 @@ namespace Nektar
 	// Operate with transpose of NodalToModal transformation
         void StdNodalTriExp::NodalToModalTranspose(NekDoubleSharedArray &in_out_array)
         {
-	    StdLinSysKey         Nkey(eNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
+	    StdLinSysKey         Nkey(eNBasisTrans,DetShapeType(),
+                                      *this,m_nodalPointsKey->GetPointsType());
 	    DNekLinSysSharedPtr  matsys = m_stdLinSysManager[Nkey];
 	    
 	    // solve inverse of system
@@ -140,13 +143,7 @@ namespace Nektar
 	    
 	    // Multiply out matrix
 	    DNekVec  v(m_ncoeffs,in_out_array,eWrapper);
-	    //v = (*mat)*v;
-
-	    // Not sure why the above is not working. Here is a direct call to dgemv
-	    NekDoubleSharedArray tmp = GetDoubleTmpSpace(m_ncoeffs);
-	    Vmath::Vcopy(m_ncoeffs,&in_out_array[0],1,&tmp[0],1);
-	    Blas::Dgemv('T',m_ncoeffs,m_ncoeffs,1.0,&(*mat).GetPtr()[0],m_ncoeffs,&tmp[0],1,0.0,
-			&in_out_array[0],1);
+	    v = (*mat)*v;
         }
 
 
@@ -159,8 +156,7 @@ namespace Nektar
 					     NekDoubleSharedArray &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),
-			    m_base[1]->GetBdata(),
-			    inarray, 
+			    m_base[1]->GetBdata(), inarray, 
 			    outarray);
         }
 
@@ -184,9 +180,9 @@ namespace Nektar
             ASSERTL2(mode >= m_ncoeffs, 
                 "calling argument mode is larger than total expansion order");
 
-            Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
+            Vmath::Zero(m_ncoeffs,&outarray[0],1);
 
-            m_coeffs[mode] = 1.0;
+            outarray[mode] = 1.0;
 	    BwdTrans(outarray,outarray);
         }
 
@@ -212,7 +208,7 @@ namespace Nektar
 				      NekDoubleSharedArray &outarray)
         {
             IProductWRTBase(inarray,outarray);
-
+            
 	    StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
 	    DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
 	    
@@ -317,6 +313,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.7  2007/04/10 14:00:45  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.6  2007/01/17 16:05:40  pvos
 * updated doxygen documentation
 *

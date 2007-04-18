@@ -258,8 +258,7 @@ NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2){
 	}
     }
     
-    //return sol;
-    return 1.0;
+    return sol;
 }
 
 NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, 

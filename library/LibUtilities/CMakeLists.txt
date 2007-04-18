@@ -120,7 +120,7 @@ SET(PolylibSources
 
 SET(LinearAlgebraSources
 	./LinearAlgebra/blas.cpp
-	./LinearAlgebra/lapack.cpp
+#	./LinearAlgebra/lapack.cpp
 )
 
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})

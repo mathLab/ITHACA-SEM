@@ -88,8 +88,8 @@ namespace Nektar
             void ModalToNodal();
             void ModalToNodal(NekDoubleSharedArray &in_out_array);
 
-            void GetNodalPoints(ConstNekDoubleSharedArray x, 
-				ConstNekDoubleSharedArray y)
+            void GetNodalPoints(ConstNekDoubleSharedArray &x, 
+				ConstNekDoubleSharedArray &y)
 	    {
 		LibUtilities::PointsManager()[*m_nodalPointsKey]->GetPoints(x,y);
             }
@@ -250,6 +250,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.7  2007/04/10 14:00:45  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.6  2007/01/17 16:05:40  pvos
 * updated doxygen documentation
 *

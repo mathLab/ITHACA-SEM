@@ -151,7 +151,7 @@ namespace Nektar
                 m_wrapperType(eCopy)
             {
                 m_data = MemoryManager::AllocateSharedArray<DataType>(size);
-                std::copy(ptr, ptr+size, m_data.get());
+                std::copy(ptr.get(), ptr.get()+size, m_data.get());
             }
 
             NekVector(unsigned int size, DataType* ptr, PointerWrapper h = eCopy) :

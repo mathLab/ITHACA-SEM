@@ -154,7 +154,7 @@ namespace Nektar
 
 #else
                 // TODO
-                BOOST_STATIC_ASSERT(0);
+                BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
 #endif //NEKTAR_USING_LAPACK
 
             }
@@ -528,6 +528,9 @@ namespace Nektar
 
 /**
     $Log: NekFullMatrix.hpp,v $
+    Revision 1.13  2007/04/10 16:43:49  bnelson
+    *** empty log message ***
+
     Revision 1.12  2007/04/09 03:16:53  bnelson
     *** empty log message ***
 

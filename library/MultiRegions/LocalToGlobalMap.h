@@ -37,8 +37,10 @@
 #define NEKTAR_LIB_MULTIREGIONS_LOC2GLOMAP_H
 
 #include <MultiRegions/MultiRegions.hpp>
+#include <MultiRegions/ExpList.h>
 #include <vector>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+
 
 namespace Nektar
 {
@@ -49,49 +51,31 @@ namespace Nektar
 	{
         public:
             LocalToGlobalMap();
-	    LocalToGlobalMap(const int totdata, int *map);
+	    LocalToGlobalMap(const int totdata, NekIntSharedArray &map);
 	    
             ~LocalToGlobalMap();
 	    
-	    inline int GetMap(const int n, const int i) const
+	    inline int GetMap(const int i) const
 	    {
-		return m_locToContMap[n][i];
+		return m_locToContMap[i];
 	    }
 
-	    inline void LocalToCont(ExpList &loc, double *cont)
+	    inline void LocalToCont(ConstNekDoubleSharedArray loc, NekDoubleSharedArray &cont)
 	    {
-		int i;
-		for(i = 0; i < loc.GetExpSize(); ++i)
-		{
-		    Vmath::Scatr(loc.GetExp(i)->GetNcoeffs(), 
-				 &loc.GetExp(i)->GetCoeffs()[0],
-				 &m_locToContMap[i][0],cont);
-		}
+                Vmath::Scatr(m_totLocLen, &loc[0],&m_locToContMap[0],&cont[0]);
+            }                
+
+	    
+	    inline void ContToLocal(ConstNekDoubleSharedArray cont, NekDoubleSharedArray &loc)
+	    {
+                Vmath::Gathr(m_totLocLen,&cont[0],&m_locToContMap[0], &loc[0]);
 	    }
 	    
-	    inline void ContToLocal(const double *cont, ExpList &loc)
+	    inline void Assemble(ConstNekDoubleSharedArray loc, NekDoubleSharedArray &cont)
 	    {
-		int i;
-		for(i = 0; i < loc.GetExpSize(); ++i)
-		{
-		    Vmath::Gathr(loc.GetExp(i)->GetNcoeffs(),
-				 cont,&m_locToContMap[i][0],
-				 &loc.GetExp(i)->GetCoeffs()[0]);
-		}
+		Vmath::Zero(m_totGloLen,&cont[0],1);
 
-	    }
-	    
-	    inline void Assemble(ExpList &loc, double *cont)
-	    {
-		int i;
-
-		Vmath::Zero(m_totGloLen,cont,1);
-		for(i = 0; i < loc.GetExpSize(); ++i)
-		{
-		    Vmath::Assmb(loc.GetExp(i)->GetNcoeffs(),
-				 &loc.GetExp(i)->GetCoeffs()[0],
-				 &m_locToContMap[i][0],cont);
-		}
+                Vmath::Assmb(m_totLocLen,&loc[0],&m_locToContMap[0],&cont[0]);
 	    }
 	    
 	    inline int GetTotGloLen()
@@ -100,8 +84,9 @@ namespace Nektar
 	    }
 
         protected:
-	    int        m_totGloLen;    //< length of global dofs
-	    IntVector  m_locToContMap; //< Vector of boost pointser to integer maps
+	    int                m_totLocLen;    //< length of local dofs
+	    int                m_totGloLen;    //< length of global dofs
+	    NekIntSharedArray  m_locToContMap; //< Vector of boost pointers to integer maps
         private:
 	};
 	
@@ -112,6 +97,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.3  2007/03/20 16:58:42  sherwin
+/** Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+/**
 /** Revision 1.2  2007/03/14 21:24:08  sherwin
 /** Update for working version of MultiRegions up to ExpList1D
 /**

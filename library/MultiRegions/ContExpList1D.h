@@ -54,47 +54,42 @@ namespace Nektar
 			  SpatialDomains::MeshGraph1D &graph1D);
 	    ~ContExpList1D();
 	    
-	    inline int getContNcoeffs()
+	    inline int GetContNcoeffs()
 	    {
 		return m_contNcoeffs;
 	    }
 	    
-	    inline BstShrDArray &getContCoeffs()
-	    {
-		return m_contCoeffs;
-	    }
-	    
 	    inline void ContToLocal()
 	    {
-		m_locToGloMap->ContToLocal(&m_contCoeffs[0],*this);
+		m_locToGloMap->ContToLocal(m_contCoeffs,m_coeffs);
 	    }
 	    
 	    inline void LocalToCont()
 	    {
-		m_locToGloMap->LocalToCont(*this,&m_contCoeffs[0]);
+		m_locToGloMap->LocalToCont(m_coeffs,m_contCoeffs);
 	    }
 	    
 	    
 	    inline void Assemble()
 	    {
-		m_locToGloMap->Assemble(*this,&m_contCoeffs[0]);
+		m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
 	    }
 	    
-	    void IProductWRTBase(const double *inarray, double *outarray);
+	    void IProductWRTBase(ConstNekDoubleSharedArray inarray, NekDoubleSharedArray &outarray);
 	    void IProductWRTBase(const ExpList &In);
 	    
 	    void FwdTrans(const ExpList &In);
 	    
 	    void BwdTrans(const ExpList &In);
 	    
-	    void GenMassMatrix(void);
+	    void GenMassMatrixLinSys(void);
 	    
 	protected:
 	    
 	    
 	private:
-	    int          m_contNcoeffs;
-	    BstShrDArray m_contCoeffs;
+	    int                  m_contNcoeffs;
+	    NekDoubleSharedArray m_contCoeffs;
 	    
 	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
 	    

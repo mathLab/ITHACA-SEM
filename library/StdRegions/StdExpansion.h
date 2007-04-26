@@ -559,6 +559,7 @@ namespace Nektar
             *  with the different modes, i.e. \f$ outarray[p] = I[p]\f$ 
             *  (output of the function) 
             */
+
             void IProductWRTBase(ConstNekDoubleSharedArray inarray, 
 				 NekDoubleSharedArray &outarray)
             {
@@ -808,7 +809,12 @@ namespace Nektar
 			  ConstNekDoubleSharedArray from,
 			  const LibUtilities::BasisKey &tbasis0,
 			  NekDoubleSharedArray &to);
-	    
+
+            void Interp1D(const LibUtilities::BasisKey &fbasis0,
+                          const NekDouble *from,
+                          const LibUtilities::BasisKey &tbasis0,
+                          NekDouble *to);
+
 
             /** \brief this function interpolates a 2D function \f$f\f$ evaluated
             *  at the quadrature points of the 2D basis, constructed by 
@@ -1066,6 +1072,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.44  2007/04/18 16:09:13  pvos
+* Added some new Tensor Operations routines
+*
 * Revision 1.43  2007/04/10 14:00:45  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

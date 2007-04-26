@@ -39,48 +39,45 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	LocalToGlobalMap1D::LocalToGlobalMap1D(StdRegions::StdExpansionVector &locexp, 	 SpatialDomains::MeshGraph1D &graph1D)
+	LocalToGlobalMap1D::LocalToGlobalMap1D(int loclen, StdRegions::StdExpansionVector &locexp, 	 
+                                               SpatialDomains::MeshGraph1D &graph1D)
 	{
-	    int i,j,gid;
-	    StdExpansionVectorIter iexp;
-	    IntSharedPtr locToContMap;
+	    int i,j,gid,cnt;
+	    StdRegions::StdExpansionVectorIter iexp;
+	    NekIntSharedArray locToContMap;
 	    
 	    // set up Local to Continuous mapping 
-	  
 	    StdRegions::StdExpMap vmap;
 	    
-	    // set up simple map based on vertex and edge id's
-	    for(i = 0; i < locexp.GetExpSize(); ++i)
-	    {
-	       
-		locToContMap = Memorymanager::AllocateSharedArray<int> (locexp[i]->GetNcoeffs);
-		Vmath::Fill(m_totLocLen,-1,&locToContMap[0],1);
+            m_totLocLen = loclen;
 
+	    // set up simple map based on vertex and edge id's
+	    for(i = cnt = 0; i < locexp.size(); ++i)
+	    {
+		locToContMap = MemoryManager::AllocateSharedArray<int> (m_totLocLen);
+		Vmath::Fill(m_totLocLen,-1,&locToContMap[0],1);
+                
 		locexp[i]->MapTo(StdRegions::eForwards,vmap);
 
 		for(j = 0; j < 2; ++j)
 		{
-		    locToContMap[vmap[j]] = graph1D.GetVidFromElmt(j,i);
+		    locToContMap[cnt + vmap[j]] = graph1D.GetVidFromElmt(j,i);
 		    gid = max(gid,locToContMap[vmap[j]]);
 		}
+                cnt += locexp[i]->GetNcoeffs();
 	    }
-
 	    
-	    for(iexp = locexp.begin(); iexp != iexp.end(); ++iexp)
+	    for(iexp = locexp.begin(); iexp != locexp.end(); ++iexp)
 	    {
-		for(i = 0; i < iexp->GetNCoeffs(); ++i)
+		for(i = 0; i < (*iexp)->GetNcoeffs(); ++i)
 		{
 		    if(locToContMap[i] == -1)
 		    {
 			locToContMap[i] = gid++;
 		    }
 		}
-		// save mapping to vector
-		m_locToContMap.push_back(locToContMap);
 	    }
-	    
 	    m_totGloLen = gid;
-	    
 	}
 	
 	

@@ -61,7 +61,7 @@ namespace Nektar
             /// \brief Constructor using BasisKey class for quadrature
             /// points and order definition 
             SegExp(const LibUtilities::BasisKey &Ba, 
-		   SpatialDomains::SegGeomSharedPtr &geom);
+		   const SpatialDomains::SegGeomSharedPtr &geom);
 
             ///Copy Constructor
             SegExp(const SegExp &S);
@@ -82,7 +82,7 @@ namespace Nektar
 			  NekDoubleSharedArray &coords);
 
 
-            SpatialDomains::SegGeomSharedPtr GetGeom()
+            const SpatialDomains::SegGeomSharedPtr GetGeom()
             {
                 return m_geom;
             }
@@ -96,7 +96,7 @@ namespace Nektar
             //----------------------------
 
             /// \brief Integrate the physical point list \a inarray over region
-            double Integral(SharedArray<const NekDouble> inarray);
+            NekDouble Integral(SharedArray<const NekDouble> inarray);
 
 
             /// \brief  Inner product of \a inarray over region with respect to the 
@@ -128,7 +128,7 @@ namespace Nektar
             void FwdTrans(SharedArray<const NekDouble> inarray, 
 			  NekDoubleSharedArray &outarray);
 
-            double PhysEvaluate(SharedArray<const NekDouble> coord);
+            NekDouble PhysEvaluate(SharedArray<const NekDouble> coord);
 
         protected:
 
@@ -139,7 +139,7 @@ namespace Nektar
 
             SpatialDomains::SegGeomSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-
+            
             LibUtilities::NekManager<MatrixKey, DNekMat, MatrixKey::opLess> m_matrixManager;
 
             LibUtilities::NekManager<LinSysKey, DNekLinSys, LinSysKey::opLess> m_linSysManager;
@@ -332,7 +332,6 @@ namespace Nektar
         typedef boost::shared_ptr<SegExp> SegExpSharedPtr;
         typedef std::vector< SegExpSharedPtr > SegExpVector;
         typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
-
     } //end of namespace
 } //end of namespace
 
@@ -340,6 +339,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.10  2007/04/08 03:33:31  jfrazier
+// Minor reformatting and fixing SharedArray usage.
+//
 // Revision 1.9  2007/03/25 15:48:21  sherwin
 // UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
 //

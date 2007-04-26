@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LocalRegions/QuadExp.h,v $
+// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/QuadExp.h,v $
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -57,19 +57,12 @@ namespace Nektar
 
         /** \brief Constructor using BasisKey class for quadrature
         points and order definition */
-        QuadExp(const StdRegions::BasisKey &Ba,
-            const StdRegions::BasisKey &Bb,
-            SpatialDomains::QuadGeomSharedPtr geom);
-
-        /** \brief Constructor using BasisKey class for quadrature
-        points and order definition */
-        QuadExp(const StdRegions::BasisKey &Ba,
-            const StdRegions::BasisKey &Bb,
-            double *coeffs, double *phys,
-            SpatialDomains::QuadGeomSharedPtr geom);
-
+        QuadExp(const LibUtilities::BasisKey &Ba,
+                const LibUtilities::BasisKey &Bb,
+                SpatialDomains::QuadGeomSharedPtr &geom);
+        
         /// Copy Constructor
-        QuadExp(QuadExp &T);
+        QuadExp(const QuadExp &T);
 
         /// Destructor
         ~QuadExp();
@@ -78,20 +71,24 @@ namespace Nektar
         /// list. i.e. Quadrilateral
         StdRegions::ShapeType DetShapeType()
         {
-        return StdRegions::eQuadrilateral;
+            return StdRegions::eQuadrilateral;
         }
 
         MetricRelatedInfoSharedPtr GenGeoFac();
 
 
-        inline  void SetGeoFac(MetricRelatedInfoSharedPtr minfo)
+        void GetCoords(NekDoubleSharedArray &coords_1,
+                    NekDoubleSharedArray &coords_2 = NullNekDoubleSharedArray,
+                    NekDoubleSharedArray &coords_3 = NullNekDoubleSharedArray);
+
+        void GetCoord(SharedArray<const NekDouble> Lcoords, 
+                      NekDoubleSharedArray &coords);
+
+        SpatialDomains::QuadGeomSharedPtr GetGeom()
         {
-        m_minfo = minfo;
+            return m_geom;
         }
 
-        void GetCoords(double **coords);
-
-        void GetCoord(const double *Lcoords, double *coords);
 
         void WriteToFile(FILE *outfile);
         void WriteToFile(std::ofstream &outfile, const int dumpVar);
@@ -102,100 +99,73 @@ namespace Nektar
         //----------------------------
 
         /// \brief Integrate the physical point list \a inarray over region
-        double Integral(const double *inarray);
+        NekDouble Integral(SharedArray<const NekDouble> inarray);
 
 
         /** \brief  Inner product of \a inarray over region with respect to the
         expansion basis (this)->_Base[0] and return in \a outarray */
-        void IProductWRTBase(const double * inarray, double * outarray);
+        void IProductWRTBase(SharedArray<const NekDouble> inarray, 
+                             NekDoubleSharedArray &outarray);
 
-
-        //----------------------------------
-        // Local Matrix Routines
-        //----------------------------------
-
-        /** \brief Get the mass matrix attached to this expansion by using
-        the StdMatrix manager _ElmtMats and return the standard Matrix
-        container */
-        StdRegions::StdMatContainer *GetMassMatrix();
-
-        /** \brief Get the weak Laplacian matrix attached to this
-        expansion by using the StdMatrix manager _ElmtMats and return
-        the standard Matrix container */
-        StdRegions::StdMatContainer * GetLapMatrix();
 
         //-----------------------------
         // Differentiation Methods
         //-----------------------------
 
-        void Deriv(double * outarray_d1, double *outarray_d2)
-        {
-        double *out[2];
-        out [0] = outarray_d1;
-        out [1] = outarray_d2;
-        Deriv(2, this->m_phys, out);
-        }
-
-        void Deriv(const double *inarray, double * outarray_d1,
-               double *outarray_d2)
-        {
-        double *out[2];
-        out [0] = outarray_d1;
-        out [1] = outarray_d2;
-        Deriv(2, inarray, out);
-        }
-
-
-        void Deriv(const int n, double **outarray);
-        void Deriv(const int n, const double *inarray, double ** outarray);
-
+        void PhysDeriv(SharedArray<const NekDouble> inarray, 
+                       NekDoubleSharedArray &out_d0 = NullNekDoubleSharedArray,
+                       NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+                       NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
+        
+        
         //----------------------------
         // Evaluations Methods
         //---------------------------
-
+        
         /** \brief Forward transform from physical quadrature space
-        stored in \a inarray and evaluate the expansion coefficients and
-        store in \a (this)->_coeffs  */
-        void FwdTrans(const double * inarray);
-
-        double Evaluate(const double *coord);
-
+            stored in \a inarray and evaluate the expansion coefficients and
+            store in \a (this)->_coeffs  */
+        void FwdTrans(SharedArray<const NekDouble> inarray, 
+                      NekDoubleSharedArray &outarray);
+        
+        NekDouble PhysEvaluate(SharedArray<const NekDouble> coord);
+        
     protected:
-        SpatialDomains::QuadGeomSharedPtr m_geom;
-        MetricRelatedInfoSharedPtr  m_minfo;
+        SpatialDomains::SegGeomSharedPtr m_geom;
+        SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+
+        DNekMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
+        DNekLinSysSharedPtr CreateLinSys(const LinSysKey &mkey);
 
         /** \brief  Inner product of \a inarray over region with respect to
         the expansion basis \a base and return in \a outarray */
-        inline void IProductWRTBase(const double *base0,
-                    const double *base1,
-                    const double *inarray,
-                    double *outarray,
-                    int coll_check);
-
+        inline void IProductWRTBase(SharedArray<const NekDouble> base, 
+                                    SharedArray<const NekDouble> inarray, 
+                                    NekDoubleSharedArray &outarray, 
+                                    const int coll_check);
+        
     private:
         virtual StdRegions::ShapeType v_DetShapeType()
-		{
-			return DetShapeType();
+        {
+            return DetShapeType();
         }
 	
-        virtual MetricRelatedInfoSharedPtr v_GenGeoFac()
+        virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
         {
-		return GenGeoFac();
+            return m_metricinfo;
         }
 
-        virtual void v_SetGeoFac(MetricRelatedInfoSharedPtr minfo)
-        {
-			SetGeoFac(minfo);
-        }
+        virtual void v_GetCoords(NekDoubleSharedArray &coords_0,
+                                 NekDoubleSharedArray &coords_1 = NullNekDoubleSharedArray,
+                                 NekDoubleSharedArray &coords_2 = NullNekDoubleSharedArray)
+	 {
+             GetCoords(coords_0, coords_1, coords_2);
+         }
 
-        virtual void v_GetCoords(double **coords)
+        virtual void v_GetCoord(SharedArray<const NekDouble> lcoord, 
+                                NekDoubleSharedArray &coord)
         {
-			GetCoords(coords);
-        }
-
-        virtual void v_GetCoord(const double *Lcoords, double *coords)
-        {
-			GetCoord(Lcoords, coords);
+            GetCoord(lcoord, coord);
         }
 
         virtual  int v_GetCoordim()
@@ -203,11 +173,6 @@ namespace Nektar
 	    return m_geom->GetCoordim();
         }
 
-
-        virtual StdRegions::GeomType v_GeoFacType()
-        {
-	    return m_minfo->GetGtype();
-        }
 
         virtual void v_WriteToFile(FILE *outfile)
         {
@@ -221,92 +186,73 @@ namespace Nektar
 
         /** \brief Virtual call to integrate the physical point list \a inarray
         over region (see SegExp::Integral) */
-        virtual double v_Integral(const double *inarray)
+        virtual NekDouble v_Integral(SharedArray<const NekDouble> inarray )
         {
-        return Integral(inarray);
+            return Integral(inarray);
         }
 
         /** \brief Virtual call to QuadExp::IProduct_WRT_B */
-        virtual void v_IProductWRTBase(const double * inarray, double * outarray)
+        virtual void v_IProductWRTBase(SharedArray<const NekDouble> inarray,
+                                       NekDoubleSharedArray &outarray)
         {
-        IProductWRTBase(inarray,outarray);
+            IProductWRTBase(inarray,outarray);
         }
 
-        /// virtual call to GetMassMatrix
-        virtual StdRegions::StdMatContainer *v_GetMassMatrix()
-        {
-        return GetMassMatrix();
-        }
 
-        /// virtual call to GetLapatrix
-        virtual StdRegions::StdMatContainer *V_GetLapMatrix()
+        /// Virtual call to SegExp::PhysDeriv
+        virtual void v_StdPhysDeriv(SharedArray<const NekDouble> inarray, 
+                                    NekDoubleSharedArray &outarray)
         {
-        return GetLapMatrix();
+            StdSegExp::PhysDeriv(inarray, outarray);
         }
-
-        virtual void v_Deriv(double * outarray_d1, double *outarray_d2)
-        {
-	    Deriv(this->m_phys, outarray_d1, outarray_d2);
-        }
-
-        virtual void v_StdDeriv(double * outarray_d1, double *outarray_d2)
-        {
-	    StdQuadExp::Deriv(this->m_phys, outarray_d1, outarray_d2);
-        }
-
-        virtual void v_Deriv(const double *inarray, double * outarray_d1,
-			     double *outarray_d2)
-        {
-	    Deriv(inarray, outarray_d1, outarray_d2);
-        }
-
+        
+        virtual void v_PhysDeriv(SharedArray<const NekDouble> inarray, 
+                                 NekDoubleSharedArray &out_d0 = NullNekDoubleSharedArray,
+                                 NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+                                 NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
+	 {
+             PhysDeriv(inarray, out_d0, out_d1, out_d2);
+         }
+        
         virtual void v_StdDeriv(const double *inarray, double * outarray_d1,
 				double *outarray_d2)
         {
 	    StdQuadExp::Deriv(inarray, outarray_d1, outarray_d2);
         }
 	
-        virtual void v_Deriv(const int n,  double ** outarray)
-        {
-	    Deriv(n, outarray);
-        }
-
-        virtual void v_Deriv(const int n, const double *inarray,
-			     double ** outarray)
-        {
-	    Deriv(n, inarray, outarray);
-        }
-	
         /// Virtual call to SegExp::FwdTrans
-        virtual void v_FwdTrans(const double * inarray)
+        virtual void v_FwdTrans(SharedArray<const NekDouble> inarray, 
+                                NekDoubleSharedArray &outarray)
         {
-	    FwdTrans(inarray);
+            FwdTrans(inarray,outarray);
         }
 	
         /// Virtual call to QuadExp::Evaluate
-        virtual double v_Evaluate(const double * coords)
+        virtual double v_PhysEvaluate(SharedArray<const NekDouble> coords)
         {
-	    return Evaluate(coords);
+            return PhysEvaluate(coords);
         }
 	
-        virtual double v_Linf(const double *sol)
+        virtual double v_Linf(SharedArray<const NekDouble> sol)
         {
-	    return Linf(sol);
+            return Linf(sol);
         }
 	
+        
         virtual double v_Linf()
         {
-	    return Linf();
+            return Linf();
         }
 	
-        virtual double v_L2(const double *sol)
+        virtual double v_L2(SharedArray<const NekDouble> sol)
         {
-	    return StdExpansion::L2(sol);
+            return StdExpansion::L2(sol);
         }
+
 	
         virtual double v_L2()
         {
-	    return StdExpansion::L2();
+            return StdExpansion::L2();
         }
     };
 
@@ -323,6 +269,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.8  2007/01/15 21:12:26  sherwin
+ *    First definition
+ *
  *    Revision 1.7  2006/06/13 18:05:01  sherwin
  *    Modifications to make MultiRegions demo ProjectLoc2D execute properly.
  *

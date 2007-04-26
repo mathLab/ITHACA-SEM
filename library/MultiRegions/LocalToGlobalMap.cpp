@@ -41,14 +41,16 @@ namespace Nektar
     namespace MultiRegions
     {
 	LocalToGlobalMap::LocalToGlobalMap():
-	    m_totLocLen(0)
+	    m_totLocLen(0),
+	    m_totGloLen(0)
 	{
 	}
 	
-	LocalToGlobalMap::LocalToGlobalMap(int totdata, int *map):
+	LocalToGlobalMap::LocalToGlobalMap(int totdata, NekIntSharedArray &map):
 	    m_totLocLen(totdata)
 	{
-	    m_locToContMap.reset(map);
+	    m_locToContMap = map; 
+            m_totGloLen = Vmath::Vmax(m_totLocLen,&map[0],1);
 	}
 	
 	

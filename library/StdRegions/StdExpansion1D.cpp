@@ -68,16 +68,20 @@ namespace Nektar
 					     NekDoubleSharedArray outarray)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
-	    DNekMatSharedPtr     D;
-	    NekDoubleSharedArray wsp = GetDoubleTmpSpace(nquad); 
-	    
-	    // check to see if calling array is inarray
-	    Vmath::Vcopy(nquad,&inarray[0],1,&wsp[0],1);
+	    DNekMatSharedPtr     D  = ExpPointsProperties(0)->GetD();
+            
+	    // copy inarray in case inarray == outarray
+            DNekVec in (nquad,inarray);
+            DNekVec out(nquad,outarray,eWrapper);
+            
+            out = (*D)*in;
 
-	    D = ExpPointsProperties(0)->GetD();
-      
-	    Blas::Dgemv('T',nquad,nquad,1.0,&((*D).GetPtr())[0],nquad,
-			&wsp[0],1,0.0,&outarray[0],1);
+            // this line should not be needed
+            Vmath::Vcopy(nquad,&out[0],1,&outarray[0],1);
+
+            // cannot make version above work yet. 
+	    //Blas::Dgemv('T',nquad,nquad,1.0,&((*D).GetPtr())[0],nquad,
+            //           &wsp[0],1,0.0,&outarray[0],1);
 	}
     
 	NekDouble StdExpansion1D::PhysEvaluate1D(ConstNekDoubleSharedArray Lcoord)
@@ -102,6 +106,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.14  2007/04/10 14:00:45  sherwin
+ * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+ *
  * Revision 1.13  2007/04/08 03:36:58  jfrazier
  * Updated to use SharedArray consistently and minor reformatting.
  *

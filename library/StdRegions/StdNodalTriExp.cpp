@@ -144,6 +144,9 @@ namespace Nektar
 	    // Multiply out matrix
 	    DNekVec  v(m_ncoeffs,in_out_array,eWrapper);
 	    v = (*mat)*v;
+
+            // this line should not be needed
+            Vmath::Vcopy(m_ncoeffs,&v[0],1,&in_out_array[0],1);
         }
 
 
@@ -313,6 +316,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.8  2007/04/18 09:44:01  sherwin
+* Working version for StdNodalTri. Removed lapack.cpp from compile.
+*
 * Revision 1.7  2007/04/10 14:00:45  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

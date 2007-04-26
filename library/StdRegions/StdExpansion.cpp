@@ -315,14 +315,29 @@ namespace Nektar
 				    const LibUtilities::BasisKey &tbasis0, 
 				    NekDoubleSharedArray &to)
         {
+            Interp1D(fbasis0, from.get(), tbasis0, to.get());
+        }
+
+        void StdExpansion::Interp1D(const LibUtilities::BasisKey &fbasis0, 
+                                    const NekDouble *from,  
+				    const LibUtilities::BasisKey &tbasis0, 
+				    NekDouble *to)
+        {
             DNekMatSharedPtr I0;
 
             I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]
 		->GetI(tbasis0.GetPointsKey());
 	    
+            //DNekVec in(fbasis0.GetNumPoints(),from);
+            //DNekVec out(tbasis0.GetNumPoints(),to,eWrapper);
+
+            //out  = (*I0)*in;
+            // this line should not be needed
+            //Vmath::Vcopy(tbasis0.GetNumPoints(),&out[0],1,&to[0],1);
+            
             Blas::Dgemv('T', fbasis0.GetNumPoints(), tbasis0.GetNumPoints(), 
-			1.0, I0->GetPtr().get(), fbasis0.GetNumPoints(), 
-			from.get(), 1, 0.0, to.get(), 1);
+                        1.0, I0->GetPtr().get(), fbasis0.GetNumPoints(), 
+                        from, 1, 0.0, to, 1);
         }
 
         //   I/O routine
@@ -340,6 +355,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.32  2007/04/18 16:09:12  pvos
+* Added some new Tensor Operations routines
+*
 * Revision 1.31  2007/04/10 14:00:45  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

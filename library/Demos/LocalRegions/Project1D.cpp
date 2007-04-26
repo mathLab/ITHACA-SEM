@@ -17,9 +17,9 @@ int main(int argc, char *argv[])
 {
     int i,j;
     int order, nq;
-    const double *z,*w;
-    double L2_err;
-    double x[2];
+    const NekDouble *z,*w;
+    NekDouble L2_err;
+    NdkDouble x[2];
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;
     StdRegions::StdExpansion1D  *E;

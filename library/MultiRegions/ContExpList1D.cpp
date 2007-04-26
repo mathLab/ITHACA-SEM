@@ -58,7 +58,7 @@ namespace Nektar
 		     "Expansion not of an boundary-interior type");
 	    
 	    // setup mapping array 
-	    m_locToGloMap.reset(new LocalToGlobalMap1D(m_exp,graph1D));
+	    m_locToGloMap.reset(new LocalToGlobalMap1D(m_ncoeffs,m_exp,graph1D));
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
 	    m_contCoeffs  = MemoryManager::AllocateSharedArray<double> 
@@ -78,7 +78,7 @@ namespace Nektar
 
 	    if(!(m_mass.get()))
 	    {
-		GenMassMatrix();
+		GenMassMatrixLinSys();
 	    }
 
 	    DNekVec v(m_ncoeffs,m_contCoeffs,eWrapper);
@@ -99,7 +99,7 @@ namespace Nektar
 	}
 	
 	
-	void ContExpList1D::GenMassMatrix(void)
+	void ContExpList1D::GenMassMatrixLinSys(void)
 	{
 	    if(!(m_mass.get()))
 	    {
@@ -108,13 +108,13 @@ namespace Nektar
 		DNekMatSharedPtr loc_mass;
 		StdRegions::StdExpansionVectorIter def;
 		
-		DNekLinSys Gmass(m_contNcoeffs,m_contNcoeffs);
-		m_mass.reset(Gmass);
+		DNekMatSharedPtr Gmass = MemoryManager::AllocateSharedPtr<DNekMat>(m_contNcoeffs,m_contNcoeffs);
+		m_mass = MemoryManager::AllocateSharedPtr<DNekLinSys>(Gmass);
 		
 		// fill global matrix 
 		for(n = 0; n < m_exp.size(); ++n)
 		{
-		    loc_mass = GetExp(n)->GetLocMass(StdRegions::eMassMatrix);
+		    loc_mass = m_exp[n]->GetLocMass(StdRegions::eMassMatrix);
 		    loc_lda = loc_mass->GetColumns();
 		    loc_mat = loc_mass->GetMatrix();
 		    
@@ -125,7 +125,7 @@ namespace Nektar
 			for(j = 0; j < loc_lda; ++j)
 			{
 			    gid2 = m_locToGloMap->GetMap(n,j);
-			    Gmass(gid1*m_contNcoeffs,gid2) += loc_mat[i*loc_lda+j];
+			    m_mass(gid1*m_contNcoeffs,gid2) += loc_mat[i*loc_lda+j];
 			}
 		    }
 		}

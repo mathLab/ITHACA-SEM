@@ -63,9 +63,11 @@ namespace Nektar
 	    
 	    for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
 	    {
-		seg.reset( new LocalRegions::SegExp(Ba, *def));
+		seg = MemoryManager::AllocateSharedPtr<LocalRegions::SegExp>(Ba, *def);
 		m_exp.push_back(seg);
 	    }
+
+            m_coeffs = MemoryManager::AllocateSharedArray<NekDouble>(m_ncoeffs);
 	}
     } //end of namespace
 } //end of namespace

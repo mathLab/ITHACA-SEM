@@ -75,28 +75,30 @@ namespace Nektar
 	return m_physState;
       }
       
-      double Integral(const NekDoubleSharedArray &inarray);
-      void   IProductWRTBase(const NekDoubleSharedArray &inarray, 
+      NekDouble Integral(ConstNekDoubleSharedArray inarray);
+      void   IProductWRTBase(ConstNekDoubleSharedArray inarray, 
 			     NekDoubleSharedArray &outarray);
       void   IProductWRTBase(const ExpList &S1);
       void   IProductWRTBase(const ExpList &S1, 
 			     NekDoubleSharedArray &outarray);
-      void   PhysDeriv(const int n, const NekDoubleSharedArray &inarray,
+      void   PhysDeriv(ConstNekDoubleSharedArray inarray,
 		       NekDoubleSharedArray &out_d0, 
 		       NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
 		       NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
-      void   PhysDeriv  (const ExpList &Sin, ExpList &S_x);
-      void   FwdTrans (const NekDoubleSharedArray &inarray,
+      void   FwdTrans (ConstNekDoubleSharedArray inarray,
 		       NekDoubleSharedArray &outarray);
-      void   FwdTrans (const NekDoubleSharedArray &inarray, ExpList &Sout);
+      void   FwdTrans (ConstNekDoubleSharedArray inarray, 
+                       ExpList &Sout);
       void   FwdTrans (const ExpList &Sin);
-      void   BwdTrans (const NekDoubleSharedArray &inarray, 
+      void   BwdTrans (ConstNekDoubleSharedArray inarray, 
 		       NekDoubleSharedArray &outarray); 
       void   BwdTrans (const ExpList &Sin); 
       
-      void   GetCoords(NekDoubleSharedArray coord_0,
-		       NekDoubleSharedArray coord_1 = NullNekDoubleSharedArray,
-		       NekDoubleSharedArray coord_2 = NullNekDoubleSharedArray);
+      void   GetCoords(NekDoubleSharedArray &coord_0,
+		       NekDoubleSharedArray &coord_1 = NullNekDoubleSharedArray,
+		       NekDoubleSharedArray &coord_2 = NullNekDoubleSharedArray);
+      void   GetCoords(NekDoubleArrayVector &coords);
+
       void   WriteToFile(std::ofstream &out);
     
       inline int GetCoordim(int eid)
@@ -106,8 +108,19 @@ namespace Nektar
 	  return m_exp[eid]->GetCoordim();
       }
       
-      double Linf (const NekDoubleSharedArray sol);
-      double L2   (const NekDoubleSharedArray sol);
+
+      inline ConstNekDoubleSharedArray GetCoeffs() const
+      {
+          return m_coeffs;
+      }
+
+      inline NekDoubleSharedArray &UpdateCoeffs()
+      {
+          return m_coeffs;
+      }
+
+      NekDouble Linf (ConstNekDoubleSharedArray sol);
+      NekDouble L2   (ConstNekDoubleSharedArray sol);
 
 
       inline int GetExpSize(void)
@@ -124,6 +137,7 @@ namespace Nektar
     protected:
       int m_ncoeffs; 
       int m_npoints;
+      NekDoubleSharedArray m_coeffs;
 
       TransState m_transState;
       bool       m_physState;

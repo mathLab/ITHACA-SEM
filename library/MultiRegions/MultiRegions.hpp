@@ -49,7 +49,7 @@ namespace Nektar
     namespace MultiRegions
     {
 
-
+        
 	// multiregion stuff here
 	enum TransState
 	{

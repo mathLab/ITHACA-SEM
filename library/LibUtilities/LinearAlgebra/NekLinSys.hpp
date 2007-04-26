@@ -63,22 +63,6 @@ namespace Nektar
         typedef NekVector<DataType, vectorDim, space> VectorType;
         typedef NekMatrix<DataType, eDiagonal, eNormal, space> MatrixType;
 
-#if OLD
-        static void Solve(const boost::shared_ptr<MatrixType>& A, const VectorType& b, VectorType& x)
-        {
-            ASSERTL0(A->GetColumns() == b.GetRows(), "ERROR: NekLinSys::Solve matrix columns must equal vector rows");
-	    
-            for(unsigned int i = 0; i < A->GetColumns(); ++i)
-            {
-                x[i] = b[i]*(*A)(i,i);
-            }
-       }
-
-        static void SolveTranspose(const boost::shared_ptr<MatrixType>& A, const VectorType& b, VectorType& x)
-        {
-	    Solve(A,b,x);
-        }
-#else
         static void Solve(const MatrixType& A, const Nektar::NekIntSharedArray &ipivot, const VectorType& b, VectorType& x)
         {
             ASSERTL0(A.GetColumns() == b.GetRows(), "ERROR: NekLinSys::Solve matrix columns must equal vector rows");
@@ -93,7 +77,6 @@ namespace Nektar
         {
 	    Solve(A,ipivot,b,x);
         }
-#endif
     };
 
     template<typename DataType, NekMatrixForm form, unsigned int space, MatrixBlockType BlockType, unsigned int vectorDim>
@@ -102,12 +85,6 @@ namespace Nektar
         typedef NekMatrix<DataType, form, BlockType, space> MatrixType;
         typedef NekVector<DataType, vectorDim, space> VectorType;
 
-#if OLD
-        static void Solve(const boost::shared_ptr<MatrixType>& A,  const VectorType& b, VectorType& x)
-        {
-            Lapack::dgetrs('N',A->GetRows(),A->GetColumns(),A->GetPtr().get(),x.GetPtr());
-	}
-#else
         static void Solve(const MatrixType& A, const Nektar::NekIntSharedArray &ipivot, const VectorType& b, VectorType& x)
         {
 	    int info = 0;
@@ -118,14 +95,7 @@ namespace Nektar
 		ASSERTL0(false, message.c_str());
 	    }
         }
-#endif
-	
-#if OLD 
-        static void SolveTranspose(const boost::shared_ptr<MatrixType>& A, const VectorType& b, VectorType& x)
-        {
-            Lapack::dgetrs('T',A->GetRows(),A->GetColumns(),A->GetPtr().get(),x.GetPtr());
-        }
-#else
+
         static void SolveTranspose(const MatrixType& A, const Nektar::NekIntSharedArray &ipivot, const VectorType& b, VectorType& x)
         {
 	    int info = 0;
@@ -137,7 +107,6 @@ namespace Nektar
 		ASSERTL0(false, message.c_str());
 	    }
         }
-#endif
     };
 
     template<typename MatrixType>
@@ -154,10 +123,7 @@ namespace Nektar
             explicit LinearSystem(const boost::shared_ptr<MatrixType> &theA) :
                 A(*theA) 
             {
-#if OLD
-#else
                 FactorMatrix(A);
-#endif
             }
 
             LinearSystem(const ThisType& rhs) :
@@ -181,11 +147,7 @@ namespace Nektar
             VectorType Solve(const boost::shared_ptr<VectorType>& b)
             {
                 VectorType x(*b);
-#if OLD 
-                LinearSystemSolver<MatrixType, VectorType>::Solve(A, *b, x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::Solve(A, m_ipivot,*b, x);
-#endif
                 return x;
             }
 
@@ -193,11 +155,7 @@ namespace Nektar
             void Solve(const boost::shared_ptr<VectorType>& b,
                        const boost::shared_ptr<VectorType>& x) const
             {
-#if OLD
-                LinearSystemSolver<MatrixType, VectorType>::Solve(A, *b, *x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::Solve(A, m_ipivot,*b, *x);
-#endif
             }
 
             template<typename VectorType>
@@ -205,11 +163,7 @@ namespace Nektar
                              typename boost::disable_if<IsSharedPointer<VectorType> >::type* = 0)
             {
                 VectorType x(b);
-#if OLD
-                LinearSystemSolver<MatrixType, VectorType>::Solve(A, b, x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::Solve(A, m_ipivot,b, x);
-#endif
                 return x;
             }
 
@@ -218,22 +172,14 @@ namespace Nektar
                        VectorType& x,
                        typename boost::disable_if<IsSharedPointer<VectorType> >::type* = 0) const
             {
-#if OLD
-                LinearSystemSolver<MatrixType, VectorType>::Solve(A, b, x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::Solve(A, m_ipivot, b, x);
-#endif
             }
 
             template<typename VectorType>
             void Solve(const boost::shared_ptr<VectorType>& b,
                        VectorType& x) const
             {
-#if OLD
-                LinearSystemSolver<MatrixType, VectorType>::Solve(A, *b, x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::Solve(A, m_ipivot,*b, x);
-#endif
             }
 
 
@@ -241,11 +187,7 @@ namespace Nektar
             void Solve(const VectorType& b,
                        const boost::shared_ptr<VectorType>& x) const
             {
-#if OLD
-                LinearSystemSolver<MatrixType, VectorType>::Solve(A, b, *x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::Solve(A, m_ipivot,b, *x);
-#endif
             }
 
 
@@ -254,11 +196,7 @@ namespace Nektar
             VectorType SolveTranspose(const boost::shared_ptr<VectorType>& b)
             {
                 VectorType x(*b);
-#if OLD
-                LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, *b, x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, m_ipivot,*b, x);
-#endif
                 return x;
             }
 
@@ -267,11 +205,7 @@ namespace Nektar
             void SolveTranspose(const boost::shared_ptr<VectorType>& b,
 				const boost::shared_ptr<VectorType>& x) const
             {
-#if OLD
-                LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, *b, *x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, m_ipivot,*b, *x);
-#endif
             }
 
             template<typename VectorType>
@@ -279,12 +213,7 @@ namespace Nektar
 				      typename boost::disable_if<IsSharedPointer<VectorType> >::type* = 0)
             {
                 VectorType x(b);
-#if OLD
-                LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, b, x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, m_ipivot,b, x);
-#endif
-
                 return x;
             }
 
@@ -293,39 +222,25 @@ namespace Nektar
 				VectorType& x,
 				typename boost::disable_if<IsSharedPointer<VectorType> >::type* = 0) const
             {
-#if OLD
-                LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, b, x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, m_ipivot,b, x);
-#endif
             }
 
             template<typename VectorType>
             void SolveTranspose(const boost::shared_ptr<VectorType>& b,
 				VectorType& x) const
             {
-#if OLD
-                LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, *b, x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, m_ipivot,*b, x);
-#endif
             }
 
             template<typename VectorType>
             void SolveTranspose(const VectorType& b,
 				const boost::shared_ptr<VectorType>& x) const
             {
-#if OLD
-                LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, b, *x);
-#else
                 LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, m_ipivot, b, x);
-#endif
             }
 
 
     private:
-#if OLD
-#else
         void FactorMatrix(NekMatrix<DataType,eDiagonal> &theA)
 	{
 	    for(unsigned int i = 0; i < A.GetColumns(); ++i)
@@ -356,7 +271,6 @@ namespace Nektar
 		ASSERTL0(false, message.c_str());
 	    }		    
         }
-#endif
 
 	void swap(ThisType& rhs)
 	{
@@ -364,11 +278,7 @@ namespace Nektar
             std::swap(m_ipivot,rhs.m_ipivot);
 	}
 	
-#ifdef OLD
-	boost::shared_ptr<MatrixType> A;
-#else
 	MatrixType A;
-#endif
 	Nektar::NekIntSharedArray m_ipivot;	    
     };
 }

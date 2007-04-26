@@ -45,11 +45,11 @@ namespace Nektar
     {
 	
 	class LocalToGlobalMap1D: 
-	public LocalToGlobalMap
+            public LocalToGlobalMap
 	{
         public:
             LocalToGlobalMap1D(){};
-	    LocalToGlobalMap1D(StdRegions::StdExpansionVector &locexp, SpatialDomains::MeshGraph1D &graph1D);
+	    LocalToGlobalMap1D(int loclen, StdRegions::StdExpansionVector &locexp, SpatialDomains::MeshGraph1D &graph1D);
 
             virtual ~LocalToGlobalMap1D();
 	    
@@ -65,6 +65,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.2  2007/03/20 16:58:42  sherwin
+/** Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+/**
 /** Revision 1.1  2006/07/02 17:16:17  sherwin
 /**
 /** Modifications to make MultiRegions work for a connected domain in 2D (Tris)

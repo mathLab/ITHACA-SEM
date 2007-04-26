@@ -16,12 +16,12 @@ int main(int argc, char *argv[])
     MultiRegions::ExpList1D  *Exp;
     int i,j,k;
     int     order, nq;
-    double *sol;
     int     coordim;
-    double  **xc;
     char    *infile;
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;  
+    NekDoubleSharedArray sol; 
+    NekDoubleSharedArray xc0,xc1,xc2; 
     
     if(argc != 5)
     {
@@ -71,7 +71,6 @@ int main(int argc, char *argv[])
     // read in mesh
     string  in(infile);
     SpatialDomains::MeshGraph1D graph1D;
-    
     graph1D.Read(in);
     
     // Define Expansion
@@ -85,26 +84,36 @@ int main(int argc, char *argv[])
     nq      = Exp->GetPointsTot();
     
     // define coordinates and solution
-    sol   = new double  [nq];
-    xc    = new double *[coordim];
-    xc[0] = new double  [coordim*nq];
-    
-    for(i = 1; i < coordim; ++i)
+    sol = GetDoubleTmpSpace(nq);
+
+    xc0 = GetDoubleTmpSpace(nq);
+    xc1 = GetDoubleTmpSpace(nq);
+    xc2 = GetDoubleTmpSpace(nq);
+
+    switch(coordim)
     {
-	xc[i] = xc[i-1] + nq;
+    case 1:
+        Exp->GetCoords(xc0);
+        Vmath::Zero(nq,&xc1[0],1);
+        Vmath::Zero(nq,&xc2[0],1);
+        break;
+    case 2:
+        Exp->GetCoords(xc0,xc1);
+        Vmath::Zero(nq,&xc2[0],1);
+        break;
+    case 3:
+        Exp->GetCoords(xc0,xc1,xc2);
+        break;
     }
-    
-    Exp->GetCoords(xc);
     
     for(i = 0; i < nq; ++i)
     {
 	sol[i] = 0.0;
 	for(j = 0; j < order; ++j)
 	{
-	    for(k = 0; k < coordim; ++k)
-	    {
-		sol[i] += pow(xc[k][i],j);
-	    }
+            sol[i] += pow(xc0[i],j);
+            sol[i] += pow(xc1[i],j);
+            sol[i] += pow(xc2[i],j);
 	}
     }
     
@@ -129,8 +138,4 @@ int main(int argc, char *argv[])
     cout << "L infinity error: " << Exp->Linf(sol) << endl;
     cout << "L 2 error:        " << Exp->L2  (sol) << endl;
     //--------------------------------------------
-    
-    delete[] sol; 
-    delete[] xc[0];
-    delete[] xc;
 }

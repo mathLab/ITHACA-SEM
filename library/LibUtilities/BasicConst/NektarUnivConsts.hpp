@@ -40,9 +40,10 @@
 
 namespace Nektar
 {
-    // Null defintion of NekDoubleSharedArray
-    static NekDoubleSharedArray NullNekDoubleSharedArray;
-
+    // Null defintion of NekDouble1DSharedArray
+    static NekDouble1DSharedArray NullNekDouble1DSharedArray;
+    static NekDouble2DSharedArray NullNekDouble2DSharedArray;
+    static NekDouble3DSharedArray NullNekDouble3DSharedArray;
 
 } //end of namespace 
 
@@ -50,6 +51,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivConsts.hpp,v $
+Revision 1.3  2007/03/31 00:39:51  bnelson
+*** empty log message ***
+
 Revision 1.2  2007/03/21 20:56:42  sherwin
 Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
 

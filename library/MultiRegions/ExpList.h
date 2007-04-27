@@ -48,6 +48,8 @@ namespace Nektar
     {
     public:
       ExpList();
+
+      ExpList(const ExpList &in);
       virtual ~ExpList();
       
       inline int GetNcoeffs(void) const
@@ -64,7 +66,17 @@ namespace Nektar
       {
 	m_transState = transState;
       }
+
+      inline TransState GetTransState(void)
+      {
+          return m_transState; 
+      }
       
+      inline void SetPhys(ConstNekDoubleSharedArray inarray)
+      {
+          Vmath::Vcopy(m_npoints,&inarray[0],1,&m_phys[0],1);
+      }
+
       inline void SetPhysState(const bool physState)
       {
 	m_physState = physState;
@@ -75,24 +87,11 @@ namespace Nektar
 	return m_physState;
       }
       
-      NekDouble Integral(ConstNekDoubleSharedArray inarray);
-      void   IProductWRTBase(ConstNekDoubleSharedArray inarray, 
-			     NekDoubleSharedArray &outarray);
-      void   IProductWRTBase(const ExpList &S1);
-      void   IProductWRTBase(const ExpList &S1, 
-			     NekDoubleSharedArray &outarray);
-      void   PhysDeriv(ConstNekDoubleSharedArray inarray,
-		       NekDoubleSharedArray &out_d0, 
-		       NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
-		       NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
-      void   FwdTrans (ConstNekDoubleSharedArray inarray,
-		       NekDoubleSharedArray &outarray);
-      void   FwdTrans (ConstNekDoubleSharedArray inarray, 
-                       ExpList &Sout);
-      void   FwdTrans (const ExpList &Sin);
-      void   BwdTrans (ConstNekDoubleSharedArray inarray, 
-		       NekDoubleSharedArray &outarray); 
-      void   BwdTrans (const ExpList &Sin); 
+      NekDouble PhysIntegral (void);
+      void   IProductWRTBase (const ExpList &Sin);
+      void   FwdTrans        (const ExpList &Sin);
+      void   BwdTrans        (const ExpList &Sin); 
+      void   PhysDeriv       (ExpList &S0, ExpList &S1, ExpList &S2); 
       
       void   GetCoords(NekDoubleSharedArray &coord_0,
 		       NekDoubleSharedArray &coord_1 = NullNekDoubleSharedArray,
@@ -105,7 +104,7 @@ namespace Nektar
       {
 	  ASSERTL2(eid <= m_exp.size(),"eid is larger than number of elements");
 	
-	  return m_exp[eid]->GetCoordim();
+	  return (*m_exp)[eid]->GetCoordim();
       }
       
 
@@ -114,40 +113,65 @@ namespace Nektar
           return m_coeffs;
       }
 
-      inline NekDoubleSharedArray &UpdateCoeffs()
+      inline ConstNekDoubleSharedArray GetPhys() const
       {
-          return m_coeffs;
+          return m_phys;
       }
 
-      NekDouble Linf (ConstNekDoubleSharedArray sol);
-      NekDouble L2   (ConstNekDoubleSharedArray sol);
+
+      NekDouble Linf (const ExpList &Sol);
+      NekDouble L2   (const ExpList &Sol);
 
 
       inline int GetExpSize(void)
       {
-	  return m_exp.size();
+	  return (*m_exp).size();
       }
       
 
       inline StdRegions::StdExpansionSharedPtr& GetExp(int n)
       {
-	  return m_exp[n];
+	  return (*m_exp)[n];
       }
       
     protected:
       int m_ncoeffs; 
       int m_npoints;
       NekDoubleSharedArray m_coeffs;
+      NekDoubleSharedArray m_phys;
 
       TransState m_transState;
       bool       m_physState;
      
-      StdRegions::StdExpansionVector m_exp;
+      boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
       
     private:
+      inline NekDoubleSharedArray &UpdateCoeffs()
+      {
+          return m_coeffs;
+      }
+
+      inline NekDoubleSharedArray &UpdatePhys()
+      {
+          return m_phys;
+      }
+
+      NekDouble PhysIntegral(ConstNekDoubleSharedArray inarray);
+      void   IProductWRTBase(ConstNekDoubleSharedArray inarray, 
+			     NekDoubleSharedArray &outarray);
       
+      void   PhysDeriv(ConstNekDoubleSharedArray inarray,
+		       NekDoubleSharedArray &out_d0, 
+		       NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
+		       NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
+      void   FwdTrans (ConstNekDoubleSharedArray inarray,
+		       NekDoubleSharedArray &outarray);
+
+      void   BwdTrans (ConstNekDoubleSharedArray inarray, 
+		       NekDoubleSharedArray &outarray); 
     };
 
+    static const ExpList NullExpList();
     
   } //end of namespace
 } //end of namespace

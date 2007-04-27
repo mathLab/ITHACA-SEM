@@ -48,8 +48,15 @@ namespace Nektar
 	{
 	}
 	
+        ExpList1D::ExpList1D(const ExpList1D &In):
+            ExpList(In)
+        {
+            m_coeffs = MemoryManager::AllocateSharedArray<NekDouble>(m_ncoeffs);
+            m_phys   = MemoryManager::AllocateSharedArray<NekDouble>(m_npoints);
+        }
+
 	ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
-			     SpatialDomains::MeshGraph1D &graph1D)
+			     const SpatialDomains::MeshGraph1D &graph1D)
 	{
 	    LocalRegions::SegExpSharedPtr seg;
 	    SpatialDomains::SegGeomVector SegGeoms = graph1D.GetSeggeoms();
@@ -64,10 +71,11 @@ namespace Nektar
 	    for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
 	    {
 		seg = MemoryManager::AllocateSharedPtr<LocalRegions::SegExp>(Ba, *def);
-		m_exp.push_back(seg);
+		(*m_exp).push_back(seg);
 	    }
 
             m_coeffs = MemoryManager::AllocateSharedArray<NekDouble>(m_ncoeffs);
+            m_phys   = MemoryManager::AllocateSharedArray<NekDouble>(m_npoints);
 	}
     } //end of namespace
 } //end of namespace

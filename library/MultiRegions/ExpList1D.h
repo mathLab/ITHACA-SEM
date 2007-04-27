@@ -56,18 +56,27 @@ namespace Nektar
 	public:
 	    
 	    ExpList1D();
+
+	    ExpList1D(const ExpList1D &In);
 	    
 	    ExpList1D(const LibUtilities::BasisKey &Ba, 
-		      SpatialDomains::MeshGraph1D &graph1D);
+		      const SpatialDomains::MeshGraph1D &graph1D);
 	    
 	    ~ExpList1D();
-	    
+
+
+            void   PhysDeriv  (ExpList &S0,
+                               ExpList &S1 = NullExpList, 
+                               ExpList &S2 = NullExpList)
+            {
+                ExpList::PhysDeriv(S0,S1,S2);
+            }
+
 	protected:
 	    
 	private:
             
 	};
-
 	
         typedef boost::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;

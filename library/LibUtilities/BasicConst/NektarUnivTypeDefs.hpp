@@ -38,7 +38,6 @@
 
 #include <boost/multi_array.hpp>
 #include <boost/shared_ptr.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <vector>
 
 namespace Nektar
@@ -58,7 +57,8 @@ namespace Nektar
     template<typename T>
     struct Nek1DSharedArray
     {
-        typedef boost::shared_ptr<typename Nek1DArray<T>::type> type;
+        typedef typename Nek1DArray<T>::type base;
+        typedef boost::shared_ptr<base> type;
     };
 
     template<typename T>
@@ -72,6 +72,7 @@ namespace Nektar
     typedef Nek1DConstSharedArray<NekDouble>::type      ConstNekDouble1DSharedArray;
     typedef Nek1DArray<int>::type                       Int1DArray;
     typedef Nek1DSharedArray<int>::type                 Int1DSharedArray;
+    typedef Nek1DSharedArray<int>::base                 Int1DSharedArrayBase;
     typedef Nek1DConstSharedArray<int>::type            ConstInt1DSharedArray;
 
     template<typename T>
@@ -83,7 +84,8 @@ namespace Nektar
     template<typename T>
     struct Nek2DSharedArray
     {
-        typedef boost::shared_ptr<typename Nek2DArray<T>::type> type;
+        typedef typename Nek2DArray<T>::type base;
+        typedef boost::shared_ptr<base> type;
     };
 
     template<typename T>
@@ -108,7 +110,8 @@ namespace Nektar
     template<typename T>
     struct Nek3DSharedArray
     {
-        typedef boost::shared_ptr<typename Nek3DArray<T>::type> type;
+        typedef typename Nek3DArray<T>::type base; 
+        typedef boost::shared_ptr<base> type;
     };
 
     template<typename T>
@@ -142,6 +145,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.7  2007/04/26 21:52:09  jfrazier
+Converted to new multi_array implementation.
+
 Revision 1.6  2007/04/10 14:00:44  sherwin
 Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 

@@ -69,8 +69,8 @@ namespace Lapack
         // Pivot information
         int pivotSize = std::max(1, std::min(m, n));
         int info = 0;
-        Nektar::NekIntSharedArray ipivot = Nektar::MemoryManager::AllocateSharedArray<int>(pivotSize);
-        Lapack::Dgetrf(m, n, factoredMatrix.GetPtr().get(), m, ipivot.get(), info);
+        Nektar::Int1DSharedArray ipivot = Nektar::MemoryManager::AllocateSharedPtr<Nektar::Int1DSharedArrayBase>(boost::extents[pivotSize]);
+        Lapack::Dgetrf(m, n, factoredMatrix.GetPtr().get(), m, ipivot->data(), info);
 
         if( info < 0 )
         {
@@ -88,7 +88,7 @@ namespace Lapack
         //void    dgetrs(char *trans,int *n,int *nrhs,double *a,int *lda,int *ipiv,double *b,int *ldb,int *info);
         int nrhs = 1; // ONly 1 right hand side.
 
-        Lapack::Dgetrs(trans, matrixRows, 1, factoredMatrix.GetPtr().get(), matrixRows, ipivot.get(), x, matrixRows, info);
+        Lapack::Dgetrs(trans, matrixRows, 1, factoredMatrix.GetPtr().get(), matrixRows, ipivot->data(), x, matrixRows, info);
         
         if( info < 0 )
         {

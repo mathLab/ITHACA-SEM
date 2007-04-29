@@ -47,14 +47,15 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        void NodalTriFekete::CalculatePoints()
+        template<typename T>
+        void NodalTriFekete<T>::CalculatePoints()
         {
             // Allocate the storage for points
-            Points<double>::CalculatePoints();
+            PointsBaseType::CalculatePoints();
 
             int index=0,isum=0;
             const int offset = 3; //offset to match Datafile
-            double a,b,c;
+            T a,b,c;
             unsigned int numPoints = GetNumPoints();
 
             // initialize values
@@ -127,24 +128,28 @@ namespace Nektar
             ASSERTL1((isum==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
         }
 
-        void NodalTriFekete::CalculateWeights()
+        template<typename T>
+        void NodalTriFekete<T>::CalculateWeights()
         {
             // No weights computed
         }
 
-        void NodalTriFekete::CalculateDerivMatrix()
+        template<typename T>
+        void NodalTriFekete<T>::CalculateDerivMatrix()
         {
             // No derivative matrix computed
         }
 
-        boost::shared_ptr< Points<double> > NodalTriFekete::Create(const PointsKey &key)
+        template<typename T>
+        boost::shared_ptr<typename NodalTriFekete<T>::PointsBaseType> NodalTriFekete<T>::Create(const PointsKey &key)
         {
-            boost::shared_ptr< Points<double> > returnval(new NodalTriFekete(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<NodalTriFekete<T> >(key));
             returnval->Initialize();
             return returnval;
         }
 
-        void NodalTriFekete::NodalPointReorder2d()
+        template<typename T>
+        void NodalTriFekete<T>::NodalPointReorder2d()
         {
             int istart,iend,isum=0;
             const int numvert = 3;
@@ -207,7 +212,6 @@ namespace Nektar
     } // end of namespace stdregion
 } // end of namespace stdregion
 
-
 /**
-* %Log%
+* $Log$
 */

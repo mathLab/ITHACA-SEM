@@ -48,40 +48,40 @@ namespace Nektar
     namespace LibUtilities 
     {
  
-        typedef Points<double> PointsBaseType;
-
-        class NodalTriFekete: public PointsBaseType
+        template<typename T>
+        class NodalTriFekete: public Points<T>
         {
         public:
+            typedef Points<T> PointsBaseType;
+
             virtual ~NodalTriFekete()
             {
             }
 
-            static boost::shared_ptr< Points<double> > Create(const PointsKey &key);
+            static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
 
-
-            const boost::shared_ptr<NekMatrix<DataType> > GetI(const PointsKey &pkey)
+            const boost::shared_ptr<NekMatrix<T> > GetI(const PointsKey &pkey)
             {
                 ASSERTL0(false, "NodalTriFekete Method not implemented");
-                boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+                boost::shared_ptr<NekMatrix<T> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<T> >());
 
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<DataType> > GetI(SharedArray<const NekDouble> x)
+            const boost::shared_ptr<NekMatrix<T> > GetI(typename Nek1DConstSharedArray<T>::type x)
             {
                 ASSERTL0(false, "NodalTriFekete Method not implemented");
 
-                boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+                boost::shared_ptr<NekMatrix<T> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<T> >());
 
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<DataType> > GetI(unsigned int numpoints, SharedArray<const NekDouble> x)
+            const boost::shared_ptr<NekMatrix<T> > GetI(unsigned int numpoints, typename Nek1DConstSharedArray<T>::type x)
             {
                 ASSERTL0(false, "NodalTriFekete Method not implemented");
 
-                boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>);
+                boost::shared_ptr<NekMatrix<T> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<T> >());
 
                 return returnval;
            }
@@ -102,12 +102,6 @@ namespace Nektar
             void CalculateDerivMatrix();
             void NodalPointReorder2d();
         };
- 
-        namespace
-        {
-            const bool nodalTriFeketeInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTriFekete), NodalTriFekete::Create);
-        }
-
    } // end of namespace
 } // end of namespace 
 

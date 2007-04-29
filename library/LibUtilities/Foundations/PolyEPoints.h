@@ -47,20 +47,21 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        typedef Points<double> PointsBaseType;
-
-        class PolyEPoints: public PointsBaseType
+        template<typename T>
+        class PolyEPoints: public Points<T>
         {
         public:
+            typedef Points<T> PointsBaseType;
+
             virtual ~PolyEPoints()
             {
             }            
 
             static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
 
-            const boost::shared_ptr<NekMatrix<double> > GetI(const PointsKey &pkey);
-            const boost::shared_ptr<NekMatrix<double> > GetI(SharedArray<const NekDouble> x);
-            const boost::shared_ptr<NekMatrix<double> > GetI(unsigned int numpoints, SharedArray<const NekDouble> x);
+            const boost::shared_ptr<NekMatrix<T> > GetI(const PointsKey &pkey);
+            const boost::shared_ptr<NekMatrix<T> > GetI(typename Nek1DConstSharedArray<T>::type x);
+            const boost::shared_ptr<NekMatrix<T> > GetI(unsigned int numpoints, typename Nek1DConstSharedArray<T>::type x);
 
         protected:
             PolyEPoints(const PointsKey &key):PointsBaseType(key)
@@ -81,18 +82,13 @@ namespace Nektar
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
-            void CalculateInterpMatrix(unsigned int npts, SharedArray<const NekDouble> xpoints, SharedArray<NekDouble>  interp);
+            void CalculateInterpMatrix(unsigned int npts, typename Nek1DConstSharedArray<T>::type xpoints, typename Nek1DSharedArray<T>::type  interp);
 
-            double LagrangeInterpolant(double x, int npts, SharedArray<const NekDouble> xpts, SharedArray<const NekDouble> funcvals);
-            double LagrangePoly(double x, int pt, int npts, SharedArray<const NekDouble> xpts);     
-            double LagrangePolyDeriv(double x, int pt, int npts, SharedArray<const NekDouble> xpts);
+            T LagrangeInterpolant(T x, int npts, typename Nek1DConstSharedArray<T>::type xpts, typename Nek1DConstSharedArray<T>::type funcvals);
+            T LagrangePoly(T x, int pt, int npts, typename Nek1DConstSharedArray<T>::type xpts);     
+            T LagrangePolyDeriv(T x, int pt, int npts, typename Nek1DConstSharedArray<T>::type xpts);
 
         }; // class PolyEPoints
-
-        namespace
-        {
-            const bool PolyEPointsInited1 = PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), PolyEPoints::Create);
-        }
     } // end of namespace
 } // end of namespace 
 

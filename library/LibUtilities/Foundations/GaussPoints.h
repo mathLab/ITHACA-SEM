@@ -48,21 +48,22 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        typedef Points<double> PointsBaseType;
-
-        class GaussPoints: public PointsBaseType
+        template<typename T>
+        class GaussPoints: public Points<T>
         {
         public:
+            typedef Points<T> PointsBaseType;
+
             virtual ~GaussPoints()
             {
             }            
 
             static boost::shared_ptr< PointsBaseType > Create(const PointsKey &pkey);
-            boost::shared_ptr< NekMatrix<double> > CreateMatrix(const PointsKey &pkey);
+            boost::shared_ptr< NekMatrix<T> > CreateMatrix(const PointsKey &pkey);
 
-            const boost::shared_ptr<NekMatrix<double> > GetI(const PointsKey &pkey);
-            const boost::shared_ptr<NekMatrix<double> > GetI(SharedArray<const NekDouble> x);
-            const boost::shared_ptr<NekMatrix<double> > GetI(unsigned int numpoints, SharedArray<const NekDouble> x);
+            const boost::shared_ptr<NekMatrix<T> > GetI(const PointsKey &pkey);
+            const boost::shared_ptr<NekMatrix<T> > GetI(typename Nek1DConstSharedArray<T>::type x);
+            const boost::shared_ptr<NekMatrix<T> > GetI(unsigned int numpoints, typename Nek1DConstSharedArray<T>::type x);
 
         protected:
             GaussPoints(const PointsKey &pkey):PointsBaseType(pkey)
@@ -107,7 +108,7 @@ namespace Nektar
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
-            void CalculateInterpMatrix(unsigned int npts, SharedArray<const NekDouble> xpoints, SharedArray<NekDouble> interp);
+            void CalculateInterpMatrix(unsigned int npts, typename Nek1DConstSharedArray<T>::type xpoints, typename Nek1DSharedArray<T>::type interp);
         }; // class GaussPoints
     } // end of namespace
 } // end of namespace 

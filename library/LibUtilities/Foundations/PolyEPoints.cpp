@@ -45,8 +45,8 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-
-        void PolyEPoints::CalculatePoints()
+        template<typename T>
+        void PolyEPoints<T>::CalculatePoints()
         {
             // Allocate the storage for points
             PointsBaseType::CalculatePoints();
@@ -58,7 +58,7 @@ namespace Nektar
             }
             else
             {
-                double dx = 2.0/(double)(npts-1);
+                T dx = 2.0/(T)(npts-1);
                 for(unsigned int i=0;i<npts;++i)
                 {
                     m_points[0][i] = -1.0 + i*dx;
@@ -66,7 +66,8 @@ namespace Nektar
             }
         }
 
-        void PolyEPoints::CalculateWeights()
+        template<typename T>
+        void PolyEPoints<T>::CalculateWeights()
         {
             // Allocate the storage for points
             PointsBaseType::CalculateWeights();
@@ -79,9 +80,9 @@ namespace Nektar
             else
             {
                 PointsKey gaussKey(npts, eGaussLobattoLegendre);
-                boost::shared_ptr<Points<double> > ptr = PointsManager()[gaussKey];
-                SharedArray<const NekDouble> z;
-                SharedArray<const NekDouble> w;
+                boost::shared_ptr<PointsBaseType> ptr = PointsManager()[gaussKey];
+                typename Nek1DConstSharedArray<T>::type z;
+                typename Nek1DConstSharedArray<T>::type w;
 
                 ptr->GetZW(z,w);
                 for(unsigned int i=0; i<npts;++i)
@@ -95,10 +96,11 @@ namespace Nektar
             }
         }
 
-        void PolyEPoints::CalculateDerivMatrix()
+        template<typename T>
+        void PolyEPoints<T>::CalculateDerivMatrix()
         {
             // Allocate the derivative matrix.
-            Points<double>::CalculateDerivMatrix();
+            PointsBaseType::CalculateDerivMatrix();
 
             for(unsigned int i=0;i<m_pointsKey.GetNumPoints();++i)
             {
@@ -109,41 +111,43 @@ namespace Nektar
             }
         }
 
-        void PolyEPoints::CalculateInterpMatrix(unsigned int npts, SharedArray<const NekDouble> xpoints, SharedArray<NekDouble> interp)
+        template<typename T>
+        void PolyEPoints<T>::CalculateInterpMatrix(unsigned int npts, typename Nek1DConstSharedArray<T>::type xpoints, typename Nek1DSharedArray<T>::type interp)
         {
             for(unsigned int i=0;i<npts;++i)
             {
                 for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
                 {
-                    interp[i*m_pointsKey.GetNumPoints()+j] = LagrangePoly(xpoints[i],j,m_pointsKey.GetNumPoints(),m_points[0]);
+                    interp[i*m_pointsKey.GetNumPoints()+j] = LagrangePoly((*xpoints)[i],j,m_pointsKey.GetNumPoints(),m_points[0]);
                 }
             }
-
         }
 
-        boost::shared_ptr< PointsBaseType > PolyEPoints::Create(const PointsKey &key)
+        template<typename T>
+        boost::shared_ptr<typename PolyEPoints<T>::PointsBaseType> PolyEPoints<T>::Create(const PointsKey &key)
         {
-            boost::shared_ptr< PointsBaseType > returnval(new PolyEPoints(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<PolyEPoints<T> >(key));
 
             returnval->Initialize();
 
             return returnval;
         }
 
-        const boost::shared_ptr<NekMatrix<double> > PolyEPoints::GetI(const PointsKey &pkey)
+        template<typename T>
+        const boost::shared_ptr<NekMatrix<T> > PolyEPoints<T>::GetI(const PointsKey &pkey)
         {
-
             ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
 
             int numpoints = pkey.GetNumPoints();
-            SharedArray<const NekDouble> xpoints;
+            Nek1DConstSharedArray<T> xpoints;
 
             PointsManager()[pkey]->GetPoints(xpoints);
 
             return GetI(numpoints, xpoints);
         }
 
-        const boost::shared_ptr<NekMatrix<double> > PolyEPoints::GetI(SharedArray<const NekDouble> x)
+        template<typename T>
+        const boost::shared_ptr<NekMatrix<T> > PolyEPoints<T>::GetI(typename Nek1DConstSharedArray<T>::type x)
         {
             int numpoints = 1;
 
@@ -151,22 +155,24 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const boost::shared_ptr<NekMatrix<double> > PolyEPoints::GetI(unsigned int numpoints, SharedArray<const NekDouble> x)
+        template<typename T>
+        const boost::shared_ptr<NekMatrix<T> > PolyEPoints<T>::GetI(unsigned int numpoints, typename Nek1DConstSharedArray<T>::type x)
         {
-            SharedArray<NekDouble> interp = MemoryManager::AllocateSharedArray<double>(GetNumPoints()*numpoints);
+            Nek1DSharedArray<T> interp = MemoryManager::AllocateSharedArray<T>(GetNumPoints()*numpoints);
 
             CalculateInterpMatrix(numpoints, x, interp);
 
-            boost::shared_ptr< NekMatrix<DataType> > returnval(new NekMatrix<DataType>(numpoints,GetNumPoints(),interp.get()));
+            boost::shared_ptr< NekMatrix<T> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<T> >(numpoints,GetNumPoints(),interp.get()));
 
             return returnval;
         }
 
 
-        double PolyEPoints::LagrangeInterpolant(double x, int npts, SharedArray<const NekDouble> xpts,
-            SharedArray<const NekDouble> funcvals)
+        template<typename T>
+        T PolyEPoints<T>::LagrangeInterpolant(T x, int npts, typename Nek1DConstSharedArray<T>::type xpts,
+            typename Nek1DConstSharedArray<T>::type funcvals)
         {
-            double sum = 0.0;
+            T sum = 0.0;
 
             for(int i=0;i<npts;++i)
             {
@@ -176,9 +182,10 @@ namespace Nektar
         }
 
 
-        double PolyEPoints::LagrangePoly(double x, int pt, int npts, SharedArray<const NekDouble> xpts)
+        template<typename T>
+        T PolyEPoints<T>::LagrangePoly(T x, int pt, int npts, typename Nek1DConstSharedArray<T>::type xpts)
         {
-            double h=1.0;
+            T h=1.0;
 
             for(int i=0;i<pt; ++i)
             {
@@ -193,10 +200,11 @@ namespace Nektar
             return h;
         }
 
-        double PolyEPoints::LagrangePolyDeriv(double x, int pt, int npts, SharedArray<const NekDouble> xpts)
+        template<typename T>
+        T PolyEPoints<T>::LagrangePolyDeriv(T x, int pt, int npts, typename Nek1DConstSharedArray<T>::type xpts)
         {
-            double h;
-            double y=0.0;
+            T h;
+            T y=0.0;
 
             for(int j=0;j<npts;++j)
             {

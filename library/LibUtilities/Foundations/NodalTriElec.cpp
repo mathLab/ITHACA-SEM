@@ -47,14 +47,15 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        void NodalTriElec::CalculatePoints()
+        template<typename T>
+        void NodalTriElec<T>::CalculatePoints()
         {
             // Allocate the storage for points
             Points<double>::CalculatePoints();
 
             int index=0,isum=0;
             const int offset = 3; //offset to match Datafile
-            double a,b,c;
+            T a,b,c;
             unsigned int numPoints = GetNumPoints();
 
             // initialize values
@@ -71,8 +72,8 @@ namespace Nektar
                     b = NodalTriElecData[index][4]; 
                     c = NodalTriElecData[index][5]; 
 
-                    m_points[0][isum] = 2.0*b - 1.0;
-                    m_points[1][isum] = 2.0*c - 1.0;
+                    (*m_points[0])[isum] = 2.0*b - 1.0;
+                    (*m_points[1])[isum] = 2.0*c - 1.0;
                     isum++;
                     continue;
                 }//end symmetry1
@@ -85,8 +86,8 @@ namespace Nektar
                         a = NodalTriElecData[index][offset+perm3A_2d[j][0]];
                         b = NodalTriElecData[index][offset+perm3A_2d[j][1]];
                         c = NodalTriElecData[index][offset+perm3A_2d[j][2]];
-                        m_points[0][isum] = 2.0*b - 1.0;
-                        m_points[1][isum] = 2.0*c - 1.0;
+                        (*m_points[0])[isum] = 2.0*b - 1.0;
+                        (*m_points[1])[isum] = 2.0*c - 1.0;
                         isum++;
                     }//end j
                     continue;
@@ -99,8 +100,8 @@ namespace Nektar
                         a = NodalTriElecData[index][offset+perm3B_2d[j][0]];
                         b = NodalTriElecData[index][offset+perm3B_2d[j][1]];
                         c = NodalTriElecData[index][offset+perm3B_2d[j][2]];
-                        m_points[0][isum] = 2.0*b - 1.0;
-                        m_points[1][isum] = 2.0*c - 1.0;
+                        (*m_points[0])[isum] = 2.0*b - 1.0;
+                        (*m_points[1])[isum] = 2.0*c - 1.0;
                         isum++;
                     }//end j
                     continue;   
@@ -114,8 +115,8 @@ namespace Nektar
                         a = NodalTriElecData[index][offset+perm6_2d[j][0]];
                         b = NodalTriElecData[index][offset+perm6_2d[j][1]];
                         c = NodalTriElecData[index][offset+perm6_2d[j][2]];
-                        m_points[0][isum] = 2.0*b - 1.0;
-                        m_points[1][isum] = 2.0*c - 1.0;
+                        (*m_points[0])[isum] = 2.0*b - 1.0;
+                        (*m_points[1])[isum] = 2.0*c - 1.0;
                         isum++;
                     }//end j
                     continue;   
@@ -127,24 +128,28 @@ namespace Nektar
             ASSERTL1((isum==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
         }
 
-        void NodalTriElec::CalculateWeights()
+        template<typename T>
+        void NodalTriElec<T>::CalculateWeights()
         {
             // No weights computed
         }
 
-        void NodalTriElec::CalculateDerivMatrix()
+        template<typename T>
+        void NodalTriElec<T>::CalculateDerivMatrix()
         {
             // No derivative matrix computed
         }
 
-        boost::shared_ptr< Points<double> > NodalTriElec::Create(const PointsKey &key)
+        template<typename T>
+        boost::shared_ptr<typename NodalTriElec<T>::PointsBaseType> NodalTriElec<T>::Create(const PointsKey &key)
         {
-            boost::shared_ptr< Points<double> > returnval(new NodalTriElec(key));
+            boost::shared_ptr<typename NodalTriElec<T>::PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<NodalTriElec<T> >(key));
             returnval->Initialize();
             return returnval;
         }
 
-        void NodalTriElec::NodalPointReorder2d()
+        template<typename T>
+        void NodalTriElec<T>::NodalPointReorder2d()
         {
             int istart,iend,isum=0;
             const int numvert = 3;

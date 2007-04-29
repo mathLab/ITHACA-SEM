@@ -41,6 +41,7 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/BasicUtils/NekManager.hpp>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 namespace Nektar
 {
@@ -216,38 +217,38 @@ namespace Nektar
                 return m_pointsKey.GetPointsType();
             }
 
-            inline SharedArray<const DataType> GetZ() const
+            inline typename Nek1DConstSharedArray<DataType>::type GetZ() const
             {
-                return SharedArray<const DataType>(m_points[0]);
+                return m_points[0];
             }
 
-            inline SharedArray<const DataType> GetW() const 
+            inline typename Nek1DConstSharedArray<DataType>::type GetW() const 
             {
-                return SharedArray<const DataType>(m_weights); 
+                return m_weights; 
             } 
 
-            inline void GetZW(SharedArray<const DataType> &z,
-                              SharedArray<const DataType> &w) const 
+            inline void GetZW(typename Nek1DConstSharedArray<DataType>::type &z,
+                typename Nek1DConstSharedArray<DataType>::type &w) const 
             {
                 z = m_points[0];
                 w = m_weights;
             }
 
-            inline void GetPoints(SharedArray<const DataType> &x) const
+            inline void GetPoints(Nek1DConstSharedArray<DataType> &x) const
             {
                 x = m_points[0];
             }
 
-            inline void GetPoints(SharedArray<const DataType> &x,
-                                  SharedArray<const DataType> &y) const
+            inline void GetPoints(Nek1DConstSharedArray<DataType> &x,
+                                  Nek1DConstSharedArray<DataType> &y) const
             {
                 x = m_points[0];
                 y = m_points[1];
             }
 
-            inline void GetPoints(SharedArray<const DataType> &x,
-                                  SharedArray<const DataType> &y,
-                                  SharedArray<const DataType> &z) const
+            inline void GetPoints(Nek1DConstSharedArray<DataType> &x,
+                                  Nek1DConstSharedArray<DataType> &y,
+                                  Nek1DConstSharedArray<DataType> &z) const
             {
                 x = m_points[0];
                 y = m_points[1];
@@ -260,13 +261,13 @@ namespace Nektar
             }
 
             virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)=0;
-            virtual const MatrixSharedPtrType GetI(SharedArray<const NekDouble> x) = 0;
-            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, SharedArray<const NekDouble> x) = 0;
+            virtual const MatrixSharedPtrType GetI(Nek1DConstSharedArray<DataType> &x) = 0;
+            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, Nek1DConstSharedArray<DataType> &x) = 0;
 
         protected:
             PointsKey m_pointsKey;
-            SharedArray< SharedArray<DataType> > m_points;
-            SharedArray<DataType> m_weights;
+            typename Nek1DSharedArray<DataType>::type m_points[3];
+            typename Nek1DSharedArray<DataType>::type m_weights;
             MatrixSharedPtrType m_derivmatrix;
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_InterpManager;
 
@@ -275,23 +276,21 @@ namespace Nektar
                 unsigned int pointsDim = GetPointsDim();
                 unsigned int totNumPoints = GetTotNumPoints();
 
-                m_points = MemoryManager::AllocateSharedArray< SharedArray<DataType> >(pointsDim);
-
                 for (unsigned int i=0; i<pointsDim; ++i)
                 {
-                    m_points[i] = MemoryManager::AllocateSharedArray< DataType >(totNumPoints);
+                    m_points[i] = MemoryManager::AllocateSharedPtr<typename Nek1DArray<DataType>::type>(boost::extents[totNumPoints]);
                 }
             }
 
             virtual void CalculateWeights()
             {
-                m_weights =  MemoryManager::AllocateSharedArray<DataType>(GetTotNumPoints());
+                m_weights =  MemoryManager::AllocateSharedPtr<typename Nek1DArray<DataType>::type>(boost::extents[GetTotNumPoints()]);
             }
 
             virtual void CalculateDerivMatrix()
             {
                 int totNumPoints = GetTotNumPoints();
-                m_derivmatrix.reset(new NekMatrix<DataType>(totNumPoints,totNumPoints));
+                m_derivmatrix.reset(MemoryManager::Allocate<NekMatrix<DataType> >(totNumPoints,totNumPoints));
             }
 
             Points(const PointsKey &key):m_pointsKey(key)

@@ -47,31 +47,36 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        void NodalTetElec::CalculatePoints()
+        template<typename T>
+        void NodalTetElec<T>::CalculatePoints()
         {
             // Allocate the storage for points
             Points<double>::CalculatePoints();
             ASSERTL0(false, "3D Point Expansion Not Implemented Yet");
         }
 
-        void NodalTetElec::CalculateWeights()
+        template<typename T>
+        void NodalTetElec<T>::CalculateWeights()
         {
             // No weights computed
         }
 
-        void NodalTetElec::CalculateDerivMatrix()
+        template<typename T>
+        void NodalTetElec<T>::CalculateDerivMatrix()
         {
             // No derivative matrix computed
         }
 
-        boost::shared_ptr< Points<double> > NodalTetElec::Create(const PointsKey &key)
+        template<typename T>
+        boost::shared_ptr< Points<T> > NodalTetElec<T>::Create(const PointsKey &key)
         {
-            boost::shared_ptr< Points<double> > returnval(new NodalTetElec(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<NodalTetElec<T> >(key));
             returnval->Initialize();
             return returnval;
         }
 
-        void NodalTetElec::NodalPointReorder3d()
+        template<typename T>
+        void NodalTetElec<T>::NodalPointReorder3d()
         {
         }     
 
@@ -80,5 +85,5 @@ namespace Nektar
 
 
 /**
-* %Log%
+* $Log$
 */

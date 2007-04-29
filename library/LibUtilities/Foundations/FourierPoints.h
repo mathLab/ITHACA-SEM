@@ -47,23 +47,21 @@ namespace Nektar
 {
 	namespace LibUtilities 
 	{
-        template <typename T>
-		class FourierPoints: public Points<T>
+		class FourierPoints: public Points<NekDouble>
 		{
 		public:
-		    typedef Points<T> PointsBaseType;
+		    typedef Points<NekDouble> PointsBaseType;
 			virtual ~FourierPoints()
 			{
 			}            
 
 			static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
-			boost::shared_ptr< NekMatrix<T> > CreateMatrix(const PointsKey &pkey);
+			boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
 
             const MatrixSharedPtrType GetI(const PointsKey &pkey);
-            const MatrixSharedPtrType GetI(typename Nek1DConstSharedArray<T>::type &x);
-            const MatrixSharedPtrType GetI(unsigned int numpoints, typename Nek1DConstSharedArray<T>::type &x);
+            const MatrixSharedPtrType GetI(ConstNekDouble1DSharedArray x);
+            const MatrixSharedPtrType GetI(unsigned int numpoints, ConstNekDouble1DSharedArray x);
 
-		protected:
 			FourierPoints(const PointsKey &key):PointsBaseType(key)
 			{
 				m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
@@ -103,8 +101,8 @@ namespace Nektar
 			void CalculateWeights();
 			void CalculateDerivMatrix();
 
-            void CalculateInterpMatrix(unsigned int npts, typename Nek1DConstSharedArray<T>::type xpoints, typename Nek1DSharedArray<T>::type interp);
-			double PeriodicSincFunction(const T x, const T h);
+            void CalculateInterpMatrix(unsigned int npts, Nek1DConstSharedArray<NekDouble>::type xpoints, Nek1DSharedArray<NekDouble>::type interp);
+			double PeriodicSincFunction(const NekDouble x, const NekDouble h);
 		}; // class FourierPoints
 	} // end of namespace
 } // end of namespace 

@@ -46,8 +46,7 @@ namespace Nektar
     namespace LibUtilities 
     {
 
-        template<typename T>
-        void FourierPoints<T>::CalculatePoints()
+        void FourierPoints::CalculatePoints()
         {
             // Allocate the storage for points
             PointsBaseType::CalculatePoints();
@@ -69,8 +68,7 @@ namespace Nektar
             }
         }
 
-        template<typename T>
-        void FourierPoints<T>::CalculateWeights()
+        void FourierPoints::CalculateWeights()
         {
             // Allocate the storage for points
             PointsBaseType::CalculateWeights();
@@ -89,11 +87,10 @@ namespace Nektar
             }
         }
 
-        template<typename T>
-        void FourierPoints<T>::CalculateDerivMatrix()
+        void FourierPoints::CalculateDerivMatrix()
         {
             //// Allocate the derivative matrix.
-            Points<double>::CalculateDerivMatrix();
+            Points<NekDouble>::CalculateDerivMatrix();
 
             unsigned int npts = m_pointsKey.GetNumPoints();
 
@@ -116,10 +113,9 @@ namespace Nektar
             }           
         }
 
-        template<typename T>
-        boost::shared_ptr<typename FourierPoints<T>::PointsBaseType> FourierPoints<T>::Create(const PointsKey &key)
+        boost::shared_ptr<Points<NekDouble> > FourierPoints::Create(const PointsKey &key)
         {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<FourierPoints<T> >(key));
+            boost::shared_ptr<Points<NekDouble> > returnval(MemoryManager::AllocateSharedPtr<FourierPoints>(key));
 
             returnval->Initialize();
 
@@ -127,11 +123,10 @@ namespace Nektar
         }
 
 
-        template<typename T>
-        boost::shared_ptr< NekMatrix<T> > FourierPoints<T>::CreateMatrix(const PointsKey &pkey)
+        boost::shared_ptr< NekMatrix<NekDouble> > FourierPoints::CreateMatrix(const PointsKey &pkey)
         {
             int numpoints = pkey.GetNumPoints();
-            typename Nek1DConstSharedArray<T>::type xpoints;
+            ConstNekDouble1DSharedArray xpoints;
 
             PointsManager()[pkey]->GetPoints(xpoints);
 
@@ -139,16 +134,14 @@ namespace Nektar
             return GetI(numpoints, xpoints);
         }
 
-        template<typename T>
-        const boost::shared_ptr<NekMatrix<T> > FourierPoints<T>::GetI(const PointsKey& pkey)
+        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(const PointsKey& pkey)
         {
             ASSERTL0(pkey.GetPointsDim()==1, "Fourier Points can only interp to other 1d point distributions");
 
             return m_InterpManager[pkey];
         }
 
-        template<typename T>
-        const boost::shared_ptr<NekMatrix<T> > FourierPoints<T>::GetI(typename Nek1DConstSharedArray<T>::type &x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(ConstNekDouble1DSharedArray x)
         {
             int numpoints = 1;
 
@@ -156,33 +149,30 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        template<typename T>
-        const boost::shared_ptr<NekMatrix<T> > FourierPoints<T>::GetI(unsigned int numpoints, typename Nek1DConstSharedArray<T>::type &x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(unsigned int numpoints, ConstNekDouble1DSharedArray x)
         {
-            Nek1DSharedArray<T> interp = MemoryManager::AllocateSharedPtr<Nek1DArray<T> >(boost::extents[GetNumPoints()*numpoints]);
+            NekDouble1DSharedArray interp = MemoryManager::AllocateSharedPtr<NekDouble1DArray>(boost::extents[GetNumPoints()*numpoints]);
 
             CalculateInterpMatrix(numpoints, x, interp);
 
-            boost::shared_ptr< NekMatrix<T> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<T> >(numpoints,GetNumPoints(),interp.get()));
+            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<NekDouble> >(numpoints,GetNumPoints(),interp->data()));
 
             return returnval;
         }
 
-        template<typename T>
-        void FourierPoints<T>::CalculateInterpMatrix(unsigned int npts, typename Nek1DConstSharedArray<T>::type xpoints, typename Nek1DSharedArray<T>::type interp)
+        void FourierPoints::CalculateInterpMatrix(unsigned int npts, ConstNekDouble1DSharedArray xpoints, NekDouble1DSharedArray interp)
         {
-            const T h = 2.0/m_pointsKey.GetNumPoints();
+            const NekDouble h = 2.0/m_pointsKey.GetNumPoints();
             for(unsigned int i=0;i<npts;++i)
             {
                 for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
                 {
-                    (*interp)[i*m_pointsKey.GetNumPoints()+j] = PeriodicSincFunction(M_PI*(xpoints[i]-(*m_points[0])[j]),h);
+                    (*interp)[i*m_pointsKey.GetNumPoints()+j] = PeriodicSincFunction(M_PI*((*xpoints)[i]-(*m_points[0])[j]),h);
                 }
             }
         }
 
-        template<typename T>
-        double FourierPoints<T>::PeriodicSincFunction(const T x, const T h)
+        double FourierPoints::PeriodicSincFunction(const NekDouble x, const NekDouble h)
         {
             // This formula is based upon a mapped version of 
             // the periodic sinc presented in Trefethen's "Spectral Methods

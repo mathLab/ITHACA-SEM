@@ -234,21 +234,21 @@ namespace Nektar
                 w = m_weights;
             }
 
-            inline void GetPoints(Nek1DConstSharedArray<DataType> &x) const
+            inline void GetPoints(typename Nek1DConstSharedArray<DataType>::type &x) const
             {
                 x = m_points[0];
             }
 
-            inline void GetPoints(Nek1DConstSharedArray<DataType> &x,
-                                  Nek1DConstSharedArray<DataType> &y) const
+            inline void GetPoints(typename Nek1DConstSharedArray<DataType>::type &x,
+                                  typename Nek1DConstSharedArray<DataType>::type &y) const
             {
                 x = m_points[0];
                 y = m_points[1];
             }
 
-            inline void GetPoints(Nek1DConstSharedArray<DataType> &x,
-                                  Nek1DConstSharedArray<DataType> &y,
-                                  Nek1DConstSharedArray<DataType> &z) const
+            inline void GetPoints(typename Nek1DConstSharedArray<DataType>::type &x,
+                                  typename Nek1DConstSharedArray<DataType>::type &y,
+                                  typename Nek1DConstSharedArray<DataType>::type &z) const
             {
                 x = m_points[0];
                 y = m_points[1];
@@ -261,8 +261,8 @@ namespace Nektar
             }
 
             virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)=0;
-            virtual const MatrixSharedPtrType GetI(Nek1DConstSharedArray<DataType> &x) = 0;
-            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, Nek1DConstSharedArray<DataType> &x) = 0;
+            virtual const MatrixSharedPtrType GetI(typename Nek1DConstSharedArray<DataType>::type x) = 0;
+            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, typename Nek1DConstSharedArray<DataType>::type x) = 0;
 
         protected:
             PointsKey m_pointsKey;

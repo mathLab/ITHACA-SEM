@@ -44,7 +44,7 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        typedef NekManager<PointsKey, Points<double>, PointsKey::opLess> PointsManagerT;
+        typedef NekManager<PointsKey, Points<NekDouble>, PointsKey::opLess> PointsManagerT;
         PointsManagerT &PointsManager(void);
 
         typedef NekManager<BasisKey, Basis, BasisKey::opLess> BasisManagerT;
@@ -56,6 +56,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.h,v $
+Revision 1.8  2007/02/06 17:12:31  jfrazier
+Fixed a problem with global initialization in libraries.
+
 Revision 1.7  2007/02/01 23:28:42  jfrazier
 Basis is working, but not fully tested.
 

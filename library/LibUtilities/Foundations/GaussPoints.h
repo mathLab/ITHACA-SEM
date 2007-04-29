@@ -43,29 +43,29 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        template<typename T>
-        class GaussPoints: public Points<T>
+        class GaussPoints: public Points<NekDouble>
         {
         public:
-            typedef Points<T> PointsBaseType;
+            typedef Points<NekDouble> PointsBaseType;
 
             virtual ~GaussPoints()
             {
             }            
 
-            static boost::shared_ptr< PointsBaseType > Create(const PointsKey &pkey);
-            boost::shared_ptr< NekMatrix<T> > CreateMatrix(const PointsKey &pkey);
+            static boost::shared_ptr< Points<NekDouble> > Create(const PointsKey &pkey);
 
-            const boost::shared_ptr<NekMatrix<T> > GetI(const PointsKey &pkey);
-            const boost::shared_ptr<NekMatrix<T> > GetI(typename Nek1DConstSharedArray<T>::type x);
-            const boost::shared_ptr<NekMatrix<T> > GetI(unsigned int numpoints, typename Nek1DConstSharedArray<T>::type x);
+            boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
 
-        protected:
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(Nek1DConstSharedArray<NekDouble>::type x);
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, Nek1DConstSharedArray<NekDouble>::type x);
+
             GaussPoints(const PointsKey &pkey):PointsBaseType(pkey)
             {
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
@@ -108,7 +108,7 @@ namespace Nektar
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
-            void CalculateInterpMatrix(unsigned int npts, typename Nek1DConstSharedArray<T>::type xpoints, typename Nek1DSharedArray<T>::type interp);
+            void CalculateInterpMatrix(unsigned int npts, Nek1DConstSharedArray<NekDouble>::type xpoints, Nek1DSharedArray<NekDouble>::type interp);
         }; // class GaussPoints
     } // end of namespace
 } // end of namespace 

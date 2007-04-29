@@ -394,14 +394,14 @@ namespace Nektar
 
     };
 
-    inline NekDoubleSharedArray  GetDoubleTmpSpace(const int size)
+    inline NekDouble1DSharedArray GetDoubleTmpSpace(const int size)
     {
-        return MemoryManager::AllocateSharedArray<NekDouble>(size);
+        return MemoryManager::AllocateSharedPtr<NekDouble1DArray>(boost::extents[size]);
     }
     
-    inline NekIntSharedArray  GetIntTmpSpace(const int size)
+    inline Nek1DSharedArray<int>::type GetIntTmpSpace(const int size)
     {
-        return MemoryManager::AllocateSharedArray<int>(size);
+        return MemoryManager::AllocateSharedPtr<Nek1DArray<int>::type >(boost::extents[size]);
     }
     
 }
@@ -411,6 +411,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.9  2007/04/06 04:36:21  bnelson
+    Updated for const-correctness.
+
     Revision 1.8  2007/03/29 18:42:58  bnelson
     Replaced boost::shared_array with Nektar::SharedArray and fixed several problems where the compile time array size was being used instead of the run time array size.
 
@@ -418,7 +421,7 @@ namespace Nektar
     Fixed double to NekDouble casting in GetDoubleTmpSpace
 
     Revision 1.6  2007/03/20 16:58:41  sherwin
-    Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+    Update to use NekDouble1DSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 
     Revision 1.5  2007/01/29 01:27:49  bnelson
     Added additional Allocate methods which take more parameters for the constructor.

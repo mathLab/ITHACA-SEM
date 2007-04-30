@@ -118,7 +118,7 @@ namespace Nektar
         void GaussPoints::CalculateDerivMatrix()
         {
             // Allocate the derivative matrix.
-            Points<NekDouble>::CalculateDerivMatrix();
+            PointsBaseType::CalculateDerivMatrix();
 
             int numpoints = m_pointsKey.GetNumPoints();
             int totpoints = m_pointsKey.GetTotNumPoints();
@@ -180,8 +180,6 @@ namespace Nektar
             }
 
             std::copy(dmtemp,dmtemp+totpoints*totpoints,m_derivmatrix->begin());
-
-            delete[] dmtemp;
         }
 
         void GaussPoints::CalculateInterpMatrix(unsigned int npts, Nek1DConstSharedArray<NekDouble>::type xpoints, Nek1DSharedArray<NekDouble>::type interp)
@@ -291,6 +289,9 @@ namespace Nektar
 
 /**
 * $Log: GaussPoints.cpp,v $
+* Revision 1.16  2007/04/29 03:09:47  jfrazier
+* More conversion to multi_arrays.
+*
 * Revision 1.15  2007/04/29 00:31:57  jfrazier
 * Updated to use multi_arrays.
 *

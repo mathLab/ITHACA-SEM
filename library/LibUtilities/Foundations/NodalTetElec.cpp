@@ -47,36 +47,31 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        template<typename T>
-        void NodalTetElec<T>::CalculatePoints()
+        void NodalTetElec::CalculatePoints()
         {
             // Allocate the storage for points
             Points<double>::CalculatePoints();
             ASSERTL0(false, "3D Point Expansion Not Implemented Yet");
         }
 
-        template<typename T>
-        void NodalTetElec<T>::CalculateWeights()
+        void NodalTetElec::CalculateWeights()
         {
             // No weights computed
         }
 
-        template<typename T>
-        void NodalTetElec<T>::CalculateDerivMatrix()
+        void NodalTetElec::CalculateDerivMatrix()
         {
             // No derivative matrix computed
         }
 
-        template<typename T>
-        boost::shared_ptr< Points<T> > NodalTetElec<T>::Create(const PointsKey &key)
+        boost::shared_ptr<NodalTetElec::PointsBaseType> NodalTetElec::Create(const PointsKey &key)
         {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<NodalTetElec<T> >(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<NodalTetElec>(key));
             returnval->Initialize();
             return returnval;
         }
 
-        template<typename T>
-        void NodalTetElec<T>::NodalPointReorder3d()
+        void NodalTetElec::NodalPointReorder3d()
         {
         }     
 
@@ -85,5 +80,8 @@ namespace Nektar
 
 
 /**
-* $Log$
+* $Log: NodalTetElec.cpp,v $
+* Revision 1.5  2007/04/29 00:31:57  jfrazier
+* Updated to use multi_arrays.
+*
 */

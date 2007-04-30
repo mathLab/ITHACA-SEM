@@ -48,53 +48,50 @@ namespace Nektar
     namespace LibUtilities 
     {
  
-        template<typename T>
-        class NodalTetElec: public Points<T>
+        class NodalTetElec: public Points<NekDouble>
         {
         public:
-            typedef Points<T> PointsBaseType;
+            typedef Points<NekDouble> PointsBaseType;
 
             virtual ~NodalTetElec()
             {
             }
 
-            static boost::shared_ptr< Points<T> > Create(const PointsKey &key);
+            static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
 
 
-            const boost::shared_ptr<NekMatrix<T> > GetI(const PointsKey &pkey)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
             {
                 ASSERTL0(false, "NodalTetElec Method not implemented");
-                boost::shared_ptr<NekMatrix<T> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<T> >());
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<NekDouble> >());
 
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<T> > GetI(typename Nek1DConstSharedArray<T>::type x)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(ConstNekDouble1DSharedArray x)
             {
                 ASSERTL0(false, "NodalTetElec Method not implemented");
 
-                boost::shared_ptr< NekMatrix<T> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<T> >());
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<NekDouble> >());
 
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<T> > GetI(unsigned int numpoints, typename Nek1DConstSharedArray<T>::type x)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, ConstNekDouble1DSharedArray x)
             {
                 ASSERTL0(false, "NodalTetElec Method not implemented");
 
-                boost::shared_ptr< NekMatrix<T> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<T> >());
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<NekDouble> >());
 
                 return returnval;
            }
 
-        protected:
-
-        private:
-            NodalTetElec():PointsBaseType(NullPointsKey)
+            NodalTetElec(const PointsKey &key):PointsBaseType(key)
             {
             }
 
-            NodalTetElec(const PointsKey &key):PointsBaseType(key)
+        private:
+            NodalTetElec():PointsBaseType(NullPointsKey)
             {
             }
 

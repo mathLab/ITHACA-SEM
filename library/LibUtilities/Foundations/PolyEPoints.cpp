@@ -45,8 +45,7 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-        template<typename T>
-        void PolyEPoints<T>::CalculatePoints()
+        void PolyEPoints::CalculatePoints()
         {
             // Allocate the storage for points
             PointsBaseType::CalculatePoints();
@@ -54,20 +53,19 @@ namespace Nektar
             unsigned int npts = m_pointsKey.GetNumPoints();
             if(npts==1)
             {
-                m_points[0][0] = 0.0;
+                (*m_points[0])[0] = 0.0;
             }
             else
             {
-                T dx = 2.0/(T)(npts-1);
+                NekDouble dx = 2.0/(NekDouble)(npts-1);
                 for(unsigned int i=0;i<npts;++i)
                 {
-                    m_points[0][i] = -1.0 + i*dx;
+                    (*m_points[0])[i] = -1.0 + i*dx;
                 }
             }
         }
 
-        template<typename T>
-        void PolyEPoints<T>::CalculateWeights()
+        void PolyEPoints::CalculateWeights()
         {
             // Allocate the storage for points
             PointsBaseType::CalculateWeights();
@@ -75,29 +73,28 @@ namespace Nektar
             unsigned int npts = m_pointsKey.GetNumPoints();
             if(npts==1)
             {
-                m_weights[0] = 2.0; //midpoint rule
+                (*m_weights)[0] = 2.0; //midpoint rule
             }
             else
             {
                 PointsKey gaussKey(npts, eGaussLobattoLegendre);
                 boost::shared_ptr<PointsBaseType> ptr = PointsManager()[gaussKey];
-                typename Nek1DConstSharedArray<T>::type z;
-                typename Nek1DConstSharedArray<T>::type w;
+                ConstNekDouble1DSharedArray z;
+                ConstNekDouble1DSharedArray w;
 
                 ptr->GetZW(z,w);
                 for(unsigned int i=0; i<npts;++i)
                 {
-                    m_weights[i] = 0.0;
+                    (*m_weights)[i] = 0.0;
                     for(unsigned j=0;j<npts;++j)
                     {
-                        m_weights[i] += w[j]*LagrangePoly(z[j],i,npts,m_points[0]);
+                        (*m_weights)[i] += (*w)[j]*LagrangePoly((*z)[j],i,npts,m_points[0]);
                     }
                 }
             }
         }
 
-        template<typename T>
-        void PolyEPoints<T>::CalculateDerivMatrix()
+        void PolyEPoints::CalculateDerivMatrix()
         {
             // Allocate the derivative matrix.
             PointsBaseType::CalculateDerivMatrix();
@@ -106,48 +103,44 @@ namespace Nektar
             {
                 for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
                 {
-                    (*m_derivmatrix)(i,j) = LagrangePolyDeriv(m_points[0][i],j,m_pointsKey.GetNumPoints(),m_points[0]);
+                    (*m_derivmatrix)(i,j) = LagrangePolyDeriv((*m_points[0])[i],j,m_pointsKey.GetNumPoints(),m_points[0]);
                 }
             }
         }
 
-        template<typename T>
-        void PolyEPoints<T>::CalculateInterpMatrix(unsigned int npts, typename Nek1DConstSharedArray<T>::type xpoints, typename Nek1DSharedArray<T>::type interp)
+        void PolyEPoints::CalculateInterpMatrix(unsigned int npts, ConstNekDouble1DSharedArray xpoints, NekDouble1DSharedArray interp)
         {
             for(unsigned int i=0;i<npts;++i)
             {
                 for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
                 {
-                    interp[i*m_pointsKey.GetNumPoints()+j] = LagrangePoly((*xpoints)[i],j,m_pointsKey.GetNumPoints(),m_points[0]);
+                    (*interp)[i*m_pointsKey.GetNumPoints()+j] = LagrangePoly((*xpoints)[i],j,m_pointsKey.GetNumPoints(),m_points[0]);
                 }
             }
         }
 
-        template<typename T>
-        boost::shared_ptr<typename PolyEPoints<T>::PointsBaseType> PolyEPoints<T>::Create(const PointsKey &key)
+        boost::shared_ptr<PolyEPoints::PointsBaseType> PolyEPoints::Create(const PointsKey &key)
         {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<PolyEPoints<T> >(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<PolyEPoints>(key));
 
             returnval->Initialize();
 
             return returnval;
         }
 
-        template<typename T>
-        const boost::shared_ptr<NekMatrix<T> > PolyEPoints<T>::GetI(const PointsKey &pkey)
+        const boost::shared_ptr<NekMatrix<NekDouble> > PolyEPoints::GetI(const PointsKey &pkey)
         {
             ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
 
             int numpoints = pkey.GetNumPoints();
-            Nek1DConstSharedArray<T> xpoints;
+            ConstNekDouble1DSharedArray xpoints;
 
             PointsManager()[pkey]->GetPoints(xpoints);
 
             return GetI(numpoints, xpoints);
         }
 
-        template<typename T>
-        const boost::shared_ptr<NekMatrix<T> > PolyEPoints<T>::GetI(typename Nek1DConstSharedArray<T>::type x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > PolyEPoints::GetI(ConstNekDouble1DSharedArray x)
         {
             int numpoints = 1;
 
@@ -155,56 +148,52 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        template<typename T>
-        const boost::shared_ptr<NekMatrix<T> > PolyEPoints<T>::GetI(unsigned int numpoints, typename Nek1DConstSharedArray<T>::type x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > PolyEPoints::GetI(unsigned int numpoints, ConstNekDouble1DSharedArray x)
         {
-            Nek1DSharedArray<T> interp = MemoryManager::AllocateSharedArray<T>(GetNumPoints()*numpoints);
+            NekDouble1DSharedArray interp = MemoryManager::AllocateSharedPtr<NekDouble1DArray>(boost::extents[GetNumPoints()*numpoints]);
 
             CalculateInterpMatrix(numpoints, x, interp);
 
-            boost::shared_ptr< NekMatrix<T> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<T> >(numpoints,GetNumPoints(),interp.get()));
+            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<NekDouble> >(numpoints,GetNumPoints(),interp->data()));
 
             return returnval;
         }
 
 
-        template<typename T>
-        T PolyEPoints<T>::LagrangeInterpolant(T x, int npts, typename Nek1DConstSharedArray<T>::type xpts,
-            typename Nek1DConstSharedArray<T>::type funcvals)
+        NekDouble PolyEPoints::LagrangeInterpolant(NekDouble x, int npts, ConstNekDouble1DSharedArray xpts,
+            ConstNekDouble1DSharedArray funcvals)
         {
-            T sum = 0.0;
+            NekDouble sum = 0.0;
 
             for(int i=0;i<npts;++i)
             {
-                sum += funcvals[i]*LagrangePoly(x,i,npts,xpts);
+                sum += (*funcvals)[i]*LagrangePoly(x,i,npts,xpts);
             }
             return sum;
         }
 
 
-        template<typename T>
-        T PolyEPoints<T>::LagrangePoly(T x, int pt, int npts, typename Nek1DConstSharedArray<T>::type xpts)
+        NekDouble PolyEPoints::LagrangePoly(NekDouble x, int pt, int npts, ConstNekDouble1DSharedArray xpts)
         {
-            T h=1.0;
+            NekDouble h=1.0;
 
             for(int i=0;i<pt; ++i)
             {
-                h = h * (x - xpts[i])/(xpts[pt]-xpts[i]);
+                h = h * (x - (*xpts)[i])/((*xpts)[pt]-(*xpts)[i]);
             }
 
             for(int i=pt+1;i<npts;++i)
             {
-                h = h * (x - xpts[i])/(xpts[pt]-xpts[i]);
+                h = h * (x - (*xpts)[i])/((*xpts)[pt]-(*xpts)[i]);
             }
 
             return h;
         }
 
-        template<typename T>
-        T PolyEPoints<T>::LagrangePolyDeriv(T x, int pt, int npts, typename Nek1DConstSharedArray<T>::type xpts)
+        NekDouble PolyEPoints::LagrangePolyDeriv(NekDouble x, int pt, int npts, ConstNekDouble1DSharedArray xpts)
         {
-            T h;
-            T y=0.0;
+            NekDouble h;
+            NekDouble y=0.0;
 
             for(int j=0;j<npts;++j)
             {
@@ -217,9 +206,9 @@ namespace Nektar
                         {
                             if(i!=j)
                             {
-                                h = h*(x-xpts[i]);
+                                h = h*(x-(*xpts)[i]);
                             }
-                            h = h/(xpts[pt]-xpts[i]);
+                            h = h/((*xpts)[pt]-(*xpts)[i]);
                         }
                     }
                     y = y + h;

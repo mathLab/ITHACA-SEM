@@ -47,15 +47,14 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        template<typename T>
-        void NodalTriElec<T>::CalculatePoints()
+        void NodalTriElec::CalculatePoints()
         {
             // Allocate the storage for points
-            Points<double>::CalculatePoints();
+            PointsBaseType::CalculatePoints();
 
             int index=0,isum=0;
             const int offset = 3; //offset to match Datafile
-            T a,b,c;
+            NekDouble a,b,c;
             unsigned int numPoints = GetNumPoints();
 
             // initialize values
@@ -128,28 +127,24 @@ namespace Nektar
             ASSERTL1((isum==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
         }
 
-        template<typename T>
-        void NodalTriElec<T>::CalculateWeights()
+        void NodalTriElec::CalculateWeights()
         {
             // No weights computed
         }
 
-        template<typename T>
-        void NodalTriElec<T>::CalculateDerivMatrix()
+        void NodalTriElec::CalculateDerivMatrix()
         {
             // No derivative matrix computed
         }
 
-        template<typename T>
-        boost::shared_ptr<typename NodalTriElec<T>::PointsBaseType> NodalTriElec<T>::Create(const PointsKey &key)
+        boost::shared_ptr<NodalTriElec::PointsBaseType> NodalTriElec::Create(const PointsKey &key)
         {
-            boost::shared_ptr<typename NodalTriElec<T>::PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<NodalTriElec<T> >(key));
+            boost::shared_ptr<NodalTriElec::PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<NodalTriElec>(key));
             returnval->Initialize();
             return returnval;
         }
 
-        template<typename T>
-        void NodalTriElec<T>::NodalPointReorder2d()
+        void NodalTriElec::NodalPointReorder2d()
         {
             int istart,iend,isum=0;
             const int numvert = 3;
@@ -167,10 +162,10 @@ namespace Nektar
             {
                 for(int j=istart; j<iend-1; ++j)
                 {
-                    if(m_points[0][j+1] < m_points[0][j])
+                    if((*m_points[0])[j+1] < (*m_points[0])[j])
                     {
-                        std::swap(m_points[0][j+1], m_points[0][j]);
-                        std::swap(m_points[1][j+1], m_points[1][j]);
+                        std::swap((*m_points[0])[j+1], (*m_points[0])[j]);
+                        std::swap((*m_points[1])[j+1], (*m_points[1])[j]);
                     }
                 }
             }
@@ -183,10 +178,10 @@ namespace Nektar
             {
                 for(int j=istart;j<iend-1; ++j)
                 {
-                    if(m_points[0][j+1] > m_points[0][j])
+                    if((*m_points[0])[j+1] > (*m_points[0])[j])
                     {
-                        std::swap(m_points[0][j+1], m_points[0][j]);
-                        std::swap(m_points[1][j+1], m_points[1][j]);
+                        std::swap((*m_points[0])[j+1], (*m_points[0])[j]);
+                        std::swap((*m_points[1])[j+1], (*m_points[1])[j]);
                     }
                 }
             }
@@ -199,10 +194,10 @@ namespace Nektar
             {
                 for(int j=istart; j<iend-1; ++j)
                 {
-                    if(m_points[1][j+1] > m_points[1][j])
+                    if((*m_points[1])[j+1] > (*m_points[1])[j])
                     {
-                        std::swap(m_points[0][j+1], m_points[0][j]);
-                        std::swap(m_points[1][j+1], m_points[1][j]);
+                        std::swap((*m_points[0])[j+1], (*m_points[0])[j]);
+                        std::swap((*m_points[1])[j+1], (*m_points[1])[j]);
                     }
                 }
             }
@@ -214,5 +209,5 @@ namespace Nektar
 
 
 /**
-* %Log%
+* $Log$
 */

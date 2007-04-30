@@ -47,15 +47,14 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
-        template<typename T>
-        void NodalTriFekete<T>::CalculatePoints()
+        void NodalTriFekete::CalculatePoints()
         {
             // Allocate the storage for points
             PointsBaseType::CalculatePoints();
 
             int index=0,isum=0;
             const int offset = 3; //offset to match Datafile
-            T a,b,c;
+            NekDouble a,b,c;
             unsigned int numPoints = GetNumPoints();
 
             // initialize values
@@ -72,8 +71,8 @@ namespace Nektar
                     b = NodalTriFeketeData[index][4]; 
                     c = NodalTriFeketeData[index][5]; 
 
-                    m_points[0][isum] = 2.0*b - 1.0;
-                    m_points[1][isum] = 2.0*c - 1.0;
+                    (*m_points[0])[isum] = 2.0*b - 1.0;
+                    (*m_points[1])[isum] = 2.0*c - 1.0;
                     isum++;
                     continue;
                 }//end symmetry1
@@ -86,8 +85,8 @@ namespace Nektar
                         a = NodalTriFeketeData[index][offset+perm3A_2d[j][0]];
                         b = NodalTriFeketeData[index][offset+perm3A_2d[j][1]];
                         c = NodalTriFeketeData[index][offset+perm3A_2d[j][2]];
-                        m_points[0][isum] = 2.0*b - 1.0;
-                        m_points[1][isum] = 2.0*c - 1.0;
+                        (*m_points[0])[isum] = 2.0*b - 1.0;
+                        (*m_points[1])[isum] = 2.0*c - 1.0;
                         isum++;
                     }//end j
                     continue;
@@ -100,8 +99,8 @@ namespace Nektar
                         a = NodalTriFeketeData[index][offset+perm3B_2d[j][0]];
                         b = NodalTriFeketeData[index][offset+perm3B_2d[j][1]];
                         c = NodalTriFeketeData[index][offset+perm3B_2d[j][2]];
-                        m_points[0][isum] = 2.0*b - 1.0;
-                        m_points[1][isum] = 2.0*c - 1.0;
+                        (*m_points[0])[isum] = 2.0*b - 1.0;
+                        (*m_points[1])[isum] = 2.0*c - 1.0;
                         isum++;
                     }//end j
                     continue;   
@@ -115,8 +114,8 @@ namespace Nektar
                         a = NodalTriFeketeData[index][offset+perm6_2d[j][0]];
                         b = NodalTriFeketeData[index][offset+perm6_2d[j][1]];
                         c = NodalTriFeketeData[index][offset+perm6_2d[j][2]];
-                        m_points[0][isum] = 2.0*b - 1.0;
-                        m_points[1][isum] = 2.0*c - 1.0;
+                        (*m_points[0])[isum] = 2.0*b - 1.0;
+                        (*m_points[1])[isum] = 2.0*c - 1.0;
                         isum++;
                     }//end j
                     continue;   
@@ -128,28 +127,24 @@ namespace Nektar
             ASSERTL1((isum==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
         }
 
-        template<typename T>
-        void NodalTriFekete<T>::CalculateWeights()
+        void NodalTriFekete::CalculateWeights()
         {
             // No weights computed
         }
 
-        template<typename T>
-        void NodalTriFekete<T>::CalculateDerivMatrix()
+        void NodalTriFekete::CalculateDerivMatrix()
         {
             // No derivative matrix computed
         }
 
-        template<typename T>
-        boost::shared_ptr<typename NodalTriFekete<T>::PointsBaseType> NodalTriFekete<T>::Create(const PointsKey &key)
+        boost::shared_ptr<NodalTriFekete::PointsBaseType> NodalTriFekete::Create(const PointsKey &key)
         {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<NodalTriFekete<T> >(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<NodalTriFekete>(key));
             returnval->Initialize();
             return returnval;
         }
 
-        template<typename T>
-        void NodalTriFekete<T>::NodalPointReorder2d()
+        void NodalTriFekete::NodalPointReorder2d()
         {
             int istart,iend,isum=0;
             const int numvert = 3;
@@ -167,10 +162,10 @@ namespace Nektar
             {
                 for(int j=istart; j<iend-1; ++j)
                 {
-                    if(m_points[0][j+1] < m_points[0][j])
+                    if((*m_points[0])[j+1] < (*m_points[0])[j])
                     {
-                        std::swap(m_points[0][j+1], m_points[0][j]);
-                        std::swap(m_points[1][j+1], m_points[1][j]);
+                        std::swap((*m_points[0])[j+1], (*m_points[0])[j]);
+                        std::swap((*m_points[1])[j+1], (*m_points[1])[j]);
                     }
                 }
             }
@@ -183,10 +178,10 @@ namespace Nektar
             {
                 for(int j=istart;j<iend-1; ++j)
                 {
-                    if(m_points[0][j+1] > m_points[0][j])
+                    if((*m_points[0])[j+1] > (*m_points[0])[j])
                     {
-                        std::swap(m_points[0][j+1], m_points[0][j]);
-                        std::swap(m_points[1][j+1], m_points[1][j]);
+                        std::swap((*m_points[0])[j+1], (*m_points[0])[j]);
+                        std::swap((*m_points[1])[j+1], (*m_points[1])[j]);
                     }
                 }
             }
@@ -199,10 +194,10 @@ namespace Nektar
             {
                 for(int j=istart; j<iend-1; ++j)
                 {
-                    if(m_points[1][j+1] > m_points[1][j])
+                    if((*m_points[1])[j+1] > (*m_points[1])[j])
                     {
-                        std::swap(m_points[0][j+1], m_points[0][j]);
-                        std::swap(m_points[1][j+1], m_points[1][j]);
+                        std::swap((*m_points[0])[j+1], (*m_points[0])[j]);
+                        std::swap((*m_points[1])[j+1], (*m_points[1])[j]);
                     }
                 }
             }
@@ -213,5 +208,8 @@ namespace Nektar
 } // end of namespace stdregion
 
 /**
-* $Log$
+* $Log: NodalTriFekete.cpp,v $
+* Revision 1.10  2007/04/29 00:31:57  jfrazier
+* Updated to use multi_arrays.
+*
 */

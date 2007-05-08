@@ -33,7 +33,7 @@
 // Author: Sophia Han
 //
 ///////////////////////////////////////////////////////////////////////////////
-    
+#undef NEKTAR_MEMORY_POOL_ENABLED    
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -50,6 +50,7 @@
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/NodalTriFekete.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+
 
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
@@ -443,7 +444,7 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                 long double (*f)(long double, int) = fourierFunc;
                
                 for(int nPts = 2; nPts<=50; nPts += 2){
-                    long double epsilon = 1.5 * numeric_limits<double>::epsilon();
+                    long double epsilon = nPts* numeric_limits<double>::epsilon();
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     array1DPtr zPtr = points->GetZ();

@@ -40,70 +40,84 @@
 
 #include <boost/thread/tss.hpp>
 #include <boost/pool/pool.hpp>
+#include <loki/Singleton.h>
 
 namespace Nektar
 {
-    /// \brief A memory pool which exists on a thread by thread basis.
-    /// \param ByteSize The number of bytes in each chunk allocated by the pool.
-    ///
-    /// Provides a simple, thread specific memory pool that is based on byte size.
-    /// The pool allocates and deallocates raw memory - the user is responsible for
-    /// calling appropriate constructors/destructors when allocating objects.
-    ///
-    /// Example:
-    ///
-    /// \code
-    /// ThreadSpecificPool<sizeof(TestClass)> pool;
-    /// void* memory = pool.allocate();
-    ///
-    /// // Construct the object in the memory returned by the pool.
-    /// TestClass* t = new (memory) TestClass;
-    ///
-    /// // Do stuff with t.
-    ///
-    /// // Destruct t and return it.
-    /// t->~TestClass();
-    /// pool.deallocate(t);
-    /// \endcode
-    template<unsigned int ByteSize>
-    class ThreadSpecificPool
+    namespace detail
     {
-        public:
-            /// \brief Allocate a block of memory of size ByteSize.
-            /// \throw std::bad_alloc if memory is exhausted.
-            static void* Allocate()
-            {
-                // Check to see if we've created the pool for this thread.
-                // If not, create one.  Note that the get method here will
-                // always return NULL the first time allocate is called on
-                // each thread.
-                if( !m_pool.get() )
+        /// \brief A memory pool which exists on a thread by thread basis.
+        /// \param ByteSize The number of bytes in each chunk allocated by the pool.
+        ///
+        /// Provides a simple, thread specific memory pool that is based on byte size.
+        /// The pool allocates and deallocates raw memory - the user is responsible for
+        /// calling appropriate constructors/destructors when allocating objects.
+        ///
+        /// Example:
+        ///
+        /// \code
+        /// ThreadSpecificPool<sizeof(TestClass)> pool;
+        /// void* memory = pool.allocate();
+        ///
+        /// // Construct the object in the memory returned by the pool.
+        /// TestClass* t = new (memory) TestClass;
+        ///
+        /// // Do stuff with t.
+        ///
+        /// // Destruct t and return it.
+        /// t->~TestClass();
+        /// pool.deallocate(t);
+        /// \endcode
+        template<unsigned int ByteSize>
+        class ThreadSpecificPool
+        {
+            public:
+                ThreadSpecificPool() :
+                    m_pool()
                 {
+                    // We can do the new in the constructor list because the thread specific 
+                    // pointer doesn't have a supporting constructor.
                     m_pool.reset(new boost::pool<>(ByteSize));
                 }
 
-                return m_pool->malloc();
-            }
+                ~ThreadSpecificPool()
+                {
+                    // The documentation isn't particularly clear if delete needs to be called manually
+                    // or if the thread specific pointer will call delete for me.  Looking through the 
+                    // boost code doesn't make it any clearer. 
+                }
 
-            /// \brief Deallocate memory claimed by an earlier call to allocate.
-            ///
-            /// \attention It is an error to deallocate memory not allocated
-            /// from this pool.  Doing this will result in undefined behavior.
-            static void Deallocate(const void* p)
-            {
-                if( m_pool.get() )
+                /// \brief Allocate a block of memory of size ByteSize.
+                /// \throw std::bad_alloc if memory is exhausted.
+                void* Allocate()
+                {
+                    return m_pool->malloc();
+                }
+
+                /// \brief Deallocate memory claimed by an earlier call to allocate.
+                ///
+                /// \attention It is an error to deallocate memory not allocated
+                /// from this pool.  Doing this will result in undefined behavior.
+                void Deallocate(const void* p)
                 {
                     m_pool->free(const_cast<void*>(p));
                 }
-            }
 
 
-        private:
-            static boost::thread_specific_ptr<boost::pool<> > m_pool;
-    };
+            private:
+                boost::thread_specific_ptr<boost::pool<> > m_pool;
+        };
+    }
 
+   
     template<unsigned int ByteSize>
-    boost::thread_specific_ptr<boost::pool<> > ThreadSpecificPool<ByteSize>::m_pool;
+    class MemPool
+    {
+        public:
+            typedef Loki::SingletonHolder<Nektar::detail::ThreadSpecificPool<ByteSize> ,
+                Loki::CreateUsingNew,
+                Loki::PhoenixSingleton > Type;
+    };
 }
 
 
@@ -112,6 +126,9 @@ namespace Nektar
 
 /**
     $Log: ThreadSpecificPool.hpp,v $
+    Revision 1.2  2007/04/06 04:36:22  bnelson
+    Updated for const-correctness.
+
     Revision 1.1  2006/06/01 09:17:24  kirby
     *** empty log message ***
 

@@ -40,11 +40,6 @@
 
 namespace Nektar
 {
-    // Null defintion of Array<OneD, NekDouble>
-//     static Array<OneD, NekDouble> NullNekDouble1DSharedArray;
-//     static NekDouble2DSharedArray NullNekDouble2DSharedArray;
-//     static NekDouble3DSharedArray NullNekDouble3DSharedArray;
-    
 
 } //end of namespace 
 
@@ -52,6 +47,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivConsts.hpp,v $
+Revision 1.5  2007/05/14 23:24:40  bnelson
+Removed unneeded code.
+
 Revision 1.4  2007/04/26 21:51:54  jfrazier
 Converted to new multi_array implementation.
 

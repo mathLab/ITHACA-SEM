@@ -44,100 +44,12 @@ namespace Nektar
 {
     typedef double NekDouble;
 
-    // Multi_array and multi_array_ref type defines, and their
-    // shared_ptr versions.  The ref version is used to create
-    // a multi_array that uses memory not owned by the multi_array.
-
-    template<typename T>
-    struct Nek1DArray
+    enum Dimension
     {
-        typedef boost::multi_array<T, 1> type;
+        OneD = 1,
+        TwoD = 2,
+        ThreeD = 3
     };
-
-    template<typename T>
-    struct Nek1DSharedArray
-    {
-        typedef typename Nek1DArray<T>::type base;
-        typedef boost::shared_ptr<base> type;
-    };
-
-    template<typename T>
-    struct Nek1DConstSharedArray
-    {
-        typedef boost::shared_ptr<const typename Nek1DArray<T>::type> type;
-    };
-
-    typedef Nek1DArray<NekDouble>::type                 NekDouble1DArray;
-    typedef Nek1DSharedArray<NekDouble>::type           NekDouble1DSharedArray;
-    typedef Nek1DConstSharedArray<NekDouble>::type      ConstNekDouble1DSharedArray;
-    typedef Nek1DArray<int>::type                       Int1DArray;
-    typedef Nek1DSharedArray<int>::type                 Int1DSharedArray;
-    typedef Nek1DSharedArray<int>::base                 Int1DSharedArrayBase;
-    typedef Nek1DConstSharedArray<int>::type            ConstInt1DSharedArray;
-
-    template<typename T>
-    struct Nek2DArray
-    {
-        typedef boost::multi_array<T, 2> type;
-    };
-
-    template<typename T>
-    struct Nek2DSharedArray
-    {
-        typedef typename Nek2DArray<T>::type base;
-        typedef boost::shared_ptr<base> type;
-    };
-
-    template<typename T>
-    struct Nek2DConstSharedArray
-    {
-        typedef boost::shared_ptr<const typename Nek2DArray<T>::type> type;
-    };
-
-    typedef Nek2DArray<NekDouble>::type                 NekDouble2DArray;
-    typedef Nek2DSharedArray<NekDouble>::type           NekDouble2DSharedArray;
-    typedef Nek2DConstSharedArray<NekDouble>::type      ConstNekDouble2DSharedArray;
-    typedef Nek2DArray<int>::type                       Int2DArray;
-    typedef Nek2DSharedArray<int>::type                 Int2DSharedArray;
-    typedef Nek2DConstSharedArray<int>::type            ConstInt2DSharedArray;
-
-    template<typename T>
-    struct Nek3DArray
-    {
-        typedef boost::multi_array<T, 3> type;
-    };
-
-    template<typename T>
-    struct Nek3DSharedArray
-    {
-        typedef typename Nek3DArray<T>::type base; 
-        typedef boost::shared_ptr<base> type;
-    };
-
-    template<typename T>
-    struct Nek3DConstSharedArray
-    {
-        typedef boost::shared_ptr<const typename Nek3DArray<T>::type> type;
-    };
-
-    typedef Nek3DArray<NekDouble>::type                 NekDouble3DArray;
-    typedef Nek3DSharedArray<NekDouble>::type           NekDouble3DSharedArray;
-    typedef Nek3DConstSharedArray<NekDouble>::type      ConstNekDouble3DSharedArray;
-    typedef Nek3DArray<int>::type                       Int3DArray;
-    typedef Nek3DSharedArray<int>::type                 Int3DSharedArray;
-    typedef Nek3DConstSharedArray<int>::type            ConstInt3DSharedArray;
-
-    // Old typedefs based on SharedArray.  Easiest way to force the issue is to
-    // comment them out and then recompile.
-
-    //typedef std::vector< NekDouble1DSharedArray > NekDoubleArrayVector;
-    //typedef std::vector< NekDouble1DSharedArray >::iterator NekDoubleArrayVectorIter;
- 
-    //typedef SharedArray<int>  NekIntSharedArray;
-    //typedef std::vector< NekIntSharedArray > NekIntArrayVector;
-    //typedef std::vector< NekIntSharedArray >::iterator NekIntArrayVectorIter;
-
-    //typedef SharedArray<const int>  ConstNekIntSharedArray;
 
 } //end of namespace 
 
@@ -145,6 +57,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.8  2007/04/29 00:31:12  jfrazier
+Continued conversion to multi_arrays.
+
 Revision 1.7  2007/04/26 21:52:09  jfrazier
 Converted to new multi_array implementation.
 

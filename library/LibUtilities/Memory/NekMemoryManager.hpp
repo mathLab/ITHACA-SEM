@@ -40,7 +40,7 @@
 
 #include <LibUtilities/Memory/ThreadSpecificPool.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
+//#include <LibUtilities/BasicUtils/SharedArray.hpp>
 //#include <boost/shared_array.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
@@ -57,8 +57,18 @@
 #include <boost/preprocessor/repetition/enum_trailing.hpp>  
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/enum_trailing_params.hpp>
+#include <boost/preprocessor/control/if.hpp>
+#include <boost/preprocessor/facilities/empty.hpp>
+#include <boost/preprocessor/comparison/equal.hpp>
+#include <boost/preprocessor/punctuation/comma.hpp>
+#include <boost/preprocessor/repetition/enum_trailing_binary_params.hpp>
 
 #include <vector>
+
+#ifdef max
+#undef max
+#endif
+
 namespace Nektar
 {
 
@@ -76,9 +86,39 @@ namespace Nektar
     /// the same manager object without blocking while waiting for memory
     /// allocation from the system.
     ///
+    template<typename DataType>
     class MemoryManager
     {
-
+        private:
+            template<typename ObjectType, typename CustomDeallocator>
+            class DeallocateSharedPtr
+            {
+                public:
+                    explicit DeallocateSharedPtr(const CustomDeallocator& d) :
+                        m_dealloc(d)
+                    {
+                    }
+                    
+                    
+                    void operator()(ObjectType*& m) const
+                    {
+                        m_dealloc();
+                        MemoryManager<ObjectType>::Deallocate(m);
+                    }
+                    
+                private:
+                    CustomDeallocator m_dealloc;
+                    
+            };
+            
+            class DefaultCustomDeallocator
+            {
+                public:
+                    void operator()() const
+                    {
+                    }
+            };
+            
         public:
 
            
@@ -94,316 +134,296 @@ namespace Nektar
             /// CustObj* c = MemoryManager::Allocate<CustObj>();
             /// MemoryManager::Deallocate(c);
             /// \endcode
-            template<typename DataType>
             static void Deallocate(DataType*& data)
             {
-#ifdef NEKTAR_MEMORY_POOL_ENABLED
-                data->~DataType();
-                ThreadSpecificPool<sizeof(DataType)>::Deallocate(data);
-#else //NEKTAR_MEMORY_POOL_ENABLED
-                delete data;
-#endif //NEKTAR_MEMORY_POOL_ENABLED
+                #ifdef NEKTAR_MEMORY_POOL_ENABLED
+                    data->~DataType();
+                    //ThreadSpecificPool<sizeof(DataType)>::Deallocate(data);
+                    MemPool<sizeof(DataType)>::Type::Instance().Deallocate(data);
+                #else //NEKTAR_MEMORY_POOL_ENABLED
+                    delete data;
+                #endif //NEKTAR_MEMORY_POOL_ENABLED
+                
                 data = NULL;
             }
 
            
-#ifdef NEKTAR_MEMORY_POOL_ENABLED
-            #define ALLOCATE_METHOD_GENERATOR(z, i, methodName) \
-            /* \brief test1 */ \
-            template<typename DataType BOOST_PP_ENUM_TRAILING_PARAMS(i, typename Arg)> \
-            static DataType* methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, const Arg, & arg)) \
-            { \
-                DataType* result = static_cast<DataType*>(ThreadSpecificPool<sizeof(DataType)>::Allocate()); \
-                \
-                if( result ) \
+//            template<typename Arg1>
+//             static DataType* Allocate(const Arg1& arg1) 
+//             { 
+//                 DataType* result = static_cast<DataType*>(ThreadSpecificPool<sizeof(DataType)>::Allocate()); 
+//                 
+//                 if( result ) 
+//                 { 
+//                     try 
+//                     { 
+//                         new (result) DataType(arg1);BOOST_PP_ENUM_PARAMS(i, arg)); \
+//                     } \
+//                     catch(...) \
+//                     { \
+//                         ThreadSpecificPool<sizeof(DataType)>::Deallocate(result); \
+//                         throw; \
+//                     } \
+//                 } \
+//                 \
+//                 return result; \
+//             }
+                
+            #ifdef NEKTAR_MEMORY_POOL_ENABLED
+                static DataType* Allocate() 
+                { 
+                    //DataType* result = static_cast<DataType*>(ThreadSpecificPool<sizeof(DataType)>::Allocate()); 
+                    DataType* result = static_cast<DataType*>(MemPool<sizeof(DataType)>::Type::Instance().Allocate());
+                    
+                    if( result ) 
+                    { 
+                        try 
+                        { 
+                            new (result) DataType();
+                        } 
+                        catch(...) 
+                        { 
+                            //ThreadSpecificPool<sizeof(DataType)>::Deallocate(result); 
+                            MemPool<sizeof(DataType)>::Type::Instance().Deallocate(result);
+                            throw; 
+                        } 
+                    } 
+                    
+                    return result; 
+                }
+                #define ALLOCATE_METHOD_GENERATOR(z, i, methodName) \
+                /* \brief test1 */ \
+                template<BOOST_PP_ENUM_PARAMS(i, typename Arg)> \
+                static DataType* methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, const Arg, & arg)) \
                 { \
-                    try \
+                    DataType* result = static_cast<DataType*>(MemPool<sizeof(DataType)>::Type::Instance().Allocate()); \
+                    \
+                    if( result ) \
                     { \
-                        new (result) DataType(BOOST_PP_ENUM_PARAMS(i, arg)); \
+                        try \
+                        { \
+                            new (result) DataType(BOOST_PP_ENUM_PARAMS(i, arg)); \
+                        } \
+                        catch(...) \
+                        { \
+                            MemPool<sizeof(DataType)>::Type::Instance().Deallocate(result); \
+                            throw; \
+                        } \
                     } \
-                    catch(...) \
-                    { \
-                        ThreadSpecificPool<sizeof(DataType)>::Deallocate(result); \
-                        throw; \
-                    } \
-                } \
-                \
-                return result; \
-            }
-#else //NEKTAR_MEMORY_POOL_ENABLED
-            #define ALLOCATE_METHOD_GENERATOR(z, i, methodName) \
-            template<typename DataType BOOST_PP_ENUM_TRAILING_PARAMS(i, typename Arg)> \
-            static DataType* methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, const Arg, & arg)) \
-            { \
-                return new DataType(BOOST_PP_ENUM_PARAMS(i, arg)); \
-            }
-#endif //NEKTAR_MEMORY_POOL_ENABLED
+                    \
+                    return result; \
+                }
+            #else //NEKTAR_MEMORY_POOL_ENABLED
+                static DataType* Allocate()
+                {
+                    return new DataType();
+                }
+                
+                #define ALLOCATE_METHOD_GENERATOR(z, i, methodName) \
+                template<BOOST_PP_ENUM_PARAMS(i, typename Arg)> \
+                static DataType* methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, const Arg, & arg)) \
+                { \
+                    return new DataType(BOOST_PP_ENUM_PARAMS(i, arg)); \
+                }
+            #endif //NEKTAR_MEMORY_POOL_ENABLED
 
-            BOOST_PP_REPEAT_FROM_TO(0, NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS, ALLOCATE_METHOD_GENERATOR, Allocate)
+            BOOST_PP_REPEAT_FROM_TO(1, NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS, ALLOCATE_METHOD_GENERATOR, Allocate);
 
+            static boost::shared_ptr<DataType> AllocateSharedPtr()
+            {
+                return AllocateSharedPtrD(DefaultCustomDeallocator());
+                //DataType* data = Allocate(); 
+                //return boost::shared_ptr<DataType>(data, &MemoryManager::DeallocateSharedPtr); 
+            }
+            
             #define ALLOCATE_SHARED_PTR_METHOD_GENERATOR(z, i, methodName) \
-            template<typename DataType BOOST_PP_ENUM_TRAILING_PARAMS(i, typename Arg)> \
+            template<BOOST_PP_ENUM_PARAMS(i, typename Arg)> \
             static boost::shared_ptr<DataType> methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, const Arg, & arg)) \
             { \
-                DataType* data = Allocate<DataType>(BOOST_PP_ENUM_PARAMS(i, arg)); \
-                return boost::shared_ptr<DataType>(data, &MemoryManager::DeallocateSharedPtr<DataType>); \
+                return AllocateSharedPtrD(DefaultCustomDeallocator(), BOOST_PP_ENUM_PARAMS(i, arg)); \
             }
 
-            BOOST_PP_REPEAT_FROM_TO(0, NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS, ALLOCATE_SHARED_PTR_METHOD_GENERATOR, AllocateSharedPtr)
-
-
-            /// \brief Deallocate an array allocated via MemoryManager::AllocateArray.
-            template<unsigned int Capacity, typename DataType>
-            static void DeallocateArray(DataType*& data)
-            {
-                DeallocateArray<Capacity, DataType>(data, Capacity);
+            #define ALLOCATE_SHARED_PTR_METHOD_WITH_DEALLOCATOR_GENERATOR(z, i, methodName) \
+            template<typename DeallocatorType BOOST_PP_ENUM_TRAILING_PARAMS(i, typename Arg)> \
+            static boost::shared_ptr<DataType> methodName(const DeallocatorType& d BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(i, const Arg, & arg)) \
+            { \
+                DataType* data = Allocate(BOOST_PP_ENUM_PARAMS(i, arg)); \
+                return boost::shared_ptr<DataType>(data, DeallocateSharedPtr<DataType, DeallocatorType>(d)); \
             }
+            
+            BOOST_PP_REPEAT_FROM_TO(0, NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS, ALLOCATE_SHARED_PTR_METHOD_WITH_DEALLOCATOR_GENERATOR, AllocateSharedPtrD);
+            BOOST_PP_REPEAT_FROM_TO(1, NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS, ALLOCATE_SHARED_PTR_METHOD_GENERATOR, AllocateSharedPtr);
 
-            /// \brief Allocate an array.
-            ///
-            /// Every pointer obtained through this method must be deallocated with 
-            /// MemoryManager::DeallocateArray.
-            template<unsigned int Capacity, typename DataType>
-            static DataType* AllocateArray(unsigned int itemsToCreate = Capacity,
-                                           typename boost::disable_if<boost::is_fundamental<DataType> >::type* p = NULL)
+
+
+
+            /// \brief Allocates a chunk of raw, uninitialized memory, capable of holding NumberOfElements objects.
+            template<unsigned int NumberOfElements>
+            static DataType* RawAllocate()
             {
-                BOOST_STATIC_ASSERT(Capacity > 0);
-#ifdef NEKTAR_MEMORY_POOL_ENABLED
-                /// Remove the const from the actual array we allocate to prevent problems in the 
-                /// placement new.
-                typedef typename boost::remove_const<DataType>::type AllocateType;
-
-                AllocateType* result = static_cast<AllocateType*>(ThreadSpecificPool<sizeof(AllocateType)*Capacity>::Allocate());
-
-                if( result )
-                {
-                    unsigned int nextObjectToCreate = 0;
-                    try
-                    {
-                        for(unsigned int i = 0; i < itemsToCreate; ++i)
-                        {
-                            AllocateType* memLocation = &result[i];
-                            new (memLocation) DataType();
-                            ++nextObjectToCreate;
-                        }
-                    }
-                    catch(...)
-                    {
-                        /// TODO - Deallocate in the reverse order.
-                        for(unsigned int i = 0; i < nextObjectToCreate; ++i)
-                        {
-                            AllocateType* memLocation = &result[i];
-                            memLocation->~DataType();
-                        }
-
-                        ThreadSpecificPool<sizeof(AllocateType)*Capacity>::Deallocate(result);
-                        throw;
-                    }
-                }
-
-                return result;
-#else //NEKTAR_MEMORY_POOL_ENABLED
-                return new DataType[itemsToCreate];
-#endif //NEKTAR_MEMORY_POOL_ENABLED
+                BOOST_STATIC_ASSERT(NumberOfElements > 0);
+                
+                #ifdef NEKTAR_MEMORY_POOL_ENABLED
+                    return static_cast<DataType*>(MemPool<sizeof(DataType)*NumberOfElements>::Type::Instance().Allocate());
+                #else //NEKTAR_MEMORY_POOL_ENABLED
+                    return static_cast<DataType*>(::operator new(NumberOfElements * sizeof(DataType)));
+                #endif //NEKTAR_MEMORY_POOL_ENABLED
             }
-           
-            /// \brief Creates an array of fundamental type using the memory pool.
-            template<unsigned int Capacity, typename DataType>
-            static DataType* AllocateArray(unsigned int itemsToCreate = Capacity,
-                                           typename boost::enable_if<boost::is_fundamental<DataType> >::type* p = NULL)
+            
+            /// \brief Allocates a chunk of raw, uninitialized memory, capable of holding NumberOfElements objects.
+            static DataType* RawAllocate(unsigned int NumberOfElements)
             {
-                BOOST_STATIC_ASSERT(Capacity > 0);
-#ifdef NEKTAR_MEMORY_POOL_ENABLED
-                return static_cast<DataType*>(ThreadSpecificPool<sizeof(DataType)*Capacity>::Allocate());
-#else //NEKTAR_MEMORY_POOL_ENABLED
-                return new DataType[itemsToCreate];
-#endif //NEKTAR_MEMORY_POOL_ENABLED
-            }
-
-            /// \brief Creates an array.
-            template<typename DataType>
-            static DataType* AllocateArray(unsigned int arraySize)
-            {
-                if( arraySize < 10 )
+                // Even if 0 elements are requested, we should allocate some memory.
+                if( NumberOfElements <= 1 )
                 {
-                    return MemoryManager::AllocateArray<10, DataType>(arraySize);
+                    return RawAllocate<1>();
                 }
-                else if( arraySize < 20 )
+                else if( NumberOfElements < 10 )
                 {
-                    return MemoryManager::AllocateArray<20, DataType>(arraySize);
+                    return RawAllocate<10>();
                 }
-                else if( arraySize < 30 )
+                else if( NumberOfElements < 20 )
                 {
-                    return MemoryManager::AllocateArray<30, DataType>(arraySize);
+                    return RawAllocate<20>();
                 }
-                else if( arraySize < 40 )
+                else if( NumberOfElements < 30 )
                 {
-                    return MemoryManager::AllocateArray<40, DataType>(arraySize);
+                    return RawAllocate<30>();
                 }
-                else if( arraySize < 50 )
+                else if( NumberOfElements < 40 )
                 {
-                    return MemoryManager::AllocateArray<50, DataType>(arraySize);
+                    return RawAllocate<40>();
                 }
-                else if( arraySize < 60 )
+                else if( NumberOfElements < 50 )
                 {
-                    return MemoryManager::AllocateArray<60, DataType>(arraySize);
+                    return RawAllocate<50>();
+                }
+                else if( NumberOfElements < 60 )
+                {
+                    return RawAllocate<60>();
                 }
                 else
                 {
-                    return new DataType[arraySize];
+                    return static_cast<DataType*>(::operator new(NumberOfElements * sizeof(DataType)));
                 }
             }
-
-            /// \brief Deallocates an array.
-            template<typename DataType>
-            static void DeallocateArray(DataType*& array, unsigned int arraySize)
-            {
-                if( arraySize < 10 )
-                {
-                    MemoryManager::DeallocateArray<10, DataType>(array, arraySize);
-                }
-                else if( arraySize < 20 )
-                {
-                    MemoryManager::DeallocateArray<20, DataType>(array, arraySize);
-                }
-                else if( arraySize < 30 )
-                {
-                    MemoryManager::DeallocateArray<30, DataType>(array, arraySize);
-                }
-                else if( arraySize < 40 )
-                {
-                    MemoryManager::DeallocateArray<40, DataType>(array, arraySize);
-                }
-                else if( arraySize < 50 )
-                {
-                    MemoryManager::DeallocateArray<50, DataType>(array, arraySize);
-                }
-                else if( arraySize < 60 )
-                {
-                    MemoryManager::DeallocateArray<60, DataType>(array, arraySize);
-                }
-                else
-                {
-                    delete[] array;
-                }
-
-                array = 0;
-            }
-
-
-            /// \brief Allocate a shared array of given size and type.
-            template<unsigned int Capacity, typename DataType>
-            static SharedArray<DataType> AllocateSharedArray()
-            {
-                return AllocateSharedArray<Capacity, DataType>(Capacity);
-            }
-
-            template<typename DataType>
-            static SharedArray<DataType> AllocateSharedArray(unsigned int arraySize)
-            {
-                if( arraySize < 10 )
-                {
-                    return MemoryManager::AllocateSharedArray<10, DataType>(arraySize);
-                }
-                else if( arraySize < 20 )
-                {
-                    return MemoryManager::AllocateSharedArray<20, DataType>(arraySize);
-                }
-                else if( arraySize < 30 )
-                {
-                    return MemoryManager::AllocateSharedArray<30, DataType>(arraySize);
-                }
-                else if( arraySize < 40 )
-                {
-                    return MemoryManager::AllocateSharedArray<40, DataType>(arraySize);
-                }
-                else if( arraySize < 50 )
-                {
-                    return MemoryManager::AllocateSharedArray<50, DataType>(arraySize);
-                }
-                else if( arraySize < 60 )
-                {
-                    return MemoryManager::AllocateSharedArray<60, DataType>(arraySize);
-                }
-                else
-                {
-                    return SharedArray<DataType>(new DataType[arraySize], arraySize);
-                }
-            }
-
-        private:
-            /// \brief Custom deletion policy for shared pointers.
-            template<typename DataType>
-            static void DeallocateSharedPtr(DataType* data)
-            {
-                Deallocate<DataType>(data);
-            }
-
-            /// \brief Custom deletion policy for shared arrays.
-            template<unsigned int Capacity, typename DataType>
-            static void DeallocateSharedArray(DataType* data, unsigned int arraySize)
-            {
-                BOOST_STATIC_ASSERT(Capacity > 0);
-                DeallocateArray<Capacity, DataType>(data, arraySize);
-            }
-
-            template<unsigned int Capacity, typename DataType>
-            static SharedArray<DataType> AllocateSharedArray(unsigned int arraySize)
-            {
-                DataType* data = AllocateArray<Capacity, DataType>(arraySize);
-                //void (*deallocator)(DataType *) = &MemoryManager::DeallocateSharedArray<ArraySize, DataType>;
-                //return SharedArray<DataType>(data, deallocator);
-                return SharedArray<DataType>(data, arraySize, boost::bind(MemoryManager::DeallocateSharedArray<Capacity, DataType>, _1, arraySize));
-            }
-
+            
             /// \brief Deallocates arrays of fundamental data types.
-            template<unsigned int Capacity, typename DataType>
-            static void DeallocateArray(DataType*& data, unsigned int numToDelete,
-                    typename boost::enable_if<boost::is_fundamental<DataType> >::type* p = NULL)
+            template<unsigned int NumberOfElements>
+            static void RawDeallocate(DataType* data)
             {
-                BOOST_STATIC_ASSERT(Capacity > 0);
-#ifdef NEKTAR_MEMORY_POOL_ENABLED
-                ThreadSpecificPool<sizeof(DataType)*Capacity>::Deallocate(data);
-#else //NEKTAR_MEMORY_POOL_ENABLED
-                delete [] data;
-#endif //NEKTAR_MEMORY_POOL_ENABLED
-                data = NULL;
+                BOOST_STATIC_ASSERT(NumberOfElements > 0);
+                
+                #ifdef NEKTAR_MEMORY_POOL_ENABLED
+                    MemPool<sizeof(DataType)*NumberOfElements>::Type::Instance().Deallocate(data);
+                #else //NEKTAR_MEMORY_POOL_ENABLED
+                    ::operator delete(data);
+                #endif //NEKTAR_MEMORY_POOL_ENABLED
             }
+                    
 
-            /// \brief Deallocate a pointer allocated by the Memory Manager with a memory pool.
-            /// \param numToDelete The number of objects in this memory chunk on which the destructor must be called.
-            template<unsigned int Capacity, typename DataType>
-            static void DeallocateArray(DataType*& data, unsigned int numToDelete,
-                typename boost::disable_if<boost::is_fundamental<DataType> >::type* p = NULL)
+            static void RawDeallocate(DataType* array, unsigned int NumberOfElements)
             {
-#ifdef NEKTAR_MEMORY_POOL_ENABLED
-                BOOST_STATIC_ASSERT(Capacity > 0);
-                /// TODO - To be more consistent with C++, delete in descending order.
-                for(unsigned int i = 0; i < numToDelete; ++i)
+                if( NumberOfElements <= 1 )
                 {
-                    DataType* memLocation = &data[i];
-                    memLocation->~DataType();
+                    RawDeallocate<1>(array);
                 }
-
-                ThreadSpecificPool<sizeof(DataType)*Capacity>::Deallocate(data);
-#else //NEKTAR_MEMORY_POOL_ENABLED
-                delete [] data;
-#endif //NEKTAR_MEMORY_POOL_ENABLED
-                data = NULL;
+                else if( NumberOfElements < 10 )
+                {
+                    RawDeallocate<10>(array);
+                }
+                else if( NumberOfElements < 20 )
+                {
+                    RawDeallocate<20>(array);
+                }
+                else if( NumberOfElements < 30 )
+                {
+                    RawDeallocate<30>(array);
+                }
+                else if( NumberOfElements < 40 )
+                {
+                    RawDeallocate<40>(array);
+                }
+                else if( NumberOfElements < 50 )
+                {
+                    RawDeallocate<50>(array);
+                }
+                else if( NumberOfElements < 60 )
+                {
+                    RawDeallocate<60>(array);
+                }
+                else
+                {
+                    ::operator delete(array);
+                }
             }
+            
+            /////////////////////////////////////////////////////////////////
+            /// @[ Allocator Interface
+            /// \todo I don't think this is the correct syntax for doxygen sections.
+            /////////////////////////////////////////////////////////////////
+            typedef DataType value_type;
+            typedef size_t size_type;
+            typedef ptrdiff_t difference_type;
+            typedef DataType* pointer;
+            typedef const DataType* const_pointer;
+            typedef DataType& reference;
+            typedef const DataType& const_reference;
+            
+            MemoryManager() {}
+            ~MemoryManager() {}
+            
+            pointer address(reference r) const { return &r; }
+            const_pointer address(const_reference r) const { return &r; }
+            
+            pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)//typename MemoryManager<void>::pointer hint = 0)
+            {
+                return RawAllocate(n);
+            }
+            
+            void deallocate(pointer p, size_type n)
+            {
+                return RawDeallocate(p, n);
+            }
+            
+            void construct(pointer p, const_reference val)
+            {
+                new(p) DataType(val);
+            }
+            
+            void destroy(pointer p)
+            {
+                p->~DataType();
+            }
+            
+            size_type max_size()
+            {
+                return std::numeric_limits<size_type>::max()/sizeof(DataType);
+            }
+            
+            template<typename U>
+            struct rebind
+            {
+                typedef MemoryManager<U> other; 
+            };
+            
+            
+        private:
 
     };
 
-    inline NekDouble1DSharedArray GetDoubleTmpSpace(const int size)
+    template<typename DataType>
+    bool operator==(const MemoryManager<DataType>& lhs, const MemoryManager<DataType>& rhs)
     {
-        return MemoryManager::AllocateSharedPtr<NekDouble1DArray>(boost::extents[size]);
+        return true;
     }
     
-    inline Nek1DSharedArray<int>::type GetIntTmpSpace(const int size)
+    template<typename DataType>
+    bool operator!=(const MemoryManager<DataType>& lhs, const MemoryManager<DataType>& rhs)
     {
-        return MemoryManager::AllocateSharedPtr<Nek1DArray<int>::type >(boost::extents[size]);
+        return !(lhs == rhs);
     }
-    
+
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_MEMORY_MANAGER_H
@@ -411,6 +431,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.10  2007/04/29 00:30:05  jfrazier
+    Converted tmp space methods to return 1D multi_arrays.
+
     Revision 1.9  2007/04/06 04:36:21  bnelson
     Updated for const-correctness.
 
@@ -418,10 +441,10 @@ namespace Nektar
     Replaced boost::shared_array with Nektar::SharedArray and fixed several problems where the compile time array size was being used instead of the run time array size.
 
     Revision 1.7  2007/03/21 16:13:19  sherwin
-    Fixed double to NekDouble casting in GetDoubleTmpSpace
+    Fixed double to NekDouble casting in Array<OneD, NekDouble>
 
     Revision 1.6  2007/03/20 16:58:41  sherwin
-    Update to use NekDouble1DSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+    Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 
     Revision 1.5  2007/01/29 01:27:49  bnelson
     Added additional Allocate methods which take more parameters for the constructor.

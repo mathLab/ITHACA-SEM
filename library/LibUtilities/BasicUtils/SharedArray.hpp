@@ -52,394 +52,390 @@
 #include <functional>         // for std::less
 
 #include <LibUtilities/BasicUtils/mojo.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/mpl/assert.hpp>
+#include <boost/multi_array.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
+    // Forward declaration for a ConstArray constructor.
+    template<Dimension Dim, typename DataType>
+    class Array;
 
-    /// \brief Wraps a reference counted T* and deletes it when it is no longer referenced.
+    /// \brief An array of unchangeable elements.
+    /// \param Dim The array's dimensionality.
+    /// \param DataType The data type held at each position in the array.
     ///
-    /// SharedArray is a replacement for boost::shared_array.  It addresses the following 
-    /// problem with boost::shared_array
+    /// ConstArray is a thin wrapper around boost::multi_array.  It supports
+    /// much of the multi_array interface (with a notable exception of views)
+    /// including the arbitrary data type and dimension.
     ///
-    /// A "const boost::shared_array<T>" still allows you to modify the internal data
-    /// held by the array.  In other words, it is possible to do the following:
+    /// ConstArray sets itself apart from multi_array by not allowing any 
+    /// modification of the underlying data.  For modifiable arrays, \see Array.
     ///
-    /// const boost::shared_array<double>& foo();
+    /// ConstArray is most often used as the return value of a method when 
+    /// the user needs access to an array of data but should not be allowed 
+    /// to modify it.
     ///
-    /// const boost::shared_array<double>& a = foo();
-    /// a[0] = 1.0;
+    ///\code
+    /// class Sample
+    /// {
+    ///     public:
+    ///         ConstArray<OneD, double>& getData() const { return m_data; }
+    ///        
+    ///     private:
+    ///         Array<OneD, double> m_data;
+    /// };
+    ///\endcode
     ///
-    /// With SharedArrays, a "const SharedArray" will not allow you to modify the 
-    /// underlying data.  
-    ///
-    /// An additional feature of a SharedArray is the ability to create a new shared array
-    /// with an offset:
-    ///
-    /// SharedArray<double> coeffs = MemoryManager::AllocateSharedArray<double>(10);
-    /// SharedArray<double> offset = coefffs+5; // offset[5] = coeffs[0]
-    /// 
-    /// coeffs and offset point to the same underlying array, so if coeffs goes out of scope the array
-    /// is not deleted until offset goes out of scope.  
-    ///
-
-    template<class T> 
-    class SharedArrayBase 
-    {
-        protected:
-
-            // Borland 5.5.1 specific workarounds
-            typedef boost::checked_array_deleter<T> deleter;
-            typedef SharedArrayBase<T> this_type;
-
-        public:
-            template<typename U> friend class SharedArrayBase;
-            template<typename U> friend class SharedArray;
-
-            SharedArrayBase() : 
-                px(0), 
-                pn((T*)0, deleter()),
-                m_offset(0),
-                m_size(0)
-            {
-            }
-
-            explicit SharedArrayBase(unsigned int s) :
-                px(new T[s]),
-                pn(px, deleter()),
-                m_offset(0),
-                m_size(s)
-            {
-            }
-
-            SharedArrayBase(T* p, unsigned int s) : 
-                px(p), 
-                pn(p, deleter()),
-                m_offset(0),
-                m_size(s)
-            {
-            }
-            
-            SharedArrayBase(const SharedArrayBase<T>& rhs, unsigned int offset) :
-                px(rhs.px),
-                pn(rhs.pn),
-                m_offset(offset),
-                m_size(rhs.m_size)
-            {
-            }
-
-            SharedArrayBase(const SharedArrayBase<T>& rhs) :
-                px(rhs.px),
-                pn(rhs.pn),
-                m_offset(rhs.m_offset),
-                m_size(rhs.m_size)
-            {
-            }
-            
-            SharedArrayBase(T* rhs_px, const boost::detail::shared_count& rhs_pn,
-                            unsigned int rhs_offset, unsigned int rhs_size) :
-                px(rhs_px),
-                pn(rhs_pn),
-                m_offset(rhs_offset),
-                m_size(rhs_size)
-            {
-            }
-                            
-            //
-            // Requirements: D's copy constructor must not throw
-            //
-            // shared_array will release p by calling d(p)
-            //
-
-            template<class D> 
-            SharedArrayBase(T* p, unsigned int s, D d) : 
-                px(p), 
-                pn(p, d),
-                m_offset(0),
-                m_size(s)
-            {
-            }
-
-            
-            SharedArrayBase<T>& operator=(const SharedArrayBase<T>& rhs)
-            {
-                px = rhs.px;
-                pn = rhs.pn;
-                m_offset = rhs.m_offset;
-                m_size = rhs.m_size;
-                return *this;
-            }
-            
-            SharedArrayBase<T>& operator+=(unsigned int incr)
-            {
-                m_offset += incr;
-                return *this;
-            }
-            
-            void reset()
-            {
-                this_type().swap(*this);
-            }
-
-            void reset(T* p, unsigned int size)
-            {
-                BOOST_ASSERT(p == 0 || p != px);
-                this_type(p, size).swap(*this);
-            }
-
-            template <class D> void reset(T * p, unsigned int size, D d)
-            {
-                this_type(p, size, d).swap(*this);
-            }
-
-            T& operator[] (std::ptrdiff_t i)  // never throws
-            {
-                BOOST_ASSERT(px != 0);
-                BOOST_ASSERT(i >= 0);
-                return px[i + m_offset];
-            }
-
-            const T& operator[] (std::ptrdiff_t i) const  // never throws
-            {
-                BOOST_ASSERT(px != 0);
-                BOOST_ASSERT(i >= 0);
-                return px[i + m_offset];
-            }
-            
-            T* get() // never throws
-            {
-                return px + m_offset;
-            }
-
-            const T* get() const 
-            {
-                return px + m_offset;
-            }
-            
-            unsigned int GetSize() const { return m_size; }
-
-            // implicit conversion to "bool"
-
-        #if defined(__SUNPRO_CC) && BOOST_WORKAROUND(__SUNPRO_CC, <= 0x530)
-
-            operator bool () const
-            {
-                return px != 0;
-            }
-
-        #elif defined(__MWERKS__) && BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
-            typedef T * (this_type::*unspecified_bool_type)() const;
-            
-            operator unspecified_bool_type() const // never throws
-            {
-                return px == 0? 0: &this_type::get;
-            }
-
-        #else 
-
-            typedef T * this_type::*unspecified_bool_type;
-
-            operator unspecified_bool_type() const // never throws
-            {
-                return px == 0? 0: &this_type::px;
-            }
-
-        #endif
-
-            bool operator! () const // never throws
-            {
-                return px == 0;
-            }
-
-            bool unique() const // never throws
-            {
-                return pn.unique();
-            }
-
-            long use_count() const // never throws
-            {
-                return pn.use_count();
-            }
-
-            void swap(SharedArrayBase<T>& other) // never throws
-            {
-                std::swap(px, other.px);
-                pn.swap(other.pn);
-                std::swap(m_offset, other.m_offset);
-                std::swap(m_size, other.m_size);
-            }
-
-            typedef T* iterator;
-            typedef const T* const_iterator;
-
-            iterator begin() { return px + m_offset; }
-            iterator end() { return px + m_size; }
-
-            const_iterator begin() const { return px + m_offset; }
-            const_iterator end() const { return px + m_size; }
-
-        protected:
-            T* px;                              
-            boost::detail::shared_count pn;    
-            unsigned int m_offset;
-            unsigned int m_size;
-
-    };  
-
-
-    template<class T>
-    class SharedArray : public SharedArrayBase<T>, public MojoEnabled<SharedArray<T> >
+    /// In this example, each instance of Sample contains an array.  The getData method 
+    /// gives the user access to the array values, but does not allow modification of those
+    /// values.
+    template<Dimension Dim, typename DataType>
+    class ConstArray
     {
         public:
-            SharedArray() :
-                SharedArrayBase<T>()
+            typedef boost::multi_array_ref<DataType, Dim> ArrayType;
+
+            typedef typename ArrayType::const_reference const_reference;
+            typedef typename ArrayType::index index;
+            typedef typename ArrayType::const_iterator const_iterator;
+            typedef typename ArrayType::element element;
+            typedef typename ArrayType::size_type size_type;
+            
+
+        public:
+            /// \brief Constructs an empty array.
+            ///
+            /// An empty array will still have a small amount of memory allocated for it, typically around 
+            /// 4 bytes.  
+            /// \post size() == 0
+            /// \post begin() == end()
+            ConstArray() :
+                m_data(),
+                m_offset(0)
+            {
+                std::vector<unsigned int> extents(Dim, 0);
+                CreateStorage(extents);
+            }
+            
+            /// \brief Constructs a 1 dimensional array.  The elements of the array are not initialized.
+            explicit ConstArray(unsigned int arraySize) :
+                m_data(),
+                m_offset(0)
+            {
+                BOOST_STATIC_ASSERT(Dim==1);
+                std::vector<unsigned int> extents(Dim, arraySize);
+                CreateStorage(extents);
+            }
+            
+            /// \brief Constructs a 2 dimensional array.  The elements of the array are not initialized.
+            ConstArray(unsigned int dim1Size, unsigned int dim2Size) :
+                m_data(),
+                m_offset(0)
+            {
+                BOOST_STATIC_ASSERT(Dim==2);
+                unsigned int vals[] = {dim1Size, dim2Size};
+                std::vector<unsigned int> extents(vals, vals+2);
+                CreateStorage(extents);
+            }
+            
+            /// \brief Constructs a 3 dimensional array.  The elements of the array are not initialized.
+            ConstArray(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size) :
+                m_data(),
+                m_offset(0)
+            {
+                BOOST_STATIC_ASSERT(Dim==3);
+                unsigned int vals[] = {dim1Size, dim2Size, dim3Size};
+                std::vector<unsigned int> extents(vals, vals+3);
+                CreateStorage(extents);
+            }
+            
+            ConstArray(unsigned int arraySize, const DataType& initValue) :
+                m_data(),
+                m_offset(0)
+            {
+                BOOST_STATIC_ASSERT(Dim == 1);
+                std::vector<unsigned int> extents(Dim, arraySize);
+                CreateStorage(extents);
+                
+                // Can't use the ConstArray begin() and end() methods since they
+                // are constant and so we can't use them to write values.
+                std::fill(m_data->begin(), m_data->end(), initValue);
+            }
+            
+            ConstArray(unsigned int dim1Size, unsigned int dim2Size, const DataType& initValue) :
+                m_data(),
+                m_offset(0)
+            {
+                BOOST_STATIC_ASSERT(Dim==2);
+                unsigned int vals[] = {dim1Size, dim2Size};
+                std::vector<unsigned int> extents(vals, vals+2);
+                CreateStorage(extents);
+                for(unsigned int i = 0; i < dim1Size; ++i)
+                {
+                    for(unsigned int j = 0; j < dim2Size; ++j)
+                    {
+                        (*m_data)[i][j] = initValue;
+                    }
+                }
+            }
+            
+            ConstArray(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size, const DataType& initValue) :
+                m_data(),
+                m_offset(0)
+            {
+                BOOST_STATIC_ASSERT(Dim==3);
+                unsigned int vals[] = {dim1Size, dim2Size, dim3Size};
+                std::vector<unsigned int> extents(vals, vals+3);
+                CreateStorage(extents);
+                for(unsigned int i = 0; i < dim1Size; ++i)
+                {
+                    for(unsigned int j = 0; j < dim2Size; ++j)
+                    {
+                        for(unsigned int k = 0; k < dim3Size; ++k)
+                        {
+                            (*m_data)[i][j][k] = initValue;
+                        }
+                    }
+                }
+            }
+            
+            ConstArray(unsigned int arraySize, const DataType* const d) :
+                m_data(),
+                m_offset(0)
+            {
+                BOOST_STATIC_ASSERT(Dim==1);
+                std::vector<unsigned int> extents(Dim, arraySize);
+                CreateStorage(extents);
+                m_data->assign(d, d+arraySize);
+            }
+             
+            ConstArray(const ConstArray<Dim, DataType>& rhs) :
+                m_data(rhs.m_data),
+                m_offset(rhs.m_offset)
+            {
+            }
+             
+            ConstArray(const ConstArray<Dim, DataType>& rhs, unsigned int offset) :
+                m_data(rhs.m_data),
+                m_offset(offset)
+            {
+                BOOST_STATIC_ASSERT(Dim == 1);
+            }
+            
+            ConstArray(const Array<Dim, DataType>& rhs) :
+                m_data(rhs.m_data),
+                m_offset(rhs.m_offset)
             {
             }
             
-            explicit SharedArray(unsigned int s) :
-                SharedArrayBase<T>(s)
+            ConstArray(const Array<Dim, DataType>& rhs, unsigned int offset) :
+                m_data(rhs.m_data),
+                m_offset(offset)
             {
-            }
+            }   
             
-            SharedArray(T* p, unsigned int s) : 
-                SharedArrayBase<T>(p, s)
+            ConstArray<Dim, DataType>& operator=(const ConstArray<Dim, DataType>& rhs)
             {
-            }
-            
-            template<class D> 
-            SharedArray(T* p, unsigned int s, D d) : 
-                SharedArrayBase<T>(p, s, d)
-            {
-            }
-            
-            SharedArray(SharedArray<T>& rhs, unsigned int offset) :
-                SharedArrayBase<T>(rhs, offset)
-            {
-            }
-            
-            SharedArray(SharedArray<T>& rhs) :
-                SharedArrayBase<T>(rhs)
-            {
-            }
-            
-            SharedArray(Temporary<SharedArray<T> > rhs) :
-                SharedArrayBase<T>(rhs.GetValue().px, rhs.GetValue().pn, rhs.GetValue().m_offset, rhs.GetValue().m_size)
-            {
-            }
-            
-            SharedArray<T>& operator=(SharedArray<T>& rhs)
-            {
-                SharedArrayBase<T>::operator=(rhs);
+                ConstArray<Dim, DataType> temp(rhs);
+                Swap(temp);
                 return *this;
             }
-            
-            SharedArray<T>& operator=(Temporary<SharedArray<T> > rhs)
-            {
-                this->px = rhs.GetValue().px;
-                this->pn = rhs.GetValue().pn;
-                this->m_offset = rhs.GetValue().m_offset;
-                this->m_size = rhs.GetValue().m_size;
-                return *this;
+
+            const_reference operator[](index i) const 
+            { 
+                ASSERTL1(i < size(), "Array Bounds Error.");
+                return (*m_data)[i+m_offset]; 
             }
-        private:
         
+            const_iterator begin() const 
+            {
+                const_iterator result = m_data->begin();
+                result += m_offset;
+                return result;
+            }
+            
+            const_iterator end() const 
+            { 
+                return m_data->end(); 
+            }
+            
+            const element* get() const 
+            { 
+                return m_data->data() + m_offset; 
+            }
+            
+            const element* data() const 
+            { 
+                return m_data->data() + m_offset; 
+            }
+            
+            size_type size() const 
+            { 
+                return m_data->size() - m_offset; 
+            }
+            
+            size_type num_dimensions() const 
+            { 
+                return m_data->num_dimensions(); 
+            }
+            
+            bool operator==(const ConstArray<Dim, DataType>& rhs) const
+            {
+                return m_data == rhs.m_data;
+            }
+            
+            bool operator!=(const ConstArray<Dim, DataType>& rhs) const
+            {
+                return !(*this == rhs);
+            }
+            
+            const size_type* shape() const { return m_data->shape(); }
+            
+        protected:
+            boost::shared_ptr<ArrayType>& GetData() { return m_data; }
+            const boost::shared_ptr<ArrayType>& GetData() const { return m_data; }
+            unsigned int GetOffset() const { return m_offset; }
+            
+        private:
+            template<typename ExtentListType>
+            void CreateStorage(const ExtentListType& extent)
+            {
+                unsigned int size = std::accumulate(extent.begin(), extent.end(), 1, 
+                    std::multiplies<unsigned int>());
+                DataType* storage = MemoryManager<DataType>::RawAllocate(size);
+                m_data = MemoryManager<ArrayType>::AllocateSharedPtrD(
+                    boost::bind(&MemoryManager<DataType>::RawDeallocate, storage, size),
+                    storage, extent);
+            }
+            
+            void Swap(ConstArray<OneD, DataType>& rhs)
+            {
+                std::swap(m_data, rhs.m_data);
+                std::swap(m_offset, rhs.m_offset);
+            }
+            
+            boost::shared_ptr<ArrayType> m_data;
+            unsigned int m_offset;
     };
     
-    template<class T>
-    class SharedArray<const T> : public SharedArrayBase<const T>
+    template<Dimension Dim, typename DataType>
+    class Array : public ConstArray<Dim, DataType>
     {
         public:
-           
-            friend class SharedArray<T>;
+            typedef ConstArray<Dim, DataType> BaseType;
+            typedef typename BaseType::ArrayType ArrayType;
+            typedef typename BaseType::index index;
             
-            SharedArray() :
-                SharedArrayBase<const T>()
+            typedef typename ArrayType::iterator iterator;
+            typedef typename ArrayType::reference reference;
+            typedef typename ArrayType::const_reference const_reference;
+            typedef typename ArrayType::element element;
+            
+        public:
+            Array() :
+                BaseType()
             {
             }
             
-            explicit SharedArray(unsigned int s) :
-                SharedArrayBase<const T>(s)
+            explicit Array(unsigned int size) :
+                BaseType(size)
             {
             }
             
-            SharedArray(const T* p, unsigned int s) : 
-                SharedArrayBase<const T>(p, s)
+            Array(unsigned int dim1Size, unsigned int dim2Size) :
+                BaseType(dim1Size, dim2Size)
             {
             }
             
-            SharedArray(SharedArray<const T>& rhs, unsigned int offset) :
-                SharedArrayBase<const T>(rhs, offset)
+            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size) :
+                BaseType(dim1Size, dim2Size, dim3Size)
+            {
+            }
+            
+            Array(unsigned int arraySize, const DataType& initValue) :
+                BaseType(arraySize, initValue)
+            {
+            }
+            
+            Array(unsigned int dim1Size, unsigned int dim2Size, const DataType& initValue) :
+                BaseType(dim1Size, dim2Size, initValue)
+            {
+            }
+            
+            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size, const DataType& initValue) :
+                BaseType(dim1Size, dim2Size, dim3Size, initValue)
             {
             }
 
-            template<class D> 
-            SharedArray(const T* p, unsigned int s, D d) : 
-                SharedArrayBase<const T>(p, s, d)
-            {
-            }
-
-            SharedArray(const SharedArray<const T>& rhs) :
-                SharedArrayBase<const T>(rhs)
+            
+            Array(unsigned int arraySize, const DataType* const d) :
+                BaseType(arraySize, d)
             {
             }
             
-            SharedArray(const SharedArray<T>& rhs) :
-                SharedArrayBase<const T>(rhs.px, rhs.pn, rhs.m_offset, rhs.m_size)
+            Array(const Array<Dim, DataType>& rhs) :
+                BaseType(rhs)
             {
-                
             }
             
-            SharedArray<const T>& operator=(const SharedArray<const T>& rhs)
+            Array(const Array<Dim, DataType>& rhs, unsigned int offset) :
+                BaseType(rhs, offset)
             {
-                SharedArrayBase<const T>::operator=(rhs);
+            }
+            
+            explicit Array(const ConstArray<Dim, DataType>& rhs) :
+                BaseType(rhs.size())
+            {
+                std::copy(rhs.begin(), rhs.end(), begin());
+            }
+            
+            Array<Dim, DataType>& operator=(const Array<Dim, DataType>& rhs)
+            {
+                ConstArray<Dim, DataType>::operator=(rhs);
                 return *this;
             }
             
-            SharedArray<const T>& operator=(const SharedArray<T>& rhs)
+            element* get() { return this->GetData()->data(); }
+            element* data() { return this->GetData()->data(); }
+            
+            const element* get() const { return this->GetData()->data(); }
+            const element* data() const { return this->GetData()->data(); }
+            
+            reference operator[](index i) { return (*(this->GetData()))[i+this->GetOffset()]; }
+            const_reference operator[](index i) const { return (*(this->GetData()))[i+this->GetOffset()]; }
+            
+            iterator begin()
             {
-                this->px = rhs.px;
-                this->pn = rhs.pn;
-                this->m_offset = rhs.m_offset;
-                this->m_size = rhs.m_size;
-                return *this;
+                iterator result = this->GetData()->begin();
+                result += this->GetOffset();
+                return result;
             }
+            
+            iterator end() { return this->GetData()->end(); }
+            
+            
+        private:
     };
-            
-    template<class T> inline bool operator==(SharedArray<T> const & a, SharedArray<T> const & b) // never throws
+        
+    template<Dimension Dim, typename DataType>
+    void CopyArray(const ConstArray<Dim, DataType>& source, Array<Dim, DataType>& dest)
     {
-        return a.get() == b.get();
+        if( dest.size() != source.size() )
+        {
+            dest = Array<Dim, DataType>(source.size());
+        }
+        
+        std::copy(source.begin(), source.end(), dest.begin());
     }
-
-    template<class T> inline bool operator!=(SharedArray<T> const & a, SharedArray<T> const & b) // never throws
-    {
-        return a.get() != b.get();
-    }
-
-    template<class T> inline bool operator<(SharedArray<T> const & a, SharedArray<T> const & b) // never throws
-    {
-        return std::less<T*>()(a.get(), b.get());
-    }
-
-    template<class T> void swap(SharedArray<T> & a, SharedArray<T> & b) // never throws
-    {
-        a.swap(b);
-    }
-
-    template<typename T>
-    SharedArray<T> operator+(SharedArray<T>& lhs, unsigned int offset)
-    {
-        return SharedArray<T>(lhs, offset);
-    }
-
-    template<typename T>
-    SharedArray<T> operator+(unsigned int offset, SharedArray<T>& rhs)
-    {
-        return SharedArray<T>(rhs, offset);
-    }
-
+    
+    static Array<OneD, NekDouble> NullNekDouble1DArray;
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHARED_ARRAY_HPP

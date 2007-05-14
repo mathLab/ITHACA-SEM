@@ -49,13 +49,19 @@ namespace ErrorUtil
     };
 
 #ifdef ENABLE_NEKTAR_EXCEPTIONS
+    class NekError : public std::runtime_error
+    {
+        public:
+            NekError(const std::string& message) : std::runtime_error(message) {}
+    };
+    
     static void ExceptionError(ErrType type, const char *routine, int lineNumber, const char *msg)
     {
         std::string errorMessage = std::string(routine) + "[" +
                 boost::lexical_cast<std::string>(lineNumber) + "]:" +
                 std::string(msg);
         std::cerr << errorMessage << std::endl;
-        throw std::runtime_error(errorMessage);
+        throw NekError(errorMessage);
     }
 #endif
 
@@ -166,6 +172,9 @@ namespace ErrorUtil
 #endif //ERRORUTIL_HPP
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.2  2006/08/14 02:18:02  bnelson
+Added the option to throw exceptions when an error is encountered.
+
 Revision 1.1  2006/06/01 11:07:52  kirby
 *** empty log message ***
 

@@ -65,7 +65,7 @@ namespace Nektar
                 m_columns(columns),
                 m_blockColumns(m_rows, blockColumns),
                 m_blockRows(m_columns, blockRows),
-                m_data(MemoryManager::AllocateSharedArray<InnerDataType>(m_rows*m_columns))
+                m_data(m_rows*m_columns)
             {
                 ASSERTL0(blockRows%rows == 0, "ERROR: Blocks in a block matrix must fit evenly in the requested size.");
                 ASSERTL0(blockColumns%columns == 0, "ERROR: Blocks in a block matrix must fit evenly in the requested size.");
@@ -84,7 +84,7 @@ namespace Nektar
                 m_columns(rhs.m_columns),
                 m_blockColumns(rhs.m_blockColumns),
                 m_blockRows(rhs.m_blockRows),
-                m_data(MemoryManager::AllocateSharedArray<InnerDataType>(m_rows*m_columns))
+                m_data(m_rows*m_columns)
             {
                 for(unsigned int i = 0; i < m_rows; ++i)
                 {
@@ -102,15 +102,14 @@ namespace Nektar
                 return *this;
             }
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
             NekMatrix(const expt::Expression<ExpressionPolicyType>& rhs) :
                 m_rows(rhs.GetMetadata().Rows),
                 m_columns(rhs.GetMetadata().Columns),
                 m_blockColumns(rhs.GetMetadata().BlockColumns),
                 m_blockRows(rhs.GetMetadata().BlockRows),
-                m_data(MemoryManager::AllocateSharedArray<InnerDataType>(m_rows*m_columns))
+                m_data(m_rows*m_columns)
             {
                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, eFull, BlockType, space> > ));
                 rhs.Apply(*this);
@@ -125,12 +124,12 @@ namespace Nektar
                 m_columns = rhs.GetMetadata().Columns;
                 m_blockColumns = rhs.GetMetadata().BlockColumns;
                 m_blockRows = rhs.GetMetadata().BlockRows;
-                m_data = MemoryManager::AllocateSharedArray<InnerDataType>(m_rows*m_columns);
+                m_data = Array<OneD, InnerDataType>(m_rows*m_columns);
 
                 rhs.Apply(*this);
                 return *this;
             }
-#endif              
+            #endif
             
             typename boost::call_traits<DataType>::reference operator()(unsigned int rowNumber, unsigned int colNumber)
             {
@@ -170,21 +169,21 @@ namespace Nektar
             const std::vector<unsigned int> GetBlockColumns() const { return m_blockColumns; }
 
             /// \brief Return a full matrix version.
-            SharedArray<DataType> GetPtr()
-            {
-                SharedArray<DataType> result(new DataType[GetRows()*GetColumns()]);
-                //std::fill(result, result+GetRows()*GetColumns(), DataType(0));
-                
-                for(unsigned int i = 0; i < GetRows(); ++i)
-                {
-                    for(unsigned int j = 0; j < GetColumns(); ++j)
-                    {
-                        result[i*GetColumns() + j] = (*this)(i,j);
-                    }
-                }
-                
-                return result;
-            }
+//             Array<OneD, DataType> GetPtr()
+//             {
+//                 SharedArray<DataType> result(new DataType[GetRows()*GetColumns()]);
+//                 //std::fill(result, result+GetRows()*GetColumns(), DataType(0));
+//                 
+//                 for(unsigned int i = 0; i < GetRows(); ++i)
+//                 {
+//                     for(unsigned int j = 0; j < GetColumns(); ++j)
+//                     {
+//                         result[i*GetColumns() + j] = (*this)(i,j);
+//                     }
+//                 }
+//                 
+//                 return result;
+//             }
             
             ThisType& operator+=(const ThisType& rhs)
             {
@@ -214,14 +213,14 @@ namespace Nektar
             unsigned int m_numberOfElements;
             unsigned int m_rows;
             unsigned int m_columns;
-    
-    // For column i, the number of columns in that block.
+
+            // For column i, the number of columns in that block.
             std::vector<unsigned int> m_blockColumns;
-    
-    // For row i, the number of rows in that block.
+
+            // For row i, the number of rows in that block.
             std::vector<unsigned int> m_blockRows;
     
-            SharedArray<InnerDataType> m_data;
+            Array<OneD, InnerDataType> m_data;
             
     };
 };
@@ -230,6 +229,9 @@ namespace Nektar
 
 /**
     $Log: NekBlockFullMatrix.hpp,v $
+    Revision 1.3  2007/03/31 15:38:46  bnelson
+    *** empty log message ***
+
     Revision 1.2  2007/01/23 03:12:49  jfrazier
     Added more conditional compilation directives for expression templates.
 

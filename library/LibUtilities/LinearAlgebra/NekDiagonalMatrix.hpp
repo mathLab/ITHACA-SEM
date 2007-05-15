@@ -41,6 +41,7 @@
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/Memory/DeleteNothing.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <boost/call_traits.hpp>
 
@@ -52,13 +53,13 @@ namespace Nektar
     class NekMatrixStoragePolicy<DataType, eDiagonal> 
     {
         public: 
-            static void Transpose(SharedArray<DataType>& data, unsigned int& rows, unsigned int& columns)
+            static void Transpose(Array<OneD, DataType>& data, unsigned int& rows, unsigned int& columns)
             {
             }
 
 
             static typename boost::call_traits<DataType>::reference GetData(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns,
-                                                                            SharedArray<DataType>& data)
+                                                                            Array<OneD, DataType>& data)
             {
                 if( row == column )
                 {
@@ -73,7 +74,7 @@ namespace Nektar
             }
 
             static typename boost::call_traits<DataType>::const_reference GetConstData(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns,
-                                                                            const SharedArray<DataType>& data)
+                                                                            const ConstArray<OneD, DataType>& data)
             {
                 if( row == column )
                 {
@@ -403,6 +404,9 @@ namespace Nektar
 
 /**
     $Log: NekDiagonalMatrix.hpp,v $
+    Revision 1.7  2007/03/29 18:59:04  bnelson
+    Refactoring in preparation for scaled matrices.  Fixed transpose problem.
+
     Revision 1.6  2007/02/15 06:56:54  bnelson
     *** empty log message ***
 

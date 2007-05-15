@@ -63,7 +63,7 @@ namespace Nektar
         typedef NekVector<DataType, vectorDim, space> VectorType;
         typedef NekMatrix<DataType, eDiagonal, eNormal, space> MatrixType;
 
-        static void Solve(const MatrixType& A, ConstInt1DSharedArray &ipivot, const VectorType& b, VectorType& x)
+        static void Solve(const MatrixType& A, const ConstArray<OneD, int>& ipivot, const VectorType& b, VectorType& x)
         {
             ASSERTL0(A.GetColumns() == b.GetRows(), "ERROR: NekLinSys::Solve matrix columns must equal vector rows");
 
@@ -73,7 +73,7 @@ namespace Nektar
             }
         }
 
-        static void SolveTranspose(const MatrixType& A, ConstInt1DSharedArray &ipivot, const VectorType& b, VectorType& x)
+        static void SolveTranspose(const MatrixType& A, const ConstArray<OneD, int>& ipivot, const VectorType& b, VectorType& x)
         {
             Solve(A,ipivot,b,x);
         }
@@ -85,7 +85,7 @@ namespace Nektar
         typedef NekMatrix<DataType, form, BlockType, space> MatrixType;
         typedef NekVector<DataType, vectorDim, space> VectorType;
 
-        static void Solve(const MatrixType& A, ConstInt1DSharedArray &ipivot, const VectorType& b, VectorType& x)
+        static void Solve(const MatrixType& A, const ConstArray<OneD, int>& ipivot, const VectorType& b, VectorType& x)
         {
             int info = 0;
             Lapack::Dgetrs('T',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetPtr(),A.GetRows(),info);
@@ -96,7 +96,7 @@ namespace Nektar
             }
         }
 
-        static void SolveTranspose(const MatrixType& A, ConstInt1DSharedArray &ipivot, const VectorType& b, VectorType& x)
+        static void SolveTranspose(const MatrixType& A, const ConstArray<OneD, int>& ipivot, const VectorType& b, VectorType& x)
         {
             int info = 0;
             Lapack::Dgetrs('N',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetPtr(),A.GetRows(),info);
@@ -256,7 +256,7 @@ namespace Nektar
             int n = theA.GetColumns();
             int pivotSize = std::max(1, std::min(m, n));
             int info = 0;
-            m_ipivot = Nektar::MemoryManager::AllocateSharedArray<int>(pivotSize);
+            m_ipivot = Array<OneD, int>(pivotSize);
 
             Lapack::Dgetrf(m, n, theA.GetPtr().get(), m, m_ipivot.get(), info);
 
@@ -279,7 +279,7 @@ namespace Nektar
         }
 
         MatrixType A;
-        Int1DSharedArray m_ipivot;	    
+        Array<OneD, int> m_ipivot;	    
     };
 }
 

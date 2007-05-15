@@ -42,6 +42,7 @@
 //#include <LibUtilities/LinearAlgebra/NekVectorMetadata.hpp>
 
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/Memory/DeleteNothing.hpp>
@@ -71,26 +72,24 @@ namespace Nektar
             // \brief Creates a vector with given size and initial value.
             //        This constructor is only valid for variable sized vectors.
             NekVector(unsigned int size, typename boost::call_traits<DataType>::const_reference a) :
-                m_data(MemoryManager::AllocateSharedArray<DataType>(size)),
-                m_dimension(size),
+                m_data(size),
                 m_wrapperType(eCopy)
             {
-                std::fill_n(m_data.get(), m_dimension, a);
+                std::fill_n(m_data.get(), m_data.size(), a);
             }
 
             explicit NekVector(const std::string& vectorValues) :
                 m_data(),
-                m_dimension(0),
                 m_wrapperType(eCopy)
             {
                 try
                 {
                     std::vector<DataType> values = FromString<DataType>(vectorValues);
-                    m_dimension = values.size();
-                    m_data = MemoryManager::AllocateSharedArray<DataType>(m_dimension);
+                    unsigned int size = values.size();
+                    m_data = Array<OneD, DataType>(size);
                     std::copy(values.begin(), values.end(), m_data);
 
-                    ASSERTL0(m_dimension > 0, "Error converting string values to vector");
+                    ASSERTL0(size > 0, "Error converting string values to vector");
                 }
                 catch(std::runtime_error& e)
                 {
@@ -101,8 +100,7 @@ namespace Nektar
             NekVector(typename boost::call_traits<DataType>::const_reference x,
                       typename boost::call_traits<DataType>::const_reference y,
                       typename boost::call_traits<DataType>::const_reference z) :
-                m_data(MemoryManager::AllocateSharedArray<DataType>(3)),
-                m_dimension(3),
+                m_data(3),
                 m_wrapperType(eCopy)
             {
                 m_data[0] = x;
@@ -110,15 +108,14 @@ namespace Nektar
                 m_data[2] = z;
             }
 
-            NekVector(NekVector<DataType, 0, space>& rhs) :
+            NekVector(const NekVector<DataType, 0, space>& rhs) :
                 m_data(),
-                m_dimension(rhs.m_dimension),
                 m_wrapperType(rhs.m_wrapperType)
             {
                 if( m_wrapperType = eCopy )
                 {
-                    m_data = MemoryManager::AllocateSharedArray<DataType>(m_dimension);
-                    std::copy(rhs.m_data.get(), rhs.m_data.get() + m_dimension, m_data.get());
+                    m_data = Array<OneD, DataType>(rhs.m_data.size());
+                    CopyArray(rhs.m_data, m_data);
                 }
                 else
                 {
@@ -126,59 +123,51 @@ namespace Nektar
                 }
             }
 
-            NekVector(const NekVector<DataType, 0, space>& rhs) :
+            explicit NekVector(const ConstArray<OneD, DataType>& ptr) :
                 m_data(),
-                m_dimension(rhs.m_dimension),
                 m_wrapperType(eCopy)
             {
-                // A copy of a wrapped vector must make a copy when passed a constant input vector.
-                m_data = MemoryManager::AllocateSharedArray<DataType>(m_dimension);
-                std::copy(rhs.m_data.get(), rhs.m_data.get() + m_dimension, m_data.get());
+                m_data = Array<OneD, DataType>(ptr.size());
+                CopyArray(ptr, m_data);
             }
 
+            NekVector(unsigned int size, const ConstArray<OneD, DataType>& ptr) :
+                m_data(size),
+                m_wrapperType(eCopy)
+            {
+                m_data = Array<OneD, DataType>(ptr.size());
+                CopyArray(ptr, m_data);
+            }
+            
             NekVector(unsigned int size, const DataType* const ptr) :
-                m_data(),
-                m_dimension(size),
+                m_data(size, ptr),
                 m_wrapperType(eCopy)
             {
-                m_data = MemoryManager::AllocateSharedArray<DataType>(size);
-                std::copy(ptr, ptr+size, m_data.get());
             }
-
-            NekVector(unsigned int size, const SharedArray<const DataType>& ptr) :
+            
+            explicit NekVector(const Array<OneD, DataType>& ptr, PointerWrapper h = eCopy) :
                 m_data(),
-                m_dimension(size),
-                m_wrapperType(eCopy)
-            {
-                m_data = MemoryManager::AllocateSharedArray<DataType>(size);
-                std::copy(ptr.get(), ptr.get()+size, m_data.get());
-            }
-
-            NekVector(unsigned int size, DataType* ptr, PointerWrapper h = eCopy) :
-                m_data(),
-                m_dimension(size),
                 m_wrapperType(h)
             {
                 if( h == eCopy )
                 {
-                    m_data = MemoryManager::AllocateSharedArray<DataType>(size);
-                    std::copy(ptr, ptr+size, m_data.get());
+                    m_data = Array<OneD, DataType>(ptr.size());
+                    CopyArray(ptr, m_data);
                 }
                 else
                 {
-                    m_data = SharedArray<DataType>(ptr, size, DeleteNothing<DataType>());
+                    m_data = ptr;
                 }
             }
-
-            NekVector(unsigned int size, SharedArray<DataType>& ptr, PointerWrapper h = eCopy) :
+            
+            explicit NekVector(unsigned int size, Array<OneD, DataType>& ptr, PointerWrapper h = eCopy) :
                 m_data(),
-                m_dimension(size),
                 m_wrapperType(h)
             {
                 if( h == eCopy )
                 {
-                    m_data = MemoryManager::AllocateSharedArray<DataType>(size);
-                    std::copy(ptr.get(), ptr.get()+size, m_data.get());
+                    m_data = Array<OneD, DataType>(ptr.size());
+                    CopyArray(ptr, m_data);
                 }
                 else
                 {
@@ -186,80 +175,68 @@ namespace Nektar
                 }
             }
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
             NekVector(const expt::Expression<ExpressionPolicyType>& rhs) :
-                m_data(MemoryManager::AllocateSharedArray<DataType>(rhs.GetMetadata().Rows)),
-                m_dimension(rhs.GetMetadata().Rows),
+                m_data(rhs.GetMetadata().Rows),
                 m_wrapperType(eCopy)
             {
+                /// TODO Make sure this works correctly with eWrapper
                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, 0, space> > ));
                 rhs.Apply(*this);
             }
-#endif
+            #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+                    
             ~NekVector()
             {
-#ifdef _DEBUG
-                m_data.reset();
-                m_dimension = 0;
-#endif //_DEBUG
             }
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
             NekVector<DataType, 0, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
             {
+                /// TODO Make sure this works correctly with eWrapper.
                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, 0, space> > ));
 
-                m_data = SharedArray<DataType>(rhs.GetMetadata().Rows);
+                m_data = Array<OneD, DataType>(rhs.GetMetadata().Rows);
                 m_wrapperType = eCopy;
-                m_dimension = rhs.GetMetadata().Rows;
 
                 rhs.Apply(*this);
                 return *this;
             }
-#endif
-
-            /// TODO - Use the lessons from SharedArray - the const
-            /// assignment operator may be the only one ever called.
-            NekVector<DataType, 0, space>& operator=(NekVector<DataType, 0, space>& rhs)
-            {
-                m_dimension = rhs.m_dimension;
-                m_wrapperType = rhs.m_wrapperType;
-
-                if( m_wrapperType == eCopy )
-                {
-                    m_data = MemoryManager::AllocateSharedArray<DataType>(m_dimension);
-                    std::copy(rhs.m_data.get(), rhs.m_data.get() + m_dimension, m_data.get());
-                }
-                else
-                {
-                    m_data = rhs.m_data;
-                }
-
-                return *this;
-            }
+            #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
             NekVector<DataType, 0, space>& operator=(const NekVector<DataType, 0, space>& rhs)
             {
-                m_dimension = rhs.m_dimension;
-                m_wrapperType = eCopy;
-                
-                m_data = MemoryManager::AllocateSharedArray<DataType>(m_dimension);
-                std::copy(rhs.m_data.get(), rhs.m_data.get() + m_dimension, m_data.get());
-         
+                if( m_wrapperType == eCopy  )
+                {
+                    // If the current vector is a copy, then regardless of the rhs type 
+                    // we just copy over the values, resizing if needed.
+                    if( m_data.size() != rhs.m_data.size() )
+                    {
+                        m_data = Array<OneD, DataType>(rhs.m_data.size());
+                    }
+                }
+                else if( m_wrapperType == eWrapper )
+                {
+                    // If the current vector is wrapped, then just copy over the top,
+                    // but the sizes of the two vectors must be the same.
+                    ASSERTL0(m_data.size() == rhs.m_data.size(), "Wrapped NekVectors must have the same dimension in operator=");
+                }
+
+                CopyArray(rhs.m_data, m_data);
                 return *this;
             }
 
             /// \brief Returns the number of dimensions for the point.
             unsigned int GetDimension() const
             {
-                return m_dimension;
+                return m_data.size();
             }
 
             unsigned int GetRows() const
             {
-                return m_dimension;
+                return m_data.size();
             }
 
             DataType* GetPtr()
@@ -429,8 +406,7 @@ namespace Nektar
             DataType InfinityNorm() const { return Nektar::InfinityNorm(*this); }
             
         private:
-            SharedArray<DataType> m_data;
-            unsigned int m_dimension;
+            Array<OneD, DataType> m_data;
             PointerWrapper m_wrapperType;
     };    
   

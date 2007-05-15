@@ -96,6 +96,45 @@ namespace Nektar
     /// In this example, each instance of Sample contains an array.  The getData method 
     /// gives the user access to the array values, but does not allow modification of those
     /// values.
+    ///\section Usage Test
+    /// 
+    /// For those with a strong C background, the easiest way to look at an array is to 
+    /// transform "Array<OneD, DataType>" to "DataType*".  Therfore, in any code where you 
+    /// would have specified "DataType*" you will want to use "Array<OneD, DataType>", and 
+    /// where you would have used 
+    ///
+    /// <TABLE>
+    /// <TR>
+    ///     <TH>Native C Parameter Type</TH>
+    ///     <TH>Array Parameter Type</TH>
+    ///     <TH>Description</TH>
+    /// </TR>
+    /// <TR>
+    ///     <TD>DataType*</TD>
+    ///     <TD>Array&lt;OneD, DataType&gt; </TD>
+    ///     <TD></TD>
+    /// </TR>
+    /// <TR>
+    ///     <TD>DataType*</TD>
+    ///     <TD>Array&lt;OneD, DataType&gt; </TD>
+    ///     <TD></TD>
+    /// </TR>
+    /// </TABLE>
+    /// const Array<>& is kind of weird.  You can't change it directly, but you can create a copy
+    /// of it and change that.  So the const can be ignored as needed.  Mostly useful for cases 
+    /// where you want to be able to change the array, and you need to accept temporaries.
+    ///
+    ///\section Efficiency Efficiency Considerations
+    ///
+    ///\code
+    /// // Instead of this:
+    /// ConstArray<OneD, NekDouble> lessEfficient(points->GetZ());
+    ///
+    /// // Do this
+    /// ConstArray<OneD, NekDouble>& moreEfficient = points->GetZ();
+    ///\endcode
+    ///
+    /// If you know the size, don't create an empty array and then populate it on another line.
     template<Dimension Dim, typename DataType>
     class ConstArray
     {
@@ -420,10 +459,25 @@ namespace Nektar
             
             iterator end() { return this->GetData()->end(); }
             
+            using BaseType::begin;
+            using BaseType::end;
             
         private:
     };
         
+        
+    template<Dimension Dim, typename DataType>
+    ConstArray<Dim, DataType> operator+(const ConstArray<Dim, DataType>& lhs, unsigned int offset)
+    {
+        return ConstArray<Dim, DataType>(lhs, offset);
+    }
+    
+    template<Dimension Dim, typename DataType>
+    Array<Dim, DataType> operator+(const Array<Dim, DataType>& lhs, unsigned int offset)
+    {
+        return Array<Dim, DataType>(lhs, offset);
+    }
+    
     template<Dimension Dim, typename DataType>
     void CopyArray(const ConstArray<Dim, DataType>& source, Array<Dim, DataType>& dest)
     {

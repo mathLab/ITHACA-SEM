@@ -257,14 +257,14 @@ namespace Nektar
             }
 
             /** \brief return basis definition array m_bdata */
-            inline ConstNekDouble1DSharedArray GetBdata() const 
+            inline const ConstArray<OneD, NekDouble>& GetBdata() const 
             {
 		return m_bdata;
             }
 
             /** \brief return basis definition array m_dbdata */
 
-            inline ConstNekDouble1DSharedArray GetDbdata() const
+            inline const ConstArray<OneD, NekDouble>& GetDbdata() const
             {
                 return m_dbdata;
             }
@@ -278,8 +278,8 @@ namespace Nektar
 
         protected:
             BasisKey    m_basisKey;
-            NekDouble1DSharedArray m_bdata; /**< Basis definition */
-            NekDouble1DSharedArray m_dbdata; /**< Derivative Basis definition */
+            Array<OneD, NekDouble> m_bdata; /**< Basis definition */
+            Array<OneD, NekDouble> m_dbdata; /**< Derivative Basis definition */
 
         private:
 

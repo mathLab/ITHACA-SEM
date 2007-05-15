@@ -63,25 +63,25 @@ namespace Nektar
             const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
             {
                 ASSERTL0(false, "NodalTetElec Method not implemented");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<NekDouble> >());
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
 
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(ConstNekDouble1DSharedArray x)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(ConstArray<OneD, NekDouble>& x)
             {
                 ASSERTL0(false, "NodalTetElec Method not implemented");
 
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<NekDouble> >());
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
 
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, ConstNekDouble1DSharedArray x)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, ConstArray<OneD, NekDouble>& x)
             {
                 ASSERTL0(false, "NodalTetElec Method not implemented");
 
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager::AllocateSharedPtr<NekMatrix<NekDouble> >());
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
 
                 return returnval;
            }

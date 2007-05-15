@@ -66,7 +66,7 @@ namespace Nektar
 
         boost::shared_ptr<NodalTetElec::PointsBaseType> NodalTetElec::Create(const PointsKey &key)
         {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<NodalTetElec>(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTetElec>::AllocateSharedPtr(key));
             returnval->Initialize();
             return returnval;
         }
@@ -81,6 +81,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTetElec.cpp,v $
+* Revision 1.6  2007/04/30 23:29:09  jfrazier
+* More conversion to multi_array.
+*
 * Revision 1.5  2007/04/29 00:31:57  jfrazier
 * Updated to use multi_arrays.
 *

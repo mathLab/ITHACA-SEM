@@ -217,38 +217,38 @@ namespace Nektar
                 return m_pointsKey.GetPointsType();
             }
 
-            inline typename Nek1DConstSharedArray<DataType>::type GetZ() const
+            inline const ConstArray<OneD, DataType>& GetZ() const
             {
                 return m_points[0];
             }
 
-            inline typename Nek1DConstSharedArray<DataType>::type GetW() const 
+            inline const ConstArray<OneD, DataType>& GetW() const 
             {
                 return m_weights; 
             } 
 
-            inline void GetZW(typename Nek1DConstSharedArray<DataType>::type &z,
-                typename Nek1DConstSharedArray<DataType>::type &w) const 
+            inline void GetZW(ConstArray<OneD, DataType> &z,
+                ConstArray<OneD, DataType> &w) const 
             {
                 z = m_points[0];
                 w = m_weights;
             }
 
-            inline void GetPoints(typename Nek1DConstSharedArray<DataType>::type &x) const
+            inline void GetPoints(ConstArray<OneD, DataType> &x) const
             {
                 x = m_points[0];
             }
 
-            inline void GetPoints(typename Nek1DConstSharedArray<DataType>::type &x,
-                                  typename Nek1DConstSharedArray<DataType>::type &y) const
+            inline void GetPoints(ConstArray<OneD, DataType> &x,
+                                  ConstArray<OneD, DataType> &y) const
             {
                 x = m_points[0];
                 y = m_points[1];
             }
 
-            inline void GetPoints(typename Nek1DConstSharedArray<DataType>::type &x,
-                                  typename Nek1DConstSharedArray<DataType>::type &y,
-                                  typename Nek1DConstSharedArray<DataType>::type &z) const
+            inline void GetPoints(ConstArray<OneD, DataType> &x,
+                                  ConstArray<OneD, DataType> &y,
+                                  ConstArray<OneD, DataType> &z) const
             {
                 x = m_points[0];
                 y = m_points[1];
@@ -261,13 +261,13 @@ namespace Nektar
             }
 
             virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)=0;
-            virtual const MatrixSharedPtrType GetI(typename Nek1DConstSharedArray<DataType>::type x) = 0;
-            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, typename Nek1DConstSharedArray<DataType>::type x) = 0;
+            virtual const MatrixSharedPtrType GetI(ConstArray<OneD, DataType>& x) = 0;
+            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, ConstArray<OneD, DataType>& x) = 0;
 
         protected:
             PointsKey m_pointsKey;
-            typename Nek1DSharedArray<DataType>::type m_points[3];
-            typename Nek1DSharedArray<DataType>::type m_weights;
+            Array<OneD, DataType> m_points[3];
+            Array<OneD, DataType> m_weights;
             MatrixSharedPtrType m_derivmatrix;
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_InterpManager;
 
@@ -278,19 +278,19 @@ namespace Nektar
 
                 for (unsigned int i=0; i<pointsDim; ++i)
                 {
-                    m_points[i] = MemoryManager::AllocateSharedPtr<typename Nek1DArray<DataType>::type>(boost::extents[totNumPoints]);
+                    m_points[i] = Array<OneD, DataType>(totNumPoints);
                 }
             }
 
             virtual void CalculateWeights()
             {
-                m_weights =  MemoryManager::AllocateSharedPtr<typename Nek1DArray<DataType>::type>(boost::extents[GetTotNumPoints()]);
+                m_weights = Array<OneD, DataType>(GetTotNumPoints());
             }
 
             virtual void CalculateDerivMatrix()
             {
                 int totNumPoints = GetTotNumPoints();
-                m_derivmatrix.reset(MemoryManager::Allocate<NekMatrix<DataType> >(totNumPoints,totNumPoints));
+                m_derivmatrix.reset(MemoryManager<NekMatrix<DataType> >::Allocate(totNumPoints,totNumPoints));
             }
 
             Points(const PointsKey &key):m_pointsKey(key)

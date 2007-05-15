@@ -71,8 +71,8 @@ namespace Nektar
                     b = NodalTriFeketeData[index][4]; 
                     c = NodalTriFeketeData[index][5]; 
 
-                    (*m_points[0])[isum] = 2.0*b - 1.0;
-                    (*m_points[1])[isum] = 2.0*c - 1.0;
+                    m_points[0][isum] = 2.0*b - 1.0;
+                    m_points[1][isum] = 2.0*c - 1.0;
                     isum++;
                     continue;
                 }//end symmetry1
@@ -85,8 +85,8 @@ namespace Nektar
                         a = NodalTriFeketeData[index][offset+perm3A_2d[j][0]];
                         b = NodalTriFeketeData[index][offset+perm3A_2d[j][1]];
                         c = NodalTriFeketeData[index][offset+perm3A_2d[j][2]];
-                        (*m_points[0])[isum] = 2.0*b - 1.0;
-                        (*m_points[1])[isum] = 2.0*c - 1.0;
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
                         isum++;
                     }//end j
                     continue;
@@ -99,8 +99,8 @@ namespace Nektar
                         a = NodalTriFeketeData[index][offset+perm3B_2d[j][0]];
                         b = NodalTriFeketeData[index][offset+perm3B_2d[j][1]];
                         c = NodalTriFeketeData[index][offset+perm3B_2d[j][2]];
-                        (*m_points[0])[isum] = 2.0*b - 1.0;
-                        (*m_points[1])[isum] = 2.0*c - 1.0;
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
                         isum++;
                     }//end j
                     continue;   
@@ -114,8 +114,8 @@ namespace Nektar
                         a = NodalTriFeketeData[index][offset+perm6_2d[j][0]];
                         b = NodalTriFeketeData[index][offset+perm6_2d[j][1]];
                         c = NodalTriFeketeData[index][offset+perm6_2d[j][2]];
-                        (*m_points[0])[isum] = 2.0*b - 1.0;
-                        (*m_points[1])[isum] = 2.0*c - 1.0;
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
                         isum++;
                     }//end j
                     continue;   
@@ -139,7 +139,7 @@ namespace Nektar
 
         boost::shared_ptr<NodalTriFekete::PointsBaseType> NodalTriFekete::Create(const PointsKey &key)
         {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager::AllocateSharedPtr<NodalTriFekete>(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTriFekete>::AllocateSharedPtr(key));
             returnval->Initialize();
             return returnval;
         }
@@ -162,10 +162,10 @@ namespace Nektar
             {
                 for(int j=istart; j<iend-1; ++j)
                 {
-                    if((*m_points[0])[j+1] < (*m_points[0])[j])
+                    if(m_points[0][j+1] < m_points[0][j])
                     {
-                        std::swap((*m_points[0])[j+1], (*m_points[0])[j]);
-                        std::swap((*m_points[1])[j+1], (*m_points[1])[j]);
+                        std::swap(m_points[0][j+1], m_points[0][j]);
+                        std::swap(m_points[1][j+1], m_points[1][j]);
                     }
                 }
             }
@@ -178,10 +178,10 @@ namespace Nektar
             {
                 for(int j=istart;j<iend-1; ++j)
                 {
-                    if((*m_points[0])[j+1] > (*m_points[0])[j])
+                    if(m_points[0][j+1] > m_points[0][j])
                     {
-                        std::swap((*m_points[0])[j+1], (*m_points[0])[j]);
-                        std::swap((*m_points[1])[j+1], (*m_points[1])[j]);
+                        std::swap(m_points[0][j+1], m_points[0][j]);
+                        std::swap(m_points[1][j+1], m_points[1][j]);
                     }
                 }
             }
@@ -194,10 +194,10 @@ namespace Nektar
             {
                 for(int j=istart; j<iend-1; ++j)
                 {
-                    if((*m_points[1])[j+1] > (*m_points[1])[j])
+                    if(m_points[1][j+1] > m_points[1][j])
                     {
-                        std::swap((*m_points[0])[j+1], (*m_points[0])[j]);
-                        std::swap((*m_points[1])[j+1], (*m_points[1])[j]);
+                        std::swap(m_points[0][j+1], m_points[0][j]);
+                        std::swap(m_points[1][j+1], m_points[1][j]);
                     }
                 }
             }
@@ -209,6 +209,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriFekete.cpp,v $
+* Revision 1.11  2007/04/30 23:29:10  jfrazier
+* More conversion to multi_array.
+*
 * Revision 1.10  2007/04/29 00:31:57  jfrazier
 * Updated to use multi_arrays.
 *

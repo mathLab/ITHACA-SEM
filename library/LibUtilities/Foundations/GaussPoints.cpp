@@ -266,7 +266,7 @@ namespace Nektar
             return m_InterpManager[pkey];
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(ConstArray<OneD, NekDouble>& x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const ConstArray<OneD, NekDouble>& x)
         {
             int numpoints = 1;
 
@@ -274,7 +274,7 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(unsigned int numpoints, ConstArray<OneD, NekDouble>& x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
         {
             Array<OneD, NekDouble> interp(GetNumPoints()*numpoints);
 
@@ -289,6 +289,9 @@ namespace Nektar
 
 /**
 * $Log: GaussPoints.cpp,v $
+* Revision 1.18  2007/05/15 03:37:24  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.17  2007/04/30 23:28:59  jfrazier
 * More conversion to multi_array.
 *

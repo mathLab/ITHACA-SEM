@@ -79,29 +79,29 @@ namespace Nektar
 	     *  \f$\eta_3\f$ direction will be stored in outarray_d3 as output 
 	     *  of the function
 	     */
-            void PhysTensorDeriv(ConstNekDoubleSharedArray &inarray, 
-				 NekDoubleSharedArray &outarray_d1,
-				 NekDoubleSharedArray &outarray_d2, 
-				 NekDoubleSharedArray &outarray_d3);
+            void PhysTensorDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+				 Array<OneD, NekDouble> &outarray_d1,
+				 Array<OneD, NekDouble> &outarray_d2, 
+				 Array<OneD, NekDouble> &outarray_d3);
 
             /** \brief Evaluate a function at points coords which is assumed
 	     *  to be in local collapsed coordinate format. The function is
 	     *  assumed to be in physical space
 	     */
-            NekDouble PhysEvaluate(ConstNekDoubleSharedArray &coords);
+            NekDouble PhysEvaluate(ConstArray<OneD, NekDouble> &coords);
 
-            void PhysDeriv(ConstNekDoubleSharedArray &inarray, 
-			   NekDoubleSharedArray &outarray_d0, 
-			   NekDoubleSharedArray &outarray_d1, 
-			   NekDoubleSharedArray &outarray_d2)
+            void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+			   Array<OneD, NekDouble> &outarray_d0, 
+			   Array<OneD, NekDouble> &outarray_d1, 
+			   Array<OneD, NekDouble> &outarray_d2)
             {
                 v_PhysDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
             }
 
-            void StdPhysDeriv(ConstNekDoubleSharedArray &inarray,
-			  NekDoubleSharedArray &outarray_d0,
-			  NekDoubleSharedArray &outarray_d1,  
-			  NekDoubleSharedArray &outarray_d2)
+            void StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
+			  Array<OneD, NekDouble> &outarray_d0,
+			  Array<OneD, NekDouble> &outarray_d1,  
+			  Array<OneD, NekDouble> &outarray_d2)
             {
                 v_StdPhysDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
             }
@@ -117,40 +117,40 @@ namespace Nektar
 	    virtual int v_GetNedges() = 0;
 	    virtual int v_GetNfaces() = 0;
 
-            virtual void v_GenMassMatrix(NekDoubleSharedArray & outarray)   = 0;
-            virtual void v_GenLapMatrix (NekDoubleSharedArray & outarray)   = 0;
+            virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray)   = 0;
+            virtual void v_GenLapMatrix (Array<OneD, NekDouble> & outarray)   = 0;
             virtual ShapeType v_DetShapeType()                = 0;
 
             virtual DNekMatSharedPtr v_GetMassMatrix()        = 0;
             virtual DNekMatSharedPtr v_GetLapMatrix()         = 0;
 
-            virtual int v_get_nodalpoints(ConstNekDoubleSharedArray &x, ConstNekDoubleSharedArray &y)
+            virtual int v_get_nodalpoints(ConstArray<OneD, NekDouble> &x, ConstArray<OneD, NekDouble> &y)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
                 return 0;
             }
 
-            virtual void v_GenNBasisTransMatrix(NekDoubleSharedArray &outarray)
+            virtual void v_GenNBasisTransMatrix(Array<OneD, NekDouble> &outarray)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
             }
 
-            virtual void   v_BwdTrans (ConstNekDoubleSharedArray &inarray, 
-				       NekDoubleSharedArray &outarray)      = 0;
-            virtual void   v_FwdTrans (ConstNekDoubleSharedArray &inarray,
-				       NekDoubleSharedArray &outarray)      = 0;
+            virtual void   v_BwdTrans (const ConstArray<OneD, NekDouble> &inarray, 
+				       Array<OneD, NekDouble> &outarray)      = 0;
+            virtual void   v_FwdTrans (const ConstArray<OneD, NekDouble> &inarray,
+				       Array<OneD, NekDouble> &outarray)      = 0;
 
-            virtual NekDouble v_Integral(ConstNekDoubleSharedArray &inarray ) = 0;
-            virtual NekDouble v_Evaluate(ConstNekDoubleSharedArray &coords) = 0;
+            virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble> &inarray ) = 0;
+            virtual NekDouble v_Evaluate(const ConstArray<OneD, NekDouble> &coords) = 0;
 
-            virtual void   v_PhysDeriv(ConstNekDoubleSharedArray &inarray, 
-				       NekDoubleSharedArray &outarray_d0,
-				       NekDoubleSharedArray &outarray_d1, 
-				       NekDoubleSharedArray &outarray_d2) = 0;
-            virtual void   v_StdPhysDeriv(ConstNekDoubleSharedArray &inarray, 
-					  NekDoubleSharedArray &outarray_d0,
-					  NekDoubleSharedArray &outarray_d1,
-					  NekDoubleSharedArray &outarray_d2) = 0;
+            virtual void   v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+				       Array<OneD, NekDouble> &outarray_d0,
+				       Array<OneD, NekDouble> &outarray_d1, 
+				       Array<OneD, NekDouble> &outarray_d2) = 0;
+            virtual void   v_StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+					  Array<OneD, NekDouble> &outarray_d0,
+					  Array<OneD, NekDouble> &outarray_d1,
+					  Array<OneD, NekDouble> &outarray_d2) = 0;
 
 	    virtual int v_GetCoordim(void)
 	    {
@@ -166,11 +166,14 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.7  2007/04/10 14:00:45  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.6  2007/03/29 19:35:09  bnelson
 * Replaced boost::shared_array with SharedArray
 *
 * Revision 1.5  2007/03/20 16:58:43  sherwin
-* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *
 * Revision 1.4  2007/01/17 16:05:40  pvos
 * updated doxygen documentation

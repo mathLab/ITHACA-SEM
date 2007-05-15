@@ -46,6 +46,20 @@ namespace Nektar
         void testConstruction();
         void testAssignment();
         void testFunctionCall();
+        
+        // Put individual method testers here.
+        
+        
+        // Higher level
+        void testEmptyConstructor();
+        void testUninitializedConstructor();
+        void testSingleValueInitialization();
+        void testPopulationFromCArray();
+        
+        void testNewOffset();
+        void testConstantResultType();
+        void testParameterPopulation();
+        
     }
 }
 

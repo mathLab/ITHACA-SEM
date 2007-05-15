@@ -145,8 +145,10 @@ namespace Nektar
             using namespace Nektar;
             using namespace Nektar::expt;
 
-            unsigned int buf1[] = {1, 2, 3, 4};
-            unsigned int buf2[] = {3, 4, 5, 6};
+            unsigned int b1[] = {1, 2, 3, 4};
+            unsigned int b2[] = {3, 4, 5, 6};
+            Array<OneD, unsigned int> buf1(4, b1);
+            Array<OneD, unsigned int> buf2(4, b2);
 // 
 //             // The following crashes because of the temporary.  What to do here?
 //             //Nektar::ConstantExpression<Nektar::LibUtilities::NekMatrix<unsigned int> > m1(Nektar::LibUtilities::NekMatrix<unsigned int>(2, 2, buf1));
@@ -1095,6 +1097,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.13  2007/01/29 01:37:16  bnelson
+    *** empty log message ***
+
     Revision 1.12  2007/01/16 05:31:33  bnelson
     Major improvements for expression templates.
 

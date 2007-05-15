@@ -84,7 +84,7 @@ namespace Nektar
 		return m_ncoeffs;
 	    }
 
-	    inline const SharedArray<LibUtilities::BasisSharedPtr>& GetBase() const
+	    inline const ConstArray<OneD, LibUtilities::BasisSharedPtr>& GetBase() const
 	    {
 		return m_base;
 	    }
@@ -98,7 +98,7 @@ namespace Nektar
 	    
         protected:
             ShapeType m_shapeType;
-            const SharedArray<LibUtilities::BasisSharedPtr>& m_base;
+            Array<OneD, LibUtilities::BasisSharedPtr> m_base;
 
             unsigned int m_ncoeffs;
             MatrixType m_matrixType;
@@ -119,6 +119,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.9  2007/04/10 14:00:45  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.8  2007/04/08 03:36:58  jfrazier
 * Updated to use SharedArray consistently and minor reformatting.
 *
@@ -132,7 +135,7 @@ namespace Nektar
 * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
 *
 * Revision 1.4  2007/03/20 16:58:43  sherwin
-* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *
 * Revision 1.3  2007/03/05 08:07:14  sherwin
 * Modified so that StdMatrixKey has const calling arguments in its constructor.

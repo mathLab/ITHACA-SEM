@@ -51,7 +51,7 @@ namespace Nektar
 	{
 	    m_len = len;
 	    ASSERTL2(len > 0,"called with zero length");
-	    m_map = MemoryManager::AllocateSharedArray<int>(m_len);
+	    m_map = Array<OneD, int>(m_len);
 	}
 	
 	
@@ -64,7 +64,7 @@ namespace Nektar
 	    if(m_len != len)
 	    {
 		m_len = len;
-		m_map = MemoryManager::AllocateSharedArray<int> (m_len);
+		m_map = Array<OneD, int>(m_len);
 	    }
 	}
 	
@@ -73,6 +73,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpMap.cpp,v $
+ * Revision 1.5  2007/03/29 19:35:08  bnelson
+ * Replaced boost::shared_array with SharedArray
+ *
  * Revision 1.4  2007/01/29 15:04:53  sherwin
  * StdBasis.h moved to LibUtilities. Other minor mods
  *

@@ -261,8 +261,8 @@ namespace Nektar
             }
 
             virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)=0;
-            virtual const MatrixSharedPtrType GetI(ConstArray<OneD, DataType>& x) = 0;
-            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, ConstArray<OneD, DataType>& x) = 0;
+            virtual const MatrixSharedPtrType GetI(const ConstArray<OneD, DataType>& x) = 0;
+            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const ConstArray<OneD, DataType>& x) = 0;
 
         protected:
             PointsKey m_pointsKey;

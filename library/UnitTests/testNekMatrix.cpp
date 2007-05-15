@@ -346,8 +346,8 @@ namespace Nektar
          void testUserManagedMatrixData()
          {    
              {
-                 unsigned int matrixValues[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-                 
+                 unsigned int mv[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+                 Array<OneD, unsigned int> matrixValues(9, mv);
                  NekMatrix<unsigned int> m(3, 3, matrixValues, eWrapper);
  
                  BOOST_CHECK_EQUAL(m(0,0), 1);
@@ -369,8 +369,8 @@ namespace Nektar
                  NekMatrix<unsigned int> m1(m);
                  m1(1,0) = 900;
                  BOOST_CHECK_EQUAL(m1(1,0), 900);
-                 BOOST_CHECK_EQUAL(m(1,0), 4);
-                 BOOST_CHECK_EQUAL(matrixValues[3], 4);
+                 BOOST_CHECK_EQUAL(m(1,0), 900);
+                 BOOST_CHECK_EQUAL(matrixValues[3], 900);
  
                  NekMatrix<unsigned int> m2(3, 3);
                  m2 = m1;
@@ -380,7 +380,8 @@ namespace Nektar
              }
  
              {
-                 unsigned int matrixValues[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+                 unsigned int mv[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+                 Array<OneD, unsigned int> matrixValues(9, mv);
                  NekMatrix<unsigned int> m(3, 3, matrixValues, eCopy);
  
                  m(0,0) = 800;
@@ -692,6 +693,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.22  2007/03/29 19:42:03  bnelson
+    *** empty log message ***
+
     Revision 1.21  2007/02/13 02:47:23  bnelson
     *** empty log message ***
 

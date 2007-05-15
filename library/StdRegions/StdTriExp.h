@@ -85,10 +85,10 @@ namespace Nektar
              *  0.5 which is due to the factor \f$ (1-\xi_2)/2 \f$ in the 
              *  integral weight
              */
-                NekDouble Integral(ConstNekDoubleSharedArray inarray);
+                NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray);
 
-                void IProductWRTBase(ConstNekDoubleSharedArray inarray, 
-				     NekDoubleSharedArray &outarray);
+                void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+				     Array<OneD, NekDouble> &outarray);
 
             /** \brief Fill outarray with mode \a mode of expansion
              *
@@ -96,7 +96,7 @@ namespace Nektar
              *  fastest
              */
                 void FillMode(const int mode, 
-			      NekDoubleSharedArray &outarray);
+			      Array<OneD, NekDouble> &outarray);
 
             ///////////////////////////////////
             // Differentiation Methods
@@ -113,9 +113,9 @@ namespace Nektar
              *  \right |_{\eta_2}  + \left . \frac{\partial u}{\partial d\eta_2}
              *  \right |_{\eta_1}  \f$
              */
-		void PhysDeriv(ConstNekDoubleSharedArray inarray, 
-			       NekDoubleSharedArray &outarray_d0,
-			       NekDoubleSharedArray &outarray_d1);
+		void PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+			       Array<OneD, NekDouble> &outarray_d0,
+			       Array<OneD, NekDouble> &outarray_d1);
 
             //-----------------------------
             // Evaluations Methods
@@ -125,13 +125,13 @@ namespace Nektar
              *
              *  \b Note: That 'q' (base[1]) runs fastest in this element 
              */
-                void BwdTrans(ConstNekDoubleSharedArray inarray,
-			      NekDoubleSharedArray &outarray);
-                void FwdTrans(ConstNekDoubleSharedArray inarray,
-			      NekDoubleSharedArray &outarray);
+                void BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+			      Array<OneD, NekDouble> &outarray);
+                void FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+			      Array<OneD, NekDouble> &outarray);
 
             /** \brief Single Point Evaluation */
-                NekDouble PhysEvaluate(ConstNekDoubleSharedArray coords);
+                NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& coords);
 
 		void MapTo(const int edge_ncoeffs,
 			   const LibUtilities::BasisType Btype, const int eid,
@@ -176,8 +176,8 @@ namespace Nektar
 
                 }
 
-		void GetCoords(NekDoubleSharedArray &coords_0, 
-			       NekDoubleSharedArray &coords_1);
+		void GetCoords(Array<OneD, NekDouble> &coords_0, 
+			       Array<OneD, NekDouble> &coords_1);
 
             protected:
 
@@ -219,10 +219,10 @@ namespace Nektar
              *  In the triangular space the i (i.e. \f$\eta_1\f$ direction)
              *  ordering still runs fastest by convention.
              */
-                void IProductWRTBase(ConstNekDoubleSharedArray base0, 
-				     ConstNekDoubleSharedArray base1,
-                                     ConstNekDoubleSharedArray inarray, 
-				     NekDoubleSharedArray &outarray);
+                void IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
+				     const ConstArray<OneD, NekDouble>& base1,
+                                     const ConstArray<OneD, NekDouble>& inarray, 
+				     Array<OneD, NekDouble> &outarray);
             private:
 
                 virtual int v_GetNverts()
@@ -261,59 +261,59 @@ namespace Nektar
                     return DetShapeType();
                 };
 
-		virtual void v_GetCoords(NekDoubleSharedArray &coords_0,
-					 NekDoubleSharedArray &coords_1,
-					 NekDoubleSharedArray &coords_2)
+		virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
+					 Array<OneD, NekDouble> &coords_1,
+					 Array<OneD, NekDouble> &coords_2)
 		{
 		    GetCoords(coords_0,coords_1);
 		}
 
-                virtual NekDouble v_Integral(ConstNekDoubleSharedArray inarray )
+                virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray )
                 {
                     return Integral(inarray);
                 }
 
-                virtual void v_IProductWRTBase(ConstNekDoubleSharedArray inarray,
-					       NekDoubleSharedArray &outarray)
+                virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
+					       Array<OneD, NekDouble> &outarray)
 		{
 		    IProductWRTBase(inarray, outarray);
                 }
 
-                virtual void v_FillMode(const int mode, NekDoubleSharedArray &outarray)
+                virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
                 {
                     FillMode(mode, outarray);
                 }
 
-                virtual void v_PhysDeriv(ConstNekDoubleSharedArray inarray,
-					 NekDoubleSharedArray &out_d0,
-					 NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
-					 NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
+                virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+					 Array<OneD, NekDouble> &out_d0,
+					 Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+					 Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
                 {
                     PhysDeriv(inarray, out_d1, out_d2);
                 }
 
-                virtual void v_StdPhysDeriv(ConstNekDoubleSharedArray inarray,
-					    NekDoubleSharedArray &out_d0, 
-					    NekDoubleSharedArray &out_d1)
+                virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+					    Array<OneD, NekDouble> &out_d0, 
+					    Array<OneD, NekDouble> &out_d1)
                 {
                     PhysDeriv(inarray, out_d0, out_d1);
                 }
 
                 /** \brief Virtual call to StdTriExp::BwdTrans */
-		virtual void v_BwdTrans(ConstNekDoubleSharedArray inarray,
-					NekDoubleSharedArray &outarray)
+		virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+					Array<OneD, NekDouble> &outarray)
                 {
                     BwdTrans(inarray,outarray);
                 }
 
                 /** \brief Virtual call to StdTriExp::FwdTrans */
-                virtual void v_FwdTrans(ConstNekDoubleSharedArray inarray,
-					NekDoubleSharedArray &outarray)
+                virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+					Array<OneD, NekDouble> &outarray)
                 {
                     FwdTrans(inarray,outarray);
                 }
 
-                virtual NekDouble v_PhysEvaluate(ConstNekDoubleSharedArray coords)
+                virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
                 {
                     return PhysEvaluate(coords);
                 }
@@ -354,6 +354,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.11  2007/04/10 14:00:46  sherwin
+ * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+ *
  * Revision 1.10  2007/04/06 08:44:43  sherwin
  * Update to make 2D regions work at StdRegions level
  *

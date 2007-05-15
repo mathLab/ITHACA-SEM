@@ -70,14 +70,14 @@ namespace Nektar
         // Differentiation Methods
         //----------------------------
 
-        void StdExpansion2D::PhysTensorDeriv(ConstNekDoubleSharedArray inarray,
-					     NekDoubleSharedArray &outarray_d0, 
-					     NekDoubleSharedArray &outarray_d1)
+        void StdExpansion2D::PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray,
+					     Array<OneD, NekDouble> &outarray_d0, 
+					     Array<OneD, NekDouble> &outarray_d1)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             DNekMatSharedPtr D0, D1;
-            NekDoubleSharedArray wsp = GetDoubleTmpSpace(nquad0 * nquad1);
+            Array<OneD, NekDouble> wsp = Array<OneD, NekDouble>(nquad0 * nquad1);
 
             // copy inarray to wsp in case inarray is used as outarray 
 	    Vmath::Vcopy(nquad0*nquad1, &inarray[0], 1, &wsp[0], 1);
@@ -85,7 +85,7 @@ namespace Nektar
             D0 = ExpPointsProperties(0)->GetD();
             D1 = ExpPointsProperties(1)->GetD();
 
-            if (outarray_d0) // calculate du/dx_0
+            if (outarray_d0.size() > 0) // calculate du/dx_0
             {
                 Blas::Dgemm('T', 'N', nquad0, nquad1, nquad0, 1.0,
                             &(D0->GetPtr())[0], nquad0, &wsp[0], nquad0, 0.0,
@@ -93,7 +93,7 @@ namespace Nektar
             }
 
             // calculate du/dx_1
-            if (outarray_d1)
+            if (outarray_d1.size() > 0)
             {
                 Blas:: Dgemm('N', 'N', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,
                          &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
@@ -101,13 +101,13 @@ namespace Nektar
 
         }
 
-        NekDouble StdExpansion2D::PhysEvaluate2D(ConstNekDoubleSharedArray coords)
+        NekDouble StdExpansion2D::PhysEvaluate2D(ConstArray<OneD, NekDouble>& coords)
         {
             NekDouble val;
             int i;
             int nq0 = m_base[0]->GetNumPoints();
             int nq1 = m_base[1]->GetNumPoints();
-            NekDoubleSharedArray wsp1 = GetDoubleTmpSpace(nq1);
+            Array<OneD, NekDouble> wsp1 = Array<OneD, NekDouble>(nq1);
 
             DNekMatSharedPtr I;
 
@@ -136,15 +136,15 @@ namespace Nektar
         /// Integration Methods
         //////////////////////////////
 
-        NekDouble StdExpansion2D::Integral(ConstNekDoubleSharedArray inarray, 
-					   ConstNekDoubleSharedArray w0,
-					   ConstNekDoubleSharedArray w1)
+        NekDouble StdExpansion2D::Integral(const ConstArray<OneD, NekDouble>& inarray, 
+					   const ConstArray<OneD, NekDouble>& w0,
+					   const ConstArray<OneD, NekDouble>& w1)
         {
             int i;
             NekDouble Int = 0.0;
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
-            NekDoubleSharedArray tmp = GetDoubleTmpSpace(nquad0 * nquad1);
+            Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nquad0 * nquad1);
 
             // multiply by integration constants
             for (i = 0; i < nquad1; ++i)
@@ -170,6 +170,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.11  2007/04/10 14:00:45  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.10  2007/04/05 15:20:11  sherwin
 * Updated 2D stuff to comply with SharedArray philosophy
 *
@@ -177,7 +180,7 @@ namespace Nektar
 * Replaced boost::shared_array with SharedArray
 *
 * Revision 1.8  2007/03/20 16:58:42  sherwin
-* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *
 * Revision 1.7  2007/03/14 21:24:09  sherwin
 * Update for working version of MultiRegions up to ExpList1D

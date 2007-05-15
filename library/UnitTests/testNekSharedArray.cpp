@@ -40,303 +40,380 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <UnitTests/CountedObject.h>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
+#include <iostream>
 
 namespace Nektar
 {
     namespace SharedArrayUnitTests
     {
-        SharedArray<double> testFunc1()
-        {
-            SharedArray<double> result(new double[10], 10);
-            return result;
-        }
+        
 
-        class TestClass
+        void testNewOffset()
+        {
+        }
+        
+        void testConstantResultType()
+        {
+        }
+        
+        
+        class ParameterTestClass
         {
             public:
-                TestClass() : result(new double[10], 10) {}
-
-                SharedArray<double> foo() { return result; }
-                const SharedArray<double>& bar() const { return result; }
-
-            private:
-                SharedArray<double> result;
-        };
-
-        // Nothing really runs here - it just checks valid compilation.  The commented out 
-        // lines should not compile.
-        void testGet()
-        {
-            Nektar::SharedArray<double> d1(new double[10], 10);
-            const Nektar::SharedArray<double> d2(new double[10], 10);
-            const Nektar::SharedArray<double>& d3 = d1;
-
-            double* a1 = d1.get();
-            const double* a2 = d1.get();
-
-            //double* a3 = d2.get();
-            const double* a4 = d2.get();
-
-            //double* a5 = d3.get();
-            const double* a6 = d3.get();
-
-            //Nektar::SharedArray<double> d4(d2);
-            //d4[0] = 2.7;
-
-            const Nektar::SharedArray<double> d5(d1);
-            //d5 = d3;
-            //d5[0] = 3.4;
-
-            Nektar::SharedArray<double> d6;
-            d6 = d1;
-
-            Nektar::SharedArray<double> d7 = testFunc1();
-
-            TestClass t;
-            Nektar::SharedArray<double> d8 = t.foo();
-            //Nektar::SharedArray<double> d9 = t.bar();
-            const Nektar::SharedArray<double>& d9 = t.bar();
-        }
-
-        void testAccessOperator()
-        {
-            Nektar::SharedArray<double> d1(new double[10], 10);
-            const Nektar::SharedArray<double> d2(new double[10], 10);
-            const Nektar::SharedArray<double>& d3 = d1;
-
-            double& a1 = d1[0];
-            const double& a2 = d1[0]; 
-
-            //double& a3 = d2[0];
-            const double& a4 = d2[0];
-
-            //double& a5 = d3[0];
-            const double& a6 = d3[0];
-        }
-
-        void testOffset()
-        {
-            Nektar::SharedArray<double> d1(new double[10], 10);
-            for(unsigned int i = 0; i < 10; ++i)
-            {
-                d1[i] = (double)i + .7;
-            }
-
-            Nektar::SharedArray<double> d2 = d1 + 5;
-            BOOST_CHECK_EQUAL(d1[5], d2[0]);
-
-
-            const Nektar::SharedArray<double>& d3 = d2;
-            //Nektar::SharedArray<double> d4 = d3 + 2;
-        }
-
-        class TestReference
-        {
-            public:
-                TestReference() : obj(new double[10], 10) {}
-                const SharedArray<double>& foo() const { return obj; }
-
-                SharedArray<double> obj;
+                ParameterTestClass() :
+                    a(5),
+                    b(a)
+                {
+                    a[0] = 0.0;
+                    a[1] = 1.0;
+                    a[2] = 2.0;
+                    a[3] = 3.0;
+                    a[4] = 4.0;
+                }
+                
+                // out should refer to the same array as a, so any 
+                // changes in out should be reflected in a.
+                void getNonConstByReference(Array<OneD, NekDouble>& out)
+                {
+                    out = a;
+                }
+                
+                // Does nothing - the assignment goes into a temporary and is 
+                // immediately lost.
+                void getNonConstByValue(Array<OneD, NekDouble> out)
+                {
+                    out = a;
+                }
+            
+                // The following should not compile because the assignment it going into a 
+                // C++ const variable.
+//                 void getNonConstByConstReference(const Array<OneD, NekDouble>& out)
+//                 {
+//                     out = a;
+//                 }
+//                 
+//                 void getNonConstByConstValue(const Array<OneD, NekDouble> out)
+//                 {
+//                     out = a;
+//                 }
+                
+                // out should refer to the same array as a, so any 
+                // changes in out should be reflected in a.
+                void getConstByReference(ConstArray<OneD, NekDouble>& out)
+                {
+                    out = a;
+                }
+                
+                // Does nothing - the assignment goes into a temporary and is 
+                // immediately lost.
+                void getConstByValue(ConstArray<OneD, NekDouble> out)
+                {
+                    out = a;
+                }
+                
+                Array<OneD, NekDouble> a;
+                ConstArray<OneD, NekDouble> b;
         };
         
-        void testConstruction()
+        void testParameterPopulation()
+        {
+            ParameterTestClass obj;
+            
+            Array<OneD, NekDouble> zero(5, 0.0);
+            Array<OneD, NekDouble> temp(zero);
+            ConstArray<OneD, NekDouble> const_zero(5, 0.0);
+            ConstArray<OneD, NekDouble> const_temp(const_zero);
+            
+            obj.getNonConstByReference(temp);
+            BOOST_CHECK(temp == obj.a);
+            
+            temp = zero;
+            obj.getNonConstByValue(temp);
+            BOOST_CHECK(temp == zero);
+            BOOST_CHECK(temp != obj.a);
+            
+            // should not compile.
+            //obj.getNonConstByReference(const_temp);
+            //obj.getNonConstByValue(const_temp);
+            
+            // Now the ConstArray versions.
+            obj.getConstByReference(const_temp);
+            BOOST_CHECK(const_temp == obj.a);
+            BOOST_CHECK(const_temp != const_zero);
+            const_temp = const_zero;
+            BOOST_CHECK(const_temp == const_zero);
+            
+            obj.getConstByValue(const_temp);
+            BOOST_CHECK(const_temp == const_zero);
+            BOOST_CHECK(const_temp != obj.a );
+            
+        }
+        
+        void testEmptyConstructor()
         {
             {
                 CountedObject<double>::ClearCounters();
-
-                SharedArray<CountedObject<double> > a1 = 
-                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
-                SharedArray<const CountedObject<double> > a2 = 
-                    MemoryManager::AllocateSharedArray<const CountedObject<double> >(10);
-                const SharedArray<CountedObject<double> > a3 = 
-                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
-                const SharedArray<const CountedObject<double> > a4 = 
-                    MemoryManager::AllocateSharedArray<const CountedObject<double> >(10);
-
-                {
-                    // All should compile.
-                    SharedArray<const CountedObject<double> > b1(a1);
-                    SharedArray<const CountedObject<double> > b2(a2);
-                    SharedArray<const CountedObject<double> > b3(a3);
-                    SharedArray<const CountedObject<double> > b4(a4);
-                }
-
-                {
-                    // All should compile.
-                    const SharedArray<const CountedObject<double> > b1(a1);
-                    const SharedArray<const CountedObject<double> > b2(a2);
-                    const SharedArray<const CountedObject<double> > b3(a3);
-                    const SharedArray<const CountedObject<double> > b4(a4);
-                }
-
-                {
-                    // Commented out should not compile
-                    SharedArray<CountedObject<double> > b1(a1);
-                    //SharedArray<CountedObject<double> > b2(a2);
-                    //SharedArray<CountedObject<double> > b3(a3);
-                    //SharedArray<CountedObject<double> > b4(a4);
-                }
-
-                {
-                    // Commented out should not compile
-                    const SharedArray<CountedObject<double> > b1(a1);
-                    //const SharedArray<CountedObject<double> > b2(a2);
-                    //const SharedArray<CountedObject<double> > b3(a3);
-                    //const SharedArray<CountedObject<double> > b4(a4);
-                }
-                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
+                ConstArray<OneD, CountedObject<double> > a;
+                Array<OneD, CountedObject<double> > b;
+                CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+                
+                BOOST_CHECK(a.begin() == a.end());
+                BOOST_CHECK(b.begin() == b.end());
+                
+                BOOST_CHECK_EQUAL(a.size(), 0);
+                BOOST_CHECK_EQUAL(b.size(), 0);
+                
+                BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
+                BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
             }
-            BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 40);
-
+            CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+            
             {
-                // TODO - Find a way to prohibit data not on the heap.
-                double* data1 = new double[10];
-                double* data2 = new double[10];
-                for(int i = 0; i < 10; ++i)
-                {
-                    data1[i] = i+1;
-                    data2[i] = i+1;
-                }
+                CountedObject<double>::ClearCounters();
+                ConstArray<TwoD, CountedObject<double> > a;
+                Array<TwoD, CountedObject<double> > b;
+                CountedObject<double>::check(0, 0, 0, 0, 0, 0);
                 
-                SharedArray<double> a1(data1, 10);
-                SharedArray<const double> a2(data2, 10);
+                BOOST_CHECK(a.begin() == a.end());
+                BOOST_CHECK(b.begin() == b.end());
                 
-                {
-                    SharedArray<const double> b1(a1);
-                    a1[0] = 17.0;
-                    BOOST_CHECK_EQUAL(b1[0], 17.0);
-                    BOOST_CHECK_EQUAL(b1[0], a1[0]);
-
-                    // Should not compile.
-                    //b1[0] = 15;
-                    //b1.get()[1] = 15;
-                }
-
-                {
-                    SharedArray<double> b1(a1);
-                    b1[0] = 23.0;
-                    BOOST_CHECK_EQUAL(b1[0], 23.0);
-                    BOOST_CHECK_EQUAL(b1[0], a1[0]);
-                }
+                BOOST_CHECK_EQUAL(a.size(), 0);
+                BOOST_CHECK_EQUAL(b.size(), 0);
+                
+                BOOST_CHECK_EQUAL(a.num_dimensions(), 2);
+                BOOST_CHECK_EQUAL(b.num_dimensions(), 2);
             }
+            CountedObject<double>::check(0, 0, 0, 0, 0, 0);
         }
-
-        void testAssignment()
+        
+        void testUninitializedConstructor()
         {
             {
                 CountedObject<double>::ClearCounters();
-
-                SharedArray<CountedObject<double> > a1 = 
-                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
-                SharedArray<const CountedObject<double> > a2 = 
-                    MemoryManager::AllocateSharedArray<const CountedObject<double> >(10);
-                const SharedArray<CountedObject<double> > a3 = 
-                    MemoryManager::AllocateSharedArray<CountedObject<double> >(10);
-                const SharedArray<const CountedObject<double> > a4 = 
-                    MemoryManager::AllocateSharedArray<const CountedObject<double> >(10);
-
-                {
-                    // All should compile.
-                    SharedArray<const CountedObject<double> > b1;
-                    SharedArray<const CountedObject<double> > b2;
-                    SharedArray<const CountedObject<double> > b3;
-                    SharedArray<const CountedObject<double> > b4;
-
-                    b1 = a1;
-                    b2 = a2;
-                    b3 = a3;
-                    b4 = a4;
-                }
-
-                {
-                    // None should compile, we can't assign into a constant 
-                    // Shared Array
-                    const SharedArray<const CountedObject<double> > b1;
-                    const SharedArray<const CountedObject<double> > b2;
-                    const SharedArray<const CountedObject<double> > b3;
-                    const SharedArray<const CountedObject<double> > b4;
-
-                    //b1 = a1;
-                    //b2 = a2;
-                    //b3 = a3;
-                    //b4 = a4;
-                }
-
-                {
-                    // Commented out should not compile
-                    SharedArray<CountedObject<double> > b1;
-                    SharedArray<CountedObject<double> > b2;
-                    SharedArray<CountedObject<double> > b3;
-                    SharedArray<CountedObject<double> > b4;
-
-                    b1 = a1;
-                    //b2 = a2;
-                    //b3 = a3;
-                    //b4 = a4;
-                }
-
-                {
-                    // None should compile, we can't assign into a constant 
-                    // Shared Array
-                    const SharedArray<CountedObject<double> > b1;
-                    const SharedArray<CountedObject<double> > b2;
-                    const SharedArray<CountedObject<double> > b3;
-                    const SharedArray<CountedObject<double> > b4;
-
-                    //b1 = a1;
-                    //b2 = a2;
-                    //b3 = a3;
-                    //b4 = a4;
-                }
-                BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 0);
+                
+                ConstArray<OneD, CountedObject<double> > a(5);
+                Array<OneD, CountedObject<double> > b(10);
+                CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+                
+                BOOST_CHECK(a.begin() != a.end());
+                BOOST_CHECK(b.begin() != b.end());
+                
+                BOOST_CHECK_EQUAL(a.size(), 5);
+                BOOST_CHECK_EQUAL(b.size(), 10);
+                
+                BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
+                BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
             }
-            BOOST_CHECK_EQUAL(CountedObject<double>::numberDestroyed, 40);
-        }
-
-        void foo(SharedArray<double>& f)
-        {
-            SharedArray<double> d = MemoryManager::AllocateSharedArray<double>(10);
-            d[0] = 7.1;
-            d[1] = 8.2;
-
-            f = d;
+            CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+            
+            {
+                CountedObject<double>::ClearCounters();
+                
+                ConstArray<TwoD, CountedObject<double> > a(5, 10);
+                Array<TwoD, CountedObject<double> > b(10, 10);
+                CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+                
+                BOOST_CHECK(a.begin() != a.end());
+                BOOST_CHECK(b.begin() != b.end());
+                
+                BOOST_CHECK_EQUAL(a.size(), 5);
+                BOOST_CHECK_EQUAL(b.size(), 10);
+                BOOST_CHECK_EQUAL(a.shape()[0], 5);
+                BOOST_CHECK_EQUAL(a.shape()[1], 10);
+                BOOST_CHECK_EQUAL(b.shape()[0], 10);
+                BOOST_CHECK_EQUAL(b.shape()[1], 10);
+                
+                BOOST_CHECK_EQUAL(a.num_dimensions(), 2);
+                BOOST_CHECK_EQUAL(b.num_dimensions(), 2);
+            }
+            CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+            
+            {
+                CountedObject<double>::ClearCounters();
+                
+                ConstArray<ThreeD, CountedObject<double> > a(1, 2, 3);
+                Array<ThreeD, CountedObject<double> > b(4, 5, 6);
+                CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+                
+                BOOST_CHECK(a.begin() != a.end());
+                BOOST_CHECK(b.begin() != b.end());
+                
+                BOOST_CHECK_EQUAL(a.size(), 1);
+                BOOST_CHECK_EQUAL(b.size(), 4);
+                BOOST_CHECK_EQUAL(a.shape()[0], 1);
+                BOOST_CHECK_EQUAL(a.shape()[1], 2);
+                BOOST_CHECK_EQUAL(a.shape()[2], 3);
+                BOOST_CHECK_EQUAL(b.shape()[0], 4);
+                BOOST_CHECK_EQUAL(b.shape()[1], 5);
+                BOOST_CHECK_EQUAL(b.shape()[2], 6);
+               
+                BOOST_CHECK_EQUAL(a.num_dimensions(), 3);
+                BOOST_CHECK_EQUAL(b.num_dimensions(), 3);
+            }
+            CountedObject<double>::check(0, 0, 0, 0, 0, 0);
         }
         
-        class Foo
+        void testSingleValueInitialization()
         {
-            public:
-                SharedArray<double const> GetData() const
+            {
+                CountedObject<double> initValue(98);
+                CountedObject<double>::ClearCounters();
+                
+                ConstArray<OneD, CountedObject<double> > a(5, initValue);
+                Array<OneD, CountedObject<double> > b(10, initValue);
+                CountedObject<double>::check(0, 0, 0, 0, 0, 15);
+                
+                BOOST_CHECK(a.begin() != a.end());
+                BOOST_CHECK(b.begin() != b.end());
+                
+                BOOST_CHECK_EQUAL(a.size(), 5);
+                BOOST_CHECK_EQUAL(b.size(), 10);
+                
+                BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
+                BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
+                
+                for(ConstArray<OneD, CountedObject<double> >::const_iterator iter = a.begin(); iter != a.end(); ++iter)
                 {
-                    return m_data;
+                    BOOST_CHECK(*iter == initValue);
+                }
+                    
+                for(Array<OneD, CountedObject<double> >::iterator iter = b.begin(); iter != b.end(); ++iter)
+                {
+                    BOOST_CHECK(*iter == initValue);
+                }
+            }
+            CountedObject<double>::check(0, 0, 1, 0, 0, 15);
+            
+            {
+                CountedObject<double> initValue(98);
+                CountedObject<double>::ClearCounters();
+                
+                ConstArray<TwoD, CountedObject<double> > a(5, 10, initValue);
+                Array<TwoD, CountedObject<double> > b(10, 10, initValue);
+                CountedObject<double>::check(0, 0, 0, 0, 0, 150);
+                
+                BOOST_CHECK(a.begin() != a.end());
+                BOOST_CHECK(b.begin() != b.end());
+                
+                BOOST_CHECK_EQUAL(a.size(), 5);
+                BOOST_CHECK_EQUAL(b.size(), 10);
+                BOOST_CHECK_EQUAL(a.shape()[0], 5);
+                BOOST_CHECK_EQUAL(a.shape()[1], 10);
+                BOOST_CHECK_EQUAL(b.shape()[0], 10);
+                BOOST_CHECK_EQUAL(b.shape()[1], 10);
+                
+                BOOST_CHECK_EQUAL(a.num_dimensions(), 2);
+                BOOST_CHECK_EQUAL(b.num_dimensions(), 2);
+                    
+                for(unsigned int i = 0; i < a.shape()[0]; ++i)
+                {
+                    for(unsigned int j = 0; j < a.shape()[1]; ++j)
+                    {
+                        BOOST_CHECK(a[i][j] == initValue);
+                    }
                 }
                 
-                SharedArray<double> GetNonConstData()
+                for(unsigned int i = 0; i < b.shape()[0]; ++i)
                 {
-                    SharedArray<double> result;
-                    return result;
+                    for(unsigned int j = 0; j < b.shape()[1]; ++j)
+                    {
+                        BOOST_CHECK(b[i][j] == initValue);
+                    }
+                }
+            }
+            CountedObject<double>::check(0, 0, 1, 0, 0, 150);
+            
+            {
+                CountedObject<double> initValue(98);
+                CountedObject<double>::ClearCounters();
+                
+                ConstArray<ThreeD, CountedObject<double> > a(1, 2, 3, initValue);
+                Array<ThreeD, CountedObject<double> > b(4, 5, 6, initValue);
+                CountedObject<double>::check(0, 0, 0, 0, 0, 126);
+                
+                BOOST_CHECK(a.begin() != a.end());
+                BOOST_CHECK(b.begin() != b.end());
+                
+                BOOST_CHECK_EQUAL(a.size(), 1);
+                BOOST_CHECK_EQUAL(b.size(), 4);
+                BOOST_CHECK_EQUAL(a.shape()[0], 1);
+                BOOST_CHECK_EQUAL(a.shape()[1], 2);
+                BOOST_CHECK_EQUAL(a.shape()[2], 3);
+                BOOST_CHECK_EQUAL(b.shape()[0], 4);
+                BOOST_CHECK_EQUAL(b.shape()[1], 5);
+                BOOST_CHECK_EQUAL(b.shape()[2], 6);
+               
+                BOOST_CHECK_EQUAL(a.num_dimensions(), 3);
+                BOOST_CHECK_EQUAL(b.num_dimensions(), 3);
+                    
+                for(unsigned int i = 0; i < a.shape()[0]; ++i)
+                {
+                    for(unsigned int j = 0; j < a.shape()[1]; ++j)
+                    {
+                        for(unsigned int k = 0; k < a.shape()[2]; ++k)
+                        {
+                            BOOST_CHECK(a[i][j][k] == initValue);
+                        }
+                    }
                 }
                 
-            private:
-                SharedArray<double> m_data;
-        };
+                for(unsigned int i = 0; i < b.shape()[0]; ++i)
+                {
+                    for(unsigned int j = 0; j < b.shape()[1]; ++j)
+                    {
+                        for(unsigned int k = 0; k < b.shape()[2]; ++k)
+                        {
+                            BOOST_CHECK(b[i][j][k] == initValue);
+                        }
+                    }
+                }
+            }
+            CountedObject<double>::check(0, 0, 1, 0, 0, 126);
+        }
         
-        void testFunctionCall()
+        void testPopulationFromCArray()
         {
-            SharedArray<double> a;
-            foo(a);
-
-            BOOST_CHECK_EQUAL(a[0], 7.1);
-            BOOST_CHECK_EQUAL(a[1], 8.2);
+            {
+                CountedObject<double> a_array[] = { CountedObject<double>(1), 
+                                                    CountedObject<double>(2),
+                                                    CountedObject<double>(3),
+                                                    CountedObject<double>(4) };
+                CountedObject<double> b_array[] = { CountedObject<double>(1), 
+                                                    CountedObject<double>(2),
+                                                    CountedObject<double>(3),
+                                                    CountedObject<double>(4),
+                                                    CountedObject<double>(5)};
+                CountedObject<double>::ClearCounters();
             
-            Foo obj1;
-            SharedArray<const double> const_data;
-            const_data = obj1.GetData();
+                ConstArray<OneD, CountedObject<double> > a(4, a_array);
+                Array<OneD, CountedObject<double> > b(5, b_array);
+                CountedObject<double>::check(0, 0, 0, 0, 0, 9);
             
-            SharedArray<double> lhs = obj1.GetNonConstData();
-            lhs = obj1.GetNonConstData();
+                BOOST_CHECK(a.begin() != a.end());
+                BOOST_CHECK(b.begin() != b.end());
+            
+                BOOST_CHECK_EQUAL(a.size(), 4);
+                BOOST_CHECK_EQUAL(b.size(), 5);
+            
+                BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
+                BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
+            
+                for(unsigned int i = 0; i < a.size(); ++i)
+                {
+                    BOOST_CHECK(a[i] == a_array[i]);
+                }
+                
+                for(unsigned int i = 0; i < b.size(); ++i)
+                {
+                    BOOST_CHECK(b[i] == b_array[i]);
+                }
+            }
+            CountedObject<double>::check(0, 0, 18, 0, 0, 9);
         }
     }
 }

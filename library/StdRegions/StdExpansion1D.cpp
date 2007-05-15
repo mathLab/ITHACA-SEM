@@ -64,8 +64,8 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdExpansion1D::PhysTensorDeriv(ConstNekDoubleSharedArray inarray, 
-					     NekDoubleSharedArray outarray)
+	void StdExpansion1D::PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+					     Array<OneD, NekDouble>& outarray)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
 	    DNekMatSharedPtr     D  = ExpPointsProperties(0)->GetD();
@@ -84,7 +84,7 @@ namespace Nektar
             //           &wsp[0],1,0.0,&outarray[0],1);
 	}
     
-	NekDouble StdExpansion1D::PhysEvaluate1D(ConstNekDoubleSharedArray Lcoord)
+	NekDouble StdExpansion1D::PhysEvaluate1D(ConstArray<OneD, NekDouble>& Lcoord)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
 	    NekDouble  val;
@@ -106,6 +106,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.15  2007/04/26 15:00:17  sherwin
+ * SJS compiling working version using SHaredArrays
+ *
  * Revision 1.14  2007/04/10 14:00:45  sherwin
  * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
  *
@@ -119,7 +122,7 @@ namespace Nektar
  * Replaced boost::shared_array with SharedArray
  *
  * Revision 1.10  2007/03/20 16:58:42  sherwin
- * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+ * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
  *
  * Revision 1.9  2007/03/14 21:24:09  sherwin
  * Update for working version of MultiRegions up to ExpList1D

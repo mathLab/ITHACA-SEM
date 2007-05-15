@@ -67,7 +67,7 @@ namespace Nektar
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(ConstArray<OneD, NekDouble>& x)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x)
             {
                 ASSERTL0(false, "NodalTriFekete Method not implemented");
 
@@ -76,7 +76,7 @@ namespace Nektar
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, ConstArray<OneD, NekDouble>& x)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
             {
                 ASSERTL0(false, "NodalTriFekete Method not implemented");
 

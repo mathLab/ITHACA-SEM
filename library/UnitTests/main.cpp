@@ -35,12 +35,19 @@ test_suite* init_unit_test_suite( int, char* [] )
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
 
     // shared array
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testGet), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testAccessOperator), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testOffset), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testConstruction), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testAssignment), 0);
-
+//     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testGet), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testAccessOperator), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testOffset), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testConstruction), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testAssignment), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testEmptyConstructor), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testUninitializedConstructor), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testNewOffset), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testConstantResultType), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testParameterPopulation), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testSingleValueInitialization), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testPopulationFromCArray), 0);
+    
     // Test Foundation
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussGaussLegendre),0);
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMLegendre),0);
@@ -56,15 +63,15 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testFourierEvenlySpaced),0);
 		
     // StdSegExp algorithms
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
-    //test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testLapMatrix), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIntegration), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testDifferentiation), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIProductWRTBase), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testFwdTrans), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testBwdTrans), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testPhysEvaluate), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testNorms), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
+//     //test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testLapMatrix), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIntegration), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testDifferentiation), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIProductWRTBase), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testFwdTrans), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testBwdTrans), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testPhysEvaluate), 0);
+//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testNorms), 0);
 
     // Memory Manager
     test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testParameterizedConstructors), 0);
@@ -139,6 +146,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.28  2007/03/29 19:42:02  bnelson
+    *** empty log message ***
+
     Revision 1.27  2007/03/26 11:16:12  pvos
     made testStdRegions back working
 

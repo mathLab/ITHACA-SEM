@@ -66,9 +66,9 @@ namespace Nektar
 		return m_len;
 	    }
 	    
-	    inline const NekIntSharedArray& GetMap() const
+	    inline const ConstArray<OneD, int>& GetMap() const
 	    {
-            return m_map;
+                return m_map;
 	    }
 	    
 	    int operator[](const int i) const
@@ -99,7 +99,7 @@ namespace Nektar
 	private:
 	    
 	    int m_len;
-	    NekIntSharedArray m_map;
+	    Array<OneD, int> m_map;
 	};
 	
     } // end of namespace
@@ -109,8 +109,11 @@ namespace Nektar
 
 /**
  * $Log: StdExpMap.h,v $
+ * Revision 1.7  2007/03/29 19:35:08  bnelson
+ * Replaced boost::shared_array with SharedArray
+ *
  * Revision 1.6  2007/03/20 16:58:42  sherwin
- * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+ * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
  *
  * Revision 1.5  2007/01/28 18:34:17  sherwin
  * More modifications to make Demo Project1D compile

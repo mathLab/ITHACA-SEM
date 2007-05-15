@@ -59,8 +59,8 @@ namespace Nektar
 			boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
 
             const MatrixSharedPtrType GetI(const PointsKey &pkey);
-            const MatrixSharedPtrType GetI(ConstArray<OneD, NekDouble>& x);
-            const MatrixSharedPtrType GetI(unsigned int numpoints, ConstArray<OneD, NekDouble>& x);
+            const MatrixSharedPtrType GetI(const ConstArray<OneD, NekDouble>& x);
+            const MatrixSharedPtrType GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x);
 
 			FourierPoints(const PointsKey &key):PointsBaseType(key)
 			{

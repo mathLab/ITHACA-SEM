@@ -197,6 +197,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.15  2007/04/18 16:09:13  pvos
+* Added some new Tensor Operations routines
+*
 * Revision 1.14  2007/04/03 03:56:13  bnelson
 * Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
 *
@@ -204,7 +207,7 @@ namespace Nektar
 * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
 *
 * Revision 1.12  2007/03/20 16:58:43  sherwin
-* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *
 * Revision 1.11  2007/03/14 21:24:09  sherwin
 * Update for working version of MultiRegions up to ExpList1D

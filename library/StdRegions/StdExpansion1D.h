@@ -67,19 +67,19 @@ namespace Nektar
             *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
             *  \a outarray as output of the function
             */
-            void PhysTensorDeriv(SharedArray<const NekDouble> inarray, 
-                NekDoubleSharedArray outarray);
+            void PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble>& outarray);
 
-            void PhysDeriv (SharedArray<const NekDouble> inarray,
-                NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
-                NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
-                NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
+            void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
+                ConstArray<OneD, NekDouble>& out_d1 = NullNekDouble1DArray,
+                ConstArray<OneD, NekDouble>& out_d2 = NullNekDouble1DArray,
+                ConstArray<OneD, NekDouble>& out_d3 = NullNekDouble1DArray)
             {
                 v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
             }
 
-            void StdPhysDeriv (SharedArray<const NekDouble> inarray, 
-                NekDoubleSharedArray &outarray)
+            void StdPhysDeriv (const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble>& outarray)
             {
                 v_StdPhysDeriv (inarray,outarray);
             }
@@ -106,7 +106,7 @@ namespace Nektar
             *  \param coords the coordinates of the single point
             *  \return returns the value of the expansion at the single point
             */
-            NekDouble PhysEvaluate(SharedArray<const NekDouble> coords)
+            NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
             {
                 return v_PhysEvaluate(coords);
             }
@@ -117,7 +117,7 @@ namespace Nektar
             *  to be in local collapsed coordinate format. The function is
             *  assumed to be in physical space
             */
-            NekDouble PhysEvaluate1D(SharedArray<const NekDouble> coords);
+            NekDouble PhysEvaluate1D(ConstArray<OneD, NekDouble>& coords);
 
             /** \brief wrapper around virtual call */
             void FwdTrans(const StdExpansion1D &in)
@@ -130,7 +130,7 @@ namespace Nektar
                 v_BwdTrans(in);
             }
 
-            void  BwdTrans (SharedArray<const NekDouble> inarray, NekDoubleSharedArray &outarray)
+            void  BwdTrans (const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
             {
                 v_BwdTrans (inarray, outarray);
             }
@@ -147,8 +147,8 @@ namespace Nektar
             virtual void v_FwdTrans(const StdExpansion1D &in) = 0;
             virtual void v_BwdTrans(const StdExpansion1D &in) = 0;
 
-            virtual void v_BwdTrans(SharedArray<const NekDouble> inarray, 
-                NekDoubleSharedArray &outarray) = 0;
+            virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray) = 0;
 
 
             virtual int v_GetNverts() = 0;
@@ -165,14 +165,14 @@ namespace Nektar
 
             virtual ShapeType v_DetShapeType()                = 0;
 
-            virtual int v_get_nodalpoints(SharedArray<const NekDouble> x, 
-                SharedArray<const NekDoubleSharedArray> y)
+            virtual int v_get_nodalpoints(const ConstArray<OneD, NekDouble>& x, 
+                Array<OneD, ConstArray<OneD, NekDouble> >& y)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
                 return 0;
             }
 
-            virtual void v_GenNBasisTransMatrix(NekDoubleSharedArray & outarray)
+            virtual void v_GenNBasisTransMatrix(Array<OneD, NekDouble> & outarray)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
             }
@@ -183,15 +183,15 @@ namespace Nektar
                 return 1; 
             }
 
-            virtual void   v_PhysDeriv (SharedArray<const NekDouble> inarray,
-                NekDoubleSharedArray &out_d0,
-                NekDoubleSharedArray &out_d1,
-                NekDoubleSharedArray &out_d2) = 0;
+            virtual void   v_PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
+                ConstArray<OneD, NekDouble> &out_d0,
+                ConstArray<OneD, NekDouble> &out_d1,
+                ConstArray<OneD, NekDouble> &out_d2) = 0;
 
-            virtual void   v_StdPhysDeriv (SharedArray<const NekDouble> inarray, 
-                NekDoubleSharedArray &outarray) = 0;
+            virtual void   v_StdPhysDeriv (const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray) = 0;
 
-            virtual NekDouble v_PhysEvaluate(SharedArray<const NekDouble> coords)
+            virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                     "local expansions");
@@ -208,6 +208,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.17  2007/04/08 03:36:58  jfrazier
+* Updated to use SharedArray consistently and minor reformatting.
+*
 * Revision 1.16  2007/04/04 20:48:17  sherwin
 * Update to handle SharedArrays
 *
@@ -221,7 +224,7 @@ namespace Nektar
 * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
 *
 * Revision 1.12  2007/03/20 16:58:42  sherwin
-* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *
 * Revision 1.11  2007/03/20 09:12:47  kirby
 * update of geofac and metric info; fix style issues

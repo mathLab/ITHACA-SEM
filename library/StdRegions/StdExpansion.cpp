@@ -67,7 +67,7 @@ namespace Nektar
 	        m_numbases(numbases)
         {
 	    
-    	    m_base = MemoryManager::AllocateSharedArray<LibUtilities::BasisSharedPtr>(m_numbases);
+    	    m_base = Array<OneD, LibUtilities::BasisSharedPtr>(m_numbases);
             
             switch(m_numbases)
             {
@@ -91,11 +91,11 @@ namespace Nektar
             };
 
             //allocate memory for coeffs
-            m_coeffs = MemoryManager::AllocateSharedArray<NekDouble>(m_ncoeffs);
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
 
             //allocate memory for phys
-            m_phys = MemoryManager::AllocateSharedArray<NekDouble>(GetTotPoints());
+            m_phys = Array<OneD, NekDouble>(GetTotPoints());
 
             // Register Creators for  Managers
             m_stdMatrixManager.RegisterCreator(StdMatrixKey(eMassMatrix,eNoShapeType,*this),
@@ -120,17 +120,17 @@ namespace Nektar
 
         StdExpansion::StdExpansion(const StdExpansion &T)
         {
-            m_base = Copy(T.m_base);
+            CopyArray(T.m_base, m_base);
 
             // NOTE: Copy Constructor produces a deep copy
             // allocate memory for coeffs
             // need to check allocation for variable order. 
             m_ncoeffs = T.m_ncoeffs;
-            m_coeffs = MemoryManager::AllocateSharedArray<NekDouble>(m_ncoeffs);
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
 	    Vmath::Vcopy(m_ncoeffs,&T.m_coeffs[0],1,&m_coeffs[0],1);
 
             //allocate memory for phys
-            m_phys = MemoryManager::AllocateSharedArray<NekDouble>(GetTotPoints());
+            m_phys = Array<OneD, NekDouble>(GetTotPoints());
 	    Vmath::Vcopy(GetTotPoints(),&T.m_phys[0],1,&m_phys[0],1);
         }
 
@@ -167,20 +167,20 @@ namespace Nektar
         {
             DNekLinSysSharedPtr returnval;
 	    
-	    returnval = MemoryManager::AllocateSharedPtr<DNekLinSys> (m_stdMatrixManager[mkey]);
+	    returnval = MemoryManager<DNekLinSys>::AllocateSharedPtr (m_stdMatrixManager[mkey]);
 
             return returnval;
         }
 
 
-        NekDouble StdExpansion::Linf(ConstNekDoubleSharedArray sol)
+        NekDouble StdExpansion::Linf(const ConstArray<OneD, NekDouble>& sol)
         {
             int     ntot;
             NekDouble  val;
-            NekDoubleSharedArray  wsp;
+            Array<OneD, NekDouble>  wsp;
 
             ntot = GetTotPoints();
-            wsp  = GetDoubleTmpSpace(ntot);
+            wsp  = Array<OneD, NekDouble>(ntot);
 
             Vmath::Vsub(ntot,sol.get(),1,&m_phys[0],1,&wsp[0],1);
             Vmath::Vabs(ntot,&wsp[0],1,&wsp[0],1);
@@ -194,13 +194,13 @@ namespace Nektar
             return Vmath::Vamax(GetTotPoints(),&m_phys[0],1);    
         }
 
-        NekDouble StdExpansion::L2(ConstNekDoubleSharedArray sol)
+        NekDouble StdExpansion::L2(const ConstArray<OneD, NekDouble>& sol)
         {
             int     ntot = GetTotPoints();
             NekDouble  val;
-            NekDoubleSharedArray wsp;
+            Array<OneD, NekDouble> wsp;
 
-            wsp = GetDoubleTmpSpace(ntot);
+            wsp = Array<OneD, NekDouble>(ntot);
 
             Vmath::Vsub(ntot, sol.get(), 1, m_phys.get(), 1, wsp.get(), 1);
             Vmath::Vmul(ntot, wsp.get(), 1, wsp.get(),  1, wsp.get(), 1);
@@ -214,9 +214,9 @@ namespace Nektar
         {
             int     ntot = GetTotPoints();
             NekDouble  val;
-            NekDoubleSharedArray wsp;
+            Array<OneD, NekDouble> wsp;
 
-            wsp = GetDoubleTmpSpace(ntot);
+            wsp = Array<OneD, NekDouble>(ntot);
 
             Vmath::Vmul(ntot, &m_phys[0], 1, &m_phys[0], 1, &wsp[0], 1);
             val   = sqrt(v_Integral(wsp));
@@ -227,12 +227,12 @@ namespace Nektar
         DNekMatSharedPtr StdExpansion::GenerateMassMatrix() 
         {
             int     i;
-            NekDoubleSharedArray store = GetDoubleTmpSpace(m_ncoeffs);
-            NekDoubleSharedArray tmp   = GetDoubleTmpSpace(GetTotPoints());
+            Array<OneD, NekDouble> store = Array<OneD, NekDouble>(m_ncoeffs);
+            Array<OneD, NekDouble> tmp   = Array<OneD, NekDouble>(GetTotPoints());
 
             DNekMatSharedPtr  Mat;
 
-            Mat = MemoryManager::AllocateSharedPtr<DNekMat>(m_ncoeffs,m_ncoeffs);
+            Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
 
             Blas::Dcopy(m_ncoeffs,&m_coeffs[0],1,&store[0],1);
             for(i=0; i<m_ncoeffs; ++i)
@@ -250,11 +250,11 @@ namespace Nektar
         {
             int     i;
 	    int     ntot = GetTotPoints();
-            NekDoubleSharedArray tmp   = GetDoubleTmpSpace(ntot);
+            Array<OneD, NekDouble> tmp   = Array<OneD, NekDouble>(ntot);
 
             DNekMatSharedPtr  Mat;
 
-            Mat = MemoryManager::AllocateSharedPtr<DNekMat>(ntot,m_ncoeffs);
+            Mat = MemoryManager<DNekMat>::AllocateSharedPtr(ntot,m_ncoeffs);
 
             for(i=0; i < m_ncoeffs; ++i)
             {
@@ -265,8 +265,8 @@ namespace Nektar
             return Mat;
         }
 
-        void StdExpansion::TensProdBwdTrans(ConstNekDoubleSharedArray inarray, 
-                              NekDoubleSharedArray &outarray)
+        void StdExpansion::TensProdBwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                              Array<OneD, NekDouble> &outarray)
         {
 	    int nq = GetTotPoints();
 	    StdMatrixKey      bwdtransmatkey(eBwdTransMatrix,DetShapeType(),*this);
@@ -283,13 +283,13 @@ namespace Nektar
         // 2D Interpolation
         void StdExpansion::Interp2D(const LibUtilities::BasisKey &fbasis0, 
 				    const LibUtilities::BasisKey &fbasis1, 
-				    ConstNekDoubleSharedArray from,  
+				    const ConstArray<OneD, NekDouble>& from,  
 				    const LibUtilities::BasisKey &tbasis0,
 				    const LibUtilities::BasisKey &tbasis1,
-				    NekDoubleSharedArray &to)
+				    Array<OneD, NekDouble> &to)
         {
             DNekMatSharedPtr I0,I1;
-            NekDoubleSharedArray wsp = GetDoubleTmpSpace(tbasis1.GetNumPoints()*
+            Array<OneD, NekDouble> wsp = Array<OneD, NekDouble>(tbasis1.GetNumPoints()*
 						 fbasis0.GetNumPoints());
 
             I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]
@@ -311,9 +311,9 @@ namespace Nektar
 
         // 1D Interpolation
         void StdExpansion::Interp1D(const LibUtilities::BasisKey &fbasis0, 
-				    ConstNekDoubleSharedArray from,  
+				    const ConstArray<OneD, NekDouble>& from,  
 				    const LibUtilities::BasisKey &tbasis0, 
-				    NekDoubleSharedArray &to)
+				    Array<OneD, NekDouble> &to)
         {
             Interp1D(fbasis0, from.get(), tbasis0, to.get());
         }
@@ -355,6 +355,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.33  2007/04/26 15:00:17  sherwin
+* SJS compiling working version using SHaredArrays
+*
 * Revision 1.32  2007/04/18 16:09:12  pvos
 * Added some new Tensor Operations routines
 *
@@ -377,7 +380,7 @@ namespace Nektar
 * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
 *
 * Revision 1.25  2007/03/20 16:58:42  sherwin
-* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *
 * Revision 1.24  2007/03/14 21:24:09  sherwin
 * Update for working version of MultiRegions up to ExpList1D

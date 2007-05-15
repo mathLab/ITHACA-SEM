@@ -79,16 +79,16 @@ namespace Nektar
             *	Note for quadrilateral expansions _base[0] (i.e. p)  modes run 
             *  fastest
             */
-            void FillMode(const int mode, NekDoubleSharedArray &outarray);
+            void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
 
             //////////////////////////////
             // Integration Methods
             //////////////////////////////
 
-            NekDouble Integral(ConstNekDoubleSharedArray inarray);
+            NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray);
 
-            void IProductWRTBase(ConstNekDoubleSharedArray inarray, 
-                NekDoubleSharedArray &outarray);
+            void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray);
 
             /** \brief Calculate the inner product of inarray with respect to
             *  the basis B=base0*base1 and put into outarray
@@ -115,10 +115,10 @@ namespace Nektar
             *  \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
             *  {\bf B_0 F}  \f$
             */
-            void IProductWRTBase(ConstNekDoubleSharedArray base0, 
-				 ConstNekDoubleSharedArray base1,
-				 ConstNekDoubleSharedArray inarray, 
-				 NekDoubleSharedArray &outarray,
+            void IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
+				 const ConstArray<OneD, NekDouble>& base1,
+				 const ConstArray<OneD, NekDouble>& inarray, 
+				 Array<OneD, NekDouble> &outarray,
 				 int coll_check);
 
             //----------------------------------
@@ -137,22 +137,22 @@ namespace Nektar
             *  For quadrilateral region can use the Tensor_Deriv function
             *  defined under StdExpansion.
             */
-            void PhysDeriv(ConstNekDoubleSharedArray inarray, 
-                NekDoubleSharedArray &out_d0, 
-                NekDoubleSharedArray &out_d1,
-                NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
+            void PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &out_d0, 
+                Array<OneD, NekDouble> &out_d1,
+                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
 
 
             //----------------------------
             // Evaluations Methods
             //-----------------------------
 
-            void BwdTrans(ConstNekDoubleSharedArray inarray,
-                NekDoubleSharedArray &outarray);
-            void FwdTrans(ConstNekDoubleSharedArray inarray,
-                NekDoubleSharedArray &outarray);
+            void BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray);
+            void FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray);
 
-            NekDouble PhysEvaluate(ConstNekDoubleSharedArray coords);
+            NekDouble PhysEvaluate(ConstArray<OneD, NekDouble>& coords);
 
             void MapTo(const int edge_ncoeffs, 
                 const LibUtilities::BasisType Btype, 
@@ -196,8 +196,8 @@ namespace Nektar
 
             }
 
-            void GetCoords(NekDoubleSharedArray &coords_0, 
-                NekDoubleSharedArray &coords_1);
+            void GetCoords(Array<OneD, NekDouble> &coords_0, 
+                Array<OneD, NekDouble> &coords_1);
 
         protected:
 
@@ -229,26 +229,26 @@ namespace Nektar
                 return DetShapeType();
             }
 
-            virtual void v_GetCoords(NekDoubleSharedArray &coords_0,
-                NekDoubleSharedArray &coords_1,
-                NekDoubleSharedArray &coords_2)
+            virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
+                Array<OneD, NekDouble> &coords_1,
+                Array<OneD, NekDouble> &coords_2)
             {
                 GetCoords(coords_0,coords_1);
             }
 
 
-            virtual void v_FillMode(const int mode, NekDoubleSharedArray &array)
+            virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &array)
             {
                 FillMode(mode,array);
             }
 
-            virtual NekDouble v_Integral(ConstNekDoubleSharedArray inarray )
+            virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray )
             {
                 return Integral(inarray);
             }
 
-            virtual void v_IProductWRTBase(ConstNekDoubleSharedArray inarray,
-                NekDoubleSharedArray &outarray)
+            virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTBase(inarray,outarray);
             }
@@ -260,37 +260,37 @@ namespace Nektar
 
             virtual DNekMatSharedPtr v_GenLapMatrix()
             {
-                GenLapMatrix();
+                return GenLapMatrix();
             }
 
-            virtual void v_PhysDeriv(ConstNekDoubleSharedArray inarray,
-                NekDoubleSharedArray &out_d0,
-                NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
-                NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray)
+            virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+                Array<OneD, NekDouble> &out_d0,
+                Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
             {
                 PhysDeriv(inarray,out_d0, out_d1);
             }
 
-            virtual void v_StdPhysDeriv(ConstNekDoubleSharedArray inarray, 
-                NekDoubleSharedArray &out_d0,
-                NekDoubleSharedArray &out_d1)
+            virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &out_d0,
+                Array<OneD, NekDouble> &out_d1)
             {
                 PhysDeriv(inarray, out_d0,  out_d1);
             }
 
-            virtual void v_BwdTrans(ConstNekDoubleSharedArray inarray, 
-                NekDoubleSharedArray &outarray)
+            virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray)
             {
                 BwdTrans(inarray, outarray);
             }
 
-            virtual void v_FwdTrans(ConstNekDoubleSharedArray inarray, 
-                NekDoubleSharedArray &outarray)
+            virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray)
             {
                 FwdTrans(inarray, outarray);
             }
 
-            virtual NekDouble v_PhysEvaluate(ConstNekDoubleSharedArray Lcoords)
+            virtual NekDouble v_PhysEvaluate(ConstArray<OneD, NekDouble>& Lcoords)
             {
                 return PhysEvaluate(Lcoords);
             }
@@ -322,6 +322,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.13  2007/04/10 14:00:45  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.12  2007/04/08 03:36:58  jfrazier
 * Updated to use SharedArray consistently and minor reformatting.
 *

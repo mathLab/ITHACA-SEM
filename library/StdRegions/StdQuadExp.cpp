@@ -64,9 +64,9 @@ namespace Nektar
         // Integration Methods
         //////////////////////////////
 
-        NekDouble StdQuadExp::Integral(ConstNekDoubleSharedArray inarray)
+        NekDouble StdQuadExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
         {
-            ConstNekDoubleSharedArray w0, w1;
+            ConstArray<OneD, NekDouble> w0, w1;
 
 	    w0 = ExpPointsProperties(0)->GetW();
 	    w1 = ExpPointsProperties(1)->GetW();
@@ -75,17 +75,17 @@ namespace Nektar
         }
 
 
-        void StdQuadExp::IProductWRTBase(ConstNekDoubleSharedArray inarray, 
-					 NekDoubleSharedArray &outarray)
+        void StdQuadExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+					 Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
 			    inarray,outarray,1);
         }
 
-        void StdQuadExp:: IProductWRTBase(ConstNekDoubleSharedArray base0, 
-					  ConstNekDoubleSharedArray base1,
-					  ConstNekDoubleSharedArray inarray, 
-					  NekDoubleSharedArray &outarray,
+        void StdQuadExp:: IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
+					  const ConstArray<OneD, NekDouble>& base1,
+					  const ConstArray<OneD, NekDouble>& inarray, 
+					  Array<OneD, NekDouble> &outarray,
 					  int coll_check)
 	{
 	    int i;
@@ -93,9 +93,9 @@ namespace Nektar
 	    int    nquad1 = m_base[1]->GetNumPoints();
 	    int    order0 = m_base[0]->GetNumModes();
 	    int    order1 = m_base[1]->GetNumModes();
-	    ConstNekDoubleSharedArray w0,w1;
-	    NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad0*nquad1);
-	    NekDoubleSharedArray tmp1 = GetDoubleTmpSpace(nquad0*nquad1);
+	    ConstArray<OneD, NekDouble> w0,w1;
+	    Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad0*nquad1);
+	    Array<OneD, NekDouble> tmp1 = Array<OneD, NekDouble>(nquad0*nquad1);
 	    
 #if FULLDEBUG
 	    if((m_base[0]->GetAlpha() != 0.0)||(m_base[1]->GetAlpha() != 0.0))
@@ -152,13 +152,13 @@ namespace Nektar
 
             }
 	
-	void StdQuadExp::FillMode(const int mode, NekDoubleSharedArray &outarray)
+	void StdQuadExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
 	{
 	    int    i;
 	    int   nquad0 = m_base[0]->GetNumPoints();
 	    int   nquad1 = m_base[1]->GetNumPoints();
-	    ConstNekDoubleSharedArray base0  = m_base[0]->GetBdata();
-	    ConstNekDoubleSharedArray base1  = m_base[1]->GetBdata();
+	    ConstArray<OneD, NekDouble> base0  = m_base[0]->GetBdata();
+	    ConstArray<OneD, NekDouble> base1  = m_base[1]->GetBdata();
 	    int   btmp0 = m_base[0]->GetNumModes();
 	    int   mode0 = mode%btmp0;
 	    int   mode1 = mode/btmp0;
@@ -214,16 +214,17 @@ namespace Nektar
 	DNekMatSharedPtr  StdQuadExp::GenLapMatrix()
 	{
 	    ASSERTL0(false, "Not implemented");
+        return DNekMatSharedPtr(static_cast<DNekMat*>(0));
 	}
 	
 	///////////////////////////////
 	/// Differentiation Methods
 	///////////////////////////////
 	
-	void StdQuadExp::PhysDeriv(ConstNekDoubleSharedArray inarray,
-				   NekDoubleSharedArray &out_d0,
-				   NekDoubleSharedArray &out_d1,
-				   NekDoubleSharedArray &out_d2)
+	void StdQuadExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+				   Array<OneD, NekDouble> &out_d0,
+				   Array<OneD, NekDouble> &out_d1,
+				   Array<OneD, NekDouble> &out_d2)
 	{
 	    PhysTensorDeriv(inarray, out_d0, out_d1);
 	}
@@ -232,16 +233,16 @@ namespace Nektar
 	// Evaluation Methods
 	//-----------------------------
 	
-	void StdQuadExp::BwdTrans(ConstNekDoubleSharedArray inarray,
-				  NekDoubleSharedArray &outarray)
+	void StdQuadExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+				  Array<OneD, NekDouble> &outarray)
 	{
 	    int           nquad0 = m_base[0]->GetNumPoints();
 	    int           nquad1 = m_base[1]->GetNumPoints();
 	    int           order0 = m_base[0]->GetNumModes();
 	    int           order1 = m_base[1]->GetNumModes();
-	    ConstNekDoubleSharedArray base0 = m_base[0]->GetBdata();
-	    ConstNekDoubleSharedArray base1 = m_base[1]->GetBdata();
-	    NekDoubleSharedArray tmp = GetDoubleTmpSpace(nquad0*std::max(order1,nquad1));
+	    ConstArray<OneD, NekDouble> base0 = m_base[0]->GetBdata();
+	    ConstArray<OneD, NekDouble> base1 = m_base[1]->GetBdata();
+	    Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nquad0*std::max(order1,nquad1));
 	    
 	    if(m_base[0]->Collocation())
 	    {
@@ -265,8 +266,8 @@ namespace Nektar
 	    }    
 	}
 
-	void StdQuadExp::FwdTrans(ConstNekDoubleSharedArray inarray,
-				  NekDoubleSharedArray &outarray)
+	void StdQuadExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+				  Array<OneD, NekDouble> &outarray)
 	{
 	    if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
 	    {
@@ -288,7 +289,7 @@ namespace Nektar
 	}
 
 	/// Single Point Evaluation
-	NekDouble StdQuadExp::PhysEvaluate(ConstNekDoubleSharedArray coords)
+	NekDouble StdQuadExp::PhysEvaluate(ConstArray<OneD, NekDouble>& coords)
 	{
 	    return  StdExpansion2D::PhysEvaluate2D(coords); 
 	}
@@ -312,7 +313,7 @@ namespace Nektar
 	    
 	    int i, start, skip;
 	    int *dir, order0,order1;
-	    NekIntSharedArray wsp; 
+	    Array<OneD, int> wsp; 
 	    
 	    ASSERTL2(eid>=0&&eid <=3,"eid must be between 0 and 3");
 	    // make sure have correct memory storage
@@ -321,7 +322,7 @@ namespace Nektar
 		Map.SetMapMemory(edge_ncoeffs);
 	    }
 	    
-	    wsp = GetIntTmpSpace(edge_ncoeffs);
+	    wsp = Array<OneD, int>(edge_ncoeffs);
 	    dir = wsp.get(); 
 	    
 	    if(eorient == eForwards)
@@ -465,11 +466,11 @@ namespace Nektar
 	    }
 	}
 
-	void StdQuadExp::GetCoords(NekDoubleSharedArray &coords_0, 
-				  NekDoubleSharedArray &coords_1)
+	void StdQuadExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
+				  Array<OneD, NekDouble> &coords_1)
 	{
-	    ConstNekDoubleSharedArray z0 = ExpPointsProperties(0)->GetZ();
-	    ConstNekDoubleSharedArray z1 = ExpPointsProperties(1)->GetZ();
+	    ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+	    ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
 	    int nq0 = GetNumPoints(0);
 	    int nq1 = GetNumPoints(1);
 	    int i;
@@ -487,6 +488,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.14  2007/04/10 14:00:45  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.13  2007/04/06 08:44:43  sherwin
 * Update to make 2D regions work at StdRegions level
 *
@@ -497,7 +501,7 @@ namespace Nektar
 * quad_edited
 *
 * Revision 1.10  2007/03/20 16:58:43  sherwin
-* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *
 * Revision 1.9  2007/01/20 22:35:21  sherwin
 * Version with StdExpansion compiling

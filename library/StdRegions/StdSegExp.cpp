@@ -60,13 +60,13 @@ namespace Nektar
 	// Integration Methods
 	//----------------------------
 	
-	double StdSegExp::Integral(ConstNekDoubleSharedArray inarray)
+	double StdSegExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
 	{
 	    NekDouble Int = 0.0;
-	    ConstNekDoubleSharedArray z;
-	    ConstNekDoubleSharedArray w0;
+	    ConstArray<OneD, NekDouble> z;
+	    ConstArray<OneD, NekDouble> w0;
 	    int    nquad0 = m_base[0]->GetNumPoints();
-	    NekDoubleSharedArray tmp = GetDoubleTmpSpace(nquad0);
+	    Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nquad0);
 	    
 	    ExpPointsProperties(0)->GetZW(z,w0);
 	    
@@ -78,15 +78,15 @@ namespace Nektar
 	    return Int;
 	}
 	
-	void StdSegExp::IProductWRTBase(ConstNekDoubleSharedArray base, 
-					ConstNekDoubleSharedArray inarray, 
-					NekDoubleSharedArray &outarray, 
+	void StdSegExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& base, 
+					const ConstArray<OneD, NekDouble>& inarray, 
+					Array<OneD, NekDouble> &outarray, 
 					int coll_check)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
-	    ConstNekDoubleSharedArray z;
-	    ConstNekDoubleSharedArray w;
-	    NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad);
+	    ConstArray<OneD, NekDouble> z;
+	    ConstArray<OneD, NekDouble> w;
+	    Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad);
 	    
 	    ExpPointsProperties(0)->GetZW(z,w);
 	    
@@ -103,13 +103,13 @@ namespace Nektar
 	    }    
 	}
 	
-	void StdSegExp::IProductWRTBase(ConstNekDoubleSharedArray inarray, 
-					NekDoubleSharedArray &outarray)
+	void StdSegExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+					Array<OneD, NekDouble> &outarray)
 	{
 	    IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
 	}
 	
-	void StdSegExp::FillMode(const int mode, NekDoubleSharedArray &outarray)
+	void StdSegExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
 	{
 	    int   nquad = m_base[0]->GetNumPoints();
 	    const NekDouble * base  = m_base[0]->GetBdata().get();
@@ -139,15 +139,14 @@ namespace Nektar
 	    int    i;
 	    int   nquad = m_base[0]->GetNumPoints();
 	    const NekDouble * dbase  = m_base[0]->GetDbdata().get();
-	    ConstNekDoubleSharedArray z;
-	    ConstNekDoubleSharedArray w;
-	    NekDoubleSharedArray tmp  = GetDoubleTmpSpace(nquad);
+	    ConstArray<OneD, NekDouble> z;
+	    ConstArray<OneD, NekDouble> w;
+	    Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad);
 	    int nummodes = m_base[0]->GetNumModes();
 	    DNekMatSharedPtr Mat;
 	    
-	    Mat = MemoryManager::AllocateSharedPtr<DNekMat>(nummodes,
-							    nummodes,
-							    MemoryManager::AllocateArray<NekDouble>(nummodes*nummodes));
+	    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(nummodes,
+							    nummodes);
 	    
 	    ExpPointsProperties(0)->GetZW(z,w);
 	    
@@ -165,10 +164,10 @@ namespace Nektar
 	// Differentiation Methods
 	//-----------------------------
 	
-	void StdSegExp::PhysDeriv(ConstNekDoubleSharedArray inarray, 
-				  NekDoubleSharedArray &out_d0,
-				  NekDoubleSharedArray &out_d2,
-				  NekDoubleSharedArray &out_d3)
+	void StdSegExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+				  Array<OneD, NekDouble> &out_d0,
+				  Array<OneD, NekDouble> &out_d2,
+				  Array<OneD, NekDouble> &out_d3)
 	{
 	    PhysTensorDeriv(inarray,out_d0);
 	}
@@ -177,8 +176,8 @@ namespace Nektar
 	// Evaluation Methods
 	//----------------------------
 	
-	void StdSegExp::BwdTrans(ConstNekDoubleSharedArray inarray, 
-				 NekDoubleSharedArray &outarray)
+	void StdSegExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+				 Array<OneD, NekDouble> &outarray)
 	{
 	    int  nquad = m_base[0]->GetNumPoints();
 	    
@@ -195,7 +194,7 @@ namespace Nektar
 	    }
 	}
 	
-	void StdSegExp::FwdTrans(ConstNekDoubleSharedArray inarray, NekDoubleSharedArray &outarray)
+	void StdSegExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
 	{
 	    if(m_base[0]->Collocation())
 	    {
@@ -215,7 +214,7 @@ namespace Nektar
 	    }
 	}
 	
-	NekDouble StdSegExp::PhysEvaluate(ConstNekDoubleSharedArray Lcoord)
+	NekDouble StdSegExp::PhysEvaluate(ConstArray<OneD, NekDouble>& Lcoord)
 	{
 	    return StdExpansion1D::PhysEvaluate1D(Lcoord);
 	}
@@ -264,7 +263,7 @@ namespace Nektar
 	    }
 	}    
 	
-	void StdSegExp::GetCoords(NekDoubleSharedArray &coords)
+	void StdSegExp::GetCoords(Array<OneD, NekDouble> &coords)
 	{
 	    Blas::Dcopy(GetNumPoints(0),ExpPointsProperties(0)->GetZ().get(),
 			1,&coords[0],1);
@@ -275,6 +274,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.28  2007/04/10 14:00:46  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.27  2007/04/08 03:36:58  jfrazier
 * Updated to use SharedArray consistently and minor reformatting.
 *
@@ -294,7 +296,7 @@ namespace Nektar
 * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
 *
 * Revision 1.21  2007/03/20 16:58:43  sherwin
-* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *
 * Revision 1.20  2007/03/14 21:24:09  sherwin
 * Update for working version of MultiRegions up to ExpList1D

@@ -89,22 +89,22 @@ namespace Nektar
              *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
              *  \end{array} \f$
              */
-                void PhysTensorDeriv(ConstNekDoubleSharedArray inarray, 
-				     NekDoubleSharedArray &outarray_d0,
-                                     NekDoubleSharedArray &outarray_d1);
+                void PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+				     Array<OneD, NekDouble> &outarray_d0,
+                                     Array<OneD, NekDouble> &outarray_d1);
 
                 // Change names from Deriv to PhysDeriv
-		void PhysDeriv (ConstNekDoubleSharedArray inarray,
-				NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
-				NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray,
-				NekDoubleSharedArray &out_d3 = NullNekDoubleSharedArray)
+		void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
+				Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+				Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray,
+				Array<OneD, NekDouble> &out_d3 = NullNekDouble1DArray)
 		{
 		    v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
 		}
 
-                void StdPhysDeriv(ConstNekDoubleSharedArray inarray, 
-				  NekDoubleSharedArray &outarray_d1,
-                                  NekDoubleSharedArray &outarray_d2)
+                void StdPhysDeriv(ConstArray<OneD, NekDouble>& inarray, 
+				  Array<OneD, NekDouble> &outarray_d1,
+                                  Array<OneD, NekDouble> &outarray_d2)
                 {
                     v_StdPhysDeriv(inarray, outarray_d1, outarray_d2);
                 }
@@ -131,7 +131,7 @@ namespace Nektar
 	     *  \param coords the coordinates of the single point
 	     *  \return returns the value of the expansion at the single point
 	     */
-	     NekDouble PhysEvaluate(ConstNekDoubleSharedArray coords)
+	     NekDouble PhysEvaluate(ConstArray<OneD, NekDouble>& coords)
              {
                  return v_PhysEvaluate(coords);
              }
@@ -140,14 +140,14 @@ namespace Nektar
 	     *  to be in local collapsed coordinate format. The function is
 	     *  assumed to be in physical space 
 	     */
-	     NekDouble PhysEvaluate2D(ConstNekDoubleSharedArray coords);
+	     NekDouble PhysEvaluate2D(ConstArray<OneD, NekDouble>& coords);
 
-	     NekDouble Integral(ConstNekDoubleSharedArray inarray, 
-				ConstNekDoubleSharedArray w0, 
-				ConstNekDoubleSharedArray w1);
+	     NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray, 
+				const ConstArray<OneD, NekDouble>& w0, 
+				const ConstArray<OneD, NekDouble>& w1);
 
-	     int GetNodalPoints(ConstNekDoubleSharedArray &x, 
-				ConstNekDoubleSharedArray &y)
+	     int GetNodalPoints(ConstArray<OneD, NekDouble> &x, 
+				ConstArray<OneD, NekDouble> &y)
 	     {
 		 return v_GetNodalPoints(x, y);
 	     }
@@ -168,8 +168,8 @@ namespace Nektar
 	     }
 	     
 	     virtual ShapeType v_DetShapeType() = 0;
-	     virtual int v_GetNodalPoints(ConstNekDoubleSharedArray &x,
-					  ConstNekDoubleSharedArray &y)
+	     virtual int v_GetNodalPoints(ConstArray<OneD, NekDouble> &x,
+					  ConstArray<OneD, NekDouble> &y)
              {
 		 ASSERTL0(false, "This function is only valid for nodal "
 			  "expansions");
@@ -178,8 +178,9 @@ namespace Nektar
 	     
 	     virtual DNekMatSharedPtr v_GenNBasisTransMatrix()
 	     {
-		 ASSERTL0(false, "This function is only valid for nodal "
+            ASSERTL0(false, "This function is only valid for nodal "
 			  "expansions");
+            return DNekMatSharedPtr(static_cast<DNekMat*>(0));
 	     }
 	     
 	     virtual int v_GetCoordim(void)
@@ -187,23 +188,23 @@ namespace Nektar
 		 return 2;
 	     }
 	     
-	     virtual void v_BwdTrans(ConstNekDoubleSharedArray inarray, 
-				     NekDoubleSharedArray &outarray) = 0;
-	     virtual void v_FwdTrans(ConstNekDoubleSharedArray inarray, 
-				     NekDoubleSharedArray &outarray) = 0;
+	     virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+				     Array<OneD, NekDouble> &outarray) = 0;
+	     virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+				     Array<OneD, NekDouble> &outarray) = 0;
 	     
-	     virtual NekDouble v_Integral(ConstNekDoubleSharedArray inarray ) = 0;
+	     virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray ) = 0;
 	     
-	     virtual void   v_PhysDeriv (ConstNekDoubleSharedArray inarray,
-					 NekDoubleSharedArray &out_d0,
-					 NekDoubleSharedArray &out_d1,
-					 NekDoubleSharedArray &out_d2) = 0;
+	     virtual void   v_PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
+					 Array<OneD, NekDouble> &out_d0,
+					 Array<OneD, NekDouble> &out_d1,
+					 Array<OneD, NekDouble> &out_d2) = 0;
 	     
-	     virtual void v_StdPhysDeriv(ConstNekDoubleSharedArray inarray,
-					 NekDoubleSharedArray &outarray_d1, 
-					 NekDoubleSharedArray &outarray_d2) = 0;
+	     virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+					 Array<OneD, NekDouble> &outarray_d1, 
+					 Array<OneD, NekDouble> &outarray_d2) = 0;
 	     
-	     virtual NekDouble v_PhysEvaluate(ConstNekDoubleSharedArray coords)
+	     virtual NekDouble v_PhysEvaluate(ConstArray<OneD, NekDouble>& coords)
 	     {
 		 return PhysEvaluate2D(coords);
 	     }
@@ -217,6 +218,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.12  2007/04/10 14:00:45  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.11  2007/04/06 08:44:43  sherwin
 * Update to make 2D regions work at StdRegions level
 *
@@ -227,7 +231,7 @@ namespace Nektar
 * Replaced boost::shared_array with SharedArray
 *
 * Revision 1.8  2007/03/20 16:58:43  sherwin
-* Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 *
 * Revision 1.7  2007/03/14 21:24:09  sherwin
 * Update for working version of MultiRegions up to ExpList1D

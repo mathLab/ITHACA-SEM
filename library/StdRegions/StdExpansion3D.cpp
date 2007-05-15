@@ -66,18 +66,18 @@ namespace Nektar
 	{ 
 	}
 	
-	void StdExpansion3D::PhysTensorDeriv(ConstNekDoubleSharedArray &inarray, 
-					     NekDoubleSharedArray &outarray_d0, 
-					     NekDoubleSharedArray &outarray_d1, 
-					     NekDoubleSharedArray &outarray_d2)
+	void StdExpansion3D::PhysTensorDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+					     Array<OneD, NekDouble> &outarray_d0, 
+					     Array<OneD, NekDouble> &outarray_d1, 
+					     Array<OneD, NekDouble> &outarray_d2)
 	{
 	    int    i;
 	    int    nquad0 = m_base[0]->GetNumPoints();
 	    int    nquad1 = m_base[1]->GetNumPoints();
 	    int    nquad2 = m_base[2]->GetNumPoints();
 	    DNekMatSharedPtr D0,D1,D2;
-	    NekDoubleSharedArray wsp;
-            wsp = GetDoubleTmpSpace(nquad0*nquad1*nquad2);
+	    Array<OneD, NekDouble> wsp;
+            wsp = Array<OneD, NekDouble>(nquad0*nquad1*nquad2);
 	    
 	    // copy inarray to wsp in case inarray is used as outarray
             Vmath::Vcopy(nquad0*nquad1*nquad2,&inarray[0],1,&wsp[0],1);
@@ -87,7 +87,7 @@ namespace Nektar
 	    D2 = ExpPointsProperties(2)->GetD();
 	    
 	    // calculate du/dx_0
-	    if(outarray_d0)
+	    if(outarray_d0.size() > 0)
 	    {
 		for(i=0; i < nquad2; ++i)
 		{
@@ -98,7 +98,7 @@ namespace Nektar
 	    }
 	    
 	    // calculate du/dx_1
-	    if(outarray_d1)
+	    if(outarray_d1.size() > 0 )
 	    {
 		for(i=0; i < nquad2; ++i)
 		{
@@ -109,7 +109,7 @@ namespace Nektar
 	    }
 	    
 	    // calculate du/dx_2
-	    if(outarray_d2)
+	    if(outarray_d2.size() > 0)
 	    {
 		for(i=0; i < nquad0*nquad1; ++i)
 		{
@@ -120,7 +120,7 @@ namespace Nektar
 	    }   
 	}
 	
-	NekDouble StdExpansion3D::PhysEvaluate(ConstNekDoubleSharedArray &coords)
+	NekDouble StdExpansion3D::PhysEvaluate(ConstArray<OneD, NekDouble> &coords)
 	{
 	    NekDouble  val;
 	    int i;
@@ -130,8 +130,8 @@ namespace Nektar
 	    	    
             DNekMatSharedPtr I;
 
-	    NekDoubleSharedArray wsp  = GetDoubleTmpSpace(nq2*nq3);
-	    NekDoubleSharedArray wsp1 = GetDoubleTmpSpace(nq3);
+	    Array<OneD, NekDouble> wsp  = Array<OneD, NekDouble>(nq2*nq3);
+	    Array<OneD, NekDouble> wsp1 = Array<OneD, NekDouble>(nq3);
 	    
 	    ASSERTL2(coord[0] < -1,"coord[0] < -1");
 	    ASSERTL2(coord[0] >  1,"coord[0] >  1");
@@ -167,6 +167,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.8  2007/04/10 14:00:45  sherwin
+ * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+ *
  * Revision 1.7  2007/04/04 20:48:17  sherwin
  * Update to handle SharedArrays
  *
@@ -174,7 +177,7 @@ namespace Nektar
  * Replaced boost::shared_array with SharedArray
  *
  * Revision 1.5  2007/03/20 16:58:43  sherwin
- * Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+ * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
  *
  * Revision 1.4  2007/01/18 18:44:45  bnelson
  * Updates to compile on Visual Studio 2005.

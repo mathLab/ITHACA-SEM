@@ -59,7 +59,8 @@ namespace Nektar
             NekMatrix() :
                 m_rows(0),
                 m_columns(0),
-                m_data()
+                m_data(),
+                m_wrapperType(eCopy)
             {
             }
     
@@ -69,7 +70,8 @@ namespace Nektar
             NekMatrix(unsigned int rows, unsigned int columns) :
                 m_rows(rows),
                 m_columns(columns),
-                m_data()
+                m_data(),
+                m_wrapperType(eCopy)
             {
                 // If you get a compiler error here, then you are trying to use this constructor with a block matrix.
                 BOOST_STATIC_ASSERT(BlockType == eNormal);
@@ -77,19 +79,30 @@ namespace Nektar
                 Initialize(rows, columns, d);
             }
 
-            NekMatrix(unsigned int rows, unsigned int columns, DataType* ptr, PointerWrapper t = eCopy) :
+            NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
                 m_rows(rows),
                 m_columns(columns),
-                m_data()
+                m_data(),
+                m_wrapperType(eCopy)
+            {
+                Initialize(m_rows, m_columns, ptr);
+            }
+            
+            NekMatrix(unsigned int rows, unsigned int columns, Array<OneD, DataType>& ptr, PointerWrapper t = eCopy) :
+                m_rows(rows),
+                m_columns(columns),
+                m_data(),
+                m_wrapperType(t)
             {
                 BOOST_STATIC_ASSERT(BlockType == eNormal);
                 Initialize(rows, columns, ptr, t);
             }
 
-            NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
+            NekMatrix(unsigned int rows, unsigned int columns, const ConstArray<OneD, DataType>& ptr) :
                 m_rows(rows),
                 m_columns(columns),
-                m_data()
+                m_data(),
+                m_wrapperType(eCopy)
             {
                 BOOST_STATIC_ASSERT(BlockType == eNormal);
                 Initialize(rows, columns, ptr);
@@ -98,7 +111,8 @@ namespace Nektar
             NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference d) :
                 m_rows(),
                 m_columns(),
-                m_data()
+                m_data(),
+                m_wrapperType(eCopy)
             {
                 BOOST_STATIC_ASSERT(BlockType == eNormal);
                 Initialize(rows, columns, d);
@@ -107,16 +121,38 @@ namespace Nektar
             NekMatrix(const ThisType& rhs) :
                 m_rows(rhs.m_rows),
                 m_columns(rhs.m_columns),
-                m_data()
+                m_data(),
+                m_wrapperType(rhs.m_wrapperType)
             {
                 BOOST_STATIC_ASSERT(BlockType == eNormal);
-                Initialize(m_rows, m_columns, rhs.m_data.get());
+                if( m_wrapperType == eWrapper )
+                {
+                    m_data = rhs.m_data;
+                }
+                else
+                {
+                    Initialize(m_rows, m_columns, rhs.m_data.get());
+                }
             }
 
             ThisType& operator=(const ThisType& rhs)
             {
-                ThisType temp(rhs);
-                Swap(temp);
+                m_rows = rhs.m_rows;
+                m_columns = rhs.m_columns;
+                
+                if( m_wrapperType == eCopy )
+                {
+                    if( m_data.size() != rhs.m_data.size() )
+                    {
+                        Initialize(m_rows, m_columns);
+                    }
+                }
+                else
+                {
+                    ASSERTL0(m_data.size() == rhs.m_data.size(), "Wrapped NekMatrices must have the same dimension in operator=");
+                }
+                
+                CopyArray(rhs.m_data, m_data);
                 return *this;
             }
 
@@ -127,13 +163,13 @@ namespace Nektar
                 return *this;
             }
 
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
             NekMatrix(const expt::Expression<ExpressionPolicyType>& rhs) :
                 m_rows(rhs.GetMetadata().Rows),
                 m_columns(rhs.GetMetadata().Columns),
-                m_data()
+                m_data(),
+                m_wrapperType(eCopy)
             {
                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, ThisType> ));
                 Initialize(m_rows, m_columns);
@@ -143,6 +179,7 @@ namespace Nektar
             template<typename ExpressionPolicyType>
             NekMatrix& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
             {
+                // TODO The assignment operator should be wrapper aware.
                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, ThisType> ));
                 m_rows = rhs.GetMetadata().Rows;
                 m_columns = rhs.GetMetadata().Columns;
@@ -150,13 +187,12 @@ namespace Nektar
                 rhs.Apply(*this);
                 return *this;
             }
-#endif
+            #endif
 
             ~NekMatrix() 
             {
                 m_rows = 0;
                 m_columns = 0;
-                m_data.reset();
             }
 
 
@@ -177,42 +213,37 @@ namespace Nektar
                 return StoragePolicy::GetConstData(rowNumber, colNumber, m_rows, m_columns, m_data);
             }
 
-            //DataType* GetPtr(unsigned int rowNumber, unsigned int colNumber)
-            //{
-            //    return m_data.get() + rowNumber*m_columns + colNumber;
-            //}
-
-            SharedArray<DataType>& GetPtr()
+            Array<OneD, DataType>& GetPtr()
             {
                 return m_data;
             }
 
-            const SharedArray<DataType>& GetPtr() const
+            const ConstArray<OneD, DataType>& GetPtr() const
             {
                 return m_data;
             }
 
-            typedef DataType* iterator;
-            typedef const DataType* const_iterator;
+            typedef typename Array<OneD, DataType>::iterator iterator;
+            typedef typename Array<OneD, DataType>::const_iterator const_iterator;
 
             iterator begin() 
             { 
-                return m_data.get();
+                return m_data.begin();
             }
 
             iterator end() 
             { 
-                return m_data.get() + StoragePolicy::NumStorageElements(m_rows, m_columns);
+                return m_data.end();
             }
 
             const_iterator begin() const 
             { 
-                return m_data.get();
+                return m_data.begin();
             }
 
             const_iterator end() const 
             { 
-                return m_data.get() + StoragePolicy::NumStorageElements(m_rows, m_columns);
+                return m_data.end();
             }
 
             void Negate()
@@ -255,6 +286,7 @@ namespace Nektar
                 return *this;
             }
 
+            // TODO - Fix this.
             //// This is wrong as well.  What if this is diagonal?
             //// enable if on the output.
             //NekMatrix<DataType, eFull, eNormal, space> operator+=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
@@ -272,8 +304,8 @@ namespace Nektar
             ThisType& operator-=(const ThisType& rhs)
             {
                 ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator-=");
-                DataType* lhs_data = begin();
-                const DataType* rhs_data = rhs.begin();
+                iterator lhs_data = begin();
+                const_iterator rhs_data = rhs.begin();
 
                 for( ; lhs_data < end(); ++lhs_data, ++rhs_data )
                 {
@@ -283,6 +315,7 @@ namespace Nektar
                 return *this;
             }
 
+            // TODO
             //// This is wrong as well.  What if this is diagonal?
             //// enable if on the output.
             //NekMatrix<DataType, eFull, eNormal, space> operator-=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
@@ -326,21 +359,29 @@ namespace Nektar
             
 
         private:
-            void Initialize(unsigned int rows, unsigned int columns)
+            void Initialize(unsigned int rows, unsigned int columns, const DataType* ptr = 0)
             {
                 m_rows = rows;
                 m_columns = columns;
                 unsigned int storageSize = StoragePolicy::NumStorageElements(m_rows, m_columns);
-                m_data = MemoryManager::AllocateSharedArray<DataType>(storageSize);
+
+                if( ptr )
+                {
+                    m_data = Array<OneD, DataType>(storageSize, ptr);
+                }
+                else
+                {
+                    m_data = Array<OneD, DataType>(storageSize);
+                }
             }
-            
+                        
             void Initialize(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference d)
             {
                 Initialize(rows, columns);
                 std::fill(begin(), end(), d);
             }
 
-            void Initialize(unsigned int rows, unsigned int columns, DataType* ptr, 
+            void Initialize(unsigned int rows, unsigned int columns, Array<OneD, DataType>& ptr, 
                                    PointerWrapper t)
             {
                 m_rows = rows;
@@ -351,15 +392,14 @@ namespace Nektar
                 }
                 else
                 {
-                    m_data = SharedArray<DataType>(ptr, StoragePolicy::NumStorageElements(rows, columns),
-                        DeleteNothing<DataType>());
+                    m_data = ptr;
                 }
             }
 
-            void Initialize(unsigned int rows, unsigned int columns, const DataType* const ptr)
+            void Initialize(unsigned int rows, unsigned int columns, ConstArray<OneD, DataType>& ptr)
             {
                 Initialize(rows, columns);
-                std::copy(ptr, ptr + StoragePolicy::NumStorageElements(rows, columns), begin());
+                CopyArray(ptr, m_data);
             }
 
             void Swap(NekMatrix<DataType, eFull, eNormal, space>& rhs)
@@ -371,7 +411,8 @@ namespace Nektar
 
             unsigned int m_rows;
             unsigned int m_columns;
-            SharedArray<DataType> m_data;
+            Array<OneD, DataType> m_data;
+            PointerWrapper m_wrapperType;
     };
     
     

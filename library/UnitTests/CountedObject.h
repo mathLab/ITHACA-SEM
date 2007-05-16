@@ -51,7 +51,7 @@ namespace Nektar
                 ++numberDefaultConstructed;
             }
 
-            CountedObject(unsigned int v) :
+            explicit CountedObject(unsigned int v) :
                 value(v)
             {
                 ++numberConstructedFromInt;
@@ -174,6 +174,9 @@ namespace Nektar
 
 /**
     $Log: CountedObject.h,v $
+    Revision 1.3  2007/01/29 01:37:16  bnelson
+    *** empty log message ***
+
     Revision 1.2  2006/11/12 17:59:47  bnelson
     *** empty log message ***
 

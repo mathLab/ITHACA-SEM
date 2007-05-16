@@ -416,10 +416,10 @@ namespace Nektar
             unsigned int GetOffset() const { return m_offset; }
             
         private:
-            void DeleteStorage()
+            static void DeleteStorage(DataType* data, unsigned int num)
             {
-                DestructionPolicy<DataType>::Destroy(m_data->data(), m_data->num_elements());
-                MemoryManager<DataType>::RawDeallocate(m_data->data(), m_data->num_elements());
+                DestructionPolicy<DataType>::Destroy(data, num);
+                MemoryManager<DataType>::RawDeallocate(data, num);
             }
             
             template<typename ExtentListType>
@@ -429,7 +429,7 @@ namespace Nektar
                     std::multiplies<unsigned int>());
                 DataType* storage = MemoryManager<DataType>::RawAllocate(size);
                 m_data = MemoryManager<ArrayType>::AllocateSharedPtrD(
-                        boost::bind(&ConstArray<Dim, DataType>::DeleteStorage, this),
+                        boost::bind(&ConstArray<Dim, DataType>::DeleteStorage, storage, size),
                         storage, extent);
                 InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
             }

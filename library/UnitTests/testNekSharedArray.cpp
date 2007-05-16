@@ -198,7 +198,7 @@ namespace Nektar
                 
                 ConstArray<OneD, CountedObject<double> > a(5);
                 Array<OneD, CountedObject<double> > b(10);
-                CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+                CountedObject<double>::check(15, 0, 0, 0, 0, 0);
                 
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
@@ -209,14 +209,14 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
             }
-            CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+            CountedObject<double>::check(15, 0, 15, 0, 0, 0);
             
             {
                 CountedObject<double>::ClearCounters();
                 
                 ConstArray<TwoD, CountedObject<double> > a(5, 10);
                 Array<TwoD, CountedObject<double> > b(10, 10);
-                CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+                CountedObject<double>::check(150, 0, 0, 0, 0, 0);
                 
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
@@ -231,14 +231,14 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(a.num_dimensions(), 2);
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 2);
             }
-            CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+            CountedObject<double>::check(150, 0, 150, 0, 0, 0);
             
             {
                 CountedObject<double>::ClearCounters();
                 
                 ConstArray<ThreeD, CountedObject<double> > a(1, 2, 3);
                 Array<ThreeD, CountedObject<double> > b(4, 5, 6);
-                CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+                CountedObject<double>::check(126, 0, 0, 0, 0, 0);
                 
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
@@ -255,7 +255,7 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(a.num_dimensions(), 3);
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 3);
             }
-            CountedObject<double>::check(0, 0, 0, 0, 0, 0);
+            CountedObject<double>::check(126, 0, 126, 0, 0, 0);
         }
         
         void testSingleValueInitialization()
@@ -266,7 +266,7 @@ namespace Nektar
                 
                 ConstArray<OneD, CountedObject<double> > a(5, initValue);
                 Array<OneD, CountedObject<double> > b(10, initValue);
-                CountedObject<double>::check(0, 0, 0, 0, 0, 15);
+                CountedObject<double>::check(15, 0, 0, 0, 0, 15);
                 
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
@@ -287,7 +287,7 @@ namespace Nektar
                     BOOST_CHECK(*iter == initValue);
                 }
             }
-            CountedObject<double>::check(0, 0, 1, 0, 0, 15);
+            CountedObject<double>::check(15, 0, 16, 0, 0, 15);
             
             {
                 CountedObject<double> initValue(98);
@@ -295,7 +295,7 @@ namespace Nektar
                 
                 ConstArray<TwoD, CountedObject<double> > a(5, 10, initValue);
                 Array<TwoD, CountedObject<double> > b(10, 10, initValue);
-                CountedObject<double>::check(0, 0, 0, 0, 0, 150);
+                CountedObject<double>::check(150, 0, 0, 0, 0, 150);
                 
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
@@ -326,7 +326,7 @@ namespace Nektar
                     }
                 }
             }
-            CountedObject<double>::check(0, 0, 1, 0, 0, 150);
+            CountedObject<double>::check(150, 0, 151, 0, 0, 150);
             
             {
                 CountedObject<double> initValue(98);
@@ -334,7 +334,7 @@ namespace Nektar
                 
                 ConstArray<ThreeD, CountedObject<double> > a(1, 2, 3, initValue);
                 Array<ThreeD, CountedObject<double> > b(4, 5, 6, initValue);
-                CountedObject<double>::check(0, 0, 0, 0, 0, 126);
+                CountedObject<double>::check(126, 0, 0, 0, 0, 126);
                 
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
@@ -373,7 +373,7 @@ namespace Nektar
                     }
                 }
             }
-            CountedObject<double>::check(0, 0, 1, 0, 0, 126);
+            CountedObject<double>::check(126, 0, 127, 0, 0, 126);
         }
         
         void testPopulationFromCArray()
@@ -392,7 +392,7 @@ namespace Nektar
             
                 ConstArray<OneD, CountedObject<double> > a(4, a_array);
                 Array<OneD, CountedObject<double> > b(5, b_array);
-                CountedObject<double>::check(0, 0, 0, 0, 0, 9);
+                CountedObject<double>::check(9, 0, 0, 0, 0, 9);
             
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
@@ -413,7 +413,7 @@ namespace Nektar
                     BOOST_CHECK(b[i] == b_array[i]);
                 }
             }
-            CountedObject<double>::check(0, 0, 18, 0, 0, 9);
+            CountedObject<double>::check(9, 0, 18, 0, 0, 9);
         }
     }
 }

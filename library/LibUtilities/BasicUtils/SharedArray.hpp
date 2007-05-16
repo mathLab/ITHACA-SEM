@@ -147,7 +147,80 @@ namespace Nektar
             typedef typename ArrayType::element element;
             typedef typename ArrayType::size_type size_type;
             
-
+        public:
+            template<typename ObjectType, typename enabled = void>
+            class InitializationPolicy;
+            
+            /// \brief Does nothing.
+            template<typename ObjectType>
+            class InitializationPolicy<ObjectType, 
+                                       typename boost::enable_if<boost::is_fundamental<ObjectType> >::type >
+            {
+                public:
+                    static void Initialize(ObjectType* data, unsigned int itemsToCreate)
+                    {
+                    }
+            };
+            
+            /// \brief Default initializes all elements.
+            template<typename ObjectType>
+            class InitializationPolicy<ObjectType, 
+                                       typename boost::disable_if<boost::is_fundamental<ObjectType> >::type >
+            {
+                public:
+                    static void Initialize(ObjectType* data, unsigned int itemsToCreate)
+                    {
+                        unsigned int nextObjectToCreate = 0;
+                        try
+                        {
+                            for(unsigned int i = 0; i < itemsToCreate; ++i)
+                            {
+                                DataType* memLocation = &data[i];
+                                new (memLocation) DataType;
+                                ++nextObjectToCreate;
+                            }
+                        }
+                        catch(...)
+                        {
+                            for(unsigned int i = 0; i < nextObjectToCreate; ++i)
+                            {
+                                DataType* memLocation = &data[nextObjectToCreate - i - 1];
+                                memLocation->~DataType();
+                            }
+                            throw;
+                        }
+                    }
+            };
+            
+            
+            template<typename ObjectType, typename enabled = void>
+            class DestructionPolicy;
+            
+            template<typename ObjectType>
+            class DestructionPolicy<ObjectType, 
+                                    typename boost::enable_if<boost::is_fundamental<ObjectType> >::type >
+            {
+                public:
+                    static void Destroy(ObjectType* data, unsigned int itemsToDestroy)
+                    {
+                    }
+            };
+            
+            template<typename ObjectType>
+            class DestructionPolicy<ObjectType, 
+                                    typename boost::disable_if<boost::is_fundamental<ObjectType> >::type >
+            {
+                public:
+                    static void Destroy(ObjectType* data, unsigned int itemsToDestroy)
+                    {
+                        for(unsigned int i = 0; i < itemsToDestroy; ++i)
+                        {
+                            DataType* memLocation = &data[itemsToDestroy - i - 1];
+                            memLocation->~DataType();
+                        }
+                    }
+            };
+            
         public:
             /// \brief Constructs an empty array.
             ///
@@ -343,6 +416,12 @@ namespace Nektar
             unsigned int GetOffset() const { return m_offset; }
             
         private:
+            void DeleteStorage()
+            {
+                DestructionPolicy<DataType>::Destroy(m_data->data(), m_data->num_elements());
+                MemoryManager<DataType>::RawDeallocate(m_data->data(), m_data->num_elements());
+            }
+            
             template<typename ExtentListType>
             void CreateStorage(const ExtentListType& extent)
             {
@@ -350,8 +429,9 @@ namespace Nektar
                     std::multiplies<unsigned int>());
                 DataType* storage = MemoryManager<DataType>::RawAllocate(size);
                 m_data = MemoryManager<ArrayType>::AllocateSharedPtrD(
-                    boost::bind(&MemoryManager<DataType>::RawDeallocate, storage, size),
-                    storage, extent);
+                        boost::bind(&ConstArray<Dim, DataType>::DeleteStorage, this),
+                        storage, extent);
+                InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
             }
             
             void Swap(ConstArray<OneD, DataType>& rhs)

@@ -47,160 +47,161 @@ namespace Nektar
     namespace SpatialDomains
     {
         SegGeom::SegGeom():
-            m_owndata(false)
-        {
+    m_owndata(false)
+    {
+    }
+
+    SegGeom::SegGeom(int id, VertexComponentSharedPtr vert1, VertexComponentSharedPtr  vert2):
+    EdgeComponent(id,vert1->GetCoordim())
+    {
+        m_owndata = false;
+        m_verts[0] = vert1; 
+        m_verts[1] = vert2;
+
+        m_state = eNotFilled;
+    }
+
+    SegGeom::SegGeom(SegGeom &in)
+    {
+
+        // info from EdgeComponent class
+        m_eid     = in.m_eid;
+        m_elmtmap = in.m_elmtmap;
+        m_xmap = in.m_xmap;
+
+        // info from SegGeom class
+        m_owndata  = false; 
+        m_coordim  = in.m_coordim;
+        m_verts[0] = in.m_verts[0]; 
+        m_verts[1] = in.m_verts[1];
+
+        m_state = in.m_state;
+    }
+
+    SegGeom::~SegGeom()
+    {
+    }
+
+    // Set up GeoFac for this geometry using Coord quadrature distribution
+    void SegGeom::GenGeomFactors(void)
+    {
+        GeomFactorsSharedPtr gfac;
+
+        FillGeom();
+
+        if(m_xmap[0]->GetBasisNumModes(0)==2)
+        {// assumes all direction have same order
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(eRegular, m_coordim, m_xmap);
         }
-
-        SegGeom::SegGeom(int id, VertexComponentSharedPtr vert1, VertexComponentSharedPtr  vert2):
-            EdgeComponent(id,vert1->GetCoordim())
+        else
         {
-            m_owndata = false;
-            m_verts[0] = vert1; 
-            m_verts[1] = vert2;
-
-            m_state = eNotFilled;
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(eDeformed, m_coordim, m_xmap);
         }
-
-        SegGeom::SegGeom(SegGeom &in)
-        {
-
-            // info from EdgeComponent class
-            m_eid     = in.m_eid;
-            m_elmtmap = in.m_elmtmap;
-            m_xmap = in.m_xmap;
-
-            // info from SegGeom class
-            m_owndata  = false; 
-            m_coordim  = in.m_coordim;
-            m_verts[0] = in.m_verts[0]; 
-            m_verts[1] = in.m_verts[1];
-
-            m_state = in.m_state;
-        }
-
-        SegGeom::~SegGeom()
-        {
-        }
-
-        // Set up GeoFac for this geometry using Coord quadrature distribution
-        void SegGeom::GenGeomFactors(void)
-        {
-            GeomFactorsSharedPtr gfac;
-
-            FillGeom();
-
-            if(m_xmap[0]->GetBasisNumModes(0)==2)
-            {// assumes all direction have same order
-		m_geomfactors = MemoryManager::AllocateSharedPtr<GeomFactors>
-		    (eRegular, m_coordim, m_xmap);
-            }
-            else
-            {
-                m_geomfactors = MemoryManager::AllocateSharedPtr<GeomFactors>
-		    (eDeformed, m_coordim, m_xmap);
-            }
-        }
+    }
 
 
-        /** \brief put all quadrature information into edge structure and 
-        backward transform */
+    /** \brief put all quadrature information into edge structure and 
+    backward transform */
 
-        void SegGeom::FillGeom()
-        {
-            if(m_state != ePtsFilled)
-            {
-                int i;
-
-                for(i = 0; i < m_coordim; ++i){
-                    m_xmap[i]->SetCoeff(0,(*m_verts[0])[i]);
-                    m_xmap[i]->SetCoeff(1,(*m_verts[1])[i]);
-                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),m_xmap[i]->UpdatePhys());
-                }
-                m_state = ePtsFilled;
-            }
-        }
-
-
-        void SegGeom::GetLocCoords(double *Lcoords,const double *coords)
+    void SegGeom::FillGeom()
+    {
+        if(m_state != ePtsFilled)
         {
             int i;
-	    
-            FillGeom();
-	    
-            // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
-            {
-                const double *pts;
-                double len = 0.0;
-                double xi  = 0.0;
-                int nq;
 
-                // get points;
-                //find end points 
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    nq   = m_xmap[i]->GetNumPoints(0);
-                    pts  = &(m_xmap[i]->GetPhys())[0];
-                    len  += (pts[nq-1]-pts[0])*(pts[nq-1]-pts[0]);	
-                    xi   += (coords[i]-pts[0])*(coords[i]-pts[0]);
-                }
-
-                len = sqrt(len);
-                xi  = sqrt(xi);
-
-                Lcoords[0] =  2*xi/len-1.0;
+            for(i = 0; i < m_coordim; ++i){
+                m_xmap[i]->SetCoeff(0,(*m_verts[0])[i]);
+                m_xmap[i]->SetCoeff(1,(*m_verts[1])[i]);
+                m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),m_xmap[i]->UpdatePhys());
             }
-            else
-            {
-                ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
-                    "inverse mapping must be set up to use this call");
-            }
+            m_state = ePtsFilled;
         }
+    }
 
-        void SegGeom::WriteToFile(std::ofstream &outfile, const int dumpVar)
+
+    void SegGeom::GetLocCoords(double *Lcoords,const double *coords)
+    {
+        int i;
+
+        FillGeom();
+
+        // calculate local coordinate for coord
+        if(GetGtype() == eRegular)
         {
+            const double *pts;
+            double len = 0.0;
+            double xi  = 0.0;
+            int nq;
 
-            int i,j;
-            int  nquad = m_xmap[0]->GetNumPoints(0);
-            double *coords[3];
-
-            FillGeom();
-
+            // get points;
+            //find end points 
             for(i = 0; i < m_coordim; ++i)
             {
-                coords[i] = &(m_xmap[i]->UpdatePhys())[0];
+                nq   = m_xmap[i]->GetNumPoints(0);
+                pts  = &(m_xmap[i]->GetPhys())[0];
+                len  += (pts[nq-1]-pts[0])*(pts[nq-1]-pts[0]);	
+                xi   += (coords[i]-pts[0])*(coords[i]-pts[0]);
             }
 
-            if(dumpVar)
-            {
-                outfile << "Variables = x";
-                if(m_coordim == 2)
-                {
-                    outfile << ", y";
-                }
-                else if (m_coordim == 3)
-                {
-                    outfile << ", y, z";
-                }
-                outfile << std::endl;
-            }
+            len = sqrt(len);
+            xi  = sqrt(xi);
 
-            outfile << "Zone, I=" << nquad << ", F=Point\n";
-            for(i = 0; i < nquad; ++i)
-            {
-                for(j = 0; j < m_coordim; ++j)
-                {
-                    outfile << coords[j][i] << " ";
-                }
-                outfile << std::endl;
-            }
+            Lcoords[0] =  2*xi/len-1.0;
         }
+        else
+        {
+            ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
+                "inverse mapping must be set up to use this call");
+        }
+    }
+
+    void SegGeom::WriteToFile(std::ofstream &outfile, const int dumpVar)
+    {
+
+        int i,j;
+        int  nquad = m_xmap[0]->GetNumPoints(0);
+        double *coords[3];
+
+        FillGeom();
+
+        for(i = 0; i < m_coordim; ++i)
+        {
+            coords[i] = &(m_xmap[i]->UpdatePhys())[0];
+        }
+
+        if(dumpVar)
+        {
+            outfile << "Variables = x";
+            if(m_coordim == 2)
+            {
+                outfile << ", y";
+            }
+            else if (m_coordim == 3)
+            {
+                outfile << ", y, z";
+            }
+            outfile << std::endl;
+        }
+
+        outfile << "Zone, I=" << nquad << ", F=Point\n";
+        for(i = 0; i < nquad; ++i)
+        {
+            for(j = 0; j < m_coordim; ++j)
+            {
+                outfile << coords[j][i] << " ";
+            }
+            outfile << std::endl;
+        }
+    }
 
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.12  2007/04/04 21:49:24  sherwin
+// Update for SharedArray
+//
 // Revision 1.11  2007/03/29 19:26:36  bnelson
 // *** empty log message ***
 //

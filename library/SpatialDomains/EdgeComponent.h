@@ -78,7 +78,7 @@ namespace Nektar
                 return m_xmap[i];
             }
 
-            inline NekDoubleSharedArray &UpdatePhys(int i){
+            inline Array<OneD, NekDouble> &UpdatePhys(int i){
                 return m_xmap[i]->UpdatePhys();
             }
 
@@ -107,7 +107,7 @@ namespace Nektar
                 return m_xmap[0]; //should never be reached
             }
 
-            NekDouble GetCoord(const int i, SharedArray<const NekDouble> Lcoord);
+            NekDouble GetCoord(const int i, ConstArray<OneD, NekDouble> &Lcoord);
                     
             /// \brief Get the orientation of edge1.
             ///
@@ -120,7 +120,7 @@ namespace Nektar
             int m_eid;
             std::list<CompToElmt> m_elmtmap;
 
-	    SharedArray<StdRegions::StdExpansion1DSharedPtr> m_xmap;
+	    Array<OneD, StdRegions::StdExpansion1DSharedPtr> m_xmap;
 
             VertexVector m_vertex;
         private:
@@ -135,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.9  2007/04/08 03:34:48  jfrazier
+// Updated to compile with SharedArray.  This has not been converted to SharedArray, just made to work with others that have been converted.
+//
 // Revision 1.8  2007/04/04 21:49:24  sherwin
 // Update for SharedArray
 //

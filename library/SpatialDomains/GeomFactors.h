@@ -57,7 +57,7 @@ namespace Nektar
             two or three dimensional coordinate description
             **/
             GeomFactors(const GeomType gtype, const int coordim,
-                const SharedArray<StdRegions::StdExpansion1DSharedPtr> &Coords);
+                const Array<OneD, StdRegions::StdExpansion1DSharedPtr> &Coords);
 
 #if 0 
             /**  \brief Two dimensional geometric factors based on two
@@ -140,6 +140,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.5  2007/04/08 03:34:48  jfrazier
+// Updated to compile with SharedArray.  This has not been converted to SharedArray, just made to work with others that have been converted.
+//
 // Revision 1.4  2007/04/04 21:49:24  sherwin
 // Update for SharedArray
 //

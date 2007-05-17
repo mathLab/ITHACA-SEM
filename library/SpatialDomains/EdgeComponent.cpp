@@ -46,19 +46,17 @@ namespace Nektar
         }
 
         EdgeComponent::EdgeComponent(int id, const int coordim): 
-        Geometry1D(coordim)
+        Geometry1D(coordim),
+            m_xmap(coordim)
         {
 
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-	       LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
             m_eid = id;
-
-	    m_xmap = MemoryManager::AllocateSharedArray<StdRegions::StdExpansion1DSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = MemoryManager::AllocateSharedPtr<StdRegions::StdSegExp>(B);
-		
+                m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
             }
         }
 
@@ -72,13 +70,13 @@ namespace Nektar
             if (coordim > 0)
             {
                 const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-	           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                    LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
-		m_xmap = MemoryManager::AllocateSharedArray<StdRegions::StdExpansion1DSharedPtr>(m_coordim);
+                m_xmap = Array<OneD, StdRegions::StdExpansion1DSharedPtr>(m_coordim);
 
                 for(int i = 0; i < m_coordim; ++i)
                 {
-		    m_xmap[i] = MemoryManager::AllocateSharedPtr<StdRegions::StdSegExp>(B);
+                    m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
                 }
             }
 
@@ -91,15 +89,15 @@ namespace Nektar
         Geometry1D(coordim)
         {
 
-            
-            const LibUtilities::BasisKey B(LibUtilities::eModified_A, order,
-					   LibUtilities::PointsKey(nquad,LibUtilities::eGaussLobattoLegendre));
 
-	    m_xmap = MemoryManager::AllocateSharedArray<StdRegions::StdExpansion1DSharedPtr>(m_coordim);
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, order,
+                LibUtilities::PointsKey(nquad,LibUtilities::eGaussLobattoLegendre));
+
+            m_xmap = Array<OneD, StdRegions::StdExpansion1DSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = MemoryManager::AllocateSharedPtr<StdRegions::StdSegExp>(B);
+                m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
             }
 
             m_state = eNotFilled;
@@ -126,7 +124,7 @@ namespace Nektar
         /** given local collapsed coordinate Lcoord return the value of
         physical coordinate in direction i **/
 
-        NekDouble EdgeComponent::GetCoord(const int i, SharedArray<const NekDouble> Lcoord) 
+        NekDouble EdgeComponent::GetCoord(const int i, ConstArray<OneD, NekDouble> &Lcoord) 
         {
 
             ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
@@ -203,6 +201,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.16  2007/04/08 03:34:48  jfrazier
+*    Updated to compile with SharedArray.  This has not been converted to SharedArray, just made to work with others that have been converted.
+*
 *    Revision 1.15  2007/04/04 21:49:24  sherwin
 *    Update for SharedArray
 *

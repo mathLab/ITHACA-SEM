@@ -49,7 +49,7 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
-				DisableSpecificWarnings="4018;4267;4996"
+				DisableSpecificWarnings="4018;4267;4996;4348;4244;4267"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -166,10 +166,6 @@
 			</File>
 			<File
 				RelativePath="..\..\LibUtilities\Foundations\GaussPoints.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\LibUtilities\LinearAlgebra\lapack.cpp"
 				>
 			</File>
 			<File

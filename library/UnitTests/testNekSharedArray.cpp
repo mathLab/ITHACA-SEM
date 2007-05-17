@@ -266,7 +266,7 @@ namespace Nektar
                 
                 ConstArray<OneD, CountedObject<double> > a(5, initValue);
                 Array<OneD, CountedObject<double> > b(10, initValue);
-                CountedObject<double>::check(15, 0, 0, 0, 0, 15);
+                CountedObject<double>::check(0, 0, 0, 15, 0, 0);
                 
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
@@ -287,7 +287,7 @@ namespace Nektar
                     BOOST_CHECK(*iter == initValue);
                 }
             }
-            CountedObject<double>::check(15, 0, 16, 0, 0, 15);
+            CountedObject<double>::check(0, 0, 16, 15, 0, 0);
             
             {
                 CountedObject<double> initValue(98);
@@ -295,7 +295,7 @@ namespace Nektar
                 
                 ConstArray<TwoD, CountedObject<double> > a(5, 10, initValue);
                 Array<TwoD, CountedObject<double> > b(10, 10, initValue);
-                CountedObject<double>::check(150, 0, 0, 0, 0, 150);
+                CountedObject<double>::check(0, 0, 0, 150, 0, 0);
                 
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
@@ -326,7 +326,7 @@ namespace Nektar
                     }
                 }
             }
-            CountedObject<double>::check(150, 0, 151, 0, 0, 150);
+            CountedObject<double>::check(0, 0, 151, 150, 0, 0);
             
             {
                 CountedObject<double> initValue(98);
@@ -334,7 +334,7 @@ namespace Nektar
                 
                 ConstArray<ThreeD, CountedObject<double> > a(1, 2, 3, initValue);
                 Array<ThreeD, CountedObject<double> > b(4, 5, 6, initValue);
-                CountedObject<double>::check(126, 0, 0, 0, 0, 126);
+                CountedObject<double>::check(0, 0, 0, 126, 0, 0);
                 
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
@@ -373,7 +373,7 @@ namespace Nektar
                     }
                 }
             }
-            CountedObject<double>::check(126, 0, 127, 0, 0, 126);
+            CountedObject<double>::check(0, 0, 127, 126, 0, 0);
         }
         
         void testPopulationFromCArray()

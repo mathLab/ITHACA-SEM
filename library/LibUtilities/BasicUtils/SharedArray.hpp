@@ -160,37 +160,81 @@ namespace Nektar
                     static void Initialize(ObjectType* data, unsigned int itemsToCreate)
                     {
                     }
+                    
+                    static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType& initValue)
+                    {
+                        std::fill_n(data, itemsToCreate, initValue);
+                    }
             };
             
             /// \brief Default initializes all elements.
+            ///
+            /// \internal 
+            /// The user calls Initialize, which immediately calls DoInitialization.  There reason
+            /// for this separation is because the code for creating an array of default initialized 
+            /// elements and an array of copy constructed elements is identical except for the actual 
+            /// call to placement new.
+            ///
+            /// 
             template<typename ObjectType>
             class InitializationPolicy<ObjectType, 
                                        typename boost::disable_if<boost::is_fundamental<ObjectType> >::type >
             {
                 public:
+                    /// \brief Initalize each element in the array with ObjectType's default constructor.
+                    /// \param data The array of values to populate.
+                    /// \param itemsToCreate The size of data.
                     static void Initialize(ObjectType* data, unsigned int itemsToCreate)
                     {
-                        unsigned int nextObjectToCreate = 0;
-                        try
-                        {
-                            for(unsigned int i = 0; i < itemsToCreate; ++i)
-                            {
-                                DataType* memLocation = &data[i];
-                                new (memLocation) DataType;
-                                ++nextObjectToCreate;
-                            }
-                        }
-                        catch(...)
-                        {
-                            for(unsigned int i = 0; i < nextObjectToCreate; ++i)
-                            {
-                                DataType* memLocation = &data[nextObjectToCreate - i - 1];
-                                memLocation->~DataType();
-                            }
-                            throw;
-                        }
+                        DoInitialization(data, itemsToCreate, 
+                                         boost::bind(&InitializationPolicy<ObjectType>::DefaultConstructionWithPlacementNew, _1));
                     }
-            };
+                    
+                    /// \brief Initalize each element in the array with ObjectType's copy constructor.
+                    /// \param data The array of values to populate.
+                    /// \param itemsToCreate The size of data.
+                    /// \param initValue The inital value each element in data will have.
+                    static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType& initValue)
+                    {
+                        DoInitialization(data, itemsToCreate, 
+                                         boost::bind(&InitializationPolicy<ObjectType>::CopyConstructionWithPlacementNew, _1, boost::ref(initValue)));
+                    }
+                    
+                    private:
+                        template<typename CreateType>
+                        static void DoInitialization(ObjectType* data, unsigned int itemsToCreate, const CreateType& f)
+                        {
+                            unsigned int nextObjectToCreate = 0;
+                            try
+                            {
+                                for(unsigned int i = 0; i < itemsToCreate; ++i)
+                                {
+                                    ObjectType* memLocation = &data[i];
+                                    f(memLocation);
+                                    ++nextObjectToCreate;
+                                }
+                            }
+                            catch(...)
+                            {
+                                for(unsigned int i = 0; i < nextObjectToCreate; ++i)
+                                {
+                                    ObjectType* memLocation = &data[nextObjectToCreate - i - 1];
+                                    memLocation->~DataType();
+                                }
+                                throw;
+                            }
+                        }
+                        
+                        static void DefaultConstructionWithPlacementNew(ObjectType* element)
+                        {
+                            new (element) ObjectType;
+                        }
+                        
+                        static void CopyConstructionWithPlacementNew(ObjectType* element, const ObjectType& initValue)
+                        {
+                            new (element) ObjectType(initValue);
+                        }
+                };
             
             
             template<typename ObjectType, typename enabled = void>
@@ -236,6 +280,12 @@ namespace Nektar
                 CreateStorage(extents);
             }
             
+            // We could have used the boost pre-processor library to automate the generation 
+            // of the constructors that take varying parameters based on the dimension (similar 
+            // to how it is done in the MemoryManager.  However, since we don't anticipate that 
+            // anyone will create arrays with a dimension greater than 3, the code is clearer by
+            // spelling it out explicitly.
+            
             /// \brief Constructs a 1 dimensional array.  The elements of the array are not initialized.
             explicit ConstArray(unsigned int arraySize) :
                 m_data(),
@@ -268,17 +318,18 @@ namespace Nektar
                 CreateStorage(extents);
             }
             
+            /// \brief Constructs a 1D array.  Every element is given the value initValue.
             ConstArray(unsigned int arraySize, const DataType& initValue) :
                 m_data(),
                 m_offset(0)
             {
                 BOOST_STATIC_ASSERT(Dim == 1);
                 std::vector<unsigned int> extents(Dim, arraySize);
-                CreateStorage(extents);
+                CreateStorage(extents, &initValue);
                 
                 // Can't use the ConstArray begin() and end() methods since they
                 // are constant and so we can't use them to write values.
-                std::fill(m_data->begin(), m_data->end(), initValue);
+                //std::fill(m_data->begin(), m_data->end(), initValue);
             }
             
             ConstArray(unsigned int dim1Size, unsigned int dim2Size, const DataType& initValue) :
@@ -288,14 +339,8 @@ namespace Nektar
                 BOOST_STATIC_ASSERT(Dim==2);
                 unsigned int vals[] = {dim1Size, dim2Size};
                 std::vector<unsigned int> extents(vals, vals+2);
-                CreateStorage(extents);
-                for(unsigned int i = 0; i < dim1Size; ++i)
-                {
-                    for(unsigned int j = 0; j < dim2Size; ++j)
-                    {
-                        (*m_data)[i][j] = initValue;
-                    }
-                }
+                CreateStorage(extents, &initValue);
+                //std::fill_n(m_data->data(), m_data->num_elements(), initValue);
             }
             
             ConstArray(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size, const DataType& initValue) :
@@ -305,23 +350,15 @@ namespace Nektar
                 BOOST_STATIC_ASSERT(Dim==3);
                 unsigned int vals[] = {dim1Size, dim2Size, dim3Size};
                 std::vector<unsigned int> extents(vals, vals+3);
-                CreateStorage(extents);
-                for(unsigned int i = 0; i < dim1Size; ++i)
-                {
-                    for(unsigned int j = 0; j < dim2Size; ++j)
-                    {
-                        for(unsigned int k = 0; k < dim3Size; ++k)
-                        {
-                            (*m_data)[i][j][k] = initValue;
-                        }
-                    }
-                }
+                CreateStorage(extents, &initValue);
+                //std::fill_n(m_data->data(), m_data->num_elements(), initValue);
             }
             
             ConstArray(unsigned int arraySize, const DataType* const d) :
                 m_data(),
                 m_offset(0)
             {
+                /// TODO - Next is to copy construct all of these elements as well.
                 BOOST_STATIC_ASSERT(Dim==1);
                 std::vector<unsigned int> extents(Dim, arraySize);
                 CreateStorage(extents);
@@ -423,7 +460,7 @@ namespace Nektar
             }
             
             template<typename ExtentListType>
-            void CreateStorage(const ExtentListType& extent)
+            void CreateStorage(const ExtentListType& extent, const DataType* initValue = 0)
             {
                 unsigned int size = std::accumulate(extent.begin(), extent.end(), 1, 
                     std::multiplies<unsigned int>());
@@ -431,7 +468,14 @@ namespace Nektar
                 m_data = MemoryManager<ArrayType>::AllocateSharedPtrD(
                         boost::bind(&ConstArray<Dim, DataType>::DeleteStorage, storage, size),
                         storage, extent);
-                InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
+                if( initValue == 0 )
+                {
+                    InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
+                }
+                else
+                {
+                    InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), *initValue);
+                }
             }
             
             void Swap(ConstArray<OneD, DataType>& rhs)

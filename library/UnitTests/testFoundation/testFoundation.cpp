@@ -54,8 +54,6 @@
 
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
-typedef ConstNekDouble1DSharedArray array1DPtr;
-typedef boost::multi_array<NekDouble, 1> array1D;
 
  namespace Nektar{
     
@@ -82,10 +80,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                     
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
     
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -130,10 +126,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
                 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -158,10 +152,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -188,10 +180,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -218,10 +208,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -248,10 +236,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
                 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -278,10 +264,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2)*(nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -308,10 +292,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2)*(nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
                 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -338,10 +320,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 4);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
                      
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -367,10 +347,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (2*(nPts + 2));
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -397,10 +375,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -447,10 +423,8 @@ typedef boost::multi_array<NekDouble, 1> array1D;
                     long double epsilon = nPts* numeric_limits<double>::epsilon();
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    array1DPtr zPtr = points->GetZ();
-                    array1DPtr wPtr = points->GetW();
-                    array1D z = *zPtr;
-                    array1D w = *wPtr;
+                    ConstArray<OneD,NekDouble> z = points->GetZ();
+                    ConstArray<OneD,NekDouble> w = points->GetW();
                 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;

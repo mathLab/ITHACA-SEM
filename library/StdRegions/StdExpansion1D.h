@@ -71,9 +71,9 @@ namespace Nektar
                 Array<OneD, NekDouble>& outarray);
 
             void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
-                ConstArray<OneD, NekDouble>& out_d1 = NullNekDouble1DArray,
-                ConstArray<OneD, NekDouble>& out_d2 = NullNekDouble1DArray,
-                ConstArray<OneD, NekDouble>& out_d3 = NullNekDouble1DArray)
+                            Array<OneD, NekDouble>& out_d1 = NullNekDouble1DArray,
+                            Array<OneD, NekDouble>& out_d2 = NullNekDouble1DArray,
+                            Array<OneD, NekDouble>& out_d3 = NullNekDouble1DArray)
             {
                 v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
             }
@@ -117,7 +117,7 @@ namespace Nektar
             *  to be in local collapsed coordinate format. The function is
             *  assumed to be in physical space
             */
-            NekDouble PhysEvaluate1D(ConstArray<OneD, NekDouble>& coords);
+            NekDouble PhysEvaluate1D(const ConstArray<OneD, NekDouble>& coords);
 
             /** \brief wrapper around virtual call */
             void FwdTrans(const StdExpansion1D &in)
@@ -184,17 +184,17 @@ namespace Nektar
             }
 
             virtual void   v_PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
-                ConstArray<OneD, NekDouble> &out_d0,
-                ConstArray<OneD, NekDouble> &out_d1,
-                ConstArray<OneD, NekDouble> &out_d2) = 0;
-
+                                        Array<OneD, NekDouble> &out_d0,
+                                        Array<OneD, NekDouble> &out_d1,
+                                        Array<OneD, NekDouble> &out_d2) = 0;
+            
             virtual void   v_StdPhysDeriv (const ConstArray<OneD, NekDouble>& inarray, 
-                Array<OneD, NekDouble> &outarray) = 0;
+                                           Array<OneD, NekDouble> &outarray) = 0;
 
             virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                    "local expansions");
+                         "local expansions");
                 return 0;
             }
         };
@@ -208,6 +208,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.18  2007/05/15 05:18:23  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.17  2007/04/08 03:36:58  jfrazier
 * Updated to use SharedArray consistently and minor reformatting.
 *

@@ -214,7 +214,7 @@ namespace Nektar
 	    }
 	}
 	
-	NekDouble StdSegExp::PhysEvaluate(ConstArray<OneD, NekDouble>& Lcoord)
+	NekDouble StdSegExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& Lcoord)
 	{
 	    return StdExpansion1D::PhysEvaluate1D(Lcoord);
 	}
@@ -274,6 +274,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.29  2007/05/15 05:18:24  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.28  2007/04/10 14:00:46  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

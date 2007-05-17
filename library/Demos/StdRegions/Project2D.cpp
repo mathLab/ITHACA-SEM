@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
   LibUtilities::PointsType     NodalType;
   StdRegions::ShapeType       regionshape;
   StdRegions::StdExpansion2D *E;
-  NekDoubleSharedArray  sol;
+  Array<OneD, NekDouble> sol;
   
   if(argc != 8)
   {
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]){
   nq1    =   atoi(argv[6]);
   nq2    =   atoi(argv[7]);
 
-  sol = GetDoubleTmpSpace(nq1*nq2);
+  sol = Array<OneD, NekDouble>(nq1*nq2);
 
   if(btype1 != LibUtilities::eFourier)
   {
@@ -168,8 +168,8 @@ int main(int argc, char *argv[]){
 	      E = new StdRegions::StdTriExp(Bkey1,Bkey2);
 	  }
 
-	  NekDoubleSharedArray x = GetDoubleTmpSpace(nq1*nq2);
-	  NekDoubleSharedArray y = GetDoubleTmpSpace(nq1*nq2);
+	  Array<OneD,NekDouble> x = Array<OneD,NekDouble>(nq1*nq2);
+	  Array<OneD,NekDouble> y = Array<OneD,NekDouble>(nq1*nq2);
 	  E->GetCoords(x,y);
 
 	  //----------------------------------------------
@@ -193,8 +193,8 @@ int main(int argc, char *argv[]){
 	  //----------------------------------------------
 	  // Define solution to be projected
 	  
-	  NekDoubleSharedArray x = GetDoubleTmpSpace(nq1*nq2);
-	  NekDoubleSharedArray y = GetDoubleTmpSpace(nq1*nq2);
+	  Array<OneD, NekDouble> x = Array<OneD, NekDouble>(nq1*nq2);
+	  Array<OneD, NekDouble> y = Array<OneD, NekDouble>(nq1*nq2);
 	  E->GetCoords(x,y);
 	  
 	  for(i = 0; i < nq1*nq2; ++i)
@@ -226,7 +226,7 @@ int main(int argc, char *argv[]){
   // Evaulate solution at x = y =0  and print error
 
 
-  NekDoubleSharedArray x = GetDoubleTmpSpace(2);
+  Array<OneD, NekDouble> x = Array<OneD, NekDouble>(2);
   x[0] = 0;
   x[1] = -0.25;
   

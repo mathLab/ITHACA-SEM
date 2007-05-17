@@ -84,7 +84,7 @@ namespace Nektar
             //           &wsp[0],1,0.0,&outarray[0],1);
 	}
     
-	NekDouble StdExpansion1D::PhysEvaluate1D(ConstArray<OneD, NekDouble>& Lcoord)
+	NekDouble StdExpansion1D::PhysEvaluate1D(const ConstArray<OneD, NekDouble>& Lcoord)
 	{
 	    int    nquad = m_base[0]->GetNumPoints();
 	    NekDouble  val;
@@ -106,6 +106,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.16  2007/05/15 05:18:22  bnelson
+ * Updated to use the new Array object.
+ *
  * Revision 1.15  2007/04/26 15:00:17  sherwin
  * SJS compiling working version using SHaredArrays
  *

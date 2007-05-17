@@ -774,9 +774,9 @@ namespace Nektar
             }
 
             void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
-                Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray,
-                Array<OneD, NekDouble> &out_d3 = NullNekDouble1DArray)
+                            Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                            Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray,
+                            Array<OneD, NekDouble> &out_d3 = NullNekDouble1DArray)
             {
                 v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
             }
@@ -952,9 +952,9 @@ namespace Nektar
 
 
             virtual void   v_PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
-                Array<OneD, NekDouble> &out_d1,
-                Array<OneD, NekDouble> &out_d2,
-                Array<OneD, NekDouble> &out_d3)
+                                        Array<OneD, NekDouble> &out_d1,
+                                        Array<OneD, NekDouble> &out_d2,
+                                        Array<OneD, NekDouble> &out_d3)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                     "local expansions");
@@ -1072,6 +1072,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.46  2007/05/15 05:18:23  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.45  2007/04/26 15:00:17  sherwin
 * SJS compiling working version using SHaredArrays
 *

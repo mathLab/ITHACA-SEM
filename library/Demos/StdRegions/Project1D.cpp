@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
   LibUtilities::PointsType Qtype;
   LibUtilities::BasisType  btype;
   StdRegions::StdExpansion1D  *E;
-  NekDoubleSharedArray sol;
+  Array<OneD,NekDouble> sol;
   
   if(argc != 4)
   {
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
   order =   atoi(argv[2]);
   nq    =   atoi(argv[3]);
 
-  sol = GetDoubleTmpSpace(nq);
+  sol = Array<OneD, NekDouble>(nq);
   
   if(btype != LibUtilities::eFourier)
   {
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
   
   //----------------------------------------------
   // Define solution to be projected
-  NekDoubleSharedArray z = GetDoubleTmpSpace(nq);
+  Array<OneD,NekDouble> z = Array<OneD,NekDouble>(nq);
   E->GetCoords(z);
 
   if(btype != LibUtilities::eFourier)
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
       sol[0] =  order/2;
   }
 
-  NekDoubleSharedArray x = GetDoubleTmpSpace(1);
+  Array<OneD,NekDouble> x = Array<OneD, NekDouble>(1);
   x[0] = 0;
   NekDouble nsol = E->PhysEvaluate(x);
   cout << "error at x = 0: " << nsol - sol[0] << endl;

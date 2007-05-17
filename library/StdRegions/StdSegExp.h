@@ -194,7 +194,7 @@ namespace Nektar
             /** \brief Single Point Evaluation: \f$ u(x) = \sum_p \phi_p(x) \hat{u}_p 
             *  = \sum_p h_p(x) u(x_p)\f$
             */
-            NekDouble PhysEvaluate(ConstArray<OneD, NekDouble>& Lcoords);
+            NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& Lcoords);
 
             void MapTo(EdgeOrientation dir, StdExpMap& Map);
 
@@ -324,7 +324,7 @@ namespace Nektar
             }
 
             /** \brief Virtual call to StdSegExp::Evaluate */
-            virtual NekDouble v_PhysEvaluate(ConstArray<OneD, NekDouble>& Lcoords)
+            virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& Lcoords)
             {
                 return PhysEvaluate(Lcoords);
             }
@@ -343,6 +343,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.19  2007/05/15 05:18:24  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.18  2007/04/10 14:00:46  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

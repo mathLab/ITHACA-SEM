@@ -392,7 +392,7 @@ namespace Nektar
             
                 ConstArray<OneD, CountedObject<double> > a(4, a_array);
                 Array<OneD, CountedObject<double> > b(5, b_array);
-                CountedObject<double>::check(9, 0, 0, 0, 0, 9);
+                CountedObject<double>::check(0, 0, 0, 9, 0, 0);
             
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
@@ -413,7 +413,26 @@ namespace Nektar
                     BOOST_CHECK(b[i] == b_array[i]);
                 }
             }
-            CountedObject<double>::check(9, 0, 18, 0, 0, 9);
+            CountedObject<double>::check(0, 0, 18, 9, 0, 0);
+
+            {
+                double a_array[] = {1.0, 2.0, 3.0, 4.0};
+                double b_array[] = {5.0, 6.0, 7.0, 8.0, 9.0};
+                Array<OneD, double> a(4, a_array);
+                Array<OneD, double> b(5, b_array);
+
+                BOOST_CHECK(a.size() == 4);
+                BOOST_CHECK(b.size() == 5);
+                for(unsigned int i = 0; i < a.size(); ++i)
+                {
+                    BOOST_CHECK(a[i] == a_array[i]);
+                }
+                
+                for(unsigned int i = 0; i < b.size(); ++i)
+                {
+                    BOOST_CHECK(b[i] == b_array[i]);
+                }
+            }
         }
     }
 }

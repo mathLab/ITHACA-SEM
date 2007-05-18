@@ -40,25 +40,12 @@ namespace Nektar
 {
     namespace SharedArrayUnitTests
     {
-        void testGet();
-        void testAccessOperator();
-        void testOffset();
-        void testConstruction();
-        void testAssignment();
-        void testFunctionCall();
-        
-        // Put individual method testers here.
-        
-        
-        // Higher level
-        void testEmptyConstructor();
-        void testUninitializedConstructor();
-        void testSingleValueInitialization();
-        void testPopulationFromCArray();
-        
-        void testNewOffset();
-        void testConstantResultType();
-        void testParameterPopulation();
+        void TestEmptyConstructor();
+        void TestUninitializedConstructor();
+        void TestSingleValueInitialization();
+        void TestPopulationFromCArray();
+        void TestCopyConstruction();   
+        void TestParameterPopulation();
         
     }
 }

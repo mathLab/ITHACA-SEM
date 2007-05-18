@@ -51,16 +51,7 @@ namespace Nektar
 {
     namespace SharedArrayUnitTests
     {
-        
-
-        void testNewOffset()
-        {
-        }
-        
-        void testConstantResultType()
-        {
-        }
-        
+               
         
         class ParameterTestClass
         {
@@ -120,7 +111,7 @@ namespace Nektar
                 ConstArray<OneD, NekDouble> b;
         };
         
-        void testParameterPopulation()
+        void TestParameterPopulation()
         {
             ParameterTestClass obj;
             
@@ -154,7 +145,7 @@ namespace Nektar
             
         }
         
-        void testEmptyConstructor()
+        void TestEmptyConstructor()
         {
             {
                 CountedObject<double>::ClearCounters();
@@ -191,7 +182,7 @@ namespace Nektar
             CountedObject<double>::check(0, 0, 0, 0, 0, 0);
         }
         
-        void testUninitializedConstructor()
+        void TestUninitializedConstructor()
         {
             {
                 CountedObject<double>::ClearCounters();
@@ -258,7 +249,7 @@ namespace Nektar
             CountedObject<double>::check(126, 0, 126, 0, 0, 0);
         }
         
-        void testSingleValueInitialization()
+        void TestSingleValueInitialization()
         {
             {
                 CountedObject<double> initValue(98);
@@ -376,7 +367,7 @@ namespace Nektar
             CountedObject<double>::check(0, 0, 127, 126, 0, 0);
         }
         
-        void testPopulationFromCArray()
+        void TestPopulationFromCArray()
         {
             {
                 CountedObject<double> a_array[] = { CountedObject<double>(1), 
@@ -433,6 +424,40 @@ namespace Nektar
                     BOOST_CHECK(b[i] == b_array[i]);
                 }
             }
+        }
+
+        void TestCopyConstruction()
+        {
+            {
+                CountedObject<double> a_array[] = { CountedObject<double>(1), 
+                                                    CountedObject<double>(2),
+                                                    CountedObject<double>(3),
+                                                    CountedObject<double>(4) };
+                CountedObject<double> b_array[] = { CountedObject<double>(1), 
+                                                    CountedObject<double>(2),
+                                                    CountedObject<double>(3),
+                                                    CountedObject<double>(4),
+                                                    CountedObject<double>(5)};
+                CountedObject<double>::ClearCounters();
+            
+                ConstArray<OneD, CountedObject<double> > a(4, a_array);
+                Array<OneD, CountedObject<double> > b(5, b_array);
+                CountedObject<double>::check(0, 0, 0, 9, 0, 0);
+
+                {
+                    ConstArray<OneD, CountedObject<double> > c(a);
+                    Array<OneD, CountedObject<double> > d(b);
+
+                    BOOST_CHECK_EQUAL(c.num_elements(), a.num_elements());
+                    BOOST_CHECK_EQUAL(d.num_elements(), b.num_elements());
+                    BOOST_CHECK(c.data() == a.data());
+                    BOOST_CHECK(d.data() == b.data());
+
+                    CountedObject<double>::check(0, 0, 0, 9, 0, 0);
+                }
+                CountedObject<double>::check(0, 0, 0, 9, 0, 0);
+            }
+            CountedObject<double>::check(0, 0, 18, 9, 0, 0);
         }
     }
 }

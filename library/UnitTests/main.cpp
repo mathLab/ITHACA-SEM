@@ -35,18 +35,12 @@ test_suite* init_unit_test_suite( int, char* [] )
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
 
     // shared array
-//     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testGet), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testAccessOperator), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testOffset), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testConstruction), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testAssignment), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testEmptyConstructor), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testUninitializedConstructor), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testNewOffset), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testConstantResultType), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testParameterPopulation), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testSingleValueInitialization), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::testPopulationFromCArray), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestEmptyConstructor), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestUninitializedConstructor), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestParameterPopulation), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestSingleValueInitialization), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestPopulationFromCArray), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestCopyConstruction), 0);
     
     // Test Foundation
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussGaussLegendre),0);
@@ -146,6 +140,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.29  2007/05/15 05:19:54  bnelson
+    Updated to use the new Array object.
+
     Revision 1.28  2007/03/29 19:42:02  bnelson
     *** empty log message ***
 

@@ -165,6 +165,11 @@ namespace Nektar
                     {
                         std::fill_n(data, itemsToCreate, initValue);
                     }
+
+                    static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType* initValue)
+                    {
+                        std::copy(initValue, initValue + itemsToCreate, data);
+                    }
             };
             
             /// \brief Default initializes all elements.
@@ -198,6 +203,12 @@ namespace Nektar
                     {
                         DoInitialization(data, itemsToCreate, 
                                          boost::bind(&InitializationPolicy<ObjectType>::CopyConstructionWithPlacementNew, _1, boost::ref(initValue)));
+                    }
+
+                    static void Initialize(ObjectType* data, unsigned int itemsToCreate, const ObjectType* initValue)
+                    {
+                        DoInitialization(data, itemsToCreate, 
+                                boost::bind(&InitializationPolicy<ObjectType>::CopyConstructionFromArray, _1, boost::ref(initValue)));
                     }
                     
                     private:
@@ -233,6 +244,12 @@ namespace Nektar
                         static void CopyConstructionWithPlacementNew(ObjectType* element, const ObjectType& initValue)
                         {
                             new (element) ObjectType(initValue);
+                        }
+
+                        static void CopyConstructionFromArray(ObjectType* element, const ObjectType*& rhs)
+                        {
+                            new (element) ObjectType(*rhs);
+                            rhs += 1;
                         }
                 };
             
@@ -294,6 +311,7 @@ namespace Nektar
                 BOOST_STATIC_ASSERT(Dim==1);
                 std::vector<unsigned int> extents(Dim, arraySize);
                 CreateStorage(extents);
+                InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
             }
             
             /// \brief Constructs a 2 dimensional array.  The elements of the array are not initialized.
@@ -305,6 +323,7 @@ namespace Nektar
                 unsigned int vals[] = {dim1Size, dim2Size};
                 std::vector<unsigned int> extents(vals, vals+2);
                 CreateStorage(extents);
+                InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
             }
             
             /// \brief Constructs a 3 dimensional array.  The elements of the array are not initialized.
@@ -316,6 +335,7 @@ namespace Nektar
                 unsigned int vals[] = {dim1Size, dim2Size, dim3Size};
                 std::vector<unsigned int> extents(vals, vals+3);
                 CreateStorage(extents);
+                InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
             }
             
             /// \brief Constructs a 1D array.  Every element is given the value initValue.
@@ -325,11 +345,8 @@ namespace Nektar
             {
                 BOOST_STATIC_ASSERT(Dim == 1);
                 std::vector<unsigned int> extents(Dim, arraySize);
-                CreateStorage(extents, &initValue);
-                
-                // Can't use the ConstArray begin() and end() methods since they
-                // are constant and so we can't use them to write values.
-                //std::fill(m_data->begin(), m_data->end(), initValue);
+                CreateStorage(extents);
+                InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
             }
             
             ConstArray(unsigned int dim1Size, unsigned int dim2Size, const DataType& initValue) :
@@ -339,8 +356,8 @@ namespace Nektar
                 BOOST_STATIC_ASSERT(Dim==2);
                 unsigned int vals[] = {dim1Size, dim2Size};
                 std::vector<unsigned int> extents(vals, vals+2);
-                CreateStorage(extents, &initValue);
-                //std::fill_n(m_data->data(), m_data->num_elements(), initValue);
+                CreateStorage(extents);
+                InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
             }
             
             ConstArray(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size, const DataType& initValue) :
@@ -350,11 +367,11 @@ namespace Nektar
                 BOOST_STATIC_ASSERT(Dim==3);
                 unsigned int vals[] = {dim1Size, dim2Size, dim3Size};
                 std::vector<unsigned int> extents(vals, vals+3);
-                CreateStorage(extents, &initValue);
-                //std::fill_n(m_data->data(), m_data->num_elements(), initValue);
+                CreateStorage(extents);
+                InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
             }
             
-            ConstArray(unsigned int arraySize, const DataType* const d) :
+            ConstArray(unsigned int arraySize, const DataType* d) :
                 m_data(),
                 m_offset(0)
             {
@@ -362,7 +379,8 @@ namespace Nektar
                 BOOST_STATIC_ASSERT(Dim==1);
                 std::vector<unsigned int> extents(Dim, arraySize);
                 CreateStorage(extents);
-                m_data->assign(d, d+arraySize);
+                InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), d);
+                //m_data->assign(d, d+arraySize);
             }
              
             ConstArray(const ConstArray<Dim, DataType>& rhs) :
@@ -460,7 +478,7 @@ namespace Nektar
             }
             
             template<typename ExtentListType>
-            void CreateStorage(const ExtentListType& extent, const DataType* initValue = 0)
+            void CreateStorage(const ExtentListType& extent)
             {
                 unsigned int size = std::accumulate(extent.begin(), extent.end(), 1, 
                     std::multiplies<unsigned int>());
@@ -468,14 +486,6 @@ namespace Nektar
                 m_data = MemoryManager<ArrayType>::AllocateSharedPtrD(
                         boost::bind(&ConstArray<Dim, DataType>::DeleteStorage, storage, size),
                         storage, extent);
-                if( initValue == 0 )
-                {
-                    InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
-                }
-                else
-                {
-                    InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), *initValue);
-                }
             }
             
             void Swap(ConstArray<OneD, DataType>& rhs)
@@ -538,7 +548,7 @@ namespace Nektar
             }
 
             
-            Array(unsigned int arraySize, const DataType* const d) :
+            Array(unsigned int arraySize, const DataType* d) :
                 BaseType(arraySize, d)
             {
             }

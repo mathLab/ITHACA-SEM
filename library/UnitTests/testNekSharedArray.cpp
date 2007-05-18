@@ -458,6 +458,36 @@ namespace Nektar
                 CountedObject<double>::check(0, 0, 0, 9, 0, 0);
             }
             CountedObject<double>::check(0, 0, 18, 9, 0, 0);
+
+            {
+                // Test offset copy constructor..
+                CountedObject<double> a_array[] = { CountedObject<double>(1), 
+                                                    CountedObject<double>(2),
+                                                    CountedObject<double>(3),
+                                                    CountedObject<double>(4) };
+                CountedObject<double> b_array[] = { CountedObject<double>(1), 
+                                                    CountedObject<double>(2),
+                                                    CountedObject<double>(3),
+                                                    CountedObject<double>(4),
+                                                    CountedObject<double>(5)};
+                CountedObject<double>::ClearCounters();
+                ConstArray<OneD, CountedObject<double> > a(4, a_array);
+                Array<OneD, CountedObject<double> > b(5, b_array);
+                CountedObject<double>::check(0, 0, 0, 9, 0, 0);
+
+                ConstArray<OneD, CountedObject<double> > a_off(a, 1);
+                Array<OneD, CountedObject<double> > b_off(b, 2);
+
+                BOOST_CHECK_EQUAL(a_off[0].value, a[1].value);
+                BOOST_CHECK_EQUAL(a_off[1].value, a[2].value);
+                BOOST_CHECK_EQUAL(a_off[2].value, a[3].value);
+                BOOST_CHECK_EQUAL(a_off.size(), 3);
+
+                BOOST_CHECK_EQUAL(b_off[0].value, b[2].value);
+                BOOST_CHECK_EQUAL(b_off[1].value, b[3].value);
+                BOOST_CHECK_EQUAL(b_off[2].value, b[4].value);
+                BOOST_CHECK_EQUAL(b_off.size(), 3);
+            }
         }
     }
 }

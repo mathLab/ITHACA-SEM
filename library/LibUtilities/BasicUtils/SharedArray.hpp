@@ -375,12 +375,10 @@ namespace Nektar
                 m_data(),
                 m_offset(0)
             {
-                /// TODO - Next is to copy construct all of these elements as well.
                 BOOST_STATIC_ASSERT(Dim==1);
                 std::vector<unsigned int> extents(Dim, arraySize);
                 CreateStorage(extents);
                 InitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), d);
-                //m_data->assign(d, d+arraySize);
             }
              
             ConstArray(const ConstArray<Dim, DataType>& rhs) :
@@ -465,6 +463,8 @@ namespace Nektar
             
             const size_type* shape() const { return m_data->shape(); }
             
+            size_type num_elements() const { return m_data->num_elements(); }
+
         protected:
             boost::shared_ptr<ArrayType>& GetData() { return m_data; }
             const boost::shared_ptr<ArrayType>& GetData() const { return m_data; }

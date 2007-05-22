@@ -75,7 +75,7 @@ namespace Nektar
                 m_data(size),
                 m_wrapperType(eCopy)
             {
-                std::fill_n(m_data.get(), m_data.size(), a);
+                std::fill_n(m_data.get(), m_data.num_elements(), a);
             }
 
             explicit NekVector(const std::string& vectorValues) :
@@ -114,7 +114,7 @@ namespace Nektar
             {
                 if( m_wrapperType = eCopy )
                 {
-                    m_data = Array<OneD, DataType>(rhs.m_data.size());
+                    m_data = Array<OneD, DataType>(rhs.m_data.num_elements());
                     CopyArray(rhs.m_data, m_data);
                 }
                 else
@@ -135,7 +135,7 @@ namespace Nektar
                 m_data(size),
                 m_wrapperType(eCopy)
             {
-                m_data = Array<OneD, DataType>(ptr.size());
+                m_data = Array<OneD, DataType>(ptr.num_elements());
                 CopyArray(ptr, m_data);
             }
             
@@ -166,7 +166,7 @@ namespace Nektar
             {
                 if( h == eCopy )
                 {
-                    m_data = Array<OneD, DataType>(ptr.size());
+                    m_data = Array<OneD, DataType>(ptr.num_elements());
                     CopyArray(ptr, m_data);
                 }
                 else
@@ -212,16 +212,16 @@ namespace Nektar
                 {
                     // If the current vector is a copy, then regardless of the rhs type 
                     // we just copy over the values, resizing if needed.
-                    if( m_data.size() != rhs.m_data.size() )
+                    if( m_data.num_elements() != rhs.m_data.num_elements() )
                     {
-                        m_data = Array<OneD, DataType>(rhs.m_data.size());
+                        m_data = Array<OneD, DataType>(rhs.m_data.num_elements());
                     }
                 }
                 else if( m_wrapperType == eWrapper )
                 {
                     // If the current vector is wrapped, then just copy over the top,
                     // but the sizes of the two vectors must be the same.
-                    ASSERTL0(m_data.size() == rhs.m_data.size(), "Wrapped NekVectors must have the same dimension in operator=");
+                    ASSERTL0(m_data.num_elements() == rhs.m_data.num_elements(), "Wrapped NekVectors must have the same dimension in operator=");
                 }
 
                 CopyArray(rhs.m_data, m_data);
@@ -231,12 +231,12 @@ namespace Nektar
             /// \brief Returns the number of dimensions for the point.
             unsigned int GetDimension() const
             {
-                return m_data.size();
+                return m_data.num_elements();
             }
 
             unsigned int GetRows() const
             {
-                return m_data.size();
+                return m_data.num_elements();
             }
 
             DataType* GetPtr()

@@ -48,38 +48,40 @@ namespace ErrorUtil
         ewarning
     };
 
-#ifdef ENABLE_NEKTAR_EXCEPTIONS
-    class NekError : public std::runtime_error
-    {
-        public:
-            NekError(const std::string& message) : std::runtime_error(message) {}
-    };
-    
-    static void ExceptionError(ErrType type, const char *routine, int lineNumber, const char *msg)
-    {
-        std::string errorMessage = std::string(routine) + "[" +
-                boost::lexical_cast<std::string>(lineNumber) + "]:" +
-                std::string(msg);
-        std::cerr << errorMessage << std::endl;
-        throw NekError(errorMessage);
-    }
-#endif
-
-    static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
-    {
-        switch(type)
+    #ifdef ENABLE_NEKTAR_EXCEPTIONS
+        class NekError : public std::runtime_error
         {
-            case efatal:
-                std::cerr << routine << "[" << lineNumber << "]:" << msg << std::endl;
-                exit(1);
-                break;
-            case ewarning:
-                std::cerr << routine << ": " << msg << std::endl;
-                break;
-            default:
-                std::cerr << "Unknown warning type" << std::endl;
+            public:
+                NekError(const std::string& message) : std::runtime_error(message) {}
+        };
+        
+        static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
+        {
+            std::string errorMessage = std::string(routine) + "[" +
+                    boost::lexical_cast<std::string>(lineNumber) + "]:" +
+                    std::string(msg);
+            //std::cerr << errorMessage << std::endl;
+            throw NekError(errorMessage);
         }
-    }
+    #else // ENABLE_NEKTAR_EXCEPTION
+
+        static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
+        {
+            switch(type)
+            {
+                case efatal:
+                    std::cerr << routine << "[" << lineNumber << "]:" << msg << std::endl;
+                    exit(1);
+                    break;
+                case ewarning:
+                    std::cerr << routine << ": " << msg << std::endl;
+                    break;
+                default:
+                    std::cerr << "Unknown warning type" << std::endl;
+            }
+        }
+    #endif // ENABLE_NEKTAR_EXCEPTION
+    
 } // end of namespace
 
 /// Assert Level 0 -- Fundamental assert which
@@ -91,40 +93,17 @@ namespace ErrorUtil
 #define NEKERROR(type, msg) \
     ErrorUtil::Error(type, __FILE__, __LINE__, msg);
 
-#ifdef ENABLE_NEKTAR_EXCEPTIONS
-
 #define ASSERTL0(condition,msg) \
     if(!(condition)) \
 { \
-    fprintf(stderr,"Level 0 Assert Violation\n"); \
-    ErrorUtil::ExceptionError(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
-}
-
-#else
-
-#define ASSERTL0(condition,msg) \
-    if(!(condition)) \
-{ \
-    fprintf(stderr,"Level 0 Assert Violation\n"); \
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
 }
 
-#endif
 
 /// Assert Level 1 -- Debugging which is used whether in FULLDEBUG or
 /// DEBUG compilation mode.  This level assert is designed for aiding
 /// in standard debug (-g) mode
-#ifdef DEBUG
-#ifdef ENABLE_NEKTAR_EXCEPTIONS
-
-#define ASSERTL1(condition,msg) \
-    if(!(condition)) \
-{ \
-    fprintf(stderr,"Level 1 Assert Violation\n"); \
-    ErrorUtil::ExceptionError(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
-}
-
-#else
+#if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
 
 #define ASSERTL1(condition,msg) \
     if(!(condition)) \
@@ -133,28 +112,15 @@ namespace ErrorUtil
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
 }
 
-#endif
-
-#else
+#else //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
 #define ASSERTL1(condition,msg)
-#endif
+#endif //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
 
 
 /// Assert Level 2 -- Debugging which is used FULLDEBUG compilation
 /// mode.  This level assert is designed to provide addition safety
 /// checks within the code (such as bounds checking, etc.).
-#ifdef FULLDEBUG
-
-#ifdef ENABLE_NEKTAR_EXCEPTIONS
-
-#define ASSERTL2(condition,msg) \
-    if(!(condition)) \
-{ \
-    fprintf(stderr,"Level 2 Assert Violation\n"); \
-    ErrorUtil::ExceptionError(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
-}
-
-#else
+#ifdef NEKTAR_FULLDEBUG
 
 #define ASSERTL2(condition,msg) \
     if(!(condition)) \
@@ -163,15 +129,17 @@ namespace ErrorUtil
     ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
 }
 
-#endif
-
-#else
+#else //NEKTAR_FULLDEBUG
 #define ASSERTL2(condition,msg)
-#endif
+#endif //NEKTAR_FULLDEBUG
 
 #endif //ERRORUTIL_HPP
+
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.3  2007/05/14 23:22:38  bnelson
+Errors throw a new exception type NekError.
+
 Revision 1.2  2006/08/14 02:18:02  bnelson
 Added the option to throw exceptions when an error is encountered.
 

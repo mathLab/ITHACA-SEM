@@ -85,7 +85,7 @@ namespace Nektar
             D0 = ExpPointsProperties(0)->GetD();
             D1 = ExpPointsProperties(1)->GetD();
 
-            if (outarray_d0.size() > 0) // calculate du/dx_0
+            if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
                 Blas::Dgemm('T', 'N', nquad0, nquad1, nquad0, 1.0,
                             &(D0->GetPtr())[0], nquad0, &wsp[0], nquad0, 0.0,
@@ -93,7 +93,7 @@ namespace Nektar
             }
 
             // calculate du/dx_1
-            if (outarray_d1.size() > 0)
+            if (outarray_d1.num_elements() > 0)
             {
                 Blas:: Dgemm('N', 'N', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,
                          &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
@@ -111,10 +111,10 @@ namespace Nektar
 
             DNekMatSharedPtr I;
 
-            ASSERTL2(coord[0] < -1, "coord[0] < -1");
-            ASSERTL2(coord[0] > 1, "coord[0] >  1");
-            ASSERTL2(coord[1] < -1, "coord[1] < -1");
-            ASSERTL2(coord[1] > 1, "coord[1] >  1");
+            ASSERTL2(coords[0] < -1, "coord[0] < -1");
+            ASSERTL2(coords[0] > 1, "coord[0] >  1");
+            ASSERTL2(coords[1] < -1, "coord[1] < -1");
+            ASSERTL2(coords[1] > 1, "coord[1] >  1");
 
             // interpolate first coordinate direction
             I = ExpPointsProperties(0)->GetI(coords);
@@ -170,6 +170,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.12  2007/05/15 05:18:23  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.11  2007/04/10 14:00:45  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

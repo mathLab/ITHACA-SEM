@@ -156,8 +156,8 @@ namespace Nektar
                 BOOST_CHECK(a.begin() == a.end());
                 BOOST_CHECK(b.begin() == b.end());
                 
-                BOOST_CHECK_EQUAL(a.size(), 0);
-                BOOST_CHECK_EQUAL(b.size(), 0);
+                BOOST_CHECK_EQUAL(a.num_elements(), 0);
+                BOOST_CHECK_EQUAL(b.num_elements(), 0);
                 
                 BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
@@ -173,8 +173,8 @@ namespace Nektar
                 BOOST_CHECK(a.begin() == a.end());
                 BOOST_CHECK(b.begin() == b.end());
                 
-                BOOST_CHECK_EQUAL(a.size(), 0);
-                BOOST_CHECK_EQUAL(b.size(), 0);
+                BOOST_CHECK_EQUAL(a.num_elements(), 0);
+                BOOST_CHECK_EQUAL(b.num_elements(), 0);
                 
                 BOOST_CHECK_EQUAL(a.num_dimensions(), 2);
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 2);
@@ -194,8 +194,8 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
                 
-                BOOST_CHECK_EQUAL(a.size(), 5);
-                BOOST_CHECK_EQUAL(b.size(), 10);
+                BOOST_CHECK_EQUAL(a.num_elements(), 5);
+                BOOST_CHECK_EQUAL(b.num_elements(), 10);
                 
                 BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
@@ -212,8 +212,8 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
                 
-                BOOST_CHECK_EQUAL(a.size(), 5);
-                BOOST_CHECK_EQUAL(b.size(), 10);
+                BOOST_CHECK_EQUAL(a.num_elements(), 50);
+                BOOST_CHECK_EQUAL(b.num_elements(), 100);
                 BOOST_CHECK_EQUAL(a.shape()[0], 5);
                 BOOST_CHECK_EQUAL(a.shape()[1], 10);
                 BOOST_CHECK_EQUAL(b.shape()[0], 10);
@@ -234,8 +234,8 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
                 
-                BOOST_CHECK_EQUAL(a.size(), 1);
-                BOOST_CHECK_EQUAL(b.size(), 4);
+                BOOST_CHECK_EQUAL(a.num_elements(), 6);
+                BOOST_CHECK_EQUAL(b.num_elements(), 120);
                 BOOST_CHECK_EQUAL(a.shape()[0], 1);
                 BOOST_CHECK_EQUAL(a.shape()[1], 2);
                 BOOST_CHECK_EQUAL(a.shape()[2], 3);
@@ -262,8 +262,8 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
                 
-                BOOST_CHECK_EQUAL(a.size(), 5);
-                BOOST_CHECK_EQUAL(b.size(), 10);
+                BOOST_CHECK_EQUAL(a.num_elements(), 5);
+                BOOST_CHECK_EQUAL(b.num_elements(), 10);
                 
                 BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
@@ -291,8 +291,8 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
                 
-                BOOST_CHECK_EQUAL(a.size(), 5);
-                BOOST_CHECK_EQUAL(b.size(), 10);
+                BOOST_CHECK_EQUAL(a.num_elements(), 50);
+                BOOST_CHECK_EQUAL(b.num_elements(), 100);
                 BOOST_CHECK_EQUAL(a.shape()[0], 5);
                 BOOST_CHECK_EQUAL(a.shape()[1], 10);
                 BOOST_CHECK_EQUAL(b.shape()[0], 10);
@@ -330,8 +330,8 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
                 
-                BOOST_CHECK_EQUAL(a.size(), 1);
-                BOOST_CHECK_EQUAL(b.size(), 4);
+                BOOST_CHECK_EQUAL(a.num_elements(), 6);
+                BOOST_CHECK_EQUAL(b.num_elements(), 120);
                 BOOST_CHECK_EQUAL(a.shape()[0], 1);
                 BOOST_CHECK_EQUAL(a.shape()[1], 2);
                 BOOST_CHECK_EQUAL(a.shape()[2], 3);
@@ -388,18 +388,18 @@ namespace Nektar
                 BOOST_CHECK(a.begin() != a.end());
                 BOOST_CHECK(b.begin() != b.end());
             
-                BOOST_CHECK_EQUAL(a.size(), 4);
-                BOOST_CHECK_EQUAL(b.size(), 5);
+                BOOST_CHECK_EQUAL(a.num_elements(), 4);
+                BOOST_CHECK_EQUAL(b.num_elements(), 5);
             
                 BOOST_CHECK_EQUAL(a.num_dimensions(), 1);
                 BOOST_CHECK_EQUAL(b.num_dimensions(), 1);
             
-                for(unsigned int i = 0; i < a.size(); ++i)
+                for(unsigned int i = 0; i < a.num_elements(); ++i)
                 {
                     BOOST_CHECK(a[i] == a_array[i]);
                 }
                 
-                for(unsigned int i = 0; i < b.size(); ++i)
+                for(unsigned int i = 0; i < b.num_elements(); ++i)
                 {
                     BOOST_CHECK(b[i] == b_array[i]);
                 }
@@ -412,14 +412,14 @@ namespace Nektar
                 Array<OneD, double> a(4, a_array);
                 Array<OneD, double> b(5, b_array);
 
-                BOOST_CHECK(a.size() == 4);
-                BOOST_CHECK(b.size() == 5);
-                for(unsigned int i = 0; i < a.size(); ++i)
+                BOOST_CHECK(a.num_elements() == 4);
+                BOOST_CHECK(b.num_elements() == 5);
+                for(unsigned int i = 0; i < a.num_elements(); ++i)
                 {
                     BOOST_CHECK(a[i] == a_array[i]);
                 }
                 
-                for(unsigned int i = 0; i < b.size(); ++i)
+                for(unsigned int i = 0; i < b.num_elements(); ++i)
                 {
                     BOOST_CHECK(b[i] == b_array[i]);
                 }
@@ -447,10 +447,13 @@ namespace Nektar
                 {
                     ConstArray<OneD, CountedObject<double> > c(a);
                     Array<OneD, CountedObject<double> > d(b);
-
+                    ConstArray<OneD, CountedObject<double> > e(a);
+                    
                     BOOST_CHECK_EQUAL(c.num_elements(), a.num_elements());
+                    BOOST_CHECK_EQUAL(e.num_elements(), a.num_elements());
                     BOOST_CHECK_EQUAL(d.num_elements(), b.num_elements());
                     BOOST_CHECK(c.data() == a.data());
+                    BOOST_CHECK(e.data() == a.data());
                     BOOST_CHECK(d.data() == b.data());
 
                     CountedObject<double>::check(0, 0, 0, 9, 0, 0);
@@ -460,7 +463,7 @@ namespace Nektar
             CountedObject<double>::check(0, 0, 18, 9, 0, 0);
 
             {
-                // Test offset copy constructor..
+                // Test offset copy constructor.
                 CountedObject<double> a_array[] = { CountedObject<double>(1), 
                                                     CountedObject<double>(2),
                                                     CountedObject<double>(3),
@@ -476,20 +479,218 @@ namespace Nektar
                 CountedObject<double>::check(0, 0, 0, 9, 0, 0);
 
                 ConstArray<OneD, CountedObject<double> > a_off(a, 1);
+                ConstArray<OneD, CountedObject<double> > bb_off(b, 2);
                 Array<OneD, CountedObject<double> > b_off(b, 2);
 
                 BOOST_CHECK_EQUAL(a_off[0].value, a[1].value);
                 BOOST_CHECK_EQUAL(a_off[1].value, a[2].value);
                 BOOST_CHECK_EQUAL(a_off[2].value, a[3].value);
-                BOOST_CHECK_EQUAL(a_off.size(), 3);
+                BOOST_CHECK_EQUAL(a_off.num_elements(), 3);
 
                 BOOST_CHECK_EQUAL(b_off[0].value, b[2].value);
                 BOOST_CHECK_EQUAL(b_off[1].value, b[3].value);
                 BOOST_CHECK_EQUAL(b_off[2].value, b[4].value);
-                BOOST_CHECK_EQUAL(b_off.size(), 3);
+                BOOST_CHECK_EQUAL(b_off.num_elements(), 3);
+                
+                BOOST_CHECK_EQUAL(bb_off[0].value, b[2].value);
+                BOOST_CHECK_EQUAL(bb_off[1].value, b[3].value);
+                BOOST_CHECK_EQUAL(bb_off[2].value, b[4].value);
+                BOOST_CHECK_EQUAL(bb_off.num_elements(), 3);
             }
         }
-    }
-}
+        
+        void Test1DAssignmentOperator()
+        {
+            {
+                // 1D
+                CountedObject<double> a_array[] = { CountedObject<double>(1), 
+                                                    CountedObject<double>(2),
+                                                    CountedObject<double>(3),
+                                                    CountedObject<double>(4) };
+                CountedObject<double> b_array[] = { CountedObject<double>(1), 
+                                                    CountedObject<double>(2),
+                                                    CountedObject<double>(3),
+                                                    CountedObject<double>(4),
+                                                    CountedObject<double>(5)};
+                CountedObject<double>::ClearCounters();
+                ConstArray<OneD, CountedObject<double> > a(4, a_array);
+                Array<OneD, CountedObject<double> > b(5, b_array);
+                CountedObject<double>::check(0, 0, 0, 9, 0, 0);
+    
+                {
+                    ConstArray<OneD, CountedObject<double> > lhs_a;
+                    Array<OneD, CountedObject<double> > lhs_b1;
+                    ConstArray<OneD, CountedObject<double> > lhs_b2;
+                    CountedObject<double>::check(0, 0, 0, 9, 0, 0);
+        
+                    BOOST_CHECK_EQUAL(lhs_a.num_elements(), 0);
+                    BOOST_CHECK_EQUAL(lhs_b1.num_elements(), 0);
+                    BOOST_CHECK_EQUAL(lhs_b2.num_elements(), 0);
+    
+                    {
+                        lhs_a = a;
+                        lhs_b1 = b;
+                        lhs_b2 = b;
+                        CountedObject<double>::check(0, 0, 0, 9, 0, 0);
+            
+                        BOOST_CHECK_EQUAL(lhs_a.num_elements(), a.num_elements());
+                        BOOST_CHECK_EQUAL(lhs_b1.num_elements(), b.num_elements());
+                        BOOST_CHECK_EQUAL(lhs_b2.num_elements(), b.num_elements());
+                        BOOST_CHECK_EQUAL(lhs_a.data(), a.data());
+                        BOOST_CHECK_EQUAL(lhs_b1.data(), b.data());
+                        BOOST_CHECK_EQUAL(lhs_b2.data(), b.data());
+            
+                        for(unsigned int i = 0; i < a.num_elements(); ++i)
+                        {
+                            BOOST_CHECK(lhs_a[i] == a[i]);
+                        }
+            
+                            for(unsigned int i = 0; i < b.num_elements(); ++i)
+                            {
+                                BOOST_CHECK(lhs_b1[i] == b[i]);
+                                BOOST_CHECK(lhs_b2[i] == b[i]);
+                            }
+                            CountedObject<double>::check(0, 0, 0, 9, 0, 0);
+                        }
+                        CountedObject<double>::check(0, 0, 0, 9, 0, 0);
+                    }
+                    CountedObject<double>::check(0, 0, 0, 9, 0, 0);
+            }
+        }
+        
+        void Test2DAssignmentOperator()
+        {
+            {
+                // 2D
+                CountedObject<double> initValue(98);
+                CountedObject<double>::ClearCounters();
+                
+                ConstArray<TwoD, CountedObject<double> > a(5, 10, initValue);
+                Array<TwoD, CountedObject<double> > b(10, 10, initValue);
+                CountedObject<double>::check(0, 0, 0, 150, 0, 0);
+                
+                BOOST_CHECK(a.begin() != a.end());
+                BOOST_CHECK(b.begin() != b.end());
+                
+                BOOST_CHECK_EQUAL(a.num_elements(), 50);
+                BOOST_CHECK_EQUAL(b.num_elements(), 100);
+                BOOST_CHECK_EQUAL(a.shape()[0], 5);
+                BOOST_CHECK_EQUAL(a.shape()[1], 10);
+                BOOST_CHECK_EQUAL(b.shape()[0], 10);
+                BOOST_CHECK_EQUAL(b.shape()[1], 10);
+                
+                BOOST_CHECK_EQUAL(a.num_dimensions(), 2);
+                BOOST_CHECK_EQUAL(b.num_dimensions(), 2);
+                    
+                {
+                    ConstArray<TwoD, CountedObject<double> > lhs_a;
+                    ConstArray<TwoD, CountedObject<double> > lhs_b1;
+                    Array<TwoD, CountedObject<double> > lhs_b2;
+                
+                    BOOST_CHECK_EQUAL(lhs_a.num_elements(), 0);
+                    BOOST_CHECK_EQUAL(lhs_b1.num_elements(), 0);
+                    BOOST_CHECK_EQUAL(lhs_b2.num_elements(), 0);
+                
+                    lhs_a = a;
+                    lhs_b1 = b;
+                    lhs_b2 = b;
+                    CountedObject<double>::check(0, 0, 0, 150, 0, 0);
+                
+                    BOOST_CHECK_EQUAL(lhs_a.num_elements(), a.num_elements());
+                    BOOST_CHECK_EQUAL(lhs_b1.num_elements(), b.num_elements());
+                    BOOST_CHECK_EQUAL(lhs_b2.num_elements(), b.num_elements());
+                    BOOST_CHECK_EQUAL(lhs_a.shape()[0], a.shape()[0]);
+                    BOOST_CHECK_EQUAL(lhs_a.shape()[1], a.shape()[1]);
+                
+                    BOOST_CHECK_EQUAL(lhs_b1.shape()[0], b.shape()[0]);
+                    BOOST_CHECK_EQUAL(lhs_b1.shape()[1], b.shape()[1]);
+                
+                    BOOST_CHECK_EQUAL(lhs_b2.shape()[0], b.shape()[0]);
+                    BOOST_CHECK_EQUAL(lhs_b2.shape()[1], b.shape()[1]);
+                
+                    for(unsigned int i = 0; i < a.shape()[0]; ++i)
+                    {
+                        for(unsigned int j = 0; j < a.shape()[1]; ++j)
+                        {
+                            BOOST_CHECK(a[i][j] == initValue);
+                            BOOST_CHECK(lhs_a[i][j] == a[i][j]);
+                        }
+                    }
+                
+                    for(unsigned int i = 0; i < b.shape()[0]; ++i)
+                    {
+                        for(unsigned int j = 0; j < b.shape()[1]; ++j)
+                        {
+                            BOOST_CHECK(b[i][j] == initValue);
+                            BOOST_CHECK(lhs_b1[i][j] == b[i][j]);
+                            BOOST_CHECK(lhs_b2[i][j] == b[i][j]);
+                        }
+                    }
+                }
+                CountedObject<double>::check(0, 0, 0, 150, 0, 0);
+            }
+        
+            CountedObject<double>::check(0, 0, 151, 150, 0, 0);
+        }
+    
+        void TestOffsetAssignmentOperator()
+        {
+            double a[] = {1.0, 2.0, 3.0, 4.0, 5.0};
+            double b[] = {10.0, 20.0, 30.0, 40.0 };
+            
+            Array<OneD, NekDouble> rhs_a(5, a);
+            ConstArray<OneD, NekDouble> rhs_b(4, b);
+            
+            Array<OneD, NekDouble> offset_a = rhs_a + 2;;
+            ConstArray<OneD, NekDouble> offset_b = rhs_a + 2;
+            
+            Array<OneD, NekDouble> lhs_a;
+            ConstArray<OneD, NekDouble> lhs_b;
+            
+            lhs_a = offset_a;
+            lhs_b = offset_b;
+            
+            BOOST_CHECK_EQUAL(lhs_a.num_elements(), offset_a.num_elements());
+            BOOST_CHECK_EQUAL(lhs_b.num_elements(), offset_b.num_elements());
+            
+            for(unsigned int i = 0; i < lhs_a.num_elements(); ++i)
+            {
+                BOOST_CHECK(lhs_a[i] == offset_a[i]);
+            }
+            
+            for(unsigned int i = 0; i < lhs_b.num_elements(); ++i)
+            {
+                BOOST_CHECK(lhs_b[i] == offset_b[i]);
+            }
+        }
+        
+        void Test1DAccessOperator()
+        {
+            // Normal access.
+            double a[] = {1.0, 2.0, 3.0, 4.0, 5.0};
+            double b[] = {10.0, 20.0, 30.0, 40.0 };
+            
+            Array<OneD, NekDouble> rhs_a(5, a);
+            ConstArray<OneD, NekDouble> rhs_b(4, b);
+            
+            BOOST_CHECK_EQUAL(a[0], 1.0);
+            BOOST_CHECK_EQUAL(a[1], 2.0);
+            BOOST_CHECK_EQUAL(a[2], 3.0);
+            BOOST_CHECK_EQUAL(a[3], 4.0);
+            BOOST_CHECK_EQUAL(a[4], 5.0);
+            
+            BOOST_CHECK_EQUAL(b[0], 10.0);
+            BOOST_CHECK_EQUAL(b[2], 20.0);
+            BOOST_CHECK_EQUAL(b[3], 30.0);
+            BOOST_CHECK_EQUAL(b[4], 40.0);
+            
+            #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULL_DEBUG)
+            // TODO - The offset is causing problems in multi-dimensional arrays.  Specialize for 
+            // 1D arrays.
+            #endif
+        }
+    
+    } // End SharedArrayUnitTests
+} // End Nektar
 
 #endif //NEKTAR_UNIT_TESTS_SHARED_ARRAY_HPP

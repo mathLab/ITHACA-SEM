@@ -46,6 +46,11 @@ namespace Nektar
         void TestPopulationFromCArray();
         void TestCopyConstruction();   
         void TestParameterPopulation();
+        void Test1DAssignmentOperator();
+        void Test2DAssignmentOperator();
+        void TestOffsetAssignmentOperator();
+        void Test1DAccessOperator();
+
         
     }
 }

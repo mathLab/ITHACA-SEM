@@ -246,7 +246,7 @@ namespace Nektar
                 gfac[i] = 2.0/(1-z1[i]);
             }
 	    
-            if(out_d1.size() > 0)// if no d1 required do not need to calculate both deriv
+            if(out_d1.num_elements() > 0)// if no d1 required do not need to calculate both deriv
             {
                 PhysTensorDeriv(inarray, out_d0, out_d1);
 
@@ -257,7 +257,7 @@ namespace Nektar
             }
             else
             {
-                if(out_d0.size() > 0)// need other local callopsed derivative for d1 
+                if(out_d0.num_elements() > 0)// need other local callopsed derivative for d1 
                 {
                     d0 = Array<OneD, NekDouble>(nquad0*nquad1);
                 }
@@ -535,6 +535,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.15  2007/05/15 05:18:24  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.14  2007/04/10 14:00:46  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

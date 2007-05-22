@@ -400,12 +400,6 @@ namespace Nektar
             {
             }
             
-            ConstArray(const Array<Dim, DataType>& rhs, unsigned int offset) :
-                m_data(rhs.m_data),
-                m_offset(offset)
-            {
-            }   
-            
             ConstArray<Dim, DataType>& operator=(const ConstArray<Dim, DataType>& rhs)
             {
                 ConstArray<Dim, DataType> temp(rhs);
@@ -415,7 +409,7 @@ namespace Nektar
 
             const_reference operator[](index i) const 
             { 
-                ASSERTL1(i < size(), "Array Bounds Error.");
+                ASSERTL1(i < num_elements(), "Array Bounds Error.");
                 return (*m_data)[i+m_offset]; 
             }
         
@@ -441,10 +435,10 @@ namespace Nektar
                 return m_data->data() + m_offset; 
             }
             
-            size_type size() const 
-            { 
-                return m_data->size() - m_offset; 
-            }
+//             size_type size() const 
+//             { 
+//                 return m_data->size() - m_offset; 
+//             }
             
             size_type num_dimensions() const 
             { 
@@ -463,7 +457,7 @@ namespace Nektar
             
             const size_type* shape() const { return m_data->shape(); }
             
-            size_type num_elements() const { return m_data->num_elements(); }
+            size_type num_elements() const { return m_data->num_elements() - m_offset; }
 
         protected:
             boost::shared_ptr<ArrayType>& GetData() { return m_data; }
@@ -488,7 +482,7 @@ namespace Nektar
                         storage, extent);
             }
             
-            void Swap(ConstArray<OneD, DataType>& rhs)
+            void Swap(ConstArray<Dim, DataType>& rhs)
             {
                 std::swap(m_data, rhs.m_data);
                 std::swap(m_offset, rhs.m_offset);
@@ -564,7 +558,7 @@ namespace Nektar
             }
             
             explicit Array(const ConstArray<Dim, DataType>& rhs) :
-                BaseType(rhs.size())
+                BaseType(rhs.num_elements())
             {
                 std::copy(rhs.begin(), rhs.end(), begin());
             }
@@ -612,15 +606,15 @@ namespace Nektar
         return Array<Dim, DataType>(lhs, offset);
     }
     
-    template<Dimension Dim, typename DataType>
-    void CopyArray(const ConstArray<Dim, DataType>& source, Array<Dim, DataType>& dest)
+    template<typename DataType>
+    void CopyArray(const ConstArray<OneD, DataType>& source, Array<OneD, DataType>& dest)
     {
-        if( dest.size() != source.size() )
+        if( dest.num_elements() != source.num_elements() )
         {
-            dest = Array<Dim, DataType>(source.size());
+            dest = Array<OneD, DataType>(source.num_elements());
         }
         
-        std::copy(source.begin(), source.end(), dest.begin());
+        std::copy(source.data(), source.data() + source.num_elements(), dest.data());
     }
     
     static Array<OneD, NekDouble> NullNekDouble1DArray;

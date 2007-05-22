@@ -87,7 +87,7 @@ namespace Nektar
 	    D2 = ExpPointsProperties(2)->GetD();
 	    
 	    // calculate du/dx_0
-	    if(outarray_d0.size() > 0)
+	    if(outarray_d0.num_elements() > 0)
 	    {
 		for(i=0; i < nquad2; ++i)
 		{
@@ -98,7 +98,7 @@ namespace Nektar
 	    }
 	    
 	    // calculate du/dx_1
-	    if(outarray_d1.size() > 0 )
+	    if(outarray_d1.num_elements() > 0 )
 	    {
 		for(i=0; i < nquad2; ++i)
 		{
@@ -109,7 +109,7 @@ namespace Nektar
 	    }
 	    
 	    // calculate du/dx_2
-	    if(outarray_d2.size() > 0)
+	    if(outarray_d2.num_elements() > 0)
 	    {
 		for(i=0; i < nquad0*nquad1; ++i)
 		{
@@ -133,12 +133,12 @@ namespace Nektar
 	    Array<OneD, NekDouble> wsp  = Array<OneD, NekDouble>(nq2*nq3);
 	    Array<OneD, NekDouble> wsp1 = Array<OneD, NekDouble>(nq3);
 	    
-	    ASSERTL2(coord[0] < -1,"coord[0] < -1");
-	    ASSERTL2(coord[0] >  1,"coord[0] >  1");
-	    ASSERTL2(coord[1] < -1,"coord[1] < -1");
-	    ASSERTL2(coord[1] >  1,"coord[1] >  1");
-	    ASSERTL2(coord[2] < -1,"coord[2] < -1");
-	    ASSERTL2(coord[2] >  1,"coord[2] >  1");
+	    ASSERTL2(coords[0] < -1,"coord[0] < -1");
+	    ASSERTL2(coords[0] >  1,"coord[0] >  1");
+	    ASSERTL2(coords[1] < -1,"coord[1] < -1");
+	    ASSERTL2(coords[1] >  1,"coord[1] >  1");
+	    ASSERTL2(coords[2] < -1,"coord[2] < -1");
+	    ASSERTL2(coords[2] >  1,"coord[2] >  1");
 	    
 	    // interpolate first coordinate direction
             I = ExpPointsProperties(0)->GetI(coords);
@@ -167,6 +167,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.9  2007/05/15 05:18:23  bnelson
+ * Updated to use the new Array object.
+ *
  * Revision 1.8  2007/04/10 14:00:45  sherwin
  * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
  *

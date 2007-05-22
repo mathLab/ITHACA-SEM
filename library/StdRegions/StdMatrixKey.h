@@ -92,7 +92,6 @@ namespace Nektar
 
 	    inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
 	    {
-		ASSERTL1(dir < m_numbases, "dir is larger than number of bases");
 		return(m_base[dir]);
 	    }
 	    
@@ -119,6 +118,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.10  2007/05/15 05:18:23  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.9  2007/04/10 14:00:45  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

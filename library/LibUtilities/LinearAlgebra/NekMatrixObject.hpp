@@ -142,14 +142,14 @@ namespace Nektar
                 
                 if( m_wrapperType == eCopy )
                 {
-                    if( m_data.size() != rhs.m_data.size() )
+                    if( m_data.num_elements() != rhs.m_data.num_elements() )
                     {
                         Initialize(m_rows, m_columns);
                     }
                 }
                 else
                 {
-                    ASSERTL0(m_data.size() == rhs.m_data.size(), "Wrapped NekMatrices must have the same dimension in operator=");
+                    ASSERTL0(m_data.num_elements() == rhs.m_data.num_elements(), "Wrapped NekMatrices must have the same dimension in operator=");
                 }
                 
                 CopyArray(rhs.m_data, m_data);

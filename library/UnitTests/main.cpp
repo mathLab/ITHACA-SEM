@@ -41,6 +41,10 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestSingleValueInitialization), 0);
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestPopulationFromCArray), 0);
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestCopyConstruction), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::Test1DAssignmentOperator), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::Test2DAssignmentOperator), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestOffsetAssignmentOperator), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::Test1DAccessOperator), 0);
     
     // Test Foundation
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussGaussLegendre),0);
@@ -140,6 +144,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.30  2007/05/18 00:45:06  bnelson
+    Added copy constructor tests.
+
     Revision 1.29  2007/05/15 05:19:54  bnelson
     Updated to use the new Array object.
 

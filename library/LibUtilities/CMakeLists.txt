@@ -47,6 +47,11 @@ SET(FoundationHeaders
 	./Foundations/PolyEPoints.h
 )
 
+SET(InterpreterHeaders
+        ./Interpreter/Interpreter.hpp
+        ./Interpreter/defaults.h       
+)       
+
 SET(PolyLibHeaders
 	./Polylib/Polylib.h
 )	
@@ -114,6 +119,10 @@ SET(FoundationSources
 	./Foundations/PolyEPoints.cpp
 )
 
+SET(InterpreterSources
+        ./Interpreter/initial.y
+)       
+
 SET(PolylibSources
 	./Polylib/Polylib.cpp
 )
@@ -135,6 +144,8 @@ SOURCE_GROUP("Memory" FILES ${Memory})
 SOURCE_GROUP("Polylib Headers" FILES ${PolyLibHeaders})
 SOURCE_GROUP("Polylib Sources" FILES ${PolylibSources})
 
+SOURCE_GROUP("Interpreter Headers" FILES ${InterpreterHeaders})
+SOURCE_GROUP("Interpreter Sources" FILES ${InterpreterSources})
 
 SET(LibUtilityHeaders
 	${Memory}
@@ -144,12 +155,14 @@ SET(LibUtilityHeaders
 	${FoundationHeaders}
 	${LinearAlgebraHeaders}
 	${BasicConstHeaders}
+	${InterpreterHeaders}
 )
 
 SET(LibUtilitySources
 	${FoundationSources}
 	${PolylibSources}
 	${LinearAlgebraSources}
+	${InterpreterSources}
 )
 
 

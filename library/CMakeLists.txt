@@ -17,6 +17,7 @@ SET(USE_WIN32_LAPACK OFF CACHE BOOL "Use Win32 Lapack provided with the Third Pa
 SET(USE_NEKTAR_MEMORY_POOLS ON CACHE BOOL "Use memory pools to accelerate memory allocation.")
 SET(USE_BLAS_LAPACK ON CACHE BOOL "Use Blas and lapack routine.")
 SET(USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
+SET(NEKTAR_FULL_DEBUG OFF CACHE BOOL "Enable Full Debugging.")
 
 SET(USE_EXPRESSION_TEMPLATES ON CACHE BOOL "")
 
@@ -64,11 +65,20 @@ MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
 
-	IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
-		# Disable the warnings about duplicate copy/assignment methods (4521, 4522)
-		# Disable the warning that arrays are default intialized (4351)	
-		SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "/wd4521 /wd4522 /wd4351")
-	ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+    IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
+        # Disable the warnings about duplicate copy/assignment methods (4521, 4522)
+        # Disable the warning that arrays are default intialized (4351)	
+        SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "/wd4521 /wd4522 /wd4351")
+    ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+
+    IF ( NEKTAR_FULL_DEBUG )
+        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG -DNEKTAR_FULLDEBUG")
+    ELSE( NEKTAR_FULL_DEBUG )
+        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG")
+    ENDIF( NEKTAR_FULL_DEBUG )
+    
+    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
+    
 ENDMACRO(SET_COMMON_PROPERTIES name)
 
 MACRO(ADD_NEKTAR_LIBRARY name type)

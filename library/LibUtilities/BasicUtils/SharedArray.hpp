@@ -241,11 +241,6 @@ namespace Nektar
             const size_type* shape() const { return m_data->shape(); }
             
             size_type num_elements() const { return m_data->num_elements(); }
-
-/*        protected:
-            boost::shared_ptr<ArrayType>& GetData() { return m_data; }
-            const boost::shared_ptr<ArrayType>& GetData() const { return m_data; }
-            unsigned int GetOffset() const { return m_offset; }*/
             
         protected:
             static void DeleteStorage(DataType* data, unsigned int num)
@@ -375,12 +370,6 @@ namespace Nektar
                 return BaseType::data() + m_offset;
             }
             
-//             size_type size() const 
-//             { 
-//                 return m_data->size() - m_offset; 
-//             }
-            
-
             
             size_type num_elements() const 
             { 
@@ -390,13 +379,6 @@ namespace Nektar
             using BaseType::shape;
             using BaseType::num_dimensions;
             
-//             void Swap(ConstArray<Dim, DataType>& rhs)
-//             {
-//                 std::swap(m_data, rhs.m_data);
-//                 std::swap(m_offset, rhs.m_offset);
-//             }
-
-        
             template<typename T>
             friend bool operator==(const ConstArray<OneD, T>&, const ConstArray<OneD, T>&);
             
@@ -578,12 +560,6 @@ namespace Nektar
             {
             }
             
-//             explicit ArrayImpl(const ConstArrayImpl<Dim, DataType>& rhs) :
-//                 BaseType(rhs.num_elements())
-//             {
-//                 std::copy(rhs.begin(), rhs.end(), begin());
-//             }
-            
             Array<OneD, DataType>& operator=(const Array<OneD, DataType>& rhs)
             {
                 ConstArray<OneD, DataType>::operator=(rhs);
@@ -602,15 +578,11 @@ namespace Nektar
                 return ArrayImpl<OneD, DataType>::data() + this->GetOffset(); 
             }
             
-/*            const element* get() const { return this->GetData()->data(); }
-            const element* data() const { return this->GetData()->data(); }*/
-            
             using BaseType::operator[];
             reference operator[](index i) 
             { 
                 return ArrayImpl<OneD, DataType>::operator[](i + this->GetOffset());
             }
-            //const_reference operator[](index i) const { return (*(this->GetData()))[i+this->GetOffset()]; }
             
             using BaseType::begin;
             iterator begin()

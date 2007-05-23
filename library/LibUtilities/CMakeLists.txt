@@ -89,6 +89,7 @@ SET(ExpressionTemplates
 )
 
 SET(BasicUtils
+        ./BasicUtils/ArrayPolicies.hpp
 	./BasicUtils/BoostUtil.hpp
 	./BasicUtils/ConsistentObjectAccess.hpp
 	./BasicUtils/ErrorUtil.hpp

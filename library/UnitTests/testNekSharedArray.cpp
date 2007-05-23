@@ -680,9 +680,9 @@ namespace Nektar
             BOOST_CHECK_EQUAL(a[4], 5.0);
             
             BOOST_CHECK_EQUAL(b[0], 10.0);
-            BOOST_CHECK_EQUAL(b[2], 20.0);
-            BOOST_CHECK_EQUAL(b[3], 30.0);
-            BOOST_CHECK_EQUAL(b[4], 40.0);
+            BOOST_CHECK_EQUAL(b[1], 20.0);
+            BOOST_CHECK_EQUAL(b[2], 30.0);
+            BOOST_CHECK_EQUAL(b[3], 40.0);
             
             #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULL_DEBUG)
             // TODO - The offset is causing problems in multi-dimensional arrays.  Specialize for 

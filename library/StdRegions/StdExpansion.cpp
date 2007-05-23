@@ -91,8 +91,7 @@ namespace Nektar
             };
 
             //allocate memory for coeffs
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
 
             //allocate memory for phys
             m_phys = Array<OneD, NekDouble>(GetTotPoints());
@@ -234,14 +233,12 @@ namespace Nektar
 
             Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
 
-            Blas::Dcopy(m_ncoeffs,&m_coeffs[0],1,&store[0],1);
             for(i=0; i<m_ncoeffs; ++i)
             {
                 v_FillMode(i, tmp);
                 v_IProductWRTBase(tmp, tmp);
 		Vmath::Vcopy(m_ncoeffs,&tmp[0],1,&((*Mat).GetPtr())[0]+i*m_ncoeffs,1);
             }
-            Blas::Dcopy(m_ncoeffs,&store[0],1,&m_coeffs[0],1);
 
             return Mat;
         }
@@ -355,6 +352,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.34  2007/05/15 05:18:23  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.33  2007/04/26 15:00:17  sherwin
 * SJS compiling working version using SHaredArrays
 *

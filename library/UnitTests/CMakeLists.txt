@@ -14,6 +14,8 @@ testNekSharedArray.cpp
 Memory/TestNekMemoryManager.cpp
 StdRegions/testStdSegExp.cpp
 testFoundation/testFoundation.cpp
+testFoundation/testInterpolation.cpp
+testFoundation/testDerivation.cpp
 )
 
 SET(UnitTestHeaders
@@ -30,6 +32,8 @@ testNekSharedArray.h
 Memory/TestNekMemoryManager.h
 StdRegions/testStdSegExp.h
 testFoundation/testFoundation.h
+testFoundation/testInterpolation.h
+testFoundation/testDerivation.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)

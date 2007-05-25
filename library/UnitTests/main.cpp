@@ -27,6 +27,8 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/Memory/TestNekMemoryManager.h>
 #include <UnitTests/StdRegions/testStdSegExp.h>
 #include <UnitTests/testFoundation/testFoundation.h>
+#include <UnitTests/testFoundation/testInterpolation.h>
+#include <UnitTests/testFoundation/testDerivation.h>
 
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
@@ -46,7 +48,38 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestOffsetAssignmentOperator), 0);
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::Test1DAccessOperator), 0);
     
-    // Test Foundation
+
+       //Test Derivation
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivGaussGaussLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivGaussRadauMLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivGaussRadauPLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivGaussLobattoLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivGaussGaussChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivGaussRadauMChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivGaussRadauPChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivGaussLobattoChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivGaussRadauMAlpha0Beta1),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivGaussRadauMAlpha0Beta2),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivPolyEvenlySpaced),0);
+//        test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testDrivFourierEvenlySpaced),0);
+
+
+    //Test Interpolation
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterGaussGaussLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterGaussRadauMLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterGaussRadauPLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterGaussLobattoLegendre),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterGaussGaussChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterGaussRadauMChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterGaussRadauPChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterGaussLobattoChebyshev),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterGaussRadauMAlpha0Beta1),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterGaussRadauMAlpha0Beta2),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterPolyEvenlySpaced),0);
+    test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterFourierEvenlySpaced),0);
+   
+	
+	// Test Foundation
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussGaussLegendre),0);
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMLegendre),0);
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauPLegendre),0);
@@ -59,17 +92,17 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMAlpha0Beta2),0);
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testPolyEvenlySpaced),0);
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testFourierEvenlySpaced),0);
-		
+				
     // StdSegExp algorithms
-//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
-//     //test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testLapMatrix), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIntegration), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testDifferentiation), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIProductWRTBase), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testFwdTrans), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testBwdTrans), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testPhysEvaluate), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testNorms), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
+    //test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testLapMatrix), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIntegration), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testDifferentiation), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIProductWRTBase), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testFwdTrans), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testBwdTrans), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testPhysEvaluate), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testNorms), 0);
 
     // Memory Manager
     test->add(BOOST_TEST_CASE(&Nektar::MemManagerUnitTests::testParameterizedConstructors), 0);
@@ -92,7 +125,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNorms), 0);
 
 
-    //test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testMakePtr), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testMakePtr), 0);
 
 
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixConstruction), 0);
@@ -110,8 +143,8 @@ test_suite* init_unit_test_suite( int, char* [] )
     // would be needed instead of the LokiObject factory so that the factory would
     // play nice with the NekMemoryManager.  This may not be the case, but in case
     // it comes along in the near future I'll leave these statements in.
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNoParameterConstruction), 0);
-//     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testSingleParameterConstruction), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNoParameterConstruction), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testSingleParameterConstruction), 0);
 
     // Unit tests for NekManager
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekManager), 0);
@@ -144,6 +177,11 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.31  2007/05/22 02:02:53  bnelson
+    Changed Array::size to Array::num_elements.
+
+    Fixed some compiler errors in assertions.
+
     Revision 1.30  2007/05/18 00:45:06  bnelson
     Added copy constructor tests.
 

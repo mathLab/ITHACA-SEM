@@ -46,58 +46,58 @@ namespace Nektar
         class StdExpansion;
 
         class StdMatrixKey
-	{
-	public:
-	    StdMatrixKey( const StdRegions::MatrixType matrixType, 
-			  const StdRegions::ShapeType shapeType, 
-			  const StdRegions::StdExpansion &stdExpansion,
-			  LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-    	    
-	    StdMatrixKey(const StdMatrixKey& rhs);
-	    
-	    virtual ~StdMatrixKey()
-	    {
-	    }
-	    
-	    /// Used to lookup the create function in NekManager.
-	    struct opLess
-	    {
-		bool operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
-	    };
-	    
-	    /// Used for finding value given the key in NekManager.
-	    friend bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
-	    friend bool opLess::operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
-	    
-	    MatrixType GetMatrixType() const
-	    {
-		return m_matrixType;
-	    }
-	    
-	    ShapeType GetShapeType() const
-	    {
-		return m_shapeType;
-	    }
-	    
-	    int GetNcoeffs() const
-	    {
-		return m_ncoeffs;
-	    }
+        {
+        public:
+            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+                const StdRegions::ShapeType shapeType, 
+                const StdRegions::StdExpansion &stdExpansion,
+                LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-	    inline const ConstArray<OneD, LibUtilities::BasisSharedPtr>& GetBase() const
-	    {
-		return m_base;
-	    }
-	    
+            StdMatrixKey(const StdMatrixKey& rhs);
 
-	    inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
-	    {
-		return(m_base[dir]);
-	    }
-	    
+            virtual ~StdMatrixKey()
+            {
+            }
+
+            /// Used to lookup the create function in NekManager.
+            struct opLess
+            {
+                bool operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
+            };
+
+            /// Used for finding value given the key in NekManager.
+            friend bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
+            friend bool opLess::operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
+
+            MatrixType GetMatrixType() const
+            {
+                return m_matrixType;
+            }
+
+            ShapeType GetShapeType() const
+            {
+                return m_shapeType;
+            }
+
+            int GetNcoeffs() const
+            {
+                return m_ncoeffs;
+            }
+
+            inline const ConstArray<OneD, LibUtilities::BasisSharedPtr>& GetBase() const
+            {
+                return m_base;
+            }
+
+
+            inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
+            {
+                return(m_base[dir]);
+            }
+
         protected:
             ShapeType m_shapeType;
-            Array<OneD, LibUtilities::BasisSharedPtr> m_base;
+            ConstArray<OneD, LibUtilities::BasisSharedPtr> m_base;
 
             unsigned int m_ncoeffs;
             MatrixType m_matrixType;
@@ -118,6 +118,11 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.11  2007/05/22 02:01:50  bnelson
+* Changed Array::size to Array::num_elements.
+*
+* Fixed some compiler errors in assertions.
+*
 * Revision 1.10  2007/05/15 05:18:23  bnelson
 * Updated to use the new Array object.
 *

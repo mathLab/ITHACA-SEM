@@ -64,12 +64,12 @@ namespace Nektar
                 return m_geomfactors->GetGtype();
             }
 
-            inline const double* GetJac()
+            inline const ConstArray<OneD,NekDouble> &GetJac()
             {
                 return m_geomfactors->GetJac();
             }
 
-            inline const double** GetGmat()
+            inline const ConstArray<TwoD, NekDouble> &GetGmat()
             {
                 return m_geomfactors->GetGmat();
             }
@@ -116,6 +116,10 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.7  2007/03/20 09:17:39  kirby
+//
+// GeomFactors now added; metricinfo used instead of minfo; styles updated
+//
 // Revision 1.6  2007/03/14 21:24:08  sherwin
 // Update for working version of MultiRegions up to ExpList1D
 //

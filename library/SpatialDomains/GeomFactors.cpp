@@ -41,16 +41,13 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        GeomFactors::GeomFactors(void):m_gtype(eNoGeomType),m_gmat((double **) NULL), 
-            m_jac ((double *) NULL)
+        GeomFactors::GeomFactors(void):m_gtype(eNoGeomType)
         {
         }
 
         GeomFactors::GeomFactors(const GeomType gtype,
-            const int expdim, const int coordim):m_gtype(gtype), m_jac((double *) NULL)
+            const int expdim, const int coordim):m_gtype(gtype)
         {
-	        m_gmat    = new double* [expdim*coordim];
-	        m_gmat[0] = (double *) NULL;
         }
 
         /** \brief One dimensional geometric factors based on one, two or three
@@ -66,24 +63,20 @@ namespace Nektar
         **/
 
         GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
-				 const SharedArray<StdRegions::StdExpansion1DSharedPtr>  &Coords)
+				 const ConstArray<OneD,StdRegions::StdExpansion1DSharedPtr>  &Coords)
         {
-            NekDoubleSharedArray der[3];
             int        i,nquad;
             LibUtilities::PointsType  ptype;
 
             ASSERTL1(coordim <= 3, "Only understand up to 3 Coordinate for this routine");
 
             m_gtype  = gtype;
-            m_gmat = new double* [coordim];
 
             nquad = Coords[0]->GetNumPoints(0);
             ptype = Coords[0]->GetPointsType(0);
 
-            // setup temp storage
-            der[0]= GetDoubleTmpSpace(nquad);
-            der[1] = GetDoubleTmpSpace(nquad);
-            der[2] = GetDoubleTmpSpace(nquad);
+            Array<OneD,NekDouble> der[3] = {Array<OneD, NekDouble>(nquad),
+                Array<OneD, NekDouble>(nquad), Array<OneD, NekDouble>(nquad)};
 
             // Calculate local derivatives using physical space storage
             for(i = 0; i < coordim; ++i)
@@ -101,18 +94,21 @@ namespace Nektar
 
             if((m_gtype == eRegular)||(m_gtype== eMovingRegular))
             {
-                m_jac     = new double [1];
-                m_gmat[0] = new double [coordim];
+                //m_jac     = new double [1];
+                //m_gmat[0] = new double [coordim];
+                int temp = 1;
+                m_jac  = Array<OneD, NekDouble>(1);
+                m_gmat = Array<TwoD, NekDouble>(coordim, temp);
 
-                for(i = 1; i < coordim; ++i)
-                {
-                    m_gmat[i] = m_gmat[i-1]+1;
-                }
+                //for(i = 1; i < coordim; ++i)
+                //{
+                //    m_gmat[i] = m_gmat[i-1]+1;
+                //}
 
                 m_jac[0]   = 0.0;
                 for(i = 0; i < coordim; ++i)
                 {
-                    m_gmat[i][0] = 1/der[i][0];
+                    m_gmat[i][0] = 1.0/der[i][0];
                     m_jac[0] += der[i][0]*der[i][0];
                 }
 
@@ -120,21 +116,24 @@ namespace Nektar
             }
             else
             {
-                m_jac     = new double [nquad];
-                m_gmat[0] = new double [coordim*nquad];
+                //m_jac     = new double [nquad];
+                //m_gmat[0] = new double [coordim*nquad];
+                m_jac  = Array<OneD, NekDouble>(nquad);
+                m_gmat = Array<TwoD, NekDouble>(coordim, nquad);
 
-                for(i = 1; i < coordim; ++i)
-                {
-                    m_gmat[i] = m_gmat[i-1] + nquad;
-                }
+                // Array uses contiguous memory by default.
+                //for(i = 1; i < coordim; ++i)
+                //{
+                //    m_gmat[i] = m_gmat[i-1] + nquad;
+                //}
 
                 // invert local derivative for gmat;
                 for(i = 0; i < coordim; ++i)
                 {
-                    Vmath::Sdiv(nquad,1.0,&der[i][0],1,m_gmat[i],1);
-                    Vmath::Vmul(nquad,&der[i][0],1,&der[i][0],1,m_jac,1);
+                    Vmath::Sdiv(nquad,1.0,&der[i][0],1,&m_gmat[i][0],1);
+                    Vmath::Vmul(nquad,&der[i][0],1,&der[i][0],1,&m_jac[0],1);
                 }
-                Vmath::Vsqrt(nquad,m_jac,1,m_jac,1);
+                Vmath::Vsqrt(nquad,&m_jac[0],1,&m_jac[0],1);
             }
         }
 
@@ -579,9 +578,6 @@ namespace Nektar
 #endif
 
         GeomFactors::~GeomFactors(){
-            delete[] m_jac;
-            delete[] m_gmat[0];
-            delete[] m_gmat;
         }
 
     }; //end of namespace
@@ -589,6 +585,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.4  2007/04/04 21:49:24  sherwin
+// Update for SharedArray
+//
 // Revision 1.3  2007/03/29 19:23:59  bnelson
 // Replaced boost::shared_array with SharedArray
 //

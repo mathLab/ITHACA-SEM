@@ -57,7 +57,7 @@ namespace Nektar
             two or three dimensional coordinate description
             **/
             GeomFactors(const GeomType gtype, const int coordim,
-                const Array<OneD, StdRegions::StdExpansion1DSharedPtr> &Coords);
+                const ConstArray<OneD, StdRegions::StdExpansion1DSharedPtr> &Coords);
 
 #if 0 
             /**  \brief Two dimensional geometric factors based on two
@@ -79,50 +79,60 @@ namespace Nektar
                 return m_gtype;
             }
 
-            inline const double ** GetGmat() const
+            inline const ConstArray<TwoD,NekDouble> &GetGmat() const
             {
-                return (const double**) m_gmat;
+                return m_gmat;
             }
 
-            inline const double *GetJac() const 
+            inline const ConstArray<OneD,NekDouble> &GetJac() const 
             {
                 return m_jac;
             }
 
-            inline void ResetGmat(double *ndata, int nq, int expdim, 
+            inline void ResetGmat(const double *ndata, int nq, int expdim, 
                 int coordim)
             {
-                if(!m_gmat)
-                {
-                    m_gmat    = new double* [expdim*coordim];
-                    m_gmat[0] = (double *) NULL;
-                }
+#pragma message("Fix this here")
+                m_gmat = Array<TwoD, NekDouble>(coordim, expdim, ndata);
 
-                if(m_gmat[0])
-                {
-                    delete[] m_gmat[0];
-                }
+                //if(!m_gmat)
+                //{
+                //    m_gmat    = new double* [expdim*coordim];
+                //    m_gmat[0] = (double *) NULL;
+                //}
 
-                m_gmat[0] = ndata;
-                for(int i = 1; i < expdim*coordim; ++i)
-                {
-                    m_gmat[i] = m_gmat[i-1]+nq;
-                }
+                //if(m_gmat[0])
+                //{
+                //    delete[] m_gmat[0];
+                //}
+
+                //m_gmat[0] = ndata;
+                //for(int i = 1; i < expdim*coordim; ++i)
+                //{
+                //    m_gmat[i] = m_gmat[i-1]+nq;
+                //}
             }
 
             inline void ResetJac(double *ndata)
             {
-                if(m_jac)
-                { 
-                    delete[] m_jac;
-                }
+                //if(m_jac)
+                //{ 
+                //    delete[] m_jac;
+                //}
 
-                m_jac = ndata;
+                //m_jac = ndata;
+
+                // Keep m_jac the same size, but initialize it with ndata.
+                unsigned int sz = m_jac.num_elements();
+                m_jac = Array<OneD, NekDouble>(sz, ndata);
             }
 
         protected:
-            double ** m_gmat;
-            double *  m_jac;
+            //double ** m_gmat;
+            Array<TwoD,NekDouble> m_gmat;
+
+            //double *  m_jac;
+            Array<OneD,NekDouble> m_jac;
 
         private:
             GeomType m_gtype;
@@ -140,6 +150,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.6  2007/05/17 18:45:25  jfrazier
+// Minor changes to accommodate Array class.
+//
 // Revision 1.5  2007/04/08 03:34:48  jfrazier
 // Updated to compile with SharedArray.  This has not been converted to SharedArray, just made to work with others that have been converted.
 //

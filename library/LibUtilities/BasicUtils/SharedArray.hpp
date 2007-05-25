@@ -268,6 +268,12 @@ namespace Nektar
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
             }
             
+            ConstArray(unsigned int dim1Size, unsigned int dim2Size, const DataType* data) :
+                m_data(CreateStorage<DataType>(dim1Size, dim2Size))
+            {
+                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), data);
+            }
+            
             ConstArray(const ConstArray<TwoD, DataType>& rhs) :
                 m_data(rhs.m_data)
             {
@@ -408,6 +414,11 @@ namespace Nektar
             {
             }
             
+            Array(const ConstArray<TwoD, DataType>& rhs) :
+                BaseType(rhs)
+            {
+            }
+            
             Array<TwoD, DataType>& operator=(const Array<TwoD, DataType>& rhs)
             {
                 BaseType::operator=(rhs);
@@ -465,6 +476,11 @@ namespace Nektar
             
             Array(unsigned int dim1Size, unsigned int dim2Size, const DataType& initValue) :
                 BaseType(dim1Size, dim2Size, initValue)
+            {
+            }
+            
+            Array(unsigned int dim1Size, unsigned int dim2Size, const DataType* data) :
+                BaseType(dim1Size, dim2Size, data)
             {
             }
             

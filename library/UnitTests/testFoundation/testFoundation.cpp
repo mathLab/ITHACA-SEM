@@ -80,8 +80,8 @@ using namespace Nektar::LibUtilities;
                     
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
     
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -126,9 +126,10 @@ using namespace Nektar::LibUtilities;
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
-                
+
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
         
@@ -152,8 +153,9 @@ using namespace Nektar::LibUtilities;
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
+
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -180,8 +182,8 @@ using namespace Nektar::LibUtilities;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -208,8 +210,8 @@ using namespace Nektar::LibUtilities;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -236,8 +238,8 @@ using namespace Nektar::LibUtilities;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
                 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -264,8 +266,8 @@ using namespace Nektar::LibUtilities;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2)*(nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -292,8 +294,8 @@ using namespace Nektar::LibUtilities;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2)*(nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
                 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -320,8 +322,8 @@ using namespace Nektar::LibUtilities;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 4);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
                      
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -347,8 +349,8 @@ using namespace Nektar::LibUtilities;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (2*(nPts + 2));
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -375,8 +377,8 @@ using namespace Nektar::LibUtilities;
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;
@@ -423,8 +425,8 @@ using namespace Nektar::LibUtilities;
                     long double epsilon = nPts* numeric_limits<double>::epsilon();
                     const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
-                    ConstArray<OneD,NekDouble> z = points->GetZ();
-                    ConstArray<OneD,NekDouble> w = points->GetW();
+                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
+                    const ConstArray<OneD,NekDouble> &w = points->GetW();
                 
                     int numPoints = points->GetNumPoints();
                     long double numericIntegral = 0.0;

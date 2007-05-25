@@ -132,7 +132,7 @@ namespace Nektar
     /// ConstArray<OneD, NekDouble> lessEfficient(points->GetZ());
     ///
     /// // Do this
-    /// ConstArray<OneD, NekDouble>& moreEfficient = points->GetZ();
+    /// const ConstArray<OneD, NekDouble>& moreEfficient = points->GetZ();
     ///\endcode
     ///
     /// If you know the size, don't create an empty array and then populate it on another line.

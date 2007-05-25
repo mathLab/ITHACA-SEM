@@ -138,376 +138,231 @@ namespace Nektar
     /// If you know the size, don't create an empty array and then populate it on another line.
     
     
-    template<Dimension Dim, typename DataType>
-    class ArrayImpl
-    {
-        public:
-            typedef boost::multi_array_ref<DataType, Dim> ArrayType;
-
-            typedef typename ArrayType::const_reference const_reference;
-            typedef typename ArrayType::index index;
-            typedef typename ArrayType::const_iterator const_iterator;
-            typedef typename ArrayType::element element;
-            typedef typename ArrayType::size_type size_type;
-            typedef typename ArrayType::reference reference;
-            typedef typename ArrayType::iterator iterator;
-            
-        public:
-            ArrayImpl() :
-                m_data()
-            {
-            }
-            
-            ArrayImpl(const ArrayImpl<Dim, DataType>& rhs) :
-                m_data(rhs.m_data)
-            {
-            }
-            
-            ArrayImpl<Dim, DataType>& operator=(const ArrayImpl<Dim, DataType>& rhs)
-            {
-                if( m_data != rhs.m_data )
-                {
-                    m_data = rhs.m_data;
-                }
-                return *this;
-            }
-            
-            const_reference operator[](index i) const 
-            { 
-                ASSERTL1(i < num_elements(), "Array Bounds Error.");
-                return (*m_data)[i]; 
-            }
-            
-            reference operator[](index i) 
-            { 
-                ASSERTL1(i < num_elements(), "Array Bounds Error.");
-                return (*m_data)[i]; 
-            }
-        
-            const_iterator begin() const 
-            {
-                const_iterator result = m_data->begin();
-                return result;
-            }
-            
-            iterator begin() 
-            {
-                iterator result = m_data->begin();
-                return result;
-            }
-            
-            const_iterator end() const 
-            { 
-                return m_data->end(); 
-            }
-            
-            iterator end() 
-            { 
-                return m_data->end(); 
-            }
-            
-            const element* get() const 
-            { 
-                return m_data->data(); 
-            }
-            
-            element* get() 
-            { 
-                return m_data->data(); 
-            }
-            
-            const element* data() const 
-            { 
-                return m_data->data(); 
-            }
-            
-            element* data() 
-            { 
-                return m_data->data(); 
-            }
-            
-//             size_type size() const 
-//             { 
-//                 return m_data->size() - m_offset; 
-//             }
-            
-            size_type num_dimensions() const 
-            { 
-                return m_data->num_dimensions(); 
-            }
-            
-            
-            
-            const size_type* shape() const { return m_data->shape(); }
-            
-            size_type num_elements() const { return m_data->num_elements(); }
-            
-        protected:
-            static void DeleteStorage(DataType* data, unsigned int num)
-            {
-                ArrayDestructionPolicy<DataType>::Destroy(data, num);
-                MemoryManager<DataType>::RawDeallocate(data, num);
-            }
-            
-            template<typename ExtentListType>
-            void CreateStorage(const ExtentListType& extent)
-            {
-                unsigned int size = std::accumulate(extent.begin(), extent.end(), 1, 
-                    std::multiplies<unsigned int>());
-                DataType* storage = MemoryManager<DataType>::RawAllocate(size);
-                m_data = MemoryManager<ArrayType>::AllocateSharedPtrD(
-                        boost::bind(&ArrayImpl<Dim, DataType>::DeleteStorage, storage, size),
-                        storage, extent);
-            }
-
-            boost::shared_ptr<ArrayType> m_data;
-    };
+    
     
     
     template<Dimension Dim, typename DataType>
     class ConstArray;
     
+    
     template<typename DataType>
-    class ConstArray<OneD, DataType> : protected ArrayImpl<OneD, DataType>
+    class ConstArray<OneD, DataType>
     {
         public:
-            typedef ArrayImpl<OneD, DataType> BaseType;
-            typedef typename BaseType::const_reference const_reference;
-            typedef typename BaseType::reference reference;
-            typedef typename BaseType::iterator iterator;
-            typedef typename BaseType::const_iterator const_iterator;
-            typedef typename BaseType::index index;
-            typedef typename BaseType::element element;
-            typedef typename BaseType::size_type size_type;
+            typedef boost::multi_array_ref<DataType, 1> ArrayType;
+            typedef typename ArrayType::const_reference const_reference;
+            typedef typename ArrayType::reference reference;
             
+            typedef typename ArrayType::index index;
+            typedef typename ArrayType::const_iterator const_iterator;
+            typedef typename ArrayType::iterator iterator;
+            
+            typedef typename ArrayType::element element;
+            typedef typename ArrayType::size_type size_type;
+            
+            
+
         public:
-            /// \brief Constructs an empty array.
-            ///
-            /// An empty array will still have a small amount of memory allocated for it, typically around 
-            /// 4 bytes.  
-            /// \post size() == 0
-            /// \post begin() == end()
             ConstArray() :
-                BaseType(),
+                m_data(CreateStorage<DataType>(0)),
                 m_offset(0)
             {
-                std::vector<unsigned int> extents(1, 0);
-                this->CreateStorage(extents);
             }
             
-            /// \brief Constructs a 1D array.  Every element is given the value initValue.
-            ConstArray(unsigned int arraySize) :
-                BaseType(),
+            /// \brief Constructs a 3 dimensional array.  The elements of the array are not initialized.
+            explicit ConstArray(unsigned int dim1Size) :
+                m_data(CreateStorage<DataType>(dim1Size)),
                 m_offset(0)
             {
-                std::vector<unsigned int> extents(1, arraySize);
-                this->CreateStorage(extents);
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
             }
             
-            /// \brief Constructs a 1D array.  Every element is given the value initValue.
-            ConstArray(unsigned int arraySize, const DataType& initValue) :
-                BaseType(),
+            ConstArray(unsigned int dim1Size, const DataType& initValue) :
+                m_data(CreateStorage<DataType>(dim1Size)),
                 m_offset(0)
             {
-                std::vector<unsigned int> extents(1, arraySize);
-                this->CreateStorage(extents);
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
             }
             
-            ConstArray(unsigned int arraySize, const DataType* d) :
-                BaseType(),
+            ConstArray(unsigned int dim1Size, const DataType* data) :
+                m_data(CreateStorage<DataType>(dim1Size)),
                 m_offset(0)
             {
-                std::vector<unsigned int> extents(1, arraySize);
-                this->CreateStorage(extents);
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), d);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), data);
             }
             
             ConstArray(const ConstArray<OneD, DataType>& rhs) :
-                BaseType(rhs),
+                m_data(rhs.m_data),
                 m_offset(rhs.m_offset)
-            {
-            }
-            
-            ConstArray(const ConstArray<OneD, DataType>& rhs, unsigned int off) :
-                BaseType(rhs),
-                m_offset(off)
             {
             }
             
             ConstArray<OneD, DataType>& operator=(const ConstArray<OneD, DataType>& rhs)
             {
-                BaseType::operator=(rhs);
+                m_data = rhs.m_data;
                 m_offset = rhs.m_offset;
                 return *this;
             }
             
-            const_reference operator[](index i) const 
+            static ConstArray<OneD, DataType> CreateWithOffset(const ConstArray<OneD, DataType>& rhs, unsigned int offset)
             {
-                return BaseType::operator[](i+m_offset);
-            }
-        
-            const_iterator begin() const 
-            {
-                const_iterator result = BaseType::begin();
-                result += m_offset;
+                ConstArray<OneD, DataType> result(rhs);
+                result.m_offset = offset;
                 return result;
             }
             
-            const_iterator end() const 
-            { 
-                return BaseType::end();
-            }
-            
-            const element* get() const 
-            { 
-                return BaseType::data() + m_offset;
-            }
-            
-            const element* data() const 
-            { 
-                return BaseType::data() + m_offset;
-            }
-            
-            
-            size_type num_elements() const 
-            { 
-                return BaseType::num_elements() - m_offset;
-            }
-
-            using BaseType::shape;
-            using BaseType::num_dimensions;
+            const_iterator begin() const { return m_data->begin() + m_offset; }
+            const_iterator end() const { return m_data->end(); }
+            const_reference operator[](index i) const { return (*m_data)[i+m_offset]; }
+            const element* get() const { return m_data->data()+m_offset; }
+            const element* data() const { return m_data->data()+m_offset; }
+            size_type num_dimensions() const { return m_data->num_dimensions(); }
+            //const size_type* shape() const { return m_data->shape(); }
+            size_type num_elements() const { return m_data->num_elements()-m_offset; }
+            unsigned int GetOffset() const { return m_offset; }
             
             template<typename T>
             friend bool operator==(const ConstArray<OneD, T>&, const ConstArray<OneD, T>&);
             
-            unsigned int GetOffset() const { return m_offset; }
-        private:
-            using BaseType::m_data;
+        protected:
+            boost::shared_ptr<ArrayType> m_data;
             unsigned int m_offset;
+            
+        private:
+            
     };
     
     template<typename DataType>
-    class ConstArray<TwoD, DataType> : protected ArrayImpl<TwoD, DataType>
+    class ConstArray<TwoD, DataType>
     {
         public:
-            typedef ArrayImpl<TwoD, DataType> BaseType;
+            typedef boost::multi_array_ref<DataType, 2> ArrayType;
+            typedef typename ArrayType::const_reference const_reference;
+            typedef typename ArrayType::reference reference;
             
+            typedef typename ArrayType::index index;
+            typedef typename ArrayType::const_iterator const_iterator;
+            typedef typename ArrayType::iterator iterator;
+            
+            typedef typename ArrayType::element element;
+            typedef typename ArrayType::size_type size_type;
+            
+            
+
         public:
             ConstArray() :
-                BaseType()
+                m_data(CreateStorage<DataType>(0, 0))
             {
-                std::vector<unsigned int> extents(1, 0);
-                this->CreateStorage(extents);
             }
             
-            /// \brief Constructs a 2 dimensional array.  The elements of the array are not initialized.
+            /// \brief Constructs a 3 dimensional array.  The elements of the array are not initialized.
             ConstArray(unsigned int dim1Size, unsigned int dim2Size) :
-                BaseType()
+                m_data(CreateStorage<DataType>(dim1Size, dim2Size))
             {
-                unsigned int vals[] = {dim1Size, dim2Size};
-                std::vector<unsigned int> extents(vals, vals+2);
-                this->CreateStorage(extents);
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
             }
             
             ConstArray(unsigned int dim1Size, unsigned int dim2Size, const DataType& initValue) :
-                BaseType()
+                m_data(CreateStorage<DataType>(dim1Size, dim2Size))
             {
-                unsigned int vals[] = {dim1Size, dim2Size};
-                std::vector<unsigned int> extents(vals, vals+2);
-                this->CreateStorage(extents);
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
             }
             
             ConstArray(const ConstArray<TwoD, DataType>& rhs) :
-                BaseType(rhs)
+                m_data(rhs.m_data)
             {
             }
             
             ConstArray<TwoD, DataType>& operator=(const ConstArray<TwoD, DataType>& rhs)
             {
-                BaseType::operator=(rhs);
+                m_data = rhs.m_data;
                 return *this;
             }
             
-            using BaseType::begin;
-            using BaseType::end;
-            using BaseType::operator[];
-            using BaseType::data;
-            using BaseType::get;
-            using BaseType::num_elements;
-            using BaseType::shape;
-            using BaseType::num_dimensions;
+            const_iterator begin() const { return m_data->begin(); }
+            const_iterator end() const { return m_data->end(); }
+            const_reference operator[](index i) const { return (*m_data)[i]; }
+            const element* get() const { return m_data->data(); }
+            const element* data() const { return m_data->data(); }
+            size_type num_dimensions() const { return m_data->num_dimensions(); }
+            const size_type* shape() const { return m_data->shape(); }
+            size_type num_elements() const { return m_data->num_elements(); }
+
+        protected:
+            boost::shared_ptr<ArrayType> m_data;
             
         private:
-            using BaseType::m_data;
-            
             
     };
     
     template<typename DataType>
-    class ConstArray<ThreeD, DataType> : protected ArrayImpl<ThreeD, DataType>
+    class ConstArray<ThreeD, DataType>
     {
         public:
-            typedef ArrayImpl<ThreeD, DataType> BaseType;
+            typedef boost::multi_array_ref<DataType, 3> ArrayType;
+            typedef typename ArrayType::const_reference const_reference;
+            typedef typename ArrayType::reference reference;
             
+            typedef typename ArrayType::index index;
+            typedef typename ArrayType::const_iterator const_iterator;
+            typedef typename ArrayType::iterator iterator;
+            
+            typedef typename ArrayType::element element;
+            typedef typename ArrayType::size_type size_type;
+            
+            
+
         public:
             ConstArray() :
-                BaseType()
+                m_data(CreateStorage<DataType>(0, 0, 0))
             {
-                std::vector<unsigned int> extents(1, 0);
-                this->CreateStorage(extents);
             }
             
             /// \brief Constructs a 3 dimensional array.  The elements of the array are not initialized.
             ConstArray(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size) :
-                BaseType()
+                m_data(CreateStorage<DataType>(dim1Size, dim2Size, dim3Size))
             {
-                unsigned int vals[] = {dim1Size, dim2Size, dim3Size};
-                std::vector<unsigned int> extents(vals, vals+3);
-                this->CreateStorage(extents);
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
             }
             
             ConstArray(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size, const DataType& initValue) :
-                BaseType()
+                m_data(CreateStorage<DataType>(dim1Size, dim2Size, dim3Size))
             {
-                unsigned int vals[] = {dim1Size, dim2Size, dim3Size};
-                std::vector<unsigned int> extents(vals, vals+3);
-                this->CreateStorage(extents);
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
             }
             
             ConstArray(const ConstArray<ThreeD, DataType>& rhs) :
-                BaseType(rhs)
+                m_data(rhs.m_data)
             {
             }
             
             ConstArray<ThreeD, DataType>& operator=(const ConstArray<ThreeD, DataType>& rhs)
             {
-                BaseType::operator=(rhs);
+                m_data = rhs.m_data;
                 return *this;
             }
             
-            using BaseType::begin;
-            using BaseType::end;
-            using BaseType::operator[];
-            using BaseType::data;
-            using BaseType::get;
-            using BaseType::num_elements;
-            using BaseType::shape;
-            using BaseType::num_dimensions;
+            const_iterator begin() const { return m_data->begin(); }
+            const_iterator end() const { return m_data->end(); }
+            const_reference operator[](index i) const { return (*m_data)[i]; }
+            const element* get() const { return m_data->data(); }
+            const element* data() const { return m_data->data(); }
+            size_type num_dimensions() const { return m_data->num_dimensions(); }
+            const size_type* shape() const { return m_data->shape(); }
+            size_type num_elements() const { return m_data->num_elements(); }
+
+        protected:
+            boost::shared_ptr<ArrayType> m_data;
             
         private:
-            using BaseType::m_data;
+            
     };
 
     template<Dimension Dim, typename DataType>
     class Array;
     
     
+    /// \brief 1D Array
     /// Misc notes.
     ///
     /// Throught the 1D Array class you will see things like "using BaseType::begin" and 
@@ -520,13 +375,11 @@ namespace Nektar
     {
         public:
             typedef ConstArray<OneD, DataType> BaseType;
-            typedef typename ArrayImpl<OneD, DataType>::ArrayType ArrayType;
-            typedef typename ArrayType::index index;
-            
-            typedef typename ArrayType::iterator iterator;
-            typedef typename ArrayType::reference reference;
-            typedef typename ArrayType::const_reference const_reference;
-            typedef typename ArrayType::element element;
+            typedef typename BaseType::iterator iterator;
+            typedef typename BaseType::reference reference;
+            typedef typename BaseType::index index;
+            typedef typename BaseType::size_type size_type;
+            typedef typename BaseType::element element;
             
         public:
             Array() :
@@ -534,79 +387,70 @@ namespace Nektar
             {
             }
             
-            explicit Array(unsigned int size) :
-                BaseType(size)
+            Array(unsigned int dim1Size) :
+                BaseType(dim1Size)
             {
             }
             
-            Array(unsigned int arraySize, const DataType& initValue) :
-                BaseType(arraySize, initValue)
+            Array(unsigned int dim1Size, const DataType& initValue) :
+                BaseType(dim1Size, initValue)
             {
             }
             
-
-            Array(unsigned int arraySize, const DataType* d) :
-                BaseType(arraySize, d)
+            Array(unsigned int dim1Size, const DataType* data) :
+                BaseType(dim1Size, data)
             {
             }
             
-            Array(const Array<OneD, DataType>& rhs) :
+            
+            Array(const Array<TwoD, DataType>& rhs) :
                 BaseType(rhs)
             {
             }
             
-            Array(const Array<OneD, DataType>& rhs, unsigned int offset) :
-                BaseType(rhs, offset)
+            Array<TwoD, DataType>& operator=(const Array<TwoD, DataType>& rhs)
             {
-            }
-            
-            Array<OneD, DataType>& operator=(const Array<OneD, DataType>& rhs)
-            {
-                ConstArray<OneD, DataType>::operator=(rhs);
+                BaseType::operator=(rhs);
                 return *this;
             }
             
-            using BaseType::get;
-            element* get() 
+            static Array<OneD, DataType> CreateWithOffset(const Array<OneD, DataType>& rhs, unsigned int offset)
             {
-                return ArrayImpl<OneD, DataType>::get() + this->GetOffset(); 
-            }
-            
-            using BaseType::data;
-            element* data() 
-            { 
-                return ArrayImpl<OneD, DataType>::data() + this->GetOffset(); 
-            }
-            
-            using BaseType::operator[];
-            reference operator[](index i) 
-            { 
-                return ArrayImpl<OneD, DataType>::operator[](i + this->GetOffset());
-            }
-            
-            using BaseType::begin;
-            iterator begin()
-            {
-                iterator result = ArrayImpl<OneD, DataType>::begin();
-                result += this->GetOffset();
+                Array<OneD, DataType> result(rhs);
+                result.m_offset = offset;
                 return result;
             }
             
+            using BaseType::begin;
+            iterator begin() { return this->m_data->begin()+this->m_offset; }
+            
             using BaseType::end;
-            iterator end() 
-            { 
-                return ArrayImpl<OneD, DataType>::end();
-            }
-
+            iterator end() { return this->m_data->end(); }
+            
+            using BaseType::operator[];
+            reference operator[](index i) { return (*this->m_data)[i+this->m_offset]; }
+            
+            using BaseType::get;
+            element* get() { return this->m_data->data()+this->m_offset; }
+            
+            using BaseType::data;
+            element* data() { return this->m_data->data()+this->m_offset; }
+            
         private:
+            
     };
-        
-        
+
+    /// \brief A 2D array.
     template<typename DataType>
     class Array<TwoD, DataType> : public ConstArray<TwoD, DataType>
     {
         public:
             typedef ConstArray<TwoD, DataType> BaseType;
+            typedef typename BaseType::iterator iterator;
+            typedef typename BaseType::reference reference;
+            typedef typename BaseType::index index;
+            typedef typename BaseType::size_type size_type;
+            typedef typename BaseType::element element;
             
         public:
             Array() :
@@ -618,7 +462,6 @@ namespace Nektar
                 BaseType(dim1Size, dim2Size)
             {
             }
-            
             
             Array(unsigned int dim1Size, unsigned int dim2Size, const DataType& initValue) :
                 BaseType(dim1Size, dim2Size, initValue)
@@ -635,13 +478,37 @@ namespace Nektar
                 BaseType::operator=(rhs);
                 return *this;
             }
+            
+            using BaseType::begin;
+            iterator begin() { return this->m_data->begin(); }
+            
+            using BaseType::end;
+            iterator end() { return this->m_data->end(); }
+            
+            using BaseType::operator[];
+            reference operator[](index i) { return (*this->m_data)[i]; }
+            
+            using BaseType::get;
+            element* get() { return this->m_data->data(); }
+            
+            using BaseType::data;
+            element* data() { return this->m_data->data(); }
+            
+        private:
+            
     };
             
+    /// \brief A 3D array.
     template<typename DataType>
     class Array<ThreeD, DataType> : public ConstArray<ThreeD, DataType>
     {
         public:
             typedef ConstArray<ThreeD, DataType> BaseType;
+            typedef typename BaseType::iterator iterator;
+            typedef typename BaseType::reference reference;
+            typedef typename BaseType::index index;
+            typedef typename BaseType::size_type size_type;
+            typedef typename BaseType::element element;
             
         public:
             Array() :
@@ -669,6 +536,24 @@ namespace Nektar
                 BaseType::operator=(rhs);
                 return *this;
             }
+            
+            using BaseType::begin;
+            iterator begin() { return this->m_data->begin(); }
+            
+            using BaseType::end;
+            iterator end() { return this->m_data->end(); }
+            
+            using BaseType::operator[];
+            reference operator[](index i) { return (*this->m_data)[i]; }
+            
+            using BaseType::get;
+            element* get() { return this->m_data->data(); }
+            
+            using BaseType::data;
+            element* data() { return this->m_data->data(); }
+            
+        private:
+            
     };
     
     template<typename DataType>
@@ -686,13 +571,13 @@ namespace Nektar
     template<typename DataType>
     ConstArray<OneD, DataType> operator+(const ConstArray<OneD, DataType>& lhs, unsigned int offset)
     {
-        return ConstArray<OneD, DataType>(lhs, offset);
+        return ConstArray<OneD, DataType>::CreateWithOffset(lhs, offset);
     }
     
     template<typename DataType>
     Array<OneD, DataType> operator+(const Array<OneD, DataType>& lhs, unsigned int offset)
     {
-        return Array<OneD, DataType>(lhs, offset);
+        return Array<OneD, DataType>::CreateWithOffset(lhs, offset);
     }
     
     template<typename DataType>

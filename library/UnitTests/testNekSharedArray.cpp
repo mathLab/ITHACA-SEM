@@ -478,9 +478,9 @@ namespace Nektar
                 Array<OneD, CountedObject<double> > b(5, b_array);
                 CountedObject<double>::check(0, 0, 0, 9, 0, 0);
 
-                ConstArray<OneD, CountedObject<double> > a_off(a, 1);
-                ConstArray<OneD, CountedObject<double> > bb_off(b, 2);
-                Array<OneD, CountedObject<double> > b_off(b, 2);
+                ConstArray<OneD, CountedObject<double> > a_off = a + 1;
+                ConstArray<OneD, CountedObject<double> > bb_off = b + 2;
+                Array<OneD, CountedObject<double> > b_off = b + 2;
 
                 BOOST_CHECK_EQUAL(a_off[0].value, a[1].value);
                 BOOST_CHECK_EQUAL(a_off[1].value, a[2].value);

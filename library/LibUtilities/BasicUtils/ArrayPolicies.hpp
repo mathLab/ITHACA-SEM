@@ -37,6 +37,10 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_ARRAY_POLICIES_HPP
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_ARRAY_POLICIES_HPP
 
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/multi_array.hpp>
+
 namespace Nektar
 {
     template<typename ObjectType, typename enabled = void>
@@ -172,6 +176,52 @@ namespace Nektar
                 }
             }
     };
+    
+    template<typename DataType>
+    void DeleteStorage(DataType* data, unsigned int num)
+    {
+        ArrayDestructionPolicy<DataType>::Destroy(data, num);
+        MemoryManager<DataType>::RawDeallocate(data, num);
+    }
+    
+    template<Dimension Dim, typename DataType, typename ExtentListType>
+    boost::shared_ptr<boost::multi_array_ref<DataType, Dim> > 
+    CreateStorage(const ExtentListType& extent)
+    {
+        typedef boost::multi_array_ref<DataType, Dim> ArrayType;
+        unsigned int size = std::accumulate(extent.begin(), extent.end(), 1, 
+            std::multiplies<unsigned int>());
+        DataType* storage = MemoryManager<DataType>::RawAllocate(size);
+        return MemoryManager<ArrayType>::AllocateSharedPtrD(
+                boost::bind(DeleteStorage<DataType>, storage, size),
+                storage, extent);
+    }
+    
+    template<typename DataType>
+    boost::shared_ptr<boost::multi_array_ref<DataType, OneD> >
+    CreateStorage(unsigned int d1)
+    {
+        std::vector<unsigned int> extents(1, d1);
+        return CreateStorage<OneD, DataType>(extents);
+    } 
+    
+    template<typename DataType>
+    boost::shared_ptr<boost::multi_array_ref<DataType, TwoD> >
+    CreateStorage(unsigned int d1, unsigned int d2)
+    {
+        unsigned int vals[]  = {d1, d2};
+        std::vector<unsigned int> extents(vals, vals+2);
+        return CreateStorage<TwoD, DataType>(extents);
+    }
+    
+    template<typename DataType>
+    boost::shared_ptr<boost::multi_array_ref<DataType, ThreeD> >
+    CreateStorage(unsigned int d1, unsigned int d2, unsigned int d3)
+    {
+        unsigned int vals[]  = {d1, d2, d3};
+        std::vector<unsigned int> extents(vals, vals+3);
+        return CreateStorage<ThreeD, DataType>(extents);
+    }
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_ARRAY_POLICIES_HPP

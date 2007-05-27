@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     x[0]  =   atof(argv[4]);
     x[1]  =   atof(argv[5]);
 
-    NekDoubleSharedArray sol = GetDoubleTmpSpace(nq);
+    Array<OneD, NekDouble> sol = Array<OneD, NekDouble>(nq);
 
     if(btype != LibUtilities::eFourier)
     {
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define solution to be projected 
-    NekDoubleSharedArray xc = GetDoubleTmpSpace(nq);
+    Array<OneD, NekDouble> xc = Array<OneD, NekDouble>(nq);
     E->GetCoords(xc);
 
     if(btype != LibUtilities::eFourier)

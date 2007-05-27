@@ -61,8 +61,7 @@ namespace Nektar
 	    m_locToGloMap.reset(new LocalToGlobalMap1D(m_ncoeffs,m_exp,graph1D));
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
-	    m_contCoeffs  = MemoryManager::AllocateSharedArray<double> 
-		(m_contNcoeffs);
+	    m_contCoeffs  = NekArray<NekDouble>(m_contNcoeffs);
 	}
               
 	void ContExpList1D::IProductWRTBase(const ExpList &In)

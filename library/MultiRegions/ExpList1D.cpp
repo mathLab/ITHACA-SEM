@@ -51,8 +51,8 @@ namespace Nektar
         ExpList1D::ExpList1D(const ExpList1D &In):
             ExpList(In)
         {
-            m_coeffs = MemoryManager::AllocateSharedArray<NekDouble>(m_ncoeffs);
-            m_phys   = MemoryManager::AllocateSharedArray<NekDouble>(m_npoints);
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
 	ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
@@ -74,8 +74,8 @@ namespace Nektar
 		(*m_exp).push_back(seg);
 	    }
 
-            m_coeffs = MemoryManager::AllocateSharedArray<NekDouble>(m_ncoeffs);
-            m_phys   = MemoryManager::AllocateSharedArray<NekDouble>(m_npoints);
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
 	}
     } //end of namespace
 } //end of namespace

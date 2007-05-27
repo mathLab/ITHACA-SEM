@@ -82,7 +82,7 @@ namespace Nektar
                 return m_stdMatKey->GetNcoeffs();
             }
 
-            const SharedArray<LibUtilities::BasisSharedPtr> &GetBase()
+            const Array<OneD, LibUtilities::BasisSharedPtr> &GetBase()
             {
                 return m_stdMatKey->GetBase();
             }
@@ -120,6 +120,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.7  2007/04/08 03:33:30  jfrazier
+* Minor reformatting and fixing SharedArray usage.
+*
 * Revision 1.6  2007/04/04 21:49:23  sherwin
 * Update for SharedArray
 *

@@ -45,7 +45,7 @@ namespace Nektar
             StdRegions::ShapeType shapeType,
             StdRegions::StdExpansion &stdExpansion)
         {
-            m_stdMatKey =  MemoryManager::AllocateSharedPtr<StdRegions::StdMatrixKey>(matrixType,shapeType,stdExpansion);
+            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion);
 
             m_metricinfo = stdExpansion.GetMetricInfo(); 
         }
@@ -106,6 +106,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.6  2007/04/08 03:33:30  jfrazier
+* Minor reformatting and fixing SharedArray usage.
+*
 * Revision 1.5  2007/04/04 21:49:23  sherwin
 * Update for SharedArray
 *

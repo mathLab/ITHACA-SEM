@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     x[0]  =   atof(argv[4]);
     x[1]  =   atof(argv[5]);
 
-    NekDoubleSharedArray sol = GetDoubleTmpSpace(nq);
+    Array<OneD, NekDouble> sol = Array<OneD, NekDouble>(nq);
 
     if(btype != LibUtilities::eFourier)
     {
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define solution to be projected 
-    NekDoubleSharedArray xc = GetDoubleTmpSpace(nq);
+    Array<OneD, NekDouble> xc = Array<OneD, NekDouble>(nq);
     E->GetCoords(xc);
 
     if(btype != LibUtilities::eFourier)
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
         sol[0] = solutionfourier(0.5*(x[1]+x[0]),order,x[0],x[1]);
     }
 
-    NekDoubleSharedArray lcoord = GetDoubleTmpSpace(1);
+    Array<OneD, NekDouble> lcoord = Array<OneD, NekDouble>(1);
     lcoord[0] = 0;
     E->GetCoord(lcoord,xc);
     double nsol = E->PhysEvaluate(xc);

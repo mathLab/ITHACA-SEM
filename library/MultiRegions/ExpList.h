@@ -72,7 +72,7 @@ namespace Nektar
           return m_transState; 
       }
       
-      inline void SetPhys(ConstNekDoubleSharedArray inarray)
+      inline void SetPhys(ConstArray<OneD, NekDouble> inarray)
       {
           Vmath::Vcopy(m_npoints,&inarray[0],1,&m_phys[0],1);
       }
@@ -93,9 +93,9 @@ namespace Nektar
       void   BwdTrans        (const ExpList &Sin); 
       void   PhysDeriv       (ExpList &S0, ExpList &S1, ExpList &S2); 
       
-      void   GetCoords(NekDoubleSharedArray &coord_0,
-		       NekDoubleSharedArray &coord_1 = NullNekDoubleSharedArray,
-		       NekDoubleSharedArray &coord_2 = NullNekDoubleSharedArray);
+      void   GetCoords(Array<OneD, NekDouble> &coord_0,
+		       Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
+		       Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
       void   GetCoords(NekDoubleArrayVector &coords);
 
       void   WriteToFile(std::ofstream &out);
@@ -108,12 +108,12 @@ namespace Nektar
       }
       
 
-      inline ConstNekDoubleSharedArray GetCoeffs() const
+      inline ConstArray<OneD, NekDouble> GetCoeffs() const
       {
           return m_coeffs;
       }
 
-      inline ConstNekDoubleSharedArray GetPhys() const
+      inline ConstArray<OneD, NekDouble> GetPhys() const
       {
           return m_phys;
       }
@@ -137,8 +137,8 @@ namespace Nektar
     protected:
       int m_ncoeffs; 
       int m_npoints;
-      NekDoubleSharedArray m_coeffs;
-      NekDoubleSharedArray m_phys;
+      Array<OneD, NekDouble> m_coeffs;
+      Array<OneD, NekDouble> m_phys;
 
       TransState m_transState;
       bool       m_physState;
@@ -146,29 +146,29 @@ namespace Nektar
       boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
       
     private:
-      inline NekDoubleSharedArray &UpdateCoeffs()
+      inline Array<OneD, NekDouble> &UpdateCoeffs()
       {
           return m_coeffs;
       }
 
-      inline NekDoubleSharedArray &UpdatePhys()
+      inline Array<OneD, NekDouble> &UpdatePhys()
       {
           return m_phys;
       }
 
-      NekDouble PhysIntegral(ConstNekDoubleSharedArray inarray);
-      void   IProductWRTBase(ConstNekDoubleSharedArray inarray, 
-			     NekDoubleSharedArray &outarray);
+      NekDouble PhysIntegral(ConstArray<OneD, NekDouble> inarray);
+      void   IProductWRTBase(ConstArray<OneD, NekDouble> inarray, 
+			     Array<OneD, NekDouble> &outarray);
       
-      void   PhysDeriv(ConstNekDoubleSharedArray inarray,
-		       NekDoubleSharedArray &out_d0, 
-		       NekDoubleSharedArray &out_d1 = NullNekDoubleSharedArray,
-		       NekDoubleSharedArray &out_d2 = NullNekDoubleSharedArray);
-      void   FwdTrans (ConstNekDoubleSharedArray inarray,
-		       NekDoubleSharedArray &outarray);
+      void   PhysDeriv(ConstArray<OneD, NekDouble> inarray,
+		       Array<OneD, NekDouble> &out_d0, 
+		       Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+		       Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
+      void   FwdTrans (ConstArray<OneD, NekDouble> inarray,
+		       Array<OneD, NekDouble> &outarray);
 
-      void   BwdTrans (ConstNekDoubleSharedArray inarray, 
-		       NekDoubleSharedArray &outarray); 
+      void   BwdTrans (ConstArray<OneD, NekDouble> inarray, 
+		       Array<OneD, NekDouble> &outarray); 
     };
 
     static const ExpList NullExpList();

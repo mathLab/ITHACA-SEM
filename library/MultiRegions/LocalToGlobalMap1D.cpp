@@ -54,7 +54,7 @@ namespace Nektar
 	    // set up simple map based on vertex and edge id's
 	    for(i = cnt = 0; i < locexp.size(); ++i)
 	    {
-		locToContMap = MemoryManager::AllocateSharedArray<int> (m_totLocLen);
+		locToContMap = Array<OneD, int>(m_totLocLen);
 		Vmath::Fill(m_totLocLen,-1,&locToContMap[0],1);
                 
 		locexp[i]->MapTo(StdRegions::eForwards,vmap);

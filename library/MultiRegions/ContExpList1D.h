@@ -75,7 +75,7 @@ namespace Nektar
 		m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
 	    }
 	    
-	    void IProductWRTBase(ConstNekDoubleSharedArray inarray, NekDoubleSharedArray &outarray);
+	    void IProductWRTBase(ConstArray<OneD, NekDouble> inarray, Array<OneD, NekDouble> &outarray);
 	    void IProductWRTBase(const ExpList &In);
 	    
 	    void FwdTrans(const ExpList &In);
@@ -89,7 +89,7 @@ namespace Nektar
 	    
 	private:
 	    int                  m_contNcoeffs;
-	    NekDoubleSharedArray m_contCoeffs;
+	    Array<OneD, NekDouble> m_contCoeffs;
 	    
 	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
 	    

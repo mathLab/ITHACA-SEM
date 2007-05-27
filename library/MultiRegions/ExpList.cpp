@@ -84,7 +84,7 @@ namespace Nektar
             return PhysIntegral(m_phys);
         }
         
-	NekDouble ExpList::PhysIntegral(ConstNekDoubleSharedArray inarray)
+	NekDouble ExpList::PhysIntegral(ConstArray<OneD, NekDouble> inarray)
 	{
 	    int       i;
 	    int       cnt = 0;
@@ -107,13 +107,13 @@ namespace Nektar
             IProductWRTBase(Sin.GetPhys(),m_coeffs);
 	}
 
-	void ExpList::IProductWRTBase(ConstNekDoubleSharedArray inarray, 
-				      NekDoubleSharedArray &outarray)
+	void ExpList::IProductWRTBase(ConstArray<OneD, NekDouble> inarray, 
+				      Array<OneD, NekDouble> &outarray)
 	{
 	    int    i;
 	    int    cnt  = 0;
 	    int    cnt1 = 0;
-            NekDoubleSharedArray elmt_outarray;
+            Array<OneD, NekDouble> elmt_outarray;
 
 	    for(i = 0; i < GetExpSize(); ++i)
 	    {
@@ -139,16 +139,16 @@ namespace Nektar
         }
 
 	
-        void ExpList::PhysDeriv(ConstNekDoubleSharedArray inarray,
-                                NekDoubleSharedArray &out_d0, 
-                                NekDoubleSharedArray &out_d1, 
-                                NekDoubleSharedArray &out_d2)
+        void ExpList::PhysDeriv(ConstArray<OneD, NekDouble> inarray,
+                                Array<OneD, NekDouble> &out_d0, 
+                                Array<OneD, NekDouble> &out_d1, 
+                                Array<OneD, NekDouble> &out_d2)
 	{
 	    int  cnt = 0;
 	    int  i;
-            NekDoubleSharedArray e_out_d0;
-            NekDoubleSharedArray e_out_d1;
-            NekDoubleSharedArray e_out_d2;
+            Array<OneD, NekDouble> e_out_d0;
+            Array<OneD, NekDouble> e_out_d1;
+            Array<OneD, NekDouble> e_out_d2;
 
 	    for(i= 0; i < GetExpSize(); ++i)
 	    {
@@ -177,13 +177,13 @@ namespace Nektar
 	    m_transState = eLocal;
         }
 
-	void ExpList::FwdTrans(ConstNekDoubleSharedArray inarray, 
-                               NekDoubleSharedArray    &outarray)
+	void ExpList::FwdTrans(ConstArray<OneD, NekDouble> inarray, 
+                               Array<OneD, NekDouble>    &outarray)
 	{
 	    int cnt  = 0;
 	    int cnt1 = 0;
 	    int i;
-            NekDoubleSharedArray e_outarray;
+            Array<OneD, NekDouble> e_outarray;
             
 	    for(i= 0; i < GetExpSize(); ++i)
 	    {
@@ -206,13 +206,13 @@ namespace Nektar
 	    m_physState = true;
         }
 		
-	void ExpList::BwdTrans(ConstNekDoubleSharedArray inarray,
-			       NekDoubleSharedArray &outarray)
+	void ExpList::BwdTrans(ConstArray<OneD, NekDouble> inarray,
+			       Array<OneD, NekDouble> &outarray)
 	{
 	    int  i;
 	    int  cnt  = 0;
 	    int  cnt1 = 0;
-	    NekDoubleSharedArray e_outarray;
+	    Array<OneD, NekDouble> e_outarray;
 
 	    for(i= 0; i < GetExpSize(); ++i)
 	    {
@@ -239,14 +239,14 @@ namespace Nektar
             }
         }
 
-	void ExpList::GetCoords(NekDoubleSharedArray &coord_0,
-				NekDoubleSharedArray &coord_1,
-				NekDoubleSharedArray &coord_2)
+	void ExpList::GetCoords(Array<OneD, NekDouble> &coord_0,
+				Array<OneD, NekDouble> &coord_1,
+				Array<OneD, NekDouble> &coord_2)
 	{
 	    int    i, j, cnt = 0;
-	    NekDoubleSharedArray e_coord_0;
-	    NekDoubleSharedArray e_coord_1;
-	    NekDoubleSharedArray e_coord_2;
+	    Array<OneD, NekDouble> e_coord_0;
+	    Array<OneD, NekDouble> e_coord_1;
+	    Array<OneD, NekDouble> e_coord_2;
 
 	    switch(GetExp(0)->GetCoordim())
 	    {
@@ -259,7 +259,7 @@ namespace Nektar
 		}
 		break;
 	    case 2: 
-		ASSERTL0(coord_1 != NullNekDoubleSharedArray, 
+		ASSERTL0(coord_1 != NullNekDouble1DArray, 
 			 "output coord_1 is not defined");
     
 		for(i= 0; i < GetExpSize(); ++i)
@@ -271,9 +271,9 @@ namespace Nektar
 		}
 		break;
 	    case 3: 
-		ASSERTL0(coord_1 != NullNekDoubleSharedArray, 
+		ASSERTL0(coord_1 != NullNekDouble1DArray, 
 			 "output coord_1 is not defined");
-		ASSERTL0(coord_2 != NullNekDoubleSharedArray, 
+		ASSERTL0(coord_2 != NullNekDouble1DArray, 
 			 "output coord_2 is not defined");
     
 		for(i= 0; i < GetExpSize(); ++i)
@@ -317,8 +317,8 @@ namespace Nektar
 	    StdRegions::StdExpansionVectorIter def;
 	    NekDouble err = 0.0;
 	    int       i,cnt = 0;
-	    ConstNekDoubleSharedArray soln = Sol.GetPhys();
-	    ConstNekDoubleSharedArray phys = m_phys;
+	    ConstArray<OneD, NekDouble> soln = Sol.GetPhys();
+	    ConstArray<OneD, NekDouble> phys = m_phys;
 
 	    if(m_physState == false)
 	    {
@@ -343,8 +343,8 @@ namespace Nektar
 
 	    NekDouble err = 0.0,errl2;
 	    int    i,cnt = 0;
-	    ConstNekDoubleSharedArray soln = Sol.GetPhys();
-	    ConstNekDoubleSharedArray phys = m_phys;
+	    ConstArray<OneD, NekDouble> soln = Sol.GetPhys();
+	    ConstArray<OneD, NekDouble> phys = m_phys;
 	    
 	    if(m_physState == false)
 	    {

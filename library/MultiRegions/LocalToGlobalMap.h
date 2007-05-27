@@ -60,18 +60,18 @@ namespace Nektar
 		return m_locToContMap[i];
 	    }
 
-	    inline void LocalToCont(ConstNekDoubleSharedArray loc, NekDoubleSharedArray &cont)
+	    inline void LocalToCont(ConstArray<OneD, NekDouble> loc, Array<OneD, NekDouble> &cont)
 	    {
                 Vmath::Scatr(m_totLocLen, &loc[0],&m_locToContMap[0],&cont[0]);
             }                
 
 	    
-	    inline void ContToLocal(ConstNekDoubleSharedArray cont, NekDoubleSharedArray &loc)
+	    inline void ContToLocal(ConstArray<OneD, NekDouble> cont, Array<OneD, NekDouble> &loc)
 	    {
                 Vmath::Gathr(m_totLocLen,&cont[0],&m_locToContMap[0], &loc[0]);
 	    }
 	    
-	    inline void Assemble(ConstNekDoubleSharedArray loc, NekDoubleSharedArray &cont)
+	    inline void Assemble(ConstArray<OneD, NekDouble> loc, Array<OneD, NekDouble> &cont)
 	    {
 		Vmath::Zero(m_totGloLen,&cont[0],1);
 
@@ -97,8 +97,11 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.4  2007/04/26 15:00:16  sherwin
+/** SJS compiling working version using SHaredArrays
+/**
 /** Revision 1.3  2007/03/20 16:58:42  sherwin
-/** Update to use NekDoubleSharedArray storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+/** Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
 /**
 /** Revision 1.2  2007/03/14 21:24:08  sherwin
 /** Update for working version of MultiRegions up to ExpList1D

@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
     char    *infile;
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;  
-    NekDoubleSharedArray sol; 
-    NekDoubleSharedArray xc0,xc1,xc2; 
+    Array<OneD, NekDouble> sol; 
+    Array<OneD, NekDouble> xc0,xc1,xc2; 
     
     if(argc != 5)
     {
@@ -84,11 +84,11 @@ int main(int argc, char *argv[])
     nq      = Exp->GetPointsTot();
     
     // define coordinates and solution
-    sol = GetDoubleTmpSpace(nq);
+    sol = Array<OneD, NekDouble>(nq);
 
-    xc0 = GetDoubleTmpSpace(nq);
-    xc1 = GetDoubleTmpSpace(nq);
-    xc2 = GetDoubleTmpSpace(nq);
+    xc0 = Array<OneD, NekDouble>(nq);
+    xc1 = Array<OneD, NekDouble>(nq);
+    xc2 = Array<OneD, NekDouble>(nq);
 
     switch(coordim)
     {

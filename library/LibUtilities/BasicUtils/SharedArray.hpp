@@ -36,41 +36,31 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHARED_ARRAY_HPP
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHARED_ARRAY_HPP
 
-// This is a copy of boost::shared_array with minor modifications.
-
-#include <boost/config.hpp>   // for broken compiler workarounds
-
-#include <boost/assert.hpp>
-#include <boost/checked_delete.hpp>
-
-#include <boost/detail/shared_count.hpp>
-#include <boost/detail/workaround.hpp>
-#include <boost/bind.hpp>
-
-#include <cstddef>            // for std::ptrdiff_t
-#include <algorithm>          // for std::swap
-#include <functional>         // for std::less
-
-#include <LibUtilities/BasicUtils/mojo.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/ArrayPolicies.hpp>
 
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/mpl/and.hpp>
-#include <boost/mpl/assert.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
-    // Forward declaration for a ConstArray constructor.
-    template<Dimension Dim, typename DataType>
-    class Array;
-
-    /// \brief An array of unchangeable elements.
-    /// \param Dim The array's dimensionality.
-    /// \param DataType The data type held at each position in the array.
+    /// \page Arrays
+    ///
+    /// An Array object is a thin wrapper around native arrays.  Arrays provide 
+    /// all the functionality of native arrays, with the additional benefits of 
+    /// automatic use of the Nektar memory pool, automatic memory allocation and 
+    /// deallocation, and easy creation and use of multi-dimensional arrays.
+    ///
+    /// The two Array classes are ConstArray and Array.  Each takes two template parameters.
+    /// The first is a Dimension enumeration and indicates the array's dimensionality.
+    /// The second is the type of data held in the array.
+    ///
+    /// A ConstArray provides constant access to an array.  A ConstArray can, through 
+    /// its assignment operator and copy constructor, access many different arrays, but 
+    /// it is impossible to modify the data.
+    ///
+    /// NumDimensions
+    ///
+    /// DataType - Requirements of DataType.
     ///
     /// ConstArray is a thin wrapper around boost::multi_array.  It supports
     /// much of the multi_array interface (with a notable exception of views)
@@ -136,15 +126,102 @@ namespace Nektar
     ///\endcode
     ///
     /// If you know the size, don't create an empty array and then populate it on another line.
+    ///
+    ///\section ArrayCreation Array Creation
+    ///
+    /// Each array comes with three types of constructors.
+    ///
+    ///\li Empty Array Constructor.  This constructor takes one parameter for each dimension, then creates 
+    /// an empty array of the appropriate size.  If the array data type is a fundamental C++ type
+    /// (such as double, int, char, etc.) then the array will be uninitialized.  If the array is any 
+    /// other type each element will be initialized with the data type's default constructor.  
+    ///
+    ///\code
+    /// class Double 
+    /// {
+    ///     public:
+    ///         Double() : m_value(0.0) {}
+    ///     private:
+    ///         double m_value;
+    /// };
+    ///
+    /// class Integer
+    /// {
+    ///     public: 
+    ///         Integer(int i) : m_value(i) {}
+    ///     private:
+    ///         int m_value;
+    /// };
+    ///
+    /// void ExampleFunction() 
+    /// {
+    ///     // Creates a 10 element uninitialized array.
+    ///     Array<OneD, NekDouble> a(10);
+    ///
+    ///     // Creates a 10 element array initialized with the Double default constructor.
+    ///     // For each element i in the array, b[i].m_value == 0.0
+    ///     // The default constructor is called 10 times.
+    ///     Array<OneD, Double> b(10);
+    ///
+    ///     // Creates a 10x20 array with a total of 200 elements using Double's default constructor.
+    ///     Array<TwoD, Double> c(10, 20);
+    ///
+    ///     // This is an error.  Class Integer doesn't have a default constructor.
+    ///     Array<OneD, Integer> c(15);
+    /// }
+    ///\endcode
+    ///
+    ///\li Initial Value Constructor.  This constructor takes the apprpriate number of size parameters 
+    /// for the array's dimension, then an additional parameter which specifies the initial value for 
+    /// each element.  If the array's data type is a fundamental type (such as double, int, etc.), then
+    /// the initial value is copied directly into the array.  Otherwise, each element is created using the 
+    /// data type's copy constructor.
+    ///
+    ///\code
+    /// class Double 
+    /// {
+    ///     public:
+    ///         Double(double v) : m_value(v) {}
+    ///         Double(const Double& rhs) : m_value(rhs.m_value) {}
+    ///     private:
+    ///         double m_value;
+    /// };
+    ///
+    /// class Integer
+    /// {
+    ///     public: 
+    ///         Integer(int i) : m_value(i) {}
+    ///     private:
+    ///         Integer(const Integer& rhs);
+    ///         int m_value;
+    /// };
+    ///
+    /// void ExampleInitialValueConstructors() 
+    /// {
+    ///     // Copies the value 8.9 into each a's 10 elements.
+    ///     Array<OneD, NekDouble> a(10, 8.9);
+    ///
+    ///     // Copies d into each of b's 10 elements.
+    ///     Double d(1.7);
+    ///     Array<OneD, Double> b(10, d);
+    ///
+    ///     // Does not compile since Integer does not have a public copy constructor.
+    ///     Integer i(2);
+    ///     Array<OneD, Integer> c(10, i);
+    /// }
+    ///\endcode
+    ///
     
     
     
-    
+    // Forward declaration for a ConstArray constructor.
+    template<Dimension Dim, typename DataType>
+    class Array;    
     
     template<Dimension Dim, typename DataType>
     class ConstArray;
     
-    
+    /// \brief A 1D immutable array.  See \ref Arrays for details.
     template<typename DataType>
     class ConstArray<OneD, DataType>
     {
@@ -161,15 +238,20 @@ namespace Nektar
             typedef typename ArrayType::size_type size_type;
             
             
-
         public:
+            /// \brief Creates an empty, size 0 array.
             ConstArray() :
                 m_data(CreateStorage<DataType>(0)),
                 m_offset(0)
             {
             }
             
-            /// \brief Constructs a 3 dimensional array.  The elements of the array are not initialized.
+            /// \brief Constructs an empty 1 dimensional array.
+            /// \param dim1Size The array's size.
+            ///
+            /// If DataType is a fundamental type (double, int, etc.), then the allocated array is 
+            /// uninitialized.  If it is any other type, each element is initialized with DataType's default
+            /// constructor.
             explicit ConstArray(unsigned int dim1Size) :
                 m_data(CreateStorage<DataType>(dim1Size)),
                 m_offset(0)
@@ -177,6 +259,13 @@ namespace Nektar
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
             }
             
+            /// \brief Creates a 1D array with each element initialized to an initial value.
+            /// \param dim1Size The array's size.
+            /// \param initValue Each element's initial value.
+            ///
+            /// If DataType is a fundamental type (double, int, etc.), then the initial value 
+            /// is copied directly into each element.  Otherwise, the DataType's copy constructor
+            /// is used to initialize each element.
             ConstArray(unsigned int dim1Size, const DataType& initValue) :
                 m_data(CreateStorage<DataType>(dim1Size)),
                 m_offset(0)
@@ -184,6 +273,13 @@ namespace Nektar
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
             }
             
+            /// \brief Creates a 1D array with a copy the given raw array.
+            /// \param dim1Size the array's size.
+            /// \param data The data to copy.  
+            ///
+            /// If DataType is a fundamental type (double, int, etc.), then data is copied
+            /// directly into the underlying storage.  Otherwise, the DataType's copy constructor
+            /// is used to copy each element.
             ConstArray(unsigned int dim1Size, const DataType* data) :
                 m_data(CreateStorage<DataType>(dim1Size)),
                 m_offset(0)
@@ -204,13 +300,6 @@ namespace Nektar
                 return *this;
             }
             
-            static ConstArray<OneD, DataType> CreateWithOffset(const ConstArray<OneD, DataType>& rhs, unsigned int offset)
-            {
-                ConstArray<OneD, DataType> result(rhs);
-                result.m_offset = offset;
-                return result;
-            }
-            
             const_iterator begin() const { return m_data->begin() + m_offset; }
             const_iterator end() const { return m_data->end(); }
             const_reference operator[](index i) const { return (*m_data)[i+m_offset]; }
@@ -224,11 +313,23 @@ namespace Nektar
             template<typename T>
             friend bool operator==(const ConstArray<OneD, T>&, const ConstArray<OneD, T>&);
             
+            template<typename T>
+            friend ConstArray<OneD, T> operator+(const ConstArray<OneD, T>& lhs, unsigned int offset);
+   
+            template<typename T>
+            friend ConstArray<OneD, T> operator+(unsigned int offset, const ConstArray<OneD, T>& rhs);
+            
         protected:
             boost::shared_ptr<ArrayType> m_data;
             unsigned int m_offset;
             
         private:
+            static ConstArray<OneD, DataType> CreateWithOffset(const ConstArray<OneD, DataType>& rhs, unsigned int offset)
+            {
+                ConstArray<OneD, DataType> result(rhs);
+                result.m_offset = offset;
+                return result;
+            }
             
     };
     
@@ -369,6 +470,9 @@ namespace Nektar
     
     
     /// \brief 1D Array
+    ///
+    /// \ref Arrayp
+    ///
     /// Misc notes.
     ///
     /// Throught the 1D Array class you will see things like "using BaseType::begin" and 
@@ -588,6 +692,12 @@ namespace Nektar
     ConstArray<OneD, DataType> operator+(const ConstArray<OneD, DataType>& lhs, unsigned int offset)
     {
         return ConstArray<OneD, DataType>::CreateWithOffset(lhs, offset);
+    }
+
+    template<typename DataType>
+    ConstArray<OneD, DataType> operator+(unsigned int offset, const ConstArray<OneD, DataType>& rhs)
+    {
+        return ConstArray<OneD, DataType>::CreateWithOffset(rhs, offset);
     }
     
     template<typename DataType>

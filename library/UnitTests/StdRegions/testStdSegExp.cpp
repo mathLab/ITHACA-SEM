@@ -35,6 +35,7 @@
 
 #include <UnitTests/StdRegions/testStdSegExp.h>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdRegions.hpp>
@@ -84,231 +85,231 @@ namespace Nektar
 {   // IS THIS THE CORRECT NAMESPACE (or should it be StdRegionsUnitTests)
      namespace StdSegExpUnitTests
      {
-// 	const int max_nummodes = 15;
-// 	const int max_nq = 15;
-// 	/*	
-// 	const int num_BasisTypes = 5;
-// 	LibUtilities::BasisType TestedBasisTypes[num_BasisTypes] = {LibUtilities::eOrtho_A,
-// 								    LibUtilities::eModified_A,
-// 								    LibUtilities::eGLL_Lagrange,
-// 								    LibUtilities::eLegendre,
-// 								    LibUtilities::eChebyshev};
-// 
-// 	const int num_PointsTypes = 11;
-// 	LibUtilities::PointsType TestedPointsTypes[num_PointsTypes] = {LibUtilities::eGaussGaussLegendre,
-// 								       LibUtilities::eGaussRadauMLegendre,
-// 								       LibUtilities::eGaussRadauPLegendre,
-// 								       LibUtilities::eGaussLobattoLegendre,
-// 								       LibUtilities::eGaussGaussChebyshev,
-// 								       LibUtilities::eGaussRadauMChebyshev,
-// 								       LibUtilities::eGaussRadauPChebyshev,
-// 								       LibUtilities::eGaussLobattoChebyshev,
-// 								       LibUtilities::eGaussRadauMAlpha0Beta1,
-// 								       LibUtilities::eGaussRadauMAlpha0Beta2,
-// 								       LibUtilities::ePolyEvenlySpaced};
-// 	*/
-// 
-// 	const int num_BasisTypes = 3;
-// 	LibUtilities::BasisType TestedBasisTypes[num_BasisTypes] = {LibUtilities::eOrtho_A,
-// 								    LibUtilities::eModified_A,
-// 								    LibUtilities::eLegendre};
-// 
-// 	const int num_PointsTypes = 4;
-// 	LibUtilities::PointsType TestedPointsTypes[num_PointsTypes] = {LibUtilities::eGaussGaussLegendre,
-// 								       LibUtilities::eGaussRadauMLegendre,
-// 								       LibUtilities::eGaussRadauPLegendre,
-// 								       LibUtilities::eGaussLobattoLegendre};
-// 	/*	
-// 								       LibUtilities::eGaussGaussChebyshev,
-// 								       LibUtilities::eGaussRadauMChebyshev,
-// 								       LibUtilities::eGaussRadauPChebyshev,
-// 								       LibUtilities::eGaussLobattoChebyshev,
-// 								       LibUtilities::eGaussRadauMAlpha0Beta1,
-// 								       LibUtilities::eGaussRadauMAlpha0Beta2,
-// 								       LibUtilities::ePolyEvenlySpaced};
-// 	*/
-// 		
-// 
-//         void testMassMatrix()
-// 	{
-// 	    NekDouble exactmatrices[3][36] = {
-// 		{1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-// 		 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
-// 		 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-// 		 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-// 		 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-// 		 0.0, 0.0, 0.0, 0.0, 0.0, 1.0},
-// 		{2.0/3.0, 1.0/3.0, 1.0/6.0, -1.0/15.0, 0.0, 0.0,
-// 		 1.0/3.0, 2.0/3.0, 1.0/6.0, 1.0/15.0, 0.0, 0.0,
-// 		 1.0/6.0, 1.0/6.0, 1.0/15.0, 0.0, -1.0/70.0, 0.0,
-// 		 -1.0/15.0, 1.0/15.0, 0.0, 4.0/105.0, 0.0, -4.0/315.0,
-// 		 0.0, 0.0, -1.0/70.0, 0.0, 2.0/70.0, 0.0,
-// 		 0.0, 0.0, 0.0, -4.0/315.0, 0.0, 16.0/693.0},
-// 		{1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-// 		 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
-// 		 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-// 		 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-// 		 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-// 		 0.0, 0.0, 0.0, 0.0, 0.0, 1.0}
-// 	    };
-// 
-// 	    int nummodes = 6;
-// 	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)(2.0*(nummodes-1.0)+1.0)};
-// 	    
-// 	    for(int i = 0; i < num_BasisTypes; i++)
-// 	    {
-// 		LibUtilities::BasisType btype = TestedBasisTypes[i];
-// 
-// 		for(int j = 0; j < num_PointsTypes; j++)
-// 		{
-// 		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-// 		    
-// 		    for(int nq = nq_min[j] ; nq <= max_nq; nq++)
-// 		    {
-// 			const LibUtilities::PointsKey Pkey(nq,Qtype);
-// 			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-// 			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
-// 
-// 			DNekMatSharedPtr matrix = E->GenMassMatrix();
-// 			NekDouble *result =  &((*matrix).GetPtr())[0];
-// 			NekDouble *expected_result = exactmatrices[i];
-// 
-// 			NekDouble epsilon = 1e-12;
-// 			for(int k = 0; k < 36; k++)
-// 			{ 
-// 			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
-// 			}
-// 		    }
-// 		}	
-// 	    }    
-// 	}
-// 
-//         void testLapMatrix()
-// 	{
-// 	    NekDouble exactmatrices[3][36] = {
-// 		{0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-// 		 0.0, 3.0, 0.0, sqrt(21.0), 0.0, sqrt(33.0),
-// 		 0.0, 0.0, 15.0, 0.0, sqrt(5.0)*9.0, 0.0,
-// 		 0.0, sqrt(21.0), 0.0, 42.0, 0.0, sqrt(77.0)*6.0,
-// 		 0.0, 0.0, sqrt(5.0)*9.0, 0.0, 90.0, 0.0,
-// 		 0.0, sqrt(33.0), 0.0, sqrt(77.0)*6.0, 0.0, 165.0},
-// 		{1.0/2.0, -1.0/2.0, 0.0, 0.0, 0.0, 0.0,
-// 		 -1.0/2.0, 1.0/2.0, 0.0, 0.0, 0.0, 0.0,
-// 		 0.0, 0.0, 1.0/6.0, 0.0, 0.0, 0.0,
-// 		 0.0, 0.0, 0.0, 2.0/5.0, 0.0, 0.0,
-// 		 0.0, 0.0, 0.0, 0.0, 9.0/14.0, 0.0,
-// 		 0.0, 0.0, 0.0, 0.0, 0.0, 8.0/9.0},
-// 		{0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-// 		 0.0, 3.0, 0.0, sqrt(21.0), 0.0, sqrt(33.0),
-// 		 0.0, 0.0, 15.0, 0.0, sqrt(5.0)*9.0, 0.0,
-// 		 0.0, sqrt(21.0), 0.0, 42.0, 0.0, sqrt(77.0)*6.0,
-// 		 0.0, 0.0, sqrt(5.0)*9.0, 0.0, 90.0, 0.0,
-// 		 0.0, sqrt(33.0), 0.0, sqrt(77.0)*6.0, 0.0, 165.0}
-// 		 };
-// 
-// 	    int nummodes = 6;
-// 	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)(2.0*(nummodes-1.0)+1.0)};
-// 	    
-// 	    for(int i = 0; i < num_BasisTypes; i++)
-// 	    {
-// 		LibUtilities::BasisType btype = TestedBasisTypes[i];
-// 
-// 		for(int j = 0; j < num_PointsTypes; j++)
-// 		{
-// 		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-// 		    
-// 		    for(int nq = nq_min[j] ; nq <= max_nq; nq++)
-// 		    {
-// 			const LibUtilities::PointsKey Pkey(nq,Qtype);
-// 			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-// 			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
-// 
-// 			DNekMatSharedPtr matrix = E->GenLapMatrix();
-// 			NekDouble *result =  &((*matrix).GetPtr())[0];
-// 			NekDouble *expected_result = exactmatrices[i];
-// 
-// 			NekDouble epsilon = 1e-122;
-// 			for(int k = 0; k < 36; k++)
-// 			{ 
-// 			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
-// 			}
-// 		    }
-// 		}	
-// 	    }  	
-// 	}
-// 
-//         void testIntegration()
-// 	{
-// 	    NekDouble expected_result = 2.0;//-4.0/3.0;
-// 
-// 	    int order_f = 5;
-// 	    int nq_min[11]={(int)ceil((order_f+1.0)/2.0),
-// 			  (int)ceil((order_f+2.0)/2.0),
-// 			  (int)ceil((order_f+2.0)/2.0),
-// 			  (int)ceil((order_f+3.0)/2.0),
-// 			  (int)ceil((order_f+1.0)/2.0),
-// 			  (int)ceil((order_f+2.0)/2.0),
-// 			  (int)ceil((order_f+2.0)/2.0),
-// 			  (int)ceil((order_f+3.0)/2.0),
-// 			  (int)ceil((order_f+2.0)/2.0),
-// 			  (int)ceil((order_f+2.0)/2.0),
-// 			  (int)(order_f+1.0)};
-// 	    
-// 	    for(int i = 0; i < num_BasisTypes; i++)
-// 	    {
-// 		LibUtilities::BasisType btype = TestedBasisTypes[i];
-// 
-// 		for(int j = 0; j < num_PointsTypes; j++)
-// 		{
-// 		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-// 
-// 		    for(int nummodes = 2; nummodes <= max_nummodes; nummodes++)
-// 		    {
-// 			
-// 			for(int nq = nq_min[j] ; nq <= max_nq; nq++)
-// 			{
-// 			    const LibUtilities::PointsKey Pkey(nq,Qtype);
-// 			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-// 			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
-// 
-// 			    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
-// 			    Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
-// 			    E->GetCoords(z);
-// 			    for(int r = 0; r < nq; ++r)
-// 			    {
-// 				f[r] = 1.0;//3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
-// 			    }
-// 			    NekDouble result = E->Integral(f);
-// 			    NekDouble epsilon = 1e-12;
-// 			    CHECK_CLOSE_ABS_EXP(result, expected_result, epsilon, btype, nummodes, Qtype, nq);
-// 			}
-// 		    }
-// 		}	
-// 	    }    
-// 	}
-// 
-//     void testDifferentiation()
-// 	{
+	const int max_nummodes = 15;
+	const int max_nq = 15;
+        /* 	
+        const int num_BasisTypes = 5;
+	LibUtilities::BasisType TestedBasisTypes[num_BasisTypes] = {LibUtilities::eOrtho_A,
+								    LibUtilities::eModified_A,
+								    LibUtilities::eGLL_Lagrange,
+								    LibUtilities::eLegendre,
+								    LibUtilities::eChebyshev};
+
+	const int num_PointsTypes = 11;
+	LibUtilities::PointsType TestedPointsTypes[num_PointsTypes] = {LibUtilities::eGaussGaussLegendre,
+								       LibUtilities::eGaussRadauMLegendre,
+								       LibUtilities::eGaussRadauPLegendre,
+								       LibUtilities::eGaussLobattoLegendre,
+								       LibUtilities::eGaussGaussChebyshev,
+								       LibUtilities::eGaussRadauMChebyshev,
+								       LibUtilities::eGaussRadauPChebyshev,
+								       LibUtilities::eGaussLobattoChebyshev,
+								       LibUtilities::eGaussRadauMAlpha0Beta1,
+								       LibUtilities::eGaussRadauMAlpha0Beta2,
+								       LibUtilities::ePolyEvenlySpaced};
+        */
+
+	const int num_BasisTypes = 3;
+	LibUtilities::BasisType TestedBasisTypes[num_BasisTypes] = {LibUtilities::eOrtho_A,
+								    LibUtilities::eModified_A,
+								    LibUtilities::eLegendre};
+
+	const int num_PointsTypes = 4;
+	LibUtilities::PointsType TestedPointsTypes[num_PointsTypes] = {LibUtilities::eGaussGaussLegendre,
+								       LibUtilities::eGaussRadauMLegendre,
+								       LibUtilities::eGaussRadauPLegendre,
+								       LibUtilities::eGaussLobattoLegendre};
+	/*	
+								       LibUtilities::eGaussGaussChebyshev,
+								       LibUtilities::eGaussRadauMChebyshev,
+								       LibUtilities::eGaussRadauPChebyshev,
+								       LibUtilities::eGaussLobattoChebyshev,
+								       LibUtilities::eGaussRadauMAlpha0Beta1,
+								       LibUtilities::eGaussRadauMAlpha0Beta2,
+								       LibUtilities::ePolyEvenlySpaced};
+	*/
+		
+
+        void testMassMatrix()
+	{
+	    NekDouble exactmatrices[3][36] = {
+		{1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+		 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+		 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+		 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+		 0.0, 0.0, 0.0, 0.0, 0.0, 1.0},
+		{2.0/3.0, 1.0/3.0, 1.0/6.0, -1.0/15.0, 0.0, 0.0,
+		 1.0/3.0, 2.0/3.0, 1.0/6.0, 1.0/15.0, 0.0, 0.0,
+		 1.0/6.0, 1.0/6.0, 1.0/15.0, 0.0, -1.0/70.0, 0.0,
+		 -1.0/15.0, 1.0/15.0, 0.0, 4.0/105.0, 0.0, -4.0/315.0,
+		 0.0, 0.0, -1.0/70.0, 0.0, 2.0/70.0, 0.0,
+		 0.0, 0.0, 0.0, -4.0/315.0, 0.0, 16.0/693.0},
+		{1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+		 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+		 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+		 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+		 0.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+	    };
+
+	    int nummodes = 6;
+	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)(2.0*(nummodes-1.0)+1.0)};
+	    
+	    for(int i = 0; i < num_BasisTypes; i++)
+	    {
+		LibUtilities::BasisType btype = TestedBasisTypes[i];
+
+		for(int j = 0; j < num_PointsTypes; j++)
+		{
+		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
+		    
+		    for(int nq = nq_min[j] ; nq <= max_nq; nq++)
+		    {
+			const LibUtilities::PointsKey Pkey(nq,Qtype);
+			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
+			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
+
+			DNekMatSharedPtr matrix = E->GenMassMatrix();
+			NekDouble *result =  &((*matrix).GetPtr())[0];
+			NekDouble *expected_result = exactmatrices[i];
+
+			NekDouble epsilon = 1e-12;
+			for(int k = 0; k < 36; k++)
+			{ 
+			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
+			}
+		    }
+		}	
+	    }    
+	}
+
+        void testLapMatrix()
+	{
+	    NekDouble exactmatrices[3][36] = {
+		{0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		 0.0, 3.0, 0.0, sqrt(21.0), 0.0, sqrt(33.0),
+		 0.0, 0.0, 15.0, 0.0, sqrt(5.0)*9.0, 0.0,
+		 0.0, sqrt(21.0), 0.0, 42.0, 0.0, sqrt(77.0)*6.0,
+		 0.0, 0.0, sqrt(5.0)*9.0, 0.0, 90.0, 0.0,
+		 0.0, sqrt(33.0), 0.0, sqrt(77.0)*6.0, 0.0, 165.0},
+		{1.0/2.0, -1.0/2.0, 0.0, 0.0, 0.0, 0.0,
+		 -1.0/2.0, 1.0/2.0, 0.0, 0.0, 0.0, 0.0,
+		 0.0, 0.0, 1.0/6.0, 0.0, 0.0, 0.0,
+		 0.0, 0.0, 0.0, 2.0/5.0, 0.0, 0.0,
+		 0.0, 0.0, 0.0, 0.0, 9.0/14.0, 0.0,
+		 0.0, 0.0, 0.0, 0.0, 0.0, 8.0/9.0},
+		{0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		 0.0, 3.0, 0.0, sqrt(21.0), 0.0, sqrt(33.0),
+		 0.0, 0.0, 15.0, 0.0, sqrt(5.0)*9.0, 0.0,
+		 0.0, sqrt(21.0), 0.0, 42.0, 0.0, sqrt(77.0)*6.0,
+		 0.0, 0.0, sqrt(5.0)*9.0, 0.0, 90.0, 0.0,
+		 0.0, sqrt(33.0), 0.0, sqrt(77.0)*6.0, 0.0, 165.0}
+		 };
+
+	    int nummodes = 6;
+	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)(2.0*(nummodes-1.0)+1.0)};
+	    
+	    for(int i = 0; i < num_BasisTypes; i++)
+	    {
+		LibUtilities::BasisType btype = TestedBasisTypes[i];
+
+		for(int j = 0; j < num_PointsTypes; j++)
+		{
+		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
+		    
+		    for(int nq = nq_min[j] ; nq <= max_nq; nq++)
+		    {
+			const LibUtilities::PointsKey Pkey(nq,Qtype);
+			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
+			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
+
+			DNekMatSharedPtr matrix = E->GenLapMatrix();
+			NekDouble *result =  &((*matrix).GetPtr())[0];
+			NekDouble *expected_result = exactmatrices[i];
+
+			NekDouble epsilon = 1e-122;
+			for(int k = 0; k < 36; k++)
+			{ 
+			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
+			}
+		    }
+		}	
+	    }  	
+	}
+
+        void testIntegration()
+	{
+	    NekDouble expected_result = 2.0;//-4.0/3.0;
+
+	    int order_f = 5;
+	    int nq_min[11]={(int)ceil((order_f+1.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)ceil((order_f+3.0)/2.0),
+			  (int)ceil((order_f+1.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)ceil((order_f+3.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)ceil((order_f+2.0)/2.0),
+			  (int)(order_f+1.0)};
+	    
+	    for(int i = 0; i < num_BasisTypes; i++)
+	    {
+		LibUtilities::BasisType btype = TestedBasisTypes[i];
+
+		for(int j = 0; j < num_PointsTypes; j++)
+		{
+		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
+
+		    for(int nummodes = 2; nummodes <= max_nummodes; nummodes++)
+		    {
+			
+			for(int nq = nq_min[j] ; nq <= max_nq; nq++)
+			{
+			    const LibUtilities::PointsKey Pkey(nq,Qtype);
+			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
+			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
+
+			    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
+			    Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
+			    E->GetCoords(z);
+			    for(int r = 0; r < nq; ++r)
+			    {
+				f[r] = 1.0;//3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
+			    }
+			    NekDouble result = E->Integral(f);
+			    NekDouble epsilon = 1e-12;
+			    CHECK_CLOSE_ABS_EXP(result, expected_result, epsilon, btype, nummodes, Qtype, nq);
+			}
+		    }
+		}	
+	    }    
+	}
+
+    void testDifferentiation()
+	{
 // 	    NekDouble expected_result = -4.0;
 // 	    
 // 	    for(int i = 0; i < num_BasisTypes; i++)
@@ -335,278 +336,281 @@ namespace Nektar
 // 		    }
 // 		}	
 // 	    }    
-// 	}
-// 
-//         void testIProductWRTBase()
-// 	{
-// 	    NekDouble exactmatrices[3][6] = {
-// 		{-sqrt(0.5)*4.0/3.0, -sqrt(1.5)*8.0/7.0, sqrt(2.5)*4.0/15.0, -sqrt(3.5)*4.0/21.0, 0.0, sqrt(5.5)*16.0/231.0},
-// 		{-2.0/21.0, -26.0/21.0, -4.0/15.0, -4.0/21.0, 2.0/35.0, -40.0/693.0},
-// 		{-sqrt(0.5)*4.0/3.0, -sqrt(1.5)*8.0/7.0, sqrt(2.5)*4.0/15.0, -sqrt(3.5)*4.0/21.0, 0.0, sqrt(5.5)*16.0/231.0}
-// 	    };
-// 
-// 	    int nummodes = 6;
-// 	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)(2.0*(nummodes-1.0)+1.0)};
-// 	    
-// 	    for(int i = 0; i < num_BasisTypes; i++)
-// 	    {
-// 		LibUtilities::BasisType btype = TestedBasisTypes[i];
-// 
-// 		for(int j = 0; j < num_PointsTypes; j++)
-// 		{
-// 		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-// 		    
-// 		    for(int nq = nq_min[j] ; nq <= max_nq; nq++)
-// 		    {
-// 			const LibUtilities::PointsKey Pkey(nq,Qtype);
-// 			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-// 			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
-// 
-// 			Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
-// 			Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
-// 			E->GetCoords(z);
-// 			for(int r = 0; r < nq; r++)
-// 			{
-// 			    f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
-// 			}		
-// 			Array<OneD, NekDouble> result = Array<OneD, NekDouble>(6);
-// 			E->IProductWRTBase(f,result);
-// 			NekDouble *expected_result = exactmatrices[i];
-// 			
-// 			NekDouble epsilon = 1e-12;	
-// 			for(int k = 0; k < 6; k++)
-// 			{ 
-// 			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
-// 			}
-// 		    }
-// 		}	
-// 	    }    
-// 	}
-// 
-//         void testFwdTrans()
-// 	{
-// 	    NekDouble exactmatrices[3][6] = {
-// 		{-sqrt(2)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)},
-// 		{2.0, -2.0, -4.0, 10.0/7.0, 0.0, -12.0/7.0},
-// 		{-sqrt(2.0)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)}
-// 	    };
-// 
-// 	    int nummodes = 6;
-// 	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 			    (int)(2.0*(nummodes-1.0)+1.0)};
-// 	    
-// 	    for(int i = 0; i < num_BasisTypes; i++)
-// 	    {
-// 		LibUtilities::BasisType btype = TestedBasisTypes[i];
-// 
-// 		for(int j = 0; j < num_PointsTypes; j++)
-// 		{
-// 		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-// 		    
-// 		    for(int nq = nq_min[j] ; nq <= max_nq; nq++)
-// 		    {
-// 			const LibUtilities::PointsKey Pkey(nq,Qtype);
-// 			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-// 			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
-// 
-// 			Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
-// 			Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
-// 			E->GetCoords(z);
-// 			for(int r = 0; r < nq; r++)
-// 			{
-// 			    f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
-// 			}	
-// 			Array<OneD, NekDouble> result = Array<OneD, NekDouble>(nummodes);	
-// 			E->FwdTrans(f,result);
-// 			NekDouble *expected_result = exactmatrices[i];
-// 
-// 			NekDouble epsilon = 1e-12;	
-// 			for(int k = 0; k < 6; k++)
-// 			{ 
-// 			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
-// 			}
-// 		    }
-// 		}	
-// 	    }    
-// 	}
-// 
-//         void testBwdTrans()
-// 	{	    
-// 	    for(int i = 0; i < num_BasisTypes; i++)
-// 	    {
-// 		LibUtilities::BasisType btype = TestedBasisTypes[i];
-// 
-// 		for(int j = 0; j < num_PointsTypes; j++)
-// 		{
-// 		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-// 
-// 		    for(int nummodes = 6; nummodes <= max_nummodes; nummodes++)
-// 		    {
-// 			int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)(2.0*(nummodes-1.0)+1.0)};
-// 			
-// 			for(int nq = nq_min[j] ; nq <= max_nq; nq++)
-// 			{
-// 			    const LibUtilities::PointsKey Pkey(nq,Qtype);
-// 			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-// 			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
-// 
-// 			    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
-// 			    Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
-// 			    E->GetCoords(z);
-// 			    for(int r = 0; r < nq; ++r)
-// 			    {
-// 				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
-// 			    }
-// 			    Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nummodes);
-// 			    Array<OneD, NekDouble> result = Array<OneD, NekDouble>(nq);
-// 			    E->FwdTrans(f,tmp);
-// 			    E->BwdTrans(tmp,result);
-// 			    NekDouble *expected_result = f.get();
-// 
-// 			    NekDouble epsilon = 1e-12;	
-// 			    for(int k = 0; k < nq; k++)
-// 			    { 
-// 				CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
-// 			    }
-// 			}
-// 		    }
-// 		}	
-// 	    }    
-// 	}
-// 
-//         void testPhysEvaluate()
-// 	{
-// 	    NekDouble expected_result = -7.0/32.0;
-// 	    
-// 	    for(int i = 0; i < num_BasisTypes; i++)
-// 	    {
-// 		LibUtilities::BasisType btype = TestedBasisTypes[i];
-// 
-// 		for(int j = 0; j < num_PointsTypes; j++)
-// 		{
-// 		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-// 
-// 		    for(int nummodes = 2; nummodes <= max_nummodes; nummodes++)
-// 		    {
-// 			
-// 			for(int nq = 6 ; nq <= max_nq; nq++)
-// 			{
-// 			    const LibUtilities::PointsKey Pkey(nq,Qtype);
-// 			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-// 			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
-// 
-// 			    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
-// 			    Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
-// 			    E->GetCoords(z);
-// 			    for(int r = 0; r < nq; ++r)
-// 			    {
-// 				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
-// 			    }
-// 			    E->SetPhys(f);
-// 			    Array<OneD, NekDouble> x = Array<OneD, NekDouble>(1);
-// 			    x[0] = -0.5;
-// 			    NekDouble result = E->PhysEvaluate(x);
-// 
-// 			    NekDouble epsilon = 1e-12;
-// 			    CHECK_CLOSE_ABS_EXP(result, expected_result, epsilon, btype, nummodes, Qtype, nq);
-// 			}
-// 		    }
-// 		}	
-// 	    }    
-// 	}
-// 
-//         void testNorms()
-// 	{
-// 	    NekDouble expected_resultL2 = sqrt(1224.0/385.0);
-// 	    NekDouble expected_resultL2err = 0.0;
-// 	    NekDouble expected_resultLinferr = 0.0;
-// 	    
-// 	    for(int i = 0; i < num_BasisTypes; i++)
-// 	    {
-// 		LibUtilities::BasisType btype = TestedBasisTypes[i];
-// 
-// 		for(int j = 0; j < num_PointsTypes; j++)
-// 		{
-// 		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-// 
-// 		    for(int nummodes = 6; nummodes <= max_nummodes; nummodes++)
-// 		    {
-// 			int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
-// 					(int)(2.0*(nummodes-1.0)+1.0)};
-// 			
-// 			for(int nq = nq_min[j]; nq <= max_nq; nq++)
-// 			{
-// 			    const LibUtilities::PointsKey Pkey(nq,Qtype);
-// 			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-// 			    StdRegions::StdExpansion1D *E = new StdRegions::StdSegExp(Bkey); 
-// 
-// 			    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
-// 			    Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
-// 			    E->GetCoords(z);
-// 			    for(int r = 0; r < nq; ++r)
-// 			    {
-// 				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
-// 			    }
-// 			    E->SetPhys(f);
-// 			    E->FwdTrans(*E);
-// 			    E->BwdTrans(*E);
-// 	       
-// 			    NekDouble resultL2 = E->L2();
-// 			    NekDouble resultL2err = E->L2(f);
-// 			    NekDouble resultLinferr = E->Linf(f);
-// 
-// 			    NekDouble epsilon = 1e-12;
-// 			    CHECK_CLOSE_ABS_EXP(resultL2, expected_resultL2, epsilon, btype, nummodes, Qtype, nq);
-// 			    CHECK_CLOSE_ABS_EXP(resultL2err, expected_resultL2err, epsilon, btype, nummodes, Qtype, nq);
-// 			    CHECK_CLOSE_ABS_EXP(resultLinferr, expected_resultLinferr, epsilon, btype, nummodes, Qtype, nq);
-// 			}
-// 		    }
-// 		}	
-// 	    }    
-// 	}
+	}
+
+        void testIProductWRTBase()
+	{
+	    NekDouble exactmatrices[3][6] = {
+		{-sqrt(0.5)*4.0/3.0, -sqrt(1.5)*8.0/7.0, sqrt(2.5)*4.0/15.0, -sqrt(3.5)*4.0/21.0, 0.0, sqrt(5.5)*16.0/231.0},
+		{-2.0/21.0, -26.0/21.0, -4.0/15.0, -4.0/21.0, 2.0/35.0, -40.0/693.0},
+		{-sqrt(0.5)*4.0/3.0, -sqrt(1.5)*8.0/7.0, sqrt(2.5)*4.0/15.0, -sqrt(3.5)*4.0/21.0, 0.0, sqrt(5.5)*16.0/231.0}
+	    };
+
+	    int nummodes = 6;
+	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)(2.0*(nummodes-1.0)+1.0)};
+	    
+	    for(int i = 0; i < num_BasisTypes; i++)
+	    {
+		LibUtilities::BasisType btype = TestedBasisTypes[i];
+
+		for(int j = 0; j < num_PointsTypes; j++)
+		{
+		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
+		    
+		    for(int nq = nq_min[j] ; nq <= max_nq; nq++)
+		    {
+			const LibUtilities::PointsKey Pkey(nq,Qtype);
+			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
+			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
+
+			Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
+			Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
+			E->GetCoords(z);
+			for(int r = 0; r < nq; r++)
+			{
+			    f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
+			}		
+			Array<OneD, NekDouble> result = Array<OneD, NekDouble>(6);
+			E->IProductWRTBase(f,result);
+			NekDouble *expected_result = exactmatrices[i];
+			
+			NekDouble epsilon = 1e-12;	
+			for(int k = 0; k < 6; k++)
+			{ 
+			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
+			}
+		    }
+		}	
+	    }    
+	}
+
+        void testFwdTrans()
+	{
+	    NekDouble exactmatrices[3][6] = {
+		{-sqrt(2)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)},
+		{2.0, -2.0, -4.0, 10.0/7.0, 0.0, -12.0/7.0},
+		{-sqrt(2.0)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)}
+	    };
+
+	    int nummodes = 6;
+	    int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+			    (int)(2.0*(nummodes-1.0)+1.0)};
+	    
+	    for(int i = 0; i < num_BasisTypes; i++)
+	    {
+		LibUtilities::BasisType btype = TestedBasisTypes[i];
+
+		for(int j = 0; j < num_PointsTypes; j++)
+		{
+		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
+		    
+		    for(int nq = nq_min[j] ; nq <= max_nq; nq++)
+		    {
+			const LibUtilities::PointsKey Pkey(nq,Qtype);
+			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
+			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
+
+			Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
+			Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
+			E->GetCoords(z);
+			for(int r = 0; r < nq; r++)
+			{
+			    f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
+			}	
+			Array<OneD, NekDouble> result = Array<OneD, NekDouble>(nummodes);	
+			E->FwdTrans(f,result);
+			NekDouble *expected_result = exactmatrices[i];
+
+			NekDouble epsilon = 1e-12;	
+			for(int k = 0; k < 6; k++)
+			{ 
+			    CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
+			}
+		    }
+		}	
+	    }    
+	}
+
+        void testBwdTrans()
+	{	    
+	    for(int i = 0; i < num_BasisTypes; i++)
+	    {
+		LibUtilities::BasisType btype = TestedBasisTypes[i];
+
+		for(int j = 0; j < num_PointsTypes; j++)
+		{
+		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
+
+		    for(int nummodes = 6; nummodes <= max_nummodes; nummodes++)
+		    {
+			int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)(2.0*(nummodes-1.0)+1.0)};
+			
+			for(int nq = nq_min[j] ; nq <= max_nq; nq++)
+			{
+			    const LibUtilities::PointsKey Pkey(nq,Qtype);
+			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
+			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
+
+			    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
+			    Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
+			    E->GetCoords(z);
+			    for(int r = 0; r < nq; ++r)
+			    {
+				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
+			    }
+			    Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nummodes);
+			    Array<OneD, NekDouble> result = Array<OneD, NekDouble>(nq);
+			    E->FwdTrans(f,tmp);
+			    E->BwdTrans(tmp,result);
+			    NekDouble *expected_result = f.get();
+
+			    NekDouble epsilon = 1e-12;	
+			    for(int k = 0; k < nq; k++)
+			    { 
+				CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
+			    }
+			}
+		    }
+		}	
+	    }    
+	}
+
+        void testPhysEvaluate()
+	{
+	    NekDouble expected_result = -7.0/32.0;
+	    
+	    for(int i = 0; i < num_BasisTypes; i++)
+	    {
+		LibUtilities::BasisType btype = TestedBasisTypes[i];
+
+		for(int j = 0; j < num_PointsTypes; j++)
+		{
+		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
+
+		    for(int nummodes = 2; nummodes <= max_nummodes; nummodes++)
+		    {
+			
+			for(int nq = 6 ; nq <= max_nq; nq++)
+			{
+			    const LibUtilities::PointsKey Pkey(nq,Qtype);
+			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
+			    StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
+
+			    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
+			    Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
+			    E->GetCoords(z);
+			    for(int r = 0; r < nq; ++r)
+			    {
+				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
+			    }
+			    E->SetPhys(f);
+			    Array<OneD, NekDouble> x = Array<OneD, NekDouble>(1);
+			    x[0] = -0.5;
+			    NekDouble result = E->PhysEvaluate(x);
+
+			    NekDouble epsilon = 1e-12;
+			    CHECK_CLOSE_ABS_EXP(result, expected_result, epsilon, btype, nummodes, Qtype, nq);
+			}
+		    }
+		}	
+	    }    
+	}
+
+        void testNorms()
+	{
+	    NekDouble expected_resultL2 = sqrt(1224.0/385.0);
+	    NekDouble expected_resultL2err = 0.0;
+	    NekDouble expected_resultLinferr = 0.0;
+	    
+	    for(int i = 0; i < num_BasisTypes; i++)
+	    {
+		LibUtilities::BasisType btype = TestedBasisTypes[i];
+
+		for(int j = 0; j < num_PointsTypes; j++)
+		{
+		    LibUtilities::PointsType Qtype = TestedPointsTypes[j];
+
+		    for(int nummodes = 6; nummodes <= max_nummodes; nummodes++)
+		    {
+			int nq_min[11]={(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+1.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+3.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)ceil((2*(nummodes-1.0)+2.0)/2.0),
+					(int)(2.0*(nummodes-1.0)+1.0)};
+			
+			for(int nq = nq_min[j]; nq <= max_nq; nq++)
+			{
+			    const LibUtilities::PointsKey Pkey(nq,Qtype);
+			    const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
+			    StdRegions::StdExpansion1D *E = new StdRegions::StdSegExp(Bkey); 
+
+			    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
+			    Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
+			    E->GetCoords(z);
+			    for(int r = 0; r < nq; ++r)
+			    {
+				f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
+			    }
+			    E->SetPhys(f);
+			    E->FwdTrans(*E);
+			    E->BwdTrans(*E);
+	       
+			    NekDouble resultL2 = E->L2();
+			    NekDouble resultL2err = E->L2(f);
+			    NekDouble resultLinferr = E->Linf(f);
+
+			    NekDouble epsilon = 1e-12;
+			    CHECK_CLOSE_ABS_EXP(resultL2, expected_resultL2, epsilon, btype, nummodes, Qtype, nq);
+			    CHECK_CLOSE_ABS_EXP(resultL2err, expected_resultL2err, epsilon, btype, nummodes, Qtype, nq);
+			    CHECK_CLOSE_ABS_EXP(resultLinferr, expected_resultLinferr, epsilon, btype, nummodes, Qtype, nq);
+			}
+		    }
+		}	
+	    }    
+	}
     }
 }
 
 /**
     $Log: testStdSegExp.cpp,v $
+    Revision 1.10  2007/05/15 05:21:04  bnelson
+    Updated to use the new Array object.
+
     Revision 1.9  2007/03/31 00:40:16  bnelson
     *** empty log message ***
 

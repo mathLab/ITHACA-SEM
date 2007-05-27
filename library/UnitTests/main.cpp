@@ -95,7 +95,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testFourierEvenlySpaced),0);
 				
     // StdSegExp algorithms
-    test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
+     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
     //test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testLapMatrix), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testIntegration), 0);
     test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testDifferentiation), 0);
@@ -144,8 +144,8 @@ test_suite* init_unit_test_suite( int, char* [] )
     // would be needed instead of the LokiObject factory so that the factory would
     // play nice with the NekMemoryManager.  This may not be the case, but in case
     // it comes along in the near future I'll leave these statements in.
-    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNoParameterConstruction), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testSingleParameterConstruction), 0);
+    //test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNoParameterConstruction), 0);
+    //test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testSingleParameterConstruction), 0);
 
     // Unit tests for NekManager
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekManager), 0);
@@ -178,6 +178,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.33  2007/05/27 14:40:56  bnelson
+    Added 2D Access Operator tests.
+
     Revision 1.32  2007/05/25 23:46:02  ehan
     checking in derivation and interpolation
 

@@ -69,7 +69,7 @@ long double derivativeFunc(long double x) {
     return ((15.0*x*x - 15.0)*x   + 2.0)*x - 2.0;
 }
 
-long double polyFunc2(long double x) {
+static long double polyFunc2(long double x) {
     return  (((33.0*x*x + 27.0)*x*x - 7.0)*x*x + 5.0)*x*x*x*x  + 3.0;
 }
 
@@ -77,7 +77,7 @@ long double derivativeFunc2(long double x) {
     return (((330*x*x + 216)*x*x - 42)*x*x + 20)*x*x*x;
 }
 
-long double polyFunc3(long double x) {
+static long double polyFunc3(long double x) {
     return x*x;
 }
 long double derivativeFunc3(long double x) {
@@ -191,7 +191,7 @@ long double derivativeMatrixFourier(const ConstArray<OneD,NekDouble> &x, int N, 
 }
 
 // fourier function using Trapezoidal rule
-long double fourierFunc(long double x, int N) {
+static long double fourierFunc(long double x, int N) {
     long double z = M_PI*(x + 1.0);
     return (cos(N/2.0*z) + sin((N/2.0 - 2.0)*z))*M_PI;
 }

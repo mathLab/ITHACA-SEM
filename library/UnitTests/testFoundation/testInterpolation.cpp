@@ -57,10 +57,10 @@ using namespace Nektar::LibUtilities;
 namespace Nektar {
  namespace foundationUnitTests{
 
-long double polyFunc(long double x) {
+static long double polyFunc(long double x) {
     return  (((3.0*x*x - 5.0)*x + 1.0)*x - 2.0)*x + 3.0;
 }
-long double polyFunc2(long double x) {
+static long double polyFunc2(long double x) {
     return  (((3.0*x*x - 5.0)*x + 1.0)*x - 2.0)*x + 3.0;
 }
 long double polyFunc3(long double x) {
@@ -131,7 +131,7 @@ long double LagrangeInterpolation(int j, long double x, const ConstArray<OneD, N
 }
 
 // fourier function using Trapezoidal rule
-long double fourierFunc(long double x, int N) {
+static long double fourierFunc(long double x, int N) {
     long double z = M_PI*(x + 1.0);
     return (cos(N/2.0*z) + sin((N/2.0 - 2.0)*z))/M_PI;
 }

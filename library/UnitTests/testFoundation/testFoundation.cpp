@@ -58,14 +58,14 @@ using namespace Nektar::LibUtilities;
  namespace Nektar{
     
         namespace foundationUnitTests{
-            long double polyFunc(long double x){
+            static long double polyFunc(long double x){
                 return ((1.0/20.0*x*x - 1.0/6.0)*x*x + 3.0/4.0)*x + 1.0;
             }
-            long double polyFunc2(long double x){
+            static long double polyFunc2(long double x){
                return  (((3.0*x*x - 5.0)*x + 1.0)*x - 2.0)*x + 3.0;
             }
 
-            long double polyFunc3(long double x){
+            static long double polyFunc3(long double x){
                return  (((33.0*x*x + 27.0)*x*x - 7.0)*x*x + 5.0)*x*x*x*x  + 3.0;
             }
 
@@ -396,7 +396,7 @@ using namespace Nektar::LibUtilities;
                 cout<<"" << endl;
             }
 
-            long double fourierFunc(long double x, int N){
+            static long double fourierFunc(long double x, int N){
                 long double z = M_PI*(x + 1.0);
                 return (cos(N/2*z) + sin((N/2 - 2)*z))/M_PI;
             }

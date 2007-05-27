@@ -42,6 +42,7 @@
 #include <UnitTests/CountedObject.h>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
@@ -685,8 +686,10 @@ namespace Nektar
             BOOST_CHECK_EQUAL(b[3], 40.0);
             
             #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULL_DEBUG)
-            // TODO - The offset is causing problems in multi-dimensional arrays.  Specialize for 
-            // 1D arrays.
+                BOOST_CHECK_NO_THROW(a[4])
+                BOOST_CHECK_THROW((a[5]), ErrorUtil::NekError);
+                BOOST_CHECK_NO_THROW(b[3]);
+                BOOST_CHECK_THROW(b[4], ErrorUtil::NekError);
             #endif
         }
         

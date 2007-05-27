@@ -48,13 +48,13 @@ namespace ErrorUtil
         ewarning
     };
 
-    #ifdef ENABLE_NEKTAR_EXCEPTIONS
-        class NekError : public std::runtime_error
-        {
-            public:
-                NekError(const std::string& message) : std::runtime_error(message) {}
-        };
+    class NekError : public std::runtime_error
+    {
+        public:
+            NekError(const std::string& message) : std::runtime_error(message) {}
+    };
         
+    #ifdef ENABLE_NEKTAR_EXCEPTIONS
         static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
         {
             std::string errorMessage = std::string(routine) + "[" +
@@ -81,6 +81,10 @@ namespace ErrorUtil
             }
         }
     #endif // ENABLE_NEKTAR_EXCEPTION
+    static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg)
+    {
+        Error(type, routine, lineNumber, msg.c_str());
+    }
     
 } // end of namespace
 
@@ -137,6 +141,11 @@ namespace ErrorUtil
 
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.4  2007/05/22 02:02:35  bnelson
+Changed Array::size to Array::num_elements.
+
+Fixed some compiler errors in assertions.
+
 Revision 1.3  2007/05/14 23:22:38  bnelson
 Errors throw a new exception type NekError.
 

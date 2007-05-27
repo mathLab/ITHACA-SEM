@@ -37,12 +37,14 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHARED_ARRAY_HPP
 
 #include <LibUtilities/BasicUtils/ArrayPolicies.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <boost/multi_array.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
+    
     /// \page Arrays
     ///
     /// An Array object is a thin wrapper around native arrays.  Arrays provide 
@@ -302,7 +304,15 @@ namespace Nektar
             
             const_iterator begin() const { return m_data->begin() + m_offset; }
             const_iterator end() const { return m_data->end(); }
-            const_reference operator[](index i) const { return (*m_data)[i+m_offset]; }
+            
+            const_reference operator[](index i) const 
+            {
+                ASSERTL1(i < num_elements(), (std::string("Element ") +
+                    boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
+                    boost::lexical_cast<std::string>(num_elements())));
+                return (*m_data)[i+m_offset]; 
+            }
+            
             const element* get() const { return m_data->data()+m_offset; }
             const element* data() const { return m_data->data()+m_offset; }
             size_type num_dimensions() const { return m_data->num_dimensions(); }
@@ -546,7 +556,14 @@ namespace Nektar
             iterator end() { return this->m_data->end(); }
             
             using BaseType::operator[];
-            reference operator[](index i) { return (*this->m_data)[i+this->m_offset]; }
+            reference operator[](index i)
+            {
+                ASSERTL1(i < this->num_elements(), (std::string("Element ") +
+                    boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
+                    boost::lexical_cast<std::string>(this->num_elements())));
+                return (*this->m_data)[i+this->m_offset]; 
+            }
+                
             
             using BaseType::get;
             element* get() { return this->m_data->data()+this->m_offset; }

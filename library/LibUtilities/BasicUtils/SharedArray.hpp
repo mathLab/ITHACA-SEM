@@ -395,6 +395,9 @@ namespace Nektar
             const size_type* shape() const { return m_data->shape(); }
             size_type num_elements() const { return m_data->num_elements(); }
 
+            size_type GetRows() const { return m_data->shape()[0]; }
+            size_type GetColumns() const { return m_data->shape()[1]; }
+            
         protected:
             boost::shared_ptr<ArrayType> m_data;
             

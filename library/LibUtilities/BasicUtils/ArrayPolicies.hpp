@@ -38,8 +38,10 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_ARRAY_POLICIES_HPP
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/multi_array.hpp>
+#include <boost/bind.hpp>
 
 namespace Nektar
 {

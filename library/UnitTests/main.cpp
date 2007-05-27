@@ -47,6 +47,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::Test2DAssignmentOperator), 0);
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestOffsetAssignmentOperator), 0);
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::Test1DAccessOperator), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::Test2DAccessOperator), 0);
     
 
        //Test Derivation
@@ -177,6 +178,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.32  2007/05/25 23:46:02  ehan
+    checking in derivation and interpolation
+
     Revision 1.31  2007/05/22 02:02:53  bnelson
     Changed Array::size to Array::num_elements.
 

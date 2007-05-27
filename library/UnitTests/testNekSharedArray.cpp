@@ -689,6 +689,49 @@ namespace Nektar
             // 1D arrays.
             #endif
         }
+        
+        void Test2DAccessOperator()
+        {
+            NekDouble a_vals[] = {1.0, 2.0, 
+                                  3.0, 4.0, 
+                                  5.0, 6.0,
+                                  7.0, 8.0, 
+                                  9.0, 10.0};
+            Array<TwoD, NekDouble> a(5, 2, a_vals);
+            
+            BOOST_CHECK_EQUAL(a.GetRows(), 5);
+            BOOST_CHECK_EQUAL(a.GetColumns(), 2);
+            
+            for(unsigned int i = 0; i < a.GetRows(); ++i)
+            {
+                for(unsigned int j = 0; j < a.GetColumns(); ++j)
+                {
+                    BOOST_CHECK_EQUAL(a[i][j], a_vals[i*a.GetColumns() + j]);
+                }
+            }
+            
+            // Now test assignment.
+            NekDouble rhs_vals[] = {18.0, -76.2,
+                                    45.2, 1352.246,
+                                    -46.346, -2463.346,
+                                    26.347, 1.0,
+                                    0.0, 23465.3};
+            for(unsigned int i = 0; i < a.GetRows(); ++i)
+            {
+                for(unsigned int j = 0; j < a.GetColumns(); ++j)
+                {
+                    a[i][j] = rhs_vals[i*a.GetColumns() + j];
+                }
+            }
+                
+            for(unsigned int i = 0; i < a.GetRows(); ++i)
+            {
+                for(unsigned int j = 0; j < a.GetColumns(); ++j)
+                {
+                    BOOST_CHECK_EQUAL(a[i][j], rhs_vals[i*a.GetColumns() + j]);
+                }
+            }
+        }
     
     } // End SharedArrayUnitTests
 } // End Nektar

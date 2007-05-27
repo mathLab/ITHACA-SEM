@@ -50,6 +50,7 @@ namespace Nektar
         void Test2DAssignmentOperator();
         void TestOffsetAssignmentOperator();
         void Test1DAccessOperator();
+        void Test2DAccessOperator();
 
         
     }

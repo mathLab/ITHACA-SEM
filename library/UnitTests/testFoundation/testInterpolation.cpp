@@ -215,7 +215,7 @@ void testFourierInterpolation(PointsType type, long double epsilon) {
                     for(int j=0; j<I.GetColumns(); ++j) {
                         long double F = fourierInterpolationFunction(j, zNodePtr[k], z, nPts);
                         long double error = I(k,j) - F;
-                        Linf = max(Linf, fabs(error));
+                        Linf = max(Linf, static_cast<double>(fabs(error)));
                         L1_interpolationMatrixError += fabs(error);
                         RMS += error*error;
                         mean += error;
@@ -310,7 +310,7 @@ void testPointsInterpolation(PointsType type, long double epsilon) {
                     for(int j=0; j<I.GetColumns(); ++j) {
                         long double L = LagrangeInterpolation(j, zNodePtr[k], z, nPts);
                         long double error = I(k,j) - L;
-                        Linf = max(Linf, fabs(error));
+                        Linf = max(Linf, static_cast<double>(fabs(error)));
                         L1_interpolationMatrixError += fabs(error);
                         RMS += error*error;
                         mean += error;

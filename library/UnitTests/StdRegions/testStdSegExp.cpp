@@ -397,7 +397,7 @@ namespace Nektar
         void testFwdTrans()
 	{
 	    NekDouble exactmatrices[3][6] = {
-		{-sqrt(2)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)},
+		{-sqrt(2.0)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)},
 		{2.0, -2.0, -4.0, 10.0/7.0, 0.0, -12.0/7.0},
 		{-sqrt(2.0)*2.0/3.0, -sqrt(2.0/3.0)*12.0/7.0, sqrt(0.4)*2.0/3.0, -sqrt(2.0/7.0)*2.0/3.0, 0.0, sqrt(2.0/11.0)*(8.0/21.0)}
 	    };
@@ -608,6 +608,9 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.cpp,v $
+    Revision 1.11  2007/05/27 16:40:04  bnelson
+    *** empty log message ***
+
     Revision 1.10  2007/05/15 05:21:04  bnelson
     Updated to use the new Array object.
 

@@ -674,22 +674,21 @@ namespace Nektar
             Array<OneD, NekDouble> rhs_a(5, a);
             ConstArray<OneD, NekDouble> rhs_b(4, b);
             
-            BOOST_CHECK_EQUAL(a[0], 1.0);
-            BOOST_CHECK_EQUAL(a[1], 2.0);
-            BOOST_CHECK_EQUAL(a[2], 3.0);
-            BOOST_CHECK_EQUAL(a[3], 4.0);
-            BOOST_CHECK_EQUAL(a[4], 5.0);
+            BOOST_CHECK_EQUAL(rhs_a[0], 1.0);
+            BOOST_CHECK_EQUAL(rhs_a[1], 2.0);
+            BOOST_CHECK_EQUAL(rhs_a[2], 3.0);
+            BOOST_CHECK_EQUAL(rhs_a[3], 4.0);
+            BOOST_CHECK_EQUAL(rhs_a[4], 5.0);
             
-            BOOST_CHECK_EQUAL(b[0], 10.0);
-            BOOST_CHECK_EQUAL(b[1], 20.0);
-            BOOST_CHECK_EQUAL(b[2], 30.0);
-            BOOST_CHECK_EQUAL(b[3], 40.0);
-            
+            BOOST_CHECK_EQUAL(rhs_b[0], 10.0);
+            BOOST_CHECK_EQUAL(rhs_b[1], 20.0);
+            BOOST_CHECK_EQUAL(rhs_b[2], 30.0);
+            BOOST_CHECK_EQUAL(rhs_b[3], 40.0);
             #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULL_DEBUG)
-                BOOST_CHECK_NO_THROW(a[4])
-                BOOST_CHECK_THROW((a[5]), ErrorUtil::NekError);
-                BOOST_CHECK_NO_THROW(b[3]);
-                BOOST_CHECK_THROW(b[4], ErrorUtil::NekError);
+                BOOST_CHECK_NO_THROW(rhs_a[4])
+                BOOST_CHECK_THROW(rhs_a[5], ErrorUtil::NekError);
+                BOOST_CHECK_NO_THROW(rhs_b[3]);
+                BOOST_CHECK_THROW(rhs_b[4], ErrorUtil::NekError);
             #endif
         }
         

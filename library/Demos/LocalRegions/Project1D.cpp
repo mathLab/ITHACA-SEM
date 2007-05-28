@@ -17,9 +17,9 @@ int main(int argc, char *argv[])
 {
     int i,j;
     int order, nq;
-    const NekDouble *z,*w;
+    ConstArray<OneD,NekDouble> z,w;
     NekDouble L2_err;
-    NdkDouble x[2];
+    NekDouble x[2];
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;
     StdRegions::StdExpansion1D  *E;
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     x[0]  =   atof(argv[4]);
     x[1]  =   atof(argv[5]);
 
-    Array<OneD, NekDouble> sol = Array<OneD, NekDouble>(nq);
+    Array<OneD,NekDouble> sol(nq);
 
     if(btype != LibUtilities::eFourier)
     {
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define solution to be projected 
-    Array<OneD, NekDouble> xc = Array<OneD, NekDouble>(nq);
+    Array<OneD,NekDouble> xc(nq);
     E->GetCoords(xc);
 
     if(btype != LibUtilities::eFourier)
@@ -141,7 +141,8 @@ int main(int argc, char *argv[])
         sol[0] = solutionfourier(0.5*(x[1]+x[0]),order,x[0],x[1]);
     }
 
-    Array<OneD, NekDouble> lcoord = Array<OneD, NekDouble>(1);
+    Array<OneD,NekDouble> lcoord(1);
+
     lcoord[0] = 0;
     E->GetCoord(lcoord,xc);
     double nsol = E->PhysEvaluate(xc);

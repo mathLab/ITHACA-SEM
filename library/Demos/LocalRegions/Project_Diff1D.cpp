@@ -20,9 +20,9 @@ int main(int argc, char *argv[])
 {
     int i,j;
     int order, nq;
-    const double *z,*w;
-    double L2_err;
-    double x[2];
+    ConstArray<OneD,NekDouble> z,w;
+    NekDouble L2_err;
+    NekDouble x[2];
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;
     StdRegions::StdExpansion1D  *E;
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     x[0]  =   atof(argv[4]);
     x[1]  =   atof(argv[5]);
 
-    Array<OneD, NekDouble> sol = Array<OneD, NekDouble>(nq);
+    Array<OneD,NekDouble> sol(nq);
 
     if(btype != LibUtilities::eFourier)
     {
@@ -85,7 +85,8 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define solution to be projected 
-    Array<OneD, NekDouble> xc = Array<OneD, NekDouble>(nq);
+    Array<OneD,NekDouble> xc(nq);
+
     E->GetCoords(xc);
 
     if(btype != LibUtilities::eFourier)

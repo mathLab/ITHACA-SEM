@@ -124,7 +124,8 @@ namespace Nektar
         /** given local collapsed coordinate Lcoord return the value of
         physical coordinate in direction i **/
 
-        NekDouble EdgeComponent::GetCoord(const int i, ConstArray<OneD, NekDouble> &Lcoord) 
+        NekDouble EdgeComponent::GetCoord(const int i, 
+                                 const ConstArray<OneD, NekDouble> &Lcoord) 
         {
 
             ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
@@ -201,6 +202,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.17  2007/05/17 18:45:24  jfrazier
+*    Minor changes to accommodate Array class.
+*
 *    Revision 1.16  2007/04/08 03:34:48  jfrazier
 *    Updated to compile with SharedArray.  This has not been converted to SharedArray, just made to work with others that have been converted.
 *

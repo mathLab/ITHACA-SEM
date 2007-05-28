@@ -77,7 +77,7 @@ namespace Nektar
             out = (*D)*in;
 
             // this line should not be needed
-            Vmath::Vcopy(nquad,&out[0],1,&outarray[0],1);
+            //Vmath::Vcopy(nquad,&out[0],1,&outarray[0],1);
 
             // cannot make version above work yet. 
 	    //Blas::Dgemv('T',nquad,nquad,1.0,&((*D).GetPtr())[0],nquad,
@@ -106,6 +106,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.17  2007/05/17 17:59:28  sherwin
+ * Modification to make Demos work after introducion of Array<>
+ *
  * Revision 1.16  2007/05/15 05:18:22  bnelson
  * Updated to use the new Array object.
  *

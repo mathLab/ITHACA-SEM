@@ -76,7 +76,8 @@ namespace Nektar
             ptype = Coords[0]->GetPointsType(0);
 
             Array<OneD,NekDouble> der[3] = {Array<OneD, NekDouble>(nquad),
-                Array<OneD, NekDouble>(nquad), Array<OneD, NekDouble>(nquad)};
+                                            Array<OneD, NekDouble>(nquad), 
+                                            Array<OneD, NekDouble>(nquad)};
 
             // Calculate local derivatives using physical space storage
             for(i = 0; i < coordim; ++i)
@@ -94,18 +95,9 @@ namespace Nektar
 
             if((m_gtype == eRegular)||(m_gtype== eMovingRegular))
             {
-                //m_jac     = new double [1];
-                //m_gmat[0] = new double [coordim];
-                int temp = 1;
-                m_jac  = Array<OneD, NekDouble>(1);
-                m_gmat = Array<TwoD, NekDouble>(coordim, temp);
+                m_jac  = Array<OneD, NekDouble>(1,0.0);
+                m_gmat = Array<TwoD, NekDouble>(coordim,1,1.0);
 
-                //for(i = 1; i < coordim; ++i)
-                //{
-                //    m_gmat[i] = m_gmat[i-1]+1;
-                //}
-
-                m_jac[0]   = 0.0;
                 for(i = 0; i < coordim; ++i)
                 {
                     m_gmat[i][0] = 1.0/der[i][0];
@@ -116,16 +108,8 @@ namespace Nektar
             }
             else
             {
-                //m_jac     = new double [nquad];
-                //m_gmat[0] = new double [coordim*nquad];
                 m_jac  = Array<OneD, NekDouble>(nquad);
-                m_gmat = Array<TwoD, NekDouble>(coordim, nquad);
-
-                // Array uses contiguous memory by default.
-                //for(i = 1; i < coordim; ++i)
-                //{
-                //    m_gmat[i] = m_gmat[i-1] + nquad;
-                //}
+                m_gmat = Array<TwoD, NekDouble>(coordim,nquad);
 
                 // invert local derivative for gmat;
                 for(i = 0; i < coordim; ++i)
@@ -585,6 +569,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.5  2007/05/25 17:52:01  jfrazier
+// Updated to use new Array classes.
+//
 // Revision 1.4  2007/04/04 21:49:24  sherwin
 // Update for SharedArray
 //

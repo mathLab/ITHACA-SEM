@@ -89,49 +89,20 @@ namespace Nektar
                 return m_jac;
             }
 
-            inline void ResetGmat(const double *ndata, int nq, int expdim, 
-                int coordim)
+            inline void ResetGmat(const ConstArray<OneD,NekDouble> &ndata, 
+                                  const int nq, const int expdim, 
+                                  const int coordim)
             {
-#pragma message("Fix this here")
-                m_gmat = Array<TwoD, NekDouble>(coordim, expdim, ndata);
-
-                //if(!m_gmat)
-                //{
-                //    m_gmat    = new double* [expdim*coordim];
-                //    m_gmat[0] = (double *) NULL;
-                //}
-
-                //if(m_gmat[0])
-                //{
-                //    delete[] m_gmat[0];
-                //}
-
-                //m_gmat[0] = ndata;
-                //for(int i = 1; i < expdim*coordim; ++i)
-                //{
-                //    m_gmat[i] = m_gmat[i-1]+nq;
-                //}
+                m_gmat = Array<TwoD,NekDouble>(expdim*coordim,nq,ndata.data());
             }
 
-            inline void ResetJac(double *ndata)
+            inline void ResetJac(int nq, const ConstArray<OneD,NekDouble> &ndata)
             {
-                //if(m_jac)
-                //{ 
-                //    delete[] m_jac;
-                //}
-
-                //m_jac = ndata;
-
-                // Keep m_jac the same size, but initialize it with ndata.
-                unsigned int sz = m_jac.num_elements();
-                m_jac = Array<OneD, NekDouble>(sz, ndata);
+                m_jac = Array<OneD, NekDouble>(nq, ndata.data());
             }
 
         protected:
-            //double ** m_gmat;
             Array<TwoD,NekDouble> m_gmat;
-
-            //double *  m_jac;
             Array<OneD,NekDouble> m_jac;
 
         private:
@@ -150,6 +121,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.7  2007/05/25 17:52:02  jfrazier
+// Updated to use new Array classes.
+//
 // Revision 1.6  2007/05/17 18:45:25  jfrazier
 // Minor changes to accommodate Array class.
 //

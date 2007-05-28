@@ -107,7 +107,7 @@ namespace Nektar
                 return m_xmap[0]; //should never be reached
             }
 
-            NekDouble GetCoord(const int i, ConstArray<OneD, NekDouble> &Lcoord);
+            NekDouble GetCoord(const int i, const ConstArray<OneD, NekDouble> &Lcoord);
                     
             /// \brief Get the orientation of edge1.
             ///
@@ -135,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.10  2007/05/17 18:45:25  jfrazier
+// Minor changes to accommodate Array class.
+//
 // Revision 1.9  2007/04/08 03:34:48  jfrazier
 // Updated to compile with SharedArray.  This has not been converted to SharedArray, just made to work with others that have been converted.
 //

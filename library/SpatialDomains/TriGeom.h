@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/TriGeom.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/TriGeom.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -39,7 +39,7 @@
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 
-#include <SpatialDomains/GeoFac.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/EdgeComponent.h>
@@ -53,8 +53,8 @@ namespace Nektar
         {
         public:
             TriGeom();
-            TriGeom(const VertexComponentSharedPtr verts[], const EdgeComponentSharedPtr edges[], StdRegions::EdgeOrientation * eorient);
-            TriGeom(const EdgeComponentSharedPtr edges[], StdRegions::EdgeOrientation * eorient);
+            TriGeom(const VertexComponentSharedPtr verts[], const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+            TriGeom(const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
             ~TriGeom();
 
             inline void SetOwnData()
@@ -63,9 +63,8 @@ namespace Nektar
             }
 
             void FillGeom();
-            GeoFacSharedPtr GenXGeoFac();
 
-            void GetLocCoords(double *Lcoords, const double *coords);
+            void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
 	    inline int GetEid(int i){
 		ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
@@ -94,6 +93,7 @@ namespace Nektar
             EdgeComponentVector             m_edges;
             StdRegions::EdgeOrientation     m_eorient [kNedges];
 
+            void GenGeomFactors(void);
         private:
             bool m_owndata;
         };
@@ -109,6 +109,10 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.6  2006/07/02 17:16:18  sherwin
+//
+// Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+//
 // Revision 1.5  2006/06/01 14:15:31  sherwin
 // Added typdef of boost wrappers and made GeoFac a boost shared pointer.
 //

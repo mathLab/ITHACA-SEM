@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/MeshGraph2D.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph2D.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -42,8 +42,8 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        MeshGraph2D::MeshGraph2D():
-    m_geofac_defined(false)
+        MeshGraph2D::MeshGraph2D()
+            //m_geofac_defined(false)
     {
     }
 
@@ -416,7 +416,7 @@ namespace Nektar
     {
     }
 
-
+#ifdef OLD
     // generate geometric factors based on MeshGraph information. 
     void MeshGraph2D::GenXGeoFac()
     {
@@ -437,7 +437,7 @@ namespace Nektar
 
         m_geofac_defined = true;
     }
-
+#endif
 
     // Take the string that is the composite reference and find the
     // pointer to the Geometry object corresponding to it.
@@ -553,6 +553,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.13  2006/10/17 22:26:01  jfrazier
+// Added capability to specify ranges in composite definition.
+//
 // Revision 1.12  2006/10/17 18:42:54  jfrazier
 // Removed "NUMBER" attribute in items.
 //

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/QuadGeom.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/QuadGeom.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -49,14 +49,14 @@ namespace Nektar
     namespace SpatialDomains
     {
         /// Default constructor
-
+        
         QuadGeom::QuadGeom()
         {
         }
 
         QuadGeom::QuadGeom(const VertexComponentSharedPtr verts[], 
 			   const EdgeComponentSharedPtr edges[], 
-			   StdRegions::EdgeOrientation * eorient):
+			   const StdRegions::EdgeOrientation eorient[]):
 	  QuadFaceComponent(verts[0]->GetCoordim())
         {
             /// Copy the vert shared pointers.
@@ -77,7 +77,7 @@ namespace Nektar
         }
 	
 	QuadGeom::QuadGeom(const EdgeComponentSharedPtr edges[], 
-			   StdRegions::EdgeOrientation * eorient):
+			   const StdRegions::EdgeOrientation eorient[]):
 	    QuadFaceComponent(edges[0]->GetCoordim())
         {
 	    int j;
@@ -112,37 +112,27 @@ namespace Nektar
         }
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
-
-        GeoFacSharedPtr QuadGeom::GenXGeoFac()
+        void QuadGeom::GenGeomFactors(void)
         {
-            GeoFacSharedPtr gfac;
             int i;
-            StdRegions::GeomType Gtype = StdRegions::eRegular;
-
-            StdRegions::StdExpansion2D ** xmaptemp = new 
-                StdRegions::StdExpansion2D*[m_coordim];
-
-            for(i=0;i<m_coordim;i++)
-            {
-	      xmaptemp[i] = m_xmap[i];
-            }
+            GeomType Gtype = eRegular;
 
             FillGeom();
 
             // check to see if expansions are linear
             for(i = 0; i < m_coordim; ++i)
             {
-                if((m_xmap[i]->GetBasisOrder(0) != 2)||
-                    (m_xmap[i]->GetBasisOrder(1) != 2))
+                if((m_xmap[i]->GetBasisNumModes(0) != 2)||
+                   (m_xmap[i]->GetBasisNumModes(1) != 2))
                 {
-                    Gtype = StdRegions::eDeformed;
+                    Gtype = eDeformed;
                 }
             }
 
             // check to see if all angles are 90 degrees
-            if(Gtype == StdRegions::eRegular)
+            if(Gtype == eRegular)
             {
-                double dx1,dx2,dy1,dy2;
+                NekDouble dx1,dx2,dy1,dy2;
 
                 for(i = 0; i < 3; ++i)
                 {
@@ -156,18 +146,14 @@ namespace Nektar
                         sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))*
                         kGeomRightAngleTol)
                     {
-                        Gtype = StdRegions::eDeformed;
+                        Gtype = eDeformed;
                         break;
                     }
                 }
             }
 
-            gfac.reset(new GeoFac(Gtype,  m_coordim, 
-                (const StdRegions::StdExpansion2D **) xmaptemp));
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
 
-            delete[] xmaptemp;
-
-            return gfac; 
         }
 
 
@@ -180,15 +166,16 @@ namespace Nektar
 
         */
 
-        void QuadGeom::FillGeom(){
-
+        void QuadGeom::FillGeom()
+        {
+            
             // check to see if geometry structure is already filled
             if(m_state != ePtsFilled)
             {
                 int i,j; 
-                int order0 = m_xmap[0]->GetBasisOrder(0);
-                int order1 = m_xmap[0]->GetBasisOrder(1);
-                double *coef;
+                int order0 = m_xmap[0]->GetBasisNumModes(0);
+                int order1 = m_xmap[0]->GetBasisNumModes(1);
+                ConstArray<OneD,NekDouble> coef;
                 StdRegions::StdExpMap Map,MapV;
 
                 // set side 0 
@@ -251,7 +238,7 @@ namespace Nektar
                         m_xmap[i]->SetCoeff(Map[j],coef[j]);
                     }
                 }
-
+                
                 // set side 3
 		m_xmap[0]->MapTo((*m_edges[3])[0]->GetNcoeffs(),
 				 (*m_edges[3])[0]->GetBasisType(0),
@@ -265,38 +252,39 @@ namespace Nektar
                         m_xmap[i]->SetCoeff(Map[j],coef[j]);
                     }
                 }
-
+                
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    m_xmap[i]->BwdTrans(m_xmap[i]->GetPhys());
+                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
+                                        m_xmap[i]->UpdatePhys());
                 }
-
+                
                 m_state = ePtsFilled;
             }
         }
-
-        void QuadGeom::GetLocCoords(double *Lcoords, const double *coords)
+        
+        void QuadGeom::GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
         {
             int i;
-
+            
             FillGeom();
 
             // calculate local coordinate for coord 
-            if(GetGtype() == StdRegions::eRegular)
+            if(GetGtype() == eRegular)
             { // can assume it is right angled rectangle
-                double len0 = 0.0 ;
-                double len1 = 0.0;
-                double xi0 = 0.0;
-                double xi1 = 0.0;
-                const double *pts;
+                NekDouble len0 = 0.0 ;
+                NekDouble len1 = 0.0;
+                NekDouble xi0 = 0.0;
+                NekDouble xi1 = 0.0;
+                ConstArray<OneD,NekDouble> pts;
                 int nq0, nq1;
 
                 // get points;
                 //find end points
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    nq0 = m_xmap[i]->GetPointsOrder(0);
-                    nq1 = m_xmap[i]->GetPointsOrder(1);
+                    nq0 = m_xmap[i]->GetNumPoints(0);
+                    nq1 = m_xmap[i]->GetNumPoints(1);
 
                     pts = m_xmap[i]->GetPhys();
 
@@ -325,6 +313,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.7  2006/08/05 19:03:47  sherwin
+// Update to make the multiregions 2D expansion in connected regions work
+//
 // Revision 1.6  2006/07/02 17:16:17  sherwin
 //
 // Modifications to make MultiRegions work for a connected domain in 2D (Tris)

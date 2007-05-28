@@ -2,7 +2,7 @@ SET(SPATIAL_DOMAINS_SOURCES
 EdgeComponent.cpp
 GeomFactors.cpp
 Geometry1D.cpp
-#Geometry2D.cpp
+Geometry2D.cpp
 #Geometry3D.cpp
 Geometry.cpp
 #HexGeom.cpp
@@ -10,17 +10,17 @@ InterfaceComponent.cpp
 MeshComponents.cpp
 MeshGraph.cpp
 MeshGraph1D.cpp
-#MeshGraph2D.cpp
+MeshGraph2D.cpp
 #MeshGraph3D.cpp
 pchSpatialDomains.cpp
 #PrismGeom.cpp
 #PyrGeom.cpp
-#QuadFaceComponent.cpp
-#QuadGeom.cpp
+QuadFaceComponent.cpp
+QuadGeom.cpp
 SegGeom.cpp
 #TetGeom.cpp
-#TriFaceComponent.cpp
-#TriGeom.cpp
+TriFaceComponent.cpp
+TriGeom.cpp
 )
 
 SET(SPATIAL_DOMAINS_HEADERS

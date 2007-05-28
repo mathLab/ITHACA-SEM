@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/QuadFaceComponent.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/QuadFaceComponent.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -46,16 +46,16 @@ namespace Nektar
         }
 
         QuadFaceComponent::QuadFaceComponent(const int coordim):
-        Geometry2D(coordim)
+            Geometry2D(coordim),
+            m_xmap(coordim)
         {
-            const StdRegions::BasisKey B(StdRegions::eModified_A, 2,
-                StdRegions::eLobatto, 3,0,0);
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap =  new StdRegions::StdQuadExp *[m_coordim]; 
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = new StdRegions::StdQuadExp(B,B);  
+                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);  
             }
 
             m_state = eNotFilled;
@@ -63,16 +63,6 @@ namespace Nektar
 
         QuadFaceComponent::~QuadFaceComponent()
         {
-            if(m_xmap)
-            {
-                for(int i = 0; i < m_coordim; ++i)
-                {
-                    delete m_xmap[i];
-                }
-
-                delete[] m_xmap;
-                m_xmap = (StdRegions::StdQuadExp **)  NULL;
-            }
         }
 
         QuadFaceComponent::QuadFaceComponent(const QuadFaceComponent &T)
@@ -113,19 +103,23 @@ namespace Nektar
             return(false);
         }
 
-        double QuadFaceComponent::GetCoord(const int i, const double *Lcoord)
+        double QuadFaceComponent::GetCoord(const int i, 
+                                           const ConstArray<OneD,NekDouble> &Lcoord)
         {
 
             ASSERTL1(m_state == ePtsFilled,
                 "Goemetry is not in physical space");
 
-            return m_xmap[i]->Evaluate(Lcoord);
+            return m_xmap[i]->PhysEvaluate(Lcoord);
         }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: QuadFaceComponent.cpp,v $
+// Revision 1.1  2006/05/04 18:59:02  kirby
+// *** empty log message ***
+//
 // Revision 1.11  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

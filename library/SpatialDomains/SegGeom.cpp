@@ -51,7 +51,8 @@ namespace Nektar
     {
     }
 
-    SegGeom::SegGeom(int id, VertexComponentSharedPtr vert1, VertexComponentSharedPtr  vert2):
+    SegGeom::SegGeom(int id, VertexComponentSharedPtr vert1, 
+                     VertexComponentSharedPtr  vert2):
     EdgeComponent(id,vert1->GetCoordim())
     {
         m_owndata = false;
@@ -119,7 +120,7 @@ namespace Nektar
     }
 
 
-    void SegGeom::GetLocCoords(double *Lcoords,const double *coords)
+        void SegGeom::GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
     {
         int i;
 
@@ -128,9 +129,9 @@ namespace Nektar
         // calculate local coordinate for coord
         if(GetGtype() == eRegular)
         {
-            const double *pts;
-            double len = 0.0;
-            double xi  = 0.0;
+            const NekDouble *pts;
+            NekDouble len = 0.0;
+            NekDouble xi  = 0.0;
             int nq;
 
             // get points;
@@ -199,6 +200,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.13  2007/05/17 18:45:25  jfrazier
+// Minor changes to accommodate Array class.
+//
 // Revision 1.12  2007/04/04 21:49:24  sherwin
 // Update for SharedArray
 //

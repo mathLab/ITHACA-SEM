@@ -93,10 +93,11 @@ namespace Nektar
                 Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(), der[i]);
             }
 
-            if((m_gtype == eRegular)||(m_gtype== eMovingRegular))
+            if((m_gtype == eRegular)||
+               (m_gtype == eMovingRegular))
             {
                 m_jac  = Array<OneD, NekDouble>(1,0.0);
-                m_gmat = Array<TwoD, NekDouble>(coordim,1,1.0);
+                m_gmat = Array<TwoD, NekDouble>(coordim,1,0.0);
 
                 for(i = 0; i < coordim; ++i)
                 {
@@ -176,40 +177,35 @@ namespace Nektar
         \frac{\partial {\bf x}}{\partial \xi_2} \right | = \sqrt{J_{3D}} \f$
 
         **/
-#ifdef HIGH_D_FUNCTIONS
-        GeomFactors::GeomFactors(const GeomType gtype, const int n, 
-            const StdRegions::StdExpansion2D **Coords)
+        GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
+                                 const ConstArray<OneD,StdRegions::StdExpansion2DSharedPtr> &Coords)
         {
-            int        i,nquad0,nquad1,nqtot;
-            StdRegions::PointsType  ptype0, ptype1;
-            double      *d1[3], *d2[3];
+            int           i,nquad0,nquad1,nqtot;
+            LibUtilities::PointsType  ptype0, ptype1;
 
-            ASSERTL1((n >= 2)&&(n <= 3),
+            ASSERTL1((coordim >= 2)&&(coordim <= 3),
                 "Only understand up to three Coordinate and must have "
                 "at least two coordinates for this routine");
 
             m_gtype = gtype;
-            m_gmat  = new double*[2*n];
 
-            nquad0 = Coords[0]->GetPointsOrder(0);
-            nquad1 = Coords[0]->GetPointsOrder(1);
+            nquad0 = Coords[0]->GetNumPoints(0);
+            nquad1 = Coords[0]->GetNumPoints(1);
             ptype0 = Coords[0]->GetPointsType (0);
             ptype1 = Coords[0]->GetPointsType (1);
 
             nqtot = nquad0*nquad1;
 
-
             // setup temp storage
-            d1[0] = new double [3*nqtot]; 
-            d1[1] = d1[0] + nqtot;
-            d1[2] = d1[1] + nqtot;
-
-            d2[0] = new double [3*nqtot]; 
-            d2[1] = d2[0] + nqtot;
-            d2[2] = d2[1] + nqtot;
+            Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
+                                           Array<OneD, NekDouble>(nqtot), 
+                                           Array<OneD, NekDouble>(nqtot)};
+            Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
+                                           Array<OneD, NekDouble>(nqtot), 
+                                           Array<OneD, NekDouble>(nqtot)};
 
             // Calculate local derivatives using physical space storage
-            for(i = 0; i < n; ++i)
+            for(i = 0; i < coordim; ++i)
             {
                 ASSERTL2(Coords[i]->GetPointsOrder(0) == nquad0,
                     "Points order are different for coordinate 0 ");
@@ -220,21 +216,19 @@ namespace Nektar
                 ASSERTL2(Coords[i]->GetPointstTpe(1)  == ptype1,
                     "Points type are different for coordinate 1 ");
 
-                ((StdRegions::StdExpansion2D **) Coords)[i]->StdDeriv(d1[i],d2[i]);
+                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), 
+				    Coords[i]->UpdatePhys());
+
+                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1[i],d2[i]);
             }
 
-            if((m_gtype == StdRegions::eRegular)||
-                (m_gtype == StdRegions::eMovingRegular))
+            if((m_gtype == eRegular)||
+               (m_gtype == eMovingRegular))
             {
-                m_jac      = new double [1];
-                m_gmat[0]  = new double [2*n];
+                m_jac  = Array<OneD, NekDouble>(1,0.0);
+                m_gmat = Array<TwoD, NekDouble>(2*coordim,1,0.0);
 
-                for(i = 1; i < 2*n; ++i)
-                {
-                    m_gmat[i] = m_gmat[i-1]+1;
-                }
-
-                if(n == 2) // assume g = [0,0,1]
+                if(coordim == 2) // assume g = [0,0,1]
                 {
                     m_jac[0] = d1[0][0]*d2[1][0] - d2[0][0]*d1[1][0];
 
@@ -247,7 +241,7 @@ namespace Nektar
                 }
                 else
                 {
-                    double g[3];
+                    NekDouble g[3];
                     g[0] = d1[1][0]*d2[2][0] - d1[2][0]*d2[1][0];
                     g[1] = d1[2][0]*d2[0][0] - d1[0][0]*d2[2][0];
                     g[2] = d1[0][0]*d2[1][0] - d1[1][0]*d2[0][0];
@@ -267,94 +261,87 @@ namespace Nektar
             }  
             else
             {
-                m_jac     = new double [nqtot];
-                m_gmat[0] = new double [2*n*nqtot];
+                m_jac  = Array<OneD, NekDouble>(nqtot,0.0);
+                m_gmat = Array<TwoD, NekDouble>(2*coordim,nqtot,0.0);
 
-                for(i = 1; i < 2*n; ++i)
-                {
-                    m_gmat[i] = m_gmat[i-1] + nqtot;
-                }
-
-                if(n == 2) // assume g = [0,0,1]
+                if(coordim == 2) // assume g = [0,0,1]
                 {
                     // set up Jacobian 
-                    Vmath::Vmul(nqtot,d2[0],1,d1[1],1,m_jac,1);
-                    Vmath::Vvtvm(nqtot,d1[0],1,d2[1],1,m_jac,1,m_jac,1);
+                    Vmath::Vmul (nqtot,&d2[0][0],1,&d1[1][0],1,&m_jac[0],1);
+                    Vmath::Vvtvm(nqtot,&d1[0][0],1,&d2[1][0],1,&m_jac[0],1,
+                                 &m_jac[0],1);
 
-                    m_jac[0] = d1[0][0]*d2[1][0] - d2[0][0]*d1[1][0];
-
-                    ASSERTL1(Vmath::Vmin(nqtot,m_jac,1) > 0, "2D Deformed Jacobian is not positive");
-
-                    Vmath::Vdiv(nqtot,d2[1],1,m_jac,1,m_gmat[0],1); // d xi_1/d x_1
-                    Vmath::Vdiv(nqtot,d1[1],1,m_jac,1,m_gmat[1],1); 
-                    Vmath::Neg(nqtot,m_gmat[1],1);                  // d xi_2/d x_1
-                    Vmath::Vdiv(nqtot,d2[0],1,m_jac,1,m_gmat[2],1); 
-                    Vmath::Neg(nqtot,m_gmat[2],1);                  // d xi_1/d x_2
-                    Vmath::Vdiv(nqtot,d1[0],1,m_jac,1,m_gmat[3],1); // d xi_2/d x_2
+                    ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0, "2D Deformed Jacobian is not positive");
+                    
+                    Vmath::Vdiv(nqtot,&d2[1][0],1,&m_jac[0],1,&m_gmat[0][0],1); // d xi_1/d x_1
+                    Vmath::Vdiv(nqtot,&d1[1][0],1,&m_jac[0],1,&m_gmat[1][0],1); 
+                    Vmath::Neg(nqtot,&m_gmat[1][0],1);                  // d xi_2/d x_1
+                    Vmath::Vdiv(nqtot,&d2[0][0],1,&m_jac[0],1,&m_gmat[2][0],1); 
+                    Vmath::Neg(nqtot,&m_gmat[2][0],1);                  // d xi_1/d x_2
+                    Vmath::Vdiv(nqtot,&d1[0][0],1,&m_jac[0],1,&m_gmat[3][0],1); // d xi_2/d x_2
                 }
                 else
                 {
-                    double *g[3];
-                    // Assume that wsh1 is sufficiently large for 3 2D expressions. 
-                    g[0] = new double [3*nqtot];
-                    g[1] = g[0] + nqtot;
-                    g[2] = g[1] + nqtot; 
-
+                    Array<OneD,NekDouble> g[3] = {Array<OneD, NekDouble>(nqtot),
+                                                  Array<OneD, NekDouble>(nqtot),
+                                                  Array<OneD, NekDouble>(nqtot)};
                     // g[0]
-                    Vmath::Vmul (nqtot,d1[2],1,d2[1],1,g[0],1);
-                    Vmath::Vvtvm(nqtot,d1[1],1,d2[2],1,g[0],1,g[0],1);
+                    Vmath::Vmul (nqtot,&d1[2][0],1,&d2[1][0],1,&g[0][0],1);
+                    Vmath::Vvtvm(nqtot,&d1[1][0],1,&d2[2][0],1,&g[0][0],1,&g[0][0],1);
                     //g[1]
-                    Vmath::Vmul (nqtot,d1[0],1,d2[2],1,g[1],1);
-                    Vmath::Vvtvm(nqtot,d1[2],1,d2[0],1,g[1],1,g[1],1);
+                    Vmath::Vmul (nqtot,&d1[0][0],1,&d2[2][0],1,&g[1][0],1);
+                    Vmath::Vvtvm(nqtot,&d1[2][0],1,&d2[0][0],1,&g[1][0],1,&g[1][0],1);
                     //g[2]
-                    Vmath::Vmul (nqtot,d1[1],1,d2[0],1,g[2],1);
-                    Vmath::Vvtvm(nqtot,d1[0],1,d2[1],1,g[2],1,g[2],1);
+                    Vmath::Vmul (nqtot,&d1[1][0],1,&d2[0][0],1,&g[2][0],1);
+                    Vmath::Vvtvm(nqtot,&d1[0][0],1,&d2[1][0],1,&g[2][0],1,&g[2][0],1);
 
                     // J_3D
-                    Vmath::Vmul(nqtot,g[0],1,g[0],1,m_jac,1);
-                    Vmath::Vvtvp(nqtot,g[1],1,g[1],1,m_jac,1,m_jac,1);
-                    Vmath::Vvtvp(nqtot,g[2],1,g[2],1,m_jac,1,m_jac,1);
+                    Vmath::Vmul (nqtot,&g[0][0],1,&g[0][0],1,&m_jac[0],1);
+                    Vmath::Vvtvp(nqtot,&g[1][0],1,&g[1][0],1,&m_jac[0],1,&m_jac[0],1);
+                    Vmath::Vvtvp(nqtot,&g[2][0],1,&g[2][0],1,&m_jac[0],1,&m_jac[0],1);
 
                     // d xi_1/d x_1
-                    Vmath::Vmul (nqtot,d2[2],1,g[1],1,m_gmat[0],1);
-                    Vmath::Vvtvm(nqtot,d2[1],1,g[2],1,m_gmat[0],1,m_gmat[0],1);
-                    Vmath::Vdiv(nqtot,m_gmat[0],1,m_jac,1,m_gmat[0],1);
+                    Vmath::Vmul (nqtot,&d2[2][0],1,&g[1][0],1,&m_gmat[0][0],1);
+                    Vmath::Vvtvm(nqtot,&d2[1][0],1,&g[2][0],1,&m_gmat[0][0],1,&m_gmat[0][0],1);
+                    Vmath::Vdiv(nqtot,&m_gmat[0][0],1,&m_jac[0],1,&m_gmat[0][0],1);
 
                     // d xi_2/d x_1
-                    Vmath::Vmul (nqtot,d1[1],1,g[2],1,m_gmat[1],1);
-                    Vmath::Vvtvm(nqtot,d1[2],1,g[1],1,m_gmat[1],1,m_gmat[1],1);
-                    Vmath::Vdiv(nqtot,m_gmat[1],1,m_jac,1,m_gmat[1],1);
+                    Vmath::Vmul (nqtot,&d1[1][0],1,&g[2][0],1,&m_gmat[1][0],1);
+                    Vmath::Vvtvm(nqtot,&d1[2][0],1,&g[1][0],1,&m_gmat[1][0],1
+                                 ,&m_gmat[1][0],1);
+                    Vmath::Vdiv(nqtot,&m_gmat[1][0],1,&m_jac[0],1,&m_gmat[1][0],1);
 
                     // d xi_1/d x_2
-                    Vmath::Vmul (nqtot,d2[0],1,g[2],1,m_gmat[2],1);
-                    Vmath::Vvtvm(nqtot,d2[2],1,g[0],1,m_gmat[2],1,m_gmat[2],1);
-                    Vmath::Vdiv(nqtot,m_gmat[2],1,m_jac,1,m_gmat[2],1);
+                    Vmath::Vmul (nqtot,&d2[0][0],1,&g[2][0],1,&m_gmat[2][0],1);
+                    Vmath::Vvtvm(nqtot,&d2[2][0],1,&g[0][0],1,&m_gmat[2][0],1,
+                                 &m_gmat[2][0],1);
+                    Vmath::Vdiv(nqtot,&m_gmat[2][0],1,&m_jac[0],1,&m_gmat[2][0],1);
 
                     // d xi_2/d x_2
-                    Vmath::Vmul (nqtot,d1[2],1,g[0],1,m_gmat[3],1);
-                    Vmath::Vvtvm(nqtot,d1[0],1,g[2],1,m_gmat[3],1,m_gmat[3],1);
-                    Vmath::Vdiv(nqtot,m_gmat[3],1,m_jac,1,m_gmat[3],1);
+                    Vmath::Vmul (nqtot,&d1[2][0],1,&g[0][0],1,&m_gmat[3][0],1);
+                    Vmath::Vvtvm(nqtot,&d1[0][0],1,&g[2][0],1,&m_gmat[3][0],1,
+                                 &m_gmat[3][0],1);
+                    Vmath::Vdiv(nqtot,&m_gmat[3][0],1,&m_jac[0],1,&m_gmat[3][0],1);
 
                     // d xi_1/d x_3
-                    Vmath::Vmul (nqtot,d2[1],1,g[0],1,m_gmat[4],1);
-                    Vmath::Vvtvm(nqtot,d2[0],1,g[1],1,m_gmat[4],1,m_gmat[4],1);
-                    Vmath::Vdiv(nqtot,m_gmat[4],1,m_jac,1,m_gmat[4],1);
+                    Vmath::Vmul (nqtot,&d2[1][0],1,&g[0][0],1,&m_gmat[4][0],1);
+                    Vmath::Vvtvm(nqtot,&d2[0][0],1,&g[1][0],1,&m_gmat[4][0],1,
+                                 &m_gmat[4][0],1);
+                    Vmath::Vdiv(nqtot,&m_gmat[4][0],1,&m_jac[0],1,&m_gmat[4][0],1);
 
                     // d xi_2/d x_3
-                    Vmath::Vmul (nqtot,d1[0],1,g[1],1,m_gmat[5],1);
-                    Vmath::Vvtvm(nqtot,d1[1],1,g[0],1,m_gmat[5],1,m_gmat[5],1);
-                    Vmath::Vdiv(nqtot,m_gmat[5],1,m_jac,1,m_gmat[5],1);
+                    Vmath::Vmul (nqtot,&d1[0][0],1,&g[1][0],1,&m_gmat[5][0],1);
+                    Vmath::Vvtvm(nqtot,&d1[1][0],1,&g[0][0],1,&m_gmat[5][0],1,
+                                 &m_gmat[5][0],1);
+                    Vmath::Vdiv(nqtot,&m_gmat[5][0],1,&m_jac[0],1,&m_gmat[5][0],1);
 
                     // J = sqrt(J_3D)
-                    Vmath::Vsqrt(nqtot,m_jac,1,m_jac,1);
+                    Vmath::Vsqrt(nqtot,&m_jac[0],1,&m_jac[0],1);
 
-                    delete[] g[0];
                 }
             }
-
-            delete[] d1[0];
-            delete[] d2[0];
         }
+#ifdef HIGH_D_FUNCTIONS
 
 
         /**
@@ -444,8 +431,8 @@ namespace Nektar
                 ((StdRegions::StdExpansion3D **) Coords)[i]->StdDeriv(d1[i],d2[i],d3[i]);
             }
 
-            if((m_gtype == StdRegions::eRegular)||
-                (m_gtype == StdRegions::eMovingRegular))
+            if((m_gtype == eRegular)||
+               (m_gtype == eMovingRegular))
             {
                 m_jac      = new double [1];
                 m_gmat[0]  = new double [9];
@@ -569,6 +556,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.6  2007/05/28 08:35:25  sherwin
+// Updated for localregions up to Project1D
+//
 // Revision 1.5  2007/05/25 17:52:01  jfrazier
 // Updated to use new Array classes.
 //

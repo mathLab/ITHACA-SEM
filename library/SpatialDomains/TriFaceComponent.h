@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/TriFaceComponent.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/TriFaceComponent.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -71,27 +71,29 @@ namespace Nektar
 	      return m_coordim;
 	    }
 
-            inline const StdRegions::Basis *GetBasis(const int i, const int j)
+            inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
 	    {
-	      return m_xmap[i]->GetBasis(j);
+                return m_xmap[i]->GetBasis(j);
             }
 	    
-            inline double *GetPhys(int i)
-	    {
-                return m_xmap[i]->GetPhys();
+            inline Array<OneD,NekDouble> &UpdatePhys(int i)
+            {
+                return m_xmap[i]->UpdatePhys();
             }
 
-            double GetCoord(const int i, const double *Lcoord);
+            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord);
 
         protected:
             int m_fid;
             bool m_ownverts;
             std::list<CompToElmt> m_elmtmap;
 
-            StdRegions::StdTriExp **m_xmap;
-
+	    Array<OneD, StdRegions::StdExpansion2DSharedPtr> m_xmap;
         private:
         };
+
+        typedef boost::shared_ptr<TriFaceComponent> TriFaceComponentSharedPtr;
+        typedef std::vector<TriFaceComponentSharedPtr> TriFaceComponentVector; 
     }; //end of namespace
 }; //end of namespace
 
@@ -99,6 +101,9 @@ namespace Nektar
 
 //
 // $Log: TriFaceComponent.h,v $
+// Revision 1.1  2006/05/04 18:59:05  kirby
+// *** empty log message ***
+//
 // Revision 1.8  2006/03/12 14:20:44  sherwin
 //
 // First compiling version of SpatialDomains and associated modifications

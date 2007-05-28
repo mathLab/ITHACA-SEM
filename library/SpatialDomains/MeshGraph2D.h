@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/MeshGraph2D.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph2D.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -79,10 +79,12 @@ namespace Nektar
                 return m_quadgeoms;
             }
 
+#ifdef OLD
             inline bool GetGeofac_defined(void)
             {
                 return m_geofac_defined;
             }
+#endif
 
             void GenXGeoFac();
 
@@ -211,7 +213,9 @@ namespace Nektar
             void ReadComposites(TiXmlDocument &doc);
             void ResolveGeomRef(const std::string &prevToken, const std::string &token);
 
+#ifdef OLD
             bool   m_geofac_defined;
+#endif
 
         private:
             EdgeComponentVector m_ecomps;
@@ -225,6 +229,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.9  2006/10/17 22:26:01  jfrazier
+// Added capability to specify ranges in composite definition.
+//
 // Revision 1.8  2006/09/26 23:41:53  jfrazier
 // Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
 //

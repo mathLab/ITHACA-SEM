@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/TriGeom.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/TriGeom.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -47,7 +47,7 @@ namespace Nektar
 
         TriGeom::TriGeom(const VertexComponentSharedPtr verts[], 
 			 const EdgeComponentSharedPtr edges[], 
-			 StdRegions::EdgeOrientation * eorient):
+			 const StdRegions::EdgeOrientation eorient[]):
 	    TriFaceComponent(verts[0]->GetCoordim())
         {
             /// Copy the vert shared pointers.
@@ -67,7 +67,7 @@ namespace Nektar
         }
 
         TriGeom::TriGeom(const EdgeComponentSharedPtr edges[], 
-			 StdRegions::EdgeOrientation * eorient):
+			 const StdRegions::EdgeOrientation eorient[]):
 	    TriFaceComponent(edges[0]->GetCoordim())
         {
 	    int j;
@@ -101,37 +101,24 @@ namespace Nektar
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
 
-        GeoFacSharedPtr TriGeom::GenXGeoFac()
+        void TriGeom::GenGeomFactors(void)
         {
-            GeoFacSharedPtr gfac;
-            StdRegions::GeomType Gtype = StdRegions::eRegular;
-
-            StdRegions::StdExpansion2D ** xmaptemp = new 
-                StdRegions::StdExpansion2D*[m_coordim];
-
-            for(int i=0;i<m_coordim;i++)
-            {
-                xmaptemp[i] = m_xmap[i];
-            }
-
+            GeomType Gtype = eRegular;
+            
             FillGeom();
 
             // check to see if expansions are linear
             for(int i = 0; i < m_coordim; ++i)
             {
-                if((m_xmap[i]->GetBasisOrder(0) != 2)||
-                    (m_xmap[i]->GetBasisOrder(1) != 2))
+                if((m_xmap[i]->GetBasisNumModes(0) != 2)||
+                   (m_xmap[i]->GetBasisNumModes(1) != 2))
                 {
-                    Gtype = StdRegions::eDeformed;
+                    Gtype = eDeformed;
                 }
             }
 
-            gfac.reset(new GeoFac(Gtype,  m_coordim, 
-		      (const StdRegions::StdExpansion2D **) xmaptemp));
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
 
-            delete[] xmaptemp;
-
-            return gfac; 
         }
 
         /** \brief put all quadrature information into edge structure 
@@ -152,9 +139,9 @@ namespace Nektar
             }
 
             int i,j; 
-            int order0 = m_xmap[0]->GetBasisOrder(0);
-            int order1 = m_xmap[0]->GetBasisOrder(1);
-            double *coef;
+            int order0 = m_xmap[0]->GetBasisNumModes(0);
+            int order1 = m_xmap[0]->GetBasisNumModes(1);
+            ConstArray<OneD,NekDouble> coef;
             StdRegions::StdExpMap Map,MapV;
 
             // set side 1 
@@ -219,19 +206,20 @@ namespace Nektar
 
             for(i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i]->BwdTrans(m_xmap[i]->GetPhys());
+                m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
+                                    m_xmap[i]->UpdatePhys());
             }
 
             m_state = ePtsFilled;
 
         }
 
-        void TriGeom::GetLocCoords(double *Lcoords, const double *coords)
+        void TriGeom::GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
         {
             FillGeom();
 
             // calculate local coordinate for coord 
-            if(GetGtype() == StdRegions::eRegular)
+            if(GetGtype() == eRegular)
             { // can assume it is right angled rectangle
                 VertexComponent dv1, dv2, norm, orth1, orth2;
                 VertexComponent *xin = new VertexComponent (m_coordim,0,coords[0], coords[1], coords[2]);
@@ -264,6 +252,10 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.7  2006/07/02 17:16:18  sherwin
+//
+// Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+//
 // Revision 1.6  2006/06/02 18:48:40  sherwin
 // Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
 //

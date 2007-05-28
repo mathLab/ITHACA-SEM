@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/TriFaceComponent.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/TriFaceComponent.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -46,17 +46,17 @@ namespace Nektar
         }
 
         TriFaceComponent::TriFaceComponent(const int coordim):
-        Geometry2D(coordim)
+            Geometry2D(coordim),
+            m_xmap(coordim)
         {
-            const StdRegions::BasisKey B0(StdRegions::eModified_A, 2,
-                StdRegions::eLobatto, 3,0,0);
-            const StdRegions::BasisKey B1(StdRegions::eModified_B, 2,
-                StdRegions::eRadauM, 3,1,0);
-            m_xmap = new StdRegions::StdTriExp * [m_coordim];
+            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
 
             for(int i = 0; i < m_coordim; ++i)
             {
-	      m_xmap[i] = new StdRegions::StdTriExp(B0,B1);
+	      m_xmap[i] = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
             }
 
             m_state = eNotFilled;
@@ -65,16 +65,6 @@ namespace Nektar
 
         TriFaceComponent::~TriFaceComponent()
         {
-            if(m_xmap)
-            {
-                for(int i = 0; i < m_coordim; ++i)
-                {
-		  delete m_xmap[i]; 
-                }
-
-                delete[] m_xmap;
-                m_xmap = (StdRegions::StdTriExp **) NULL;
-            }
         }
 
 
@@ -118,18 +108,22 @@ namespace Nektar
         physical coordinate in direction i **/
 
 
-        double TriFaceComponent::GetCoord(const int i, const double *Lcoord)
+        double TriFaceComponent::GetCoord(const int i, 
+                                          const ConstArray<OneD,NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
                 "Goemetry is not in physical space");
 
-            return m_xmap[i]->Evaluate(Lcoord);
+            return m_xmap[i]->PhysEvaluate(Lcoord);
         }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: TriFaceComponent.cpp,v $
+// Revision 1.3  2006/05/30 14:00:04  sherwin
+// Updates to make MultiRegions and its Demos work
+//
 // Revision 1.2  2006/05/23 19:56:33  jfrazier
 // These build and run, but the expansion pieces are commented out
 // because they would not run.

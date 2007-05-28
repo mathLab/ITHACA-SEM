@@ -72,7 +72,8 @@ namespace Nektar
                 return StdRegions::eSegment;
             }
 
-            void GetLocCoords(double *Lcoords, const double *coords);
+            void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+
 
             inline void SetOwnData()
             {
@@ -97,7 +98,7 @@ namespace Nektar
 
             virtual void v_GenGeomFactors(void)
             {
-        		GenGeomFactors();
+                GenGeomFactors();
             }
         };
         
@@ -113,6 +114,10 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.8  2007/03/20 09:17:40  kirby
+//
+// GeomFactors now added; metricinfo used instead of minfo; styles updated
+//
 // Revision 1.7  2007/03/14 21:24:08  sherwin
 // Update for working version of MultiRegions up to ExpList1D
 //

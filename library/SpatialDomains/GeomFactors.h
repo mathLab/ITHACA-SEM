@@ -39,8 +39,10 @@
 #include <SpatialDomains/SpatialDomains.hpp>
 
 #include <StdRegions/StdExpansion1D.h>
-//#include <StdRegions/StdExpansion2D.h>
-//#include <StdRegions/StdExpansion3D.h>
+#include <StdRegions/StdExpansion2D.h>
+#ifdef HIGH_D_FUNCTIONS
+#include <StdRegions/StdExpansion3D.h>
+#endif
 
 namespace Nektar
 {
@@ -59,13 +61,13 @@ namespace Nektar
             GeomFactors(const GeomType gtype, const int coordim,
                 const ConstArray<OneD, StdRegions::StdExpansion1DSharedPtr> &Coords);
 
-#if 0 
             /**  \brief Two dimensional geometric factors based on two
             or three dimensional coordinate description
             **/
             GeomFactors(const GeomType gtype, const int coordim,
-                const StdRegions::StdExpansion2D **Coords);
+                        const ConstArray<OneD,StdRegions::StdExpansion2DSharedPtr> &Coords);
 
+#ifdef HIGH_D_FUNCTIONS
             /**  \brief Three dimensional geometric factors and Jacobian
             **/
             GeomFactors(const GeomType gtype, 
@@ -121,6 +123,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.8  2007/05/28 08:35:26  sherwin
+// Updated for localregions up to Project1D
+//
 // Revision 1.7  2007/05/25 17:52:02  jfrazier
 // Updated to use new Array classes.
 //

@@ -46,7 +46,7 @@ namespace Nektar
 	{
 	}
 	
-	LocalToGlobalMap::LocalToGlobalMap(int totdata, NekIntSharedArray &map):
+	LocalToGlobalMap::LocalToGlobalMap(int totdata, Array<OneD,int> &map):
 	    m_totLocLen(totdata)
 	{
 	    m_locToContMap = map; 

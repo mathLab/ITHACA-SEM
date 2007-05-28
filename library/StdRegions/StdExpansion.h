@@ -773,6 +773,11 @@ namespace Nektar
                 return v_GenLapMatrix();
             }
 
+            DNekMatSharedPtr GetLocMatrix(MatrixType mtype)
+            {
+                return v_GetLocMatrix(mtype);
+            }
+
             void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
                             Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                             Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray,
@@ -785,6 +790,12 @@ namespace Nektar
             boost::shared_ptr<SpatialDomains::GeomFactors> GetMetricInfo(void) const
             {
                 return v_GetMetricInfo();
+            }
+
+            virtual DNekMatSharedPtr v_GetLocMatrix(MatrixType mtype)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return boost::shared_ptr<DNekMat>();
             }
 
             /** \brief this function interpolates a 1D function \f$f\f$ evaluated
@@ -1072,6 +1083,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.47  2007/05/17 17:59:27  sherwin
+* Modification to make Demos work after introducion of Array<>
+*
 * Revision 1.46  2007/05/15 05:18:23  bnelson
 * Updated to use the new Array object.
 *

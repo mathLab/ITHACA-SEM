@@ -48,20 +48,30 @@ namespace Nektar
 	{
 	}
 
+        ContExpList1D::ContExpList1D(const ContExpList1D &In):
+            ExpList1D(In),
+            m_contNcoeffs(In.m_contNcoeffs),
+            m_locToGloMap(In.m_locToGloMap),
+            m_mass(In.m_mass)
+
+        {
+            m_contCoeffs = Array<OneD,NekDouble>(m_contNcoeffs);
+        }
+        
 	ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba, 
-				     SpatialDomains::MeshGraph1D &graph1D):
+				     const SpatialDomains::MeshGraph1D &graph1D):
 	    ExpList1D(Ba,graph1D)
 	{
 	    
-	    ASSERTL1((Ba.GetBasisType() == LibUtilities::Modified_A)
-		     ||(Ba.GetBasisType() == LibUtilities::GLL_Lagrange),
+	    ASSERTL1((Ba.GetBasisType() == LibUtilities::eModified_A)
+		     ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
 		     "Expansion not of an boundary-interior type");
 	    
 	    // setup mapping array 
-	    m_locToGloMap.reset(new LocalToGlobalMap1D(m_ncoeffs,m_exp,graph1D));
+	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph1D);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
-	    m_contCoeffs  = NekArray<NekDouble>(m_contNcoeffs);
+	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs);
 	}
               
 	void ContExpList1D::IProductWRTBase(const ExpList &In)
@@ -102,32 +112,30 @@ namespace Nektar
 	{
 	    if(!(m_mass.get()))
 	    {
-		int   i,j,n,gid1,gid2,loc_lda;
-		double *loc_mat;
+		int   i,j,n,gid1,gid2,loc_lda,cnt;
 		DNekMatSharedPtr loc_mass;
 		StdRegions::StdExpansionVectorIter def;
 		
-		DNekMatSharedPtr Gmass = MemoryManager::AllocateSharedPtr<DNekMat>(m_contNcoeffs,m_contNcoeffs);
-		m_mass = MemoryManager::AllocateSharedPtr<DNekLinSys>(Gmass);
+		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs);
 		
 		// fill global matrix 
-		for(n = 0; n < m_exp.size(); ++n)
+		for(n = cnt = 0; n < (*m_exp).size(); ++n)
 		{
-		    loc_mass = m_exp[n]->GetLocMass(StdRegions::eMassMatrix);
+		    loc_mass = (*m_exp)[n]->GetLocMatrix(StdRegions::eMassMatrix);
 		    loc_lda = loc_mass->GetColumns();
-		    loc_mat = loc_mass->GetMatrix();
 		    
 		    for(i = 0; i < loc_lda; ++i)
 		    {
-			gid1 = m_locToGloMap->GetMap(n,i);
-			
+			gid1 = m_locToGloMap->GetMap(cnt + i);
 			for(j = 0; j < loc_lda; ++j)
 			{
-			    gid2 = m_locToGloMap->GetMap(n,j);
-			    m_mass(gid1*m_contNcoeffs,gid2) += loc_mat[i*loc_lda+j];
-			}
-		    }
+			    gid2 = m_locToGloMap->GetMap(cnt + j);
+			    (*Gmass)(gid1,gid2) += (*loc_mass)(i,j);
+			}		
+                    }
+                    cnt += (*m_exp)[n]->GetNcoeffs();
 		}
+                m_mass = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmass);
 	    }
 	}
     } //end of namespace

@@ -46,7 +46,7 @@ namespace Nektar
 	    m_transState(eNotSet),
 	    m_physState(false)
 	{
-            m_exp = MemoryManager::AllocateSharedPtr<StdRegions::StdExpansionVector>();
+            m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
 	}
 	
 
@@ -84,7 +84,7 @@ namespace Nektar
             return PhysIntegral(m_phys);
         }
         
-	NekDouble ExpList::PhysIntegral(ConstArray<OneD, NekDouble> inarray)
+	NekDouble ExpList::PhysIntegral(const ConstArray<OneD, NekDouble> &inarray)
 	{
 	    int       i;
 	    int       cnt = 0;
@@ -107,18 +107,19 @@ namespace Nektar
             IProductWRTBase(Sin.GetPhys(),m_coeffs);
 	}
 
-	void ExpList::IProductWRTBase(ConstArray<OneD, NekDouble> inarray, 
+	void ExpList::IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
 				      Array<OneD, NekDouble> &outarray)
 	{
 	    int    i;
 	    int    cnt  = 0;
 	    int    cnt1 = 0;
-            Array<OneD, NekDouble> elmt_outarray;
-
+            ConstArray<OneD,NekDouble> e_inarray;
+            Array<OneD,NekDouble> e_outarray;
+            
 	    for(i = 0; i < GetExpSize(); ++i)
 	    {
-                elmt_outarray = outarray + cnt1;
-                (*m_exp)[i]->IProductWRTBase(inarray+cnt,elmt_outarray);
+                (*m_exp)[i]->IProductWRTBase(e_inarray = inarray+cnt,
+                                             e_outarray = outarray+cnt1);
                 cnt  += (*m_exp)[i]->GetTotPoints();
                 cnt1 += (*m_exp)[i]->GetNcoeffs();
 	    }
@@ -139,7 +140,7 @@ namespace Nektar
         }
 
 	
-        void ExpList::PhysDeriv(ConstArray<OneD, NekDouble> inarray,
+        void ExpList::PhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
                                 Array<OneD, NekDouble> &out_d0, 
                                 Array<OneD, NekDouble> &out_d1, 
                                 Array<OneD, NekDouble> &out_d2)
@@ -153,12 +154,12 @@ namespace Nektar
 	    for(i= 0; i < GetExpSize(); ++i)
 	    {
                 e_out_d0 = out_d0 + cnt;
-                if(out_d1)
+                if(out_d1.num_elements())
                 {
                     e_out_d1 = out_d1 + cnt;
                 }
                 
-                if(out_d2)
+                if(out_d2.num_elements())
                 {
                     e_out_d2 = out_d2 + cnt;
                 }
@@ -177,18 +178,19 @@ namespace Nektar
 	    m_transState = eLocal;
         }
 
-	void ExpList::FwdTrans(ConstArray<OneD, NekDouble> inarray, 
+	void ExpList::FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
                                Array<OneD, NekDouble>    &outarray)
 	{
 	    int cnt  = 0;
 	    int cnt1 = 0;
 	    int i;
-            Array<OneD, NekDouble> e_outarray;
-            
+            ConstArray<OneD,NekDouble> e_inarray;
+            Array<OneD,NekDouble> e_outarray;
+
 	    for(i= 0; i < GetExpSize(); ++i)
 	    {
-                e_outarray = outarray + cnt1;
-                (*m_exp)[i]->FwdTrans(inarray+cnt, e_outarray);
+                (*m_exp)[i]->FwdTrans(e_inarray  = inarray+cnt, 
+                                      e_outarray = outarray+cnt1);
 		cnt  += (*m_exp)[i]->GetTotPoints();
 		cnt1 += (*m_exp)[i]->GetNcoeffs();
 	    }
@@ -206,38 +208,23 @@ namespace Nektar
 	    m_physState = true;
         }
 		
-	void ExpList::BwdTrans(ConstArray<OneD, NekDouble> inarray,
+	void ExpList::BwdTrans(const ConstArray<OneD, NekDouble> &inarray,
 			       Array<OneD, NekDouble> &outarray)
 	{
 	    int  i;
 	    int  cnt  = 0;
 	    int  cnt1 = 0;
-	    Array<OneD, NekDouble> e_outarray;
+            ConstArray<OneD,NekDouble> e_inarray;
+            Array<OneD,NekDouble> e_outarray;
 
 	    for(i= 0; i < GetExpSize(); ++i)
 	    {
-                e_outarray = outarray + cnt1;
-		(*m_exp)[i]->BwdTrans(inarray + cnt, e_outarray);
+		(*m_exp)[i]->BwdTrans(e_inarray = inarray + cnt, 
+                                      e_outarray = outarray+cnt1);
 		cnt   += (*m_exp)[i]->GetNcoeffs();
 		cnt1  += (*m_exp)[i]->GetTotPoints();
 	    }	    
 	}
-
-        void ExpList::GetCoords(NekDoubleArrayVector &coords)
-        {
-	    switch(GetExp(0)->GetCoordim())
-            {
-            case 1:
-                GetCoords(coords[0]);
-                break;
-            case 2:
-                GetCoords(coords[0],coords[1]);
-                break;
-            case 3:
-                GetCoords(coords[0],coords[1],coords[2]);
-                break;
-            }
-        }
 
 	void ExpList::GetCoords(Array<OneD, NekDouble> &coord_0,
 				Array<OneD, NekDouble> &coord_1,
@@ -259,7 +246,7 @@ namespace Nektar
 		}
 		break;
 	    case 2: 
-		ASSERTL0(coord_1 != NullNekDouble1DArray, 
+		ASSERTL0(coord_1.num_elements() != 0, 
 			 "output coord_1 is not defined");
     
 		for(i= 0; i < GetExpSize(); ++i)
@@ -271,9 +258,9 @@ namespace Nektar
 		}
 		break;
 	    case 3: 
-		ASSERTL0(coord_1 != NullNekDouble1DArray, 
+		ASSERTL0(coord_1.num_elements() != 0,
 			 "output coord_1 is not defined");
-		ASSERTL0(coord_2 != NullNekDouble1DArray, 
+		ASSERTL0(coord_2.num_elements() != 0,
 			 "output coord_2 is not defined");
     
 		for(i= 0; i < GetExpSize(); ++i)

@@ -49,7 +49,9 @@ namespace Nektar
 	{
         public:
             LocalToGlobalMap1D(){};
-	    LocalToGlobalMap1D(int loclen, StdRegions::StdExpansionVector &locexp, SpatialDomains::MeshGraph1D &graph1D);
+	    LocalToGlobalMap1D(const int loclen, 
+                               const StdRegions::StdExpansionVector &locexp, 
+                               const SpatialDomains::MeshGraph1D &graph1D);
 
             virtual ~LocalToGlobalMap1D();
 	    
@@ -65,6 +67,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.4  2007/05/27 16:09:43  bnelson
+/** Update to new Array type.
+/**
 /** Revision 1.3  2007/04/26 15:00:16  sherwin
 /** SJS compiling working version using SHaredArrays
 /**

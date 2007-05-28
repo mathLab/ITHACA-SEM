@@ -51,7 +51,7 @@ namespace Nektar
 	{
         public:
             LocalToGlobalMap();
-	    LocalToGlobalMap(const int totdata, NekIntSharedArray &map);
+	    LocalToGlobalMap(const int totdata, Array<OneD,int> &map);
 	    
             ~LocalToGlobalMap();
 	    
@@ -60,18 +60,21 @@ namespace Nektar
 		return m_locToContMap[i];
 	    }
 
-	    inline void LocalToCont(ConstArray<OneD, NekDouble> loc, Array<OneD, NekDouble> &cont)
+	    inline void LocalToCont(ConstArray<OneD, NekDouble> &loc, 
+                                    Array<OneD, NekDouble> &cont)
 	    {
                 Vmath::Scatr(m_totLocLen, &loc[0],&m_locToContMap[0],&cont[0]);
             }                
 
 	    
-	    inline void ContToLocal(ConstArray<OneD, NekDouble> cont, Array<OneD, NekDouble> &loc)
+	    inline void ContToLocal(ConstArray<OneD, NekDouble> &cont, 
+                                    Array<OneD, NekDouble> &loc)
 	    {
                 Vmath::Gathr(m_totLocLen,&cont[0],&m_locToContMap[0], &loc[0]);
 	    }
 	    
-	    inline void Assemble(ConstArray<OneD, NekDouble> loc, Array<OneD, NekDouble> &cont)
+	    inline void Assemble(ConstArray<OneD, NekDouble> &loc, 
+                                 Array<OneD, NekDouble> &cont)
 	    {
 		Vmath::Zero(m_totGloLen,&cont[0],1);
 
@@ -84,9 +87,9 @@ namespace Nektar
 	    }
 
         protected:
-	    int                m_totLocLen;    //< length of local dofs
-	    int                m_totGloLen;    //< length of global dofs
-	    NekIntSharedArray  m_locToContMap; //< Vector of boost pointers to integer maps
+	    int             m_totLocLen;    //< length of local dofs
+	    int             m_totGloLen;    //< length of global dofs
+	    Array<OneD,int> m_locToContMap; //< Vector of boost pointers to integer maps
         private:
 	};
 	
@@ -97,6 +100,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.5  2007/05/27 16:09:43  bnelson
+/** Update to new Array type.
+/**
 /** Revision 1.4  2007/04/26 15:00:16  sherwin
 /** SJS compiling working version using SHaredArrays
 /**

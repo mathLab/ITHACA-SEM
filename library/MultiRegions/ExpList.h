@@ -72,7 +72,7 @@ namespace Nektar
           return m_transState; 
       }
       
-      inline void SetPhys(ConstArray<OneD, NekDouble> inarray)
+      inline void SetPhys(ConstArray<OneD, NekDouble> &inarray)
       {
           Vmath::Vcopy(m_npoints,&inarray[0],1,&m_phys[0],1);
       }
@@ -84,7 +84,7 @@ namespace Nektar
 
       inline bool GetPhysState(void) const
       {
-	return m_physState;
+          return m_physState;
       }
       
       NekDouble PhysIntegral (void);
@@ -96,7 +96,6 @@ namespace Nektar
       void   GetCoords(Array<OneD, NekDouble> &coord_0,
 		       Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
 		       Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
-      void   GetCoords(NekDoubleArrayVector &coords);
 
       void   WriteToFile(std::ofstream &out);
     
@@ -108,12 +107,12 @@ namespace Nektar
       }
       
 
-      inline ConstArray<OneD, NekDouble> GetCoeffs() const
+      inline const ConstArray<OneD, NekDouble> &GetCoeffs() const 
       {
           return m_coeffs;
       }
 
-      inline ConstArray<OneD, NekDouble> GetPhys() const
+      inline const ConstArray<OneD, NekDouble> &GetPhys()  const
       {
           return m_phys;
       }
@@ -156,18 +155,18 @@ namespace Nektar
           return m_phys;
       }
 
-      NekDouble PhysIntegral(ConstArray<OneD, NekDouble> inarray);
-      void   IProductWRTBase(ConstArray<OneD, NekDouble> inarray, 
+      NekDouble PhysIntegral(const ConstArray<OneD, NekDouble> &inarray);
+      void   IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
 			     Array<OneD, NekDouble> &outarray);
       
-      void   PhysDeriv(ConstArray<OneD, NekDouble> inarray,
+      void   PhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
 		       Array<OneD, NekDouble> &out_d0, 
 		       Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
 		       Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
-      void   FwdTrans (ConstArray<OneD, NekDouble> inarray,
+      void   FwdTrans (const ConstArray<OneD, NekDouble> &inarray,
 		       Array<OneD, NekDouble> &outarray);
 
-      void   BwdTrans (ConstArray<OneD, NekDouble> inarray, 
+      void   BwdTrans (const ConstArray<OneD, NekDouble> &inarray, 
 		       Array<OneD, NekDouble> &outarray); 
     };
 

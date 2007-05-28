@@ -51,7 +51,8 @@ namespace Nektar
 	public:
 	    ContExpList1D();
 	    ContExpList1D(const LibUtilities::BasisKey &Ba, 
-			  SpatialDomains::MeshGraph1D &graph1D);
+			  const SpatialDomains::MeshGraph1D &graph1D);
+            ContExpList1D::ContExpList1D(const ContExpList1D &In);
 	    ~ContExpList1D();
 	    
 	    inline int GetContNcoeffs()
@@ -75,7 +76,6 @@ namespace Nektar
 		m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
 	    }
 	    
-	    void IProductWRTBase(ConstArray<OneD, NekDouble> inarray, Array<OneD, NekDouble> &outarray);
 	    void IProductWRTBase(const ExpList &In);
 	    
 	    void FwdTrans(const ExpList &In);
@@ -88,7 +88,7 @@ namespace Nektar
 	    
 	    
 	private:
-	    int                  m_contNcoeffs;
+	    int                    m_contNcoeffs;
 	    Array<OneD, NekDouble> m_contCoeffs;
 	    
 	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
@@ -96,6 +96,11 @@ namespace Nektar
 	    DNekLinSysSharedPtr m_mass;
 	    
 	};
+	
+        typedef boost::shared_ptr<ContExpList1D>      ContExpList1DSharedPtr;
+        typedef std::vector<ContExpList1DSharedPtr>   ContExpList1DVector;
+        typedef std::vector<ContExpList1DSharedPtr>::iterator ContExpList1DVectorIter;
+
     } //end of namespace
 } //end of namespace
 

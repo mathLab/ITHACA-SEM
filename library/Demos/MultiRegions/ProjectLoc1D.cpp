@@ -13,7 +13,7 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    MultiRegions::ExpList1D  *Exp;
+    MultiRegions::ExpList1DSharedPtr Exp,Sol;
     int i,j,k;
     int     order, nq;
     int     coordim;
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     // Define Expansion
     const LibUtilities::PointsKey Pkey(nq,Qtype);
     const LibUtilities::BasisKey Bkey(btype,order,Pkey);
-    Exp = new MultiRegions::ExpList1D (Bkey,graph1D);
+    Exp = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(Bkey,graph1D);
     
     //----------------------------------------------
     // Define solution to be projected 
@@ -118,8 +118,14 @@ int main(int argc, char *argv[])
     }
     
     //---------------------------------------------
+    // Set up ExpList1D containing the solution 
+    Sol = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(*Exp);
+    Sol->SetPhys(sol);
+    //---------------------------------------------
+
+    //---------------------------------------------
     // Project onto Expansion 
-    Exp->FwdTrans(sol,*Exp);
+    Exp->FwdTrans(*Sol);
     //---------------------------------------------
     
     //-------------------------------------------
@@ -135,7 +141,7 @@ int main(int argc, char *argv[])
     
     //--------------------------------------------
     // Calculate L_inf error 
-    cout << "L infinity error: " << Exp->Linf(sol) << endl;
-    cout << "L 2 error:        " << Exp->L2  (sol) << endl;
+    cout << "L infinity error: " << Exp->Linf(*Sol) << endl;
+    cout << "L 2 error:        " << Exp->L2  (*Sol) << endl;
     //--------------------------------------------
 }

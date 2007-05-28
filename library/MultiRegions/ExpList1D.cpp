@@ -70,7 +70,7 @@ namespace Nektar
 	    
 	    for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
 	    {
-		seg = MemoryManager::AllocateSharedPtr<LocalRegions::SegExp>(Ba, *def);
+		seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba, *def);
 		(*m_exp).push_back(seg);
 	    }
 

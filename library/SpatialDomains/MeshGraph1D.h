@@ -68,7 +68,7 @@ namespace Nektar
 		return m_seggeoms;
             }
 
-	    inline int GetVidFromElmt(const int vert, const int elmt)
+	    inline const int GetVidFromElmt(const int vert, const int elmt) const
 	    {
 		ASSERTL2((elmt >=0)&&(elmt < m_seggeoms.size()),
 				     "eid is out of range");
@@ -89,6 +89,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.h,v $
+// Revision 1.5  2007/03/14 21:24:08  sherwin
+// Update for working version of MultiRegions up to ExpList1D
+//
 // Revision 1.4  2006/07/02 17:16:17  sherwin
 //
 // Modifications to make MultiRegions work for a connected domain in 2D (Tris)

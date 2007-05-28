@@ -327,6 +327,12 @@ namespace Nektar
             {
                 return StdExpansion::L2();
             }
+
+            virtual DNekMatSharedPtr v_GetLocMatrix(StdRegions::MatrixType type)
+            {
+                MatrixKey masskey(type,DetShapeType(),*this);
+                return m_matrixManager[masskey];
+            }
         };
 
         // type defines for use of SegExp in a boost vector
@@ -340,6 +346,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.13  2007/05/28 08:35:25  sherwin
+// Updated for localregions up to Project1D
+//
 // Revision 1.12  2007/05/27 16:10:29  bnelson
 // Update to new Array type.
 //

@@ -136,7 +136,7 @@ namespace Nektar
         StdExpansion::~StdExpansion()
         {
         }
-
+        
 
         DNekMatSharedPtr StdExpansion::CreateStdMatrix(const StdMatrixKey &mkey) 
         {
@@ -285,6 +285,16 @@ namespace Nektar
 				    const LibUtilities::BasisKey &tbasis1,
 				    Array<OneD, NekDouble> &to)
         {
+            Interp2D(fbasis0,fbasis1,from.data(),tbasis0,tbasis1,to.data());
+        }
+
+        void StdExpansion::Interp2D(const LibUtilities::BasisKey &fbasis0, 
+				    const LibUtilities::BasisKey &fbasis1, 
+				    const NekDouble *from,  
+				    const LibUtilities::BasisKey &tbasis0,
+				    const LibUtilities::BasisKey &tbasis1,
+				    NekDouble *to)
+        {
             DNekMatSharedPtr I0,I1;
             Array<OneD, NekDouble> wsp = Array<OneD, NekDouble>(tbasis1.GetNumPoints()*
 						 fbasis0.GetNumPoints());
@@ -352,6 +362,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.35  2007/05/23 15:12:45  pvos
+* removed some obsolete lines
+*
 * Revision 1.34  2007/05/15 05:18:23  bnelson
 * Updated to use the new Array object.
 *

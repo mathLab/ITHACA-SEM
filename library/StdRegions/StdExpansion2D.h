@@ -102,7 +102,7 @@ namespace Nektar
 		    v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
 		}
 
-                void StdPhysDeriv(ConstArray<OneD, NekDouble>& inarray, 
+                void StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
 				  Array<OneD, NekDouble> &outarray_d1,
                                   Array<OneD, NekDouble> &outarray_d2)
                 {
@@ -131,7 +131,7 @@ namespace Nektar
 	     *  \param coords the coordinates of the single point
 	     *  \return returns the value of the expansion at the single point
 	     */
-	     NekDouble PhysEvaluate(ConstArray<OneD, NekDouble>& coords)
+	     NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
              {
                  return v_PhysEvaluate(coords);
              }
@@ -140,14 +140,14 @@ namespace Nektar
 	     *  to be in local collapsed coordinate format. The function is
 	     *  assumed to be in physical space 
 	     */
-	     NekDouble PhysEvaluate2D(ConstArray<OneD, NekDouble>& coords);
+	     NekDouble PhysEvaluate2D(const ConstArray<OneD, NekDouble>& coords);
 
 	     NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray, 
 				const ConstArray<OneD, NekDouble>& w0, 
 				const ConstArray<OneD, NekDouble>& w1);
 
-	     int GetNodalPoints(ConstArray<OneD, NekDouble> &x, 
-				ConstArray<OneD, NekDouble> &y)
+	     int GetNodalPoints(const ConstArray<OneD, NekDouble> &x, 
+				const ConstArray<OneD, NekDouble> &y)
 	     {
 		 return v_GetNodalPoints(x, y);
 	     }
@@ -168,8 +168,8 @@ namespace Nektar
 	     }
 	     
 	     virtual ShapeType v_DetShapeType() = 0;
-	     virtual int v_GetNodalPoints(ConstArray<OneD, NekDouble> &x,
-					  ConstArray<OneD, NekDouble> &y)
+	     virtual int v_GetNodalPoints(const ConstArray<OneD, NekDouble> &x,
+					  const ConstArray<OneD, NekDouble> &y)
              {
 		 ASSERTL0(false, "This function is only valid for nodal "
 			  "expansions");
@@ -204,12 +204,13 @@ namespace Nektar
 					 Array<OneD, NekDouble> &outarray_d1, 
 					 Array<OneD, NekDouble> &outarray_d2) = 0;
 	     
-	     virtual NekDouble v_PhysEvaluate(ConstArray<OneD, NekDouble>& coords)
+	     virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
 	     {
 		 return PhysEvaluate2D(coords);
 	     }
-
         };
+
+        typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
 
     } //end of namespace
 } //end of namespace
@@ -218,6 +219,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.13  2007/05/15 05:18:23  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.12  2007/04/10 14:00:45  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

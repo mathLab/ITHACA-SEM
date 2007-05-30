@@ -854,6 +854,13 @@ namespace Nektar
                 const LibUtilities::BasisKey &tbasis1, 
                 Array<OneD, NekDouble> &to);
 
+            void Interp2D(const LibUtilities::BasisKey &fbasis0, 
+                          const LibUtilities::BasisKey &fbasis1,
+                          const NekDouble *from,   
+                          const LibUtilities::BasisKey &tbasis0,
+                          const LibUtilities::BasisKey &tbasis1, 
+                          NekDouble *to);
+
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
             *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
             *	u_{exact}\f$ is given by the array \a sol. 
@@ -1083,6 +1090,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.48  2007/05/28 16:15:01  sherwin
+* Updated files in MultiRegions to make 1D demos work
+*
 * Revision 1.47  2007/05/17 17:59:27  sherwin
 * Modification to make Demos work after introducion of Array<>
 *

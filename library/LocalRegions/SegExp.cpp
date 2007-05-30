@@ -582,7 +582,7 @@ namespace Nektar
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(1);
 
             ASSERTL0(m_geom,"_geom not defined");
-            m_geom->GetLocCoords(&Lcoord[0],&coord[0]);
+            m_geom->GetLocCoords(coord,Lcoord);
 
             return StdSegExp::PhysEvaluate(Lcoord);
         }
@@ -628,6 +628,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.15  2007/05/28 08:35:25  sherwin
+// Updated for localregions up to Project1D
+//
 // Revision 1.14  2007/05/27 16:10:28  bnelson
 // Update to new Array type.
 //

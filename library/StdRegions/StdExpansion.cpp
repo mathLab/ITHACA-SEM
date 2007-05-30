@@ -307,13 +307,13 @@ namespace Nektar
             Blas::Dgemm('T', 'T', tbasis1.GetNumPoints(), fbasis0.GetNumPoints(),
                 fbasis1.GetNumPoints(), 1.0, I1->GetPtr().get(),  
                 fbasis1.GetNumPoints(),
-			 from.get(),fbasis0.GetNumPoints(), 0.0, wsp.get(),
+                        from,fbasis0.GetNumPoints(), 0.0, wsp.get(),
                 tbasis1.GetNumPoints());
 	    
             Blas::Dgemm('T', 'T',tbasis0.GetNumPoints(),tbasis1.GetNumPoints(),
                 fbasis0.GetNumPoints(),1.0,I0->GetPtr().get(),
                 fbasis0.GetNumPoints(),wsp.get(), tbasis1.GetNumPoints(),
-                0.0,to.get(), tbasis0.GetNumPoints());
+                0.0,to, tbasis0.GetNumPoints());
         }
 
         // 1D Interpolation
@@ -362,6 +362,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.36  2007/05/30 20:49:12  sherwin
+* Updates to do with LocalRegions and SpatialDomains
+*
 * Revision 1.35  2007/05/23 15:12:45  pvos
 * removed some obsolete lines
 *

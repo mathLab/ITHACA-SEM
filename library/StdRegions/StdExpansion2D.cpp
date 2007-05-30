@@ -101,7 +101,7 @@ namespace Nektar
 
         }
 
-        NekDouble StdExpansion2D::PhysEvaluate2D(ConstArray<OneD, NekDouble>& coords)
+        NekDouble StdExpansion2D::PhysEvaluate2D(const ConstArray<OneD, NekDouble>& coords)
         {
             NekDouble val;
             int i;
@@ -170,6 +170,11 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.13  2007/05/22 02:01:41  bnelson
+* Changed Array::size to Array::num_elements.
+*
+* Fixed some compiler errors in assertions.
+*
 * Revision 1.12  2007/05/15 05:18:23  bnelson
 * Updated to use the new Array object.
 *

@@ -105,14 +105,14 @@ int main(int argc, char *argv[]){
       
       break;
   case StdRegions::eQuadrilateral:
-      if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_B)||
+      if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_C)||
 	 (btype1 == LibUtilities::eModified_B)||(btype1 == LibUtilities::eModified_C))
       {
 	  ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
 			   "Basis 1 is for 2 or 3D expansions");
       }
       
-      if((btype2 == LibUtilities::eOrtho_B)||(btype2 == LibUtilities::eOrtho_B)||
+      if((btype2 == LibUtilities::eOrtho_B)||(btype2 == LibUtilities::eOrtho_C)||
 	 (btype2 == LibUtilities::eModified_B)||(btype2 == LibUtilities::eModified_C))
       {
 	  ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
@@ -266,7 +266,7 @@ NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
 		   LibUtilities::BasisType btype2)
 {   
     int k,l;
-    NekDouble sol = 0;
+    NekDouble sol = 0.0;
     
     if(btype1 != LibUtilities::eFourier)
     {

@@ -60,7 +60,7 @@ namespace Nektar
         points and order definition */
         QuadExp(const LibUtilities::BasisKey &Ba,
                 const LibUtilities::BasisKey &Bb,
-                SpatialDomains::QuadGeomSharedPtr &geom);
+                const SpatialDomains::QuadGeomSharedPtr &geom);
         
         /// Copy Constructor
         QuadExp(const QuadExp &T);
@@ -109,8 +109,8 @@ namespace Nektar
         //-----------------------------
 
         void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-                       Array<OneD, NekDouble> &out_d0 = NullNekDouble1DArray,
-                       Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                       Array<OneD, NekDouble> &out_d0,
+                       Array<OneD, NekDouble> &out_d1,
                        Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);      
         
         //----------------------------
@@ -211,20 +211,12 @@ namespace Nektar
         }
         
         virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-                                 Array<OneD, NekDouble> &out_d0 = NullNekDouble1DArray,
-                                 Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                                 Array<OneD, NekDouble> &out_d0,
+                                 Array<OneD, NekDouble> &out_d1,
                                  Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
 	 {
-             PhysDeriv(inarray, out_d0, out_d1, out_d2);
+             PhysDeriv(inarray, out_d0, out_d1);
          }
-        
-        virtual void v_StdDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-                                Array<OneD, NekDouble> &out_d0,
-                                Array<OneD, NekDouble> &out_d1)
-
-        {
-	    StdQuadExp::PhysDeriv(inarray, out_d0, out_d1);
-        }
 	
         /// Virtual call to SegExp::FwdTrans
        virtual void v_FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
@@ -275,6 +267,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.11  2007/05/31 11:38:17  pvos
+ *    Updated QuadExp and TriExp
+ *
  *    Revision 1.10  2007/05/27 16:10:28  bnelson
  *    Update to new Array type.
  *

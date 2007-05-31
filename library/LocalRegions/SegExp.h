@@ -114,7 +114,7 @@ namespace Nektar
             physical quadrature points given by \a inarray and return in \a
             outarray. */
             void PhysDeriv(const ConstArray<OneD,NekDouble>& inarray, 
-			   Array<OneD,NekDouble> &out_d0 = NullNekDouble1DArray,
+			   Array<OneD,NekDouble> &out_d0,
 			   Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
 			   Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray);
 
@@ -223,7 +223,7 @@ namespace Nektar
 				     Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
 				     Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray)
 	    {
-                PhysDeriv(inarray, out_d0, out_d1, out_d2);
+                PhysDeriv(inarray, out_d0);
             }
 
             /// Virtual call to SegExp::FwdTrans
@@ -346,6 +346,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.14  2007/05/28 16:15:00  sherwin
+// Updated files in MultiRegions to make 1D demos work
+//
 // Revision 1.13  2007/05/28 08:35:25  sherwin
 // Updated for localregions up to Project1D
 //

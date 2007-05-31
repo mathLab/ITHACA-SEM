@@ -184,10 +184,10 @@ namespace Nektar
             //-----------------------------
 	    virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
 				     Array<OneD, NekDouble> &out_d0,
-				     Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+				     Array<OneD, NekDouble> &out_d1,
 				     Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
             {
-		PhysDeriv(inarray, out_d1, out_d2);
+		PhysDeriv(inarray, out_d0, out_d1);
 	    }
 
             //-----------------------------
@@ -250,6 +250,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.9  2007/05/15 05:18:24  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.8  2007/04/18 09:44:01  sherwin
 * Working version for StdNodalTri. Removed lapack.cpp from compile.
 *

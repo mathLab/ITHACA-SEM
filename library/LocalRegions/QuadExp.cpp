@@ -47,10 +47,11 @@ namespace Nektar
 	
 	QuadExp::QuadExp(const LibUtilities::BasisKey &Ba, 
 			 const LibUtilities::BasisKey &Bb, 
-			 SpatialDomains::QuadGeomSharedPtr &geom):
-	    StdRegions::StdQuadExp(Ba,Bb),
-	    m_geom(geom)
+			 const SpatialDomains::QuadGeomSharedPtr &geom):
+	    StdRegions::StdQuadExp(Ba,Bb)
 	{
+            m_geom = geom;
+
             m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMassMatrix,
                 StdRegions::eNoShapeType,*this),
                 boost::bind(&QuadExp::CreateMatrix, this, _1));
@@ -639,6 +640,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.10  2007/05/31 11:38:16  pvos
+ *    Updated QuadExp and TriExp
+ *
  *    Revision 1.9  2007/04/26 15:00:16  sherwin
  *    SJS compiling working version using SHaredArrays
  *

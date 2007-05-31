@@ -114,8 +114,9 @@ namespace Nektar
              *  \right |_{\eta_1}  \f$
              */
 		void PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-			       Array<OneD, NekDouble> &outarray_d0,
-			       Array<OneD, NekDouble> &outarray_d1);
+			       Array<OneD, NekDouble> &out_d0,
+			       Array<OneD, NekDouble> &out_d1,
+                               Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
 
             //-----------------------------
             // Evaluations Methods
@@ -286,10 +287,10 @@ namespace Nektar
 
                 virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
 					 Array<OneD, NekDouble> &out_d0,
-					 Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+					 Array<OneD, NekDouble> &out_d1,
 					 Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
                 {
-                    PhysDeriv(inarray, out_d1, out_d2);
+                    PhysDeriv(inarray, out_d0, out_d1);
                 }
 
                 virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
@@ -354,6 +355,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.12  2007/05/15 05:18:24  bnelson
+ * Updated to use the new Array object.
+ *
  * Revision 1.11  2007/04/10 14:00:46  sherwin
  * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
  *

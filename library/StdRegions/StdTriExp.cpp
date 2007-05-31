@@ -227,7 +227,8 @@ namespace Nektar
 	
 	void StdTriExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
 				  Array<OneD, NekDouble> &out_d0, 
-				  Array<OneD, NekDouble> &out_d1)
+				  Array<OneD, NekDouble> &out_d1,
+                                  Array<OneD, NekDouble> &out_d2)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -535,6 +536,11 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.16  2007/05/22 02:01:50  bnelson
+* Changed Array::size to Array::num_elements.
+*
+* Fixed some compiler errors in assertions.
+*
 * Revision 1.15  2007/05/15 05:18:24  bnelson
 * Updated to use the new Array object.
 *

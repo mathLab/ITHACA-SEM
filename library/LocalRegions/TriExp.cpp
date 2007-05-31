@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/TriExp.cpp,v $ 
+// File TriExp.cpp  
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -45,10 +45,11 @@ namespace Nektar
 
         TriExp::TriExp(const LibUtilities::BasisKey &Ba,
                        const LibUtilities::BasisKey &Bb,
-                       SpatialDomains::TriGeomSharedPtr &geom):	
-	    StdRegions::StdTriExp(Ba,Bb),
-            m_geom(geom)
+                       const SpatialDomains::TriGeomSharedPtr &geom):	
+	    StdRegions::StdTriExp(Ba,Bb)
 	{
+            m_geom = geom;
+
             m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMassMatrix,
                                                       StdRegions::eNoShapeType,*this),
                                             boost::bind(&TriExp::CreateMatrix, this, _1));
@@ -580,7 +581,7 @@ namespace Nektar
 	    }
 	}
 
-	double TriExp::PhysEvaluate(const ConstArray<OneD,NekDouble> &coord)
+	NekDouble TriExp::PhysEvaluate(const ConstArray<OneD,NekDouble> &coord)
 	{
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
 	    
@@ -607,7 +608,6 @@ namespace Nektar
             return returnval;
         }
 
-
         DNekLinSysSharedPtr TriExp::CreateLinSys(const LinSysKey &mkey)
         {
             DNekLinSysSharedPtr returnval;
@@ -630,6 +630,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.9  2007/05/31 11:38:17  pvos
+ *    Updated QuadExp and TriExp
+ *
  *    Revision 1.8  2006/12/10 18:59:46  sherwin
  *    Updates for Nodal points
  *

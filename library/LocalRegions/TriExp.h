@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/TriExp.h,v $
+// File TriExp.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -60,7 +60,7 @@ namespace Nektar
         points and order definition */
         TriExp(const LibUtilities::BasisKey &Ba,
                 const LibUtilities::BasisKey &Bb,
-                SpatialDomains::TriGeomSharedPtr &geom);
+                const SpatialDomains::TriGeomSharedPtr &geom);
 
 
         /// Copy Constructor
@@ -100,8 +100,8 @@ namespace Nektar
         //-----------------------------
 
         void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-                       Array<OneD, NekDouble> &out_d0 = NullNekDouble1DArray,
-                       Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                       Array<OneD, NekDouble> &out_d0,
+                       Array<OneD, NekDouble> &out_d1,
                        Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);  
 
         //----------------------------
@@ -164,18 +164,18 @@ namespace Nektar
 
         virtual int v_GetCoordim()
         {
-			return m_geom->GetCoordim();
+            return m_geom->GetCoordim();
         }
 
 
         virtual void v_WriteToFile(FILE *outfile)
         {
-			WriteToFile(outfile);
+            WriteToFile(outfile);
         }
-
+        
         virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
         {
-			WriteToFile(outfile,dumpVar);
+            WriteToFile(outfile,dumpVar);
         }
 
         /** \brief Virtual call to integrate the physical point list \a inarray
@@ -201,28 +201,20 @@ namespace Nektar
         }
         
         virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-                                 Array<OneD, NekDouble> &out_d0 = NullNekDouble1DArray,
-                                 Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                                 Array<OneD, NekDouble> &out_d0,
+                                 Array<OneD, NekDouble> &out_d1,
                                  Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
 	 {
-             PhysDeriv(inarray, out_d0, out_d1, out_d2);
+             PhysDeriv(inarray, out_d0, out_d1);
          }
-        
-        virtual void v_StdDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-                                Array<OneD, NekDouble> &out_d0,
-                                Array<OneD, NekDouble> &out_d1)
 
-        {
-	    StdTriExp::PhysDeriv(inarray, out_d0, out_d1);
-        }
-	
         /// Virtual call to SegExp::FwdTrans
-       virtual void v_FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
+        virtual void v_FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
                                 Array<OneD, NekDouble> &outarray)
         {
             FwdTrans(inarray,outarray);
         }
-
+        
         /// Virtual call to TriExp::Evaluate
         virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble> &coords)
         {
@@ -265,6 +257,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.10  2007/05/31 11:38:17  pvos
+ *    Updated QuadExp and TriExp
+ *
  *    Revision 1.9  2007/01/15 21:12:26  sherwin
  *    First definition
  *

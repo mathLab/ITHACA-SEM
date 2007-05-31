@@ -166,8 +166,8 @@ namespace Nektar
 	
 	void StdSegExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
 				  Array<OneD, NekDouble> &out_d0,
-				  Array<OneD, NekDouble> &out_d2,
-				  Array<OneD, NekDouble> &out_d3)
+				  Array<OneD, NekDouble> &out_d1,
+				  Array<OneD, NekDouble> &out_d2)
 	{
 	    PhysTensorDeriv(inarray,out_d0);
 	}
@@ -274,6 +274,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.30  2007/05/17 17:59:28  sherwin
+* Modification to make Demos work after introducion of Array<>
+*
 * Revision 1.29  2007/05/15 05:18:24  bnelson
 * Updated to use the new Array object.
 *

@@ -32,130 +32,145 @@
 // Description: NodalTriExp routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+#include <LocalRegions/LocalRegions.hpp>
+#include <stdio.h>
 
 #include <LocalRegions/NodalTriExp.h>
 
 namespace Nektar
 {
-  namespace LocalRegions 
-  {
-      
-      NodalTriExp::NodalTriExp(const StdRegions::BasisKey &Ba,  
-			       const StdRegions::BasisKey &Bb, 
-			       StdRegions::NodalBasisType Ntype, 
-			       SpatialDomains::TriGeomSharedPtr geom):
-	  StdRegions::StdNodalTriExp(Ba,Bb,Ntype)
-      {
-	  m_geom = geom;
-      }
-      
-      NodalTriExp::NodalTriExp(const StdRegions::BasisKey &Ba, 
-			       const StdRegions::BasisKey &Bb, 
-			       StdRegions::NodalBasisType Ntype,
-			       double *coeffs, double *phys, 
-			       SpatialDomains::TriGeomSharedPtr geom):
-	  StdRegions::StdNodalTriExp(Ba,Bb,Ntype,coeffs,phys)
-      {
-	  m_geom = geom;
-      }
-      
+    namespace LocalRegions 
+    {
+        
+        NodalTriExp::NodalTriExp(const LibUtilities::BasisKey &Ba,
+                                 const LibUtilities::BasisKey &Bb,
+                                 const LibUtilities::PointsType Ntype,
+                                 const SpatialDomains::TriGeomSharedPtr &geom):
+            StdRegions::StdNodalTriExp(Ba,Bb,Ntype)
+        {
+            m_geom = geom;
+            
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMassMatrix,
+                                                      StdRegions::eNoShapeType,*this),
+                                            boost::bind(&NodalTriExp::CreateMatrix, this, _1));
+            
+            m_linSysManager.RegisterCreator(LinSysKey(StdRegions::eMassMatrix,
+                                                      StdRegions::eNoShapeType,*this),
+                                            boost::bind(&NodalTriExp::CreateLinSys, this, _1));
+            
+            GenMetricInfo();
+            
+        }
+        
 	
-      NodalTriExp::NodalTriExp(const NodalTriExp &T):StdRegions::StdNodalTriExp(T)
-      {
-	  m_geom = T.m_geom;
-      }
-      
-	
-      NodalTriExp::~NodalTriExp()
-      {
-      }
-      
-      MetricRelatedInfoSharedPtr NodalTriExp::GenGeoFac()
-      {
-	  MetricRelatedInfoSharedPtr minfo;
-	  SpatialDomains::GeoFacSharedPtr Xgfac;
-	  const double **gmat, *odata;
-	  double *ndata;
-	  
-	  
-	  if((Xgfac = m_geom->GetXGeoFac()).get() == NULL)  // define geometric version 
-	  {
-	      m_geom->SetXGeoFac(Xgfac = m_geom->GenXGeoFac());
-	  }
-	  
-	  int coordim = m_geom->GetCoordDim();
-	  StdRegions::GeomType gtype = Xgfac->GetGtype();
-	  
-	  minfo.reset(new MetricRelatedInfo (gtype,2,coordim));
-	  
-	  // interp gfac to 
-	  if(gtype == StdRegions::eDeformed)
-	  {
-	      const StdRegions::BasisKey *CBasis0;
-	      const StdRegions::BasisKey *CBasis1;
-	      int coordim = m_geom->GetCoordDim();
-	      
-	      CBasis0 = m_geom->GetBasis(0,0); // this assumes all goembasis are same
-	      CBasis1 = m_geom->GetBasis(0,1);
-	      
-	      // basis are different distributions
-	      if(!(m_base[0]->SamePoints(*CBasis0))||
-		 !(m_base[1]->SamePoints(*CBasis1)))
-	      {
-		  int i;
-		  int nq = m_base[0]->GetPointsOrder()*m_base[1]->GetPointsOrder();
-		  double *ndata;
-		  const double **gmat, *odata;
-		  
-		  // interpolate Geometric data
-		  ndata = new double [2*coordim*nq];	
-		  gmat  = Xgfac->GetGmat();
-		  
-		  for(i = 0; i < 2*coordim; ++i)
-		  {
-		      Interp2D(CBasis0,CBasis1, gmat[i], m_base[0],
-			       m_base[1], ndata + i*nq);
-		  }
-		  
-		  minfo->ResetGmat(ndata,nq,2,coordim);
-		  
-		  // interpolate Jacobian
-		  ndata = new double [nq];	
-		  odata = Xgfac->GetJac();
-		  
-		  Interp2D(CBasis0,CBasis1,odata,m_base[0],m_base[1],ndata);
-		  
-		  minfo->ResetJac(ndata);
-	      }
-	  }
-	  else
-	  {
-	      // interpolate Geometric data
-	      ndata = new double [2*coordim];	
-	      gmat  = Xgfac->GetGmat();
-	      
-	      Blas::Dcopy(2*coordim,gmat[0],1,ndata,1);
-	      minfo->ResetGmat(ndata,2,2,coordim);
-	      
-	      // interpolate Jacobian
-	      ndata = new double [1];	
-	      odata = Xgfac->GetJac();
-	      
-	      ndata[0] = odata[0];
-	      minfo->ResetJac(ndata);
-	  }
-	  
-	  return minfo;
-      }
-      
-      
-	//----------------------------
-	// Integration Methods
-	//----------------------------
-	
+        NodalTriExp::NodalTriExp(const NodalTriExp &T):StdRegions::StdNodalTriExp(T)
+        {
+            m_geom = T.m_geom;
+            m_metricinfo = T.m_metricinfo;
+        }
+        
+        
+        NodalTriExp::~NodalTriExp()
+        {
+        }
+        
+        void NodalTriExp::GenMetricInfo()
+        {
+            SpatialDomains::GeomFactorsSharedPtr Xgfac;
+            
+            Xgfac = m_geom->GetGeomFactors();
+            
+            if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
+            {
+                m_metricinfo = Xgfac;
+            }
+            else
+            {
+                LibUtilities::BasisSharedPtr CBasis0;
+                LibUtilities::BasisSharedPtr CBasis1;
+                
+                Array<OneD,NekDouble> ndata;
+                ConstArray<TwoD,NekDouble> gmat;
+                ConstArray<OneD,NekDouble> odata;
+                int coordim = m_geom->GetCoordim();
+                
+                CBasis0 = m_geom->GetBasis(0,0); // this assumes all goembasis are same
+                CBasis1 = m_geom->GetBasis(0,1);
+                
+                m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr(); 
+                
+                // basis are different distributions
+                if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))||
+                   !(m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))     
+                {
+                    int i;
+                    int nq = m_base[0]->GetNumPoints()*
+                        m_base[1]->GetNumPoints();
+                    
+                    ndata = Array<OneD,NekDouble>(coordim*nq);
+                    gmat  = Xgfac->GetGmat();
+                    
+                    // interpolate Geometric data
+                    
+                    for(i = 0; i < 2*coordim; ++i)
+                    {
+                        Interp2D(CBasis0->GetBasisKey(),
+                                 CBasis1->GetBasisKey(), 
+                                 &gmat[i][0], 
+                                 m_base[0]->GetBasisKey(),
+                                 m_base[1]->GetBasisKey(),
+                                 &ndata[0] + i*nq);
+                    } 
+                    m_metricinfo->ResetGmat(ndata,nq,2,coordim);
+                    
+                    // interpolate Jacobian
+                    ndata = Array<OneD,NekDouble>(nq);	
+                    odata = Xgfac->GetJac();
+                    
+                    Interp2D(CBasis0->GetBasisKey(),
+                             CBasis1->GetBasisKey(),
+                             &odata[0],
+                             m_base[0]->GetBasisKey(),
+                             m_base[1]->GetBasisKey(), 
+                             &ndata[0]);
+                    
+                    m_metricinfo->ResetJac(nq,ndata);
+                    
+                    ErrorUtil::Error(ErrorUtil::ewarning,__FILE__,__LINE__,
+                                     "Need to check/debug routine for deformed elements");
+                    
+                }
+                else // Same data can be used 
+                {
+                    int nq = m_base[0]->GetNumPoints()*
+                        m_base[1]->GetNumPoints();
+                    
+                    // interpolate Geometric data
+                    ndata = Array<OneD,NekDouble>(2*nq*coordim); 
+                    gmat  = Xgfac->GetGmat();
+                    Blas::Dcopy(2*coordim*nq,&gmat[0][0],1,&ndata[0],1);
+                    
+                    m_metricinfo->ResetGmat(ndata,nq,2,coordim);
+                    
+                    // Copy Jacobian
+                    ndata = Array<OneD,NekDouble>(nq);	
+                    
+                    odata = Xgfac->GetJac();
+                    Blas::Dcopy(nq,&odata[0],1,&ndata[0],1);
+                    
+                    m_metricinfo->ResetJac(nq,ndata);
+                    
+                }
+            }
+        }       
+        
+        //----------------------------
+        // Integration Methods
+        //----------------------------
+        
 	/** \brief Integrate the physical point list \a inarray over region
 	    and return the value
-	    
+            
 	    Inputs:\n
 	    
 	    - \a inarray: definition of function to be returned at quadrature point 
@@ -170,143 +185,136 @@ namespace Nektar
 	*/
 	
 	
-      double NodalTriExp::Integral(const double *inarray)
-      {
-	  
-	  int    nquad0 = m_base[0]->GetPointsOrder();
-	  int    nquad1 = m_base[1]->GetPointsOrder();
-	  const double *jac = m_minfo->GetJac();
-	  double ival, *tmp = new double [nquad0*nquad1];
-	  
+        NekDouble NodalTriExp::Integral(const ConstArray<OneD, NekDouble> &inarray)
+        {
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            ConstArray<OneD,NekDouble> jac = m_metricinfo->GetJac();
+            NekDouble ival;
+            Array<OneD,NekDouble> tmp   = Array<OneD,NekDouble>(nquad0*nquad1);
+            
+            // multiply inarray with Jacobian
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vmul(nquad0*nquad1,&jac[0],1,(NekDouble*)&inarray[0],1,
+                            &tmp[0],1);
+            }
+            else
+            {
+                Vmath::Smul(nquad0*nquad1,(NekDouble) jac[0],
+                          (NekDouble*)&inarray[0],1,&tmp[0],1);
+            }
+            
+            // call StdQuadExp version;
+            ival = StdNodalTriExp::Integral(tmp);
+            
+            return ival; 
+        }
+        
+        
+        void NodalTriExp::IProductWRTBase(const ConstArray<OneD, NekDouble> &base0, 
+                                          const ConstArray<OneD, NekDouble> &base1, 
+                                          const ConstArray<OneD, NekDouble> &inarray, 
+                                          Array<OneD, NekDouble> &outarray)
+	{
+	    int    nquad0 = m_base[0]->GetNumPoints();
+	    int    nquad1 = m_base[1]->GetNumPoints();
+	    ConstArray<OneD,NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(nquad0*nquad1);
+	    
 	    // multiply inarray with Jacobian
-	  if(m_minfo->GetGtype() == StdRegions::eDeformed)
-	  {
-	      Vmath::Vmul(nquad0*nquad1,jac,1,(double*)inarray,1,tmp,1);
-	  }
-	  else
-	  {
-	      Vmath::Smul(nquad0*nquad1,(double) jac[0],(double*)inarray,1,tmp,1);
-	  }
-	  
-	  // call StdQuadExp version;
-	  ival = StdNodalTriExp::Integral(tmp);
-	  delete[] tmp;
-	  return ival; 
-      }
-      
-
-      void NodalTriExp::IProductWRTBase(const double *base0, 
-					const double *base1,
-					const double *inarray, 
-					double *outarray)
-      {
-	  int    nquad0 = m_base[0]->GetPointsOrder();
-	  int    nquad1 = m_base[1]->GetPointsOrder();
-	  const double *jac = m_minfo->GetJac();
-	  double *tmp = new double [nquad0*nquad1];
-	  
-	  // multiply inarray with Jacobian
-	  if(m_minfo->GetGtype() == StdRegions::eDeformed)
-	  {
-	      Vmath::Vmul(nquad0*nquad1,jac,1,(double*)inarray,1,tmp,1);
-	  }
-	  else
-	  {
-	      Vmath::Smul(nquad0*nquad1,jac[0],(double*)inarray,1,tmp,1);
-	  }
-	  
-	  StdNodalTriExp::IProductWRTBase(base0,base1,tmp,outarray);
-      }
-
-      void NodalTriExp::IProductWRTBase(const double * inarray, double * outarray)
-      {
-	  IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-			  inarray,outarray);
-      }
-      
-
-      /** \brief Get the mass matrix attached to this expansion by using
-	  the StdMatrix manager _ElmtMats and return the standard Matrix
-	  container */
-
-      StdRegions::StdMatContainer * NodalTriExp::GetMassMatrix() 
-      {
-	  StdRegions::StdMatContainer * tmp;
-	  tmp = s_elmtmats.GetLocalMass(this);
-	  return tmp;
-      }
+	    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+	    {
+		Vmath::Vmul(nquad0*nquad1,&jac[0],1,(NekDouble*)&inarray[0],1,&tmp[0],1);
+	    }
+	    else
+	    {
+		Vmath::Smul(nquad0*nquad1,jac[0],(NekDouble*)&inarray[0],1,&tmp[0],1);
+	    }
+	    
+	    StdNodalTriExp::IProductWRTBase(base0,base1,tmp,outarray);
+	}
+        
+	void NodalTriExp::IProductWRTBase(const ConstArray<OneD,NekDouble> &inarray, 
+                                          Array<OneD,NekDouble> &outarray)
+	{
+	    IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
+			    inarray,outarray);
+	}
 	
-
-	
-      /** \brief Get the weak Laplacian matrix attached to this
-	  expansion by using the StdMatrix manager _ElmtMats and return
-	  the standard Matrix container */
-      
-      StdRegions::StdMatContainer * NodalTriExp::GetLapMatrix() 
-      {
-	  StdRegions::StdMatContainer * tmp;
-	  tmp = s_elmtmats.GetLocalLap(this);
-	  return tmp;
-      }
-	
-	
-      ///////////////////////////////
-      /// Differentiation Methods
-      ///////////////////////////////
-      
-      /** 
-	  \brief Calculate the deritive of the physical points 
-      **/
-      void NodalTriExp::Deriv(const int n, double **outarray)
-      {
-	  Deriv(n, this->m_phys, outarray);
-      }
-      
-
-      /** 
-	  \brief Calculate the derivative of the physical points 
-	  
-	  Basic call uses Tensor_Deriv funcion defined under StdExpansion2D.
-      **/
-      void NodalTriExp::Deriv(const int n, const double *inarray, 
-			      double **outarray)
-      {
-	  int    i;
-	  int    nquad0 = m_base[0]->GetPointsOrder();
-	  int    nquad1 = m_base[0]->GetPointsOrder();
-	  const double **gmat = m_minfo->GetGmat();
-	  double *tmp = new double [nquad0*nquad1];
-	  
-	  if(m_geom)
-	  {
-	      ASSERTL2(n <= m_geom->GeCoordDim(),
-		       "value of n is larger than the number of coordinates");
-	  }
-	  
-	  StdNodalTriExp::Deriv(inarray, tmp, outarray[n-1]);
-	  
-	  if(m_minfo->GetGtype() == StdRegions::eDeformed)
-	  {
-	      for(i = 0; i < n; ++i)
-	      {
-		  Vmath::Vmul  (nquad0*nquad1,gmat[2*i+1],1,outarray[n-1],1,
-				outarray[i],1);
-		  Vmath::Vvtvp (nquad0*nquad1,gmat[2*i]  ,1,tmp          ,1, 
-				outarray[i],1,outarray[i],1);
-	      }
-	  }
-	  else
-	  {
-	      for(i = 0; i < n; ++i)
-	      {
-		  Vmath::Vmul  (nquad0*nquad1,gmat[2*i+1],1,outarray[n-1],1,
-				outarray[i],1);
-		  Vmath::Vvtvp (nquad0*nquad1,gmat[2*i]  ,1,tmp          ,1,
-				outarray[i],1,outarray[i],1);
-	      }
-	  }
-      }
-      
+        ///////////////////////////////
+        /// Differentiation Methods
+        ///////////////////////////////
+        
+	/** 
+	    \brief Calculate the deritive of the physical points 
+	**/
+        void NodalTriExp::PhysDeriv(const ConstArray<OneD,NekDouble> & inarray,
+                                    Array<OneD,NekDouble> &out_d0,
+                                    Array<OneD,NekDouble> &out_d1,
+                                    Array<OneD,NekDouble> &out_d2)
+        {
+	    int    i;
+	    int    nquad0 = m_base[0]->GetNumPoints();
+	    int    nquad1 = m_base[0]->GetNumPoints();
+	    ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
+            Array<OneD,NekDouble> Diff0 = Array<OneD,NekDouble>(nquad0*nquad1);
+            Array<OneD,NekDouble> Diff1 = Array<OneD,NekDouble>(nquad0*nquad1);
+	    
+	    if(m_geom)
+	    {
+		ASSERTL2(n <= m_geom->GetCoordDim(),
+			 "value of n is larger than the number of coordinates");
+	    }
+            
+ 	    StdExpansion2D::PhysTensorDeriv(inarray, Diff0, Diff1);
+	    
+	    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+	    {
+                if(out_d0.num_elements())
+		{
+		    Vmath::Vmul  (nquad0*nquad1,&gmat[0][0],1,&Diff0[0],1, &out_d0[0], 1);
+		    Vmath::Vvtvp (nquad0*nquad1,&gmat[1][0],1,&Diff1[0],1, &out_d0[0], 1,
+                                  &out_d0[0],1);
+		}
+                
+                if(out_d1.num_elements())
+		{
+		    Vmath::Vmul  (nquad0*nquad1,&gmat[2][0],1,&Diff0[0],1, &out_d1[0], 1);
+		    Vmath::Vvtvp (nquad0*nquad1,&gmat[3][0],1,&Diff1[0],1, &out_d1[0], 1,
+                                  &out_d1[0],1);
+		}
+                
+                if(out_d2.num_elements())
+		{
+		    Vmath::Vmul  (nquad0*nquad1,&gmat[4][0],1,&Diff0[0],1, &out_d2[0], 1);
+		    Vmath::Vvtvp (nquad0*nquad1,&gmat[5][0],1,&Diff1[0],1, &out_d2[0], 1,
+                                  &out_d2[0],1);
+		}
+	    }
+  	    else // regular geometry
+	    {
+                if(out_d0.num_elements())
+		{
+		    Vmath::Smul  (nquad0*nquad1,gmat[0][0],&Diff0[0],1, &out_d0[0], 1);
+                    Blas::Daxpy (nquad0*nquad1,gmat[1][0],&Diff1[0],1, &out_d0[0], 1);
+		    //Vmath::Svtvp (nquad0*nquad1,gmat[1][0],&Diff1[0],1, &out_d0[0], 1,
+                    //            &out_d0[0],1);
+		}
+                
+                if(out_d1.num_elements())
+		{
+		    Vmath::Smul  (nquad0*nquad1,gmat[2][0],&Diff0[0],1, &out_d1[0], 1);
+                    Blas::Daxpy (nquad0*nquad1,gmat[3][0],&Diff1[0],1, &out_d1[0], 1);
+		}
+                
+                if(out_d2.num_elements())
+		{
+		    Vmath::Smul  (nquad0*nquad1,gmat[4][0],&Diff0[0],1, &out_d2[0], 1);
+                    Blas::Daxpy (nquad0*nquad1,gmat[5][0],&Diff1[0],1, &out_d2[0], 1);
+		}
+	    }
+	}    
       
       /** \brief Forward transform from physical quadrature space
 	  stored in \a inarray and evaluate the expansion coefficients and
@@ -321,165 +329,259 @@ namespace Nektar
 	  - (this)->_coeffs: updated array of expansion coefficients. 
 	  
 	*/ 
-      
-      
-      void NodalTriExp::FwdTrans(const double *inarray)
-      {
-	  StdRegions::StdMatContainer *M;
-	  IProductWRTBase(inarray,m_coeffs);
-	  M = GetMassMatrix();
-	  M->Solve(m_coeffs,1);
-      }
-	
-	
-      void NodalTriExp::GetCoords(double **coords)
-      {
-	  int  i;
-	  const double *x;
-	  const StdRegions::BasisKey *CBasis0;
-	  const StdRegions::BasisKey *CBasis1;
-	  
-	  // get physical points defined in Geom
-	  m_geom->FillGeom();
-	  
-	  for(i = 0; i < m_geom->GetCoordDim(); ++i)
-	  {
-	      CBasis0 = m_geom->GetBasis(i,0); 
-	      CBasis1 = m_geom->GetBasis(i,1);
-	      
-	      if((m_base[0]->SamePoints(*CBasis0))&&
-		 (m_base[1]->SamePoints(*CBasis1)))
-	      {
-		  x = m_geom->GetPhys(i);
-		  Blas::Dcopy(m_base[0]->GetPointsOrder()*
-			      m_base[1]->GetPointsOrder(),
-			      x,1,coords[i],1);
-	      }
-	      else // Interpolate to Expansion point distribution
-	      {
-		  Interp2D(CBasis0, CBasis1,m_geom->GetPhys(i),
-			   m_base[0],m_base[1],coords[i]);
-	      }
-	  }
-      }
-      
-      
-      // get the coordinates "coords" at the local coordinates "Lcoords"
-      void NodalTriExp::GetCoord(const double *Lcoords, double *coords)
-      {
-	  int  i;
-	  
-	  ASSERTL1(Lcoords[0] >= -1.0 && Lcoords[1] <= 1.0 && 
-		   Lcoords[1] >= -1.0 && Lcoords[1]  <=1.0,
-		   "Local coordinates are not in region [-1,1]");
-	  
-	  m_geom->FillGeom();
-	  
-	  for(i = 0; i < m_geom->GetCoordDim(); ++i)
-	  {
-	      coords[i] = m_geom->GetCoord(i,Lcoords);
-	  }
-      }
-      
-      
-      void NodalTriExp::WriteToFile(FILE *outfile)
-      {
-	  int i,j;
-	  double *coords[3];
-	  int  nquad0 = m_base[0]->GetPointsOrder();
-	  int  nquad1 = m_base[1]->GetPointsOrder();
-	  int  gdim   = m_geom->GetCoordDim();
-	  
+ 	void NodalTriExp::FwdTrans(const ConstArray<OneD,NekDouble> & inarray, 
+                                   Array<OneD,NekDouble> &outarray)
+	{
+            IProductWRTBase(inarray,outarray);
+            
+            LinSysKey  masskey(StdRegions::eMassMatrix,DetShapeType(),*this);
+            DNekLinSysSharedPtr matsys = m_linSysManager[masskey];
+            
+            DNekVec   v(m_ncoeffs,outarray,eWrapper);
+            matsys->Solve(v,v);
+        }
+
+        void NodalTriExp::GetCoords(Array<OneD,NekDouble> &coords_0,
+                                    Array<OneD,NekDouble> &coords_1,
+                                    Array<OneD,NekDouble> &coords_2)
+        {
+	    LibUtilities::BasisSharedPtr CBasis0;
+	    LibUtilities::BasisSharedPtr CBasis1;
+            Array<OneD,NekDouble>  x;
+            
+            ASSERTL0(m_geom, "m_geom not define");
 	    
-	  coords[0] = new double [3*nquad0*nquad1];
-	  coords[1] = coords[0] + nquad0*nquad1;
-	  coords[2] = coords[1] + nquad0*nquad1;
-	  
-	  GetCoords(coords);
-	  
-	  fprintf(outfile,"Variables = x");
-	  
-	  if(gdim == 2)
-	  {
-	      fprintf(outfile,", y");
-	  }
-	  else if (gdim == 3)
-	  {
-	      fprintf(outfile,", y, z");
-	  }
-	  fprintf(outfile,", v\n");
-	  
-	  fprintf(outfile,"Zone, I=%d, J=%d, F=Point\n",nquad0,nquad1);
-	  for(i = 0; i < nquad0*nquad1; ++i)
-	  {
-	      for(j = 0; j < gdim; ++j)
-	      {
-		  fprintf(outfile,"%lf ",coords[j][i]);
-	      }
-	      fprintf(outfile,"%lf \n",m_phys[i]);
-	  }
-      }
+	    // get physical points defined in Geom
+	    m_geom->FillGeom();
+            
+            switch(m_geom->GetCoordim())
+            {
+            case 3:
+                ASSERTL0(coords_2.num_elements() != 0, 
+                         "output coords_2 is not defined");
+
+		CBasis0 = m_geom->GetBasis(2,0); 
+		CBasis1 = m_geom->GetBasis(2,1);
+		
+		if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
+		   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
+		{
+		    x = m_geom->UpdatePhys(2);
+		    Blas::Dcopy(m_base[0]->GetNumPoints()*
+				m_base[1]->GetNumPoints(),
+				&x[0],1,&coords_2[0],1);
+		}
+		else // Interpolate to Expansion point distribution
+		{
+		    Interp2D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(),&(m_geom->UpdatePhys(2))[0],
+			     m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),&coords_2[0]);
+		}
+            case 2:
+                ASSERTL0(coords_1.num_elements(), 
+                         "output coords_1 is not defined");
+                
+		CBasis0 = m_geom->GetBasis(1,0); 
+		CBasis1 = m_geom->GetBasis(1,1);
+		
+		if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
+		   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
+		{
+		    x = m_geom->UpdatePhys(1);
+		    Blas::Dcopy(m_base[0]->GetNumPoints()*
+				m_base[1]->GetNumPoints(),
+				&x[0],1,&coords_1[0],1);
+		}
+		else // Interpolate to Expansion point distribution
+		{
+		    Interp2D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), &(m_geom->UpdatePhys(1))[0],
+			     m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),&coords_1[0]);
+		}
+            case 1:
+                ASSERTL0(coords_0.num_elements(), 
+                         "output coords_0 is not defined");
+                
+		CBasis0 = m_geom->GetBasis(0,0); 
+		CBasis1 = m_geom->GetBasis(0,1);
+		
+		if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
+		   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
+		{
+		    x = m_geom->UpdatePhys(0);
+		    Blas::Dcopy(m_base[0]->GetNumPoints()*
+				m_base[1]->GetNumPoints(),
+				&x[0],1,&coords_0[0],1);
+		}
+		else // Interpolate to Expansion point distribution
+		{
+		    Interp2D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), &(m_geom->UpdatePhys(0))[0],
+			     m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),&coords_1[0]);
+		}
+                break;
+            default:
+                ASSERTL0(false,"Number of dimensions are greater than 2");
+                break;
+	    }
+	}
+	
+	// get the coordinates "coords" at the local coordinates "Lcoords"
+	void NodalTriExp::GetCoord(const ConstArray<OneD,NekDouble> &Lcoords, 
+                                   Array<OneD,NekDouble> &coords)
+	{
+	    int  i;
+	    
+	    ASSERTL1(Lcoords[0] >= -1.0 && Lcoords[1] <= 1.0 && 
+		     Lcoords[1] >= -1.0 && Lcoords[1]  <=1.0,
+		     "Local coordinates are not in region [-1,1]");
+	    
+	    m_geom->FillGeom();
+	    
+	    for(i = 0; i < m_geom->GetCoordDim(); ++i)
+	    {
+		coords[i] = m_geom->GetCoord(i,Lcoords);
+	    }
+	}
+	
+ 	void NodalTriExp::WriteToFile(FILE *outfile)
+	{
+	    int i,j;
+            Array<OneD,NekDouble> coords[3];
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+
+            ASSERTL0(m_geom,"_geom not defined");
+            
+	    int  coordim   = m_geom->GetCoordDim();
+	    
+            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
+            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
+            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
+	    
+	    std::fprintf(outfile,"Variables = x");
+	    if(coordim == 2)
+	    {
+                GetCoords(coords[0],coords[1]);
+		fprintf(outfile,", y");
+	    }
+	    else if (coordim == 3)
+	    {
+                GetCoords(coords[0],coords[1],coords[2]);
+		fprintf(outfile,", y, z");
+	    }
+            else
+            {
+                GetCoords(coords[0]);
+            }
+
+	    fprintf(outfile,", v\n");
+	    
+	    fprintf(outfile,"Zone, I=%d, J=%d, F=Point\n",nquad0,nquad1);
+	    for(i = 0; i < nquad0*nquad1; ++i)
+	    {
+		for(j = 0; j < coordim; ++j)
+		{
+		    fprintf(outfile,"%lf ",coords[j][i]);
+		}
+		fprintf(outfile,"%lf \n",m_phys[i]);
+	    }
+	}
+	
+	void NodalTriExp::WriteToFile(std::ofstream &outfile, const int dumpVar)
+	{
+	    int i,j;
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            Array<OneD,NekDouble> coords[3];
+
+            ASSERTL0(m_geom,"m_geom not defined");
+
+            int     coordim  = m_geom->GetCoordim();
+
+            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
+            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
+            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
+	    
+	    GetCoords(coords[0],coords[1],coords[2]);
       
-      void NodalTriExp::WriteToFile(std::ofstream &outfile, const int dumpVar)
-      {
-	  int i,j;
-	  double *coords[3];
-	  int  nquad0 = m_base[0]->GetPointsOrder();
-	  int  nquad1 = m_base[1]->GetPointsOrder();
-	  int  gdim   = m_geom->GetCoordDim();
-	  
-	  
-	  coords[0] = new double [3*nquad0*nquad1]; 
-	  coords[1] = coords[0] + nquad0*nquad1;
-	  coords[2] = coords[1] + nquad0*nquad1;
-	  
-	  GetCoords(coords);
-	  
-	  if(dumpVar)
-	  {
-	      outfile << "Variables = x";
-	      
-	      if(gdim == 2)
-	      {
-		  outfile << ", y";
-	      }
-	      else if (gdim == 3)
-	      {
-		  outfile << ", y, z";
-	      }
-	      outfile << ", v\n" << std::endl;
-	  }
-	  
-	  outfile << "Zone, I=" << nquad0 << ", J=" << 
-	      nquad1 <<", F=Point" << std::endl;
-	  
-	  for(i = 0; i < nquad0*nquad1; ++i)
-	  {
-	      for(j = 0; j < gdim; ++j)
-	      {
-		  outfile << coords[j][i] << " ";
-	      }
-	      outfile << m_phys[i] << std::endl;
-	  }
-	  delete[] coords[0];
-      }
+	    if(dumpVar)
+	    {
+		outfile << "Variables = x";
+		
+		if(coordim == 2)
+		{
+		    outfile << ", y";
+		}
+		else if (coordim == 3)
+		{
+		    outfile << ", y, z";
+		}
+		outfile << ", v\n" << std::endl;
+	    }
+    
+	    outfile << "Zone, I=" << nquad0 << ", J=" << 
+		nquad1 <<", F=Point" << std::endl;
+	    
+	    for(i = 0; i < nquad0*nquad1; ++i)
+	    {
+		for(j = 0; j < coordim; ++j)
+		{
+		    outfile << coords[j][i] << " ";
+		}
+		outfile << m_phys[i] << std::endl;
+	    }
+	}      
       
+	NekDouble NodalTriExp::PhysEvaluate(const ConstArray<OneD,NekDouble> &coord)
+	{
+            Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
+	    
+	    ASSERTL0(m_geom,"m_geom not defined");
+	    m_geom->GetLocCoords(coord,Lcoord);
+	    
+	    return StdNodalTriExp::PhysEvaluate(Lcoord);
+	}
       
-      double NodalTriExp::Evaluate(const double *coord)
-      {
-	  double Lcoord[2];
-	  
-	  ASSERTL0(m_geom,"_geom not defined");
-	  m_geom->GetLocCoords(Lcoord,coord);
-	  
-	  return StdNodalTriExp::Evaluate(Lcoord);
-      }
+       DNekMatSharedPtr NodalTriExp::CreateMatrix(const MatrixKey &mkey)
+        {
+            DNekMatSharedPtr returnval;
+
+            switch(mkey.GetMatrixType())
+            {
+            case StdRegions::eMassMatrix:
+                returnval = GenMassMatrix();
+                break;
+            default:
+                NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
+                break;
+            }
+
+            return returnval;
+        }
+
+        DNekLinSysSharedPtr NodalTriExp::CreateLinSys(const LinSysKey &mkey)
+        {
+            DNekLinSysSharedPtr returnval;
+
+            switch(mkey.GetMatrixType())
+            {
+            case StdRegions::eMassMatrix:
+                returnval = MemoryManager<DNekLinSys>::AllocateSharedPtr (m_matrixManager[mkey]);
+                break;
+            default:
+                NEKERROR(ErrorUtil::efatal, "Linear System creation not defined");
+                break;
+            }
+
+            return returnval;
+        }    
 
   }//end of namespace
 }//end of namespace
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.2  2006/12/10 18:59:46  sherwin
+ *    Updates for Nodal points
+ *
  *    Revision 1.1  2006/05/04 18:58:45  kirby
  *    *** empty log message ***
  *

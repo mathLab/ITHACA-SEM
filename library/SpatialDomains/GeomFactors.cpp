@@ -428,7 +428,7 @@ namespace Nektar
                 ASSERTL2(Coords[i]->GetPointsType(2)  == ptype2,
                     "Points type are different for coordinate 1 ");
 
-                ((StdRegions::StdExpansion3D **) Coords)[i]->StdDeriv(d1[i],d2[i],d3[i]);
+                ((StdRegions::StdExpansion3D **) Coords)[i]->StdPhysDeriv(d1[i],d2[i],d3[i]);
             }
 
             if((m_gtype == eRegular)||
@@ -556,6 +556,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.7  2007/05/28 21:48:41  sherwin
+// Update for 2D functionality
+//
 // Revision 1.6  2007/05/28 08:35:25  sherwin
 // Updated for localregions up to Project1D
 //

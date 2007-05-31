@@ -281,17 +281,17 @@ namespace Nektar
             /** \brief Virtual call to StdSegExp::Deriv */
 
             virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
-                Array<OneD, NekDouble> &out_d0,
-                Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
+                                     Array<OneD, NekDouble> &out_d0,
+                                     Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                                     Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
             {
                 PhysDeriv(inarray,out_d0);
             }
-
+            
 
             /** \brief Virtual call to StdSegExp::Deriv */
             virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-                Array<OneD, NekDouble> &outarray)
+                                        Array<OneD, NekDouble> &outarray)
             {
                 PhysDeriv(inarray, outarray);
             }
@@ -343,6 +343,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.20  2007/05/17 17:59:28  sherwin
+* Modification to make Demos work after introducion of Array<>
+*
 * Revision 1.19  2007/05/15 05:18:24  bnelson
 * Updated to use the new Array object.
 *

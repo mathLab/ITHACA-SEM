@@ -6,10 +6,10 @@ MatrixKey.cpp
 #NodalTriExp.cpp
 #PrismExp.cpp
 #PyrExp.cpp
-#QuadExp.cpp
+QuadExp.cpp
 SegExp.cpp
 #TetExp.cpp
-#TriExp.cpp
+TriExp.cpp
 )
 
 SET(LOCAL_REGIONS_HEADERS

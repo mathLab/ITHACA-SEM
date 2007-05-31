@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LocalRegions/TriExp.h,v $
+// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/TriExp.h,v $
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -36,14 +36,15 @@
 #ifndef TRIEXP_H
 #define TRIEXP_H
 
-#include <StdRegions/StdBasis.h>
-#include <StdRegions/StdTriExp.h>
+#include <LocalRegions/LocalRegions.hpp>
 
+#include <StdRegions/StdTriExp.h>
 #include <SpatialDomains/TriGeom.h>
 
-#include <LocalRegions/MetricRelatedInfo.h>
+#include <SpatialDomains/GeomFactors.h>
 
-#include <StdRegions/StdRegions.hpp>
+#include <LocalRegions/MatrixKey.h>
+#include <LocalRegions/LinSys.hpp>
 
 namespace Nektar
 {
@@ -57,18 +58,10 @@ namespace Nektar
 
         /** \brief Constructor using BasisKey class for quadrature
         points and order definition */
-        TriExp(const StdRegions::BasisKey &Ba,
-           const StdRegions::BasisKey &Bb,
-           SpatialDomains::TriGeomSharedPtr geom);
+        TriExp(const LibUtilities::BasisKey &Ba,
+                const LibUtilities::BasisKey &Bb,
+                SpatialDomains::TriGeomSharedPtr &geom);
 
-
-        /** \brief Constructor using BasisKey class for quadrature
-        points and order definition where _coeffs and _phys are all
-        set. */
-        TriExp(const StdRegions::BasisKey &Ba,
-           const StdRegions::BasisKey &Bb,
-           double *coeffs, double *phys,
-           SpatialDomains::TriGeomSharedPtr geom);
 
         /// Copy Constructor
         TriExp(const TriExp &T);
@@ -76,30 +69,15 @@ namespace Nektar
         /// Destructor
         ~TriExp();
 
-        /// Return Shape of region, using  ShapeType enum list.
-        StdRegions::ShapeType DetShapeType()
+        void GetCoords(Array<OneD,NekDouble> &coords_1,
+                       Array<OneD,NekDouble> &coords_2 = NullNekDouble1DArray, 
+                       Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
+        void GetCoord(const ConstArray<OneD,NekDouble>& Lcoords, 
+                      Array<OneD,NekDouble> &coords);
+
+        SpatialDomains::TriGeomSharedPtr GetGeom()
         {
-          return StdRegions::eTriangle;
-        }
-
-        MetricRelatedInfoSharedPtr GenGeoFac();
-
-
-        inline void SetGeoFac(MetricRelatedInfoSharedPtr minfo)
-        {
-          m_minfo = minfo;
-        }
-
-
-        void GetCoords(double **coords);
-
-
-        void GetCoord(const double *Lcoords, double *coords);
-
-
-        virtual StdRegions::GeomType V_GeoFacType()
-        {
-	    return m_minfo->GetGtype();
+            return m_geom;
         }
 
         void WriteToFile(FILE *outfile);
@@ -110,50 +88,21 @@ namespace Nektar
         //----------------------------
 
         /// \brief Integrate the physical point list \a inarray over region
-        double Integral(const double *inarray);
+        NekDouble Integral(const ConstArray<OneD, NekDouble> &inarray);
 
         /** \brief  Inner product of \a inarray over region with respect to the
         expansion basis (this)->_Base[0] and return in \a outarray */
-        void IProductWRTBase(const double * inarray, double * outarray);
-
-        //----------------------------------
-        // Local Matrix Routines
-        //----------------------------------
-
-        /** \brief Get the mass matrix attached to this expansion by using
-        the StdMatrix manager _ElmtMats and return the standard Matrix
-        container */
-        StdRegions::StdMatContainer *GetMassMatrix();
-
-        /** \brief Get the weak Laplacian matrix attached to this
-        expansion by using the StdMatrix manager _ElmtMats and return
-        the standard Matrix container */
-        StdRegions::StdMatContainer * GetLapMatrix();
+        void IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
+                             Array<OneD, NekDouble> &outarray);
 
         //-----------------------------
         // Differentiation Methods
         //-----------------------------
 
-        void Deriv(double * outarray_d1, double *outarray_d2)
-        {
-	    double *out[2];
-	    out [0] = outarray_d1;
-	    out [1] = outarray_d2;
-	    Deriv(2, this->m_phys, out);
-        }
-
-        void Deriv(const double *inarray, double * outarray_d1,
-		   double *outarray_d2)
-	{
-	    double *out[2];
-	    out [0] = outarray_d1;
-	    out [1] = outarray_d2;
-	    Deriv(2, inarray, out);
-	}
-	
-        void Deriv(const int n, double **outarray);
-
-        void Deriv(const int n, const double *inarray, double ** outarray);
+        void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                       Array<OneD, NekDouble> &out_d0 = NullNekDouble1DArray,
+                       Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                       Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);  
 
         //----------------------------
         // Evaluations Methods
@@ -162,20 +111,31 @@ namespace Nektar
         /** \brief Forward transform from physical quadrature space
         stored in \a inarray and evaluate the expansion coefficients and
         store in \a (this)->_coeffs  */
-        void FwdTrans(const double * inarray);
-
-        double Evaluate(const double *coord);
-
+        void FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
+                      Array<OneD, NekDouble> &outarray);
+        
+        NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble> &coord);
+        
     protected:
+
+        void GenMetricInfo();
+
+        DNekMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
+        DNekLinSysSharedPtr CreateLinSys(const LinSysKey &mkey);
+
         SpatialDomains::TriGeomSharedPtr m_geom;
-        MetricRelatedInfoSharedPtr       m_minfo;
+        SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+
+        LibUtilities::NekManager<MatrixKey, DNekMat, MatrixKey::opLess> m_matrixManager;
+        
+        LibUtilities::NekManager<LinSysKey, DNekLinSys, LinSysKey::opLess> m_linSysManager;
 
         /** \brief  Inner product of \a inarray over region with respect to
         the expansion basis \a base and return in \a outarray */
-        inline void IProductWRTBase(const double *base0,
-                    const double *base1,
-                    const double *inarray,
-                    double *outarray);
+        inline void IProductWRTBase(const ConstArray<OneD, NekDouble> &base0, 
+                                    const ConstArray<OneD, NekDouble> &base1, 
+                                    const ConstArray<OneD, NekDouble> &inarray, 
+                                    Array<OneD, NekDouble> &outarray);
 
     private:
 
@@ -184,24 +144,22 @@ namespace Nektar
 			return DetShapeType();
         }
 
-        virtual MetricRelatedInfoSharedPtr v_GenGeoFac()
+        virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
         {
-			return GenGeoFac();
+            return m_metricinfo;
         }
 
-        virtual void v_SetGeoFac(MetricRelatedInfoSharedPtr minfo)
-        {
-			SetGeoFac(minfo);
-        }
+         virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
+                                 Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
+                                 Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray)
+	 {
+             GetCoords(coords_0, coords_1, coords_2);
+         }
 
-        virtual void v_GetCoords(double **coords)
+        virtual void v_GetCoord(const ConstArray<OneD, NekDouble> &lcoord, 
+                                Array<OneD, NekDouble> &coord)
         {
-			GetCoords(coords);
-        }
-
-        virtual void v_GetCoord(const double *Lcoords, double *coords)
-        {
-			GetCoord(Lcoords, coords);
+            GetCoord(lcoord, coord);
         }
 
         virtual int v_GetCoordim()
@@ -222,73 +180,77 @@ namespace Nektar
 
         /** \brief Virtual call to integrate the physical point list \a inarray
         over region (see SegExp::Integral) */
-        virtual double v_Integral(const double *inarray)
+        virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble> &inarray )
         {
-			return Integral(inarray);
+            return Integral(inarray);
         }
 
         /** \brief Virtual call to TriExp::IProduct_WRT_B */
-        virtual void v_IProductWRTBase(const double * inarray, double * outarray)
+        virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray,
+                                       Array<OneD, NekDouble> &outarray)
         {
-			IProductWRTBase(inarray,outarray);
+            IProductWRTBase(inarray,outarray);
         }
 
-        /// virtual call to GetMassMatrix
-        virtual StdRegions::StdMatContainer *v_GetMassMatrix()
+         /// Virtual call to SegExp::PhysDeriv
+        virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                                    Array<OneD, NekDouble> &out_d0,
+                                    Array<OneD, NekDouble> &out_d1)
         {
-			return GetMassMatrix();
+            StdTriExp::PhysDeriv(inarray, out_d0, out_d1);
         }
+        
+        virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                                 Array<OneD, NekDouble> &out_d0 = NullNekDouble1DArray,
+                                 Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                                 Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
+	 {
+             PhysDeriv(inarray, out_d0, out_d1, out_d2);
+         }
+        
+        virtual void v_StdDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                                Array<OneD, NekDouble> &out_d0,
+                                Array<OneD, NekDouble> &out_d1)
 
-        /// virtual call to GetLapatrix
-        virtual StdRegions::StdMatContainer *v_GetLapMatrix()
         {
-			return GetLapMatrix();
+	    StdTriExp::PhysDeriv(inarray, out_d0, out_d1);
         }
-
-        virtual void v_Deriv(double * outarray_d1, double *outarray_d2)
-        {
-			Deriv(this->m_phys, outarray_d1, outarray_d2);
-        }
-
-        virtual void v_StdDeriv(double * outarray_d1, double *outarray_d2)
-        {
-			StdTriExp::Deriv(this->m_phys, outarray_d1, outarray_d2);
-        }
-
-        virtual void v_Deriv(const double *inarray, double * outarray_d1,
-                 double *outarray_d2)
-        {
-			Deriv(inarray, outarray_d1, outarray_d2);
-        }
-
-        virtual void v_StdDeriv(const double *inarray, double * outarray_d1,
-                    double *outarray_d2)
-		{
-			StdTriExp::Deriv(inarray, outarray_d1, outarray_d2);
-        }
-
-        virtual void v_Deriv(const int n,  double ** outarray)
-        {
-			Deriv(n, outarray);
-        }
-
-        virtual void v_Deriv(const int n, const double *inarray,
-                 double ** outarray)
-        {
-			Deriv(n, inarray, outarray);
-        }
-
+	
         /// Virtual call to SegExp::FwdTrans
-        virtual void v_FwdTrans(const double * inarray)
+       virtual void v_FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
+                                Array<OneD, NekDouble> &outarray)
         {
-			FwdTrans(inarray);
+            FwdTrans(inarray,outarray);
         }
 
         /// Virtual call to TriExp::Evaluate
-        virtual double v_Evaluate(const double * coords)
+        virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble> &coords)
         {
-			return Evaluate(coords);
+            return PhysEvaluate(coords);
         }
+
+        virtual NekDouble v_Linf(const ConstArray<OneD, NekDouble> &sol)
+        {
+            return Linf(sol);
+        }
+	
+        
+        virtual NekDouble v_Linf()
+        {
+            return Linf();
+        }
+	
+        virtual NekDouble v_L2(const ConstArray<OneD, NekDouble> &sol)
+        {
+            return StdExpansion::L2(sol);
+        }
+
+	
+        virtual NekDouble v_L2()
+        {
+            return StdExpansion::L2();
+        }
+
     };
 
     // type defines for use of TriExp in a boost vector
@@ -303,6 +265,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.9  2007/01/15 21:12:26  sherwin
+ *    First definition
+ *
  *    Revision 1.8  2006/12/10 18:59:47  sherwin
  *    Updates for Nodal points
  *

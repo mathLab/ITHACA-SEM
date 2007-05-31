@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/QuadExp.h,v $
+// File QuadExp.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -36,14 +36,15 @@
 #ifndef QUADEXP_H
 #define QUADEXP_H
 
-#include <StdRegions/StdRegions.hpp>
+#include <LocalRegions/LocalRegions.hpp>
 
-#include <StdRegions/StdBasis.h>
 #include <StdRegions/StdQuadExp.h>
-
 #include <SpatialDomains/QuadGeom.h>
 
-#include <LocalRegions/MetricRelatedInfo.h>
+#include <SpatialDomains/GeomFactors.h>
+
+#include <LocalRegions/MatrixKey.h>
+#include <LocalRegions/LinSys.hpp>
 
 namespace Nektar
 {
@@ -74,15 +75,11 @@ namespace Nektar
             return StdRegions::eQuadrilateral;
         }
 
-        MetricRelatedInfoSharedPtr GenGeoFac();
-
-
-        void GetCoords(Array<OneD, NekDouble> &coords_1,
-                    Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray,
-                    Array<OneD, NekDouble> &coords_3 = NullNekDouble1DArray);
-
-        void GetCoord(ConstArray<OneD, NekDouble> Lcoords, 
-                      Array<OneD, NekDouble> &coords);
+        void GetCoords(Array<OneD,NekDouble> &coords_1,
+                       Array<OneD,NekDouble> &coords_2 = NullNekDouble1DArray, 
+                       Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
+        void GetCoord(const ConstArray<OneD,NekDouble>& Lcoords, 
+                      Array<OneD,NekDouble> &coords);
 
         SpatialDomains::QuadGeomSharedPtr GetGeom()
         {
@@ -98,25 +95,23 @@ namespace Nektar
         // Integration Methods
         //----------------------------
 
-        /// \brief Integrate the physical point list \a inarray over region
-        NekDouble Integral(ConstArray<OneD, NekDouble> inarray);
+         /// \brief Integrate the physical point list \a inarray over region
+        NekDouble Integral(const ConstArray<OneD, NekDouble> &inarray);
 
 
         /** \brief  Inner product of \a inarray over region with respect to the
         expansion basis (this)->_Base[0] and return in \a outarray */
-        void IProductWRTBase(ConstArray<OneD, NekDouble> inarray, 
+        void IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
                              Array<OneD, NekDouble> &outarray);
-
 
         //-----------------------------
         // Differentiation Methods
         //-----------------------------
 
-        void PhysDeriv(ConstArray<OneD, NekDouble> inarray, 
+        void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
                        Array<OneD, NekDouble> &out_d0 = NullNekDouble1DArray,
                        Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                       Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
-        
+                       Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);      
         
         //----------------------------
         // Evaluations Methods
@@ -125,22 +120,30 @@ namespace Nektar
         /** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
             store in \a (this)->_coeffs  */
-        void FwdTrans(ConstArray<OneD, NekDouble> inarray, 
+        void FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
                       Array<OneD, NekDouble> &outarray);
         
-        NekDouble PhysEvaluate(ConstArray<OneD, NekDouble> coord);
+        NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble> &coord);        
         
     protected:
-        SpatialDomains::SegGeomSharedPtr m_geom;
-        SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+
+        void GenMetricInfo();
 
         DNekMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
         DNekLinSysSharedPtr CreateLinSys(const LinSysKey &mkey);
 
+        SpatialDomains::QuadGeomSharedPtr m_geom;
+        SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+
+        LibUtilities::NekManager<MatrixKey, DNekMat, MatrixKey::opLess> m_matrixManager;
+        
+        LibUtilities::NekManager<LinSysKey, DNekLinSys, LinSysKey::opLess> m_linSysManager;
+
         /** \brief  Inner product of \a inarray over region with respect to
         the expansion basis \a base and return in \a outarray */
-        inline void IProductWRTBase(ConstArray<OneD, NekDouble> base, 
-                                    ConstArray<OneD, NekDouble> inarray, 
+        inline void IProductWRTBase(const ConstArray<OneD, NekDouble> &base0, 
+                                    const ConstArray<OneD, NekDouble> &base1, 
+                                    const ConstArray<OneD, NekDouble> &inarray, 
                                     Array<OneD, NekDouble> &outarray, 
                                     const int coll_check);
         
@@ -162,7 +165,7 @@ namespace Nektar
              GetCoords(coords_0, coords_1, coords_2);
          }
 
-        virtual void v_GetCoord(ConstArray<OneD, NekDouble> lcoord, 
+        virtual void v_GetCoord(const ConstArray<OneD, NekDouble> &lcoord, 
                                 Array<OneD, NekDouble> &coord)
         {
             GetCoord(lcoord, coord);
@@ -186,13 +189,13 @@ namespace Nektar
 
         /** \brief Virtual call to integrate the physical point list \a inarray
         over region (see SegExp::Integral) */
-        virtual NekDouble v_Integral(ConstArray<OneD, NekDouble> inarray )
+        virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble> &inarray )
         {
             return Integral(inarray);
         }
 
         /** \brief Virtual call to QuadExp::IProduct_WRT_B */
-        virtual void v_IProductWRTBase(ConstArray<OneD, NekDouble> inarray,
+        virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray,
                                        Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
@@ -200,13 +203,14 @@ namespace Nektar
 
 
         /// Virtual call to SegExp::PhysDeriv
-        virtual void v_StdPhysDeriv(ConstArray<OneD, NekDouble> inarray, 
-                                    Array<OneD, NekDouble> &outarray)
+        virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                                    Array<OneD, NekDouble> &out_d0,
+                                    Array<OneD, NekDouble> &out_d1)
         {
-            StdSegExp::PhysDeriv(inarray, outarray);
+            StdQuadExp::PhysDeriv(inarray, out_d0, out_d1);
         }
         
-        virtual void v_PhysDeriv(ConstArray<OneD, NekDouble> inarray, 
+        virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
                                  Array<OneD, NekDouble> &out_d0 = NullNekDouble1DArray,
                                  Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                                  Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
@@ -214,43 +218,45 @@ namespace Nektar
              PhysDeriv(inarray, out_d0, out_d1, out_d2);
          }
         
-        virtual void v_StdDeriv(const double *inarray, double * outarray_d1,
-				double *outarray_d2)
+        virtual void v_StdDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                                Array<OneD, NekDouble> &out_d0,
+                                Array<OneD, NekDouble> &out_d1)
+
         {
-	    StdQuadExp::Deriv(inarray, outarray_d1, outarray_d2);
+	    StdQuadExp::PhysDeriv(inarray, out_d0, out_d1);
         }
 	
         /// Virtual call to SegExp::FwdTrans
-        virtual void v_FwdTrans(ConstArray<OneD, NekDouble> inarray, 
+       virtual void v_FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
                                 Array<OneD, NekDouble> &outarray)
         {
             FwdTrans(inarray,outarray);
         }
 	
         /// Virtual call to QuadExp::Evaluate
-        virtual double v_PhysEvaluate(ConstArray<OneD, NekDouble> coords)
+        virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble> &coords)
         {
             return PhysEvaluate(coords);
         }
 	
-        virtual double v_Linf(ConstArray<OneD, NekDouble> sol)
+        virtual NekDouble v_Linf(const ConstArray<OneD, NekDouble> &sol)
         {
             return Linf(sol);
         }
 	
         
-        virtual double v_Linf()
+        virtual NekDouble v_Linf()
         {
             return Linf();
         }
 	
-        virtual double v_L2(ConstArray<OneD, NekDouble> sol)
+        virtual NekDouble v_L2(const ConstArray<OneD, NekDouble> &sol)
         {
             return StdExpansion::L2(sol);
         }
 
 	
-        virtual double v_L2()
+        virtual NekDouble v_L2()
         {
             return StdExpansion::L2();
         }
@@ -269,6 +275,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.10  2007/05/27 16:10:28  bnelson
+ *    Update to new Array type.
+ *
  *    Revision 1.9  2007/04/26 15:00:16  sherwin
  *    SJS compiling working version using SHaredArrays
  *

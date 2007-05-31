@@ -4,6 +4,7 @@ MatrixKey.cpp
 #MetricRelatedInfo.cpp
 #NodalTetExp.cpp
 #NodalTriExp.cpp
+PointExp.cpp
 #PrismExp.cpp
 #PyrExp.cpp
 QuadExp.cpp
@@ -19,6 +20,7 @@ MatrixKey.h
 #MetricRelatedInfo.h
 NodalTetExp.h
 NodalTriExp.h
+PointExp.h
 PrismExp.h
 PyrExp.h
 QuadExp.h

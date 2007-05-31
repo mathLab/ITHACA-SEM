@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source$
+// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/PointExp.cpp,v $
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -32,6 +32,7 @@
 // Description: Definition of a Point expansion 
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <LocalRegions/PointExp.h>
 
 namespace Nektar
@@ -39,7 +40,9 @@ namespace Nektar
     namespace LocalRegions
     {
 
-	PointExp::PointExp(void)
+	PointExp::PointExp(SpatialDomains::VertexComponentSharedPtr &m_geom):
+            m_value(0),
+            m_geom(m_geom)
 	{
 	}
 

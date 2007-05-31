@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source$
+// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/PointExp.h,v $
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -36,6 +36,7 @@
 #ifndef POINTEXP_H
 #define POINTEXP_H
 
+#include <LocalRegions/LocalRegions.hpp>
 #include <SpatialDomains/MeshComponents.h>
 
 namespace Nektar
@@ -47,13 +48,16 @@ namespace Nektar
 	{
 	    
 	public:
-	    PointExp();
+	    PointExp(SpatialDomains::VertexComponentSharedPtr &m_geom);
 	    ~PointExp(void);
 
-	protected:
-            double *m_coeffs;   //!< Array containing expansion coefficients
-	    double *m_phys;
+            inline NekDouble GetValue(void)
+            {
+                return m_value;
+            }
 
+	protected:
+            NekDouble      m_value; //!< Array containing expansion coefficients
 	    SpatialDomains::VertexComponentSharedPtr m_geom;
 	private:
 

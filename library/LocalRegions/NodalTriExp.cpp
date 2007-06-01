@@ -231,7 +231,6 @@ namespace Nektar
 	    {
 		Vmath::Smul(nquad0*nquad1,jac[0],(NekDouble*)&inarray[0],1,&tmp[0],1);
 	    }
-	    
 	    StdNodalTriExp::IProductWRTBase(base0,base1,tmp,outarray);
 	}
         
@@ -332,13 +331,13 @@ namespace Nektar
  	void NodalTriExp::FwdTrans(const ConstArray<OneD,NekDouble> & inarray, 
                                    Array<OneD,NekDouble> &outarray)
 	{
-            IProductWRTBase(inarray,outarray);
-            
+            IProductWRTBase(inarray,outarray); 
+
             LinSysKey  masskey(StdRegions::eMassMatrix,DetShapeType(),*this);
             DNekLinSysSharedPtr matsys = m_linSysManager[masskey];
             
             DNekVec   v(m_ncoeffs,outarray,eWrapper);
-            matsys->Solve(v,v);
+            matsys->Solve(v,v);;
         }
 
         void NodalTriExp::GetCoords(Array<OneD,NekDouble> &coords_0,
@@ -414,7 +413,7 @@ namespace Nektar
 		else // Interpolate to Expansion point distribution
 		{
 		    Interp2D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), &(m_geom->UpdatePhys(0))[0],
-			     m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),&coords_1[0]);
+			     m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),&coords_0[0]);
 		}
                 break;
             default:
@@ -467,10 +466,6 @@ namespace Nektar
                 GetCoords(coords[0],coords[1],coords[2]);
 		fprintf(outfile,", y, z");
 	    }
-            else
-            {
-                GetCoords(coords[0]);
-            }
 
 	    fprintf(outfile,", v\n");
 	    
@@ -579,6 +574,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.3  2007/05/31 19:13:12  pvos
+ *    Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+ *
  *    Revision 1.2  2006/12/10 18:59:46  sherwin
  *    Updates for Nodal points
  *

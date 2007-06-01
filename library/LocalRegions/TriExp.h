@@ -70,7 +70,7 @@ namespace Nektar
         ~TriExp();
 
         void GetCoords(Array<OneD,NekDouble> &coords_1,
-                       Array<OneD,NekDouble> &coords_2 = NullNekDouble1DArray, 
+                       Array<OneD,NekDouble> &coords_2, 
                        Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
         void GetCoord(const ConstArray<OneD,NekDouble>& Lcoords, 
                       Array<OneD,NekDouble> &coords);
@@ -257,6 +257,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.11  2007/05/31 19:13:12  pvos
+ *    Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+ *
  *    Revision 1.10  2007/05/31 11:38:17  pvos
  *    Updated QuadExp and TriExp
  *

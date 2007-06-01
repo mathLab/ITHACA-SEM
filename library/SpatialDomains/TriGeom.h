@@ -96,6 +96,11 @@ namespace Nektar
             void GenGeomFactors(void);
         private:
             bool m_owndata;
+
+            virtual void v_GenGeomFactors(void)
+            {
+                GenGeomFactors();
+            }
         };
 
         typedef boost::shared_ptr<TriGeom>      TriGeomSharedPtr;
@@ -109,6 +114,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.7  2007/05/28 21:48:43  sherwin
+// Update for 2D functionality
+//
 // Revision 1.6  2006/07/02 17:16:18  sherwin
 //
 // Modifications to make MultiRegions work for a connected domain in 2D (Tris)

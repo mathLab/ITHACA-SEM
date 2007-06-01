@@ -470,7 +470,7 @@ namespace Nektar
 		else // Interpolate to Expansion point distribution
 		{
 		    Interp2D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), &(m_geom->UpdatePhys(0))[0],
-			     m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),&coords_1[0]);
+			     m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),&coords_0[0]);
 		}
                 break;
             default:
@@ -524,10 +524,6 @@ namespace Nektar
                 GetCoords(coords[0],coords[1],coords[2]);
 		fprintf(outfile,", y, z");
 	    }
-            else
-            {
-                GetCoords(coords[0]);
-            }
 
 	    fprintf(outfile,", v\n");
 	    
@@ -640,6 +636,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.11  2007/05/31 19:13:12  pvos
+ *    Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+ *
  *    Revision 1.10  2007/05/31 11:38:16  pvos
  *    Updated QuadExp and TriExp
  *

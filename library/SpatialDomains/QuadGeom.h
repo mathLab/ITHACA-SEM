@@ -97,6 +97,11 @@ namespace Nektar
 
         private:
             bool m_owndata;   ///< Boolean indicating whether object owns the data
+
+            virtual void v_GenGeomFactors(void)
+            {
+                GenGeomFactors();
+            }
         };
 
 	// shorthand for boost pointer
@@ -111,6 +116,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.8  2007/05/28 21:48:42  sherwin
+// Update for 2D functionality
+//
 // Revision 1.7  2006/07/02 17:16:18  sherwin
 //
 // Modifications to make MultiRegions work for a connected domain in 2D (Tris)

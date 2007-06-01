@@ -84,6 +84,10 @@ namespace Nektar
 					boost::bind(&FourierPoints::CreateMatrix, this, _1));
 				m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),
 					boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),
+                                                                boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),
+                                                                boost::bind(&FourierPoints::CreateMatrix, this, _1));
 				m_InterpManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
 					boost::bind(&FourierPoints::CreateMatrix, this, _1));
 				m_InterpManager.RegisterCreator(PointsKey(0, eFourierEvenlySpaced),

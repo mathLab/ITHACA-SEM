@@ -224,8 +224,6 @@ int main(int argc, char *argv[]){
 
   //-------------------------------------------
   // Evaulate solution at x = y =0  and print error
-
-
   Array<OneD, NekDouble> x = Array<OneD, NekDouble>(2);
   x[0] = 0;
   x[1] = -0.25;

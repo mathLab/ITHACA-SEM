@@ -82,3 +82,7 @@ namespace Nektar
 	
     }
 }
+
+/**
+* $Log: LocalToGlobalMap1D.cpp,v $
+**/

@@ -90,7 +90,7 @@ namespace Nektar
 		GenMassMatrixLinSys();
 	    }
 
-	    DNekVec v(m_ncoeffs,m_contCoeffs,eWrapper);
+	    DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
 	    m_mass->Solve(v,v);
 	    m_transState = eContinuous;
 	    m_physState = false;
@@ -141,5 +141,7 @@ namespace Nektar
     } //end of namespace
 } //end of namespace
 
-
+/**
+* $Log: ContExpList1D.cpp,v $
+**/
 

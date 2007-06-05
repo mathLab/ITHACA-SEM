@@ -42,137 +42,83 @@ namespace Nektar
 	
 	ContExpList2D::ContExpList2D()
 	{
-#ifndef NEKMAT
-	    m_mass = (StdRegions::StdMatContainer *)NULL;
-#endif
 	}
 	
 	ContExpList2D::~ContExpList2D()
 	{
-	    if(m_contCoeffs)
-	    {
-		delete[] m_contCoeffs;
-	    }
 	}
-	
-	ContExpList2D::ContExpList2D(const StdRegions::BasisKey &TriBa, 
-				     const StdRegions::BasisKey &TriBb, 
-				     const StdRegions::BasisKey &QuadBa, 
-				     const StdRegions::BasisKey &QuadBb, 
-				     SpatialDomains::MeshGraph2D &graph2D):
-	    ExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D)
+
+        ContExpList2D::ContExpList2D(const ContExpList2D &In):
+            ExpList2D(In),
+            m_contNcoeffs(In.m_contNcoeffs),
+            m_locToGloMap(In.m_locToGloMap),
+            m_mass(In.m_mass)
+            
+        {
+            m_contCoeffs = Array<OneD,NekDouble>(m_contNcoeffs);
+        }
+
+        ContExpList2D::ContExpList2D(const LibUtilities::BasisKey &TriBa, 
+                                     const LibUtilities::BasisKey &TriBb,
+                                     const LibUtilities::BasisKey &QuadBa, 
+                                     const LibUtilities::BasisKey &QuadBb, 
+                                     const SpatialDomains::MeshGraph2D &graph2D,
+                                     const LibUtilities::PointsType TriNb):
+	    ExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D,TriNb)
 	{
 	    
-	    ASSERTL1((TriBa.GetBasisType() == StdRegions::eModified_A),
+	    ASSERTL1((TriBa.GetBasisType() == LibUtilities::eModified_A)&&
+		     (TriNb == LibUtilities::SIZE_PointsType),
 		     "Expansion not of an boundary-interior type");
 	    
-	    ASSERTL1((TriBb.GetBasisType() == StdRegions::eModified_B),
+	    ASSERTL1((TriBb.GetBasisType() == LibUtilities::eModified_B)&&
+		     (TriNb == LibUtilities::SIZE_PointsType),
 		     "Expansion not of an boundary-interior type");
 
-	    ASSERTL1((QuadBa.GetBasisType() == StdRegions::eModified_A)
-		     ||(QuadBa.GetBasisType() == StdRegions::eGLL_Lagrange),
+	    ASSERTL1((QuadBa.GetBasisType() == LibUtilities::eModified_A)
+		     ||(QuadBa.GetBasisType() == LibUtilities::eGLL_Lagrange),
 		     "Expansion not of an boundary-interior type");
 
-	    ASSERTL1((QuadBb.GetBasisType() == StdRegions::eModified_A)
-		     ||(QuadBb.GetBasisType() == StdRegions::eGLL_Lagrange),
+	    ASSERTL1((QuadBb.GetBasisType() == LibUtilities::eModified_A)
+		     ||(QuadBb.GetBasisType() == LibUtilities::eGLL_Lagrange),
 		     "Expansion not of an boundary-interior type");
 	    
-	    if(TriBa.GetBasisType() == StdRegions::eModified_A)
+	    if(TriBa.GetBasisType() == LibUtilities::eModified_A)
 	    {
-		ASSERTL1((QuadBb.GetBasisType() == StdRegions::eModified_A),
+		ASSERTL1((QuadBb.GetBasisType() == LibUtilities::eModified_A),
 			 "Quad and Tri Expansions are not of the same type");
 	    }
-	    
-#ifndef NEKMAT
-	    m_mass = (StdRegions::StdMatContainer *)NULL;
-#endif
-	    
+	   	    
 	    // setup mapping array 
-	    m_locToGloMap.reset(new LocalToGlobalMap2D(m_ncoeffs, m_exp_shapes,
-							graph2D));
-	    
+	    m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph2D);
+
 	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
-	    m_contCoeffs = new double [m_contNcoeffs];
+	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs);
 	}
 
-
-	ContExpList2D::ContExpList2D(const StdRegions::BasisKey &TriBa, 
-				     const StdRegions::BasisKey &TriBb, 
-				     const StdRegions::NodalBasisType  TriNb,
-				     const StdRegions::BasisKey &QuadBa, 
-				     const StdRegions::BasisKey &QuadBb, 
-				     SpatialDomains::MeshGraph2D &graph2D):
-	    ExpList2D(TriBa,TriBb,TriNb,QuadBa,QuadBb,graph2D)
+        void ContExpList2D::IProductWRTBase(const ExpList &In)
 	{
-	    
-	    ASSERTL1((TriBa.GetBasisType() == StdRegions::eModified_A)&&
-		     (TriNb == NULL),
-		     "Expansion not of an boundary-interior type");
-	    
-	    ASSERTL1((TriBb.GetBasisType() == StdRegions::eModified_B)&&
-		     (TriNb == NULL),
-		     "Expansion not of an boundary-interior type");
-
-	    ASSERTL1((QuadBa.GetBasisType() == StdRegions::eModified_A)
-		     ||(QuadBa.GetBasisType() == StdRegions::eGLL_Lagrange),
-		     "Expansion not of an boundary-interior type");
-
-	    ASSERTL1((QuadBb.GetBasisType() == StdRegions::eModified_A)
-		     ||(QuadBb.GetBasisType() == StdRegions::eGLL_Lagrange),
-		     "Expansion not of an boundary-interior type");
-	    
-	    if(TriBa.GetBasisType() == StdRegions::eModified_A)
-	    {
-		ASSERTL1((QuadBb.GetBasisType() == StdRegions::eModified_A),
-			 "Quad and Tri Expansions are not of the same type");
-	    }
-	    
-#ifndef NEKMAT	    
-	    m_mass = (StdRegions::StdMatContainer *)NULL;
-#endif
-	    
-	    // setup mapping array 
-	    m_locToGloMap.reset(new LocalToGlobalMap2D(m_ncoeffs, m_exp_shapes,
-							graph2D));
-	    
-	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
-	    m_contCoeffs = new double [m_contNcoeffs];
-	}
-	
-	void ContExpList2D::IProductWRTBase(const double *inarray, 
-					    double *outarray)
-	{
-	    ExpList2D::IProductWRTBase(inarray,m_coeffs);
-	    Assemble(m_coeffs,outarray);
+	    ExpList2D::IProductWRTBase(In);
+	    Assemble();
 	    m_transState = eLocalCont;
 	}
 
-	void ContExpList2D::FwdTrans(const double *inarray)
+	void ContExpList2D::FwdTrans(const ExpList &In)
 	{
-	    IProductWRTBase(inarray,m_contCoeffs);
+	    IProductWRTBase(In);
 
-	    if(!m_mass)
+	    if(!(m_mass.get()))
 	    {
-		GenMassMatrix();
-	    }
+		GenMassMatrixLinSys();
+	    }	    
 	    
-#ifdef NEKMAT
-	    DNekVec    contCoeffs(m_contNcoeffs,m_contCoeffs);
-	    LinearSystem< NekMatrix<double, eFull>, NekVector<double> > 
-		linsys(m_mass,contCoeffs);
-	    // DNekLinSys linsys(m_mass,contCoeffs);
-	    contCoeffs = linsys.Solve();
-#else
-	    m_mass->ShowMatrixStructure(stdout);
-	    fflush(stdout);
-
-	    m_mass->Solve(m_contCoeffs,1);
+	    DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
+	    m_mass->Solve(v,v);
 	    m_transState = eContinuous;
 	    m_physState = false;
-#endif
 	}
 
-	void ContExpList2D::BwdTrans(double *outarray)
+	void ContExpList2D::BwdTrans(const ExpList &In)
 	{
 	    
 	    if(m_transState == eContinuous)
@@ -180,68 +126,48 @@ namespace Nektar
 		ContToLocal();
 	    }
 	    
-	    ExpList2D::BwdTrans(outarray);
+	    ExpList2D::BwdTrans(In);
 	}
 	
 
-	void ContExpList2D::GenMassMatrix(void)
+	void ContExpList2D::GenMassMatrixLinSys(void)
 	{
-	    if(!m_mass)
+	    if(!(m_mass.get()))
 	    {
-		int   i,j,cnt,gid1,gid2,loc_lda;
-		double *loc_mat,sign1,sign2;
-		StdRegions::StdMatContainer *loc_mass;
-		std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
+		int   i,j,n,cnt,gid1,gid2,loc_lda;
+		NekDouble sign1,sign2;
+		DNekMatSharedPtr loc_mass;
 		StdRegions::StdExpansionVectorIter def;
-	
-		double *mmat = new double [m_contNcoeffs*m_contNcoeffs];
-		Vmath::Zero(m_contNcoeffs*m_contNcoeffs,mmat,1);
-		
-#ifdef NEKMAT
-		m_mass.reset(new DNekMat (m_contNcoeffs,m_contNcoeffs));
-#else
-		m_mass = new StdRegions::StdMatContainer(mmat);
-		m_mass->SetLda     (m_contNcoeffs);
-		m_mass->SetMatForm (StdRegions::eSymmetric_Positive);
-#endif
 
+		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs);
 	
 		// fill global matrix 
-		for(cnt = 0, sdef = m_exp_shapes.begin(); sdef != m_exp_shapes.end();
-		    ++sdef)
+		for(n = cnt = 0; n < (*m_exp).size(); ++n);
 		{
+                    loc_mass = (*m_exp)[n]->GetLocMatrix(StdRegions::eMassMatrix);
+                    loc_lda = loc_mass->GetColumns();
 		    
-		    for(def = (*sdef).begin(); def != (*sdef).end(); ++def)
-		    {
-
-			loc_mass = (*def)->GetMassMatrix();
-			loc_lda = loc_mass->GetLda();
-			loc_mat = loc_mass->GetMatrix();
-		    
-			for(i = 0; i < loc_lda; ++i)
-			{
-			    gid1  = m_locToGloMap->GetMap(i+cnt);
-			    sign1 = m_locToGloMap->GetSign(i+cnt);
-			    
-			    for(j = 0; j < loc_lda; ++j)
-			    {
-				gid2 = m_locToGloMap->GetMap(j+cnt);	
-				sign2 = m_locToGloMap->GetSign(j+cnt);
-				
-#ifdef NEKMAT
-				(*m_mass)(gid1,gid2)
-				+= sign1*sign2*loc_mat[i*loc_lda + j];
-#else
-				mmat[gid1*m_contNcoeffs + gid2] 
-				+= sign1*sign2*loc_mat[i*loc_lda + j];
-#endif
-			    }
-			}
-			cnt+=(*def)->GetNcoeffs();
-		    }
+                    for(i = 0; i < loc_lda; ++i)
+                    {
+                        gid1  =  m_locToGloMap->GetMap(cnt + i);
+                        sign1 =  m_locToGloMap->GetSign(cnt + i);
+			
+                        for(j = 0; j < loc_lda; ++j)
+                        {
+                            gid2  = m_locToGloMap->GetMap(cnt + j);	
+                            sign2 = m_locToGloMap->GetSign(cnt + j);
+                            
+                            (*Gmass)(gid1,gid2) +=  sign1*sign2*(*loc_mass)(i,j);
+                        }
+                    }
+                    cnt += (*m_exp)[n]->GetNcoeffs();		    
 		}
+                m_mass = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmass);
 	    }
 	}
     } //end of namespace
 } //end of namespace
 
+/**
+* $Log: ContExpList2D.cpp,v $
+**/

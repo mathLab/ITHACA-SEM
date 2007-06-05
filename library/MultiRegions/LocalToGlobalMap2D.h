@@ -49,15 +49,17 @@ namespace Nektar
 	{
         public:
             LocalToGlobalMap2D(){};
-	    LocalToGlobalMap2D(int loclen, std::vector<StdRegions::StdExpansionVector> &exp_shapes, SpatialDomains::MeshGraph2D &graph2D);
+	    LocalToGlobalMap2D(const int loclen, 
+                               const StdRegions::StdExpansionVector &locexp, 
+                               const SpatialDomains::MeshGraph2D &graph2D);
 
             virtual ~LocalToGlobalMap2D();
 	    
-	    inline double GetSign(int i) 
+	    inline NekDouble GetSign(int i) 
 	    {
 		if(m_sign_change)
 		{
-		    return m_sign.get()[i];
+		    return m_sign[i];
 		}
 		else
 		{
@@ -65,54 +67,47 @@ namespace Nektar
 		}
 	    }
 	    
-	    inline void LocalToCont(double *loc, double *cont)
+	    inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
+                                    Array<OneD, NekDouble> &cont)
 	    {
+                Array<OneD, NekDouble> tmp;
 		if(m_sign_change)
 		{
-		    Vmath::Vmul(m_totLocLen,m_sign.get(),1,loc,1,loc,1);
+		    Vmath::Vmul(m_totLocLen,&m_sign[0],1,&loc[0],1,&tmp[0],1);
 		}
 		
-		Vmath::Scatr(m_totLocLen,loc,m_locToContMap.get(),cont);
+                Vmath::Scatr(m_totLocLen, &tmp[0],&m_locToContMap[0],&cont[0]);
+	    }
+	    
+	    inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
+                                    Array<OneD, NekDouble> &loc)
+	    {
+                Vmath::Gathr(m_totLocLen,&cont[0],&m_locToContMap[0], &loc[0]);
 		
-		// additional sign change to make sure local vector is unaffected
 		if(m_sign_change)
 		{
-		    Vmath::Vmul(m_totLocLen,m_sign.get(),1,loc,1,loc,1);
+		    Vmath::Vmul(m_totLocLen,&m_sign[0],1,&loc[0],1,&loc[0],1);
 		}
 	    }
 	    
-	    inline void ContToLocal(double *cont, double *loc)
+	    inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
+                                 Array<OneD, NekDouble> &cont)
 	    {
-		Vmath::Gathr(m_totLocLen,cont,m_locToContMap.get(),loc);
-		
+		Vmath::Zero(m_totGloLen,&cont[0],1);
+                Array<OneD, NekDouble> tmp;
 		if(m_sign_change)
 		{
-		    Vmath::Vmul(m_totLocLen,m_sign.get(),1,loc,1,loc,1);
-		}
-	    }
-	    
-	    inline void Assemble(double *loc, double *cont)
-	    {
-		Vmath::Zero(m_totGloLen,cont,1);
-		if(m_sign_change)
-		{
-		    Vmath::Vmul(m_totLocLen,m_sign.get(),1,loc,1,loc,1);
+		    Vmath::Vmul(m_totLocLen,&m_sign[0],1,&loc[0],1,&tmp[0],1);
 		}
 
-		Vmath::Assmb(m_totLocLen,loc,m_locToContMap.get(),cont);
-
-		// additional sign change to make sure local vector is unaffected
-		if(m_sign_change)
-		{
-		    Vmath::Vmul(m_totLocLen,m_sign.get(),1,loc,1,loc,1);
-		}
+                Vmath::Assmb(m_totLocLen,&tmp[0],&m_locToContMap[0],&cont[0]);
 	    }
 
 
         protected:
 	    
         private:
-	    boost::shared_ptr<double> m_sign;
+	    Array<OneD,NekDouble> m_sign;
 	    bool  m_sign_change;
 	};
 	
@@ -122,7 +117,11 @@ namespace Nektar
 #endif //LOC2GLOMAP2D_H
 
 
-/** $Log: Loc2GloMap.h,v $
+/** $Log: LocalToGlobalMap2D.h,v $
+/** Revision 1.1  2006/07/02 17:16:17  sherwin
+/**
+/** Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+/**
 /** Revision 1.3  2006/06/05 00:14:33  bnelson
 /** Fixed a compiler error (couldn't find boost::shared_ptr) and a couple of formatting updates for the standard.
 /** */

@@ -88,13 +88,13 @@ namespace Nektar
 
             void GenXGeoFac();
 
-            inline int GetNecomps()
+            inline const int GetNecomps() const 
             {
                 return int(m_ecomps.size());
             }
 
-            inline int GetVidFromElmt(StdRegions::ShapeType shape, 
-                const int vert, const int elmt)
+            inline const int GetVidFromElmt(StdRegions::ShapeType shape, 
+                const int vert, const int elmt) const 
             {
                 if(shape == StdRegions::eTriangle)
                 {
@@ -112,8 +112,8 @@ namespace Nektar
                 }
             }
 
-            inline int GetEidFromElmt(StdRegions::ShapeType shape, 
-                const int edge, const int elmt)
+            inline const int GetEidFromElmt(StdRegions::ShapeType shape, 
+                const int edge, const int elmt) const
             {
                 if(shape == StdRegions::eTriangle)
                 {
@@ -131,7 +131,7 @@ namespace Nektar
                 }
             }
 
-            inline StdRegions::EdgeOrientation GetEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt)
+            inline const StdRegions::EdgeOrientation GetEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt) const 
             {
                 if(shape == StdRegions::eTriangle)
                 {
@@ -150,7 +150,7 @@ namespace Nektar
             }
 
 
-            inline StdRegions::EdgeOrientation GetCartesianEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt)
+            inline const StdRegions::EdgeOrientation GetCartesianEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt) const
             {
                 StdRegions::EdgeOrientation returnval;
 
@@ -229,6 +229,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.10  2007/05/28 21:48:42  sherwin
+// Update for 2D functionality
+//
 // Revision 1.9  2006/10/17 22:26:01  jfrazier
 // Added capability to specify ranges in composite definition.
 //

@@ -79,3 +79,7 @@ namespace Nektar
 	}
     } //end of namespace
 } //end of namespace
+
+/**
+* $Log: ExpList1D.cpp,v $
+**/

@@ -176,3 +176,7 @@ namespace Nektar
 } //end of namespace
   
 #endif // EXPLIST_H
+
+/**
+* $Log: ExpList.h,v $
+**/

@@ -69,8 +69,7 @@ namespace Nektar
 	    {
 		m_locToGloMap->LocalToCont(m_coeffs,m_contCoeffs);
 	    }
-	    
-	    
+	    	    
 	    inline void Assemble()
 	    {
 		m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
@@ -105,3 +104,7 @@ namespace Nektar
 } //end of namespace
 
 #endif // end of define
+
+/**
+* $Log: ContExpList1D.h,v $
+**/

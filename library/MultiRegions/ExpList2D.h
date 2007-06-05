@@ -39,8 +39,6 @@
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
-#include <StdRegions/StdBasis.h>
-
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/NodalTriExp.h>
@@ -56,27 +54,31 @@ namespace Nektar
 	    public ExpList
 	{
 	public:
-	    ExpList2D();
+	    ExpList2D(); 
+
+	    ExpList2D(const ExpList2D &In);   
+	    
+	    ExpList2D(const LibUtilities::BasisKey &TriBa, 
+		      const LibUtilities::BasisKey &TriBb, 
+		      const LibUtilities::BasisKey &QuadBa, 
+		      const LibUtilities::BasisKey &QuadBb, 
+		      const SpatialDomains::MeshGraph2D &graph2D,
+		      const LibUtilities::PointsType 
+                      TriNb = LibUtilities::SIZE_PointsType);
+
 	    ~ExpList2D();
-	    
-	    
-	    ExpList2D(const StdRegions::BasisKey &TriBa, 
-		      const StdRegions::BasisKey &TriBb, 
-		      const StdRegions::BasisKey &QuadBa, 
-		      const StdRegions::BasisKey &QuadBb, 
-		      SpatialDomains::MeshGraph2D &graph2D,
-		      SpatialDomains::Domain &domain = NULL,
-		      const StdRegions::NodalBasisType 
-		              TriNb = StdRegions::SIZE_NodalBasisType);
+
+            void   PhysDeriv  (ExpList &S0,
+                               ExpList &S1, 
+                               ExpList &S2 = NullExpList)
+            {
+                ExpList::PhysDeriv(S0,S1,S2);
+            }
 	    
 	protected:
 	    
 	private:
 	    
-	    virtual void v_BwdTrans(double *outarray)
-	    {
-		BwdTrans(outarray);
-	    }
 	};
 	
         typedef boost::shared_ptr<ExpList2D>      ExpList2DSharedPtr;
@@ -85,4 +87,9 @@ namespace Nektar
     } //end of namespace
 } //end of namespace
 
-#endif
+#endif//EXPLIST2D_H
+
+/**
+* $Log: ExpList2D.h,v $
+**/
+

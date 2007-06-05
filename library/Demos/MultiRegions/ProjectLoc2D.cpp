@@ -5,31 +5,27 @@
 #include <MultiRegions/ExpList2D.h>
 
 using namespace Nektar;
-using namespace StdRegions;
-using namespace SpatialDomains; 
-using namespace MultiRegions;
-using namespace std;
-
-// compile using Builds/Demos/StdRegions -> make DEBUG=1 ProjectLoc2D
 
 // This routine projects a polynomial which has energy in all mdoes of
 // the expansions and report an error.
 
-int main(int argc, char *argv[]){
-    ExpList2D  *Exp;
+int main(int argc, char *argv[])
+{
+    MultiRegions::ExpList2DSharedPtr Exp,Sol;
     int        i,j,k;
-    int        nq;
-    double     *sol;
+    int        order, nq;
     int        coordim;
-    double     **xc;
-    int        Tritype, Quadtype, order, Tri_input;
-    NodalBasisType Tri_Nb;
-    BasisType  Tri_btype1, Tri_btype2, Quad_btype;  
+    char    *infile;
+    int        Tritype, Quadtype, Tri_input;
+    LibUtilities::PointsType Tri_Nb, Qtype;
+    LibUtilities::BasisType  Tri_btype1, Tri_btype2, Quad_btype;
+    Array<OneD, NekDouble> sol; 
+    Array<OneD, NekDouble> xc0,xc1,xc2; 
     
-    if(argc != 5)
+    if(argc != 6)
     {
 	fprintf(stderr,"Usage: ProjectLoc2D  Tri_Type  "  
-		"Quad_Type order mesh.xml\n");
+		"Quad_Type order nq mesh\n");
 	
 	fprintf(stderr,"Where Type is an integer value which "
 		"dictates the basis type as:\n");
@@ -51,24 +47,28 @@ int main(int argc, char *argv[]){
     
     if((Tri_input = atoi(argv[1]))  < 3)
     {
-	Tritype  = (StdRegions::BasisType) atoi(argv[1]);
-	Tri_Nb   = (StdRegions::NodalBasisType) NULL;
+	Tritype  = (LibUtilities::BasisType) atoi(argv[1]);
+	Tri_Nb   = (LibUtilities::PointsType) NULL;
     }
     else
     {
-	Tritype  = (StdRegions::BasisType) 1;
+	Tritype  = (LibUtilities::BasisType) 1;
 	if(Tri_input == 3)
 	{
-	    Tri_Nb   = (StdRegions::NodalBasisType) StdRegions::eNodalTriElec;
+	    Tri_Nb   = (LibUtilities::PointsType) LibUtilities::eNodalTriElec;
 	}
 	else
 	{
-	    Tri_Nb   = (StdRegions::NodalBasisType) StdRegions::eNodalTriFekete;
+	    Tri_Nb   = (LibUtilities::PointsType) LibUtilities::eNodalTriFekete;
 	}
     }
 
-    Quadtype  = (BasisType) atoi(argv[2]);
+    Quadtype  = (LibUtilities::BasisType) atoi(argv[2]);
     order     = atoi(argv[3]);
+    nq        = atoi(argv[4]);
+    infile    = argv[5];
+
+    Qtype = LibUtilities::eGaussLobattoLegendre; 
     
     if((Tritype < 1)||(Tritype > 4))
     {
@@ -82,42 +82,44 @@ int main(int argc, char *argv[]){
 		       "Illegal option for Quad_Type\n");
     }
     // read in mesh
-    string  in(argv[argc-1]);
-    MeshGraph2D graph2D;
+    string  in(infile);
+    SpatialDomains::MeshGraph2D graph2D;
     graph2D.Read(in);
     
     switch(Tritype){
     case 1: case 3: case 4:
-	Tri_btype1 = eOrtho_A;
-	Tri_btype2 = eOrtho_B;
+	Tri_btype1 = LibUtilities::eOrtho_A;
+	Tri_btype2 = LibUtilities::eOrtho_B;
 
 	break;
     case 2:
-	Tri_btype1 = eModified_A;
-	Tri_btype2 = eModified_B;
+	Tri_btype1 = LibUtilities::eModified_A;
+	Tri_btype2 = LibUtilities::eModified_B;
 	break;
     }
     
     switch(Quadtype){
     case 5:
-	Quad_btype = eOrtho_A;
+	Quad_btype = LibUtilities::eOrtho_A;
 	break;
     case 6:
-	Quad_btype = eModified_A;
+	Quad_btype = LibUtilities::eModified_A;
 	break;
     case 7:
-	Quad_btype = eGLL_Lagrange;
+	Quad_btype = LibUtilities::eGLL_Lagrange;
 	break;
     case 8:
-	Quad_btype = eChebyshev;
+	Quad_btype = LibUtilities::eChebyshev;
 	break;
     }
 
-    const BasisKey T_Ba(Tri_btype1, order,  eLobatto, order+1, 0,0);
-    const BasisKey T_Bb(Tri_btype2, order,  eLobatto, order+1, 1,0);
-    const BasisKey Q_Ba(Quad_btype ,order,  eLobatto, order+1,0,0);
-    
-    Exp = new ExpList2D (T_Ba,T_Bb,Q_Ba,Q_Ba,graph2D, Tri_Nb);
+    // Define Expansion
+    const LibUtilities::PointsKey PKey(nq,Qtype);
+    const LibUtilities::BasisKey T_Ba(Tri_btype1,order,PKey);
+    const LibUtilities::BasisKey T_Bb(Tri_btype2,order,PKey);
+    const LibUtilities::BasisKey Q_Ba(Quad_btype,order,PKey);
+
+    Exp = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(T_Ba,T_Bb,Q_Ba,Q_Ba,graph2D, Tri_Nb);    
     
     //----------------------------------------------
     // Define solution to be projected 
@@ -125,37 +127,54 @@ int main(int argc, char *argv[]){
     nq      = Exp->GetPointsTot();
 
     // Define coordinates and solution
-    sol   = new double  [nq];
-    xc    = new double *[coordim];
-    xc[0] = new double  [coordim*nq];
+    sol = Array<OneD, NekDouble>(nq);
+
+    xc0 = Array<OneD, NekDouble>(nq);
+    xc1 = Array<OneD, NekDouble>(nq);
+    xc2 = Array<OneD, NekDouble>(nq);
     
-    for(i = 1; i < coordim; ++i)
+    switch(coordim)
     {
-	xc[i] = xc[i-1] + nq;
+    case 1:
+        Exp->GetCoords(xc0);
+        Vmath::Zero(nq,&xc1[0],1);
+        Vmath::Zero(nq,&xc2[0],1);
+        break;
+    case 2:
+        Exp->GetCoords(xc0,xc1);
+        Vmath::Zero(nq,&xc2[0],1);
+        break;
+    case 3:
+        Exp->GetCoords(xc0,xc1,xc2);
+        break;
     }
-    
-    Exp->GetCoords(xc);
     
     for(i = 0; i < nq; ++i)
     {
 	sol[i] = 0.0;
 	for(j = 0; j < order; ++j)
 	{
-	    for(k = 0; k < coordim; ++k)
-	    {
-		sol[i] += pow(xc[k][i],j);
-	    }
+            sol[i] += pow(xc0[i],j);
+            sol[i] += pow(xc1[i],j);
+            sol[i] += pow(xc2[i],j);
 	}
     }
+   
     
     //---------------------------------------------
+    // Set up ExpList1D containing the solution 
+    Sol = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*Exp);
+    Sol->SetPhys(sol);
+    //---------------------------------------------
+ 
+    //---------------------------------------------
     // Project onto Expansion 
-    Exp->FwdTrans(sol);
+    Exp->FwdTrans(*Sol);
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    Exp->BwdTrans(Exp->GetPhys());
+    Exp->BwdTrans(*Exp);
     //-------------------------------------------  
     
     //--------------------------------------------
@@ -166,12 +185,9 @@ int main(int argc, char *argv[]){
     
     //--------------------------------------------
     // Calculate L_inf error 
-    cout << "L infinity error: " << Exp->Linf(sol) << endl;
-    cout << "L 2 error:        " << Exp->L2  (sol) << endl;
+    cout << "L infinity error: " << Exp->Linf(*Sol) << endl;
+    cout << "L 2 error:        " << Exp->L2  (*Sol) << endl;
     //--------------------------------------------
-    
-    delete[] sol; 
-    delete[] xc[0];
-    delete[] xc;
-	return 0;
+
+    return 0;
 }

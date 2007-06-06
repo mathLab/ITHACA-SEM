@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Geometry1D.h,v $
+//  File: Geometry1D.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -48,7 +48,7 @@ namespace Nektar
         {
         public:
             Geometry1D();
-            Geometry1D(int coordim);
+            Geometry1D(const int coordim);
             ~Geometry1D();
 
         protected:
@@ -63,6 +63,10 @@ namespace Nektar
 
 //
 // $Log: Geometry1D.h,v $
+// Revision 1.3  2007/03/20 09:17:40  kirby
+//
+// GeomFactors now added; metricinfo used instead of minfo; styles updated
+//
 // Revision 1.2  2007/02/19 08:06:25  sherwin
 // Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
 //

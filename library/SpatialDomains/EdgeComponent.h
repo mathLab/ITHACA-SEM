@@ -68,21 +68,22 @@ namespace Nektar
                 return m_eid;
             }
 
-            inline const LibUtilities::BasisSharedPtr GetBasis(int i, int j) 
+            inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j) 
             {
                 return m_xmap[i]->GetBasis(j);
             }
 
-            inline const StdRegions::StdExpansion1DSharedPtr &GetXmap(int i)
+            inline const StdRegions::StdExpansion1DSharedPtr &GetXmap(const int i)
             {
                 return m_xmap[i];
             }
 
-            inline Array<OneD, NekDouble> &UpdatePhys(int i){
+            inline Array<OneD, NekDouble> &UpdatePhys(const int i)
+            {
                 return m_xmap[i]->UpdatePhys();
             }
 
-            inline VertexComponentSharedPtr GetVertex(int i) const
+            inline VertexComponentSharedPtr GetVertex(const int i) const
             {
                 VertexComponentSharedPtr returnval;
 
@@ -135,6 +136,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.12  2007/06/06 11:29:31  pvos
+// Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
+//
 // Revision 1.11  2007/05/28 08:35:25  sherwin
 // Updated for localregions up to Project1D
 //

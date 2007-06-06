@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/TriFaceComponent.cpp,v $
+//  File:  TriFaceComponent.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -58,8 +58,6 @@ namespace Nektar
             {
 	      m_xmap[i] = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
             }
-
-            m_state = eNotFilled;
         }
 
 
@@ -121,6 +119,9 @@ namespace Nektar
 
 //
 // $Log: TriFaceComponent.cpp,v $
+// Revision 1.4  2007/05/28 21:48:42  sherwin
+// Update for 2D functionality
+//
 // Revision 1.3  2006/05/30 14:00:04  sherwin
 // Updates to make MultiRegions and its Demos work
 //

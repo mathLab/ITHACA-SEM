@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/Geometry1D.cpp,v $
+//  File: Geometry1D.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -61,6 +61,9 @@ namespace Nektar
 
 //
 // $Log: Geometry1D.cpp,v $
+// Revision 1.1  2006/05/04 18:58:59  kirby
+// *** empty log message ***
+//
 // Revision 1.16  2006/04/09 02:08:34  jfrazier
 // Added precompiled header.
 //

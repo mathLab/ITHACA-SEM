@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/TriFaceComponent.h,v $
+//  File:  TriFaceComponent.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -37,7 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_TRIFACECOMPONENT_H
 
 #include <SpatialDomains/SpatialDomains.hpp>
-
+#include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/Geometry2D.h>
 
@@ -76,7 +76,7 @@ namespace Nektar
                 return m_xmap[i]->GetBasis(j);
             }
 	    
-            inline Array<OneD,NekDouble> &UpdatePhys(int i)
+            inline Array<OneD,NekDouble> &UpdatePhys(const int i)
             {
                 return m_xmap[i]->UpdatePhys();
             }
@@ -101,6 +101,9 @@ namespace Nektar
 
 //
 // $Log: TriFaceComponent.h,v $
+// Revision 1.2  2007/05/28 21:48:42  sherwin
+// Update for 2D functionality
+//
 // Revision 1.1  2006/05/04 18:59:05  kirby
 // *** empty log message ***
 //

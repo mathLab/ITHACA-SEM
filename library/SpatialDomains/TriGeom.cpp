@@ -222,7 +222,17 @@ namespace Nektar
             if(GetGtype() == eRegular)
             { // can assume it is right angled rectangle
                 VertexComponent dv1, dv2, norm, orth1, orth2;
-                VertexComponent *xin = new VertexComponent (m_coordim,0,coords[0], coords[1], coords[2]);
+                VertexComponent *xin;
+                
+                switch(m_coordim)
+                {
+                case 2:
+                    xin = new VertexComponent (m_coordim,0,coords[0], coords[1], 0.0);
+                    break;
+                case 3:
+                    xin = new VertexComponent (m_coordim,0,coords[0], coords[1], coords[2]);
+                    break;
+                }
 
                 dv1.Sub(*m_verts[1],*m_verts[0]);
                 dv2.Sub(*m_verts[2],*m_verts[0]);
@@ -252,6 +262,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.9  2007/06/06 11:29:31  pvos
+// Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
+//
 // Revision 1.8  2007/05/28 21:48:42  sherwin
 // Update for 2D functionality
 //

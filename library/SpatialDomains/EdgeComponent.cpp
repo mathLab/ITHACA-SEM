@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/EdgeComponent.cpp,v $
+//  File: EdgeComponent.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -202,6 +202,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.18  2007/05/28 08:35:25  sherwin
+*    Updated for localregions up to Project1D
+*
 *    Revision 1.17  2007/05/17 18:45:24  jfrazier
 *    Minor changes to accommodate Array class.
 *

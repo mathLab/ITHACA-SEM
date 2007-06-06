@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/QuadGeom.cpp,v $
+//  File:  QuadGeom.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -313,6 +313,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.9  2007/06/06 11:29:31  pvos
+// Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
+//
 // Revision 1.8  2007/05/28 21:48:42  sherwin
 // Update for 2D functionality
 //

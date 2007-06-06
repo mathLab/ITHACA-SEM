@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/TriGeom.h,v $
+//  File:  TriGeom.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -114,6 +114,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.8  2007/06/01 17:08:07  pvos
+// Modification to make LocalRegions/Project2D run correctly (PART1)
+//
 // Revision 1.7  2007/05/28 21:48:43  sherwin
 // Update for 2D functionality
 //

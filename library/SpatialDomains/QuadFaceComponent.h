@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/QuadFaceComponent.h,v $
+//  File:  QuadFaceComponent.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -37,7 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_QUADFACECOMPONENT_H
 
 #include <SpatialDomains/SpatialDomains.hpp>
-
+#include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/Geometry2D.h>
 
@@ -74,7 +74,7 @@ namespace Nektar
                 return m_xmap[i]->GetBasis(j);
             }
 
-            inline Array<OneD,NekDouble> &UpdatePhys(int i)
+            inline Array<OneD,NekDouble> &UpdatePhys(const int i)
 	    {
                 return m_xmap[i]->UpdatePhys();
             }
@@ -100,6 +100,9 @@ namespace Nektar
 
 //
 // $Log: QuadFaceComponent.h,v $
+// Revision 1.2  2007/05/28 21:48:42  sherwin
+// Update for 2D functionality
+//
 // Revision 1.1  2006/05/04 18:59:03  kirby
 // *** empty log message ***
 //

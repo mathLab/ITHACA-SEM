@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/QuadFaceComponent.cpp,v $
+//  File:  QuadFaceComponent.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -57,8 +57,6 @@ namespace Nektar
             {
                 m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);  
             }
-
-            m_state = eNotFilled;
         }
 
         QuadFaceComponent::~QuadFaceComponent()
@@ -106,7 +104,6 @@ namespace Nektar
         double QuadFaceComponent::GetCoord(const int i, 
                                            const ConstArray<OneD,NekDouble> &Lcoord)
         {
-
             ASSERTL1(m_state == ePtsFilled,
                 "Goemetry is not in physical space");
 
@@ -117,6 +114,9 @@ namespace Nektar
 
 //
 // $Log: QuadFaceComponent.cpp,v $
+// Revision 1.2  2007/05/28 21:48:42  sherwin
+// Update for 2D functionality
+//
 // Revision 1.1  2006/05/04 18:59:02  kirby
 // *** empty log message ***
 //

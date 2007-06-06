@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/Geometry2D.cpp,v $
+//  File:  Geometry2D.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -36,7 +36,6 @@
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/Geometry2D.h>
-
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdQuadExp.h>
 
@@ -46,53 +45,12 @@ namespace Nektar
   {
         Geometry2D::Geometry2D()
 	{
-        };
+        }
 
-        Geometry2D::Geometry2D(const int coordim)
+        Geometry2D::Geometry2D(const int coordim):
+        Geometry(coordim)
 	{
-	  m_coordim = coordim;
-        };
-
-
-#if 0
-        Geometry2D::Geometry2D(const int order0, const int nquad0, 
-			       const int order1, const int nquad1){
-	  ASSERTL1(shape == StdRegions::eTriangle || 
-		   shape == StdRegions::eQuadrilateral,
-		   "Geometry2D::Geometry2D","Shape should be a triangle "
-		   "or quadrilateral");
-
-	  if(Shape == StdRegions::eTriangle){
-	    const StdRegions::BasisKey B0(StdRegions::eModified_A, order0,
-					  StdRegions::eLobatto, nquad0,0,0);
-	    const StdRegions::BasisKey B1(StdRegions::eModified_B, order1,
-					  StdRegions::eRadauM, nquad1,1,0);
-	    // this format is not allowed in ansi - follow Geometry1D
-	    m_xmap[0] = new StdRegions::StdTriExp [dim](B0,B1);
-	  }
-	  else if (Shape == StdRegions::eQuadrilateral)
-	  {
-	    const StdRegions::BasisKey B0(StdRegions::eModified_A, order0,
-					  StdRegions::eLobatto, nquad0,0,0);
-	    const StdRegions::BasisKey B1(StdRegions::eModified_A, order1,
-					  StdRegions::eLobatto, nquad1,0,0);
-	    // this format is not allowed in ansi - follow Geometry1D
-	    m_xmap[0] = new StdRegions::StdTriExp [dim](B0,B1);
-	  }
-	  else
-	  {
-	    ASSERTL0(0,"Geometry2D::Geometry2D","Shape should be a "
-		     "triangle or quadrilateral");
-	  }
-
-	  for(int i = 1; i < dim; ++i){
-	    m_xmap[i] = m_xmap[i-1]+1;
-	  }
-
-	  m_state = eNotFilled;
-        };
-#endif
-
+        }
 
         Geometry2D::~Geometry2D()
 	{
@@ -102,6 +60,9 @@ namespace Nektar
 
 //
 // $Log: Geometry2D.cpp,v $
+// Revision 1.1  2006/05/04 18:59:00  kirby
+// *** empty log message ***
+//
 // Revision 1.14  2006/04/09 02:08:34  jfrazier
 // Added precompiled header.
 //

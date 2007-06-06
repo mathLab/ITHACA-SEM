@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/SegGeom.h,v $
+//  File:  SegGeom.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -53,9 +53,9 @@ namespace Nektar
         {
         public:
             SegGeom();
-            SegGeom(int id, VertexComponentSharedPtr vert1, VertexComponentSharedPtr  vert2);
+            SegGeom(const int id, const VertexComponentSharedPtr vert1, const VertexComponentSharedPtr  vert2);
 
-            SegGeom(SegGeom &in);
+            SegGeom(const SegGeom &in);
 
             ~SegGeom();
 
@@ -114,6 +114,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.9  2007/05/28 21:48:42  sherwin
+// Update for 2D functionality
+//
 // Revision 1.8  2007/03/20 09:17:40  kirby
 //
 // GeomFactors now added; metricinfo used instead of minfo; styles updated

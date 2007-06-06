@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/QuadGeom.h,v $
+//  File: QuadGeom.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -39,8 +39,10 @@
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 
+#include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry2D.h>
+#include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/EdgeComponent.h>
 #include <SpatialDomains/QuadFaceComponent.h>
 
@@ -116,6 +118,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.9  2007/06/01 17:08:07  pvos
+// Modification to make LocalRegions/Project2D run correctly (PART1)
+//
 // Revision 1.8  2007/05/28 21:48:42  sherwin
 // Update for 2D functionality
 //

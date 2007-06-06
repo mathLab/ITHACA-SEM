@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/SegGeom.cpp,v $
+//  File:  SegGeom.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -51,8 +51,8 @@ namespace Nektar
     {
     }
 
-    SegGeom::SegGeom(int id, VertexComponentSharedPtr vert1, 
-                     VertexComponentSharedPtr  vert2):
+    SegGeom::SegGeom(const int id, const VertexComponentSharedPtr vert1, 
+                     const VertexComponentSharedPtr  vert2):
     EdgeComponent(id,vert1->GetCoordim())
     {
         m_owndata = false;
@@ -62,7 +62,7 @@ namespace Nektar
         m_state = eNotFilled;
     }
 
-    SegGeom::SegGeom(SegGeom &in)
+    SegGeom::SegGeom(const SegGeom &in)
     {
 
         // info from EdgeComponent class
@@ -129,7 +129,7 @@ namespace Nektar
         // calculate local coordinate for coord
         if(GetGtype() == eRegular)
         {
-            const NekDouble *pts;
+            ConstArray<OneD,NekDouble> pts;
             NekDouble len = 0.0;
             NekDouble xi  = 0.0;
             int nq;
@@ -139,7 +139,7 @@ namespace Nektar
             for(i = 0; i < m_coordim; ++i)
             {
                 nq   = m_xmap[i]->GetNumPoints(0);
-                pts  = &(m_xmap[i]->GetPhys())[0];
+                pts  = m_xmap[i]->GetPhys();
                 len  += (pts[nq-1]-pts[0])*(pts[nq-1]-pts[0]);	
                 xi   += (coords[i]-pts[0])*(coords[i]-pts[0]);
             }
@@ -200,6 +200,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.15  2007/06/06 11:29:31  pvos
+// Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
+//
 // Revision 1.14  2007/05/28 21:48:42  sherwin
 // Update for 2D functionality
 //

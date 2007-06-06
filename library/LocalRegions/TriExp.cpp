@@ -136,7 +136,7 @@ namespace Nektar
 		    
                     m_metricinfo->ResetJac(nq,ndata);
 
-                    ErrorUtil::Error(ErrorUtil::ewarning,__FILE__,__LINE__,
+                    NEKERROR(ErrorUtil::ewarning,
                         "Need to check/debug routine for deformed elements");
 
 		}
@@ -626,6 +626,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.11  2007/06/01 17:08:07  pvos
+ *    Modification to make LocalRegions/Project2D run correctly (PART1)
+ *
  *    Revision 1.10  2007/05/31 19:13:12  pvos
  *    Updated NodalTriExp + LocalRegions/Project2D + some other modifications
  *

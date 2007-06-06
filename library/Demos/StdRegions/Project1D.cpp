@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 
   if(btype == LibUtilities::eNoBasisType)
   {
-      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+      NEKERROR(ErrorUtil::efatal,
 		     "No Basis Type requested");
   }
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
   if((btype == LibUtilities::eOrtho_B)||(btype == LibUtilities::eOrtho_B)||
      (btype == LibUtilities::eModified_B)||(btype == LibUtilities::eModified_C))
   {
-      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+      NEKERROR(ErrorUtil::efatal,
 		     "This basis is for 2 or 3D expansions");
   }
   

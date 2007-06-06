@@ -52,13 +52,13 @@ int main(int argc, char *argv[])
    
     if((Tritype < 1)||(Tritype > 3))
     {
-	ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+	NEKERROR(ErrorUtil::efatal,
 			 "Illegal option for Tri_Type\n");
     }
     
     if((Quadtype < 4)||(Quadtype > 5))
     {
-	ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+	NEKERROR(ErrorUtil::efatal,
 			 "Illegal option for Quad_Type\n");
     }
 

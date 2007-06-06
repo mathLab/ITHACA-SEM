@@ -102,7 +102,7 @@ namespace Nektar
                     return m_xmap[i];
                 }
 
-                ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+                NEKERROR(ErrorUtil::efatal,
                     "Invalid Index used in [] operator");
                 return m_xmap[0]; //should never be reached
             }
@@ -135,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.11  2007/05/28 08:35:25  sherwin
+// Updated for localregions up to Project1D
+//
 // Revision 1.10  2007/05/17 18:45:25  jfrazier
 // Minor changes to accommodate Array class.
 //

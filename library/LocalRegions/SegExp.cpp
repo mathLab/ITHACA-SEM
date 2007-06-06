@@ -127,7 +127,7 @@ namespace Nektar
 
                     m_metricinfo->ResetJac(nq,ndata);
 
-                    ErrorUtil::Error(ErrorUtil::ewarning,__FILE__,__LINE__,
+                    NEKERROR(ErrorUtil::ewarning,
                         "Need to check/debug routine for deformed elements");
                 }
                 else  // Same data can be used 
@@ -628,6 +628,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.16  2007/05/30 15:59:05  sherwin
+// Fixed bug with new definition of GetLocCoords
+//
 // Revision 1.15  2007/05/28 08:35:25  sherwin
 // Updated for localregions up to Project1D
 //

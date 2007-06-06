@@ -104,7 +104,7 @@ namespace Nektar
         private:
             virtual void v_GenGeomFactors(void)
             {
-                ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
+                NEKERROR(ErrorUtil::efatal,
                     "This function is only valid for shape type geometries");
             }
 
@@ -116,6 +116,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.8  2007/05/25 17:52:02  jfrazier
+// Updated to use new Array classes.
+//
 // Revision 1.7  2007/03/20 09:17:39  kirby
 //
 // GeomFactors now added; metricinfo used instead of minfo; styles updated

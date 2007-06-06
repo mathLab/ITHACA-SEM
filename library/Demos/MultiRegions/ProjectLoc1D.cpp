@@ -45,13 +45,13 @@ int main(int argc, char *argv[])
     // Check to see that only 1D Expansions are used
     if((btype == LibUtilities::eOrtho_B)||(btype == LibUtilities::eOrtho_B)||
        (btype == LibUtilities::eModified_B)||(btype == LibUtilities::eModified_C))
-	ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+	NEKERROR(ErrorUtil::efatal,
 			 "This basis is for 2 or 3D expansions");
     
     // Do not use Fourier expansion
     if(btype == LibUtilities::eFourier)
     {
-	ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+	NEKERROR(ErrorUtil::efatal,
 			 "Demo not set up for Fourier Expanison");
     }
     

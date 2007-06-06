@@ -72,13 +72,13 @@ int main(int argc, char *argv[])
     
     if((Tritype < 1)||(Tritype > 4))
     {
-      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+      NEKERROR(ErrorUtil::efatal,
 		       "Illegal option for Tri_Type\n");
     }
 
     if((Quadtype < 5)||(Quadtype > 8))
     {
-      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+      NEKERROR(ErrorUtil::efatal,
 		       "Illegal option for Quad_Type\n");
     }
     // read in mesh

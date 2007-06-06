@@ -41,14 +41,14 @@ int main(int argc, char *argv[])
     // Check to see that only continuous 1D Expansions are used
     if((btype != LibUtilities::eModified_A)&&(btype != LibUtilities::eGLL_Lagrange))
     {
-        ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+        NEKERROR(ErrorUtil::efatal,
                          "This basis is only for 1D Modified_A or GLL_Lagrange expansions");
     }
     
     // Do not use Fourier expansion
     if(btype == LibUtilities::eFourier)
     {
-        ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+        NEKERROR(ErrorUtil::efatal,
                          "Demo not set up for Fourier Expanison");
     }
     

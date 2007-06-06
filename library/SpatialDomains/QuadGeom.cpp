@@ -303,7 +303,7 @@ namespace Nektar
             }
             else
             {
-	      ErrorUtil::Error(ErrorUtil::efatal,__FILE__,__LINE__,
+	      NEKERROR(ErrorUtil::efatal,
                     "inverse mapping must be set up to use this call");
             }
         }
@@ -313,6 +313,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.8  2007/05/28 21:48:42  sherwin
+// Update for 2D functionality
+//
 // Revision 1.7  2006/08/05 19:03:47  sherwin
 // Update to make the multiregions 2D expansion in connected regions work
 //

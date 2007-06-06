@@ -151,7 +151,7 @@ namespace Nektar
         }
         else
         {
-            ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
+            NEKERROR(ErrorUtil::efatal,
                 "inverse mapping must be set up to use this call");
         }
     }
@@ -200,6 +200,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.14  2007/05/28 21:48:42  sherwin
+// Update for 2D functionality
+//
 // Revision 1.13  2007/05/17 18:45:25  jfrazier
 // Minor changes to accommodate Array class.
 //

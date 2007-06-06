@@ -55,7 +55,7 @@ namespace ErrorUtil
     };
         
     #ifdef ENABLE_NEKTAR_EXCEPTIONS
-        static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
+        static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
         {
             std::string errorMessage = std::string(routine) + "[" +
                     boost::lexical_cast<std::string>(lineNumber) + "]:" +
@@ -65,25 +65,27 @@ namespace ErrorUtil
         }
     #else // ENABLE_NEKTAR_EXCEPTION
 
-        static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
+        static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
         {
             switch(type)
             {
                 case efatal:
-                    std::cerr << routine << "[" << lineNumber << "]:" << msg << std::endl;
+                    std::cerr << "Level " << level << " assertion violation\n" << routine << "[" << lineNumber << "]:" << msg << std::endl;
                     exit(1);
                     break;
                 case ewarning:
-                    std::cerr << routine << ": " << msg << std::endl;
+                    std::cerr << "Level " << level << " assertion violation\n" << routine << ": " << msg << std::endl;
                     break;
                 default:
                     std::cerr << "Unknown warning type" << std::endl;
             }
         }
     #endif // ENABLE_NEKTAR_EXCEPTION
-    static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg)
+    
+    // This method is necessary for ASSERTLX when the message is passed in as a std::string object.
+    static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level)
     {
-        Error(type, routine, lineNumber, msg.c_str());
+        Error(type, routine, lineNumber, msg.c_str(), level);
     }
     
 } // end of namespace
@@ -95,12 +97,12 @@ namespace ErrorUtil
 /// optimized compilation.
 
 #define NEKERROR(type, msg) \
-    ErrorUtil::Error(type, __FILE__, __LINE__, msg);
+    ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0);
 
 #define ASSERTL0(condition,msg) \
     if(!(condition)) \
 { \
-    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
+    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 0); \
 }
 
 
@@ -112,8 +114,7 @@ namespace ErrorUtil
 #define ASSERTL1(condition,msg) \
     if(!(condition)) \
 { \
-    fprintf(stderr,"Level 1 Assert Violation\n"); \
-    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
+    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 1); \
 }
 
 #else //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
@@ -129,8 +130,7 @@ namespace ErrorUtil
 #define ASSERTL2(condition,msg) \
     if(!(condition)) \
 { \
-    fprintf(stderr,"Level 2 Assert Violation\n"); \
-    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg); \
+    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 2); \
 }
 
 #else //NEKTAR_FULLDEBUG
@@ -141,6 +141,9 @@ namespace ErrorUtil
 
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.5  2007/05/27 18:28:23  bnelson
+*** empty log message ***
+
 Revision 1.4  2007/05/22 02:02:35  bnelson
 Changed Array::size to Array::num_elements.
 

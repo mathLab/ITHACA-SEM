@@ -1,6 +1,6 @@
 
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/MeshGraph.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -71,20 +71,20 @@ namespace Nektar
             }
 
             /// \brief Dimension of the mesh (can be a 1D curve in 3D space).
-            inline int MeshDimension(void)
+            inline int GetMeshDimension(void) const
             {
                 return m_MeshDimension;
             }
 
             /// \brief Dimension of the mesh (can be a 1D curve in 3D space).
-            inline int GetSpaceDimension(void)
+            inline int GetSpaceDimension(void) const
             {
                 return m_SpaceDimension;
             }
 
             void Write(std::string &outfilename);
 
-            inline std::string &GetFileName(void)
+            inline const std::string &GetFileName(void) const
             {
                 return m_FileName;
             };
@@ -95,7 +95,7 @@ namespace Nektar
             };
 
             GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
-            Composite GetComposite(int whichComposite)
+            Composite GetComposite(int whichComposite) const
             {
                 Composite returnval;
                 if (whichComposite >= 0 && whichComposite < int(m_MeshCompositeVector.size()))
@@ -125,6 +125,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.6  2007/01/18 20:59:28  sherwin
+// Before new configuration
+//
 // Revision 1.5  2006/09/26 23:41:53  jfrazier
 // Updated to account for highest level NEKTAR tag and changed the geometry tag to GEOMETRY.
 //

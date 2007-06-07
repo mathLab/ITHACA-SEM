@@ -45,37 +45,39 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-
         class MeshGraph1D: public MeshGraph
         {
         public:
-	    
+
             MeshGraph1D();
             virtual ~MeshGraph1D();
 
             void Read(std::string &infilename);
             void Read(TiXmlDocument &doc);
+            void ReadElements(TiXmlDocument &doc);
+            void ReadComposites(TiXmlDocument &doc);
+            void ResolveGeomRef(const std::string &prevToken, const std::string &token);
 
             void Write(std::string &outfilename);
 
             inline const int GetCoordim(void)
-	    {
+            {
                 return GetSpaceDimension();
             }
 
             inline const SegGeomVector &GetSeggeoms(void) const
-	    {
-		return m_seggeoms;
+            {
+                return m_seggeoms;
             }
 
-	    inline const int GetVidFromElmt(const int vert, const int elmt) const
-	    {
-		ASSERTL2((elmt >=0)&&(elmt < m_seggeoms.size()),
-				     "eid is out of range");
+            inline const int GetVidFromElmt(const int vert, const int elmt) const
+            {
+                ASSERTL2((elmt >=0)&&(elmt < m_seggeoms.size()),
+                    "eid is out of range");
 
-		return m_seggeoms[elmt]->GetVid(vert);
-	    }
-	    
+                return m_seggeoms[elmt]->GetVid(vert);
+            }
+
         protected:
 
 
@@ -89,6 +91,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.h,v $
+// Revision 1.6  2007/05/28 16:15:01  sherwin
+// Updated files in MultiRegions to make 1D demos work
+//
 // Revision 1.5  2007/03/14 21:24:08  sherwin
 // Update for working version of MultiRegions up to ExpList1D
 //

@@ -12,7 +12,7 @@
         C = 3.0
     </DEF>
 
-    <VERTEX NUMBER="6">
+    <VERTEX>
         <!-- Always must have four values per entry. -->
         0 0.0 1.0 0.0
         1 1.0 1.0 0.0
@@ -22,25 +22,10 @@
         5 2.0 0.0 0.0
     </VERTEX>
     
-    <!-- Can include Q - quads, T - triangles -->
-    <FACE>
-    </FACE>
-
-    <!-- Edges are vertex pairs -->
-    <EDGE NUMBER="7">
-        0 1 2
-        1 2 3
-        2 3 4
-        3 4 1
-        4 2 5
-        5 5 6
-        6 6 3
-    </EDGE>
-    
     <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, R - prism, H - hex -->
     <!-- Only certain element types are appropriate for the given dimension (dim on mesh) -->
     <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
-    <ELEMENT NUMBER="5">
+    <ELEMENT>
         0 <S> 0 1 </S>
         1 <S> 1 2 </S>
         2 <S> 2 3 </S>
@@ -48,10 +33,10 @@
         4 <S> 4 5 </S>
     </ELEMENT>
     
-    <!-- V - vertex, E - edge, F - face, L - element -->
+    <!-- V - vertex, S - Segment, E - edge, F - face -->
     <COMPOSITE>
-        1 V[1] V[3] E[2]
-        2 E[5] E[6] E[7]
+        0 <C> S[0-2] </C>
+        1 <C> S[3-4] </C>
     </COMPOSITE>
 </GEOMETRY>
 </NEKTAR>

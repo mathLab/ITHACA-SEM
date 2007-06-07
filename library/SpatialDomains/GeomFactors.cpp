@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/GeomFactors.cpp,v $
+//  File: GeomFactors.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -82,7 +82,7 @@ namespace Nektar
             // Calculate local derivatives using physical space storage
             for(i = 0; i < coordim; ++i)
             {
-                ASSERTL2(Coords[i]->GetPointsOrder(0) == nquad,
+                ASSERTL2(Coords[i]->GetNumPoints(0) == nquad,
                     "Points order are different for each coordinate");
                 ASSERTL2(Coords[i]->GetPointsType(0)  == ptype,
                     "Points type are different for each coordinate");
@@ -207,13 +207,13 @@ namespace Nektar
             // Calculate local derivatives using physical space storage
             for(i = 0; i < coordim; ++i)
             {
-                ASSERTL2(Coords[i]->GetPointsOrder(0) == nquad0,
+                ASSERTL2(Coords[i]->GetNumPoints(0) == nquad0,
                     "Points order are different for coordinate 0 ");
-                ASSERTL2(Coords[i]->GetPointsOrder(1) == nquad1,
+                ASSERTL2(Coords[i]->GetNumPoints(1) == nquad1,
                     "Points order are different for coordinate 1 ");
                 ASSERTL2(Coords[i]->GetPointsType(0)  == ptype0,
                     "Points type are different for coordinate 0 ");
-                ASSERTL2(Coords[i]->GetPointstTpe(1)  == ptype1,
+                ASSERTL2(Coords[i]->GetPointsType(1)  == ptype1,
                     "Points type are different for coordinate 1 ");
 
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), 
@@ -391,9 +391,9 @@ namespace Nektar
             m_gtype = gtype;
             m_gmat  = new double*[9];
 
-            nquad0 = Coords[0]->GetPointsOrder(0);
-            nquad1 = Coords[0]->GetPointsOrder(1);
-            nquad2 = Coords[0]->GetPointsOrder(2);
+            nquad0 = Coords[0]->GetNumPoints(0);
+            nquad1 = Coords[0]->GetNumPoints(1);
+            nquad2 = Coords[0]->GetNumPoints(2);
             ptype0 = Coords[0]->GetPointsType (0);
             ptype1 = Coords[0]->GetPointsType (1);
             ptype2 = Coords[0]->GetPointsType (2);
@@ -415,11 +415,11 @@ namespace Nektar
             // Calculate local derivatives using physical space storage
             for(i = 0; i < 3; ++i)
             {
-                ASSERTL2(Coords[i]->GetPointsOrder(0) == nquad0,
+                ASSERTL2(Coords[i]->GetNumPoints(0) == nquad0,
                     "Points order are different for coordinate 0 ");
-                ASSERTL2(Coords[i]->GetPointsOrder(1) == nquad1,
+                ASSERTL2(Coords[i]->GetNumPoints(1) == nquad1,
                     "Points order are different for coordinate 1 ");
-                ASSERTL2(Coords[i]->GetPointsOrder(2) == nquad2,
+                ASSERTL2(Coords[i]->GetNumPoints(2) == nquad2,
                     "Points order are different for coordinate 1 ");
                 ASSERTL2(Coords[i]->GetPointsType(0)  == ptype0,
                     "Points type are different for coordinate 0 ");
@@ -556,6 +556,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.8  2007/05/31 19:13:12  pvos
+// Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+//
 // Revision 1.7  2007/05/28 21:48:41  sherwin
 // Update for 2D functionality
 //

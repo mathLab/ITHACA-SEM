@@ -101,7 +101,7 @@ namespace Nektar
 		
 	void ExpList::IProductWRTBase(const ExpList &Sin)
 	{
-            ASSERTL2(Sin.GetPhysState == true,
+            ASSERTL2(Sin.GetPhysState() == true,
                      "Sin physical space is not true ");
 
             IProductWRTBase(Sin.GetPhys(),m_coeffs);
@@ -171,7 +171,7 @@ namespace Nektar
 
         void ExpList::FwdTrans(const ExpList &Sin)
         {
-            ASSERTL2(Sin.GetPhysState == true,
+            ASSERTL2(Sin.GetPhysState() == true,
                      "Sin physical space is not true ");
 
             FwdTrans(Sin.GetPhys(),m_coeffs);
@@ -297,7 +297,7 @@ namespace Nektar
 	
 	NekDouble  ExpList::Linf(const ExpList &Sol)
 	{
-            ASSERTL2(Sol.GetPhysState == true,
+            ASSERTL2(Sol.GetPhysState() == true,
                      "local physical space is not true ");
 
 	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
@@ -325,7 +325,7 @@ namespace Nektar
 	
 	NekDouble  ExpList::L2(const ExpList &Sol)
 	{
-            ASSERTL2(Sol.GetPhysState == true,
+            ASSERTL2(Sol.GetPhysState() == true,
                      "local physical space is not true ");
 
 	    NekDouble err = 0.0,errl2;

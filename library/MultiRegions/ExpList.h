@@ -67,7 +67,7 @@ namespace Nektar
 	m_transState = transState;
       }
 
-      inline TransState GetTransState(void)
+      inline TransState GetTransState(void) const 
       {
           return m_transState; 
       }
@@ -101,7 +101,7 @@ namespace Nektar
     
       inline int GetCoordim(int eid)
       {
-	  ASSERTL2(eid <= m_exp.size(),"eid is larger than number of elements");
+	  ASSERTL2(eid <= (*m_exp).size(),"eid is larger than number of elements");
 	
 	  return (*m_exp)[eid]->GetCoordim();
       }
@@ -179,4 +179,7 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.16  2007/06/05 16:36:55  pvos
+* Updated Explist2D ContExpList2D and corresponding demo-codes
+*
 **/

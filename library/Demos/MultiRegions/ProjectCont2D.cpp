@@ -72,18 +72,17 @@ int main(int argc, char *argv[])
 	Tri_btype1 = LibUtilities::eModified_A;
 	Tri_btype2 = LibUtilities::eModified_B;
 	// size counter is used as a trip to turn off Nodal Basis
-	Tri_Nb     = (LibUtilities::PointsType) LibUtilities::SIZE_PointsType;
+	Tri_Nb     = LibUtilities::SIZE_PointsType;
 	break;
     case 2:
-	Tri_btype1 = (LibUtilities::BasisType) LibUtilities::eOrtho_A;
-	Tri_btype2 = (LibUtilities::BasisType) LibUtilities::eOrtho_B;
-	Tri_Nb     = (LibUtilities::PointsType) LibUtilities::eNodalTriElec;
+	Tri_btype1 =  LibUtilities::eOrtho_A;
+	Tri_btype2 =  LibUtilities::eOrtho_B;
+	Tri_Nb     =  LibUtilities::eNodalTriElec;
 	break;
     case 3:
-	Tri_btype1 = (LibUtilities::BasisType) LibUtilities::eOrtho_A;
-	Tri_btype2 = (LibUtilities::BasisType) LibUtilities::eOrtho_B;
-	Tri_Nb     = (LibUtilities::PointsType) LibUtilities
-::eNodalTriFekete;
+	Tri_btype1 =  LibUtilities::eOrtho_A;
+	Tri_btype2 =  LibUtilities::eOrtho_B;
+	Tri_Nb     =  LibUtilities::eNodalTriFekete;
 	break;
     }
     

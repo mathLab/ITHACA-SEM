@@ -149,7 +149,7 @@ namespace Nektar
 
                 int GetEdgeNcoeffs(const int i)
                 {
-                    ASSERTL2((i > 0) && (i < 2), "edge id is out of range");
+                    ASSERTL2((i >= 0) && (i <= 2), "edge id is out of range");
 
                     if (i == 0)
                     {
@@ -164,7 +164,7 @@ namespace Nektar
 
                 LibUtilities::BasisType GetEdgeBasisType(const int i)
                 {
-                    ASSERTL2((i > 0) && (i < 2), "edge id is out of range");
+                    ASSERTL2((i >= 0) && (i <= 2), "edge id is out of range");
 
                     if (i == 0)
                     {
@@ -355,6 +355,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.13  2007/05/31 19:13:12  pvos
+ * Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+ *
  * Revision 1.12  2007/05/15 05:18:24  bnelson
  * Updated to use the new Array object.
  *

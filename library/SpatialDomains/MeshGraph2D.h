@@ -105,7 +105,7 @@ namespace Nektar
                 }
                 else
                 {
-                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
                         "eid is out of range");
 
                     return m_quadgeoms[elmt]->GetVid(vert);
@@ -229,6 +229,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.11  2007/06/05 16:36:55  pvos
+// Updated Explist2D ContExpList2D and corresponding demo-codes
+//
 // Revision 1.10  2007/05/28 21:48:42  sherwin
 // Update for 2D functionality
 //

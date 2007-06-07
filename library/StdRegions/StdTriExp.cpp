@@ -123,11 +123,11 @@ namespace Nektar
                 (m_base[1]->GetBasisType() == LibUtilities::eModified_B), 
                 "Basis[1] is not of general tensor type");
 
-            ASSERTL2((m_base[0]->GetAlpha() == 0.0)&&(m_base[1]->GetAlpha() > 1.0),
-                "Basis[0] has illegal alpha weight");
+//             ASSERTL2((m_base[0]->GetAlpha() == 0.0)&&(m_base[1]->GetAlpha() > 1.0),
+//                 "Basis[0] has illegal alpha weight");
 
-            ASSERTL2((m_base[1]->GetBeta() == 0.0)&&(m_base[1]->GetBeta() == 0.0),
-                "Basis[1] has non-zero beta weight");
+//             ASSERTL2((m_base[1]->GetBeta() == 0.0)&&(m_base[1]->GetBeta() == 0.0),
+//                 "Basis[1] has non-zero beta weight");
 
             // Note cannot use outarray as tmp space since dimensions are not always
             // guarenteed to be sufficient 
@@ -536,6 +536,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.17  2007/05/31 19:13:12  pvos
+* Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+*
 * Revision 1.16  2007/05/22 02:01:50  bnelson
 * Changed Array::size to Array::num_elements.
 *

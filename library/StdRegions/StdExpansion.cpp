@@ -72,17 +72,17 @@ namespace Nektar
             switch(m_numbases)
             {
             case 3:
-                ASSERTL2(Bc==LibUtilities::NullBasisKey,
+                ASSERTL2(Bc!=LibUtilities::NullBasisKey,
                          "NULL Basis attempting to be used.");
                 m_base[2] = LibUtilities::BasisManager()[Bc];
 
             case 2:
-                ASSERTL2(Bb==LibUtilities::NullBasisKey,
+                ASSERTL2(Bb!=LibUtilities::NullBasisKey,
                      "NULL Basis attempting to be used.");
 
                 m_base[1] = LibUtilities::BasisManager()[Bb];
             case 1:
-                ASSERTL2(Ba==LibUtilities::NullBasisKey,
+                ASSERTL2(Ba!=LibUtilities::NullBasisKey,
                          "NULL Basis attempting to be used.");
                 m_base[0] = LibUtilities::BasisManager()[Ba];
                 break;
@@ -362,6 +362,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.37  2007/05/30 23:56:54  sherwin
+* Silly errors
+*
 * Revision 1.36  2007/05/30 20:49:12  sherwin
 * Updates to do with LocalRegions and SpatialDomains
 *

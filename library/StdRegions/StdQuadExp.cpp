@@ -167,7 +167,7 @@ namespace Nektar
 	    ASSERTL2(mode1 == (int)floor((1.0*mode)/btmp0),
 		     "Integer Truncation not Equiv to Floor");
 	    
-	    ASSERTL2(m_ncoeffs <= modes, 
+	    ASSERTL2(m_ncoeffs <= mode, 
 		     "calling argument mode is larger than total expansion order");
 	    
 	    for(i = 0; i < nquad1; ++i)
@@ -488,6 +488,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.15  2007/05/15 05:18:24  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.14  2007/04/10 14:00:45  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

@@ -91,7 +91,7 @@ namespace Nektar
 	   	    
 	    // setup mapping array 
 	    m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph2D);
-
+ 
 	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs);
 	}
@@ -142,7 +142,7 @@ namespace Nektar
 		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs);
 	
 		// fill global matrix 
-		for(n = cnt = 0; n < (*m_exp).size(); ++n);
+		for(n = cnt = 0; n < (*m_exp).size(); ++n)
 		{
                     loc_mass = (*m_exp)[n]->GetLocMatrix(StdRegions::eMassMatrix);
                     loc_lda = loc_mass->GetColumns();
@@ -170,4 +170,7 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.4  2007/06/05 16:36:55  pvos
+* Updated Explist2D ContExpList2D and corresponding demo-codes
+*
 **/

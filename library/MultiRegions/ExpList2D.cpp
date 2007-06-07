@@ -79,7 +79,7 @@ namespace Nektar
             
 	    if(TriGeoms.size())
 	    {		
-		tri_ncoeffs_elmt = TriBa.GetTotNumModes() 
+		tri_ncoeffs_elmt = tri_ncoeffs_elmt = (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
                     + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
 		tri_npoints_elmt = (TriBa.GetNumPoints()*
 				    TriBb.GetNumPoints());
@@ -275,4 +275,7 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.12  2007/06/05 16:36:55  pvos
+* Updated Explist2D ContExpList2D and corresponding demo-codes
+*
 **/

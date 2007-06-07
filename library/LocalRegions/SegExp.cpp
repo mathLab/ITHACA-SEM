@@ -308,11 +308,11 @@ namespace Nektar
             ConstArray<TwoD,NekDouble>  gmat = m_metricinfo->GetGmat();
             Array<OneD,NekDouble> Diff = Array<OneD,NekDouble>(nquad0);
 
-            if(m_geom)
-            {
-                ASSERTL2(n <= m_geom->GetCoordim(),
-                    "value of n is larger than the number of coordinates");
-            }
+//             if(m_geom)
+//             {
+//                 ASSERTL2(n <= m_geom->GetCoordim(),
+//                     "value of n is larger than the number of coordinates");
+//             }
 
             StdExpansion1D::PhysTensorDeriv(inarray,Diff);
 
@@ -628,6 +628,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.17  2007/06/06 11:29:31  pvos
+// Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
+//
 // Revision 1.16  2007/05/30 15:59:05  sherwin
 // Fixed bug with new definition of GetLocCoords
 //

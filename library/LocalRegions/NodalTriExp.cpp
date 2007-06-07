@@ -260,11 +260,11 @@ namespace Nektar
             Array<OneD,NekDouble> Diff0 = Array<OneD,NekDouble>(nquad0*nquad1);
             Array<OneD,NekDouble> Diff1 = Array<OneD,NekDouble>(nquad0*nquad1);
 	    
-	    if(m_geom)
-	    {
-		ASSERTL2(n <= m_geom->GetCoordDim(),
-			 "value of n is larger than the number of coordinates");
-	    }
+// 	    if(m_geom)
+// 	    {
+// 		ASSERTL2(n <= m_geom->GetCoordDim(),
+// 			 "value of n is larger than the number of coordinates");
+// 	    }
             
  	    StdExpansion2D::PhysTensorDeriv(inarray, Diff0, Diff1);
 	    
@@ -574,6 +574,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.5  2007/06/06 11:29:31  pvos
+ *    Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
+ *
  *    Revision 1.4  2007/06/01 17:08:07  pvos
  *    Modification to make LocalRegions/Project2D run correctly (PART1)
  *

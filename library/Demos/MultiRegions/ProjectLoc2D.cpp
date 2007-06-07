@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     if((Tri_input = atoi(argv[1]))  < 3)
     {
 	Tritype  = (LibUtilities::BasisType) atoi(argv[1]);
-	Tri_Nb   = (LibUtilities::PointsType) NULL;
+	Tri_Nb   = LibUtilities::SIZE_PointsType;
     }
     else
     {

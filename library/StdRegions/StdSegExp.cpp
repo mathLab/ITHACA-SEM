@@ -114,7 +114,7 @@ namespace Nektar
 	    int   nquad = m_base[0]->GetNumPoints();
 	    const NekDouble * base  = m_base[0]->GetBdata().get();
 	    
-	    ASSERTL2(modes <= m_ncoeffs , 
+	    ASSERTL2(mode <= m_ncoeffs , 
 		     "calling argument mode is larger than total expansion order");
 	    
 	    Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
@@ -274,6 +274,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.31  2007/05/31 19:13:12  pvos
+* Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+*
 * Revision 1.30  2007/05/17 17:59:28  sherwin
 * Modification to make Demos work after introducion of Array<>
 *

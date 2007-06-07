@@ -252,6 +252,12 @@ namespace Nektar
         {
             return StdExpansion::L2();
         }
+
+        virtual DNekMatSharedPtr v_GetLocMatrix(StdRegions::MatrixType type)
+        {
+            MatrixKey masskey(type,DetShapeType(),*this);
+            return m_matrixManager[masskey];
+        }
     };
 
     // type defines for use of QuadExp in a boost vector
@@ -267,6 +273,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.13  2007/06/01 17:08:07  pvos
+ *    Modification to make LocalRegions/Project2D run correctly (PART1)
+ *
  *    Revision 1.12  2007/05/31 19:13:12  pvos
  *    Updated NodalTriExp + LocalRegions/Project2D + some other modifications
  *

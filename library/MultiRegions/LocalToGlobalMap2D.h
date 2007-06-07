@@ -70,7 +70,7 @@ namespace Nektar
 	    inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
                                     Array<OneD, NekDouble> &cont)
 	    {
-                Array<OneD, NekDouble> tmp;
+                Array<OneD, NekDouble> tmp(m_totLocLen);
 		if(m_sign_change)
 		{
 		    Vmath::Vmul(m_totLocLen,&m_sign[0],1,&loc[0],1,&tmp[0],1);
@@ -94,7 +94,7 @@ namespace Nektar
                                  Array<OneD, NekDouble> &cont)
 	    {
 		Vmath::Zero(m_totGloLen,&cont[0],1);
-                Array<OneD, NekDouble> tmp;
+                Array<OneD, NekDouble> tmp(m_totLocLen);
 		if(m_sign_change)
 		{
 		    Vmath::Vmul(m_totLocLen,&m_sign[0],1,&loc[0],1,&tmp[0],1);
@@ -118,6 +118,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap2D.h,v $
+/** Revision 1.2  2007/06/05 16:36:55  pvos
+/** Updated Explist2D ContExpList2D and corresponding demo-codes
+/**
 /** Revision 1.1  2006/07/02 17:16:17  sherwin
 /**
 /** Modifications to make MultiRegions work for a connected domain in 2D (Tris)

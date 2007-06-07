@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<NEKTAR>
+<!-- Embed a 2-dimensional object in a 2-dimensional space -->
+<!-- DIM <= SPACE -->
+<!-- This provides a method of optimizing code for a 1-D curve embedded in 3-space. -->
+<GEOMETRY DIM="2" SPACE="2">
+
+    <!-- Definitions that can be used below in this file. -->
+    <DEF>
+        A = 1.0
+        B = 2.0
+        C = 3.0
+    </DEF>
+
+    <VERTEX NUMBER="6">
+        <!-- Always must have four values per entry. -->
+        0 0.0 0.0 0.0
+        1 0.0 1.0 0.0
+        2 1.0 0.0 0.0
+        3 1.0 1.0 0.0
+        4 2.0 0.0 0.0
+        5 2.0 1.0 0.0
+    </VERTEX>
+    
+    <!-- Can include Q - quads, T - triangles -->
+    <FACE>
+    </FACE>
+
+    <!-- Edges are vertex pairs -->
+    <EDGE NUMBER="7">
+        0 0 2
+        1 2 4
+        2 0 1
+        3 2 3
+        4 4 5
+        5 1 3
+        6 3 5
+    </EDGE>
+    
+    <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, R - prism, H - hex -->
+    <!-- Only certain element types are appropriate for the given dimension (dim on mesh) -->
+    <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
+    <!-- Element need to be entered in consistent "anti-clockwise" manner -->
+    <ELEMENT NUMBER="2">
+		<!-- List the edges for each element -->
+        0 <Q> 0 3 5 2</Q>
+        1 <Q> 4 6 3 1</Q>
+    </ELEMENT>
+    
+    <!-- V - vertex, E - edge, F - face, L - element -->
+    <COMPOSITE>
+        1 V[1] V[3] E[2]
+        2 E[5] E[6] E[7]
+    </COMPOSITE>
+</GEOMETRY>
+</NEKTAR>
+

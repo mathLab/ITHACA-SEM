@@ -84,16 +84,15 @@ namespace Nektar
 	    void GenMassMatrixLinSys(void);
 	    
 	protected:
-	    
-	    
-	private:
-	    int                    m_contNcoeffs;
+      	    int                    m_contNcoeffs;
 	    Array<OneD, NekDouble> m_contCoeffs;
 	    
 	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
 	    
 	    DNekLinSysSharedPtr m_mass;
 	    
+	private:
+
 	};
 	
         typedef boost::shared_ptr<ContExpList1D>      ContExpList1DSharedPtr;
@@ -107,4 +106,7 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.10  2007/06/05 16:36:55  pvos
+* Updated Explist2D ContExpList2D and corresponding demo-codes
+*
 **/

@@ -85,11 +85,17 @@ namespace Nektar
 	    {
 		return m_totGloLen;
 	    }
+           
+            inline int GetNumDirichletBCs()
+            {
+                return m_numDirichletBCs;
+            }
 
         protected:
 	    int             m_totLocLen;    //< length of local dofs
 	    int             m_totGloLen;    //< length of global dofs
-	    Array<OneD,int> m_locToContMap; //< Vector of boost pointers to integer maps
+            int             m_numDirichletBCs;  //< number of Dirichlet conditions 
+            Array<OneD,int> m_locToContMap; //< Vector of boost pointers to integer maps
         private:
 	};
 	
@@ -100,6 +106,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.6  2007/05/28 16:15:00  sherwin
+/** Updated files in MultiRegions to make 1D demos work
+/**
 /** Revision 1.5  2007/05/27 16:09:43  bnelson
 /** Update to new Array type.
 /**

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Field2D.cpp
+// File ContSolnField1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,55 +29,43 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Field definition for 2D domains
+// Description: Field definition in one-dimension
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/Field2D.h>
+#ifndef NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
+#define NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
+
+#include <MultiRegions/MultiRegions.hpp>
+#include <MultiRegions/ContExpList1D.h>
+#include <LocalRegions/PointExp.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-	
-	Field2D::Field2D(void)
-	{
-	}
 
-	Field2D::Field2D(const StdRegions::BasisKey &TriBa, 
-			 const StdRegions::BasisKey &TriBb, 
-			 const StdRegions::NodalBasisType  TriNb,
-			 const StdRegions::BasisKey &QuadBa, 
-			 const StdRegions::BasisKey &QuadBb, 
-			 SpatialDomains::Domain &Domain2D)
-	{
-	    int i,nbnd;
-	    ExpList1DSharedPtr  bndry;
-	    BoundaryVectorIter def;
-	    BoundaryVector Bndry = Domain2D.getBoundaries();
-
-	    m_field.reset(new ContExpList2D(TriBa,TriBb,TriNb,QuadBa,QuadBa,
-					    Domain2D.GetGraph2D()));
-
-	    nbnd = Domain2D.GetBoundaries().size();
-
-	    for(def = Bndry.begin(); def < Bndry.end(); ++def)
+	class ContField1D:
+	    public ContExpList1D
 	    {
-		bndry.reset(new ExpList1D(Ba,graph1D));
-		m_bndConstraint.push_back(Bndry);
-		m_bndType(Def of Bndry Type);/////////////////////////
-	    } 
+	    public:
+		ContField1D();
+		~ContField1D();
+		
+                void FwdTrans(const ExpList &In);
 
- -- Get element and fac id's from graph - ask joe
-
-Set up numbering to local and global definition. 
-
-	}
+                void GenMassMatrixLinSys(void);
 
 
-	Field2D::~Field2D()
-	{
-	}
+	    protected:
+		
+	    private:
+		LocalRegions::PointExpVector  m_bndContraint;
+		BndTypesVector                m_bndTypes;
 
-    } // end of namespace
+	    };
+	
+    } //end of namespace
 } //end of namespace
+  
+#endif // MULTIERGIONS_CONTSOLNFIELD1D_H

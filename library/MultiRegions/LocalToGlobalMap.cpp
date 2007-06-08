@@ -42,7 +42,8 @@ namespace Nektar
     {
 	LocalToGlobalMap::LocalToGlobalMap():
 	    m_totLocLen(0),
-	    m_totGloLen(0)
+	    m_totGloLen(0),
+            m_numDirichletBCs(0)
 	{
 	}
 	

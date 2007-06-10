@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source$
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/BoundaryConditions.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -134,196 +134,134 @@ namespace Nektar
             // See if we have parameters defined.  They are optional so we go on if not.
             if (variablesElement)
             {
-                TiXmlNode *node = variablesElement->FirstChild();
+                TiXmlElement *variableElement = variablesElement->FirstChildElement("V");
 
-                // Multiple nodes will only occur if there is a comment in between
-                // definitions.
-                while (node)
+                // Sequential counter for the composite numbers.
+                int nextVariableNumber = -1;
+
+                while (variableElement)
                 {
-                    int nodeType = node->Type();
-                    if (nodeType == TiXmlNode::TEXT)
+                    /// All elements are of the form: "<V ID="#"> name = value </V>", with
+                    /// ? being the element type.
+
+                    nextVariableNumber++;
+
+                    TiXmlAttribute *attr = variableElement->FirstAttribute();
+                    std::string attrName(attr->Name());
+
+                    ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
+                    int indx;
+                    int err = attr->QueryIntValue(&indx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
+                    ASSERTL0(indx == nextVariableNumber, "Composite IDs must begin with zero and be sequential.");
+
+                    TiXmlNode* variableChild = variableElement->FirstChild();
+                    // This is primarily to skip comments that may be present.
+                    // Comments appear as nodes just like elements.
+                    // We are specifically looking for text in the body
+                    // of the definition.
+                    while(variableChild && variableChild->Type() != TiXmlNode::TEXT)
                     {
-                        // Format is "number variable"
-                        // Due to the way XML is processed, all variable
-                        // definitions will be on the same line unless seperated
-                        // by a comment or other node type (not allowed).
-                        std::string line = node->ToText()->Value();
-
-                        try
-                        {
-                            // Skip leading blanks.
-                            line = line.substr(line.find_first_not_of(" "));
-
-                            // Repeat reading "number variable" until string is depleted.
-                            while (!line.empty())
-                            {
-                                // Find the end of the number.
-                                std::string::size_type endPos = line.find_first_of(" ");
-
-                                // Extract the number and remove it from the line
-                                // including the trailing spaces.
-                                int indx = atoi(line.substr(0, endPos).c_str());
-                                ASSERTL0(indx == varIndex, "Index error.  Variable indices must be zero-based and sequential.");
-                                ++varIndex;
-
-                                line = line.substr(endPos);
-                                line = line.substr(line.find_first_not_of(" "));
-
-                                // Find the end of the variable, which may be the end
-                                // of the line as well (find_first_of will return
-                                // string::npos in this case).
-                                endPos = line.find_first_of(" ");
-                                m_Variables.push_back(line.substr(0,endPos));
-
-                                // Need to go to the next definition, or if at the end
-                                // clear the line so our loop will terminate.
-                                if (endPos != std::string::npos)
-                                {
-                                    line = line.substr(endPos);
-                                    line = line.substr(line.find_first_not_of(" "));
-                                }
-                                else
-                                {
-                                    line.clear();
-                                }
-                            }
-                        }
-                        catch(...)
-                        {
-                            NEKERROR(ErrorUtil::efatal, "Error processing variable definitions.");
-                        }
-                    }
-                    else if (nodeType != TiXmlNode::COMMENT)
-                    {
-                        NEKERROR(ErrorUtil::ewarning, "Unknown node type in VARIABLES block.")
+                        variableChild = variableChild->NextSibling();
                     }
 
-                    node = node->NextSibling();
+                    ASSERTL0(variableChild, "Unable to read variable definition body.");
+                    std::string variableName = variableChild->ToText()->ValueStr();
+
+                    std::istringstream variableStrm(variableName);
+
+                    variableStrm >> variableName;
+                    m_Variables.push_back(variableName);
+
+                    variableElement = variableElement->NextSiblingElement("V");
                 }
 
-                ASSERTL0(varIndex > 0, "Number of variables must be greater than zero.")
+                ASSERTL0(nextVariableNumber > 0, "Number of variables must be greater than zero.")
             }
         }
 
         void BoundaryConditions::ReadBoundaryRegions(TiXmlElement *conditions)
         {
-            TiXmlElement *boundaryRegionsElement = conditions->FirstChildElement("BOUNDARYREGIONS");
-            ASSERTL0(boundaryRegionsElement, "Unable to find BOUNDARYREGIONS block.");
+            TiXmlElement *boundaryRegions = conditions->FirstChildElement("BOUNDARYREGIONS");
+            ASSERTL0(boundaryRegions, "Unable to find BOUNDARYREGIONS block.");
 
             int regionIndx = 0;
 
             // See if we have boundary regions defined.
-            TiXmlNode *node = boundaryRegionsElement->FirstChild();
+            TiXmlElement *boundaryRegionsElement = boundaryRegions->FirstChildElement("B");
 
-            // Multiple nodes will only occur if there is a comment in between
-            // definitions.
-            while (node)
+            // Sequential counter for the composite numbers.
+            int nextBoundaryRegionNumber = -1;
+
+            while (boundaryRegionsElement)
             {
-                int nodeType = node->Type();
-                if (nodeType == TiXmlNode::TEXT)
+                /// All elements are of the form: "<B ID="#"> ... </B>", with
+                /// ? being the element type.
+
+                nextBoundaryRegionNumber++;
+
+                TiXmlAttribute *attr = boundaryRegionsElement->FirstAttribute();
+                std::string attrName(attr->Name());
+
+                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
+                int indx;
+                int err = attr->QueryIntValue(&indx);
+                ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
+                ASSERTL0(indx == nextBoundaryRegionNumber, "Boundary region IDs must begin with zero and be sequential.");
+
+                TiXmlNode* boundaryRegionChild = boundaryRegionsElement->FirstChild();
+                // This is primarily to skip comments that may be present.
+                // Comments appear as nodes just like elements.
+                // We are specifically looking for text in the body
+                // of the definition.
+                while(boundaryRegionChild && boundaryRegionChild->Type() != TiXmlNode::TEXT)
                 {
-                    // Format is "number <B composites /B>"
-                    // Due to the way XML is processed, all variable
-                    // definitions will be on the same line unless seperated
-                    // by a comment or other node type (not allowed).
-                    std::string line = node->ToText()->Value();
-
-                    try
-                    {
-                        // Skip leading blanks.
-                        line = line.substr(line.find_first_not_of(" "));
-
-                        int indx = atoi(line.c_str());
-                        ASSERTL0(indx == regionIndx,
-                            "Index error.  Boundary region indices must be zero-based and sequential.");
-                        ++regionIndx;
-
-                        // Now should read another element.
-                        node = node->NextSibling();
-
-                        // Skip any comments.
-                        while (node->Type() == TiXmlNode::COMMENT)
-                        {
-                            node = node->NextSibling();
-                        }
-
-                        ASSERTL0(node->Type() == TiXmlNode::ELEMENT,
-                            "Error processing boundary region definitions. Boundary region ill-formed.");
-
-                        ASSERTL0(node->ValueStr() == "B", "Only 'B' tag is recognized in boundary region definition.");
-
-                        TiXmlNode *child = node->FirstChild();
-
-                        ASSERTL0(child, "No boundary region definition was found between tags.");
-
-                        while (child)
-                        {
-                            // At this time process composites only.
-                            int type = child->Type();
-                            if (type == TiXmlNode::TEXT)
-                            {
-                                //...and finally we arrive at the composites defining the boundary region.
-                                // All composites will be together unless another node is between them.
-                                std::string line = child->ToText()->Value();
-
-                                std::string::size_type indxBeg = line.find_first_of('[') + 1;
-                                std::string::size_type indxEnd = line.find_last_of(']') - 1;
-
-                                ASSERTL0(indxBeg <= indxEnd, (std::string("Error reading boundary region definition:") + line).c_str());
-
-                                std::string indxStr = line.substr(indxBeg, indxEnd - indxBeg + 1);
-                                typedef vector<unsigned int> SeqVectorType;
-                                SeqVectorType seqVector;
-
-                                if (!indxStr.empty())
-                                {
-                                    vector<Composite> compVector;
-
-                                    if (ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector))
-                                    {
-                                        for (SeqVectorType::iterator iter = seqVector.begin(); iter != seqVector.end(); ++iter)
-                                        {
-                                            Composite composite = m_MeshGraph->GetComposite(*iter);
-                                            if (composite)
-                                            {
-                                                compVector.push_back(composite);
-                                            }
-                                            else
-                                            {
-                                                char str[64];
-                                                ::sprintf(str, "%d", *iter);
-                                                NEKERROR(ErrorUtil::ewarning, (std::string("Undefined composite: ") + str).c_str());
-
-                                            }
-                                        }
-
-                                        m_BoundaryRegions.push_back(compVector);
-                                    }
-                                    else
-                                    {
-                                        NEKERROR(ErrorUtil::efatal, (std::string("Cannot read composite definition: ") + line).c_str());
-                                    }
-                                }
-                            }
-                            else if (type != TiXmlNode::COMMENT)
-                            {
-                                NEKERROR(ErrorUtil::efatal, "Error processing boundary region definitions.");
-                            }
-
-                            child = child->NextSibling();
-                        }
-                    }
-                    catch(...)
-                    {
-                        NEKERROR(ErrorUtil::efatal, "Error processing boundary region definitions.");
-                    }
-                }
-                else if (nodeType != TiXmlNode::COMMENT)
-                {
-                    NEKERROR(ErrorUtil::ewarning, "Unknown node type in BOUNDARYREGION block.")
+                    boundaryRegionChild = boundaryRegionChild->NextSibling();
                 }
 
-                node = node->NextSibling();
+                ASSERTL0(boundaryRegionChild, "Unable to read variable definition body.");
+                std::string boundaryRegionStr = boundaryRegionChild->ToText()->ValueStr();
+
+                std::string::size_type indxBeg = boundaryRegionStr.find_first_of('[') + 1;
+                std::string::size_type indxEnd = boundaryRegionStr.find_last_of(']') - 1;
+
+                ASSERTL0(indxBeg <= indxEnd, (std::string("Error reading boundary region definition:") + boundaryRegionStr).c_str());
+
+                std::string indxStr = boundaryRegionStr.substr(indxBeg, indxEnd - indxBeg + 1);
+                typedef vector<unsigned int> SeqVectorType;
+                SeqVectorType seqVector;
+
+                if (!indxStr.empty())
+                {
+                    vector<Composite> compVector;
+
+                    if (ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector))
+                    {
+                        for (SeqVectorType::iterator iter = seqVector.begin(); iter != seqVector.end(); ++iter)
+                        {
+                            Composite composite = m_MeshGraph->GetComposite(*iter);
+                            if (composite)
+                            {
+                                compVector.push_back(composite);
+                            }
+                            else
+                            {
+                                char str[64];
+                                ::sprintf(str, "%d", *iter);
+                                NEKERROR(ErrorUtil::ewarning, (std::string("Undefined composite: ") + str).c_str());
+
+                            }
+                        }
+
+                        m_BoundaryRegions.push_back(compVector);
+                    }
+                    else
+                    {
+                        NEKERROR(ErrorUtil::efatal, (std::string("Cannot read composite definition: ") + boundaryRegionStr).c_str());
+                    }
+                }
+
+                boundaryRegionsElement = boundaryRegionsElement->NextSiblingElement("B");
             }
         }
 

@@ -126,50 +126,71 @@ namespace Nektar
             TiXmlElement* element = mesh->FirstChildElement("VERTEX");
             ASSERTL0(element, "Unable to find mesh VERTEX tag in file.");
 
-            //// Get the entire data block then go through it one line at a time.
-            std::string vertexData;
+            TiXmlElement *vertex = element->FirstChildElement("V");
 
-            // Look through all immediate children and accumulate all text (type TEXT).
-            // This is just in case it is broken up by other tagged elements.
-            // Using element->GetText() will not work if text contains XML comments,
-            // for example.
-            TiXmlNode *child = element->FirstChild();
-            while(child)
-            {
-                if (child->Type() == TiXmlNode::TEXT)
-                {
-                    vertexData += child->ToText()->Value();
-                    vertexData += " "; // Don't jam together.
-                }
-                child = child->NextSibling();
-            }
-
-            // Get vertex data from the data string.
             int indx;
-            double xval, yval, zval;
-            std::istrstream vertexDataStrm(vertexData.c_str());
+            int nextVertexNumber = -1;
 
-            try
+            while (vertex)
             {
-                while(!vertexDataStrm.fail())
-                {
-                    vertexDataStrm >> indx;
-                    vertexDataStrm >> xval >> yval >> zval;
+                nextVertexNumber++;
 
-                    // Need to check it here because we may not be good after the read
-                    // indicating that there was nothing to read.
-                    if (!vertexDataStrm.fail())
+                TiXmlAttribute *vertexAttr = vertex->FirstAttribute();
+                std::string attrName(vertexAttr->Name());
+
+                ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
+
+                err = vertexAttr->QueryIntValue(&indx);
+                ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
+                ASSERTL0(indx == nextVertexNumber, "Element IDs must begin with zero and be sequential.");
+
+                // Now read body of vertex
+                std::string vertexBodyStr;
+
+                TiXmlNode *vertexBody = vertex->FirstChild();
+
+                while (vertexBody)
+                {
+                    // Accumulate all non-comment body data.
+                    if (vertexBody->Type() == TiXmlNode::TEXT)
                     {
-                        VertexComponentSharedPtr vert(new VertexComponent(m_MeshDimension, indx, xval, yval, zval));
-                        m_vertset.push_back(vert);
+                        vertexBodyStr += vertexBody->ToText()->Value();
+                        vertexBodyStr += " ";
+                    }
+
+                    vertexBody = vertexBody->NextSibling();
+                }
+
+                ASSERTL0(!vertexBodyStr.empty(), "Vertex definitions must contain vertex data.");
+
+                // Get vertex data from the data string.
+                double xval, yval, zval;
+                std::istrstream vertexDataStrm(vertexBodyStr.c_str());
+
+                try
+                {
+                    while(!vertexDataStrm.fail())
+                    {
+                        vertexDataStrm >> xval >> yval >> zval;
+
+                        // Need to check it here because we may not be good after the read
+                        // indicating that there was nothing to read.
+                        if (!vertexDataStrm.fail())
+                        {
+                            VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, indx, xval, yval, zval));
+                            m_vertset.push_back(vert);
+                        }
                     }
                 }
+                catch(...)
+                {
+                    ASSERTL0(false, "Unable to read VERTEX data.");
+                }
+ 
+                vertex = vertex->NextSiblingElement("V");
             }
-            catch(...)
-            {
-                ASSERTL0(false, "Unable to read VERTEX data.");
-            }
-        }
+
+       }
 
         GeometrySharedPtr MeshGraph::GetCompositeItem(int whichComposite, int whichItem)
         {
@@ -217,6 +238,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.6  2007/03/29 19:25:10  bnelson
+// *** empty log message ***
+//
 // Revision 1.5  2006/10/17 18:42:54  jfrazier
 // Removed "NUMBER" attribute in items.
 //

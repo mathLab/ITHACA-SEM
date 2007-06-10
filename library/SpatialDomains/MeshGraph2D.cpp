@@ -293,8 +293,7 @@ namespace Nektar
             int nextCompositeNumber = 0;
             int err = 0;
 
-            /// All elements are of the form: "ID <?> ... </?>", with
-            /// ? being the element type.
+            /// All elements are of the form: "<C ID = N> ... </C>".
 
             /// Read the ID field first.
             TiXmlNode *child = field->FirstChild();
@@ -554,6 +553,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.15  2007/06/07 23:55:24  jfrazier
+// Intermediate revisions to add parsing for boundary conditions file.
+//
 // Revision 1.14  2007/05/28 21:48:42  sherwin
 // Update for 2D functionality
 //

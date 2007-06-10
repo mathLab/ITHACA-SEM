@@ -96,200 +96,65 @@ namespace Nektar
             ASSERTL0(field, "Unable to find ELEMENT tag in file.");
 
             TiXmlAttribute *attr = field->FirstAttribute();
-            int elementNumber = 0;
-            int nextElementNumber = 0;
+            int indx = 0;
+            int nextElementNumber = -1;
             int err = 0;
 
-            /// All elements are of the form: "ID <?> ... </?>", with
+            /// All elements are of the form: "<S ID = n> ... </S>", with
             /// ? being the element type.
 
-            /// Read the ID field first.
-            TiXmlNode *child = field->FirstChild();
+            TiXmlElement *segment = field->FirstChildElement("S");
 
-            /// Get first TEXT node, just in case any comments are present.
-            /// If no TEXT appears before an ELEMENT, then we will assume
-            /// a running number.
-            int elementID = nextElementNumber++;
-
-            while (child)
+            while (segment)
             {
-                int type = child->Type();
+                nextElementNumber++;
 
-                if (type == TiXmlNode::TEXT)
+                TiXmlAttribute *attr = segment->FirstAttribute();
+                std::string attrName(attr->Name());
+
+                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
+                int indx;
+                int err = attr->QueryIntValue(&indx);
+                ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
+                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
+
+                TiXmlNode* elementChild = segment->FirstChild();
+                while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
                 {
-                    /// Read the text...it should be our index number
-                    nextElementNumber = ::atoi(child->ToText()->Value());
-                }
-                else if (type == TiXmlNode::ELEMENT)
-                {
-                    std::string elementType(child->ValueStr());
-
-                    ASSERTL0(elementType == "S",
-                        (std::string("Unknown 2D element type: ") + elementType).c_str());
-
-                    elementID = nextElementNumber++;
-                    /// Read text element description.
-
-                    TiXmlNode* elementChild = child->FirstChild();
-                    while(elementChild->Type() != TiXmlNode::TEXT)
-                    {
-                        elementChild = elementChild->NextSibling();
-                    }
-
-                    ASSERTL0(elementChild, "Unable to read element description body.");
-                    std::string elementStr = elementChild->ToText()->ValueStr();
-
-                    /// Parse out the element components corresponding to type of element.
-                    if (elementType == "S")
-                    {
-                        // Read two vertex numbers
-                        int vertex1, vertex2;
-                        std::istrstream elementDataStrm(elementStr.c_str());
-
-                        try
-                        {
-                            elementDataStrm >> vertex1;
-                            elementDataStrm >> vertex2;
-
-                            ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for SEGMENT: ") + elementStr).c_str());
-
-                            VertexComponentSharedPtr vertShPtr1 = GetVertex(vertex1);
-                            VertexComponentSharedPtr vertShPtr2 = GetVertex(vertex2);
-
-                            SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(elementID, 
-                                GetVertex(vertex1), GetVertex(vertex2));
-                            m_seggeoms.push_back(seg);                        
-                        }
-                        catch(...)
-                        {
-                            NEKERROR(ErrorUtil::efatal,
-                                (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
-                        }
-                    }
+                    elementChild = elementChild->NextSibling();
                 }
 
-                /// Keep looking
-                child = child->NextSibling();
+                ASSERTL0(elementChild, "Unable to read element description body.");
+                std::string elementStr = elementChild->ToText()->ValueStr();
+
+                /// Parse out the element components corresponding to type of element.
+                /// Read two vertex numbers
+                int vertex1, vertex2;
+                std::istrstream elementDataStrm(elementStr.c_str());
+
+                try
+                {
+                    elementDataStrm >> vertex1;
+                    elementDataStrm >> vertex2;
+
+                    ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for SEGMENT: ") + elementStr).c_str());
+
+                    SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, 
+                        GetVertex(vertex1), GetVertex(vertex2));
+                    m_seggeoms.push_back(seg);                        
+                }
+                catch(...)
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                        (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
+                }
+
+                /// Keep looking for additional segments
+                segment = segment->NextSiblingElement("S");
             }
+
+            ASSERTL0(nextElementNumber >= 0, "At least one element must be specified.");
         }
-
-        //void MeshGraph1D::ReadSegments(TiXmlDocument &doc)
-        //{
-        //    // Read mesh first
-        //    MeshGraph::Read(doc);
-
-        //    TiXmlHandle docHandle(&doc);
-
-        //    TiXmlNode* node = NULL;
-        //    TiXmlElement *element = NULL;
-        //    int err;    /// Error value returned by TinyXML.
-
-        //    /// Look for segments in ELEMENT block.
-        //    element = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").FirstChildElement("ELEMENT").Element();
-
-        //    ASSERTL0(element, "Unable to find ELEMENT tag in file.");
-        //    TiXmlAttribute *attr = element->FirstAttribute();
-        //    int numSegments = -1;
-
-        //    while (attr)
-        //    {
-        //        std::string attrName(attr->Name());
-        //        if (attrName == "NUMBER")
-        //        {
-        //            err = attr->QueryIntValue(&numSegments);
-        //            if (err)
-        //            {
-        //                numSegments = -1;
-        //            }
-        //        }
-        //        // Get the next attribute.  Shouldn't be any more, but just in case.
-        //        attr = attr->Next();
-        //    }
-
-        //    ASSERTL0(numSegments > 0, "Unable to read NUMBER attribute value.");
-        //    int indx = -1;
-
-        //    node = element->FirstChild();
-        //    for (int i=0; i<numSegments; ++i)
-        //    {
-        //        /// First read index number
-        //        /// Then read tagged element
-
-        //        int nodeType = node->Type();
-        //        if (nodeType == TiXmlNode::TEXT)
-        //        {
-        //            // Read index number
-        //            indx = atoi(node->ToText()->Value());
-        //            --i; // Don't count the index
-        //        }
-        //        else if (nodeType == TiXmlNode::COMMENT)
-        //        {
-        //            --numSegments; /// Leave it pointing where it is and skip it.
-        //        }
-        //        else if (nodeType == TiXmlNode::ELEMENT)
-        //        {
-        //            /// All segments are embedded in <S></S> tags.
-        //            TiXmlElement* segment = element->FirstChildElement();
-        //            if (std::string(segment->Value())!= "S")
-        //            {
-        //                NEKERROR(ErrorUtil::ewarning,(std::string("Element type not allowed: ") +
-        //                    segment->Value()).c_str());
-        //            }
-        //            else
-        //            {
-        //                //// Get the entire data block then go through it one piece at a time.
-        //                std::string segmentData;
-
-        //                // Look through all immediate children and
-        //                // accumulate all text (type TEXT).  This is just
-        //                // in case it is broken up by other tagged
-        //                // elements.  Using element->GetText() will not
-        //                // work if text contains XML comments, for
-        //                // example.
-        //                TiXmlNode *child = node->FirstChild();
-        //                while(child)
-        //                {
-        //                    if (child->Type() == TiXmlNode::TEXT)
-        //                    {
-        //                        segmentData += child->ToText()->Value();
-        //                        segmentData += " "; // Don't jam together.
-        //                    }
-        //                    child = child->NextSibling();
-        //                }
-
-        //                // Get segment data from the data string.
-        //                int vertex1, vertex2;
-        //                std::istrstream vertexDataStrm(segmentData.c_str());
-
-        //                try
-        //                {
-        //                    vertexDataStrm >> vertex1 >> vertex2;
-
-        //                    ASSERTL0(!vertexDataStrm.fail(), 
-        //                        (std::string("Unable to read segment data: ")
-        //                        + std::string(segmentData) + ".").c_str());
-
-        //                    SegGeomSharedPtr seg(new SegGeom(indx, 
-        //                        GetVertex(vertex1), GetVertex(vertex2)));
-        //                    m_seggeoms.push_back(seg);
-        //                }
-        //                catch(...)
-        //                {
-        //                    NEKERROR(ErrorUtil::efatal, (std::string("Unable to read segment data: "
-        //                        + segmentData + ".").c_str()));
-        //                }
-
-        //                indx = -1;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            ASSERTL1(false, "Unknown node type.");
-        //        }
-
-        //        node = node->NextSibling();
-        //    }
-        //}
 
         void MeshGraph1D::ReadComposites(TiXmlDocument &doc)
         {
@@ -306,92 +171,86 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find COMPOSITE tag in file.");
 
-            TiXmlAttribute *attr = field->FirstAttribute();
-            int nextCompositeNumber = 0;
+            TiXmlElement *node = field->FirstChildElement("C");
 
-            /// All elements are of the form: "ID <C ID="#"> ... </?>", with
-            /// ? being the element type.
+            // Sequential counter for the composite numbers.
+            int nextCompositeNumber = -1;
 
-            /// Read the ID field first.
-            TiXmlNode *child = field->FirstChild();
-
-            while (child)
+            while (node)
             {
-                int type = child->Type();
+                /// All elements are of the form: "<? ID="#"> ... </?>", with
+                /// ? being the element type.
 
-                if (type == TiXmlNode::TEXT)
+                nextCompositeNumber++;
+
+                TiXmlAttribute *attr = node->FirstAttribute();
+                std::string attrName(attr->Name());
+
+                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
+                int indx;
+                int err = attr->QueryIntValue(&indx);
+                ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
+                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
+
+                TiXmlNode* compositeChild = node->FirstChild();
+                // This is primarily to skip comments that may be present.
+                // Comments appear as nodes just like elements.
+                // We are specifically looking for text in the body
+                // of the definition.
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
                 {
-                    /// Read the text...it should be our index number
-                    int indx = ::atoi(child->ToText()->Value());
-#pragma message("Fix this")
-                    ASSERTL0(indx == nextCompositeNumber, "");
-                    ++nextCompositeNumber;
+                    compositeChild = compositeChild->NextSibling();
                 }
-                else if (type == TiXmlNode::ELEMENT)// XML element, not mesh element
+
+                ASSERTL0(compositeChild, "Unable to read composite definition body.");
+                std::string compositeStr = compositeChild->ToText()->ValueStr();
+
+                /// Parse out the element components corresponding to type of element.
+
+                std::istrstream compositeDataStrm(compositeStr.c_str());
+
+                try
                 {
-                    std::string elementType(child->ValueStr());
+                    bool first = true;
+                    std::string prevCompositeElementStr;
 
-                    ASSERTL0(elementType == "C",
-                        (std::string("Unknown XML tag in COMPOSITE definition: ") + elementType).c_str());
-
-                    /// Read text element description.
-
-                    TiXmlNode* compositeChild = child->FirstChild();
-                    // This is primarily to skip comments that may be present.
-                    // Comments appear as nodes just like elements.
-                    // We are specifically looking for text in the body
-                    // of the definition.
-                    while(compositeChild->Type() != TiXmlNode::TEXT)
+                    while (!compositeDataStrm.fail())
                     {
-                        compositeChild = compositeChild->NextSibling();
-                    }
+                        std::string compositeElementStr;
+                        compositeDataStrm >> compositeElementStr;
 
-                    ASSERTL0(compositeChild, "Unable to read composite description body.");
-                    std::string compositeStr = compositeChild->ToText()->ValueStr();
-
-                    /// Parse out the element components corresponding to type of element.
-
-                    std::istrstream compositeDataStrm(compositeStr.c_str());
-
-                    try
-                    {
-                        bool first = true;
-                        std::string prevCompositeElementStr;
-
-                        while (!compositeDataStrm.fail())
+                        if (!compositeDataStrm.fail())
                         {
-                            std::string compositeElementStr;
-                            compositeDataStrm >> compositeElementStr;
-
-                            if (!compositeDataStrm.fail())
+                            if (first)
                             {
-                                if (first)
-                                {
-                                    first = false;
+                                first = false;
 
-                                    Composite curVector(new std::vector<GeometrySharedPtr>);
-                                    m_MeshCompositeVector.push_back(curVector);
-                                }
-
-                                if (compositeElementStr.length() > 0)
-                                {
-                                    ResolveGeomRef(prevCompositeElementStr, compositeElementStr);
-                                }
-                                prevCompositeElementStr = compositeElementStr;
+                                Composite curVector(new std::vector<GeometrySharedPtr>);
+                                m_MeshCompositeVector.push_back(curVector);
                             }
+
+                            if (compositeElementStr.length() > 0)
+                            {
+                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr);
+                            }
+                            prevCompositeElementStr = compositeElementStr;
                         }
                     }
-                    catch(...)
-                    {
-                        NEKERROR(ErrorUtil::efatal,
-                            (std::string("Unable to read COMPOSITE data for composite: ") + compositeStr).c_str());
-                    }
                 }
-
-                /// Keep looking
-                child = child->NextSibling();
+                catch(...)
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                        (std::string("Unable to read COMPOSITE data for composite: ") + compositeStr).c_str());
+                }
+                
+                /// Keep looking for additional composite definitions.
+                node = node->NextSiblingElement("C");
             }
+
+            ASSERTL0(nextCompositeNumber >= 0, "At least one composite must be specified.");
         }
+
+
         // Take the string that is the composite reference and find the
         // pointer to the Geometry object corresponding to it.
 
@@ -488,6 +347,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.9  2007/06/07 23:55:24  jfrazier
+// Intermediate revisions to add parsing for boundary conditions file.
+//
 // Revision 1.8  2007/03/14 21:24:08  sherwin
 // Update for working version of MultiRegions up to ExpList1D
 //

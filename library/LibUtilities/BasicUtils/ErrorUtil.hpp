@@ -80,6 +80,11 @@ namespace ErrorUtil
                     std::cerr << "Unknown warning type" << std::endl;
             }
         }
+        
+        static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
+        {
+            Error(type, routine, lineNumber, msg, 0);
+        }
     #endif // ENABLE_NEKTAR_EXCEPTION
     
     // This method is necessary for ASSERTLX when the message is passed in as a std::string object.
@@ -141,6 +146,9 @@ namespace ErrorUtil
 
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.6  2007/06/06 04:57:21  bnelson
+Removed all printing to the console when error reporting is done via exceptions.  This makes it easier to see errors in the UnitTests.
+
 Revision 1.5  2007/05/27 18:28:23  bnelson
 *** empty log message ***
 

@@ -38,7 +38,7 @@
 #ifndef NEKTAR_LIB_UTILTIES_BASIC_UTILS_BINARY_EXPRESSION_TRAITS_HPP
 #define NEKTAR_LIB_UTILTIES_BASIC_UTILS_BINARY_EXPRESSION_TRAITS_HPP
 
-namespace NektarTemp
+namespace Nektar
 {
     class AddOp {};
     class SubtractOp {};

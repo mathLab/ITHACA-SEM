@@ -510,7 +510,7 @@ namespace Nektar
             {
             }
             
-            Array(unsigned int dim1Size) :
+            explicit Array(unsigned int dim1Size) :
                 BaseType(dim1Size)
             {
             }

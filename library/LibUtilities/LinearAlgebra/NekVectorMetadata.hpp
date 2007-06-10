@@ -41,61 +41,64 @@
 
 namespace Nektar
 {
-    // Interface for expression templates.
-    class NekVectorMetadata
-    {
-        public:
-            template<typename VectorType>
-            explicit NekVectorMetadata(const VectorType& vec) :
-                Rows(vec.GetDimension())
-            {
-            }
-
-            NekVectorMetadata(const NekVectorMetadata& rhs) :
-                Rows(rhs.Rows)
-            {
-            }
-
-            static NekVectorMetadata CreateForNegation(const NekVectorMetadata& rhs)
-            {
-                return NekVectorMetadata(rhs);
-            }
-
-            static NekVectorMetadata CreateForAddition(const NekVectorMetadata& lhs, const NekVectorMetadata& rhs)
-            {
-                ASSERTL1(lhs.Rows == rhs.Rows, "Vector dimensions must agree in operator+");
-                return NekVectorMetadata(lhs);
-            }
-
-            static NekVectorMetadata CreateForMultiplication(const NekMatrixMetadata& lhs, const NekVectorMetadata& rhs)
-            {
-                ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree in operator*");
-                NekVectorMetadata result;
-                result.Rows = lhs.Rows;
-                return result;
-            }
-
-
-            NekVectorMetadata& operator=(const NekVectorMetadata& rhs)
-            {
-                Rows = rhs.Rows;
-                return *this;
-            }
-
-            unsigned int Rows;
-
-        private:
-            NekVectorMetadata() :
-                Rows(0)
-            {
-            }
-    };
+//     // Interface for expression templates.
+//     class NekVectorMetadata
+//     {
+//         public:
+//             template<typename VectorType>
+//             explicit NekVectorMetadata(const VectorType& vec) :
+//                 Rows(vec.GetDimension())
+//             {
+//             }
+// 
+//             NekVectorMetadata(const NekVectorMetadata& rhs) :
+//                 Rows(rhs.Rows)
+//             {
+//             }
+// 
+//             static NekVectorMetadata CreateForNegation(const NekVectorMetadata& rhs)
+//             {
+//                 return NekVectorMetadata(rhs);
+//             }
+// 
+//             static NekVectorMetadata CreateForAddition(const NekVectorMetadata& lhs, const NekVectorMetadata& rhs)
+//             {
+//                 ASSERTL1(lhs.Rows == rhs.Rows, "Vector dimensions must agree in operator+");
+//                 return NekVectorMetadata(lhs);
+//             }
+// 
+//             static NekVectorMetadata CreateForMultiplication(const NekMatrixMetadata& lhs, const NekVectorMetadata& rhs)
+//             {
+//                 ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree in operator*");
+//                 NekVectorMetadata result;
+//                 result.Rows = lhs.Rows;
+//                 return result;
+//             }
+// 
+// 
+//             NekVectorMetadata& operator=(const NekVectorMetadata& rhs)
+//             {
+//                 Rows = rhs.Rows;
+//                 return *this;
+//             }
+// 
+//             unsigned int Rows;
+// 
+//         private:
+//             NekVectorMetadata() :
+//                 Rows(0)
+//             {
+//             }
+//     };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_VECTOR_METADATA_HPP
 
 /**
     $Log: NekVectorMetadata.hpp,v $
+    Revision 1.2  2006/09/30 15:18:37  bnelson
+    no message
+
     Revision 1.1  2006/09/14 02:06:17  bnelson
     Fixed gcc compiler errors.
 

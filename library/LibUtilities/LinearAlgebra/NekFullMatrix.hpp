@@ -56,165 +56,165 @@
 
 namespace Nektar
 {
-    template<typename DataType>
-    class NekMatrixStoragePolicy<DataType, eFull> 
-    {
-        public: 
-            static void Transpose(unsigned int& rows, unsigned int& columns,
-                                  Array<OneD, DataType>& data)
-            {
-                Array<OneD, DataType> temp(data.GetSize());
-
-                for(unsigned int row = 0; row < rows; ++row)
-                {
-                    for(unsigned int column = 0; column < columns; ++column)
-                    {
-                        unsigned int firstIndex = CalculateIndex(row, column, rows, columns);
-                        unsigned int secondIndex = CalculateIndex(column, row, columns, rows);
-
-                        temp[secondIndex] = data[firstIndex];
-                    }
-                }
-
-                std::swap(rows, columns);
-                std::swap(data, temp);
-            }
-
-
-            static typename boost::call_traits<DataType>::reference GetData(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns,
-                                                                            Array<OneD, DataType>& data)
-            {
-                return data[CalculateIndex(row, column, matrixRows, matrixColumns)];
-            }
-
-            static typename boost::call_traits<DataType>::const_reference GetConstData(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns,
-                                                                            const ConstArray<OneD, DataType>& data)
-            {
-                return data[CalculateIndex(row, column, matrixRows, matrixColumns)];
-            }
-
-            static unsigned int CalculateIndex(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns)
-            {
-                return row*matrixColumns + column;
-            }
-
-            static unsigned int NumStorageElements(unsigned int rows, unsigned int cols)
-            {
-                return rows*cols;
-            }
-
-            static void Invert(unsigned int rows, unsigned int columns, Array<OneD, DataType>& data)
-            {
-#ifdef NEKTAR_USING_LAPACK
-                ASSERTL0(rows == columns, "Matrix Inversion only works for square arrays.");
-
-                /// Incoming data is row major, make it column major for lapack calls.
-                Transpose(rows, columns, data);
-
-                int m = rows;
-                int n = columns;
-                int pivotSize = std::max(1, std::min(m, n));
-
-                Array<OneD, int> ipivot(pivotSize);
-                int info = 0;
-                Lapack::Dgetrf(m, n, data.get(), m, ipivot.get(), info);
-
-                if( info < 0 )
-                {
-                    std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + 
-                            "th parameter had an illegal parameter for dgetrf";
-                    ASSERTL0(false, message.c_str());
-                }
-                else if( info > 0 )
-                {
-                    std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
-                            boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
-                    ASSERTL0(false, message.c_str());
-                }
-
-                unsigned int workSize = 64*n;
-
-                Array<OneD, NekDouble> work(workSize);
-                Lapack::Dgetri(n, data.get(), n, ipivot.get(), work.get(), workSize, info);
-
-                if( info < 0 )
-                {
-                    std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + 
-                            "th parameter had an illegal parameter for dgetri";
-                    ASSERTL0(false, message.c_str());
-                }
-                else if( info > 0 )
-                {
-                    std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
-                            boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
-                    ASSERTL0(false, message.c_str());
-                }
-
-                // Put it back to row major form.
-                Transpose(rows, columns, data);
-
-#else
-                // TODO
-                BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
-#endif //NEKTAR_USING_LAPACK
-
-            }
-
-            static void Factorize(unsigned int rows, unsigned int columns, Array<OneD, DataType>& data)
-            {
-
-            }
-
-        private:
-            
-    };
-
-    template<typename DataType>
-    class NekMatrixArithmeticPolicy<DataType, eFull>
-    {
-        public:
-            template<MatrixBlockType BlockType, unsigned int space>
-            static void PlusEqual(NekMatrix<DataType, eFull, BlockType, space>& lhs, 
-                                  const NekMatrix<DataType, eFull, BlockType, space>& rhs)
-            {
-                ASSERTL0(lhs.GetRows() == rhs.GetRows() && lhs.GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+=");
-                typename NekMatrix<DataType, eFull, BlockType, space>::iterator lhs_data = lhs.begin();
-                typename NekMatrix<DataType, eFull, BlockType, space>::const_iterator rhs_data = rhs.begin();                
-
-                for( ; lhs_data < lhs.end(); ++lhs_data, ++rhs_data )
-                {
-                    *lhs_data += *rhs_data;
-                }
-            }
-
-            template<MatrixBlockType BlockType, unsigned int space>
-            static void PlusEqual(NekMatrix<DataType, eFull, BlockType, space>& lhs, 
-                                  const NekMatrix<DataType, eDiagonal, BlockType, space>& rhs)
-            {
-                ASSERTL0(lhs.GetRows() == rhs.GetRows() && lhs.GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+=");
-
-                for(unsigned int i = 0; i < lhs.GetRows(); ++i)
-                {
-                    lhs(i,i) += rhs(i,i);
-                }
-            }
-    };
-
-    template<typename DataType>
-    class NekMatrixAssignmentPolicy<DataType, eFull>
-    {
-        public:
-            template<MatrixBlockType BlockType, unsigned int space>
-            static void Assign(NekMatrix<DataType, eFull, BlockType, space>& lhs, 
-                               const NekMatrix<DataType, eDiagonal, BlockType, space>& rhs)
-            {
-                lhs = NekMatrix<DataType, eFull, BlockType, space>(rhs.GetRows(), rhs.GetColumns(), DataType(0));
-                for(unsigned int i = 0; i < rhs.GetRows(); ++i)
-                {
-                    lhs(i,i) = rhs(i,i);
-                }
-            }
-    };
+//     template<typename DataType>
+//     class NekMatrixStoragePolicy<DataType, FullMatrixTag> 
+//     {
+//         public: 
+//             static void Transpose(unsigned int& rows, unsigned int& columns,
+//                                   Array<OneD, DataType>& data)
+//             {
+//                 Array<OneD, DataType> temp(data.GetSize());
+// 
+//                 for(unsigned int row = 0; row < rows; ++row)
+//                 {
+//                     for(unsigned int column = 0; column < columns; ++column)
+//                     {
+//                         unsigned int firstIndex = CalculateIndex(row, column, rows, columns);
+//                         unsigned int secondIndex = CalculateIndex(column, row, columns, rows);
+// 
+//                         temp[secondIndex] = data[firstIndex];
+//                     }
+//                 }
+// 
+//                 std::swap(rows, columns);
+//                 std::swap(data, temp);
+//             }
+// 
+// 
+//             static typename boost::call_traits<DataType>::reference GetData(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns,
+//                                                                             Array<OneD, DataType>& data)
+//             {
+//                 return data[CalculateIndex(row, column, matrixRows, matrixColumns)];
+//             }
+// 
+//             static typename boost::call_traits<DataType>::const_reference GetConstData(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns,
+//                                                                             const ConstArray<OneD, DataType>& data)
+//             {
+//                 return data[CalculateIndex(row, column, matrixRows, matrixColumns)];
+//             }
+// 
+//             static unsigned int CalculateIndex(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns)
+//             {
+//                 return row*matrixColumns + column;
+//             }
+// 
+//             static unsigned int NumStorageElements(unsigned int rows, unsigned int cols)
+//             {
+//                 return rows*cols;
+//             }
+// 
+//             static void Invert(unsigned int rows, unsigned int columns, Array<OneD, DataType>& data)
+//             {
+// #ifdef NEKTAR_USING_LAPACK
+//                 ASSERTL0(rows == columns, "Matrix Inversion only works for square arrays.");
+// 
+//                 /// Incoming data is row major, make it column major for lapack calls.
+//                 Transpose(rows, columns, data);
+// 
+//                 int m = rows;
+//                 int n = columns;
+//                 int pivotSize = std::max(1, std::min(m, n));
+// 
+//                 Array<OneD, int> ipivot(pivotSize);
+//                 int info = 0;
+//                 Lapack::Dgetrf(m, n, data.get(), m, ipivot.get(), info);
+// 
+//                 if( info < 0 )
+//                 {
+//                     std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + 
+//                             "th parameter had an illegal parameter for dgetrf";
+//                     ASSERTL0(false, message.c_str());
+//                 }
+//                 else if( info > 0 )
+//                 {
+//                     std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
+//                             boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
+//                     ASSERTL0(false, message.c_str());
+//                 }
+// 
+//                 unsigned int workSize = 64*n;
+// 
+//                 Array<OneD, NekDouble> work(workSize);
+//                 Lapack::Dgetri(n, data.get(), n, ipivot.get(), work.get(), workSize, info);
+// 
+//                 if( info < 0 )
+//                 {
+//                     std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + 
+//                             "th parameter had an illegal parameter for dgetri";
+//                     ASSERTL0(false, message.c_str());
+//                 }
+//                 else if( info > 0 )
+//                 {
+//                     std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
+//                             boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
+//                     ASSERTL0(false, message.c_str());
+//                 }
+// 
+//                 // Put it back to row major form.
+//                 Transpose(rows, columns, data);
+// 
+// #else
+//                 // TODO
+//                 BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
+// #endif //NEKTAR_USING_LAPACK
+// 
+//             }
+// 
+//             static void Factorize(unsigned int rows, unsigned int columns, Array<OneD, DataType>& data)
+//             {
+// 
+//             }
+// 
+//         private:
+//             
+//     };
+// 
+//     template<typename DataType>
+//     class NekMatrixArithmeticPolicy<DataType, FullMatrixTag>
+//     {
+//         public:
+//             template<MatrixBlockType BlockType, unsigned int space>
+//             static void PlusEqual(NekMatrix<DataType, FullMatrixTag, BlockType, space>& lhs, 
+//                                   const NekMatrix<DataType, FullMatrixTag, BlockType, space>& rhs)
+//             {
+//                 ASSERTL0(lhs.GetRows() == rhs.GetRows() && lhs.GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+=");
+//                 typename NekMatrix<DataType, FullMatrixTag, BlockType, space>::iterator lhs_data = lhs.begin();
+//                 typename NekMatrix<DataType, FullMatrixTag, BlockType, space>::const_iterator rhs_data = rhs.begin();                
+// 
+//                 for( ; lhs_data < lhs.end(); ++lhs_data, ++rhs_data )
+//                 {
+//                     *lhs_data += *rhs_data;
+//                 }
+//             }
+// 
+//             template<MatrixBlockType BlockType, unsigned int space>
+//             static void PlusEqual(NekMatrix<DataType, FullMatrixTag, BlockType, space>& lhs, 
+//                                   const NekMatrix<DataType, DiagonalMatrixTag, BlockType, space>& rhs)
+//             {
+//                 ASSERTL0(lhs.GetRows() == rhs.GetRows() && lhs.GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+=");
+// 
+//                 for(unsigned int i = 0; i < lhs.GetRows(); ++i)
+//                 {
+//                     lhs(i,i) += rhs(i,i);
+//                 }
+//             }
+//     };
+// 
+//     template<typename DataType>
+//     class NekMatrixAssignmentPolicy<DataType, FullMatrixTag>
+//     {
+//         public:
+//             template<MatrixBlockType BlockType, unsigned int space>
+//             static void Assign(NekMatrix<DataType, FullMatrixTag, BlockType, space>& lhs, 
+//                                const NekMatrix<DataType, DiagonalMatrixTag, BlockType, space>& rhs)
+//             {
+//                 lhs = NekMatrix<DataType, FullMatrixTag, BlockType, space>(rhs.GetRows(), rhs.GetColumns(), DataType(0));
+//                 for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+//                 {
+//                     lhs(i,i) = rhs(i,i);
+//                 }
+//             }
+//     };
 
 }
 
@@ -222,6 +222,9 @@ namespace Nektar
 
 /**
     $Log: NekFullMatrix.hpp,v $
+    Revision 1.15  2007/05/15 00:14:10  bnelson
+    Updated to use the new Array object.
+
     Revision 1.14  2007/04/21 04:09:43  bnelson
     *** empty log message ***
 

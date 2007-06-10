@@ -53,15 +53,15 @@ namespace Nektar
 {
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-    namespace expt
-    {
-        template<typename DataType, unsigned int dim, unsigned int space>
-        class ExpressionTraits<NekVector<DataType, dim, space> >
-        {
-            public:
-                typedef NekVectorMetadata MetadataType;
-        };
-    }
+//     namespace expt
+//     {
+//         template<typename DataType, unsigned int dim, unsigned int space>
+//         class ExpressionTraits<NekVector<DataType, dim, space> >
+//         {
+//             public:
+//                 typedef NekVectorMetadata MetadataType;
+//         };
+//     }
 #endif
 
     template<typename DataType, unsigned int dim, unsigned int space>
@@ -143,21 +143,21 @@ namespace Nektar
     }
 
 
-    template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, unsigned int space, unsigned int dim>
-    NekVector<DataType, dim, space> operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs,
-                                              const NekVector<DataType, dim, space>& rhs)
-    {
-        NekVector<DataType, dim, space> result(lhs.GetRows(), DataType(0));
-        for(unsigned int i = 0; i < result.GetRows(); ++i)
-        {
-            for(unsigned int j = 0; j < lhs.GetColumns(); ++j)
-            {
-                result[i] += lhs(i,j)*rhs(j);
-            }
-        }
-
-        return result;
-    }
+//     template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, unsigned int space, unsigned int dim>
+//     NekVector<DataType, dim, space> operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs,
+//                                               const NekVector<DataType, dim, space>& rhs)
+//     {
+//         NekVector<DataType, dim, space> result(lhs.GetRows(), DataType(0));
+//         for(unsigned int i = 0; i < result.GetRows(); ++i)
+//         {
+//             for(unsigned int j = 0; j < lhs.GetColumns(); ++j)
+//             {
+//                 result[i] += lhs(i,j)*rhs(j);
+//             }
+//         }
+// 
+//         return result;
+//     }
 
 //#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 //    template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, unsigned int space, unsigned int dim>
@@ -211,6 +211,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.17  2007/04/05 05:12:45  bnelson
+    *** empty log message ***
+
     Revision 1.16  2007/02/15 06:56:55  bnelson
     *** empty log message ***
 

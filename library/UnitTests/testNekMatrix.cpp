@@ -35,7 +35,6 @@
 
 #include <UnitTests/testNekMatrix.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -45,12 +44,347 @@
 
 namespace Nektar
 {
-    //template class NekMatrix<double, eFull>;
+    namespace MatrixUnitTests
+    {
+        
+        
+        void TestNekMatrixConstruction()
+        {
+            {
+                boost::shared_ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double>(3,4));
+                boost::shared_ptr<Nektar::NekMatrix<double> > b(new Nektar::NekMatrix<double>(5,6));
+                
+                BOOST_CHECK_EQUAL(a->GetRows(), 3);
+                BOOST_CHECK_EQUAL(a->GetColumns(), 4);
+                BOOST_CHECK_EQUAL(a->GetSize()[0], 3);
+                BOOST_CHECK_EQUAL(a->GetSize()[1], 4);
+                
+                BOOST_CHECK_EQUAL(b->GetRows(), 5);
+                BOOST_CHECK_EQUAL(b->GetColumns(), 6);
+                BOOST_CHECK_EQUAL(b->GetSize()[0], 5);
+                BOOST_CHECK_EQUAL(b->GetSize()[1], 6);
+                
+                BOOST_CHECK_EQUAL(a->GetStorageType(), eFULL);
+                BOOST_CHECK_EQUAL(b->GetStorageType(), eFULL);
+                
+                BOOST_CHECK_EQUAL(a->GetStorageSize(), 3*4);
+                BOOST_CHECK_EQUAL(b->GetStorageSize(), 5*6);
+            }
+            
+            {
+                boost::shared_ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3,3));
+                boost::shared_ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > b(new Nektar::NekMatrix<double, DiagonalMatrixTag>(5,5));
+                
+                BOOST_CHECK_EQUAL(a->GetRows(), 3);
+                BOOST_CHECK_EQUAL(a->GetColumns(), 3);
+                BOOST_CHECK_EQUAL(a->GetSize()[0], 3);
+                BOOST_CHECK_EQUAL(a->GetSize()[1], 3);
+                
+                BOOST_CHECK_EQUAL(b->GetRows(), 5);
+                BOOST_CHECK_EQUAL(b->GetColumns(), 5);
+                BOOST_CHECK_EQUAL(b->GetSize()[0], 5);
+                BOOST_CHECK_EQUAL(b->GetSize()[1], 5);
+                
+                BOOST_CHECK_EQUAL(a->GetStorageType(), eDIAGONAL);
+                BOOST_CHECK_EQUAL(b->GetStorageType(), eDIAGONAL);
+                
+                BOOST_CHECK_EQUAL(a->GetStorageSize(), 3);
+                BOOST_CHECK_EQUAL(b->GetStorageSize(), 5);
+            }
+        }
+        
+        void TestFullNekMatrixGetValue()
+        {
+            double data[] = {1.0, 2.0, 3.0,
+                             89.0, -12.3, -56.7,
+                             0.0, 892.2532, 211.22,
+                             45.12, 76.12, 45.23};
+            Nektar::NekMatrix<double> m(4, 3, data);
+            
+            BOOST_CHECK_EQUAL( m(0,0), 1.0 );
+            BOOST_CHECK_EQUAL( m(0,1), 2.0 );
+            BOOST_CHECK_EQUAL( m(0,2), 3.0 );
+            
+            BOOST_CHECK_EQUAL( m(1,0), 89.0 );
+            BOOST_CHECK_EQUAL( m(1,1), -12.3 );
+            BOOST_CHECK_EQUAL( m(1,2), -56.7 );
+            
+            BOOST_CHECK_EQUAL( m(2,0), 0.0 );
+            BOOST_CHECK_EQUAL( m(2,1), 892.2532 );
+            BOOST_CHECK_EQUAL( m(2,2), 211.22 );
+            
+            BOOST_CHECK_EQUAL( m(3,0), 45.12 );
+            BOOST_CHECK_EQUAL( m(3,1), 76.12 );
+            BOOST_CHECK_EQUAL( m(3,2), 45.23 );
+            
+            #ifdef NEKTAR_FULLDEBUG
+            BOOST_CHECK_THROW( m(0,3), ErrorUtil::NekError);
+            BOOST_CHECK_THROW( m(4,1), ErrorUtil::NekError);
+            BOOST_CHECK_THROW( m(4,3), ErrorUtil::NekError);
+            #endif //NEKTAR_FULLDEBUG
+            
+            boost::shared_ptr<Nektar::Matrix<double> > m1(new Nektar::NekMatrix<double>(4, 3, data));
+            boost::shared_ptr<Nektar::NekMatrix<double> > m2(new Nektar::NekMatrix<double>(4, 3, data));
+            
+            BOOST_CHECK_EQUAL( (*m1)(0,0), 1.0 );
+            BOOST_CHECK_EQUAL( (*m1)(0,1), 2.0 );
+            BOOST_CHECK_EQUAL( (*m1)(0,2), 3.0 );
+            
+            BOOST_CHECK_EQUAL( (*m1)(1,0), 89.0 );
+            BOOST_CHECK_EQUAL( (*m1)(1,1), -12.3 );
+            BOOST_CHECK_EQUAL( (*m1)(1,2), -56.7 );
+            
+            BOOST_CHECK_EQUAL( (*m1)(2,0), 0.0 );
+            BOOST_CHECK_EQUAL( (*m1)(2,1), 892.2532 );
+            BOOST_CHECK_EQUAL( (*m1)(2,2), 211.22 );
+            
+            BOOST_CHECK_EQUAL( (*m1)(3,0), 45.12 );
+            BOOST_CHECK_EQUAL( (*m1)(3,1), 76.12 );
+            BOOST_CHECK_EQUAL( (*m1)(3,2), 45.23 );
+            
+            #ifdef NEKTAR_FULLDEBUG
+            BOOST_CHECK_THROW( (*m1)(0,3), ErrorUtil::NekError);
+            BOOST_CHECK_THROW( (*m1)(4,1), ErrorUtil::NekError);
+            BOOST_CHECK_THROW( (*m1)(4,3), ErrorUtil::NekError);
+            #endif //NEKTAR_FULLDEBUG
+            
+            BOOST_CHECK_EQUAL( (*m2)(0,0), 1.0 );
+            BOOST_CHECK_EQUAL( (*m2)(0,1), 2.0 );
+            BOOST_CHECK_EQUAL( (*m2)(0,2), 3.0 );
+            
+            BOOST_CHECK_EQUAL( (*m2)(1,0), 89.0 );
+            BOOST_CHECK_EQUAL( (*m2)(1,1), -12.3 );
+            BOOST_CHECK_EQUAL( (*m2)(1,2), -56.7 );
+            
+            BOOST_CHECK_EQUAL( (*m2)(2,0), 0.0 );
+            BOOST_CHECK_EQUAL( (*m2)(2,1), 892.2532 );
+            BOOST_CHECK_EQUAL( (*m2)(2,2), 211.22 );
+            
+            BOOST_CHECK_EQUAL( (*m2)(3,0), 45.12 );
+            BOOST_CHECK_EQUAL( (*m2)(3,1), 76.12 );
+            BOOST_CHECK_EQUAL( (*m2)(3,2), 45.23 );
+            
+            #ifdef NEKTAR_FULLDEBUG
+            BOOST_CHECK_THROW( (*m2)(0,3), ErrorUtil::NekError);
+            BOOST_CHECK_THROW( (*m2)(4,1), ErrorUtil::NekError);
+            BOOST_CHECK_THROW( (*m2)(4,3), ErrorUtil::NekError);
+            #endif //NEKTAR_FULLDEBUG
+            
+        }
+        
+        void TestDiagonalMatrixGetValue()
+        {
+            double data[] = {8.9, 3.4, 5.7};
+            Nektar::NekMatrix<double, DiagonalMatrixTag> m1(3, 3, data);
+            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
+            boost::shared_ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > m3(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
+            
+            BOOST_CHECK_EQUAL(m1(0,0), 8.9);
+            BOOST_CHECK_EQUAL((*m2)(0,0), 8.9);
+            BOOST_CHECK_EQUAL((*m3)(0,0), 8.9);
+            
+            BOOST_CHECK_EQUAL(m1(0,1), 0.0);
+            BOOST_CHECK_EQUAL((*m2)(0,1), 0.0);
+            BOOST_CHECK_EQUAL((*m3)(0,1), 0.0);
+            
+            BOOST_CHECK_EQUAL(m1(0,2), 0.0);
+            BOOST_CHECK_EQUAL((*m2)(0,2), 0.0);
+            BOOST_CHECK_EQUAL((*m3)(0,2), 0.0);
+            
+            BOOST_CHECK_EQUAL(m1(1,0), 0.0);
+            BOOST_CHECK_EQUAL((*m2)(1,0), 0.0);
+            BOOST_CHECK_EQUAL((*m3)(1,0), 0.0);
+            
+            BOOST_CHECK_EQUAL(m1(1,1), 3.4);
+            BOOST_CHECK_EQUAL((*m2)(1,1), 3.4);
+            BOOST_CHECK_EQUAL((*m3)(1,1), 3.4);
+            
+            BOOST_CHECK_EQUAL(m1(1,2), 0.0);
+            BOOST_CHECK_EQUAL((*m2)(1,2), 0.0);
+            BOOST_CHECK_EQUAL((*m3)(1,2), 0.0);
+            
+            BOOST_CHECK_EQUAL(m1(2,0), 0.0);
+            BOOST_CHECK_EQUAL((*m2)(2,0), 0.0);
+            BOOST_CHECK_EQUAL((*m3)(2,0), 0.0);
+            
+            BOOST_CHECK_EQUAL(m1(2,1), 0.0);
+            BOOST_CHECK_EQUAL((*m2)(2,1), 0.0);
+            BOOST_CHECK_EQUAL((*m3)(2,1), 0.0);
+            
+            BOOST_CHECK_EQUAL(m1(2,2), 5.7);
+            BOOST_CHECK_EQUAL((*m2)(2,2), 5.7);
+            BOOST_CHECK_EQUAL((*m3)(2,2), 5.7);
+            
+            #ifdef NEKTAR_FULLDEBUG
+            BOOST_CHECK_THROW(m1(0,4), ErrorUtil::NekError);
+            BOOST_CHECK_THROW((*m2)(0,4), ErrorUtil::NekError);
+            BOOST_CHECK_THROW((*m3)(0,4), ErrorUtil::NekError);
+            
+            BOOST_CHECK_THROW(m1(4,0), ErrorUtil::NekError);
+            BOOST_CHECK_THROW((*m2)(4,0), ErrorUtil::NekError);
+            BOOST_CHECK_THROW((*m3)(4,0), ErrorUtil::NekError);
+            
+            BOOST_CHECK_THROW(m1(4,4), ErrorUtil::NekError);
+            BOOST_CHECK_THROW((*m2)(4,4), ErrorUtil::NekError);
+            BOOST_CHECK_THROW((*m3)(4,4), ErrorUtil::NekError);
+            #endif //NEKTAR_FULLDEBUG
+            
+            
+        }
+        
+        void TestFullNekMatrixSetValue()
+        {
+            double data[] = {1.0, 2.0, 
+                             3.0, 4.0,
+                             5.0, 6.0};
+            Nektar::NekMatrix<double> m1(3, 2, data);
+            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double>(3, 2, data));
+            boost::shared_ptr<Nektar::NekMatrix<double> > m3(new Nektar::NekMatrix<double>(3, 2, data));
+            
+            m1.SetValue(0,0,-1.0);
+            m2->SetValue(1,1,-2.0);
+            m3->SetValue(2,1, -3.0);
+            
+            BOOST_CHECK_EQUAL(m1(0,0), -1.0);
+            BOOST_CHECK_EQUAL(m1(0,1), 2.0);
+            BOOST_CHECK_EQUAL(m1(1,0), 3.0);
+            BOOST_CHECK_EQUAL(m1(1,1), 4.0);
+            BOOST_CHECK_EQUAL(m1(2,0), 5.0);
+            BOOST_CHECK_EQUAL(m1(2,1), 6.0);
+            
+            BOOST_CHECK_EQUAL((*m2)(0,0), 1.0);
+            BOOST_CHECK_EQUAL((*m2)(0,1), 2.0);
+            BOOST_CHECK_EQUAL((*m2)(1,0), 3.0);
+            BOOST_CHECK_EQUAL((*m2)(1,1), -2.0);
+            BOOST_CHECK_EQUAL((*m2)(2,0), 5.0);
+            BOOST_CHECK_EQUAL((*m2)(2,1), 6.0);
+            
+            BOOST_CHECK_EQUAL((*m3)(0,0), 1.0);
+            BOOST_CHECK_EQUAL((*m3)(0,1), 2.0);
+            BOOST_CHECK_EQUAL((*m3)(1,0), 3.0);
+            BOOST_CHECK_EQUAL((*m3)(1,1), 4.0);
+            BOOST_CHECK_EQUAL((*m3)(2,0), 5.0);
+            BOOST_CHECK_EQUAL((*m3)(2,1), -3.0);
+        }
+        
+        void TestDiagonalNekMatrixSetValue()
+        {
+            double data[] = {8.9, 3.4, 5.7};
+            Nektar::NekMatrix<double, DiagonalMatrixTag> m1(3, 3, data);
+            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
+            boost::shared_ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > m3(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
+            
+            m1.SetValue(0,0,1.0);
+            m2->SetValue(1,1,2.0);
+            m3->SetValue(2,2,3.0);
+            
+            BOOST_CHECK_EQUAL(m1.GetStorageType(), eDIAGONAL);
+            BOOST_CHECK_EQUAL(m2->GetStorageType(), eDIAGONAL);
+            BOOST_CHECK_EQUAL(m3->GetStorageType(), eDIAGONAL);
+            
+            BOOST_CHECK_EQUAL(m1(0,0), 1.0);
+            BOOST_CHECK_EQUAL(m1(1,1), 3.4);
+            BOOST_CHECK_EQUAL(m1(2,2), 5.7);
+            
+            BOOST_CHECK_EQUAL((*m2)(0,0), 8.9);
+            BOOST_CHECK_EQUAL((*m2)(1,1), 2.0);
+            BOOST_CHECK_EQUAL((*m2)(2,2), 5.7);
+            
+            BOOST_CHECK_EQUAL((*m3)(0,0), 8.9);
+            BOOST_CHECK_EQUAL((*m3)(1,1), 3.4);
+            BOOST_CHECK_EQUAL((*m3)(2,2), 3.0);
+            
+            #ifdef NEKTAR_FULLDEBUG
+            BOOST_CHECK_THROW(m1.SetValue(0,3,2.0), ErrorUtil::NekError);
+            BOOST_CHECK_THROW(m1.SetValue(3,0,2.0), ErrorUtil::NekError);
+            BOOST_CHECK_THROW(m1.SetValue(3,3,2.0), ErrorUtil::NekError);
+            
+            BOOST_CHECK_THROW(m2->SetValue(0,3,2.0), ErrorUtil::NekError);
+            BOOST_CHECK_THROW(m2->SetValue(3,0,2.0), ErrorUtil::NekError);
+            BOOST_CHECK_THROW(m2->SetValue(3,3,2.0), ErrorUtil::NekError);
+            
+            BOOST_CHECK_THROW(m3->SetValue(0,3,2.0), ErrorUtil::NekError);
+            BOOST_CHECK_THROW(m3->SetValue(3,0,2.0), ErrorUtil::NekError);
+            BOOST_CHECK_THROW(m3->SetValue(3,3,2.0), ErrorUtil::NekError);
+            #endif //NEKTAR_FULLDEBUG
+        }
+        
+        
+        
+        void TestFullFullMatrixAddition()
+        {
+            double lhs_data[] = {1.0, 2.0, 3.0,
+                            4.0, 5.0, 6.0};
+            double rhs_data[] = {10.0, 11.0, 12.0,
+                            13.0, 14.0, 15.0};
+            
+            Nektar::NekMatrix<double> lhs(2,3,lhs_data);
+            Nektar::NekMatrix<double> rhs(2,3,rhs_data);
+            Nektar::NekMatrix<double> result = lhs + rhs;
+            
+            BOOST_CHECK_EQUAL(result.GetRows(), 2);
+            BOOST_CHECK_EQUAL(result.GetColumns(), 3);
+            BOOST_CHECK_EQUAL(result.GetStorageType(), eFULL);
+            BOOST_CHECK_EQUAL(result(0,0), 11.0);
+            BOOST_CHECK_EQUAL(result(0,1), 13.0);
+            BOOST_CHECK_EQUAL(result(0,2), 15.0);
+            BOOST_CHECK_EQUAL(result(1,0), 17.0);
+            BOOST_CHECK_EQUAL(result(1,1), 19.0);
+            BOOST_CHECK_EQUAL(result(1,2), 21.0);
+        }
+        
+        void TestFullDiagonalMatrixAddition()
+        {
+        }
+        
+        void TestDiagonalDiagonalMatrixAddition()
+        {
+        }
+        
+        void TestNekMatrixGetValue()
+        {
+        }
+        
+        void TestNekMatrixSetValue()
+        {
+        }
+        
+        void TestScaledMatrixConstruction()
+        {
+        }
+        
+        void TestBlockMatrixConstruction()
+        {
+        }
+    }
+    
     namespace UnitTests
     {
-       
+        
         using namespace Nektar;
-
+        
+        
+        void testMatrixConstruction()
+        {
+            
+        }
+        
+        void TestMatrixGetValue()
+        {
+        }
+        
+        void TestMatrixSetValue()
+        {
+        }
+        
+        void testScaledMatrixConstruction()
+        {
+        }
+        
+        void testBlockMatrixConstruction()
+        {
+        }
+        
         void testNekMatrixConstruction()
         {
             // Basic, dense matrix construction.
@@ -324,7 +658,7 @@ namespace Nektar
              NekMatrix<unsigned int> full(3, 3, fullValues);
  
              unsigned int diagonalValues[] = {6, 12, 5};
-             NekMatrix<unsigned int, eDiagonal> diag(3, 3, diagonalValues);
+             NekMatrix<unsigned int, DiagonalMatrixTag> diag(3, 3, diagonalValues);
  
              NekMatrix<unsigned int> result1 = full+diag;
              NekMatrix<unsigned int> result2 = diag+full;
@@ -393,7 +727,7 @@ namespace Nektar
         void testBlockDiagonalMatrices()
         {
 /*            {
-                typedef NekMatrix<double, eDiagonal, eBlock> BlockMatrix;
+                typedef NekMatrix<double, DiagonalMatrixTag, eBlock> BlockMatrix;
                 typedef BlockMatrix::InnerMatrixType InnerMatrixType;
                 
                 // Create a 6x6 block diagonal matrix.  Each block is a 2x2 matrix.Blas
@@ -425,7 +759,7 @@ namespace Nektar
 //            }
             
 //             {
-//                 typedef NekMatrix<double, eDiagonal, ePointerBlock> BlockMatrix;
+//                 typedef NekMatrix<double, DiagonalMatrixTag, ePointerBlock> BlockMatrix;
 //                 typedef BlockMatrix::InnerMatrixType InnerMatrixType;
 //                 
 //                 // Create a 6x6 block diagonal matrix.  Each block is a 2x2 matrix.Blas
@@ -457,7 +791,7 @@ namespace Nektar
             
 //             // Block Matrix operators.
 //             {
-//                 typedef NekMatrix<int, eDiagonal, eBlock> BlockMatrix;
+//                 typedef NekMatrix<int, DiagonalMatrixTag, eBlock> BlockMatrix;
 //                 typedef BlockMatrix::InnerMatrixType InnerMatrixType;
 //                 
 //                 BlockMatrix m1(2, 2, 2);
@@ -544,7 +878,7 @@ namespace Nektar
         void testBlockDiagonalTimesEqual()
         {
 /*            {
-                typedef NekMatrix<int, eDiagonal, eBlock> BlockMatrix;
+                typedef NekMatrix<int, DiagonalMatrixTag, eBlock> BlockMatrix;
                 typedef BlockMatrix::InnerMatrixType InnerMatrixType;
                 
                 BlockMatrix m1(4, 2, 2);
@@ -654,7 +988,7 @@ namespace Nektar
         
         void testBlockMatrices()
         {
-//             typedef NekMatrix<int, eFull, eBlock> BlockMatrix;
+//             typedef NekMatrix<int, FullMatrixTag, eBlock> BlockMatrix;
 //             
 //             {
 //                 unsigned int rows[] = {8};
@@ -685,7 +1019,7 @@ namespace Nektar
         void testNekMatrixTemp()
         {
             //NekMatrixTemp<double> m1(1,2);
-            //NekMatrixTemp<double, eFull, eBlock> m2(1,2);
+            //NekMatrixTemp<double, FullMatrixTag, eBlock> m2(1,2);
         }
     }
 }
@@ -693,6 +1027,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.23  2007/05/15 05:19:55  bnelson
+    Updated to use the new Array object.
+
     Revision 1.22  2007/03/29 19:42:03  bnelson
     *** empty log message ***
 
@@ -760,4 +1097,6 @@ namespace Nektar
     *** empty log message ***
 
  **/
+
+
 

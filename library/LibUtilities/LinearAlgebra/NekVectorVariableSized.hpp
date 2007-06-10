@@ -43,9 +43,13 @@
 
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/Memory/DeleteNothing.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 
 //#include <functional>
 //#include <algorithm>
@@ -58,17 +62,29 @@
 
 namespace Nektar
 {
-   
+    template<typename DataType, typename StorageType, typename Type, unsigned int space>
+    class BinaryExpressionTraits<NekMatrix<DataType, StorageType, Type>, NekVector<DataType, 0, space>, MultiplyOp>
+    {
+        public:
+            typedef NekVector<DataType, 0, space> ResultType;
+    };
+        
 
     // \param DataType The type of data held by each element of the vector.
     // \param dim The number of elements in the vector.  If set to 0, the vector
     //            will have a variable number of elements.
     // \param space The space of the vector.
     template<typename DataType, unsigned int space>
-    class NekVector<DataType, 0, space>
+    class NekVector<DataType, 0, space> : public OperatorGeneratorL3<NekMatrix, NekVector<DataType, 0, space>, MultiplyOp>
     {
         public:
-
+            /// \brief Creates an empty vector.
+            NekVector() :
+                m_data(),
+                m_wrapperType(eCopy)
+            {
+            }
+            
             // \brief Creates a vector with given size and initial value.
             //        This constructor is only valid for variable sized vectors.
             NekVector(unsigned int size, typename boost::call_traits<DataType>::const_reference a) :
@@ -405,10 +421,32 @@ namespace Nektar
             DataType L2Norm() const { return Nektar::L2Norm(*this); }
             DataType InfinityNorm() const { return Nektar::InfinityNorm(*this); }
             
+            
+            
         private:
             Array<OneD, DataType> m_data;
             PointerWrapper m_wrapperType;
     };    
+    
+    template<typename DataType, typename StorageType, typename Type, unsigned int space>
+    void NekMultiply(NekVector<DataType, 0, space>& result, 
+                     const NekMatrix<DataType, StorageType, Type>& lhs,
+                     const NekVector<DataType, 0, space>& rhs)
+    {
+        ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
+        
+        result = NekVector<DataType, 0, space>(rhs.GetDimension(), DataType(0));
+
+        for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
+        {
+            DataType t = DataType(0);
+            for(unsigned int j = 0; j < rhs.GetDimension(); ++j)
+            {
+                t += lhs(i,j)*rhs(j);
+            }
+            result(i) = t;
+        }
+    }
   
 }
 

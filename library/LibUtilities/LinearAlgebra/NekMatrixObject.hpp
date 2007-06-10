@@ -45,400 +45,400 @@
 
 namespace Nektar
 {
-    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space, typename enabled>
-    class NekMatrix
-    {
-        public:
-            typedef NekMatrix<DataType, form, BlockType, space, void> ThisType;
-            typedef NekMatrixStoragePolicy<DataType, form> StoragePolicy;
-            typedef NekMatrixArithmeticPolicy<DataType, form> ArtihmeticPolicy;
-            typedef NekMatrixAssignmentPolicy<DataType, form> AssignmentPolicy;
-
-        public:
-            /// \brief Creates an empty, 0x0 matrix.  
-            NekMatrix() :
-                m_rows(0),
-                m_columns(0),
-                m_data(),
-                m_wrapperType(eCopy)
-            {
-            }
-    
-            /// \brief Create a matrix with the given size, initialized to the default value of DataType.
-            ///
-            /// It is not possible to create a block matrix with this constructor since the block size is not specified.
-            NekMatrix(unsigned int rows, unsigned int columns) :
-                m_rows(rows),
-                m_columns(columns),
-                m_data(),
-                m_wrapperType(eCopy)
-            {
-                // If you get a compiler error here, then you are trying to use this constructor with a block matrix.
-                BOOST_STATIC_ASSERT(BlockType == eNormal);
-                DataType d(0);
-                Initialize(rows, columns, d);
-            }
-
-            NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
-                m_rows(rows),
-                m_columns(columns),
-                m_data(),
-                m_wrapperType(eCopy)
-            {
-                Initialize(m_rows, m_columns, ptr);
-            }
-            
-            NekMatrix(unsigned int rows, unsigned int columns, Array<OneD, DataType>& ptr, PointerWrapper t = eCopy) :
-                m_rows(rows),
-                m_columns(columns),
-                m_data(),
-                m_wrapperType(t)
-            {
-                BOOST_STATIC_ASSERT(BlockType == eNormal);
-                Initialize(rows, columns, ptr, t);
-            }
-
-            NekMatrix(unsigned int rows, unsigned int columns, const ConstArray<OneD, DataType>& ptr) :
-                m_rows(rows),
-                m_columns(columns),
-                m_data(),
-                m_wrapperType(eCopy)
-            {
-                BOOST_STATIC_ASSERT(BlockType == eNormal);
-                Initialize(rows, columns, ptr);
-            }
-
-            NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference d) :
-                m_rows(),
-                m_columns(),
-                m_data(),
-                m_wrapperType(eCopy)
-            {
-                BOOST_STATIC_ASSERT(BlockType == eNormal);
-                Initialize(rows, columns, d);
-            }
-
-            NekMatrix(const ThisType& rhs) :
-                m_rows(rhs.m_rows),
-                m_columns(rhs.m_columns),
-                m_data(),
-                m_wrapperType(rhs.m_wrapperType)
-            {
-                BOOST_STATIC_ASSERT(BlockType == eNormal);
-                if( m_wrapperType == eWrapper )
-                {
-                    m_data = rhs.m_data;
-                }
-                else
-                {
-                    Initialize(m_rows, m_columns, rhs.m_data.get());
-                }
-            }
-
-            ThisType& operator=(const ThisType& rhs)
-            {
-                m_rows = rhs.m_rows;
-                m_columns = rhs.m_columns;
-                
-                if( m_wrapperType == eCopy )
-                {
-                    if( m_data.num_elements() != rhs.m_data.num_elements() )
-                    {
-                        Initialize(m_rows, m_columns);
-                    }
-                }
-                else
-                {
-                    ASSERTL0(m_data.num_elements() == rhs.m_data.num_elements(), "Wrapped NekMatrices must have the same dimension in operator=");
-                }
-                
-                CopyArray(rhs.m_data, m_data);
-                return *this;
-            }
-
-            template<NekMatrixForm rhs_form>
-            ThisType& operator=(const NekMatrix<DataType, rhs_form, BlockType, space>& rhs)
-            {
-                AssignmentPolicy::Assign(*this, rhs);
-                return *this;
-            }
-
-            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            template<typename ExpressionPolicyType>
-            NekMatrix(const expt::Expression<ExpressionPolicyType>& rhs) :
-                m_rows(rhs.GetMetadata().Rows),
-                m_columns(rhs.GetMetadata().Columns),
-                m_data(),
-                m_wrapperType(eCopy)
-            {
-                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, ThisType> ));
-                Initialize(m_rows, m_columns);
-                rhs.Apply(*this);
-            }
-
-            template<typename ExpressionPolicyType>
-            NekMatrix& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
-            {
-                // TODO The assignment operator should be wrapper aware.
-                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, ThisType> ));
-                m_rows = rhs.GetMetadata().Rows;
-                m_columns = rhs.GetMetadata().Columns;
-                Initialize(m_rows, m_columns);
-                rhs.Apply(*this);
-                return *this;
-            }
-            #endif
-
-            ~NekMatrix() 
-            {
-                m_rows = 0;
-                m_columns = 0;
-            }
-
-
-            unsigned int GetRows() const { return m_rows; }
-            unsigned int GetColumns() const { return m_columns; }
-
-            typename boost::call_traits<DataType>::reference operator()(unsigned int rowNumber, unsigned int colNumber)
-            {
-                ASSERTL2(rowNumber < m_rows, "Invalid row number to NekMatrix::operator()");
-                ASSERTL2(colNumber < m_columns, "Invalid column number to NekMatrix::operator()");
-                return StoragePolicy::GetData(rowNumber, colNumber, m_rows, m_columns, m_data);
-            }
-
-            typename boost::call_traits<DataType>::const_reference operator()(unsigned int rowNumber, unsigned int colNumber) const
-            {
-                ASSERTL2(rowNumber < m_rows, "Invalid row number to NekMatrix::operator()");
-                ASSERTL2(colNumber < m_columns, "Invalid column number to NekMatrix::operator()");
-                return StoragePolicy::GetConstData(rowNumber, colNumber, m_rows, m_columns, m_data);
-            }
-
-            Array<OneD, DataType>& GetPtr()
-            {
-                return m_data;
-            }
-
-            const ConstArray<OneD, DataType>& GetPtr() const
-            {
-                return m_data;
-            }
-
-            typedef typename Array<OneD, DataType>::iterator iterator;
-            typedef typename Array<OneD, DataType>::const_iterator const_iterator;
-
-            iterator begin() 
-            { 
-                return m_data.begin();
-            }
-
-            iterator end() 
-            { 
-                return m_data.end();
-            }
-
-            const_iterator begin() const 
-            { 
-                return m_data.begin();
-            }
-
-            const_iterator end() const 
-            { 
-                return m_data.end();
-            }
-
-            void Negate()
-            {
-                for(iterator iter = begin(); iter != end(); ++iter)
-                {
-                    *iter = -*iter;
-                }
-            }
-            
-            void Transpose()
-            {
-                StoragePolicy::Transpose(m_rows, m_columns, m_data);
-            }
-
-            void Invert()
-            {
-                StoragePolicy::Invert(m_rows, m_columns, m_data);
-            }
-
-            /// \brief Performs an LU factorization of the matrix.
-            ///
-            /// See getrf.
-            //void Factorize()
-            //{
-            //    StoragePolicy::Factorize(m_data, m_rows, m_columns);
-            //}
-
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<ThisType> >, expt::NegateOp> > operator-() const
-            {
-                return expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<ThisType> >, expt::NegateOp> >(
-                        expt::Expression<expt::ConstantExpressionPolicy<ThisType> >(*this));
-            }
-#endif
-            template<NekMatrixForm rhs_form>
-            ThisType& operator+=(const NekMatrix<DataType, rhs_form, BlockType, space>& rhs)
-            {
-                ArtihmeticPolicy::PlusEqual(*this, rhs);
-                return *this;
-            }
-
-            // TODO - Fix this.
-            //// This is wrong as well.  What if this is diagonal?
-            //// enable if on the output.
-            //NekMatrix<DataType, eFull, eNormal, space> operator+=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
-            //{
-            //    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+=");
-
-            //    for(unsigned int i = 0; i < rhs.GetRows(); ++i)
-            //    {
-            //        (*this)(i,i) += rhs(i, i);
-            //    }
-
-            //    return *this;
-            //}
-
-            ThisType& operator-=(const ThisType& rhs)
-            {
-                ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator-=");
-                iterator lhs_data = begin();
-                const_iterator rhs_data = rhs.begin();
-
-                for( ; lhs_data < end(); ++lhs_data, ++rhs_data )
-                {
-                    *lhs_data -= *rhs_data;
-                }
-
-                return *this;
-            }
-
-            // TODO
-            //// This is wrong as well.  What if this is diagonal?
-            //// enable if on the output.
-            //NekMatrix<DataType, eFull, eNormal, space> operator-=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
-            //{
-            //    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator-=");
-
-            //    for(unsigned int i = 0; i < rhs.GetRows(); ++i)
-            //    {
-            //        (*this)(i,i) -= rhs(i, i);
-            //    }
-
-            //    return *this;
-            //}
-
-            ThisType& operator*=(const ThisType& rhs)
-            {
-                ASSERTL0(GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
-
-                NekMatrix<DataType, eFull, eNormal, space> result(GetRows(), rhs.GetColumns());
-
-                for(unsigned int i = 0; i < result.GetRows(); ++i)
-                {
-                    for(unsigned int j = 0; j < result.GetColumns(); ++j)
-                    {
-                        DataType t = DataType(0);
-
-                        // Set the result(i,j) element.
-                        for(unsigned int k = 0; k < GetColumns(); ++k)
-                        {
-                            t += (*this)(i,k)*rhs(k,j);
-                        }
-                        result(i,j) = t;
-                    }
-                }
-
-                Swap(result);
-
-                return *this;
-            }
-
-            
-
-        private:
-            void Initialize(unsigned int rows, unsigned int columns, const DataType* ptr = 0)
-            {
-                m_rows = rows;
-                m_columns = columns;
-                unsigned int storageSize = StoragePolicy::NumStorageElements(m_rows, m_columns);
-
-                if( ptr )
-                {
-                    m_data = Array<OneD, DataType>(storageSize, ptr);
-                }
-                else
-                {
-                    m_data = Array<OneD, DataType>(storageSize);
-                }
-            }
-                        
-            void Initialize(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference d)
-            {
-                Initialize(rows, columns);
-                std::fill(begin(), end(), d);
-            }
-
-            void Initialize(unsigned int rows, unsigned int columns, Array<OneD, DataType>& ptr, 
-                                   PointerWrapper t)
-            {
-                m_rows = rows;
-                m_columns = columns;
-                if( t == eCopy )
-                {
-                    Initialize(rows, columns, ptr);
-                }
-                else
-                {
-                    m_data = ptr;
-                }
-            }
-
-            void Initialize(unsigned int rows, unsigned int columns, ConstArray<OneD, DataType>& ptr)
-            {
-                Initialize(rows, columns);
-                CopyArray(ptr, m_data);
-            }
-
-            void Swap(NekMatrix<DataType, eFull, eNormal, space>& rhs)
-            {
-                std::swap(m_rows, rhs.m_rows);
-                std::swap(m_columns, rhs.m_columns);
-                std::swap(m_data, rhs.m_data);
-            }
-
-            unsigned int m_rows;
-            unsigned int m_columns;
-            Array<OneD, DataType> m_data;
-            PointerWrapper m_wrapperType;
-    };
-    
-    
-
-    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
-    std::ostream& operator<<(std::ostream& os, const NekMatrix<DataType, form, BlockType, space>& rhs)
-    {
-        for(unsigned int i = 0; i < rhs.GetRows(); ++i)
-        {
-            os << "[";
-            for(unsigned int j = 0; j < rhs.GetColumns(); ++j)
-            {
-                os << rhs(i,j);
-                if( j != rhs.GetColumns() - 1 )
-                {
-                    os << ", ";
-                }
-            }
-            os << "]";
-            if( i != rhs.GetRows()-1 )
-            {
-                os << std::endl;
-            }
-        }
-        return os;
-    }
+//     template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space, typename enabled>
+//     class NekMatrix
+//     {
+//         public:
+//             typedef NekMatrix<DataType, form, BlockType, space, void> ThisType;
+//             typedef NekMatrixStoragePolicy<DataType, form> StoragePolicy;
+//             typedef NekMatrixArithmeticPolicy<DataType, form> ArtihmeticPolicy;
+//             typedef NekMatrixAssignmentPolicy<DataType, form> AssignmentPolicy;
+// 
+//         public:
+//             /// \brief Creates an empty, 0x0 matrix.  
+//             NekMatrix() :
+//                 m_rows(0),
+//                 m_columns(0),
+//                 m_data(),
+//                 m_wrapperType(eCopy)
+//             {
+//             }
+//     
+//             /// \brief Create a matrix with the given size, initialized to the default value of DataType.
+//             ///
+//             /// It is not possible to create a block matrix with this constructor since the block size is not specified.
+//             NekMatrix(unsigned int rows, unsigned int columns) :
+//                 m_rows(rows),
+//                 m_columns(columns),
+//                 m_data(),
+//                 m_wrapperType(eCopy)
+//             {
+//                 // If you get a compiler error here, then you are trying to use this constructor with a block matrix.
+//                 BOOST_STATIC_ASSERT(BlockType == StandardMatrixTag);
+//                 DataType d(0);
+//                 Initialize(rows, columns, d);
+//             }
+// 
+//             NekMatrix(unsigned int rows, unsigned int columns, const DataType* const ptr) :
+//                 m_rows(rows),
+//                 m_columns(columns),
+//                 m_data(),
+//                 m_wrapperType(eCopy)
+//             {
+//                 Initialize(m_rows, m_columns, ptr);
+//             }
+//             
+//             NekMatrix(unsigned int rows, unsigned int columns, Array<OneD, DataType>& ptr, PointerWrapper t = eCopy) :
+//                 m_rows(rows),
+//                 m_columns(columns),
+//                 m_data(),
+//                 m_wrapperType(t)
+//             {
+//                 BOOST_STATIC_ASSERT(BlockType == StandardMatrixTag);
+//                 Initialize(rows, columns, ptr, t);
+//             }
+// 
+//             NekMatrix(unsigned int rows, unsigned int columns, const ConstArray<OneD, DataType>& ptr) :
+//                 m_rows(rows),
+//                 m_columns(columns),
+//                 m_data(),
+//                 m_wrapperType(eCopy)
+//             {
+//                 BOOST_STATIC_ASSERT(BlockType == StandardMatrixTag);
+//                 Initialize(rows, columns, ptr);
+//             }
+// 
+//             NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference d) :
+//                 m_rows(),
+//                 m_columns(),
+//                 m_data(),
+//                 m_wrapperType(eCopy)
+//             {
+//                 BOOST_STATIC_ASSERT(BlockType == StandardMatrixTag);
+//                 Initialize(rows, columns, d);
+//             }
+// 
+//             NekMatrix(const ThisType& rhs) :
+//                 m_rows(rhs.m_rows),
+//                 m_columns(rhs.m_columns),
+//                 m_data(),
+//                 m_wrapperType(rhs.m_wrapperType)
+//             {
+//                 BOOST_STATIC_ASSERT(BlockType == StandardMatrixTag);
+//                 if( m_wrapperType == eWrapper )
+//                 {
+//                     m_data = rhs.m_data;
+//                 }
+//                 else
+//                 {
+//                     Initialize(m_rows, m_columns, rhs.m_data.get());
+//                 }
+//             }
+// 
+//             ThisType& operator=(const ThisType& rhs)
+//             {
+//                 m_rows = rhs.m_rows;
+//                 m_columns = rhs.m_columns;
+//                 
+//                 if( m_wrapperType == eCopy )
+//                 {
+//                     if( m_data.num_elements() != rhs.m_data.num_elements() )
+//                     {
+//                         Initialize(m_rows, m_columns);
+//                     }
+//                 }
+//                 else
+//                 {
+//                     ASSERTL0(m_data.num_elements() == rhs.m_data.num_elements(), "Wrapped NekMatrices must have the same dimension in operator=");
+//                 }
+//                 
+//                 CopyArray(rhs.m_data, m_data);
+//                 return *this;
+//             }
+// 
+//             template<NekMatrixForm rhs_form>
+//             ThisType& operator=(const NekMatrix<DataType, rhs_form, BlockType, space>& rhs)
+//             {
+//                 AssignmentPolicy::Assign(*this, rhs);
+//                 return *this;
+//             }
+// 
+//             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+//             template<typename ExpressionPolicyType>
+//             NekMatrix(const expt::Expression<ExpressionPolicyType>& rhs) :
+//                 m_rows(rhs.GetMetadata().Rows),
+//                 m_columns(rhs.GetMetadata().Columns),
+//                 m_data(),
+//                 m_wrapperType(eCopy)
+//             {
+//                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, ThisType> ));
+//                 Initialize(m_rows, m_columns);
+//                 rhs.Apply(*this);
+//             }
+// 
+//             template<typename ExpressionPolicyType>
+//             NekMatrix& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
+//             {
+//                 // TODO The assignment operator should be wrapper aware.
+//                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, ThisType> ));
+//                 m_rows = rhs.GetMetadata().Rows;
+//                 m_columns = rhs.GetMetadata().Columns;
+//                 Initialize(m_rows, m_columns);
+//                 rhs.Apply(*this);
+//                 return *this;
+//             }
+//             #endif
+// 
+//             ~NekMatrix() 
+//             {
+//                 m_rows = 0;
+//                 m_columns = 0;
+//             }
+// 
+// 
+//             unsigned int GetRows() const { return m_rows; }
+//             unsigned int GetColumns() const { return m_columns; }
+// 
+//             typename boost::call_traits<DataType>::reference operator()(unsigned int rowNumber, unsigned int colNumber)
+//             {
+//                 ASSERTL2(rowNumber < m_rows, "Invalid row number to NekMatrix::operator()");
+//                 ASSERTL2(colNumber < m_columns, "Invalid column number to NekMatrix::operator()");
+//                 return StoragePolicy::GetData(rowNumber, colNumber, m_rows, m_columns, m_data);
+//             }
+// 
+//             typename boost::call_traits<DataType>::const_reference operator()(unsigned int rowNumber, unsigned int colNumber) const
+//             {
+//                 ASSERTL2(rowNumber < m_rows, "Invalid row number to NekMatrix::operator()");
+//                 ASSERTL2(colNumber < m_columns, "Invalid column number to NekMatrix::operator()");
+//                 return StoragePolicy::GetConstData(rowNumber, colNumber, m_rows, m_columns, m_data);
+//             }
+// 
+//             Array<OneD, DataType>& GetPtr()
+//             {
+//                 return m_data;
+//             }
+// 
+//             const ConstArray<OneD, DataType>& GetPtr() const
+//             {
+//                 return m_data;
+//             }
+// 
+//             typedef typename Array<OneD, DataType>::iterator iterator;
+//             typedef typename Array<OneD, DataType>::const_iterator const_iterator;
+// 
+//             iterator begin() 
+//             { 
+//                 return m_data.begin();
+//             }
+// 
+//             iterator end() 
+//             { 
+//                 return m_data.end();
+//             }
+// 
+//             const_iterator begin() const 
+//             { 
+//                 return m_data.begin();
+//             }
+// 
+//             const_iterator end() const 
+//             { 
+//                 return m_data.end();
+//             }
+// 
+//             void Negate()
+//             {
+//                 for(iterator iter = begin(); iter != end(); ++iter)
+//                 {
+//                     *iter = -*iter;
+//                 }
+//             }
+//             
+//             void Transpose()
+//             {
+//                 StoragePolicy::Transpose(m_rows, m_columns, m_data);
+//             }
+// 
+//             void Invert()
+//             {
+//                 StoragePolicy::Invert(m_rows, m_columns, m_data);
+//             }
+// 
+//             /// \brief Performs an LU factorization of the matrix.
+//             ///
+//             /// See getrf.
+//             //void Factorize()
+//             //{
+//             //    StoragePolicy::Factorize(m_data, m_rows, m_columns);
+//             //}
+// 
+// #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+//             expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<ThisType> >, expt::NegateOp> > operator-() const
+//             {
+//                 return expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<ThisType> >, expt::NegateOp> >(
+//                         expt::Expression<expt::ConstantExpressionPolicy<ThisType> >(*this));
+//             }
+// #endif
+//             template<NekMatrixForm rhs_form>
+//             ThisType& operator+=(const NekMatrix<DataType, rhs_form, BlockType, space>& rhs)
+//             {
+//                 ArtihmeticPolicy::PlusEqual(*this, rhs);
+//                 return *this;
+//             }
+// 
+//             // TODO - Fix this.
+//             //// This is wrong as well.  What if this is diagonal?
+//             //// enable if on the output.
+//             //NekMatrix<DataType, FullMatrixTag, StandardMatrixTag, space> operator+=(const NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>& rhs)
+//             //{
+//             //    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+=");
+// 
+//             //    for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+//             //    {
+//             //        (*this)(i,i) += rhs(i, i);
+//             //    }
+// 
+//             //    return *this;
+//             //}
+// 
+//             ThisType& operator-=(const ThisType& rhs)
+//             {
+//                 ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator-=");
+//                 iterator lhs_data = begin();
+//                 const_iterator rhs_data = rhs.begin();
+// 
+//                 for( ; lhs_data < end(); ++lhs_data, ++rhs_data )
+//                 {
+//                     *lhs_data -= *rhs_data;
+//                 }
+// 
+//                 return *this;
+//             }
+// 
+//             // TODO
+//             //// This is wrong as well.  What if this is diagonal?
+//             //// enable if on the output.
+//             //NekMatrix<DataType, FullMatrixTag, StandardMatrixTag, space> operator-=(const NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>& rhs)
+//             //{
+//             //    ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator-=");
+// 
+//             //    for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+//             //    {
+//             //        (*this)(i,i) -= rhs(i, i);
+//             //    }
+// 
+//             //    return *this;
+//             //}
+// 
+//             ThisType& operator*=(const ThisType& rhs)
+//             {
+//                 ASSERTL0(GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
+// 
+//                 NekMatrix<DataType, FullMatrixTag, StandardMatrixTag, space> result(GetRows(), rhs.GetColumns());
+// 
+//                 for(unsigned int i = 0; i < result.GetRows(); ++i)
+//                 {
+//                     for(unsigned int j = 0; j < result.GetColumns(); ++j)
+//                     {
+//                         DataType t = DataType(0);
+// 
+//                         // Set the result(i,j) element.
+//                         for(unsigned int k = 0; k < GetColumns(); ++k)
+//                         {
+//                             t += (*this)(i,k)*rhs(k,j);
+//                         }
+//                         result(i,j) = t;
+//                     }
+//                 }
+// 
+//                 Swap(result);
+// 
+//                 return *this;
+//             }
+// 
+//             
+// 
+//         private:
+//             void Initialize(unsigned int rows, unsigned int columns, const DataType* ptr = 0)
+//             {
+//                 m_rows = rows;
+//                 m_columns = columns;
+//                 unsigned int storageSize = StoragePolicy::NumStorageElements(m_rows, m_columns);
+// 
+//                 if( ptr )
+//                 {
+//                     m_data = Array<OneD, DataType>(storageSize, ptr);
+//                 }
+//                 else
+//                 {
+//                     m_data = Array<OneD, DataType>(storageSize);
+//                 }
+//             }
+//                         
+//             void Initialize(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference d)
+//             {
+//                 Initialize(rows, columns);
+//                 std::fill(begin(), end(), d);
+//             }
+// 
+//             void Initialize(unsigned int rows, unsigned int columns, Array<OneD, DataType>& ptr, 
+//                                    PointerWrapper t)
+//             {
+//                 m_rows = rows;
+//                 m_columns = columns;
+//                 if( t == eCopy )
+//                 {
+//                     Initialize(rows, columns, ptr);
+//                 }
+//                 else
+//                 {
+//                     m_data = ptr;
+//                 }
+//             }
+// 
+//             void Initialize(unsigned int rows, unsigned int columns, ConstArray<OneD, DataType>& ptr)
+//             {
+//                 Initialize(rows, columns);
+//                 CopyArray(ptr, m_data);
+//             }
+// 
+//             void Swap(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag, space>& rhs)
+//             {
+//                 std::swap(m_rows, rhs.m_rows);
+//                 std::swap(m_columns, rhs.m_columns);
+//                 std::swap(m_data, rhs.m_data);
+//             }
+// 
+//             unsigned int m_rows;
+//             unsigned int m_columns;
+//             Array<OneD, DataType> m_data;
+//             PointerWrapper m_wrapperType;
+//     };
+//     
+//     
+// 
+//     template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
+//     std::ostream& operator<<(std::ostream& os, const NekMatrix<DataType, form, BlockType, space>& rhs)
+//     {
+//         for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+//         {
+//             os << "[";
+//             for(unsigned int j = 0; j < rhs.GetColumns(); ++j)
+//             {
+//                 os << rhs(i,j);
+//                 if( j != rhs.GetColumns() - 1 )
+//                 {
+//                     os << ", ";
+//                 }
+//             }
+//             os << "]";
+//             if( i != rhs.GetRows()-1 )
+//             {
+//                 os << std::endl;
+//             }
+//         }
+//         return os;
+//     }
 
 }
 

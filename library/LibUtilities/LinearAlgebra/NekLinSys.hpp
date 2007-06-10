@@ -41,6 +41,7 @@
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/Memory/DeleteNothing.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixType.h>
 
 #include <boost/shared_ptr.hpp> 
 #include <boost/utility/enable_if.hpp>
@@ -57,11 +58,11 @@ namespace Nektar
     template<typename MatrixType, typename VectorType>
     struct LinearSystemSolver;
 
-    template<typename DataType, unsigned int space, unsigned int vectorDim>
-    struct LinearSystemSolver<NekMatrix<DataType, eDiagonal, eNormal, space>, NekVector<DataType, vectorDim, space> >
+    template<typename DataType, unsigned int vectorDim>
+    struct LinearSystemSolver<NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag>, NekVector<DataType, vectorDim> >
     {
-        typedef NekVector<DataType, vectorDim, space> VectorType;
-        typedef NekMatrix<DataType, eDiagonal, eNormal, space> MatrixType;
+        typedef NekVector<DataType, vectorDim> VectorType;
+        typedef NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag> MatrixType;
 
         static void Solve(const MatrixType& A, const ConstArray<OneD, int>& ipivot, const VectorType& b, VectorType& x)
         {
@@ -79,11 +80,11 @@ namespace Nektar
         }
     };
 
-    template<typename DataType, NekMatrixForm form, unsigned int space, MatrixBlockType BlockType, unsigned int vectorDim>
-    struct LinearSystemSolver<NekMatrix<DataType, form, BlockType, space>, NekVector<DataType, vectorDim, space> >
+    template<typename DataType, typename StorageType, typename Form, unsigned int vectorDim>
+    struct LinearSystemSolver<NekMatrix<DataType, StorageType, Form>, NekVector<DataType, vectorDim> >
     {
-        typedef NekMatrix<DataType, form, BlockType, space> MatrixType;
-        typedef NekVector<DataType, vectorDim, space> VectorType;
+        typedef NekMatrix<DataType, StorageType, Form> MatrixType;
+        typedef NekVector<DataType, vectorDim> VectorType;
 
         static void Solve(const MatrixType& A, const ConstArray<OneD, int>& ipivot, const VectorType& b, VectorType& x)
         {
@@ -112,11 +113,11 @@ namespace Nektar
     template<typename MatrixType>
     class LinearSystem;
 
-    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
-    class LinearSystem<NekMatrix<DataType, form, BlockType, space> >
+    template<typename DataType, typename StorageType, typename Type>
+    class LinearSystem<NekMatrix<DataType, StorageType, Type> >
     {
     public:
-        typedef NekMatrix<DataType, form, BlockType, space> MatrixType;
+        typedef NekMatrix<DataType, StorageType, Type> MatrixType;
         typedef LinearSystem<MatrixType> ThisType;
 
     public:
@@ -241,16 +242,16 @@ namespace Nektar
 
 
     private:
-        void FactorMatrix(NekMatrix<DataType,eDiagonal> &theA)
+        void FactorMatrix(NekMatrix<DataType,DiagonalMatrixTag> &theA)
         {
             for(unsigned int i = 0; i < A.GetColumns(); ++i)
             {
-                (theA)(i,i) = 1.0/(theA)(i,i);
+                theA.SetValue(i, i, 1.0/theA(i,i));
             }
 
         }
 
-        void FactorMatrix(NekMatrix<DataType,eFull> &theA)
+        void FactorMatrix(NekMatrix<DataType,FullMatrixTag> &theA)
         {
             int m = theA.GetRows();
             int n = theA.GetColumns();

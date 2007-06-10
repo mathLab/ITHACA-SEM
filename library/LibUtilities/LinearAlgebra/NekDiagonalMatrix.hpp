@@ -49,66 +49,66 @@
 
 namespace Nektar
 {
-    template<typename DataType>
-    class NekMatrixStoragePolicy<DataType, eDiagonal> 
-    {
-        public: 
-            static void Transpose(Array<OneD, DataType>& data, unsigned int& rows, unsigned int& columns)
-            {
-            }
-
-
-            static typename boost::call_traits<DataType>::reference GetData(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns,
-                                                                            Array<OneD, DataType>& data)
-            {
-                if( row == column )
-                {
-                    return data[CalculateIndex(row, column, matrixRows, matrixColumns)];
-                }
-                else
-                {
-                    static DataType result = DataType(0);
-                    ASSERTL1(result == DataType(0), "An off diagonal element of a diagonal matrix has been set.");
-                    return result;
-                }
-            }
-
-            static typename boost::call_traits<DataType>::const_reference GetConstData(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns,
-                                                                            const ConstArray<OneD, DataType>& data)
-            {
-                if( row == column )
-                {
-                    return data[CalculateIndex(row, column, matrixRows, matrixColumns)];
-                }
-                else
-                {
-                    static DataType result = DataType(0);
-                    return result;
-                }
-            }
-
-            static unsigned int CalculateIndex(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns)
-            {
-                ASSERTL1(matrixRows == matrixColumns, "Diagonal matrices must be square");
-                return row;
-            }
-
-            static unsigned int NumStorageElements(unsigned int rows, unsigned int cols)
-            {
-                ASSERTL1(rows == cols, "Diagonal matrices must be square");
-                return rows;
-            }
-
-        private:
-            
-    };
+//     template<typename DataType>
+//     class NekMatrixStoragePolicy<DataType, DiagonalMatrixTag> 
+//     {
+//         public: 
+//             static void Transpose(Array<OneD, DataType>& data, unsigned int& rows, unsigned int& columns)
+//             {
+//             }
+// 
+// 
+//             static typename boost::call_traits<DataType>::reference GetData(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns,
+//                                                                             Array<OneD, DataType>& data)
+//             {
+//                 if( row == column )
+//                 {
+//                     return data[CalculateIndex(row, column, matrixRows, matrixColumns)];
+//                 }
+//                 else
+//                 {
+//                     static DataType result = DataType(0);
+//                     ASSERTL1(result == DataType(0), "An off diagonal element of a diagonal matrix has been set.");
+//                     return result;
+//                 }
+//             }
+// 
+//             static typename boost::call_traits<DataType>::const_reference GetConstData(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns,
+//                                                                             const ConstArray<OneD, DataType>& data)
+//             {
+//                 if( row == column )
+//                 {
+//                     return data[CalculateIndex(row, column, matrixRows, matrixColumns)];
+//                 }
+//                 else
+//                 {
+//                     static DataType result = DataType(0);
+//                     return result;
+//                 }
+//             }
+// 
+//             static unsigned int CalculateIndex(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns)
+//             {
+//                 ASSERTL1(matrixRows == matrixColumns, "Diagonal matrices must be square");
+//                 return row;
+//             }
+// 
+//             static unsigned int NumStorageElements(unsigned int rows, unsigned int cols)
+//             {
+//                 ASSERTL1(rows == cols, "Diagonal matrices must be square");
+//                 return rows;
+//             }
+// 
+//         private:
+//             
+//     };
 
 
 //    template<typename DataType, unsigned int space>
-//    class NekMatrix<DataType, eDiagonal, eNormal, space>
+//    class NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>
 //    {
 //        public:
-//            typedef NekMatrix<DataType, eDiagonal, eNormal, space> ThisType;
+//            typedef NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space> ThisType;
 //
 //        public:
 //
@@ -158,7 +158,7 @@ namespace Nektar
 //            }
 //
 //
-//            NekMatrix(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs) :
+//            NekMatrix(const NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>& rhs) :
 //                m_numberOfElements(rhs.m_numberOfElements),
 //                m_data(MemoryManager::AllocateSharedArray<DataType>(m_numberOfElements))
 //            {
@@ -172,14 +172,14 @@ namespace Nektar
 //                m_numberOfElements(rhs.GetMetadata().Rows),
 //                m_data(MemoryManager::AllocateSharedArray<DataType>(m_numberOfElements))
 //            {
-//                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, eDiagonal, eNormal, space> > ));
+//                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space> > ));
 //                rhs.Apply(*this);
 //            }
 //
 //            template<typename ExpressionPolicyType>
-//            NekMatrix<DataType, eDiagonal, eNormal, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
+//            NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
 //            {
-//                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, eDiagonal, eNormal, space> > ));
+//                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space> > ));
 //                
 //                m_numberOfElements = rhs.GetMetadata().Rows;
 //                m_data = MemoryManager::AllocateSharedArray<DataType>(m_numberOfElements);
@@ -188,9 +188,9 @@ namespace Nektar
 //            }
 //#endif
 //
-//            NekMatrix<DataType, eDiagonal, eNormal, space>& operator=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
+//            NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>& operator=(const NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>& rhs)
 //            {
-//                NekMatrix<DataType, eDiagonal, eNormal, space> temp(rhs);
+//                NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space> temp(rhs);
 //                Swap(temp);
 //                return *this;
 //            }
@@ -282,14 +282,14 @@ namespace Nektar
 //            }
 //
 //#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-//            expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, eDiagonal, eNormal, space> > >, expt::NegateOp> > operator-() const
+//            expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space> > >, expt::NegateOp> > operator-() const
 //            {
-//                return expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, eDiagonal, eNormal, space> > >, expt::NegateOp> >(
-//                        expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, eDiagonal, eNormal, space> > >(*this));
+//                return expt::Expression<expt::UnaryExpressionPolicy<expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space> > >, expt::NegateOp> >(
+//                        expt::Expression<expt::ConstantExpressionPolicy<NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space> > >(*this));
 //            }
 //#endif
 //
-////             NekMatrix<DataType, eFull, BlockType, space> operator+=(const NekMatrix<DataType, eFull, BlockType, space>& rhs)
+////             NekMatrix<DataType, FullMatrixTag, BlockType, space> operator+=(const NekMatrix<DataType, FullMatrixTag, BlockType, space>& rhs)
 ////             {
 ////                 ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+");
 ////                 DataType* lhs_data = begin();
@@ -305,7 +305,7 @@ namespace Nektar
 //
 //            // This is wrong as well.  What if this is diagonal?
 //            // enable if on the output.
-//            NekMatrix<DataType, eDiagonal, eNormal, space> operator+=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
+//            NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space> operator+=(const NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>& rhs)
 //            {
 //                ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator+=");
 //
@@ -317,7 +317,7 @@ namespace Nektar
 //                return *this;
 //            }
 //            
-//            NekMatrix<DataType, eDiagonal, eNormal, space> operator-=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
+//            NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space> operator-=(const NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>& rhs)
 //            {
 //                ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator-=");
 //
@@ -337,11 +337,11 @@ namespace Nektar
 //
 //
 ////             template<NekMatrixForm rhsForm>
-////             NekMatrix<DataType, eFull, BlockType, space>& operator*=(const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
+////             NekMatrix<DataType, FullMatrixTag, BlockType, space>& operator*=(const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
 ////             {
 ////                 ASSERTL0(GetColumns() == rhs.GetRows(), "Invalid matrix dimensions in operator*");
 //// 
-////                 NekMatrix<DataType, eFull, BlockType, space> result(GetRows(), rhs.GetColumns());
+////                 NekMatrix<DataType, FullMatrixTag, BlockType, space> result(GetRows(), rhs.GetColumns());
 //// 
 ////                 for(unsigned int i = 0; i < result.GetRows(); ++i)
 ////                 {
@@ -363,7 +363,7 @@ namespace Nektar
 ////                 return *this;
 ////             }
 //
-//            NekMatrix<DataType, eDiagonal, eNormal, space>& operator*=(const NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
+//            NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>& operator*=(const NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>& rhs)
 //            {
 //                ASSERTL0(GetRows() == rhs.GetRows() && GetColumns() == rhs.GetColumns(), "Matrix dimensions must agree in operator*=");
 //
@@ -387,7 +387,7 @@ namespace Nektar
 //            
 //            //void Initialize(unsigned int rows, unsigned int columns);
 //            
-//            void Swap(NekMatrix<DataType, eDiagonal, eNormal, space>& rhs)
+//            void Swap(NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag, space>& rhs)
 //            {
 //                std::swap(m_numberOfElements, rhs.m_numberOfElements);
 //                std::swap(m_data, rhs.m_data);
@@ -404,6 +404,9 @@ namespace Nektar
 
 /**
     $Log: NekDiagonalMatrix.hpp,v $
+    Revision 1.8  2007/05/15 03:04:21  bnelson
+    Updated to use the new Array object.
+
     Revision 1.7  2007/03/29 18:59:04  bnelson
     Refactoring in preparation for scaled matrices.  Fixed transpose problem.
 

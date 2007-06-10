@@ -113,18 +113,18 @@ namespace Nektar
         }
         
 
-//         typedef boost::shared_ptr<NekMatrix<double, eFull, eBlock> > MatrixType;
+//         typedef boost::shared_ptr<NekMatrix<double, FullMatrixTag, eBlock> > MatrixType;
 //         
 //         MatrixType create(int k)
 //         {
-//             return MatrixType(new NekMatrix<double, eDiagonal>(k, k, 2, 2));
+//             return MatrixType(new NekMatrix<double, DiagonalMatrixTag>(k, k, 2, 2));
 //         }
 //         
 //         void testNekMatrixManager()
 //         {
-//             NekManager<int, NekMatrix<double, eDiagonal> > manager(create);
+//             NekManager<int, NekMatrix<double, DiagonalMatrixTag> > manager(create);
 //             
-//             manager[10] = boost::shared_ptr<NekMatrix<double, eDiagonal> >(new NekMatrix<double, eDiagonal>(3, 3));
+//             manager[10] = boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >(new NekMatrix<double, DiagonalMatrixTag>(3, 3));
 //            
 //            if( manager[11] )
 //            {
@@ -135,6 +135,9 @@ namespace Nektar
 
 /**
    $Log: testNekManager.cpp,v $
+   Revision 1.6  2007/01/18 18:44:45  bnelson
+   Updates to compile on Visual Studio 2005.
+
    Revision 1.5  2007/01/16 17:17:58  bnelson
    Updated to use shared pointers in the NekManager.
 

@@ -38,194 +38,269 @@
 #ifndef NEKTAR_LIB_UTILITIES_NEK_MATRIX_HPP
 #define NEKTAR_LIB_UTILITIES_NEK_MATRIX_HPP
 
-#include <LibUtilities/LinearAlgebra/NekMatrixObject.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorObject.hpp>
-#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
+#include <LibUtilities/LinearAlgebra/BlockMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/NormalMatrix.hpp>
 
 namespace Nektar
 {
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-    // All of the expression interfaces for NekMatrix should go here.
-    namespace expt
+    template<typename DataType, typename StorageType, typename FormType>
+    std::ostream& operator<<(std::ostream& os, const NekMatrix<DataType, StorageType, FormType>& rhs)
     {
-        template<typename DataType, Nektar::NekMatrixForm Form, MatrixBlockType BlockType, unsigned int space>
-        class ConstantExpressionTraits<Nektar::NekMatrix<DataType, Form, BlockType, space> >
+        for(unsigned int i = 0; i < rhs.GetRows(); ++i)
         {
-            public:
-                typedef Nektar::NekMatrix<DataType, Form, BlockType, space> result_type;
-                typedef NekMatrixConstantMetadata MetadataType;
-        };
-                
-        template<typename DataType, Nektar::NekMatrixForm lhsForm, Nektar::NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-        class AdditionTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, Nektar::NekMatrix<DataType, rhsForm, BlockType, space> >
-        {
-            public:
-                typedef Nektar::NekMatrix<DataType, lhsForm, BlockType, space> LhsType;
-                typedef Nektar::NekMatrix<DataType, rhsForm, BlockType, space> RhsType;
-                typedef Nektar::NekMatrixAdditionAndSubtractionMetadata MetadataType;
-                typedef Nektar::NekMatrix<DataType, Nektar::eFull, BlockType, space> result_type;
-                static const bool HasOpEqual = true;
-                static const bool HasOpLeftEqual = false;
-                
-                static void Add(result_type& result, const LhsType& lhs, const RhsType& rhs)
+            os << "[";
+            for(unsigned int j = 0; j < rhs.GetColumns(); ++j)
+            {
+                os << rhs(i,j);
+                if( j != rhs.GetColumns() - 1 )
                 {
-                    result = lhs;
-                    result += rhs;
+                    os << ", ";
                 }
-        };
-        
-        template<typename DataType, Nektar::NekMatrixForm lhsForm, Nektar::NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-        class SubtractionTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, Nektar::NekMatrix<DataType, rhsForm, BlockType, space> >
-        {
-            public:
-                typedef Nektar::NekMatrix<DataType, lhsForm, BlockType, space> LhsType;
-                typedef Nektar::NekMatrix<DataType, rhsForm, BlockType, space> RhsType;
-                typedef Nektar::NekMatrixAdditionAndSubtractionMetadata MetadataType;
-                typedef Nektar::NekMatrix<DataType, Nektar::eFull, BlockType, space> result_type;
-                static const bool HasOpEqual = true;
-                static const bool HasOpLeftEqual = false;
-                
-                static void Subtract(result_type& result, const LhsType& lhs, const RhsType& rhs)
-                {
-                    result = lhs;
-                    result -= rhs;
-                }
-        };
-        
-        template<typename DataType, Nektar::NekMatrixForm lhsForm, Nektar::NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-        class MultiplicationTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, 
-                                   Nektar::NekMatrix<DataType, rhsForm, BlockType, space> >
-        {
-            public:
-                typedef Nektar::NekMatrix<DataType, lhsForm, BlockType, space> LhsType;
-                typedef Nektar::NekMatrix<DataType, rhsForm, BlockType, space> RhsType;
-                typedef Nektar::NekMatrixMultiplicationMetadata MetadataType;
-                typedef Nektar::NekMatrix<DataType, Nektar::eFull, BlockType, space> result_type;
-                static const bool HasOpEqual = true;
-                static const bool HasOpLeftEqual = false;
-                
-                static void Multiply(result_type& result, const LhsType& lhs, const RhsType& rhs)
-                {
-                    result = lhs;
-                    result *= rhs;
-                }
-
-        };
-        
-       
-        template<typename FirstDataType, typename SecondDataType, 
-                 Nektar::NekMatrixForm firstForm, Nektar::NekMatrixForm secondForm,
-                 MatrixBlockType firstBlockType, MatrixBlockType secondBlockType, 
-                 unsigned int space>
-        class CommutativeTraits<NekMatrix<FirstDataType, firstForm, firstBlockType, space>, MultiplyOp,
-                                NekMatrix<SecondDataType, secondForm, secondBlockType, space> >
-        {
-            public:
-                static const bool IsCommutative = false;
-        };    
-    }
-#endif
-    
-    // Now define general purpose operators.
-    
-    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
-    void negate(NekMatrix<DataType, form, BlockType, space>& rhs)
-    {
-        rhs.Negate();
-    }
-        
-    
-
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-
-#else
-    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
-    NekMatrix<DataType, form, BlockType, space> Invert(const NekMatrix<DataType, form, BlockType, space>& rhs)
-    {
-        NekMatrix<DataType, form, BlockType, space> result(rhs);
-        result.Invert();
-        return result;
-    }
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
-
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-    typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>,
-                                         expt::AddOp,
-                                         NekMatrix<DataType, rhsForm, BlockType, space> >::Type
-    operator+(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
-    {
-        return expt::CreateBinaryExpression<expt::AddOp>(lhs, rhs);
+            }
+            os << "]";
+            if( i != rhs.GetRows()-1 )
+            {
+                os << std::endl;
+            }
+        }
+        return os;
     }
 
-#else
-    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-    typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::AdditionResultType 
-    operator+(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
-    {
-        typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::AdditionResultType result(lhs);
-        result += rhs;
-        return result;
-    }
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
-
-
-    /////////////////////////////////////
-    // Subtraction
-    ////////////////////////////////////
-
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-    typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>,
-                                         expt::SubtractOp,
-                                         NekMatrix<DataType, rhsForm, BlockType, space> >::Type
-    operator-(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
-    {
-        return expt::CreateBinaryExpression<expt::SubtractOp>(lhs, rhs);
-    }
-#else
-    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-    typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::SubtractionResultType 
-    operator+(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
-    {
-        typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::SubtractionResultType result(lhs);
-        result -= rhs;
-        return result;
-    }
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
-
-    /////////////////////////////////////////
-    // Multiplication
-    /////////////////////////////////////////
-//     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-//     void multiply(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, 
-//                 const NekMatrix<DataType, rhsForm, BlockType, space>& rhs,
-//                 typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::MultiplicationResultType& result,
-//                 typename boost::enable_if<boost::is_same<DataType, double> >::type* p = NULL )
+// #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+//     // All of the expression interfaces for NekMatrix should go here.
+//     namespace expt
 //     {
-// #ifdef NEKTAR_USING_BLAS
-//         dgemm(lhs.GetRows(), lhs.GetColumns(), rhs.GetColumns(), lhs.begin(), rhs.begin(), result.begin());
-// #else
-//         result = lhs;
-//         result *= rhs;
+//         template<typename DataType, Nektar::NekMatrixForm Form, MatrixBlockType BlockType, unsigned int space>
+//         class ConstantExpressionTraits<Nektar::NekMatrix<DataType, Form, BlockType, space> >
+//         {
+//             public:
+//                 typedef Nektar::NekMatrix<DataType, Form, BlockType, space> result_type;
+//                 typedef NekMatrixConstantMetadata MetadataType;
+//         };
+//                 
+//         template<typename DataType, Nektar::NekMatrixForm lhsForm, Nektar::NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+//         class AdditionTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, Nektar::NekMatrix<DataType, rhsForm, BlockType, space> >
+//         {
+//             public:
+//                 typedef Nektar::NekMatrix<DataType, lhsForm, BlockType, space> LhsType;
+//                 typedef Nektar::NekMatrix<DataType, rhsForm, BlockType, space> RhsType;
+//                 typedef Nektar::NekMatrixAdditionAndSubtractionMetadata MetadataType;
+//                 typedef Nektar::NekMatrix<DataType, Nektar::FullMatrixTag, BlockType, space> result_type;
+//                 static const bool HasOpEqual = true;
+//                 static const bool HasOpLeftEqual = false;
+//                 
+//                 static void Add(result_type& result, const LhsType& lhs, const RhsType& rhs)
+//                 {
+//                     result = lhs;
+//                     result += rhs;
+//                 }
+//         };
+//         
+//         template<typename DataType, Nektar::NekMatrixForm lhsForm, Nektar::NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+//         class SubtractionTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, Nektar::NekMatrix<DataType, rhsForm, BlockType, space> >
+//         {
+//             public:
+//                 typedef Nektar::NekMatrix<DataType, lhsForm, BlockType, space> LhsType;
+//                 typedef Nektar::NekMatrix<DataType, rhsForm, BlockType, space> RhsType;
+//                 typedef Nektar::NekMatrixAdditionAndSubtractionMetadata MetadataType;
+//                 typedef Nektar::NekMatrix<DataType, Nektar::FullMatrixTag, BlockType, space> result_type;
+//                 static const bool HasOpEqual = true;
+//                 static const bool HasOpLeftEqual = false;
+//                 
+//                 static void Subtract(result_type& result, const LhsType& lhs, const RhsType& rhs)
+//                 {
+//                     result = lhs;
+//                     result -= rhs;
+//                 }
+//         };
+//         
+//         template<typename DataType, Nektar::NekMatrixForm lhsForm, Nektar::NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+//         class MultiplicationTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, 
+//                                    Nektar::NekMatrix<DataType, rhsForm, BlockType, space> >
+//         {
+//             public:
+//                 typedef Nektar::NekMatrix<DataType, lhsForm, BlockType, space> LhsType;
+//                 typedef Nektar::NekMatrix<DataType, rhsForm, BlockType, space> RhsType;
+//                 typedef Nektar::NekMatrixMultiplicationMetadata MetadataType;
+//                 typedef Nektar::NekMatrix<DataType, Nektar::FullMatrixTag, BlockType, space> result_type;
+//                 static const bool HasOpEqual = true;
+//                 static const bool HasOpLeftEqual = false;
+//                 
+//                 static void Multiply(result_type& result, const LhsType& lhs, const RhsType& rhs)
+//                 {
+//                     result = lhs;
+//                     result *= rhs;
+//                 }
+// 
+//         };
+//         
+//        
+//         template<typename FirstDataType, typename SecondDataType, 
+//                  Nektar::NekMatrixForm firstForm, Nektar::NekMatrixForm secondForm,
+//                  MatrixBlockType firstBlockType, MatrixBlockType secondBlockType, 
+//                  unsigned int space>
+//         class CommutativeTraits<NekMatrix<FirstDataType, firstForm, firstBlockType, space>, MultiplyOp,
+//                                 NekMatrix<SecondDataType, secondForm, secondBlockType, space> >
+//         {
+//             public:
+//                 static const bool IsCommutative = false;
+//         };    
+//     }
 // #endif
-//     }
-
-//     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-//     void multiply(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, 
-//                   const NekMatrix<DataType, rhsForm, BlockType, space>& rhs,
-//                   typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::MultiplicationResultType& result,
-//                 typename boost::disable_if<boost::is_same<DataType, double> >::type* p = NULL )
+//     
+//     // Now define general purpose operators.
+//     
+//     template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
+//     void negate(NekMatrix<DataType, form, BlockType, space>& rhs)
 //     {
-//         result = lhs;
-//         result *= rhs;
+//         rhs.Negate();
 //     }
-
-//     template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, MatrixBlockType BlockType, unsigned int space>
-//     void multiply(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekVector<DataType, vectorDim, space>& rhs,
-//                   typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekVector<DataType, vectorDim, space> >::MultiplicationResultType& result)
+//         
+//     
+// 
+// #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+// 
+// #else
+//     template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
+//     NekMatrix<DataType, form, BlockType, space> Invert(const NekMatrix<DataType, form, BlockType, space>& rhs)
+//     {
+//         NekMatrix<DataType, form, BlockType, space> result(rhs);
+//         result.Invert();
+//         return result;
+//     }
+// #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+// 
+// #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+//     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+//     typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>,
+//                                          expt::AddOp,
+//                                          NekMatrix<DataType, rhsForm, BlockType, space> >::Type
+//     operator+(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
+//     {
+//         return expt::CreateBinaryExpression<expt::AddOp>(lhs, rhs);
+//     }
+// 
+// #else
+//     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+//     typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::AdditionResultType 
+//     operator+(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
+//     {
+//         typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::AdditionResultType result(lhs);
+//         result += rhs;
+//         return result;
+//     }
+// #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+// 
+// 
+//     /////////////////////////////////////
+//     // Subtraction
+//     ////////////////////////////////////
+// 
+// #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+//     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+//     typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>,
+//                                          expt::SubtractOp,
+//                                          NekMatrix<DataType, rhsForm, BlockType, space> >::Type
+//     operator-(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
+//     {
+//         return expt::CreateBinaryExpression<expt::SubtractOp>(lhs, rhs);
+//     }
+// #else
+//     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+//     typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::SubtractionResultType 
+//     operator+(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
+//     {
+//         typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::SubtractionResultType result(lhs);
+//         result -= rhs;
+//         return result;
+//     }
+// #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+// 
+//     /////////////////////////////////////////
+//     // Multiplication
+//     /////////////////////////////////////////
+// //     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+// //     void multiply(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, 
+// //                 const NekMatrix<DataType, rhsForm, BlockType, space>& rhs,
+// //                 typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::MultiplicationResultType& result,
+// //                 typename boost::enable_if<boost::is_same<DataType, double> >::type* p = NULL )
+// //     {
+// // #ifdef NEKTAR_USING_BLAS
+// //         dgemm(lhs.GetRows(), lhs.GetColumns(), rhs.GetColumns(), lhs.begin(), rhs.begin(), result.begin());
+// // #else
+// //         result = lhs;
+// //         result *= rhs;
+// // #endif
+// //     }
+// 
+// //     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+// //     void multiply(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, 
+// //                   const NekMatrix<DataType, rhsForm, BlockType, space>& rhs,
+// //                   typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekMatrix<DataType, rhsForm, BlockType, space> >::MultiplicationResultType& result,
+// //                 typename boost::disable_if<boost::is_same<DataType, double> >::type* p = NULL )
+// //     {
+// //         result = lhs;
+// //         result *= rhs;
+// //     }
+// 
+// //     template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, MatrixBlockType BlockType, unsigned int space>
+// //     void multiply(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekVector<DataType, vectorDim, space>& rhs,
+// //                   typename expt::BinaryExpressionTraits<NekMatrix<DataType, lhsForm, BlockType, space>, NekVector<DataType, vectorDim, space> >::MultiplicationResultType& result)
+// //     {
+// //         ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
+// //         for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
+// //         {
+// //             DataType t = DataType(0);
+// //             for(unsigned int j = 0; j < rhs.GetDimension(); ++j)
+// //             {
+// //                 t += lhs(i,j)*rhs(j);
+// //             }
+// //             result(i) = t;
+// //         }
+// //     }
+// 
+//                
+// #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+//     template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
+//     typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>,
+//                                          expt::MultiplyOp,
+//                                          NekMatrix<DataType, rhsForm, BlockType, space> >::Type
+//     operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
+//     {
+//         return expt::CreateBinaryExpression<expt::MultiplyOp>(lhs, rhs);
+//     }
+// 
+//     //template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, MatrixBlockType BlockType, unsigned int space>
+//     //typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>,
+//     //                                     expt::MultiplyOp,
+//     //                                     NekVector<DataType, vectorDim, space> >::Type
+//     //operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekVector<DataType, vectorDim, space>& rhs)
+//     //{
+//     //    return expt::CreateBinaryExpression<expt::MultiplyOp>(lhs, rhs);
+//     //}
+// #else
+// 
+//     template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
+//     NekMatrix<DataType, form, BlockType, space> operator*(const NekMatrix<DataType, form, BlockType, space>& lhs,
+//                                                const NekMatrix<DataType, form, BlockType, space>& rhs)
+//     {
+//         NekMatrix<DataType, form, BlockType, space> result(lhs.GetRows(), rhs.GetColumns());
+//         multiply(lhs, rhs, result);
+// 
+//         return result;
+//     }
+// 
+//     template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
+//     NekVector<DataType, 0, space> operator*(
+//         const NekMatrix<DataType, form, space>& lhs,
+//         const NekVector<DataType, 0, space>& rhs)
 //     {
 //         ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
+// 
+//         NekVector<DataType, 0, space> result(rhs.GetDimension(), DataType(0));
+// 
 //         for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
 //         {
 //             DataType t = DataType(0);
@@ -235,97 +310,46 @@ namespace Nektar
 //             }
 //             result(i) = t;
 //         }
+// 
+//         return result;
 //     }
-
-               
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-    template<typename DataType, NekMatrixForm lhsForm, NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-    typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>,
-                                         expt::MultiplyOp,
-                                         NekMatrix<DataType, rhsForm, BlockType, space> >::Type
-    operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekMatrix<DataType, rhsForm, BlockType, space>& rhs)
-    {
-        return expt::CreateBinaryExpression<expt::MultiplyOp>(lhs, rhs);
-    }
-
-    //template<typename DataType, NekMatrixForm lhsForm, unsigned int vectorDim, MatrixBlockType BlockType, unsigned int space>
-    //typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>,
-    //                                     expt::MultiplyOp,
-    //                                     NekVector<DataType, vectorDim, space> >::Type
-    //operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs, const NekVector<DataType, vectorDim, space>& rhs)
-    //{
-    //    return expt::CreateBinaryExpression<expt::MultiplyOp>(lhs, rhs);
-    //}
-#else
-
-    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
-    NekMatrix<DataType, form, BlockType, space> operator*(const NekMatrix<DataType, form, BlockType, space>& lhs,
-                                               const NekMatrix<DataType, form, BlockType, space>& rhs)
-    {
-        NekMatrix<DataType, form, BlockType, space> result(lhs.GetRows(), rhs.GetColumns());
-        multiply(lhs, rhs, result);
-
-        return result;
-    }
-
-    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
-    NekVector<DataType, 0, space> operator*(
-        const NekMatrix<DataType, form, space>& lhs,
-        const NekVector<DataType, 0, space>& rhs)
-    {
-        ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
-
-        NekVector<DataType, 0, space> result(rhs.GetDimension(), DataType(0));
-
-        for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
-        {
-            DataType t = DataType(0);
-            for(unsigned int j = 0; j < rhs.GetDimension(); ++j)
-            {
-                t += lhs(i,j)*rhs(j);
-            }
-            result(i) = t;
-        }
-
-        return result;
-    }
-#endif
-
-
-    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
-    bool operator==(const NekMatrix<DataType, form, BlockType, space>& lhs,
-                    const NekMatrix<DataType, form, BlockType, space>& rhs)
-    {
-        if( lhs.GetRows() != rhs.GetRows() )
-        {
-            return false;
-        }
-
-        if( lhs.GetColumns() != rhs.GetColumns() )
-        {
-            return false;
-        }
-
-        typename NekMatrix<DataType, form, BlockType, space>::const_iterator lhs_iter = lhs.begin();
-        typename NekMatrix<DataType, form, BlockType, space>::const_iterator rhs_iter = rhs.begin();
-
-        for( ; lhs_iter != lhs.end(); ++lhs_iter, ++rhs_iter )
-        {
-            if( *lhs_iter != *rhs_iter )
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-    
-    template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
-    bool operator!=(const NekMatrix<DataType, form, BlockType, space>& lhs,
-                     const NekMatrix<DataType, form, BlockType, space>& rhs)
-    {
-        return !(lhs == rhs);
-    }
+// #endif
+// 
+// 
+//     template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
+//     bool operator==(const NekMatrix<DataType, form, BlockType, space>& lhs,
+//                     const NekMatrix<DataType, form, BlockType, space>& rhs)
+//     {
+//         if( lhs.GetRows() != rhs.GetRows() )
+//         {
+//             return false;
+//         }
+// 
+//         if( lhs.GetColumns() != rhs.GetColumns() )
+//         {
+//             return false;
+//         }
+// 
+//         typename NekMatrix<DataType, form, BlockType, space>::const_iterator lhs_iter = lhs.begin();
+//         typename NekMatrix<DataType, form, BlockType, space>::const_iterator rhs_iter = rhs.begin();
+// 
+//         for( ; lhs_iter != lhs.end(); ++lhs_iter, ++rhs_iter )
+//         {
+//             if( *lhs_iter != *rhs_iter )
+//             {
+//                 return false;
+//             }
+//         }
+// 
+//         return true;
+//     }
+//     
+//     template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
+//     bool operator!=(const NekMatrix<DataType, form, BlockType, space>& lhs,
+//                      const NekMatrix<DataType, form, BlockType, space>& rhs)
+//     {
+//         return !(lhs == rhs);
+//     }
 
 }
 
@@ -333,6 +357,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.25  2007/04/05 05:12:45  bnelson
+    *** empty log message ***
+
     Revision 1.24  2007/04/04 02:11:08  bnelson
     Added inversion
 

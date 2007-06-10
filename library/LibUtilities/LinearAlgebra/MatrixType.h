@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: NekMatrixForm.h
+// File: MatrixType.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,38 +29,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description: Interface classes for matrices
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FORM_H
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FORM_H
-
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_TYPE_H
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_TYPE_H
 
 namespace Nektar
 {
-//     enum NekMatrixForm
-//     {
-//         FullMatrixTag,
-//         DiagonalMatrixTag,
-//         eUpperTriangular,
-//         eLowerTriangular
-// //             eZero,
-// //             eSquareSymmetric,
-// //             eSquareSymmetricPositiveDefinite,
-// //             eSymmetricPositiveDefiniteBanded,
-// //             eSquareGeneral,
-// //             eSquareGeneralBanded
-//     };
+    
+    class StandardMatrixTag;
+    class BlockMatrixTag;
+    class ScaledMatrixTag;
 }
 
-#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FORM_H
-
-
-/**
-    $Log: NekMatrixForm.h,v $
-    Revision 1.1  2006/10/30 05:11:16  bnelson
-    Added preliminary linear system and block matrix support.
-
-
- **/
+#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_TYPE_H

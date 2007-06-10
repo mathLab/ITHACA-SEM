@@ -36,6 +36,8 @@ test_suite* init_unit_test_suite( int, char* [] )
 {
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
 
+    
+    
     // shared array
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestEmptyConstructor), 0);
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestUninitializedConstructor), 0);
@@ -129,6 +131,9 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testMakePtr), 0);
 
 
+    //////////////////////////////
+    // Matrix Tests
+    //////////////////////////////
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixConstruction), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixAccess), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixBasicMath), 0);
@@ -138,7 +143,19 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockDiagonalMatrices), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockDiagonalTimesEqual), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixTemp), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestFullNekMatrixGetValue), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestDiagonalMatrixGetValue), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestFullNekMatrixSetValue), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestDiagonalNekMatrixSetValue), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestFullFullMatrixAddition), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestFullDiagonalMatrixAddition), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestDiagonalDiagonalMatrixAddition), 0);
     
+    test->add(BOOST_TEST_CASE(&Nektar::ScaledMatrixUnitTests::TestConstruction), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::ScaledMatrixUnitTests::TestElementAccess), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::ScaledMatrixUnitTests::TestGetNumElements), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::ScaledMatrixUnitTests::TestGetStorageType), 0);
+
 
     // These tests were originally added because it appeared that a NekObjectFactory
     // would be needed instead of the LokiObject factory so that the factory would
@@ -158,8 +175,8 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixSomewhatComplicatedExpression), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixComplicatedExpression), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testTemporaryGenerationFromSingleLevelBinaryExpressions), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testExhaustiveSingleLevelBinaryExpressions), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testExhaustive2OpBinaryExpressions), 0);
+    //test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testExhaustiveSingleLevelBinaryExpressions), 0);
+    //test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testExhaustive2OpBinaryExpressions), 0);
 
 
     /// Linear system tests.
@@ -178,6 +195,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.34  2007/05/27 16:40:18  bnelson
+    *** empty log message ***
+
     Revision 1.33  2007/05/27 14:40:56  bnelson
     Added 2D Access Operator tests.
 

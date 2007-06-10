@@ -42,204 +42,207 @@
 namespace Nektar
 {
    
-    // Interface for expression templates.
-    class NekMatrixMetadata
-    {
-        public:
-            NekMatrixMetadata(const NekMatrixMetadata& rhs) :
-                Rows(rhs.Rows),
-                Columns(rhs.Columns)
-            {
-            }
-
-            NekMatrixMetadata& operator=(const NekMatrixMetadata& rhs)
-            {
-                Rows = rhs.Rows;
-                Columns = rhs.Columns;
-                return *this;
-            }
-
-            unsigned int Rows;
-            unsigned int Columns;
-
-        protected:
-            NekMatrixMetadata(unsigned int r, unsigned int c) :
-                Rows(r),
-                Columns(c)
-            {
-            }
-                
-            // To force the use of one of the subclasses without the overhead of 
-            // a pure virtual destructor.
-            ~NekMatrixMetadata() {}
-            
-        private:
-            NekMatrixMetadata() :
-                Rows(0),
-                Columns(0)
-            {
-            }
-    };
-    
-    class NekMatrixAdditionAndSubtractionMetadata : public NekMatrixMetadata
-    {
-        public:
-            NekMatrixAdditionAndSubtractionMetadata(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs) :
-                NekMatrixMetadata(lhs.Rows, lhs.Columns)
-            {
-                ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree.");
-            }
-
-            NekMatrixAdditionAndSubtractionMetadata(const NekMatrixAdditionAndSubtractionMetadata& rhs) :
-                NekMatrixMetadata(rhs)
-            {
-            }
-            
-            NekMatrixAdditionAndSubtractionMetadata() :
-                NekMatrixMetadata(0,0)
-            {
-            }
-            
-            NekMatrixAdditionAndSubtractionMetadata& operator=(const NekMatrixAdditionAndSubtractionMetadata& rhs)
-            {
-                NekMatrixMetadata::operator=(rhs);
-                return *this;
-            }
-        private:
-            
-
-    };
-    
-    class NekMatrixMultiplicationMetadata : public NekMatrixMetadata
-    {
-        public:
-            NekMatrixMultiplicationMetadata(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs) :
-                NekMatrixMetadata(lhs.Rows, rhs.Columns)
-            {
-                ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree.");
-            }
-            
-            NekMatrixMultiplicationMetadata(const NekMatrixMultiplicationMetadata& rhs) :
-                NekMatrixMetadata(rhs)
-            {
-            }
-                    
-            NekMatrixMultiplicationMetadata() :
-                NekMatrixMetadata(0,0)
-            {
-            }
-            
-            NekMatrixMultiplicationMetadata& operator=(const NekMatrixMultiplicationMetadata& rhs)
-            {
-                NekMatrixMetadata::operator=(rhs);
-                return *this;
-            }
-        private:
-            
-            
-    };
-    
-    class NekMatrixConstantMetadata : public NekMatrixMetadata
-    {
-        public:
-            template<typename MatrixType>
-            explicit NekMatrixConstantMetadata(const MatrixType& matrix) :
-                NekMatrixMetadata(matrix.GetRows(), matrix.GetColumns())
-            {
-            }
-            
-            NekMatrixConstantMetadata(const NekMatrixConstantMetadata& rhs) :
-                NekMatrixMetadata(rhs)
-            {
-            }
-            
-            NekMatrixConstantMetadata() :
-                NekMatrixMetadata(0, 0)
-            {
-            }
-            
-            NekMatrixConstantMetadata& operator=(const NekMatrixConstantMetadata& rhs)
-            {
-                NekMatrixMetadata::operator=(rhs);
-                return *this;
-            }
-        private:
-            
-    };
-    
-    
-    
-    
-    class NekBlockMatrixMetadata
-    {
-        public:
-            template<typename MatrixType>
-            explicit NekBlockMatrixMetadata(const MatrixType& matrix) :
-                Rows(matrix.GetRows()),
-                Columns(matrix.GetColumns()),
-                BlockRows(matrix.GetBlockRows()),
-                BlockColumns(matrix.GetBlockColumns())
-            {
-            }
-
-            NekBlockMatrixMetadata(const NekBlockMatrixMetadata& rhs) :
-                Rows(rhs.Rows),
-                Columns(rhs.Columns),
-                BlockRows(rhs.BlockRows),
-                BlockColumns(rhs.BlockColumns)
-            {
-            }
-
-            static NekBlockMatrixMetadata CreateForNegation(const NekBlockMatrixMetadata& rhs)
-            {
-                return NekBlockMatrixMetadata(rhs);
-            }
-
-            static NekBlockMatrixMetadata CreateForAddition(const NekBlockMatrixMetadata& lhs, const NekBlockMatrixMetadata& rhs)
-            {
-                ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree in operator+");
-                ASSERTL1(lhs.BlockRows == rhs.BlockRows && lhs.BlockColumns == rhs.BlockColumns, "Matrix block dimensions must agree in operator+");
-                return NekBlockMatrixMetadata(lhs);
-            }
-
-//             static NekBlockMatrixMetadata CreateForMultiplication(const NekBlockMatrixMetadata& lhs, const NekBlockMatrixMetadata& rhs)
+//     // Interface for expression templates.
+//     class NekMatrixMetadata
+//     {
+//         public:
+//             NekMatrixMetadata(const NekMatrixMetadata& rhs) :
+//                 Rows(rhs.Rows),
+//                 Columns(rhs.Columns)
 //             {
-//                 ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree in operator*");
-//                 NekBlockMatrixMetadata result;
-//                 result.Rows = lhs.Rows;
-//                 result.Columns = rhs.Columns;
-//                 return result;
 //             }
-
-            NekBlockMatrixMetadata& operator=(const NekBlockMatrixMetadata& rhs)
-            {
-                Rows = rhs.Rows;
-                Columns = rhs.Columns;
-                BlockRows = rhs.BlockRows;
-                BlockColumns = rhs.BlockColumns;
-                return *this;
-            }
-
-            unsigned int Rows;
-            unsigned int Columns;
-            std::vector<unsigned int> BlockRows;
-            std::vector<unsigned int> BlockColumns;
-
-        private:
-            NekBlockMatrixMetadata() :
-                Rows(0),
-                Columns(0),
-                BlockRows(),
-                BlockColumns()
-            {
-            }
-    };
+// 
+//             NekMatrixMetadata& operator=(const NekMatrixMetadata& rhs)
+//             {
+//                 Rows = rhs.Rows;
+//                 Columns = rhs.Columns;
+//                 return *this;
+//             }
+// 
+//             unsigned int Rows;
+//             unsigned int Columns;
+// 
+//         protected:
+//             NekMatrixMetadata(unsigned int r, unsigned int c) :
+//                 Rows(r),
+//                 Columns(c)
+//             {
+//             }
+//                 
+//             // To force the use of one of the subclasses without the overhead of 
+//             // a pure virtual destructor.
+//             ~NekMatrixMetadata() {}
+//             
+//         private:
+//             NekMatrixMetadata() :
+//                 Rows(0),
+//                 Columns(0)
+//             {
+//             }
+//     };
+//     
+//     class NekMatrixAdditionAndSubtractionMetadata : public NekMatrixMetadata
+//     {
+//         public:
+//             NekMatrixAdditionAndSubtractionMetadata(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs) :
+//                 NekMatrixMetadata(lhs.Rows, lhs.Columns)
+//             {
+//                 ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree.");
+//             }
+// 
+//             NekMatrixAdditionAndSubtractionMetadata(const NekMatrixAdditionAndSubtractionMetadata& rhs) :
+//                 NekMatrixMetadata(rhs)
+//             {
+//             }
+//             
+//             NekMatrixAdditionAndSubtractionMetadata() :
+//                 NekMatrixMetadata(0,0)
+//             {
+//             }
+//             
+//             NekMatrixAdditionAndSubtractionMetadata& operator=(const NekMatrixAdditionAndSubtractionMetadata& rhs)
+//             {
+//                 NekMatrixMetadata::operator=(rhs);
+//                 return *this;
+//             }
+//         private:
+//             
+// 
+//     };
+//     
+//     class NekMatrixMultiplicationMetadata : public NekMatrixMetadata
+//     {
+//         public:
+//             NekMatrixMultiplicationMetadata(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs) :
+//                 NekMatrixMetadata(lhs.Rows, rhs.Columns)
+//             {
+//                 ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree.");
+//             }
+//             
+//             NekMatrixMultiplicationMetadata(const NekMatrixMultiplicationMetadata& rhs) :
+//                 NekMatrixMetadata(rhs)
+//             {
+//             }
+//                     
+//             NekMatrixMultiplicationMetadata() :
+//                 NekMatrixMetadata(0,0)
+//             {
+//             }
+//             
+//             NekMatrixMultiplicationMetadata& operator=(const NekMatrixMultiplicationMetadata& rhs)
+//             {
+//                 NekMatrixMetadata::operator=(rhs);
+//                 return *this;
+//             }
+//         private:
+//             
+//             
+//     };
+//     
+//     class NekMatrixConstantMetadata : public NekMatrixMetadata
+//     {
+//         public:
+//             template<typename MatrixType>
+//             explicit NekMatrixConstantMetadata(const MatrixType& matrix) :
+//                 NekMatrixMetadata(matrix.GetRows(), matrix.GetColumns())
+//             {
+//             }
+//             
+//             NekMatrixConstantMetadata(const NekMatrixConstantMetadata& rhs) :
+//                 NekMatrixMetadata(rhs)
+//             {
+//             }
+//             
+//             NekMatrixConstantMetadata() :
+//                 NekMatrixMetadata(0, 0)
+//             {
+//             }
+//             
+//             NekMatrixConstantMetadata& operator=(const NekMatrixConstantMetadata& rhs)
+//             {
+//                 NekMatrixMetadata::operator=(rhs);
+//                 return *this;
+//             }
+//         private:
+//             
+//     };
+//     
+//     
+//     
+//     
+//     class NekBlockMatrixMetadata
+//     {
+//         public:
+//             template<typename MatrixType>
+//             explicit NekBlockMatrixMetadata(const MatrixType& matrix) :
+//                 Rows(matrix.GetRows()),
+//                 Columns(matrix.GetColumns()),
+//                 BlockRows(matrix.GetBlockRows()),
+//                 BlockColumns(matrix.GetBlockColumns())
+//             {
+//             }
+// 
+//             NekBlockMatrixMetadata(const NekBlockMatrixMetadata& rhs) :
+//                 Rows(rhs.Rows),
+//                 Columns(rhs.Columns),
+//                 BlockRows(rhs.BlockRows),
+//                 BlockColumns(rhs.BlockColumns)
+//             {
+//             }
+// 
+//             static NekBlockMatrixMetadata CreateForNegation(const NekBlockMatrixMetadata& rhs)
+//             {
+//                 return NekBlockMatrixMetadata(rhs);
+//             }
+// 
+//             static NekBlockMatrixMetadata CreateForAddition(const NekBlockMatrixMetadata& lhs, const NekBlockMatrixMetadata& rhs)
+//             {
+//                 ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree in operator+");
+//                 ASSERTL1(lhs.BlockRows == rhs.BlockRows && lhs.BlockColumns == rhs.BlockColumns, "Matrix block dimensions must agree in operator+");
+//                 return NekBlockMatrixMetadata(lhs);
+//             }
+// 
+// //             static NekBlockMatrixMetadata CreateForMultiplication(const NekBlockMatrixMetadata& lhs, const NekBlockMatrixMetadata& rhs)
+// //             {
+// //                 ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree in operator*");
+// //                 NekBlockMatrixMetadata result;
+// //                 result.Rows = lhs.Rows;
+// //                 result.Columns = rhs.Columns;
+// //                 return result;
+// //             }
+// 
+//             NekBlockMatrixMetadata& operator=(const NekBlockMatrixMetadata& rhs)
+//             {
+//                 Rows = rhs.Rows;
+//                 Columns = rhs.Columns;
+//                 BlockRows = rhs.BlockRows;
+//                 BlockColumns = rhs.BlockColumns;
+//                 return *this;
+//             }
+// 
+//             unsigned int Rows;
+//             unsigned int Columns;
+//             std::vector<unsigned int> BlockRows;
+//             std::vector<unsigned int> BlockColumns;
+// 
+//         private:
+//             NekBlockMatrixMetadata() :
+//                 Rows(0),
+//                 Columns(0),
+//                 BlockRows(),
+//                 BlockColumns()
+//             {
+//             }
+//     };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_MATRIX_METADATA_HPP
 
 /**
     $Log: NekMatrixMetadata.hpp,v $
+    Revision 1.6  2007/01/16 05:30:34  bnelson
+    Major improvements for expression templates.
+
     Revision 1.5  2006/11/08 04:16:14  bnelson
     Added subtraction operators.
 

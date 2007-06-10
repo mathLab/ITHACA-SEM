@@ -2,6 +2,7 @@
 SET(UnitTestSources
 CountedObject.cpp
 main.cpp
+ScaledMatrixUnitTests.cpp
 testBoostUtil.cpp
 testExpressionTemplates.cpp
 testLinearSystem.cpp

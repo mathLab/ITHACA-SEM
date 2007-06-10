@@ -40,34 +40,48 @@
 
 #include <LibUtilities/LinearAlgebra/MatrixBlockType.h>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
+#include <LibUtilities/LinearAlgebra/MatrixType.h>
+#include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 #include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
-  
+    template<typename DataType>
+    class ConstMatrix;
+    
+    template<typename DataType>
+    class Matrix;
+    
+    template<typename DataType, typename StorageType = FullMatrixTag, typename MatType = StandardMatrixTag>
+    class NekMatrix;
+
     /// \brief Enumeration used internally to determine if a pointer can be deleted or not.
     //enum MatrixDataDeltetableType { eDeletable, eNotDeletable };
     
-    template<typename DataType, NekMatrixForm form = eFull, MatrixBlockType BlockType = eNormal, unsigned int space = 0, typename enabled=void>
-    class NekMatrix;
-    
-    template<typename DataType, NekMatrixForm form>
-    class NekMatrixStoragePolicy;
+//     template<typename DataType, NekMatrixForm form = FullMatrixTag, MatrixBlockType BlockType = StandardMatrixTag, unsigned int space = 0, typename enabled=void>
+//     class NekMatrix;
+//     
+//     template<typename DataType, NekMatrixForm form>
+//     class NekMatrixStoragePolicy;
+// 
+//     template<typename DataType, NekMatrixForm form>
+//     class NekMatrixArithmeticPolicy;
+// 
+//     template<typename DataType, NekMatrixForm form>
+//     class NekMatrixAssignmentPolicy;
 
-    template<typename DataType, NekMatrixForm form>
-    class NekMatrixArithmeticPolicy;
-
-    template<typename DataType, NekMatrixForm form>
-    class NekMatrixAssignmentPolicy;
-
-    typedef boost::shared_ptr<NekMatrix<double> > SharedNekMatrixPtr;
+    typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedNekMatrixPtr;
 };
     
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
 
 /**
     $Log: NekMatrixFwd.hpp,v $
+    Revision 1.7  2007/03/29 18:59:05  bnelson
+    Refactoring in preparation for scaled matrices.  Fixed transpose problem.
+
     Revision 1.6  2007/02/15 06:56:55  bnelson
     *** empty log message ***
 

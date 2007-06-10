@@ -40,11 +40,12 @@
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
-
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 namespace Nektar
 {
-    typedef NekMatrix<double,eFull>        DNekMat;
-    typedef NekVector<double>              DNekVec;
+    typedef NekMatrix<NekDouble,FullMatrixTag>        DNekMat;
+    typedef NekVector<NekDouble>              DNekVec;
     typedef LinearSystem <DNekMat>         DNekLinSys;
 
     typedef boost::shared_ptr<DNekMat>     DNekMatSharedPtr;
@@ -55,6 +56,9 @@ namespace Nektar
 
 /**
     $Log: NekTypeDefs.hpp,v $
+    Revision 1.3  2007/02/24 09:08:41  sherwin
+    Updated to include definition of NekLinSysSharedPtr
+
     Revision 1.2  2007/02/17 01:11:27  bnelson
     *** empty log message ***
 

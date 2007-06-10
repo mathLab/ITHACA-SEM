@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: NekMatrixForm.h
+// File: MatrixStoragePolicy.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,38 +29,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description: Interface classes for matrices
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FORM_H
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FORM_H
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_STORAGE_POLICY_HPP
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_STORAGE_POLICY_HPP
 
+#include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
 
 namespace Nektar
 {
-//     enum NekMatrixForm
-//     {
-//         FullMatrixTag,
-//         DiagonalMatrixTag,
-//         eUpperTriangular,
-//         eLowerTriangular
-// //             eZero,
-// //             eSquareSymmetric,
-// //             eSquareSymmetricPositiveDefinite,
-// //             eSymmetricPositiveDefiniteBanded,
-// //             eSquareGeneral,
-// //             eSquareGeneralBanded
-//     };
+    template<typename DataType, typename StorageType>
+    class MatrixStoragePolicy;
 }
 
-#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FORM_H
-
-
-/**
-    $Log: NekMatrixForm.h,v $
-    Revision 1.1  2006/10/30 05:11:16  bnelson
-    Added preliminary linear system and block matrix support.
-
-
- **/
+#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_STORAGE_POLICY_HPP

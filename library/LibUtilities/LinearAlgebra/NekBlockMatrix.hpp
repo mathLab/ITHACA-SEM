@@ -46,19 +46,19 @@
 namespace Nektar
 {
 
-    template<MatrixBlockType BlockType, typename MatrixType>
-    class BlockMatrixDataType
-    {
-        public:
-            typedef ConsistentObjectAccess<MatrixType> ResultType;
-    };
-
-    template<typename MatrixType>
-            class BlockMatrixDataType<ePointerBlock, MatrixType>
-    {
-        public:
-            typedef ConsistentObjectAccess<boost::shared_ptr<MatrixType> > ResultType;
-    };
+//     template<MatrixBlockType BlockType, typename MatrixType>
+//     class BlockMatrixDataType
+//     {
+//         public:
+//             typedef ConsistentObjectAccess<MatrixType> ResultType;
+//     };
+// 
+//     template<typename MatrixType>
+//             class BlockMatrixDataType<ePointerBlock, MatrixType>
+//     {
+//         public:
+//             typedef ConsistentObjectAccess<boost::shared_ptr<MatrixType> > ResultType;
+//     };
 
 
 };
@@ -67,6 +67,9 @@ namespace Nektar
 
 /**
     $Log: NekBlockMatrix.hpp,v $
+    Revision 1.2  2006/11/01 04:07:08  bnelson
+    Changed block matrices to use the ConsistentObjectAccess object to store matrices or pointers to matrices so that the same pointer syntax works for both.
+
     Revision 1.1  2006/10/30 05:11:16  bnelson
     Added preliminary linear system and block matrix support.
 

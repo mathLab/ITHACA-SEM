@@ -52,6 +52,34 @@ namespace Nektar
         void testBlockDiagonalTimesEqual();
         void testNekMatrixTemp();
     }
+    
+    namespace MatrixUnitTests
+    {
+        void TestNekMatrixConstruction();
+        void TestNekMatrixGetValue();
+        
+        void TestFullNekMatrixGetValue();
+        void TestDiagonalMatrixGetValue();
+        void TestFullFullMatrixAddition();
+        void TestFullDiagonalMatrixAddition();
+        void TestDiagonalDiagonalMatrixAddition();
+        
+        void TestFullNekMatrixSetValue();
+        void TestDiagonalNekMatrixSetValue();
+        
+        void TestNekMatrixSetValue();
+        
+        void TestScaledMatrixConstruction();
+        void TestBlockMatrixConstruction();
+    }
+    
+    namespace ScaledMatrixUnitTests
+    {
+        void TestConstruction();
+        void TestElementAccess();
+        void TestGetNumElements();
+        void TestGetStorageType();
+    }
 }
 
 #endif // NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
@@ -59,6 +87,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.h,v $
+    Revision 1.8  2007/03/29 19:42:03  bnelson
+    *** empty log message ***
+
     Revision 1.7  2006/10/30 05:08:14  bnelson
     Added preliminary linear system and block matrix support.
 

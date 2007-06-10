@@ -6,8 +6,15 @@ SET(BasicConstHeaders
 
 SET(LinearAlgebraHeaders
 	./LinearAlgebra/Blas.hpp
+        ./LinearAlgebra/BlockMatrix.hpp
+        ./LinearAlgebra/DiagonalMatrixStoragePolicy.hpp
+        ./LinearAlgebra/FullMatrixStoragePolicy.hpp
 	./LinearAlgebra/Lapack.hpp
+        ./LinearAlgebra/MatrixBase.hpp
 	./LinearAlgebra/MatrixBlockType.h
+        ./LinearAlgebra/MatrixStoragePolicy.hpp
+        ./LinearAlgebra/MatrixStorageType.h
+        ./LinearAlgebra/MatrixType.h
 	./LinearAlgebra/NekBlockDiagonalMatrix.hpp
 	./LinearAlgebra/NekBlockFullMatrix.hpp
 	./LinearAlgebra/NekBlockMatrix.hpp
@@ -30,7 +37,9 @@ SET(LinearAlgebraHeaders
 	./LinearAlgebra/NekVectorMetadata.hpp
 	./LinearAlgebra/NekVectorTypeTraits.hpp
 	./LinearAlgebra/NekVectorVariableSized.hpp
+        ./LinearAlgebra/NormalMatrix.hpp
 	./LinearAlgebra/PointerWrapper.h
+        ./LinearAlgebra/ScaledMatrix.hpp
 	./LinearAlgebra/TransF77.hpp
 )
 
@@ -90,14 +99,16 @@ SET(ExpressionTemplates
 
 SET(BasicUtils
         ./BasicUtils/ArrayPolicies.hpp
+        ./BasicUtils/BinaryExpressionTraits.hpp
 	./BasicUtils/BoostUtil.hpp
+        ./BasicUtils/Concepts.hpp
 	./BasicUtils/ConsistentObjectAccess.hpp
 	./BasicUtils/ErrorUtil.hpp
 	./BasicUtils/mojo.hpp
-	./BasicUtils/Concepts.hpp
-	./BasicUtils/Vmath.hpp
+        ./BasicUtils/OperatorGenerators.hpp
 	./BasicUtils/SharedArray.hpp
 	./BasicUtils/SharedArrayUtil.hpp
+        ./BasicUtils/Vmath.hpp
 )
 
 SET(Memory

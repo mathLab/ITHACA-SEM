@@ -41,22 +41,22 @@
 #include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
 #include <boost/concept_check.hpp>
 
-namespace NektarTemp
+namespace Nektar
 {
     template<typename LhsType, typename RhsType, typename OpType>
     class OperatorGenerator;
     
-    template<typename LhsType, typename RhsType>
-    struct PlusEqualConcept
-    {
-        void constraints()
-        {
-            lhs += rhs;
-        }
-        
-        LhsType lhs;
-        RhsType rhs;
-    };
+//     template<typename LhsType, typename RhsType>
+//     struct PlusEqualConcept
+//     {
+//         void constraints()
+//         {
+//             lhs += rhs;
+//         }
+//         
+//         LhsType lhs;
+//         RhsType rhs;
+//     };
     
     template<typename LhsType, typename RhsType>
     class OperatorGenerator<LhsType, RhsType, AddOp>
@@ -67,9 +67,9 @@ namespace NektarTemp
             friend ResultType operator+(typename boost::call_traits<LhsType>::const_reference lhs,
                                         typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                boost::function_requires<PlusEqualConcept<LhsType, RhsType> >();
-                ResultType result = lhs;
-                result += rhs;
+                //boost::function_requires<PlusEqualConcept<LhsType, RhsType> >();
+                ResultType result;
+                NekAdd(result, lhs, rhs);
                 return result;
             }
     };
@@ -83,8 +83,8 @@ namespace NektarTemp
             friend ResultType operator-(typename boost::call_traits<LhsType>::const_reference lhs,
                                         typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                ResultType result = lhs;
-                lhs -= rhs;
+                ResultType result;
+                NekSubtract(result, lhs, rhs);
                 return result;
             }
     };
@@ -98,8 +98,8 @@ namespace NektarTemp
             friend ResultType operator/(typename boost::call_traits<LhsType>::const_reference lhs,
                                         typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                ResultType result = lhs;
-                lhs /= rhs;
+                ResultType result;
+                NekDivide(result, lhs, rhs);
                 return result;
             }
     };
@@ -113,11 +113,120 @@ namespace NektarTemp
             friend ResultType operator*(typename boost::call_traits<LhsType>::const_reference lhs,
                                         typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                ResultType result = lhs;
-                lhs *= rhs;
+                ResultType result;
+                NekMultiply(result, lhs, rhs);
                 return result;
             }
     };
+    
+//     template<typename LhsType, template<typename, typename, typename> class RhsType, typename OpType>
+//     class OperatorGeneratorR3;
+//     
+//     template<typename LhsType, template<typename, typename, typename> class RhsType>
+//     class OperatorGenerator<LhsType, RhsType, MultiplyOp>
+//     {
+//         public:
+//             //typedef typename BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType ResultType;
+//             
+//             template<typename R1, typename R2, typename R3>
+//             friend typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3> >::ResultType 
+//             operator*(typename boost::call_traits<LhsType>::const_reference lhs,
+//                       typename boost::call_traits<RhsType<R1, R2, R3> >::const_reference rhs)
+//             {
+//                 typedef typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3> >::ResultType ResultType;
+//                 ResultType result;
+//                 ResultType::NekMultiply(result, lhs, rhs);
+//                 return result;
+//             }
+//     };
+    
+    template<template<typename, typename, typename> class LhsType, typename RhsType, typename OpType>
+    class OperatorGeneratorL3;
+    
+    template<template<typename, typename, typename> class LhsType, typename RhsType>
+    class OperatorGeneratorL3<LhsType, RhsType, MultiplyOp>
+    {
+        public:           
+            template<typename L1, typename L2, typename L3>
+            friend typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType 
+            operator*(const LhsType<L1, L2, L3>& lhs,
+                      const RhsType& rhs)
+            {
+                typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType ResultType;
+                ResultType result;
+                NekMultiply(result, lhs, rhs);
+                return result;
+            }
+    };
+    
+    
+    template<template<typename, typename, typename> class LhsType, 
+             template<typename, typename, typename> class RhsType, 
+             typename OpType>
+    class OperatorGeneratorL3R3;
+    
+    template<template<typename, typename, typename> class LhsType, 
+             template<typename, typename, typename> class RhsType>
+    class OperatorGeneratorL3R3<LhsType, RhsType, MultiplyOp>
+    {
+        public:           
+            template<typename L1, typename L2, typename L3,
+                     typename R1, typename R2, typename R3>
+            friend typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, MultiplyOp>::ResultType 
+            operator*(const LhsType<L1, L2, L3>& lhs,
+                      const RhsType<R1, R2, R3>& rhs)
+            {
+                typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, MultiplyOp>::ResultType ResultType;
+                ResultType result;
+                NekMultiply(result, lhs, rhs);
+                return result;
+            }
+    };
+    
+    template<template<typename, typename, typename> class LhsType, 
+             template<typename, typename, typename> class RhsType>
+    class OperatorGeneratorL3R3<LhsType, RhsType, AddOp>
+    {
+        public:           
+            template<typename L1, typename L2, typename L3,
+                     typename R1, typename R2, typename R3>
+            friend typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, AddOp>::ResultType 
+            operator+(const LhsType<L1, L2, L3>& lhs,
+                      const RhsType<R1, R2, R3>& rhs)
+            {
+                typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, AddOp>::ResultType ResultType;
+                ResultType result;
+                NekAdd(result, lhs, rhs);
+                return result;
+            }
+    };
+    
+    #define GENERATE_OPERATOR_L3_R3(LhsType, RhsType, OperatorEnum, OperatorGlobalMethod, OperatorLocalMethod) \
+        template<typename L1, typename L2, typename L3, typename R1, typename R2, typename R3> \
+        typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, OperatorEnum>::ResultType \
+        OperatorGlobalMethod(const LhsType<L1, L2, L3>& lhs, const RhsType<R1, R2, R3>& rhs) \
+        { \
+            typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, OperatorEnum>::ResultType ResultType; \
+            ResultType result; \
+            OperatorLocalMethod(result, lhs, rhs); \
+            return result; \
+         }
+         
+    #define GENERATE_ADDITION_OPERATOR_L3R3(LhsType, RhsType) \
+        GENERATE_OPERATOR_L3_R3(LhsType, RhsType, AddOp, operator+, NekAdd);
+        
+    #define GENERATE_MULTIPLICATION_OPERATOR_L3R3(LhsType, RhsType) \
+        GENERATE_OPERATOR_L3_R3(LhsType, RhsType, MultiplyOp, operator*, NekMultiply);
+        
+//         template<typename L1, typename L2, typename L3, typename R1, typename R2, typename R3> \
+//         typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, AddOp>::ResultType \
+//         operator+(const LhsType<L1, L2, L3>& lhs, const RhsType<R1, R2, R3>& rhs) \
+//         { \
+//             typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, AddOp>::ResultType ResultType; \
+//             ResultType result; \
+//             NekAdd(result, lhs, rhs); \
+//             return result; \
+//          }
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_OPERATOR_GENERATORS_HPP

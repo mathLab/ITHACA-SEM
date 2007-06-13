@@ -63,14 +63,14 @@ namespace Nektar
                 m_columnSizes(numberOfBlockColumns+1),
                 m_storageSize(this->GetRows()*this->GetColumns())
             {
-                for(unsigned int i = 0; i < numberOfBlockRows; ++i)
+                for(unsigned int i = 1; i <= numberOfBlockRows; ++i)
                 {
-                    m_rowSizes[i] = i*rowsPerBlock;
+                    m_rowSizes[i-1] = i*rowsPerBlock-1;
                 }
                 
-                for(unsigned int i = 0; i < numberOfBlockColumns; ++i)
+                for(unsigned int i = 1; i <= numberOfBlockColumns; ++i)
                 {
-                    m_columnSizes[i] = i*columnsPerBlock;
+                    m_columnSizes[i-1] = i*columnsPerBlock-1;
                 }
             }
             
@@ -83,16 +83,16 @@ namespace Nektar
                 m_columnSizes(numberOfBlockColumns+1),
                 m_storageSize(this->GetRows()*this->GetColumns())
             {
-                m_rowSizes[0] = 0;
-                for(unsigned int i = 1; i <= numberOfBlockRows; ++i)
+                m_rowSizes[0] = rowsPerBlock[0] - 1;
+                for(unsigned int i = 1; i < numberOfBlockRows; ++i)
                 {
-                    m_rowSizes[i] = rowsPerBlock[i-1] + m_rowSizes[i-1];
+                    m_rowSizes[i] = rowsPerBlock[i] + m_rowSizes[i-1];
                 }
                 
-                m_columnSizes[0] = 0;
-                for(unsigned int i = 1; i <= numberOfBlockColumns; ++i)
+                m_columnSizes[0] = columnsPerBlock[0] - 1;
+                for(unsigned int i = 1; i < numberOfBlockColumns; ++i)
                 {
-                    m_columnSizes[i] = columnsPerBlock[i-1] + m_columnSizes[i-1];
+                    m_columnSizes[i] = columnsPerBlock[i] + m_columnSizes[i-1];
                 }
             }
                 
@@ -126,7 +126,7 @@ namespace Nektar
                 ASSERTL2(column < m_data.GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
                     std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_data.GetColumns()) +
                     std::string(" columns"));
-                return m_data[row][column] = m;
+                m_data[row][column] = m;
             }
             
             
@@ -143,8 +143,8 @@ namespace Nektar
                     
                 unsigned int blockRow = std::lower_bound(m_rowSizes.begin(), m_rowSizes.end(), row) - m_rowSizes.begin();
                 unsigned int blockColumn = std::lower_bound(m_columnSizes.begin(), m_columnSizes.end(), col) - m_columnSizes.begin();
-                unsigned int actualRow = row-m_rowSizes[blockRow];
-                unsigned int actualCol = col-m_columnSizes[blockColumn];
+                unsigned int actualRow = row-(m_rowSizes[blockRow]-1);
+                unsigned int actualCol = col-(m_columnSizes[blockColumn]-1);
                 
                 ASSERTL2(GetBlock(blockRow, blockColumn), std::string("Attempting to access block (") +
                     boost::lexical_cast<std::string>(blockRow) + std::string(", ") + 
@@ -164,8 +164,8 @@ namespace Nektar
                     
                 unsigned int blockRow = std::lower_bound(m_rowSizes.begin(), m_rowSizes.end(), row) - m_rowSizes.begin();
                 unsigned int blockColumn = std::lower_bound(m_columnSizes.begin(), m_columnSizes.end(), col) - m_columnSizes.begin();
-                unsigned int actualRow = row-m_rowSizes[blockRow];
-                unsigned int actualCol = col-m_columnSizes[blockColumn];
+                unsigned int actualRow = row-(m_rowSizes[blockRow]-1);
+                unsigned int actualCol = col-(m_columnSizes[blockColumn]-1);
                 
                 ASSERTL2(GetBlock(blockRow, blockColumn), std::string("Attempting to access block (") +
                     boost::lexical_cast<std::string>(blockRow) + std::string(", ") + 

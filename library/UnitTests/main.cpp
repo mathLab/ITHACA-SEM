@@ -35,8 +35,6 @@ using boost::unit_test_framework::test_suite;
 test_suite* init_unit_test_suite( int, char* [] )
 {
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
-
-    
     
     // shared array
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestEmptyConstructor), 0);
@@ -201,6 +199,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.36  2007/06/13 06:17:35  bnelson
+    *** empty log message ***
+
     Revision 1.35  2007/06/10 23:45:58  bnelson
     Matrix updates.
 

@@ -41,13 +41,10 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
+    template<typename DataType>
+    boost::shared_ptr<DataType> MakePtr(DataType* d)
     {
-        template<typename DataType>
-        boost::shared_ptr<DataType> MakePtr(DataType* d)
-        {
-            return boost::shared_ptr<DataType>(d);
-        }
+        return boost::shared_ptr<DataType>(d);
     }
 }
 

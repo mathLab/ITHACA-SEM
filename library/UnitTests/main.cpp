@@ -142,7 +142,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockMatrices), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockDiagonalMatrices), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testBlockDiagonalTimesEqual), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekMatrixTemp), 0);
+
     test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestFullNekMatrixGetValue), 0);
     test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestDiagonalMatrixGetValue), 0);
     test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestFullNekMatrixSetValue), 0);
@@ -155,6 +155,12 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::ScaledMatrixUnitTests::TestElementAccess), 0);
     test->add(BOOST_TEST_CASE(&Nektar::ScaledMatrixUnitTests::TestGetNumElements), 0);
     test->add(BOOST_TEST_CASE(&Nektar::ScaledMatrixUnitTests::TestGetStorageType), 0);
+    
+    test->add(BOOST_TEST_CASE(&Nektar::BlockMatrixUnitTests::TestEqualSizedBlockConstruction), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::BlockMatrixUnitTests::TestVariableSizedBlockConstruction), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::BlockMatrixUnitTests::TestElementAccess), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::BlockMatrixUnitTests::TestGetNumElements), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::BlockMatrixUnitTests::TestGetStorageType), 0);
 
 
     // These tests were originally added because it appeared that a NekObjectFactory
@@ -195,6 +201,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.35  2007/06/10 23:45:58  bnelson
+    Matrix updates.
+
     Revision 1.34  2007/05/27 16:40:18  bnelson
     *** empty log message ***
 

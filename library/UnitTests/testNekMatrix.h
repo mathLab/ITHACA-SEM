@@ -50,7 +50,6 @@ namespace Nektar
         void testBlockMatrices();
         void testBlockDiagonalMatrices();
         void testBlockDiagonalTimesEqual();
-        void testNekMatrixTemp();
     }
     
     namespace MatrixUnitTests
@@ -80,6 +79,15 @@ namespace Nektar
         void TestGetNumElements();
         void TestGetStorageType();
     }
+    
+    namespace BlockMatrixUnitTests
+    {
+        void TestEqualSizedBlockConstruction();
+        void TestVariableSizedBlockConstruction();
+        void TestElementAccess();
+        void TestGetNumElements();
+        void TestGetStorageType();
+    }
 }
 
 #endif // NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_H
@@ -87,6 +95,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.h,v $
+    Revision 1.9  2007/06/10 23:45:59  bnelson
+    Matrix updates.
+
     Revision 1.8  2007/03/29 19:42:03  bnelson
     *** empty log message ***
 

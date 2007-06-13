@@ -73,6 +73,9 @@ namespace Nektar
             typedef NekMatrix<DataType, StorageType, StandardMatrixTag> ThisType;
             typedef MatrixStoragePolicy<DataType, StorageType> StoragePolicy;
             
+            typedef typename StoragePolicy::GetValueReturnType GetValueType;
+            typedef typename boost::call_traits<DataType>::const_reference ConstGetValueType;
+            
         public:
             NekMatrix() :
                 BaseType(0, 0),
@@ -167,7 +170,7 @@ namespace Nektar
             }
             
             
-            typename boost::call_traits<DataType>::const_reference operator()(unsigned int row, unsigned int column) const
+            ConstGetValueType operator()(unsigned int row, unsigned int column) const
             {
                 ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
@@ -179,7 +182,7 @@ namespace Nektar
                 return StoragePolicy::GetValue(this->GetRows(), this->GetColumns(), row, column, m_data);    
             }
             
-            typename StoragePolicy::GetValueReturnType operator()(unsigned int row, unsigned int column)
+            GetValueType operator()(unsigned int row, unsigned int column)
             {
                 ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +

@@ -38,6 +38,7 @@
 
 #include <SpatialDomains/BoundaryConditions.h>
 #include <SpatialDomains/ParseUtils.hpp>
+#include <SpatialDomains/Equation.hpp>
 
 namespace Nektar
 {
@@ -233,7 +234,7 @@ namespace Nektar
 
                 if (!indxStr.empty())
                 {
-                    vector<Composite> compVector;
+                    BoundaryRegionShPtrType boundaryRegion(MemoryManager<BoundaryRegionType>::AllocateSharedPtr());
 
                     if (ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector))
                     {
@@ -242,7 +243,7 @@ namespace Nektar
                             Composite composite = m_MeshGraph->GetComposite(*iter);
                             if (composite)
                             {
-                                compVector.push_back(composite);
+                                boundaryRegion->push_back(composite);
                             }
                             else
                             {
@@ -253,7 +254,7 @@ namespace Nektar
                             }
                         }
 
-                        m_BoundaryRegions.push_back(compVector);
+                        m_BoundaryRegions.push_back(boundaryRegion);
                     }
                     else
                     {
@@ -272,7 +273,223 @@ namespace Nektar
 
         void BoundaryConditions::ReadBoundaryConditions(TiXmlElement *conditions)
         {
-        }
+            // Read REGION tags
+            TiXmlElement *boundaryConditionsElement = conditions->FirstChildElement("BOUNDARYCONDITIONS");
+            ASSERTL0(boundaryConditionsElement, "Boundary conditions must be specified.");
+
+            TiXmlElement *regionElement = boundaryConditionsElement->FirstChildElement("REGION");
+
+            while (regionElement)
+            {
+                TiXmlAttribute *attr = regionElement->FirstAttribute();
+                ASSERTL0(attr,
+                    "The REF attribute must be present to specify the boundary region to which the condition applies.");
+                std::string attrName(attr->Name());
+                ASSERTL0(attrName == "REF",
+                    "The REF attribute must be present to specify the boundary region to which the condition applies.");
+
+                int boundaryRegionID;
+                int err = attr->QueryIntValue(&boundaryRegionID);
+                ASSERTL0(err == TIXML_SUCCESS, "Error reading boundary region reference.");
+
+                // Find the boundary region corresponding to this ID.
+                std::string boundaryRegionIDStr;
+                std::ostringstream boundaryRegionIDStrm(boundaryRegionIDStr);
+                boundaryRegionIDStrm << boundaryRegionID;
+                ASSERTL0(boundaryRegionID < m_BoundaryRegions.size(),
+                    (std::string("Boundary region ID not found: ") + boundaryRegionIDStr).c_str());
+
+                // Need to also make sure that we only specify a region ID once.  Since they
+                // must be specified in order we can just check to see if that index exists.
+                // It should be the next one in the container.
+                ASSERTL0(boundaryRegionID == m_BoundaryConditions.size(),
+                    (std::string("Next boundary condition must be ID: ") + boundaryRegionIDStr).c_str());
+
+                // Here is the boundary region.
+                // m_BoundaryRegions[boundaryRegionID];
+
+                TiXmlElement *conditionElement = regionElement->FirstChildElement();
+
+                // In all types, all components must be defined.  Use a bool map to keep this
+                // straight.  Set up a map with variable name as key and bool as the value.
+                std::map<std::string, bool> componentSetMap;
+                for (VariableType::iterator iter = m_Variables.begin(); iter != m_Variables.end(); ++iter)
+                {
+                    componentSetMap[*iter] = false;
+                }
+
+                while (conditionElement)
+                {
+                    // Check type.
+                    std::string conditionType = conditionElement->Value();
+                    std::string attrData;
+
+                    // All have var specified, or else all variables are zero.
+                    attr = conditionElement->FirstAttribute();
+
+                    VariableType::iterator iter;
+
+                    if (attr)
+                    {
+                        attrName = attr->Name();
+
+                        ASSERTL0(attrName == "VAR", "First attribute must be VAR.");
+
+                        attrData = attr->Value();
+
+                        if (!attrData.empty())
+                        {
+                            iter = std::find(m_Variables.begin(), m_Variables.end(), attrData);
+
+                            ASSERTL0(iter != m_Variables.end(), (std::string("Cannot find variable: ") + attrData).c_str());
+                        }
+                    }
+
+                    if (conditionType == "N")
+                    {
+                        if (attrData.empty())
+                        {
+                            // All variables are Neumann and are set to zero.
+                            for (VariableType::iterator varIter = m_Variables.begin();
+                                varIter != m_Variables.end(); ++varIter)
+                            {
+                                BoundaryConditionShPtrType neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("0"));
+                                m_BoundaryConditions[*varIter]  = neumannCondition;
+                            }
+                        }
+                        else
+                        {
+                            // Use the iterator from above, which must point to the variable.
+                            // Read the VALUE attribute.  It is the next and only other attribute.
+                            attr = attr->Next();
+
+                            if (attr)
+                            {
+                                attrName = attr->Name();
+
+                                ASSERTL0(attrName == "VALUE", (std::string("Unknown attribute: ") + attrName).c_str());
+
+                                attrData = attr->Value();
+
+                                ASSERTL0(!attrData.empty(), "VALUE attribute must have associated value.");
+
+                                BoundaryConditionShPtrType neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(attrData));
+                                m_BoundaryConditions[*iter]  = neumannCondition;
+                            }
+                            else
+                            {
+                                // This variable's condition is zero.
+                                BoundaryConditionShPtrType neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("0"));
+                                m_BoundaryConditions[*iter]  = neumannCondition;
+                            }
+                        }
+                    }
+                    else if (conditionType == "D")
+                    {
+                        if (attrData.empty())
+                        {
+                            // All variables are Dirichlet and are set to zero.
+                            for (VariableType::iterator varIter = m_Variables.begin();
+                                varIter != m_Variables.end(); ++varIter)
+                            {
+                                BoundaryConditionShPtrType dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
+                                m_BoundaryConditions[*varIter] = dirichletCondition;
+                            }
+                        }
+                        else
+                        {
+                            // Use the iterator from above, which must point to the variable.
+                            // Read the VALUE attribute.  It is the next and only other attribute.
+                            attr = attr->Next();
+
+                            if (attr)
+                            {
+                                attrName = attr->Name();
+
+                                ASSERTL0(attrName == "VALUE", (std::string("Unknown attribute: ") + attrName).c_str());
+
+                                attrData = attr->Value();
+
+                                ASSERTL0(!attrData.empty(), "VALUE attribute must have associated value.");
+
+                                BoundaryConditionShPtrType dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(attrData));
+                                m_BoundaryConditions[*iter]  = dirichletCondition;
+                            }
+                            else
+                            {
+                                // This variable's condition is zero.
+                                BoundaryConditionShPtrType dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
+                                m_BoundaryConditions[*iter]  = dirichletCondition;
+                            }
+                        }
+                    }
+                    else if (conditionType == "R")
+                    {
+                        if (attrData.empty())
+                        {
+                            // All variables are Robin and are set to zero.
+                            for (VariableType::iterator varIter = m_Variables.begin();
+                                varIter != m_Variables.end(); ++varIter)
+                            {
+                                BoundaryConditionShPtrType robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
+                                m_BoundaryConditions[*varIter] = robinCondition;
+                            }
+                        }
+                        else
+                        {
+                            // Use the iterator from above, which must point to the variable.
+                            // Read the A and B attributes.
+                            attr = attr->Next();
+
+                            if (attr)
+                            {
+                                std::string attrName1, attrName2;
+                                std::string attrData1, attrData2;
+
+                                attrName1 = attr->Name();
+
+                                ASSERTL0(attrName1 == "A", (std::string("Unknown attribute: ") + attrName1).c_str());
+
+                                attrData1 = attr->Value();
+
+                                ASSERTL0(!attrData1.empty(), "A attributes must have associated values.");
+
+                                attr = attr->Next();
+                                ASSERTL0(attr, "Unable to read B attribute.");
+
+                                attrName2 = attr->Name();
+                                ASSERTL0(attrName2 == "B", (std::string("Unknown attribute: ") + attrName2).c_str());
+
+                                attrData2 = attr->Value();
+
+                                ASSERTL0(!attrData2.empty(), "B attributes must have associated values.");
+
+                                BoundaryConditionShPtrType robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(attrData1, attrData2));
+                                m_BoundaryConditions[*iter]  = robinCondition;
+                            }
+                            else
+                            {
+                                // This variable's condition is zero.
+                                BoundaryConditionShPtrType robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
+                                m_BoundaryConditions[*iter]  = robinCondition;
+                            }
+                        }
+                    }
+                    else if (conditionType == "C")
+                    {
+                        NEKERROR(ErrorUtil::ewarning, "Cauchy type boundary conditions not implemented.");
+                    }
+
+                    conditionElement = conditionElement->NextSiblingElement();
+                }
+
+                regionElement = regionElement->NextSiblingElement("REGION");
+            }
+
+            ASSERTL0(regionElement, "One or more boundary conditions must be specified.");
+
+            // Read R (Robin), D (Dirichlet), N (Neumann) [What about Cauchy?] tags
+       }
 
         void BoundaryConditions::ReadForcingFunctions(TiXmlElement *conditions)
         {

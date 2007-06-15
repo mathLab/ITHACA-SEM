@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source$
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/BoundaryConditions.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -39,6 +39,7 @@
 #include <string>
 #include <map>
 
+#include <SpatialDomains/Equation.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <SpatialDomains/MeshGraph.h>
 
@@ -51,12 +52,54 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+
+        struct BoundaryConditionBase
+        {
+            std::string m_variable;
+        };
+
+        struct DirichletBoundaryCondition : public BoundaryConditionBase
+        {
+            DirichletBoundaryCondition(const std::string &eqn):
+                m_DirichletCondition(eqn)
+            {
+            };
+
+            Equation<NekDouble> m_DirichletCondition;
+        };
+
+        struct NeumannBoundaryCondition : public BoundaryConditionBase
+        {
+            NeumannBoundaryCondition(const std::string &eqn):
+                m_NeumannCondition(eqn)
+            {
+            };
+
+            Equation<NekDouble> m_NeumannCondition;
+        };
+
+        struct RobinBoundaryCondition : public BoundaryConditionBase
+        {
+            RobinBoundaryCondition(const std::string &a, const std::string &b):
+                m_a(a), m_b(b)
+            {
+            }
+
+            // u = a(x,y,z) + b(x,y,z)*\frac{\partial{u}}{\partial{n}}
+            Equation<NekDouble> m_a;
+            Equation<NekDouble> m_b;
+        };
+
         class BoundaryConditions
         {
         public:
             typedef std::map<std::string, NekDouble> ParamMapType;
             typedef std::vector<std::string> VariableType;
-            typedef std::vector<std::vector<Composite> > BoundaryRegionType;
+            typedef std::vector<Composite> BoundaryRegionType;
+            typedef boost::shared_ptr<BoundaryRegionType> BoundaryRegionShPtrType;
+            typedef std::vector<BoundaryRegionShPtrType> BoundaryRegionCollectionType;
+            typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtrType;
+            typedef std::map<std::string, BoundaryConditionShPtrType> BoundaryConditionCollectionType;
 
             BoundaryConditions(const MeshGraph *meshGraph);
             ~BoundaryConditions();
@@ -78,10 +121,11 @@ namespace Nektar
             void ReadForcingFunctions(TiXmlElement *conditions);
             void ReadInitialConditions(TiXmlElement *conditions);
 
-            // Containers to hold conditions
+            // Containers to hold conditions and associated data
             ParamMapType m_Parameters;
             VariableType m_Variables;
-            BoundaryRegionType m_BoundaryRegions;
+            BoundaryRegionCollectionType m_BoundaryRegions;
+            BoundaryConditionCollectionType m_BoundaryConditions;
 
             /// The mesh graph to use for referencing geometry info.
             const MeshGraph *m_MeshGraph;

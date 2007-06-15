@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source$
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Equation.hpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -64,6 +64,11 @@ namespace Nektar
               T Evaluate(T x=0, T y=0, T z=0)
               {
                   return Evaluator<T>::Evaluate(m_eqn, x, y, z);
+              }
+
+              std::string GetEquation(void)
+              {
+                  return m_eqn;
               }
 
         private:

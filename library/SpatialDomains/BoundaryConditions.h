@@ -52,16 +52,28 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        enum BoundaryConditionType
+        {
+            eDirichlet,
+            eNeumann,
+            eRobin
+        };
 
         struct BoundaryConditionBase
         {
-            std::string m_variable;
+            BoundaryConditionBase(BoundaryConditionType type):
+                m_BoundaryConditionType(type)
+            {
+            };
+
+            BoundaryConditionType m_BoundaryConditionType;
         };
 
         struct DirichletBoundaryCondition : public BoundaryConditionBase
         {
             DirichletBoundaryCondition(const std::string &eqn):
-                m_DirichletCondition(eqn)
+                m_DirichletCondition(eqn),
+                BoundaryConditionBase(eDirichlet)
             {
             };
 
@@ -71,7 +83,8 @@ namespace Nektar
         struct NeumannBoundaryCondition : public BoundaryConditionBase
         {
             NeumannBoundaryCondition(const std::string &eqn):
-                m_NeumannCondition(eqn)
+                m_NeumannCondition(eqn),
+                BoundaryConditionBase(eNeumann)
             {
             };
 
@@ -81,7 +94,8 @@ namespace Nektar
         struct RobinBoundaryCondition : public BoundaryConditionBase
         {
             RobinBoundaryCondition(const std::string &a, const std::string &b):
-                m_a(a), m_b(b)
+                m_a(a), m_b(b),
+                BoundaryConditionBase(eRobin)
             {
             }
 
@@ -90,17 +104,19 @@ namespace Nektar
             Equation<NekDouble> m_b;
         };
 
+        typedef std::map<std::string, NekDouble> ParamMapType;
+        typedef std::vector<std::string> VariableType;
+        typedef std::vector<Composite> BoundaryRegionType;
+        typedef boost::shared_ptr<BoundaryRegionType> BoundaryRegionShPtrType;
+        typedef std::vector<BoundaryRegionShPtrType> BoundaryRegionCollectionType;
+        typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtrType;
+        typedef std::map<std::string, BoundaryConditionShPtrType> BoundaryConditionMapType;
+        typedef boost::shared_ptr<BoundaryConditionMapType> BoundaryConditionMapShPtrType;
+        typedef std::map<int, BoundaryConditionMapShPtrType> BoundaryConditionCollectionType;
+
         class BoundaryConditions
         {
         public:
-            typedef std::map<std::string, NekDouble> ParamMapType;
-            typedef std::vector<std::string> VariableType;
-            typedef std::vector<Composite> BoundaryRegionType;
-            typedef boost::shared_ptr<BoundaryRegionType> BoundaryRegionShPtrType;
-            typedef std::vector<BoundaryRegionShPtrType> BoundaryRegionCollectionType;
-            typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtrType;
-            typedef std::map<std::string, BoundaryConditionShPtrType> BoundaryConditionCollectionType;
-
             BoundaryConditions(const MeshGraph *meshGraph);
             ~BoundaryConditions();
 
@@ -110,6 +126,16 @@ namespace Nektar
             const ParamMapType &GetParameters(void)
             {
                 return m_Parameters;
+            }
+
+            BoundaryRegionCollectionType &GetBoundaryRegionCollection(void)
+            {
+                return m_BoundaryRegions;
+            }
+
+            BoundaryConditionCollectionType &GetBoundaryConditions(void)
+            {
+                return m_BoundaryConditions;
             }
 
         protected:

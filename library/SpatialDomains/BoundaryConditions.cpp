@@ -279,8 +279,14 @@ namespace Nektar
 
             TiXmlElement *regionElement = boundaryConditionsElement->FirstChildElement("REGION");
 
+            ASSERTL0(regionElement, "One or more boundary conditions must be specified.");
+
+            // Read R (Robin), D (Dirichlet), N (Neumann) [What about Cauchy?] tags
+
             while (regionElement)
             {
+                BoundaryConditionMapShPtrType boundaryConditions = MemoryManager<BoundaryConditionMapType>::AllocateSharedPtr();
+
                 TiXmlAttribute *attr = regionElement->FirstAttribute();
                 ASSERTL0(attr,
                     "The REF attribute must be present to specify the boundary region to which the condition applies.");
@@ -299,24 +305,16 @@ namespace Nektar
                 ASSERTL0(boundaryRegionID < m_BoundaryRegions.size(),
                     (std::string("Boundary region ID not found: ") + boundaryRegionIDStr).c_str());
 
-                // Need to also make sure that we only specify a region ID once.  Since they
-                // must be specified in order we can just check to see if that index exists.
-                // It should be the next one in the container.
-                ASSERTL0(boundaryRegionID == m_BoundaryConditions.size(),
-                    (std::string("Next boundary condition must be ID: ") + boundaryRegionIDStr).c_str());
+                //// Need to also make sure that we only specify a region ID once.  Since they
+                //// must be specified in order we can just check to see if that index exists.
+                //// It should be the next one in the container.
+                //ASSERTL0(boundaryRegionID == m_BoundaryConditions.size(),
+                //    (std::string("Next boundary condition must be ID: ") + boundaryRegionIDStr).c_str());
 
                 // Here is the boundary region.
                 // m_BoundaryRegions[boundaryRegionID];
 
                 TiXmlElement *conditionElement = regionElement->FirstChildElement();
-
-                // In all types, all components must be defined.  Use a bool map to keep this
-                // straight.  Set up a map with variable name as key and bool as the value.
-                std::map<std::string, bool> componentSetMap;
-                for (VariableType::iterator iter = m_Variables.begin(); iter != m_Variables.end(); ++iter)
-                {
-                    componentSetMap[*iter] = false;
-                }
 
                 while (conditionElement)
                 {
@@ -354,7 +352,7 @@ namespace Nektar
                                 varIter != m_Variables.end(); ++varIter)
                             {
                                 BoundaryConditionShPtrType neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("0"));
-                                m_BoundaryConditions[*varIter]  = neumannCondition;
+                                (*boundaryConditions)[*varIter]  = neumannCondition;
                             }
                         }
                         else
@@ -374,13 +372,13 @@ namespace Nektar
                                 ASSERTL0(!attrData.empty(), "VALUE attribute must have associated value.");
 
                                 BoundaryConditionShPtrType neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(attrData));
-                                m_BoundaryConditions[*iter]  = neumannCondition;
+                                (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
                                 BoundaryConditionShPtrType neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("0"));
-                                m_BoundaryConditions[*iter]  = neumannCondition;
+                                (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                         }
                     }
@@ -393,7 +391,7 @@ namespace Nektar
                                 varIter != m_Variables.end(); ++varIter)
                             {
                                 BoundaryConditionShPtrType dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
-                                m_BoundaryConditions[*varIter] = dirichletCondition;
+                                (*boundaryConditions)[*varIter] = dirichletCondition;
                             }
                         }
                         else
@@ -413,13 +411,13 @@ namespace Nektar
                                 ASSERTL0(!attrData.empty(), "VALUE attribute must have associated value.");
 
                                 BoundaryConditionShPtrType dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(attrData));
-                                m_BoundaryConditions[*iter]  = dirichletCondition;
+                                (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
                                 BoundaryConditionShPtrType dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
-                                m_BoundaryConditions[*iter]  = dirichletCondition;
+                                (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                         }
                     }
@@ -432,7 +430,7 @@ namespace Nektar
                                 varIter != m_Variables.end(); ++varIter)
                             {
                                 BoundaryConditionShPtrType robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
-                                m_BoundaryConditions[*varIter] = robinCondition;
+                                (*boundaryConditions)[*varIter] = robinCondition;
                             }
                         }
                         else
@@ -465,13 +463,13 @@ namespace Nektar
                                 ASSERTL0(!attrData2.empty(), "B attributes must have associated values.");
 
                                 BoundaryConditionShPtrType robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(attrData1, attrData2));
-                                m_BoundaryConditions[*iter]  = robinCondition;
+                                (*boundaryConditions)[*iter]  = robinCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
                                 BoundaryConditionShPtrType robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
-                                m_BoundaryConditions[*iter]  = robinCondition;
+                                (*boundaryConditions)[*iter]  = robinCondition;
                             }
                         }
                     }
@@ -483,12 +481,9 @@ namespace Nektar
                     conditionElement = conditionElement->NextSiblingElement();
                 }
 
+                m_BoundaryConditions[boundaryRegionID] = boundaryConditions;
                 regionElement = regionElement->NextSiblingElement("REGION");
             }
-
-            ASSERTL0(regionElement, "One or more boundary conditions must be specified.");
-
-            // Read R (Robin), D (Dirichlet), N (Neumann) [What about Cauchy?] tags
        }
 
         void BoundaryConditions::ReadForcingFunctions(TiXmlElement *conditions)

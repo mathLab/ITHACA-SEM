@@ -16,7 +16,7 @@ SET(USE_ACML OFF CACHE BOOL "Use the AMD Core Math Library (ACML) for BLAS and L
 SET(USE_ATLAS OFF CACHE BOOL "Use ATLAS for BLAS and Lapack support." )
 SET(USE_WIN32_LAPACK OFF CACHE BOOL "Use Win32 Lapack provided with the Third Party Distribution.")
 SET(USE_NEKTAR_MEMORY_POOLS ON CACHE BOOL "Use memory pools to accelerate memory allocation.")
-SET(USE_BLAS_LAPACK ON CACHE BOOL "Use Blas and lapack routine.")
+SET(USE_BLAS_LAPACK ON CACHE BOOL "Use Blas and lapack routines.")
 SET(USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
 SET(NEKTAR_FULL_DEBUG OFF CACHE BOOL "Enable Full Debugging.")
 

@@ -307,7 +307,7 @@ namespace Nektar
             
             const_reference operator[](index i) const 
             {
-                ASSERTL1(i < num_elements(), (std::string("Element ") +
+                ASSERTL1(static_cast<size_type>(i) < num_elements(), (std::string("Element ") +
                     boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
                     boost::lexical_cast<std::string>(num_elements())));
                 return (*m_data)[i+m_offset]; 
@@ -558,7 +558,7 @@ namespace Nektar
             using BaseType::operator[];
             reference operator[](index i)
             {
-                ASSERTL1(i < this->num_elements(), (std::string("Element ") +
+                ASSERTL1(static_cast<size_type>(i) < this->num_elements(), (std::string("Element ") +
                     boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
                     boost::lexical_cast<std::string>(this->num_elements())));
                 return (*this->m_data)[i+this->m_offset]; 

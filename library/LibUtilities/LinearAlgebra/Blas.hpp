@@ -180,10 +180,10 @@ namespace Blas
     // \brief Wrapper to mutliply two (row major) matrices together C =
     // a*A*B + b*C
     static void Cdgemm(const int M, const int N, const int K, const double a,
-          double *A, const int ldA, double * B, const int ldB,
+          const double *A, const int ldA, const double * B, const int ldB,
           const double b, double *C, const int ldC)
     {
-        Dgemm('N','N',N,M,K,a,B,ldB,A,ldA,b,C,ldC) ;
+        Dgemm('N','N',N,M,K,a,B,N,A,K,b,C,N) ;
     }
 #endif //NEKTAR_USING_BLAS
 }
@@ -191,6 +191,9 @@ namespace Blas
 
 /***
 $Log: Blas.hpp,v $
+Revision 1.1  2007/04/03 03:59:24  bnelson
+Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
+
 Revision 1.3  2007/02/04 00:15:40  bnelson
 *** empty log message ***
 

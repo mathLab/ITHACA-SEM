@@ -12,6 +12,8 @@ SET(LinearAlgebraHeaders
 	./LinearAlgebra/Lapack.hpp
         ./LinearAlgebra/MatrixBase.hpp
 	./LinearAlgebra/MatrixBlockType.h
+        ./LinearAlgebra/MatrixOperations.cpp
+        ./LinearAlgebra/MatrixOperations.hpp
         ./LinearAlgebra/MatrixStoragePolicy.hpp
         ./LinearAlgebra/MatrixStorageType.h
         ./LinearAlgebra/MatrixType.h

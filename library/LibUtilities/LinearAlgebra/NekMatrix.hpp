@@ -42,6 +42,7 @@
 #include <LibUtilities/LinearAlgebra/BlockMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NormalMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
 
 namespace Nektar
 {
@@ -357,6 +358,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.26  2007/06/10 23:42:15  bnelson
+    Matrix updates.
+
     Revision 1.25  2007/04/05 05:12:45  bnelson
     *** empty log message ***
 

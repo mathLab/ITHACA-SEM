@@ -39,29 +39,38 @@
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
 #include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/LinearAlgebra/FullMatrixStoragePolicy.hpp>
+#include <LibUtilities/LinearAlgebra/DiagonalMatrixStoragePolicy.hpp>
 
 #include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
-    template<typename DataType, typename StorageType, typename OwnedMatrixType>
-    class NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, BlockMatrixTag> : public Matrix<DataType>
+    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename OuterStorageType>
+    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, OuterStorageType, BlockMatrixTag> : public Matrix<DataType>
     {
         public:
             typedef Matrix<DataType> BaseType;
-            typedef NekMatrix<DataType, StorageType, OwnedMatrixType> InnerMatrixType;
-            typedef NekMatrix<InnerMatrixType, StorageType, ScaledMatrixTag> ThisType;
-            typedef typename InnerMatrixType::GetValueType GetValueType;
-            typedef typename InnerMatrixType::ConstGetValueType ConstGetValueType;
+            typedef NekMatrix<DataType, InnerStorageType, InnerMatrixType> InnerType;
+            typedef NekMatrix<InnerType, OuterStorageType, BlockMatrixTag> ThisType;
+            
+            // Each inner matrix type can possible return references or value types from GetValue.
+            // Query the type here to find out.
+            typedef typename InnerType::GetValueType GetValueType;
+            typedef typename InnerType::ConstGetValueType ConstGetValueType;
+            
+            typedef MatrixStoragePolicy<boost::shared_ptr<InnerType>, OuterStorageType> StoragePolicy;
                 
         public:
             NekMatrix(unsigned int numberOfBlockRows, unsigned int numberOfBlockColumns,
                       unsigned int rowsPerBlock, unsigned int columnsPerBlock) :
                 BaseType(numberOfBlockRows*rowsPerBlock, numberOfBlockColumns*columnsPerBlock),
-                m_data(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerMatrixType>()),
+                m_data(StoragePolicy::Initialize(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>())),
                 m_rowSizes(numberOfBlockRows+1),
                 m_columnSizes(numberOfBlockColumns+1),
-                m_storageSize(this->GetRows()*this->GetColumns())
+                m_storageSize(this->GetRows()*this->GetColumns()),
+                m_numberOfBlockRows(numberOfBlockRows),
+                m_numberOfBlockColumns(numberOfBlockColumns)
             {
                 for(unsigned int i = 1; i <= numberOfBlockRows; ++i)
                 {
@@ -78,10 +87,12 @@ namespace Nektar
                       unsigned int* rowsPerBlock, unsigned int* columnsPerBlock) :
                 BaseType(std::accumulate(rowsPerBlock, rowsPerBlock + numberOfBlockRows, 0),
                          std::accumulate(columnsPerBlock, columnsPerBlock + numberOfBlockColumns, 0)),
-                m_data(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerMatrixType>()),
+                m_data(StoragePolicy::Initialize(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>())),
                 m_rowSizes(numberOfBlockRows+1),
                 m_columnSizes(numberOfBlockColumns+1),
-                m_storageSize(this->GetRows()*this->GetColumns())
+                m_storageSize(this->GetRows()*this->GetColumns()),
+                m_numberOfBlockRows(numberOfBlockRows),
+                m_numberOfBlockColumns(numberOfBlockColumns)
             {
                 m_rowSizes[0] = rowsPerBlock[0] - 1;
                 for(unsigned int i = 1; i < numberOfBlockRows; ++i)
@@ -96,37 +107,37 @@ namespace Nektar
                 }
             }
                 
-            boost::shared_ptr<const InnerMatrixType> GetBlock(unsigned int row, unsigned int column) const        
+            boost::shared_ptr<const InnerType> GetBlock(unsigned int row, unsigned int column) const        
             {
-                ASSERTL2(row < m_data.GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_data.GetRows()) +
+                ASSERTL2(row < m_numberOfBlockRows, std::string("Row ") + boost::lexical_cast<std::string>(row) + 
+                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
                     std::string(" rows"));
-                ASSERTL2(column < m_data.GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_data.GetColumns()) +
+                ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) + 
+                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
                     std::string(" columns"));
-                return m_data[row][column];
+                return StoragePolicy::GetValue(m_numberOfBlockRows, m_numberOfBlockColumns, row, column, m_data);
             }
             
-            boost::shared_ptr<InnerMatrixType> GetBlock(unsigned int row, unsigned int column)       
+            boost::shared_ptr<InnerType> GetBlock(unsigned int row, unsigned int column)       
             {
-                ASSERTL2(row < m_data.GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_data.GetRows()) +
+                ASSERTL2(row < m_numberOfBlockRows, std::string("Row ") + boost::lexical_cast<std::string>(row) + 
+                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
                     std::string(" rows"));
-                ASSERTL2(column < m_data.GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_data.GetColumns()) +
+                ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) + 
+                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
                     std::string(" columns"));
-                return m_data[row][column];
+                return StoragePolicy::GetValue(m_numberOfBlockRows, m_numberOfBlockColumns, row, column, m_data);
             }
             
-            void SetBlock(unsigned int row, unsigned int column, boost::shared_ptr<InnerMatrixType>& m)
+            void SetBlock(unsigned int row, unsigned int column, boost::shared_ptr<InnerType>& m)
             {
-                ASSERTL2(row < m_data.GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_data.GetRows()) +
+                ASSERTL2(row < m_numberOfBlockRows, std::string("Row ") + boost::lexical_cast<std::string>(row) + 
+                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
                     std::string(" rows"));
-                ASSERTL2(column < m_data.GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_data.GetColumns()) +
+                ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) + 
+                    std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
                     std::string(" columns"));
-                m_data[row][column] = m;
+                StoragePolicy::SetValue(m_numberOfBlockRows, m_numberOfBlockColumns, row, column, m_data, m);
             }
             
             
@@ -181,8 +192,11 @@ namespace Nektar
              
             MatrixStorage GetStorageType() const
             {
-                return static_cast<MatrixStorage>(ConvertToMatrixStorageEnum<StorageType>::Value);
+                return static_cast<MatrixStorage>(ConvertToMatrixStorageEnum<OuterStorageType>::Value);
             }            
+            
+            unsigned int GetNumberOfBlockRows() const { return m_numberOfBlockRows; }
+            unsigned int GetNumberOfBlockColumns() const { return m_numberOfBlockColumns; }
             
         public:
         
@@ -207,10 +221,12 @@ namespace Nektar
                 (*this)(row, column) = d;
             }
             
-            Array<TwoD, boost::shared_ptr<InnerMatrixType> > m_data;
+            Array<OneD, boost::shared_ptr<InnerType> > m_data;
             Array<OneD, unsigned int> m_rowSizes;
             Array<OneD, unsigned int> m_columnSizes;
             unsigned int m_storageSize;
+            unsigned int m_numberOfBlockRows;
+            unsigned int m_numberOfBlockColumns;            
     };
     
 }

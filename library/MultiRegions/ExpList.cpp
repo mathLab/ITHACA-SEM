@@ -230,7 +230,7 @@ namespace Nektar
 				Array<OneD, NekDouble> &coord_1,
 				Array<OneD, NekDouble> &coord_2)
 	{
-	    int    i, j, cnt = 0;
+	    int    i, cnt = 0;
 	    Array<OneD, NekDouble> e_coord_0;
 	    Array<OneD, NekDouble> e_coord_1;
 	    Array<OneD, NekDouble> e_coord_2;

@@ -44,7 +44,6 @@ namespace Nektar
                              const SpatialDomains::MeshGraph1D &graph1D)
 	{
 	    int i,j,gid,cnt;
-            int n;
 	    
 	    // set up Local to Continuous mapping 
 	    StdRegions::StdExpMap vmap;
@@ -85,4 +84,7 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.6  2007/06/05 16:36:55  pvos
+* Updated Explist2D ContExpList2D and corresponding demo-codes
+*
 **/

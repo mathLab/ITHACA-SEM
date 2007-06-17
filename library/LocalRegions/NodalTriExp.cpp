@@ -253,7 +253,6 @@ namespace Nektar
                                     Array<OneD,NekDouble> &out_d1,
                                     Array<OneD,NekDouble> &out_d2)
         {
-	    int    i;
 	    int    nquad0 = m_base[0]->GetNumPoints();
 	    int    nquad1 = m_base[0]->GetNumPoints();
 	    ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
@@ -574,6 +573,10 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.6  2007/06/07 15:54:18  pvos
+ *    Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
+ *    Also made corrections to various ASSERTL2 calls
+ *
  *    Revision 1.5  2007/06/06 11:29:31  pvos
  *    Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
  *

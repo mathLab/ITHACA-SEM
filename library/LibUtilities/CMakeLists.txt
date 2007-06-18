@@ -42,6 +42,7 @@ SET(LinearAlgebraHeaders
         ./LinearAlgebra/NormalMatrix.hpp
 	./LinearAlgebra/PointerWrapper.h
         ./LinearAlgebra/ScaledMatrix.hpp
+        ./LinearAlgebra/TriangularMatrixStoragePolicy.hpp
 	./LinearAlgebra/TransF77.hpp
 )
 

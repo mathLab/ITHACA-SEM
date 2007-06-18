@@ -46,6 +46,8 @@ namespace Nektar
       
     class FullMatrixTag {};
     class DiagonalMatrixTag {};
+    class UpperTriangularMatrixTag {};
+    class LowerTriangularMatrixTag {};
     
     template<typename T>
     class ConvertToMatrixStorageEnum;

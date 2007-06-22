@@ -7,36 +7,36 @@
 
     <!-- Definitions that can be used below in this file. -->
     <DEF>
-        A = 1.0
-        B = 2.0
-        C = 3.0
+        <D> A = 1.0 </D>
+        <D> B = 2.0 </D>
+        <D> C = 3.0 </D>
     </DEF>
 
     <VERTEX>
         <!-- Always must have four values per entry. -->
-        0 0.0 1.0 0.0
-        1 1.0 1.0 0.0
-        2 1.0 0.0 0.0
-        3 0.0 0.0 0.0
-        4 2.0 1.0 0.0
-        5 2.0 0.0 0.0
+        <V ID="0"> 0.0 1.0 0.0 </V>
+        <V ID="1"> 1.0 1.0 0.0 </V>
+        <V ID="2"> 0.0 0.0 0.0 </V>
+        <V ID="3"> 0.0 1.0 0.0 </V>
+        <V ID="4"> 2.0 1.0 0.0 </V>
+        <V ID="5"> 2.0 0.0 0.0 </V>
     </VERTEX>
     
     <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, R - prism, H - hex -->
     <!-- Only certain element types are appropriate for the given dimension (dim on mesh) -->
     <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
     <ELEMENT>
-        0 <S> 0 1 </S>
-        1 <S> 1 2 </S>
-        2 <S> 2 3 </S>
-        3 <S> 3 4 </S>
-        4 <S> 4 5 </S>
+        <S ID="0"> 0 1 </S>
+        <S ID="1"> 1 2 </S>
+        <S ID="2"> 2 3 </S>
+        <S ID="3"> 3 4 </S>
+        <S ID="4"> 4 5 </S>
     </ELEMENT>
     
     <!-- V - vertex, S - Segment, E - edge, F - face -->
     <COMPOSITE>
-        0 <C> S[0-2] </C>
-        1 <C> S[3-4] </C>
+        <C ID="0"> S[0-2] </C>
+        <C ID="1"> S[3-4] </C>
     </COMPOSITE>
 </GEOMETRY>
 </NEKTAR>

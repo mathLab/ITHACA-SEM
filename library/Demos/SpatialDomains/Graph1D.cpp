@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 
+#include <boost/shared_ptr.hpp>
+
 using namespace Nektar;
 using namespace SpatialDomains; 
 using namespace std;
@@ -30,6 +32,16 @@ int main(int argc, char *argv[]){
 
     graph1D.Read(meshfile);
     bcs.Read(bcfile);
+
+    BoundaryRegionCollectionType &boundaryRegions = bcs.GetBoundaryRegions();
+    BoundaryConditionCollectionType &boundaryConditions = bcs.GetBoundaryConditions();
+
+    // Region 1, v component
+    BoundaryConditionShPtrType bcShPtr((*boundaryConditions[1])["v"]);
+    boost::shared_ptr<RobinBoundaryCondition> rbBC;
+    
+    rbBC = boost::dynamic_pointer_cast<RobinBoundaryCondition>(bcShPtr);
+//    static_cast<RobinBoundaryCondition>(*bcShPtr)
 
     return 0;
 }

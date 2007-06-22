@@ -37,19 +37,19 @@
         <!--The region numbers below correspond to the regions specified in the
         BoundaryRegion definition above.-->
         <BOUNDARYCONDITIONS>
-            <REGION ID="0">
-                <D> u, f(x,y) </D>
-                <N> v, g(x,y) </N>
+            <REGION REF="0">
+                <D VAR="u" VALUE="f(x,y)" />
+                <N VAR="v" VALUE="g(x,y)" />
             </REGION>
 
             <!-- Notice that the variable order has been reversed. -->
-            <REGION ID="1">
-                <R> v, a(x,y), b(x,y) </R>
-                <D> u </D> <!-- u = 0 -->
+            <REGION REF="1">
+                <R VAR="v" A="a(x,y)" B="b(x,y)" />
+                <D VAR="u" /> <!-- u = 0 -->
             </REGION>
 
             <!--<REGION ID="2">
-                <D> </D>
+                <D> </D> u,v = 0; all vars equal to zero
             </REGION>
 
             <REGION ID="3">

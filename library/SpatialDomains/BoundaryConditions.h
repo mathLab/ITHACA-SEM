@@ -66,6 +66,8 @@ namespace Nektar
             {
             };
 
+            virtual ~BoundaryConditionBase(){};
+
             BoundaryConditionType m_BoundaryConditionType;
         };
 
@@ -113,6 +115,9 @@ namespace Nektar
         typedef std::map<std::string, BoundaryConditionShPtrType> BoundaryConditionMapType;
         typedef boost::shared_ptr<BoundaryConditionMapType> BoundaryConditionMapShPtrType;
         typedef std::map<int, BoundaryConditionMapShPtrType> BoundaryConditionCollectionType;
+        typedef Equation<NekDouble> ForcingFunctionType;
+        typedef boost::shared_ptr<ForcingFunctionType> ForcingFunctionsShPtrType;
+        typedef std::map<std::string, ForcingFunctionsShPtrType> ForcingFunctionsMapType;
 
         class BoundaryConditions
         {
@@ -128,7 +133,7 @@ namespace Nektar
                 return m_Parameters;
             }
 
-            BoundaryRegionCollectionType &GetBoundaryRegionCollection(void)
+            BoundaryRegionCollectionType &GetBoundaryRegions(void)
             {
                 return m_BoundaryRegions;
             }
@@ -136,6 +141,11 @@ namespace Nektar
             BoundaryConditionCollectionType &GetBoundaryConditions(void)
             {
                 return m_BoundaryConditions;
+            }
+
+            ForcingFunctionsMapType &GetForcingFunctions(void)
+            {
+                return m_ForcingFunctions;
             }
 
         protected:
@@ -152,6 +162,7 @@ namespace Nektar
             VariableType m_Variables;
             BoundaryRegionCollectionType m_BoundaryRegions;
             BoundaryConditionCollectionType m_BoundaryConditions;
+            ForcingFunctionsMapType m_ForcingFunctions;
 
             /// The mesh graph to use for referencing geometry info.
             const MeshGraph *m_MeshGraph;

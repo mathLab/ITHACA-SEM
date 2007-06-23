@@ -40,6 +40,8 @@
 #include <SpatialDomains/ParseUtils.hpp>
 #include <SpatialDomains/Equation.hpp>
 
+#include <string>
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -488,6 +490,48 @@ namespace Nektar
 
         void BoundaryConditions::ReadForcingFunctions(TiXmlElement *conditions)
         {
+            TiXmlElement *forcingFunctionsElement = conditions->FirstChildElement("FORCING");
+            ASSERTL0(forcingFunctionsElement, "Forcing functions must be specified.");
+
+            TiXmlElement *forcingFunction = forcingFunctionsElement->FirstChildElement("F");
+
+            // All forcing functions are initialized to "0" so they only have to be
+            // partially specified.  That is, not all variables have to have functions
+            // specified.  For those that are missing it is assumed they are "0".
+            for (VariableType::iterator varIter = m_Variables.begin();
+                varIter != m_Variables.end(); ++varIter)
+            {
+                ForcingFunctionsShPtrType forcingFunction(MemoryManager<ForcingFunctionType>::AllocateSharedPtr("0"));
+                m_ForcingFunctions[*varIter] = forcingFunction;
+            }
+
+            while (forcingFunction)
+            {
+                TiXmlAttribute *variableAttr = forcingFunction->FirstAttribute();
+
+                ASSERTL0(variableAttr, "The variable must be specified for the forcing function.");
+                std::string variableAttrName = variableAttr->Name();
+                ASSERTL0(variableAttrName == "VAR", (std::string("Error in attribute name: ") + variableAttrName).c_str());
+
+                std::string variableStr = variableAttr->Value();
+
+                TiXmlAttribute *functionAttr = variableAttr->Next();
+                if (functionAttr)
+                {
+                    ForcingFunctionsMapType::iterator forcingFcnsIter = m_ForcingFunctions.find(variableStr);
+
+                    if (forcingFcnsIter != m_ForcingFunctions.end())
+                    {
+                        m_ForcingFunctions[variableStr]->SetEquation(functionAttr->Value());
+                    }
+                    else
+                    {
+                        NEKERROR(ErrorUtil::efatal, (std::string("Error setting forcing function for variable: ") + variableStr).c_str());
+                    }
+                }
+
+                forcingFunction = forcingFunction->NextSiblingElement("F");
+            }
         }
 
         void BoundaryConditions::ReadInitialConditions(TiXmlElement *conditions)

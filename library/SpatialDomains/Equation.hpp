@@ -71,6 +71,16 @@ namespace Nektar
                   return m_eqn;
               }
 
+              void SetEquation(std::string eqn)
+              {
+                  m_eqn = eqn;
+              }
+
+              void SetEquation(const char *eqn)
+              {
+                  m_eqn = eqn;
+              }
+
         private:
             std::string m_eqn;
         };

@@ -501,8 +501,8 @@ namespace Nektar
             for (VariableType::iterator varIter = m_Variables.begin();
                 varIter != m_Variables.end(); ++varIter)
             {
-                ForcingFunctionsShPtrType forcingFunction(MemoryManager<ForcingFunctionType>::AllocateSharedPtr("0"));
-                m_ForcingFunctions[*varIter] = forcingFunction;
+                ForcingFunctionsShPtrType forcingFunctionShPtr(MemoryManager<ForcingFunctionType>::AllocateSharedPtr("0"));
+                m_ForcingFunctions[*varIter] = forcingFunctionShPtr;
             }
 
             while (forcingFunction)
@@ -511,7 +511,7 @@ namespace Nektar
 
                 ASSERTL0(variableAttr, "The variable must be specified for the forcing function.");
                 std::string variableAttrName = variableAttr->Name();
-                ASSERTL0(variableAttrName == "VAR", (std::string("Error in attribute name: ") + variableAttrName).c_str());
+                ASSERTL0(variableAttrName == "VAR", (std::string("Error in forcing function attribute name: ") + variableAttrName).c_str());
 
                 std::string variableStr = variableAttr->Value();
 
@@ -536,6 +536,49 @@ namespace Nektar
 
         void BoundaryConditions::ReadInitialConditions(TiXmlElement *conditions)
         {
+            TiXmlElement *initialConditionsElement = conditions->FirstChildElement("INITIALCONDITIONS");
+            ASSERTL0(initialConditionsElement, "Initial conditions must be specified.");
+
+            TiXmlElement *initialCondition = initialConditionsElement->FirstChildElement("I");
+
+            // All initial conditions are initialized to "0" so they only have to be
+            // partially specified.  That is, not all variables have to have functions
+            // specified.  For those that are missing it is assumed they are "0".
+            for (VariableType::iterator varIter = m_Variables.begin();
+                varIter != m_Variables.end(); ++varIter)
+            {
+                InitialConditionsShPtrType initialConditionShPtr(MemoryManager<InitialConditionType>::AllocateSharedPtr("0"));
+                m_InitialConditions[*varIter] = initialConditionShPtr;
+            }
+
+            while (initialCondition)
+            {
+                TiXmlAttribute *initialConditionAttr = initialCondition->FirstAttribute();
+
+                ASSERTL0(initialConditionAttr, "The variable must be specified for the forcing function.");
+                std::string intialConditionAttrName = initialConditionAttr->Name();
+                ASSERTL0(intialConditionAttrName == "VAR", (std::string("Error in initial condition attribute name: ") + intialConditionAttrName).c_str());
+
+                std::string initialConditionStr = initialConditionAttr->Value();
+
+                TiXmlAttribute *functionAttr = initialConditionAttr->Next();
+                if (functionAttr)
+                {
+                    InitialConditionsMapType::iterator initialConditionFcnsIter =
+                        m_InitialConditions.find(initialConditionStr);
+
+                    if (initialConditionFcnsIter != m_InitialConditions.end())
+                    {
+                        m_InitialConditions[initialConditionStr]->SetEquation(functionAttr->Value());
+                    }
+                    else
+                    {
+                        NEKERROR(ErrorUtil::efatal, (std::string("Error setting initial condition for variable: ") + initialConditionStr).c_str());
+                    }
+                }
+
+                initialCondition = initialCondition->NextSiblingElement("I");
+            }
         }
     }
 }

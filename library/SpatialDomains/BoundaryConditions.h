@@ -118,6 +118,9 @@ namespace Nektar
         typedef Equation<NekDouble> ForcingFunctionType;
         typedef boost::shared_ptr<ForcingFunctionType> ForcingFunctionsShPtrType;
         typedef std::map<std::string, ForcingFunctionsShPtrType> ForcingFunctionsMapType;
+        typedef Equation<NekDouble> InitialConditionType;
+        typedef boost::shared_ptr<InitialConditionType> InitialConditionsShPtrType;
+        typedef std::map<std::string, InitialConditionsShPtrType> InitialConditionsMapType;
 
         class BoundaryConditions
         {
@@ -148,6 +151,11 @@ namespace Nektar
                 return m_ForcingFunctions;
             }
 
+            InitialConditionsMapType &GetInitialConditions(void)
+            {
+                return m_InitialConditions;
+            }
+
         protected:
             void ReadParameters(TiXmlElement *conditions);
             void ReadVariables(TiXmlElement *conditions);
@@ -163,6 +171,7 @@ namespace Nektar
             BoundaryRegionCollectionType m_BoundaryRegions;
             BoundaryConditionCollectionType m_BoundaryConditions;
             ForcingFunctionsMapType m_ForcingFunctions;
+            InitialConditionsMapType m_InitialConditions;
 
             /// The mesh graph to use for referencing geometry info.
             const MeshGraph *m_MeshGraph;

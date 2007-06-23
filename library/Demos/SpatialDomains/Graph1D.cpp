@@ -38,10 +38,10 @@ int main(int argc, char *argv[]){
 
     // Region 1, v component
     BoundaryConditionShPtrType bcShPtr((*boundaryConditions[1])["v"]);
-    boost::shared_ptr<RobinBoundaryCondition> rbBC;
-    
-    rbBC = boost::dynamic_pointer_cast<RobinBoundaryCondition>(bcShPtr);
-//    static_cast<RobinBoundaryCondition>(*bcShPtr)
+    boost::shared_ptr<RobinBoundaryCondition> rbBC(boost::dynamic_pointer_cast<RobinBoundaryCondition>(bcShPtr));
+
+    ForcingFunctionsMapType &forcingfcns = bcs.GetForcingFunctions();
+    InitialConditionsMapType &initialConditions = bcs.GetInitialConditions();
 
     return 0;
 }

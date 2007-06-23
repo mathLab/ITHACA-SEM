@@ -58,13 +58,13 @@
         </BOUNDARYCONDITIONS>
 
         <FORCING>
-            <F> u , f(x, y, z, t) </F>
-            <F> v , g(x, y, z, t) </F>
+            <F VAR="u" VALUE="f(x,y,z,t)" />
+            <F VAR="v" VALUE="g(x,y,z,t)" />
         </FORCING>
 
         <INITIALCONDITIONS>
-            <I> u , f(x, y, z) </I>
-            <I> v , g(x, y, z) </I>
+            <I VAR ="u" VALUE="f(x,y,z)" />
+            <I VAR ="v" VALUE="g(x,y,z)" />
         </INITIALCONDITIONS>
     </CONDITIONS>
 </NEKTAR>

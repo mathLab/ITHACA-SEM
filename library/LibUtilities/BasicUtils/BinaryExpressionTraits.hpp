@@ -45,7 +45,7 @@ namespace Nektar
     class DivideOp {};
     class MultiplyOp {};
     
-    template<typename LhsType, typename RhsType, typename OpType>
+    template<typename LhsType, typename RhsType, typename OpType, typename enabled = void>
     class BinaryExpressionTraits;
     
     template<typename OpType>

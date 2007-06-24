@@ -236,6 +236,56 @@ namespace Nektar
                 return result;
             }
     };
+    
+    template<typename LhsType, 
+             template<typename, typename, typename> class RhsType>
+    class OperatorGeneratorR3
+    {
+        public:
+            template<typename R1, typename R2, typename R3>
+            friend typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, DivideOp>::ResultType 
+            operator/(const LhsType& lhs,
+                      const RhsType<R1, R2, R3>& rhs)
+            {
+                typedef typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, DivideOp>::ResultType ResultType;
+                ResultType result;
+                NekDivide(result, lhs, rhs);
+                return result;
+            }
+            
+            template<typename R1, typename R2, typename R3>
+            friend typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, MultiplyOp>::ResultType 
+            operator*(const LhsType& lhs,
+                      const RhsType<R1, R2, R3>& rhs)
+            {
+                typedef typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, MultiplyOp>::ResultType ResultType;
+                ResultType result;
+                NekMultiply(result, lhs, rhs);
+                return result;
+            }
+            
+            template<typename R1, typename R2, typename R3>
+            friend typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, AddOp>::ResultType 
+            operator+(const LhsType& lhs,
+                      const RhsType<R1, R2, R3>& rhs)
+            {
+                typedef typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, AddOp>::ResultType ResultType;
+                ResultType result;
+                NekAdd(result, lhs, rhs);
+                return result;
+            }
+            
+            template<typename R1, typename R2, typename R3>
+            friend typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, SubtractOp>::ResultType 
+            operator-(const LhsType& lhs,
+                      const RhsType<R1, R2, R3>& rhs)
+            {
+                typedef typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, SubtractOp>::ResultType ResultType;
+                ResultType result;
+                NekSubtract(result, lhs, rhs);
+                return result;
+            }
+    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_OPERATOR_GENERATORS_HPP

@@ -195,12 +195,16 @@ test_suite* init_unit_test_suite( int, char* [] )
     
     // Matrix Operations
     test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsFull), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsDiagonal), 0);
     
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.38  2007/06/24 18:00:16  bnelson
+    *** empty log message ***
+
     Revision 1.37  2007/06/13 22:00:48  bnelson
     *** empty log message ***
 

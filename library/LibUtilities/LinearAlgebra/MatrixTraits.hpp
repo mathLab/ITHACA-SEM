@@ -63,7 +63,9 @@ namespace Nektar
 //             typedef NekMatrix<DataType, StorageType, StandardMatrixTag> ResultType;
 //     };
 
-    // 2-10
+    // All row references are for the spreadsheet "Matrix Operation and ResultTypes".
+    
+    // The following specializations are for rows 2-10.  These are for plus and minus on the left side of the expression.
     template<typename LhsDataType, typename RhsDataType, typename RhsStorageType, typename LhsMatrixType, typename RhsMatrixType>
     class BinaryExpressionTraits<NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>, NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>, AddOp>
     {
@@ -80,8 +82,11 @@ namespace Nektar
             typedef NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> ResultType;
     };
     
-    // 11,20, 29, 38, 47, 56, 65, 74
-    // Have to disallow a Lhs full matrix because that has already been done for cases 2-10.
+    // The following are for rows
+    // 11,20, 29, 38, 47, 56, 65, 74, and are for full matrices on the right side of a plus or minus.
+    //
+    // We have to use boost::disable_if to disable full matrices on the left hand side.  Otherwise there would 
+    // be a conflict with the previous specializations.
     template<typename LhsDataType, typename RhsDataType, typename LhsStorageType, typename LhsMatrixType, typename RhsMatrixType>
     class BinaryExpressionTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>, 
                                  NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>, 
@@ -101,7 +106,8 @@ namespace Nektar
             typedef NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> ResultType;
     };
     
-    // All multiplications
+    
+    // All multiplications, rows 83 - 163.
     template<typename LhsDataType, typename RhsDataType, typename LhsStorageType, typename RhsStorageType, typename LhsMatrixType, typename RhsMatrixType>
     class BinaryExpressionTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>, NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>, MultiplyOp>
     {

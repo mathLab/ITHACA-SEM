@@ -41,6 +41,7 @@ namespace Nektar
     namespace MatrixOperationTests
     {
         void TestLhsFullRhsFull();
+        void TestLhsFullRhsDiagonal();
     }
 }
 

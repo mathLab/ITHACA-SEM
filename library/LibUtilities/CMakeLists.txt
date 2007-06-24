@@ -16,6 +16,7 @@ SET(LinearAlgebraHeaders
         ./LinearAlgebra/MatrixOperations.hpp
         ./LinearAlgebra/MatrixStoragePolicy.hpp
         ./LinearAlgebra/MatrixStorageType.h
+        ./LinearAlgebra/MatrixTraits.hpp
         ./LinearAlgebra/MatrixType.h
 	./LinearAlgebra/NekBlockDiagonalMatrix.hpp
 	./LinearAlgebra/NekBlockFullMatrix.hpp

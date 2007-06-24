@@ -39,33 +39,113 @@
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
 #include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LinearAlgebra/FullMatrixStoragePolicy.hpp>
-#include <LibUtilities/LinearAlgebra/DiagonalMatrixStoragePolicy.hpp>
-
+#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
-    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename OuterStorageType>
-    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, OuterStorageType, BlockMatrixTag> : public Matrix<DataType>
+    template<typename DataType, typename StorageType, typename InnerMatrixType>
+    class NekMatrix<NekMatrix<DataType, StorageType, InnerMatrixType>, StorageType, BlockMatrixTag> : public Matrix<DataType>,
+                                                                                                      public OperatorGeneratorR3<NekMatrix<NekMatrix<DataType, StorageType, InnerMatrixType>, StorageType, BlockMatrixTag>, NekMatrix>  
     {
         public:
             typedef Matrix<DataType> BaseType;
-            typedef NekMatrix<DataType, InnerStorageType, InnerMatrixType> InnerType;
-            typedef NekMatrix<InnerType, OuterStorageType, BlockMatrixTag> ThisType;
-            
+            typedef NekMatrix<DataType, StorageType, InnerMatrixType> InnerType;
+            typedef NekMatrix<InnerType, StorageType, BlockMatrixTag> ThisType;
+            typedef typename NekMatrix<DataType, StorageType, InnerMatrixType>::NumberType NumberType;
+
             // Each inner matrix type can possible return references or value types from GetValue.
             // Query the type here to find out.
             typedef typename InnerType::GetValueType GetValueType;
             typedef typename InnerType::ConstGetValueType ConstGetValueType;
-            
-            typedef MatrixStoragePolicy<boost::shared_ptr<InnerType>, OuterStorageType> StoragePolicy;
                 
+        public:
+            template<typename MatrixType>
+            class iterator_base
+            {
+                public:
+                    typedef typename MatrixType::InnerType IteratorInnerType;
+                    
+                public:                   
+                    iterator_base(MatrixType& m, unsigned int curRow, unsigned int curCol) :
+                        m_matrix(m),
+                        m_curRow(curRow),
+                        m_curColumn(curCol)
+                    {
+                    }
+                    
+                    iterator_base(MatrixType& m) :
+                        m_matrix(m),
+                        m_curRow(std::numeric_limits<unsigned int>::max()),
+                        m_curColumn(std::numeric_limits<unsigned int>::max())
+                    {
+                    }
+                    
+                    iterator_base(const iterator_base<MatrixType>& rhs) :
+                        m_matrix(rhs.m_matrix),
+                        m_curRow(rhs.m_curRow),
+                        m_curColumn(rhs.m_curColumn)
+                    {
+                    }
+                    
+                    void operator++()
+                    {
+                        if( m_curColumn != std::numeric_limits<unsigned int>::max() )
+                        {
+                            ++m_curColumn;
+                            
+                            if( m_curColumn >= m_matrix.GetColumns() )
+                            {
+                                m_curColumn = 0;
+                                ++m_curRow;
+                                
+                                if( m_curRow >= m_matrix.GetRows() )
+                                {
+                                    m_curColumn = std::numeric_limits<unsigned int>::max();
+                                    m_curRow = std::numeric_limits<unsigned int>::max();
+                                }
+                            }
+                            
+//                             if( m_curColumn != std::numeric_limits<unsigned int>::max() )
+//                             {
+//                                 m_curBlock = m_matrix.GetBlock(m_curRow, m_curColumn);
+//                             }
+                        }
+                    }
+                    
+                    NumberType operator*()
+                    {
+                        return m_matrix(m_curRow, m_curColumn);
+                    }
+                                        
+                    bool operator==(const iterator_base<MatrixType>& rhs)
+                    {
+                        return m_curRow == rhs.m_curRow && m_curColumn == rhs.m_curColumn;
+                    }
+                    
+                    bool operator!=(const iterator_base<MatrixType>& rhs)
+                    {
+                        return !(*this == rhs);
+                    }
+                    
+                private:
+                    iterator_base<MatrixType>& operator=(const iterator_base<MatrixType>& rhs);
+                                
+                    MatrixType& m_matrix;
+                    //boost::shared_ptr<IteratorInnerType> m_curBlock;
+                    unsigned int m_curRow;
+                    unsigned int m_curColumn;
+            };
+            
+            typedef iterator_base<ThisType> iterator;
+            typedef iterator_base<const ThisType> const_iterator;
+                                                            
         public:
             NekMatrix(unsigned int numberOfBlockRows, unsigned int numberOfBlockColumns,
                       unsigned int rowsPerBlock, unsigned int columnsPerBlock) :
                 BaseType(numberOfBlockRows*rowsPerBlock, numberOfBlockColumns*columnsPerBlock),
-                m_data(StoragePolicy::Initialize(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>())),
+                m_data(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>()),
                 m_rowSizes(numberOfBlockRows+1),
                 m_columnSizes(numberOfBlockColumns+1),
                 m_storageSize(this->GetRows()*this->GetColumns()),
@@ -87,7 +167,7 @@ namespace Nektar
                       unsigned int* rowsPerBlock, unsigned int* columnsPerBlock) :
                 BaseType(std::accumulate(rowsPerBlock, rowsPerBlock + numberOfBlockRows, 0),
                          std::accumulate(columnsPerBlock, columnsPerBlock + numberOfBlockColumns, 0)),
-                m_data(StoragePolicy::Initialize(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>())),
+                m_data(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>()),
                 m_rowSizes(numberOfBlockRows+1),
                 m_columnSizes(numberOfBlockColumns+1),
                 m_storageSize(this->GetRows()*this->GetColumns()),
@@ -115,7 +195,7 @@ namespace Nektar
                 ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) + 
                     std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
                     std::string(" columns"));
-                return StoragePolicy::GetValue(m_numberOfBlockRows, m_numberOfBlockColumns, row, column, m_data);
+                return m_data[row][column];
             }
             
             boost::shared_ptr<InnerType> GetBlock(unsigned int row, unsigned int column)       
@@ -126,7 +206,7 @@ namespace Nektar
                 ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) + 
                     std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
                     std::string(" columns"));
-                return StoragePolicy::GetValue(m_numberOfBlockRows, m_numberOfBlockColumns, row, column, m_data);
+                return m_data[row][column];
             }
             
             void SetBlock(unsigned int row, unsigned int column, boost::shared_ptr<InnerType>& m)
@@ -137,7 +217,7 @@ namespace Nektar
                 ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) + 
                     std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
                     std::string(" columns"));
-                StoragePolicy::SetValue(m_numberOfBlockRows, m_numberOfBlockColumns, row, column, m_data, m);
+                m_data[row][column] = m;
             }
             
             
@@ -192,12 +272,17 @@ namespace Nektar
              
             MatrixStorage GetStorageType() const
             {
-                return static_cast<MatrixStorage>(ConvertToMatrixStorageEnum<OuterStorageType>::Value);
+                return static_cast<MatrixStorage>(ConvertToMatrixStorageEnum<StorageType>::Value);
             }            
             
             unsigned int GetNumberOfBlockRows() const { return m_numberOfBlockRows; }
             unsigned int GetNumberOfBlockColumns() const { return m_numberOfBlockColumns; }
             
+            iterator begin() { return iterator(*this, 0, 0); }
+            iterator end() { return iterator(*this); }
+            const_iterator begin() const { return const_iterator(*this, 0, 0); }
+            const_iterator end() const { return const_iterator(*this); }
+                    
         public:
         
         private:
@@ -221,7 +306,7 @@ namespace Nektar
                 (*this)(row, column) = d;
             }
             
-            Array<OneD, boost::shared_ptr<InnerType> > m_data;
+            Array<TwoD, boost::shared_ptr<InnerType> > m_data;
             Array<OneD, unsigned int> m_rowSizes;
             Array<OneD, unsigned int> m_columnSizes;
             unsigned int m_storageSize;

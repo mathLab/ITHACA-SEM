@@ -29,6 +29,7 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/testFoundation/testFoundation.h>
 #include <UnitTests/testFoundation/testInterpolation.h>
 #include <UnitTests/testFoundation/testDerivation.h>
+#include <UnitTests/testNekMatrixOperations.h>
 
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
@@ -192,13 +193,17 @@ test_suite* init_unit_test_suite( int, char* [] )
     /// Linear algebra algorithsm.
     test->add(BOOST_TEST_CASE(&Nektar::NekLinAlgTests::testGramSchmidtOrthogonalizationBookExample), 0);
     
-
+    // Matrix Operations
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsFull), 0);
     
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.37  2007/06/13 22:00:48  bnelson
+    *** empty log message ***
+
     Revision 1.36  2007/06/13 06:17:35  bnelson
     *** empty log message ***
 

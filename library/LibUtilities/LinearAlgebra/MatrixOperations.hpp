@@ -45,10 +45,10 @@
 
 namespace Nektar
 {
-    template<typename DataType>
+    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
     void NekAdd(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
-                const NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& lhs,
-                const NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& rhs)
+                const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
+                const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
     {
         ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
@@ -56,28 +56,24 @@ namespace Nektar
         ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
-//         ASSERTL2(result.GetRows() == lhs.GetRows() && result.GetColumns() == rhs.GetColumns(),
-//             std::string("The result matrix passed to NekAdd has the wrong number of rows and columns.  It has (") +
-//             boost::lexical_cast<std::string>(result.GetRows()) + std::string(",") + 
-//             boost::lexical_cast<std::string>(result.GetColumns()) + std::string("), but ") + 
-//             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(",") + 
-//             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string("), was expected.")); 
             
-        result = NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>(lhs);
+        result = NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>(lhs.GetRows(), lhs.GetColumns());
         typename NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>::iterator result_iter = result.begin();
-        typename NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>::const_iterator rhs_iter = rhs.begin();
+        typename NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>::const_iterator rhs_iter = rhs.begin();
+        typename NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>::const_iterator lhs_iter = lhs.begin();
         while( result_iter != result.end() )
         {
-            (*result_iter) += (*rhs_iter);
+            (*result_iter) = (*lhs_iter) + (*rhs_iter);
             ++result_iter;
             ++rhs_iter;
+            ++lhs_iter;
         }
     }
     
-    template<typename DataType>
+    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
     void NekAdd(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
-                        const NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& lhs,
-                        const NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag>& rhs)
+                        const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
+                        const NekMatrix<RhsDataType, DiagonalMatrixTag, RhsMatrixType>& rhs)
     {
         ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
@@ -93,10 +89,10 @@ namespace Nektar
         }
     }
     
-    template<typename DataType>
+    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
     void NekAdd(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
-                        const NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag>& lhs,
-                        const NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& rhs)
+                        const NekMatrix<LhsDataType, DiagonalMatrixTag, LhsMatrixType>& lhs,
+                        const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
     {
         ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +

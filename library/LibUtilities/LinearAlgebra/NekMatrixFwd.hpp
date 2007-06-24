@@ -38,8 +38,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
 
-#include <LibUtilities/LinearAlgebra/MatrixBlockType.h>
-#include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 #include <LibUtilities/LinearAlgebra/MatrixType.h>
 #include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
@@ -57,21 +55,15 @@ namespace Nektar
     template<typename DataType, typename StorageType = FullMatrixTag, typename MatType = StandardMatrixTag>
     class NekMatrix;
 
-    /// \brief Enumeration used internally to determine if a pointer can be deleted or not.
-    //enum MatrixDataDeltetableType { eDeletable, eNotDeletable };
+    template<typename DataType, typename StorageType, typename OwnedMatrixType>
+    class NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, ScaledMatrixTag>;
     
-//     template<typename DataType, NekMatrixForm form = FullMatrixTag, MatrixBlockType BlockType = StandardMatrixTag, unsigned int space = 0, typename enabled=void>
-//     class NekMatrix;
-//     
-//     template<typename DataType, NekMatrixForm form>
-//     class NekMatrixStoragePolicy;
-// 
-//     template<typename DataType, NekMatrixForm form>
-//     class NekMatrixArithmeticPolicy;
-// 
-//     template<typename DataType, NekMatrixForm form>
-//     class NekMatrixAssignmentPolicy;
-
+    template<typename DataType, typename StorageType, typename InnerMatrixType>
+    class NekMatrix<NekMatrix<DataType, StorageType, InnerMatrixType>, StorageType, BlockMatrixTag>;
+    
+    template<typename DataType, typename StorageType>
+    class NekMatrix<DataType, StorageType, StandardMatrixTag>;
+    
     typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedNekMatrixPtr;
 };
     
@@ -79,6 +71,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrixFwd.hpp,v $
+    Revision 1.8  2007/06/10 23:42:15  bnelson
+    Matrix updates.
+
     Revision 1.7  2007/03/29 18:59:05  bnelson
     Refactoring in preparation for scaled matrices.  Fixed transpose problem.
 

@@ -10,6 +10,7 @@ testLinearSystem.cpp
 testNekLinAlgAlgorithms.cpp
 testNekManager.cpp
 testNekMatrix.cpp
+testNekMatrixOperations.cpp
 testNekPoint.cpp
 testNekVector.cpp
 testNekSharedArray.cpp
@@ -28,6 +29,7 @@ testLinearSystem.h
 testNekLinAlgAlgorithms.h
 testNekManager.h
 testNekMatrix.h
+testNekMatrixOperations.h
 testNekPoint.h
 testNekVector.h
 testNekSharedArray.h

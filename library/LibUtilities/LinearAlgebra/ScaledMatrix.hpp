@@ -38,19 +38,70 @@
 
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
 #include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
+#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
 
 #include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
     template<typename DataType, typename StorageType, typename OwnedMatrixType>
-    class NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, ScaledMatrixTag> : public ConstMatrix<DataType>
+    class NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, ScaledMatrixTag> : public ConstMatrix<DataType>,
+                                                                                                       public OperatorGeneratorR3<NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, ScaledMatrixTag>, NekMatrix>  
     {
         public:
             typedef ConstMatrix<DataType> BaseType;
             typedef NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, ScaledMatrixTag> ThisType;
+            typedef typename NekMatrix<DataType, StorageType, OwnedMatrixType>::NumberType NumberType;
+            typedef NekMatrix<DataType, StorageType, OwnedMatrixType> InnerMatrixType;
             
-            NekMatrix(typename boost::call_traits<DataType>::const_reference scale,
+        public:
+            /// \brief Iterator through elements of the matrix.
+            /// Not quite a real iterator in the C++ sense.
+            class const_iterator
+            {
+                public:
+                    const_iterator(typename InnerMatrixType::const_iterator iter,
+                                   const NumberType& scale) :
+                        m_iter(iter),
+                        m_scale(scale)
+                    {
+                    }
+                    
+                    void operator++(int)
+                    {
+                        m_iter++;
+                    }
+                    
+                    void operator++()
+                    {
+                        ++m_iter;
+                    }
+                    
+                    NumberType operator*()
+                    {
+                        return m_scale*(*m_iter);
+                    }
+                    
+                    bool operator==(const const_iterator& rhs)
+                    {
+                        return m_iter == rhs.m_iter;
+                    }
+                    
+                    bool operator!=(const const_iterator& rhs)
+                    {
+                        return !(*this == rhs);
+                    }
+                    
+                private:
+                    typename InnerMatrixType::const_iterator m_iter;
+                    NumberType m_scale;
+            };
+            
+            
+            
+        public:
+            NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
                       boost::shared_ptr<NekMatrix<DataType, StorageType, OwnedMatrixType> > m) :
                 BaseType(m->GetRows(), m->GetColumns()),
                 m_matrix(m),
@@ -58,7 +109,7 @@ namespace Nektar
             {
             }
             
-            typename boost::call_traits<DataType>::value_type operator()(unsigned int row, unsigned int col) const
+            typename boost::call_traits<NumberType>::value_type operator()(unsigned int row, unsigned int col) const
             {
                 return m_scale*(*m_matrix)(row, col);
             }
@@ -73,12 +124,12 @@ namespace Nektar
                 return m_matrix->GetStorageType();
             }
             
-            typename boost::call_traits<DataType>::reference Scale()
+            typename boost::call_traits<NumberType>::reference Scale()
             {
                 return m_scale;
             }
             
-            typename boost::call_traits<DataType>::const_reference Scale() const
+            typename boost::call_traits<NumberType>::const_reference Scale() const
             {
                 return m_scale;
             }
@@ -88,10 +139,13 @@ namespace Nektar
                 return m_matrix; 
             }
             
+            const_iterator begin() const { return const_iterator(m_matrix->begin(), m_scale); }
+            const_iterator end() const { return const_iterator(m_matrix->end(), m_scale); }
+            
         public:
         
         private:
-            virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const 
+            virtual typename boost::call_traits<NumberType>::value_type v_GetValue(unsigned int row, unsigned int column) const 
             {
                 return ThisType::operator()(row, column);
             }
@@ -108,7 +162,7 @@ namespace Nektar
             
 
             boost::shared_ptr<const NekMatrix<DataType, StorageType, OwnedMatrixType> > m_matrix;
-            DataType m_scale;
+            NumberType m_scale;
     };
     
 }

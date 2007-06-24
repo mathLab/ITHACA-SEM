@@ -40,38 +40,22 @@
 #include <LibUtilities/LinearAlgebra/FullMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/DiagonalMatrixStoragePolicy.hpp>
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
 #include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
+#include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 
 namespace Nektar
 {
-    // Define the expression traits for a matrix before defining the matrix or the 
-    // OperatorGenerator won't work.
-    
-    /// \brief Gives all expressions involving the same storage types the same result type.
-    template<typename DataType, typename LhsStorageType, typename RhsStorageType, typename OpType>
-    class BinaryExpressionTraits<NekMatrix<DataType, LhsStorageType, StandardMatrixTag>, NekMatrix<DataType, RhsStorageType, StandardMatrixTag>, OpType>
-    {
-        public:
-            typedef NekMatrix<DataType, FullMatrixTag, StandardMatrixTag> ResultType;
-    };
-    
-    template<typename DataType, typename StorageType, typename OpType>
-    class BinaryExpressionTraits<NekMatrix<DataType, StorageType, StandardMatrixTag>, NekMatrix<DataType, StorageType, StandardMatrixTag>, OpType>
-    {
-        public:
-            typedef NekMatrix<DataType, StorageType, StandardMatrixTag> ResultType;
-    };
-    
-    
+     
     template<typename DataType, typename StorageType>
     class NekMatrix<DataType, StorageType, StandardMatrixTag> : public Matrix<DataType>,
-                                                                public OperatorGeneratorL3R3<NekMatrix, NekMatrix, AddOp>,
-                                                                public OperatorGeneratorL3R3<NekMatrix, NekMatrix, MultiplyOp>
+                                                                public OperatorGeneratorR3<NekMatrix<DataType, StorageType, StandardMatrixTag>, NekMatrix>
     {
         public:
             typedef Matrix<DataType> BaseType;
             typedef NekMatrix<DataType, StorageType, StandardMatrixTag> ThisType;
             typedef MatrixStoragePolicy<DataType, StorageType> StoragePolicy;
+            typedef DataType NumberType;
             
             typedef typename StoragePolicy::GetValueReturnType GetValueType;
             typedef typename boost::call_traits<DataType>::const_reference ConstGetValueType;

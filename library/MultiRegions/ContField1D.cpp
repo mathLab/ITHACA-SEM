@@ -46,34 +46,53 @@ namespace Nektar
 
 #if 0 
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
-                                 const SpatialDomains::Domain &domain1D):
-            ContExpList1D(Ba,domain1D.GetGraph1D)
+                                 const SpatialDomains::Domain &domain1D, ):
+            ContExpList1D(Ba,domain1D.GetGraph1D())
         {
 	    int i,nbnd;
-	    BoundaryVector Bndry = domain1D.GetBoundaries();
             PointExpSharedPtr  p_ext;
             int NumDirichet = 0;
 
-            nbnd = Bndry.size();
+            SpatialDomains::BoundaryConditions bcs = domain1D.GetBoundaries(); 
+            SpatialDomains::BoundaryRegionCollectionType    &bregions = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollectionType &bconditions = bcs.GetBoundaryConditions();
 
+            nbnd = bregions.size();
 
             // list Dirichlet boundaries first
             for(i = 0; i < nbnd; ++i)
             {
-                if(Bndry[i].GetType == eDirichlet)
+                if(bconditions[i]->GetBoundaryConditionType() 
+                   == SpatialDomains::eDirichlet)
                 {
-                    p_exp = MemoryManager<LocalRegions::PointExp>::AllocatedSharedPtr(Bndry[i].GetVertex());
+                    p_exp = MemoryManager<LocalRegions::PointExp>::AllocatedSharedPtr(bregions[i]->GetVertex()); 
                     m_bndContraint.push_back(p_exp);
-                    m_bndTypes.push_back(Bndry[i].GetType());
+                    m_bndTypes.push_back(SpatialDomains::eDirichlet);
                     NumDirichet++;
                 }
             }
 
+            for(i = 0; i < nbnd; ++i)
+            {
+                if(bconditions[i]->GetBoundaryConditionType()
+                   != SpatialDomains::eDirichlet)
+                {
+                    p_exp = MemoryManager<LocalRegions::PointExp>::AllocatedSharedPtr(Bndry[i].GetVertex());
+                    m_bndContraint.push_back(p_exp);
+                    m_bndTypes.push_back(bconditions[i]->GetBoundaryConditionType());
+                }
+            }
+            
+
+            // Need to reset numbering according to Dirichlet Bondary Condition
+            m_locToGloMap->ResetMapping(NumDirichlet,bcs);
+            // Need to know how to get global vertex id 
+            // I note that boundary Regions is a composite vector and so belive we can use this to get the desired quantities. 
 
         }
 #endif
 
-	ContField1D::~ContField1D()
+        ContField1D::~ContField1D()
 	{
 	}
 

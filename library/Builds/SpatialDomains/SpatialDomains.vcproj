@@ -43,7 +43,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_USE_MATH_DEFINES;NEKTAR_USE_EXPRESSION_TEMPLATES;NEKTAR_USING_BLAS;NEKTAR_USING_LAPACK"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough="pchSpatialDomains.h"
 				PrecompiledHeaderFile="$(IntDir)/pchSpatialDomains.pch"
@@ -152,8 +152,26 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\SpatialDomains\Domain.cpp"
+				RelativePath="..\..\SpatialDomains\BoundaryConditions.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\SpatialDomains\EdgeComponent.cpp"
@@ -165,6 +183,14 @@
 			</File>
 			<File
 				RelativePath="..\..\SpatialDomains\Geometry1D.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\Geometry2D.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\GeomFactors.cpp"
 				>
 			</File>
 			<File
@@ -184,6 +210,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\SpatialDomains\MeshGraph2D.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\SpatialDomains\pchSpatialDomains.cpp"
 				>
 				<FileConfiguration
@@ -197,7 +227,23 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\SpatialDomains\QuadFaceComponent.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\QuadGeom.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\SpatialDomains\SegGeom.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\TriFaceComponent.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\TriGeom.cpp"
 				>
 			</File>
 		</Filter>
@@ -213,7 +259,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\SpatialDomains\Domain.h"
+				RelativePath="..\..\SpatialDomains\BoundaryConditions.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Interpreter\defaults.h"
 				>
 			</File>
 			<File
@@ -221,7 +271,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\SpatialDomains\GeoFac.h"
+				RelativePath="..\..\SpatialDomains\Equation.hpp"
 				>
 			</File>
 			<File
@@ -241,11 +291,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\SpatialDomains\GeomFactors.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\SpatialDomains\HexGeom.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\SpatialDomains\InterfaceComponent.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\LibUtilities\Interpreter\Interpreter.hpp"
 				>
 			</File>
 			<File
@@ -266,6 +324,10 @@
 			</File>
 			<File
 				RelativePath="..\..\SpatialDomains\MeshGraph3D.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\ParseUtils.hpp"
 				>
 			</File>
 			<File
@@ -293,6 +355,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\LibUtilities\BasicUtils\SharedArray.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\SpatialDomains\SpatialDomains.hpp"
 				>
 			</File>
@@ -309,6 +375,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\..\Demos\SpatialDomains\BC1.xml"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

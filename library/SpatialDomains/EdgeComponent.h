@@ -53,7 +53,7 @@ namespace Nektar
         public:
             EdgeComponent();
             EdgeComponent(int id, const int coordim);
-            EdgeComponent(int id, const int coordim, VertexComponentSharedPtr vertex[]);
+            EdgeComponent(int id, const int coordim, const VertexComponentSharedPtr vertex[]);
             EdgeComponent(int id, const int coordim, const int order, const int nquad);
 
             ~EdgeComponent();
@@ -136,6 +136,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.13  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.12  2007/06/06 11:29:31  pvos
 // Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
 //

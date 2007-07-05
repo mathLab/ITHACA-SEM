@@ -68,6 +68,12 @@ namespace Nektar
 
             virtual ~BoundaryConditionBase(){};
 
+            BoundaryConditionType GetBoundaryConditionType()
+            {
+                return m_BoundaryConditionType;
+            };
+
+        protected:
             BoundaryConditionType m_BoundaryConditionType;
         };
 

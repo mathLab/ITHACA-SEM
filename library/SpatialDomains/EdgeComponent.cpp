@@ -61,7 +61,7 @@ namespace Nektar
         }
 
         EdgeComponent::EdgeComponent(int id, const int coordim,
-            VertexComponentSharedPtr vertex[]): 
+            const VertexComponentSharedPtr vertex[]): 
         Geometry1D(coordim),
             m_vertex(2) //always have two vertices per edge
         {
@@ -202,6 +202,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.19  2007/06/06 15:15:20  pvos
+*    Some minor updates for 2D routines
+*
 *    Revision 1.18  2007/05/28 08:35:25  sherwin
 *    Updated for localregions up to Project1D
 *

@@ -146,7 +146,7 @@ namespace Nektar
                 catch(...)
                 {
                     NEKERROR(ErrorUtil::efatal,
-                        (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
+                        (std::string("Unable to read element data for segment: ") + elementStr).c_str());
                 }
 
                 /// Keep looking for additional segments
@@ -347,6 +347,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.10  2007/06/10 02:27:10  jfrazier
+// Another checkin with an incremental completion of the boundary conditions reader.
+//
 // Revision 1.9  2007/06/07 23:55:24  jfrazier
 // Intermediate revisions to add parsing for boundary conditions file.
 //

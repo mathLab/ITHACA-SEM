@@ -63,322 +63,6 @@ namespace Nektar
             Read(doc);
         }
 
-        void MeshGraph2D::ReadEdges(TiXmlDocument &doc)
-        {
-            /// We know we have it since we made it this far.
-            TiXmlHandle docHandle(&doc);
-            TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
-            TiXmlElement* field = NULL;
-
-            /// Look for elements in ELEMENT block.
-            field = mesh->FirstChildElement("EDGE");
-
-            ASSERTL0(field, "Unable to find EDGE tag in file.");
-
-            TiXmlAttribute *attr = field->FirstAttribute();
-            int edgeNumber = 0;
-            int nextEdgeNumber = 0;
-            int err = 0;
-
-            /// All elements are of the form: "ID <?> ... </?>", with
-            /// ? being the element type.
-            /// Read the ID field first.
-            TiXmlNode *child = field->FirstChild();
-
-            /// Since all edge data is one big text block, we need to accumulate
-            /// all TEXT data and then parse it.  This approach effectively skips
-            /// all comments or other node types since we only care about the
-            /// edge list.  We cannot handle missing edge numbers as we could
-            /// with missing element numbers due to the text block format.
-            std::string edgeStr;
-
-            while(child)
-            {
-                if (child->Type() == TiXmlNode::TEXT)
-                {
-                    edgeStr += child->ToText()->ValueStr();
-                }
-
-                child = child->NextSibling();
-            }
-
-            /// Now parse out the edges, three fields at a time.
-            int edgeid, vertex1, vertex2;
-            std::istrstream edgeDataStrm(edgeStr.c_str());
-
-            try
-            {
-                while (!edgeDataStrm.fail())
-                {
-                    edgeDataStrm >> edgeid >> vertex1 >> vertex2;
-
-                    // Must check after the read because we may be at the end and not know it.
-                    // If we are at the end we will add a duplicate of the last entry if we
-                    // don't check here.
-                    if (!edgeDataStrm.fail())
-                    {
-                        VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
-                        EdgeComponentSharedPtr edge(new EdgeComponent(edgeid, m_MeshDimension, vertices));
-
-                        m_ecomps.push_back(edge);
-                    }
-                }
-            }
-            catch(...)
-            {
-                NEKERROR(ErrorUtil::efatal, (std::string("Unable to read edge data: ") + edgeStr).c_str());
-            }
-
-        }
-
-        void MeshGraph2D::ReadElements(TiXmlDocument &doc)
-        {
-            /// We know we have it since we made it this far.
-            TiXmlHandle docHandle(&doc);
-            TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
-            TiXmlElement* field = NULL;
-
-            /// Look for elements in ELEMENT block.
-            field = mesh->FirstChildElement("ELEMENT");
-
-            ASSERTL0(field, "Unable to find ELEMENT tag in file.");
-
-            TiXmlAttribute *attr = field->FirstAttribute();
-            int elementNumber = 0;
-            int nextElementNumber = 0;
-            int err = 0;
-
-            /// All elements are of the form: "ID <?> ... </?>", with
-            /// ? being the element type.
-
-            /// Read the ID field first.
-            TiXmlNode *child = field->FirstChild();
-
-            /// Get first TEXT node, just in case any comments are present.
-            /// If no TEXT appears before an ELEMENT, then we will assume
-            /// a running number.
-            int elementID = nextElementNumber++;
-
-            while (child)
-            {
-                int type = child->Type();
-
-                if (type == TiXmlNode::TEXT)
-                {
-                    /// Read the text...it should be our index number
-                    nextElementNumber = ::atoi(child->ToText()->Value());
-                }
-                else if (type == TiXmlNode::ELEMENT)
-                {
-                    std::string elementType(child->ValueStr());
-
-                    ASSERTL0(elementType == "Q" || elementType == "T",
-                        (std::string("Unknown 2D element type: ") + elementType).c_str());
-
-                    elementID = nextElementNumber++;
-                    /// Read text element description.
-
-                    TiXmlNode* elementChild = child->FirstChild();
-                    while(elementChild->Type() != TiXmlNode::TEXT)
-                    {
-                        elementChild = elementChild->NextSibling();
-                    }
-
-                    ASSERTL0(elementChild, "Unable to read element description body.");
-                    std::string elementStr = elementChild->ToText()->ValueStr();
-
-                    /// Parse out the element components corresponding to type of element.
-
-                    if (elementType == "T")
-                    {
-                        // Read three edge numbers
-                        int edge1, edge2, edge3;
-                        std::istrstream elementDataStrm(elementStr.c_str());
-
-                        try
-                        {
-                            elementDataStrm >> edge1;
-                            elementDataStrm >> edge2;
-                            elementDataStrm >> edge3;
-
-                            ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
-
-                            /// Create a TriGeom to hold the new definition.
-                            EdgeComponentSharedPtr edges[TriGeom::kNedges] = 
-                            {
-                                GetEdgeComponent(edge1),
-                                GetEdgeComponent(edge2),
-                                GetEdgeComponent(edge3)
-                            };
-
-                            StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] = 
-                            {
-                                EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
-                                EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]), 
-                                EdgeComponent::GetEdgeOrientation(*edges[2], *edges[0])
-                            };
-
-                            TriGeomSharedPtr trigeom(new TriGeom(edges, edgeorient));
-
-                            m_trigeoms.push_back(trigeom);
-                        }
-                        catch(...)
-                        {
-                            NEKERROR(ErrorUtil::efatal,
-                                (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
-                        }
-                    }
-                    else if (elementType == "Q")
-                    {
-                        // Read four edge numbers
-                        int edge1, edge2, edge3, edge4;
-                        std::istrstream elementDataStrm(elementStr.c_str());
-
-                        try
-                        {
-                            elementDataStrm >> edge1;
-                            elementDataStrm >> edge2;
-                            elementDataStrm >> edge3;
-                            elementDataStrm >> edge4;
-
-                            ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
-
-                            /// Create a QuadGeom to hold the new definition.
-                            EdgeComponentSharedPtr edges[QuadGeom::kNedges] = 
-                            {GetEdgeComponent(edge1),GetEdgeComponent(edge2),
-                            GetEdgeComponent(edge3),GetEdgeComponent(edge4)};
-
-                            StdRegions::EdgeOrientation edgeorient[QuadGeom::kNedges] =
-                            {
-                                EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
-                                EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]),
-                                EdgeComponent::GetEdgeOrientation(*edges[2], *edges[3]),
-                                EdgeComponent::GetEdgeOrientation(*edges[3], *edges[0])
-                            };
-
-                            QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
-
-                            m_quadgeoms.push_back(quadgeom);
-
-                        }
-                        catch(...)
-                        {
-                            NEKERROR(ErrorUtil::efatal,(std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
-                        }
-                    }
-                }
-
-                /// Keep looking
-                child = child->NextSibling();
-            }
-        }
-
-        void MeshGraph2D::ReadComposites(TiXmlDocument &doc)
-        {
-            TiXmlHandle docHandle(&doc);
-
-            /// We know we have it since we made it this far.
-            TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
-            TiXmlElement* field = NULL;
-
-            ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
-
-            /// Look for elements in ELEMENT block.
-            field = mesh->FirstChildElement("COMPOSITE");
-
-            ASSERTL0(field, "Unable to find COMPOSITE tag in file.");
-
-            TiXmlAttribute *attr = field->FirstAttribute();
-            int compositeNumber = 0;
-            int nextCompositeNumber = 0;
-            int err = 0;
-
-            /// All elements are of the form: "<C ID = N> ... </C>".
-
-            /// Read the ID field first.
-            TiXmlNode *child = field->FirstChild();
-
-            /// Get first TEXT node, just in case any comments are present.
-            /// If no TEXT appears before an ELEMENT, then we will assume
-            /// a running number.
-            int compositeID = nextCompositeNumber++;
-
-            while (child)
-            {
-                int type = child->Type();
-
-                if (type == TiXmlNode::TEXT)
-                {
-                    /// Read the text...it should be our index number
-                    nextCompositeNumber = ::atoi(child->ToText()->Value());
-                }
-                else if (type == TiXmlNode::ELEMENT)// XML element, not mesh element
-                {
-                    std::string elementType(child->ValueStr());
-
-                    ASSERTL0(elementType == "C",
-                        (std::string("Unknown XML tag in COMPOSITE definition: ") + elementType).c_str());
-
-                    compositeID = nextCompositeNumber++;
-                    /// Read text element description.
-
-                    TiXmlNode* compositeChild = child->FirstChild();
-                    // This is primarily to skip comments that may be present.
-                    // Comments appear as nodes just like elements.
-                    // We are specifically looking for text in the body
-                    // of the definition.
-                    while(compositeChild->Type() != TiXmlNode::TEXT)
-                    {
-                        compositeChild = compositeChild->NextSibling();
-                    }
-
-                    ASSERTL0(compositeChild, "Unable to read composite description body.");
-                    std::string compositeStr = compositeChild->ToText()->ValueStr();
-
-                    /// Parse out the element components corresponding to type of element.
-
-                    std::istrstream compositeDataStrm(compositeStr.c_str());
-
-                    try
-                    {
-                        bool first = true;
-                        std::string prevCompositeElementStr;
-
-                        while (!compositeDataStrm.fail())
-                        {
-                            std::string compositeElementStr;
-                            compositeDataStrm >> compositeElementStr;
-
-                            if (!compositeDataStrm.fail())
-                            {
-                                if (first)
-                                {
-                                    first = false;
-
-                                    Composite curVector(new std::vector<GeometrySharedPtr>);
-                                    m_MeshCompositeVector.push_back(curVector);
-                                }
-
-                                if (compositeElementStr.length() > 0)
-                                {
-                                    ResolveGeomRef(prevCompositeElementStr, compositeElementStr);
-                                }
-                                prevCompositeElementStr = compositeElementStr;
-                            }
-                        }
-                    }
-                    catch(...)
-                    {
-                        NEKERROR(ErrorUtil::efatal,
-                            (std::string("Unable to read COMPOSITE data for composite: ") + compositeStr).c_str());
-                    }
-                }
-
-                /// Keep looking
-                child = child->NextSibling();
-            }
-        }
-
         // \brief Read segments (and general MeshGraph) given TiXmlDocument.
         void MeshGraph2D::Read(TiXmlDocument &doc)
         {
@@ -398,6 +82,324 @@ namespace Nektar
             ReadElements(doc);
             ReadComposites(doc);
         }
+
+        void MeshGraph2D::ReadEdges(TiXmlDocument &doc)
+        {
+            /// We know we have it since we made it this far.
+            TiXmlHandle docHandle(&doc);
+            TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
+            TiXmlElement* field = NULL;
+
+            /// Look for elements in ELEMENT block.
+            field = mesh->FirstChildElement("EDGE");
+
+            ASSERTL0(field, "Unable to find EDGE tag in file.");
+
+            TiXmlAttribute *attr = field->FirstAttribute();
+            int err = 0;
+
+            /// All elements are of the form: "<E ID="#"> ... </E>", with
+            /// ? being the element type.
+            /// Read the ID field first.
+            TiXmlElement *edge = field->FirstChildElement("E");
+
+            /// Since all edge data is one big text block, we need to accumulate
+            /// all TEXT data and then parse it.  This approach effectively skips
+            /// all comments or other node types since we only care about the
+            /// edge list.  We cannot handle missing edge numbers as we could
+            /// with missing element numbers due to the text block format.
+            std::string edgeStr;
+            int indx;
+            int nextEdgeNumber = -1;
+
+            while(edge)
+            {
+                nextEdgeNumber++;
+
+                TiXmlAttribute *attr = edge->FirstAttribute();
+                std::string attrName(attr->Name());
+
+                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
+                int err = attr->QueryIntValue(&indx);
+                ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
+                ASSERTL0(indx == nextEdgeNumber, "Edge IDs must begin with zero and be sequential.");
+
+                TiXmlNode *child = edge->FirstChild();
+                edgeStr.clear();
+                if (child->Type() == TiXmlNode::TEXT)
+                {
+                    edgeStr += child->ToText()->ValueStr();
+                }
+
+                /// Now parse out the edges, three fields at a time.
+                int vertex1, vertex2;
+                std::istrstream edgeDataStrm(edgeStr.c_str());
+
+                try
+                {
+                    while (!edgeDataStrm.fail())
+                    {
+                        edgeDataStrm >> vertex1 >> vertex2;
+
+                        // Must check after the read because we may be at the end and not know it.
+                        // If we are at the end we will add a duplicate of the last entry if we
+                        // don't check here.
+                        if (!edgeDataStrm.fail())
+                        {
+                            VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                            EdgeComponentSharedPtr edge(MemoryManager<EdgeComponent>::AllocateSharedPtr(indx, m_MeshDimension, vertices));
+
+                            m_ecomps.push_back(edge);
+                        }
+                    }
+                }
+                catch(...)
+                {
+                    NEKERROR(ErrorUtil::efatal, (std::string("Unable to read edge data: ") + edgeStr).c_str());
+                }
+
+                edge = edge->NextSiblingElement("E");
+            }
+        }
+
+        void MeshGraph2D::ReadElements(TiXmlDocument &doc)
+        {
+            /// We know we have it since we made it this far.
+            TiXmlHandle docHandle(&doc);
+            TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
+            TiXmlElement* field = NULL;
+
+            /// Look for elements in ELEMENT block.
+            field = mesh->FirstChildElement("ELEMENT");
+
+            ASSERTL0(field, "Unable to find ELEMENT tag in file.");
+
+            int nextElementNumber = -1;
+            int err = 0;
+
+            /// All elements are of the form: "<? ID="#"> ... </?>", with
+            /// ? being the element type.
+
+            TiXmlElement *element = field->FirstChildElement();
+
+            while (element)
+            {
+                std::string elementType(element->ValueStr());
+
+                ASSERTL0(elementType == "Q" || elementType == "T",
+                    (std::string("Unknown 2D element type: ") + elementType).c_str());
+
+                /// These should be ordered.
+                nextElementNumber++;
+
+                /// Read id attribute.
+                TiXmlAttribute *attr = element->FirstAttribute();
+                std::string attrName(attr->Name());
+
+                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
+                int indx;
+                int err = attr->QueryIntValue(&indx);
+                ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
+                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
+
+                /// Read text element description.
+                TiXmlNode* elementChild = element->FirstChild();
+                std::string elementStr;
+                while(elementChild)
+                {
+                    if (elementChild->Type() == TiXmlNode::TEXT)
+                    {
+                        elementStr += elementChild->ToText()->ValueStr();
+                    }
+                    elementChild = elementChild->NextSibling();
+                }
+
+                ASSERTL0(!elementStr.empty(), "Unable to read element description body.");
+
+                /// Parse out the element components corresponding to type of element.
+                if (elementType == "T")
+                {
+                    // Read three edge numbers
+                    int edge1, edge2, edge3;
+                    std::istrstream elementDataStrm(elementStr.c_str());
+
+                    try
+                    {
+                        elementDataStrm >> edge1;
+                        elementDataStrm >> edge2;
+                        elementDataStrm >> edge3;
+
+                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
+
+                        /// Create a TriGeom to hold the new definition.
+                        EdgeComponentSharedPtr edges[TriGeom::kNedges] = 
+                        {
+                            GetEdgeComponent(edge1),
+                            GetEdgeComponent(edge2),
+                            GetEdgeComponent(edge3)
+                        };
+
+                        StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] = 
+                        {
+                            EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
+                            EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]), 
+                            EdgeComponent::GetEdgeOrientation(*edges[2], *edges[0])
+                        };
+
+                        TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(edges, edgeorient));
+
+                        m_trigeoms.push_back(trigeom);
+                    }
+                    catch(...)
+                    {
+                        NEKERROR(ErrorUtil::efatal,
+                            (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
+                    }
+                }
+                else if (elementType == "Q")
+                {
+                    // Read four edge numbers
+                    int edge1, edge2, edge3, edge4;
+                    std::istrstream elementDataStrm(elementStr.c_str());
+
+                    try
+                    {
+                        elementDataStrm >> edge1;
+                        elementDataStrm >> edge2;
+                        elementDataStrm >> edge3;
+                        elementDataStrm >> edge4;
+
+                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
+
+                        /// Create a QuadGeom to hold the new definition.
+                        EdgeComponentSharedPtr edges[QuadGeom::kNedges] = 
+                        {GetEdgeComponent(edge1),GetEdgeComponent(edge2),
+                        GetEdgeComponent(edge3),GetEdgeComponent(edge4)};
+
+                        StdRegions::EdgeOrientation edgeorient[QuadGeom::kNedges] =
+                        {
+                            EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
+                            EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]),
+                            EdgeComponent::GetEdgeOrientation(*edges[2], *edges[3]),
+                            EdgeComponent::GetEdgeOrientation(*edges[3], *edges[0])
+                        };
+
+                        QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
+
+                        m_quadgeoms.push_back(quadgeom);
+
+                    }
+                    catch(...)
+                    {
+                        NEKERROR(ErrorUtil::efatal,(std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
+                    }
+                }
+
+                /// Keep looking
+                element = element->NextSiblingElement();
+            }
+        }
+
+        void MeshGraph2D::ReadComposites(TiXmlDocument &doc)
+        {
+            TiXmlHandle docHandle(&doc);
+
+            /// We know we have it since we made it this far.
+            TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
+            TiXmlElement* field = NULL;
+
+            ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
+
+            /// Look for elements in ELEMENT block.
+            field = mesh->FirstChildElement("COMPOSITE");
+
+            ASSERTL0(field, "Unable to find COMPOSITE tag in file.");
+
+            TiXmlAttribute *attr = field->FirstAttribute();
+            int nextCompositeNumber = -1;
+            int err = 0;
+
+            /// All elements are of the form: "<C ID = N> ... </C>".
+
+            /// Read the ID field first.
+            TiXmlElement *composite = field->FirstChildElement("C");
+
+            while (composite)
+            {
+                nextCompositeNumber++;
+
+                TiXmlAttribute *attr = composite->FirstAttribute();
+                std::string attrName(attr->Name());
+
+                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
+                int indx;
+                int err = attr->QueryIntValue(&indx);
+                ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
+                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
+
+                // Read the body of the composite definition.
+                TiXmlNode* compositeChild = composite->FirstChild();
+                // This is primarily to skip comments that may be present.
+                // Comments appear as nodes just like elements.
+                // We are specifically looking for text in the body
+                // of the definition.
+                std::string compositeStr = compositeChild->ToText()->ValueStr();
+                while(compositeChild)
+                {
+                    if (compositeChild->Type() == TiXmlNode::TEXT)
+                    {
+                        compositeStr += compositeChild->ToText()->ValueStr();
+                        compositeStr += " ";    // Just in case there is no space between them.
+                    }
+
+                    compositeChild = compositeChild->NextSibling();
+                }
+
+                ASSERTL0(!compositeStr.empty(), "Unable to read composite description body.");
+
+                /// Parse out the element components corresponding to type of element.
+
+                std::istrstream compositeDataStrm(compositeStr.c_str());
+
+                try
+                {
+                    bool first = true;
+                    std::string prevCompositeElementStr;
+
+                    while (!compositeDataStrm.fail())
+                    {
+                        std::string compositeElementStr;
+                        compositeDataStrm >> compositeElementStr;
+
+                        if (!compositeDataStrm.fail())
+                        {
+                            if (first)
+                            {
+                                first = false;
+
+                                Composite curVector(MemoryManager<GeometryVector>::AllocateSharedPtr());
+                                m_MeshCompositeVector.push_back(curVector);
+                            }
+
+                            if (compositeElementStr.length() > 0)
+                            {
+                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr);
+                            }
+                            prevCompositeElementStr = compositeElementStr;
+                        }
+                    }
+                }
+                catch(...)
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                        (std::string("Unable to read COMPOSITE data for composite: ") + compositeStr).c_str());
+                }
+
+                /// Keep looking
+                composite = composite->NextSiblingElement("C");
+            }
+        }
+
 
         EdgeComponentSharedPtr MeshGraph2D::GetEdgeComponent(int eID)
         {
@@ -553,6 +555,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.16  2007/06/10 02:27:11  jfrazier
+// Another checkin with an incremental completion of the boundary conditions reader.
+//
 // Revision 1.15  2007/06/07 23:55:24  jfrazier
 // Intermediate revisions to add parsing for boundary conditions file.
 //

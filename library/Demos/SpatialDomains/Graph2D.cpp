@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <iostream> 
 #include "SpatialDomains/MeshGraph2D.h"
-#include "SpatialDomains/Domain.h"
+#include <SpatialDomains/BoundaryConditions.h>
 
 using namespace Nektar;
 using namespace SpatialDomains; 
@@ -19,16 +19,13 @@ int main(int argc, char *argv[]){
 
     //string in(argv[argc-1]);
     // If we all have the same relative structure, these should work for everyone.
-    string in("../../../Demos/SpatialDomains/meshdef2D.xml");
-    string domainfile("../../../Demos/SpatialDomains/domain.xml");
+    string in("C:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/meshdef2D.xml");
+    string bcfile("c:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/BC1.xml");
     MeshGraph2D graph2D;
-    Domain domain2D(&graph2D);
+    BoundaryConditions bcs(&graph2D);
 
     graph2D.Read(in);
-    domain2D.Read(domainfile);
-
-    CompositeVector compVector = domain2D.GetDomain();
-    BoundaryVector boundVector = domain2D.GetBoundaries();
+    bcs.Read(bcfile);
     
     return 0;
 }

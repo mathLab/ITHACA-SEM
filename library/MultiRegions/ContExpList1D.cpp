@@ -73,6 +73,22 @@ namespace Nektar
 	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs);
 	}
+
+        ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba, 
+                                     const SpatialDomains::Domain &domain1D):
+	    ExpList1D(Ba,domain1D)
+	{
+	    
+	    ASSERTL1((Ba.GetBasisType() == LibUtilities::eModified_A)
+		     ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
+		     "Expansion not of an boundary-interior type");
+	    
+	    // setup mapping array 
+	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,domain1D);
+	    
+	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
+	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs);
+	}
               
 	void ContExpList1D::IProductWRTBase(const ExpList &In)
 	{
@@ -143,5 +159,8 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.11  2007/06/05 16:36:55  pvos
+* Updated Explist2D ContExpList2D and corresponding demo-codes
+*
 **/
 

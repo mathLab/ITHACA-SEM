@@ -73,6 +73,50 @@ namespace Nektar
             }
 	    m_totGloLen = ++gid;
 	}
+
+        LocalToGlobalMap1D::LocalToGlobalMap1D(const int loclen, 
+                             const StdRegions::StdExpansionVector &locexp, 
+                             const SpatialDomains::Domain &domain1D)
+	{
+	    int i,j,gid,cnt;
+	    
+	    // set up Local to Continuous mapping 
+	    StdRegions::StdExpMap vmap;
+
+            m_totLocLen    = loclen;	    
+            m_locToContMap = Array<OneD, int>(m_totLocLen,-1);
+
+	    // set up simple map based on vertex and edge id's
+	    for(i = cnt = gid = 0; i < locexp.size(); ++i)
+	    {
+		locexp[i]->MapTo(StdRegions::eForwards,vmap);
+                
+                SpatialDomains::SegGeomSharedPtr SegmentGeom;
+                
+                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*((domain1D.GetDomain())[0]))[i]))
+                {
+                    for(j = 0; j < 2; ++j)
+                    {
+                        m_locToContMap[cnt + vmap[j]] =  SegmentGeom->GetVid(j);
+                        gid = max(gid,m_locToContMap[cnt + vmap[j]]);
+                    }
+		}
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a SegGeom failed");
+                }
+                cnt += locexp[i]->GetNcoeffs();
+	    }
+	    
+            for(i = 0; i < m_totLocLen; ++i)
+            {
+                if(m_locToContMap[i] == -1)
+                {
+                    m_locToContMap[i] = ++gid;
+                }
+            }
+	    m_totGloLen = ++gid;
+	}
 	
 	
 	LocalToGlobalMap1D::~LocalToGlobalMap1D()
@@ -84,6 +128,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.7  2007/06/17 19:01:29  bnelson
+* Removed unused variables.
+*
 * Revision 1.6  2007/06/05 16:36:55  pvos
 * Updated Explist2D ContExpList2D and corresponding demo-codes
 *

@@ -38,6 +38,7 @@
 
 #include <MultiRegions/LocalToGlobalMap.h>
 #include <SpatialDomains/MeshGraph1D.h>
+#include <SpatialDomains/domain.h>
 
 namespace Nektar
 {
@@ -52,6 +53,9 @@ namespace Nektar
 	    LocalToGlobalMap1D(const int loclen, 
                                const StdRegions::StdExpansionVector &locexp, 
                                const SpatialDomains::MeshGraph1D &graph1D);
+	    LocalToGlobalMap1D(const int loclen, 
+                               const StdRegions::StdExpansionVector &locexp, 
+                               const SpatialDomains::Domain &domain1D);
 
             virtual ~LocalToGlobalMap1D();
 	    
@@ -67,6 +71,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.5  2007/05/28 16:15:00  sherwin
+/** Updated files in MultiRegions to make 1D demos work
+/**
 /** Revision 1.4  2007/05/27 16:09:43  bnelson
 /** Update to new Array type.
 /**

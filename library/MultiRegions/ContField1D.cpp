@@ -44,16 +44,15 @@ namespace Nektar
 	{
 	}
 
-#if 0 
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
-                                 const SpatialDomains::Domain &domain1D, ):
-            ContExpList1D(Ba,domain1D.GetGraph1D())
+                                 const SpatialDomains::Domain &domain1D,
+                                 SpatialDomains::BoundaryConditions &bcs):
+            ContExpList1D(Ba,domain1D)
         {
 	    int i,nbnd;
-            PointExpSharedPtr  p_ext;
+            LocalRegions::PointExpSharedPtr  p_exp;
             int NumDirichet = 0;
 
-            SpatialDomains::BoundaryConditions bcs = domain1D.GetBoundaries(); 
             SpatialDomains::BoundaryRegionCollectionType    &bregions = bcs.GetBoundaryRegions();
             SpatialDomains::BoundaryConditionCollectionType &bconditions = bcs.GetBoundaryConditions();
 
@@ -62,35 +61,51 @@ namespace Nektar
             // list Dirichlet boundaries first
             for(i = 0; i < nbnd; ++i)
             {
-                if(bconditions[i]->GetBoundaryConditionType() 
-                   == SpatialDomains::eDirichlet)
+                if(  ((*(bconditions[i]))["u"])->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                    p_exp = MemoryManager<LocalRegions::PointExp>::AllocatedSharedPtr(bregions[i]->GetVertex()); 
-                    m_bndContraint.push_back(p_exp);
-                    m_bndTypes.push_back(SpatialDomains::eDirichlet);
-                    NumDirichet++;
+                    SpatialDomains::VertexComponentSharedPtr vert;
+                    
+                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                    {
+                        p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
+                        m_bndConstraint.push_back(p_exp);
+                        m_bndTypes.push_back(SpatialDomains::eDirichlet);
+                        NumDirichet++;
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a vertex faiiled");
+                    }
                 }
             }
 
             for(i = 0; i < nbnd; ++i)
             {
-                if(bconditions[i]->GetBoundaryConditionType()
-                   != SpatialDomains::eDirichlet)
+                if( ((*(bconditions[i]))["u"])->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
-                    p_exp = MemoryManager<LocalRegions::PointExp>::AllocatedSharedPtr(Bndry[i].GetVertex());
-                    m_bndContraint.push_back(p_exp);
-                    m_bndTypes.push_back(bconditions[i]->GetBoundaryConditionType());
+                   SpatialDomains:: VertexComponentSharedPtr vert;
+
+                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                    {
+                        p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
+                        m_bndConstraint.push_back(p_exp);
+                        m_bndTypes.push_back(SpatialDomains::eDirichlet);
+                        NumDirichet++;
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a vertex faiiled");
+                    }
                 }
             }
             
 
             // Need to reset numbering according to Dirichlet Bondary Condition
-            m_locToGloMap->ResetMapping(NumDirichlet,bcs);
+            //m_locToGloMap->ResetMapping(NumDirichlet,bcs);
             // Need to know how to get global vertex id 
             // I note that boundary Regions is a composite vector and so belive we can use this to get the desired quantities. 
 
         }
-#endif
 
         ContField1D::~ContField1D()
 	{
@@ -111,7 +126,7 @@ namespace Nektar
 
             for(i = 0; i < NumDirBcs; ++i)
             {
-                m_contCoeffs[i] = m_bndContraint[i]->GetValue();
+                m_contCoeffs[i] = m_bndConstraint[i]->GetValue();
             }
             
             // need to modify right hand side vector here to take

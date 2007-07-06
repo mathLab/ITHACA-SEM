@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ContExpList1D.h>
 #include <LocalRegions/PointExp.h>
+#include <SpatialDomains/BoundaryConditions.h>
 
 namespace Nektar
 {
@@ -50,6 +51,9 @@ namespace Nektar
 	    {
 	    public:
 		ContField1D();
+                ContField1D(const LibUtilities::BasisKey &Ba, 
+                            const SpatialDomains::Domain &domain1D,
+                            SpatialDomains::BoundaryConditions &bcs);
 		~ContField1D();
 		
                 void FwdTrans(const ExpList &In);
@@ -60,8 +64,8 @@ namespace Nektar
 	    protected:
 		
 	    private:
-		LocalRegions::PointExpVector  m_bndContraint;
-		BndTypesVector                m_bndTypes;
+		LocalRegions::PointExpVector                         m_bndConstraint;
+                std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
 
 	    };
 	

@@ -52,6 +52,8 @@ namespace Nektar
 	    ContExpList1D();
 	    ContExpList1D(const LibUtilities::BasisKey &Ba, 
 			  const SpatialDomains::MeshGraph1D &graph1D);
+	    ContExpList1D(const LibUtilities::BasisKey &Ba, 
+                          const SpatialDomains::Domain &domain1D);
             ContExpList1D::ContExpList1D(const ContExpList1D &In);
 	    ~ContExpList1D();
 	    
@@ -106,6 +108,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.11  2007/06/08 12:58:26  sherwin
+* Added ContField1D and remove previous structure using Fields
+*
 * Revision 1.10  2007/06/05 16:36:55  pvos
 * Updated Explist2D ContExpList2D and corresponding demo-codes
 *

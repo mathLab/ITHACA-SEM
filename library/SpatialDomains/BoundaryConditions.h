@@ -142,7 +142,7 @@ namespace Nektar
                 return m_Parameters;
             }
 
-            BoundaryRegionCollectionType &GetBoundaryRegions(void)
+            BoundaryRegionCollectionType &GetBoundaryRegions(void)  
             {
                 return m_BoundaryRegions;
             }

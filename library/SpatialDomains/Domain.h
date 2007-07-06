@@ -95,8 +95,8 @@ namespace Nektar
             void Read(TiXmlDocument &doc);
             void Write(std::string &outfilename);
 
-            CompositeVector GetDomain(void) { return m_Domain; };
-            BoundaryVector  GetBoundaries(void) { return m_Boundaries; };
+            CompositeVector GetDomain(void) const { return m_Domain; };
+            BoundaryVector  GetBoundaries(void) const { return m_Boundaries; };
 
             inline void SetFileName(const std::string &inString)
             {

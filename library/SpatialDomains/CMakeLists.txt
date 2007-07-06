@@ -1,4 +1,6 @@
 SET(SPATIAL_DOMAINS_SOURCES
+BoundaryConditions.cpp
+Domain.cpp
 EdgeComponent.cpp
 GeomFactors.cpp
 Geometry1D.cpp
@@ -24,6 +26,9 @@ TriGeom.cpp
 )
 
 SET(SPATIAL_DOMAINS_HEADERS
+BoundaryConditions.h
+Domain.h
+Equation.hpp
 EdgeComponent.h
 GeomFactors.h
 Geometry1D.h

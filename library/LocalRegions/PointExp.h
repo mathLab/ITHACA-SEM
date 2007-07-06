@@ -48,7 +48,7 @@ namespace Nektar
 	{
 	    
 	public:
-	    PointExp(SpatialDomains::VertexComponentSharedPtr &m_geom);
+	    PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom);
 	    ~PointExp(void);
 
             inline NekDouble GetValue(void)

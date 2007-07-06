@@ -77,9 +77,48 @@ namespace Nektar
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 	}
+
+	ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
+			     const SpatialDomains::Domain &domain1D)
+	{
+            int i;
+            int nel;
+	    LocalRegions::SegExpSharedPtr seg;
+	    SpatialDomains::CompositeVector Composites = domain1D.GetDomain();
+            
+            // The actual solution domain is stored in the first composite (index 0)
+            nel = Composites[0]->size();
+            
+	    m_ncoeffs = nel*Ba.GetNumModes();
+	    m_npoints = nel*Ba.GetNumPoints();
+	    
+	    m_transState = eNotSet; 
+	    m_physState  = false;
+            
+            for(i = 0; i < nel; ++i)
+            {
+                SpatialDomains::SegGeomSharedPtr SegmentGeom;
+                
+                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*(Composites[0]))[i]))
+                {
+                    seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba, SegmentGeom);
+                    (*m_exp).push_back(seg);
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a SegGeom failed");
+                }   
+                
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+            }
+        }
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.14  2007/06/05 16:36:55  pvos
+* Updated Explist2D ContExpList2D and corresponding demo-codes
+*
 **/

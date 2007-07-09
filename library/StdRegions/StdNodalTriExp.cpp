@@ -212,12 +212,16 @@ namespace Nektar
         {
             IProductWRTBase(inarray,outarray);
             
-	    StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
-	    DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
-	    
-	    // solve inverse of system
-	    DNekVec   v(m_ncoeffs,outarray,eWrapper);
-	    matsys->Solve(v,v);
+            // get Mass matrix inverse
+            StdMatrixKey      masskey(eInvMassMatrix,DetShapeType(),*this, 
+                                      m_nodalPointsKey->GetPointsType());
+            DNekMatSharedPtr  matsys = m_stdMatrixManager[masskey];
+            
+            // copy inarray in case inarray == outarray
+            DNekVec in (m_ncoeffs,outarray);
+            DNekVec out(m_ncoeffs,outarray,eWrapper);
+                
+            out = (*matsys)*in;
         }
 
 
@@ -316,6 +320,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.10  2007/05/15 05:18:23  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.9  2007/04/26 15:00:17  sherwin
 * SJS compiling working version using SHaredArrays
 *

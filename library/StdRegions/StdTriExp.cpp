@@ -330,13 +330,15 @@ namespace Nektar
 	    
             IProductWRTBase(inarray,outarray);
 
-	    // get Mass matrix
-	    StdLinSysKey         masskey(eMassMatrix,DetShapeType(),*this);
-	    DNekLinSysSharedPtr  matsys = m_stdLinSysManager[masskey];
-	    
-	    // solve inverse of system
-	    DNekVec   v(m_ncoeffs,outarray,eWrapper);
-	    matsys->Solve(v,v);
+	    // get Mass matrix inverse
+            StdMatrixKey      masskey(eInvMassMatrix,DetShapeType(),*this);
+            DNekMatSharedPtr  matsys = m_stdMatrixManager[masskey];
+		
+            // copy inarray in case inarray == outarray
+            DNekVec in (m_ncoeffs,outarray);
+            DNekVec out(m_ncoeffs,outarray,eWrapper);
+            
+            out = (*matsys)*in;
 	}
 
         NekDouble StdTriExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
@@ -536,6 +538,10 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.18  2007/06/07 15:54:19  pvos
+* Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
+* Also made corrections to various ASSERTL2 calls
+*
 * Revision 1.17  2007/05/31 19:13:12  pvos
 * Updated NodalTriExp + LocalRegions/Project2D + some other modifications
 *

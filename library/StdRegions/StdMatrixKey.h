@@ -53,6 +53,12 @@ namespace Nektar
                 const StdRegions::StdExpansion &stdExpansion,
                 LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
+            StdMatrixKey(const MatrixType matrixType, 
+                         const ShapeType shapeType,
+                         const ConstArray<OneD,LibUtilities::BasisSharedPtr> &base,
+                         const int ncoeffs,
+                         LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
             StdMatrixKey(const StdMatrixKey& rhs);
 
             virtual ~StdMatrixKey()
@@ -79,6 +85,11 @@ namespace Nektar
                 return m_shapeType;
             }
 
+            LibUtilities::PointsType GetNodalPointsType() const
+            {
+                return m_nodalPointsType;
+            }
+           
             int GetNcoeffs() const
             {
                 return m_ncoeffs;
@@ -118,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.12  2007/05/25 17:48:58  jfrazier
+* Changed the class so the bases are not stored as an Array, but rather a ConstArray.
+*
 * Revision 1.11  2007/05/22 02:01:50  bnelson
 * Changed Array::size to Array::num_elements.
 *

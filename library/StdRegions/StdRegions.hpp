@@ -85,6 +85,7 @@ namespace Nektar
         enum MatrixType
         {
             eMassMatrix,
+            eInvMassMatrix,
             eLapMatrix,
             eNBasisTrans,
             eBwdTransMatrix
@@ -93,6 +94,7 @@ namespace Nektar
         const char* const MatrixTypeMap[] = 
 	{
             "MassMatrix",
+            "InvMassMatrix",
             "LapMatrix",
             "NBasisTrans",
             "BwdTransMatrix"
@@ -197,6 +199,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.16  2007/05/15 05:18:24  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.15  2007/04/18 16:09:13  pvos
 * Added some new Tensor Operations routines
 *

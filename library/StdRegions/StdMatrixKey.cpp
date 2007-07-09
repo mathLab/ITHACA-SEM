@@ -53,6 +53,21 @@ namespace Nektar
 	    m_nodalPointsType(nodalType)
 	{
 	}
+
+
+	// Register Mass Matrix creator. 
+	StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+				   const ShapeType shapeType,
+                                   const ConstArray<OneD,LibUtilities::BasisSharedPtr> &base,
+				   const int ncoeffs,
+				   LibUtilities::PointsType nodalType) :
+            m_shapeType(shapeType),
+            m_base(base),
+            m_ncoeffs(ncoeffs),
+	    m_matrixType(matrixType),
+	    m_nodalPointsType(nodalType)
+	{
+	}
 	
         StdMatrixKey::StdMatrixKey(const StdMatrixKey& rhs) :
             m_shapeType(rhs.m_shapeType),
@@ -130,6 +145,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.cpp,v $
+* Revision 1.6  2007/05/15 05:18:23  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.5  2007/04/10 14:00:45  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

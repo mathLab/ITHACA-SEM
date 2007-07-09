@@ -100,16 +100,14 @@ namespace Nektar
             m_stdMatrixManager.RegisterCreator(StdMatrixKey(eMassMatrix,eNoShapeType,*this),
                 boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
 
-            m_stdLinSysManager.RegisterCreator(StdLinSysKey(eMassMatrix,eNoShapeType,*this),
-		boost::bind(&StdExpansion::CreateStdLinSys, this, _1));
-
+            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eInvMassMatrix,eNoShapeType,*this),
+                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
 
             m_stdMatrixManager.RegisterCreator(StdMatrixKey(eNBasisTrans,eNoShapeType,*this),
                 boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
 
             m_stdLinSysManager.RegisterCreator(StdLinSysKey(eNBasisTrans,eNoShapeType,*this),
 		boost::bind(&StdExpansion::CreateStdLinSys, this, _1));
-
 
             m_stdMatrixManager.RegisterCreator(StdMatrixKey(eBwdTransMatrix,eNoShapeType,*this),
                 boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
@@ -146,6 +144,32 @@ namespace Nektar
             {
             case eMassMatrix:
                 returnval = GenMassMatrix();
+                break;
+            case eInvMassMatrix:
+                {
+                    StdMatrixKey masskey(eMassMatrix,mkey.GetShapeType(),mkey.GetBase(),
+                                         mkey.GetNcoeffs(),mkey.GetNodalPointsType());
+                    DNekMatSharedPtr mmat = m_stdMatrixManager[masskey];
+                    DNekLinSys invmass(mmat);
+                    
+                    int dim = mmat->GetRows(); //assume square matrix 
+                    Array<OneD,NekDouble> invdata = Array<OneD,NekDouble>(dim*dim);
+                    Array<OneD,NekDouble> data_offset;
+                    
+                    Vmath::Zero(dim*dim,&invdata[0],1);
+
+                    for(int i = 0; i < dim; ++i)
+                    {
+                        // set array to be identity matrix
+                        invdata[i*dim + i] = 1.0;
+
+                        //call inverse on symmetric matrix
+                        DNekVec   v(dim,data_offset = invdata+i*dim,eWrapper);
+                        invmass.Solve(v,v);
+                    }
+
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(dim,dim,&invdata[0]);
+                }
                 break;
 	    case eNBasisTrans:
 		returnval = GenNBasisTransMatrix();
@@ -362,6 +386,10 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.38  2007/06/07 15:54:19  pvos
+* Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
+* Also made corrections to various ASSERTL2 calls
+*
 * Revision 1.37  2007/05/30 23:56:54  sherwin
 * Silly errors
 *

@@ -149,7 +149,7 @@ namespace Nektar
         template<typename VectorType>
         VectorType Solve(const boost::shared_ptr<VectorType>& b)
         {
-            VectorType x(*b);
+            VectorType x;
             LinearSystemSolver<MatrixType, VectorType>::Solve(A, m_ipivot,*b, x);
             return x;
         }
@@ -165,7 +165,7 @@ namespace Nektar
         VectorType Solve(const VectorType& b,
             typename boost::disable_if<IsSharedPointer<VectorType> >::type* = 0)
         {
-            VectorType x(b);
+            VectorType x;
             LinearSystemSolver<MatrixType, VectorType>::Solve(A, m_ipivot,b, x);
             return x;
         }
@@ -198,7 +198,7 @@ namespace Nektar
         template<typename VectorType>
         VectorType SolveTranspose(const boost::shared_ptr<VectorType>& b)
         {
-            VectorType x(*b);
+            VectorType x;
             LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, m_ipivot,*b, x);
             return x;
         }
@@ -215,7 +215,7 @@ namespace Nektar
         VectorType SolveTranspose(const VectorType& b,
             typename boost::disable_if<IsSharedPointer<VectorType> >::type* = 0)
         {
-            VectorType x(b);
+            VectorType x;
             LinearSystemSolver<MatrixType, VectorType>::SolveTranspose(A, m_ipivot,b, x);
             return x;
         }

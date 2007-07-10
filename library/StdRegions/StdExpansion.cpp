@@ -400,14 +400,11 @@ namespace Nektar
 
         DNekMatSharedPtr StdExpansion::CreateGeneralStdNBasisTransMatrix() 
         {
-            NEKERROR(ErrorUtil::efatal, "Method not populated yet.");
-
+            NEKERROR(ErrorUtil::efatal, "General Nodal Basis Transform Creation Does Not Exist.");
             DNekMatSharedPtr  Mat;
-
-            Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
-
             return Mat;
         }
+
 
         DNekMatSharedPtr StdExpansion::CreateGeneralStdBwdTransMatrix()
         {
@@ -528,6 +525,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.40  2007/07/10 19:27:58  kirby
+* Update for new matrix structures
+*
 * Revision 1.39  2007/07/09 15:19:14  sherwin
 * Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
 *

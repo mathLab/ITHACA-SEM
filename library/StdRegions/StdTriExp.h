@@ -224,6 +224,23 @@ namespace Nektar
                 const ConstArray<OneD, NekDouble>& base1,
                 const ConstArray<OneD, NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray);
+
+            //----------------------------------
+            // Local Matrix Routines
+            //----------------------------------
+
+            DNekMatSharedPtr GenMassMatrix();
+
+            DNekMatSharedPtr GenLaplacianMatrix();
+
+            DNekMatSharedPtr GenLaplacianMatrix(const int i, const int j);
+
+            DNekMatSharedPtr GenWeakDerivMatrix(const int i);
+
+            DNekMatSharedPtr GenNBasisTransMatrix();
+
+            DNekMatSharedPtr GenBwdTransMatrix();
+
         private:
 
             virtual int v_GetNverts()
@@ -240,17 +257,36 @@ namespace Nektar
             {
                 return GetEdgeNcoeffs(i);
             }
-
             /** \brief Virtual call to GenMassMatrix */
             virtual DNekMatSharedPtr v_GenMassMatrix() 
             {
-                return StdExpansion::GenerateMassMatrix();
+                return GenMassMatrix();
             }
 
             virtual DNekMatSharedPtr v_GenLaplacianMatrix() 
             {
                 return GenLaplacianMatrix();
-            }	    
+            }
+
+            virtual DNekMatSharedPtr v_GenLaplacianMatrix(const int i, const int j) 
+            {
+                return GenLaplacianMatrix(i,j);
+            }
+
+            virtual DNekMatSharedPtr v_GenWeakDerivMatrix(const int i) 
+            {
+                return GenWeakDerivMatrix(i);
+            }
+
+            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
+            {
+                return GenNBasisTransMatrix();
+            }
+
+            virtual DNekMatSharedPtr v_GenBwdTransMatrix() 
+            {
+                return GenBwdTransMatrix();
+            }
 
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
             {
@@ -355,6 +391,9 @@ namespace Nektar
 
 /**
 * $Log: StdTriExp.h,v $
+* Revision 1.15  2007/07/10 19:27:58  kirby
+* Update for new matrix structures
+*
 * Revision 1.14  2007/06/07 15:54:19  pvos
 * Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
 * Also made corrections to various ASSERTL2 calls

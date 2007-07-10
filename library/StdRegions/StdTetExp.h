@@ -77,7 +77,7 @@ namespace Nektar
 	    }
 	    
 	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
-	    
+
 	protected:
 	    
 	    static StdMatrix s_elmtmats;
@@ -118,6 +118,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.4  2007/01/17 16:05:41  pvos
+ * updated doxygen documentation
+ *
  * Revision 1.3  2006/12/10 19:00:54  sherwin
  * Modifications to handle nodal expansions
  *

@@ -46,11 +46,11 @@ namespace Nektar
         }
 
         StdQuadExp::StdQuadExp(const LibUtilities::BasisKey &Ba, 
-			       const LibUtilities::BasisKey &Bb):
-	    StdExpansion2D(Ba.GetNumModes()*Bb.GetNumModes(),Ba,Bb)
+            const LibUtilities::BasisKey &Bb):
+        StdExpansion2D(Ba.GetNumModes()*Bb.GetNumModes(),Ba,Bb)
         { 
         }
-		
+
         StdQuadExp::StdQuadExp(const StdQuadExp &T):
         StdExpansion2D(T)
         {
@@ -68,420 +68,420 @@ namespace Nektar
         {
             ConstArray<OneD, NekDouble> w0, w1;
 
-	    w0 = ExpPointsProperties(0)->GetW();
-	    w1 = ExpPointsProperties(1)->GetW();
+            w0 = ExpPointsProperties(0)->GetW();
+            w1 = ExpPointsProperties(1)->GetW();
 
             return StdExpansion2D::Integral(inarray,w0,w1);
         }
 
 
         void StdQuadExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
-					 Array<OneD, NekDouble> &outarray)
+            Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-			    inarray,outarray,1);
+                inarray,outarray,1);
         }
 
         void StdQuadExp:: IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
-					  const ConstArray<OneD, NekDouble>& base1,
-					  const ConstArray<OneD, NekDouble>& inarray, 
-					  Array<OneD, NekDouble> &outarray,
-					  int coll_check)
-	{
-	    int i;
-	    int    nquad0 = m_base[0]->GetNumPoints();
-	    int    nquad1 = m_base[1]->GetNumPoints();
-	    int    order0 = m_base[0]->GetNumModes();
-	    int    order1 = m_base[1]->GetNumModes();
-	    ConstArray<OneD, NekDouble> w0,w1;
-	    Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad0*nquad1);
-	    Array<OneD, NekDouble> tmp1 = Array<OneD, NekDouble>(nquad0*nquad1);
-	    
-#if FULLDEBUG
-	    if((m_base[0]->GetAlpha() != 0.0)||(m_base[1]->GetAlpha() != 0.0))
-	    {
-		ErrorUtil::Error(ErrorUtil::ewarning,"StdQuadExp::IProduct_WRT_B",
-                        "Basis has non-zero alpha weight");
-                }
+            const ConstArray<OneD, NekDouble>& base1,
+            const ConstArray<OneD, NekDouble>& inarray, 
+            Array<OneD, NekDouble> &outarray,
+            int coll_check)
+        {
+            int i;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    order0 = m_base[0]->GetNumModes();
+            int    order1 = m_base[1]->GetNumModes();
+            ConstArray<OneD, NekDouble> w0,w1;
+            Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad0*nquad1);
+            Array<OneD, NekDouble> tmp1 = Array<OneD, NekDouble>(nquad0*nquad1);
 
-                if((m_base[0]->GetBeta() != 0.0)||(m_base[1]->GetBeta() != 0.0))
-                {
-                    ErrorUtil::Error(ErrorUtil::ewarning,"StdQuadExp::IProduct_WRT_B",
-                        "Basis has non-zero beta weight");
-                }
+#if FULLDEBUG
+            if((m_base[0]->GetAlpha() != 0.0)||(m_base[1]->GetAlpha() != 0.0))
+            {
+                ErrorUtil::Error(ErrorUtil::ewarning,"StdQuadExp::IProduct_WRT_B",
+                    "Basis has non-zero alpha weight");
+            }
+
+            if((m_base[0]->GetBeta() != 0.0)||(m_base[1]->GetBeta() != 0.0))
+            {
+                ErrorUtil::Error(ErrorUtil::ewarning,"StdQuadExp::IProduct_WRT_B",
+                    "Basis has non-zero beta weight");
+            }
 #endif
 
-		w0 = ExpPointsProperties(0)->GetW();
-		w1 = ExpPointsProperties(1)->GetW();
-                // Note cannot use outarray as tmp space since dimensions are not always
-                // guarenteed to be sufficient 
+            w0 = ExpPointsProperties(0)->GetW();
+            w1 = ExpPointsProperties(1)->GetW();
+            // Note cannot use outarray as tmp space since dimensions are not always
+            // guarenteed to be sufficient 
 
-                // multiply by integration constants 
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
-				w0.get(),1,&tmp[0]+i*nquad0,1);
-                }
-
-                for(i = 0; i < nquad0; ++i)
-                {
-                    Vmath::Vmul(nquad1,&tmp[0]+i,nquad0,w1.get(),1,
-				&tmp[0]+i,nquad0);
-                }
-		
-                if(coll_check&&m_base[0]->Collocation())
-                {
-                    Vmath::Vcopy(order0*nquad1,&tmp[0],1,&tmp1[0],1);
-                }
-                else
-                {
-                    Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),
-				nquad0,&tmp[0],nquad0,0.0,&tmp1[0],order0);
-                }
-
-                if(coll_check&&m_base[1]->Collocation())
-                {
-                    Vmath::Vcopy(order0*order1,&tmp1[0],1,&outarray[0],1);
-                }
-                else
-                {
-                    Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, &tmp1[0],
-				order0, base1.get(), nquad1, 0.0, 
-				&outarray[0],order0);
-                }
-
+            // multiply by integration constants 
+            for(i = 0; i < nquad1; ++i)
+            {
+                Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
+                    w0.get(),1,&tmp[0]+i*nquad0,1);
             }
-	
-	void StdQuadExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
-	{
-	    int    i;
-	    int   nquad0 = m_base[0]->GetNumPoints();
-	    int   nquad1 = m_base[1]->GetNumPoints();
-	    ConstArray<OneD, NekDouble> base0  = m_base[0]->GetBdata();
-	    ConstArray<OneD, NekDouble> base1  = m_base[1]->GetBdata();
-	    int   btmp0 = m_base[0]->GetNumModes();
-	    int   mode0 = mode%btmp0;
-	    int   mode1 = mode/btmp0;
-	    
-	    
-	    ASSERTL2(mode1 == (int)floor((1.0*mode)/btmp0),
-		     "Integer Truncation not Equiv to Floor");
-	    
-	    ASSERTL2(m_ncoeffs <= mode, 
-		     "calling argument mode is larger than total expansion order");
-	    
-	    for(i = 0; i < nquad1; ++i)
-	    {
-		Vmath::Vcopy(nquad0,(NekDouble *)(base0.get() + mode0*nquad0),
-			     1, &outarray[0]+i*nquad0,1);
-	    }
-	    
-	    for(i = 0; i < nquad0; ++i)
-	    {
-		Vmath::Vmul(nquad1,(NekDouble *)(base1.get() + mode1*nquad1),1,
-			    &outarray[0]+i,nquad0,&outarray[0]+i,nquad0);
-	    }
-	}
-	
-	DNekMatSharedPtr StdQuadExp::GenMassMatrix()
-	{
-	    int      i;
-	    int      order0    = GetBasisNumModes(0);
-	    int      order1    = GetBasisNumModes(1);
 
-	    DNekMatSharedPtr Mat = StdExpansion::GenerateMassMatrix();
+            for(i = 0; i < nquad0; ++i)
+            {
+                Vmath::Vmul(nquad1,&tmp[0]+i,nquad0,w1.get(),1,
+                    &tmp[0]+i,nquad0);
+            }
 
-	    // For Fourier basis set the imaginary component of mean mode
-	    // to have a unit diagonal component in mass matrix 
-	    if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
-	    {
-		for(i = 0; i < order1; ++i)
-		{
-		    (*Mat)(order0*i+1,i*order0+1) = 1.0;
-		}
-	    }
-	    
-	    if(m_base[1]->GetBasisType() == LibUtilities::eFourier)
-	    {
-		for(i = 0; i < order0; ++i)
-		{
-		    (*Mat)(order0+i ,order0+i) = 1.0;
-		}
-	    }
-	    return Mat;
-	}
+            if(coll_check&&m_base[0]->Collocation())
+            {
+                Vmath::Vcopy(order0*nquad1,&tmp[0],1,&tmp1[0],1);
+            }
+            else
+            {
+                Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),
+                    nquad0,&tmp[0],nquad0,0.0,&tmp1[0],order0);
+            }
 
-	DNekMatSharedPtr  StdQuadExp::GenLapMatrix()
-	{
-	    ASSERTL0(false, "Not implemented");
-        return DNekMatSharedPtr(static_cast<DNekMat*>(0));
-	}
-	
-	///////////////////////////////
-	/// Differentiation Methods
-	///////////////////////////////
-	
-	void StdQuadExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
-				   Array<OneD, NekDouble> &out_d0,
-				   Array<OneD, NekDouble> &out_d1,
-				   Array<OneD, NekDouble> &out_d2)
-	{
-	    PhysTensorDeriv(inarray, out_d0, out_d1);
-	}
+            if(coll_check&&m_base[1]->Collocation())
+            {
+                Vmath::Vcopy(order0*order1,&tmp1[0],1,&outarray[0],1);
+            }
+            else
+            {
+                Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, &tmp1[0],
+                    order0, base1.get(), nquad1, 0.0, 
+                    &outarray[0],order0);
+            }
 
-	//------------------------------
-	// Evaluation Methods
-	//-----------------------------
-	
-	void StdQuadExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
-				  Array<OneD, NekDouble> &outarray)
-	{
-	    int           nquad0 = m_base[0]->GetNumPoints();
-	    int           nquad1 = m_base[1]->GetNumPoints();
-	    int           order0 = m_base[0]->GetNumModes();
-	    int           order1 = m_base[1]->GetNumModes();
-	    ConstArray<OneD, NekDouble> base0 = m_base[0]->GetBdata();
-	    ConstArray<OneD, NekDouble> base1 = m_base[1]->GetBdata();
-	    Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nquad0*std::max(order1,nquad1));
-	    
-	    if(m_base[0]->Collocation())
-	    {
-		Vmath::Vcopy(nquad0*order1,&inarray[0],1,&tmp[0],1);
-	    }
-	    else
-	    {
-		Blas::Dgemm('N','N', nquad0,order1,order0,1.0, base0.get(), 
-			    nquad0, &inarray[0], order0,0.0,&tmp[0], nquad0);
-	    }
-	    
-	    if(m_base[1]->Collocation())
-	    {
-		Vmath::Vcopy(nquad0*nquad1,&tmp[0],1,&outarray[0],1);
-	    }
-	    else
-	    {
-		Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &tmp[0], 
-			    nquad0, base1.get(), nquad1, 0.0, &outarray[0], 
-			    nquad0);
-	    }    
-	}
+        }
 
-	void StdQuadExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
-				  Array<OneD, NekDouble> &outarray)
-	{
-	    if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
-	    {
-		Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
-	    }
-	    else
-	    {
-		IProductWRTBase(inarray,outarray);
+        void StdQuadExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+        {
+            int    i;
+            int   nquad0 = m_base[0]->GetNumPoints();
+            int   nquad1 = m_base[1]->GetNumPoints();
+            ConstArray<OneD, NekDouble> base0  = m_base[0]->GetBdata();
+            ConstArray<OneD, NekDouble> base1  = m_base[1]->GetBdata();
+            int   btmp0 = m_base[0]->GetNumModes();
+            int   mode0 = mode%btmp0;
+            int   mode1 = mode/btmp0;
 
-		// get Mass matrix inverse
-		StdMatrixKey      masskey(eInvMassMatrix,DetShapeType(),*this);
-		DNekMatSharedPtr  matsys = m_stdMatrixManager[masskey];
-		
+
+            ASSERTL2(mode1 == (int)floor((1.0*mode)/btmp0),
+                "Integer Truncation not Equiv to Floor");
+
+            ASSERTL2(m_ncoeffs <= mode, 
+                "calling argument mode is larger than total expansion order");
+
+            for(i = 0; i < nquad1; ++i)
+            {
+                Vmath::Vcopy(nquad0,(NekDouble *)(base0.get() + mode0*nquad0),
+                    1, &outarray[0]+i*nquad0,1);
+            }
+
+            for(i = 0; i < nquad0; ++i)
+            {
+                Vmath::Vmul(nquad1,(NekDouble *)(base1.get() + mode1*nquad1),1,
+                    &outarray[0]+i,nquad0,&outarray[0]+i,nquad0);
+            }
+        }
+
+        DNekMatSharedPtr StdQuadExp::GenMassMatrix()
+        {
+            int      i;
+            int      order0    = GetBasisNumModes(0);
+            int      order1    = GetBasisNumModes(1);
+
+            DNekMatSharedPtr Mat = StdExpansion::GenerateMassMatrix();
+
+            // For Fourier basis set the imaginary component of mean mode
+            // to have a unit diagonal component in mass matrix 
+            if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
+            {
+                for(i = 0; i < order1; ++i)
+                {
+                    (*Mat)(order0*i+1,i*order0+1) = 1.0;
+                }
+            }
+
+            if(m_base[1]->GetBasisType() == LibUtilities::eFourier)
+            {
+                for(i = 0; i < order0; ++i)
+                {
+                    (*Mat)(order0+i ,order0+i) = 1.0;
+                }
+            }
+            return Mat;
+        }
+
+        DNekMatSharedPtr  StdQuadExp::GenLapMatrix()
+        {
+            ASSERTL0(false, "Not implemented");
+            return DNekMatSharedPtr(static_cast<DNekMat*>(0));
+        }
+
+        ///////////////////////////////
+        /// Differentiation Methods
+        ///////////////////////////////
+
+        void StdQuadExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+            Array<OneD, NekDouble> &out_d0,
+            Array<OneD, NekDouble> &out_d1,
+            Array<OneD, NekDouble> &out_d2)
+        {
+            PhysTensorDeriv(inarray, out_d0, out_d1);
+        }
+
+        //------------------------------
+        // Evaluation Methods
+        //-----------------------------
+
+        void StdQuadExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+            Array<OneD, NekDouble> &outarray)
+        {
+            int           nquad0 = m_base[0]->GetNumPoints();
+            int           nquad1 = m_base[1]->GetNumPoints();
+            int           order0 = m_base[0]->GetNumModes();
+            int           order1 = m_base[1]->GetNumModes();
+            ConstArray<OneD, NekDouble> base0 = m_base[0]->GetBdata();
+            ConstArray<OneD, NekDouble> base1 = m_base[1]->GetBdata();
+            Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nquad0*std::max(order1,nquad1));
+
+            if(m_base[0]->Collocation())
+            {
+                Vmath::Vcopy(nquad0*order1,&inarray[0],1,&tmp[0],1);
+            }
+            else
+            {
+                Blas::Dgemm('N','N', nquad0,order1,order0,1.0, base0.get(), 
+                    nquad0, &inarray[0], order0,0.0,&tmp[0], nquad0);
+            }
+
+            if(m_base[1]->Collocation())
+            {
+                Vmath::Vcopy(nquad0*nquad1,&tmp[0],1,&outarray[0],1);
+            }
+            else
+            {
+                Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &tmp[0], 
+                    nquad0, base1.get(), nquad1, 0.0, &outarray[0], 
+                    nquad0);
+            }    
+        }
+
+        void StdQuadExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+            Array<OneD, NekDouble> &outarray)
+        {
+            if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
+            {
+                Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
+            }
+            else
+            {
+                IProductWRTBase(inarray,outarray);
+
+                // get Mass matrix inverse
+                StdMatrixKey      masskey(eInvMassMatrix,DetShapeType(),*this);
+                DNekMatSharedPtr  matsys = m_stdMatrixManager[masskey];
+
                 // copy inarray in case inarray == outarray
                 DNekVec in (m_ncoeffs,outarray);
                 DNekVec out(m_ncoeffs,outarray,eWrapper);
-                
+
                 out = (*matsys)*in;
-	    }
-	}
+            }
+        }
 
-	/// Single Point Evaluation
-	NekDouble StdQuadExp::PhysEvaluate(ConstArray<OneD, NekDouble>& coords)
-	{
-	    return  StdExpansion2D::PhysEvaluate2D(coords); 
-	}
+        /// Single Point Evaluation
+        NekDouble StdQuadExp::PhysEvaluate(ConstArray<OneD, NekDouble>& coords)
+        {
+            return  StdExpansion2D::PhysEvaluate2D(coords); 
+        }
 
 
 
-	// For a specified edge 'eid' this function updates a class
-	// StdExpMap which contains the mapping of the edge degrees of
-	// freedom back into the elemental domain which is also
-	// dependent upon the edge orientation. The vertex and edge
-	// ordering of the mapping is dependent upon which basis is
-	// being considered, i.e. modal expansions the vertices will
-	// be first, nodal expansions the vertices will be the two
-	// end points
-	void StdQuadExp::MapTo(const int edge_ncoeffs, 
-			       const LibUtilities::BasisType Btype, 
-			       const int eid, 
-			       const EdgeOrientation eorient,
-			       StdExpMap &Map)
-	{
-	    
-	    int i, start, skip;
-	    int *dir, order0,order1;
-	    Array<OneD, int> wsp; 
-	    
-	    ASSERTL2(eid>=0&&eid <=3,"eid must be between 0 and 3");
-	    // make sure have correct memory storage
-	    if(edge_ncoeffs != Map.GetLen())
-	    {
-		Map.SetMapMemory(edge_ncoeffs);
-	    }
-	    
-	    wsp = Array<OneD, int>(edge_ncoeffs);
-	    dir = wsp.get(); 
-	    
-	    if(eorient == eForwards)
-	    {
-		for(i = 0; i < edge_ncoeffs; ++i)
-		{
-		    dir[i] = i;
-		}
-	    }
-	    else
-	    {
-		if(Btype == LibUtilities::eGLL_Lagrange)
-		{
-		    for(i = 0; i < edge_ncoeffs; ++i)
-		    {
-			dir[i] = edge_ncoeffs-i-1;
-		    }
-		}
-		else{
-		    dir[1] = 0; 
-		    dir[0] = 1;
-		    for(i = 2; i < edge_ncoeffs; ++i)
-		    {
-			dir[i] = i;
-		    }
-		}
-	    }
-	    
-	    order0 = m_base[0]->GetNumModes();
-	    order1 = m_base[0]->GetNumModes();
-	    
-	    // Set up Mapping details
-	    if((eid == 0)||(eid == 2))
-	    { 
-		ASSERTL2(Btype == m_base[0]->GetBasisType(),
-			 "Expansion type of edge and StdQuadExp are different");
-		
-		switch(Btype)
-		{
-		case LibUtilities::eGLL_Lagrange:
-		    ASSERTL2(edge_ncoeffs == order0,
-		      "Expansion order of edge and StdQuadExp are different");
-		    
-		    if(eid == 0)
-		    {
-			start = 0;
-			skip  = 1;
-		    }
-		    else
-		    {
-			start = order0*(order1-1);
-			skip = 1;
-		    }
-		    break;
-		    
-		case LibUtilities::eModified_A:
-		    if(eid == 0)
-		    {
-			start = 0;
-			skip  = 1;
-		    }
-		    else
-		    {
-			start = order0;
-			skip = 1;
-		    }
-		    break;
-		default:
-		    ASSERTL0(0,"Mapping array is not defined for this expansion");
-		    break;
-		}
-	    }
-	    else
-	    {
-		ASSERTL2(Btype == m_base[1]->GetBasisType(),
-			 "Expansion type of edge and StdQuadExp are different");      
-		
-		switch(Btype)
-		{
-		case LibUtilities::eGLL_Lagrange:
-		    ASSERTL2(edge_ncoeffs == order1,
-			     "Expansion order of edge and StdQuadExp are different");
-		    if(eid == 1)
-		    {
-			start = order0-1;
-			skip  = order0;
-		    }
-		    else
-		    {
-			start = 0;
-			skip = order0;
-		    }
-		    break;
-		    
-		case LibUtilities::eModified_A:	
-		    if(eid == 1)
-		    {
-			start = 1;
-			skip  = order0;
-		    }
-		    else
-		    {
-			start = 0;
-			skip = order0;
-		    }
-		    break;
-		default:
-		    ASSERTL0(0,"Mapping array is not defined for this expansion");
-		    break;
-		}
-	    }
-	    
-	    for(i = 0; i < edge_ncoeffs; ++i)
-	    {
-		Map[dir[i]] = start + i*skip; 
-	    }
-	    
-	}
+        // For a specified edge 'eid' this function updates a class
+        // StdExpMap which contains the mapping of the edge degrees of
+        // freedom back into the elemental domain which is also
+        // dependent upon the edge orientation. The vertex and edge
+        // ordering of the mapping is dependent upon which basis is
+        // being considered, i.e. modal expansions the vertices will
+        // be first, nodal expansions the vertices will be the two
+        // end points
+        void StdQuadExp::MapTo(const int edge_ncoeffs, 
+            const LibUtilities::BasisType Btype, 
+            const int eid, 
+            const EdgeOrientation eorient,
+            StdExpMap &Map)
+        {
 
-	// same as MapTo but assume that mapping is provided in modal
-	// basis type format where vertices are listed first followed
-	// by edges degrees of freedom
+            int i, start, skip;
+            int *dir, order0,order1;
+            Array<OneD, int> wsp; 
 
-	void StdQuadExp::MapTo_ModalFormat(const int edge_ncoeffs, 
-					   const LibUtilities::BasisType Btype, 
-					   const int eid, 
-					   const EdgeOrientation eorient,
-					   StdExpMap &Map)
-	{
-	    MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
-	    
-	    if(Btype == LibUtilities::eGLL_Lagrange)
-	    {
-		int i;
-		int vert = Map[edge_ncoeffs-1];
-		for(i = edge_ncoeffs-1; i > 1; --i)
-		{
-		    Map.SetMap(i,Map[i-1]);
-		}
-		Map.SetMap(1,vert);
-	    }
-	}
+            ASSERTL2(eid>=0&&eid <=3,"eid must be between 0 and 3");
+            // make sure have correct memory storage
+            if(edge_ncoeffs != Map.GetLen())
+            {
+                Map.SetMapMemory(edge_ncoeffs);
+            }
 
-	void StdQuadExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
-				  Array<OneD, NekDouble> &coords_1)
-	{
-	    ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-	    ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
-	    int nq0 = GetNumPoints(0);
-	    int nq1 = GetNumPoints(1);
-	    int i;
+            wsp = Array<OneD, int>(edge_ncoeffs);
+            dir = wsp.get(); 
 
-	    for(i = 0; i < nq1; ++i)
-	    {
-		Blas::Dcopy(nq0,z0.get(), 1,&coords_0[0] + i*nq0,1);
-		Vmath::Fill(nq0,z1[i],&coords_1[0] + i*nq0,1);
-	    }
-	}
+            if(eorient == eForwards)
+            {
+                for(i = 0; i < edge_ncoeffs; ++i)
+                {
+                    dir[i] = i;
+                }
+            }
+            else
+            {
+                if(Btype == LibUtilities::eGLL_Lagrange)
+                {
+                    for(i = 0; i < edge_ncoeffs; ++i)
+                    {
+                        dir[i] = edge_ncoeffs-i-1;
+                    }
+                }
+                else{
+                    dir[1] = 0; 
+                    dir[0] = 1;
+                    for(i = 2; i < edge_ncoeffs; ++i)
+                    {
+                        dir[i] = i;
+                    }
+                }
+            }
+
+            order0 = m_base[0]->GetNumModes();
+            order1 = m_base[0]->GetNumModes();
+
+            // Set up Mapping details
+            if((eid == 0)||(eid == 2))
+            { 
+                ASSERTL2(Btype == m_base[0]->GetBasisType(),
+                    "Expansion type of edge and StdQuadExp are different");
+
+                switch(Btype)
+                {
+                case LibUtilities::eGLL_Lagrange:
+                    ASSERTL2(edge_ncoeffs == order0,
+                        "Expansion order of edge and StdQuadExp are different");
+
+                    if(eid == 0)
+                    {
+                        start = 0;
+                        skip  = 1;
+                    }
+                    else
+                    {
+                        start = order0*(order1-1);
+                        skip = 1;
+                    }
+                    break;
+
+                case LibUtilities::eModified_A:
+                    if(eid == 0)
+                    {
+                        start = 0;
+                        skip  = 1;
+                    }
+                    else
+                    {
+                        start = order0;
+                        skip = 1;
+                    }
+                    break;
+                default:
+                    ASSERTL0(0,"Mapping array is not defined for this expansion");
+                    break;
+                }
+            }
+            else
+            {
+                ASSERTL2(Btype == m_base[1]->GetBasisType(),
+                    "Expansion type of edge and StdQuadExp are different");      
+
+                switch(Btype)
+                {
+                case LibUtilities::eGLL_Lagrange:
+                    ASSERTL2(edge_ncoeffs == order1,
+                        "Expansion order of edge and StdQuadExp are different");
+                    if(eid == 1)
+                    {
+                        start = order0-1;
+                        skip  = order0;
+                    }
+                    else
+                    {
+                        start = 0;
+                        skip = order0;
+                    }
+                    break;
+
+                case LibUtilities::eModified_A:	
+                    if(eid == 1)
+                    {
+                        start = 1;
+                        skip  = order0;
+                    }
+                    else
+                    {
+                        start = 0;
+                        skip = order0;
+                    }
+                    break;
+                default:
+                    ASSERTL0(0,"Mapping array is not defined for this expansion");
+                    break;
+                }
+            }
+
+            for(i = 0; i < edge_ncoeffs; ++i)
+            {
+                Map[dir[i]] = start + i*skip; 
+            }
+
+        }
+
+        // same as MapTo but assume that mapping is provided in modal
+        // basis type format where vertices are listed first followed
+        // by edges degrees of freedom
+
+        void StdQuadExp::MapTo_ModalFormat(const int edge_ncoeffs, 
+            const LibUtilities::BasisType Btype, 
+            const int eid, 
+            const EdgeOrientation eorient,
+            StdExpMap &Map)
+        {
+            MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
+
+            if(Btype == LibUtilities::eGLL_Lagrange)
+            {
+                int i;
+                int vert = Map[edge_ncoeffs-1];
+                for(i = edge_ncoeffs-1; i > 1; --i)
+                {
+                    Map.SetMap(i,Map[i-1]);
+                }
+                Map.SetMap(1,vert);
+            }
+        }
+
+        void StdQuadExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
+            Array<OneD, NekDouble> &coords_1)
+        {
+            ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            int nq0 = GetNumPoints(0);
+            int nq1 = GetNumPoints(1);
+            int i;
+
+            for(i = 0; i < nq1; ++i)
+            {
+                Blas::Dcopy(nq0,z0.get(), 1,&coords_0[0] + i*nq0,1);
+                Vmath::Fill(nq0,z1[i],&coords_1[0] + i*nq0,1);
+            }
+        }
 
 
     } //end namespace			
@@ -489,6 +489,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.17  2007/07/09 15:19:15  sherwin
+* Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
+*
 * Revision 1.16  2007/06/07 15:54:19  pvos
 * Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
 * Also made corrections to various ASSERTL2 calls

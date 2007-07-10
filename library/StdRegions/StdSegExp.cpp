@@ -155,6 +155,23 @@ namespace Nektar
 	    return Mat;
 	}
 
+
+    DNekMatSharedPtr StdSegExp::GenNBasisTransMatrix()
+    {
+        DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdNBasisTransMatrix();
+
+        return Mat;
+
+    }
+
+    DNekMatSharedPtr StdSegExp::GenBwdTransMatrix()
+    {
+        DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdBwdTransMatrix();
+
+        return Mat;
+
+    }
+
 	//----------------------------
 	// Differentiation Methods
 	//-----------------------------
@@ -271,6 +288,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.34  2007/07/10 19:27:58  kirby
+* Update for new matrix structures
+*
 * Revision 1.33  2007/07/09 15:19:15  sherwin
 * Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
 *

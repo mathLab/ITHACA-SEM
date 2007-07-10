@@ -733,7 +733,7 @@ namespace Nektar
             *  \a v_GenLapMatrix()
             * 
             *  \return returns the laplacian matrix
-  */
+            */
 
             DNekMatSharedPtr GenLaplacianMatrix() 
             {
@@ -1139,6 +1139,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.50  2007/07/10 19:27:57  kirby
+* Update for new matrix structures
+*
 * Revision 1.49  2007/05/30 20:49:13  sherwin
 * Updates to do with LocalRegions and SpatialDomains
 *

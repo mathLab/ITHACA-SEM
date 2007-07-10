@@ -116,23 +116,27 @@ namespace Nektar
             *  {\bf B_0 F}  \f$
             */
             void IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
-				 const ConstArray<OneD, NekDouble>& base1,
-				 const ConstArray<OneD, NekDouble>& inarray, 
-				 Array<OneD, NekDouble> &outarray,
-				 int coll_check);
+                const ConstArray<OneD, NekDouble>& base1,
+                const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray,
+                int coll_check);
 
             //----------------------------------
             // Local Matrix Routines
             //----------------------------------
 
             DNekMatSharedPtr GenMassMatrix();
-						
+
             DNekMatSharedPtr GenLaplacianMatrix();
 
             DNekMatSharedPtr GenLaplacianMatrix(const int i, const int j);
 
             DNekMatSharedPtr GenWeakDerivMatrix(const int i);
-						
+
+            DNekMatSharedPtr GenNBasisTransMatrix();
+
+            DNekMatSharedPtr GenBwdTransMatrix();
+
             //----------------------------
             // Differentiation Methods
             //----------------------------
@@ -289,32 +293,32 @@ namespace Nektar
             }
 
             virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
-                                     Array<OneD, NekDouble> &out_d0,
-                                     Array<OneD, NekDouble> &out_d1,
-                                     Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
+                Array<OneD, NekDouble> &out_d0,
+                Array<OneD, NekDouble> &out_d1,
+                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
             {
                 PhysDeriv(inarray,out_d0, out_d1);
             }
-            
+
             virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &out_d0,
-                                        Array<OneD, NekDouble> &out_d1)
+                Array<OneD, NekDouble> &out_d0,
+                Array<OneD, NekDouble> &out_d1)
             {
                 PhysDeriv(inarray, out_d0,  out_d1);
             }
-            
+
             virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
-                                    Array<OneD, NekDouble> &outarray)
+                Array<OneD, NekDouble> &outarray)
             {
                 BwdTrans(inarray, outarray);
             }
-            
+
             virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
-                                    Array<OneD, NekDouble> &outarray)
+                Array<OneD, NekDouble> &outarray)
             {
                 FwdTrans(inarray, outarray);
             }
-            
+
             virtual NekDouble v_PhysEvaluate(ConstArray<OneD, NekDouble>& Lcoords)
             {
                 return PhysEvaluate(Lcoords);
@@ -347,6 +351,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.16  2007/07/10 19:27:57  kirby
+* Update for new matrix structures
+*
 * Revision 1.15  2007/05/31 19:13:12  pvos
 * Updated NodalTriExp + LocalRegions/Project2D + some other modifications
 *

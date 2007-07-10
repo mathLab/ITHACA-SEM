@@ -133,6 +133,10 @@ namespace Nektar
 
             DNekMatSharedPtr GenWeakDerivMatrix(const int i);
 
+            DNekMatSharedPtr GenNBasisTransMatrix();
+
+            DNekMatSharedPtr GenBwdTransMatrix();
+
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
@@ -227,9 +231,9 @@ namespace Nektar
             *  output of the function
             */
             void IProductWRTBase(const ConstArray<OneD, NekDouble>& base, 
-				 const ConstArray<OneD, NekDouble>& inarray,
-				 Array<OneD, NekDouble> &outarray, 
-				 int coll_check);
+                const ConstArray<OneD, NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray, 
+                int coll_check);
 
         private:
 
@@ -304,17 +308,17 @@ namespace Nektar
             /** \brief Virtual call to StdSegExp::Deriv */
 
             virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
-                                     Array<OneD, NekDouble> &out_d0,
-                                     Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                                     Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
+                Array<OneD, NekDouble> &out_d0,
+                Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
             {
                 PhysDeriv(inarray,out_d0);
             }
-            
+
 
             /** \brief Virtual call to StdSegExp::Deriv */
             virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray)
+                Array<OneD, NekDouble> &outarray)
             {
                 PhysDeriv(inarray, outarray);
             }
@@ -366,6 +370,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.22  2007/07/10 19:27:58  kirby
+* Update for new matrix structures
+*
 * Revision 1.21  2007/05/31 19:13:12  pvos
 * Updated NodalTriExp + LocalRegions/Project2D + some other modifications
 *

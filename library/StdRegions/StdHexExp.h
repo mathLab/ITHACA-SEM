@@ -51,14 +51,14 @@ namespace Nektar
         public:
 
             /** \brief Constructor using BasisKey class for quadrature
-	     *  points and order definition 
-	     */
+            *  points and order definition 
+            */
             StdHexExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
 
             /** \brief Constructor using BasisKey class for quadrature
-	     *  points and order definition where m_coeffs and m_phys 
-	     *  are all set. 
-	     */
+            *  points and order definition where m_coeffs and m_phys 
+            *  are all set. 
+            */
             StdHexExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
                 double *coeffs, double *phys);
 
@@ -69,18 +69,18 @@ namespace Nektar
             ~StdHexExp();
 
             /** \brief Return Shape of region, using  ShapeType enum list. 
-	     *  i.e. Hexahedron
-	     */
+            *  i.e. Hexahedron
+            */
             ShapeType DetShapeType()
             {
                 return eHexahedron;
             };
 
-	    /** \brief Fill outarray with mode \a mode of expansion
-	     *
-	     *	Note for hexahedral expansions _base[0] (i.e. p)  modes run 
-	     *  fastest
-	     */
+            /** \brief Fill outarray with mode \a mode of expansion
+            *
+            *	Note for hexahedral expansions _base[0] (i.e. p)  modes run 
+            *  fastest
+            */
             void FillMode(int mode, double *array);
 
             //////////////////////////////
@@ -104,19 +104,19 @@ namespace Nektar
             //----------------------------
             // Differentiation Methods
             //----------------------------
-       
-	    /** \brief Calculate the deritive of the physical points 
-	     *
-	     *  For quadrilateral region can use the Tensor_Deriv function
-	     *  defined under StdExpansion.
-	     */
+
+            /** \brief Calculate the deritive of the physical points 
+            *
+            *  For quadrilateral region can use the Tensor_Deriv function
+            *  defined under StdExpansion.
+            */
             void Deriv(double * outarray_d1, double *outarray_d2, double *outarray_d3);
 
-	    /** \brief Calculate the deritive of the physical points 
-	     *
-	     *  For quadrilateral region can use the Tensor_Deriv function
-	     *  defined under StdExpansion.
-	     */
+            /** \brief Calculate the deritive of the physical points 
+            *
+            *  For quadrilateral region can use the Tensor_Deriv function
+            *  defined under StdExpansion.
+            */
             void Deriv(const double *inarray, double * outarray_d1,
                 double *outarray_d2, double * outarray_d3);
 
@@ -128,8 +128,24 @@ namespace Nektar
             void FwdTrans(const double * inarray);
             double Evaluate(const double * coords);
 
-	    // Matrix related methods 
-	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
+            // Matrix related methods 
+            void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
+
+            //----------------------------------
+            // Local Matrix Routines
+            //----------------------------------
+
+            DNekMatSharedPtr GenMassMatrix();
+
+            DNekMatSharedPtr GenLaplacianMatrix();
+
+            DNekMatSharedPtr GenLaplacianMatrix(const int i, const int j);
+
+            DNekMatSharedPtr GenWeakDerivMatrix(const int i);
+
+            DNekMatSharedPtr GenNBasisTransMatrix();
+
+            DNekMatSharedPtr GenBwdTransMatrix();
 
         protected:
 
@@ -141,20 +157,20 @@ namespace Nektar
 
         private:
 
-	    virtual int v_GetNverts()
-	    {
-		return 8;
-	    }
-	    
-	    virtual int v_GetNedges()
-	    {
-		return 12;
-	    }
-	    
-	    virtual int v_GetNfaces()
-	    {
-		return 6;
-	    }
+            virtual int v_GetNverts()
+            {
+                return 8;
+            }
+
+            virtual int v_GetNedges()
+            {
+                return 12;
+            }
+
+            virtual int v_GetNfaces()
+            {
+                return 6;
+            }
 
             virtual ShapeType v_DetShapeType()
             {
@@ -176,25 +192,35 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
             }
 
-
-            virtual void v_GenMassMatrix(double * outarray)
+            /** \brief Virtual call to GenMassMatrix */
+            virtual DNekMatSharedPtr v_GenMassMatrix() 
             {
-                GenMassMatrix(outarray);
+                return GenMassMatrix();
             }
 
-            virtual void v_GenLapMatrix(double * outarray)
+            virtual DNekMatSharedPtr v_GenLaplacianMatrix() 
             {
-                GenLapMatrix(outarray);
+                return GenLaplacianMatrix();
             }
 
-            virtual StdMatContainer *v_GetMassMatrix()
+            virtual DNekMatSharedPtr v_GenLaplacianMatrix(const int i, const int j) 
             {
-                return GetMassMatrix();
+                return GenLaplacianMatrix(i,j);
             }
 
-            virtual StdMatContainer * v_GetLapMatrix()
+            virtual DNekMatSharedPtr v_GenWeakDerivMatrix(const int i) 
             {
-                return GetLapMatrix();
+                return GenWeakDerivMatrix(i);
+            }
+
+            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
+            {
+                return GenNBasisTransMatrix();
+            }
+
+            virtual DNekMatSharedPtr v_GenBwdTransMatrix() 
+            {
+                return GenBwdTransMatrix();
             }
 
             virtual void v_Deriv(double * outarray_d1, double *outarray_d2,
@@ -237,10 +263,10 @@ namespace Nektar
                 return Evaluate(coords);
             }
 
-	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-	    {
-		SetInvInfo(mat,Mform);
-	    }
+            virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+            {
+                SetInvInfo(mat,Mform);
+            }
 
         };
 
@@ -251,6 +277,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.7  2007/01/17 16:36:58  pvos
+* updating doxygen documentation
+*
 * Revision 1.6  2007/01/17 16:05:40  pvos
 * updated doxygen documentation
 *

@@ -38,7 +38,7 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion3D.h>
-#include <StdRegions/StdMatrix.h>
+
 
 namespace Nektar
 {

@@ -38,7 +38,7 @@
 #define NEKTAR_LIBS_STDREGIONS_STDPYREXP_H
 
 #include <StdRegions/StdExpansion3D.h>
-#include <StdRegions/StdMatrix.h>
+
 
 namespace Nektar
 {
@@ -110,6 +110,9 @@ namespace Nektar
 
 /**
  * $Log: StdPyrExp.h,v $
+ * Revision 1.3  2007/01/17 16:05:40  pvos
+ * updated doxygen documentation
+ *
  * Revision 1.2  2006/07/02 17:16:18  sherwin
  *
  * Modifications to make MultiRegions work for a connected domain in 2D (Tris)

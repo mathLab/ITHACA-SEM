@@ -38,7 +38,7 @@
 #define NEKTAR_LIB_STDREGIONS_STDTETEXP_H
 
 #include <StdRegions/StdExpansion3D.h>
-#include <StdRegions/StdMatrix.h>
+
 
 namespace Nektar
 {
@@ -118,6 +118,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.5  2007/07/10 20:41:52  kirby
+ * more fixes
+ *
  * Revision 1.4  2007/01/17 16:05:41  pvos
  * updated doxygen documentation
  *

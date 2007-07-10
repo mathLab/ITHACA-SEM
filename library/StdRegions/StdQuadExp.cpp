@@ -189,7 +189,7 @@ namespace Nektar
             int      order0    = GetBasisNumModes(0);
             int      order1    = GetBasisNumModes(1);
 
-            DNekMatSharedPtr Mat = StdExpansion::GenerateMassMatrix();
+            DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdMassMatrix();
 
             // For Fourier basis set the imaginary component of mean mode
             // to have a unit diagonal component in mass matrix 
@@ -211,11 +211,6 @@ namespace Nektar
             return Mat;
         }
 
-        DNekMatSharedPtr  StdQuadExp::GenLapMatrix()
-        {
-            ASSERTL0(false, "Not implemented");
-            return DNekMatSharedPtr(static_cast<DNekMat*>(0));
-        }
 
         ///////////////////////////////
         /// Differentiation Methods
@@ -278,7 +273,7 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
 
                 // get Mass matrix inverse
-                StdMatrixKey      masskey(eInvMassMatrix,DetShapeType(),*this);
+                StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
                 DNekMatSharedPtr  matsys = m_stdMatrixManager[masskey];
 
                 // copy inarray in case inarray == outarray

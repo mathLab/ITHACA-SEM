@@ -39,16 +39,16 @@ namespace Nektar
 {
     namespace StdRegions
     {
-	
+
         StdTriExp::StdTriExp() // default constructor of StdExpansion is directly called. 
         {
         } //default constructor
 
 
         StdTriExp::StdTriExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb):
-	    StdExpansion2D(Ba.GetNumModes()*(Ba.GetNumModes()+1)/2+
-			   Ba.GetNumModes()*(Bb.GetNumModes()-Ba.GetNumModes()), 
-			   Ba,Bb)
+        StdExpansion2D(Ba.GetNumModes()*(Ba.GetNumModes()+1)/2+
+            Ba.GetNumModes()*(Bb.GetNumModes()-Ba.GetNumModes()), 
+            Ba,Bb)
         {    
 
             if(Ba.GetNumModes() >  Bb.GetNumModes())
@@ -58,7 +58,7 @@ namespace Nektar
         }
 
         StdTriExp::StdTriExp(const StdTriExp &T):
-	    StdExpansion2D(T)
+        StdExpansion2D(T)
         {
         }
 
@@ -75,13 +75,13 @@ namespace Nektar
             int    i,nquad1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> w1_tmp = Array<OneD, NekDouble>(nquad1);
 
-	    w0 = ExpPointsProperties(0)->GetW();
-	    ExpPointsProperties(1)->GetZW(z1,w1);
+            w0 = ExpPointsProperties(0)->GetW();
+            ExpPointsProperties(1)->GetZW(z1,w1);
 
             switch(m_base[1]->GetPointsType())
-	    {
-	    case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
-		for(i = 0; i < nquad1; ++i)
+            {
+            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
+                for(i = 0; i < nquad1; ++i)
                 {
                     w1_tmp[i] = 0.5*(1-z1[i])*w1[i];
                 }
@@ -90,22 +90,22 @@ namespace Nektar
                 Vmath::Smul(nquad1,0.5,(NekDouble *)w1.get(),1,w1_tmp.get(),1);      
                 break;
             }
-	    
+
             return StdExpansion2D::Integral(inarray,w0,w1_tmp);
         }
 
 
-	void StdTriExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
-					Array<OneD, NekDouble> &outarray)
+        void StdTriExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+            Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),inarray,
                 outarray);
         }
-    
-	void StdTriExp:: IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
-					 const ConstArray<OneD, NekDouble>& base1, 
-					 const ConstArray<OneD, NekDouble>& inarray, 
-					 Array<OneD, NekDouble> & outarray)
+
+        void StdTriExp:: IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
+            const ConstArray<OneD, NekDouble>& base1, 
+            const ConstArray<OneD, NekDouble>& inarray, 
+            Array<OneD, NekDouble> & outarray)
         {
             int    i,mode;
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -116,18 +116,18 @@ namespace Nektar
             Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad0*nquad1);
             Array<OneD, NekDouble> tmp1 = Array<OneD, NekDouble>(nquad0*nquad1);
 
-	    w0 = ExpPointsProperties(0)->GetW();
-	    ExpPointsProperties(1)->GetZW(z1,w1);
+            w0 = ExpPointsProperties(0)->GetW();
+            ExpPointsProperties(1)->GetZW(z1,w1);
 
             ASSERTL2((m_base[1]->GetBasisType() == LibUtilities::eOrtho_B)||
                 (m_base[1]->GetBasisType() == LibUtilities::eModified_B), 
                 "Basis[1] is not of general tensor type");
 
-//             ASSERTL2((m_base[0]->GetAlpha() == 0.0)&&(m_base[1]->GetAlpha() > 1.0),
-//                 "Basis[0] has illegal alpha weight");
+            //             ASSERTL2((m_base[0]->GetAlpha() == 0.0)&&(m_base[1]->GetAlpha() > 1.0),
+            //                 "Basis[0] has illegal alpha weight");
 
-//             ASSERTL2((m_base[1]->GetBeta() == 0.0)&&(m_base[1]->GetBeta() == 0.0),
-//                 "Basis[1] has non-zero beta weight");
+            //             ASSERTL2((m_base[1]->GetBeta() == 0.0)&&(m_base[1]->GetBeta() == 0.0),
+            //                 "Basis[1] has non-zero beta weight");
 
             // Note cannot use outarray as tmp space since dimensions are not always
             // guarenteed to be sufficient 
@@ -136,7 +136,7 @@ namespace Nektar
             for(i = 0; i < nquad1; ++i)
             {
                 Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
-			    w0.get(),1, &tmp[0]+i*nquad0,1);
+                    w0.get(),1, &tmp[0]+i*nquad0,1);
             }
 
             switch(m_base[1]->GetPointsType())
@@ -154,17 +154,17 @@ namespace Nektar
                 }
                 break;
             }
-	    
+
             // Inner product with respect to 'a' direction 
             Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
-			base0.get(),nquad0,0.0,&tmp1[0],nquad1);
+                base0.get(),nquad0,0.0,&tmp1[0],nquad1);
 
             // Inner product with respect to 'b' direction 
             for(mode=i=0; i < order0; ++i)
             {
                 Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
-			    nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
-			    &outarray[0] + mode,1);
+                    nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
+                    &outarray[0] + mode,1);
                 mode += order1-i;
             }
 
@@ -172,11 +172,11 @@ namespace Nektar
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 outarray[1] += Blas::Ddot(nquad1,base1.get()+nquad1,1,
-					  &tmp1[0]+nquad1,1);
+                    &tmp1[0]+nquad1,1);
             }
         }
-    
-	void StdTriExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+
+        void StdTriExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
             int    i,m;
             int   nquad0 = m_base[0]->GetNumPoints();
@@ -210,7 +210,7 @@ namespace Nektar
                 for(i = 0; i < nquad1; ++i)
                 {
                     Vmath::Vcopy(nquad0,(NekDouble *)(base0.get()+mode0*nquad0),
-				 1,&outarray[0]+i*nquad0,1);
+                        1,&outarray[0]+i*nquad0,1);
                 }
             }
 
@@ -220,15 +220,15 @@ namespace Nektar
                     nquad0,&outarray[0]+i,nquad0);
             }
         }
-    
-	//-----------------------------
-	// Differentiation Methods
-	//-----------------------------
-	
-	void StdTriExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-				  Array<OneD, NekDouble> &out_d0, 
-				  Array<OneD, NekDouble> &out_d1,
-                                  Array<OneD, NekDouble> &out_d2)
+
+        //-----------------------------
+        // Differentiation Methods
+        //-----------------------------
+
+        void StdTriExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+            Array<OneD, NekDouble> &out_d0, 
+            Array<OneD, NekDouble> &out_d1,
+            Array<OneD, NekDouble> &out_d2)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -238,15 +238,15 @@ namespace Nektar
             Array<OneD, NekDouble> wsp1  = Array<OneD, NekDouble>(nquad0*nquad1);
             NekDouble *gfac = wsp1.get();
 
-	    z0 = ExpPointsProperties(0)->GetZ();
-	    z1 = ExpPointsProperties(1)->GetZ();
+            z0 = ExpPointsProperties(0)->GetZ();
+            z1 = ExpPointsProperties(1)->GetZ();
 
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
             {
                 gfac[i] = 2.0/(1-z1[i]);
             }
-	    
+
             if(out_d1.num_elements() > 0)// if no d1 required do not need to calculate both deriv
             {
                 PhysTensorDeriv(inarray, out_d0, out_d1);
@@ -279,18 +279,18 @@ namespace Nektar
                 for(i = 0; i < nquad1; ++i) 
                 {
                     Vmath::Vvtvp(nquad0,gfac,1,&d0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
-				 &out_d1[0]+i*nquad0,1);
+                        &out_d1[0]+i*nquad0,1);
                 }	
             }
         }
-	
+
 
         ///////////////////////////////
         // Evaluation Methods
         ///////////////////////////////
 
         void StdTriExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
-				 Array<OneD, NekDouble> &outarray)
+            Array<OneD, NekDouble> &outarray)
         {
             int           i,mode;
             int           nquad0 = m_base[0]->GetNumPoints();
@@ -303,13 +303,13 @@ namespace Nektar
 
 
             ASSERTL2((m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)||
-		     (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
-		     "Basis[1] is not of general tensor type");
+                (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
+                "Basis[1] is not of general tensor type");
 
             for(i = mode = 0; i < order0; ++i)
             {
                 Blas::Dgemv('N', nquad1,order1-i,1.0,base1.get()+mode*nquad1,
-			    nquad1,&inarray[0]+mode,1,0.0,&tmp[0]+i*nquad1,1);
+                    nquad1,&inarray[0]+mode,1,0.0,&tmp[0]+i*nquad1,1);
                 mode += order1-i;
             }
 
@@ -317,29 +317,29 @@ namespace Nektar
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 Blas::Daxpy(nquad1,inarray[1],base1.get()+nquad1,1,
-			    &tmp[0]+nquad1,1);
+                    &tmp[0]+nquad1,1);
             }
 
             Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0.get(),nquad0, 
-			&tmp[0], nquad1,0.0, &outarray[0], nquad0);
+                &tmp[0], nquad1,0.0, &outarray[0], nquad0);
         }
 
         void StdTriExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
-				 Array<OneD, NekDouble> &outarray)
+            Array<OneD, NekDouble> &outarray)
         {
-	    
+
             IProductWRTBase(inarray,outarray);
 
-	    // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMassMatrix,DetShapeType(),*this);
+            // get Mass matrix inverse
+            StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  matsys = m_stdMatrixManager[masskey];
-		
+
             // copy inarray in case inarray == outarray
             DNekVec in (m_ncoeffs,outarray);
             DNekVec out(m_ncoeffs,outarray,eWrapper);
-            
+
             out = (*matsys)*in;
-	}
+        }
 
         NekDouble StdTriExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
         {
@@ -360,15 +360,15 @@ namespace Nektar
 
             return  StdExpansion2D::PhysEvaluate2D(coll); 
         }
-	
+
 
         void  StdTriExp::MapTo(const int edge_ncoeffs, 
-			       const LibUtilities::BasisType Btype,
-			       const int eid, 
-			       const EdgeOrientation eorient, 
-			       StdExpMap &Map)
+            const LibUtilities::BasisType Btype,
+            const int eid, 
+            const EdgeOrientation eorient, 
+            StdExpMap &Map)
         {
-	    
+
             int i;
             int *dir, order0,order1;
             Array<OneD, int> wsp; 
@@ -402,7 +402,7 @@ namespace Nektar
             {
                 dir[1] = 0; 
                 dir[0] = 1;
-		
+
                 for(i = 2; i < edge_ncoeffs; ++i)
                 {
                     dir[i] = i;
@@ -413,9 +413,9 @@ namespace Nektar
             switch (eid)
             {
             case 0:
-		{
+                {
                     int cnt = 0;
-		    
+
                     for(i = 0; i < edge_ncoeffs; cnt+=order1-i, ++i)
                     {
                         Map[dir[i]] = cnt; 
@@ -425,7 +425,7 @@ namespace Nektar
             case 1:
                 Map[dir[0]] = order1;
                 Map[dir[1]] = 1;
-		
+
                 for(i = 2; i < edge_ncoeffs; ++i)
                 {
                     Map[dir[i]] = order1+i-1; 
@@ -440,16 +440,16 @@ namespace Nektar
             }
         }
 
-	// currently same as MapTo 
+        // currently same as MapTo 
 
-	void StdTriExp::MapTo_ModalFormat(const int edge_ncoeffs, 
-					   const LibUtilities::BasisType Btype, 
-					   const int eid, 
-					   const EdgeOrientation eorient,
-					   StdExpMap &Map)
-	{	    
-	    MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
-	}
+        void StdTriExp::MapTo_ModalFormat(const int edge_ncoeffs, 
+            const LibUtilities::BasisType Btype, 
+            const int eid, 
+            const EdgeOrientation eorient,
+            StdExpMap &Map)
+        {	    
+            MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
+        }
 
 
         void StdTriExp::WriteToFile(std::ofstream &outfile)
@@ -459,8 +459,8 @@ namespace Nektar
             int  nquad1 = m_base[1]->GetNumPoints();
             ConstArray<OneD, NekDouble> z0,z1;
 
-	    z0 = ExpPointsProperties(0)->GetZ();
-	    z1 = ExpPointsProperties(1)->GetZ();
+            z0 = ExpPointsProperties(0)->GetZ();
+            z1 = ExpPointsProperties(1)->GetZ();
 
             outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
             outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
@@ -513,24 +513,24 @@ namespace Nektar
             outfile << "]" ; 
         }
 
-	void StdTriExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
-				  Array<OneD, NekDouble> &coords_1)
-	{
-	    ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-	    ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
-	    int nq0 = GetNumPoints(0);
-	    int nq1 = GetNumPoints(1);
-	    int i,j;
+        void StdTriExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
+            Array<OneD, NekDouble> &coords_1)
+        {
+            ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            int nq0 = GetNumPoints(0);
+            int nq1 = GetNumPoints(1);
+            int i,j;
 
-	    for(i = 0; i < nq1; ++i)
-	    {
-		for(j = 0; j < nq0; ++j)
-		{
-		    coords_0[i*nq0+j] = (1+z0[j])*(1-z1[i])/2.0 - 1.0;
-		}
-		Vmath::Fill(nq0,z1[i],&coords_1[0] + i*nq0,1);
-	    }
-	}
+            for(i = 0; i < nq1; ++i)
+            {
+                for(j = 0; j < nq0; ++j)
+                {
+                    coords_0[i*nq0+j] = (1+z0[j])*(1-z1[i])/2.0 - 1.0;
+                }
+                Vmath::Fill(nq0,z1[i],&coords_1[0] + i*nq0,1);
+            }
+        }
 
     }//end namespace
 }//end namespace
@@ -538,6 +538,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.19  2007/07/09 15:19:15  sherwin
+* Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
+*
 * Revision 1.18  2007/06/07 15:54:19  pvos
 * Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
 * Also made corrections to various ASSERTL2 calls

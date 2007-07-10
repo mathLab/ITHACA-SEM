@@ -396,6 +396,9 @@ namespace Nektar
                 return *this;
             }
             
+            template<typename T>
+            friend bool operator==(const ConstArray<TwoD, T>&, const ConstArray<TwoD, T>&);
+            
             const_iterator begin() const { return m_data->begin(); }
             const_iterator end() const { return m_data->end(); }
             const_reference operator[](index i) const { return (*m_data)[i]; }
@@ -738,6 +741,20 @@ namespace Nektar
     }
     
     static Array<OneD, NekDouble> NullNekDouble1DArray;
+
+    template<typename DataType>
+    bool operator==(const ConstArray<TwoD, DataType>& lhs, const ConstArray<TwoD, DataType>& rhs) 
+    {
+        return *(lhs.m_data) == *(rhs.m_data);
+    }
+    
+    template<typename DataType>
+    bool operator!=(const ConstArray<TwoD, DataType>& lhs, const ConstArray<TwoD, DataType>& rhs) 
+    {
+        return !(lhs == rhs);
+    }
+
+
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHARED_ARRAY_HPP

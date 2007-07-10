@@ -146,8 +146,8 @@ namespace Nektar
                       unsigned int rowsPerBlock, unsigned int columnsPerBlock) :
                 BaseType(numberOfBlockRows*rowsPerBlock, numberOfBlockColumns*columnsPerBlock),
                 m_data(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>()),
-                m_rowSizes(numberOfBlockRows+1),
-                m_columnSizes(numberOfBlockColumns+1),
+                m_rowSizes(numberOfBlockRows),
+                m_columnSizes(numberOfBlockColumns),
                 m_storageSize(this->GetRows()*this->GetColumns()),
                 m_numberOfBlockRows(numberOfBlockRows),
                 m_numberOfBlockColumns(numberOfBlockColumns)
@@ -168,8 +168,8 @@ namespace Nektar
                 BaseType(std::accumulate(rowsPerBlock, rowsPerBlock + numberOfBlockRows, 0),
                          std::accumulate(columnsPerBlock, columnsPerBlock + numberOfBlockColumns, 0)),
                 m_data(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>()),
-                m_rowSizes(numberOfBlockRows+1),
-                m_columnSizes(numberOfBlockColumns+1),
+                m_rowSizes(numberOfBlockRows),
+                m_columnSizes(numberOfBlockColumns),
                 m_storageSize(this->GetRows()*this->GetColumns()),
                 m_numberOfBlockRows(numberOfBlockRows),
                 m_numberOfBlockColumns(numberOfBlockColumns)

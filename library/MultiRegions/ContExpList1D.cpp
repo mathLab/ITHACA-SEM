@@ -58,25 +58,10 @@ namespace Nektar
             m_contCoeffs = Array<OneD,NekDouble>(m_contNcoeffs);
         }
         
-	ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba, 
-				     const SpatialDomains::MeshGraph1D &graph1D):
-	    ExpList1D(Ba,graph1D)
-	{
-	    
-	    ASSERTL1((Ba.GetBasisType() == LibUtilities::eModified_A)
-		     ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
-		     "Expansion not of an boundary-interior type");
-	    
-	    // setup mapping array 
-	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph1D);
-	    
-	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
-	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs);
-	}
 
         ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba, 
-                                     const SpatialDomains::Domain &domain1D):
-	    ExpList1D(Ba,domain1D)
+                                     const SpatialDomains::Composite &cmps):
+	    ExpList1D(Ba,cmps)
 	{
 	    
 	    ASSERTL1((Ba.GetBasisType() == LibUtilities::eModified_A)
@@ -84,7 +69,7 @@ namespace Nektar
 		     "Expansion not of an boundary-interior type");
 	    
 	    // setup mapping array 
-	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,domain1D);
+	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,cmps);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs);
@@ -159,6 +144,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.12  2007/07/06 18:39:33  pvos
+* ContField1D constructor updates
+*
 * Revision 1.11  2007/06/05 16:36:55  pvos
 * Updated Explist2D ContExpList2D and corresponding demo-codes
 *

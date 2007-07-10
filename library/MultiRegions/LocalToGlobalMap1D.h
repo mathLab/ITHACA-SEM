@@ -38,7 +38,6 @@
 
 #include <MultiRegions/LocalToGlobalMap.h>
 #include <SpatialDomains/MeshGraph1D.h>
-#include <SpatialDomains/domain.h>
 
 namespace Nektar
 {
@@ -52,12 +51,12 @@ namespace Nektar
             LocalToGlobalMap1D(){};
 	    LocalToGlobalMap1D(const int loclen, 
                                const StdRegions::StdExpansionVector &locexp, 
-                               const SpatialDomains::MeshGraph1D &graph1D);
-	    LocalToGlobalMap1D(const int loclen, 
-                               const StdRegions::StdExpansionVector &locexp, 
-                               const SpatialDomains::Domain &domain1D);
+                               const SpatialDomains::Composite &cmps);
 
             virtual ~LocalToGlobalMap1D();
+
+            void ResetMapping(const int NumDirichlet, 
+                              SpatialDomains::BoundaryConditions &bcs);
 	    
         protected:
 	    
@@ -71,6 +70,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.6  2007/07/06 18:39:34  pvos
+/** ContField1D constructor updates
+/**
 /** Revision 1.5  2007/05/28 16:15:00  sherwin
 /** Updated files in MultiRegions to make 1D demos work
 /**

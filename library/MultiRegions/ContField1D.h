@@ -52,7 +52,7 @@ namespace Nektar
 	    public:
 		ContField1D();
                 ContField1D(const LibUtilities::BasisKey &Ba, 
-                            const SpatialDomains::Domain &domain1D,
+                            const SpatialDomains::Composite &cmps,
                             SpatialDomains::BoundaryConditions &bcs);
 		~ContField1D();
 		

@@ -55,39 +55,38 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
-	ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
-			     const SpatialDomains::MeshGraph1D &graph1D)
-	{
-	    LocalRegions::SegExpSharedPtr seg;
-	    SpatialDomains::SegGeomVector SegGeoms = graph1D.GetSeggeoms();
-	    SpatialDomains::SegGeomVectorIter def;
+// 	ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
+// 			     const SpatialDomains::MeshGraph1D &graph1D)
+// 	{
+// 	    LocalRegions::SegExpSharedPtr seg;
+// 	    SpatialDomains::SegGeomVector SegGeoms = graph1D.GetSeggeoms();
+// 	    SpatialDomains::SegGeomVectorIter def;
 	    
-	    m_ncoeffs = SegGeoms.size()*Ba.GetNumModes();
-	    m_npoints = SegGeoms.size()*Ba.GetNumPoints();
+// 	    m_ncoeffs = SegGeoms.size()*Ba.GetNumModes();
+// 	    m_npoints = SegGeoms.size()*Ba.GetNumPoints();
 	    
-	    m_transState = eNotSet; 
-	    m_physState  = false;
+// 	    m_transState = eNotSet; 
+// 	    m_physState  = false;
 	    
-	    for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
-	    {
-		seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba, *def);
-		(*m_exp).push_back(seg);
-	    }
+// 	    for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
+// 	    {
+// 		seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba, *def);
+// 		(*m_exp).push_back(seg);
+// 	    }
 
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
-	}
+//             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+//             m_phys   = Array<OneD, NekDouble>(m_npoints);
+// 	}
 
 	ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
-			     const SpatialDomains::Domain &domain1D)
+                             const SpatialDomains::Composite &cmps)
 	{
             int i;
             int nel;
 	    LocalRegions::SegExpSharedPtr seg;
-	    SpatialDomains::CompositeVector Composites = domain1D.GetDomain();
             
             // The actual solution domain is stored in the first composite (index 0)
-            nel = Composites[0]->size();
+            nel = cmps->size();
             
 	    m_ncoeffs = nel*Ba.GetNumModes();
 	    m_npoints = nel*Ba.GetNumPoints();
@@ -99,7 +98,7 @@ namespace Nektar
             {
                 SpatialDomains::SegGeomSharedPtr SegmentGeom;
                 
-                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*(Composites[0]))[i]))
+                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*cmps)[i]))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba, SegmentGeom);
                     (*m_exp).push_back(seg);
@@ -118,6 +117,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.15  2007/07/06 18:39:34  pvos
+* ContField1D constructor updates
+*
 * Revision 1.14  2007/06/05 16:36:55  pvos
 * Updated Explist2D ContExpList2D and corresponding demo-codes
 *

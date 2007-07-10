@@ -41,7 +41,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
-//#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/BoundaryConditions.h>
 //#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 //#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
@@ -60,8 +60,8 @@ namespace Nektar
 	    eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values 
 	};
 	
-        //typedef std::vector<SpatialDomains::BoundaryConditionType>  BndTypesVector;
-        //typedef std::vector<SpatialDomains::BoundaryConditionType>::iterator BndTypesVectorIter;
+        typedef std::vector<SpatialDomains::BoundaryConditionType>  BndTypesVector;
+        typedef std::vector<SpatialDomains::BoundaryConditionType>::iterator BndTypesVectorIter;
 
     }// end of namespace
 }// end of namespace

@@ -43,7 +43,6 @@
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
-#include <SpatialDomains/domain.h>
 
 namespace Nektar
 {
@@ -60,11 +59,12 @@ namespace Nektar
 
 	    ExpList1D(const ExpList1D &In);
 	    
-	    ExpList1D(const LibUtilities::BasisKey &Ba, 
-		      const SpatialDomains::MeshGraph1D &graph1D);
+            //	    ExpList1D(const LibUtilities::BasisKey &Ba, 
+	    //      const SpatialDomains::MeshGraph1D &graph1D);
 
             ExpList1D(const LibUtilities::BasisKey &Ba, 
-                      const SpatialDomains::Domain &domain1D);
+                      const SpatialDomains::Composite &cmps
+);
 	    
 	    ~ExpList1D();
 
@@ -93,6 +93,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.h,v $
+* Revision 1.12  2007/07/06 18:39:34  pvos
+* ContField1D constructor updates
+*
 * Revision 1.11  2007/06/05 16:36:55  pvos
 * Updated Explist2D ContExpList2D and corresponding demo-codes
 *

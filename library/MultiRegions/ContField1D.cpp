@@ -45,13 +45,13 @@ namespace Nektar
 	}
 
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
-                                 const SpatialDomains::Domain &domain1D,
+                                 const SpatialDomains::Composite &cmps,
                                  SpatialDomains::BoundaryConditions &bcs):
-            ContExpList1D(Ba,domain1D)
+            ContExpList1D(Ba,cmps)
         {
 	    int i,nbnd;
             LocalRegions::PointExpSharedPtr  p_exp;
-            int NumDirichet = 0;
+            int NumDirichlet = 0;
 
             SpatialDomains::BoundaryRegionCollectionType    &bregions = bcs.GetBoundaryRegions();
             SpatialDomains::BoundaryConditionCollectionType &bconditions = bcs.GetBoundaryConditions();
@@ -70,11 +70,11 @@ namespace Nektar
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
                         m_bndConstraint.push_back(p_exp);
                         m_bndTypes.push_back(SpatialDomains::eDirichlet);
-                        NumDirichet++;
+                        NumDirichlet++;
                     }
                     else
                     {
-                        ASSERTL0(false,"dynamic cast to a vertex faiiled");
+                        ASSERTL0(false,"dynamic cast to a vertex failed");
                     }
                 }
             }
@@ -89,19 +89,18 @@ namespace Nektar
                     {
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
                         m_bndConstraint.push_back(p_exp);
-                        m_bndTypes.push_back(SpatialDomains::eDirichlet);
-                        NumDirichet++;
+                        m_bndTypes.push_back(((*(bconditions[i]))["u"])->GetBoundaryConditionType());
                     }
                     else
                     {
-                        ASSERTL0(false,"dynamic cast to a vertex faiiled");
+                        ASSERTL0(false,"dynamic cast to a vertex failed");
                     }
                 }
             }
             
 
             // Need to reset numbering according to Dirichlet Bondary Condition
-            //m_locToGloMap->ResetMapping(NumDirichlet,bcs);
+            m_locToGloMap->ResetMapping(NumDirichlet,bcs);
             // Need to know how to get global vertex id 
             // I note that boundary Regions is a composite vector and so belive we can use this to get the desired quantities. 
 

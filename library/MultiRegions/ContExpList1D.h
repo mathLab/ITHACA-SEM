@@ -50,10 +50,10 @@ namespace Nektar
 	{
 	public:
 	    ContExpList1D();
-	    ContExpList1D(const LibUtilities::BasisKey &Ba, 
-			  const SpatialDomains::MeshGraph1D &graph1D);
-	    ContExpList1D(const LibUtilities::BasisKey &Ba, 
-                          const SpatialDomains::Domain &domain1D);
+            //ContExpList1D(const LibUtilities::BasisKey &Ba, 
+            //const SpatialDomains::MeshGraph1D &graph1D);
+            ContExpList1D(const LibUtilities::BasisKey &Ba, 
+                          const SpatialDomains::Composite &cmps);
             ContExpList1D::ContExpList1D(const ContExpList1D &In);
 	    ~ContExpList1D();
 	    
@@ -108,6 +108,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.12  2007/07/06 18:39:34  pvos
+* ContField1D constructor updates
+*
 * Revision 1.11  2007/06/08 12:58:26  sherwin
 * Added ContField1D and remove previous structure using Fields
 *

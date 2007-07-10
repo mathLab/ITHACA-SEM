@@ -41,12 +41,14 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        GeomFactors::GeomFactors(void)
+        GeomFactors::GeomFactors(void):m_gtype(eNoGeomType),
+            m_expdim(0), m_coordim(0)
         {
         }
 
         GeomFactors::GeomFactors(const GeomType gtype,
-            const int expdim, const int coordim):m_gFacKey(gtype, expdim, coordim)
+            const int expdim, const int coordim):m_gtype(gtype),
+            m_expdim(expdim), m_coordim(coordim)
         {
         }
 
@@ -64,7 +66,7 @@ namespace Nektar
 
         GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
             const ConstArray<OneD,StdRegions::StdExpansion1DSharedPtr>  &Coords):
-            m_gFacKey(gtype, coordim)
+            m_gtype(gtype), m_coordim(coordim)
         {
             int        i,nquad;
             LibUtilities::PointsType  ptype;
@@ -72,7 +74,7 @@ namespace Nektar
             ASSERTL1(coordim <= 3, "Only understand up to 3 Coordinate for this routine");
 
             nquad = Coords[0]->GetNumPoints(0);
-            m_gFacKey.m_expdim = nquad;
+            m_expdim = nquad;
             ptype = Coords[0]->GetPointsType(0);
 
             Array<OneD,NekDouble> der[3] = {Array<OneD, NekDouble>(nquad),
@@ -93,8 +95,8 @@ namespace Nektar
                 Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(), der[i]);
             }
 
-            if(( m_gFacKey.m_gtype == eRegular)||
-               ( m_gFacKey.m_gtype == eMovingRegular))
+            if(( m_gtype == eRegular)||
+               ( m_gtype == eMovingRegular))
             {
                 m_jac  = Array<OneD, NekDouble>(1,0.0);
                 m_gmat = Array<TwoD, NekDouble>(coordim,1,0.0);
@@ -187,7 +189,7 @@ namespace Nektar
                 "Only understand up to three Coordinate and must have "
                 "at least two coordinates for this routine");
 
-            m_gFacKey.m_gtype = gtype;
+            m_gtype = gtype;
 
             nquad0 = Coords[0]->GetNumPoints(0);
             nquad1 = Coords[0]->GetNumPoints(1);
@@ -222,8 +224,8 @@ namespace Nektar
                 Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1[i],d2[i]);
             }
 
-            if((m_gFacKey.m_gtype == eRegular)||
-               (m_gFacKey.m_gtype == eMovingRegular))
+            if((m_gtype == eRegular)||
+               (m_gtype == eMovingRegular))
             {
                 m_jac  = Array<OneD, NekDouble>(1,0.0);
                 m_gmat = Array<TwoD, NekDouble>(2*coordim,1,0.0);
@@ -551,31 +553,21 @@ namespace Nektar
         GeomFactors::~GeomFactors(){
         }
 
-        bool operator<(const GeomFactors &lhs, const GeomFactors &rhs)
+        bool operator==(const GeomFactors &lhs, const GeomFactors &rhs)
         {
-            return (lhs.GetGeomFactorsKey() < rhs.GetGeomFactorsKey());
-        }
-
-        bool operator<(const GeomFactorsKey &lhs, const GeomFactorsKey &rhs)
-        {
-            if (lhs.m_gtype < rhs.m_gtype)
-                return true;
-            else if (lhs.m_gtype > rhs.m_gtype)
-                return false;
-            else if (lhs.m_expdim < rhs.m_expdim)
-                return true;
-            else if (lhs.m_expdim > rhs.m_expdim)
-                return false;
-            else if (lhs.m_coordim < rhs.m_coordim)
-                return true;
-            else
-                return false;
+            return (lhs.m_gmat == rhs.m_gmat &&
+                    lhs.m_gtype == rhs.m_gtype &&
+                    lhs.m_expdim == rhs.m_expdim &&
+                    lhs.m_coordim == rhs.m_coordim);
         }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.10  2007/07/10 17:06:30  jfrazier
+// Added method and underlying structure to manage geomfactors.
+//
 // Revision 1.9  2007/06/07 15:54:19  pvos
 // Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
 // Also made corrections to various ASSERTL2 calls

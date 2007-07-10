@@ -58,24 +58,30 @@ namespace Nektar
         {
         }
         
-        RegGeomFactorsMap Geometry::m_RegGeomFactorsManager;
+        GeomFactorsVector Geometry::m_RegGeomFactorsManager;
         GeomFactorsSharedPtr Geometry::ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor)
         {
             GeomFactorsSharedPtr returnval;
+            bool found = false;
             if (geomFactor->GetGtype() == eRegular)
             {
-                const GeomFactorsKey &geomFacKey = geomFactor->GetGeomFactorsKey();
-                RegGeomFactorsMap::iterator iter = m_RegGeomFactorsManager.find(geomFacKey);
+                for (GeomFactorsVectorIter iter = m_RegGeomFactorsManager.begin();
+                    iter != m_RegGeomFactorsManager.end();
+                    ++iter)
+                {
+                    if (**iter == *geomFactor)
+                    {
+                        returnval = *iter;
+                        found = true;
+                        break;
+                    }
+                }
+            }
 
-                if (iter != m_RegGeomFactorsManager.end())
-                {
-                    returnval = iter->second;
-                }
-                else
-                {
-                    m_RegGeomFactorsManager[geomFacKey] = geomFactor;
-                    returnval = geomFactor;
-                }
+            if (!found)
+            {
+                m_RegGeomFactorsManager.push_back(geomFactor);
+                returnval = geomFactor;
             }
 
             return returnval;
@@ -86,6 +92,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.cpp,v $
+// Revision 1.5  2007/07/10 17:06:31  jfrazier
+// Added method and underlying structure to manage geomfactors.
+//
 // Revision 1.4  2007/03/14 21:24:08  sherwin
 // Update for working version of MultiRegions up to ExpList1D
 //

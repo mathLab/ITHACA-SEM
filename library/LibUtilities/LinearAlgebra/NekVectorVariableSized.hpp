@@ -62,8 +62,8 @@
 
 namespace Nektar
 {
-    template<typename DataType, typename StorageType, typename Type, unsigned int space>
-    class BinaryExpressionTraits<NekMatrix<DataType, StorageType, Type>, NekVector<DataType, 0, space>, MultiplyOp>
+    template<typename MatrixDataType, typename DataType, typename StorageType, typename Type, unsigned int space>
+    class BinaryExpressionTraits<NekMatrix<MatrixDataType, StorageType, Type>, NekVector<DataType, 0, space>, MultiplyOp>
     {
         public:
             typedef NekVector<DataType, 0, space> ResultType;
@@ -454,26 +454,6 @@ namespace Nektar
             PointerWrapper m_wrapperType;
     };    
     
-    template<typename DataType, typename StorageType, typename Type, unsigned int space>
-    void NekMultiply(NekVector<DataType, 0, space>& result, 
-                     const NekMatrix<DataType, StorageType, Type>& lhs,
-                     const NekVector<DataType, 0, space>& rhs)
-    {
-        ASSERTL0(lhs.GetColumns() == rhs.GetDimension(), "Invalid matrix dimensions in operator*");
-        
-        result = NekVector<DataType, 0, space>(rhs.GetDimension(), DataType(0));
-
-        for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
-        {
-            DataType t = DataType(0);
-            for(unsigned int j = 0; j < rhs.GetDimension(); ++j)
-            {
-                t += lhs(i,j)*rhs(j);
-            }
-            result(i) = t;
-        }
-    }
-  
 }
 
 #endif // NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_VARIABLE_SIZED_HPP

@@ -126,8 +126,13 @@ namespace Nektar
             //----------------------------------
 
             DNekMatSharedPtr GenMassMatrix();
-            DNekMatSharedPtr GenLapMatrix();
+						
+            DNekMatSharedPtr GenLaplacianMatrix();
 
+            DNekMatSharedPtr GenLaplacianMatrix(const int i, const int j);
+
+            DNekMatSharedPtr GenWeakDerivMatrix(const int i);
+						
             //----------------------------
             // Differentiation Methods
             //----------------------------
@@ -258,9 +263,29 @@ namespace Nektar
                 return GenMassMatrix();
             }
 
-            virtual DNekMatSharedPtr v_GenLapMatrix()
+            virtual DNekMatSharedPtr v_GenLaplacianMatrix() 
             {
-                return GenLapMatrix();
+                return GenLaplacianMatrix();
+            }
+
+            virtual DNekMatSharedPtr v_GenLaplacianMatrix(const int i, const int j) 
+            {
+                return GenLaplacianMatrix(i,j);
+            }
+
+            virtual DNekMatSharedPtr v_GenWeakDerivMatrix(const int i) 
+            {
+                return GenWeakDerivMatrix(i);
+            }
+
+            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
+            {
+                return GenNBasisTransMatrix();
+            }
+
+            virtual DNekMatSharedPtr v_GenBwdTransMatrix() 
+            {
+                return GenBwdTransMatrix();
             }
 
             virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
@@ -322,6 +347,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.15  2007/05/31 19:13:12  pvos
+* Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+*
 * Revision 1.14  2007/05/15 05:18:24  bnelson
 * Updated to use the new Array object.
 *

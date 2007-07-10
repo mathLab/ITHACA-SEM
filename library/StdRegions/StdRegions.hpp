@@ -84,20 +84,40 @@ namespace Nektar
 
         enum MatrixType
         {
-            eMassMatrix,
-            eInvMassMatrix,
-            eLapMatrix,
+            eMass,
+            eInvMass,
+            eLaplacian,
+            eLaplacian00,
+            eLaplacian01,
+            eLaplacian02,
+            eLaplacian11,
+            eLaplacian12,
+            eLaplacian22,
+            eWeakDeriv0,
+            eWeakDeriv1,
+            eWeakDeriv2,
             eNBasisTrans,
-            eBwdTransMatrix
+            eInvNBasisTrans,
+            eBwdTrans
         };
 
         const char* const MatrixTypeMap[] = 
 	{
-            "MassMatrix",
-            "InvMassMatrix",
-            "LapMatrix",
+            "Mass",
+            "InvMass",
+            "Laplacian",
+            "Laplacian00",
+            "Laplacian01",
+            "Laplacian02",
+            "Laplacian11",
+            "Laplacian12",
+            "Laplacian22",
+            "WeakDeriv0",
+            "WeakDeriv1",
+            "WeakDeriv2",
             "NBasisTrans",
-            "BwdTransMatrix"
+            "InvNBasisTrans", 
+            "BwdTrans"
         };
 
         /** enum list of StdExpansion regions */
@@ -199,6 +219,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.17  2007/07/09 15:19:15  sherwin
+* Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
+*
 * Revision 1.16  2007/05/15 05:18:24  bnelson
 * Updated to use the new Array object.
 *

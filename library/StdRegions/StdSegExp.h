@@ -127,7 +127,11 @@ namespace Nektar
             *  is stored in the array \a outarray. The matrix is in row major format 
             *  and is stored as \a outarray[j*(this)->m_ncoeffs + i]
             */
-            DNekMatSharedPtr GenLapMatrix();
+            DNekMatSharedPtr GenLaplacianMatrix();
+
+            DNekMatSharedPtr GenLaplacianMatrix(const int i, const int j);
+
+            DNekMatSharedPtr GenWeakDerivMatrix(const int i);
 
             //-----------------------------
             // Differentiation Methods
@@ -272,11 +276,30 @@ namespace Nektar
                 return GenMassMatrix();
             }
 
-            virtual DNekMatSharedPtr v_GenLapMatrix() 
+            virtual DNekMatSharedPtr v_GenLaplacianMatrix() 
             {
-                return GenLapMatrix();
+                return GenLaplacianMatrix();
             }
 
+            virtual DNekMatSharedPtr v_GenLaplacianMatrix(const int i, const int j) 
+            {
+                return GenLaplacianMatrix(i,j);
+            }
+
+            virtual DNekMatSharedPtr v_GenWeakDerivMatrix(const int i) 
+            {
+                return GenWeakDerivMatrix(i);
+            }
+
+            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
+            {
+                return GenNBasisTransMatrix();
+            }
+
+            virtual DNekMatSharedPtr v_GenBwdTransMatrix() 
+            {
+                return GenBwdTransMatrix();
+            }
 
             /** \brief Virtual call to StdSegExp::Deriv */
 
@@ -343,6 +366,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.21  2007/05/31 19:13:12  pvos
+* Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+*
 * Revision 1.20  2007/05/17 17:59:28  sherwin
 * Modification to make Demos work after introducion of Array<>
 *

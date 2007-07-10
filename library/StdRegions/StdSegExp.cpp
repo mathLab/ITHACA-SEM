@@ -122,7 +122,7 @@ namespace Nektar
 	
 	DNekMatSharedPtr StdSegExp::GenMassMatrix() 
 	{
-	    DNekMatSharedPtr Mat = StdExpansion::GenerateMassMatrix();
+	    DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdMassMatrix();
 	    
 	    // For Fourier basis set the imaginary component of mean mode
 	    // to have a unit diagonal component in mass matrix 
@@ -134,32 +134,27 @@ namespace Nektar
 	    return Mat;
 	}
 	
-	DNekMatSharedPtr StdSegExp::GenLapMatrix() 
+	DNekMatSharedPtr StdSegExp::GenLaplacianMatrix() 
 	{
-	    int    i;
-	    int   nquad = m_base[0]->GetNumPoints();
-	    const NekDouble * dbase  = m_base[0]->GetDbdata().get();
-	    ConstArray<OneD, NekDouble> z;
-	    ConstArray<OneD, NekDouble> w;
-	    Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad);
-	    int nummodes = m_base[0]->GetNumModes();
-	    DNekMatSharedPtr Mat;
-	    
-	    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(nummodes,
-							    nummodes);
-	    
-	    ExpPointsProperties(0)->GetZW(z,w);
-	    
-	    for(i = 0; i < nummodes; ++i)
-	    {
-		Vmath::Vcopy(nquad,(NekDouble *)dbase+i*nquad,1, &tmp[0],1);
-		IProductWRTBase(m_base[0]->GetDbdata(), tmp, tmp, 0);
-		Vmath::Vcopy(nquad,tmp.get(),1,Mat->GetPtr().get()+ i*m_base[0]->GetNumModes(),1);
-	    }
-	    
+	    DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdLaplacianMatrix();
+
 	    return Mat;
 	}
-	
+
+    DNekMatSharedPtr StdSegExp::GenLaplacianMatrix(const int i, const int j) 
+	{
+	    DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdLaplacianMatrix(i,j);
+
+	    return Mat;
+	}
+
+    DNekMatSharedPtr StdSegExp::GenWeakDerivMatrix(const int i)
+	{
+	    DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdWeakDerivMatrix(i);
+
+	    return Mat;
+	}
+
 	//----------------------------
 	// Differentiation Methods
 	//-----------------------------
@@ -205,7 +200,7 @@ namespace Nektar
 		IProductWRTBase(inarray,outarray);
 		
 		// get Mass matrix inverse
-		StdMatrixKey      masskey(eInvMassMatrix,DetShapeType(),*this);
+		StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
 		DNekMatSharedPtr  matsys = m_stdMatrixManager[masskey];
 		
                 // copy inarray in case inarray == outarray
@@ -276,6 +271,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.33  2007/07/09 15:19:15  sherwin
+* Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
+*
 * Revision 1.32  2007/06/07 15:54:19  pvos
 * Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
 * Also made corrections to various ASSERTL2 calls

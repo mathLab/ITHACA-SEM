@@ -70,11 +70,11 @@ namespace ErrorUtil
             switch(type)
             {
                 case efatal:
-                    std::cerr << "Level " << level << " assertion violation\n" << routine << "[" << lineNumber << "]:" << msg << std::endl;
+                    std::cerr << "Fatal: Level " << level << " assertion violation\n" << routine << "[" << lineNumber << "]:" << msg << std::endl;
                     exit(1);
                     break;
                 case ewarning:
-                    std::cerr << "Level " << level << " assertion violation\n" << routine << ": " << msg << std::endl;
+                    std::cerr << "Warning: Level " << level << " assertion violation\n" << routine << ": " << msg << std::endl;
                     break;
                 default:
                     std::cerr << "Unknown warning type" << std::endl;
@@ -146,6 +146,9 @@ namespace ErrorUtil
 
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.7  2007/06/10 23:36:59  bnelson
+A previous change to ErrorUtil::Error added an additional level parameter, breaking code which called it directly outside of ErrorUtil.  A new method without this parameter was added.
+
 Revision 1.6  2007/06/06 04:57:21  bnelson
 Removed all printing to the console when error reporting is done via exceptions.  This makes it easier to see errors in the UnitTests.
 

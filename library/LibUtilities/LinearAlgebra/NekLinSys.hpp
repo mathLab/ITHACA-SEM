@@ -88,6 +88,7 @@ namespace Nektar
 
         static void Solve(const MatrixType& A, const ConstArray<OneD, int>& ipivot, const VectorType& b, VectorType& x)
         {
+            x = b;
             int info = 0;
             Lapack::Dgetrs('T',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetPtr(),A.GetRows(),info);
             if( info < 0 )
@@ -99,6 +100,7 @@ namespace Nektar
 
         static void SolveTranspose(const MatrixType& A, const ConstArray<OneD, int>& ipivot, const VectorType& b, VectorType& x)
         {
+            x = b;
             int info = 0;
             Lapack::Dgetrs('N',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetPtr(),A.GetRows(),info);
 

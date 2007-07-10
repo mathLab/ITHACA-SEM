@@ -104,6 +104,7 @@ namespace Nektar
             }
 
             explicit NekVector(const std::string& vectorValues) :
+                m_size(0),
                 m_data(),
                 m_wrapperType(eCopy)
             {
@@ -114,7 +115,7 @@ namespace Nektar
                     m_data = Array<OneD, DataType>(m_size);
                     std::copy(values.begin(), values.end(), m_data);
 
-                    ASSERTL0(size > 0, "Error converting string values to vector");
+                    ASSERTL0(m_size > 0, "Error converting string values to vector");
                 }
                 catch(std::runtime_error& e)
                 {

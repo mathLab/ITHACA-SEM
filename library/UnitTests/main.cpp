@@ -36,7 +36,6 @@ using boost::unit_test_framework::test_suite;
 test_suite* init_unit_test_suite( int, char* [] )
 {
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
-    
 
     // shared array
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestEmptyConstructor), 0);
@@ -126,6 +125,8 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekVectorOperators), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNekVectorArithmetic), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testNorms), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::TestMatrixVectorMultiply), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UnitTests::TestVectorConstructorsWithSizeArguments), 0);
 
 
     test->add(BOOST_TEST_CASE(&Nektar::UnitTests::testMakePtr), 0);
@@ -204,6 +205,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.40  2007/07/10 01:22:38  bnelson
+    Unit tests for full linear system with both x and b as input parameters.
+
     Revision 1.39  2007/06/24 23:51:04  bnelson
     *** empty log message ***
 

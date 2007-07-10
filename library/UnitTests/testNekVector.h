@@ -45,6 +45,8 @@ namespace Nektar
         void testNekVectorOperators();
         void testNekVectorArithmetic();
         void testNorms();
+        void TestMatrixVectorMultiply();
+        void TestVectorConstructorsWithSizeArguments();
     }
 }
 
@@ -52,6 +54,9 @@ namespace Nektar
 
 /**
     $Log: testNekVector.h,v $
+    Revision 1.2  2006/11/18 17:18:46  bnelson
+    Added L1, L2, and Infinity norm tests.
+
     Revision 1.1  2006/05/04 18:59:56  kirby
     *** empty log message ***
 

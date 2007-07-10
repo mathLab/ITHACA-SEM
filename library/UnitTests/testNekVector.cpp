@@ -35,6 +35,7 @@
 
 #include <UnitTests/testNekVector.h>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -348,11 +349,96 @@ namespace Nektar
             BOOST_CHECK_CLOSE(v.L2Norm(), sqrt(1.0+4.0+9.0), epsilon);
             BOOST_CHECK_EQUAL(v.InfinityNorm(), 3);
         }
+
+        void TestMatrixVectorMultiply()
+        {
+            //double matrix_buf[] = {1.0, 2.0, 3.0,
+            //                       4.0, 5.0, 6.0,
+            //                       7.0, 8.0, 9.0};
+            //NekMatrix<double> m(3, 3, matrix_buf);
+
+            //double vector_buf[] = {10.0, 20.0, 30.0};
+            //NekVector<double, 3> v(vector_buf);
+
+            //NekVector<double, 3> result = m*v;
+        }
+
+        void TestVectorConstructorsWithSizeArguments()
+        {
+            {
+                double buf[] = {1.0, 2.0, 3.0, 4.0};
+                Array<OneD, double> a(4, buf);
+                NekVector<double> b(3, a);
+
+                BOOST_CHECK_EQUAL(b.GetRows(), 3);
+                BOOST_CHECK_EQUAL(b.GetDimension(), 3);
+                BOOST_CHECK_EQUAL(b[0], 1.0);
+                BOOST_CHECK_EQUAL(b[1], 2.0);
+                BOOST_CHECK_EQUAL(b[2], 3.0);
+
+                NekVector<double>::iterator iter = b.begin();
+                BOOST_CHECK_EQUAL(*iter, 1.0);
+                ++iter;
+                BOOST_CHECK_EQUAL(*iter, 2.0);
+                ++iter;
+                BOOST_CHECK_EQUAL(*iter, 3.0);
+                ++iter;
+                BOOST_CHECK(iter == b.end());
+            }
+
+            {
+                double buf[] = {1.0, 2.0, 3.0, 4.0};
+                ConstArray<OneD, double> a(4, buf);
+                NekVector<double> b(3, a);
+
+                BOOST_CHECK_EQUAL(b.GetRows(), 3);
+                BOOST_CHECK_EQUAL(b.GetDimension(), 3);
+                BOOST_CHECK_EQUAL(b[0], 1.0);
+                BOOST_CHECK_EQUAL(b[1], 2.0);
+                BOOST_CHECK_EQUAL(b[2], 3.0);
+
+                NekVector<double>::iterator iter = b.begin();
+                BOOST_CHECK_EQUAL(*iter, 1.0);
+                ++iter;
+                BOOST_CHECK_EQUAL(*iter, 2.0);
+                ++iter;
+                BOOST_CHECK_EQUAL(*iter, 3.0);
+                ++iter;
+                BOOST_CHECK(iter == b.end());
+            }
+
+            {
+                double buf[] = {1.0, 2.0, 3.0, 4.0};
+                Array<OneD, double> a(4, buf);
+                NekVector<double> b(3, a, eWrapper);
+
+                BOOST_CHECK_EQUAL(b.GetRows(), 3);
+                BOOST_CHECK_EQUAL(b.GetDimension(), 3);
+                BOOST_CHECK_EQUAL(b[0], 1.0);
+                BOOST_CHECK_EQUAL(b[1], 2.0);
+                BOOST_CHECK_EQUAL(b[2], 3.0);
+
+                NekVector<double>::iterator iter = b.begin();
+                BOOST_CHECK_EQUAL(*iter, 1.0);
+                ++iter;
+                BOOST_CHECK_EQUAL(*iter, 2.0);
+                ++iter;
+                BOOST_CHECK_EQUAL(*iter, 3.0);
+                ++iter;
+                BOOST_CHECK(iter == b.end());
+
+                b[0] = 5.0;
+                BOOST_CHECK_EQUAL(b[0], a[0]);
+            }
+        }
     }
 }
 
 /**
     $Log: testNekVector.cpp,v $
+    Revision 1.6  2007/02/15 06:58:46  bnelson
+    *** empty log message ***
+
     Revision 1.5  2006/11/18 17:18:46  bnelson
     Added L1, L2, and Infinity norm tests.
 

@@ -98,7 +98,10 @@ namespace Nektar
             void CalculateWeights();
             void CalculateDerivMatrix();
             void NodalPointReorder2d();
-        };
+
+           NekDouble LagrangePoly(NekDouble x, int pt, int npts, const ConstArray<OneD, NekDouble>& xpts);
+
+        }; // end of NodalTriFekete
    } // end of namespace
 } // end of namespace 
 

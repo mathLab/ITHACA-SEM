@@ -80,18 +80,27 @@ namespace Nektar
         public:
             /// \brief Creates an empty vector.
             NekVector() :
+                m_size(0),
                 m_data(),
                 m_wrapperType(eCopy)
             {
             }
             
-            // \brief Creates a vector with given size and initial value.
-            //        This constructor is only valid for variable sized vectors.
-            NekVector(unsigned int size, typename boost::call_traits<DataType>::const_reference a) :
+            /// \brief Creates a vector of given size.  The elements are not initialized.
+            explicit NekVector(unsigned int size) :
+                m_size(size),
                 m_data(size),
                 m_wrapperType(eCopy)
             {
-                std::fill_n(m_data.get(), m_data.num_elements(), a);
+            }
+
+            /// \brief Creates a vector with given size and initial value.
+            NekVector(unsigned int size, typename boost::call_traits<DataType>::const_reference a) :
+                m_size(size),
+                m_data(size),
+                m_wrapperType(eCopy)
+            {
+                std::fill_n(m_data.get(), m_size, a);
             }
 
             explicit NekVector(const std::string& vectorValues) :
@@ -101,8 +110,8 @@ namespace Nektar
                 try
                 {
                     std::vector<DataType> values = FromString<DataType>(vectorValues);
-                    unsigned int size = values.size();
-                    m_data = Array<OneD, DataType>(size);
+                    m_size = values.size();
+                    m_data = Array<OneD, DataType>(m_size);
                     std::copy(values.begin(), values.end(), m_data);
 
                     ASSERTL0(size > 0, "Error converting string values to vector");
@@ -116,7 +125,8 @@ namespace Nektar
             NekVector(typename boost::call_traits<DataType>::const_reference x,
                       typename boost::call_traits<DataType>::const_reference y,
                       typename boost::call_traits<DataType>::const_reference z) :
-                m_data(3),
+                m_size(3),
+                m_data(m_size),
                 m_wrapperType(eCopy)
             {
                 m_data[0] = x;
@@ -125,13 +135,14 @@ namespace Nektar
             }
 
             NekVector(const NekVector<DataType, 0, space>& rhs) :
+                m_size(rhs.GetDimension()),
                 m_data(),
                 m_wrapperType(rhs.m_wrapperType)
             {
                 if( m_wrapperType = eCopy )
                 {
-                    m_data = Array<OneD, DataType>(rhs.m_data.num_elements());
-                    CopyArray(rhs.m_data, m_data);
+                    m_data = Array<OneD, DataType>(m_size);
+                    std::copy(rhs.begin(), rhs.end(), begin());
                 }
                 else
                 {
@@ -140,34 +151,40 @@ namespace Nektar
             }
 
             explicit NekVector(const ConstArray<OneD, DataType>& ptr) :
-                m_data(),
+                m_size(ptr.num_elements()),
+                m_data(m_size),
                 m_wrapperType(eCopy)
             {
-                m_data = Array<OneD, DataType>(ptr.size());
                 CopyArray(ptr, m_data);
             }
 
             NekVector(unsigned int size, const ConstArray<OneD, DataType>& ptr) :
+                m_size(size),
                 m_data(size),
                 m_wrapperType(eCopy)
             {
-                m_data = Array<OneD, DataType>(ptr.num_elements());
-                CopyArray(ptr, m_data);
+                ASSERTL0(size <= ptr.num_elements(), "Attempting to populate a vector of size " +
+                    boost::lexical_cast<std::string>(size) + " but the incoming array only has " +
+                    boost::lexical_cast<std::string>(ptr.num_elements()) + " elements.");
+
+                std::copy(ptr.begin(), ptr.begin()+size, m_data.begin());
             }
             
             NekVector(unsigned int size, const DataType* const ptr) :
+                m_size(size),
                 m_data(size, ptr),
                 m_wrapperType(eCopy)
             {
             }
             
             explicit NekVector(const Array<OneD, DataType>& ptr, PointerWrapper h = eCopy) :
+                m_size(ptr.num_elements()),
                 m_data(),
                 m_wrapperType(h)
             {
                 if( h == eCopy )
                 {
-                    m_data = Array<OneD, DataType>(ptr.size());
+                    m_data = Array<OneD, DataType>(m_size);
                     CopyArray(ptr, m_data);
                 }
                 else
@@ -177,13 +194,18 @@ namespace Nektar
             }
             
             explicit NekVector(unsigned int size, Array<OneD, DataType>& ptr, PointerWrapper h = eCopy) :
+                m_size(size),
                 m_data(),
                 m_wrapperType(h)
             {
                 if( h == eCopy )
                 {
-                    m_data = Array<OneD, DataType>(ptr.num_elements());
-                    CopyArray(ptr, m_data);
+                    ASSERTL0(size <= ptr.num_elements(), "Attempting to populate a vector of size " +
+                        boost::lexical_cast<std::string>(size) + " but the incoming array only has " +
+                        boost::lexical_cast<std::string>(ptr.num_elements()) + " elements.");
+
+                    m_data = Array<OneD, DataType>(size);
+                    std::copy(ptr.begin(), ptr.begin()+size, m_data.begin());
                 }
                 else
                 {
@@ -214,7 +236,8 @@ namespace Nektar
                 /// TODO Make sure this works correctly with eWrapper.
                 BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, 0, space> > ));
 
-                m_data = Array<OneD, DataType>(rhs.GetMetadata().Rows);
+                m_size = rhs.GetMetadata().Rows;
+                m_data = Array<OneD, DataType>(m_size);
                 m_wrapperType = eCopy;
 
                 rhs.Apply(*this);
@@ -228,31 +251,32 @@ namespace Nektar
                 {
                     // If the current vector is a copy, then regardless of the rhs type 
                     // we just copy over the values, resizing if needed.
-                    if( m_data.num_elements() != rhs.m_data.num_elements() )
+                    if( GetDimension() != rhs.GetDimension() )
                     {
-                        m_data = Array<OneD, DataType>(rhs.m_data.num_elements());
+                        m_size = rhs.GetDimension();
+                        m_data = Array<OneD, DataType>(m_size);
                     }
                 }
                 else if( m_wrapperType == eWrapper )
                 {
                     // If the current vector is wrapped, then just copy over the top,
                     // but the sizes of the two vectors must be the same.
-                    ASSERTL0(m_data.num_elements() == rhs.m_data.num_elements(), "Wrapped NekVectors must have the same dimension in operator=");
+                    ASSERTL0(GetDimension() == rhs.GetDimension(), "Wrapped NekVectors must have the same dimension in operator=");
                 }
 
-                CopyArray(rhs.m_data, m_data);
+                std::copy(rhs.begin(), rhs.end(), begin());
                 return *this;
             }
 
             /// \brief Returns the number of dimensions for the point.
             unsigned int GetDimension() const
             {
-                return m_data.num_elements();
+                return m_size;
             }
 
             unsigned int GetRows() const
             {
-                return m_data.num_elements();
+                return m_size;
             }
 
             DataType* GetPtr()
@@ -424,6 +448,7 @@ namespace Nektar
             
             
         private:
+            unsigned int m_size;
             Array<OneD, DataType> m_data;
             PointerWrapper m_wrapperType;
     };    

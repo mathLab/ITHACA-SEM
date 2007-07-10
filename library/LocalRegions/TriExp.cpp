@@ -51,13 +51,13 @@ namespace Nektar
             m_geom = geom;
 
             m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMassMatrix,
-                                                      StdRegions::eNoShapeType,*this),
-                                            boost::bind(&TriExp::CreateMatrix, this, _1));
+                StdRegions::eNoShapeType,*this),                              
+                boost::bind(&TriExp::CreateMatrix, this, _1));
             
-            m_linSysManager.RegisterCreator(LinSysKey(StdRegions::eMassMatrix,
-                                                      StdRegions::eNoShapeType,*this),
-                                            boost::bind(&TriExp::CreateLinSys, this, _1));
-            
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMassMatrix,
+                StdRegions::eNoShapeType,*this),
+                boost::bind(&TriExp::CreateMatrix, this, _1));
+
             GenMetricInfo();
 	}
 	
@@ -381,11 +381,18 @@ namespace Nektar
 	    {
 		IProductWRTBase(inarray,outarray);
                 
-                LinSysKey  masskey(StdRegions::eMassMatrix,DetShapeType(),*this);
-                DNekLinSysSharedPtr matsys = m_linSysManager[masskey];
+		// get Mass matrix inverse
+		MatrixKey             masskey(StdRegions::eInvMassMatrix,
+                                              DetShapeType(),*this);
+		DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
+		
+                // copy inarray in case inarray == outarray
+                DNekVec in (m_ncoeffs,outarray);
+                DNekVec out(m_ncoeffs,outarray,eWrapper);
                 
-                DNekVec   v(m_ncoeffs,outarray,eWrapper);
-                matsys->Solve(v,v);
+                //out = (*matsys)*in;
+                out = (*(matsys->GetOwnedMatrix()))*in;
+                out *= matsys->Scale();
 	    }
 	}
 
@@ -586,14 +593,43 @@ namespace Nektar
 	    return StdTriExp::PhysEvaluate(Lcoord);
 	}
 
-        DNekMatSharedPtr TriExp::CreateMatrix(const MatrixKey &mkey)
+        DNekScalMatSharedPtr TriExp::CreateMatrix(const MatrixKey &mkey)
         {
-            DNekMatSharedPtr returnval;
+            DNekScalMatSharedPtr returnval;
 
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eMassMatrix:
-                returnval = GenMassMatrix();
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        DNekMatSharedPtr mat = GenMassMatrix();
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
+                    }
+                    else
+                    {
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                                    (m_metricinfo->GetJac())[0],
+                                    m_stdMatrixManager[*(mkey.GetStdMatKey())]);
+                    }
+                }
+                break;
+            case StdRegions::eInvMassMatrix:
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        DNekMatSharedPtr mat = GenMassMatrix();
+                        ASSERTL0(false,"Need a matrix inverse routine");
+
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
+                    }
+                    else
+                    {
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                                      1.0/(m_metricinfo->GetJac())[0],
+                                      m_stdMatrixManager[*(mkey.GetStdMatKey())]);
+                    }
+                }
                 break;
             default:
                 NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
@@ -603,28 +639,14 @@ namespace Nektar
             return returnval;
         }
 
-        DNekLinSysSharedPtr TriExp::CreateLinSys(const LinSysKey &mkey)
-        {
-            DNekLinSysSharedPtr returnval;
-
-            switch(mkey.GetMatrixType())
-            {
-            case StdRegions::eMassMatrix:
-                returnval = MemoryManager<DNekLinSys>::AllocateSharedPtr (m_matrixManager[mkey]);
-                break;
-            default:
-                NEKERROR(ErrorUtil::efatal, "Linear System creation not defined");
-                break;
-            }
-
-            return returnval;
-        }
-	
     }//end of namespace
 }//end of namespace
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.14  2007/06/17 19:00:45  bnelson
+ *    Removed unused variables.
+ *
  *    Revision 1.13  2007/06/07 15:54:19  pvos
  *    Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
  *    Also made corrections to various ASSERTL2 calls

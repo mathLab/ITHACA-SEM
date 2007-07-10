@@ -52,9 +52,9 @@ namespace Nektar
                 StdRegions::eNoShapeType,*this),
                 boost::bind(&SegExp::CreateMatrix, this, _1));
 
-            m_linSysManager.RegisterCreator(LinSysKey(StdRegions::eMassMatrix,
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMassMatrix,
                 StdRegions::eNoShapeType,*this),
-                boost::bind(&SegExp::CreateLinSys, this, _1));
+                boost::bind(&SegExp::CreateMatrix, this, _1));
 
             GenMetricInfo();
         }
@@ -386,7 +386,7 @@ namespace Nektar
 
 
         // need to sort out family of matrices 
-        void SegExp::FwdTrans(const ConstArray<OneD,NekDouble>&  inarray, 
+        void SegExp::FwdTrans(const ConstArray<OneD,NekDouble>& inarray, 
                               Array<OneD,NekDouble> &outarray)
         {
             if(m_base[0]->Collocation())
@@ -397,11 +397,17 @@ namespace Nektar
             {
                 IProductWRTBase(inarray,outarray);
 
-                LinSysKey  masskey(StdRegions::eMassMatrix,DetShapeType(),*this);
-                DNekLinSysSharedPtr matsys = m_linSysManager[masskey];
-
-                DNekVec   v(m_ncoeffs,outarray,eWrapper);
-                matsys->Solve(v,v);
+		// get Mass matrix inverse
+		MatrixKey             masskey(StdRegions::eInvMassMatrix, DetShapeType(),*this);
+		DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
+		
+                // copy inarray in case inarray == outarray
+                DNekVec in (m_ncoeffs,outarray);
+                DNekVec out(m_ncoeffs,outarray,eWrapper);
+                
+                //out = (*matsys)*in;
+                out = (*(matsys->GetOwnedMatrix()))*in;
+                out *= matsys->Scale();
             }
         }
 
@@ -587,14 +593,54 @@ namespace Nektar
             return StdSegExp::PhysEvaluate(Lcoord);
         }
 
-        DNekMatSharedPtr SegExp::CreateMatrix(const MatrixKey &mkey)
+        DNekScalMatSharedPtr SegExp::CreateMatrix(const MatrixKey &mkey)
         {
-            DNekMatSharedPtr returnval;
+            DNekScalMatSharedPtr returnval;
+
+            ASSERTL2(m_metricinfo->GetGtype == SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eMassMatrix:
-                returnval = GenMassMatrix();
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        DNekMatSharedPtr mat = GenMassMatrix();
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
+                    }
+                    else
+                    {
+                        // need to create a StdSegExp so that correct local matrix is generated
+                        StdRegions::StdSegExpSharedPtr tmp =
+                            MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(*this);
+                        DNekMatSharedPtr mat = tmp->GetStdMatrix(*mkey.GetStdMatKey());
+
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                                    (m_metricinfo->GetJac())[0],mat);
+                    }
+                }
+                break;
+            case StdRegions::eInvMassMatrix:
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        DNekMatSharedPtr mat = GenMassMatrix();
+                        ASSERTL0(false,"Need a matrix inverse routine");
+
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
+                    }
+                    else
+                    {
+
+                        // need to create a StdSegExp so that correct local matrix is generated
+                        StdRegions::StdSegExpSharedPtr tmp =
+                            MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(*this);
+                        DNekMatSharedPtr mat = tmp->GetStdMatrix(*mkey.GetStdMatKey());
+
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                                      1.0/(m_metricinfo->GetJac())[0],mat );
+                    }
+                }
                 break;
             default:
                 NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
@@ -604,30 +650,15 @@ namespace Nektar
             return returnval;
         }
 
-
-        DNekLinSysSharedPtr SegExp::CreateLinSys(const LinSysKey &mkey)
-        {
-            DNekLinSysSharedPtr returnval;
-
-            switch(mkey.GetMatrixType())
-            {
-            case StdRegions::eMassMatrix:
-                returnval = MemoryManager<DNekLinSys>::AllocateSharedPtr (m_matrixManager[mkey]);
-                break;
-            default:
-                NEKERROR(ErrorUtil::efatal, "Linear System creation not defined");
-                break;
-            }
-
-            return returnval;
-        }
-
-
     } // end of namespace    
-}//end of namespace
+ }//end of namespace
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.18  2007/06/07 15:54:19  pvos
+// Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
+// Also made corrections to various ASSERTL2 calls
+//
 // Revision 1.17  2007/06/06 11:29:31  pvos
 // Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
 //

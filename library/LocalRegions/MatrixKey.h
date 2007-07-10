@@ -49,8 +49,9 @@ namespace Nektar
         {
         public:
             MatrixKey( StdRegions::MatrixType matrixType, 
-                StdRegions::ShapeType shapeType, 
-                StdRegions::StdExpansion &stdExpansion);
+                       StdRegions::ShapeType shapeType, 
+                       StdRegions::StdExpansion &stdExpansion,
+                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             virtual ~MatrixKey()
             {
@@ -105,8 +106,9 @@ namespace Nektar
         protected:
             MatrixKey();
 
-            StdRegions::StdMatrixKeySharedPtr  m_stdMatKey;
+            StdRegions::StdMatrixKeySharedPtr     m_stdMatKey;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo; 
+            NekDouble                             m_scalefactor;
 
         private:
         };
@@ -120,6 +122,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.9  2007/05/28 08:35:25  sherwin
+* Updated for localregions up to Project1D
+*
 * Revision 1.8  2007/05/27 16:10:28  bnelson
 * Update to new Array type.
 *

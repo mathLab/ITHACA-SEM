@@ -44,7 +44,6 @@
 #include <SpatialDomains/GeomFactors.h>
 
 #include <LocalRegions/MatrixKey.h>
-#include <LocalRegions/LinSys.hpp>
 
 namespace Nektar
 {
@@ -120,15 +119,12 @@ namespace Nektar
 
         void GenMetricInfo();
 
-        DNekMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
-        DNekLinSysSharedPtr CreateLinSys(const LinSysKey &mkey);
+        DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
 
         SpatialDomains::TriGeomSharedPtr m_geom;
         SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
-        LibUtilities::NekManager<MatrixKey, DNekMat, MatrixKey::opLess> m_matrixManager;
-        
-        LibUtilities::NekManager<LinSysKey, DNekLinSys, LinSysKey::opLess> m_linSysManager;
+        LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
 
         /** \brief  Inner product of \a inarray over region with respect to
         the expansion basis \a base and return in \a outarray */
@@ -243,7 +239,7 @@ namespace Nektar
             return StdExpansion::L2();
         }
 
-        virtual DNekMatSharedPtr v_GetLocMatrix(StdRegions::MatrixType type)
+        virtual DNekScalMatSharedPtr v_GetLocMatrix(StdRegions::MatrixType type)
         {
             MatrixKey masskey(type,DetShapeType(),*this);
             return m_matrixManager[masskey];
@@ -263,6 +259,10 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.13  2007/06/07 15:54:19  pvos
+ *    Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
+ *    Also made corrections to various ASSERTL2 calls
+ *
  *    Revision 1.12  2007/06/01 17:08:07  pvos
  *    Modification to make LocalRegions/Project2D run correctly (PART1)
  *

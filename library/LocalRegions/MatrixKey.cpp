@@ -42,10 +42,11 @@ namespace Nektar
     {
         // Register Mass Matrix creator. 
         MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
-            StdRegions::ShapeType shapeType,
-            StdRegions::StdExpansion &stdExpansion)
+                             StdRegions::ShapeType shapeType,
+                             StdRegions::StdExpansion &stdExpansion,
+                             LibUtilities::PointsType nodalType)
         {
-            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion);
+            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion,nodalType);
 
             m_metricinfo = stdExpansion.GetMetricInfo(); 
         }
@@ -92,6 +93,16 @@ namespace Nektar
                 }
             }
 
+            if(lhs.m_scalefactor > rhs.m_scalefactor)
+            {
+                return false;
+            }
+
+            if(lhs.m_scalefactor < rhs.m_scalefactor)
+            {
+                return true;
+            }
+
             return false;
         }
 
@@ -106,6 +117,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.7  2007/05/27 16:10:28  bnelson
+* Update to new Array type.
+*
 * Revision 1.6  2007/04/08 03:33:30  jfrazier
 * Minor reformatting and fixing SharedArray usage.
 *

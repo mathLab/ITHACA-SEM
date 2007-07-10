@@ -56,9 +56,9 @@ namespace Nektar
                 StdRegions::eNoShapeType,*this),
                 boost::bind(&QuadExp::CreateMatrix, this, _1));
 
-            m_linSysManager.RegisterCreator(LinSysKey(StdRegions::eMassMatrix,
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMassMatrix,
                 StdRegions::eNoShapeType,*this),
-                boost::bind(&QuadExp::CreateLinSys, this, _1));
+                boost::bind(&QuadExp::CreateMatrix, this, _1));
 
             GenMetricInfo();
 	}
@@ -387,11 +387,18 @@ namespace Nektar
 	    {
 		IProductWRTBase(inarray,outarray);
 
-                LinSysKey  masskey(StdRegions::eMassMatrix,DetShapeType(),*this);
-                DNekLinSysSharedPtr matsys = m_linSysManager[masskey];
-
-                DNekVec   v(m_ncoeffs,outarray,eWrapper);
-                matsys->Solve(v,v);
+		// get Mass matrix inverse
+		MatrixKey             masskey(StdRegions::eInvMassMatrix,
+                                              DetShapeType(),*this);
+		DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
+		
+                // copy inarray in case inarray == outarray
+                DNekVec in (m_ncoeffs,outarray);
+                DNekVec out(m_ncoeffs,outarray,eWrapper);
+                
+                //out = (*matsys)*in;
+                out = (*(matsys->GetOwnedMatrix()))*in;
+                out *= matsys->Scale();
 	    }
 	}
 	
@@ -594,35 +601,46 @@ namespace Nektar
 	    return StdQuadExp::PhysEvaluate(Lcoord);
 	}
 	
-        DNekMatSharedPtr QuadExp::CreateMatrix(const MatrixKey &mkey)
+        DNekScalMatSharedPtr QuadExp::CreateMatrix(const MatrixKey &mkey)
         {
-            DNekMatSharedPtr returnval;
+            DNekScalMatSharedPtr returnval;
 
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eMassMatrix:
-                returnval = GenMassMatrix();
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        DNekMatSharedPtr mat = GenMassMatrix();
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
+                    }
+                    else
+                    {
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                                    (m_metricinfo->GetJac())[0],
+                                    m_stdMatrixManager[*(mkey.GetStdMatKey())]);
+                    }
+                }
+                break;
+            case StdRegions::eInvMassMatrix:
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        DNekMatSharedPtr mat = GenMassMatrix();
+                        ASSERTL0(false,"Need a matrix inverse routine");
+
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
+                    }
+                    else
+                    {
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                                      1.0/(m_metricinfo->GetJac())[0],
+                                      m_stdMatrixManager[*(mkey.GetStdMatKey())]);
+                    }
+                }
                 break;
             default:
                 NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
-                break;
-            }
-
-            return returnval;
-        }
-
-
-        DNekLinSysSharedPtr QuadExp::CreateLinSys(const LinSysKey &mkey)
-        {
-            DNekLinSysSharedPtr returnval;
-
-            switch(mkey.GetMatrixType())
-            {
-            case StdRegions::eMassMatrix:
-                returnval = MemoryManager<DNekLinSys>::AllocateSharedPtr (m_matrixManager[mkey]);
-                break;
-            default:
-                NEKERROR(ErrorUtil::efatal, "Linear System creation not defined");
                 break;
             }
 
@@ -635,6 +653,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.15  2007/06/17 19:00:45  bnelson
+ *    Removed unused variables.
+ *
  *    Revision 1.14  2007/06/07 15:54:19  pvos
  *    Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
  *    Also made corrections to various ASSERTL2 calls

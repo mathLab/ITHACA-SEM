@@ -48,9 +48,33 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        class GeomFactors;
+
+        struct GeomFactorsKey
+        {
+            GeomFactorsKey(GeomType gtype=eNoGeomType, int expdim=0, int coordim=0):
+                m_gtype(gtype), m_expdim(expdim), m_coordim(coordim)
+            {
+            }
+
+            GeomType m_gtype;
+            int m_expdim;
+            int m_coordim;
+        };
+
+        bool operator<(const GeomFactorsKey &lhs, const GeomFactorsKey &rhs);
+        bool operator<(const GeomFactors &lhs, const GeomFactors &rhs);
+
+        typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
+        typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
+        typedef GeomFactorsVector::iterator GeomFactorsVectorIter;
+
         class GeomFactors
         {
         public:
+
+            friend bool operator<(const GeomFactors &lhs, const GeomFactors &rhs);
+
             GeomFactors(void);
 
             GeomFactors(const GeomType gtype, const int expdim, const int coordim);
@@ -78,7 +102,7 @@ namespace Nektar
 
             inline GeomType GetGtype()
             {
-                return m_gtype;
+                return m_gFacKey.m_gtype;
             }
 
             inline const ConstArray<TwoD,NekDouble> &GetGmat() const
@@ -103,19 +127,17 @@ namespace Nektar
                 m_jac = Array<OneD, NekDouble>(nq, ndata.data());
             }
 
+            const GeomFactorsKey &GetGeomFactorsKey(void) const
+            {
+                return m_gFacKey;
+            }
+
         protected:
             Array<TwoD,NekDouble> m_gmat;
             Array<OneD,NekDouble> m_jac;
 
-        private:
-            GeomType m_gtype;
+            GeomFactorsKey m_gFacKey;
         };
-
-        typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
-        typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
-        typedef std::vector< GeomFactorsSharedPtr >::iterator GeomFactorsVectorIter;
-
-
     } //end of namespace
 } //end of namespace
 
@@ -123,6 +145,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.9  2007/05/28 21:48:42  sherwin
+// Update for 2D functionality
+//
 // Revision 1.8  2007/05/28 08:35:26  sherwin
 // Updated for localregions up to Project1D
 //

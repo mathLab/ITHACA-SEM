@@ -51,6 +51,8 @@ namespace Nektar
         typedef std::vector< GeometrySharedPtr > GeometryVector;
         typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
 
+        typedef std::map<GeomFactorsKey, GeomFactorsSharedPtr> RegGeomFactorsMap;
+
         class Geometry
         {
         public:
@@ -97,9 +99,13 @@ namespace Nektar
             }
 
         protected:
+
+            static GeomFactorsSharedPtr ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
+
             int                  m_coordim;     // coordinate dimension
             GeomFactorsSharedPtr m_geomfactors;
             GeomState            m_state;       // enum identifier to determine if quad points are filled
+            static RegGeomFactorsMap    m_RegGeomFactorsManager;
 
         private:
             virtual void v_GenGeomFactors(void)
@@ -116,6 +122,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.9  2007/06/06 11:29:31  pvos
+// Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
+//
 // Revision 1.8  2007/05/25 17:52:02  jfrazier
 // Updated to use new Array classes.
 //

@@ -57,11 +57,38 @@ namespace Nektar
         Geometry::~Geometry()
         {
         }
+        
+        RegGeomFactorsMap Geometry::m_RegGeomFactorsManager;
+        GeomFactorsSharedPtr Geometry::ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor)
+        {
+            GeomFactorsSharedPtr returnval;
+            if (geomFactor->GetGtype() == eRegular)
+            {
+                const GeomFactorsKey &geomFacKey = geomFactor->GetGeomFactorsKey();
+                RegGeomFactorsMap::iterator iter = m_RegGeomFactorsManager.find(geomFacKey);
+
+                if (iter != m_RegGeomFactorsManager.end())
+                {
+                    returnval = iter->second;
+                }
+                else
+                {
+                    m_RegGeomFactorsManager[geomFacKey] = geomFactor;
+                    returnval = geomFactor;
+                }
+            }
+
+            return returnval;
+        }
+
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: Geometry.cpp,v $
+// Revision 1.4  2007/03/14 21:24:08  sherwin
+// Update for working version of MultiRegions up to ExpList1D
+//
 // Revision 1.3  2006/08/24 18:50:00  jfrazier
 // Completed error checking on permissable composite item combinations.
 //

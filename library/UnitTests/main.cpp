@@ -33,6 +33,8 @@ using boost::unit_test_framework::test_suite;
 
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
+
+// On Windows, to turn off memory leak detection, --detect_memory_leaks=0
 test_suite* init_unit_test_suite( int, char* [] )
 {
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
@@ -205,6 +207,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.41  2007/07/10 05:10:19  bnelson
+    Added tests for vectors with a different size than the underlying SharedArray.
+
     Revision 1.40  2007/07/10 01:22:38  bnelson
     Unit tests for full linear system with both x and b as input parameters.
 

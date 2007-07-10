@@ -37,6 +37,7 @@ test_suite* init_unit_test_suite( int, char* [] )
 {
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
     
+
     // shared array
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestEmptyConstructor), 0);
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestUninitializedConstructor), 0);
@@ -160,7 +161,8 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::BlockMatrixUnitTests::TestElementAccess), 0);
     test->add(BOOST_TEST_CASE(&Nektar::BlockMatrixUnitTests::TestGetNumElements), 0);
     test->add(BOOST_TEST_CASE(&Nektar::BlockMatrixUnitTests::TestGetStorageType), 0);
-
+    test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testMixedInputParameterTypes), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::TestFullSystemWithWrappedVectors), 0);
 
     // These tests were originally added because it appeared that a NekObjectFactory
     // would be needed instead of the LokiObject factory so that the factory would
@@ -188,7 +190,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testDiagonalSystem), 0);
     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testFullSystem), 0);
     test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testSolvingBlockDiagonalMatrices), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::LinearSystemUnitTests::testMixedInputParameterTypes), 0);
+    
 
     /// Linear algebra algorithsm.
     test->add(BOOST_TEST_CASE(&Nektar::NekLinAlgTests::testGramSchmidtOrthogonalizationBookExample), 0);
@@ -202,6 +204,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.39  2007/06/24 23:51:04  bnelson
+    *** empty log message ***
+
     Revision 1.38  2007/06/24 18:00:16  bnelson
     *** empty log message ***
 

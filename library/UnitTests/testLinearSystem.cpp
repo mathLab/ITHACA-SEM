@@ -158,6 +158,75 @@ namespace Nektar
 
                 BOOST_CHECK_EQUAL(*result, expectedResult);
             }
+
+            {
+                /// Test solving with wrapped vectors.
+                double matrix_buf[] = { 10, 5, 2 };
+
+                double result_buf[] = { 20, 50, 10 };
+                Array<OneD, double> result_array(3, result_buf);
+
+                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                NekVector<double> b(result_array, eWrapper);
+                boost::shared_ptr<NekVector<double> > result(new NekVector<double>(3, 0.0));
+
+                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
+
+                linsys.Solve(b,result);
+                
+                double expected_result_buf[] = { 2, 10, 5 };
+                NekVector<double> expectedResult(3, expected_result_buf);
+
+                BOOST_CHECK_EQUAL(*result, expectedResult);
+            }
+
+            {
+                /// Test solving with wrapped vectors.
+                double matrix_buf[] = { 10, 5, 2 };
+
+                double b_buf[] = { 20, 50, 10 };
+                Array<OneD, double> b_array(3, b_buf);
+
+                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                NekVector<double> b(b_array, eWrapper);
+
+                double result_buf[] = {0, 0, 0};
+                Array<OneD, double> result_array(3, result_buf);
+                boost::shared_ptr<NekVector<double> > result(new NekVector<double>(result_array, eWrapper));
+
+                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
+
+                linsys.Solve(b,result);
+                
+                double expected_result_buf[] = { 2, 10, 5 };
+                NekVector<double> expectedResult(3, expected_result_buf);
+
+                BOOST_CHECK_EQUAL(*result, expectedResult);
+            }
+
+            {
+                /// Test solving with wrapped vectors.
+                double matrix_buf[] = { 10, 5, 2 };
+
+                double b_buf[] = { 20, 50, 10 };
+                Array<OneD, double> b_array(3, b_buf);
+
+                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                NekVector<double> b(b_array, eWrapper);
+
+                double result_buf[] = {0, 0, 0};
+                Array<OneD, double> result_array(3, result_buf);
+                boost::shared_ptr<NekVector<double> > result(new NekVector<double>(result_array, eWrapper));
+
+                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
+
+                linsys.Solve(b,result);
+                
+                double expected_result_buf[] = { 2, 10, 5 };
+                NekVector<double> expectedResult(3, expected_result_buf);
+
+                BOOST_CHECK_EQUAL(*result, expectedResult);
+            }
         }
 
         void testDiagonalSystem()
@@ -295,6 +364,46 @@ namespace Nektar
             //BOOST_CHECK_CLOSE(result[5], -59.0, epsilon);
             //BOOST_CHECK_CLOSE(result[6], 6.0, epsilon);
             //BOOST_CHECK_CLOSE(result[7], -87.0, epsilon);
+        }
+
+        void TestFullSystemWithWrappedVectors()
+        {
+            {
+                // Larger matrix.
+                double matrix_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49, 63, 
+                    57, -59, 45, -8, -93, 92, 43, -62, 77, 66,
+                    54, -5, 99, -61, -50, -12, -18, 31, -26, -62,
+                    1, -47, -91, -47, -61, 41, -58, -90, 53, -1,
+                    94, 83, -86, 23, -84, 19, -50, 88, -53, 85,
+                    49, 78, 17, 72, -99, -85, -86, 30, 80, 72,
+                    66, -29, -91, -53, -19, -47, 68, -72, -87, 79,
+                    43, -66, -53, -61, -23, -37, 31, -34, -42, 88,
+                    -76, -65, 25, 28, -61, -60, 9, 29, -66, -32,
+                    78, 39, 94, 68, -17, -98, -36, 40, 22, 5 };
+                            
+                double b_buf[] = {12719, -3169, -16810, 7408, -14945, -6822, 10166, 7023, 8679, -11826};
+                double result_buf[10];
+
+                boost::shared_ptr<NekMatrix<double, FullMatrixTag> > A(new NekMatrix<double, FullMatrixTag>(10, 10, matrix_buf));
+                boost::shared_ptr<NekVector<double> > b(new NekVector<double>(Array<OneD, double>(10, b_buf), eWrapper));
+                NekVector<double> result(Array<OneD, double>(10, result_buf), eWrapper);
+
+                LinearSystem<NekMatrix<double, FullMatrixTag> > linsys(A);
+                
+                linsys.Solve(b, result);
+                double epsilon = 1e-11;
+                BOOST_CHECK_CLOSE(result[0], -88.0, epsilon);
+                BOOST_CHECK_CLOSE(result[1], -43.0, epsilon);
+                BOOST_CHECK_CLOSE(result[2], -73.0, epsilon);
+                BOOST_CHECK_CLOSE(result[3], 25.0, epsilon);
+                BOOST_CHECK_CLOSE(result[4], 4.0, epsilon);
+                BOOST_CHECK_CLOSE(result[5], -59.0, epsilon);
+                BOOST_CHECK_CLOSE(result[6], 62.0, epsilon);
+                BOOST_CHECK_CLOSE(result[7], -55.0, epsilon);
+                BOOST_CHECK_CLOSE(result[8], 25.0, epsilon);
+                BOOST_CHECK_CLOSE(result[9], 9.0, epsilon);
+                    
+            }
         }
     }
 }

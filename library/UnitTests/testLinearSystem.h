@@ -45,6 +45,7 @@ namespace Nektar
         void testFullSystem();
         void testSolvingBlockDiagonalMatrices();
         void testMixedInputParameterTypes();
+        void TestFullSystemWithWrappedVectors();
     }
 }
 
@@ -52,6 +53,9 @@ namespace Nektar
 
 /**
     $Log: testLinearSystem.h,v $
+    Revision 1.4  2007/02/13 02:47:23  bnelson
+    *** empty log message ***
+
     Revision 1.3  2006/10/30 05:08:13  bnelson
     Added preliminary linear system and block matrix support.
 

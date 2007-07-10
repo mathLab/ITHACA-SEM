@@ -145,6 +145,45 @@ namespace Nektar
                             const NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& lhs,
                             const NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& rhs);
     #endif //NEKTAR_USING_BLAS
+
+    //template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
+    //void NekMultiply(NekVector<DataType, dim, space>& result,
+    //                 const NekMatrix<LhsDataType, FullMatrixTag, MatrixType>& lhs,
+    //                 const NekVector<DataType, dim, space>& rhs)
+    //{
+    //    ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+    //        boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+    //        std::string(" and a right side vector with row count ") + 
+    //        boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+
+    //    result = NekVector<DataType, dim, space>(lhs.GetRows());
+    //    for(unsigned int i = 0; i < lhs.GetRows(); ++i)
+    //    {
+    //        DataType accum = DataType(0);
+    //        for(unsigned int j = 0; j < lhs.GetColumns(); ++j)
+    //        {
+    //            accum += lhs(i,j)*rhs(j);
+    //        }
+    //        result[i] = accum;
+    //    }
+    //}
+
+    //template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
+    //void NekMultiply(NekVector<DataType, dim, space>& result,
+    //                 const NekMatrix<LhsDataType, DiagonalMatrixTag, MatrixType>& lhs,
+    //                 const NekVector<DataType, dim, space>& rhs)
+    //{
+    //    ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+    //        boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+    //        std::string(" and a right side vector with row count ") + 
+    //        boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+
+    //    result = NekVector<DataType, dim, space>(lhs.GetRows());
+    //    for(unsigned int i = 0; i < lhs.GetRows(); ++i)
+    //    {
+    //        result[i] = lhs(i,i)*rhs(i);
+    //    }
+    //}
 }
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_OPERATIONS_HPP
 

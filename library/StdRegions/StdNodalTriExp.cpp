@@ -121,7 +121,7 @@ namespace Nektar
         void StdNodalTriExp::NodalToModalTranspose(Array<OneD, NekDouble> &in_out_array)
         {
             StdMatrixKey Nkey(eInvNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
-            DNekMatSharedPtr  mat = m_stdMatrixManager[Nkey];
+            DNekMatSharedPtr  mat = GetStdMatrix(Nkey);
 
             // solve inverse of system
             DNekVec   v(m_ncoeffs,in_out_array,eWrapper);
@@ -137,7 +137,7 @@ namespace Nektar
         void StdNodalTriExp::ModalToNodal(Array<OneD, NekDouble> &in_out_array)
         {
             StdMatrixKey      Nkey(eNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
-            DNekMatSharedPtr  mat = m_stdMatrixManager[Nkey];
+            DNekMatSharedPtr  mat = GetStdMatrix(Nkey);
 
             // Multiply out matrix
             DNekVec  v(m_ncoeffs,in_out_array,eWrapper);
@@ -213,7 +213,7 @@ namespace Nektar
             // get Mass matrix inverse
             StdMatrixKey      masskey(eInvMass,DetShapeType(),*this, 
                 m_nodalPointsKey->GetPointsType());
-            DNekMatSharedPtr  matsys = m_stdMatrixManager[masskey];
+            DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
             // copy inarray in case inarray == outarray
             DNekVec in (m_ncoeffs,outarray);
@@ -318,6 +318,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.13  2007/07/11 06:35:24  sherwin
+* Update after manager reshuffle
+*
 * Revision 1.12  2007/07/10 21:05:17  kirby
 * even more fixes
 *

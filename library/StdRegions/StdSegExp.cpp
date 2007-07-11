@@ -218,7 +218,7 @@ namespace Nektar
 		
 		// get Mass matrix inverse
 		StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
-		DNekMatSharedPtr  matsys = m_stdMatrixManager[masskey];
+		DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 		
                 // copy inarray in case inarray == outarray
                 DNekVec in (m_ncoeffs,outarray);
@@ -288,6 +288,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.36  2007/07/10 21:05:18  kirby
+* even more fixes
+*
 * Revision 1.34  2007/07/10 19:27:58  kirby
 * Update for new matrix structures
 *

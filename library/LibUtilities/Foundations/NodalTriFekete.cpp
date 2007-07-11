@@ -158,33 +158,33 @@ namespace Nektar
         Array<OneD, NekDouble> DubinerPoly(int p, int q, Array<OneD, NekDouble>& x, Array<OneD, NekDouble>& y);
         Array<TwoD, NekDouble> getVandermonde(Array<OneD, NekDouble>& x, Array<OneD, NekDouble>& y, int degree);
         Array<TwoD, NekDouble> getVandermonde(Array<OneD, NekDouble>& x, Array<OneD, NekDouble>& y);
-        static void Invert(unsigned int rows, unsigned int columns, Array<OneD, NekDouble>& data);
+        //static void Invert(unsigned int rows, unsigned int columns, Array<OneD, NekDouble>& data);
         Array<OneD, NekDouble> vectorizeMatrix(const Array<TwoD, NekDouble> & A, int M, int N);
         int getDegree(int nBasisFunctions);
         
 
-        Array<TwoD, NekDouble> getInterpolationMatrix(Array<OneD, NekDouble>& x, Array<OneD, NekDouble>& y,Array<OneD, NekDouble>& xi, Array<OneD, NekDouble>& yi){
-            int nNodes = x.num_elements();
-            int degree = getDegree(nNodes);
+        //Array<TwoD, NekDouble> getInterpolationMatrix(Array<OneD, NekDouble>& x, Array<OneD, NekDouble>& y,Array<OneD, NekDouble>& xi, Array<OneD, NekDouble>& yi){
+        //    int nNodes = x.num_elements();
+        //    int degree = getDegree(nNodes);
 
-            int M, N; // TODO: set to row/col
-                        
-            
-            Array<TwoD, NekDouble> S = getVandermonde(x, y); // Square 'short' matrix
-            Array<TwoD, NekDouble> T = getVandermonde(xi, yi, degree); // Coefficient interpolation matrix (tall)
+        //    int M, N; // TODO: set to row/col
+        //                
+        //    
+        //    Array<TwoD, NekDouble> S = getVandermonde(x, y); // Square 'short' matrix
+        //    Array<TwoD, NekDouble> T = getVandermonde(xi, yi, degree); // Coefficient interpolation matrix (tall)
 
-            Array<OneD, NekDouble> invMatrix = vectorizeMatrix(S, M, N);
-            Invert(M,N,invMatrix);
-            
-            for(int i=0; i<M; ++i){
-              for(int j=0; j<N; ++j){
-              //  v[CalculateIndex(i,j,M,N)] = T[i][j];
-             }
-            }
-            // Get the interpolation matrix
-        //    return T * invMatrix;
-            return S; // TODO fix
-        }
+        //    Array<OneD, NekDouble> invMatrix = vectorizeMatrix(S, M, N);
+        //    //Invert(M,N,invMatrix);
+        //    
+        //    for(int i=0; i<M; ++i){
+        //      for(int j=0; j<N; ++j){
+        //      //  v[CalculateIndex(i,j,M,N)] = T[i][j];
+        //     }
+        //    }
+        //    // Get the interpolation matrix
+        ////    return T * invMatrix;
+        //    return S; // TODO fix
+        //}
 
         static unsigned int CalculateIndex(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns) {
                  return row*matrixColumns + column;
@@ -219,60 +219,60 @@ namespace Nektar
              }
         
       
-      static void Invert(unsigned int rows, unsigned int columns, Array<OneD, NekDouble>& data) {
-//#ifdef NEKTAR_USING_LAPACK
-                 ASSERTL0(rows == columns, "Matrix Inversion only works for square arrays.");
-
-                 /// Incoming data is row major, make it column major for lapack calls.
-                 Transpose(rows, columns, data);
-
-                 int m = rows;
-                 int n = columns;
-                 int pivotSize = std::max(1, std::min(m, n));
-
-                 Array<OneD, int> ipivot(pivotSize);
-                 int info = 0;
-                 Lapack::Dgetrf(m, n, data.get(), m, ipivot.get(), info);
-
-                 if( info < 0 )
-                 {
-                     std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) +
-                             "th parameter had an illegal parameter for dgetrf";
-                     ASSERTL0(false, message.c_str());
-                 }
-                 else if( info > 0 )
-                 {
-                     std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
-                             boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
-                     ASSERTL0(false, message.c_str());
-                 }
-
-                 unsigned int workSize = 64*n;
-
-                 Array<OneD, NekDouble> work(workSize);
-                 Lapack::Dgetri(n, data.get(), n, ipivot.get(), work.get(), workSize, info);
-
-                 if( info < 0 )
-                 {
-                     std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) +
-                             "th parameter had an illegal parameter for dgetri";
-                     ASSERTL0(false, message.c_str());
-                 }
-                 else if( info > 0 )
-                 {
-                     std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
-                             boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
-                     ASSERTL0(false, message.c_str());
-                 }
-
-                 // Put it back to row major form.
-                 Transpose(rows, columns, data);
-
- //#else
-                 // TODO
-            //     BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
-// #endif //NEKTAR_USING_LAPACK
-        }
+//      static void Invert(unsigned int rows, unsigned int columns, Array<OneD, NekDouble>& data) {
+////#ifdef NEKTAR_USING_LAPACK
+//                 ASSERTL0(rows == columns, "Matrix Inversion only works for square arrays.");
+//
+//                 /// Incoming data is row major, make it column major for lapack calls.
+//                 Transpose(rows, columns, data);
+//
+//                 int m = rows;
+//                 int n = columns;
+//                 int pivotSize = std::max(1, std::min(m, n));
+//
+//                 Array<OneD, int> ipivot(pivotSize);
+//                 int info = 0;
+//                 Lapack::Dgetrf(m, n, data.get(), m, ipivot.get(), info);
+//
+//                 if( info < 0 )
+//                 {
+//                     std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) +
+//                             "th parameter had an illegal parameter for dgetrf";
+//                     ASSERTL0(false, message.c_str());
+//                 }
+//                 else if( info > 0 )
+//                 {
+//                     std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
+//                             boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
+//                     ASSERTL0(false, message.c_str());
+//                 }
+//
+//                 unsigned int workSize = 64*n;
+//
+//                 Array<OneD, NekDouble> work(workSize);
+//                 Lapack::Dgetri(n, data.get(), n, ipivot.get(), work.get(), workSize, info);
+//
+//                 if( info < 0 )
+//                 {
+//                     std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) +
+//                             "th parameter had an illegal parameter for dgetri";
+//                     ASSERTL0(false, message.c_str());
+//                 }
+//                 else if( info > 0 )
+//                 {
+//                     std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +
+//                             boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
+//                     ASSERTL0(false, message.c_str());
+//                 }
+//
+//                 // Put it back to row major form.
+//                 Transpose(rows, columns, data);
+//
+// //#else
+//                 // TODO
+//            //     BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
+//// #endif //NEKTAR_USING_LAPACK
+//        }
 
         
         Array<TwoD, NekDouble> getVandermonde(Array<OneD, NekDouble>& x, Array<OneD, NekDouble>& y, int degree){
@@ -581,6 +581,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriFekete.cpp,v $
+* Revision 1.14  2007/07/11 09:12:13  ehan
+* Fixed bug
+*
 * Revision 1.12  2007/05/15 03:37:24  bnelson
 * Updated to use the new Array object.
 *

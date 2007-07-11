@@ -50,11 +50,11 @@ namespace Nektar
         {
             m_geom = geom;
             
-            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMassMatrix,
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMass,
                 StdRegions::eNoShapeType,*this),
                 boost::bind(&NodalTriExp::CreateMatrix, this, _1));
             
-            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMassMatrix,
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMass,
                 StdRegions::eNoShapeType,*this),
                 boost::bind(&NodalTriExp::CreateMatrix, this, _1));
 
@@ -333,7 +333,7 @@ namespace Nektar
             IProductWRTBase(inarray,outarray); 
 
             // get Mass matrix inverse
-            MatrixKey             masskey(StdRegions::eInvMassMatrix,
+            MatrixKey             masskey(StdRegions::eInvMass,
                                           DetShapeType(),*this,
                                           m_nodalPointsKey->GetPointsType());
             DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
@@ -548,7 +548,7 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
-            case StdRegions::eMassMatrix:
+            case StdRegions::eMass:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
@@ -563,7 +563,7 @@ namespace Nektar
                     }
                 }
                 break;
-            case StdRegions::eInvMassMatrix:
+            case StdRegions::eInvMass:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
@@ -593,6 +593,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.8  2007/07/10 17:17:22  sherwin
+ *    Introduced Scaled Matrices into the MatrixManager
+ *
  *    Revision 1.7  2007/06/17 19:00:44  bnelson
  *    Removed unused variables.
  *

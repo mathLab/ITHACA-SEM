@@ -48,11 +48,11 @@ namespace Nektar
         {
             m_geom = geom;    
 
-            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMassMatrix,
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMass,
                 StdRegions::eNoShapeType,*this),
                 boost::bind(&SegExp::CreateMatrix, this, _1));
 
-            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMassMatrix,
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMass,
                 StdRegions::eNoShapeType,*this),
                 boost::bind(&SegExp::CreateMatrix, this, _1));
 
@@ -398,7 +398,7 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
 
 		// get Mass matrix inverse
-		MatrixKey             masskey(StdRegions::eInvMassMatrix, DetShapeType(),*this);
+		MatrixKey             masskey(StdRegions::eInvMass, DetShapeType(),*this);
 		DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 		
                 // copy inarray in case inarray == outarray
@@ -601,7 +601,7 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
-            case StdRegions::eMassMatrix:
+            case StdRegions::eMass:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
@@ -620,7 +620,7 @@ namespace Nektar
                     }
                 }
                 break;
-            case StdRegions::eInvMassMatrix:
+            case StdRegions::eInvMass:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
@@ -655,6 +655,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.19  2007/07/10 17:17:26  sherwin
+// Introduced Scaled Matrices into the MatrixManager
+//
 // Revision 1.18  2007/06/07 15:54:19  pvos
 // Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
 // Also made corrections to various ASSERTL2 calls

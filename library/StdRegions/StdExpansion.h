@@ -796,7 +796,7 @@ namespace Nektar
                 return v_GenBwdTransMatrix();
             }
 
-            DNekMatSharedPtr GetLocMatrix(MatrixType mtype)
+            DNekScalMatSharedPtr GetLocMatrix(MatrixType mtype)
             {
                 return v_GetLocMatrix(mtype);
             }
@@ -815,10 +815,10 @@ namespace Nektar
                 return v_GetMetricInfo();
             }
 
-            virtual DNekMatSharedPtr v_GetLocMatrix(MatrixType mtype)
+            virtual DNekScalMatSharedPtr v_GetLocMatrix(MatrixType mtype)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return boost::shared_ptr<DNekMat>();
+                return boost::shared_ptr<DNekScalMat>();
             }
 
             /** \brief this function interpolates a 1D function \f$f\f$ evaluated
@@ -1144,6 +1144,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.56  2007/07/11 13:44:08  kirby
+* *** empty log message ***
+*
 * Revision 1.55  2007/07/11 13:40:26  kirby
 * *** empty log message ***
 *

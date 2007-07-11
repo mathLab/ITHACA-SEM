@@ -98,6 +98,18 @@ namespace Nektar
                     return true;
                 }
 
+                bool AlreadyCreated(typename boost::call_traits<KeyType>::const_reference key)
+                {
+                    bool value = false;
+                    typename ValueContainer::iterator found = m_values.find(key);
+                    if( found != m_values.end() )
+                    {
+                        value = true;
+                    }
+
+                    return value;
+                }
+
                 ValueType &operator[](typename boost::call_traits<KeyType>::const_reference key)
                 {
                     typename ValueContainer::iterator found = m_values.find(key);

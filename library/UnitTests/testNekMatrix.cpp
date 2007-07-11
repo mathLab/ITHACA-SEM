@@ -51,9 +51,52 @@ namespace Nektar
             {
                 double buf[] = {1.0, 2.0, 3.0, 4.0};
                 NekMatrix<double> m(2,2,buf);
+                m.Invert();
+
+                BOOST_CHECK_EQUAL(m(0,0), -2.0);
+                BOOST_CHECK_EQUAL(m(0,1), 1.0);
+                BOOST_CHECK_EQUAL(m(1,0), 3.0/2.0);
+                BOOST_CHECK_EQUAL(m(1,1), -1.0/2.0);
             }
             
             {
+                double buf[] = {1.7, 4.5, 9.0, -12.6, -1,
+                                5.6, 7.8, 3.6, 2.9, 1.7,
+                                9.1, 8.2, 7.3, 6.4, 5.6,
+                                -3.4, -2.5, .98, .02, 2.98,
+                                -2.0, 5.0, 1.0, -4.0, 5.0};
+                NekMatrix<double> m(5,5,buf);
+                m.Invert();
+
+                BOOST_CHECK_CLOSE(m(0,0), 0.0005010995978, .000001);
+                BOOST_CHECK_CLOSE(m(0,1), -0.4704403712, .000001);
+                BOOST_CHECK_CLOSE(m(0,2), 0.2719063614 , .000001);
+                BOOST_CHECK_CLOSE(m(0,3), -0.3941557805 , .000001);
+                BOOST_CHECK_CLOSE(m(0,4), 0.09043166650, .000001);
+
+                BOOST_CHECK_CLOSE(m(1,0), -0.01087166322 , .000001);
+                BOOST_CHECK_CLOSE(m(1,1), 0.3242048735 , .000001);
+                BOOST_CHECK_CLOSE(m(1,2), -0.1605116333, .000001);
+                BOOST_CHECK_CLOSE(m(1,3), 0.09133673974 , .000001);
+                BOOST_CHECK_CLOSE(m(1,4), 0.01293234281, .000001);
+
+                BOOST_CHECK_CLOSE(m(2,0), 0.06465598241, .000001);
+                BOOST_CHECK_CLOSE(m(2,1), 0.2593895742 , .000001);
+                BOOST_CHECK_CLOSE(m(2,2), -0.09057233795, .000001);
+                BOOST_CHECK_CLOSE(m(2,3), 0.3106562459, .000001);
+                BOOST_CHECK_CLOSE(m(2,4), -0.1589713628, .000001);
+
+                BOOST_CHECK_CLOSE(m(3,0), -0.03464982687, .000001);
+                BOOST_CHECK_CLOSE(m(3,1), 0.2655177914, .000001);
+                BOOST_CHECK_CLOSE(m(3,2), -0.1016866584, .000001);
+                BOOST_CHECK_CLOSE(m(3,3), 0.2125363445, .000001);
+                BOOST_CHECK_CLOSE(m(3,4), -0.1099886183, .000001);
+
+                BOOST_CHECK_CLOSE(m(4,0), -0.02957895492, .000001);
+                BOOST_CHECK_CLOSE(m(4,1), -0.3518447037, .000001);
+                BOOST_CHECK_CLOSE(m(4,2), 0.2060393188, .000001);
+                BOOST_CHECK_CLOSE(m(4,3), -0.1411012255, .000001);
+                BOOST_CHECK_CLOSE(m(4,4), 0.1670437017, .000001);
             }
             
             {
@@ -1059,6 +1102,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.25  2007/07/11 03:18:23  bnelson
+    *** empty log message ***
+
     Revision 1.24  2007/06/10 23:45:59  bnelson
     Matrix updates.
 

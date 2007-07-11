@@ -61,8 +61,15 @@ namespace Nektar
                 const LibUtilities::BasisKey &Bb,
                 const SpatialDomains::QuadGeomSharedPtr &geom);
         
-        /// Copy Constructor
-        QuadExp(const QuadExp &T);
+        QuadExp(const LibUtilities::BasisKey &Ba,
+                const LibUtilities::BasisKey &Bb);
+
+            /// \brief Constructor using BasisKey class for quadrature
+            /// points and order definition where it has standard geometric factors 
+            QuadExp(const LibUtilities::BasisKey &Ba);
+
+            /// Copy Constructor
+            QuadExp(const QuadExp &T);
 
         /// Destructor
         ~QuadExp();
@@ -127,6 +134,8 @@ namespace Nektar
     protected:
 
         void GenMetricInfo();
+
+        DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
 
         DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
 
@@ -270,6 +279,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.15  2007/07/10 17:17:26  sherwin
+ *    Introduced Scaled Matrices into the MatrixManager
+ *
  *    Revision 1.14  2007/06/07 15:54:19  pvos
  *    Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
  *    Also made corrections to various ASSERTL2 calls

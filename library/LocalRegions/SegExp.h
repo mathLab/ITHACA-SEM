@@ -62,6 +62,11 @@ namespace Nektar
             SegExp(const LibUtilities::BasisKey &Ba, 
 		   const SpatialDomains::SegGeomSharedPtr &geom);
 
+
+            /// \brief Constructor using BasisKey class for quadrature
+            /// points and order definition where it has standard geometric factors 
+            SegExp(const LibUtilities::BasisKey &Ba);
+
             ///Copy Constructor
             SegExp(const SegExp &S);
 
@@ -131,15 +136,11 @@ namespace Nektar
 
         protected:
 
+
             void GenMetricInfo();    
-
-            DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey)
-            {
-                ASSERTL0(false,"Cannot call GetStdMatrix from a Local expansion since "
-                         "this will set up an incorrect matrix in the stdMatrixManager");
-            }
-
-            DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
+            
+            DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
+            DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
 
             SpatialDomains::SegGeomSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
@@ -348,6 +349,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.16  2007/07/10 17:17:26  sherwin
+// Introduced Scaled Matrices into the MatrixManager
+//
 // Revision 1.15  2007/05/31 19:13:12  pvos
 // Updated NodalTriExp + LocalRegions/Project2D + some other modifications
 //

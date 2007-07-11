@@ -59,6 +59,10 @@ namespace Nektar
                         const LibUtilities::BasisKey &Bb,
                         const LibUtilities::PointsType Ntype,
                         const SpatialDomains::TriGeomSharedPtr &geom);
+
+	    NodalTriExp(const LibUtilities::BasisKey &Ba,
+                        const LibUtilities::BasisKey &Bb,
+                        const LibUtilities::PointsType Ntype);
 	    
             /// Copy Constructor
 	    NodalTriExp(const NodalTriExp &T); 
@@ -117,6 +121,8 @@ namespace Nektar
 	protected:
             
             void GenMetricInfo();
+            
+            DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
             
             DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
             
@@ -268,6 +274,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.8  2007/07/10 17:17:24  sherwin
+ *    Introduced Scaled Matrices into the MatrixManager
+ *
  *    Revision 1.7  2007/06/07 15:54:18  pvos
  *    Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
  *    Also made corrections to various ASSERTL2 calls

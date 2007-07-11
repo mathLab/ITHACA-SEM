@@ -61,6 +61,27 @@ namespace Nektar
             GenMetricInfo();
 	}
 	
+        TriExp::TriExp(const LibUtilities::BasisKey &Ba,
+                       const LibUtilities::BasisKey &Bb):
+            StdRegions::StdTriExp(Ba,Bb)
+        {
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMass,
+                StdRegions::eNoShapeType,*this),
+                boost::bind(&TriExp::CreateMatrix, this, _1));
+
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMass,
+                StdRegions::eNoShapeType,*this),
+                boost::bind(&TriExp::CreateMatrix, this, _1));
+
+            // Set up unit geometric factors. 
+            m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
+                AllocateSharedPtr(); 
+            int coordim = 2;
+            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim,0.0); 
+            ndata[0] = ndata[2] = 1.0;
+            m_metricinfo->ResetGmat(ndata,2,2,coordim);
+            m_metricinfo->ResetJac(1,ndata);
+        }
 	
 	TriExp::TriExp(const TriExp &T):StdRegions::StdTriExp(T)
 	{
@@ -583,6 +604,25 @@ namespace Nektar
 	    }
 	}
 
+        DNekMatSharedPtr TriExp::GetStdMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            // Need to check if matrix exists in stdMatrixManager.
+            // If not then make a local expansion with standard metric info
+            // and generate matrix. Otherwise direct call is OK. 
+            if(!StdMatManagerAlreadyCreated(mkey))
+            {
+                TriExpSharedPtr tmp = MemoryManager<TriExp>::
+                    AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                      m_base[1]->GetBasisKey());
+
+                return tmp->StdTriExp::GetStdMatrix(mkey);                
+            }
+            else
+            {
+                return StdTriExp::GetStdMatrix(mkey);
+            }
+        }
+
 	NekDouble TriExp::PhysEvaluate(const ConstArray<OneD,NekDouble> &coord)
 	{
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);	  
@@ -608,9 +648,9 @@ namespace Nektar
                     }
                     else
                     {
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                                    (m_metricinfo->GetJac())[0],
-                                    m_stdMatrixManager[*(mkey.GetStdMatKey())]);
+                        returnval = MemoryManager<DNekScalMat>::
+                            AllocateSharedPtr((m_metricinfo->GetJac())[0],
+                                     GetStdMatrix(*mkey.GetStdMatKey()));
                     }
                 }
                 break;
@@ -625,9 +665,9 @@ namespace Nektar
                     }
                     else
                     {
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                                      1.0/(m_metricinfo->GetJac())[0],
-                                      m_stdMatrixManager[*(mkey.GetStdMatKey())]);
+                        returnval = MemoryManager<DNekScalMat>::
+                            AllocateSharedPtr(1.0/(m_metricinfo->GetJac())[0],
+                                     GetStdMatrix(*mkey.GetStdMatKey()));
                     }
                 }
                 break;
@@ -644,6 +684,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.16  2007/07/11 06:36:23  sherwin
+ *    Updates with MatrixManager update
+ *
  *    Revision 1.15  2007/07/10 17:17:26  sherwin
  *    Introduced Scaled Matrices into the MatrixManager
  *

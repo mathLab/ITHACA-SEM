@@ -59,12 +59,33 @@ namespace Nektar
             GenMetricInfo();
         }
 
+        SegExp::SegExp(const LibUtilities::BasisKey &Ba):
+            StdRegions::StdSegExp(Ba)
+        {
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMass,
+                StdRegions::eNoShapeType,*this),
+                boost::bind(&SegExp::CreateMatrix, this, _1));
+
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMass,
+                StdRegions::eNoShapeType,*this),
+                boost::bind(&SegExp::CreateMatrix, this, _1));
+
+            // Set up unit geometric factors. 
+            m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr(); 
+            int coordim = 1;
+            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim,0.0); 
+            ndata[0] = 1.0;
+            m_metricinfo->ResetGmat(ndata,1,1,coordim);
+            m_metricinfo->ResetJac(1,ndata);
+        }
+
         // copy constructor
         SegExp::SegExp(const SegExp &S):
         StdRegions::StdSegExp(S)
         {
             m_geom        = S.m_geom;
             m_metricinfo  = S.m_metricinfo;
+            
         }
 
         // by default the StdExpansion1D destructor will be called
@@ -98,7 +119,6 @@ namespace Nektar
 
                 m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr(); 
 
-
                 // check to see if basis are different distributions
                 if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey())))
                 {
@@ -115,7 +135,6 @@ namespace Nektar
                                  &ndata[0] + i*nq);
                     }
 
-              
                     m_metricinfo->ResetGmat(ndata,nq,1,coordim);
 
                     // interpolate Jacobian
@@ -583,6 +602,26 @@ namespace Nektar
             }
         }
 
+        DNekMatSharedPtr SegExp::GetStdMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            // Need to check if matrix exists in stdMatrixManager.
+            // If not then make a local expansion with standard metric info
+            // and generate matrix. Otherwise direct call is OK. 
+            if(!StdMatManagerAlreadyCreated(mkey))
+            {
+                SegExpSharedPtr tmp = MemoryManager<SegExp>::AllocateSharedPtr(m_base[0]->GetBasisKey());
+
+                return tmp->StdSegExp::GetStdMatrix(mkey);                
+            }
+            else
+            {
+                return StdSegExp::GetStdMatrix(mkey);
+            }
+
+        }
+
+
+
         NekDouble SegExp::PhysEvaluate(const ConstArray<OneD,NekDouble>& coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(1);
@@ -610,10 +649,7 @@ namespace Nektar
                     }
                     else
                     {
-                        // need to create a StdSegExp so that correct local matrix is generated
-                        StdRegions::StdSegExpSharedPtr tmp =
-                            MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(*this);
-                        DNekMatSharedPtr mat = tmp->GetStdMatrix(*mkey.GetStdMatKey());
+                        DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
                                     (m_metricinfo->GetJac())[0],mat);
@@ -632,10 +668,7 @@ namespace Nektar
                     else
                     {
 
-                        // need to create a StdSegExp so that correct local matrix is generated
-                        StdRegions::StdSegExpSharedPtr tmp =
-                            MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(*this);
-                        DNekMatSharedPtr mat = tmp->GetStdMatrix(*mkey.GetStdMatKey());
+                        DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
                                       1.0/(m_metricinfo->GetJac())[0],mat );
@@ -655,6 +688,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.20  2007/07/11 06:36:23  sherwin
+// Updates with MatrixManager update
+//
 // Revision 1.19  2007/07/10 17:17:26  sherwin
 // Introduced Scaled Matrices into the MatrixManager
 //

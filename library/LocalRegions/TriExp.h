@@ -61,6 +61,9 @@ namespace Nektar
                 const LibUtilities::BasisKey &Bb,
                 const SpatialDomains::TriGeomSharedPtr &geom);
 
+        TriExp(const LibUtilities::BasisKey &Ba,
+               const LibUtilities::BasisKey &Bb);
+
 
         /// Copy Constructor
         TriExp(const TriExp &T);
@@ -118,6 +121,8 @@ namespace Nektar
     protected:
 
         void GenMetricInfo();
+
+        DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
 
         DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
 
@@ -259,6 +264,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.14  2007/07/10 17:17:26  sherwin
+ *    Introduced Scaled Matrices into the MatrixManager
+ *
  *    Revision 1.13  2007/06/07 15:54:19  pvos
  *    Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
  *    Also made corrections to various ASSERTL2 calls

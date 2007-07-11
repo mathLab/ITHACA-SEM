@@ -57,11 +57,33 @@ namespace Nektar
             m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMass,
                 StdRegions::eNoShapeType,*this),
                 boost::bind(&NodalTriExp::CreateMatrix, this, _1));
-
             GenMetricInfo();
             
         }
         
+	
+        NodalTriExp::NodalTriExp(const LibUtilities::BasisKey &Ba,
+                                 const LibUtilities::BasisKey &Bb,
+                                 const LibUtilities::PointsType Ntype):
+            StdRegions::StdNodalTriExp(Ba,Bb,Ntype)
+        {
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMass,
+                StdRegions::eNoShapeType,*this),
+                 boost::bind(&NodalTriExp::CreateMatrix, this, _1));
+
+            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMass,
+                StdRegions::eNoShapeType,*this),
+                boost::bind(&NodalTriExp::CreateMatrix, this, _1));
+
+            // Set up unit geometric factors. 
+            m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
+                AllocateSharedPtr(); 
+            int coordim = 2;
+            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim,0.0); 
+            ndata[0] = ndata[2] = 1.0;
+            m_metricinfo->ResetGmat(ndata,2,2,coordim);
+            m_metricinfo->ResetJac(1,ndata);
+        }
 	
         NodalTriExp::NodalTriExp(const NodalTriExp &T):StdRegions::StdNodalTriExp(T)
         {
@@ -532,6 +554,26 @@ namespace Nektar
 	    }
 	}      
       
+        DNekMatSharedPtr NodalTriExp::GetStdMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            // Need to check if matrix exists in stdMatrixManager.
+            // If not then make a local expansion with standard metric info
+            // and generate matrix. Otherwise direct call is OK. 
+            if(!StdMatManagerAlreadyCreated(mkey))
+            {
+                NodalTriExpSharedPtr tmp = MemoryManager<NodalTriExp>::
+                    AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                      m_base[1]->GetBasisKey(),
+                                      m_nodalPointsKey->GetPointsType());
+
+                return tmp->StdNodalTriExp::GetStdMatrix(mkey);                
+            }
+            else
+            {
+                return StdNodalTriExp::GetStdMatrix(mkey);
+            }
+        }
+
 	NekDouble NodalTriExp::PhysEvaluate(const ConstArray<OneD,NekDouble> &coord)
 	{
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
@@ -557,9 +599,10 @@ namespace Nektar
                     }
                     else
                     {
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                                    (m_metricinfo->GetJac())[0],
-                                    m_stdMatrixManager[*(mkey.GetStdMatKey())]);
+                        returnval = MemoryManager<DNekScalMat>::
+                            AllocateSharedPtr((m_metricinfo->GetJac())[0],
+                                     GetStdMatrix(*mkey.GetStdMatKey()));
+
                     }
                 }
                 break;
@@ -574,9 +617,9 @@ namespace Nektar
                     }
                     else
                     {
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                                      1.0/(m_metricinfo->GetJac())[0],
-                                      m_stdMatrixManager[*(mkey.GetStdMatKey())]);
+                        returnval = MemoryManager<DNekScalMat>::
+                            AllocateSharedPtr(1.0/(m_metricinfo->GetJac())[0],
+                                     GetStdMatrix(*mkey.GetStdMatKey()));
                     }
                 }
                 break;
@@ -593,6 +636,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.9  2007/07/11 06:36:22  sherwin
+ *    Updates with MatrixManager update
+ *
  *    Revision 1.8  2007/07/10 17:17:22  sherwin
  *    Introduced Scaled Matrices into the MatrixManager
  *

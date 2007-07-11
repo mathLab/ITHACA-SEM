@@ -1594,7 +1594,7 @@ namespace Nektar
 
 
 
-            DNekMatSharedPtr GetLocMatrix(MatrixType mtype)
+            DNekScalMatSharedPtr GetLocMatrix(MatrixType mtype)
 
             {
 
@@ -1632,13 +1632,13 @@ namespace Nektar
 
 
 
-            virtual DNekMatSharedPtr v_GetLocMatrix(MatrixType mtype)
+            virtual DNekScalMatSharedPtr v_GetLocMatrix(MatrixType mtype)
 
             {
 
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
 
-                return boost::shared_ptr<DNekMat>();
+                return boost::shared_ptr<DNekScalMat>();
 
             }
 
@@ -1871,7 +1871,6 @@ namespace Nektar
 
 
             DNekMatSharedPtr GetStdMatrix(const StdMatrixKey &mkey)
-
             {
 
                 return m_stdMatrixManager[mkey];
@@ -2278,410 +2277,212 @@ namespace Nektar
 
 /**
 
+>>>>>>> 1.52
 * $Log: StdExpansion.h,v $
+* Revision 1.52  2007/07/11 03:22:47  bnelson
+* *** empty log message ***
+*
 * Revision 1.51  2007/07/10 20:41:46  kirby
 * more fixes
+<<<<<<< StdExpansion.h
 *
-
 * Revision 1.50  2007/07/10 19:27:57  kirby
-
 * Update for new matrix structures
-
 *
-
 * Revision 1.49  2007/05/30 20:49:13  sherwin
-
 * Updates to do with LocalRegions and SpatialDomains
-
 *
-
 * Revision 1.48  2007/05/28 16:15:01  sherwin
-
 * Updated files in MultiRegions to make 1D demos work
-
 *
-
 * Revision 1.47  2007/05/17 17:59:27  sherwin
-
 * Modification to make Demos work after introducion of Array<>
-
 *
-
 * Revision 1.46  2007/05/15 05:18:23  bnelson
-
 * Updated to use the new Array object.
-
 *
-
 * Revision 1.45  2007/04/26 15:00:17  sherwin
-
 * SJS compiling working version using SHaredArrays
-
 *
-
 * Revision 1.44  2007/04/18 16:09:13  pvos
-
 * Added some new Tensor Operations routines
-
 *
-
 * Revision 1.43  2007/04/10 14:00:45  sherwin
-
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
-
 *
-
 * Revision 1.42  2007/04/08 03:36:58  jfrazier
-
 * Updated to use SharedArray consistently and minor reformatting.
-
 *
-
 * Revision 1.41  2007/04/06 08:44:43  sherwin
-
 * Update to make 2D regions work at StdRegions level
-
 *
-
 * Revision 1.40  2007/04/04 21:49:25  sherwin
-
 * Update for SharedArray
-
 *
-
 * Revision 1.39  2007/04/04 20:48:16  sherwin
-
 * Update to handle SharedArrays
-
 *
-
 * Revision 1.38  2007/03/31 00:04:03  bnelson
-
 * *** empty log message ***
-
 *
-
 * Revision 1.37  2007/03/29 19:35:09  bnelson
-
 * Replaced boost::shared_array with SharedArray
-
 *
-
 * Revision 1.36  2007/03/25 15:48:22  sherwin
-
 * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
-
 *
-
 * Revision 1.35  2007/03/21 20:56:43  sherwin
-
 * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
-
 *
-
 * Revision 1.34  2007/03/20 16:58:42  sherwin
-
 * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
-
 *
-
 * Revision 1.33  2007/03/20 09:12:46  kirby
-
 * update of geofac and metric info; fix style issues
-
 *
-
 * Revision 1.32  2007/03/14 21:24:09  sherwin
-
 * Update for working version of MultiRegions up to ExpList1D
-
 *
-
 * Revision 1.31  2007/03/08 09:34:18  pvos
-
 * added documentation
-
 *
-
 * Revision 1.30  2007/03/05 08:07:12  sherwin
-
 * Modified so that StdMatrixKey has const calling arguments in its constructor.
-
 *
-
 * Revision 1.29  2007/03/02 16:43:44  pvos
-
 * Added some documentation
-
 *
-
 * Revision 1.28  2007/03/02 12:01:52  sherwin
-
 * Update for working version of LocalRegions/Project1D
-
 *
-
 * Revision 1.27  2007/03/01 17:04:07  jfrazier
-
 * Removed extraneous basis.
-
 *
-
 * Revision 1.26  2007/03/01 03:52:10  jfrazier
-
 * Added GetBasis function.
-
 *
-
 * Revision 1.25  2007/02/28 19:05:11  sherwin
-
 * Moved key definitions to their own files to make things more transparent
-
 *
-
 * Revision 1.24  2007/02/28 09:53:17  sherwin
-
 * Update including adding GetBasis call to StdExpansion
-
 *
-
 * Revision 1.23  2007/02/24 09:07:25  sherwin
-
 * Working version of stdMatrixManager and stdLinSysMatrix
-
 *
-
 * Revision 1.22  2007/02/23 19:26:08  jfrazier
-
 * General bug fix and formatting.
-
 *
-
 * Revision 1.21  2007/02/22 22:02:28  sherwin
-
 * Update with executing StdMatManager
-
 *
-
 * Revision 1.20  2007/02/22 18:11:31  sherwin
-
 * Version with some create functions introduced for StdMatManagers
-
 *
-
 * Revision 1.19  2007/02/21 22:55:16  sherwin
-
 * First integration of StdMatrixManagers
-
 *
-
 * Revision 1.18  2007/02/17 04:03:23  jfrazier
-
 * Added NekManager for holding matrices.  Need to finish the create function.
-
 *
-
 * Revision 1.17  2007/02/16 17:14:39  pvos
-
 * Added documentation
-
 *
-
 * Revision 1.16  2007/02/07 12:51:53  sherwin
-
 * Compiling version of Project1D
-
 *
-
 * Revision 1.15  2007/02/06 02:23:31  jfrazier
-
 * Minor cleanup.
-
 *
-
 * Revision 1.14  2007/01/28 18:34:21  sherwin
-
 * More modifications to make Demo Project1D compile
-
 *
-
 * Revision 1.13  2007/01/23 23:20:21  sherwin
-
 * New version after Jan 07 update
-
 *
-
 * Revision 1.12  2007/01/20 22:35:21  sherwin
-
 * Version with StdExpansion compiling
-
 *
-
 * Revision 1.11  2007/01/18 23:03:56  sherwin
-
 * Removed for repository update in utah 07
-
 *
-
 * Revision 1.10  2007/01/15 11:08:40  pvos
-
 * Updating doxygen documentation
-
 *
-
 * Revision 1.9  2006/12/10 19:00:54  sherwin
-
 * Modifications to handle nodal expansions
-
 *
-
 * Revision 1.8  2006/08/05 19:03:48  sherwin
-
 * Update to make the multiregions 2D expansion in connected regions work
-
 *
-
 * Revision 1.7  2006/07/02 17:16:18  sherwin
-
 *
-
 * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
-
 *
-
 * Revision 1.6  2006/06/13 18:05:02  sherwin
-
 * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
-
 *
-
 * Revision 1.5  2006/06/06 15:25:21  jfrazier
-
 * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
-
 * NEKERROR.
-
 *
-
 * Revision 1.4  2006/06/01 13:43:19  kirby
-
 * *** empty log message ***
-
 *
-
 * Revision 1.3  2006/05/30 14:00:04  sherwin
-
 * Updates to make MultiRegions and its Demos work
-
 *
-
 * Revision 1.2  2006/05/29 19:03:08  sherwin
-
 * Modifications to wrap geometric information in shared_ptr
-
 *
-
 * Revision 1.1  2006/05/04 18:58:31  kirby
-
 * *** empty log message ***
-
 *
-
 * Revision 1.75  2006/04/25 20:23:33  jfrazier
-
 * Various fixes to correct bugs, calls to ASSERT, etc.
-
 *
-
 * Revision 1.74  2006/04/01 21:59:27  sherwin
-
 * Sorted new definition of ASSERT
-
 *
-
 * Revision 1.73  2006/03/12 14:20:44  sherwin
-
 *
-
 * First compiling version of SpatialDomains and associated modifications
-
 *
-
 * Revision 1.72  2006/03/05 23:17:53  sherwin
-
 *
-
 * Corrected to allow MMatrix1D and MMatrix2D to execute properly
-
 *
-
 * Revision 1.71  2006/03/05 22:11:02  sherwin
-
 *
-
 * Sorted out Project1D, Project2D and Project_Diff2D as well as some test scripts
-
 *
-
 * Revision 1.70  2006/03/04 20:26:54  bnelson
-
 * Added comments after #endif.
-
 *
-
 * Revision 1.69  2006/03/03 23:04:54  sherwin
-
 *
-
 * Corrected Mistake in StdBasis.cpp to do with eModified_B
-
 *
-
 * Revision 1.66  2006/03/01 22:59:12  sherwin
-
 *
-
 * First working version of Project1D
-
 *
-
 * Revision 1.65  2006/03/01 08:25:03  sherwin
-
 *
-
 * First compiling version of StdRegions
-
 *
-
 * Revision 1.64  2006/02/26 23:37:29  sherwin
-
 *
-
 * Updates and compiling checks upto StdExpansions1D
-
 *
-
 * Revision 1.63  2006/02/26 21:23:20  bnelson
-
 * Fixed a variety of compiler errors caused by updates to the coding standard.
-
 *
-
 * Revision 1.62  2006/02/19 13:26:13  sherwin
-
 *
-
 * Coding standard revisions so that libraries compile
-
 *
-
 **/
-
-
-
-
-
-
 
 
 

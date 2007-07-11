@@ -140,9 +140,10 @@ namespace Nektar
 				 const ConstArray<OneD, NekDouble>& inarray, 
 				 Array<OneD, NekDouble> &outarray);
 
+            boost::shared_ptr<LibUtilities::PointsKey> m_nodalPointsKey;
+
         private:
 
-            boost::shared_ptr<LibUtilities::PointsKey> m_nodalPointsKey;
 
             virtual ShapeType v_DetShapeType()
             {
@@ -250,6 +251,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.10  2007/05/31 19:13:12  pvos
+* Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+*
 * Revision 1.9  2007/05/15 05:18:24  bnelson
 * Updated to use the new Array object.
 *

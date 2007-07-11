@@ -154,7 +154,7 @@ namespace Nektar
 
 
         void StdNodalTriExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
+            Array<OneD,  NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),
                 m_base[1]->GetBdata(), inarray, 
@@ -318,6 +318,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.12  2007/07/10 21:05:17  kirby
+* even more fixes
+*
 * Revision 1.11  2007/07/09 15:19:15  sherwin
 * Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
 *

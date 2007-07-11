@@ -363,6 +363,8 @@ namespace Nektar
 
         };
 
+        typedef boost::shared_ptr<StdSegExp> StdSegExpSharedPtr;
+
     } //end of namespace
 } //end of namespace
 
@@ -370,6 +372,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.23  2007/07/10 20:41:52  kirby
+* more fixes
+*
 * Revision 1.22  2007/07/10 19:27:58  kirby
 * Update for new matrix structures
 *

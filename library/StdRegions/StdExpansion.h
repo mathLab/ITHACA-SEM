@@ -946,7 +946,7 @@ namespace Nektar
             /** Array containing expansion evaluated at the quad points */
             Array<OneD, NekDouble> m_phys;
 
-            bool StdManagerAlreadyCreated(const StdMatrixKey &mkey)
+            bool StdMatManagerAlreadyCreated(const StdMatrixKey &mkey)
             {
                 return m_stdMatrixManager.AlreadyCreated(mkey);
             }

@@ -1144,6 +1144,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.55  2007/07/11 13:40:26  kirby
+* *** empty log message ***
+*
 * Revision 1.51  2007/07/10 20:41:46  kirby
 * more fixes
 *

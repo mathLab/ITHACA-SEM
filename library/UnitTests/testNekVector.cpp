@@ -352,15 +352,62 @@ namespace Nektar
 
         void TestMatrixVectorMultiply()
         {
-            //double matrix_buf[] = {1.0, 2.0, 3.0,
-            //                       4.0, 5.0, 6.0,
-            //                       7.0, 8.0, 9.0};
-            //NekMatrix<double> m(3, 3, matrix_buf);
-
-            //double vector_buf[] = {10.0, 20.0, 30.0};
-            //NekVector<double, 3> v(vector_buf);
-
-            //NekVector<double, 3> result = m*v;
+            {
+                double matrix_buf[] = {1.0, 2.0, 3.0,
+                                    4.0, 5.0, 6.0,
+                                    7.0, 8.0, 9.0};
+                double vector_buf[] = {20.0, 30.0, 40.0};
+                
+                NekMatrix<double> m(3, 3, matrix_buf);
+                NekVector<double> v(3, vector_buf);
+                NekVector<double> result = m*v;
+                
+                double result_buf[] = {200.0, 470.0, 740.0};
+                NekVector<double> expected_result(3, result_buf);
+                BOOST_CHECK_EQUAL(result, expected_result);
+                BOOST_CHECK_EQUAL(3, result.GetDimension());
+            }
+            
+            {
+                double matrix_buf[] = {1.0, 2.0, 3.0,
+                    4.0, 5.0, 6.0,
+                    7.0, 8.0, 9.0};
+                double vector_buf[] = {20.0, 30.0, 40.0};
+                
+                boost::shared_ptr<NekMatrix<double> > m(new NekMatrix<double>(3, 3, matrix_buf));
+                NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> s(2.0, m);
+                NekVector<double> v(3, vector_buf);
+                NekVector<double> result = s*v;
+                
+                double result_buf[] = {400.0, 940.0, 1480.0};
+                NekVector<double> expected_result(3, result_buf);
+                BOOST_CHECK_EQUAL(result, expected_result);
+                BOOST_CHECK_EQUAL(3, result.GetDimension());
+            }
+            
+            {
+                double m1_buf[] = {1.0, 2.0, 3.0, 4.0};
+                double m2_buf[] = {5.0, 6.0, 7.0, 8.0};
+                double m3_buf[] = {9.0, 10.0, 11.0, 12.0};
+                double vector_buf[] = {20.0, 30.0};
+                
+                boost::shared_ptr<NekMatrix<double> > m1(new NekMatrix<double>(2, 2, m1_buf));
+                boost::shared_ptr<NekMatrix<double> > m2(new NekMatrix<double>(2, 2, m2_buf));
+                boost::shared_ptr<NekMatrix<double> > m3(new NekMatrix<double>(2, 2, m3_buf));
+                
+                NekMatrix<NekMatrix<double>, FullMatrixTag, BlockMatrixTag> b(3, 1, 2, 2);
+                b.SetBlock(0,0,m1);
+                b.SetBlock(1,0,m2);
+                b.SetBlock(2,0,m3);
+                
+                NekVector<double> v(2, vector_buf);
+                NekVector<double> result = b*v;
+                
+                double result_buf[] = {80.0, 180.0, 280.0, 380.0, 480.0, 580.0};
+                NekVector<double> expected_result(6, result_buf);
+                BOOST_CHECK_EQUAL(result, expected_result);
+                BOOST_CHECK_EQUAL(6, result.GetDimension());
+            }
         }
 
         void TestVectorConstructorsWithSizeArguments()
@@ -431,11 +478,15 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(b[0], a[0]);
             }
         }
+
     }
 }
 
 /**
     $Log: testNekVector.cpp,v $
+    Revision 1.7  2007/07/10 05:10:19  bnelson
+    Added tests for vectors with a different size than the underlying SharedArray.
+
     Revision 1.6  2007/02/15 06:58:46  bnelson
     *** empty log message ***
 

@@ -46,7 +46,39 @@ namespace Nektar
 {
     namespace MatrixUnitTests
     {
+        void TestFullMatrixInversion()
+        {
+            {
+                double buf[] = {1.0, 2.0, 3.0, 4.0};
+                NekMatrix<double> m(2,2,buf);
+            }
+            
+            {
+            }
+            
+            {
+            }
+        }
         
+        void TestDiagonalMatrixInversion()
+        {
+            double buf[] = {1.0, 2.0, 3.0, 4.0};
+            NekMatrix<double, DiagonalMatrixTag> m(4, 4, buf);
+            m.Invert();
+            
+            BOOST_CHECK_EQUAL(m(0,0), 1.0/1.0);
+            BOOST_CHECK_EQUAL(m(1,1), 1.0/2.0);
+            BOOST_CHECK_EQUAL(m(2,2), 1.0/3.0);
+            BOOST_CHECK_EQUAL(m(3,3), 1.0/4.0);
+        }
+        
+        void TestScaledMatrixInversion()
+        {
+        }
+        
+        void TestBlockMatrixInversion()
+        {
+        }
         
         void TestNekMatrixConstruction()
         {
@@ -1027,6 +1059,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.24  2007/06/10 23:45:59  bnelson
+    Matrix updates.
+
     Revision 1.23  2007/05/15 05:19:55  bnelson
     Updated to use the new Array object.
 

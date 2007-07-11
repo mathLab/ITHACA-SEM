@@ -244,6 +244,10 @@ namespace Nektar
                 return std::equal(begin(), end(), rhs.begin());
             }
             
+            void Invert()
+            {
+                StoragePolicy::Invert(this->GetRows(), this->GetColumns(), m_data);
+            }
             
        protected:
             
@@ -273,7 +277,7 @@ namespace Nektar
             PointerWrapper m_wrapperType;
     };
     
-
+    
     //GENERATE_ADDITION_OPERATOR_L3R3(NekMatrix, NekMatrix);
     //GENERATE_MULTIPLICATION_OPERATOR_L3R3(NekMatrix, NekMatrix);
 }

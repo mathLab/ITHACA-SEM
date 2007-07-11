@@ -70,6 +70,11 @@ namespace Nektar
         
         void TestScaledMatrixConstruction();
         void TestBlockMatrixConstruction();
+        
+        void TestFullMatrixInversion();
+        void TestDiagonalMatrixInversion();
+        void TestScaledMatrixInversion();
+        void TestBlockMatrixInversion();
     }
     
     namespace ScaledMatrixUnitTests
@@ -95,6 +100,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.h,v $
+    Revision 1.10  2007/06/13 06:17:35  bnelson
+    *** empty log message ***
+
     Revision 1.9  2007/06/10 23:45:59  bnelson
     Matrix updates.
 

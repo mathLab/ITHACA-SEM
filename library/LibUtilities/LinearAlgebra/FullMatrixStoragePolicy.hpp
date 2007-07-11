@@ -38,6 +38,7 @@
 
 #include <LibUtilities/LinearAlgebra/MatrixStoragePolicy.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/LinearAlgebra/Lapack.hpp>
 
 namespace Nektar
 {
@@ -103,6 +104,54 @@ namespace Nektar
             {
                 data[curRow*totalColumns + curColumn] = d;
             }
+            
+            
+            static void Invert(unsigned int rows, unsigned int columns,
+                               Array<OneD, DataType>& data)
+            {
+                #ifdef NEKTAR_USING_BLAS
+                    ASSERTL0(rows==columns, "Only square matrices can be inverted.");
+                    
+                    int m = rows;
+                    int n = columns;
+                    int pivotSize = n;
+                    int info = 0;
+                    Array<OneD, int> ipivot(n);
+                    Array<OneD, DataType> work(n);
+                    
+                    Lapack::Dgetrf(m, n, data.get(), m, ipivot.get(), info);
+        
+                    if( info < 0 )
+                    {
+                        std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrf";
+                        ASSERTL0(false, message.c_str());
+                    }
+                    else if( info > 0 )
+                    {
+                        std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
+                        ASSERTL0(false, message.c_str());
+                    }   
+                    
+                    Lapack::Dgetri(n, data.get(), n, ipivot.get(),
+                                   work.get(), n, info);
+                    
+                    if( info < 0 )
+                    {
+                        std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetri";
+                        ASSERTL0(false, message.c_str());
+                    }
+                    else if( info > 0 )
+                    {
+                        std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
+                        ASSERTL0(false, message.c_str());
+                    }   
+                    
+                #else
+                    // error Full matrix inversion not supported without blas.
+                    BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
+                #endif
+            }
+            
     };
 }
 

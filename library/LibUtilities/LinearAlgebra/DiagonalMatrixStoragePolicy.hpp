@@ -123,6 +123,16 @@ namespace Nektar
                 ASSERTL0(curRow == curColumn, "Can only assign into the diagonal of a diagonal matrix.");
                 data[curRow] = d;
             }
+            
+            static void Invert(unsigned int rows, unsigned int columns,
+                               Array<OneD, DataType>& data)
+            {
+                ASSERTL0(rows==columns, "Only square matrices can be inverted.");
+                for(unsigned int i = 0; i < rows; ++i)
+                {
+                    data[i] = 1.0/data[i];
+                }
+            }
     };
     
     template<typename DataType>

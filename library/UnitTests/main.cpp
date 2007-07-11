@@ -40,13 +40,6 @@ test_suite* init_unit_test_suite( int, char* [] )
    
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
     
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestFullMatrixInversion), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestDiagonalMatrixInversion), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestScaledMatrixInversion), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixUnitTests::TestBlockMatrixInversion), 0);
-
-    return test;
-    
     // shared array
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestEmptyConstructor), 0);
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestUninitializedConstructor), 0);
@@ -221,6 +214,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.43  2007/07/11 03:18:22  bnelson
+    *** empty log message ***
+
     Revision 1.42  2007/07/10 05:18:42  bnelson
     *** empty log message ***
 

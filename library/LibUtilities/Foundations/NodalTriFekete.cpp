@@ -183,6 +183,7 @@ namespace Nektar
             }
             // Get the interpolation matrix
         //    return T * invMatrix;
+            return S; // TODO fix
         }
 
         static unsigned int CalculateIndex(unsigned int row, unsigned int column, unsigned int matrixRows, unsigned int matrixColumns) {
@@ -417,7 +418,7 @@ namespace Nektar
         }
 
         int getDegree(int nBasisFunctions){
-           return (-3 + int(sqrt(1 + 8*nBasisFunctions)))/2;
+           return (-3 + int(sqrt(1.0 + 8*nBasisFunctions)))/2;
         }
         
         NekDouble  LagrangePoly(NekDouble x, int pt, int npts, const ConstArray<OneD, NekDouble>& xpts) {

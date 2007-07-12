@@ -44,11 +44,13 @@ namespace Nektar
         MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
                              StdRegions::ShapeType shapeType,
                              StdRegions::StdExpansion &stdExpansion,
+                             NekDouble    scalefactor,
                              LibUtilities::PointsType nodalType)
         {
             m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion,nodalType);
 
-            m_metricinfo = stdExpansion.GetMetricInfo(); 
+            m_scalefactor = scalefactor;
+            m_metricinfo  = stdExpansion.GetMetricInfo(); 
         }
 
         bool MatrixKey::opLess::operator()(const MatrixKey &lhs, const MatrixKey &rhs)
@@ -117,6 +119,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.8  2007/07/10 17:17:22  sherwin
+* Introduced Scaled Matrices into the MatrixManager
+*
 * Revision 1.7  2007/05/27 16:10:28  bnelson
 * Update to new Array type.
 *

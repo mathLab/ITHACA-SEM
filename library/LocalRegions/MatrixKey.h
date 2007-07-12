@@ -51,6 +51,7 @@ namespace Nektar
             MatrixKey( StdRegions::MatrixType matrixType, 
                        StdRegions::ShapeType shapeType, 
                        StdRegions::StdExpansion &stdExpansion,
+                       double scalefactor = 1.0,
                        LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             virtual ~MatrixKey()
@@ -103,6 +104,11 @@ namespace Nektar
                 return m_metricinfo;
             }
 
+            const double GetScaleFactor() const 
+            {
+                return m_scalefactor;
+            }
+
         protected:
             MatrixKey();
 
@@ -122,6 +128,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.10  2007/07/10 17:17:22  sherwin
+* Introduced Scaled Matrices into the MatrixManager
+*
 * Revision 1.9  2007/05/28 08:35:25  sherwin
 * Updated for localregions up to Project1D
 *

@@ -48,13 +48,12 @@ namespace Nektar
         {
             m_geom = geom;    
 
-            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMass,
+            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
+            {
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
                 StdRegions::eNoShapeType,*this),
                 boost::bind(&SegExp::CreateMatrix, this, _1));
-
-            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMass,
-                StdRegions::eNoShapeType,*this),
-                boost::bind(&SegExp::CreateMatrix, this, _1));
+            }
 
             GenMetricInfo();
         }
@@ -62,13 +61,13 @@ namespace Nektar
         SegExp::SegExp(const LibUtilities::BasisKey &Ba):
             StdRegions::StdSegExp(Ba)
         {
-            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eMass,
-                StdRegions::eNoShapeType,*this),
-                boost::bind(&SegExp::CreateMatrix, this, _1));
 
-            m_matrixManager.RegisterCreator(MatrixKey(StdRegions::eInvMass,
+            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
+            {
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
                 StdRegions::eNoShapeType,*this),
                 boost::bind(&SegExp::CreateMatrix, this, _1));
+            }
 
             // Set up unit geometric factors. 
             m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr(); 
@@ -419,14 +418,12 @@ namespace Nektar
 		// get Mass matrix inverse
 		MatrixKey             masskey(StdRegions::eInvMass, DetShapeType(),*this);
 		DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
-		
+
                 // copy inarray in case inarray == outarray
                 DNekVec in (m_ncoeffs,outarray);
                 DNekVec out(m_ncoeffs,outarray,eWrapper);
                 
-                //out = (*matsys)*in;
-                out = (*(matsys->GetOwnedMatrix()))*in;
-                out *= matsys->Scale();
+                out = (*matsys)*in;
             }
         }
 
@@ -644,7 +641,7 @@ namespace Nektar
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        DNekMatSharedPtr mat = GenMassMatrix();
+                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
                     }
                     else
@@ -660,7 +657,7 @@ namespace Nektar
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        DNekMatSharedPtr mat = GenMassMatrix();
+                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
                         ASSERTL0(false,"Need a matrix inverse routine");
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
@@ -673,6 +670,47 @@ namespace Nektar
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
                                       1.0/(m_metricinfo->GetJac())[0],mat );
                     }
+                }
+                break;
+            case StdRegions::eLaplacian:
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eLaplacian);
+
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
+                    }
+                    else
+                    {
+                        DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
+                        NekDouble  gfac = m_metricinfo->GetGmat()[0][0];
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                                                                      gfac*gfac,mat);
+                    }
+                }
+                break;
+            case StdRegions::eHelmholtz:
+                {
+
+                    double factor = mkey.GetScaleFactor();
+                    MatrixKey masskey(StdRegions::eMass,
+                                      mkey.GetShapeType(), *this);    
+                    DNekScalMatSharedPtr mass = m_matrixManager[masskey];
+                    MatrixKey lapkey(StdRegions::eLaplacian,
+                                     mkey.GetShapeType(), *this);
+                    DNekScalMatSharedPtr lap = m_matrixManager[lapkey];
+
+                    DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(lap->GetRows(),lap->GetColumns());
+
+                    
+                    // Temporary fix: 
+                    DNekScalMat scaledmass(1.0/factor*mass->Scale(),mass->GetOwnedMatrix());
+                    (*helm)  = scaledmass + (*lap);
+
+                    // We wold like to do: (*helm) = (*lap) + 1.0/factor*(*mass);
+                    // Even better:          helm  = lap + 1.0/factor*mass;
+                    
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,helm);            
                 }
                 break;
             default:
@@ -688,6 +726,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.21  2007/07/11 19:26:04  sherwin
+// update for new Manager structure
+//
 // Revision 1.20  2007/07/11 06:36:23  sherwin
 // Updates with MatrixManager update
 //

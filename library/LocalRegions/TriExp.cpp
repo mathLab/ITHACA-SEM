@@ -77,7 +77,7 @@ namespace Nektar
             m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
                 AllocateSharedPtr(); 
             int coordim = 2;
-            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim,0.0); 
+            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim*coordim,0.0); 
             ndata[0] = ndata[2] = 1.0;
             m_metricinfo->ResetGmat(ndata,2,2,coordim);
             m_metricinfo->ResetJac(1,ndata);
@@ -411,9 +411,7 @@ namespace Nektar
                 DNekVec in (m_ncoeffs,outarray);
                 DNekVec out(m_ncoeffs,outarray,eWrapper);
                 
-                //out = (*matsys)*in;
-                out = (*(matsys->GetOwnedMatrix()))*in;
-                out *= matsys->Scale();
+                out = (*matsys)*in;
 	    }
 	}
 
@@ -643,7 +641,7 @@ namespace Nektar
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        DNekMatSharedPtr mat = GenMassMatrix();
+                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
                     }
                     else
@@ -658,7 +656,7 @@ namespace Nektar
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        DNekMatSharedPtr mat = GenMassMatrix();
+                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
                         ASSERTL0(false,"Need a matrix inverse routine");
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
@@ -684,6 +682,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.17  2007/07/11 19:26:04  sherwin
+ *    update for new Manager structure
+ *
  *    Revision 1.16  2007/07/11 06:36:23  sherwin
  *    Updates with MatrixManager update
  *

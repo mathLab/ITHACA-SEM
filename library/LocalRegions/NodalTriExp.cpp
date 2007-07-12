@@ -364,9 +364,7 @@ namespace Nektar
             DNekVec in (m_ncoeffs,outarray);
             DNekVec out(m_ncoeffs,outarray,eWrapper);
             
-            //out = (*matsys)*in;
-            out = (*(matsys->GetOwnedMatrix()))*in;
-            out *= matsys->Scale();
+            out = (*matsys)*in;
         }
 
         void NodalTriExp::GetCoords(Array<OneD,NekDouble> &coords_0,
@@ -587,14 +585,15 @@ namespace Nektar
        DNekScalMatSharedPtr NodalTriExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
+            StdRegions::MatrixType mtype = mkey.GetMatrixType();
 
-            switch(mkey.GetMatrixType())
+            switch(mtype)
             {
             case StdRegions::eMass:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        DNekMatSharedPtr mat = GenMassMatrix();
+                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
                     }
                     else
@@ -610,7 +609,7 @@ namespace Nektar
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        DNekMatSharedPtr mat = GenMassMatrix();
+                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
                         ASSERTL0(false,"Need a matrix inverse routine");
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
@@ -636,6 +635,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.10  2007/07/11 19:25:57  sherwin
+ *    update for new Manager structure
+ *
  *    Revision 1.9  2007/07/11 06:36:22  sherwin
  *    Updates with MatrixManager update
  *

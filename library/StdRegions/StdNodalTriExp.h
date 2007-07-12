@@ -75,9 +75,6 @@ namespace Nektar
             /// Nodal basis specific routines
             ///////////////////////////
 
-            DNekMatSharedPtr GenNBasisTransMatrix();
-	    
-
             void NodalToModal();
 
             void NodalToModal(Array<OneD, NekDouble> &in_out_array);
@@ -142,6 +139,10 @@ namespace Nektar
 
             boost::shared_ptr<LibUtilities::PointsKey> m_nodalPointsKey;
 
+            DNekMatSharedPtr GenMatrix(MatrixType mtype);
+
+            DNekMatSharedPtr GenNBasisTransMatrix();
+	    
         private:
 
 
@@ -155,9 +156,9 @@ namespace Nektar
 		return GetEdgeBasisType(i);
 	    }
 
-            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
+            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype) 
             {
-		return GenNBasisTransMatrix();
+                return GenMatrix(mtype);
 	    }
 
 
@@ -251,6 +252,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.11  2007/07/11 06:35:24  sherwin
+* Update after manager reshuffle
+*
 * Revision 1.10  2007/05/31 19:13:12  pvos
 * Updated NodalTriExp + LocalRegions/Project2D + some other modifications
 *

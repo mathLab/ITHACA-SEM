@@ -191,6 +191,10 @@ namespace Nektar
             virtual void   v_StdPhysDeriv (const ConstArray<OneD, NekDouble>& inarray, 
                                            Array<OneD, NekDouble> &outarray) = 0;
 
+            virtual void   v_StdPhysDeriv (const int dir, 
+                                           const ConstArray<OneD, NekDouble>& inarray, 
+                                           Array<OneD, NekDouble> &outarray) = 0;
+
             virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
@@ -208,6 +212,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.19  2007/05/17 17:59:28  sherwin
+* Modification to make Demos work after introducion of Array<>
+*
 * Revision 1.18  2007/05/15 05:18:23  bnelson
 * Updated to use the new Array object.
 *

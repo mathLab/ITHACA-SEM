@@ -98,7 +98,9 @@ namespace Nektar
             eWeakDeriv2,
             eNBasisTrans,
             eInvNBasisTrans,
-            eBwdTrans
+            eBwdTrans,
+            eHelmholtz,
+            SIZE_MatrixType
         };
 
         const char* const MatrixTypeMap[] = 
@@ -117,7 +119,8 @@ namespace Nektar
             "WeakDeriv2",
             "NBasisTrans",
             "InvNBasisTrans", 
-            "BwdTrans"
+            "BwdTrans",
+            "Helmholtz"
         };
 
         /** enum list of StdExpansion regions */
@@ -219,6 +222,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.18  2007/07/10 19:27:58  kirby
+* Update for new matrix structures
+*
 * Revision 1.17  2007/07/09 15:19:15  sherwin
 * Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
 *

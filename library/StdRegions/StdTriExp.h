@@ -226,20 +226,13 @@ namespace Nektar
                 Array<OneD, NekDouble> &outarray);
 
             //----------------------------------
-            // Local Matrix Routines
+            // Generate Matrix Routine
             //----------------------------------
 
-            DNekMatSharedPtr GenMassMatrix();
-
-            DNekMatSharedPtr GenLaplacianMatrix();
-
-            DNekMatSharedPtr GenLaplacianMatrix(const int i, const int j);
-
-            DNekMatSharedPtr GenWeakDerivMatrix(const int i);
-
-            DNekMatSharedPtr GenNBasisTransMatrix();
-
-            DNekMatSharedPtr GenBwdTransMatrix();
+            DNekMatSharedPtr GenMatrix(MatrixType mtype)
+            {
+                return StdExpansion::CreateGeneralMatrix(mtype);
+            }
 
         private:
 
@@ -257,36 +250,14 @@ namespace Nektar
             {
                 return GetEdgeNcoeffs(i);
             }
-            /** \brief Virtual call to GenMassMatrix */
-            virtual DNekMatSharedPtr v_GenMassMatrix() 
+
+
+            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype) 
             {
-                return GenMassMatrix();
+                return GenMatrix(mtype);
             }
 
-            virtual DNekMatSharedPtr v_GenLaplacianMatrix() 
-            {
-                return GenLaplacianMatrix();
-            }
 
-            virtual DNekMatSharedPtr v_GenLaplacianMatrix(const int i, const int j) 
-            {
-                return GenLaplacianMatrix(i,j);
-            }
-
-            virtual DNekMatSharedPtr v_GenWeakDerivMatrix(const int i) 
-            {
-                return GenWeakDerivMatrix(i);
-            }
-
-            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
-            {
-                return GenNBasisTransMatrix();
-            }
-
-            virtual DNekMatSharedPtr v_GenBwdTransMatrix() 
-            {
-                return GenBwdTransMatrix();
-            }
 
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
             {
@@ -391,6 +362,9 @@ namespace Nektar
 
 /**
 * $Log: StdTriExp.h,v $
+* Revision 1.16  2007/07/10 20:41:52  kirby
+* more fixes
+*
 * Revision 1.15  2007/07/10 19:27:58  kirby
 * Update for new matrix structures
 *

@@ -65,6 +65,23 @@ namespace Nektar
         StdNodalTriExp::~StdNodalTriExp()
         { 
         }
+        
+        DNekMatSharedPtr StdNodalTriExp::GenMatrix(MatrixType mtype)
+        {
+            DNekMatSharedPtr Mat;
+
+            switch(mtype)
+            {
+            case eNBasisTrans:
+                Mat =  GenNBasisTransMatrix();
+                break;
+            default:
+                Mat = StdExpansion::CreateGeneralMatrix(mtype);
+                break;
+            }
+
+            return Mat;
+        }
 
         DNekMatSharedPtr StdNodalTriExp::GenNBasisTransMatrix()
         {
@@ -318,6 +335,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.14  2007/07/11 13:35:17  kirby
+* *** empty log message ***
+*
 * Revision 1.13  2007/07/11 06:35:24  sherwin
 * Update after manager reshuffle
 *

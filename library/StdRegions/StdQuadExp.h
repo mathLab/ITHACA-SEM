@@ -122,20 +122,10 @@ namespace Nektar
                 int coll_check);
 
             //----------------------------------
-            // Local Matrix Routines
+            // Generate Matrix Routine
             //----------------------------------
 
-            DNekMatSharedPtr GenMassMatrix();
-
-            DNekMatSharedPtr GenLaplacianMatrix();
-
-            DNekMatSharedPtr GenLaplacianMatrix(const int i, const int j);
-
-            DNekMatSharedPtr GenWeakDerivMatrix(const int i);
-
-            DNekMatSharedPtr GenNBasisTransMatrix();
-
-            DNekMatSharedPtr GenBwdTransMatrix();
+            DNekMatSharedPtr GenMatrix(MatrixType mtype);
 
             //----------------------------
             // Differentiation Methods
@@ -262,34 +252,9 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
             }
 
-            virtual DNekMatSharedPtr v_GenMassMatrix()
+            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype)
             {
-                return GenMassMatrix();
-            }
-
-            virtual DNekMatSharedPtr v_GenLaplacianMatrix() 
-            {
-                return GenLaplacianMatrix();
-            }
-
-            virtual DNekMatSharedPtr v_GenLaplacianMatrix(const int i, const int j) 
-            {
-                return GenLaplacianMatrix(i,j);
-            }
-
-            virtual DNekMatSharedPtr v_GenWeakDerivMatrix(const int i) 
-            {
-                return GenWeakDerivMatrix(i);
-            }
-
-            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
-            {
-                return GenNBasisTransMatrix();
-            }
-
-            virtual DNekMatSharedPtr v_GenBwdTransMatrix() 
-            {
-                return GenBwdTransMatrix();
+                return GenMatrix(mtype);
             }
 
             virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
@@ -351,6 +316,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.17  2007/07/10 20:41:51  kirby
+* more fixes
+*
 * Revision 1.16  2007/07/10 19:27:57  kirby
 * Update for new matrix structures
 *

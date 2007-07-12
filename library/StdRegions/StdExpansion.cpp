@@ -97,47 +97,11 @@ namespace Nektar
             m_phys = Array<OneD, NekDouble>(GetTotPoints());
 
             // Register Creators for  Managers
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eMass,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eInvMass,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eLaplacian,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eLaplacian00,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eLaplacian01,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eLaplacian02,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eLaplacian11,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eLaplacian12,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eLaplacian22,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eWeakDeriv0,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eWeakDeriv1,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eWeakDeriv2,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eNBasisTrans,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-
-            m_stdMatrixManager.RegisterCreator(StdMatrixKey(eBwdTrans,eNoShapeType,*this),
-                boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
+            for(int i = 0; i < SIZE_MatrixType; ++i)
+            {
+                m_stdMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoShapeType,*this),
+                                  boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
+            }
 
         } //end constructor
 
@@ -166,11 +130,21 @@ namespace Nektar
         DNekMatSharedPtr StdExpansion::CreateStdMatrix(const StdMatrixKey &mkey) 
         {
             DNekMatSharedPtr returnval;
+            MatrixType mtype = mkey.GetMatrixType();
 
-            switch(mkey.GetMatrixType())
+            switch(mtype)
             {
-            case eMass:
-                returnval = StdExpansion::GenMassMatrix();
+            case eMass: 
+            case eLaplacian:
+            case eLaplacian00:
+            case eLaplacian01:
+            case eLaplacian02:
+            case eLaplacian11:
+            case eLaplacian12:
+            case eLaplacian22:
+            case eBwdTrans:
+            case eNBasisTrans:
+                returnval = StdExpansion::GenMatrix(mtype);
                 break;
 
             case eInvMass:
@@ -200,38 +174,6 @@ namespace Nektar
                 }
                 break;
                             
-            case eLaplacian:
-                returnval = GenLaplacianMatrix();
-                break;
-
-            case eLaplacian00:
-                returnval = GenLaplacianMatrix(0,0);
-                break;
-
-            case eLaplacian01:
-                returnval = GenLaplacianMatrix(0,1);
-                break;
-
-            case eLaplacian02:
-                returnval = GenLaplacianMatrix(0,2);
-                break;
-
-            case eLaplacian11:
-                returnval = GenLaplacianMatrix(1,1);
-                break;
-
-            case eLaplacian12:
-                returnval = GenLaplacianMatrix(1,2);
-                break;
-
-            case eLaplacian22:
-                returnval = GenLaplacianMatrix(2,2);
-                break;
-
-            case eNBasisTrans:
-                returnval = GenNBasisTransMatrix();
-                break;
-
             case eInvNBasisTrans:
                 {
                     StdMatrixKey tmpkey(eNBasisTrans,mkey.GetShapeType(),mkey.GetBase(),
@@ -258,11 +200,6 @@ namespace Nektar
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(dim,dim,&invdata[0]);
                 }
                 break;
-
-            case eBwdTrans:
-                returnval = GenBwdTransMatrix();
-                break;
-
             default:
                 NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
                 break;
@@ -323,107 +260,145 @@ namespace Nektar
             return val;
         }
 
-        DNekMatSharedPtr StdExpansion::CreateGeneralStdMassMatrix()
+        
+
+        DNekMatSharedPtr StdExpansion::CreateGeneralMatrix(MatrixType mtype)
         {
             int     i;
-            Array<OneD, NekDouble> store = Array<OneD, NekDouble>(m_ncoeffs);
-            Array<OneD, NekDouble> tmp   = Array<OneD, NekDouble>(GetTotPoints());
-
             DNekMatSharedPtr  Mat;
 
-            Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
+            Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(m_ncoeffs);
 
+            Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);            
             for(i=0; i<m_ncoeffs; ++i)
             {
-                v_FillMode(i, tmp);
-                v_IProductWRTBase(tmp, tmp);
+                Vmath::Zero(m_ncoeffs,&tmp[0],1);
+                tmp[i] = 1.0;
+                
+                GeneralMatrixOp(mtype,tmp,tmp);
+
                 Vmath::Vcopy(m_ncoeffs,&tmp[0],1,&((*Mat).GetPtr())[0]+i*m_ncoeffs,1);
             }
 
             return Mat;
         }
 
-        DNekMatSharedPtr StdExpansion::CreateGeneralStdLaplacianMatrix() 
+       
+        void StdExpansion::GeneralMatrixOp(MatrixType mtype, 
+                                           const ConstArray<OneD,NekDouble> &inarray,
+                                           Array<OneD,NekDouble> &outarray)
         {
-            NEKERROR(ErrorUtil::efatal, "Method not populated yet.");
-            DNekMatSharedPtr  Mat;
-
-            Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
-
-            return Mat;
-
-            /*int    i;
-            int   nquad = m_base[0]->GetNumPoints();
-            const NekDouble * dbase  = m_base[0]->GetDbdata().get();
-            ConstArray<OneD, NekDouble> z;
-            ConstArray<OneD, NekDouble> w;
-            Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad);
-            int nummodes = m_base[0]->GetNumModes();
-            DNekMatSharedPtr Mat;
-
-            Mat = MemoryManager<DNekMat>::AllocateSharedPtr(nummodes,
-                nummodes);
-
-            ExpPointsProperties(0)->GetZW(z,w);
-
-            for(i = 0; i < nummodes; ++i)
+            switch(mtype)
             {
-                Vmath::Vcopy(nquad,(NekDouble *)dbase+i*nquad,1, &tmp[0],1);
-                IProductWRTBase(m_base[0]->GetDbdata(), tmp, tmp, 0);
-                Vmath::Vcopy(nquad,tmp.get(),1,Mat->GetPtr().get()+ i*m_base[0]->GetNumModes(),1);
+            case eMass:
+                MassMatrixOp(inarray,outarray);
+                break;
+            case eLaplacian:
+                LaplacianMatrixOp(inarray,outarray);
+                break;
+            case eLaplacian00:
+                LaplacianMatrixOp(0,0,inarray,outarray);
+                break;
+            case eLaplacian11:
+                LaplacianMatrixOp(1,1,inarray,outarray);
+                break;
+            case eLaplacian22:
+                LaplacianMatrixOp(2,2,inarray,outarray);
+                break;
+            case eBwdTrans:
+                BwdTransMatrixOp(inarray,outarray);
+                break;
+            case eNBasisTrans:
+                NEKERROR(ErrorUtil::efatal,"This is a specialised matrix for nodal "
+                         "expansions only and does not have an operator");
+                break;
+
+            default:
+                NEKERROR(ErrorUtil::efatal, "Need to populate switch");
+                break;
             }
-        
-            return Mat;*/
+        }
+            
+        void StdExpansion::MassMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+                                        Array<OneD,NekDouble> &outarray)
+        {
+            Array<OneD, NekDouble> tmp   = Array<OneD, NekDouble>(GetTotPoints());
+
+            v_BwdTrans(inarray,tmp);
+            v_IProductWRTBase(tmp, outarray);
         }
 
-        DNekMatSharedPtr StdExpansion::CreateGeneralStdLaplacianMatrix(const int i, const int j) 
+        void StdExpansion::LaplacianMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray)
         {
-            NEKERROR(ErrorUtil::efatal, "Method not populated yet.");
-            DNekMatSharedPtr  Mat;
 
-            Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
-
-            return Mat;
-        }
-
-
-        DNekMatSharedPtr StdExpansion::CreateGeneralStdWeakDerivMatrix(const int i) 
-        {
-            NEKERROR(ErrorUtil::efatal, "Method not populated yet.");
-
-            DNekMatSharedPtr  Mat;
-
-            Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
-
-            return Mat;
-        }
-
-        DNekMatSharedPtr StdExpansion::CreateGeneralStdNBasisTransMatrix() 
-        {
-            NEKERROR(ErrorUtil::efatal, "General Nodal Basis Transform Creation Does Not Exist.");
-            DNekMatSharedPtr  Mat;
-            return Mat;
-        }
-
-
-        DNekMatSharedPtr StdExpansion::CreateGeneralStdBwdTransMatrix()
-        {
-            int     i;
-            int     ntot = GetTotPoints();
-            Array<OneD, NekDouble> tmp   = Array<OneD, NekDouble>(ntot);
-
-            DNekMatSharedPtr  Mat;
-
-            Mat = MemoryManager<DNekMat>::AllocateSharedPtr(ntot,m_ncoeffs);
-
-            for(i=0; i < m_ncoeffs; ++i)
+            switch(ShapeTypeDimMap[v_DetShapeType()])
             {
-                v_FillMode(i, tmp);
-                Vmath::Vcopy(ntot,&tmp[0],1,&((*Mat).GetPtr())[0]+i,m_ncoeffs);
-            }
+            case 1:
+                LaplacianMatrixOp(0,0,inarray,outarray);
+                break;
 
-            return Mat;
+            case 2:
+                {
+                    Array<OneD, NekDouble> store = Array<OneD, NekDouble>(m_ncoeffs);
+                    
+                    LaplacianMatrixOp(0,0,inarray,store);
+                    LaplacianMatrixOp(1,1,inarray,outarray);
+                    
+                    Vmath::Vadd(m_ncoeffs,&store[0],1,&outarray[0],1,&outarray[0],1);
+                }
+                break;
+            case 3:
+                {
+                    Array<OneD, NekDouble> store0 = Array<OneD, NekDouble>(m_ncoeffs);
+                    Array<OneD, NekDouble> store1 = Array<OneD, NekDouble>(m_ncoeffs);
+                    
+                    LaplacianMatrixOp(0,0,inarray,store0);
+                    LaplacianMatrixOp(1,1,inarray,store1);
+                    LaplacianMatrixOp(2,2,inarray,outarray);
+                    
+                    Vmath::Vadd(m_ncoeffs,&store0[0],1,&outarray[0],1,&outarray[0],1);
+                    Vmath::Vadd(m_ncoeffs,&store1[0],1,&outarray[0],1,&outarray[0],1);
+                }
+                break;
+            default:
+                NEKERROR(ErrorUtil::efatal, "Dimenion not recognised.");
+                break;
+            }
         }
+
+        void StdExpansion::LaplacianMatrixOp(const int k1, const int k2, 
+                                             const ConstArray<OneD,NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray)
+        {
+                
+            ASSERTL1(k1 >= 0 && k1 < ShapeTypeDimMap[v_DetShapeType()],"invalid first  argument");
+            ASSERTL1(k2 >= 0 && k2 < ShapeTypeDimMap[v_DetShapeType()],"invalid second argument");
+                                  
+            Array<OneD, NekDouble> tmp   = Array<OneD, NekDouble>(GetTotPoints());
+            Array<OneD, NekDouble> dtmp  = Array<OneD, NekDouble>(GetTotPoints());
+            
+            v_BwdTrans(inarray,tmp);
+            v_StdPhysDeriv(k2,tmp,dtmp);
+            v_IProductWRTDerivBase(k1,dtmp, outarray);
+        }
+
+
+        void StdExpansion::WeakDerivMatrixOp(const int i,
+                                             const ConstArray<OneD,NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "Method not populated yet.");
+        }
+
+
+        void StdExpansion::BwdTransMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray)
+        {
+            v_BwdTrans(inarray,outarray);
+        }
+
+
 
         void StdExpansion::TensProdBwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
             Array<OneD, NekDouble> &outarray)
@@ -525,6 +500,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.41  2007/07/10 20:41:52  kirby
+* more fixes
+*
 * Revision 1.40  2007/07/10 19:27:58  kirby
 * Update for new matrix structures
 *

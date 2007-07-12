@@ -691,19 +691,32 @@ namespace Nektar
             * 
             *  \return returns the mass matrix
             */
-            DNekMatSharedPtr CreateGeneralStdMassMatrix();
+            DNekMatSharedPtr CreateGeneralMatrix(MatrixType mtype);
+            void GeneralMatrixOp(MatrixType mtype, 
+                                 const ConstArray<OneD,NekDouble> &inarray,
+                                 Array<OneD,NekDouble> &outarray);
 
-            DNekMatSharedPtr CreateGeneralStdLaplacianMatrix();
+            
+            void MassMatrixOp(const ConstArray<OneD,NekDouble> &inarray, 
+                              Array<OneD,NekDouble> &outarray);
+        
+            void LaplacianMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray);
 
-            DNekMatSharedPtr CreateGeneralStdLaplacianMatrix(const int i, const int j);
+            void LaplacianMatrixOp(const int k1, const int k2, 
+                                   const ConstArray<OneD,NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray);
 
-            DNekMatSharedPtr CreateGeneralStdWeakDerivMatrix(const int i);
+            void WeakDerivMatrixOp(const int i,
+                                   const ConstArray<OneD,NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray);
 
-            DNekMatSharedPtr CreateGeneralStdNBasisTransMatrix();
 
-            DNekMatSharedPtr CreateGeneralStdBwdTransMatrix();
+            void BwdTransMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+                                  Array<OneD,NekDouble> &outarray);
 
-            void TensProdBwdTrans(const ConstArray<OneD, NekDouble>&     inarray, 
+
+            void TensProdBwdTrans(const ConstArray<OneD, NekDouble>&inarray, 
                                   Array<OneD, NekDouble> &outarray);
 
             void TensProdBwdTrans(const StdExpansion &in)
@@ -711,89 +724,10 @@ namespace Nektar
                 TensProdBwdTrans(((StdExpansion &)in).GetCoeffs(), m_phys);
             }
 
-            /** \brief this function returns the mass matrix 
-            *  \f$\mathbf{M}[i][j] =
-            *  \int \phi_i(\mathbf{x}) \phi_j(\mathbf{x}) d\mathbf{x}\f$
-            *
-            *  This function is a wrapper around the virtual function 
-            *  \a v_GenMassMatrix()
-            * 
-            *  \return returns the mass matrix
-            */
-            DNekMatSharedPtr GenMassMatrix ()
-            {
-                return v_GenMassMatrix();
-            }
 
-            /** \brief this function generates the laplacian matrix 
-            *  \f$\mathbf{L}[i][j] = \int \nabla\phi_i(\mathbf{x}) 
-            *  \nabla\phi_j(\mathbf{x}) d\mathbf{x}\f$
-            *
-            *  This function is a wrapper around the virtual function 
-            *  \a v_GenLapMatrix()
-            * 
-            *  \return returns the laplacian matrix
-            */
-
-            DNekMatSharedPtr GenLaplacianMatrix() 
+            DNekMatSharedPtr GenMatrix (MatrixType mtype)
             {
-                return v_GenLaplacianMatrix();
-            }
-
-            DNekMatSharedPtr GenLaplacianMatrix(const int i, const int j) 
-            {
-                return v_GenLaplacianMatrix(i, j);
-            }
-
-            DNekMatSharedPtr GenWeakDerivMatrix(const int i) 
-            {
-                return v_GenWeakDerivMatrix(i);
-            }
-
-            /** \brief for the non-tensorial nodal expansions, this function 
-            *  generates the transformation matrix needed for the 
-            *  transformation between this non-tensorial 
-            *  expansion and the tensor product expansion	      
-            *  
-            *  This function is a wrapper around the virtual function 
-            *  \a v_GenNBasisTransMatrix()
-            * 
-            *  This function generates the generalized Vandermonde matrix 
-            *  \f[ \mathbf{V}^T[i][j]=\phi_i(\mathbf{\xi_j})\f]
-            *  where
-            *  - \f$\phi_i\f$ is the tensor product expansion base
-            *  - \f$\mathbf{\xi_j}\f$ are the arbitrary nodal points (Fekete 
-            *  or Electrostatic)
-            *
-            *  This transformation matrix is needed for the definition of the 
-            *  non-tensorial nodal expansion base, which exist out of 
-            *  Lagrange polynomials \f$L_i\f$ through the nodal points
-            *  \f$\mathbf{\xi_j}\f$. These Lagrange
-            *  polynomials are expressed in terms of the tensor product 
-            *  expansion base \f$\phi_i\f$, as:
-            *  \f[ \left[ \begin{array}{c}
-            *  L_0(\mathbf{\xi}) \\
-            *  \vdots \\
-            *  L_P(\mathbf{\xi}) \end{array} \right]
-            *  = 
-            *  \mathbf{V}^T
-            *  \left[ \begin{array}{c}
-            *  \phi_0(\mathbf{\xi}) \\
-            *  \vdots \\
-            *  \phi_P(\mathbf{\xi}) \end{array} \right]
-            *  \f]
-            *
-            *  \return returns the nodal basis transformation matrix 
-            *  \f$ \mathbf{V}^T \f$
-            */
-            DNekMatSharedPtr GenNBasisTransMatrix() 
-            {
-                return v_GenNBasisTransMatrix();
-            }
-
-            DNekMatSharedPtr GenBwdTransMatrix() 
-            {
-                return v_GenBwdTransMatrix();
+                return v_GenMatrix(mtype);
             }
 
             DNekScalMatSharedPtr GetLocMatrix(MatrixType mtype)
@@ -808,7 +742,6 @@ namespace Nektar
             {
                 v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
             }
-
 
             boost::shared_ptr<SpatialDomains::GeomFactors> GetMetricInfo(void) const
             {
@@ -993,6 +926,13 @@ namespace Nektar
             virtual void   v_IProductWRTBase (const ConstArray<OneD, NekDouble>& inarray, 
 					      Array<OneD, NekDouble> &outarray) = 0;
 
+            virtual void   v_IProductWRTDerivBase (const int dir, 
+                                                   const ConstArray<OneD,NekDouble>& inarray, 
+                                                   Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This method has not been defined");
+            }
+
             virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray )
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
@@ -1010,61 +950,26 @@ namespace Nektar
                     "local expansions");
             }
 
+            virtual void   v_StdPhysDeriv (const int dir, 
+                                           const ConstArray<OneD, NekDouble>& inarray, 
+                                           Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is valid in StdExpansion ");
+            }
+            
+
             virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
                     "been defined for this shape");
             }
 
-            virtual DNekMatSharedPtr v_GenMassMatrix()  
+            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype)  
             {
                 DNekMatSharedPtr returnval;
 
                 NEKERROR(ErrorUtil::efatal, "This function is has not "
                     "been defined for this element");
-
-                return returnval;
-            }
-
-            virtual DNekMatSharedPtr v_GenLaplacianMatrix() 
-            {
-                DNekMatSharedPtr returnval;
-
-                NEKERROR(ErrorUtil::efatal, "This function is has not "
-                    "been defined for this element");
-
-                return returnval;
-            }
-
-            
-            virtual DNekMatSharedPtr v_GenLaplacianMatrix(const int i, const int j) 
-            {
-                DNekMatSharedPtr returnval;
-
-                NEKERROR(ErrorUtil::efatal, "This function is has not been defined for this element");
-
-                return returnval;
-            }
-
-            virtual DNekMatSharedPtr v_GenWeakDerivMatrix(const int i) 
-            {
-                DNekMatSharedPtr returnval;
-
-                NEKERROR(ErrorUtil::efatal, "This function is has not been defined for this element");
-
-                return returnval;
-            }
-
-            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
-            {
-                return GenNBasisTransMatrix();
-            }
-
-            virtual DNekMatSharedPtr v_GenBwdTransMatrix() 
-            {
-                DNekMatSharedPtr returnval;
-
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for nodal expansions");
 
                 return returnval;
             }
@@ -1144,6 +1049,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.57  2007/07/11 19:29:52  sherwin
+* Update for ScalMat
+*
 * Revision 1.56  2007/07/11 13:44:08  kirby
 * *** empty log message ***
 *

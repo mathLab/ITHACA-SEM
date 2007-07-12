@@ -91,7 +91,7 @@ namespace Nektar
             /** \brief Inner product of \a inarray over region with respect to the
             *  expansion basis (this)->m_base[0] and return in \a outarray
             *
-            *  Wrapper call to StdSegExp::IProduct_WRT_B
+            *  Wrapper call to StdSegExp::IProductWRTBase
             *  \param inarray array of function values evaluated at the physical
             *  collocation points
             *  \param outarray  the values of the inner product with respect to 
@@ -101,41 +101,18 @@ namespace Nektar
             void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
                 Array<OneD, NekDouble> & outarray);
 
+            void IProductWRTDerivBase(const int dir, 
+                                      const ConstArray<OneD, NekDouble>& inarray, 
+                                      Array<OneD, NekDouble> & outarray);
+
             void FillMode(const int mode, 
                 Array<OneD, NekDouble> &outarray);
 
             //----------------------------------
-            // Local Matrix Routines
+            // Generate Matrix Routine
             //----------------------------------
 
-            /** \brief Generate local mass matrix \f$ {\bf M}[i][j] =
-            *  \int^1_{-1} \phi_i(\xi_1) \phi_j(\xi_1) d\xi_1 \f$ in standard
-            *  region and store in \a outarray  
-            *
-            *  \param outarray As output of the function, the local mass matrix is 
-            *  stored in the array \a outarray. The matrix is in row major format and 
-            *  is stored as \a outarray[j*(this)->m_ncoeffs + i]
-            */
-            DNekMatSharedPtr GenMassMatrix();
-
-            /** \brief Generate local weak Laplacian matrix \f$ {\bf L}[i][j] =
-            *  \int^1_{-1} \frac{d \phi_i(\xi_1)}{d \xi_1}\frac{d
-            *  \phi_j(\xi_1)}{d \xi_1} d\xi_1 \f$ in standard region and store in
-            *  \a outarray 
-            *
-            *  \param outarray As output of the function, the local Laplacian matrix  
-            *  is stored in the array \a outarray. The matrix is in row major format 
-            *  and is stored as \a outarray[j*(this)->m_ncoeffs + i]
-            */
-            DNekMatSharedPtr GenLaplacianMatrix();
-
-            DNekMatSharedPtr GenLaplacianMatrix(const int i, const int j);
-
-            DNekMatSharedPtr GenWeakDerivMatrix(const int i);
-
-            DNekMatSharedPtr GenNBasisTransMatrix();
-
-            DNekMatSharedPtr GenBwdTransMatrix();
+            DNekMatSharedPtr GenMatrix(MatrixType mtype);
 
             //-----------------------------
             // Differentiation Methods
@@ -269,40 +246,21 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
             } 
 
+            virtual void v_IProductWRTDerivBase (const int dir, 
+                                                 const ConstArray<OneD,NekDouble> &inarray, 
+                                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTDerivBase(dir,inarray,outarray);
+            }
+
             virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
             {
                 FillMode(mode,outarray);
             } 
 
-            /** \brief Virtual call to GenMassMatrix */
-            virtual DNekMatSharedPtr v_GenMassMatrix() 
+            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype) 
             {
-                return GenMassMatrix();
-            }
-
-            virtual DNekMatSharedPtr v_GenLaplacianMatrix() 
-            {
-                return GenLaplacianMatrix();
-            }
-
-            virtual DNekMatSharedPtr v_GenLaplacianMatrix(const int i, const int j) 
-            {
-                return GenLaplacianMatrix(i,j);
-            }
-
-            virtual DNekMatSharedPtr v_GenWeakDerivMatrix(const int i) 
-            {
-                return GenWeakDerivMatrix(i);
-            }
-
-            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
-            {
-                return GenNBasisTransMatrix();
-            }
-
-            virtual DNekMatSharedPtr v_GenBwdTransMatrix() 
-            {
-                return GenBwdTransMatrix();
+                return GenMatrix(mtype);
             }
 
             /** \brief Virtual call to StdSegExp::Deriv */
@@ -322,6 +280,14 @@ namespace Nektar
             {
                 PhysDeriv(inarray, outarray);
             }
+
+            virtual void   v_StdPhysDeriv (const int dir, 
+                                           const ConstArray<OneD, NekDouble>& inarray, 
+                                           Array<OneD, NekDouble> &outarray)
+            {
+                PhysDeriv(inarray, outarray);                
+            }
+
 
             /** \brief Virtual call to StdSegExp::BwdTrans */
             virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
@@ -372,6 +338,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.24  2007/07/11 06:35:24  sherwin
+* Update after manager reshuffle
+*
 * Revision 1.23  2007/07/10 20:41:52  kirby
 * more fixes
 *

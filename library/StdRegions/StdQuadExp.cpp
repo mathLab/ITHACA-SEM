@@ -183,31 +183,36 @@ namespace Nektar
             }
         }
 
-        DNekMatSharedPtr StdQuadExp::GenMassMatrix()
+        DNekMatSharedPtr StdQuadExp::GenMatrix(MatrixType mtype)
         {
             int      i;
             int      order0    = GetBasisNumModes(0);
             int      order1    = GetBasisNumModes(1);
 
-            DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdMassMatrix();
+            DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mtype);
 
-            // For Fourier basis set the imaginary component of mean mode
-            // to have a unit diagonal component in mass matrix 
-            if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
+            switch(mtype)
             {
-                for(i = 0; i < order1; ++i)
+            case eMass:
+                // For Fourier basis set the imaginary component of mean mode
+                // to have a unit diagonal component in mass matrix 
+                if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
                 {
-                    (*Mat)(order0*i+1,i*order0+1) = 1.0;
+                    for(i = 0; i < order1; ++i)
+                    {
+                        (*Mat)(order0*i+1,i*order0+1) = 1.0;
+                    }
+                }
+                
+                if(m_base[1]->GetBasisType() == LibUtilities::eFourier)
+                {
+                    for(i = 0; i < order0; ++i)
+                    {
+                        (*Mat)(order0+i ,order0+i) = 1.0;
+                    }
                 }
             }
 
-            if(m_base[1]->GetBasisType() == LibUtilities::eFourier)
-            {
-                for(i = 0; i < order0; ++i)
-                {
-                    (*Mat)(order0+i ,order0+i) = 1.0;
-                }
-            }
             return Mat;
         }
 
@@ -484,6 +489,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.20  2007/07/11 13:35:18  kirby
+* *** empty log message ***
+*
 * Revision 1.19  2007/07/10 21:05:17  kirby
 * even more fixes
 *

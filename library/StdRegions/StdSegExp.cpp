@@ -109,6 +109,15 @@ namespace Nektar
 	    IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
 	}
 	
+        void StdSegExp::IProductWRTDerivBase(const int dir, 
+                                             const ConstArray<OneD, NekDouble>& inarray, 
+                                             Array<OneD, NekDouble> & outarray)
+	{
+            ASSERTL1(dir >= 0 &&dir < 1,"input dir is out of range");
+
+	    IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
+	}
+
 	void StdSegExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
 	{
 	    int   nquad = m_base[0]->GetNumPoints();
@@ -119,59 +128,27 @@ namespace Nektar
 	    
 	    Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
 	}
+
 	
-	DNekMatSharedPtr StdSegExp::GenMassMatrix() 
+	DNekMatSharedPtr StdSegExp::GenMatrix(MatrixType mtype) 
 	{
-	    DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdMassMatrix();
+	    DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mtype);
 	    
-	    // For Fourier basis set the imaginary component of mean mode
-	    // to have a unit diagonal component in mass matrix 
-	    if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
-	    {
-		(*Mat)(1,1) = 1.0;
-	    }
+            switch(mtype)
+            {
+            case eMass:
+                // For Fourier basis set the imaginary component of mean mode
+                // to have a unit diagonal component in mass matrix 
+                if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
+                {
+                    (*Mat)(1,1) = 1.0;
+                }
+                break;
+            }
 	    
 	    return Mat;
 	}
 	
-	DNekMatSharedPtr StdSegExp::GenLaplacianMatrix() 
-	{
-	    DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdLaplacianMatrix();
-
-	    return Mat;
-	}
-
-    DNekMatSharedPtr StdSegExp::GenLaplacianMatrix(const int i, const int j) 
-	{
-	    DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdLaplacianMatrix(i,j);
-
-	    return Mat;
-	}
-
-    DNekMatSharedPtr StdSegExp::GenWeakDerivMatrix(const int i)
-	{
-	    DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdWeakDerivMatrix(i);
-
-	    return Mat;
-	}
-
-
-    DNekMatSharedPtr StdSegExp::GenNBasisTransMatrix()
-    {
-        DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdNBasisTransMatrix();
-
-        return Mat;
-
-    }
-
-    DNekMatSharedPtr StdSegExp::GenBwdTransMatrix()
-    {
-        DNekMatSharedPtr Mat = StdExpansion::CreateGeneralStdBwdTransMatrix();
-
-        return Mat;
-
-    }
-
 	//----------------------------
 	// Differentiation Methods
 	//-----------------------------
@@ -288,6 +265,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.37  2007/07/11 13:35:18  kirby
+* *** empty log message ***
+*
 * Revision 1.36  2007/07/10 21:05:18  kirby
 * even more fixes
 *

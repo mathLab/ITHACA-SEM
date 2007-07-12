@@ -65,12 +65,17 @@ namespace Nektar
     class NekMatrix<DataType, StorageType, StandardMatrixTag>;
     
     typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedNekMatrixPtr;
+    typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> DNekScalMat;
+    typedef boost::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
 };
     
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
 
 /**
     $Log: NekMatrixFwd.hpp,v $
+    Revision 1.9  2007/06/24 17:59:33  bnelson
+    *** empty log message ***
+
     Revision 1.8  2007/06/10 23:42:15  bnelson
     Matrix updates.
 

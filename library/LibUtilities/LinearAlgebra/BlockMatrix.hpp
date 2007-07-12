@@ -39,15 +39,15 @@
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
 #include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
+#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
     template<typename DataType, typename StorageType, typename InnerMatrixType>
     class NekMatrix<NekMatrix<DataType, StorageType, InnerMatrixType>, StorageType, BlockMatrixTag> : public Matrix<DataType>,
-                                                                                                      public OperatorGeneratorR3<NekMatrix<NekMatrix<DataType, StorageType, InnerMatrixType>, StorageType, BlockMatrixTag>, NekMatrix>  
+                                                                                                      public OperatorGeneratorR3<NekMatrix<NekMatrix<DataType, StorageType, InnerMatrixType>, StorageType, BlockMatrixTag>, NekMatrix>
     {
         public:
             typedef Matrix<DataType> BaseType;
@@ -142,6 +142,17 @@ namespace Nektar
             typedef iterator_base<const ThisType> const_iterator;
                                                             
         public:
+            NekMatrix() :
+                BaseType(0,0),
+                m_data(),
+                m_rowSizes(),
+                m_columnSizes(),
+                m_storageSize(),
+                m_numberOfBlockRows(0),
+                m_numberOfBlockColumns(0)
+            {
+            }
+            
             NekMatrix(unsigned int numberOfBlockRows, unsigned int numberOfBlockColumns,
                       unsigned int rowsPerBlock, unsigned int columnsPerBlock) :
                 BaseType(numberOfBlockRows*rowsPerBlock, numberOfBlockColumns*columnsPerBlock),

@@ -38,8 +38,9 @@
 
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
 #include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
+#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
+#include <LibUtilities/Memory/DeleteNothing.hpp>
 
 #include <boost/shared_ptr.hpp>
 
@@ -47,7 +48,7 @@ namespace Nektar
 {
     template<typename DataType, typename StorageType, typename OwnedMatrixType>
     class NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, ScaledMatrixTag> : public ConstMatrix<DataType>,
-                                                                                                       public OperatorGeneratorR3<NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, ScaledMatrixTag>, NekMatrix>  
+                                                                                                       public OperatorGeneratorR3<NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, ScaledMatrixTag>, NekMatrix>
     {
         public:
             typedef ConstMatrix<DataType> BaseType;
@@ -101,8 +102,23 @@ namespace Nektar
             
             
         public:
+            NekMatrix() :
+                BaseType(0,0),
+                m_matrix(),
+                m_scale(0.0)
+            {
+            }
+            
+//             NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
+//                       const NekMatrix<DataType, StorageType, OwnedMatrixType>& m) :
+//                 BaseType(m.GetRows(), m.GetColumns()),
+//                 m_matrix(&m, DeleteNothing<NekMatrix<DataType, StorageType, OwnedMatrixType> >()),
+//                 m_scale(scale)
+//             {
+//             }
+            
             NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
-                      boost::shared_ptr<NekMatrix<DataType, StorageType, OwnedMatrixType> > m) :
+                      boost::shared_ptr<const NekMatrix<DataType, StorageType, OwnedMatrixType> > m) :
                 BaseType(m->GetRows(), m->GetColumns()),
                 m_matrix(m),
                 m_scale(scale)

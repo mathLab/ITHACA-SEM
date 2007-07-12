@@ -63,6 +63,22 @@ namespace Nektar
 //             typedef NekMatrix<DataType, StorageType, StandardMatrixTag> ResultType;
 //     };
 
+    template<typename LhsDataType, typename RhsDataType, typename LhsStorageType, typename LhsMatrixType>
+    class BinaryExpressionTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>, RhsDataType, MultiplyOp>
+    {
+        public:
+            typedef typename NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>::NumberType NumberType;
+            typedef NekMatrix<NumberType, LhsStorageType, StandardMatrixTag> ResultType;
+    };
+                        
+    template<typename LhsDataType, typename RhsDataType, typename RhsStorageType, typename RhsMatrixType>
+    class BinaryExpressionTraits<LhsDataType, NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>, MultiplyOp>
+    {
+        public:
+            typedef typename NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>::NumberType NumberType;
+            typedef NekMatrix<NumberType, RhsStorageType, StandardMatrixTag> ResultType;
+    };
+    
     // All row references are for the spreadsheet "Matrix Operation and ResultTypes".
     
     // The following specializations are for rows 2-10.  These are for plus and minus on the left side of the expression.

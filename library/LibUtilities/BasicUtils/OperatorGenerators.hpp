@@ -104,20 +104,59 @@ namespace Nektar
             }
     };
     
-    template<typename LhsType, typename RhsType>
-    class OperatorGenerator<LhsType, RhsType, MultiplyOp>
-    {
-        public:
-            typedef typename BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType ResultType;
-            
-            friend ResultType operator*(typename boost::call_traits<LhsType>::const_reference lhs,
-                                        typename boost::call_traits<RhsType>::const_reference rhs)
-            {
-                ResultType result;
-                NekMultiply(result, lhs, rhs);
-                return result;
+//     template<typename LhsType, typename RhsType>
+//     class OperatorGenerator<LhsType, RhsType, MultiplyOp>
+//     {
+//         public:
+//             typedef typename BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType ResultType;
+//             
+//             friend ResultType operator*(typename boost::call_traits<LhsType>::const_reference lhs,
+//                                         typename boost::call_traits<RhsType>::const_reference rhs)
+//             {
+//                 ResultType result;
+//                 NekMultiply(result, lhs, rhs);
+//                 return result;
+//             }
+//     };
+    
+    #define GENERATE_MULTIPLICATION_OPERATOR(LhsType, RhsType) \
+            BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType \
+            operator*(const LhsType& lhs, const RhsType& rhs) \
+            { \
+                BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType result; \
+                NekMultiply(result, lhs, rhs); \
+                return result; \
             }
-    };
+    
+    #define GENERATE_MULTIPLICATION_OPERATOR_L3(LhsType, RhsType) \
+            template<typename L1, typename L2, typename L3> \
+            typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType \
+            operator*(const LhsType<L1, L2, L3>& lhs, const RhsType& rhs) \
+            { \
+                typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType result; \
+                NekMultiply(result, lhs, rhs); \
+                return result; \
+            }
+    
+    #define GENERATE_MULTIPLICATION_OPERATOR_L3_R0(LhsType) \
+            template<typename L1, typename L2, typename L3, typename RhsType> \
+            typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType \
+            operator*(const LhsType<L1, L2, L3>& lhs, const RhsType& rhs) \
+            { \
+                typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType result; \
+                NekMultiply(result, lhs, rhs); \
+                return result; \
+            }
+    
+    #define GENERATE_MULTIPLICATION_OPERATOR_L0_R3(RhsType) \
+            template<typename R1, typename R2, typename R3, typename LhsType> \
+            typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, MultiplyOp>::ResultType \
+            operator*(const LhsType& lhs, const RhsType<R1, R2, R3>& rhs) \
+            { \
+                typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, MultiplyOp>::ResultType result; \
+                NekMultiply(result, lhs, rhs); \
+                return result; \
+            }
     
 //     template<typename LhsType, template<typename, typename, typename> class RhsType, typename OpType>
 //     class OperatorGeneratorR3;

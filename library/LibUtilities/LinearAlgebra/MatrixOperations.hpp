@@ -46,6 +46,35 @@
 
 namespace Nektar
 {
+    
+    GENERATE_MULTIPLICATION_OPERATOR_L3_R0(NekMatrix);
+    GENERATE_MULTIPLICATION_OPERATOR_L0_R3(NekMatrix);
+    
+    template<typename DataType, typename LhsDataType, typename LhsStorageType, typename LhsMatrixType, typename RhsType>
+    void NekMultiply(NekMatrix<DataType, LhsStorageType, StandardMatrixTag>& result,
+                     const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>& lhs,
+                     const RhsType& rhs)
+    {
+        // TODO - optimize for the different matrix types.
+        result = NekMatrix<DataType, LhsStorageType, StandardMatrixTag>(lhs.GetRows(), lhs.GetColumns());
+        for(unsigned int i = 0; i < lhs.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < lhs.GetColumns(); ++j)
+            {
+                result(i,j) = lhs(i,j)*rhs;
+            }
+        }
+    }
+    
+    template<typename DataType, typename LhsType, typename RhsDataType, typename RhsStorageType, typename RhsMatrixType>
+    void NekMultiply(NekMatrix<DataType, RhsStorageType, StandardMatrixTag>& result,
+                     const LhsType& rhs,
+                     const NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>& lhs)
+                     
+    {
+        return NekMultiply(result, lhs, rhs);
+    }
+    
     template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
     void NekAdd(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
                 const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,

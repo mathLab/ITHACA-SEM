@@ -39,7 +39,7 @@ test_suite* init_unit_test_suite( int, char* [] )
 {
    
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
-    
+        
     // shared array
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestEmptyConstructor), 0);
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestUninitializedConstructor), 0);
@@ -208,12 +208,16 @@ test_suite* init_unit_test_suite( int, char* [] )
     // Matrix Operations
     test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsFull), 0);
     test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsDiagonal), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestComboExpression), 0);
     
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.44  2007/07/11 04:01:12  bnelson
+    *** empty log message ***
+
     Revision 1.43  2007/07/11 03:18:22  bnelson
     *** empty log message ***
 

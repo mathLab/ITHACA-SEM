@@ -200,6 +200,26 @@ namespace Nektar
 //             GenerateDiagonalMatrices(rhs_values, 2.0, rhs1, rhs2, rhs3);
             
         }
+        
+        void TestComboExpression()
+        {
+            double buf[] = {1.0, 2.0, 3.0, 4.0};
+            SharedNekMatrixPtr inner1(new NekMatrix<NekDouble>(2,2,buf));
+            SharedNekMatrixPtr inner2(new NekMatrix<NekDouble>(2,2,buf));
+            
+            DNekScalMat m1(2.0, inner1);
+            DNekScalMat m2(3.0, inner2);
+            
+            (*inner1)*2.0;
+            2.0*(*inner1);
+            //DNekScalMat m3 = m1*2.0;
+            NekMatrix<NekDouble> result = m1 + 1.0/6.0*m2;
+            
+            BOOST_CHECK_EQUAL(result(0,0), 2.5);
+            BOOST_CHECK_EQUAL(result(0,1), 5.0);
+            BOOST_CHECK_EQUAL(result(1,0), 7.5);
+            BOOST_CHECK_EQUAL(result(1,1), 10.0);
+        }
     }
 }
 

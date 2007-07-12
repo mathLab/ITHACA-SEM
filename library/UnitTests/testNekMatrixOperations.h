@@ -42,6 +42,7 @@ namespace Nektar
     {
         void TestLhsFullRhsFull();
         void TestLhsFullRhsDiagonal();
+        void TestComboExpression();
     }
 }
 

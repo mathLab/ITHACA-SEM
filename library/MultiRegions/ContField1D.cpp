@@ -152,7 +152,7 @@ namespace Nektar
 		DNekScalMatSharedPtr loc_mass;
 		StdRegions::StdExpansionVectorIter def;
 
-		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs - NumDirBCs,m_contNcoeffs - NumDirBCs);
+		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs - NumDirBCs,m_contNcoeffs - NumDirBCs,0.0);
 		
 		// fill global matrix 
 		for(n = cnt = 0; n < (*m_exp).size(); ++n)
@@ -193,6 +193,7 @@ namespace Nektar
             Array<OneD,NekDouble> tmp;
 
 	    IProductWRTBase(In);
+            Vmath::Neg(m_contNcoeffs,&m_contCoeffs[0],1);
 
 	    if(!(m_helm.get()))
 	    {
@@ -223,7 +224,7 @@ namespace Nektar
 		DNekScalMatSharedPtr loc_helm;
 		StdRegions::StdExpansionVectorIter def;
 
-		DNekMatSharedPtr Ghelm = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs - NumDirBCs,m_contNcoeffs - NumDirBCs);
+		DNekMatSharedPtr Ghelm = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs - NumDirBCs,m_contNcoeffs - NumDirBCs,0.0);
 		
 		// fill global matrix 
 		for(n = cnt = 0; n < (*m_exp).size(); ++n)

@@ -136,7 +136,7 @@ namespace Nektar
 	    {
 		int   i,j,n,cnt,gid1,gid2,loc_lda;
 		NekDouble sign1,sign2;
-		DNekMatSharedPtr loc_mass;
+		DNekScalMatSharedPtr loc_mass;
 		StdRegions::StdExpansionVectorIter def;
 
 		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs);
@@ -144,7 +144,7 @@ namespace Nektar
 		// fill global matrix 
 		for(n = cnt = 0; n < (*m_exp).size(); ++n)
 		{
-                    loc_mass = (*m_exp)[n]->GetLocMatrix(StdRegions::eMassMatrix);
+                    loc_mass = (*m_exp)[n]->GetLocMatrix(StdRegions::eMass);
                     loc_lda = loc_mass->GetColumns();
 		    
                     for(i = 0; i < loc_lda; ++i)
@@ -170,6 +170,10 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.5  2007/06/07 15:54:19  pvos
+* Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
+* Also made corrections to various ASSERTL2 calls
+*
 * Revision 1.4  2007/06/05 16:36:55  pvos
 * Updated Explist2D ContExpList2D and corresponding demo-codes
 *

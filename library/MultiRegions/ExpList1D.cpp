@@ -55,29 +55,6 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
-// 	ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
-// 			     const SpatialDomains::MeshGraph1D &graph1D)
-// 	{
-// 	    LocalRegions::SegExpSharedPtr seg;
-// 	    SpatialDomains::SegGeomVector SegGeoms = graph1D.GetSeggeoms();
-// 	    SpatialDomains::SegGeomVectorIter def;
-	    
-// 	    m_ncoeffs = SegGeoms.size()*Ba.GetNumModes();
-// 	    m_npoints = SegGeoms.size()*Ba.GetNumPoints();
-	    
-// 	    m_transState = eNotSet; 
-// 	    m_physState  = false;
-	    
-// 	    for(def = SegGeoms.begin(); def != SegGeoms.end(); ++def)
-// 	    {
-// 		seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba, *def);
-// 		(*m_exp).push_back(seg);
-// 	    }
-
-//             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-//             m_phys   = Array<OneD, NekDouble>(m_npoints);
-// 	}
-
 	ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
                              const SpatialDomains::Composite &cmps)
 	{
@@ -117,6 +94,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.16  2007/07/10 08:54:29  pvos
+* Updated ContField1D constructor
+*
 * Revision 1.15  2007/07/06 18:39:34  pvos
 * ContField1D constructor updates
 *

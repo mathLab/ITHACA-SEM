@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 
     const LibUtilities::PointsKey Pkey(nq,Qtype);
     const LibUtilities::BasisKey Bkey(btype,order,Pkey);
-    E = new LocalRegions::SegExp(Bkey,geom);
+    E = MemoryManager<LocalRegions::SegExp>::Allocate(Bkey,geom);
     //-----------------------------------------------
 
     //----------------------------------------------
@@ -99,7 +99,6 @@ int main(int argc, char *argv[])
             sol[i] = solutionfourier(xc[i],order,x[0],x[1]);
         }
     }
-
     //---------------------------------------------
 
     //---------------------------------------------
@@ -164,7 +163,8 @@ static double solutionpoly(double x, int order)
         sol += pow(x,j);
     }
 
-    return sol;
+    //    return sol;
+    return 1.0;
 }
 
 static double solutionfourier(double x, int order, double a, double b)

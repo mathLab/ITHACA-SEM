@@ -93,6 +93,11 @@ namespace Nektar
       void   BwdTrans        (const ExpList &Sin); 
       void   PhysDeriv       (ExpList &S0, ExpList &S1, ExpList &S2); 
       
+      void   GeneralMatrixOp(const StdRegions::MatrixType     mtype,
+                             const ConstArray<OneD,NekDouble> &inarray,
+                             Array<OneD, NekDouble>          &outarray,
+                             NekDouble lambda = 1.0);
+
       void   GetCoords(Array<OneD, NekDouble> &coord_0,
 		       Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
 		       Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
@@ -144,7 +149,6 @@ namespace Nektar
      
       boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
       
-    private:
       inline Array<OneD, NekDouble> &UpdateCoeffs()
       {
           return m_coeffs;
@@ -168,6 +172,9 @@ namespace Nektar
 
       void   BwdTrans (const ConstArray<OneD, NekDouble> &inarray, 
 		       Array<OneD, NekDouble> &outarray); 
+      
+    private:
+
     };
 
     static const ExpList NullExpList();
@@ -179,6 +186,10 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.17  2007/06/07 15:54:19  pvos
+* Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
+* Also made corrections to various ASSERTL2 calls
+*
 * Revision 1.16  2007/06/05 16:36:55  pvos
 * Updated Explist2D ContExpList2D and corresponding demo-codes
 *

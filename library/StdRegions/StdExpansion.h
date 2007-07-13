@@ -650,6 +650,12 @@ namespace Nektar
                 v_WriteToFile(outfile,dumpVar);
             }
 
+            DNekScalMatSharedPtr GetLocMatrix(LocalRegions::MatrixKey &mkey)
+            {
+                return v_GetLocMatrix(mkey);
+            }
+
+
             // virtual functions related to LocalRegions
 
             int GetCoordim()
@@ -694,7 +700,8 @@ namespace Nektar
             DNekMatSharedPtr CreateGeneralMatrix(MatrixType mtype);
             void GeneralMatrixOp(MatrixType mtype, 
                                  const ConstArray<OneD,NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray);
+                                 Array<OneD,NekDouble> &outarray,
+                                 double lambda = 1.0);
 
             
             void MassMatrixOp(const ConstArray<OneD,NekDouble> &inarray, 
@@ -715,6 +722,9 @@ namespace Nektar
             void BwdTransMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray);
 
+            void HelmholtzMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const double lambda);
 
             void TensProdBwdTrans(const ConstArray<OneD, NekDouble>&inarray, 
                                   Array<OneD, NekDouble> &outarray);
@@ -730,11 +740,6 @@ namespace Nektar
                 return v_GenMatrix(mtype);
             }
 
-            DNekScalMatSharedPtr GetLocMatrix(MatrixType mtype)
-            {
-                return v_GetLocMatrix(mtype);
-            }
-
             void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
                             Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                             Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray,
@@ -748,7 +753,7 @@ namespace Nektar
                 return v_GetMetricInfo();
             }
 
-            virtual DNekScalMatSharedPtr v_GetLocMatrix(MatrixType mtype)
+            virtual DNekScalMatSharedPtr v_GetLocMatrix(LocalRegions::MatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return boost::shared_ptr<DNekScalMat>();
@@ -1049,6 +1054,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.59  2007/07/12 12:55:15  sherwin
+* Simplified Matrix Generation
+*
 * Revision 1.57  2007/07/11 19:29:52  sherwin
 * Update for ScalMat
 *

@@ -41,8 +41,8 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        GeomFactors::GeomFactors(void):m_gtype(eNoGeomType),
-            m_expdim(0), m_coordim(0)
+        GeomFactors::GeomFactors(void):m_gtype(eRegular),
+                                       m_expdim(0), m_coordim(0)
         {
         }
 
@@ -565,6 +565,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.11  2007/07/10 22:20:55  jfrazier
+// Revision of geo fac manager to test for equality.
+//
 // Revision 1.10  2007/07/10 17:06:30  jfrazier
 // Added method and underlying structure to manage geomfactors.
 //

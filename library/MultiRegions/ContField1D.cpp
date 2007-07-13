@@ -144,7 +144,7 @@ namespace Nektar
 	    {
                 int NumDirBCs = m_locToGloMap->GetNumDirichletBCs();
 		int   i,j,n,gid1,gid2,loc_lda,cnt;
-		DNekMatSharedPtr loc_mass;
+		DNekScalMatSharedPtr loc_mass;
 		StdRegions::StdExpansionVectorIter def;
 
 		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs - NumDirBCs,m_contNcoeffs - NumDirBCs);
@@ -152,7 +152,11 @@ namespace Nektar
 		// fill global matrix 
 		for(n = cnt = 0; n < (*m_exp).size(); ++n)
 		{
-		    loc_mass = (*m_exp)[n]->GetLocMatrix(StdRegions::eMassMatrix);
+                    LocalRegions::MatrixKey masskey(StdRegions::eHelmholtz,
+                                                    (*m_exp)[n]->DetShapeType(),
+                                                    *(*m_exp)[n]);
+
+		    loc_mass = (*m_exp)[n]->GetLocMatrix(masskey);
 		    loc_lda = loc_mass->GetColumns();
 		    
 		    for(i = 0; i < loc_lda; ++i)

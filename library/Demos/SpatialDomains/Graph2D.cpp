@@ -19,8 +19,14 @@ int main(int argc, char *argv[]){
 
     //string in(argv[argc-1]);
     // If we all have the same relative structure, these should work for everyone.
+#if 1 
+    string in("../../../library/Demos/SpatialDomains/meshdef2D.xml");
+    string bcfile("../../../library/Demos/SpatialDomains/BC1.xml");
+#else 
     string in("C:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/meshdef2D.xml");
     string bcfile("c:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/BC1.xml");
+#endif
+
     MeshGraph2D graph2D;
     BoundaryConditions bcs(&graph2D);
 

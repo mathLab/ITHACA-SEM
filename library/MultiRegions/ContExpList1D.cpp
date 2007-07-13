@@ -81,10 +81,21 @@ namespace Nektar
 	    Assemble();
 	    m_transState = eLocalCont;
 	}
+
+	void ContExpList1D::GeneralMatrixOp(const StdRegions::MatrixType mtype,
+                                            const ConstArray<OneD, NekDouble> &inarray,
+                                            Array<OneD, NekDouble> &outarray, 
+                                            NekDouble lambda = 1.0)
+
+	{
+	    ExpList1D::GeneralMatrixOp(mtype,inarray,outarray,lambda);
+	    Assemble();
+	    m_transState = eLocalCont;
+	}
 	
 	void ContExpList1D::FwdTrans(const ExpList &In)
 	{
-	    IProductWRTBase(In);
+            IProductWRTBase(In);
 
 	    if(!(m_mass.get()))
 	    {
@@ -93,6 +104,25 @@ namespace Nektar
 
 	    DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
 	    m_mass->Solve(v,v);
+	    m_transState = eContinuous;
+	    m_physState = false;
+	}
+
+	void ContExpList1D::HelmSolve(const ExpList &In, NekDouble lambda)
+	{
+            Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(m_ncoeffs);
+
+            ExpList1D::FwdTrans(In.GetPhys(),tmp);
+            Vmath::Neg(m_ncoeffs,&tmp[0],1);
+	    GeneralMatrixOp(StdRegions::eHelmholtz,tmp,m_coeffs,lambda);
+            
+	    if(!(m_helm.get()))
+	    {
+		GenHelmholtzMatrixLinSys(lambda);
+	    }
+
+	    DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
+	    m_helm->Solve(v,v);
 	    m_transState = eContinuous;
 	    m_physState = false;
 	}
@@ -114,15 +144,19 @@ namespace Nektar
 	    if(!(m_mass.get()))
 	    {
 		int   i,j,n,gid1,gid2,loc_lda,cnt;
-		DNekMatSharedPtr loc_mass;
+		DNekScalMatSharedPtr loc_mass;
 		StdRegions::StdExpansionVectorIter def;
 		
-		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs);
+		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs,0.0);
 		
 		// fill global matrix 
 		for(n = cnt = 0; n < (*m_exp).size(); ++n)
 		{
-		    loc_mass = (*m_exp)[n]->GetLocMatrix(StdRegions::eMassMatrix);
+                    LocalRegions::MatrixKey masskey(StdRegions::eMass,
+                                                    (*m_exp)[n]->DetShapeType(),
+                                                    *(*m_exp)[n]);
+                    
+                    loc_mass = (*m_exp)[n]->GetLocMatrix(masskey);
 		    loc_lda = loc_mass->GetColumns();
 		    
 		    for(i = 0; i < loc_lda; ++i)
@@ -139,11 +173,52 @@ namespace Nektar
                 m_mass = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmass);
 	    }
 	}
+
+
+	void ContExpList1D::GenHelmholtzMatrixLinSys(NekDouble lambda)
+	{
+	    if(!(m_helm.get()))
+	    {
+		int   i,j,n,gid1,gid2,loc_lda,cnt;
+		DNekScalMatSharedPtr loc_helm;
+		StdRegions::StdExpansionVectorIter def;
+		
+		DNekMatSharedPtr Ghelm = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs,0.0);
+		
+                                                
+		// fill global matrix 
+		for(n = cnt = 0; n < (*m_exp).size(); ++n)
+		{
+                    LocalRegions::MatrixKey helmkey(StdRegions::eHelmholtz,
+                                                    (*m_exp)[n]->DetShapeType(),
+                                                    *(*m_exp)[n],lambda);
+                    
+                    loc_helm = (*m_exp)[n]->GetLocMatrix(helmkey);
+		    loc_lda = loc_helm->GetColumns();
+		    
+		    for(i = 0; i < loc_lda; ++i)
+		    {
+			gid1 = m_locToGloMap->GetMap(cnt + i);
+			for(j = 0; j < loc_lda; ++j)
+			{
+			    gid2 = m_locToGloMap->GetMap(cnt + j);
+			    (*Ghelm)(gid1,gid2) += (*loc_helm)(i,j);
+			}		
+                    }
+                    cnt += (*m_exp)[n]->GetNcoeffs();
+		}
+                cout << *Ghelm << endl;
+                m_helm = MemoryManager<DNekLinSys>::AllocateSharedPtr(Ghelm);
+	    }
+	}
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.13  2007/07/10 08:54:29  pvos
+* Updated ContField1D constructor
+*
 * Revision 1.12  2007/07/06 18:39:33  pvos
 * ContField1D constructor updates
 *

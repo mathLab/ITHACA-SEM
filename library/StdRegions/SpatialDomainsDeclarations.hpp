@@ -38,21 +38,24 @@
 
 namespace Nektar
 {
-  namespace SpatialDomains
-  {
-
-      class Geometry;
-      class EdgeComponent;
-      class SegGeom;
-      class GeomFactors;
-
-  } // end of namespace
+    namespace SpatialDomains
+    {
+        
+        class Geometry;
+        class EdgeComponent;
+        class SegGeom;
+        class GeomFactors;
+        
+    } // end of namespace
 } // end of namespace
 
 #endif //SPATIALDOMDEF_H
 
 /**
  * $Log: SpatialDomainsDeclarations.hpp,v $
+ * Revision 1.4  2007/03/25 15:48:22  sherwin
+ * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
+ *
  * Revision 1.3  2007/03/20 09:12:46  kirby
  * update of geofac and metric info; fix style issues
  *

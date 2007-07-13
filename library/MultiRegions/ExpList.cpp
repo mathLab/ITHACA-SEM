@@ -196,7 +196,25 @@ namespace Nektar
 	    }
 	}
 
+        
+	void ExpList::GeneralMatrixOp(const StdRegions::MatrixType mtype,
+                                        const ConstArray<OneD,NekDouble> &inarray,                     
+                                      Array<OneD, NekDouble>    &outarray,
+                                      NekDouble lambda)
+        {
+	    int  i;
+	    int  cnt  = 0;
+	    int  cnt1 = 0;
+            ConstArray<OneD,NekDouble> e_inarray;
+            Array<OneD,NekDouble>      e_outarray;
 
+	    for(i= 0; i < GetExpSize(); ++i)
+	    {
+		(*m_exp)[i]->GeneralMatrixOp(mtype, e_inarray = inarray + cnt, 
+                                             e_outarray = outarray+cnt,lambda);
+		cnt   += (*m_exp)[i]->GetNcoeffs();
+	    }	    
+        }
 
         void ExpList::BwdTrans(const ExpList &Sin)
         {
@@ -278,20 +296,25 @@ namespace Nektar
 	
 	void ExpList::WriteToFile(std::ofstream &out)
         {
-	    int i;
+	    int i,cnt = 0;
 	    std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
 	    StdRegions::StdExpansionVectorIter def;
+	    ConstArray<OneD, NekDouble> phys = m_phys;
 	    
 	    if(m_physState == false)
 	    {
 		BwdTrans(*this);
 	    }
-	    
+
+            (*m_exp)[0]->SetPhys(phys);
 	    (*m_exp)[0]->WriteToFile(out,1);
+            cnt  += (*m_exp)[0]->GetTotPoints();
 	    
 	    for(i= 1; i < GetExpSize(); ++i)
 	    {
-		(*m_exp)[i]->WriteToFile(out,0);
+                (*m_exp)[i]->SetPhys(phys+cnt);
+		(*m_exp)[i]->WriteToFile(out,0); 
+                cnt  += (*m_exp)[i]->GetTotPoints();
 	    }
 	}
 	

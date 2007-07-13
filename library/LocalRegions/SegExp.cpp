@@ -692,7 +692,7 @@ namespace Nektar
             case StdRegions::eHelmholtz:
                 {
 
-                    double factor = mkey.GetScaleFactor();
+                    NekDouble factor = mkey.GetScaleFactor();
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetShapeType(), *this);    
                     DNekScalMatSharedPtr mass = m_matrixManager[masskey];
@@ -703,11 +703,13 @@ namespace Nektar
                     DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(lap->GetRows(),lap->GetColumns());
 
                     
+#if 0 
                     // Temporary fix: 
                     DNekScalMat scaledmass(1.0/factor*mass->Scale(),mass->GetOwnedMatrix());
                     (*helm)  = scaledmass + (*lap);
-
-                    // We wold like to do: (*helm) = (*lap) + 1.0/factor*(*mass);
+#else              
+                    (*helm) = (*lap) + 1.0/factor*(*mass);
+#endif
                     // Even better:          helm  = lap + 1.0/factor*mass;
                     
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,helm);            
@@ -726,6 +728,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.22  2007/07/12 12:53:01  sherwin
+// Updated to have a helmholtz matrix
+//
 // Revision 1.21  2007/07/11 19:26:04  sherwin
 // update for new Manager structure
 //

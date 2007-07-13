@@ -80,10 +80,18 @@ namespace Nektar
 	    void IProductWRTBase(const ExpList &In);
 	    
 	    void FwdTrans(const ExpList &In);
+
+	    void HelmSolve(const ExpList &In, NekDouble lambda);
 	    
 	    void BwdTrans(const ExpList &In);
+
+            void GeneralMatrixOp(const StdRegions::MatrixType     mtype,
+                                 const ConstArray<OneD,NekDouble> &inarray,
+                                 Array<OneD, NekDouble>          &outarray,
+                                 NekDouble lambda);
 	    
 	    void GenMassMatrixLinSys(void);
+	    void GenHelmholtzMatrixLinSys(NekDouble lambda);
 	    
 	protected:
       	    int                    m_contNcoeffs;
@@ -92,6 +100,7 @@ namespace Nektar
 	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
 	    
 	    DNekLinSysSharedPtr m_mass;
+	    DNekLinSysSharedPtr m_helm;
 	    
 	private:
 
@@ -108,6 +117,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.13  2007/07/10 08:54:29  pvos
+* Updated ContField1D constructor
+*
 * Revision 1.12  2007/07/06 18:39:34  pvos
 * ContField1D constructor updates
 *

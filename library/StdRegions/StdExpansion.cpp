@@ -286,7 +286,8 @@ namespace Nektar
        
         void StdExpansion::GeneralMatrixOp(MatrixType mtype, 
                                            const ConstArray<OneD,NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray)
+                                           Array<OneD,NekDouble> &outarray,
+                                           double lambda)
         {
             switch(mtype)
             {
@@ -307,6 +308,9 @@ namespace Nektar
                 break;
             case eBwdTrans:
                 BwdTransMatrixOp(inarray,outarray);
+                break;
+            case eHelmholtz:
+                HelmholtzMatrixOp(inarray,outarray,lambda);
                 break;
             case eNBasisTrans:
                 NEKERROR(ErrorUtil::efatal,"This is a specialised matrix for nodal "
@@ -367,6 +371,7 @@ namespace Nektar
             }
         }
 
+
         void StdExpansion::LaplacianMatrixOp(const int k1, const int k2, 
                                              const ConstArray<OneD,NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray)
@@ -396,6 +401,18 @@ namespace Nektar
                                              Array<OneD,NekDouble> &outarray)
         {
             v_BwdTrans(inarray,outarray);
+        }
+
+
+        void StdExpansion::HelmholtzMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const double lambda)
+        {
+            Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(m_ncoeffs);
+            LaplacianMatrixOp(inarray,tmp);
+            MassMatrixOp(inarray,outarray);
+
+            Blas::Daxpy(m_ncoeffs,lambda,&tmp[0],1,&outarray[0],1);
         }
 
 
@@ -500,6 +517,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.42  2007/07/12 12:55:14  sherwin
+* Simplified Matrix Generation
+*
 * Revision 1.41  2007/07/10 20:41:52  kirby
 * more fixes
 *

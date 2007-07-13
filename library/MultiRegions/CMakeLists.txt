@@ -1,7 +1,7 @@
 SET(MULTI_REGIONS_SOURCES
 ContExpList1D.cpp
 ContField1D.cpp
-ContExpList2D.cpp
+#ContExpList2D.cpp
 #DisContExpList1D.cpp
 ExpList1D.cpp
 ExpList2D.cpp

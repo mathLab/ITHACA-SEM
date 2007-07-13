@@ -244,10 +244,9 @@ namespace Nektar
             return StdExpansion::L2();
         }
 
-        virtual DNekScalMatSharedPtr v_GetLocMatrix(StdRegions::MatrixType type)
+        virtual DNekScalMatSharedPtr v_GetLocMatrix(MatrixKey &mkey)
         {
-            MatrixKey masskey(type,DetShapeType(),*this);
-            return m_matrixManager[masskey];
+            return m_matrixManager[mkey];
         }
 
     };
@@ -264,6 +263,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.15  2007/07/11 19:26:04  sherwin
+ *    update for new Manager structure
+ *
  *    Revision 1.14  2007/07/10 17:17:26  sherwin
  *    Introduced Scaled Matrices into the MatrixManager
  *

@@ -105,10 +105,10 @@ namespace Nektar
 
 
         protected:
-            std::string m_FileName;
-            MeshGraph *m_MeshGraph;
+            std::string     m_FileName;
+            MeshGraph      *m_MeshGraph;
             CompositeVector m_Domain;
-            BoundaryVector m_Boundaries;
+            BoundaryVector  m_Boundaries;
 
         private:
             Domain(){ NEKERROR(ErrorUtil::efatal, "Must provide a meshgraph to create a Domain."); };   // Don't call this.

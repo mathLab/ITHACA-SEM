@@ -118,7 +118,7 @@ namespace Nektar
         typedef boost::shared_ptr<BoundaryRegionType> BoundaryRegionShPtrType;
         typedef std::vector<BoundaryRegionShPtrType> BoundaryRegionCollectionType;
         typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtrType;
-        typedef std::map<std::string, BoundaryConditionShPtrType> BoundaryConditionMapType;
+        typedef std::map<std::string,BoundaryConditionShPtrType> BoundaryConditionMapType;
         typedef boost::shared_ptr<BoundaryConditionMapType> BoundaryConditionMapShPtrType;
         typedef std::map<int, BoundaryConditionMapShPtrType> BoundaryConditionCollectionType;
         typedef Equation<NekDouble> ForcingFunctionType;
@@ -142,7 +142,7 @@ namespace Nektar
                 return m_Parameters;
             }
 
-            BoundaryRegionCollectionType &GetBoundaryRegions(void)  
+            BoundaryRegionCollectionType &GetBoundaryRegions(void) 
             {
                 return m_BoundaryRegions;
             }

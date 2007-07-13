@@ -24,8 +24,13 @@ int main(int argc, char *argv[]){
     //}
 
     //string in(argv[argc-1]);
+#ifdef PC
     string meshfile = "C:\\Data\\PhD\\Research\\dev\\Nektar++\\library\\Demos\\SpatialDomains\\meshdef1D.xml";
     string bcfile = "c:\\Data\\PhD\\Research\\dev\\Nektar++\\library\\Demos\\SpatialDomains\\BC1.xml";
+#else
+    string meshfile("../../../library/Demos/SpatialDomains/meshdef1D.xml");
+    string bcfile("../../../library/Demos/SpatialDomains/BC1.xml");
+#endif
 
     MeshGraph1D graph1D;
     BoundaryConditions bcs(&graph1D);

@@ -172,8 +172,8 @@ namespace Nektar
     ///
     /// The signature of this function should match the unspecialized NekMultiply.
     void NekMultiply(NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& result,
-                            const NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& lhs,
-                            const NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& rhs);
+                     const NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& lhs,
+                     const NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& rhs);
     #endif //NEKTAR_USING_BLAS
 
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>

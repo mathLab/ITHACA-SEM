@@ -38,17 +38,20 @@
 
 namespace Nektar
 {
-  namespace LocalRegions
-  {
-
-
-  } // end of namespace
+    namespace LocalRegions
+    {
+        class MatrixKey;
+        
+    } // end of namespace
 } // end of namespace
 
 #endif //LOCALREGDEF_H
 
 /**
  * $Log: LocalRegionsDeclarations.hpp,v $
+ * Revision 1.2  2007/03/14 21:24:09  sherwin
+ * Update for working version of MultiRegions up to ExpList1D
+ *
  * Revision 1.1  2006/05/04 18:58:29  kirby
  * *** empty log message ***
  *

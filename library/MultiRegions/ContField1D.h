@@ -54,12 +54,14 @@ namespace Nektar
                 ContField1D(const LibUtilities::BasisKey &Ba, 
                             const SpatialDomains::Composite &cmps,
                             SpatialDomains::BoundaryConditions &bcs);
+                ContField1D(const ContField1D &In);
 		~ContField1D();
 		
                 void FwdTrans(const ExpList &In);
-
                 void GenMassMatrixLinSys(void);
 
+                void HelmSolve(const ExpList &In, NekDouble lambda);
+                void GenHelmholtzMatrixLinSys(NekDouble lambda);
 
 	    protected:
 		
@@ -68,6 +70,7 @@ namespace Nektar
                 std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
 
 	    };
+        typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
 	
     } //end of namespace
 } //end of namespace

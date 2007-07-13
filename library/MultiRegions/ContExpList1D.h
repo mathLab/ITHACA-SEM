@@ -77,6 +77,12 @@ namespace Nektar
 		m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
 	    }
 	    
+	    inline void Assemble(ConstArray<OneD,NekDouble> &inarray,
+                                 Array<OneD,NekDouble> &outarray)
+	    {
+		m_locToGloMap->Assemble(inarray,outarray);
+	    }
+	    
 	    void IProductWRTBase(const ExpList &In);
 	    
 	    void FwdTrans(const ExpList &In);
@@ -117,6 +123,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.14  2007/07/13 09:02:23  sherwin
+* Mods for Helmholtz solver
+*
 * Revision 1.13  2007/07/10 08:54:29  pvos
 * Updated ContField1D constructor
 *

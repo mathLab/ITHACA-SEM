@@ -684,8 +684,9 @@ namespace Nektar
                     {
                         DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
                         NekDouble  gfac = m_metricinfo->GetGmat()[0][0];
+                        NekDouble  jac  = m_metricinfo->GetJac()[0];
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                                                                      gfac*gfac,mat);
+                                                                      gfac*gfac*jac,mat);
                     }
                 }
                 break;
@@ -702,14 +703,7 @@ namespace Nektar
 
                     DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(lap->GetRows(),lap->GetColumns());
 
-                    
-#if 0 
-                    // Temporary fix: 
-                    DNekScalMat scaledmass(1.0/factor*mass->Scale(),mass->GetOwnedMatrix());
-                    (*helm)  = scaledmass + (*lap);
-#else              
                     (*helm) = (*lap) + 1.0/factor*(*mass);
-#endif
                     // Even better:          helm  = lap + 1.0/factor*mass;
                     
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,helm);            
@@ -728,6 +722,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.23  2007/07/13 09:02:22  sherwin
+// Mods for Helmholtz solver
+//
 // Revision 1.22  2007/07/12 12:53:01  sherwin
 // Updated to have a helmholtz matrix
 //

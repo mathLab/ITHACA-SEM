@@ -1,7 +1,8 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <MultiRegions/ContExpList1D.h>
+//#include <MultiRegions/ContExpList1D.h>
+#include <MultiRegions/ContField1D.h>
 
 using namespace Nektar;
 
@@ -10,7 +11,8 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    MultiRegions::ContExpList1DSharedPtr Exp,Sol;
+    //    MultiRegions::ContExpList1DSharedPtr Exp,Sol;
+    MultiRegions::ContField1DSharedPtr Exp,Sol;
     int     i,j,k;
     int     order, nq;
     int     coordim;
@@ -61,11 +63,18 @@ int main(int argc, char *argv[])
     string in(infile);
     SpatialDomains::MeshGraph1D graph1D; 
     graph1D.Read(in);
+
+    SpatialDomains::BoundaryConditions bcs(&graph1D); 
+    bcs.Read(in);
+
     
     // Define Expansion
     const LibUtilities::PointsKey Pkey(nq,Qtype);
     const LibUtilities::BasisKey Bkey(btype,order,Pkey);
-    Exp = MemoryManager<MultiRegions::ContExpList1D>::AllocateSharedPtr(Bkey,graph1D.GetComposite(0));
+
+    Exp.reset(new MultiRegions::ContField1D(Bkey,graph1D.GetComposite(0),bcs));
+    
+    //Exp = MemoryManager<MultiRegions::ContExpList1D>::AllocateSharedPtr(Bkey,graph1D.GetComposite(0),bcs);
 
     //----------------------------------------------
     // Define solution to be projected 
@@ -104,15 +113,22 @@ int main(int argc, char *argv[])
         fce[i] = -2.0; 
 
 #else
+#if 1 
+        sol[i] = sin(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
+
+        fce[i] = -(1.0+pow(M_PI/(xc0[nq-1]-xc0[0]),2))*sin(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
+#else
         sol[i] = cos(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
 
-        fce[i] = -(1.0-pow(M_PI/(xc0[nq-1]-xc0[0]),2))*cos(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
+        fce[i] = -(1.0+pow(M_PI/(xc0[nq-1]-xc0[0]),2))*cos(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
+#endif
 #endif
     }
 
     //----------------------------------------------
     // Setup Temporary expansion and put in solution
-    Sol = MemoryManager<MultiRegions::ContExpList1D>::AllocateSharedPtr(*Exp);
+    //Sol = MemoryManager<MultiRegions::ContExpList1D>::AllocateSharedPtr(*Exp);
+    Sol = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(*Exp);
     Sol->SetPhys(fce);
     //----------------------------------------------
   

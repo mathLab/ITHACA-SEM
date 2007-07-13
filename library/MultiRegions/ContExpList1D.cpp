@@ -88,8 +88,9 @@ namespace Nektar
                                             NekDouble lambda = 1.0)
 
 	{
-	    ExpList1D::GeneralMatrixOp(mtype,inarray,outarray,lambda);
-	    Assemble();
+            Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(m_ncoeffs);
+	    ExpList1D::GeneralMatrixOp(mtype,inarray,tmp,lambda);
+	    Assemble(tmp,outarray);
 	    m_transState = eLocalCont;
 	}
 	
@@ -110,11 +111,8 @@ namespace Nektar
 
 	void ContExpList1D::HelmSolve(const ExpList &In, NekDouble lambda)
 	{
-            Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(m_ncoeffs);
-
-            ExpList1D::FwdTrans(In.GetPhys(),tmp);
-            Vmath::Neg(m_ncoeffs,&tmp[0],1);
-	    GeneralMatrixOp(StdRegions::eHelmholtz,tmp,m_coeffs,lambda);
+            IProductWRTBase(In);
+            Vmath::Neg(m_contNcoeffs,&m_contCoeffs[0],1);
             
 	    if(!(m_helm.get()))
 	    {
@@ -207,7 +205,6 @@ namespace Nektar
                     }
                     cnt += (*m_exp)[n]->GetNcoeffs();
 		}
-                cout << *Ghelm << endl;
                 m_helm = MemoryManager<DNekLinSys>::AllocateSharedPtr(Ghelm);
 	    }
 	}
@@ -216,6 +213,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.14  2007/07/13 09:02:23  sherwin
+* Mods for Helmholtz solver
+*
 * Revision 1.13  2007/07/10 08:54:29  pvos
 * Updated ContField1D constructor
 *

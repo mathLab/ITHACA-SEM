@@ -152,25 +152,8 @@ namespace Nektar
                     StdMatrixKey masskey(eMass,mkey.GetShapeType(),mkey.GetBase(),
                         mkey.GetNcoeffs(),mkey.GetNodalPointsType());
                     DNekMatSharedPtr mmat = m_stdMatrixManager[masskey];
-                    DNekLinSys invmass(mmat);
-
-                    int dim = mmat->GetRows(); //assume square matrix 
-                    Array<OneD,NekDouble> invdata = Array<OneD,NekDouble>(dim*dim);
-                    Array<OneD,NekDouble> data_offset;
-
-                    Vmath::Zero(dim*dim,&invdata[0],1);
-
-                    for(int i = 0; i < dim; ++i)
-                    {
-                        // set array to be identity matrix
-                        invdata[i*dim + i] = 1.0;
-
-                        //call inverse on symmetric matrix
-                        DNekVec   v(dim,data_offset = invdata+i*dim,eWrapper);
-                        invmass.Solve(v,v);
-                    }
-
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(dim,dim,&invdata[0]);
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*mmat);
+                    returnval->Invert();
                 }
                 break;
                             
@@ -517,6 +500,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.43  2007/07/13 09:02:25  sherwin
+* Mods for Helmholtz solver
+*
 * Revision 1.42  2007/07/12 12:55:14  sherwin
 * Simplified Matrix Generation
 *

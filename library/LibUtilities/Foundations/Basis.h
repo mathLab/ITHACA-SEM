@@ -38,7 +38,7 @@
 
 #include <math.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/SharedArrayUtil.hpp>
+
 namespace Nektar
 {
     namespace LibUtilities 

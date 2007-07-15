@@ -36,7 +36,6 @@
 
 
 #include <StdRegions/StdExpansion.h>
-#include <LibUtilities/BasicUtils/SharedArrayUtil.hpp>
 
 namespace Nektar
 {
@@ -500,6 +499,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.45  2007/07/13 15:20:19  kirby
+* *** empty log message ***
+*
 * Revision 1.43  2007/07/13 09:02:25  sherwin
 * Mods for Helmholtz solver
 *

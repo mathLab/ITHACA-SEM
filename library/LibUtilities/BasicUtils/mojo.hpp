@@ -30,7 +30,12 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // Description: Move Constructors.  See Generic Programming: Move Constructors
-// by Andrei Alexandrescu in the C++ User's Journal
+// by Andrei Alexandrescu in the C++ User's Journal.
+//
+// These classes were originally used with SharedArray.  We had problems with
+// some code not compiling because of too many implicit conversion operators,
+// so we backed that out.  These objects are currently not used but they are
+// being left in because the idiom may prove useful in other contexts.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

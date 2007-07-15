@@ -111,7 +111,6 @@ SET(BasicUtils
 	./BasicUtils/mojo.hpp
         ./BasicUtils/OperatorGenerators.hpp
 	./BasicUtils/SharedArray.hpp
-	./BasicUtils/SharedArrayUtil.hpp
         ./BasicUtils/Vmath.hpp
 )
 

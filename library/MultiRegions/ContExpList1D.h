@@ -67,6 +67,12 @@ namespace Nektar
 		m_locToGloMap->ContToLocal(m_contCoeffs,m_coeffs);
 	    }
 	    
+	    inline void ContToLocal(const ConstArray<OneD,NekDouble> &inarray,
+                                    Array<OneD,NekDouble> &outarray)
+	    {
+		m_locToGloMap->ContToLocal(inarray,outarray);
+	    }
+	    
 	    inline void LocalToCont()
 	    {
 		m_locToGloMap->LocalToCont(m_coeffs,m_contCoeffs);
@@ -77,7 +83,7 @@ namespace Nektar
 		m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
 	    }
 	    
-	    inline void Assemble(ConstArray<OneD,NekDouble> &inarray,
+	    inline void Assemble(const ConstArray<OneD,NekDouble> &inarray,
                                  Array<OneD,NekDouble> &outarray)
 	    {
 		m_locToGloMap->Assemble(inarray,outarray);
@@ -123,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.15  2007/07/13 15:22:12  sherwin
+* Update for Helmholtz (working without bcs )
+*
 * Revision 1.14  2007/07/13 09:02:23  sherwin
 * Mods for Helmholtz solver
 *

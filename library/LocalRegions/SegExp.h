@@ -229,6 +229,15 @@ namespace Nektar
                 PhysDeriv(inarray, out_d0);
             }
 
+            virtual void v_PhysDeriv(const int dir, 
+                const ConstArray<OneD, NekDouble>& inarray,
+                                     Array<OneD, NekDouble> &out_d0)
+            {
+                PhysDeriv(inarray, out_d0);
+            }
+
+
+
             /// Virtual call to SegExp::FwdTrans
             virtual void v_FwdTrans(const ConstArray<OneD,NekDouble>& inarray, 
 				    Array<OneD,NekDouble> &outarray)
@@ -348,6 +357,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.18  2007/07/13 09:02:23  sherwin
+// Mods for Helmholtz solver
+//
 // Revision 1.17  2007/07/11 19:26:04  sherwin
 // update for new Manager structure
 //

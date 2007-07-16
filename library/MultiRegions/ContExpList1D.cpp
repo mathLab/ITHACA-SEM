@@ -55,7 +55,7 @@ namespace Nektar
             m_mass(In.m_mass)
 
         {
-            m_contCoeffs = Array<OneD,NekDouble>(m_contNcoeffs);
+            m_contCoeffs = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
         
 
@@ -77,6 +77,10 @@ namespace Nektar
               
 	void ContExpList1D::IProductWRTBase(const ExpList &In)
 	{
+            if(m_transState == eContinuous)
+            {
+                ContToLocal();
+            }
 	    ExpList1D::IProductWRTBase(In);
 	    Assemble();
 	    m_transState = eLocalCont;
@@ -89,9 +93,9 @@ namespace Nektar
 
 	{
             Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(m_ncoeffs);
-	    ExpList1D::GeneralMatrixOp(mtype,inarray,tmp,lambda);
+            ContToLocal(inarray,tmp);
+	    ExpList1D::GeneralMatrixOp(mtype,tmp,tmp,lambda);
 	    Assemble(tmp,outarray);
-	    m_transState = eLocalCont;
 	}
 	
 	void ContExpList1D::FwdTrans(const ExpList &In)
@@ -213,6 +217,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.15  2007/07/13 15:22:12  sherwin
+* Update for Helmholtz (working without bcs )
+*
 * Revision 1.14  2007/07/13 09:02:23  sherwin
 * Mods for Helmholtz solver
 *

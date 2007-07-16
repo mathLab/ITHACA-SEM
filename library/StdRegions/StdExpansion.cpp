@@ -366,7 +366,7 @@ namespace Nektar
             Array<OneD, NekDouble> dtmp  = Array<OneD, NekDouble>(GetTotPoints());
             
             v_BwdTrans(inarray,tmp);
-            v_StdPhysDeriv(k2,tmp,dtmp);
+            v_PhysDeriv(k2,tmp,dtmp);
             v_IProductWRTDerivBase(k1,dtmp, outarray);
         }
 
@@ -499,6 +499,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.46  2007/07/15 19:28:28  bnelson
+* *** empty log message ***
+*
 * Revision 1.45  2007/07/13 15:20:19  kirby
 * *** empty log message ***
 *

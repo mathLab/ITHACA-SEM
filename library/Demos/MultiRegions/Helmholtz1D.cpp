@@ -105,25 +105,47 @@ int main(int argc, char *argv[])
         break;
     }
     
+#if 0 // constant solution 
     for(i = 0; i < nq; ++i)
     {
-#if 0
         sol[i] = 2.0; 
         
         fce[i] = -2.0; 
-
+    }
+    Exp->SetBoundaryCondition(0,sol[0]);
+    Exp->SetBoundaryCondition(1,sol[nq-1]);
 #else
-#if 1 
+#if 1
+#if 1 // non-zero dirichlet solution 
+    for(i = 0; i < nq; ++i)
+    {
+        sol[i] = cos(M_PI*xc0[i]);
+
+        fce[i] = -(1.0+M_PI*M_PI)*cos(M_PI*xc0[i]);
+    }
+    Exp->SetBoundaryCondition(0,sol[0]);
+    Exp->SetBoundaryCondition(1,sol[nq-1]);
+#else // zero Dirichlet solution 
+    for(i = 0; i < nq; ++i)
+    {
         sol[i] = sin(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
 
         fce[i] = -(1.0+pow(M_PI/(xc0[nq-1]-xc0[0]),2))*sin(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
-#else
+    }
+    Exp->SetBoundaryCondition(0,0.0);
+    Exp->SetBoundaryCondition(1,0.0);
+#endif
+#else // zero neumann solution
+    for(i = 0; i < nq; ++i)
+    {
         sol[i] = cos(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
 
         fce[i] = -(1.0+pow(M_PI/(xc0[nq-1]-xc0[0]),2))*cos(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
-#endif
-#endif
     }
+    Exp->SetBoundaryCondition(0,0.0);
+    Exp->SetBoundaryCondition(1,0.0);
+#endif
+#endif
 
     //----------------------------------------------
     // Setup Temporary expansion and put in solution

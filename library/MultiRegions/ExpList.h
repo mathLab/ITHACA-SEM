@@ -151,11 +151,13 @@ namespace Nektar
       
       inline Array<OneD, NekDouble> &UpdateCoeffs()
       {
+          m_transState = eLocal;
           return m_coeffs;
       }
 
       inline Array<OneD, NekDouble> &UpdatePhys()
       {
+          m_physState = true;
           return m_phys;
       }
 
@@ -186,6 +188,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.18  2007/07/13 09:02:24  sherwin
+* Mods for Helmholtz solver
+*
 * Revision 1.17  2007/06/07 15:54:19  pvos
 * Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
 * Also made corrections to various ASSERTL2 calls

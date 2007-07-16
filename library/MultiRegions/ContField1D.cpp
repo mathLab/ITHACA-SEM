@@ -186,31 +186,51 @@ namespace Nektar
 	    }
 	}
 
+        // Solve the helmholtz problem assuming that m_contCoeff vector 
+        // contains an intial estimate for solution
+
 	void ContField1D::HelmSolve(const ExpList &In, NekDouble lambda)
 	{
             int i;
             int NumDirBcs = m_locToGloMap->GetNumDirichletBCs();
-            Array<OneD,NekDouble> tmp;
+            Array<OneD,NekDouble> sln;
+            Array<OneD,NekDouble> init    = Array<OneD,NekDouble>(m_contNcoeffs);
+            Array<OneD,NekDouble> Dir_fce = Array<OneD,NekDouble>(m_contNcoeffs);
+            //assume m_contCoeffs contains initial estimate
+            // Set BCs in m_contCoeffs
+            Blas::Dcopy(m_contNcoeffs,&m_contCoeffs[0],1,&init[0],1);
+            for(i = 0; i < NumDirBcs; ++i)
+            {
+                init[i] = m_bndConstraint[i]->GetValue();
+            }
+            GeneralMatrixOp(StdRegions::eHelmholtz,init,Dir_fce,lambda);
 
+            // Set up forcing function
 	    IProductWRTBase(In);
             Vmath::Neg(m_contNcoeffs,&m_contCoeffs[0],1);
 
-	    if(!(m_helm.get()))
-	    {
-		GenHelmholtzMatrixLinSys(lambda);
-	    }
+            // Forcing function with Dirichlet conditions 
+            Vmath::Vsub(m_contNcoeffs,&m_contCoeffs[0],1,
+                        &Dir_fce[0],1,&m_contCoeffs[0],1);
 
-            for(i = 0; i < NumDirBcs; ++i)
+            if(m_contNcoeffs - NumDirBcs > 0)
             {
-                m_contCoeffs[i] = m_bndConstraint[i]->GetValue();
-            }
-            
-            // need to modify right hand side vector here to take
-            // account of Dirichlet contribution to element
 
-            tmp = m_contCoeffs+NumDirBcs;
-	    DNekVec v(m_contNcoeffs-NumDirBcs,tmp,eWrapper);
-	    m_helm->Solve(v,v);
+                if(!(m_helm.get()))
+                {
+                    GenHelmholtzMatrixLinSys(lambda);
+                }
+                
+                sln = m_contCoeffs+NumDirBcs;
+                DNekVec v(m_contNcoeffs-NumDirBcs,sln,eWrapper);
+                m_helm->Solve(v,v);
+            }
+
+            // Recover solution by addinig intial conditons
+            Vmath::Zero(NumDirBcs,&m_contCoeffs[0],1);
+            Vmath::Vadd(m_contNcoeffs,&init[0],1,&m_contCoeffs[0],1,
+                        &m_contCoeffs[0],1);
+
 	    m_transState = eContinuous;
 	    m_physState = false;
 	}

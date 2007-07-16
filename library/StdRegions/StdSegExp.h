@@ -273,6 +273,13 @@ namespace Nektar
                 PhysDeriv(inarray,out_d0);
             }
 
+            virtual void v_PhysDeriv(const int dir, 
+                const ConstArray<OneD, NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray)
+            {
+                PhysDeriv(inarray, outarray);                
+            }
+
 
             /** \brief Virtual call to StdSegExp::Deriv */
             virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
@@ -338,6 +345,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.25  2007/07/12 12:55:16  sherwin
+* Simplified Matrix Generation
+*
 * Revision 1.24  2007/07/11 06:35:24  sherwin
 * Update after manager reshuffle
 *

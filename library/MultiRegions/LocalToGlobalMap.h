@@ -60,20 +60,20 @@ namespace Nektar
 		return m_locToContMap[i];
 	    }
 
-	    inline void LocalToCont(ConstArray<OneD, NekDouble> &loc, 
+	    inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
                                     Array<OneD, NekDouble> &cont)
 	    {
                 Vmath::Scatr(m_totLocLen, &loc[0],&m_locToContMap[0],&cont[0]);
             }                
 
 	    
-	    inline void ContToLocal(ConstArray<OneD, NekDouble> &cont, 
+	    inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
                                     Array<OneD, NekDouble> &loc)
 	    {
                 Vmath::Gathr(m_totLocLen,&cont[0],&m_locToContMap[0], &loc[0]);
 	    }
 	    
-	    inline void Assemble(ConstArray<OneD, NekDouble> &loc, 
+	    inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
                                  Array<OneD, NekDouble> &cont)
 	    {
 		Vmath::Zero(m_totGloLen,&cont[0],1);
@@ -106,6 +106,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.7  2007/06/08 12:58:27  sherwin
+/** Added ContField1D and remove previous structure using Fields
+/**
 /** Revision 1.6  2007/05/28 16:15:00  sherwin
 /** Updated files in MultiRegions to make 1D demos work
 /**

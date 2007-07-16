@@ -57,6 +57,11 @@ namespace Nektar
                 ContField1D(const ContField1D &In);
 		~ContField1D();
 		
+                void SetBoundaryCondition(const int loc, const NekDouble value)
+                {
+                    m_bndConstraint[loc]->SetValue(value);
+                }
+
                 void FwdTrans(const ExpList &In);
                 void GenMassMatrixLinSys(void);
 

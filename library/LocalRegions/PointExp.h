@@ -56,6 +56,11 @@ namespace Nektar
                 return m_value;
             }
 
+            inline void  SetValue(const NekDouble &value)
+            {
+                m_value = value;
+            }
+
 	protected:
             NekDouble      m_value; //!< Array containing expansion coefficients
 	    SpatialDomains::VertexComponentSharedPtr m_geom;

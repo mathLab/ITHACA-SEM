@@ -741,11 +741,18 @@ namespace Nektar
             }
 
             void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
+                            Array<OneD, NekDouble> &out_d0,
                             Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                            Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray,
-                            Array<OneD, NekDouble> &out_d3 = NullNekDouble1DArray)
+                            Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
             {
-                v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
+                v_PhysDeriv (inarray, out_d0, out_d1, out_d1);
+            }
+
+            virtual void PhysDeriv(const int dir, 
+                const ConstArray<OneD, NekDouble>& inarray,
+                                   Array<OneD, NekDouble> &outarray)
+            {
+                v_PhysDeriv (dir, inarray, outarray);
             }
 
             boost::shared_ptr<SpatialDomains::GeomFactors> GetMetricInfo(void) const
@@ -955,6 +962,15 @@ namespace Nektar
                     "local expansions");
             }
 
+            virtual void v_PhysDeriv(const int dir, 
+                const ConstArray<OneD, NekDouble>& inarray,
+                                     Array<OneD, NekDouble> &out_d0)
+
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                         "specific element types");
+            }
+
             virtual void   v_StdPhysDeriv (const int dir, 
                                            const ConstArray<OneD, NekDouble>& inarray, 
                                            Array<OneD, NekDouble> &outarray)
@@ -1054,6 +1070,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.60  2007/07/13 09:02:25  sherwin
+* Mods for Helmholtz solver
+*
 * Revision 1.59  2007/07/12 12:55:15  sherwin
 * Simplified Matrix Generation
 *

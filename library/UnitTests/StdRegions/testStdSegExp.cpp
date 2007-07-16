@@ -180,7 +180,7 @@ namespace Nektar
 			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
 			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
 
-			DNekMatSharedPtr matrix = E->GenMassMatrix();
+			DNekMatSharedPtr matrix = E->GenMatrix(StdRegions::eMass);
 			NekDouble *result =  &((*matrix).GetPtr())[0];
 			NekDouble *expected_result = exactmatrices[i];
 
@@ -244,7 +244,7 @@ namespace Nektar
 			const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
 			StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
 
-			DNekMatSharedPtr matrix = E->GenLapMatrix();
+			DNekMatSharedPtr matrix = E->GenMatrix(StdRegions::eLaplacian);
 			NekDouble *result =  &((*matrix).GetPtr())[0];
 			NekDouble *expected_result = exactmatrices[i];
 
@@ -608,6 +608,9 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.cpp,v $
+    Revision 1.12  2007/05/27 22:01:26  bnelson
+    *** empty log message ***
+
     Revision 1.11  2007/05/27 16:40:04  bnelson
     *** empty log message ***
 

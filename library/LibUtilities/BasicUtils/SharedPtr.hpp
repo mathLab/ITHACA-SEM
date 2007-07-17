@@ -228,6 +228,10 @@ namespace Nektar
                 return pn < rhs.pn;
             }
 
+        protected:
+            T* GetPx() { return px; }
+            boost::detail::shared_count& GetPn() { return pn; }
+            
         private:
             T* px;                     
             boost::detail::shared_count pn;
@@ -271,7 +275,7 @@ namespace Nektar
         return const_ptr<T>(r, const_cast_tag());
     }
 
-    template<class T, class U> \
+    template<class T, class U> 
     const_ptr<T> dynamic_pointer_cast(const const_ptr<U>& r)
     {
         return const_ptr<T>(r, dynamic_cast_tag());
@@ -295,6 +299,7 @@ namespace Nektar
             using BaseType::value_type;
             using BaseType::pointer;
             using BaseType::reference;
+            using BaseType::const_reference;
 
             ptr() : 
                 BaseType()
@@ -362,21 +367,21 @@ namespace Nektar
                 return *this;
             }
 
-            reference operator*() 
+            T& operator*()
             {
-                BOOST_ASSERT(px != 0);
-                return *px;
+                BOOST_ASSERT(this->GetPx() != 0);
+                return *(this->GetPx());
             }
 
             T* operator->()
             {
-                BOOST_ASSERT(px != 0);
-                return px;
+                BOOST_ASSERT(this->GetPx() != 0);
+                return this->GetPx();
             }
             
             T* get()
             {
-                return px;
+                return this->GetPx();
             }
 
             using BaseType::operator*;

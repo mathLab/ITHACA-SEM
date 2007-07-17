@@ -179,7 +179,7 @@ namespace Nektar
 
     };
 
-    static const ExpList NullExpList();
+    static ExpList NullExpList;
     
   } //end of namespace
 } //end of namespace
@@ -188,6 +188,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.19  2007/07/16 18:28:43  sherwin
+* Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
+*
 * Revision 1.18  2007/07/13 09:02:24  sherwin
 * Mods for Helmholtz solver
 *

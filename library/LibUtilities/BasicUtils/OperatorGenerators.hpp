@@ -39,6 +39,7 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_OPERATOR_GENERATORS_HPP
 
 #include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <boost/concept_check.hpp>
 
 namespace Nektar
@@ -126,6 +127,15 @@ namespace Nektar
                 BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType result; \
                 NekMultiply(result, lhs, rhs); \
                 return result; \
+            } \
+            \
+            boost::shared_ptr<BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType> \
+            operator*(const boost::shared_ptr<const LhsType>& lhs, const boost::shared_ptr<const RhsType>& rhs) \
+            { \
+                typedef BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType ResultType; \
+                boost::shared_ptr<ResultType> result(MemoryManager::AllocateSharedPtr<ResultType>()); \
+                NekMultiply(result, lhs, rhs); \
+                return result; \
             }
     
     #define GENERATE_MULTIPLICATION_OPERATOR_L3(LhsType, RhsType) \
@@ -146,7 +156,19 @@ namespace Nektar
                 typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType result; \
                 NekMultiply(result, lhs, rhs); \
                 return result; \
-            }
+            } 
+            //\
+            //template<typename L1, typename L2, typename L3, typename RhsType> \
+            //boost::shared_ptr<typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType> \
+            //operator*(const boost::shared_ptr<const LhsType<L1, L2, L3> > lhs, const RhsType& rhs) \
+            //{ \
+            //    return boost::shared_ptr<typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType>(); \
+            //}
+            //    typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType ResultType; \
+            //    boost::shared_ptr<ResultType> result = MemoryManager::AllocateSharedPtr<ResultType>(); \ 
+            //    NekMultiply(result, lhs, rhs); \
+            //    return result; \
+            //}
     
     #define GENERATE_MULTIPLICATION_OPERATOR_L0_R3(RhsType) \
             template<typename R1, typename R2, typename R3, typename LhsType> \
@@ -325,6 +347,46 @@ namespace Nektar
                 return result;
             }
     };
+
+    template<typename LhsType, typename RhsType>
+    typename BinaryExpressionTraits<LhsType, RhsType, AddOp>::ResultType
+    operator+(const LhsType& lhs, const RhsType& rhs)
+    {
+        typedef typename BinaryExpressionTraits<LhsType, RhsType, AddOp>::ResultType ResultType;
+        ResultType result;
+        NekAdd(result, lhs, rhs);
+        return result;
+    }
+
+    template<typename LhsType, typename RhsType>
+    typename BinaryExpressionTraits<LhsType, RhsType, SubtractOp>::ResultType 
+    operator-(const LhsType& lhs, const RhsType& rhs)
+    {
+        typedef typename BinaryExpressionTraits<LhsType, RhsType, SubtractOp>::ResultType ResultType;
+        ResultType result;
+        NekSubtract(result, lhs, rhs);
+        return result;
+    }
+
+    template<typename LhsType, typename RhsType>
+    typename BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType 
+    operator*(const LhsType& lhs, const RhsType& rhs)
+    {
+        typedef typename BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType ResultType;
+        ResultType result;
+        NekMultiply(result, lhs, rhs);
+        return result;
+    }
+
+    template<typename LhsType, typename RhsType>
+    typename BinaryExpressionTraits<LhsType, RhsType, DivideOp>::ResultType 
+    operator/(const LhsType& lhs, const RhsType& rhs)
+    {
+        typedef typename BinaryExpressionTraits<LhsType, RhsType, DivideOp>::ResultType ResultType;
+        ResultType result;
+        NekDivide(result, lhs, rhs);
+        return result;
+    }
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_OPERATOR_GENERATORS_HPP

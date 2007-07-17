@@ -116,4 +116,4 @@ namespace Nektar
     };
 }
 
-#endif NEKTAR_SPATIALDOMAINS_DOMAIN_H
+#endif //NEKTAR_SPATIALDOMAINS_DOMAIN_H

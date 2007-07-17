@@ -12,6 +12,7 @@ testNekManager.cpp
 testNekMatrix.cpp
 testNekMatrixOperations.cpp
 testNekPoint.cpp
+TestNekPtr.cpp
 testNekVector.cpp
 testNekSharedArray.cpp
 Memory/TestNekMemoryManager.cpp
@@ -31,6 +32,7 @@ testNekManager.h
 testNekMatrix.h
 testNekMatrixOperations.h
 testNekPoint.h
+TestNekPtr.h
 testNekVector.h
 testNekSharedArray.h
 Memory/TestNekMemoryManager.h

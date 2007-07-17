@@ -30,6 +30,7 @@ using boost::unit_test_framework::test_suite;
 #include <UnitTests/testFoundation/testInterpolation.h>
 #include <UnitTests/testFoundation/testDerivation.h>
 #include <UnitTests/testNekMatrixOperations.h>
+#include <UnitTests/TestNekPtr.h>
 
 // The boost unit test framework provides the main function for us.
 // All we need to do is provide a test suite.
@@ -39,7 +40,11 @@ test_suite* init_unit_test_suite( int, char* [] )
 {
    
     test_suite* test= BOOST_TEST_SUITE( "Nektar++ Test Suite" );
-        
+
+    // Nektar::ptr tests.
+    test->add(BOOST_TEST_CASE(&Nektar::PtrUnitTests::TestScope), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::PtrUnitTests::TestConstConversions), 0);
+
     // shared array
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestEmptyConstructor), 0);
     test->add(BOOST_TEST_CASE(&Nektar::SharedArrayUnitTests::TestUninitializedConstructor), 0);
@@ -215,6 +220,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.45  2007/07/12 03:59:05  bnelson
+    *** empty log message ***
+
     Revision 1.44  2007/07/11 04:01:12  bnelson
     *** empty log message ***
 

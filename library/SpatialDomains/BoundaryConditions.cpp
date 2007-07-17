@@ -179,7 +179,7 @@ namespace Nektar
                     variableElement = variableElement->NextSiblingElement("V");
                 }
 
-                ASSERTL0(nextVariableNumber > 0, "Number of variables must be greater than zero.")
+                ASSERTL0(nextVariableNumber > -1, "Number of variables must be greater than zero.")
             }
         }
 

@@ -60,40 +60,40 @@ namespace Nektar
 
         void testConstantExpressions()
         {
-//             using namespace Nektar;
-//             using namespace Nektar::expt;
-// 
-//             {
-//                 int t = 7;
-//                 Expression<ConstantExpressionPolicy<int> > e1(t);
-//                 BOOST_CHECK_EQUAL(*e1, t);
-// 
-//                 Expression<ConstantExpressionPolicy<int> > e2(e1);
-//                 BOOST_CHECK_EQUAL(*e2, *e1);
-//             }
-// 
-//             typedef NekPoint<unsigned int, 3> Point;
-//             {
-//                 Point p(1,2,3);
-//                 Expression<ConstantExpressionPolicy<Point> > e1(p);
-// 
-//                 Point p1(e1);
-//                 BOOST_CHECK_EQUAL(p, p1);
-// 
-//                 Point p2 = e1;
-//                 BOOST_CHECK_EQUAL(p, p2);
-// 
-//                 Point p3(9, 10, 11);
-//                 BOOST_CHECK(p != p3);
-//                 p3 = e1;
-//                 BOOST_CHECK_EQUAL(p, p3);
-//             }
-// 
-//             {
-//                 // TODO - Find a way to prevent temporaries (meaning that the parameter to
-//                 // this call is temporary and that could cause problems).
-//                 Nektar::expt::Expression<ConstantExpressionPolicy<Point> > e2(Point(1,2,3));
-//             }
+             using namespace Nektar;
+             using namespace Nektar::expt;
+ 
+             {
+                 int t = 7;
+                 Expression<ConstantExpressionPolicy<int> > e1(t);
+                 BOOST_CHECK_EQUAL(*e1, t);
+ 
+                 Expression<ConstantExpressionPolicy<int> > e2(e1);
+                 BOOST_CHECK_EQUAL(*e2, *e1);
+             }
+ 
+             typedef NekPoint<unsigned int, 3> Point;
+             {
+                 Point p(1,2,3);
+                 Expression<ConstantExpressionPolicy<Point> > e1(p);
+ 
+                 Point p1(e1);
+                 BOOST_CHECK_EQUAL(p, p1);
+ 
+                 Point p2 = e1;
+                 BOOST_CHECK_EQUAL(p, p2);
+ 
+                 Point p3(9, 10, 11);
+                 BOOST_CHECK(p != p3);
+                 p3 = e1;
+                 BOOST_CHECK_EQUAL(p, p3);
+             }
+ 
+             {
+                 // TODO - Find a way to prevent temporaries (meaning that the parameter to
+                 // this call is temporary and that could cause problems).
+                 Expression<ConstantExpressionPolicy<Point> > e2(Point(1,2,3));
+             }
         }
 
         void testUnaryExpressions()
@@ -1097,6 +1097,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.15  2007/06/10 23:45:59  bnelson
+    Matrix updates.
+
     Revision 1.14  2007/05/15 05:19:54  bnelson
     Updated to use the new Array object.
 

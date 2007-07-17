@@ -46,10 +46,6 @@
 
 namespace Nektar
 {
-    
-    GENERATE_MULTIPLICATION_OPERATOR_L3_R0(NekMatrix);
-    GENERATE_MULTIPLICATION_OPERATOR_L0_R3(NekMatrix);
-    
     template<typename DataType, typename LhsDataType, typename LhsStorageType, typename LhsMatrixType, typename RhsType>
     void NekMultiply(NekMatrix<DataType, LhsStorageType, StandardMatrixTag>& result,
                      const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>& lhs,
@@ -65,7 +61,15 @@ namespace Nektar
             }
         }
     }
-    
+
+    template<typename DataType, typename LhsDataType, typename LhsStorageType, typename LhsMatrixType, typename RhsType>
+    void NekMultiply(boost::shared_ptr<NekMatrix<DataType, LhsStorageType, StandardMatrixTag> >& result,
+                     const boost::shared_ptr<const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType> >& lhs,
+                     const RhsType& rhs)
+    {
+        NekMultiply(*result, *lhs, rhs);
+    }
+
     template<typename DataType, typename LhsType, typename RhsDataType, typename RhsStorageType, typename RhsMatrixType>
     void NekMultiply(NekMatrix<DataType, RhsStorageType, StandardMatrixTag>& result,
                      const LhsType& rhs,
@@ -176,6 +180,9 @@ namespace Nektar
                      const NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& rhs);
     #endif //NEKTAR_USING_BLAS
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Matrix-Vector multiplication
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
     void NekMultiply(NekVector<DataType, dim, space>& result,
                     const NekMatrix<LhsDataType, FullMatrixTag, MatrixType>& lhs,

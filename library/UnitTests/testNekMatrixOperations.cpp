@@ -201,24 +201,50 @@ namespace Nektar
             
         }
         
+        template<typename L1, typename L2, typename L3, typename RhsType> 
+        boost::shared_ptr<typename BinaryExpressionTraits<NekMatrix<L1, L2, L3>, RhsType, MultiplyOp>::ResultType> 
+        operator*(const boost::shared_ptr<NekMatrix<L1, L2, L3> > lhs, const RhsType& rhs) 
+        { 
+            return boost::shared_ptr<typename BinaryExpressionTraits<NekMatrix<L1, L2, L3>, RhsType, MultiplyOp>::ResultType>(); 
+        }
+
         void TestComboExpression()
         {
-            double buf[] = {1.0, 2.0, 3.0, 4.0};
-            SharedNekMatrixPtr inner1(new NekMatrix<NekDouble>(2,2,buf));
-            SharedNekMatrixPtr inner2(new NekMatrix<NekDouble>(2,2,buf));
-            
-            DNekScalMat m1(2.0, inner1);
-            DNekScalMat m2(3.0, inner2);
-            
-            (*inner1)*2.0;
-            2.0*(*inner1);
-            //DNekScalMat m3 = m1*2.0;
-            NekMatrix<NekDouble> result = m1 + 1.0/6.0*m2;
-            
-            BOOST_CHECK_EQUAL(result(0,0), 2.5);
-            BOOST_CHECK_EQUAL(result(0,1), 5.0);
-            BOOST_CHECK_EQUAL(result(1,0), 7.5);
-            BOOST_CHECK_EQUAL(result(1,1), 10.0);
+            {
+                double buf[] = {1.0, 2.0, 3.0, 4.0};
+                SharedNekMatrixPtr inner1(new NekMatrix<NekDouble>(2,2,buf));
+                SharedNekMatrixPtr inner2(new NekMatrix<NekDouble>(2,2,buf));
+                
+                DNekScalMat m1(2.0, inner1);
+                DNekScalMat m2(3.0, inner2);
+                
+                (*inner1)*2.0;
+                2.0*(*inner1);
+                //DNekScalMat m3 = m1*2.0;
+                NekMatrix<NekDouble> result = m1 + 1.0/6.0*m2;
+                
+                BOOST_CHECK_EQUAL(result(0,0), 2.5);
+                BOOST_CHECK_EQUAL(result(0,1), 5.0);
+                BOOST_CHECK_EQUAL(result(1,0), 7.5);
+                BOOST_CHECK_EQUAL(result(1,1), 10.0);
+            }
+
+            {
+                double buf[] = {1.0, 2.0, 3.0, 4.0};
+                SharedNekMatrixPtr inner1(new NekMatrix<NekDouble>(2,2,buf));
+                SharedNekMatrixPtr inner2(new NekMatrix<NekDouble>(2,2,buf));
+                
+                boost::shared_ptr<DNekScalMat> m1(new DNekScalMat(2.0, inner1));
+                boost::shared_ptr<DNekScalMat> m2(new DNekScalMat(3.0, inner2));
+                
+                m1*2;
+
+                //BOOST_CHECK_EQUAL(result->GetValue(0,0), 2.0);
+                //BOOST_CHECK_EQUAL(result->GetValue(0,1), 4.0);
+                //BOOST_CHECK_EQUAL(result->GetValue(1,0), 6.0);
+                //BOOST_CHECK_EQUAL(result->GetValue(1,1), 8.0);
+            }
+
         }
     }
 }

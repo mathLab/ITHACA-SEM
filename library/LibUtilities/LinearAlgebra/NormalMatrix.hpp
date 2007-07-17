@@ -43,13 +43,13 @@
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
+#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 
 namespace Nektar
 {
      
     template<typename DataType, typename StorageType>
-    class NekMatrix<DataType, StorageType, StandardMatrixTag> : public Matrix<DataType>,
-                                                                public OperatorGeneratorR3<NekMatrix<DataType, StorageType, StandardMatrixTag>, NekMatrix>
+    class NekMatrix<DataType, StorageType, StandardMatrixTag> : public Matrix<DataType>
     {
         public:
             typedef Matrix<DataType> BaseType;

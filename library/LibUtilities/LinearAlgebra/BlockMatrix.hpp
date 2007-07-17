@@ -41,13 +41,15 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
+
 #include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
     template<typename DataType, typename StorageType, typename InnerMatrixType>
-    class NekMatrix<NekMatrix<DataType, StorageType, InnerMatrixType>, StorageType, BlockMatrixTag> : public Matrix<DataType>,
-                                                                                                      public OperatorGeneratorR3<NekMatrix<NekMatrix<DataType, StorageType, InnerMatrixType>, StorageType, BlockMatrixTag>, NekMatrix>
+    class NekMatrix<NekMatrix<DataType, StorageType, InnerMatrixType>, StorageType, BlockMatrixTag> : public Matrix<DataType>
     {
         public:
             typedef Matrix<DataType> BaseType;

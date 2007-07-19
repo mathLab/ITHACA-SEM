@@ -38,6 +38,8 @@ int main(int argc, char *argv[]){
     
     ConstInitialConditionShPtr ic = bcs.GetInitialCondition("u");
     val = ic->Evaluate();
+
+    NekDouble tolerance = bcs.GetParameter("Tolerance");
     
     return 0;
 }

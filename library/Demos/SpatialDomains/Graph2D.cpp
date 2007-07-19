@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
 
     //string in(argv[argc-1]);
     // If we all have the same relative structure, these should work for everyone.
-#if 1 
+#if 0 
     string in("../../../library/Demos/SpatialDomains/meshdef2D.xml");
     string bcfile("../../../library/Demos/SpatialDomains/BC1.xml");
 #else 
@@ -33,10 +33,10 @@ int main(int argc, char *argv[]){
     graph2D.Read(in);
     bcs.Read(bcfile);
 
-    ForcingFunctionsShPtr ffunc = bcs.GetForcingFunction("u");
+    ConstForcingFunctionShPtr ffunc = bcs.GetForcingFunction("u");
     NekDouble val = ffunc->Evaluate();
     
-    InitialConditionsShPtr ic = bcs.GetInitialCondition("u");
+    ConstInitialConditionShPtr ic = bcs.GetInitialCondition("u");
     val = ic->Evaluate();
     
     return 0;

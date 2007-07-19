@@ -502,7 +502,7 @@ namespace Nektar
                 for (Variable::iterator varIter = m_Variables.begin();
                     varIter != m_Variables.end(); ++varIter)
                 {
-                    ForcingFunctionsShPtr forcingFunctionShPtr(MemoryManager<ForcingFunction>::AllocateSharedPtr("0"));
+                    ForcingFunctionShPtr forcingFunctionShPtr(MemoryManager<ForcingFunction>::AllocateSharedPtr("0"));
                     m_ForcingFunctions[*varIter] = forcingFunctionShPtr;
                 }
 
@@ -549,7 +549,7 @@ namespace Nektar
             for (Variable::iterator varIter = m_Variables.begin();
                 varIter != m_Variables.end(); ++varIter)
             {
-                InitialConditionsShPtr initialConditionShPtr(MemoryManager<InitialCondition>::AllocateSharedPtr("0"));
+                InitialConditionShPtr initialConditionShPtr(MemoryManager<InitialCondition>::AllocateSharedPtr("00.0"));
                 m_InitialConditions[*varIter] = initialConditionShPtr;
             }
 
@@ -583,9 +583,9 @@ namespace Nektar
             }
         }
 
-        ForcingFunctionsShPtr BoundaryConditions::GetForcingFunction(int indx)
+        ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(int indx)
         {
-            ForcingFunctionsShPtr returnval;
+            ConstForcingFunctionShPtr returnval;
 
             if (indx >= m_Variables.size() || indx < 0)
             {
@@ -600,9 +600,9 @@ namespace Nektar
             return GetForcingFunction(m_Variables[indx]);
         }
 
-        ForcingFunctionsShPtr BoundaryConditions::GetForcingFunction(const string &var)
+        ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(const string &var)
         {
-            ForcingFunctionsShPtr returnval;
+            ConstForcingFunctionShPtr returnval;
             
             // Check that var is defined in forcing function list.
             ForcingFunctionsMap::iterator ffIter = m_ForcingFunctions.find(var);
@@ -631,14 +631,14 @@ namespace Nektar
             return returnval;
         }
 
-        ForcingFunctionsShPtr BoundaryConditions::GetForcingFunction(const char *var)
+        ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(const char *var)
         {
             return GetForcingFunction(std::string(var));
         }
 
-        InitialConditionsShPtr BoundaryConditions::GetInitialCondition(int indx)
+        ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(int indx)
         {
-            InitialConditionsShPtr returnval;
+            ConstInitialConditionShPtr returnval;
 
             if (indx >= m_Variables.size() || indx < 0)
             {
@@ -653,9 +653,9 @@ namespace Nektar
             return GetInitialCondition(m_Variables[indx]);
         }
 
-        InitialConditionsShPtr BoundaryConditions::GetInitialCondition(const string &var)
+        ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(const string &var)
         {
-            InitialConditionsShPtr returnval;
+            ConstInitialConditionShPtr returnval;
             
             // Check that var is defined in forcing function list.
             InitialConditionsMap::iterator ffIter = m_InitialConditions.find(var);
@@ -684,7 +684,7 @@ namespace Nektar
             return returnval;
         }
 
-        InitialConditionsShPtr BoundaryConditions::GetInitialCondition(const char *var)
+        ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(const char *var)
         {
             return GetInitialCondition(std::string(var));
         }

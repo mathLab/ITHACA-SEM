@@ -124,11 +124,13 @@ namespace Nektar
         typedef boost::shared_ptr<BoundaryConditionMap> BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
         typedef Equation<NekDouble> ForcingFunction;
-        typedef boost::shared_ptr<ForcingFunction> ForcingFunctionsShPtr;
-        typedef std::map<std::string, ForcingFunctionsShPtr> ForcingFunctionsMap;
+        typedef boost::shared_ptr<ForcingFunction> ForcingFunctionShPtr;
+        typedef boost::shared_ptr<const ForcingFunction> ConstForcingFunctionShPtr;
+        typedef std::map<std::string, ForcingFunctionShPtr> ForcingFunctionsMap;
         typedef Equation<NekDouble> InitialCondition;
-        typedef boost::shared_ptr<InitialCondition> InitialConditionsShPtr;
-        typedef std::map<std::string, InitialConditionsShPtr> InitialConditionsMap;
+        typedef boost::shared_ptr<InitialCondition> InitialConditionShPtr;
+        typedef boost::shared_ptr<const InitialCondition> ConstInitialConditionShPtr;
+        typedef std::map<std::string, InitialConditionShPtr> InitialConditionsMap;
 
         class BoundaryConditions
         {
@@ -157,20 +159,20 @@ namespace Nektar
             /// Get forcing function based on the index of the variable.
             /// The index is the order in which the variable was
             /// defined.
-            ForcingFunctionsShPtr GetForcingFunction(int indx);
+            ConstForcingFunctionShPtr GetForcingFunction(int indx);
 
             /// Get forcing function based on name of variable.
-            ForcingFunctionsShPtr GetForcingFunction(const string &var);
-            ForcingFunctionsShPtr GetForcingFunction(const char *var);
+            ConstForcingFunctionShPtr GetForcingFunction(const string &var);
+            ConstForcingFunctionShPtr GetForcingFunction(const char *var);
 
             /// Get initial condition function based on the index of the variable.
             /// The index is the order in which the variable was
             /// defined.
-            InitialConditionsShPtr GetInitialCondition(int indx);
+            ConstInitialConditionShPtr GetInitialCondition(int indx);
 
             /// Get initial condition function based on name of variable.
-            InitialConditionsShPtr GetInitialCondition(const string &var);
-            InitialConditionsShPtr GetInitialCondition(const char *var);
+            ConstInitialConditionShPtr GetInitialCondition(const string &var);
+            ConstInitialConditionShPtr GetInitialCondition(const char *var);
 
         protected:
             void ReadParameters(TiXmlElement *conditions);

@@ -61,12 +61,12 @@ namespace Nektar
               {
               }
 
-              T Evaluate(T x=0, T y=0, T z=0)
+              T Evaluate(T x=0, T y=0, T z=0) const
               {
                   return Evaluator<T>::Evaluate(m_eqn, x, y, z);
               }
 
-              std::string GetEquation(void)
+              std::string GetEquation(void) const
               {
                   return m_eqn;
               }

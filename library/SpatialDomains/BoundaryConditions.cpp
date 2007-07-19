@@ -231,16 +231,16 @@ namespace Nektar
                 ASSERTL0(indxBeg <= indxEnd, (std::string("Error reading boundary region definition:") + boundaryRegionStr).c_str());
 
                 std::string indxStr = boundaryRegionStr.substr(indxBeg, indxEnd - indxBeg + 1);
-                typedef vector<unsigned int> SeqVectorType;
-                SeqVectorType seqVector;
+                typedef vector<unsigned int> SeqVector;
+                SeqVector seqVector;
 
                 if (!indxStr.empty())
                 {
-                    BoundaryRegionShPtrType boundaryRegion(MemoryManager<BoundaryRegionType>::AllocateSharedPtr());
+                    BoundaryRegionShPtr boundaryRegion(MemoryManager<BoundaryRegion>::AllocateSharedPtr());
 
                     if (ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector))
                     {
-                        for (SeqVectorType::iterator iter = seqVector.begin(); iter != seqVector.end(); ++iter)
+                        for (SeqVector::iterator iter = seqVector.begin(); iter != seqVector.end(); ++iter)
                         {
                             Composite composite = m_MeshGraph->GetComposite(*iter);
                             if (composite)
@@ -287,7 +287,7 @@ namespace Nektar
 
             while (regionElement)
             {
-                BoundaryConditionMapShPtrType boundaryConditions = MemoryManager<BoundaryConditionMapType>::AllocateSharedPtr();
+                BoundaryConditionMapShPtr boundaryConditions = MemoryManager<BoundaryConditionMap>::AllocateSharedPtr();
 
                 TiXmlAttribute *attr = regionElement->FirstAttribute();
                 ASSERTL0(attr,
@@ -327,7 +327,7 @@ namespace Nektar
                     // All have var specified, or else all variables are zero.
                     attr = conditionElement->FirstAttribute();
 
-                    VariableType::iterator iter;
+                    Variable::iterator iter;
 
                     if (attr)
                     {
@@ -350,10 +350,10 @@ namespace Nektar
                         if (attrData.empty())
                         {
                             // All variables are Neumann and are set to zero.
-                            for (VariableType::iterator varIter = m_Variables.begin();
+                            for (Variable::iterator varIter = m_Variables.begin();
                                 varIter != m_Variables.end(); ++varIter)
                             {
-                                BoundaryConditionShPtrType neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("0"));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("00.0"));
                                 (*boundaryConditions)[*varIter]  = neumannCondition;
                             }
                         }
@@ -373,13 +373,13 @@ namespace Nektar
 
                                 ASSERTL0(!attrData.empty(), "VALUE attribute must have associated value.");
 
-                                BoundaryConditionShPtrType neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(attrData));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(attrData));
                                 (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
-                                BoundaryConditionShPtrType neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("0"));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("0"));
                                 (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                         }
@@ -389,10 +389,10 @@ namespace Nektar
                         if (attrData.empty())
                         {
                             // All variables are Dirichlet and are set to zero.
-                            for (VariableType::iterator varIter = m_Variables.begin();
+                            for (Variable::iterator varIter = m_Variables.begin();
                                 varIter != m_Variables.end(); ++varIter)
                             {
-                                BoundaryConditionShPtrType dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
                                 (*boundaryConditions)[*varIter] = dirichletCondition;
                             }
                         }
@@ -412,13 +412,13 @@ namespace Nektar
 
                                 ASSERTL0(!attrData.empty(), "VALUE attribute must have associated value.");
 
-                                BoundaryConditionShPtrType dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(attrData));
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(attrData));
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
-                                BoundaryConditionShPtrType dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                         }
@@ -428,10 +428,10 @@ namespace Nektar
                         if (attrData.empty())
                         {
                             // All variables are Robin and are set to zero.
-                            for (VariableType::iterator varIter = m_Variables.begin();
+                            for (Variable::iterator varIter = m_Variables.begin();
                                 varIter != m_Variables.end(); ++varIter)
                             {
-                                BoundaryConditionShPtrType robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
+                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
                                 (*boundaryConditions)[*varIter] = robinCondition;
                             }
                         }
@@ -464,13 +464,13 @@ namespace Nektar
 
                                 ASSERTL0(!attrData2.empty(), "B attributes must have associated values.");
 
-                                BoundaryConditionShPtrType robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(attrData1, attrData2));
+                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(attrData1, attrData2));
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
-                                BoundaryConditionShPtrType robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
+                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }
                         }
@@ -491,46 +491,48 @@ namespace Nektar
         void BoundaryConditions::ReadForcingFunctions(TiXmlElement *conditions)
         {
             TiXmlElement *forcingFunctionsElement = conditions->FirstChildElement("FORCING");
-            ASSERTL0(forcingFunctionsElement, "Forcing functions must be specified.");
 
-            TiXmlElement *forcingFunction = forcingFunctionsElement->FirstChildElement("F");
-
-            // All forcing functions are initialized to "0" so they only have to be
-            // partially specified.  That is, not all variables have to have functions
-            // specified.  For those that are missing it is assumed they are "0".
-            for (VariableType::iterator varIter = m_Variables.begin();
-                varIter != m_Variables.end(); ++varIter)
+            if (forcingFunctionsElement)
             {
-                ForcingFunctionsShPtrType forcingFunctionShPtr(MemoryManager<ForcingFunctionType>::AllocateSharedPtr("0"));
-                m_ForcingFunctions[*varIter] = forcingFunctionShPtr;
-            }
+                TiXmlElement *forcingFunction = forcingFunctionsElement->FirstChildElement("F");
 
-            while (forcingFunction)
-            {
-                TiXmlAttribute *variableAttr = forcingFunction->FirstAttribute();
-
-                ASSERTL0(variableAttr, "The variable must be specified for the forcing function.");
-                std::string variableAttrName = variableAttr->Name();
-                ASSERTL0(variableAttrName == "VAR", (std::string("Error in forcing function attribute name: ") + variableAttrName).c_str());
-
-                std::string variableStr = variableAttr->Value();
-
-                TiXmlAttribute *functionAttr = variableAttr->Next();
-                if (functionAttr)
+                // All forcing functions are initialized to "0" so they only have to be
+                // partially specified.  That is, not all variables have to have functions
+                // specified.  For those that are missing it is assumed they are "0".
+                for (Variable::iterator varIter = m_Variables.begin();
+                    varIter != m_Variables.end(); ++varIter)
                 {
-                    ForcingFunctionsMapType::iterator forcingFcnsIter = m_ForcingFunctions.find(variableStr);
-
-                    if (forcingFcnsIter != m_ForcingFunctions.end())
-                    {
-                        m_ForcingFunctions[variableStr]->SetEquation(functionAttr->Value());
-                    }
-                    else
-                    {
-                        NEKERROR(ErrorUtil::efatal, (std::string("Error setting forcing function for variable: ") + variableStr).c_str());
-                    }
+                    ForcingFunctionsShPtr forcingFunctionShPtr(MemoryManager<ForcingFunction>::AllocateSharedPtr("0"));
+                    m_ForcingFunctions[*varIter] = forcingFunctionShPtr;
                 }
 
-                forcingFunction = forcingFunction->NextSiblingElement("F");
+                while (forcingFunction)
+                {
+                    TiXmlAttribute *variableAttr = forcingFunction->FirstAttribute();
+
+                    ASSERTL0(variableAttr, "The variable must be specified for the forcing function.");
+                    std::string variableAttrName = variableAttr->Name();
+                    ASSERTL0(variableAttrName == "VAR", (std::string("Error in forcing function attribute name: ") + variableAttrName).c_str());
+
+                    std::string variableStr = variableAttr->Value();
+
+                    TiXmlAttribute *functionAttr = variableAttr->Next();
+                    if (functionAttr)
+                    {
+                        ForcingFunctionsMap::iterator forcingFcnsIter = m_ForcingFunctions.find(variableStr);
+
+                        if (forcingFcnsIter != m_ForcingFunctions.end())
+                        {
+                            m_ForcingFunctions[variableStr]->SetEquation(functionAttr->Value());
+                        }
+                        else
+                        {
+                            NEKERROR(ErrorUtil::efatal, (std::string("Error setting forcing function for variable: ") + variableStr).c_str());
+                        }
+                    }
+
+                    forcingFunction = forcingFunction->NextSiblingElement("F");
+                }
             }
         }
 
@@ -544,10 +546,10 @@ namespace Nektar
             // All initial conditions are initialized to "0" so they only have to be
             // partially specified.  That is, not all variables have to have functions
             // specified.  For those that are missing it is assumed they are "0".
-            for (VariableType::iterator varIter = m_Variables.begin();
+            for (Variable::iterator varIter = m_Variables.begin();
                 varIter != m_Variables.end(); ++varIter)
             {
-                InitialConditionsShPtrType initialConditionShPtr(MemoryManager<InitialConditionType>::AllocateSharedPtr("0"));
+                InitialConditionsShPtr initialConditionShPtr(MemoryManager<InitialCondition>::AllocateSharedPtr("0"));
                 m_InitialConditions[*varIter] = initialConditionShPtr;
             }
 
@@ -564,7 +566,7 @@ namespace Nektar
                 TiXmlAttribute *functionAttr = initialConditionAttr->Next();
                 if (functionAttr)
                 {
-                    InitialConditionsMapType::iterator initialConditionFcnsIter =
+                    InitialConditionsMap::iterator initialConditionFcnsIter =
                         m_InitialConditions.find(initialConditionStr);
 
                     if (initialConditionFcnsIter != m_InitialConditions.end())
@@ -579,6 +581,112 @@ namespace Nektar
 
                 initialCondition = initialCondition->NextSiblingElement("I");
             }
+        }
+
+        ForcingFunctionsShPtr BoundaryConditions::GetForcingFunction(int indx)
+        {
+            ForcingFunctionsShPtr returnval;
+
+            if (indx >= m_Variables.size() || indx < 0)
+            {
+                string errStr;
+                std::ostringstream strStream(errStr);
+                strStream << indx;
+
+                NEKERROR(ErrorUtil::efatal,
+                    (std::string("Unable to find variable corresponding to index: ") + errStr).c_str());
+            }
+
+            return GetForcingFunction(m_Variables[indx]);
+        }
+
+        ForcingFunctionsShPtr BoundaryConditions::GetForcingFunction(const string &var)
+        {
+            ForcingFunctionsShPtr returnval;
+            
+            // Check that var is defined in forcing function list.
+            ForcingFunctionsMap::iterator ffIter = m_ForcingFunctions.find(var);
+
+            bool found = false;
+            if( ffIter != m_ForcingFunctions.end() )
+            {
+                returnval = ffIter->second;
+                found = true;
+            }
+            else
+            {
+                NEKERROR(ErrorUtil::efatal,
+                    (std::string("Unable to find variable used in obtaining forcing function: ") + var).c_str());
+            }
+
+            if (found)
+            {
+                if (returnval->GetEquation() == "00.0")
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                        (std::string("Default forcing function used for variable: ") + var).c_str());
+                }
+            }
+
+            return returnval;
+        }
+
+        ForcingFunctionsShPtr BoundaryConditions::GetForcingFunction(const char *var)
+        {
+            return GetForcingFunction(std::string(var));
+        }
+
+        InitialConditionsShPtr BoundaryConditions::GetInitialCondition(int indx)
+        {
+            InitialConditionsShPtr returnval;
+
+            if (indx >= m_Variables.size() || indx < 0)
+            {
+                string errStr;
+                std::ostringstream strStream(errStr);
+                strStream << indx;
+
+                NEKERROR(ErrorUtil::efatal,
+                    (std::string("Unable to find variable corresponding to index: ") + errStr).c_str());
+            }
+
+            return GetInitialCondition(m_Variables[indx]);
+        }
+
+        InitialConditionsShPtr BoundaryConditions::GetInitialCondition(const string &var)
+        {
+            InitialConditionsShPtr returnval;
+            
+            // Check that var is defined in forcing function list.
+            InitialConditionsMap::iterator ffIter = m_InitialConditions.find(var);
+
+            bool found = false;
+            if( ffIter != m_InitialConditions.end() )
+            {
+                returnval = ffIter->second;
+                found = true;
+            }
+            else
+            {
+                NEKERROR(ErrorUtil::efatal,
+                    (std::string("Unable to find variable used in obtaining initial condition: ") + var).c_str());
+            }
+
+            if (found)
+            {
+                if (returnval->GetEquation() == "00.0")
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                        (std::string("Default initial condition used for variable: ") + var).c_str());
+                }
+            }
+
+            return returnval;
+        }
+
+        InitialConditionsShPtr BoundaryConditions::GetInitialCondition(const char *var)
+        {
+            return GetInitialCondition(std::string(var));
         }
     }
 }

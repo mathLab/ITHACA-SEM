@@ -38,6 +38,8 @@
 
 #include <string>
 #include <map>
+#include <iostream>
+#include <sstream>
 
 #include <SpatialDomains/Equation.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
@@ -112,21 +114,21 @@ namespace Nektar
             Equation<NekDouble> m_b;
         };
 
-        typedef std::map<std::string, NekDouble> ParamMapType;
-        typedef std::vector<std::string> VariableType;
-        typedef std::vector<Composite> BoundaryRegionType;
-        typedef boost::shared_ptr<BoundaryRegionType> BoundaryRegionShPtrType;
-        typedef std::vector<BoundaryRegionShPtrType> BoundaryRegionCollectionType;
-        typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtrType;
-        typedef std::map<std::string,BoundaryConditionShPtrType> BoundaryConditionMapType;
-        typedef boost::shared_ptr<BoundaryConditionMapType> BoundaryConditionMapShPtrType;
-        typedef std::map<int, BoundaryConditionMapShPtrType> BoundaryConditionCollectionType;
-        typedef Equation<NekDouble> ForcingFunctionType;
-        typedef boost::shared_ptr<ForcingFunctionType> ForcingFunctionsShPtrType;
-        typedef std::map<std::string, ForcingFunctionsShPtrType> ForcingFunctionsMapType;
-        typedef Equation<NekDouble> InitialConditionType;
-        typedef boost::shared_ptr<InitialConditionType> InitialConditionsShPtrType;
-        typedef std::map<std::string, InitialConditionsShPtrType> InitialConditionsMapType;
+        typedef std::map<std::string, NekDouble> ParamMap;
+        typedef std::vector<std::string> Variable;
+        typedef std::vector<Composite> BoundaryRegion;
+        typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
+        typedef std::vector<BoundaryRegionShPtr> BoundaryRegionCollection;
+        typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
+        typedef std::map<std::string,BoundaryConditionShPtr> BoundaryConditionMap;
+        typedef boost::shared_ptr<BoundaryConditionMap> BoundaryConditionMapShPtr;
+        typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
+        typedef Equation<NekDouble> ForcingFunction;
+        typedef boost::shared_ptr<ForcingFunction> ForcingFunctionsShPtr;
+        typedef std::map<std::string, ForcingFunctionsShPtr> ForcingFunctionsMap;
+        typedef Equation<NekDouble> InitialCondition;
+        typedef boost::shared_ptr<InitialCondition> InitialConditionsShPtr;
+        typedef std::map<std::string, InitialConditionsShPtr> InitialConditionsMap;
 
         class BoundaryConditions
         {
@@ -137,30 +139,38 @@ namespace Nektar
             void Read(std::string &infilename);
             void Read(TiXmlDocument &doc);
 
-            const ParamMapType &GetParameters(void)
+            const ParamMap &GetParameters(void)
             {
                 return m_Parameters;
             }
 
-            BoundaryRegionCollectionType &GetBoundaryRegions(void) 
+            BoundaryRegionCollection &GetBoundaryRegions(void) 
             {
                 return m_BoundaryRegions;
             }
 
-            BoundaryConditionCollectionType &GetBoundaryConditions(void)
+            BoundaryConditionCollection &GetBoundaryConditions(void)
             {
                 return m_BoundaryConditions;
             }
 
-            ForcingFunctionsMapType &GetForcingFunctions(void)
-            {
-                return m_ForcingFunctions;
-            }
+            /// Get forcing function based on the index of the variable.
+            /// The index is the order in which the variable was
+            /// defined.
+            ForcingFunctionsShPtr GetForcingFunction(int indx);
 
-            InitialConditionsMapType &GetInitialConditions(void)
-            {
-                return m_InitialConditions;
-            }
+            /// Get forcing function based on name of variable.
+            ForcingFunctionsShPtr GetForcingFunction(const string &var);
+            ForcingFunctionsShPtr GetForcingFunction(const char *var);
+
+            /// Get initial condition function based on the index of the variable.
+            /// The index is the order in which the variable was
+            /// defined.
+            InitialConditionsShPtr GetInitialCondition(int indx);
+
+            /// Get initial condition function based on name of variable.
+            InitialConditionsShPtr GetInitialCondition(const string &var);
+            InitialConditionsShPtr GetInitialCondition(const char *var);
 
         protected:
             void ReadParameters(TiXmlElement *conditions);
@@ -172,12 +182,12 @@ namespace Nektar
             void ReadInitialConditions(TiXmlElement *conditions);
 
             // Containers to hold conditions and associated data
-            ParamMapType m_Parameters;
-            VariableType m_Variables;
-            BoundaryRegionCollectionType m_BoundaryRegions;
-            BoundaryConditionCollectionType m_BoundaryConditions;
-            ForcingFunctionsMapType m_ForcingFunctions;
-            InitialConditionsMapType m_InitialConditions;
+            ParamMap m_Parameters;
+            Variable m_Variables;
+            BoundaryRegionCollection m_BoundaryRegions;
+            BoundaryConditionCollection m_BoundaryConditions;
+            ForcingFunctionsMap m_ForcingFunctions;
+            InitialConditionsMap m_InitialConditions;
 
             /// The mesh graph to use for referencing geometry info.
             const MeshGraph *m_MeshGraph;

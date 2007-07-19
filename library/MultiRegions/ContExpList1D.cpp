@@ -104,11 +104,12 @@ namespace Nektar
 
 	    if(!(m_mass.get()))
 	    {
-		GenMassMatrixLinSys();
+                GlobalLinSysKey key(StdRegions::eMass);
+		m_mass = GenGlobalLinSys(key,0);
 	    }
 
 	    DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
-	    m_mass->Solve(v,v);
+	    m_mass->GetLinSys()->Solve(v,v);
 	    m_transState = eContinuous;
 	    m_physState = false;
 	}
@@ -118,13 +119,14 @@ namespace Nektar
             IProductWRTBase(In);
             Vmath::Neg(m_contNcoeffs,&m_contCoeffs[0],1);
             
-	    if(!(m_helm.get()))
+	    if(!(m_helm->GetLinSys().get()))
 	    {
-		GenHelmholtzMatrixLinSys(lambda);
+                GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
+		m_helm = GenGlobalLinSys(key,0);
 	    }
 
 	    DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
-	    m_helm->Solve(v,v);
+	    m_helm->GetLinSys()->Solve(v,v);
 	    m_transState = eContinuous;
 	    m_physState = false;
 	}
@@ -141,82 +143,59 @@ namespace Nektar
 	}
 	
 	
-	void ContExpList1D::GenMassMatrixLinSys(void)
+	GlobalLinSysSharedPtr ContExpList1D::GenGlobalLinSys(const GlobalLinSysKey &mkey, const int NumDirBCs)
 	{
-	    if(!(m_mass.get()))
-	    {
-		int   i,j,n,gid1,gid2,loc_lda,cnt;
-		DNekScalMatSharedPtr loc_mass;
-		StdRegions::StdExpansionVectorIter def;
-		
-		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs,0.0);
-		
-		// fill global matrix 
-		for(n = cnt = 0; n < (*m_exp).size(); ++n)
-		{
-                    LocalRegions::MatrixKey masskey(StdRegions::eMass,
-                                                    (*m_exp)[n]->DetShapeType(),
-                                                    *(*m_exp)[n]);
-                    
-                    loc_mass = (*m_exp)[n]->GetLocMatrix(masskey);
-		    loc_lda = loc_mass->GetColumns();
+            int i,j,n,gid1,gid2,loc_lda,cnt;
+            DNekScalMatSharedPtr loc_mat;
+            StdRegions::StdExpansionVectorIter def;
+            DNekLinSysSharedPtr   linsys;
+            GlobalLinSysSharedPtr returnlinsys;
+            
+            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs - NumDirBCs,m_contNcoeffs - NumDirBCs,0.0);
+            
+            // fill global matrix 
+            for(n = cnt = 0; n < (*m_exp).size(); ++n)
+            {
+                LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
+                                          (*m_exp)[n]->DetShapeType(),
+                                         *(*m_exp)[n],mkey.GetScaleFactor());
+                
+                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
+                loc_lda = loc_mat->GetColumns();
 		    
 		    for(i = 0; i < loc_lda; ++i)
 		    {
 			gid1 = m_locToGloMap->GetMap(cnt + i);
-			for(j = 0; j < loc_lda; ++j)
-			{
-			    gid2 = m_locToGloMap->GetMap(cnt + j);
-			    (*Gmass)(gid1,gid2) += (*loc_mass)(i,j);
-			}		
+                        if(gid1 >= NumDirBCs)
+                        {
+                            for(j = 0; j < loc_lda; ++j)
+                            {
+                                gid2 = m_locToGloMap->GetMap(cnt + j);
+                                if(gid2 >= NumDirBCs)
+                                {
+                                    (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
+                                        += (*loc_mat)(i,j);
+                                }
+                            }		
+                        }
                     }
                     cnt += (*m_exp)[n]->GetNcoeffs();
-		}
-                m_mass = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmass);
-	    }
-	}
+            }
+            
+            linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
+            
+            returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys);
+            return returnlinsys;
+        }
 
-
-	void ContExpList1D::GenHelmholtzMatrixLinSys(NekDouble lambda)
-	{
-	    if(!(m_helm.get()))
-	    {
-		int   i,j,n,gid1,gid2,loc_lda,cnt;
-		DNekScalMatSharedPtr loc_helm;
-		StdRegions::StdExpansionVectorIter def;
-		
-		DNekMatSharedPtr Ghelm = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs,0.0);
-		
-                                                
-		// fill global matrix 
-		for(n = cnt = 0; n < (*m_exp).size(); ++n)
-		{
-                    LocalRegions::MatrixKey helmkey(StdRegions::eHelmholtz,
-                                                    (*m_exp)[n]->DetShapeType(),
-                                                    *(*m_exp)[n],lambda);
-                    
-                    loc_helm = (*m_exp)[n]->GetLocMatrix(helmkey);
-		    loc_lda = loc_helm->GetColumns();
-		    
-		    for(i = 0; i < loc_lda; ++i)
-		    {
-			gid1 = m_locToGloMap->GetMap(cnt + i);
-			for(j = 0; j < loc_lda; ++j)
-			{
-			    gid2 = m_locToGloMap->GetMap(cnt + j);
-			    (*Ghelm)(gid1,gid2) += (*loc_helm)(i,j);
-			}		
-                    }
-                    cnt += (*m_exp)[n]->GetNcoeffs();
-		}
-                m_helm = MemoryManager<DNekLinSys>::AllocateSharedPtr(Ghelm);
-	    }
-	}
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.16  2007/07/16 18:28:42  sherwin
+* Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
+*
 * Revision 1.15  2007/07/13 15:22:12  sherwin
 * Update for Helmholtz (working without bcs )
 *

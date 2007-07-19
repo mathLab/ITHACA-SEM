@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ContSolnField1D.h
+// File GlobalLinSysKeys.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,58 +29,61 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Field definition in one-dimension
+// Description: Headers for GlobalLinSysKey
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
-#define NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
+#ifndef GLOBALLINSYSKEY_H
+#define GLOBALLINSYSKEY_H
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ContExpList1D.h>
-#include <MultiRegions/GlobalLinSys.h>
-
-#include <LocalRegions/PointExp.h>
-#include <SpatialDomains/BoundaryConditions.h>
-
 
 namespace Nektar
 {
     namespace MultiRegions
     {
 
-	class ContField1D:
-	    public ContExpList1D
-	    {
-	    public:
-		ContField1D();
-                ContField1D(const LibUtilities::BasisKey &Ba, 
-                            const SpatialDomains::Composite &cmps,
-                            SpatialDomains::BoundaryConditions &bcs);
-                ContField1D(const ContField1D &In);
-		~ContField1D();
-		
-                void SetBoundaryCondition(const int loc, const NekDouble value)
-                {
-                    m_bndConstraint[loc]->SetValue(value);
-                }
+        class GlobalLinSysKey
+        {
+        public:
+            GlobalLinSysKey(const StdRegions::MatrixType matrixType, 
+                            const double scalefactor = 1.0);
 
-                void FwdTrans (const ExpList &In);
-                void HelmSolve(const ExpList &In, NekDouble lambda);
+            GlobalLinSysKey(const GlobalLinSysKey &key);
 
-	    protected:
-		
-	    private:
-		LocalRegions::PointExpVector                         m_bndConstraint;
-                std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
+            ~GlobalLinSysKey()
+            {
+            }
 
-                GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
-                void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs);
+            friend bool operator<(const GlobalLinSysKey &lhs, 
+                                  const GlobalLinSysKey &rhs);
 
-	    };
-        typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
-	
-    } //end of namespace
-} //end of namespace
-  
-#endif // MULTIERGIONS_CONTSOLNFIELD1D_H
+            const StdRegions::MatrixType GetLinSysType() const
+            {
+                return m_linSysType; 
+            }
+            
+            const NekDouble GetScaleFactor() const 
+            {
+                return m_scaleFactor;
+            }
+
+        protected:
+            GlobalLinSysKey();
+
+            StdRegions::MatrixType m_linSysType;
+            NekDouble              m_scaleFactor;
+
+        private:
+        };
+
+        std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs);
+
+    } // end of namespace
+} // end of namespace
+
+#endif //GLOBALMATRIXKEY_H
+
+/**
+* $Log:$
+***/

@@ -39,7 +39,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/LocalToGlobalMap1D.h>
-
+#include <MultiRegions/GlobalLinSys.h>
 namespace Nektar
 {
     namespace MultiRegions
@@ -102,18 +102,18 @@ namespace Nektar
                                  Array<OneD, NekDouble>          &outarray,
                                  NekDouble lambda);
 	    
-	    void GenMassMatrixLinSys(void);
-	    void GenHelmholtzMatrixLinSys(NekDouble lambda);
-	    
 	protected:
       	    int                    m_contNcoeffs;
 	    Array<OneD, NekDouble> m_contCoeffs;
 	    
 	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
 	    
-	    DNekLinSysSharedPtr m_mass;
-	    DNekLinSysSharedPtr m_helm;
+	    GlobalLinSysSharedPtr m_mass;
+	    GlobalLinSysSharedPtr m_helm;
 	    
+            GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey,
+                                                  const int NumDirBCs);
+
 	private:
 
 	};
@@ -129,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.16  2007/07/16 18:28:43  sherwin
+* Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
+*
 * Revision 1.15  2007/07/13 15:22:12  sherwin
 * Update for Helmholtz (working without bcs )
 *

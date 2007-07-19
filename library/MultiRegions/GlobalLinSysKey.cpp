@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ContSolnField1D.h
+// File GlobalLinSysKey.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,58 +29,67 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Field definition in one-dimension
+// Description: Definition of GlobalLinSysKey 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
-#define NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ContExpList1D.h>
-#include <MultiRegions/GlobalLinSys.h>
-
-#include <LocalRegions/PointExp.h>
-#include <SpatialDomains/BoundaryConditions.h>
-
+#include <MultiRegions/GlobalLinSysKey.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
+        // Register Mass Matrix creator. 
+        GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const NekDouble    scalefactor):
+            m_linSysType(matrixType),
+            m_scaleFactor(scalefactor)
+        {
+        }
 
-	class ContField1D:
-	    public ContExpList1D
-	    {
-	    public:
-		ContField1D();
-                ContField1D(const LibUtilities::BasisKey &Ba, 
-                            const SpatialDomains::Composite &cmps,
-                            SpatialDomains::BoundaryConditions &bcs);
-                ContField1D(const ContField1D &In);
-		~ContField1D();
-		
-                void SetBoundaryCondition(const int loc, const NekDouble value)
-                {
-                    m_bndConstraint[loc]->SetValue(value);
-                }
+        GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
+            m_linSysType(key.m_linSysType),
+            m_scaleFactor(key.m_scaleFactor)
+        {
+        }
 
-                void FwdTrans (const ExpList &In);
-                void HelmSolve(const ExpList &In, NekDouble lambda);
+        bool operator<(const GlobalLinSysKey &lhs, const GlobalLinSysKey &rhs)
+        {
+            if(lhs.m_linSysType < rhs.m_linSysType)
+            {
+                return true;
+            }
 
-	    protected:
-		
-	    private:
-		LocalRegions::PointExpVector                         m_bndConstraint;
-                std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
+            if(lhs.m_linSysType > rhs.m_linSysType)
+            {
+                return false;
+            }
 
-                GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
-                void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs);
+            if(lhs.m_scaleFactor > rhs.m_scaleFactor)
+            {
+                return false;
+            }
 
-	    };
-        typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
-	
-    } //end of namespace
-} //end of namespace
-  
-#endif // MULTIERGIONS_CONTSOLNFIELD1D_H
+            if(lhs.m_scaleFactor < rhs.m_scaleFactor)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs)
+        {
+            os << "MatrixType: " << rhs.GetLinSysType() << ", ScaleFactor: " <<rhs.GetScaleFactor() << std::endl;
+
+            return os;
+        }
+    }
+}
+
+/**
+* $Log: $
+***/
+

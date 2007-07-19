@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ContSolnField1D.h
+// File GlobalLinSys.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,58 +29,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Field definition in one-dimension
+// Description: GlobalLinSys definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
-#define NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
-
-#include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ContExpList1D.h>
 #include <MultiRegions/GlobalLinSys.h>
-
-#include <LocalRegions/PointExp.h>
-#include <SpatialDomains/BoundaryConditions.h>
-
 
 namespace Nektar
 {
     namespace MultiRegions
     {
 
-	class ContField1D:
-	    public ContExpList1D
-	    {
-	    public:
-		ContField1D();
-                ContField1D(const LibUtilities::BasisKey &Ba, 
-                            const SpatialDomains::Composite &cmps,
-                            SpatialDomains::BoundaryConditions &bcs);
-                ContField1D(const ContField1D &In);
-		~ContField1D();
-		
-                void SetBoundaryCondition(const int loc, const NekDouble value)
-                {
-                    m_bndConstraint[loc]->SetValue(value);
-                }
-
-                void FwdTrans (const ExpList &In);
-                void HelmSolve(const ExpList &In, NekDouble lambda);
-
-	    protected:
-		
-	    private:
-		LocalRegions::PointExpVector                         m_bndConstraint;
-                std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
-
-                GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
-                void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs);
-
-	    };
-        typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
+	GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &mkey, 
+                                   const DNekLinSysSharedPtr linsys):
+            m_linSysKey(mkey),
+            m_linSys(linsys)
+	{
+	}
 	
     } //end of namespace
 } //end of namespace
-  
-#endif // MULTIERGIONS_CONTSOLNFIELD1D_H
+

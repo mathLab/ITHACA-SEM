@@ -7,6 +7,8 @@ ExpList1D.cpp
 ExpList2D.cpp
 #ExpList3D.cpp
 ExpList.cpp
+GlobalLinSys.cpp
+GlobalLinSysKey.cpp
 LocalToGlobalMap.cpp
 LocalToGlobalMap1D.cpp
 LocalToGlobalMap2D.cpp
@@ -21,6 +23,8 @@ ExpList1D.h
 ExpList2D.h
 ExpList3D.h
 ExpList.h
+GlobalLinSys.h
+GlobalLinSysKey.h
 LocalToGlobalMap1D.h
 LocalToGlobalMap2D.h
 LocalToGlobalMap3D.h

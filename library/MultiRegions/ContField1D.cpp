@@ -117,79 +117,23 @@ namespace Nektar
 
 	void ContField1D::FwdTrans(const ExpList &In)
 	{
-            int i;
-            int NumDirBcs = m_locToGloMap->GetNumDirichletBCs();
-            Array<OneD,NekDouble> tmp;
+            GlobalLinSysKey key(StdRegions::eMass);
+            GlobalSolve(key,In);
 
-	    IProductWRTBase(In);
-
-	    if(!(m_mass.get()))
-	    {
-		GenMassMatrixLinSys();
-	    }
-
-            for(i = 0; i < NumDirBcs; ++i)
-            {
-                m_contCoeffs[i] = m_bndConstraint[i]->GetValue();
-            }
-            
-            // need to modify right hand side vector here to take
-            // account of Dirichlet contribution to element
-
-
-	    DNekVec v(m_contNcoeffs-NumDirBcs, tmp = m_contCoeffs+NumDirBcs,eWrapper);
-	    m_mass->Solve(v,v);
 	    m_transState = eContinuous;
 	    m_physState = false;
 	}
 
-	void ContField1D::GenMassMatrixLinSys(void)
-	{
-	    if(!(m_mass.get()))
-	    {
-                int NumDirBCs = m_locToGloMap->GetNumDirichletBCs();
-		int   i,j,n,gid1,gid2,loc_lda,cnt;
-		DNekScalMatSharedPtr loc_mass;
-		StdRegions::StdExpansionVectorIter def;
-
-		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs - NumDirBCs,m_contNcoeffs - NumDirBCs,0.0);
-		
-		// fill global matrix 
-		for(n = cnt = 0; n < (*m_exp).size(); ++n)
-		{
-                    LocalRegions::MatrixKey masskey(StdRegions::eMass,
-                                                    (*m_exp)[n]->DetShapeType(),
-                                                    *(*m_exp)[n]);
-
-		    loc_mass = (*m_exp)[n]->GetLocMatrix(masskey);
-		    loc_lda = loc_mass->GetColumns();
-		    
-		    for(i = 0; i < loc_lda; ++i)
-		    {
-			gid1 = m_locToGloMap->GetMap(cnt + i);
-                        if(gid1 >= NumDirBCs)
-                        {
-                            for(j = 0; j < loc_lda; ++j)
-                            {
-                                gid2 = m_locToGloMap->GetMap(cnt + j);
-                                if(gid2 >= NumDirBCs)
-                                {
-                                    (*Gmass)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                        += (*loc_mass)(i,j);
-                                }
-                            }		
-                        }
-                    }
-                    cnt += (*m_exp)[n]->GetNcoeffs();
-		}
-                m_mass = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmass);
-	    }
-	}
-
         // Solve the helmholtz problem assuming that m_contCoeff vector 
         // contains an intial estimate for solution
-
 	void ContField1D::HelmSolve(const ExpList &In, NekDouble lambda)
+        {
+            GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
+            GlobalSolve(key,In);
+        }
+
+
+	void ContField1D::GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs)
 	{
             int i;
             int NumDirBcs = m_locToGloMap->GetNumDirichletBCs();
@@ -203,10 +147,12 @@ namespace Nektar
             {
                 init[i] = m_bndConstraint[i]->GetValue();
             }
-            GeneralMatrixOp(StdRegions::eHelmholtz,init,Dir_fce,lambda);
+
+            GeneralMatrixOp(key.GetLinSysType(), init,Dir_fce,
+                            key.GetScaleFactor());
 
             // Set up forcing function
-	    IProductWRTBase(In);
+	    IProductWRTBase(Rhs);
             Vmath::Neg(m_contNcoeffs,&m_contCoeffs[0],1);
 
             // Forcing function with Dirichlet conditions 
@@ -215,15 +161,11 @@ namespace Nektar
 
             if(m_contNcoeffs - NumDirBcs > 0)
             {
+                GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
 
-                if(!(m_helm.get()))
-                {
-                    GenHelmholtzMatrixLinSys(lambda);
-                }
-                
                 sln = m_contCoeffs+NumDirBcs;
                 DNekVec v(m_contNcoeffs-NumDirBcs,sln,eWrapper);
-                m_helm->Solve(v,v);
+                LinSys->GetLinSys()->Solve(v,v);
             }
 
             // Recover solution by addinig intial conditons
@@ -235,48 +177,33 @@ namespace Nektar
 	    m_physState = false;
 	}
 
-	void ContField1D::GenHelmholtzMatrixLinSys(NekDouble lambda)
-	{
-	    if(!(m_helm.get()))
-	    {
-                int NumDirBCs = m_locToGloMap->GetNumDirichletBCs();
-		int   i,j,n,gid1,gid2,loc_lda,cnt;
-		DNekScalMatSharedPtr loc_helm;
-		StdRegions::StdExpansionVectorIter def;
 
-		DNekMatSharedPtr Ghelm = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs - NumDirBCs,m_contNcoeffs - NumDirBCs,0.0);
-		
-		// fill global matrix 
-		for(n = cnt = 0; n < (*m_exp).size(); ++n)
-		{
-                    LocalRegions::MatrixKey helmkey(StdRegions::eHelmholtz,
-                                                    (*m_exp)[n]->DetShapeType(),
-                                                    *(*m_exp)[n],lambda);
-
-		    loc_helm = (*m_exp)[n]->GetLocMatrix(helmkey);
-		    loc_lda = loc_helm->GetColumns();
-		    
-		    for(i = 0; i < loc_lda; ++i)
-		    {
-			gid1 = m_locToGloMap->GetMap(cnt + i);
-                        if(gid1 >= NumDirBCs)
-                        {
-                            for(j = 0; j < loc_lda; ++j)
-                            {
-                                gid2 = m_locToGloMap->GetMap(cnt + j);
-                                if(gid2 >= NumDirBCs)
-                                {
-                                    (*Ghelm)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                        += (*loc_helm)(i,j);
-                                }
-                            }		
-                        }
-                    }
-                    cnt += (*m_exp)[n]->GetNcoeffs();
-		}
-                m_helm = MemoryManager<DNekLinSys>::AllocateSharedPtr(Ghelm);
-	    }
-	}
+        // could replace with a map
+        GlobalLinSysSharedPtr ContField1D::GetGlobalLinSys(const GlobalLinSysKey &mkey) 
+       {
+            switch (mkey.GetLinSysType())
+            {
+            case StdRegions::eMass:
+                if(!m_mass.get())
+                {
+                    m_mass = GenGlobalLinSys(mkey,
+                             m_locToGloMap->GetNumDirichletBCs());
+                }
+                return m_mass;
+                break;
+            case StdRegions::eHelmholtz:
+                if(!m_helm.get())
+                {
+                    m_helm = GenGlobalLinSys(mkey,
+                             m_locToGloMap->GetNumDirichletBCs());
+                }
+                return m_helm;
+                break;
+            default:
+                ASSERTL0(false,"This matrix type is not set up");
+                    break;
+            }
+        }
 
     } // end of namespace
 } //end of namespace

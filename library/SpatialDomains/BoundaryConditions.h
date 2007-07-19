@@ -118,6 +118,7 @@ namespace Nektar
         typedef std::vector<std::string> Variable;
         typedef std::vector<Composite> BoundaryRegion;
         typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
+        typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
         typedef std::vector<BoundaryRegionShPtr> BoundaryRegionCollection;
         typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
         typedef std::map<std::string,BoundaryConditionShPtr> BoundaryConditionMap;
@@ -141,10 +142,7 @@ namespace Nektar
             void Read(std::string &infilename);
             void Read(TiXmlDocument &doc);
 
-            const ParamMap &GetParameters(void)
-            {
-                return m_Parameters;
-            }
+            NekDouble GetParameter(const std::string &parmName);
 
             BoundaryRegionCollection &GetBoundaryRegions(void) 
             {
@@ -163,7 +161,6 @@ namespace Nektar
 
             /// Get forcing function based on name of variable.
             ConstForcingFunctionShPtr GetForcingFunction(const string &var);
-            ConstForcingFunctionShPtr GetForcingFunction(const char *var);
 
             /// Get initial condition function based on the index of the variable.
             /// The index is the order in which the variable was
@@ -172,7 +169,6 @@ namespace Nektar
 
             /// Get initial condition function based on name of variable.
             ConstInitialConditionShPtr GetInitialCondition(const string &var);
-            ConstInitialConditionShPtr GetInitialCondition(const char *var);
 
         protected:
             void ReadParameters(TiXmlElement *conditions);

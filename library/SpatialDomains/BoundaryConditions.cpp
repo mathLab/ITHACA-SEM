@@ -583,6 +583,16 @@ namespace Nektar
             }
         }
 
+        NekDouble BoundaryConditions::GetParameter(const std::string &parmName)
+        {
+            ParamMap::iterator paramMapIter = m_Parameters.find(parmName);
+
+            ASSERTL0(paramMapIter != m_Parameters.end(),
+                (std::string("Unable to find requested parameter: ") + parmName).c_str());
+
+            return paramMapIter->second;
+        }
+
         ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(int indx)
         {
             ConstForcingFunctionShPtr returnval;
@@ -631,11 +641,6 @@ namespace Nektar
             return returnval;
         }
 
-        ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(const char *var)
-        {
-            return GetForcingFunction(std::string(var));
-        }
-
         ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(int indx)
         {
             ConstInitialConditionShPtr returnval;
@@ -682,11 +687,6 @@ namespace Nektar
             }
 
             return returnval;
-        }
-
-        ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(const char *var)
-        {
-            return GetInitialCondition(std::string(var));
         }
     }
 }

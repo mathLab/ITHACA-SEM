@@ -17,7 +17,6 @@
             <V ID="0"> u </V> 
             <!-- Comment test -->
             <V ID="1"> v </V>
-            <!-- Another comment -->
         </VARIABLES>
 
         <!--These composites must be defined in the geometry file.-->
@@ -58,12 +57,12 @@
         </BOUNDARYCONDITIONS>
 
         <FORCING>
-            <F VAR="u" VALUE="f(x,y,z,t)" />
+            <F VAR="u" VALUE="5.0" />
             <F VAR="v" VALUE="g(x,y,z,t)" />
         </FORCING>
 
         <INITIALCONDITIONS>
-            <I VAR ="u" VALUE="f(x,y,z)" />
+            <I VAR ="u" VALUE="12.345" />
             <I VAR ="v" VALUE="g(x,y,z)" />
         </INITIALCONDITIONS>
     </CONDITIONS>

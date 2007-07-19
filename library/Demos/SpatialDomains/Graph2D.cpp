@@ -32,6 +32,12 @@ int main(int argc, char *argv[]){
 
     graph2D.Read(in);
     bcs.Read(bcfile);
+
+    ForcingFunctionsShPtr ffunc = bcs.GetForcingFunction("u");
+    NekDouble val = ffunc->Evaluate();
+    
+    InitialConditionsShPtr ic = bcs.GetInitialCondition("u");
+    val = ic->Evaluate();
     
     return 0;
 }

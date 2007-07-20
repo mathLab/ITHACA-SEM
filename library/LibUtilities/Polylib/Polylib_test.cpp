@@ -30,7 +30,7 @@ using namespace Polylib;
              -0.5 <= beta  <= 5   (increments of 0.5)
 
    using np points where
-	      NPLOWER <= np <= NPUPPER
+          NPLOWER <= np <= NPUPPER
                 2     <= n  <= 2*np - delta
 
    delta = 1 (gauss), 2(radau), 3(lobatto).
@@ -44,14 +44,14 @@ using namespace Polylib;
    The routine then evaluates the derivate of 
 
           d   n      n-1
-	  -- x  = n x 
-	  dx
+      -- x  = n x 
+      dx
 
    for all   -0.5 <= alpha <= 5   (increments of 0.5)
              -0.5 <= beta  <= 5   (increments of 0.5)
 
    using np points where
-	      NPLOWER <= np <= NPUPPER
+          NPLOWER <= np <= NPUPPER
                 2     <= n  <= np - 1
 
    The error is check in a pointwise sense and if it is larger than 
@@ -63,20 +63,20 @@ using namespace Polylib;
    Finally the routine  evaluates the interpolation of
 
              n      n
-	    z  to  x
+        z  to  x
 
    where z are the quadrature zeros and x are the equispaced points
        
                   2*i
         x    =   -----   - 1.0    (0 <= i <= np-1)
-	 i       (np-1)
+     i       (np-1)
             
-	  
+      
    for all   -0.5 <= alpha <= 5   (increments of 0.5)
              -0.5 <= beta  <= 5   (increments of 0.5)
 
    using np points where
-	      NPLOWER <= np <= NPUPPER
+          NPLOWER <= np <= NPUPPER
                 2     <= n  <= np - 1
 
    The error is check in a pointwise sense and if it is larger than 
@@ -136,14 +136,14 @@ main(){
     while(beta <= 5.0){
       
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwgj(z,w,np,alpha,beta);
-	for(n = 2; n < 2*np-1; ++n){
-	  jacobfd(np,z,p,NULL,n,alpha,beta);
-	  sum = ddot(np,w,1,p,1);
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d integal was %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwgj(z,w,np,alpha,beta);
+    for(n = 2; n < 2*np-1; ++n){
+      jacobfd(np,z,p,NULL,n,alpha,beta);
+      sum = ddot(np,w,1,p,1);
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d integal was %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
       
       beta += 0.5;
@@ -162,14 +162,14 @@ main(){
     beta = -0.5;
     while(beta <= 5.0){
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwgrjm(z,w,np,alpha,beta);
-	for(n = 2; n < 2*np-2; ++n){
-	  jacobfd(np,z,p,NULL,n,alpha,beta);
-	  sum = ddot(np,w,1,p,1);
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d integal was %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwgrjm(z,w,np,alpha,beta);
+    for(n = 2; n < 2*np-2; ++n){
+      jacobfd(np,z,p,NULL,n,alpha,beta);
+      sum = ddot(np,w,1,p,1);
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d integal was %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
       
       beta += 0.5;
@@ -189,14 +189,14 @@ main(){
     beta = -0.5;
     while(beta <= 5.0){
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwgrjp(z,w,np,alpha,beta);
-	for(n = 2; n < 2*np-2; ++n){
-	  jacobfd(np,z,p,NULL,n,alpha,beta);
-	  sum = ddot(np,w,1,p,1);
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d integal was %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwgrjp(z,w,np,alpha,beta);
+    for(n = 2; n < 2*np-2; ++n){
+      jacobfd(np,z,p,NULL,n,alpha,beta);
+      sum = ddot(np,w,1,p,1);
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d integal was %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
       
       beta += 0.5;
@@ -216,14 +216,14 @@ main(){
     while(beta <= 5.0){
 
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwglj(z,w,np,alpha,beta);
-	for(n = 2; n < 2*np-3; ++n){
-	  jacobfd(np,z,p,NULL,n,alpha,beta);
-	  sum = ddot(np,w,1,p,1);
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d integal was %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwglj(z,w,np,alpha,beta);
+    for(n = 2; n < 2*np-3; ++n){
+      jacobfd(np,z,p,NULL,n,alpha,beta);
+      sum = ddot(np,w,1,p,1);
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d integal was %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
         
       beta += 0.5;
@@ -242,19 +242,19 @@ main(){
     while(beta <= 5.0){
 
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwgj(z,w,np,alpha,beta);
-	for(n = 2; n < np-1; ++n){
-	  Dgj(d,dt,z,np,alpha,beta);
-	  
-	  for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
-	  sum = 0;
-	  for(i = 0; i < np; ++i) 
-	    sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
-	  sum /= np;
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwgj(z,w,np,alpha,beta);
+    for(n = 2; n < np-1; ++n){
+      Dgj(d,dt,z,np,alpha,beta);
+      
+      for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
+      sum = 0;
+      for(i = 0; i < np; ++i) 
+        sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
+      sum /= np;
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
       beta += 0.5;
     }
@@ -272,18 +272,18 @@ main(){
     while(beta <= 5.0){
 
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwgrjm(z,w,np,alpha,beta);
-	for(n = 2; n < np-1; ++n){
-	  Dgrjm(d,dt,z,np,alpha,beta);
-	  for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
-	  sum = 0;
-	  for(i = 0; i < np; ++i) 
-	    sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
-	  sum /= np;
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwgrjm(z,w,np,alpha,beta);
+    for(n = 2; n < np-1; ++n){
+      Dgrjm(d,dt,z,np,alpha,beta);
+      for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
+      sum = 0;
+      for(i = 0; i < np; ++i) 
+        sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
+      sum /= np;
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
       beta += 0.5;
     }
@@ -301,18 +301,18 @@ main(){
     while(beta <= 5.0){
 
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwgrjp(z,w,np,alpha,beta);
-	for(n = 2; n < np-1; ++n){
-	  Dgrjp(d,dt,z,np,alpha,beta);
-	  for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
-	  sum = 0;
-	  for(i = 0; i < np; ++i) 
-	    sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
-	  sum /= np;
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwgrjp(z,w,np,alpha,beta);
+    for(n = 2; n < np-1; ++n){
+      Dgrjp(d,dt,z,np,alpha,beta);
+      for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
+      sum = 0;
+      for(i = 0; i < np; ++i) 
+        sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
+      sum /= np;
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
       beta += 0.5;
     }
@@ -330,18 +330,18 @@ main(){
     while(beta <= 5.0){
 
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwglj(z,w,np,alpha,beta);
-	for(n = 2; n < np-1; ++n){
-	  Dglj(d,dt,z,np,alpha,beta);
-	  for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
-	  sum = 0;
-	  for(i = 0; i < np; ++i) 
-	    sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
-	  sum /= np;
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwglj(z,w,np,alpha,beta);
+    for(n = 2; n < np-1; ++n){
+      Dglj(d,dt,z,np,alpha,beta);
+      for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
+      sum = 0;
+      for(i = 0; i < np; ++i) 
+        sum += fabs(ddot(np,d+i*np,1,p,1) - n*pow(z[i],n-1));
+      sum /= np;
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
       beta += 0.5;
     }
@@ -360,21 +360,21 @@ main(){
     while(beta <= 5.0){
 
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwgj(z,w,np,alpha,beta);
-	for(n = 2; n < np-1; ++n){
-	  for(i = 0; i < np; ++i) {
-	    w[i] = 2.0*i/(double)(np-1)-1.0;
-	    p[i] = pow(z[i],n);
-	  }
-	  Imgj(d,z,w,np,np,alpha,beta);
-	  sum = 0;
-	  for(i = 0; i < np; ++i) 
-	    sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
-	  sum /= np;
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwgj(z,w,np,alpha,beta);
+    for(n = 2; n < np-1; ++n){
+      for(i = 0; i < np; ++i) {
+        w[i] = 2.0*i/(double)(np-1)-1.0;
+        p[i] = pow(z[i],n);
+      }
+      Imgj(d,z,w,np,np,alpha,beta);
+      sum = 0;
+      for(i = 0; i < np; ++i) 
+        sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
+      sum /= np;
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
       beta += 0.5;
     }
@@ -392,21 +392,21 @@ main(){
     while(beta <= 5.0){
 
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwgrjm(z,w,np,alpha,beta);
-	for(n = 2; n < np-1; ++n){
-	  for(i = 0; i < np; ++i) {
-	    w[i] = 2.0*i/(double)(np-1)-1.0;
-	    p[i] = pow(z[i],n);
-	  }
-	  Imgrjm(d,z,w,np,np,alpha,beta);
-	  sum = 0;
-	  for(i = 0; i < np; ++i) 
-	    sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
-	  sum /= np;
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwgrjm(z,w,np,alpha,beta);
+    for(n = 2; n < np-1; ++n){
+      for(i = 0; i < np; ++i) {
+        w[i] = 2.0*i/(double)(np-1)-1.0;
+        p[i] = pow(z[i],n);
+      }
+      Imgrjm(d,z,w,np,np,alpha,beta);
+      sum = 0;
+      for(i = 0; i < np; ++i) 
+        sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
+      sum /= np;
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
       beta += 0.5;
     }
@@ -423,21 +423,21 @@ main(){
     while(beta <= 5.0){
 
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwgrjp(z,w,np,alpha,beta);
-	for(n = 2; n < np-1; ++n){
-	  for(i = 0; i < np; ++i) {
-	    w[i] = 2.0*i/(double)(np-1)-1.0;
-	    p[i] = pow(z[i],n);
-	  }
-	  Imgrjp(d,z,w,np,np,alpha,beta);
-	  sum = 0;
-	  for(i = 0; i < np; ++i) 
-	    sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
-	  sum /= np;
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwgrjp(z,w,np,alpha,beta);
+    for(n = 2; n < np-1; ++n){
+      for(i = 0; i < np; ++i) {
+        w[i] = 2.0*i/(double)(np-1)-1.0;
+        p[i] = pow(z[i],n);
+      }
+      Imgrjp(d,z,w,np,np,alpha,beta);
+      sum = 0;
+      for(i = 0; i < np; ++i) 
+        sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
+      sum /= np;
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
       beta += 0.5;
     }
@@ -455,21 +455,21 @@ main(){
     while(beta <= 5.0){
 
       for(np = NPLOWER; np <= NPUPPER; ++np){
-	zwglj(z,w,np,alpha,beta);
-	for(n = 2; n < np-1; ++n){
-	  for(i = 0; i < np; ++i) {
-	    w[i] = 2.0*i/(double)(np-1)-1.0;
-	    p[i] = pow(z[i],n);
-	  }
-	  Imglj(d,z,w,np,np,alpha,beta);
-	  sum = 0;
-	  for(i = 0; i < np; ++i) 
-	    sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
-	  sum /= np;
-	  if(fabs(sum)>EPS)
-	    printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
-		   ,alpha,beta,np,n,sum);
-	}
+    zwglj(z,w,np,alpha,beta);
+    for(n = 2; n < np-1; ++n){
+      for(i = 0; i < np; ++i) {
+        w[i] = 2.0*i/(double)(np-1)-1.0;
+        p[i] = pow(z[i],n);
+      }
+      Imglj(d,z,w,np,np,alpha,beta);
+      sum = 0;
+      for(i = 0; i < np; ++i) 
+        sum += fabs(ddot(np,d+i*np,1,p,1) - pow(w[i],n));
+      sum /= np;
+      if(fabs(sum)>EPS)
+        printf("alpha = %lf, beta = %lf, np = %d, n = %d difference %lg\n"
+           ,alpha,beta,np,n,sum);
+    }
       }
       beta += 0.5;
     }

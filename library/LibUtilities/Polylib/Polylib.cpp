@@ -118,9 +118,9 @@ namespace Polylib {
 
 /* local functions */
 static void   Jacobz   (const int n, double *z, const double alpha, 
-			const double beta);
+            const double beta);
 static void   JacZeros (const int n, double *a, const double alpha, 
-			const double beta);
+            const double beta);
 static void   TriQL    (const int n, double *d, double *e);
 
 static double gammaF (const double);
@@ -136,7 +136,7 @@ static double gammaF (const double);
 */
 
 void zwgj (double *z, double *w, const int np, const double alpha, 
-	   const double beta){
+       const double beta){
   register int i;
   double fac, one = 1.0, two = 2.0, apb = alpha + beta;
 
@@ -163,7 +163,7 @@ void zwgj (double *z, double *w, const int np, const double alpha,
 */
 
 void zwgrjm(double *z, double *w, const int np, const double alpha, 
-	    const double beta){
+        const double beta){
 
   if(np == 1){
     z[0] = 0.0;
@@ -200,7 +200,7 @@ void zwgrjm(double *z, double *w, const int np, const double alpha,
 */
 
 void zwgrjp(double *z, double *w, const int np, const double alpha, 
-	    const double beta){
+        const double beta){
 
   if(np == 1){
     z[0] = 0.0;
@@ -235,7 +235,7 @@ void zwgrjp(double *z, double *w, const int np, const double alpha,
 */
 
 void zwglj(double *z, double *w, const int np, const double alpha, 
-	   const double beta){
+       const double beta){
 
   if( np == 1 ){
     z[0] = 0.0;
@@ -274,7 +274,7 @@ void zwglj(double *z, double *w, const int np, const double alpha,
 */
 
 void Dgj(double *D,  const double *z, const int np, const double alpha,
-	 const double beta){
+     const double beta){
 
   double one = 1.0, two = 2.0;
 
@@ -291,11 +291,11 @@ void Dgj(double *D,  const double *z, const int np, const double alpha,
     for (i = 0; i < np; i++){
       for (j = 0; j < np; j++){
 
-	if (i != j) 
-	  D[i*np+j] = pd[i]/(pd[j]*(z[i]-z[j]));
-	else    
-	  D[i*np+j] = (alpha - beta + (alpha + beta + two)*z[i])/
-		     (two*(one - z[i]*z[i]));
+    if (i != j) 
+      D[i*np+j] = pd[i]/(pd[j]*(z[i]-z[j]));
+    else    
+      D[i*np+j] = (alpha - beta + (alpha + beta + two)*z[i])/
+             (two*(one - z[i]*z[i]));
       }
     }
     free(pd);
@@ -316,7 +316,7 @@ void Dgj(double *D,  const double *z, const int np, const double alpha,
 */
 
   void Dgrjm(double *D, const double *z, const int np, const double alpha, 
-	     const double beta){
+         const double beta){
 
   if (np <= 0){
     D[0] = 0.0;
@@ -335,16 +335,16 @@ void Dgj(double *D,  const double *z, const int np, const double alpha,
 
     for (i = 0; i < np; i++)
       for (j = 0; j < np; j++){
-	if (i != j) 
-	  D[i*np+j] = pd[i]/(pd[j]*(z[i]-z[j]));
-	else { 
-	  if(i == 0)
-	    D[i*np+j] = -(np + alpha + beta + one)*(np - one)/
-	      (two*(beta + two));
-	  else
-	    D[i*np+j] = (alpha - beta + one + (alpha + beta + one)*z[i])/
-	      (two*(one - z[i]*z[i]));
-	}
+    if (i != j) 
+      D[i*np+j] = pd[i]/(pd[j]*(z[i]-z[j]));
+    else { 
+      if(i == 0)
+        D[i*np+j] = -(np + alpha + beta + one)*(np - one)/
+          (two*(beta + two));
+      else
+        D[i*np+j] = (alpha - beta + one + (alpha + beta + one)*z[i])/
+          (two*(one - z[i]*z[i]));
+    }
       }
     free(pd);
   }
@@ -364,7 +364,7 @@ void Dgj(double *D,  const double *z, const int np, const double alpha,
 */
 
 void Dgrjp(double *D, const double *z, const int np, const double alpha, 
-	   const double beta){
+       const double beta){
 
   if (np <= 0){
     D[0] = 0.0;
@@ -384,16 +384,16 @@ void Dgrjp(double *D, const double *z, const int np, const double alpha,
 
     for (i = 0; i < np; i++)
       for (j = 0; j < np; j++){
-	if (i != j) 
-	  D[i*np+j] = pd[i]/(pd[j]*(z[i]-z[j]));
-	else { 
-	  if(i == np-1)
-	    D[i*np+j] = (np + alpha + beta + one)*(np - one)/
-	      (two*(alpha + two));
-	  else
-	    D[i*np+j] = (alpha - beta - one + (alpha + beta + one)*z[i])/
-	      (two*(one - z[i]*z[i]));
-	}
+    if (i != j) 
+      D[i*np+j] = pd[i]/(pd[j]*(z[i]-z[j]));
+    else { 
+      if(i == np-1)
+        D[i*np+j] = (np + alpha + beta + one)*(np - one)/
+          (two*(alpha + two));
+      else
+        D[i*np+j] = (alpha - beta - one + (alpha + beta + one)*z[i])/
+          (two*(one - z[i]*z[i]));
+    }
       }
     free(pd);
   }
@@ -413,7 +413,7 @@ void Dgrjp(double *D, const double *z, const int np, const double alpha,
 */
 
 void Dglj(double *D, const double *z, const int np, const double alpha,
-	  const double beta){
+      const double beta){
      
   if (np <= 0){
     D[0] = 0.0;
@@ -434,17 +434,17 @@ void Dglj(double *D, const double *z, const int np, const double alpha,
 
     for (i = 0; i < np; i++)
       for (j = 0; j < np; j++){
-	if (i != j) 
-	  D[i*np+j] = pd[i]/(pd[j]*(z[i]-z[j]));
-	else { 
-	  if      (i == 0)
-	    D[i*np+j] = (alpha - (np-1)*(np + alpha + beta))/(two*(beta+ two));
-	  else if (i == np-1)
-	    D[i*np+j] =-(beta - (np-1)*(np + alpha + beta))/(two*(alpha+ two));
-	  else
-	    D[i*np+j] = (alpha - beta + (alpha + beta)*z[i])/
-	                        (two*(one - z[i]*z[i]));
-	}
+    if (i != j) 
+      D[i*np+j] = pd[i]/(pd[j]*(z[i]-z[j]));
+    else { 
+      if      (i == 0)
+        D[i*np+j] = (alpha - (np-1)*(np + alpha + beta))/(two*(beta+ two));
+      else if (i == np-1)
+        D[i*np+j] =-(beta - (np-1)*(np + alpha + beta))/(two*(alpha+ two));
+      else
+        D[i*np+j] = (alpha - beta + (alpha + beta)*z[i])/
+                            (two*(one - z[i]*z[i]));
+    }
       }
     free(pd);
   }
@@ -474,7 +474,7 @@ void Dglj(double *D, const double *z, const int np, const double alpha,
 */
 
 double hgj (const int i, const double z, const double *zgj, 
-	    const int np, const double alpha, const double beta)
+        const int np, const double alpha, const double beta)
 {
 
   double zi, dz, p, pd, h;
@@ -512,7 +512,7 @@ double hgj (const int i, const double z, const double *zgj,
 */
 
 double hgrjm (const int i, const double z, const double *zgrj, const int np, 
-	      const double alpha, const double beta)
+          const double alpha, const double beta)
 {
 
   double zi, dz, p, pd, h;
@@ -554,7 +554,7 @@ double hgrjm (const int i, const double z, const double *zgrj, const int np,
 */
 
 double hgrjp (const int i, const double z, const double *zgrj, const int np, 
-	      const double alpha, const double beta)
+          const double alpha, const double beta)
 {
 
   double zi, dz, p, pd, h;
@@ -596,7 +596,7 @@ double hgrjp (const int i, const double z, const double *zgrj, const int np,
 */
 
 double hglj (const int i, const double z, const double *zglj, const int np, 
-	     const double alpha, const double beta)
+         const double alpha, const double beta)
 {
   double one = 1., two = 2.;
   double zi, dz, p, pd, h;
@@ -630,7 +630,7 @@ double hglj (const int i, const double z, const double *zglj, const int np,
 */
 
 void Imgj(double *im, const double *zgj, const double *zm, const int nz, 
-	  const int mz,const double alpha, const double beta){
+      const int mz,const double alpha, const double beta){
   double zp;
   register int i, j;
 
@@ -657,7 +657,7 @@ void Imgj(double *im, const double *zgj, const double *zm, const int nz,
 */
 
 void Imgrjm(double *im, const double *zgrj, const double *zm, const int nz,
-	    const int mz, const	double alpha, const double beta){
+        const int mz, const    double alpha, const double beta){
   double zp;
   register int i, j;
 
@@ -684,7 +684,7 @@ void Imgrjm(double *im, const double *zgrj, const double *zm, const int nz,
 */
 
 void Imgrjp(double *im, const double *zgrj, const double *zm, const int nz, 
-	    const int mz,const double alpha, const double beta){
+        const int mz,const double alpha, const double beta){
   double zp;
   register int i, j;
 
@@ -712,7 +712,7 @@ void Imgrjp(double *im, const double *zgrj, const double *zm, const int nz,
 */
 
 void Imglj(double *im, const double *zglj, const double *zm, const int nz, 
-	   const int mz, const double alpha, const double beta)
+       const int mz, const double alpha, const double beta)
 {
   double zp;
   register int i, j;
@@ -767,7 +767,7 @@ void Imglj(double *im, const double *zglj, const double *zm, const int nz,
     - Note the derivative from this routine is only valid for -1 < \a z < 1.
 */
 void jacobfd(const int np, const double *z, double *poly_in, double *polyd, 
-	     const int n, const double alpha, const double beta){
+         const int n, const double alpha, const double beta){
   register int i;
   double  zero = 0.0, one = 1.0, two = 2.0;
 
@@ -777,18 +777,18 @@ void jacobfd(const int np, const double *z, double *poly_in, double *polyd,
   if(n == 0){
     if(poly_in)
       for(i = 0; i < np; ++i) 
-	poly_in[i] = one;
+    poly_in[i] = one;
     if(polyd)
       for(i = 0; i < np; ++i) 
-	polyd[i] = zero; 
+    polyd[i] = zero; 
   }
   else if (n == 1){
     if(poly_in)
       for(i = 0; i < np; ++i) 
-	poly_in[i] = 0.5*(alpha - beta + (alpha + beta + two)*z[i]);
+    poly_in[i] = 0.5*(alpha - beta + (alpha + beta + two)*z[i]);
     if(polyd)
       for(i = 0; i < np; ++i) 
-	polyd[i] = 0.5*(alpha + beta + two);
+    polyd[i] = 0.5*(alpha + beta + two);
   }
   else{
     register int k;
@@ -821,11 +821,11 @@ void jacobfd(const int np, const double *z, double *poly_in, double *polyd,
       a2 /= a1;
       a3 /= a1;
       a4 /= a1;
-	
+    
       for(i = 0; i < np; ++i){
-	poly  [i] = (a2 + a3*z[i])*polyn1[i] - a4*polyn2[i];
-	polyn2[i] = polyn1[i];
-	polyn1[i] = poly  [i];
+    poly  [i] = (a2 + a3*z[i])*polyn1[i] - a4*polyn2[i];
+    polyn2[i] = polyn1[i];
+    polyn1[i] = poly  [i];
       }
     }
     
@@ -838,8 +838,8 @@ void jacobfd(const int np, const double *z, double *poly_in, double *polyd,
 
       // note polyn2 points to polyn1 at end of poly iterations
       for(i = 0; i < np; ++i){
-	polyd[i]  = (a1- a2*z[i])*poly[i] + a3*polyn2[i];
-	polyd[i] /= (one - z[i]*z[i]);
+    polyd[i]  = (a1- a2*z[i])*poly[i] + a3*polyn2[i];
+    polyd[i] /= (one - z[i]*z[i]);
       }
     }
     
@@ -867,7 +867,7 @@ void jacobfd(const int np, const double *z, double *poly_in, double *polyd,
 */
 
 void jacobd(const int np, const double *z, double *polyd, const int n, 
-	    const double alpha, const double beta)
+        const double alpha, const double beta)
 {
   register int i;
   double one = 1.0;
@@ -931,7 +931,7 @@ static double gammaF(const double x){
 */
 
 static void Jacobz(const int n, double *z, const double alpha, 
-		   const double beta){
+           const double beta){
   register int i,j,k;
   double   dth = M_PI/(2.0*(double)n);
   double   poly,pder,rlast=0.0;
@@ -986,7 +986,7 @@ static void Jacobz(const int n, double *z, const double alpha,
 */
 
 static void JacZeros(const int n, double *a, const double alpha, 
-		     const double beta){
+             const double beta){
   int i;
   double apb, apbi,a2b2;
   double *b;
@@ -1009,7 +1009,7 @@ static void JacZeros(const int n, double *a, const double alpha,
     apbi = 2.0*(i+1) + apb;
     a[i] = a2b2/((apbi-2.0)*apbi);
     b[i] = sqrt(4.0*(i+1)*(i+1+alpha)*(i+1+beta)*(i+1+apb)/
-		((apbi*apbi-1)*apbi*apbi));
+        ((apbi*apbi-1)*apbi*apbi));
   }
 
   apbi   = 2.0*n + apb;
@@ -1055,42 +1055,42 @@ static void TriQL(const int n, double *d,double *e){
     iter=0;
     do {
       for (m=l;m<n-1;m++) {
-	dd=fabs(d[m])+fabs(d[m+1]);
-	if (fabs(e[m])+dd == dd) break;
+    dd=fabs(d[m])+fabs(d[m+1]);
+    if (fabs(e[m])+dd == dd) break;
       }
       if (m != l) {
-	if (iter++ == STOP){
-	  fprintf(stderr,"triQL: Too many iterations in TQLI");
-	  exit(1);
-	}
-	g=(d[l+1]-d[l])/(2.0*e[l]);
-	r=sqrt((g*g)+1.0);
-	g=d[m]-d[l]+e[l]/(g+sign(r,g));
-	s=c=1.0;
-	p=0.0;
-	for (i=m-1;i>=l;i--) {
-	  f=s*e[i];
-	  b=c*e[i];
-	  if (fabs(f) >= fabs(g)) {
-	    c=g/f;
-	    r=sqrt((c*c)+1.0);
-	    e[i+1]=f*r;
-	    c *= (s=1.0/r);
-	  } else {
-	    s=f/g;
-	    r=sqrt((s*s)+1.0);
-	    e[i+1]=g*r;
-	    s *= (c=1.0/r);
-	  }
-	  g=d[i+1]-p;
-	  r=(d[i]-g)*s+2.0*c*b;
-	  p=s*r;
-	  d[i+1]=g+p;
-	  g=c*r-b;
-	}
-	d[l]=d[l]-p;
-	e[l]=g;
-	e[m]=0.0;
+    if (iter++ == STOP){
+      fprintf(stderr,"triQL: Too many iterations in TQLI");
+      exit(1);
+    }
+    g=(d[l+1]-d[l])/(2.0*e[l]);
+    r=sqrt((g*g)+1.0);
+    g=d[m]-d[l]+e[l]/(g+sign(r,g));
+    s=c=1.0;
+    p=0.0;
+    for (i=m-1;i>=l;i--) {
+      f=s*e[i];
+      b=c*e[i];
+      if (fabs(f) >= fabs(g)) {
+        c=g/f;
+        r=sqrt((c*c)+1.0);
+        e[i+1]=f*r;
+        c *= (s=1.0/r);
+      } else {
+        s=f/g;
+        r=sqrt((s*s)+1.0);
+        e[i+1]=g*r;
+        s *= (c=1.0/r);
+      }
+      g=d[i+1]-p;
+      r=(d[i]-g)*s+2.0*c*b;
+      p=s*r;
+      d[i+1]=g+p;
+      g=c*r-b;
+    }
+    d[l]=d[l]-p;
+    e[l]=g;
+    e[m]=0.0;
       }
     } while (m != l);
   }
@@ -1101,8 +1101,8 @@ static void TriQL(const int n, double *d,double *e){
     p = d[i];
     for(l = i+1; l < n; ++l)
       if (d[l] < p) {
-	k = l;
-	p = d[l];
+    k = l;
+    p = d[l];
       }
     d[k] = d[i]; 
     d[i] = p;

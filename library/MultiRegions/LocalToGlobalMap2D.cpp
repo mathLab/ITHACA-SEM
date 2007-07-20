@@ -39,64 +39,64 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	LocalToGlobalMap2D::LocalToGlobalMap2D(const int loclen, 
-                             const StdRegions::StdExpansionVector &locexp, 
-                             const SpatialDomains::MeshGraph2D &graph2D)
-	{
-	    int i,j,k,gid,cnt, nedge, nedge_coeffs,edgid;
-	    int nGloVerts = 0;
-	    StdRegions::EdgeOrientation eorient;
-	    LibUtilities::BasisType Btype;
-	   
-	    m_totLocLen = loclen; 
-	    m_locToContMap =  Array<OneD, int>(m_totLocLen,-1);
-	    
-	    // set up mapping based 
-	    StdRegions::StdExpMap vmap;
-    
-	    // need to put into LocalToGloabl initialiser. 
-            Array<OneD, int> edge_offset(graph2D.GetNecomps()+1);
-	    m_sign_change = false;
+        LocalToGlobalMap2D::LocalToGlobalMap2D(const int loclen, 
+                                 const StdRegions::StdExpansionVector &locexp, 
+                                 const SpatialDomains::MeshGraph2D &graph2D)
+        {
+            int i,j,k,gid,cnt, nedge, nedge_coeffs,edgid;
+            int nGloVerts = 0;
+            StdRegions::EdgeOrientation eorient;
+            LibUtilities::BasisType Btype;
+           
+            m_totLocLen = loclen; 
+            m_locToContMap =  Array<OneD, int>(m_totLocLen,-1);
+            
+            // set up mapping based 
+            StdRegions::StdExpMap vmap;
 
-	    // determine global vertex ids
-	    for(i = 0; i < locexp.size(); ++i)
-	    {
+            // need to put into LocalToGloabl initialiser. 
+            Array<OneD, int> edge_offset(graph2D.GetNecomps()+1);
+            m_sign_change = false;
+
+            // determine global vertex ids
+            for(i = 0; i < locexp.size(); ++i)
+            {
                 for(j = 0; j < locexp[i]->GetNverts(); ++j)
                 {                    
                     nGloVerts = max(nGloVerts,graph2D.GetVidFromElmt(locexp[i]->DetShapeType(),j,i));
-                    //set up nedge coefficients for each edge 	
+                    //set up nedge coefficients for each edge     
                     nedge_coeffs = locexp[i]->GetEdgeNcoeffs(j);
                     edge_offset[graph2D.GetEidFromElmt(locexp[i]->DetShapeType(),j,i)+1] = nedge_coeffs-2;
-                    
+                        
                     // need a sign vector if edge_nceoff >=4 
                     if((nedge_coeffs >= 4)&&(locexp[i]->GetEdgeBasisType(0) == 
-						 LibUtilities::eModified_A))
-			{
-			    m_sign_change = true;
-			}
-		    }
-		
-	    }
-	    nGloVerts++; // set actual value to one plus maximum id
-	    
-	    // set up sign vector
-	    if(m_sign_change){
-		m_sign = Array<OneD, NekDouble>(m_totLocLen,1.0);
-	    }
+                         LibUtilities::eModified_A))
+                    {
+                        m_sign_change = true;
+                    }
+                }
+            }
+            nGloVerts++; // set actual value to one plus maximum id
+            
+            // set up sign vector
+            if(m_sign_change)
+            {
+                m_sign = Array<OneD, NekDouble>(m_totLocLen,1.0);
+            }
 
-	    edge_offset[0] = nGloVerts; 
+            edge_offset[0] = nGloVerts; 
 
-	    // set up consecutive list for edge entries
-	    for(i = 1; i < graph2D.GetNecomps(); ++i)
-	    {
-		edge_offset[i] += edge_offset[i-1];
-	    }
-	    
+            // set up consecutive list for edge entries
+            for(i = 1; i < graph2D.GetNecomps(); ++i)
+            {
+                edge_offset[i] += edge_offset[i-1];
+            }
+            
 
-	    // set up simple map;
-	    cnt = 0;
-	    for(i = 0; i < locexp.size(); ++i)
-	    {
+            // set up simple map;
+            cnt = 0;
+            for(i = 0; i < locexp.size(); ++i)
+            {
                 for(j = 0; j < (nedge=locexp[i]->GetNedges()); ++j)
                 {
                     locexp[i]->MapTo_ModalFormat(nedge_coeffs = locexp[i]->GetEdgeNcoeffs(j),
@@ -122,22 +122,20 @@ namespace Nektar
                         if(eorient == StdRegions::eForwards)
                         {
                             m_locToContMap[cnt+vmap[0]] = 
-				graph2D.GetVidFromElmt(locexp[i]->DetShapeType(),j,i);
+                                graph2D.GetVidFromElmt(locexp[i]->DetShapeType(),j,i);
                         }
                         else
                         {
                             m_locToContMap[cnt+vmap[1]] = 
-				graph2D.GetVidFromElmt(locexp[i]->DetShapeType(),j,i);
+                                graph2D.GetVidFromElmt(locexp[i]->DetShapeType(),j,i);
                             if(m_sign_change)
                             {
                                 for(k = 3; k < nedge_coeffs; k+=2)
                                 {
                                     m_sign[cnt+vmap[k]] = -1;
                                 }
-                            }
-                            
+                            }   
                         }
-			
                     }
                     else
                     {
@@ -145,7 +143,7 @@ namespace Nektar
                         if(eorient == StdRegions::eForwards)
                         {
                             m_locToContMap[cnt+vmap[1]] = 
-				graph2D.GetVidFromElmt(locexp[i]->DetShapeType(),j,i);
+                                graph2D.GetVidFromElmt(locexp[i]->DetShapeType(),j,i);
                             
                             if(m_sign_change)
                             {
@@ -158,7 +156,7 @@ namespace Nektar
                         else
                         {
                             m_locToContMap[cnt+vmap[0]] = 
-				graph2D.GetVidFromElmt(locexp[i]->DetShapeType(),j,i);
+                                graph2D.GetVidFromElmt(locexp[i]->DetShapeType(),j,i);
                             
                             if(Btype == LibUtilities::eGLL_Lagrange)
                             {
@@ -172,30 +170,33 @@ namespace Nektar
                     
                 }
                 cnt += locexp[i]->GetNcoeffs();
-		
-	    }
             
-	    gid = Vmath::Vmax(m_totLocLen,&m_locToContMap[0],1)+1;
-	    
-	    // setup interior mapping 
-	    for(i = 0; i < m_totLocLen; ++i)
-	    {
+            }
+                
+            gid = Vmath::Vmax(m_totLocLen,&m_locToContMap[0],1)+1;
+            
+            // setup interior mapping 
+            for(i = 0; i < m_totLocLen; ++i)
+            {
                 if(m_locToContMap[i] == -1)
-		{
-		    m_locToContMap[i] = gid++;
-		}
-	    }
+                {
+                    m_locToContMap[i] = gid++;
+                }
+            }
             m_totGloLen = gid;
         }
-	
+    
         
-	LocalToGlobalMap2D::~LocalToGlobalMap2D()
-	{
-	}
+        LocalToGlobalMap2D::~LocalToGlobalMap2D()
+        {
+        }
         
-  }
+    }
 }
 
 /**
 * $Log: LocalToGlobalMap2D.cpp,v $
+* Revision 1.5  2007/06/05 16:36:55  pvos
+* Updated Explist2D ContExpList2D and corresponding demo-codes
+*
 **/

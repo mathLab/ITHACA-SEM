@@ -50,24 +50,24 @@ namespace Nektar
     namespace MultiRegions
     {
 
-	class ExpList3D: 
-	    public ExpList
-	{
-	public:
-	    ExpList3D();
-	    ~ExpList3D();
-	    
-	protected:
-	    
-	private:
-	    LocalRegions::HexExpVector    m_hex;
-	    LocalRegions::PrismExpVector  m_prism;
-	    LocalRegions::PyrExpVector    m_pyr;
-	    LocalRegions::TetExpVector    m_tet;
-	    
-	};
-		
-        typedef boost::shared_ptr<ExpList3D>      ExpList3DSharedPtr;
+    class ExpList3D: 
+        public ExpList
+    {
+    public:
+        ExpList3D();
+        ~ExpList3D();
+        
+    protected:
+        
+    private:
+        LocalRegions::HexExpVector    m_hex;
+        LocalRegions::PrismExpVector  m_prism;
+        LocalRegions::PyrExpVector    m_pyr;
+        LocalRegions::TetExpVector    m_tet;
+        
+    };
+        
+        typedef ptr<ExpList3D>      ExpList3DSharedPtr;
         typedef std::vector<ExpList3DSharedPtr>   ExpList3DVector;
         typedef std::vector<ExpList3DSharedPtr>::iterator ExpList3DVectorIter;
 

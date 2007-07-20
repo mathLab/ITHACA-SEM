@@ -43,13 +43,13 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	
-	class LocalToGlobalMap1D: 
+    
+    class LocalToGlobalMap1D: 
             public LocalToGlobalMap
-	{
+    {
         public:
             LocalToGlobalMap1D(){};
-	    LocalToGlobalMap1D(const int loclen, 
+        LocalToGlobalMap1D(const int loclen, 
                                const StdRegions::StdExpansionVector &locexp, 
                                const SpatialDomains::Composite &cmps);
 
@@ -57,12 +57,12 @@ namespace Nektar
 
             void ResetMapping(const int NumDirichlet, 
                               SpatialDomains::BoundaryConditions &bcs);
-	    
+        
         protected:
-	    
+        
         private:
-	};
-	
+    };
+    
     } // end of namespace
 } // end of namespace
 
@@ -70,6 +70,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.7  2007/07/10 08:54:30  pvos
+/** Updated ContField1D constructor
+/**
 /** Revision 1.6  2007/07/06 18:39:34  pvos
 /** ContField1D constructor updates
 /**
@@ -90,6 +93,6 @@ namespace Nektar
 /** Modifications to make MultiRegions work for a connected domain in 2D (Tris)
 /**
 /** Revision 1.3  2006/06/05 00:14:33  bnelson
-/** Fixed a compiler error (couldn't find boost::shared_ptr) and a couple of formatting updates for the standard.
+/** Fixed a compiler error (couldn't find ptr<) and a couple of formatting updates for the standard.
 /** */
 

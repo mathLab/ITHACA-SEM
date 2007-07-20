@@ -46,45 +46,45 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	
-	class LocalToGlobalMap
-	{
+    
+    class LocalToGlobalMap
+    {
         public:
             LocalToGlobalMap();
-	    LocalToGlobalMap(const int totdata, Array<OneD,int> &map);
-	    
+        LocalToGlobalMap(const int totdata, Array<OneD,int> &map);
+        
             ~LocalToGlobalMap();
-	    
-	    inline int GetMap(const int i) const
-	    {
-		return m_locToContMap[i];
-	    }
+        
+        inline int GetMap(const int i) const
+        {
+        return m_locToContMap[i];
+        }
 
-	    inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
+        inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
                                     Array<OneD, NekDouble> &cont)
-	    {
+        {
                 Vmath::Scatr(m_totLocLen, &loc[0],&m_locToContMap[0],&cont[0]);
             }                
 
-	    
-	    inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
+        
+        inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
                                     Array<OneD, NekDouble> &loc)
-	    {
+        {
                 Vmath::Gathr(m_totLocLen,&cont[0],&m_locToContMap[0], &loc[0]);
-	    }
-	    
-	    inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
+        }
+        
+        inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
                                  Array<OneD, NekDouble> &cont)
-	    {
-		Vmath::Zero(m_totGloLen,&cont[0],1);
+        {
+        Vmath::Zero(m_totGloLen,&cont[0],1);
 
                 Vmath::Assmb(m_totLocLen,&loc[0],&m_locToContMap[0],&cont[0]);
-	    }
-	    
-	    inline int GetTotGloLen()
-	    {
-		return m_totGloLen;
-	    }
+        }
+        
+        inline int GetTotGloLen()
+        {
+        return m_totGloLen;
+        }
            
             inline int GetNumDirichletBCs()
             {
@@ -92,13 +92,13 @@ namespace Nektar
             }
 
         protected:
-	    int             m_totLocLen;    //< length of local dofs
-	    int             m_totGloLen;    //< length of global dofs
+        int             m_totLocLen;    //< length of local dofs
+        int             m_totGloLen;    //< length of global dofs
             int             m_numDirichletBCs;  //< number of Dirichlet conditions 
             Array<OneD,int> m_locToContMap; //< Vector of boost pointers to integer maps
         private:
-	};
-	
+    };
+    
     } // end of namespace
 } // end of namespace
 
@@ -106,6 +106,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.8  2007/07/16 18:28:43  sherwin
+/** Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
+/**
 /** Revision 1.7  2007/06/08 12:58:27  sherwin
 /** Added ContField1D and remove previous structure using Fields
 /**
@@ -129,6 +132,6 @@ namespace Nektar
 /** Modifications to make MultiRegions work for a connected domain in 2D (Tris)
 /**
 /** Revision 1.3  2006/06/05 00:14:33  bnelson
-/** Fixed a compiler error (couldn't find boost::shared_ptr) and a couple of formatting updates for the standard.
+/** Fixed a compiler error (couldn't find ptr<) and a couple of formatting updates for the standard.
 /** */
 

@@ -50,23 +50,23 @@ namespace Nektar
     {
 
 
-	class ExpList2D:
-	    public ExpList
-	{
-	public:
-	    ExpList2D(); 
+    class ExpList2D:
+        public ExpList
+    {
+    public:
+        ExpList2D(); 
 
-	    ExpList2D(const ExpList2D &In);   
-	    
-	    ExpList2D(const LibUtilities::BasisKey &TriBa, 
-		      const LibUtilities::BasisKey &TriBb, 
-		      const LibUtilities::BasisKey &QuadBa, 
-		      const LibUtilities::BasisKey &QuadBb, 
-		      const SpatialDomains::MeshGraph2D &graph2D,
-		      const LibUtilities::PointsType 
+        ExpList2D(const ExpList2D &In);   
+        
+        ExpList2D(const LibUtilities::BasisKey &TriBa, 
+              const LibUtilities::BasisKey &TriBb, 
+              const LibUtilities::BasisKey &QuadBa, 
+              const LibUtilities::BasisKey &QuadBb, 
+              const SpatialDomains::MeshGraph2D &graph2D,
+              const LibUtilities::PointsType 
                       TriNb = LibUtilities::SIZE_PointsType);
 
-	    ~ExpList2D();
+        ~ExpList2D();
 
             void   PhysDeriv  (ExpList &S0,
                                ExpList &S1, 
@@ -74,14 +74,14 @@ namespace Nektar
             {
                 ExpList::PhysDeriv(S0,S1,S2);
             }
-	    
-	protected:
-	    
-	private:
-	    
-	};
-	
-        typedef boost::shared_ptr<ExpList2D>      ExpList2DSharedPtr;
+        
+    protected:
+        
+    private:
+        
+    };
+    
+        typedef ptr<ExpList2D>      ExpList2DSharedPtr;
         typedef std::vector< ExpList2DSharedPtr > ExpList2DVector;
         typedef std::vector< ExpList2DSharedPtr >::iterator ExpList2DVectorIter;
     } //end of namespace
@@ -91,5 +91,8 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.9  2007/06/05 16:36:55  pvos
+* Updated Explist2D ContExpList2D and corresponding demo-codes
+*
 **/
 

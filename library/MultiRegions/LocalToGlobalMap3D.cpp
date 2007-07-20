@@ -39,14 +39,14 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	LocalToGlobalMap3D::LocalToGlobalMap3D(int loclen, 
-		       std::vector<StdRegions::StdExpansionVector> &exp_shapes, 
-					 SpatialDomains::MeshGraph3D &graph3D)
-	{
-	}
+    LocalToGlobalMap3D::LocalToGlobalMap3D(int loclen, 
+               std::vector<StdRegions::StdExpansionVector> &exp_shapes, 
+                     SpatialDomains::MeshGraph3D &graph3D)
+    {
+    }
 
-	LocalToGlobalMap3D::~LocalToGlobalMap3D()
-	{
-	}
+    LocalToGlobalMap3D::~LocalToGlobalMap3D()
+    {
+    }
     }
 }

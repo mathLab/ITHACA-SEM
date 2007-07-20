@@ -49,24 +49,24 @@ namespace Nektar
     namespace MultiRegions
     {
 
-	class ExpList1D: 
-	    public ExpList
-	{
+    class ExpList1D: 
+        public ExpList
+    {
 
-	public:
-	    
-	    ExpList1D();
+    public:
+        
+        ExpList1D();
 
-	    ExpList1D(const ExpList1D &In);
-	    
-            //	    ExpList1D(const LibUtilities::BasisKey &Ba, 
-	    //      const SpatialDomains::MeshGraph1D &graph1D);
+        ExpList1D(const ExpList1D &In);
+        
+            //        ExpList1D(const LibUtilities::BasisKey &Ba, 
+        //      const SpatialDomains::MeshGraph1D &graph1D);
 
             ExpList1D(const LibUtilities::BasisKey &Ba, 
                       const SpatialDomains::Composite &cmps
 );
-	    
-	    ~ExpList1D();
+        
+        ~ExpList1D();
 
 
             void   PhysDeriv  (ExpList &S0,
@@ -76,16 +76,16 @@ namespace Nektar
                 ExpList::PhysDeriv(S0,S1,S2);
             }
 
-	protected:
-	    
-	private:
+    protected:
+        
+    private:
             
-	};
-	
-        typedef boost::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
+    };
+    
+        typedef ptr<ExpList1D>      ExpList1DSharedPtr;
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
         typedef std::vector<ExpList1DSharedPtr>::iterator ExpList1DVectorIter;
-	
+    
     } //end of namespace
 } //end of namespace
 
@@ -93,6 +93,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.h,v $
+* Revision 1.13  2007/07/10 08:54:30  pvos
+* Updated ContField1D constructor
+*
 * Revision 1.12  2007/07/06 18:39:34  pvos
 * ContField1D constructor updates
 *

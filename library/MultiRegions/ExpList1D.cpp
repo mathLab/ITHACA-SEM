@@ -39,15 +39,15 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	
-	ExpList1D::ExpList1D()
-	{
-	}
-	
-	ExpList1D::~ExpList1D()
-	{
-	}
-	
+    
+    ExpList1D::ExpList1D()
+    {
+    }
+    
+    ExpList1D::~ExpList1D()
+    {
+    }
+    
         ExpList1D::ExpList1D(const ExpList1D &In):
             ExpList(In)
         {
@@ -55,27 +55,27 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
-	ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
+    ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
                              const SpatialDomains::Composite &cmps)
-	{
+    {
             int i;
             int nel;
-	    LocalRegions::SegExpSharedPtr seg;
+        LocalRegions::SegExpSharedPtr seg;
             
             // The actual solution domain is stored in the first composite (index 0)
             nel = cmps->size();
             
-	    m_ncoeffs = nel*Ba.GetNumModes();
-	    m_npoints = nel*Ba.GetNumPoints();
-	    
-	    m_transState = eNotSet; 
-	    m_physState  = false;
+        m_ncoeffs = nel*Ba.GetNumModes();
+        m_npoints = nel*Ba.GetNumPoints();
+        
+        m_transState = eNotSet; 
+        m_physState  = false;
             
             for(i = 0; i < nel; ++i)
             {
                 SpatialDomains::SegGeomSharedPtr SegmentGeom;
                 
-                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*cmps)[i]))
+                if(SegmentGeom = dynamic_pointer_cast<SpatialDomains::SegGeom>((*cmps)[i]))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba, SegmentGeom);
                     (*m_exp).push_back(seg);
@@ -94,6 +94,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.17  2007/07/13 16:48:47  pvos
+* Another HelmHoltz update (homogeneous dir BC multi-elemental solver does work)
+*
 * Revision 1.16  2007/07/10 08:54:29  pvos
 * Updated ContField1D constructor
 *

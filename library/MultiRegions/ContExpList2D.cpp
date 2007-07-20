@@ -39,14 +39,14 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	
-	ContExpList2D::ContExpList2D()
-	{
-	}
-	
-	ContExpList2D::~ContExpList2D()
-	{
-	}
+    
+    ContExpList2D::ContExpList2D()
+    {
+    }
+    
+    ContExpList2D::~ContExpList2D()
+    {
+    }
 
         ContExpList2D::ContExpList2D(const ContExpList2D &In):
             ExpList2D(In),
@@ -64,112 +64,115 @@ namespace Nektar
                                      const LibUtilities::BasisKey &QuadBb, 
                                      const SpatialDomains::MeshGraph2D &graph2D,
                                      const LibUtilities::PointsType TriNb):
-	    ExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D,TriNb)
-	{
-	    
-	    ASSERTL1((TriBa.GetBasisType() == LibUtilities::eModified_A)&&
-		     (TriNb == LibUtilities::SIZE_PointsType),
-		     "Expansion not of an boundary-interior type");
-	    
-	    ASSERTL1((TriBb.GetBasisType() == LibUtilities::eModified_B)&&
-		     (TriNb == LibUtilities::SIZE_PointsType),
-		     "Expansion not of an boundary-interior type");
+        ExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D,TriNb)
+    {
+        
+        ASSERTL1((TriBa.GetBasisType() == LibUtilities::eModified_A)&&
+             (TriNb == LibUtilities::SIZE_PointsType),
+             "Expansion not of an boundary-interior type");
+        
+        ASSERTL1((TriBb.GetBasisType() == LibUtilities::eModified_B)&&
+             (TriNb == LibUtilities::SIZE_PointsType),
+             "Expansion not of an boundary-interior type");
 
-	    ASSERTL1((QuadBa.GetBasisType() == LibUtilities::eModified_A)
-		     ||(QuadBa.GetBasisType() == LibUtilities::eGLL_Lagrange),
-		     "Expansion not of an boundary-interior type");
+        ASSERTL1((QuadBa.GetBasisType() == LibUtilities::eModified_A)
+             ||(QuadBa.GetBasisType() == LibUtilities::eGLL_Lagrange),
+             "Expansion not of an boundary-interior type");
 
-	    ASSERTL1((QuadBb.GetBasisType() == LibUtilities::eModified_A)
-		     ||(QuadBb.GetBasisType() == LibUtilities::eGLL_Lagrange),
-		     "Expansion not of an boundary-interior type");
-	    
-	    if(TriBa.GetBasisType() == LibUtilities::eModified_A)
-	    {
-		ASSERTL1((QuadBb.GetBasisType() == LibUtilities::eModified_A),
-			 "Quad and Tri Expansions are not of the same type");
-	    }
-	   	    
-	    // setup mapping array 
-	    m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph2D);
+        ASSERTL1((QuadBb.GetBasisType() == LibUtilities::eModified_A)
+             ||(QuadBb.GetBasisType() == LibUtilities::eGLL_Lagrange),
+             "Expansion not of an boundary-interior type");
+        
+        if(TriBa.GetBasisType() == LibUtilities::eModified_A)
+        {
+        ASSERTL1((QuadBb.GetBasisType() == LibUtilities::eModified_A),
+             "Quad and Tri Expansions are not of the same type");
+        }
+               
+        // setup mapping array 
+        m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph2D);
  
-	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
-	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs);
-	}
+        m_contNcoeffs = m_locToGloMap->GetTotGloLen();
+        m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs);
+    }
 
         void ContExpList2D::IProductWRTBase(const ExpList &In)
-	{
-	    ExpList2D::IProductWRTBase(In);
-	    Assemble();
-	    m_transState = eLocalCont;
-	}
+    {
+        ExpList2D::IProductWRTBase(In);
+        Assemble();
+        m_transState = eLocalCont;
+    }
 
-	void ContExpList2D::FwdTrans(const ExpList &In)
-	{
-	    IProductWRTBase(In);
+    void ContExpList2D::FwdTrans(const ExpList &In)
+    {
+        IProductWRTBase(In);
 
-	    if(!(m_mass.get()))
-	    {
-		GenMassMatrixLinSys();
-	    }	    
-	    
-	    DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
-	    m_mass->Solve(v,v);
-	    m_transState = eContinuous;
-	    m_physState = false;
-	}
+        if(!(m_mass.get()))
+        {
+        GenMassMatrixLinSys();
+        }        
+        
+        DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
+        m_mass->Solve(v,v);
+        m_transState = eContinuous;
+        m_physState = false;
+    }
 
-	void ContExpList2D::BwdTrans(const ExpList &In)
-	{
-	    
-	    if(m_transState == eContinuous)
-	    {
-		ContToLocal();
-	    }
-	    
-	    ExpList2D::BwdTrans(In);
-	}
-	
+    void ContExpList2D::BwdTrans(const ExpList &In)
+    {
+        
+        if(m_transState == eContinuous)
+        {
+        ContToLocal();
+        }
+        
+        ExpList2D::BwdTrans(In);
+    }
+    
 
-	void ContExpList2D::GenMassMatrixLinSys(void)
-	{
-	    if(!(m_mass.get()))
-	    {
-		int   i,j,n,cnt,gid1,gid2,loc_lda;
-		NekDouble sign1,sign2;
-		DNekScalMatSharedPtr loc_mass;
-		StdRegions::StdExpansionVectorIter def;
+    void ContExpList2D::GenMassMatrixLinSys(void)
+    {
+        if(!(m_mass.get()))
+        {
+        int   i,j,n,cnt,gid1,gid2,loc_lda;
+        NekDouble sign1,sign2;
+        DNekScalMatSharedPtr loc_mass;
+        StdRegions::StdExpansionVectorIter def;
 
-		DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs);
-	
-		// fill global matrix 
-		for(n = cnt = 0; n < (*m_exp).size(); ++n)
-		{
+        DNekMatSharedPtr Gmass = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs);
+    
+        // fill global matrix 
+        for(n = cnt = 0; n < (*m_exp).size(); ++n)
+        {
                     loc_mass = (*m_exp)[n]->GetLocMatrix(StdRegions::eMass);
                     loc_lda = loc_mass->GetColumns();
-		    
+            
                     for(i = 0; i < loc_lda; ++i)
                     {
                         gid1  =  m_locToGloMap->GetMap(cnt + i);
                         sign1 =  m_locToGloMap->GetSign(cnt + i);
-			
+            
                         for(j = 0; j < loc_lda; ++j)
                         {
-                            gid2  = m_locToGloMap->GetMap(cnt + j);	
+                            gid2  = m_locToGloMap->GetMap(cnt + j);    
                             sign2 = m_locToGloMap->GetSign(cnt + j);
                             
                             (*Gmass)(gid1,gid2) +=  sign1*sign2*(*loc_mass)(i,j);
                         }
                     }
-                    cnt += (*m_exp)[n]->GetNcoeffs();		    
-		}
+                    cnt += (*m_exp)[n]->GetNcoeffs();            
+        }
                 m_mass = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmass);
-	    }
-	}
+        }
+    }
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.6  2007/07/13 16:48:46  pvos
+* Another HelmHoltz update (homogeneous dir BC multi-elemental solver does work)
+*
 * Revision 1.5  2007/06/07 15:54:19  pvos
 * Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
 * Also made corrections to various ASSERTL2 calls

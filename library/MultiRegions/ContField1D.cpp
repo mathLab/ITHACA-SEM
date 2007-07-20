@@ -70,7 +70,7 @@ namespace Nektar
                 {
                     SpatialDomains::VertexComponentSharedPtr vert;
                     
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                    if(vert = dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
                         m_bndConstraint.push_back(p_exp);
@@ -90,7 +90,7 @@ namespace Nektar
                 {
                    SpatialDomains:: VertexComponentSharedPtr vert;
 
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                    if(vert = dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
                         m_bndConstraint.push_back(p_exp);

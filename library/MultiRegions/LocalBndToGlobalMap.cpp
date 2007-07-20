@@ -39,9 +39,9 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	LocalBndToGlobalMap::LocalBndToGlobalMap(){};
-	LocalBndToGlobalMap::~LocalBndToGlobalMap(){};
-	
+    LocalBndToGlobalMap::LocalBndToGlobalMap(){};
+    LocalBndToGlobalMap::~LocalBndToGlobalMap(){};
+    
     } // end of namespace
 } // end of namespace
 

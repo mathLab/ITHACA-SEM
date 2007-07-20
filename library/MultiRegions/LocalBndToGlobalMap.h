@@ -42,9 +42,9 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	
-	class LocalBndToGlobalMap
-	{
+    
+    class LocalBndToGlobalMap
+    {
         public:
             LocalBndToGlobalMap();
 
@@ -52,12 +52,12 @@ namespace Nektar
 
         protected:
             int m_MapLen;    //< length of local boundary mapping 
-	    
-	    boost::shared_ptr<int> m_MapIndex;
+        
+        boost::shared_ptr<int> m_MapIndex;
             boost::shared_ptr<int> m_Map;
         private:
-	};
-	
+    };
+    
     } // end of namespace
 } // end of namespace
 

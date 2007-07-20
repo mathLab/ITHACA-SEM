@@ -54,17 +54,17 @@ namespace Nektar
       
       inline int GetNcoeffs(void) const
       {
-	return m_ncoeffs;
+    return m_ncoeffs;
       }
       
       inline int GetPointsTot(void) const
       {
-	return m_npoints;
+    return m_npoints;
       }
       
       inline void SetTransState(const TransState transState)
       {
-	m_transState = transState;
+    m_transState = transState;
       }
 
       inline TransState GetTransState(void) const 
@@ -79,7 +79,7 @@ namespace Nektar
 
       inline void SetPhysState(const bool physState)
       {
-	m_physState = physState;
+    m_physState = physState;
       }
 
       inline bool GetPhysState(void) const
@@ -99,16 +99,16 @@ namespace Nektar
                              NekDouble lambda = 1.0);
 
       void   GetCoords(Array<OneD, NekDouble> &coord_0,
-		       Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
-		       Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
+               Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
+               Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 
       void   WriteToFile(std::ofstream &out);
     
       inline int GetCoordim(int eid)
       {
-	  ASSERTL2(eid <= (*m_exp).size(),"eid is larger than number of elements");
-	
-	  return (*m_exp)[eid]->GetCoordim();
+      ASSERTL2(eid <= (*m_exp).size(),"eid is larger than number of elements");
+    
+      return (*m_exp)[eid]->GetCoordim();
       }
       
 
@@ -129,13 +129,13 @@ namespace Nektar
 
       inline int GetExpSize(void)
       {
-	  return (*m_exp).size();
+      return (*m_exp).size();
       }
       
 
       inline StdRegions::StdExpansionSharedPtr& GetExp(int n)
       {
-	  return (*m_exp)[n];
+      return (*m_exp)[n];
       }
       
     protected:
@@ -147,7 +147,7 @@ namespace Nektar
       TransState m_transState;
       bool       m_physState;
      
-      boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
+      ptr<StdRegions::StdExpansionVector> m_exp;
       
       inline Array<OneD, NekDouble> &UpdateCoeffs()
       {
@@ -163,17 +163,17 @@ namespace Nektar
 
       NekDouble PhysIntegral(const ConstArray<OneD, NekDouble> &inarray);
       void   IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
-			     Array<OneD, NekDouble> &outarray);
+                 Array<OneD, NekDouble> &outarray);
       
       void   PhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
-		       Array<OneD, NekDouble> &out_d0, 
-		       Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-		       Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
+               Array<OneD, NekDouble> &out_d0, 
+               Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+               Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
       void   FwdTrans (const ConstArray<OneD, NekDouble> &inarray,
-		       Array<OneD, NekDouble> &outarray);
+               Array<OneD, NekDouble> &outarray);
 
       void   BwdTrans (const ConstArray<OneD, NekDouble> &inarray, 
-		       Array<OneD, NekDouble> &outarray); 
+               Array<OneD, NekDouble> &outarray); 
       
     private:
 
@@ -188,6 +188,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.20  2007/07/17 07:11:05  sherwin
+* Chaned definition of NullExpList
+*
 * Revision 1.19  2007/07/16 18:28:43  sherwin
 * Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
 *

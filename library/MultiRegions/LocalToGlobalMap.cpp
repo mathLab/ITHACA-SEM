@@ -40,24 +40,24 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	LocalToGlobalMap::LocalToGlobalMap():
-	    m_totLocLen(0),
-	    m_totGloLen(0),
+    LocalToGlobalMap::LocalToGlobalMap():
+        m_totLocLen(0),
+        m_totGloLen(0),
             m_numDirichletBCs(0)
-	{
-	}
-	
-	LocalToGlobalMap::LocalToGlobalMap(int totdata, Array<OneD,int> &map):
-	    m_totLocLen(totdata)
-	{
-	    m_locToContMap = map; 
+    {
+    }
+    
+    LocalToGlobalMap::LocalToGlobalMap(int totdata, Array<OneD,int> &map):
+        m_totLocLen(totdata)
+    {
+        m_locToContMap = map; 
             m_totGloLen = Vmath::Vmax(m_totLocLen,&map[0],1);
-	}
-	
-	
-	LocalToGlobalMap::~LocalToGlobalMap()
-	{
-	}
-	
+    }
+    
+    
+    LocalToGlobalMap::~LocalToGlobalMap()
+    {
+    }
+    
     }
 }

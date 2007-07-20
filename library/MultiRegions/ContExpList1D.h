@@ -106,7 +106,7 @@ namespace Nektar
       	    int                    m_contNcoeffs;
 	    Array<OneD, NekDouble> m_contCoeffs;
 	    
-	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
+	    ptr<LocalToGlobalMap1D> m_locToGloMap;
 	    
 	    GlobalLinSysSharedPtr m_mass;
 	    GlobalLinSysSharedPtr m_helm;
@@ -118,7 +118,7 @@ namespace Nektar
 
 	};
 	
-        typedef boost::shared_ptr<ContExpList1D>      ContExpList1DSharedPtr;
+        typedef ptr<ContExpList1D>      ContExpList1DSharedPtr;
         typedef std::vector<ContExpList1DSharedPtr>   ContExpList1DVector;
         typedef std::vector<ContExpList1DSharedPtr>::iterator ContExpList1DVectorIter;
 
@@ -129,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.17  2007/07/19 20:02:25  sherwin
+* Generalised global matrix solver
+*
 * Revision 1.16  2007/07/16 18:28:43  sherwin
 * Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
 *

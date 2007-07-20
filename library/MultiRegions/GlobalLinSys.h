@@ -62,7 +62,7 @@ namespace Nektar
             DNekLinSysSharedPtr  m_linSys;
 	};
 
-        typedef boost::shared_ptr<GlobalLinSys> GlobalLinSysSharedPtr;
+        typedef ptr<GlobalLinSys> GlobalLinSysSharedPtr;
 
 
     } //end of namespace

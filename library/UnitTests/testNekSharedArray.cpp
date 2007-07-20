@@ -762,9 +762,9 @@ namespace Nektar
     
         void TestSharedPtr()
         {
-            boost::shared_ptr<double> a(new double[10]);
-            boost::shared_ptr<const double> b(a);
-            boost::shared_ptr<const double> c;
+            ptr<double> a(new double[10]);
+            ptr<const double> b(a);
+            ptr<const double> c;
             c = a;
             
         }

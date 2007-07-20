@@ -69,7 +69,7 @@ namespace Nektar
         void testMakePtr()
         {
             {
-                boost::shared_ptr<TestClass> p = MakePtr(new TestClass());
+                ptr<TestClass> p = MakePtr(new TestClass());
                 BOOST_CHECK(TestClass::constructionCount == 1);
                 BOOST_CHECK(TestClass::destructionCount == 0);
             }
@@ -84,6 +84,9 @@ namespace Nektar
 
 /**
     $Log: testBoostUtil.cpp,v $
+    Revision 1.4  2007/06/13 22:00:48  bnelson
+    *** empty log message ***
+
     Revision 1.3  2006/07/05 20:21:24  jfrazier
     Added NekManager test case.
 

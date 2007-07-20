@@ -14,7 +14,7 @@ using namespace Nektar;
 
 NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2);
 NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, 
-		   LibUtilities::BasisType btype1, LibUtilities::BasisType btype2);
+           LibUtilities::BasisType btype1, LibUtilities::BasisType btype2);
 
 // This routine projects a polynomial or trigonmetric functions which 
 // has energy in all mdoes of the expansions and reports and error
@@ -37,17 +37,17 @@ int main(int argc, char *argv[])
   
   if((argc != 16)&&(argc != 14))
   {
-    fprintf(stderr,"Usage: Project2D RegionShape Type1 Type2 order1 "	   
-	    "order2  nq1 nq2 x1, y1, x2, y2,.... \n");
+    fprintf(stderr,"Usage: Project2D RegionShape Type1 Type2 order1 "       
+        "order2  nq1 nq2 x1, y1, x2, y2,.... \n");
     
     fprintf(stderr,"Where RegionShape is an integer value which "
-	    "dictates the region shape:\n");
+        "dictates the region shape:\n");
     fprintf(stderr,"\t Triangle      = 2\n");
     fprintf(stderr,"\t Quadrilateral = 3\n");
     
     
     fprintf(stderr,"Where type is an integer value which "
-	    "dictates the basis as:\n");
+        "dictates the basis as:\n");
 
     fprintf(stderr,"\t Ortho_A    = 1\n");
     fprintf(stderr,"\t Ortho_B    = 2\n");
@@ -89,11 +89,11 @@ int main(int argc, char *argv[])
       
       if(btype1_val == 11)
       {
-	  NodalType = LibUtilities::eNodalTriElec;
+      NodalType = LibUtilities::eNodalTriElec;
       }
       else
       {
-	  NodalType = LibUtilities::eNodalTriFekete;
+      NodalType = LibUtilities::eNodalTriFekete;
       }
 
   }
@@ -105,24 +105,24 @@ int main(int argc, char *argv[])
   case StdRegions::eTriangle:
       if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eModified_B))
       {
-	  NEKERROR(ErrorUtil::efatal,
-			   "Basis 1 cannot be of type Ortho_B or Modified_B");
+      NEKERROR(ErrorUtil::efatal,
+               "Basis 1 cannot be of type Ortho_B or Modified_B");
       }
       
       break;
   case StdRegions::eQuadrilateral:
       if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_C)||
-	 (btype1 == LibUtilities::eModified_B)||(btype1 == LibUtilities::eModified_C))
+     (btype1 == LibUtilities::eModified_B)||(btype1 == LibUtilities::eModified_C))
       {
-	  NEKERROR(ErrorUtil::efatal,
-			   "Basis 1 is for 2 or 3D expansions");
+      NEKERROR(ErrorUtil::efatal,
+               "Basis 1 is for 2 or 3D expansions");
       }
       
       if((btype2 == LibUtilities::eOrtho_B)||(btype2 == LibUtilities::eOrtho_C)||
-	 (btype2 == LibUtilities::eModified_B)||(btype2 == LibUtilities::eModified_C))
+     (btype2 == LibUtilities::eModified_B)||(btype2 == LibUtilities::eModified_C))
       {
-	  NEKERROR(ErrorUtil::efatal,
-			   "Basis 2 is for 2 or 3D expansions");
+      NEKERROR(ErrorUtil::efatal,
+               "Basis 2 is for 2 or 3D expansions");
       }
       break;
   }
@@ -195,26 +195,26 @@ int main(int argc, char *argv[])
           const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
 
           
-	  if(btype1_val >= 10)
-	  {
-	      E = new LocalRegions::NodalTriExp(Bkey1,Bkey2,NodalType,geom);
-	  }
-	  else
-	  {
-	      E = new LocalRegions::TriExp(Bkey1,Bkey2,geom);
-	  }
+      if(btype1_val >= 10)
+      {
+          E = new LocalRegions::NodalTriExp(Bkey1,Bkey2,NodalType,geom);
+      }
+      else
+      {
+          E = new LocalRegions::TriExp(Bkey1,Bkey2,geom);
+      }
 
- 	  Array<OneD,NekDouble> x = Array<OneD,NekDouble>(nq1*nq2);
-	  Array<OneD,NekDouble> y = Array<OneD,NekDouble>(nq1*nq2);
-	  E->GetCoords(x,y);
+       Array<OneD,NekDouble> x = Array<OneD,NekDouble>(nq1*nq2);
+      Array<OneD,NekDouble> y = Array<OneD,NekDouble>(nq1*nq2);
+      E->GetCoords(x,y);
 
-	  //----------------------------------------------
-	  // Define solution to be projected
-	  for(i = 0; i < nq1*nq2; ++i)
-	  {
-	      sol[i]  = Tri_sol(x[i],y[i],order1,order2);
-	  }
-	  //----------------------------------------------    
+      //----------------------------------------------
+      // Define solution to be projected
+      for(i = 0; i < nq1*nq2; ++i)
+      {
+          sol[i]  = Tri_sol(x[i],y[i],order1,order2);
+      }
+      //----------------------------------------------    
 
       }
       break;
@@ -260,17 +260,17 @@ int main(int argc, char *argv[])
       
           E = new LocalRegions::QuadExp(Bkey1,Bkey2,geom);
 
-	  //----------------------------------------------
-	  // Define solution to be projected	  
-	  Array<OneD, NekDouble> x = Array<OneD, NekDouble>(nq1*nq2);
-	  Array<OneD, NekDouble> y = Array<OneD, NekDouble>(nq1*nq2);
-	  E->GetCoords(x,y);
-	  
-	  for(i = 0; i < nq1*nq2; ++i)
-	  {
-	      sol[i]  = Quad_sol(x[i],y[i],order1,order2,btype1,btype2);
-	  }
-	  //---------------------------------------------
+      //----------------------------------------------
+      // Define solution to be projected      
+      Array<OneD, NekDouble> x = Array<OneD, NekDouble>(nq1*nq2);
+      Array<OneD, NekDouble> y = Array<OneD, NekDouble>(nq1*nq2);
+      E->GetCoords(x,y);
+      
+      for(i = 0; i < nq1*nq2; ++i)
+      {
+          sol[i]  = Quad_sol(x[i],y[i],order1,order2,btype1,btype2);
+      }
+      //---------------------------------------------
       }
       
       break;
@@ -328,26 +328,26 @@ NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2){
     
     for(k = 0; k < order1; ++k)
     {
-	for(l = 0; l < order2-k; ++l)
-	{
-	    sol += pow(x,k)*pow(y,l);
-	}
+    for(l = 0; l < order2-k; ++l)
+    {
+        sol += pow(x,k)*pow(y,l);
+    }
     }
     
     return sol;
 }
 
 NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, 
-		   LibUtilities::BasisType btype1,
-		   LibUtilities::BasisType btype2)
+           LibUtilities::BasisType btype1,
+           LibUtilities::BasisType btype2)
 {   
     int k,l;
     NekDouble sol = 0.0;
     
     if(btype1 != LibUtilities::eFourier)
     {
-	if(btype2 != LibUtilities::eFourier)
-	{
+    if(btype2 != LibUtilities::eFourier)
+    {
             for(k = 0; k < order1; ++k)
             {
                 for(l = 0; l < order2; ++l)
@@ -355,43 +355,43 @@ NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
                     sol += pow(x,k)*pow(y,l);
                 }
             }
-	}
-	else
-	{
-	    for(k = 0; k < order1; ++k)
-	    {
-		for(l = 0; l < order2/2; ++l)
-		{
-		    sol += pow(x,k)*sin(M_PI*l*y) + pow(x,k)*cos(M_PI*l*y);
-		}
-	    }
-	}
     }
     else
     {
-	if(btype2 != LibUtilities::eFourier)
-	{
-	    for(k = 0; k < order1/2; ++k)
-	    {
-		for(l = 0; l < order2; ++l)
-		{
-		    sol += sin(M_PI*k*x)*pow(y,l) + cos(M_PI*k*x)*pow(y,l);
-		}
-	    }
-	}
-	else
-	{
-	    for(k = 0; k < order1/2; ++k)
-	    {
-		for(l = 0; l < order2/2; ++l)
-		{
-		    sol += sin(M_PI*k*x)*sin(M_PI*l*y)
-			+ sin(M_PI*k*x)*cos(M_PI*l*y)
-			+ cos(M_PI*k*x)*sin(M_PI*l*y)
-			+ cos(M_PI*k*x)*cos(M_PI*l*y);
-		}
-	    }
-	}
+        for(k = 0; k < order1; ++k)
+        {
+        for(l = 0; l < order2/2; ++l)
+        {
+            sol += pow(x,k)*sin(M_PI*l*y) + pow(x,k)*cos(M_PI*l*y);
+        }
+        }
+    }
+    }
+    else
+    {
+    if(btype2 != LibUtilities::eFourier)
+    {
+        for(k = 0; k < order1/2; ++k)
+        {
+        for(l = 0; l < order2; ++l)
+        {
+            sol += sin(M_PI*k*x)*pow(y,l) + cos(M_PI*k*x)*pow(y,l);
+        }
+        }
+    }
+    else
+    {
+        for(k = 0; k < order1/2; ++k)
+        {
+        for(l = 0; l < order2/2; ++l)
+        {
+            sol += sin(M_PI*k*x)*sin(M_PI*l*y)
+            + sin(M_PI*k*x)*cos(M_PI*l*y)
+            + cos(M_PI*k*x)*sin(M_PI*l*y)
+            + cos(M_PI*k*x)*cos(M_PI*l*y);
+        }
+        }
+    }
     }
     
     return sol;

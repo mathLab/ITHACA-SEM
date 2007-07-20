@@ -24,22 +24,22 @@ int main(int argc, char *argv[])
    
     if(argc != 6)
     {
-	fprintf(stderr,"Usage: ProjectCont2D  Tri_Type  "  
-		"Quad_Type order nq mesh\n");
-	
-	fprintf(stderr,"Where Type is an integer value which "
-		"dictates the basis type as:\n");
-	
-	fprintf(stderr,"Triangle options:\n");
-	fprintf(stderr,"\t Modified_A, Modified_B = 1\n");
-	fprintf(stderr,"\t Nodal Elec             = 2\n");
-	fprintf(stderr,"\t Nodal Fekete           = 3\n");
+    fprintf(stderr,"Usage: ProjectCont2D  Tri_Type  "  
+        "Quad_Type order nq mesh\n");
+    
+    fprintf(stderr,"Where Type is an integer value which "
+        "dictates the basis type as:\n");
+    
+    fprintf(stderr,"Triangle options:\n");
+    fprintf(stderr,"\t Modified_A, Modified_B = 1\n");
+    fprintf(stderr,"\t Nodal Elec             = 2\n");
+    fprintf(stderr,"\t Nodal Fekete           = 3\n");
 
-	fprintf(stderr,"Quadrilateral options:\n");
-	fprintf(stderr,"\t Modified_A, Modified_A = 4\n");
-	fprintf(stderr,"\t Lagrange, Lagrange     = 5\n");
-	
-	exit(1);
+    fprintf(stderr,"Quadrilateral options:\n");
+    fprintf(stderr,"\t Modified_A, Modified_A = 4\n");
+    fprintf(stderr,"\t Lagrange, Lagrange     = 5\n");
+    
+    exit(1);
     }
     
     Tritype   = (LibUtilities::BasisType) atoi(argv[1]);
@@ -52,14 +52,14 @@ int main(int argc, char *argv[])
    
     if((Tritype < 1)||(Tritype > 3))
     {
-	NEKERROR(ErrorUtil::efatal,
-			 "Illegal option for Tri_Type\n");
+    NEKERROR(ErrorUtil::efatal,
+             "Illegal option for Tri_Type\n");
     }
     
     if((Quadtype < 4)||(Quadtype > 5))
     {
-	NEKERROR(ErrorUtil::efatal,
-			 "Illegal option for Quad_Type\n");
+    NEKERROR(ErrorUtil::efatal,
+             "Illegal option for Quad_Type\n");
     }
 
     // read in mesh
@@ -69,30 +69,30 @@ int main(int argc, char *argv[])
     
     switch(Tritype){
     case 1: 
-	Tri_btype1 = LibUtilities::eModified_A;
-	Tri_btype2 = LibUtilities::eModified_B;
-	// size counter is used as a trip to turn off Nodal Basis
-	Tri_Nb     = LibUtilities::SIZE_PointsType;
-	break;
+    Tri_btype1 = LibUtilities::eModified_A;
+    Tri_btype2 = LibUtilities::eModified_B;
+    // size counter is used as a trip to turn off Nodal Basis
+    Tri_Nb     = LibUtilities::SIZE_PointsType;
+    break;
     case 2:
-	Tri_btype1 =  LibUtilities::eOrtho_A;
-	Tri_btype2 =  LibUtilities::eOrtho_B;
-	Tri_Nb     =  LibUtilities::eNodalTriElec;
-	break;
+    Tri_btype1 =  LibUtilities::eOrtho_A;
+    Tri_btype2 =  LibUtilities::eOrtho_B;
+    Tri_Nb     =  LibUtilities::eNodalTriElec;
+    break;
     case 3:
-	Tri_btype1 =  LibUtilities::eOrtho_A;
-	Tri_btype2 =  LibUtilities::eOrtho_B;
-	Tri_Nb     =  LibUtilities::eNodalTriFekete;
-	break;
+    Tri_btype1 =  LibUtilities::eOrtho_A;
+    Tri_btype2 =  LibUtilities::eOrtho_B;
+    Tri_Nb     =  LibUtilities::eNodalTriFekete;
+    break;
     }
     
     switch(Quadtype){
     case 4:
-	Quad_btype = LibUtilities::eModified_A;
-	break;
+    Quad_btype = LibUtilities::eModified_A;
+    break;
     case 5:
-	Quad_btype = LibUtilities::eGLL_Lagrange;
-	break;
+    Quad_btype = LibUtilities::eGLL_Lagrange;
+    break;
     }
 
     // Define Expansion
@@ -133,13 +133,13 @@ int main(int argc, char *argv[])
     
     for(i = 0; i < nq; ++i)
     {
-	sol[i] = 0.0;
-	for(j = 0; j < order; ++j)
-	{
+    sol[i] = 0.0;
+    for(j = 0; j < order; ++j)
+    {
             sol[i] += pow(xc0[i],j);
             sol[i] += pow(xc1[i],j);
             sol[i] += pow(xc2[i],j);
-	}
+    }
     }
  
     //---------------------------------------------

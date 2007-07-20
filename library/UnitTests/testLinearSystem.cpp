@@ -52,7 +52,7 @@ namespace Nektar
 
                 double result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
                 NekVector<double, 3> b(result_buf);
 
                 LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
@@ -70,8 +70,8 @@ namespace Nektar
 
                 double result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-                boost::shared_ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
+                ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
 
                 LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 
@@ -88,9 +88,9 @@ namespace Nektar
 
                 double result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-                boost::shared_ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
-                boost::shared_ptr<NekVector<double, 3> > result(new NekVector<double, 3>());
+                ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
+                ptr<NekVector<double, 3> > result(new NekVector<double, 3>());
 
                 LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 
@@ -107,7 +107,7 @@ namespace Nektar
 
                 double result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
                 NekVector<double, 3> b(result_buf);
                 NekVector<double, 3> result;
 
@@ -126,8 +126,8 @@ namespace Nektar
 
                 double result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-                boost::shared_ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
+                ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
                 NekVector<double, 3> result;
 
                 LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
@@ -145,9 +145,9 @@ namespace Nektar
 
                 double result_buf[] = { 20, 50, 10 };
 
-                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
                 NekVector<double, 3> b(result_buf);
-                boost::shared_ptr<NekVector<double, 3> > result(new NekVector<double, 3>());
+                ptr<NekVector<double, 3> > result(new NekVector<double, 3>());
 
                 LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 
@@ -166,9 +166,9 @@ namespace Nektar
                 double result_buf[] = { 20, 50, 10 };
                 Array<OneD, double> result_array(3, result_buf);
 
-                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
                 NekVector<double> b(result_array, eWrapper);
-                boost::shared_ptr<NekVector<double> > result(new NekVector<double>(3, 0.0));
+                ptr<NekVector<double> > result(new NekVector<double>(3, 0.0));
 
                 LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 
@@ -187,12 +187,12 @@ namespace Nektar
                 double b_buf[] = { 20, 50, 10 };
                 Array<OneD, double> b_array(3, b_buf);
 
-                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
                 NekVector<double> b(b_array, eWrapper);
 
                 double result_buf[] = {0, 0, 0};
                 Array<OneD, double> result_array(3, result_buf);
-                boost::shared_ptr<NekVector<double> > result(new NekVector<double>(result_array, eWrapper));
+                ptr<NekVector<double> > result(new NekVector<double>(result_array, eWrapper));
 
                 LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 
@@ -211,12 +211,12 @@ namespace Nektar
                 double b_buf[] = { 20, 50, 10 };
                 Array<OneD, double> b_array(3, b_buf);
 
-                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
                 NekVector<double> b(b_array, eWrapper);
 
                 double result_buf[] = {0, 0, 0};
                 Array<OneD, double> result_array(3, result_buf);
-                boost::shared_ptr<NekVector<double> > result(new NekVector<double>(result_array, eWrapper));
+                ptr<NekVector<double> > result(new NekVector<double>(result_array, eWrapper));
 
                 LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 
@@ -235,8 +235,8 @@ namespace Nektar
 
             double result_buf[] = { 20, 50, 10 };
 
-            boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-            boost::shared_ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
+            ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+            ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
 
             LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 
@@ -257,8 +257,8 @@ namespace Nektar
     
                 double result_buf[] = { 20, 50, 10 };
     
-                boost::shared_ptr<NekMatrix<double, FullMatrixTag> >  A(new NekMatrix<double, FullMatrixTag>(3,3,matrix_buf));
-                boost::shared_ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
+                ptr<NekMatrix<double, FullMatrixTag> >  A(new NekMatrix<double, FullMatrixTag>(3,3,matrix_buf));
+                ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
     
                 LinearSystem<NekMatrix<double, FullMatrixTag> > linsys(A);
     
@@ -280,8 +280,8 @@ namespace Nektar
                             
                 double b_buf[] = {-941, 348};
                 
-                boost::shared_ptr<NekMatrix<double, FullMatrixTag> > A(new NekMatrix<double, FullMatrixTag>(2, 2, matrix_buf));
-                boost::shared_ptr<NekVector<double> > b(new NekVector<double>(2, b_buf));
+                ptr<NekMatrix<double, FullMatrixTag> > A(new NekMatrix<double, FullMatrixTag>(2, 2, matrix_buf));
+                ptr<NekVector<double> > b(new NekVector<double>(2, b_buf));
                 LinearSystem<NekMatrix<double, FullMatrixTag> > linsys(A);
             
                 NekVector<double> result = linsys.Solve(b);
@@ -306,8 +306,8 @@ namespace Nektar
                             
                 double b_buf[] = {12719, -3169, -16810, 7408, -14945, -6822, 10166, 7023, 8679, -11826};
                 
-                boost::shared_ptr<NekMatrix<double, FullMatrixTag> > A(new NekMatrix<double, FullMatrixTag>(10, 10, matrix_buf));
-                boost::shared_ptr<NekVector<double> > b(new NekVector<double>(10, b_buf));
+                ptr<NekMatrix<double, FullMatrixTag> > A(new NekMatrix<double, FullMatrixTag>(10, 10, matrix_buf));
+                ptr<NekVector<double> > b(new NekVector<double>(10, b_buf));
                 LinearSystem<NekMatrix<double, FullMatrixTag> > linsys(A);
                 
                 NekVector<double> result = linsys.Solve(b);
@@ -327,9 +327,9 @@ namespace Nektar
             }
             
             {
-                //boost::shared_ptr<NekMatrix<double, FullMatrixTag, eBlock> > A(new NekMatrix<double, FullMatrixTag, eBlock>(10, 10));
+                //ptr<NekMatrix<double, FullMatrixTag, eBlock> > A(new NekMatrix<double, FullMatrixTag, eBlock>(10, 10));
                 //double b_buf[] = {12719, -3169, -16810, 7408, -14945, -6822, 10166, 7023, 8679, -11826};
-                //boost::shared_ptr<NekVector<double> > b(new NekVector<double>(10, b_buf));
+                //ptr<NekVector<double> > b(new NekVector<double>(10, b_buf));
             }
         }
         
@@ -338,7 +338,7 @@ namespace Nektar
             //typedef NekMatrix<double, DiagonalMatrixTag, eBlock> BlockMatrix;
             //typedef BlockMatrix::InnerMatrixType InnerMatrixType;
             //    
-            //boost::shared_ptr<BlockMatrix> m1(new BlockMatrix(4, 2, 2));
+            //ptr<BlockMatrix> m1(new BlockMatrix(4, 2, 2));
             //const double m1_buf0[] = {-91, -47, 94, 83};
             //const double m1_buf1[] = {49, 78, 80, 72};
             //const double m1_buf2[] = {87, 79, 31, -34};
@@ -350,7 +350,7 @@ namespace Nektar
             //m1->GetBlock(3,3) = InnerMatrixType(2, 2, m1_buf3);
             //
             //double b_vals[] = {-7198, 7642, 1344, 3744, -9968, 115, -2469, 8424};
-            //boost::shared_ptr<NekVector<double> > b(new NekVector<double>(8, b_vals));
+            //ptr<NekVector<double> > b(new NekVector<double>(8, b_vals));
             //
             //LinearSystem<BlockMatrix, NekVector<double> > linsys(m1, b);
             //
@@ -384,8 +384,8 @@ namespace Nektar
                 double b_buf[] = {12719, -3169, -16810, 7408, -14945, -6822, 10166, 7023, 8679, -11826};
                 double result_buf[10];
 
-                boost::shared_ptr<NekMatrix<double, FullMatrixTag> > A(new NekMatrix<double, FullMatrixTag>(10, 10, matrix_buf));
-                boost::shared_ptr<NekVector<double> > b(new NekVector<double>(Array<OneD, double>(10, b_buf), eWrapper));
+                ptr<NekMatrix<double, FullMatrixTag> > A(new NekMatrix<double, FullMatrixTag>(10, 10, matrix_buf));
+                ptr<NekVector<double> > b(new NekVector<double>(Array<OneD, double>(10, b_buf), eWrapper));
                 NekVector<double> result(Array<OneD, double>(10, result_buf), eWrapper);
 
                 LinearSystem<NekMatrix<double, FullMatrixTag> > linsys(A);

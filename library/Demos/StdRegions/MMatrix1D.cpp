@@ -23,7 +23,7 @@ main(int argc, char *argv[]){
     fprintf(stderr,"Usage: MMatrix1D Type order nq \n");
 
     fprintf(stderr,"Where type is an integer value which "
-	    "dictates the basis as:\n");
+        "dictates the basis as:\n");
     fprintf(stderr,"\t Ortho_A    = 0\n");
     fprintf(stderr,"\t Modified_A = 3\n");
     fprintf(stderr,"\t Fourier    = 6\n");
@@ -43,7 +43,7 @@ main(int argc, char *argv[]){
      (btype == eModified_B)||(btype == eModified_C))
   {
     ErrorUtil::Error(ErrorUtil::efatal,"MMatrix1D",
-		     "This basis is for 2 or 3D expansions");
+             "This basis is for 2 or 3D expansions");
   }
   
   order =   atoi(argv[2]);

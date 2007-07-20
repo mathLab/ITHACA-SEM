@@ -25,19 +25,19 @@ int main(int argc, char *argv[])
     
     if(argc != 5)
     {
-	fprintf(stderr,"Usage: ProjectLoc1D Type order nq  mesh \n");
-	
-	fprintf(stderr,"Where type is an integer value which "
-		"dictates the basis as:\n");
-	fprintf(stderr,"\t Ortho_A    = 1\n");
-	fprintf(stderr,"\t Modified_A = 4\n");
-	fprintf(stderr,"\t Lagrange   = 8\n");
-	fprintf(stderr,"\t Legendre   = 9\n"); 
-	fprintf(stderr,"\t Chebyshev  = 10\n");
-	
-	fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
-	
-	exit(1);
+    fprintf(stderr,"Usage: ProjectLoc1D Type order nq  mesh \n");
+    
+    fprintf(stderr,"Where type is an integer value which "
+        "dictates the basis as:\n");
+    fprintf(stderr,"\t Ortho_A    = 1\n");
+    fprintf(stderr,"\t Modified_A = 4\n");
+    fprintf(stderr,"\t Lagrange   = 8\n");
+    fprintf(stderr,"\t Legendre   = 9\n"); 
+    fprintf(stderr,"\t Chebyshev  = 10\n");
+    
+    fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
+    
+    exit(1);
     }
     
     btype =   (LibUtilities::BasisType) atoi(argv[1]);
@@ -45,14 +45,14 @@ int main(int argc, char *argv[])
     // Check to see that only 1D Expansions are used
     if((btype == LibUtilities::eOrtho_B)||(btype == LibUtilities::eOrtho_B)||
        (btype == LibUtilities::eModified_B)||(btype == LibUtilities::eModified_C))
-	NEKERROR(ErrorUtil::efatal,
-			 "This basis is for 2 or 3D expansions");
+    NEKERROR(ErrorUtil::efatal,
+             "This basis is for 2 or 3D expansions");
     
     // Do not use Fourier expansion
     if(btype == LibUtilities::eFourier)
     {
-	NEKERROR(ErrorUtil::efatal,
-			 "Demo not set up for Fourier Expanison");
+    NEKERROR(ErrorUtil::efatal,
+             "Demo not set up for Fourier Expanison");
     }
     
     order  =   atoi(argv[2]);
@@ -61,11 +61,11 @@ int main(int argc, char *argv[])
     
     if(btype != LibUtilities::eFourier)
     {
-	Qtype = LibUtilities::eGaussLobattoLegendre; 
+    Qtype = LibUtilities::eGaussLobattoLegendre; 
     }
     else
     {
-	Qtype = LibUtilities::eFourierEvenlySpaced;
+    Qtype = LibUtilities::eFourierEvenlySpaced;
     }
   
     // read in mesh
@@ -108,13 +108,13 @@ int main(int argc, char *argv[])
     
     for(i = 0; i < nq; ++i)
     {
-	sol[i] = 0.0;
-	for(j = 0; j < order; ++j)
-	{
+    sol[i] = 0.0;
+    for(j = 0; j < order; ++j)
+    {
             sol[i] += pow(xc0[i],j);
             sol[i] += pow(xc1[i],j);
             sol[i] += pow(xc2[i],j);
-	}
+    }
     }
     
     //---------------------------------------------

@@ -25,18 +25,18 @@ main(int argc, char *argv[])
   if(argc != 8)
   {
     fprintf(stderr,"Usage: MMatrix2D RegionShape Type1 Type2 order1 "
-	    "order2  nq1 nq2  \n");
+        "order2  nq1 nq2  \n");
 
     fprintf(stderr,"Where RegionShape is an integer value which "
-	    "dictates the region shape:\n");
+        "dictates the region shape:\n");
     fprintf(stderr,"\t Triangle      = 1\n"); //Gosse: should be:
-					      //Triangle =2
+                          //Triangle =2
     fprintf(stderr,"\t Quadrilateral = 2\n"); //Gosse: should be:
-					      //Quadrilateral = 3
+                          //Quadrilateral = 3
     
     
     fprintf(stderr,"Where type is an integer value which "
-	    "dictates the basis as:\n");
+        "dictates the basis as:\n");
 
     fprintf(stderr,"\t Ortho_A    = 0\n");
     fprintf(stderr,"\t Ortho_B    = 1\n");
@@ -70,13 +70,13 @@ main(int argc, char *argv[])
     if((btype1 == eOrtho_B)||(btype1 == eModified_B))
     {
       ErrorUtil::Error(ErrorUtil::efatal,"MMatrix2D",
-		       "Basis 1 cannot be of type Ortho_B or Modified_B");
+               "Basis 1 cannot be of type Ortho_B or Modified_B");
     }
 
     if((btype2 != eOrtho_B)&&(btype2 != eModified_B))
     {
       ErrorUtil::Error(ErrorUtil::efatal,"MMatrix2D",
-		       "Basis 2 must be of type Ortho_B or Modified_B");
+               "Basis 2 must be of type Ortho_B or Modified_B");
     }
     break;
   case eQuadrilateral:
@@ -84,14 +84,14 @@ main(int argc, char *argv[])
        (btype1 == eModified_B)||(btype1 == eModified_C))
     {
       ErrorUtil::Error(ErrorUtil::efatal,"MMatrix2D",
-		       "Basis 1 is for 2 or 3D expansions");
+               "Basis 1 is for 2 or 3D expansions");
     }
 
     if((btype2 == eOrtho_B)||(btype2 == eOrtho_B)||
        (btype2 == eModified_B)||(btype2 == eModified_C))
      {
       ErrorUtil::Error(ErrorUtil::efatal,"MMatrix2D",
-		     "Basis 2 is for 2 or 3D expansions");
+             "Basis 2 is for 2 or 3D expansions");
      }
     break;
   }

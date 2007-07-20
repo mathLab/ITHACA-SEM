@@ -27,7 +27,7 @@ main(int argc, char *argv[])
     fprintf(stderr,"Usage: Basis1D Type order nq \n");
     
     fprintf(stderr,"Where type is an integer value which "
-	    "dictates the basis as:\n");
+        "dictates the basis as:\n");
     fprintf(stderr,"\t Ortho_A    = 0\n");
     fprintf(stderr,"\t Ortho_B    = 1\n");
     fprintf(stderr,"\t Ortho_C    = 2\n");

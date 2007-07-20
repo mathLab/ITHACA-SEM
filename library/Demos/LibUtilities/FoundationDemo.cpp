@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
     
     // Obtain a reference to a Points object via an appropriate PointsKey object
     PointsKey key(nPts, pointsType);
-    const boost::shared_ptr<Points<NekDouble> > points = PointsManager()[key];
+    const ptr<Points<NekDouble> > points = PointsManager()[key];
 
     // Get the abscissas and their matching quadrature weights
     SharedArray<const NekDouble> z, w;
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
 
     // Generate a list of interpolating nodes
     int nNodes = 2*nPts; // Number of interpolating nodes
-    const boost::shared_ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
+    const ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
     SharedArray<const NekDouble> zNode = nodes->GetZ();
     
     // Get the interpolation matrix I

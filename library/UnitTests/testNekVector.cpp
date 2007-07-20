@@ -374,7 +374,7 @@ namespace Nektar
                     7.0, 8.0, 9.0};
                 double vector_buf[] = {20.0, 30.0, 40.0};
                 
-                boost::shared_ptr<NekMatrix<double> > m(new NekMatrix<double>(3, 3, matrix_buf));
+                ptr<NekMatrix<double> > m(new NekMatrix<double>(3, 3, matrix_buf));
                 NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> s(2.0, m);
                 NekVector<double> v(3, vector_buf);
                 NekVector<double> result = s*v;
@@ -391,9 +391,9 @@ namespace Nektar
                 double m3_buf[] = {9.0, 10.0, 11.0, 12.0};
                 double vector_buf[] = {20.0, 30.0};
                 
-                boost::shared_ptr<NekMatrix<double> > m1(new NekMatrix<double>(2, 2, m1_buf));
-                boost::shared_ptr<NekMatrix<double> > m2(new NekMatrix<double>(2, 2, m2_buf));
-                boost::shared_ptr<NekMatrix<double> > m3(new NekMatrix<double>(2, 2, m3_buf));
+                ptr<NekMatrix<double> > m1(new NekMatrix<double>(2, 2, m1_buf));
+                ptr<NekMatrix<double> > m2(new NekMatrix<double>(2, 2, m2_buf));
+                ptr<NekMatrix<double> > m3(new NekMatrix<double>(2, 2, m3_buf));
                 
                 NekMatrix<NekMatrix<double>, FullMatrixTag, BlockMatrixTag> b(3, 1, 2, 2);
                 b.SetBlock(0,0,m1);
@@ -484,6 +484,9 @@ namespace Nektar
 
 /**
     $Log: testNekVector.cpp,v $
+    Revision 1.8  2007/07/11 03:18:23  bnelson
+    *** empty log message ***
+
     Revision 1.7  2007/07/10 05:10:19  bnelson
     Added tests for vectors with a different size than the underlying SharedArray.
 

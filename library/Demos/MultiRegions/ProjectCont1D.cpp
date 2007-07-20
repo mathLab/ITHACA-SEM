@@ -99,12 +99,12 @@ int main(int argc, char *argv[])
     for(i = 0; i < nq; ++i)
     {
         sol[i] = 0.0;
-	for(j = 0; j < order; ++j)
-	{
+    for(j = 0; j < order; ++j)
+    {
             sol[i] += pow(xc0[i],j);
             sol[i] += pow(xc1[i],j);
             sol[i] += pow(xc2[i],j);
-	}
+    }
     }
 
     //----------------------------------------------

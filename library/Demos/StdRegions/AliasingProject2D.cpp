@@ -13,7 +13,7 @@ using namespace std;
 
 double Tri_sol(double x, double y, int order1, int order2);
 double Quad_sol(double x, double y, int order1, int order2, 
-		BasisType btype1, BasisType btype2);
+        BasisType btype1, BasisType btype2);
 
 // compile using Builds/Demos/StdRegions -> make DEBUG=1 AliasingProject2D
 
@@ -34,16 +34,16 @@ main(int argc, char *argv[])
   if(argc != 8)
   {
     fprintf(stderr,"Usage: AliasingProject2D RegionShape Type1 Type2 exporder1"
-	    "exporder2  nq1 nq2  \n");
+        "exporder2  nq1 nq2  \n");
 
     fprintf(stderr,"Where RegionShape is an integer value which "
-	    "dictates the region shape:\n");
+        "dictates the region shape:\n");
     fprintf(stderr,"\t Triangle      = 2\n");
     fprintf(stderr,"\t Quadrilateral = 3\n");
     
     
     fprintf(stderr,"Where type is an integer value which "
-	    "dictates the basis as:\n");
+        "dictates the basis as:\n");
 
     fprintf(stderr,"\t Ortho_A    = 0\n");
     fprintf(stderr,"\t Ortho_B    = 1\n");
@@ -65,7 +65,7 @@ main(int argc, char *argv[])
   if((regionshape != eTriangle)&&(regionshape != eQuadrilateral))
   {
     ErrorUtil::Error(ErrorUtil::efatal,"AliasingProject2D",
-		     "This shape is not a 2D region");
+             "This shape is not a 2D region");
   }
 
   btype1 =   (BasisType) atoi(argv[2]);
@@ -78,13 +78,13 @@ main(int argc, char *argv[])
     if((btype1 == eOrtho_B)||(btype1 == eModified_B))
     {
       ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
-		       "Basis 1 cannot be of type Ortho_B or Modified_B");
+               "Basis 1 cannot be of type Ortho_B or Modified_B");
     }
 
     if((btype2 != eOrtho_B)&&(btype2 != eModified_B))
     {
       ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
-		       "Basis 2 must be of type Ortho_B or Modified_B");
+               "Basis 2 must be of type Ortho_B or Modified_B");
     }
     break;
   case eQuadrilateral:
@@ -92,14 +92,14 @@ main(int argc, char *argv[])
        (btype1 == eModified_B)||(btype1 == eModified_C))
     {
       ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
-		     "Basis 1 is for 2 or 3D expansions");
+             "Basis 1 is for 2 or 3D expansions");
     }
 
     if((btype2 == eOrtho_B)||(btype2 == eOrtho_B)||
        (btype2 == eModified_B)||(btype2 == eModified_C))
     {
       ErrorUtil::Error(ErrorUtil::efatal,"Project2D",
-		     "Basis 2 is for 2 or 3D expansions");
+             "Basis 2 is for 2 or 3D expansions");
     }
     break;
   }
@@ -151,10 +151,10 @@ main(int argc, char *argv[])
     {
       for(j = 0; j < nq2; ++j)
       {
-	x = (1+z1[i])*(1-z2[j])/2-1.0;
-	y = z2[j];
-	sol[i+nq1*j]  = Tri_sol(x,y,order1,order2);
-	sol[i+nq1*j] *= sol[i+nq1*j]; 
+    x = (1+z1[i])*(1-z2[j])/2-1.0;
+    y = z2[j];
+    sol[i+nq1*j]  = Tri_sol(x,y,order1,order2);
+    sol[i+nq1*j] *= sol[i+nq1*j]; 
       }
     }
     //----------------------------------------------
@@ -176,8 +176,8 @@ main(int argc, char *argv[])
     {
       for(j = 0; j < nq2; ++j)
       {
-	sol[i*nq1 +j]  = Quad_sol(z1[i],z2[j],order1,order2,btype1,btype2);
-	sol[i*nq1 +j] *= sol[i*nq1 +j];
+    sol[i*nq1 +j]  = Quad_sol(z1[i],z2[j],order1,order2,btype1,btype2);
+    sol[i*nq1 +j] *= sol[i*nq1 +j];
       }
     }
     //---------------------------------------------
@@ -234,7 +234,7 @@ double Tri_sol(double x, double y, int order1, int order2)
 }
 
 double Quad_sol(double x, double y, int order1, int order2, BasisType btype1,
-		BasisType btype2)
+        BasisType btype2)
 {
 
   int k,l;
@@ -246,20 +246,20 @@ double Quad_sol(double x, double y, int order1, int order2, BasisType btype1,
     {
       for(k = 0; k < order1; ++k)
       {
-	for(l = 0; l < order2; ++l)
-	{
-	  sol += pow(x,k)*pow(y,l);
-	}
+    for(l = 0; l < order2; ++l)
+    {
+      sol += pow(x,k)*pow(y,l);
+    }
       }
     }
     else
     {
       for(k = 0; k < order1; ++k)
       {
-	for(l = 0; l < order2/2; ++l)
-	  {
-	  sol += pow(x,k)*sin(M_PI*l*y) + pow(x,k)*cos(M_PI*l*y);
-	  }
+    for(l = 0; l < order2/2; ++l)
+      {
+      sol += pow(x,k)*sin(M_PI*l*y) + pow(x,k)*cos(M_PI*l*y);
+      }
       }
     }
   }
@@ -268,23 +268,23 @@ double Quad_sol(double x, double y, int order1, int order2, BasisType btype1,
     if(btype2 != eFourier){
       for(k = 0; k < order1/2; ++k)
       {
-	for(l = 0; l < order2; ++l)
-	{
-	  sol += sin(M_PI*k*x)*pow(y,l) + cos(M_PI*k*x)*pow(y,l);
-	}
+    for(l = 0; l < order2; ++l)
+    {
+      sol += sin(M_PI*k*x)*pow(y,l) + cos(M_PI*k*x)*pow(y,l);
+    }
       }
     }
     else
     {
       for(k = 0; k < order1/2; ++k)
       {
-	for(l = 0; l < order2/2; ++l)
-	{
-	  sol += sin(M_PI*k*x)*sin(M_PI*l*y)
-	    + sin(M_PI*k*x)*cos(M_PI*l*y)
-	    + cos(M_PI*k*x)*sin(M_PI*l*y)
-	    + cos(M_PI*k*x)*cos(M_PI*l*y);
-	}
+    for(l = 0; l < order2/2; ++l)
+    {
+      sol += sin(M_PI*k*x)*sin(M_PI*l*y)
+        + sin(M_PI*k*x)*cos(M_PI*l*y)
+        + cos(M_PI*k*x)*sin(M_PI*l*y)
+        + cos(M_PI*k*x)*cos(M_PI*l*y);
+    }
       }
     }
   }

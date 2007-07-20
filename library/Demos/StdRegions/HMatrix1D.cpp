@@ -27,7 +27,7 @@ int main(int argc, char *argv[]){
     fprintf(stderr,"Usage: MMatrix1D Type order nq \n");
 
     fprintf(stderr,"Where type is an integer value which "
-	    "dictates the basis as:\n");
+        "dictates the basis as:\n");
     fprintf(stderr,"\t Ortho_A    = 0\n");
     fprintf(stderr,"\t Modified_A = 3\n");
     fprintf(stderr,"\t Fourier    = 6\n");
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
   if((btype == Ortho_B)   ||(btype == Ortho_B)||
      (btype == Modified_B)||(btype == Modified_C))
     ErrorUtil::Error(fatal,"HMatrix1D",
-		     "This basis is for 2 or 3D expansions");
+             "This basis is for 2 or 3D expansions");
   
   order =   atoi(argv[2]);
   nq    =   atoi(argv[3]);
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]){
   fprintf(stdout,"VARIABLES = hmat\n");
 
   fprintf(stdout,"ZONE T = \"Helmholtz Matrix order %d\" I=%d J=%d\n",order,order,
-	    order);
+        order);
   for(i = 0; i < order; ++i){
     for(j = 0; j < order; ++j)
       fprintf(stdout, "%9.6lf ",hmat[i*order+j]);

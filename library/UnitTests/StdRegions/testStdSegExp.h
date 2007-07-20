@@ -41,14 +41,14 @@ namespace Nektar
     namespace StdSegExpUnitTests
     {
         void testMassMatrix();
-	void testLapMatrix();
-	void testIntegration();
-	void testDifferentiation();
-	void testIProductWRTBase();
-	void testFwdTrans();
-	void testBwdTrans();
-	void testPhysEvaluate();
-	void testNorms();
+    void testLapMatrix();
+    void testIntegration();
+    void testDifferentiation();
+    void testIProductWRTBase();
+    void testFwdTrans();
+    void testBwdTrans();
+    void testPhysEvaluate();
+    void testNorms();
 
     }
 }
@@ -57,6 +57,9 @@ namespace Nektar
 
 /**
     $Log: testStdSegExp.h,v $
+    Revision 1.3  2007/03/16 12:11:14  pvos
+    adapted to the modified StdExpansion-code
+
     Revision 1.2  2007/03/14 12:01:25  pvos
     *** empty log message ***
 

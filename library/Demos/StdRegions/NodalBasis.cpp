@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Usage: NodalBasis Type order\n");
 
     fprintf(stderr,"Where type is an integer value which "
-	    "dictates the basis as:\n");
+        "dictates the basis as:\n");
     fprintf(stderr,"\t NodalTriElec    = 0\n");
     fprintf(stderr,"\t NodalTriFekete  = 1\n");
     fprintf(stderr,"\t NodalTetElec    = 2\n");

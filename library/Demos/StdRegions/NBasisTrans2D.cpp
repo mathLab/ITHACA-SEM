@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Usage: NBasisTrans2D PointDis order \n");
 
     fprintf(stderr,"Where PointDist is an integer value which "
-	    "dictates the nodal distrbituion:\n");
+        "dictates the nodal distrbituion:\n");
     fprintf(stderr,"\t Electrostatic points  = 0\n");
     fprintf(stderr,"\t Fekete points         = 1\n");
     
@@ -70,10 +70,10 @@ int main(int argc, char *argv[])
       // activate all modes
       for(k = 0; k < order; ++k)
       {
-	for(l = 0; l < order-k; ++l)
-	{
-	  sol[i+nq1*j] += pow(x,k)*pow(y,l);
-	}
+    for(l = 0; l < order-k; ++l)
+    {
+      sol[i+nq1*j] += pow(x,k)*pow(y,l);
+    }
       }
     }
   }
@@ -87,10 +87,10 @@ int main(int argc, char *argv[])
     // activate all modes
     for(k = 0; k < order; ++k)
     {
-	for(l = 0; l < order-k; ++l)
-	{
-	    coeffs[i] += pow(xp[i],k)*pow(yp[i],l);
-	}
+    for(l = 0; l < order-k; ++l)
+    {
+        coeffs[i] += pow(xp[i],k)*pow(yp[i],l);
+    }
     }
   }
 

@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Usage: Project1D Type order nq \n");
 
     fprintf(stderr,"Where type is an integer value which "
-	    "dictates the basis as:\n");
+        "dictates the basis as:\n");
     fprintf(stderr,"\t Ortho_A    = 1\n");
     fprintf(stderr,"\t Modified_A = 4\n");
     fprintf(stderr,"\t Fourier    = 7\n");
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
   if(btype == LibUtilities::eNoBasisType)
   {
       NEKERROR(ErrorUtil::efatal,
-		     "No Basis Type requested");
+             "No Basis Type requested");
   }
 
   // Check to see that only 1D Expansions are used
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
      (btype == LibUtilities::eModified_B)||(btype == LibUtilities::eModified_C))
   {
       NEKERROR(ErrorUtil::efatal,
-		     "This basis is for 2 or 3D expansions");
+             "This basis is for 2 or 3D expansions");
   }
   
   order =   atoi(argv[2]);
@@ -83,22 +83,22 @@ int main(int argc, char *argv[])
   {
       for(i = 0; i < nq; ++i)
       {
-	  sol[i] = 0.0;
-	  for(j = 0; j < order; ++j)
-	  {
-	      sol[i] += pow(z[i],j);
-	  }
+      sol[i] = 0.0;
+      for(j = 0; j < order; ++j)
+      {
+          sol[i] += pow(z[i],j);
+      }
       }
   }
   else
   {
       for(i = 0; i < nq; ++i)
       {
-	  sol[i] = 1.0;
-	  for(j = 0; j < order/2-1; ++j)
-	  {
-	      sol[i] += sin(j*M_PI*z[i]) + cos(j*M_PI*z[i]);
-	  }
+      sol[i] = 1.0;
+      for(j = 0; j < order/2-1; ++j)
+      {
+          sol[i] += sin(j*M_PI*z[i]) + cos(j*M_PI*z[i]);
+      }
       }
   }
   //---------------------------------------------
@@ -139,5 +139,5 @@ int main(int argc, char *argv[])
   cout << "error at x = 0: " << nsol - sol[0] << endl;
   //-------------------------------------------
 
-  return 0;	
+  return 0;    
 }

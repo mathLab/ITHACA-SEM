@@ -27,10 +27,10 @@ main(int argc, char *argv[])
   if(argc != 11)
   {
     fprintf(stderr,"Usage: MMatrix3D RegionShape Type1 Type2 Type3 order1 "
-	    "order2  order3 nq1 nq2 nq3 \n");
+        "order2  order3 nq1 nq2 nq3 \n");
 
     fprintf(stderr,"Where RegionShape is an integer value which "
-	    "dictates the region shape:\n");
+        "dictates the region shape:\n");
     fprintf(stderr,"\t Tetrahedron      = 4\n"); 
     fprintf(stderr,"\t Pyramid          = 5\n");
     fprintf(stderr,"\t Prism            = 6\n");
@@ -38,7 +38,7 @@ main(int argc, char *argv[])
     
     
     fprintf(stderr,"Where type is an integer value which "
-	    "dictates the basis as:\n");
+        "dictates the basis as:\n");
 
     fprintf(stderr,"\t Ortho_A    = 0\n");
     fprintf(stderr,"\t Ortho_B    = 1\n");
@@ -61,7 +61,7 @@ main(int argc, char *argv[])
      (regionshape != ePrism)&&(regionshape != ePyramid))
   {
     ErrorUtil::Error(ErrorUtil::efatal,"MMatrix3D","This shape is "
-		     "not a 3D region");
+             "not a 3D region");
   }
 
   btype1 =   (BasisType) atoi(argv[2]);

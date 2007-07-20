@@ -88,8 +88,8 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterPolyEvenlySpaced),0);
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testInterFourierEvenlySpaced),0);
    
-	
-	// Test Foundation
+    
+    // Test Foundation
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussGaussLegendre),0);
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMLegendre),0);
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauPLegendre),0);
@@ -102,7 +102,7 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testGaussRadauMAlpha0Beta2),0);
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testPolyEvenlySpaced),0);
     test->add(BOOST_TEST_CASE(&Nektar::foundationUnitTests::testFourierEvenlySpaced),0);
-				
+                
     // StdSegExp algorithms
      test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testMassMatrix), 0);
     //test->add(BOOST_TEST_CASE(&Nektar::StdSegExpUnitTests::testLapMatrix), 0);
@@ -220,6 +220,9 @@ test_suite* init_unit_test_suite( int, char* [] )
 
 /**
     $Log: main.cpp,v $
+    Revision 1.46  2007/07/17 01:58:40  bnelson
+    Added SharedPtr tests.
+
     Revision 1.45  2007/07/12 03:59:05  bnelson
     *** empty log message ***
 

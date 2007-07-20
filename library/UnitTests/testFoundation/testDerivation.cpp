@@ -209,7 +209,7 @@ void testFourierDerivation(PointsType type, long double epsilon) {
     const long double eps = epsilon;
 
     for(int nPts = 4; nPts<=20; nPts += 2) {
-        const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+        const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
         const Points<NekDouble>::MatrixSharedPtrType Dptr = points->GetD();
         const NekMatrix<NekDouble> & D = *Dptr;
         const ConstArray<OneD,NekDouble> &z = points->GetZ();
@@ -217,7 +217,7 @@ void testFourierDerivation(PointsType type, long double epsilon) {
                
         int numPoints = points->GetNumPoints();
         
-		// Check the derivative at each of the i points
+        // Check the derivative at each of the i points
         for(int i = 0; i < numPoints; ++i) {
             long double exact = d(z[i], numPoints);
             long double numericDerivative = 0.0;
@@ -294,7 +294,7 @@ void testDerivation(PointsType type, long double epsilon) {
     const long double eps = epsilon;
 
     for(int nPts = 4; nPts<=10; ++nPts) {
-        const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+        const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
         const Points<double>::MatrixSharedPtrType Dptr = points->GetD();
         const NekMatrix<double> & D = *Dptr;
         const ConstArray<OneD,NekDouble> &z = points->GetZ();

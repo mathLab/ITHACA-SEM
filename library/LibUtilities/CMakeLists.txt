@@ -102,17 +102,18 @@ SET(ExpressionTemplates
 )
 
 SET(BasicUtils
-        ./BasicUtils/ArrayPolicies.hpp
-        ./BasicUtils/BinaryExpressionTraits.hpp
+    ./BasicUtils/ArrayPolicies.hpp
+    ./BasicUtils/BinaryExpressionTraits.hpp
 	./BasicUtils/BoostUtil.hpp
-        ./BasicUtils/Concepts.hpp
+    ./BasicUtils/Concepts.hpp
 	./BasicUtils/ConsistentObjectAccess.hpp
 	./BasicUtils/ErrorUtil.hpp
 	./BasicUtils/mojo.hpp
-        ./BasicUtils/OperatorGenerators.hpp
+	./BasicUtils/NekManager.hpp
+    ./BasicUtils/OperatorGenerators.hpp
 	./BasicUtils/SharedArray.hpp
 	./BasicUtils/SharedPtr.hpp
-        ./BasicUtils/Vmath.hpp
+    ./BasicUtils/Vmath.hpp
 )
 
 SET(Memory

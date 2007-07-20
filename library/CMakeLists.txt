@@ -69,6 +69,7 @@ MACRO(SET_COMMON_PROPERTIES name)
     IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
         # Disable the warnings about duplicate copy/assignment methods (4521, 4522)
         # Disable the warning that arrays are default intialized (4351)	
+        # /Za is necessary to prevent temporaries being bound to reference parameters.
         SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "/wd4521 /wd4522 /wd4351")
     ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
 

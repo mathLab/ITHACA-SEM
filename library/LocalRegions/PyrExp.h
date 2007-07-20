@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LocalRegions/PyrExp.h,v $
+// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/PyrExp.h,v $
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -80,15 +80,15 @@ namespace Nektar
       SpatialDomains::PyrGeom * m_geom;
 
     private:
-      virtual StdRegions::ShapeType v_DetShapeType()
+      virtual StdRegions::ShapeType v_DetShapeType() const
       {
-		return DetShapeType();
+        return DetShapeType();
       }
 
     };
 
     // type defines for use of PyrExp in a boost vector
-    typedef boost::shared_ptr<PyrExp> PyrExpSharedPtr;
+    typedef ptr<PyrExp> PyrExpSharedPtr;
     typedef std::vector< PyrExpSharedPtr > PyrExpVector;
     typedef std::vector< PyrExpSharedPtr >::iterator PyrExpVectorIter;
 
@@ -99,6 +99,9 @@ namespace Nektar
 
 /**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.5  2007/01/15 21:12:26  sherwin
+ *    First definition
+ *
  *    Revision 1.4  2006/06/13 18:05:01  sherwin
  *    Modifications to make MultiRegions demo ProjectLoc2D execute properly.
  *

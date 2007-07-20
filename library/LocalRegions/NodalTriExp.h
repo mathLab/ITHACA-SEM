@@ -49,26 +49,26 @@ namespace Nektar
 {
     namespace LocalRegions 
     {  
-	    
-	class NodalTriExp: public StdRegions::StdNodalTriExp
+        
+    class NodalTriExp: public StdRegions::StdNodalTriExp
         {
-	public:
+    public:
             /** \brief Constructor using BasisKey class for quadrature
                 points and order definition */
-	    NodalTriExp(const LibUtilities::BasisKey &Ba,
+        NodalTriExp(const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
                         const LibUtilities::PointsType Ntype,
                         const SpatialDomains::TriGeomSharedPtr &geom);
 
-	    NodalTriExp(const LibUtilities::BasisKey &Ba,
+        NodalTriExp(const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
                         const LibUtilities::PointsType Ntype);
-	    
+        
             /// Copy Constructor
-	    NodalTriExp(const NodalTriExp &T); 
+        NodalTriExp(const NodalTriExp &T); 
 
             /// Destructor
-	    ~NodalTriExp();
+        ~NodalTriExp();
             
             
             void GetCoords(Array<OneD,NekDouble> &coords_1,
@@ -85,10 +85,10 @@ namespace Nektar
             void WriteToFile(FILE *outfile);
             void WriteToFile(std::ofstream &outfile, const int dumpVar);
             
-	    //----------------------------
-	    // Integration Methods
-	    //----------------------------
-	    
+        //----------------------------
+        // Integration Methods
+        //----------------------------
+        
             /// \brief Integrate the physical point list \a inarray over region
             NekDouble Integral(const ConstArray<OneD, NekDouble> &inarray);
             
@@ -96,29 +96,29 @@ namespace Nektar
                 expansion basis (this)->_Base[0] and return in \a outarray */
             void IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
                                  Array<OneD, NekDouble> &outarray);
-	    
-	    //-----------------------------
-	    // Differentiation Methods
-	    //-----------------------------
-	    
+        
+        //-----------------------------
+        // Differentiation Methods
+        //-----------------------------
+        
             void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
                            Array<OneD, NekDouble> &out_d0,
                            Array<OneD, NekDouble> &out_d1,
                            Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);  
             
-	    //----------------------------
-	    // Evaluations Methods
-	    //---------------------------
-	
-	    /** \brief Forward transform from physical quadrature space
-		stored in \a inarray and evaluate the expansion coefficients and
-		store in \a (this)->_coeffs  */
+        //----------------------------
+        // Evaluations Methods
+        //---------------------------
+    
+        /** \brief Forward transform from physical quadrature space
+        stored in \a inarray and evaluate the expansion coefficients and
+        store in \a (this)->_coeffs  */
             void FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
                           Array<OneD, NekDouble> &outarray);
             
             NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble> &coord);
             
-	protected:
+    protected:
             
             void GenMetricInfo();
             
@@ -138,17 +138,17 @@ namespace Nektar
                                         const ConstArray<OneD, NekDouble> &inarray, 
                                         Array<OneD, NekDouble> &outarray); 
             
-	private:
-	    
-	    
-	    virtual StdRegions::ShapeType v_DetShapeType()
-	    {
-		return DetShapeType();
-	    }
-	    
+    private:
+        
+        
+        virtual StdRegions::ShapeType v_DetShapeType() const
+        {
+        return DetShapeType();
+        }
+        
             virtual DNekMatSharedPtr v_GenNBasisTransMatrix()
             {
-                StdNodalTriExp::GenNBasisTransMatrix();
+                return StdNodalTriExp::GenNBasisTransMatrix();
             }
 
             virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
@@ -169,27 +169,27 @@ namespace Nektar
                 GetCoord(lcoord, coord);
             }
 
-	    virtual int v_GetCoordim()
-	    {
-		return m_geom->GetCoordim();
-	    }
+        virtual int v_GetCoordim()
+        {
+        return m_geom->GetCoordim();
+        }
 
             virtual void v_GetNodalPoints(ConstArray<OneD, NekDouble> &x, 
                                           ConstArray<OneD, NekDouble> &y)
-	    {
+        {
                 return StdNodalTriExp::GetNodalPoints(x,y);
             }
 
-	    virtual void v_WriteToFile(FILE *outfile)
-	    {
-		WriteToFile(outfile);
-	    }
+        virtual void v_WriteToFile(FILE *outfile)
+        {
+        WriteToFile(outfile);
+        }
 
-	    virtual void v_WriteToFile(std::ofstream &outfile, 
-				       const int dumpVar)
-	    {
-		WriteToFile(outfile,dumpVar);
-	    }
+        virtual void v_WriteToFile(std::ofstream &outfile, 
+                       const int dumpVar)
+        {
+        WriteToFile(outfile,dumpVar);
+        }
             
             /** \brief Virtual call to integrate the physical point list \a inarray
                 over region (see SegExp::Integral) */
@@ -259,13 +259,13 @@ namespace Nektar
             {
                 return m_matrixManager[mkey];
             }
-	};
-	
-	// type defines for use of TriExp in a boost vector
-	typedef boost::shared_ptr<NodalTriExp> NodalTriExpSharedPtr;
-	typedef std::vector< NodalTriExpSharedPtr > NodalTriExpVector;
-	typedef std::vector< NodalTriExpSharedPtr >::iterator NodalTriExpVectorIter;
-	
+    };
+    
+    // type defines for use of TriExp in a boost vector
+    typedef ptr<NodalTriExp> NodalTriExpSharedPtr;
+    typedef std::vector< NodalTriExpSharedPtr > NodalTriExpVector;
+    typedef std::vector< NodalTriExpSharedPtr >::iterator NodalTriExpVectorIter;
+    
     } //end of namespace
 } //end of namespace
 
@@ -273,6 +273,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.10  2007/07/13 09:02:21  sherwin
+ *    Mods for Helmholtz solver
+ *
  *    Revision 1.9  2007/07/11 19:26:03  sherwin
  *    update for new Manager structure
  *

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LocalRegions/TetExp.h,v $ 
+// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/TetExp.h,v $ 
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -51,14 +51,14 @@ namespace Nektar
     public:
     
       /** \brief Constructor using BasisKey class for quadrature
-	  points and order definition */
+      points and order definition */
       TetExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-	     const StdRegions::BasisKey &Bc);
+         const StdRegions::BasisKey &Bc);
 
       /** \brief Constructor using BasisKey class for quadrature points
-	  and order definition where _coeffs and _phys are all set. */
+      and order definition where _coeffs and _phys are all set. */
       TetExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-	     const StdRegions::BasisKey &Bc, double *coeffs, double *phys);
+         const StdRegions::BasisKey &Bc, double *coeffs, double *phys);
       
       /// Copy Constructor
       TetExp(TetExp &T);
@@ -69,7 +69,7 @@ namespace Nektar
       /// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
       StdRegions::ShapeType DetShapeType() 
       { 
-		return StdRegions::eTetrahedron; 
+        return StdRegions::eTetrahedron; 
       }
     
     protected:
@@ -78,14 +78,14 @@ namespace Nektar
 
     private:
 
-      virtual StdRegions::ShapeType v_DetShapeType() 
+      virtual StdRegions::ShapeType v_DetShapeType() const
       {
-		return DetShapeType();
+        return DetShapeType();
       }  
     };
     
     // type defines for use of TetExp in a boost vector
-    typedef boost::shared_ptr<TetExp> TetExpSharedPtr;
+    typedef ptr<TetExp> TetExpSharedPtr;
     typedef std::vector< TetExpSharedPtr > TetExpVector;
     typedef std::vector< TetExpSharedPtr >::iterator TetExpVectorIter;
 
@@ -96,6 +96,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.4  2007/01/15 21:12:26  sherwin
+ *    First definition
+ *
  *    Revision 1.3  2006/06/13 18:05:01  sherwin
  *    Modifications to make MultiRegions demo ProjectLoc2D execute properly.
  *

@@ -140,9 +140,9 @@ namespace Nektar
 
     private:
 
-        virtual StdRegions::ShapeType v_DetShapeType()
+        virtual StdRegions::ShapeType v_DetShapeType() const
         {
-			return DetShapeType();
+            return DetShapeType();
         }
 
         virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
@@ -153,7 +153,7 @@ namespace Nektar
          virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
                                  Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
                                  Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray)
-	 {
+     {
              GetCoords(coords_0, coords_1, coords_2);
          }
 
@@ -205,7 +205,7 @@ namespace Nektar
                                  Array<OneD, NekDouble> &out_d0,
                                  Array<OneD, NekDouble> &out_d1,
                                  Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
-	 {
+     {
              PhysDeriv(inarray, out_d0, out_d1);
          }
 
@@ -226,19 +226,19 @@ namespace Nektar
         {
             return Linf(sol);
         }
-	
+    
         
         virtual NekDouble v_Linf()
         {
             return Linf();
         }
-	
+    
         virtual NekDouble v_L2(const ConstArray<OneD, NekDouble> &sol)
         {
             return StdExpansion::L2(sol);
         }
 
-	
+    
         virtual NekDouble v_L2()
         {
             return StdExpansion::L2();
@@ -252,7 +252,7 @@ namespace Nektar
     };
 
     // type defines for use of TriExp in a boost vector
-    typedef boost::shared_ptr<TriExp> TriExpSharedPtr;
+    typedef ptr<TriExp> TriExpSharedPtr;
     typedef std::vector< TriExpSharedPtr > TriExpVector;
     typedef std::vector< TriExpSharedPtr >::iterator TriExpVectorIter;
 
@@ -263,6 +263,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.16  2007/07/13 09:02:23  sherwin
+ *    Mods for Helmholtz solver
+ *
  *    Revision 1.15  2007/07/11 19:26:04  sherwin
  *    update for new Manager structure
  *

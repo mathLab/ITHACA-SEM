@@ -52,7 +52,7 @@ namespace Nektar
     namespace LocalRegions 
     {
     
-	class SegExp: public StdRegions::StdSegExp
+    class SegExp: public StdRegions::StdSegExp
         {
 
         public:
@@ -60,7 +60,7 @@ namespace Nektar
             /// \brief Constructor using BasisKey class for quadrature
             /// points and order definition 
             SegExp(const LibUtilities::BasisKey &Ba, 
-		   const SpatialDomains::SegGeomSharedPtr &geom);
+           const SpatialDomains::SegGeomSharedPtr &geom);
 
 
             /// \brief Constructor using BasisKey class for quadrature
@@ -74,16 +74,16 @@ namespace Nektar
             ~SegExp();
 
             /// Return Shape of region, using  ShapeType enum list. i.e. Segment  
-            StdRegions::ShapeType DetShapeType() 
+            StdRegions::ShapeType DetShapeType() const
             { 
                 return StdRegions::eSegment;
             }    
 
             void GetCoords(Array<OneD,NekDouble> &coords_1,
-			   Array<OneD,NekDouble> &coords_2 = NullNekDouble1DArray,
-			   Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
+               Array<OneD,NekDouble> &coords_2 = NullNekDouble1DArray,
+               Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
             void GetCoord(const ConstArray<OneD,NekDouble>& Lcoords, 
-			  Array<OneD,NekDouble> &coords);
+              Array<OneD,NekDouble> &coords);
 
 
             const SpatialDomains::SegGeomSharedPtr GetGeom()
@@ -106,7 +106,7 @@ namespace Nektar
             /// \brief  Inner product of \a inarray over region with respect to the 
             /// expansion basis (this)->_Base[0] and return in \a outarray 
             void IProductWRTBase(const ConstArray<OneD,NekDouble>& inarray, 
-				 Array<OneD,NekDouble> &outarray);
+                 Array<OneD,NekDouble> &outarray);
 
 
             //-----------------------------
@@ -118,9 +118,9 @@ namespace Nektar
             physical quadrature points given by \a inarray and return in \a
             outarray. */
             void PhysDeriv(const ConstArray<OneD,NekDouble>& inarray, 
-			   Array<OneD,NekDouble> &out_d0,
-			   Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
-			   Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray);
+               Array<OneD,NekDouble> &out_d0,
+               Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
+               Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray);
 
             //----------------------------
             // Evaluations Methods
@@ -130,7 +130,7 @@ namespace Nektar
             stored in \a inarray and evaluate the expansion coefficients and
             store in \a (this)->_coeffs  */
             void FwdTrans(const ConstArray<OneD,NekDouble>& inarray, 
-			  Array<OneD,NekDouble> &outarray);
+              Array<OneD,NekDouble> &outarray);
 
             NekDouble PhysEvaluate(const ConstArray<OneD,NekDouble>& coord);
 
@@ -150,13 +150,13 @@ namespace Nektar
             /// \brief  Inner product of \a inarray over region with respect to
             /// the expansion basis \a base and return in \a outarray 
             inline void IProductWRTBase(const ConstArray<OneD,NekDouble>& base, 
-					const ConstArray<OneD,NekDouble>& inarray, 
-					Array<OneD,NekDouble> &outarray, 
-					const int coll_check);
+                    const ConstArray<OneD,NekDouble>& inarray, 
+                    Array<OneD,NekDouble> &outarray, 
+                    const int coll_check);
 
         private:
 
-            virtual StdRegions::ShapeType v_DetShapeType() 
+            virtual StdRegions::ShapeType v_DetShapeType() const
             {
                 return DetShapeType();
             }
@@ -167,14 +167,14 @@ namespace Nektar
             }
 
             virtual void v_GetCoords(Array<OneD,NekDouble> &coords_0,
-				     Array<OneD,NekDouble> &coords_1 = NullNekDouble1DArray,
-				     Array<OneD,NekDouble> &coords_2 = NullNekDouble1DArray)
-	    {
+                     Array<OneD,NekDouble> &coords_1 = NullNekDouble1DArray,
+                     Array<OneD,NekDouble> &coords_2 = NullNekDouble1DArray)
+        {
                 GetCoords(coords_0, coords_1, coords_2);
             }
 
             virtual void v_GetCoord(const ConstArray<OneD,NekDouble>& lcoord, 
-				     Array<OneD,NekDouble> &coord)
+                     Array<OneD,NekDouble> &coord)
             {
                 GetCoord(lcoord, coord);
             }
@@ -209,23 +209,23 @@ namespace Nektar
             /** \brief Virtual call to SegExp::IProduct_WRT_B */
 
             virtual void v_IProductWRTBase(const ConstArray<OneD,NekDouble>& inarray,
-					   Array<OneD,NekDouble> &outarray)
+                       Array<OneD,NekDouble> &outarray)
             {
                 IProductWRTBase(inarray,outarray);
             }
 
             /// Virtual call to SegExp::PhysDeriv
             virtual void v_StdPhysDeriv(const ConstArray<OneD,NekDouble>& inarray, 
-					Array<OneD,NekDouble> &outarray)
+                    Array<OneD,NekDouble> &outarray)
             {
                 StdSegExp::PhysDeriv(inarray, outarray);
             }
 
             virtual void v_PhysDeriv(const ConstArray<OneD,NekDouble>& inarray, 
-				     Array<OneD,NekDouble> &out_d0,
-				     Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
-				     Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray)
-	    {
+                     Array<OneD,NekDouble> &out_d0,
+                     Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
+                     Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray)
+        {
                 PhysDeriv(inarray, out_d0);
             }
 
@@ -240,16 +240,16 @@ namespace Nektar
 
             /// Virtual call to SegExp::FwdTrans
             virtual void v_FwdTrans(const ConstArray<OneD,NekDouble>& inarray, 
-				    Array<OneD,NekDouble> &outarray)
+                    Array<OneD,NekDouble> &outarray)
             {
                 FwdTrans(inarray,outarray);
             }
 
-	    /** \brief Virtual call to SegExp::FwdTrans */
-	    virtual void v_FwdTrans(const StdExpansion1D &in)
-	    {
-		FwdTrans(((SegExp &) in).GetPhys(), m_coeffs);
-	    }
+        /** \brief Virtual call to SegExp::FwdTrans */
+        virtual void v_FwdTrans(const StdExpansion1D &in)
+        {
+        FwdTrans(((SegExp &) in).GetPhys(), m_coeffs);
+        }
       
 
             /// Virtual call to SegExp::Evaluate
@@ -347,7 +347,7 @@ namespace Nektar
         };
 
         // type defines for use of SegExp in a boost vector
-        typedef boost::shared_ptr<SegExp> SegExpSharedPtr;
+        typedef ptr<SegExp> SegExpSharedPtr;
         typedef std::vector< SegExpSharedPtr > SegExpVector;
         typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
     } //end of namespace
@@ -357,6 +357,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.19  2007/07/16 18:28:42  sherwin
+// Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
+//
 // Revision 1.18  2007/07/13 09:02:23  sherwin
 // Mods for Helmholtz solver
 //

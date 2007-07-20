@@ -42,17 +42,17 @@ namespace Nektar
 
  
     HexExp::HexExp(const StdRegions::BasisKey &Ba, 
-		   const StdRegions::BasisKey &Bb, 
-		   const StdRegions::BasisKey &Bc):
+           const StdRegions::BasisKey &Bb, 
+           const StdRegions::BasisKey &Bc):
       StdRegions::StdHexExp(Ba,Bb,Bc)
     {
     }
   
  
     HexExp::HexExp(const StdRegions::BasisKey &Ba,
-		   const StdRegions::BasisKey &Bb, 
-		   const StdRegions::BasisKey &Bc, double *coeffs, 
-		   double *phys):
+           const StdRegions::BasisKey &Bb, 
+           const StdRegions::BasisKey &Bc, double *coeffs, 
+           double *phys):
       StdRegions::StdHexExp(Ba,Bb,Bc,coeffs,phys)
     {
     }
@@ -71,6 +71,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.1  2006/05/04 18:58:45  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.8  2006/03/12 07:43:31  sherwin
  *
  *    First revision to meet coding standard. Needs to be compiled

@@ -42,17 +42,17 @@ namespace Nektar
 
     
     PyrExp::PyrExp(const StdRegions::BasisKey &Ba, 
-		   const StdRegions::BasisKey &Bb, 
-		   const StdRegions::BasisKey &Bc):
+           const StdRegions::BasisKey &Bb, 
+           const StdRegions::BasisKey &Bc):
       StdRegions::StdPyrExp(Ba,Bb,Bc)
     {
     }
   
   
     PyrExp::PyrExp(const StdRegions::BasisKey &Ba, 
-		   const StdRegions::BasisKey &Bb, 
-		   const StdRegions::BasisKey &Bc, double *coeffs, 
-		   double *phys):
+           const StdRegions::BasisKey &Bb, 
+           const StdRegions::BasisKey &Bc, double *coeffs, 
+           double *phys):
       StdRegions::StdPyrExp(Ba,Bb,Bc,coeffs,phys)
     {
     }
@@ -72,6 +72,9 @@ namespace Nektar
 
 /** 
  *    $Log: PyrExp.cpp,v $
+ *    Revision 1.1  2006/05/04 18:58:46  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.8  2006/03/12 07:43:32  sherwin
  *
  *    First revision to meet coding standard. Needs to be compiled

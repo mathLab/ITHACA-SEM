@@ -52,8 +52,8 @@ namespace Nektar
     {
     public:
       NodalTetExp(const StdRegions::Basis &Ba, const StdRegions::Basis &Bb, 
-		  const StdRegions::Basis &Bc):
-	TetExp(Ba,Bb,Bc)
+          const StdRegions::Basis &Bc):
+    TetExp(Ba,Bb,Bc)
       {
       }
     
@@ -71,6 +71,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTetExp.h,v $
+ *    Revision 1.1  2006/05/04 18:58:45  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.7  2006/03/12 21:59:48  sherwin
  *
  *    compiling version of LocalRegions

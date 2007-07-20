@@ -54,7 +54,7 @@ namespace Nektar
         }
 
         bool MatrixKey::opLess::operator()(const MatrixKey &lhs, const MatrixKey &rhs)
-        {	    
+        {        
             {
                 return (lhs.GetMatrixType() < rhs.GetMatrixType());
             }
@@ -119,6 +119,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.9  2007/07/12 12:52:58  sherwin
+* Updated to have a helmholtz matrix
+*
 * Revision 1.8  2007/07/10 17:17:22  sherwin
 * Introduced Scaled Matrices into the MatrixManager
 *

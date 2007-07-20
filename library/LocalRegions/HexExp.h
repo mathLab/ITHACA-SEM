@@ -55,12 +55,12 @@ namespace Nektar
       ///\brief Constructor using BasisKey class for quadrature
       /// points and order definition 
       HexExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-	     const StdRegions::BasisKey &Bc);
+         const StdRegions::BasisKey &Bc);
     
       /// \brief Constructor using BasisKey class for quadrature
       /// points and order definition where _coeffs and _phys are all set. 
       HexExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-	     const StdRegions::BasisKey &Bc, double *coeffs, double *phys);
+         const StdRegions::BasisKey &Bc, double *coeffs, double *phys);
     
       /// Copy Constructor
       HexExp(HexExp &T);
@@ -70,7 +70,7 @@ namespace Nektar
 
       StdRegions::ShapeType DetShapeType() 
       { 
-	return StdRegions::eHexahedron; 
+    return StdRegions::eHexahedron; 
       }
     
     protected:
@@ -78,15 +78,15 @@ namespace Nektar
 
     private:
       /// Return Shape of region, using  ShapeType enum list. i.e. Hexahedron
-      virtual StdRegions::ShapeType V_DetShapeType() 
+      virtual StdRegions::ShapeType V_DetShapeType() const
       {
-		return DetShapeType();
+        return DetShapeType();
       }
       
     };
 
     // type defines for use of HexExp in a boost vector
-    typedef boost::shared_ptr<HexExp> HexExpSharedPtr;
+    typedef ptr<HexExp> HexExpSharedPtr;
     typedef std::vector< HexExpSharedPtr > HexExpVector;
     typedef std::vector< HexExpSharedPtr >::iterator HexExpVectorIter;
     
@@ -97,6 +97,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.5  2007/01/15 21:12:25  sherwin
+ *    First definition
+ *
  *    Revision 1.4  2006/06/13 18:05:01  sherwin
  *    Modifications to make MultiRegions demo ProjectLoc2D execute properly.
  *

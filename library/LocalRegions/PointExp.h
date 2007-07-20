@@ -44,12 +44,12 @@ namespace Nektar
     namespace LocalRegions
     {
 
-	class PointExp
-	{
-	    
-	public:
-	    PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom);
-	    ~PointExp(void);
+    class PointExp
+    {
+        
+    public:
+        PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom);
+        ~PointExp(void);
 
             inline NekDouble GetValue(void)
             {
@@ -61,17 +61,17 @@ namespace Nektar
                 m_value = value;
             }
 
-	protected:
+    protected:
             NekDouble      m_value; //!< Array containing expansion coefficients
-	    SpatialDomains::VertexComponentSharedPtr m_geom;
-	private:
+        SpatialDomains::VertexComponentSharedPtr m_geom;
+    private:
 
-	};
+    };
 
-	// type defines for use of PointExp in a boost vector
-	typedef boost::shared_ptr<PointExp> PointExpSharedPtr;
-	typedef std::vector<PointExpSharedPtr> PointExpVector;
-	typedef std::vector<PointExpSharedPtr>::iterator PointExpVectorIter;
+    // type defines for use of PointExp in a boost vector
+    typedef ptr<PointExp> PointExpSharedPtr;
+    typedef std::vector<PointExpSharedPtr> PointExpVector;
+    typedef std::vector<PointExpSharedPtr>::iterator PointExpVectorIter;
 
     } //end of namespace
 } //end of namespace

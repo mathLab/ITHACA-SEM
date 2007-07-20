@@ -44,23 +44,23 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-	
+    
         class LinSysKey: public MatrixKey
         {  
         public:
             LinSysKey(StdRegions::MatrixType matrixType, StdRegions::ShapeType shapeType, 
-		      StdRegions::StdExpansion &stdExpansion):
-		MatrixKey(matrixType,shapeType,stdExpansion)
-	    {
-	    };
-	    ;
-	    
+              StdRegions::StdExpansion &stdExpansion):
+        MatrixKey(matrixType,shapeType,stdExpansion)
+        {
+        };
+        ;
+        
             virtual ~LinSysKey()
             {
             }
-	    
+        
         private:
-	    
+        
         };
 
     } // end of namespace
@@ -69,6 +69,9 @@ namespace Nektar
 #endif //LINSYSKEY_HPP
 
 /**
-* $Log:  $
+* $Log: LinSys.hpp,v $
+* Revision 1.1  2007/03/04 20:42:14  sherwin
+* Keys for matrix managers
+*
 *
 ***/

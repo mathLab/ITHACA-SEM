@@ -124,7 +124,7 @@ namespace Nektar
                     int i;
 
                     // interpolate Geometric data
-                    ndata = Array<OneD,NekDouble>(coordim*nq);	
+                    ndata = Array<OneD,NekDouble>(coordim*nq);    
                     gmat  = Xgfac->GetGmat();
 
                     for(i = 0; i < 2*coordim; ++i)
@@ -137,7 +137,7 @@ namespace Nektar
                     m_metricinfo->ResetGmat(ndata,nq,1,coordim);
 
                     // interpolate Jacobian
-                    ndata = Array<OneD,NekDouble>(nq);	
+                    ndata = Array<OneD,NekDouble>(nq);    
                     odata = Xgfac->GetJac();
 
                     Interp1D(CBasis0->GetBasisKey(),odata,
@@ -158,7 +158,7 @@ namespace Nektar
                     m_metricinfo->ResetGmat(ndata,nq,1,coordim);
 
                     // Copy Jacobian
-                    ndata = Array<OneD,NekDouble>(nq);	
+                    ndata = Array<OneD,NekDouble>(nq);    
 
                     odata = Xgfac->GetJac();
                     Blas::Dcopy(nq,&odata[0],1,&ndata[0],1);
@@ -415,9 +415,9 @@ namespace Nektar
             {
                 IProductWRTBase(inarray,outarray);
 
-		// get Mass matrix inverse
-		MatrixKey             masskey(StdRegions::eInvMass, DetShapeType(),*this);
-		DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
+        // get Mass matrix inverse
+        MatrixKey             masskey(StdRegions::eInvMass, DetShapeType(),*this);
+        DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
                 // copy inarray in case inarray == outarray
                 DNekVec in (m_ncoeffs,outarray);
@@ -722,6 +722,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.24  2007/07/13 15:22:11  sherwin
+// Update for Helmholtz (working without bcs )
+//
 // Revision 1.23  2007/07/13 09:02:22  sherwin
 // Mods for Helmholtz solver
 //

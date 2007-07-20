@@ -76,7 +76,7 @@ namespace Nektar
 
         /// Return Shape of region, using ShapeType enum
         /// list. i.e. Quadrilateral
-        StdRegions::ShapeType DetShapeType()
+        StdRegions::ShapeType DetShapeType() const
         {
             return StdRegions::eQuadrilateral;
         }
@@ -154,11 +154,11 @@ namespace Nektar
                                     const int coll_check);
         
     private:
-        virtual StdRegions::ShapeType v_DetShapeType()
+        virtual StdRegions::ShapeType v_DetShapeType() const
         {
             return DetShapeType();
         }
-	
+    
         virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
         {
             return m_metricinfo;
@@ -167,7 +167,7 @@ namespace Nektar
         virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
                                  Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
                                  Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray)
-	 {
+     {
              GetCoords(coords_0, coords_1, coords_2);
          }
 
@@ -179,18 +179,18 @@ namespace Nektar
 
         virtual  int v_GetCoordim()
         {
-	    return m_geom->GetCoordim();
+        return m_geom->GetCoordim();
         }
 
 
         virtual void v_WriteToFile(FILE *outfile)
         {
-	    WriteToFile(outfile);
+        WriteToFile(outfile);
         }
 
         virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
         {
-	    WriteToFile(outfile,dumpVar);
+        WriteToFile(outfile,dumpVar);
         }
 
         /** \brief Virtual call to integrate the physical point list \a inarray
@@ -220,40 +220,40 @@ namespace Nektar
                                  Array<OneD, NekDouble> &out_d0,
                                  Array<OneD, NekDouble> &out_d1,
                                  Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
-	 {
+     {
              PhysDeriv(inarray, out_d0, out_d1);
          }
-	
+    
         /// Virtual call to SegExp::FwdTrans
        virtual void v_FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
                                 Array<OneD, NekDouble> &outarray)
         {
             FwdTrans(inarray,outarray);
         }
-	
+    
         /// Virtual call to QuadExp::Evaluate
         virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble> &coords)
         {
             return PhysEvaluate(coords);
         }
-	
+    
         virtual NekDouble v_Linf(const ConstArray<OneD, NekDouble> &sol)
         {
             return Linf(sol);
         }
-	
+    
         
         virtual NekDouble v_Linf()
         {
             return Linf();
         }
-	
+    
         virtual NekDouble v_L2(const ConstArray<OneD, NekDouble> &sol)
         {
             return StdExpansion::L2(sol);
         }
 
-	
+    
         virtual NekDouble v_L2()
         {
             return StdExpansion::L2();
@@ -266,7 +266,7 @@ namespace Nektar
     };
 
     // type defines for use of QuadExp in a boost vector
-    typedef boost::shared_ptr<QuadExp> QuadExpSharedPtr;
+    typedef ptr<QuadExp> QuadExpSharedPtr;
     typedef std::vector< QuadExpSharedPtr > QuadExpVector;
     typedef std::vector< QuadExpSharedPtr >::iterator QuadExpVectorIter;
 
@@ -278,6 +278,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.17  2007/07/13 09:02:22  sherwin
+ *    Mods for Helmholtz solver
+ *
  *    Revision 1.16  2007/07/11 19:26:04  sherwin
  *    update for new Manager structure
  *

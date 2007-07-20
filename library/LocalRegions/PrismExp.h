@@ -40,7 +40,7 @@
 #include <StdRegions/StdPrismExp.h>
 
 #include <SpatialDomains/PrismGeom.h>
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/BasicUtils/SharedPtr.hpp>
 
 #include <StdRegions/StdRegions.hpp>
 
@@ -56,12 +56,12 @@ namespace Nektar
       /// \brief Constructor using BasisKey class for quadrature
       /// points and order definition 
       PrismExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-	       const StdRegions::BasisKey &Bc);
+           const StdRegions::BasisKey &Bc);
     
       /// \brief Constructor using BasisKey class for quadrature
       /// points and order definition where _coeffs and _phys are all set.
       PrismExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-	       const StdRegions::BasisKey &Bc, double *coeffs, double *phys);
+           const StdRegions::BasisKey &Bc, double *coeffs, double *phys);
     
       /// Copy Constructor
       PrismExp(PrismExp &T);
@@ -72,7 +72,7 @@ namespace Nektar
       /// Return Shape of region, using  ShapeType enum list. i.e. Prism
       StdRegions::ShapeType DetShapeType() 
       { 
-	return StdRegions::ePrism; 
+    return StdRegions::ePrism; 
       }
 
     protected:
@@ -80,14 +80,14 @@ namespace Nektar
     
     private:
     
-    virtual StdRegions::ShapeType v_DetShapeType() 
+    virtual StdRegions::ShapeType v_DetShapeType() const
     {
       return DetShapeType();
     }
   };
 
     // type defines for use of PrismExp in a boost vector
-    typedef boost::shared_ptr<PrismExp> PrismExpSharedPtr;
+    typedef ptr<PrismExp> PrismExpSharedPtr;
     typedef std::vector< PrismExpSharedPtr > PrismExpVector;
     typedef std::vector< PrismExpSharedPtr >::iterator PrismExpVectorIter;
   } //end of namespace
@@ -98,6 +98,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.h,v $
+ *    Revision 1.4  2007/01/15 21:12:26  sherwin
+ *    First definition
+ *
  *    Revision 1.3  2006/06/13 18:05:01  sherwin
  *    Modifications to make MultiRegions demo ProjectLoc2D execute properly.
  *

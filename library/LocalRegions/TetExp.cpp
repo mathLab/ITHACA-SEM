@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LocalRegions/TetExp.cpp,v $ 
+// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/TetExp.cpp,v $ 
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -41,17 +41,17 @@ namespace Nektar
   {
     
     TetExp::TetExp(const StdRegions::BasisKey &Ba, 
-		   const StdRegions::BasisKey &Bb, 
-		   const StdRegions::BasisKey &Bc):
+           const StdRegions::BasisKey &Bb, 
+           const StdRegions::BasisKey &Bc):
       StdRegions::StdTetExp(Ba,Bb,Bc)
     {
     }
   
   
     TetExp::TetExp(const StdRegions::BasisKey &Ba, 
-		   const StdRegions::BasisKey &Bb, 
-		   const StdRegions::BasisKey &Bc, double *coeffs, 
-		   double *phys):
+           const StdRegions::BasisKey &Bb, 
+           const StdRegions::BasisKey &Bc, double *coeffs, 
+           double *phys):
       StdRegions::StdTetExp(Ba,Bb,Bc,coeffs,phys)
     {
     }
@@ -71,6 +71,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.1  2006/05/04 18:58:46  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.9  2006/03/12 07:43:32  sherwin
  *
  *    First revision to meet coding standard. Needs to be compiled

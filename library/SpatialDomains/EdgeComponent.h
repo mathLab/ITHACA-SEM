@@ -47,87 +47,87 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        class EdgeComponent: public Geometry1D
+        class EdgeComponent : public Geometry1D
         {
 
-        public:
-            EdgeComponent();
-            EdgeComponent(int id, const int coordim);
-            EdgeComponent(int id, const int coordim, const VertexComponentSharedPtr vertex[]);
-            EdgeComponent(int id, const int coordim, const int order, const int nquad);
+            public:
+                EdgeComponent();
+                EdgeComponent(int id, const int coordim);
+                EdgeComponent(int id, const int coordim, const VertexComponentSharedPtr vertex[]);
+                EdgeComponent(int id, const int coordim, const int order, const int nquad);
 
-            ~EdgeComponent();
-            EdgeComponent(const EdgeComponent &T);
+                ~EdgeComponent();
+                EdgeComponent(const EdgeComponent &T);
 
-            void AddElmtConnected(int gvoId, int locId);
-            int NumElmtConnected() const;
-            bool IsElmtConnected(int gvoId, int locId) const;
+                void AddElmtConnected(int gvoId, int locId);
+                int NumElmtConnected() const;
+                bool IsElmtConnected(int gvoId, int locId) const;
 
-            inline int GetEid() const 
-            {
-                return m_eid;
-            }
-
-            inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j) 
-            {
-                return m_xmap[i]->GetBasis(j);
-            }
-
-            inline const StdRegions::StdExpansion1DSharedPtr &GetXmap(const int i)
-            {
-                return m_xmap[i];
-            }
-
-            inline Array<OneD, NekDouble> &UpdatePhys(const int i)
-            {
-                return m_xmap[i]->UpdatePhys();
-            }
-
-            inline VertexComponentSharedPtr GetVertex(const int i) const
-            {
-                VertexComponentSharedPtr returnval;
-
-                if (i >= 0 && i < int(m_vertex.size()))
+                inline int GetEid() const 
                 {
-                    returnval = m_vertex[i];
+                    return m_eid;
                 }
 
-                return returnval;
-            }
+                inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j) 
+                {
+                    return m_xmap[i]->GetBasis(j);
+                }
 
-
-            StdRegions::StdExpansion1DSharedPtr operator[](const int i) const
-            {
-                if((i>=0)&& (i<m_coordim))
+                inline const StdRegions::StdExpansion1DSharedPtr &GetXmap(const int i)
                 {
                     return m_xmap[i];
                 }
 
-                NEKERROR(ErrorUtil::efatal,
-                    "Invalid Index used in [] operator");
-                return m_xmap[0]; //should never be reached
-            }
+                inline Array<OneD, NekDouble> &UpdatePhys(const int i)
+                {
+                    return m_xmap[i]->UpdatePhys();
+                }
 
-            NekDouble GetCoord(const int i, const ConstArray<OneD, NekDouble> &Lcoord);
-                    
-            /// \brief Get the orientation of edge1.
-            ///
-            /// Since both edges are passed, it does
-            /// not need any information from the EdgeComponent instance.
-            static StdRegions::EdgeOrientation GetEdgeOrientation(const EdgeComponent &edge1,
-                const EdgeComponent &edge2);
+                inline VertexComponentSharedPtr GetVertex(const int i) const
+                {
+                    VertexComponentSharedPtr returnval;
 
-        protected:
-            int m_eid;
-            std::list<CompToElmt> m_elmtmap;
+                    if (i >= 0 && i < int(m_vertex.size()))
+                    {
+                        returnval = m_vertex[i];
+                    }
 
-	    Array<OneD, StdRegions::StdExpansion1DSharedPtr> m_xmap;
+                    return returnval;
+                }
 
-            VertexVector m_vertex;
-        private:
+
+                StdRegions::StdExpansion1DSharedPtr operator[](const int i) const
+                {
+                    if((i>=0)&& (i<m_coordim))
+                    {
+                        return m_xmap[i];
+                    }
+
+                    NEKERROR(ErrorUtil::efatal,
+                        "Invalid Index used in [] operator");
+                    return m_xmap[0]; //should never be reached
+                }
+
+                NekDouble GetCoord(const int i, const ConstArray<OneD, NekDouble> &Lcoord);
+                        
+                /// \brief Get the orientation of edge1.
+                ///
+                /// Since both edges are passed, it does
+                /// not need any information from the EdgeComponent instance.
+                static StdRegions::EdgeOrientation GetEdgeOrientation(const EdgeComponent &edge1,
+                    const EdgeComponent &edge2);
+
+            protected:
+                int m_eid;
+                std::list<CompToElmt> m_elmtmap;
+
+                Array<OneD, StdRegions::StdExpansion1DSharedPtr> m_xmap;
+
+                VertexVector m_vertex;
+            private:
         };
 
-        typedef boost::shared_ptr<EdgeComponent> EdgeComponentSharedPtr;
+        typedef ptr<EdgeComponent> EdgeComponentSharedPtr;
         typedef std::vector<EdgeComponentSharedPtr> EdgeComponentVector; 
     }//end of namespace
 }//end of namespace
@@ -136,6 +136,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.14  2007/07/05 04:21:10  jfrazier
+// Changed id format and propagated from 1d to 2d.
+//
 // Revision 1.13  2007/06/06 15:15:21  pvos
 // Some minor updates for 2D routines
 //

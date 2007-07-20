@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/HexGeom.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/HexGeom.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -42,17 +42,20 @@ namespace Nektar
     namespace SpatialDomains
     {
         HexGeom::HexGeom()
-	{
+    {
         }
 
         HexGeom::~HexGeom()
-	{
+    {
         }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.1  2006/05/04 18:59:00  kirby
+// *** empty log message ***
+//
 // Revision 1.11  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

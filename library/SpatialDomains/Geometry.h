@@ -47,70 +47,70 @@ namespace Nektar
     namespace SpatialDomains
     {
         class Geometry; // Forward declaration for typedef.
-        typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
+        typedef ptr<Geometry> GeometrySharedPtr;
         typedef std::vector< GeometrySharedPtr > GeometryVector;
         typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
 
         class Geometry
         {
-        public:
-            Geometry();
-            Geometry(int coordim);
+            public:
+                Geometry();
+                Geometry(int coordim);
 
-            virtual ~Geometry();
+                virtual ~Geometry();
 
-            inline GeomType GetGtype()
-            {
-                return m_geomfactors->GetGtype();
-            }
-
-            inline const ConstArray<OneD,NekDouble> &GetJac()
-            {
-                return m_geomfactors->GetJac();
-            }
-
-            inline const ConstArray<TwoD, NekDouble> &GetGmat()
-            {
-                return m_geomfactors->GetGmat();
-            }
-
-            inline const int GetCoordim()
-            {
-                return m_coordim;
-            }
-
-            inline GeomFactorsSharedPtr GetGeomFactors(void)
-            {
-                if(!(m_geomfactors.get()))
+                inline GeomType GetGtype()
                 {
-                    GenGeomFactors();
+                    return m_geomfactors->GetGtype();
                 }
 
-                return m_geomfactors;
-            }
+                inline const ConstArray<OneD,NekDouble> &GetJac()
+                {
+                    return m_geomfactors->GetJac();
+                }
+
+                inline const ConstArray<TwoD, NekDouble>& GetGmat()
+                {
+                    return m_geomfactors->GetGmat();
+                }
+
+                inline const int GetCoordim() const 
+                {
+                    return m_coordim;
+                }
+
+                inline GeomFactorsSharedPtr GetGeomFactors(void)
+                {
+                    if(!(m_geomfactors.get()))
+                    {
+                        GenGeomFactors();
+                    }
+
+                    return m_geomfactors;
+                }
 
 
-            // Wrappers around virtual Functions
-            void GenGeomFactors(void)
-            {
-                return v_GenGeomFactors();
-            }
+                // Wrappers around virtual Functions
+                void GenGeomFactors(void)
+                {
+                    return v_GenGeomFactors();
+                }
 
-        protected:
+            protected:
 
-            static GeomFactorsSharedPtr ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
+                static GeomFactorsSharedPtr ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
 
-            int                  m_coordim;     // coordinate dimension
-            GeomFactorsSharedPtr m_geomfactors;
-            GeomState            m_state;       // enum identifier to determine if quad points are filled
-            static GeomFactorsVector m_RegGeomFactorsManager;
+                int                  m_coordim;     // coordinate dimension
+                GeomFactorsSharedPtr m_geomfactors;
+                GeomState            m_state;       // enum identifier to determine if quad points are filled
+                static GeomFactorsVector m_RegGeomFactorsManager;
 
-        private:
-            virtual void v_GenGeomFactors(void)
-            {
-                NEKERROR(ErrorUtil::efatal,
-                    "This function is only valid for shape type geometries");
-            }
+            private:
+                virtual void v_GenGeomFactors(void)
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                        "This function is only valid for shape type geometries");
+                }
 
         };
     }; //end of namespace
@@ -120,6 +120,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.11  2007/07/10 22:21:00  jfrazier
+// Revision of geo fac manager to test for equality.
+//
 // Revision 1.10  2007/07/10 17:06:31  jfrazier
 // Added method and underlying structure to manage geomfactors.
 //

@@ -418,7 +418,7 @@ namespace Nektar
                     }
                     break;
 
-                case LibUtilities::eModified_A:	
+                case LibUtilities::eModified_A:    
                     if(eid == 1)
                     {
                         start = 1;
@@ -484,11 +484,14 @@ namespace Nektar
         }
 
 
-    } //end namespace			
+    } //end namespace            
 }//end namespace
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.21  2007/07/12 12:55:16  sherwin
+* Simplified Matrix Generation
+*
 * Revision 1.20  2007/07/11 13:35:18  kirby
 * *** empty log message ***
 *

@@ -97,9 +97,9 @@ namespace Nektar
             *  \return returns a pointer to the coefficient array 
             *  \f$ \mathbf{\hat{u}}\f$ 
             */
-            inline const ConstArray<OneD, NekDouble>& GetCoeffs(void)
+            inline const ConstArray<OneD, NekDouble>& GetCoeffs(void) const
             {
-                return(m_coeffs);
+                return m_coeffs;
             }
 
             /** \brief This function returns a pointer to the array
@@ -112,9 +112,9 @@ namespace Nektar
             *
             *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
             */
-            inline const ConstArray<OneD, NekDouble>& GetPhys(void) 
+            inline const ConstArray<OneD, NekDouble>& GetPhys(void) const
             {
-                return(m_phys);
+                return m_phys;
             }
 
 
@@ -264,7 +264,7 @@ namespace Nektar
             *  \param dir the direction
             *  \return returns the type of basis used in the \a dir direction
             */
-            inline  LibUtilities::BasisType GetBasisType(const int dir) 
+            inline  LibUtilities::BasisType GetBasisType(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisType());
@@ -351,7 +351,7 @@ namespace Nektar
             * 
             *  \return returns the number of vertices of the expansion domain
             */
-            int GetNverts()
+            int GetNverts() const
             {
                 return v_GetNverts();
             }
@@ -364,7 +364,7 @@ namespace Nektar
             * 
             *  \return returns the number of edges of the expansion domain
             */
-            int GetNedges()
+            int GetNedges() const
             {
                 return v_GetNedges();
             }
@@ -379,7 +379,7 @@ namespace Nektar
             *  \return returns the number of expansion coefficients belonging to
             *  the \a i-th edge
             */
-            int GetEdgeNcoeffs(const int i) 
+            int GetEdgeNcoeffs(const int i) const
             {
                 return v_GetEdgeNcoeffs(i);
             }
@@ -397,7 +397,7 @@ namespace Nektar
             *  \param i specifies which edge
             *  \return returns the expansion basis on the \a i-th edge
             */
-            LibUtilities::BasisType GetEdgeBasisType(const int i)
+            LibUtilities::BasisType GetEdgeBasisType(const int i) const
             {
                 return v_GetEdgeBasisType(i);
             }
@@ -410,7 +410,7 @@ namespace Nektar
             * 
             *  \return returns the number of faces of the expansion domain
             */
-            int GetNfaces() 
+            int GetNfaces() const
             {
                 return v_GetNfaces();
             }
@@ -425,8 +425,8 @@ namespace Nektar
             *  function will return one of the types of this enumeration list.
             *  
             *  \return returns the shape of the expansion domain
-            */	    
-            ShapeType DetShapeType()
+            */        
+            ShapeType DetShapeType() const
             {
                 return v_DetShapeType();
             }
@@ -462,7 +462,7 @@ namespace Nektar
             */
 
             void  BwdTrans (const ConstArray<OneD, NekDouble>& inarray, 
-			    Array<OneD, NekDouble> &outarray)
+                Array<OneD, NekDouble> &outarray)
             {
                 v_BwdTrans (inarray, outarray);
             }
@@ -498,8 +498,8 @@ namespace Nektar
             *  \param outarray array of the function coefficieints 
             */
             void  FwdTrans (const ConstArray<OneD, NekDouble>& inarray, 
-			    Array<OneD, NekDouble> &outarray)
-		{
+                Array<OneD, NekDouble> &outarray)
+        {
                 v_FwdTrans(inarray,outarray);
             }
 
@@ -561,7 +561,7 @@ namespace Nektar
             */
 
             void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
-				 Array<OneD, NekDouble> &outarray)
+                 Array<OneD, NekDouble> &outarray)
             {
                 v_IProductWRTBase(inarray, outarray);
             }
@@ -587,14 +587,14 @@ namespace Nektar
             *  physical coordinates of the point
             *
             *  This function is a wrapper around the virtual function 
-            *  \a v_GetCoord()	     
+            *  \a v_GetCoord()         
             *
             *  \param Lcoords the coordinates in the local collapsed 
             *  coordinate system
             *  \param coords the physical coordinates (output of the function)
             */
             void GetCoord(const ConstArray<OneD, NekDouble>& Lcoord, 
-			  Array<OneD, NekDouble> &coord)
+              Array<OneD, NekDouble> &coord)
             {
                 v_GetCoord(Lcoord, coord);
             }
@@ -755,7 +755,7 @@ namespace Nektar
                 v_PhysDeriv (dir, inarray, outarray);
             }
 
-            boost::shared_ptr<SpatialDomains::GeomFactors> GetMetricInfo(void) const
+            ptr<SpatialDomains::GeomFactors> GetMetricInfo(void) const
             {
                 return v_GetMetricInfo();
             }
@@ -763,7 +763,7 @@ namespace Nektar
             virtual DNekScalMatSharedPtr v_GetLocMatrix(LocalRegions::MatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return boost::shared_ptr<DNekScalMat>();
+                return ptr<DNekScalMat>();
             }
 
             /** \brief this function interpolates a 1D function \f$f\f$ evaluated
@@ -785,9 +785,9 @@ namespace Nektar
             *   at the quadrature points of \a tbasis0 (output of the function)
             */
             void Interp1D(const LibUtilities::BasisKey &fbasis0,
-			  const ConstArray<OneD, NekDouble>& from,
-			  const LibUtilities::BasisKey &tbasis0,
-			  Array<OneD, NekDouble> &to);
+              const ConstArray<OneD, NekDouble>& from,
+              const LibUtilities::BasisKey &tbasis0,
+              Array<OneD, NekDouble> &to);
 
             void Interp1D(const LibUtilities::BasisKey &fbasis0,
                           const NekDouble *from,
@@ -831,9 +831,9 @@ namespace Nektar
 
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
             *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
-            *	u_{exact}\f$ is given by the array \a sol. 
+            *    u_{exact}\f$ is given by the array \a sol. 
             *
-            *	This function takes the physical value space array \a m_phys as
+            *    This function takes the physical value space array \a m_phys as
             *  approximate solution
             *
             *  \param sol array of solution function  at physical quadrature
@@ -845,7 +845,7 @@ namespace Nektar
             /** \brief Function to evaluate the discrete \f$ L_\infty \f$ norm of
             *  the function defined at the physical points \a (this)->m_phys. 
             *
-            *	This function takes the physical value space array \a m_phys as
+            *    This function takes the physical value space array \a m_phys as
             *  discrete function to be evaluated
             *
             *  \return returns the \f$ L_\infty \f$ norm as a double.
@@ -857,7 +857,7 @@ namespace Nektar
             *  dx \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by 
             *  the array \a sol.
             *
-            *	This function takes the physical value space array \a m_phys as
+            *    This function takes the physical value space array \a m_phys as
             *  approximate solution
             *
             *  \param sol array of solution function  at physical quadrature
@@ -869,7 +869,7 @@ namespace Nektar
             /** \brief Function to evaluate the discrete \f$ L_2\f$ norm of the
             *  function defined at the physical points \a (this)->m_phys.
             *
-            *	This function takes the physical value space array \a m_phys as
+            *    This function takes the physical value space array \a m_phys as
             *  discrete function to be evaluated
             *
             *  \return returns the \f$ L_2 \f$ norm as a double
@@ -909,34 +909,34 @@ namespace Nektar
 
             // Virtual functions
 
-            virtual int v_GetNverts() = 0;
-            virtual int v_GetNedges() = 0;
-            virtual int v_GetNfaces() = 0;
+            virtual int v_GetNverts() const = 0;
+            virtual int v_GetNedges() const = 0;
+            virtual int v_GetNfaces() const = 0;
 
-            virtual int v_GetEdgeNcoeffs(const int i)
+            virtual int v_GetEdgeNcoeffs(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
                 return 0;
             }
 
-            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
+            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
                 return LibUtilities::eNoBasisType;
             }
 
-            virtual ShapeType v_DetShapeType()  
+            virtual ShapeType v_DetShapeType() const
             {
                 ASSERTL0(false, "This expansion does not have a shape type defined");
                 return eNoShapeType;
             }
 
             virtual void   v_BwdTrans   (const ConstArray<OneD, NekDouble>& inarray, 
-					 Array<OneD, NekDouble> &outarray) = 0;
+                     Array<OneD, NekDouble> &outarray) = 0;
             virtual void   v_FwdTrans   (const ConstArray<OneD, NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray) = 0;
             virtual void   v_IProductWRTBase (const ConstArray<OneD, NekDouble>& inarray, 
-					      Array<OneD, NekDouble> &outarray) = 0;
+                          Array<OneD, NekDouble> &outarray) = 0;
 
             virtual void   v_IProductWRTDerivBase (const int dir, 
                                                    const ConstArray<OneD,NekDouble>& inarray, 
@@ -1010,14 +1010,14 @@ namespace Nektar
 
             virtual int v_GetCoordim(void)
             {
-                NEKERROR(ErrorUtil::efatal, "Write method");		
+                NEKERROR(ErrorUtil::efatal, "Write method");        
                 return -1;
             }
 
             // element boundary ordering 
             virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
             {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );        
             }
 
             virtual void  v_MapTo(const int edge_ncoeffs, 
@@ -1025,7 +1025,7 @@ namespace Nektar
                 const int eid, const EdgeOrientation eorient, 
                 StdExpMap &Map)
             {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );        
             }
 
             virtual void  v_MapTo_ModalFormat(const int edge_ncoeffs, 
@@ -1034,7 +1034,7 @@ namespace Nektar
                 const EdgeOrientation eorient, 
                 StdExpMap &Map)
             {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );		
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );        
             }
 
 
@@ -1053,14 +1053,14 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
             }
 
-            virtual boost::shared_ptr<SpatialDomains::GeomFactors> v_GetMetricInfo() const 
+            virtual ptr<SpatialDomains::GeomFactors> v_GetMetricInfo() const 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return boost::shared_ptr<SpatialDomains::GeomFactors>();
+                return ptr<SpatialDomains::GeomFactors>();
             }
         };
 
-        typedef boost::shared_ptr<StdExpansion> StdExpansionSharedPtr;
+        typedef ptr<StdExpansion> StdExpansionSharedPtr;
         typedef std::vector< StdExpansionSharedPtr > StdExpansionVector;
         typedef std::vector< StdExpansionSharedPtr >::iterator StdExpansionVectorIter;
 
@@ -1070,6 +1070,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.61  2007/07/16 18:28:43  sherwin
+* Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
+*
 * Revision 1.60  2007/07/13 09:02:25  sherwin
 * Mods for Helmholtz solver
 *

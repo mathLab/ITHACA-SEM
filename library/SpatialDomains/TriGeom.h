@@ -51,59 +51,58 @@ namespace Nektar
     {
         class TriGeom: public TriFaceComponent
         {
-        public:
-            TriGeom();
-            TriGeom(const VertexComponentSharedPtr verts[], const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-            TriGeom(const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-            ~TriGeom();
+            public:
+                TriGeom();
+                TriGeom(const VertexComponentSharedPtr verts[], const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                TriGeom(const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                ~TriGeom();
 
-            inline void SetOwnData()
-            {
-                m_owndata = true; 
-            }
+                inline void SetOwnData()
+                {
+                    m_owndata = true; 
+                }
 
-            void FillGeom();
+                void FillGeom();
+    
+                void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
-            void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+                inline int GetEid(int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
+                    return m_edges[i]->GetEid();
+                }
 
-	    inline int GetEid(int i){
-		ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
+                inline int GetVid(const int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
+                    return m_verts[i]->GetVid();
+                }
 
-		return m_edges[i]->GetEid();
-	    }
+                inline StdRegions::EdgeOrientation GetEorient(const int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
+                    return m_eorient[i];
+                }
 
-	    inline int GetVid(const int i){
-		ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
-		
-		return m_verts[i]->GetVid();
-	    }
+                static const int kNedges = 3;
+                static const int kNverts = 3;
 
-	    inline StdRegions::EdgeOrientation GetEorient(const int i)
-	    {
-		ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
+            protected:
+                VertexComponentVector           m_verts;
+                EdgeComponentVector             m_edges;
+                StdRegions::EdgeOrientation     m_eorient [kNedges];
 
-		return m_eorient[i];
-	    }
+                void GenGeomFactors(void);
+            private:
+                bool m_owndata;
 
-        static const int kNedges = 3;
-        static const int kNverts = 3;
-
-        protected:
-            VertexComponentVector           m_verts;
-            EdgeComponentVector             m_edges;
-            StdRegions::EdgeOrientation     m_eorient [kNedges];
-
-            void GenGeomFactors(void);
-        private:
-            bool m_owndata;
-
-            virtual void v_GenGeomFactors(void)
-            {
-                GenGeomFactors();
-            }
+                virtual void v_GenGeomFactors(void)
+                {
+                    GenGeomFactors();
+                }
         };
 
-        typedef boost::shared_ptr<TriGeom>      TriGeomSharedPtr;
+        typedef ptr<TriGeom> TriGeomSharedPtr;
         typedef std::vector< TriGeomSharedPtr > TriGeomVector;
         typedef std::vector< TriGeomSharedPtr >::iterator TriGeomVectorIter;
 
@@ -114,6 +113,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.9  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.8  2007/06/01 17:08:07  pvos
 // Modification to make LocalRegions/Project2D run correctly (PART1)
 //

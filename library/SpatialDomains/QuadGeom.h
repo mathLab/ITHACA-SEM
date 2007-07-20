@@ -53,61 +53,60 @@ namespace Nektar
     {
         class QuadGeom: public QuadFaceComponent
         {
-        public:
-            QuadGeom();
-            QuadGeom(const VertexComponentSharedPtr verts[],  const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-            QuadGeom(const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-            ~QuadGeom();
+            public:
+                QuadGeom();
+                QuadGeom(const VertexComponentSharedPtr verts[],  const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                QuadGeom(const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                ~QuadGeom();
 
-            inline void SetOwnData()
-            {
-                m_owndata = true; 
-            }
+                inline void SetOwnData()
+                {
+                    m_owndata = true; 
+                }
 
-            void FillGeom();
+                void FillGeom();
 
-            void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+                void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
-	    inline int GetEid(int i){
-		ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                inline int GetEid(int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                    return m_edges[i]->GetEid();
+                }
 
-		return m_edges[i]->GetEid();
-	    }
+                inline int GetVid(int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 3),"Verted id must be between 0 and 3");
+                    return m_verts[i]->GetVid();
+                }
+                
+                inline StdRegions::EdgeOrientation GetEorient(const int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                    return m_eorient[i];
+                }
 
-	    inline int GetVid(int i){
-		ASSERTL2((i >=0) && (i <= 3),"Verted id must be between 0 and 3");
+                static const int kNverts = 4;
+                static const int kNedges = 4;
 
-		return m_verts[i]->GetVid();
-	    }
-		
-	    inline StdRegions::EdgeOrientation GetEorient(const int i)
-	    {
-		ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+            protected:
+                VertexComponentVector           m_verts;
+                EdgeComponentVector             m_edges;
+                StdRegions::EdgeOrientation     m_eorient[kNedges];
 
-		return m_eorient[i];
-	    }
+                void GenGeomFactors(void);
 
-            static const int kNverts = 4;
-            static const int kNedges = 4;
+            private:
+                bool m_owndata;   ///< Boolean indicating whether object owns the data
 
-        protected:
-            VertexComponentVector           m_verts;
-            EdgeComponentVector             m_edges;
-            StdRegions::EdgeOrientation     m_eorient[kNedges];
-
-            void GenGeomFactors(void);
-
-        private:
-            bool m_owndata;   ///< Boolean indicating whether object owns the data
-
-            virtual void v_GenGeomFactors(void)
-            {
-                GenGeomFactors();
-            }
+                virtual void v_GenGeomFactors(void)
+                {
+                    GenGeomFactors();
+                }
         };
 
-	// shorthand for boost pointer
-	typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
+    // shorthand for boost pointer
+    typedef ptr<QuadGeom> QuadGeomSharedPtr;
         typedef std::vector< QuadGeomSharedPtr > QuadGeomVector;
         typedef std::vector< QuadGeomSharedPtr >::iterator QuadGeomVectorIter;
 
@@ -118,6 +117,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.10  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.9  2007/06/01 17:08:07  pvos
 // Modification to make LocalRegions/Project2D run correctly (PART1)
 //

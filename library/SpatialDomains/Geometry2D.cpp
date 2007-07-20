@@ -44,22 +44,25 @@ namespace Nektar
   namespace SpatialDomains
   {
         Geometry2D::Geometry2D()
-	{
+    {
         }
 
         Geometry2D::Geometry2D(const int coordim):
         Geometry(coordim)
-	{
+    {
         }
 
         Geometry2D::~Geometry2D()
-	{
+    {
         }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: Geometry2D.cpp,v $
+// Revision 1.2  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.1  2006/05/04 18:59:00  kirby
 // *** empty log message ***
 //

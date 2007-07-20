@@ -120,7 +120,7 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs);
 
-        typedef  boost::shared_ptr<StdMatrixKey> StdMatrixKeySharedPtr;
+        typedef  ptr<StdMatrixKey> StdMatrixKeySharedPtr;
 
     } // end of namespace
 } // end of namespace
@@ -129,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.13  2007/07/09 15:19:15  sherwin
+* Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
+*
 * Revision 1.12  2007/05/25 17:48:58  jfrazier
 * Changed the class so the bases are not stored as an Array, but rather a ConstArray.
 *

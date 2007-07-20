@@ -41,36 +41,36 @@ namespace Nektar
 {
     namespace StdRegions
     {
-	
-	StdExpansion1D::StdExpansion1D()
-	{
-	}
-	
-	StdExpansion1D::StdExpansion1D(int numcoeffs, const LibUtilities::BasisKey &Ba):
-	    StdExpansion(numcoeffs,1,Ba)
-	{
-	}
+    
+    StdExpansion1D::StdExpansion1D()
+    {
+    }
+    
+    StdExpansion1D::StdExpansion1D(int numcoeffs, const LibUtilities::BasisKey &Ba):
+        StdExpansion(numcoeffs,1,Ba)
+    {
+    }
 
-	StdExpansion1D::StdExpansion1D(const StdExpansion1D &T):StdExpansion(T)
-	{
-	}
+    StdExpansion1D::StdExpansion1D(const StdExpansion1D &T):StdExpansion(T)
+    {
+    }
 
-	StdExpansion1D::~StdExpansion1D()
-	{
-	}
-	
+    StdExpansion1D::~StdExpansion1D()
+    {
+    }
+    
   
-	//----------------------------
-	// Differentiation Methods
-	//-----------------------------
-	
-	void StdExpansion1D::PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-					     Array<OneD, NekDouble>& outarray)
-	{
-	    int    nquad = m_base[0]->GetNumPoints();
-	    DNekMatSharedPtr     D  = ExpPointsProperties(0)->GetD();
+    //----------------------------
+    // Differentiation Methods
+    //-----------------------------
+    
+    void StdExpansion1D::PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+                         Array<OneD, NekDouble>& outarray)
+    {
+        int    nquad = m_base[0]->GetNumPoints();
+        DNekMatSharedPtr     D  = ExpPointsProperties(0)->GetD();
             
-	    // copy inarray in case inarray == outarray
+        // copy inarray in case inarray == outarray
             DNekVec in (nquad,inarray);
             DNekVec out(nquad,outarray,eWrapper);
             
@@ -80,32 +80,35 @@ namespace Nektar
             //Vmath::Vcopy(nquad,&out[0],1,&outarray[0],1);
 
             // cannot make version above work yet. 
-	    //Blas::Dgemv('T',nquad,nquad,1.0,&((*D).GetPtr())[0],nquad,
+        //Blas::Dgemv('T',nquad,nquad,1.0,&((*D).GetPtr())[0],nquad,
             //           &wsp[0],1,0.0,&outarray[0],1);
-	}
+    }
     
-	NekDouble StdExpansion1D::PhysEvaluate1D(const ConstArray<OneD, NekDouble>& Lcoord)
-	{
-	    int    nquad = m_base[0]->GetNumPoints();
-	    NekDouble  val;
-	    DNekMatSharedPtr I;
-	    
-	    ASSERTL2(Lcoord[0] < -1,"Lcoord[0] < -1");
-	    ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1");
-	    
-	    I = ExpPointsProperties(0)->GetI(Lcoord);
+    NekDouble StdExpansion1D::PhysEvaluate1D(const ConstArray<OneD, NekDouble>& Lcoord)
+    {
+        int    nquad = m_base[0]->GetNumPoints();
+        NekDouble  val;
+        DNekMatSharedPtr I;
+        
+        ASSERTL2(Lcoord[0] < -1,"Lcoord[0] < -1");
+        ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1");
+        
+        I = ExpPointsProperties(0)->GetI(Lcoord);
 
-	    val = Blas::Ddot(m_base[0]->GetNumPoints(),&((*I).GetPtr())[0],
-			     1,&m_phys[0],1);
-	    
-	    return val;    
-	}
+        val = Blas::Ddot(m_base[0]->GetNumPoints(),&((*I).GetPtr())[0],
+                 1,&m_phys[0],1);
+        
+        return val;    
+    }
     
     }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.18  2007/05/28 08:35:26  sherwin
+ * Updated for localregions up to Project1D
+ *
  * Revision 1.17  2007/05/17 17:59:28  sherwin
  * Modification to make Demos work after introducion of Array<>
  *

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/MeshComponents.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshComponents.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -86,56 +86,56 @@ namespace Nektar
         /// Vertex Component
         class VertexComponent: public Geometry, public NekPoint <double, 3>
         {
-        public:
-            //Temp debug constructor
-            VertexComponent()
-            {
-            }
+            public:
+                //Temp debug constructor
+                VertexComponent()
+                {
+                }
 
-            VertexComponent(const int coordim, const int vid,
-                double x, double y, double z);
-            ~VertexComponent();
-            VertexComponent(const VertexComponent &T);
+                VertexComponent(const int coordim, const int vid,
+                    double x, double y, double z);
+                ~VertexComponent();
+                VertexComponent(const VertexComponent &T);
 
-            void AddElmtConnected(int gvo_id, int locid);
-            int  NumElmtConnected() const;
-            bool IsElmtConnected(int gvo_id, int locid) const;
-            void UpdatePosition(double x, double y, double z);
+                void AddElmtConnected(int gvo_id, int locid);
+                int  NumElmtConnected() const;
+                bool IsElmtConnected(int gvo_id, int locid) const;
+                void UpdatePosition(double x, double y, double z);
 
-            inline int  GetCoordim()
-            {
-                return(m_coordim);
-            }
+                inline int GetCoordim() const
+                {
+                    return m_coordim;
+                }
 
-            inline int  GetVid()
-            {
-                return m_vid ;
-            }
+                inline int GetVid() const
+                {
+                    return m_vid;
+                }
 
-            inline void SetVid(const int vid)
-            {
-                m_vid = vid;
-            }
+                inline void SetVid(const int vid)
+                {
+                    m_vid = vid;
+                }
 
-            // Math routines
-            void   Mult (VertexComponent& a, VertexComponent& b);
-            void   Add  (VertexComponent& a, VertexComponent& b);
-            void   Sub  (VertexComponent& a, VertexComponent& b);
-            double dot  (VertexComponent& a);
+                // Math routines
+                void   Mult (VertexComponent& a, VertexComponent& b);
+                void   Add  (VertexComponent& a, VertexComponent& b);
+                void   Sub  (VertexComponent& a, VertexComponent& b);
+                double dot  (VertexComponent& a);
 
-            friend bool operator == (const VertexComponent &x, const VertexComponent &y);
-            friend bool operator == (const VertexComponent &x, const VertexComponent *y);
-            friend bool operator == (const VertexComponent *x, const VertexComponent &y);
-            friend bool operator != (const VertexComponent &x, const VertexComponent &y);
-            friend bool operator != (const VertexComponent &x, const VertexComponent *y);
-            friend bool operator != (const VertexComponent *x, const VertexComponent &y);
+                friend bool operator == (const VertexComponent &x, const VertexComponent &y);
+                friend bool operator == (const VertexComponent &x, const VertexComponent *y);
+                friend bool operator == (const VertexComponent *x, const VertexComponent &y);
+                friend bool operator != (const VertexComponent &x, const VertexComponent &y);
+                friend bool operator != (const VertexComponent &x, const VertexComponent *y);
+                friend bool operator != (const VertexComponent *x, const VertexComponent &y);
 
-        protected:
-            int m_vid;
-            int m_coordim;
-            std::list<CompToElmt> m_elmtmap;
+            protected:
+                int m_vid;
+                int m_coordim;
+                std::list<CompToElmt> m_elmtmap;
 
-        private:
+            private:
         };
 
         // -----------------------------------------------------------------------
@@ -164,7 +164,7 @@ namespace Nektar
         private:
         };
 
-        typedef boost::shared_ptr< VertexComponent >  VertexComponentSharedPtr;
+        typedef ptr< VertexComponent >  VertexComponentSharedPtr;
         typedef std::set< VertexComponentSharedPtr >  VertexComponentSet;
         typedef std::vector< VertexComponentSharedPtr >  VertexComponentVector;
         typedef std::vector< VertexComponentSharedPtr >::iterator  VertexComponentVectorIter;
@@ -176,6 +176,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.7  2006/10/15 06:18:58  sherwin
+// Moved NekPoint out of namespace LibUtilities
+//
 // Revision 1.6  2006/08/17 22:55:00  jfrazier
 // Continued adding code to process composites in the mesh2d.
 //

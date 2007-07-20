@@ -117,20 +117,20 @@ namespace Nektar
         typedef std::map<std::string, NekDouble> ParamMap;
         typedef std::vector<std::string> Variable;
         typedef std::vector<Composite> BoundaryRegion;
-        typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
-        typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
+        typedef ptr<BoundaryRegion> BoundaryRegionShPtr;
+        typedef ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
         typedef std::vector<BoundaryRegionShPtr> BoundaryRegionCollection;
-        typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
+        typedef ptr<BoundaryConditionBase> BoundaryConditionShPtr;
         typedef std::map<std::string,BoundaryConditionShPtr> BoundaryConditionMap;
-        typedef boost::shared_ptr<BoundaryConditionMap> BoundaryConditionMapShPtr;
+        typedef ptr<BoundaryConditionMap> BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
         typedef Equation<NekDouble> ForcingFunction;
-        typedef boost::shared_ptr<ForcingFunction> ForcingFunctionShPtr;
-        typedef boost::shared_ptr<const ForcingFunction> ConstForcingFunctionShPtr;
+        typedef ptr<ForcingFunction> ForcingFunctionShPtr;
+        typedef ptr<const ForcingFunction> ConstForcingFunctionShPtr;
         typedef std::map<std::string, ForcingFunctionShPtr> ForcingFunctionsMap;
         typedef Equation<NekDouble> InitialCondition;
-        typedef boost::shared_ptr<InitialCondition> InitialConditionShPtr;
-        typedef boost::shared_ptr<const InitialCondition> ConstInitialConditionShPtr;
+        typedef ptr<InitialCondition> InitialConditionShPtr;
+        typedef ptr<const InitialCondition> ConstInitialConditionShPtr;
         typedef std::map<std::string, InitialConditionShPtr> InitialConditionsMap;
 
         class BoundaryConditions

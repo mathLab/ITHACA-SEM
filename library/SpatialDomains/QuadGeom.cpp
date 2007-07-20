@@ -55,9 +55,9 @@ namespace Nektar
         }
 
         QuadGeom::QuadGeom(const VertexComponentSharedPtr verts[], 
-			   const EdgeComponentSharedPtr edges[], 
-			   const StdRegions::EdgeOrientation eorient[]):
-	  QuadFaceComponent(verts[0]->GetCoordim())
+               const EdgeComponentSharedPtr edges[], 
+               const StdRegions::EdgeOrientation eorient[]):
+      QuadFaceComponent(verts[0]->GetCoordim())
         {
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+QuadGeom::kNverts);
@@ -75,27 +75,27 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
         }
-	
-	QuadGeom::QuadGeom(const EdgeComponentSharedPtr edges[], 
-			   const StdRegions::EdgeOrientation eorient[]):
-	    QuadFaceComponent(edges[0]->GetCoordim())
+    
+    QuadGeom::QuadGeom(const EdgeComponentSharedPtr edges[], 
+               const StdRegions::EdgeOrientation eorient[]):
+        QuadFaceComponent(edges[0]->GetCoordim())
         {
-	    int j;
+        int j;
 
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
-	    
-	    for(j=0; j <kNedges; ++j)
-	    {
-		if(eorient[j] == StdRegions::eForwards)
-		{
-		    m_verts.push_back(edges[j]->GetVertex(0));
-		}
-		else
-		{
-		    m_verts.push_back(edges[j]->GetVertex(1));
-		}
-	    }
+        
+        for(j=0; j <kNedges; ++j)
+        {
+        if(eorient[j] == StdRegions::eForwards)
+        {
+            m_verts.push_back(edges[j]->GetVertex(0));
+        }
+        else
+        {
+            m_verts.push_back(edges[j]->GetVertex(1));
+        }
+        }
             
             for (j=0; j<kNedges; ++j)
             {
@@ -179,9 +179,9 @@ namespace Nektar
                 StdRegions::StdExpMap Map,MapV;
 
                 // set side 0 
-		m_xmap[0]->MapTo((*m_edges[0])[0]->GetNcoeffs(),
-				 (*m_edges[0])[0]->GetBasisType(0),
-				 0,m_eorient[0],Map);
+        m_xmap[0]->MapTo((*m_edges[0])[0]->GetNcoeffs(),
+                 (*m_edges[0])[0]->GetBasisType(0),
+                 0,m_eorient[0],Map);
 
                 for(i = 0; i < m_coordim; ++i)
                 {
@@ -193,9 +193,9 @@ namespace Nektar
                 }
 
                 // set side 2
-		m_xmap[0]->MapTo((*m_edges[2])[0]->GetNcoeffs(),
-				 (*m_edges[2])[0]->GetBasisType(0),
-				 2,m_eorient[2],Map);
+        m_xmap[0]->MapTo((*m_edges[2])[0]->GetNcoeffs(),
+                 (*m_edges[2])[0]->GetBasisType(0),
+                 2,m_eorient[2],Map);
 
 
                 for(i = 0; i < m_coordim; ++i)
@@ -226,9 +226,9 @@ namespace Nektar
                 }
 
                 // set side 1
-		m_xmap[0]->MapTo((*m_edges[1])[0]->GetNcoeffs(),
-				 (*m_edges[1])[0]->GetBasisType(0),
-				 1,m_eorient[1],Map);
+        m_xmap[0]->MapTo((*m_edges[1])[0]->GetNcoeffs(),
+                 (*m_edges[1])[0]->GetBasisType(0),
+                 1,m_eorient[1],Map);
 
                 for(i = 0; i < m_coordim; ++i)
                 {
@@ -240,9 +240,9 @@ namespace Nektar
                 }
                 
                 // set side 3
-		m_xmap[0]->MapTo((*m_edges[3])[0]->GetNcoeffs(),
-				 (*m_edges[3])[0]->GetBasisType(0),
-				 3,m_eorient[3],Map);
+        m_xmap[0]->MapTo((*m_edges[3])[0]->GetNcoeffs(),
+                 (*m_edges[3])[0]->GetBasisType(0),
+                 3,m_eorient[3],Map);
 
                 for(i = 0; i < m_coordim; ++i)
                 {
@@ -289,12 +289,12 @@ namespace Nektar
                     pts = m_xmap[i]->GetPhys();
 
                     // use projection to side 1 to determine xi_1 coordinate based on length
-                    len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);	
+                    len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);    
                     xi0  += (coords[i] -pts[0])*(pts[nq0-1]-pts[0]);
 
                     // use projection to side 4 to determine xi_2 coordinate based on length
                     len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]); 
-                    xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);	
+                    xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);    
                 }
 
                 Lcoords[0] =  2*xi0/len0-1.0;
@@ -303,7 +303,7 @@ namespace Nektar
             }
             else
             {
-	      NEKERROR(ErrorUtil::efatal,
+          NEKERROR(ErrorUtil::efatal,
                     "inverse mapping must be set up to use this call");
             }
         }
@@ -313,6 +313,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.10  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.9  2007/06/06 11:29:31  pvos
 // Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
 //

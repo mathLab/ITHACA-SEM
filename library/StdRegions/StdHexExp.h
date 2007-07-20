@@ -78,7 +78,7 @@ namespace Nektar
 
             /** \brief Fill outarray with mode \a mode of expansion
             *
-            *	Note for hexahedral expansions _base[0] (i.e. p)  modes run 
+            *    Note for hexahedral expansions _base[0] (i.e. p)  modes run 
             *  fastest
             */
             void FillMode(int mode, double *array);
@@ -157,22 +157,22 @@ namespace Nektar
 
         private:
 
-            virtual int v_GetNverts()
+            virtual int v_GetNverts() const
             {
                 return 8;
             }
 
-            virtual int v_GetNedges()
+            virtual int v_GetNedges() const
             {
                 return 12;
             }
 
-            virtual int v_GetNfaces()
+            virtual int v_GetNfaces() const
             {
                 return 6;
             }
 
-            virtual ShapeType v_DetShapeType()
+            virtual ShapeType v_DetShapeType() const
             {
                 return DetShapeType();
             };
@@ -277,6 +277,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.9  2007/07/10 21:05:16  kirby
+* even more fixes
+*
 * Revision 1.7  2007/01/17 16:36:58  pvos
 * updating doxygen documentation
 *

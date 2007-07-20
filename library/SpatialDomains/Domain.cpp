@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/Domain.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Domain.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -38,7 +38,10 @@
 #include <SpatialDomains/Domain.h>
 
 // Use the stl version, primarily for string.
+#ifndef TIXML_USE_STL
 #define TIXML_USE_STL
+#endif
+
 #include <tinyxml/tinyxml.h>
 #include <string>
 #include <strstream>

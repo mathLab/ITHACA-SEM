@@ -44,67 +44,67 @@ namespace Nektar
 {
     namespace StdRegions
     {
-	
-	class StdPrismExp: public StdExpansion3D
-	{
-	    
-	public:
-	    
-	    /** \brief Constructor using BasisKey class for quadrature
-	     *	points and order definition 
-	     */
-	    StdPrismExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
-	    
-	    /** \brief Constructor using BasisKey class for quadrature
-	     *  points and order definition where m_coeffs and m_phys are all
-	     *	set. 
-	     */
-	    StdPrismExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
-			double *coeffs, double *phys);
-	    
-	    /** \brief Copy Constructor */
-	    StdPrismExp(const StdPrismExp &T);
-	    
-	    /** \brief Destructor */
-	    ~StdPrismExp();
-	    
-	    /** \brief Return Shape of region, using  ShapeType enum list.
-	     *  i.e. Prism 
-	     */
-	    ShapeType DetShapeType()
-	    {
-		return ePrism;
-	    }
-	    
-	protected:
-	    
-	    static StdMatrix s_elmtmats;
-	    
-	    
-	private:
-	    
-	    virtual int v_GetNverts()
-	    {
-		return 6;
-	    }
-	    
-	    virtual int v_GetNedges()
-	    {
-		return 9;
-	    }
-	    
-	    virtual int v_GetNfaces()
-	    {
-		return 5;
-	    }
+    
+    class StdPrismExp: public StdExpansion3D
+    {
+        
+    public:
+        
+        /** \brief Constructor using BasisKey class for quadrature
+         *    points and order definition 
+         */
+        StdPrismExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
+        
+        /** \brief Constructor using BasisKey class for quadrature
+         *  points and order definition where m_coeffs and m_phys are all
+         *    set. 
+         */
+        StdPrismExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
+            double *coeffs, double *phys);
+        
+        /** \brief Copy Constructor */
+        StdPrismExp(const StdPrismExp &T);
+        
+        /** \brief Destructor */
+        ~StdPrismExp();
+        
+        /** \brief Return Shape of region, using  ShapeType enum list.
+         *  i.e. Prism 
+         */
+        ShapeType DetShapeType()
+        {
+        return ePrism;
+        }
+        
+    protected:
+        
+        static StdMatrix s_elmtmats;
+        
+        
+    private:
+        
+        virtual int v_GetNverts() const
+        {
+            return 6;
+        }
+        
+        virtual int v_GetNedges() const
+        {
+            return 9;
+        }
+        
+        virtual int v_GetNfaces() const
+        {
+            return 5;
+        }
 
-	    virtual ShapeType v_DetShapeType()
-	    {
-		return DetShapeType();
-	    }
-	    
-	};
-	
+        virtual ShapeType v_DetShapeType() const
+        {
+            return DetShapeType();
+        }
+        
+    };
+    
     } //end of namespace
 } //end of namespace
 
@@ -112,6 +112,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.4  2007/07/10 21:05:17  kirby
+ * even more fixes
+ *
  * Revision 1.3  2007/01/17 16:05:40  pvos
  * updated doxygen documentation
  *

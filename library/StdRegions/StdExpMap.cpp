@@ -40,39 +40,42 @@ namespace Nektar
 {
     namespace StdRegions
     {
-	
-	StdExpMap::StdExpMap():
-	    m_len(0),
-	    m_map()
-	{
-	}
-	
-	StdExpMap::StdExpMap(const int len)
-	{
-	    m_len = len;
-	    ASSERTL2(len > 0,"called with zero length");
-	    m_map = Array<OneD, int>(m_len);
-	}
-	
-	
-	StdExpMap::~StdExpMap()
-	{
-	}
-	
-	void StdExpMap::SetMapMemory(const int len)
-	{	    
-	    if(m_len != len)
-	    {
-		m_len = len;
-		m_map = Array<OneD, int>(m_len);
-	    }
-	}
-	
+    
+    StdExpMap::StdExpMap():
+        m_len(0),
+        m_map()
+    {
+    }
+    
+    StdExpMap::StdExpMap(const int len)
+    {
+        m_len = len;
+        ASSERTL2(len > 0,"called with zero length");
+        m_map = Array<OneD, int>(m_len);
+    }
+    
+    
+    StdExpMap::~StdExpMap()
+    {
+    }
+    
+    void StdExpMap::SetMapMemory(const int len)
+    {        
+        if(m_len != len)
+        {
+        m_len = len;
+        m_map = Array<OneD, int>(m_len);
+        }
+    }
+    
     } // end of namespace
 } // end of namespace
 
 /** 
  * $Log: StdExpMap.cpp,v $
+ * Revision 1.6  2007/05/15 05:18:23  bnelson
+ * Updated to use the new Array object.
+ *
  * Revision 1.5  2007/03/29 19:35:08  bnelson
  * Replaced boost::shared_array with SharedArray
  *

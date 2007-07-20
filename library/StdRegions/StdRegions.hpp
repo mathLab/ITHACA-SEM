@@ -104,7 +104,7 @@ namespace Nektar
         };
 
         const char* const MatrixTypeMap[] = 
-	{
+    {
             "Mass",
             "InvMass",
             "Laplacian",
@@ -136,7 +136,7 @@ namespace Nektar
             eHexahedron,
             SIZE_ShapeType
         };
-	
+    
 
         const char* const ShapeTypeMap[] = 
         {
@@ -149,7 +149,7 @@ namespace Nektar
             "Prism",
             "Hexahedron"
         };
-	
+    
 
 
 
@@ -222,6 +222,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.19  2007/07/12 12:55:16  sherwin
+* Simplified Matrix Generation
+*
 * Revision 1.18  2007/07/10 19:27:58  kirby
 * Update for new matrix structures
 *

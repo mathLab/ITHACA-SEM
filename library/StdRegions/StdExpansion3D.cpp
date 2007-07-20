@@ -45,128 +45,133 @@ namespace Nektar
 {
     namespace StdRegions
     {
-	
-	
-	StdExpansion3D::StdExpansion3D()
-	{
-	}
-	
-	StdExpansion3D::StdExpansion3D(int numcoeffs, const LibUtilities::BasisKey &Ba, 
-				       const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc):
-	    StdExpansion(numcoeffs,3,Ba,Bb,Bc)
-	{
-	}
-	
-	StdExpansion3D::StdExpansion3D(const StdExpansion3D &T):
-	    StdExpansion(T)
-	{
-	}
-	
-	StdExpansion3D::~StdExpansion3D()
-	{ 
-	}
-	
-	void StdExpansion3D::PhysTensorDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-					     Array<OneD, NekDouble> &outarray_d0, 
-					     Array<OneD, NekDouble> &outarray_d1, 
-					     Array<OneD, NekDouble> &outarray_d2)
-	{
-	    int    i;
-	    int    nquad0 = m_base[0]->GetNumPoints();
-	    int    nquad1 = m_base[1]->GetNumPoints();
-	    int    nquad2 = m_base[2]->GetNumPoints();
-	    DNekMatSharedPtr D0,D1,D2;
-	    Array<OneD, NekDouble> wsp;
+    
+    
+    StdExpansion3D::StdExpansion3D()
+    {
+    }
+    
+    StdExpansion3D::StdExpansion3D(int numcoeffs, const LibUtilities::BasisKey &Ba, 
+                       const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc):
+        StdExpansion(numcoeffs,3,Ba,Bb,Bc)
+    {
+    }
+    
+    StdExpansion3D::StdExpansion3D(const StdExpansion3D &T):
+        StdExpansion(T)
+    {
+    }
+    
+    StdExpansion3D::~StdExpansion3D()
+    { 
+    }
+    
+    void StdExpansion3D::PhysTensorDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                         Array<OneD, NekDouble> &outarray_d0, 
+                         Array<OneD, NekDouble> &outarray_d1, 
+                         Array<OneD, NekDouble> &outarray_d2)
+    {
+        int    i;
+        int    nquad0 = m_base[0]->GetNumPoints();
+        int    nquad1 = m_base[1]->GetNumPoints();
+        int    nquad2 = m_base[2]->GetNumPoints();
+        DNekMatSharedPtr D0,D1,D2;
+        Array<OneD, NekDouble> wsp;
             wsp = Array<OneD, NekDouble>(nquad0*nquad1*nquad2);
-	    
-	    // copy inarray to wsp in case inarray is used as outarray
+        
+        // copy inarray to wsp in case inarray is used as outarray
             Vmath::Vcopy(nquad0*nquad1*nquad2,&inarray[0],1,&wsp[0],1);
-	    
-	    D0 = ExpPointsProperties(0)->GetD();
-	    D1 = ExpPointsProperties(1)->GetD();
-	    D2 = ExpPointsProperties(2)->GetD();
-	    
-	    // calculate du/dx_0
-	    if(outarray_d0.num_elements() > 0)
-	    {
-		for(i=0; i < nquad2; ++i)
-		{
-		    Blas::Dgemm('T','N',nquad0,nquad1,nquad0,1.0,&(D0->GetPtr())[0],
-				nquad0,&wsp[0]+i*nquad0*nquad1, nquad0,0.0,
-				&outarray_d0[0]+i*nquad0*nquad1,nquad0);
-		}
-	    }
-	    
-	    // calculate du/dx_1
-	    if(outarray_d1.num_elements() > 0 )
-	    {
-		for(i=0; i < nquad2; ++i)
-		{
-		    Blas:: Dgemm('N','N',nquad0,nquad1,nquad1,1.0,
-				 &wsp[0]+i*nquad0*nquad1,nquad0,&(D1->GetPtr())[0],
-				 nquad1,0.0, &outarray_d1[0]+i*nquad0*nquad1,nquad0);
-		}
-	    }
-	    
-	    // calculate du/dx_2
-	    if(outarray_d2.num_elements() > 0)
-	    {
-		for(i=0; i < nquad0*nquad1; ++i)
-		{
-		    Blas:: Dgemv('T',nquad2,nquad2,1.0,&(D2->GetPtr())[0],
-				 nquad2, &wsp[0]+i,nquad0*nquad1,0.0,
-				 &outarray_d2[0]+i,nquad0*nquad1);
-		}
-	    }   
-	}
-	
-	NekDouble StdExpansion3D::PhysEvaluate(ConstArray<OneD, NekDouble> &coords)
-	{
-	    NekDouble  val;
-	    int i;
-	    int nq1 = m_base[0]->GetNumPoints();
-	    int nq2 = m_base[1]->GetNumPoints();
-	    int nq3 = m_base[2]->GetNumPoints();
-	    	    
+        
+        D0 = ExpPointsProperties(0)->GetD();
+        D1 = ExpPointsProperties(1)->GetD();
+        D2 = ExpPointsProperties(2)->GetD();
+        
+        // calculate du/dx_0
+        if(outarray_d0.num_elements() > 0)
+        {
+        for(i=0; i < nquad2; ++i)
+        {
+            Blas::Dgemm('T','N',nquad0,nquad1,nquad0,1.0,&(D0->GetPtr())[0],
+                nquad0,&wsp[0]+i*nquad0*nquad1, nquad0,0.0,
+                &outarray_d0[0]+i*nquad0*nquad1,nquad0);
+        }
+        }
+        
+        // calculate du/dx_1
+        if(outarray_d1.num_elements() > 0 )
+        {
+        for(i=0; i < nquad2; ++i)
+        {
+            Blas:: Dgemm('N','N',nquad0,nquad1,nquad1,1.0,
+                 &wsp[0]+i*nquad0*nquad1,nquad0,&(D1->GetPtr())[0],
+                 nquad1,0.0, &outarray_d1[0]+i*nquad0*nquad1,nquad0);
+        }
+        }
+        
+        // calculate du/dx_2
+        if(outarray_d2.num_elements() > 0)
+        {
+        for(i=0; i < nquad0*nquad1; ++i)
+        {
+            Blas:: Dgemv('T',nquad2,nquad2,1.0,&(D2->GetPtr())[0],
+                 nquad2, &wsp[0]+i,nquad0*nquad1,0.0,
+                 &outarray_d2[0]+i,nquad0*nquad1);
+        }
+        }   
+    }
+    
+    NekDouble StdExpansion3D::PhysEvaluate(ConstArray<OneD, NekDouble> &coords)
+    {
+        NekDouble  val;
+        int i;
+        int nq1 = m_base[0]->GetNumPoints();
+        int nq2 = m_base[1]->GetNumPoints();
+        int nq3 = m_base[2]->GetNumPoints();
+                
             DNekMatSharedPtr I;
 
-	    Array<OneD, NekDouble> wsp  = Array<OneD, NekDouble>(nq2*nq3);
-	    Array<OneD, NekDouble> wsp1 = Array<OneD, NekDouble>(nq3);
-	    
-	    ASSERTL2(coords[0] < -1,"coord[0] < -1");
-	    ASSERTL2(coords[0] >  1,"coord[0] >  1");
-	    ASSERTL2(coords[1] < -1,"coord[1] < -1");
-	    ASSERTL2(coords[1] >  1,"coord[1] >  1");
-	    ASSERTL2(coords[2] < -1,"coord[2] < -1");
-	    ASSERTL2(coords[2] >  1,"coord[2] >  1");
-	    
-	    // interpolate first coordinate direction
+        Array<OneD, NekDouble> wsp  = Array<OneD, NekDouble>(nq2*nq3);
+        Array<OneD, NekDouble> wsp1 = Array<OneD, NekDouble>(nq3);
+        
+        ASSERTL2(coords[0] < -1,"coord[0] < -1");
+        ASSERTL2(coords[0] >  1,"coord[0] >  1");
+        ASSERTL2(coords[1] < -1,"coord[1] < -1");
+        ASSERTL2(coords[1] >  1,"coord[1] >  1");
+        ASSERTL2(coords[2] < -1,"coord[2] < -1");
+        ASSERTL2(coords[2] >  1,"coord[2] >  1");
+        
+        // interpolate first coordinate direction
             I = ExpPointsProperties(0)->GetI(coords);
 
-	    for(i = 0; i < nq2*nq3;++i)
-	    {
-		wsp[i] =  Blas::Ddot(nq1,&(I->GetPtr())[0],1,&m_phys[0]+i*nq1,1);
-	    }
-	    
-	    // interpolate in second coordinate direction 
+        for(i = 0; i < nq2*nq3;++i)
+        {
+        wsp[i] =  Blas::Ddot(nq1,&(I->GetPtr())[0],1,&m_phys[0]+i*nq1,1);
+        }
+        
+        // interpolate in second coordinate direction 
             I = ExpPointsProperties(1)->GetI(coords+1);
-	    for(i =0; i < nq3; ++i)
-	    {
-		wsp1[i] = Blas::Ddot(nq2,&wsp[0]+i*nq2,1,&(I->GetPtr())[0],1);
-	    }
-	    
-	    // interpolate in third coordinate direction 
+        for(i =0; i < nq3; ++i)
+        {
+        wsp1[i] = Blas::Ddot(nq2,&wsp[0]+i*nq2,1,&(I->GetPtr())[0],1);
+        }
+        
+        // interpolate in third coordinate direction 
             I = ExpPointsProperties(2)->GetI(coords+2);
-	    val = Blas::Ddot(nq3,&wsp1[0],1,&(I->GetPtr())[0],1);
-	    
-	    return val;    
-	}
-	
+        val = Blas::Ddot(nq3,&wsp1[0],1,&(I->GetPtr())[0],1);
+        
+        return val;    
+    }
+    
     }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.10  2007/05/22 02:01:49  bnelson
+ * Changed Array::size to Array::num_elements.
+ *
+ * Fixed some compiler errors in assertions.
+ *
  * Revision 1.9  2007/05/15 05:18:23  bnelson
  * Updated to use the new Array object.
  *

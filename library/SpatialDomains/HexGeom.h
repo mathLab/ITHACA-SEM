@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/HexGeom.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/HexGeom.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -77,7 +77,7 @@ namespace Nektar
             StdRegions::StdHexExp** m_xmap;
 
             int m_eid;
-	    
+        
         private:
         };
 
@@ -88,6 +88,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.1  2006/05/04 18:59:00  kirby
+// *** empty log message ***
+//
 // Revision 1.16  2006/03/12 14:20:43  sherwin
 //
 // First compiling version of SpatialDomains and associated modifications

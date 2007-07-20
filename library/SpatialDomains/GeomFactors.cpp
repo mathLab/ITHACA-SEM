@@ -88,9 +88,9 @@ namespace Nektar
                     "Points order are different for each coordinate");
                 ASSERTL2(Coords[i]->GetPointsType(0)  == ptype,
                     "Points type are different for each coordinate");
-		
+        
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), 
-				    Coords[i]->UpdatePhys());
+                    Coords[i]->UpdatePhys());
 
                 Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(), der[i]);
             }
@@ -148,7 +148,7 @@ namespace Nektar
         \frac{\partial x_1}{\partial \xi_1}   \frac{\partial x_2}{\partial \xi_2} - 
         \frac{\partial x_2}{\partial \xi_1}   \frac{\partial x_1}{\partial \xi_2}
         \end{array} \right ] \f$
-	
+    
         The geometric factors are then given by:
 
         \f$ \begin{array}{cc}
@@ -219,7 +219,7 @@ namespace Nektar
                     "Points type are different for coordinate 1 ");
 
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), 
-				    Coords[i]->UpdatePhys());
+                    Coords[i]->UpdatePhys());
 
                 Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1[i],d2[i]);
             }
@@ -565,6 +565,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.12  2007/07/13 09:02:24  sherwin
+// Mods for Helmholtz solver
+//
 // Revision 1.11  2007/07/10 22:20:55  jfrazier
 // Revision of geo fac manager to test for equality.
 //

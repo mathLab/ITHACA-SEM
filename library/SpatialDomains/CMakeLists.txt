@@ -27,6 +27,7 @@ TriGeom.cpp
 
 SET(SPATIAL_DOMAINS_HEADERS
 BoundaryConditions.h
+Domain.h
 Equation.hpp
 EdgeComponent.h
 GeomFactors.h

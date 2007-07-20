@@ -72,7 +72,7 @@ namespace Nektar
             /** \brief Return Shape of region, using  ShapeType enum list.
             *  i.e. Triangle
             */
-            ShapeType DetShapeType()
+            ShapeType DetShapeType() const
             {
                 return eTriangle;
             }
@@ -147,7 +147,7 @@ namespace Nektar
             void WriteToFile(std::ofstream &outfile);
             void WriteCoeffsToFile(std::ofstream &outfile);
 
-            int GetEdgeNcoeffs(const int i)
+            int GetEdgeNcoeffs(const int i) const
             {
                 ASSERTL2((i >= 0) && (i <= 2), "edge id is out of range");
 
@@ -162,7 +162,7 @@ namespace Nektar
 
             }
 
-            LibUtilities::BasisType GetEdgeBasisType(const int i)
+            LibUtilities::BasisType GetEdgeBasisType(const int i) const
             {
                 ASSERTL2((i >= 0) && (i <= 2), "edge id is out of range");
 
@@ -236,17 +236,17 @@ namespace Nektar
 
         private:
 
-            virtual int v_GetNverts()
+            virtual int v_GetNverts() const
             {
                 return 3;
             }
 
-            virtual int v_GetNedges()
+            virtual int v_GetNedges() const
             {
                 return 3;
             }
 
-            virtual int v_GetEdgeNcoeffs(const int i)
+            virtual int v_GetEdgeNcoeffs(const int i) const
             {
                 return GetEdgeNcoeffs(i);
             }
@@ -259,12 +259,12 @@ namespace Nektar
 
 
 
-            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
+            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
                 return GetEdgeBasisType(i);
             }
 
-            virtual ShapeType v_DetShapeType()
+            virtual ShapeType v_DetShapeType() const
             {
                 return DetShapeType();
             };
@@ -362,6 +362,9 @@ namespace Nektar
 
 /**
 * $Log: StdTriExp.h,v $
+* Revision 1.17  2007/07/12 12:55:16  sherwin
+* Simplified Matrix Generation
+*
 * Revision 1.16  2007/07/10 20:41:52  kirby
 * more fixes
 *

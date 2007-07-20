@@ -51,9 +51,9 @@ namespace Nektar
         }
 
         StdExpansion2D::StdExpansion2D(int numcoeffs, 
-				       const LibUtilities::BasisKey &Ba,
+                       const LibUtilities::BasisKey &Ba,
                                        const LibUtilities::BasisKey &Bb):
-	    StdExpansion(numcoeffs,2, Ba, Bb)
+        StdExpansion(numcoeffs,2, Ba, Bb)
         {
         }
 
@@ -71,8 +71,8 @@ namespace Nektar
         //----------------------------
 
         void StdExpansion2D::PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray,
-					     Array<OneD, NekDouble> &outarray_d0, 
-					     Array<OneD, NekDouble> &outarray_d1)
+                         Array<OneD, NekDouble> &outarray_d0, 
+                         Array<OneD, NekDouble> &outarray_d1)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
@@ -80,7 +80,7 @@ namespace Nektar
             Array<OneD, NekDouble> wsp = Array<OneD, NekDouble>(nquad0 * nquad1);
 
             // copy inarray to wsp in case inarray is used as outarray 
-	    Vmath::Vcopy(nquad0*nquad1, &inarray[0], 1, &wsp[0], 1);
+        Vmath::Vcopy(nquad0*nquad1, &inarray[0], 1, &wsp[0], 1);
 
             D0 = ExpPointsProperties(0)->GetD();
             D1 = ExpPointsProperties(1)->GetD();
@@ -119,10 +119,10 @@ namespace Nektar
             // interpolate first coordinate direction
             I = ExpPointsProperties(0)->GetI(coords);
             for (i = 0; i < nq1;++i)
-	    {
+        {
                 wsp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1, 
-				     &m_phys[i * nq0], 1);
-	    }
+                     &m_phys[i * nq0], 1);
+        }
 
             // interpolate in second coordinate direction
             I = ExpPointsProperties(1)->GetI(coords+1);
@@ -137,8 +137,8 @@ namespace Nektar
         //////////////////////////////
 
         NekDouble StdExpansion2D::Integral(const ConstArray<OneD, NekDouble>& inarray, 
-					   const ConstArray<OneD, NekDouble>& w0,
-					   const ConstArray<OneD, NekDouble>& w1)
+                       const ConstArray<OneD, NekDouble>& w0,
+                       const ConstArray<OneD, NekDouble>& w1)
         {
             int i;
             NekDouble Int = 0.0;
@@ -170,6 +170,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.14  2007/05/30 23:56:55  sherwin
+* Silly errors
+*
 * Revision 1.13  2007/05/22 02:01:41  bnelson
 * Changed Array::size to Array::num_elements.
 *

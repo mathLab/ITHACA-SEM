@@ -37,7 +37,6 @@
 #define NEKTAR_SPATIALDOMAINS_DOMAIN_H
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-
 #include <SpatialDomains/MeshGraph.h>
 
 class TiXmlDocument;
@@ -75,7 +74,7 @@ namespace Nektar
             std::vector< Composite > m_BoundaryComposites;
         };
     
-        typedef boost::shared_ptr< BoundaryEntry > BoundarySharedPtr;
+        typedef ptr< BoundaryEntry > BoundarySharedPtr;
         typedef std::vector< BoundarySharedPtr > BoundaryVector;
         typedef std::vector< BoundarySharedPtr >::iterator BoundaryVectorIter;
         typedef std::vector< Composite > CompositeVector;

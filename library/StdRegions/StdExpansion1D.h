@@ -151,19 +151,19 @@ namespace Nektar
                 Array<OneD, NekDouble> &outarray) = 0;
 
 
-            virtual int v_GetNverts() = 0;
-            virtual int v_GetNedges()
+            virtual int v_GetNverts() const = 0;
+            virtual int v_GetNedges() const
             {
                 ASSERTL0(false,"This function is only valid for 2 and 3D expansions");
                 return 0;
             }
-            virtual int v_GetNfaces()
+            virtual int v_GetNfaces() const
             {
                 ASSERTL0(false,"This function is only valid for 2 and 3D expansions");
                 return 0;
             }
 
-            virtual ShapeType v_DetShapeType()                = 0;
+            virtual ShapeType v_DetShapeType() const = 0;
 
             virtual int v_get_nodalpoints(const ConstArray<OneD, NekDouble>& x, 
                 Array<OneD, ConstArray<OneD, NekDouble> >& y)
@@ -203,7 +203,7 @@ namespace Nektar
             }
         };
 
-        typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
+        typedef ptr<StdExpansion1D> StdExpansion1DSharedPtr;
 
     } //end of namespace
 } //end of namespace
@@ -212,6 +212,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.20  2007/07/12 12:55:16  sherwin
+* Simplified Matrix Generation
+*
 * Revision 1.19  2007/05/17 17:59:28  sherwin
 * Modification to make Demos work after introducion of Array<>
 *

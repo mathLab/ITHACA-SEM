@@ -62,20 +62,20 @@ namespace Nektar
             bool IsElmtConnected(int gvo_id, int locid) const;
 
             inline int GetFid() const 
-	    {
-	      return m_fid;
-	    }
+        {
+          return m_fid;
+        }
 
             inline int GetCoordDim() const 
-	    {
-	      return m_coordim;
-	    }
+        {
+          return m_coordim;
+        }
 
             inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
-	    {
+        {
                 return m_xmap[i]->GetBasis(j);
             }
-	    
+        
             inline Array<OneD,NekDouble> &UpdatePhys(const int i)
             {
                 return m_xmap[i]->UpdatePhys();
@@ -88,11 +88,11 @@ namespace Nektar
             bool m_ownverts;
             std::list<CompToElmt> m_elmtmap;
 
-	    Array<OneD, StdRegions::StdExpansion2DSharedPtr> m_xmap;
+        Array<OneD, StdRegions::StdExpansion2DSharedPtr> m_xmap;
         private:
         };
 
-        typedef boost::shared_ptr<TriFaceComponent> TriFaceComponentSharedPtr;
+        typedef ptr<TriFaceComponent> TriFaceComponentSharedPtr;
         typedef std::vector<TriFaceComponentSharedPtr> TriFaceComponentVector; 
     }; //end of namespace
 }; //end of namespace
@@ -101,6 +101,9 @@ namespace Nektar
 
 //
 // $Log: TriFaceComponent.h,v $
+// Revision 1.3  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.2  2007/05/28 21:48:42  sherwin
 // Update for 2D functionality
 //

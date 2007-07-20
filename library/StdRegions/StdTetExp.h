@@ -44,73 +44,73 @@ namespace Nektar
 {
     namespace StdRegions
     {
-	
-	class StdTetExp: public StdExpansion3D
-	{
-	    
-	public:
-	    
-	    /** \brief Constructor using BasisKey class for quadrature
-	     *	points and order definition 
-	     */
-	    StdTetExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
-	    
-	    /** \brief Constructor using BasisKey class for quadrature
-	     *	points and order definition where m_coeffs and m_phys are all
-	     *  set. 
-	     */
-	    StdTetExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
-		      double *coeffs, double *phys);
-	    
-	    /** \brief Copy Constructor */
-	    StdTetExp(const StdTetExp &T);
-	    
-	    /** \brief Destructor */
-	    ~StdTetExp();
-	    
-	    /** \brief Return Shape of region, using  ShapeType enum list. 
-	     *  i.e. Tetrahedron
-	     */
-	    ShapeType DetShapeType()
-	    {
-		return eTetrahedron;
-	    }
-	    
-	    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
+    
+    class StdTetExp: public StdExpansion3D
+    {
+        
+    public:
+        
+        /** \brief Constructor using BasisKey class for quadrature
+         *    points and order definition 
+         */
+        StdTetExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
+        
+        /** \brief Constructor using BasisKey class for quadrature
+         *    points and order definition where m_coeffs and m_phys are all
+         *  set. 
+         */
+        StdTetExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
+              double *coeffs, double *phys);
+        
+        /** \brief Copy Constructor */
+        StdTetExp(const StdTetExp &T);
+        
+        /** \brief Destructor */
+        ~StdTetExp();
+        
+        /** \brief Return Shape of region, using  ShapeType enum list. 
+         *  i.e. Tetrahedron
+         */
+        ShapeType DetShapeType()
+        {
+        return eTetrahedron;
+        }
+        
+        void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
 
-	protected:
-	    
-	    static StdMatrix s_elmtmats;
-	    
-	private:
-	    
-	    virtual int v_GetNverts()
-	    {
-		return 4;
-	    }
-	    
-	    virtual int v_GetNedges()
-	    {
-		return 6;
-	    }
-	    
-	    virtual int v_GetNfaces()
-	    {
-		return 4;
-	    }
+    protected:
+        
+        static StdMatrix s_elmtmats;
+        
+    private:
+        
+        virtual int v_GetNverts() const
+        {
+            return 4;
+        }
+        
+        virtual int v_GetNedges() const
+        {
+            return 6;
+        }
+        
+        virtual int v_GetNfaces() const
+        {
+            return 4;
+        }
 
-	    virtual ShapeType v_DetShapeType()
-	    {
-		return DetShapeType();
-	    }
+        virtual ShapeType v_DetShapeType() const
+        {
+            return DetShapeType();
+        }
 
-	    virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-	    {
-		SetInvInfo(mat,Mform);
-	    }
-	    
-	};
-	
+        virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+        {
+            SetInvInfo(mat,Mform);
+        }
+        
+    };
+    
     } //end of namespace
 } //end of namespace
 
@@ -118,6 +118,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.6  2007/07/10 21:05:17  kirby
+ * even more fixes
+ *
  * Revision 1.5  2007/07/10 20:41:52  kirby
  * more fixes
  *

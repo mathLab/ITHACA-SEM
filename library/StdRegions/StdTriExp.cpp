@@ -280,7 +280,7 @@ namespace Nektar
                 {
                     Vmath::Vvtvp(nquad0,gfac,1,&d0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
                         &out_d1[0]+i*nquad0,1);
-                }	
+                }    
             }
         }
 
@@ -447,7 +447,7 @@ namespace Nektar
             const int eid, 
             const EdgeOrientation eorient,
             StdExpMap &Map)
-        {	    
+        {        
             MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
         }
 
@@ -538,6 +538,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.21  2007/07/11 13:35:18  kirby
+* *** empty log message ***
+*
 * Revision 1.20  2007/07/10 21:05:18  kirby
 * even more fixes
 *

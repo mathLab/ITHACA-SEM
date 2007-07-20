@@ -41,35 +41,38 @@ namespace Nektar
     namespace StdRegions
     {
 
-	StdMatrix StdTetExp::s_elmtmats;
-	
-	void StdTetExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-	{
-	    mat->SetLda(m_ncoeffs);
-	    mat->SetMatForm(eSymmetric_Positive);
+    StdMatrix StdTetExp::s_elmtmats;
+    
+    void StdTetExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+    {
+        mat->SetLda(m_ncoeffs);
+        mat->SetMatForm(eSymmetric_Positive);
       
-	    if(GeoFacType() == eRegular)
-	    {
-		switch(Mform)
-		{
-		case eMassMatrix: // definitions need adding 
-		    mat->SetMatForm(eSymmetric);	
-		    break;
-		case eLapMatrix:
-		    mat->SetMatForm(eSymmetric);	
-		    break;
-		default:
-		    ASSERTL0(false, "MatrixType not known");
-		    break;
-	    
-		}
-	    }
-	}
+        if(GeoFacType() == eRegular)
+        {
+        switch(Mform)
+        {
+        case eMassMatrix: // definitions need adding 
+            mat->SetMatForm(eSymmetric);    
+            break;
+        case eLapMatrix:
+            mat->SetMatForm(eSymmetric);    
+            break;
+        default:
+            ASSERTL0(false, "MatrixType not known");
+            break;
+        
+        }
+        }
+    }
       }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.2  2006/12/10 19:00:54  sherwin
+ * Modifications to handle nodal expansions
+ *
  * Revision 1.1  2006/05/04 18:58:33  kirby
  * *** empty log message ***
  *

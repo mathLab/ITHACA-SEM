@@ -43,65 +43,65 @@ namespace Nektar
 {
     namespace StdRegions
     {
-	
-	class StdExpMap
-	{
-	    
-	public:
-	    StdExpMap();
-	    StdExpMap(const int len);
-	    ~StdExpMap();
-	    
-	    void SetMapMemory(const int len);
+    
+    class StdExpMap
+    {
+        
+    public:
+        StdExpMap();
+        StdExpMap(const int len);
+        ~StdExpMap();
+        
+        void SetMapMemory(const int len);
 
-	    void SetMap(const int id, const int val)
-	    {
-		ASSERTL1(id < m_len,"id is larger than length of map");
+        void SetMap(const int id, const int val)
+        {
+        ASSERTL1(id < m_len,"id is larger than length of map");
 
-		m_map[id] = val;
-	    }
-	    
-	    inline int GetLen()
-	    {
-		return m_len;
-	    }
-	    
-	    inline const ConstArray<OneD, int>& GetMap() const
-	    {
+        m_map[id] = val;
+        }
+        
+        inline int GetLen()
+        {
+        return m_len;
+        }
+        
+        inline const ConstArray<OneD, int>& GetMap() const
+        {
                 return m_map;
-	    }
-	    
-	    int operator[](const int i) const
-	    {
-		
-		    if((i>=0) && (i<m_len))
-		    {
-		        return m_map[i];
-		    }
-		    ASSERTL0(false, "Invalid Index used in [] operator");
-		
-		    return m_map[0]; //should never be reached
-	    }
-	    
-	    int& operator[](const int i)
-	    {
-		    if((i>=0) && (i<m_len))
-		    {
-		        return m_map[i];
-		    }
-    		
-		    ASSERTL0(false, "Invalid Index used in [] operator");
-		    return m_map[0]; //should never be reached
-	    }
-	    
-	protected:
-	    
-	private:
-	    
-	    int m_len;
-	    Array<OneD, int> m_map;
-	};
-	
+        }
+        
+        int operator[](const int i) const
+        {
+        
+            if((i>=0) && (i<m_len))
+            {
+                return m_map[i];
+            }
+            ASSERTL0(false, "Invalid Index used in [] operator");
+        
+            return m_map[0]; //should never be reached
+        }
+        
+        int& operator[](const int i)
+        {
+            if((i>=0) && (i<m_len))
+            {
+                return m_map[i];
+            }
+            
+            ASSERTL0(false, "Invalid Index used in [] operator");
+            return m_map[0]; //should never be reached
+        }
+        
+    protected:
+        
+    private:
+        
+        int m_len;
+        Array<OneD, int> m_map;
+    };
+    
     } // end of namespace
 } // end of namespace
 
@@ -109,6 +109,9 @@ namespace Nektar
 
 /**
  * $Log: StdExpMap.h,v $
+ * Revision 1.8  2007/05/15 05:18:23  bnelson
+ * Updated to use the new Array object.
+ *
  * Revision 1.7  2007/03/29 19:35:08  bnelson
  * Replaced boost::shared_array with SharedArray
  *

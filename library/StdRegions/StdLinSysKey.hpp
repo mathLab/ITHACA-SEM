@@ -44,28 +44,28 @@ namespace Nektar
 {
     namespace StdRegions
     {
-	
+    
         class StdLinSysKey: public StdMatrixKey
         {  
         public:
             StdLinSysKey( MatrixType matrixType, ShapeType shapeType, 
-			  StdExpansion &stdExpansion):
-		StdMatrixKey(matrixType,shapeType,stdExpansion)
-	     {
-	     };
+              StdExpansion &stdExpansion):
+        StdMatrixKey(matrixType,shapeType,stdExpansion)
+         {
+         };
 ;
 
             StdLinSysKey( MatrixType matrixType, ShapeType shapeType, 
-			  StdExpansion &stdExpansion, LibUtilities::PointsType Ntype):
-		StdMatrixKey(matrixType,shapeType,stdExpansion,Ntype)
-	     {
-	     };
+              StdExpansion &stdExpansion, LibUtilities::PointsType Ntype):
+        StdMatrixKey(matrixType,shapeType,stdExpansion,Ntype)
+         {
+         };
 ;
-	    
+        
             virtual ~StdLinSysKey()
             {
             }
-	    
+        
         private:
 
         };
@@ -77,6 +77,9 @@ namespace Nektar
 
 /**
 * $Log: StdLinSysKey.hpp,v $
+* Revision 1.2  2007/04/10 14:00:45  sherwin
+* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+*
 * Revision 1.1  2007/02/28 19:05:11  sherwin
 * Moved key definitions to their own files to make things more transparent
 *

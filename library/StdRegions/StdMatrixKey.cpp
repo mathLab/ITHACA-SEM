@@ -40,35 +40,35 @@ namespace Nektar
 {
     namespace StdRegions
     {
-	
-	// Register Mass Matrix creator. 
-	StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
-				   const ShapeType shapeType,
-				   const StdExpansion &stdExpansion,
-				   LibUtilities::PointsType nodalType) :
+    
+    // Register Mass Matrix creator. 
+    StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+                   const ShapeType shapeType,
+                   const StdExpansion &stdExpansion,
+                   LibUtilities::PointsType nodalType) :
             m_shapeType(shapeType),
             m_base(stdExpansion.GetBase()),
             m_ncoeffs(stdExpansion.GetNcoeffs()),
-	    m_matrixType(matrixType),
-	    m_nodalPointsType(nodalType)
-	{
-	}
+        m_matrixType(matrixType),
+        m_nodalPointsType(nodalType)
+    {
+    }
 
 
-	// Register Mass Matrix creator. 
-	StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
-				   const ShapeType shapeType,
+    // Register Mass Matrix creator. 
+    StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+                   const ShapeType shapeType,
                                    const ConstArray<OneD,LibUtilities::BasisSharedPtr> &base,
-				   const int ncoeffs,
-				   LibUtilities::PointsType nodalType) :
+                   const int ncoeffs,
+                   LibUtilities::PointsType nodalType) :
             m_shapeType(shapeType),
             m_base(base),
             m_ncoeffs(ncoeffs),
-	    m_matrixType(matrixType),
-	    m_nodalPointsType(nodalType)
-	{
-	}
-	
+        m_matrixType(matrixType),
+        m_nodalPointsType(nodalType)
+    {
+    }
+    
         StdMatrixKey::StdMatrixKey(const StdMatrixKey& rhs) :
             m_shapeType(rhs.m_shapeType),
             m_base(rhs.m_base),
@@ -79,60 +79,60 @@ namespace Nektar
         }
 
         bool StdMatrixKey::opLess::operator()(const StdMatrixKey &lhs, 
-					      const StdMatrixKey &rhs)
-        {	    
-	    return (lhs.m_matrixType < rhs.m_matrixType);
-	}
+                          const StdMatrixKey &rhs)
+        {        
+        return (lhs.m_matrixType < rhs.m_matrixType);
+    }
 
-	bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs)
-	{   
-	    if(lhs.m_matrixType < rhs.m_matrixType)
-	    {
-		return true;
-	    }
-	    
-	    if(lhs.m_matrixType > rhs.m_matrixType)
-	    {
-		return false;
-	    }
-    	    
-	    if(lhs.m_ncoeffs < rhs.m_ncoeffs)
-	    {
-		return true;
-	    }
-    	    
-	    if(lhs.m_ncoeffs > rhs.m_ncoeffs)
-	    {
-		return false;
-	    }
-    	    
-	    for(unsigned int i = 0; i < ShapeTypeDimMap[lhs.m_shapeType]; ++i)
-	    {
-		if(lhs.m_base[i] < rhs.m_base[i])
-		{
-		    return true;
-		}
-	    }
-    	    
-	    if(lhs.m_nodalPointsType < rhs.m_nodalPointsType)
-	    {
-		return true;
-	    }
-	    
-	    if(lhs.m_nodalPointsType > rhs.m_nodalPointsType)
-	    {
-		return false;
-	    }
+    bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs)
+    {   
+        if(lhs.m_matrixType < rhs.m_matrixType)
+        {
+        return true;
+        }
+        
+        if(lhs.m_matrixType > rhs.m_matrixType)
+        {
+        return false;
+        }
+            
+        if(lhs.m_ncoeffs < rhs.m_ncoeffs)
+        {
+        return true;
+        }
+            
+        if(lhs.m_ncoeffs > rhs.m_ncoeffs)
+        {
+        return false;
+        }
+            
+        for(unsigned int i = 0; i < ShapeTypeDimMap[lhs.m_shapeType]; ++i)
+        {
+        if(lhs.m_base[i] < rhs.m_base[i])
+        {
+            return true;
+        }
+        }
+            
+        if(lhs.m_nodalPointsType < rhs.m_nodalPointsType)
+        {
+        return true;
+        }
+        
+        if(lhs.m_nodalPointsType > rhs.m_nodalPointsType)
+        {
+        return false;
+        }
 
-	    return false;
-	}
-	
+        return false;
+    }
+    
         std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs)
         {
             os << "MatrixType: " << MatrixTypeMap[rhs.GetMatrixType()] << ", ShapeType: " 
                 << ShapeTypeMap[rhs.GetShapeType()] << ", Ncoeffs: " << rhs.GetNcoeffs() 
                 << std::endl;
-	    
+        
             for(unsigned int i = 0; i < ShapeTypeDimMap[rhs.GetShapeType()]; ++i)
             {
                 os << rhs.GetBase()[i]->GetBasisKey();
@@ -145,6 +145,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.cpp,v $
+* Revision 1.7  2007/07/09 15:19:15  sherwin
+* Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
+*
 * Revision 1.6  2007/05/15 05:18:23  bnelson
 * Updated to use the new Array object.
 *

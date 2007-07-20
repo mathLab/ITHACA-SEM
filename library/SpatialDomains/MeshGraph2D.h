@@ -47,7 +47,7 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        typedef boost::shared_ptr<QuadGeom> SharedQuadGeomPtr;
+        typedef ptr<QuadGeom> SharedQuadGeomPtr;
         typedef std::vector< SharedQuadGeomPtr >      QuadGeomVector;
 
         class MeshGraph2D: 
@@ -229,6 +229,10 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.12  2007/06/07 15:54:19  pvos
+// Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
+// Also made corrections to various ASSERTL2 calls
+//
 // Revision 1.11  2007/06/05 16:36:55  pvos
 // Updated Explist2D ContExpList2D and corresponding demo-codes
 //

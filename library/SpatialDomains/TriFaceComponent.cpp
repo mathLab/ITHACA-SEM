@@ -56,7 +56,7 @@ namespace Nektar
 
             for(int i = 0; i < m_coordim; ++i)
             {
-	      m_xmap[i] = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+          m_xmap[i] = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
             }
         }
 
@@ -119,6 +119,9 @@ namespace Nektar
 
 //
 // $Log: TriFaceComponent.cpp,v $
+// Revision 1.5  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.4  2007/05/28 21:48:42  sherwin
 // Update for 2D functionality
 //

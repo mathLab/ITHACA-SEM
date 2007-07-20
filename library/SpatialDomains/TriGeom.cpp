@@ -46,9 +46,9 @@ namespace Nektar
         }
 
         TriGeom::TriGeom(const VertexComponentSharedPtr verts[], 
-			 const EdgeComponentSharedPtr edges[], 
-			 const StdRegions::EdgeOrientation eorient[]):
-	    TriFaceComponent(verts[0]->GetCoordim())
+             const EdgeComponentSharedPtr edges[], 
+             const StdRegions::EdgeOrientation eorient[]):
+        TriFaceComponent(verts[0]->GetCoordim())
         {
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+TriGeom::kNverts);
@@ -67,26 +67,25 @@ namespace Nektar
         }
 
         TriGeom::TriGeom(const EdgeComponentSharedPtr edges[], 
-			 const StdRegions::EdgeOrientation eorient[]):
-	    TriFaceComponent(edges[0]->GetCoordim())
+                         const StdRegions::EdgeOrientation eorient[]) :
+            TriFaceComponent(edges[0]->GetCoordim())
         {
-	    int j;
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
 
-	    for(j=0; j <kNedges; ++j)
-	    {
-		if(eorient[j] == StdRegions::eForwards)
-		{
-		    m_verts.push_back(edges[j]->GetVertex(0));
-		}
-		else
-		{
-		    m_verts.push_back(edges[j]->GetVertex(1));
-		}
-	    }
+            for(int j=0; j <kNedges; ++j)
+            {
+                if(eorient[j] == StdRegions::eForwards)
+                {
+                    m_verts.push_back(edges[j]->GetVertex(0));
+                }
+                else
+                {
+                    m_verts.push_back(edges[j]->GetVertex(1));
+                }
+            }
 
-            for (j=0; j<kNedges; ++j)
+            for (int j=0; j<kNedges; ++j)
             {
                 m_eorient[j] = eorient[j];
             }
@@ -146,8 +145,8 @@ namespace Nektar
 
             // set side 1 
             m_xmap[0]->MapTo((*m_edges[0])[0]->GetNcoeffs(),
-			     (*m_edges[0])[0]->GetBasisType(0),
-			     0,m_eorient[0],Map);
+                 (*m_edges[0])[0]->GetBasisType(0),
+                 0,m_eorient[0],Map);
 
             for(i = 0; i < m_coordim; ++i)
             {
@@ -178,9 +177,9 @@ namespace Nektar
 
             // set side 2
             m_xmap[0]->MapTo((*m_edges[1])[0]->GetNcoeffs(),
-			     (*m_edges[1])[0]->GetBasisType(0),
-			     1,(m_eorient[1]),Map);
-	    
+                 (*m_edges[1])[0]->GetBasisType(0),
+                 1,(m_eorient[1]),Map);
+        
             for(i = 0; i < m_coordim; ++i)
             {
                 coef  = (*m_edges[1])[i]->GetCoeffs();
@@ -192,8 +191,8 @@ namespace Nektar
 
             // set side 3
             m_xmap[0]->MapTo((*m_edges[2])[0]->GetNcoeffs(),
-			     (*m_edges[2])[0]->GetBasisType(0),
-			     2,(m_eorient[2]),Map);
+                 (*m_edges[2])[0]->GetBasisType(0),
+                 2,(m_eorient[2]),Map);
 
             for(i = 0; i < m_coordim; ++i)
             {
@@ -262,6 +261,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.10  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.9  2007/06/06 11:29:31  pvos
 // Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
 //

@@ -44,13 +44,13 @@ namespace Nektar
     {
         Geometry::Geometry():
             m_coordim(0), 
-            m_state(eNotFilled)	  
+            m_state(eNotFilled)      
         {
         }
 
         Geometry::Geometry(const int coordim):
             m_coordim(coordim),
-            m_state(eNotFilled)	  
+            m_state(eNotFilled)      
         {
         }
 
@@ -92,6 +92,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.cpp,v $
+// Revision 1.6  2007/07/10 22:21:00  jfrazier
+// Revision of geo fac manager to test for equality.
+//
 // Revision 1.5  2007/07/10 17:06:31  jfrazier
 // Added method and underlying structure to manage geomfactors.
 //

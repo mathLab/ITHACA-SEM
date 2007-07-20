@@ -51,59 +51,59 @@ namespace Nektar
     {
         class SegGeom: public EdgeComponent
         {
-        public:
-            SegGeom();
-            SegGeom(const int id, const VertexComponentSharedPtr vert1, const VertexComponentSharedPtr  vert2);
+            public:
+                SegGeom();
+                SegGeom(const int id, const VertexComponentSharedPtr vert1, const VertexComponentSharedPtr  vert2);
 
-            SegGeom(const SegGeom &in);
+                SegGeom(const SegGeom &in);
 
-            ~SegGeom();
+                ~SegGeom();
 
-            inline int GetVid(int i){
-                ASSERTL2((i >=0) && (i <= 1),"Verted id must be between 0 and 1");
+                inline int GetVid(int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 1),"Verted id must be between 0 and 1");
+                    return m_verts[i]->GetVid();
+                }
 
-                return m_verts[i]->GetVid();
-            }
+                void    FillGeom ();
 
-            void    FillGeom ();
+                StdRegions::ShapeType DetShapeType() const
+                {
+                    return StdRegions::eSegment;
+                }
 
-            StdRegions::ShapeType DetShapeType() 
-            {
-                return StdRegions::eSegment;
-            }
-
-            void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+                void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
 
-            inline void SetOwnData()
-            {
-                m_owndata = true; 
-            }
+                inline void SetOwnData()
+                {
+                    m_owndata = true; 
+                }
 
-            void WriteToFile(std::ofstream &outfile, const int dumpVar);
+                void WriteToFile(std::ofstream &outfile, const int dumpVar);
 
-        protected:
-            static const int kNverts = 2;
+            protected:
+                static const int kNverts = 2;
 
-            SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
+                SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
 
-            void GenGeomFactors(void);
+                void GenGeomFactors(void);
 
-        private:
-            bool m_owndata;   ///< Boolean indicating whether object owns the data
-            virtual StdRegions::ShapeType V_DetShapeType() 
-            {
-                return DetShapeType();
-            }
+            private:
+                bool m_owndata;   ///< Boolean indicating whether object owns the data
+                virtual StdRegions::ShapeType V_DetShapeType()  const
+                {
+                    return DetShapeType();
+                }
 
-            virtual void v_GenGeomFactors(void)
-            {
-                GenGeomFactors();
-            }
+                virtual void v_GenGeomFactors(void)
+                {
+                    GenGeomFactors();
+                }
         };
         
         // shorthand for boost pointer
-        typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;
+        typedef ptr<SegGeom> SegGeomSharedPtr;
         typedef std::vector< SegGeomSharedPtr > SegGeomVector;
         typedef std::vector< SegGeomSharedPtr >::iterator SegGeomVectorIter;
 
@@ -114,6 +114,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.10  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.9  2007/05/28 21:48:42  sherwin
 // Update for 2D functionality
 //

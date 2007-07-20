@@ -68,7 +68,7 @@ namespace Nektar
             /** \brief Return Shape of region, using ShapeType enum list. 
             *  i.e. Quadrilateral
             */
-            ShapeType DetShapeType()
+            ShapeType DetShapeType() const
             {
                 return eQuadrilateral;
             };
@@ -76,7 +76,7 @@ namespace Nektar
 
             /** \brief Fill outarray with mode \a mode of expansion
             *
-            *	Note for quadrilateral expansions _base[0] (i.e. p)  modes run 
+            *    Note for quadrilateral expansions _base[0] (i.e. p)  modes run 
             *  fastest
             */
             void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
@@ -165,7 +165,7 @@ namespace Nektar
                 const EdgeOrientation eorient, 
                 StdExpMap &Map);
 
-            const int GetEdgeNcoeffs(const int i)
+            const int GetEdgeNcoeffs(const int i) const
             {
                 ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
 
@@ -180,7 +180,7 @@ namespace Nektar
 
             }
 
-            const LibUtilities::BasisType GetEdgeBasisType(const int i)
+            const LibUtilities::BasisType GetEdgeBasisType(const int i) const
             {
                 ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
 
@@ -203,27 +203,27 @@ namespace Nektar
 
         private:
 
-            virtual int v_GetNverts()
+            virtual int v_GetNverts() const
             {
                 return 4;
             }
 
-            virtual int v_GetNedges()
+            virtual int v_GetNedges() const
             {
                 return 4;
             }
 
-            virtual int v_GetEdgeNcoeffs(const int i)
+            virtual int v_GetEdgeNcoeffs(const int i) const
             {
                 return GetEdgeNcoeffs(i);
             }
 
-            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i)
+            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
                 return GetEdgeBasisType(i);
             }
 
-            virtual ShapeType v_DetShapeType()
+            virtual ShapeType v_DetShapeType() const
             {
                 return DetShapeType();
             }
@@ -316,6 +316,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.18  2007/07/12 12:55:16  sherwin
+* Simplified Matrix Generation
+*
 * Revision 1.17  2007/07/10 20:41:51  kirby
 * more fixes
 *

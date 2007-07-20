@@ -90,127 +90,127 @@ namespace Nektar
              *  \end{array} \f$
              */
                 void PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-				     Array<OneD, NekDouble> &outarray_d0,
+                     Array<OneD, NekDouble> &outarray_d0,
                                      Array<OneD, NekDouble> &outarray_d1);
 
                 // Change names from Deriv to PhysDeriv
-		void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
-				Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-				Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray,
-				Array<OneD, NekDouble> &out_d3 = NullNekDouble1DArray)
-		{
-		    v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
-		}
+        void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
+                Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray,
+                Array<OneD, NekDouble> &out_d3 = NullNekDouble1DArray)
+        {
+            v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
+        }
 
                 void StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-				  Array<OneD, NekDouble> &outarray_d1,
+                  Array<OneD, NekDouble> &outarray_d1,
                                   Array<OneD, NekDouble> &outarray_d2)
                 {
                     v_StdPhysDeriv(inarray, outarray_d1, outarray_d2);
                 }
 
-	    /** \brief This function evaluates the expansion at a single
-	     *  (arbitrary) point of the domain
-	     *
+        /** \brief This function evaluates the expansion at a single
+         *  (arbitrary) point of the domain
+         *
              *  This function is a wrapper around the virtual function 
              *  \a v_PhysEvaluate()
-	     *
-	     *  Based on the value of the expansion at the quadrature points,
-	     *  this function calculates the value of the expansion at an 
-	     *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
-	     *  given by the pointer \a coords). This operation, equivalent to
-	     *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
-	     *  is evaluated using Lagrangian interpolants through the quadrature
-	     *  points:
-	     *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
-	     *
+         *
+         *  Based on the value of the expansion at the quadrature points,
+         *  this function calculates the value of the expansion at an 
+         *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
+         *  given by the pointer \a coords). This operation, equivalent to
+         *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
+         *  is evaluated using Lagrangian interpolants through the quadrature
+         *  points:
+         *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
+         *
              *  This function requires that the physical value array 
              *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys) 
              *  is set.
-	     * 
-	     *  \param coords the coordinates of the single point
-	     *  \return returns the value of the expansion at the single point
-	     */
-	     NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+         * 
+         *  \param coords the coordinates of the single point
+         *  \return returns the value of the expansion at the single point
+         */
+         NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
              {
                  return v_PhysEvaluate(coords);
              }
 
             /** \brief Evaluate a function at points coords which is assumed
-	     *  to be in local collapsed coordinate format. The function is
-	     *  assumed to be in physical space 
-	     */
-	     NekDouble PhysEvaluate2D(const ConstArray<OneD, NekDouble>& coords);
+         *  to be in local collapsed coordinate format. The function is
+         *  assumed to be in physical space 
+         */
+         NekDouble PhysEvaluate2D(const ConstArray<OneD, NekDouble>& coords);
 
-	     NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray, 
-				const ConstArray<OneD, NekDouble>& w0, 
-				const ConstArray<OneD, NekDouble>& w1);
+         NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray, 
+                const ConstArray<OneD, NekDouble>& w0, 
+                const ConstArray<OneD, NekDouble>& w1);
 
-	     int GetNodalPoints(const ConstArray<OneD, NekDouble> &x, 
-				const ConstArray<OneD, NekDouble> &y)
-	     {
-		 return v_GetNodalPoints(x, y);
-	     }
-	     
-	protected:
-	     
-	private:
-	     
-	     // Virtual Functions ----------------------------------------
-	     
-	     virtual int v_GetNverts() = 0;
-	     virtual int v_GetNedges() = 0;
-	     virtual int v_GetNfaces()
-	     {
-		 ASSERTL0(false, "This function is only valid for 3D "
-			  "expansions");
-		 return 0;
-	     }
-	     
-	     virtual ShapeType v_DetShapeType() = 0;
-	     virtual int v_GetNodalPoints(const ConstArray<OneD, NekDouble> &x,
-					  const ConstArray<OneD, NekDouble> &y)
+         int GetNodalPoints(const ConstArray<OneD, NekDouble> &x, 
+                const ConstArray<OneD, NekDouble> &y)
+         {
+         return v_GetNodalPoints(x, y);
+         }
+         
+    protected:
+         
+    private:
+         
+         // Virtual Functions ----------------------------------------
+         
+         virtual int v_GetNverts() const = 0;
+         virtual int v_GetNedges() const = 0;
+         virtual int v_GetNfaces() const
+         {
+            ASSERTL0(false, "This function is only valid for 3D "
+              "expansions");
+            return 0;
+         }
+         
+         virtual ShapeType v_DetShapeType() const = 0;
+         virtual int v_GetNodalPoints(const ConstArray<OneD, NekDouble> &x,
+                      const ConstArray<OneD, NekDouble> &y)
              {
-		 ASSERTL0(false, "This function is only valid for nodal "
-			  "expansions");
-		 return 0;
-	     }
-	     
-	     virtual DNekMatSharedPtr v_GenNBasisTransMatrix()
-	     {
+         ASSERTL0(false, "This function is only valid for nodal "
+              "expansions");
+         return 0;
+         }
+         
+         virtual DNekMatSharedPtr v_GenNBasisTransMatrix()
+         {
             ASSERTL0(false, "This function is only valid for nodal "
-			  "expansions");
+              "expansions");
             return DNekMatSharedPtr(static_cast<DNekMat*>(0));
-	     }
-	     
-	     virtual int v_GetCoordim(void)
+         }
+         
+         virtual int v_GetCoordim(void)
              {
-		 return 2;
-	     }
-	     
-	     virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
-				     Array<OneD, NekDouble> &outarray) = 0;
-	     virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
-				     Array<OneD, NekDouble> &outarray) = 0;
-	     
-	     virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray ) = 0;
-	     
-	     virtual void   v_PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
-					 Array<OneD, NekDouble> &out_d0,
-					 Array<OneD, NekDouble> &out_d1,
-					 Array<OneD, NekDouble> &out_d2) = 0;
-	     
-	     virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
-					 Array<OneD, NekDouble> &outarray_d1, 
-					 Array<OneD, NekDouble> &outarray_d2) = 0;
-	     
-	     virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
-	     {
-		 return PhysEvaluate2D(coords);
-	     }
+         return 2;
+         }
+         
+         virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                     Array<OneD, NekDouble> &outarray) = 0;
+         virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                     Array<OneD, NekDouble> &outarray) = 0;
+         
+         virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray ) = 0;
+         
+         virtual void   v_PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
+                     Array<OneD, NekDouble> &out_d0,
+                     Array<OneD, NekDouble> &out_d1,
+                     Array<OneD, NekDouble> &out_d2) = 0;
+         
+         virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+                     Array<OneD, NekDouble> &outarray_d1, 
+                     Array<OneD, NekDouble> &outarray_d2) = 0;
+         
+         virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+         {
+         return PhysEvaluate2D(coords);
+         }
         };
 
-        typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
+        typedef ptr<StdExpansion2D> StdExpansion2DSharedPtr;
 
     } //end of namespace
 } //end of namespace
@@ -219,6 +219,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.14  2007/05/30 20:49:13  sherwin
+* Updates to do with LocalRegions and SpatialDomains
+*
 * Revision 1.13  2007/05/15 05:18:23  bnelson
 * Updated to use the new Array object.
 *

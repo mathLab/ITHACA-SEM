@@ -68,7 +68,7 @@ namespace Nektar
             /** \brief Return Shape of region, using  ShapeType enum list.
             *  i.e. Segment
             */
-            ShapeType DetShapeType()
+            ShapeType DetShapeType() const
             {
                 return eSegment;
             };
@@ -214,12 +214,12 @@ namespace Nektar
 
         private:
 
-            virtual int v_GetNverts()
+            virtual int v_GetNverts() const
             {
                 return 2;
             } 
 
-            virtual ShapeType v_DetShapeType()
+            virtual ShapeType v_DetShapeType() const
             {
                 return DetShapeType();
             };
@@ -336,7 +336,7 @@ namespace Nektar
 
         };
 
-        typedef boost::shared_ptr<StdSegExp> StdSegExpSharedPtr;
+        typedef ptr<StdSegExp> StdSegExpSharedPtr;
 
     } //end of namespace
 } //end of namespace
@@ -345,6 +345,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.26  2007/07/16 18:28:44  sherwin
+* Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
+*
 * Revision 1.25  2007/07/12 12:55:16  sherwin
 * Simplified Matrix Generation
 *

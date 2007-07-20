@@ -434,107 +434,110 @@ namespace Nektar
             return  PhysEvaluate(coords); 
         }
 
-	void StdHexExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-	{
-	    mat->SetLda(m_ncoeffs);
-	    mat->SetMatForm(eSymmetric_Positive);
+    void StdHexExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
+    {
+        mat->SetLda(m_ncoeffs);
+        mat->SetMatForm(eSymmetric_Positive);
       
-	    if(GeoFacType() == eRegular)
-	    {
-		switch(Mform)
-		{
-		case eMassMatrix:
-		    switch(m_base[2]->GetBasisType())
-		    {
-		    case eOrtho_A: case eLegendre:
-			if(m_base[2]->ExactIprodInt())
-			{
-			    goto eHexOrtho1;
-			}
-			break;
-		    case eGLL_Lagrange:
-			if(m_base[1]->Collocation())
-			{
-			    goto eHexOrtho1;
-			}
-			break;
-		    case eFourier:
-			goto eHexOrtho1;
-			break;
-		    eHexOrtho1:
-			{
-			    switch(m_base[1]->GetBasisType())
-			    {
-			    case eOrtho_A: case eLegendre:
-				if(m_base[1]->ExactIprodInt())
-				{
-				    goto eHexOrtho2;
-				}
-				break;
-			    case eGLL_Lagrange:
-				if(m_base[1]->Collocation())
-				{
-				    goto eHexOrtho2;
+        if(GeoFacType() == eRegular)
+        {
+        switch(Mform)
+        {
+        case eMassMatrix:
+            switch(m_base[2]->GetBasisType())
+            {
+            case eOrtho_A: case eLegendre:
+            if(m_base[2]->ExactIprodInt())
+            {
+                goto eHexOrtho1;
+            }
+            break;
+            case eGLL_Lagrange:
+            if(m_base[1]->Collocation())
+            {
+                goto eHexOrtho1;
+            }
+            break;
+            case eFourier:
+            goto eHexOrtho1;
+            break;
+            eHexOrtho1:
+            {
+                switch(m_base[1]->GetBasisType())
+                {
+                case eOrtho_A: case eLegendre:
+                if(m_base[1]->ExactIprodInt())
+                {
+                    goto eHexOrtho2;
+                }
+                break;
+                case eGLL_Lagrange:
+                if(m_base[1]->Collocation())
+                {
+                    goto eHexOrtho2;
                                         }
-				break;
-			    case eFourier:
-				goto eHexOrtho2;
-				break;
-			    default:
-				mat->SetMatForm(eSymmetric_Positive_Banded);
-				mat->SetBwidth(m_base[0]->GetBasisOrder()*m_base[1]->GetBasisOrder());
-				break;
-			    eHexOrtho2:
-				{
-				    switch(m_base[0]->GetBasisType())
-				    {
-				    case eOrtho_A: case eLegendre:
-					if(m_base[0]->ExactIprodInt())
-					{
-					    goto eHexOrtho3;
-					}
-					break;
-				    case eGLL_Lagrange:
-					if(m_base[0]->Collocation())
-					{
-					    goto eHexOrtho3;
-					}
-					break;
-				    case eFourier:
-					goto eHexOrtho3;
-					break;
-				    default:
-					mat->SetMatForm(eSymmetric_Positive_Banded);
-					mat->SetBwidth(m_base[0]->GetBasisOrder());
-					break;
-				    eHexOrtho3:
-					{
-					    mat->SetMatForm(eSymmetric_Positive_Banded);
-					    mat->SetBwidth(1);
-					    break;
-					}
-				    }
-				}
-			    }
-			}
-		    }
-		    break;
-		case eLapMatrix:
-		    mat->SetMatForm(eSymmetric);	
-		    break;
-		default:
-		    ASSERTL0(false, "MatrixType not known");
-		    break;
-	    
-		}
-	    }
-	}
+                break;
+                case eFourier:
+                goto eHexOrtho2;
+                break;
+                default:
+                mat->SetMatForm(eSymmetric_Positive_Banded);
+                mat->SetBwidth(m_base[0]->GetBasisOrder()*m_base[1]->GetBasisOrder());
+                break;
+                eHexOrtho2:
+                {
+                    switch(m_base[0]->GetBasisType())
+                    {
+                    case eOrtho_A: case eLegendre:
+                    if(m_base[0]->ExactIprodInt())
+                    {
+                        goto eHexOrtho3;
+                    }
+                    break;
+                    case eGLL_Lagrange:
+                    if(m_base[0]->Collocation())
+                    {
+                        goto eHexOrtho3;
+                    }
+                    break;
+                    case eFourier:
+                    goto eHexOrtho3;
+                    break;
+                    default:
+                    mat->SetMatForm(eSymmetric_Positive_Banded);
+                    mat->SetBwidth(m_base[0]->GetBasisOrder());
+                    break;
+                    eHexOrtho3:
+                    {
+                        mat->SetMatForm(eSymmetric_Positive_Banded);
+                        mat->SetBwidth(1);
+                        break;
+                    }
+                    }
+                }
+                }
+            }
+            }
+            break;
+        case eLapMatrix:
+            mat->SetMatForm(eSymmetric);    
+            break;
+        default:
+            ASSERTL0(false, "MatrixType not known");
+            break;
+        
+        }
+        }
+    }
   
     }//end namespace
 }//end namespace
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.6  2007/01/18 18:44:45  bnelson
+* Updates to compile on Visual Studio 2005.
+*
 * Revision 1.5  2007/01/17 16:36:57  pvos
 * updating doxygen documentation
 *

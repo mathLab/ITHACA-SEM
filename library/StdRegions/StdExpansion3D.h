@@ -51,57 +51,57 @@ namespace Nektar
         public:
             StdExpansion3D();
             StdExpansion3D(int numcoeffs, const LibUtilities::BasisKey &Ba, 
-			    const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc);
+                const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc);
             StdExpansion3D(const StdExpansion3D &T);
             ~StdExpansion3D();
 
             // Differentiation
 
-	    /** \brief Calculate the 3D derivative in the local 
-	     *  tensor/collapsed coordinate at the physical points 
-	     *	
-	     *	This function is independent of the expansion basis and can
-	     *	therefore be defined for all tensor product distribution of
-	     *	quadrature points in a generic manner.  The key operations are:
-	     *
-	     *	- \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
-	     *	- \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
-	     *	- \f$ \frac{d}{d\eta_3} \rightarrow {\bf D_2 u } \f$
-	     *
-	     *  \param inarray array of physical points to be differentiated
-	     *  \param  outarray_d1 the resulting array of derivative in the 
-	     *  \f$\eta_1\f$ direction will be stored in outarray_d1 as output
-	     *  of the function
-	     *  \param outarray_d2 the resulting array of derivative in the 
-	     *  \f$\eta_2\f$ direction will be stored in outarray_d2 as output 
-	     *  of the function
-	     *  \param outarray_d3 the resulting array of derivative in the 
-	     *  \f$\eta_3\f$ direction will be stored in outarray_d3 as output 
-	     *  of the function
-	     */
+        /** \brief Calculate the 3D derivative in the local 
+         *  tensor/collapsed coordinate at the physical points 
+         *    
+         *    This function is independent of the expansion basis and can
+         *    therefore be defined for all tensor product distribution of
+         *    quadrature points in a generic manner.  The key operations are:
+         *
+         *    - \f$ \frac{d}{d\eta_1} \rightarrow {\bf D^T_0 u } \f$ \n
+         *    - \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
+         *    - \f$ \frac{d}{d\eta_3} \rightarrow {\bf D_2 u } \f$
+         *
+         *  \param inarray array of physical points to be differentiated
+         *  \param  outarray_d1 the resulting array of derivative in the 
+         *  \f$\eta_1\f$ direction will be stored in outarray_d1 as output
+         *  of the function
+         *  \param outarray_d2 the resulting array of derivative in the 
+         *  \f$\eta_2\f$ direction will be stored in outarray_d2 as output 
+         *  of the function
+         *  \param outarray_d3 the resulting array of derivative in the 
+         *  \f$\eta_3\f$ direction will be stored in outarray_d3 as output 
+         *  of the function
+         */
             void PhysTensorDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-				 Array<OneD, NekDouble> &outarray_d1,
-				 Array<OneD, NekDouble> &outarray_d2, 
-				 Array<OneD, NekDouble> &outarray_d3);
+                 Array<OneD, NekDouble> &outarray_d1,
+                 Array<OneD, NekDouble> &outarray_d2, 
+                 Array<OneD, NekDouble> &outarray_d3);
 
             /** \brief Evaluate a function at points coords which is assumed
-	     *  to be in local collapsed coordinate format. The function is
-	     *  assumed to be in physical space
-	     */
+         *  to be in local collapsed coordinate format. The function is
+         *  assumed to be in physical space
+         */
             NekDouble PhysEvaluate(ConstArray<OneD, NekDouble> &coords);
 
             void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-			   Array<OneD, NekDouble> &outarray_d0, 
-			   Array<OneD, NekDouble> &outarray_d1, 
-			   Array<OneD, NekDouble> &outarray_d2)
+               Array<OneD, NekDouble> &outarray_d0, 
+               Array<OneD, NekDouble> &outarray_d1, 
+               Array<OneD, NekDouble> &outarray_d2)
             {
                 v_PhysDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
             }
 
             void StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
-			  Array<OneD, NekDouble> &outarray_d0,
-			  Array<OneD, NekDouble> &outarray_d1,  
-			  Array<OneD, NekDouble> &outarray_d2)
+              Array<OneD, NekDouble> &outarray_d0,
+              Array<OneD, NekDouble> &outarray_d1,  
+              Array<OneD, NekDouble> &outarray_d2)
             {
                 v_StdPhysDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
             }
@@ -113,13 +113,13 @@ namespace Nektar
 
             // Virtual Functions ----------------------------------------
 
-	    virtual int v_GetNverts() = 0;
-	    virtual int v_GetNedges() = 0;
-	    virtual int v_GetNfaces() = 0;
+            virtual int v_GetNverts() const = 0;
+            virtual int v_GetNedges() const = 0;
+            virtual int v_GetNfaces() const = 0;
 
             virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray)   = 0;
             virtual void v_GenLapMatrix (Array<OneD, NekDouble> & outarray)   = 0;
-            virtual ShapeType v_DetShapeType()                = 0;
+            virtual ShapeType v_DetShapeType() const = 0;
 
             virtual DNekMatSharedPtr v_GetMassMatrix()        = 0;
             virtual DNekMatSharedPtr v_GetLapMatrix()         = 0;
@@ -136,26 +136,26 @@ namespace Nektar
             }
 
             virtual void   v_BwdTrans (const ConstArray<OneD, NekDouble> &inarray, 
-				       Array<OneD, NekDouble> &outarray)      = 0;
+                       Array<OneD, NekDouble> &outarray)      = 0;
             virtual void   v_FwdTrans (const ConstArray<OneD, NekDouble> &inarray,
-				       Array<OneD, NekDouble> &outarray)      = 0;
+                       Array<OneD, NekDouble> &outarray)      = 0;
 
             virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble> &inarray ) = 0;
             virtual NekDouble v_Evaluate(const ConstArray<OneD, NekDouble> &coords) = 0;
 
             virtual void   v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-				       Array<OneD, NekDouble> &outarray_d0,
-				       Array<OneD, NekDouble> &outarray_d1, 
-				       Array<OneD, NekDouble> &outarray_d2) = 0;
+                       Array<OneD, NekDouble> &outarray_d0,
+                       Array<OneD, NekDouble> &outarray_d1, 
+                       Array<OneD, NekDouble> &outarray_d2) = 0;
             virtual void   v_StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-					  Array<OneD, NekDouble> &outarray_d0,
-					  Array<OneD, NekDouble> &outarray_d1,
-					  Array<OneD, NekDouble> &outarray_d2) = 0;
+                      Array<OneD, NekDouble> &outarray_d0,
+                      Array<OneD, NekDouble> &outarray_d1,
+                      Array<OneD, NekDouble> &outarray_d2) = 0;
 
-	    virtual int v_GetCoordim(void)
-	    {
+        virtual int v_GetCoordim(void)
+        {
                 return 3; 
-	    }
+        }
 
         };
 
@@ -166,6 +166,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.8  2007/05/15 05:18:23  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.7  2007/04/10 14:00:45  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

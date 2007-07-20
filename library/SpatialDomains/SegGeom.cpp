@@ -140,7 +140,7 @@ namespace Nektar
             {
                 nq   = m_xmap[i]->GetNumPoints(0);
                 pts  = m_xmap[i]->GetPhys();
-                len  += (pts[nq-1]-pts[0])*(pts[nq-1]-pts[0]);	
+                len  += (pts[nq-1]-pts[0])*(pts[nq-1]-pts[0]);    
                 xi   += (coords[i]-pts[0])*(coords[i]-pts[0]);
             }
 
@@ -200,6 +200,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.16  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.15  2007/06/06 11:29:31  pvos
 // Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
 //

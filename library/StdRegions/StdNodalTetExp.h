@@ -106,79 +106,79 @@ namespace Nektar
                 const double *inarray, double *outarray);
 
   private:
-    virtual ShapeType V_DetShapeType()
+    virtual ShapeType V_DetShapeType() const
     {
-		return DetShapeType();
+        return DetShapeType();
     }
 
     virtual double V_Integral(const double *inarray )
     {
-		return Integral(inarray);
+        return Integral(inarray);
     }
 
     virtual void V_IProduct_WRT_B(const double * inarray, double * outarray)
     {
-		IProductWRTBase(inarray,outarray);
+        IProductWRTBase(inarray,outarray);
     }
 
     virtual void V_FillMode(const int mode, double *outarray)
     {
-		FillMode(mode,outarray);
+        FillMode(mode,outarray);
     }
 
     virtual void V_GenMassMatrix(double * outarray)
     {
-		GenMassMatrix(outarray);
+        GenMassMatrix(outarray);
     }
 
     virtual void V_GenLapMatrix(double * outarray)
     {
-		GenLapMatrix(outarray);
+        GenLapMatrix(outarray);
     }
 
     virtual StdMatContainer * V_GetMassMatrix()
     {
-		return GetMassMatrix();
+        return GetMassMatrix();
     }
 
     virtual StdMatContainer * V_GetLapMatrix()
     {
-		return GetLapMatrix();
+        return GetLapMatrix();
     }
 
     virtual void V_BwdTrans(double * outarray)
     {
-		BwdTrans(outarray);
+        BwdTrans(outarray);
     }
 
     virtual void V_FwdTrans(const double * inarray)
     {
-		FwdTrans(inarray);
+        FwdTrans(inarray);
     }
 
     virtual double V_Evaluate(double x, double y, double z)
     {
-		return Evaluate(x,y,z);
+        return Evaluate(x,y,z);
     }
 
     virtual double V_Linf(const double *sol)
     {
-		return Linf(sol);
+        return Linf(sol);
     }
 
     virtual double V_Linf()
     {
-		return Linf();
+        return Linf();
     }
 
     virtual double V_L2(const double *sol)
     {
-		return L2(sol);
+        return L2(sol);
     }
 
     virtual double V_L2()
     {
-		return L2();
+        return L2();
     }
   };
 
@@ -188,6 +188,9 @@ namespace Nektar
 
 /**
  * $Log: StdNodalTetExp.h,v $
+ * Revision 1.2  2006/06/13 18:05:02  sherwin
+ * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+ *
  * Revision 1.1  2006/05/04 18:58:32  kirby
  * *** empty log message ***
  *

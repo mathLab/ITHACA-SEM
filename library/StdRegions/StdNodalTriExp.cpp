@@ -325,7 +325,7 @@ namespace Nektar
             const int eid, 
             const EdgeOrientation eorient,
             StdExpMap &Map)
-        {	    
+        {        
             MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
         }
 
@@ -335,6 +335,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.15  2007/07/12 12:55:16  sherwin
+* Simplified Matrix Generation
+*
 * Revision 1.14  2007/07/11 13:35:17  kirby
 * *** empty log message ***
 *

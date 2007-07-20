@@ -42,98 +42,98 @@ namespace Nektar
     {
 
         StdSegExp::StdSegExp(const LibUtilities::BasisKey &Ba):
-	    StdExpansion1D(Ba.GetNumModes(),Ba)
-	{    
-	}
+        StdExpansion1D(Ba.GetNumModes(),Ba)
+    {    
+    }
 
-	StdSegExp::StdSegExp(const StdSegExp &T):
-	    StdExpansion1D(T)
-	{
-	}
+    StdSegExp::StdSegExp(const StdSegExp &T):
+        StdExpansion1D(T)
+    {
+    }
 
-	StdSegExp::~StdSegExp()
-	{    
-	}
-	
-	
-	//----------------------------
-	// Integration Methods
-	//----------------------------
-	
-	double StdSegExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
-	{
-	    NekDouble Int = 0.0;
-	    ConstArray<OneD, NekDouble> z;
-	    ConstArray<OneD, NekDouble> w0;
-	    int    nquad0 = m_base[0]->GetNumPoints();
-	    Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nquad0);
-	    
-	    ExpPointsProperties(0)->GetZW(z,w0);
-	    
-	    // multiply by integration constants 
-	    Vmath::Vmul(nquad0,inarray.get(),1,w0.get(),1,tmp.get(),1);
-	    
-	    Int = Vmath::Vsum(nquad0, tmp.get(),1);
-	    
-	    return Int;
-	}
-	
-	void StdSegExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& base, 
-					const ConstArray<OneD, NekDouble>& inarray, 
-					Array<OneD, NekDouble> &outarray, 
-					int coll_check)
-	{
-	    int    nquad = m_base[0]->GetNumPoints();
-	    ConstArray<OneD, NekDouble> z;
-	    ConstArray<OneD, NekDouble> w;
-	    Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad);
-	    
-	    ExpPointsProperties(0)->GetZW(z,w);
-	    
-	    Vmath::Vmul(nquad,inarray.get(),1,w.get(),1,tmp.get(),1);
-	    
-	    if(coll_check&&m_base[0]->Collocation())
-	    {
-		Vmath::Vcopy(nquad,&tmp[0],1,&outarray[0],1);
-	    }
-	    else
-	    {
-		Blas::Dgemv('T',nquad,m_base[0]->GetNumModes(),1.0,base.get(),nquad,
-			    &tmp[0],1,0.0,outarray.get(),1);
-	    }    
-	}
-	
-	void StdSegExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
-					Array<OneD, NekDouble> &outarray)
-	{
-	    IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
-	}
-	
+    StdSegExp::~StdSegExp()
+    {    
+    }
+    
+    
+    //----------------------------
+    // Integration Methods
+    //----------------------------
+    
+    double StdSegExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
+    {
+        NekDouble Int = 0.0;
+        ConstArray<OneD, NekDouble> z;
+        ConstArray<OneD, NekDouble> w0;
+        int    nquad0 = m_base[0]->GetNumPoints();
+        Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nquad0);
+        
+        ExpPointsProperties(0)->GetZW(z,w0);
+        
+        // multiply by integration constants 
+        Vmath::Vmul(nquad0,inarray.get(),1,w0.get(),1,tmp.get(),1);
+        
+        Int = Vmath::Vsum(nquad0, tmp.get(),1);
+        
+        return Int;
+    }
+    
+    void StdSegExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& base, 
+                    const ConstArray<OneD, NekDouble>& inarray, 
+                    Array<OneD, NekDouble> &outarray, 
+                    int coll_check)
+    {
+        int    nquad = m_base[0]->GetNumPoints();
+        ConstArray<OneD, NekDouble> z;
+        ConstArray<OneD, NekDouble> w;
+        Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad);
+        
+        ExpPointsProperties(0)->GetZW(z,w);
+        
+        Vmath::Vmul(nquad,inarray.get(),1,w.get(),1,tmp.get(),1);
+        
+        if(coll_check&&m_base[0]->Collocation())
+        {
+        Vmath::Vcopy(nquad,&tmp[0],1,&outarray[0],1);
+        }
+        else
+        {
+        Blas::Dgemv('T',nquad,m_base[0]->GetNumModes(),1.0,base.get(),nquad,
+                &tmp[0],1,0.0,outarray.get(),1);
+        }    
+    }
+    
+    void StdSegExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+                    Array<OneD, NekDouble> &outarray)
+    {
+        IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
+    }
+    
         void StdSegExp::IProductWRTDerivBase(const int dir, 
                                              const ConstArray<OneD, NekDouble>& inarray, 
                                              Array<OneD, NekDouble> & outarray)
-	{
+    {
             ASSERTL1(dir >= 0 &&dir < 1,"input dir is out of range");
 
-	    IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
-	}
+        IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
+    }
 
-	void StdSegExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
-	{
-	    int   nquad = m_base[0]->GetNumPoints();
-	    const NekDouble * base  = m_base[0]->GetBdata().get();
-	    
-	    ASSERTL2(mode <= m_ncoeffs , 
-		     "calling argument mode is larger than total expansion order");
-	    
-	    Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
-	}
+    void StdSegExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+    {
+        int   nquad = m_base[0]->GetNumPoints();
+        const NekDouble * base  = m_base[0]->GetBdata().get();
+        
+        ASSERTL2(mode <= m_ncoeffs , 
+             "calling argument mode is larger than total expansion order");
+        
+        Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
+    }
 
-	
-	DNekMatSharedPtr StdSegExp::GenMatrix(MatrixType mtype) 
-	{
-	    DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mtype);
-	    
+    
+    DNekMatSharedPtr StdSegExp::GenMatrix(MatrixType mtype) 
+    {
+        DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mtype);
+        
             switch(mtype)
             {
             case eMass:
@@ -145,126 +145,129 @@ namespace Nektar
                 }
                 break;
             }
-	    
-	    return Mat;
-	}
-	
-	//----------------------------
-	// Differentiation Methods
-	//-----------------------------
-	
-	void StdSegExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-				  Array<OneD, NekDouble> &out_d0,
-				  Array<OneD, NekDouble> &out_d1,
-				  Array<OneD, NekDouble> &out_d2)
-	{
-	    PhysTensorDeriv(inarray,out_d0);
-	}
-	
-	//----------------------------
-	// Evaluation Methods
-	//----------------------------
-	
-	void StdSegExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
-				 Array<OneD, NekDouble> &outarray)
-	{
-	    int  nquad = m_base[0]->GetNumPoints();
-	    
-	    if(m_base[0]->Collocation())
-	    {
-		Vmath::Vcopy(nquad,&inarray[0],1,&outarray[0],1);
-	    }
-	    else
-	    {
-		const NekDouble *base  = m_base[0]->GetBdata().get();
-		
-		Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,base,nquad,
-			    &inarray[0],1,0.0,&outarray[0],1);
-	    }
-	}
-	
-	void StdSegExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
-	{
-	    if(m_base[0]->Collocation())
-	    {
-		Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
-	    }
-	    else
-	    {
-		IProductWRTBase(inarray,outarray);
-		
-		// get Mass matrix inverse
-		StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
-		DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
-		
+        
+        return Mat;
+    }
+    
+    //----------------------------
+    // Differentiation Methods
+    //-----------------------------
+    
+    void StdSegExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+                  Array<OneD, NekDouble> &out_d0,
+                  Array<OneD, NekDouble> &out_d1,
+                  Array<OneD, NekDouble> &out_d2)
+    {
+        PhysTensorDeriv(inarray,out_d0);
+    }
+    
+    //----------------------------
+    // Evaluation Methods
+    //----------------------------
+    
+    void StdSegExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                 Array<OneD, NekDouble> &outarray)
+    {
+        int  nquad = m_base[0]->GetNumPoints();
+        
+        if(m_base[0]->Collocation())
+        {
+        Vmath::Vcopy(nquad,&inarray[0],1,&outarray[0],1);
+        }
+        else
+        {
+        const NekDouble *base  = m_base[0]->GetBdata().get();
+        
+        Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,base,nquad,
+                &inarray[0],1,0.0,&outarray[0],1);
+        }
+    }
+    
+    void StdSegExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
+    {
+        if(m_base[0]->Collocation())
+        {
+        Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
+        }
+        else
+        {
+        IProductWRTBase(inarray,outarray);
+        
+        // get Mass matrix inverse
+        StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
+        DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
+        
                 // copy inarray in case inarray == outarray
                 DNekVec in (m_ncoeffs,outarray);
                 DNekVec out(m_ncoeffs,outarray,eWrapper);
                 
                 out = (*matsys)*in;
-	    }
-	}
-	
-	NekDouble StdSegExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& Lcoord)
-	{
-	    return StdExpansion1D::PhysEvaluate1D(Lcoord);
-	}
-	
-	
-	void StdSegExp::MapTo(EdgeOrientation dir, StdExpMap& Map)
-	{
-	    
-	    if(Map.GetLen() < 2)
-	    {
-		Map.SetMapMemory(2);
-	    }
-	    
-	    switch(m_base[0]->GetBasisType())
-	    {
-	    case LibUtilities::eGLL_Lagrange:
-		{
-		    int order = m_base[0]->GetNumModes();
-		    if(dir == eForwards)
-		    {
-			Map[0] = 0;
-			Map[1] = order-1;
-		    }
-		    else
-		    {
-			Map[0] = order-1;
-			Map[1] = 0;
-		    }
-		}
-		break;
-	    case LibUtilities::eModified_A:
-		
-		if(dir == eForwards)
-		{
-		    Map[0] = 0;
-		    Map[1] = 1;
-		}
-		else
-		{
-		    Map[0] = 1;
-		    Map[1] = 0;
-		}
-		break;
-	    default:
-		ASSERTL0(0,"Mapping not defined for this expansion");
-	    }
-	}    
-	
-	void StdSegExp::GetCoords(Array<OneD, NekDouble> &coords)
-	{
-	    Blas::Dcopy(GetNumPoints(0),ExpPointsProperties(0)->GetZ().get(),
-			1,&coords[0],1);
-	}
+        }
+    }
+    
+    NekDouble StdSegExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& Lcoord)
+    {
+        return StdExpansion1D::PhysEvaluate1D(Lcoord);
+    }
+    
+    
+    void StdSegExp::MapTo(EdgeOrientation dir, StdExpMap& Map)
+    {
+        
+        if(Map.GetLen() < 2)
+        {
+        Map.SetMapMemory(2);
+        }
+        
+        switch(m_base[0]->GetBasisType())
+        {
+        case LibUtilities::eGLL_Lagrange:
+        {
+            int order = m_base[0]->GetNumModes();
+            if(dir == eForwards)
+            {
+            Map[0] = 0;
+            Map[1] = order-1;
+            }
+            else
+            {
+            Map[0] = order-1;
+            Map[1] = 0;
+            }
+        }
+        break;
+        case LibUtilities::eModified_A:
+        
+        if(dir == eForwards)
+        {
+            Map[0] = 0;
+            Map[1] = 1;
+        }
+        else
+        {
+            Map[0] = 1;
+            Map[1] = 0;
+        }
+        break;
+        default:
+        ASSERTL0(0,"Mapping not defined for this expansion");
+        }
+    }    
+    
+    void StdSegExp::GetCoords(Array<OneD, NekDouble> &coords)
+    {
+        Blas::Dcopy(GetNumPoints(0),ExpPointsProperties(0)->GetZ().get(),
+            1,&coords[0],1);
+    }
 
     }//end namespace
 }//end namespace
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.38  2007/07/12 12:55:16  sherwin
+* Simplified Matrix Generation
+*
 * Revision 1.37  2007/07/11 13:35:18  kirby
 * *** empty log message ***
 *

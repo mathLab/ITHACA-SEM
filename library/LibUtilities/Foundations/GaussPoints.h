@@ -37,7 +37,7 @@
 #define GAUSSPOINTS_H
 
 #include <math.h>
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/BasicUtils/SharedPtr.hpp>
 #include <boost/bind.hpp>
 #include <boost/mem_fn.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
@@ -58,18 +58,18 @@ namespace Nektar
             {
             }            
 
-            static boost::shared_ptr< Points<NekDouble> > Create(const PointsKey &pkey);
+            static ptr< Points<NekDouble> > Create(const PointsKey &pkey);
 
-            boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
+            ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x);
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x);
+            const ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
+            const ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x);
+            const ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x);
 
             GaussPoints(const PointsKey &pkey):PointsBaseType(pkey)
             {
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
-		            boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPLegendre),

@@ -143,7 +143,7 @@ namespace Nektar
             unsigned int npts = m_pointsKey.GetNumPoints();
             
             PointsKey nodalTriFeketeKey(npts, eNodalTriFekete);
-            boost::shared_ptr<PointsBaseType> ptr = PointsManager()[nodalTriFeketeKey];
+            ptr<PointsBaseType> ptr = PointsManager()[nodalTriFeketeKey];
                 ConstArray<TwoD, NekDouble> z;
                 ConstArray<OneD, NekDouble> w;
 
@@ -455,7 +455,7 @@ namespace Nektar
 //             }
 // 
 //             // Form the Vandermonde matrix from the basis functions and point locations
-//             boost::shared_ptr<NekMatrix< DataType, eFull > > vandermondePtr( new NekMatrix< DataType, eFull >(nPts,nPts) );
+//             ptr<NekMatrix< DataType, eFull > > vandermondePtr( new NekMatrix< DataType, eFull >(nPts,nPts) );
 //             NekMatrix< DataType, eFull > & vandermonde = *vandermondePtr;
 // 
 //             
@@ -475,18 +475,18 @@ namespace Nektar
 // //             LinearSystem<NekMatrix<DataType, eFull> > linsys(vandermondePtr);
 // //             //DataType *x = linsys.SolveTranspose(b).GetPtr();
 // //             //NekVector<DataType> wHat( nPts, x );
-// //             //boost::shared_ptr<NekVector<DataType> > wHat( NekVector<DataType>(nPts, w ) );
+// //             //ptr<NekVector<DataType> > wHat( NekVector<DataType>(nPts, w ) );
 // //             //linsys.SolveTranspose(wHat, b);
-// //             boost::shared_ptr<NekVector<DataType> > b( new NekVector<DataType>(nPts, w) );
+// //             ptr<NekVector<DataType> > b( new NekVector<DataType>(nPts, w) );
 // //             //NekVector<DataType> wHat = linsys.SolveTranspose(b);
-// //             boost::shared_ptr<NekVector<DataType> > wHat( new NekVector<DataType>(nPts, (DataType*)0) );
+// //             ptr<NekVector<DataType> > wHat( new NekVector<DataType>(nPts, (DataType*)0) );
 // //             //NekVector<DataType> wHat(nPts, (DataType*)0);
 // //             linsys.SolveTranspose(wHat, b);
 // 
 //             double matrix_buf[] = {81, -5, -28, 4};
 //             double b_buf[] = {-941, 348};
-//             boost::shared_ptr<NekMatrix<double, eFull> > A(new NekMatrix<double, eFull>(2, 2, matrix_buf));
-//             boost::shared_ptr<NekVector<double> > b(new NekVector<double>(2, b_buf));
+//             ptr<NekMatrix<double, eFull> > A(new NekMatrix<double, eFull>(2, 2, matrix_buf));
+//             ptr<NekVector<double> > b(new NekVector<double>(2, b_buf));
 //             LinearSystem<NekMatrix<double, eFull> > linsys(A);
 // //             NekVector<double> result = linsys.Solve(b);
 //             
@@ -509,9 +509,9 @@ namespace Nektar
             // No derivative matrix computed
         }
 
-        boost::shared_ptr<NodalTriFekete::PointsBaseType> NodalTriFekete::Create(const PointsKey &key)
+        ptr<NodalTriFekete::PointsBaseType> NodalTriFekete::Create(const PointsKey &key)
         {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTriFekete>::AllocateSharedPtr(key));
+            ptr<PointsBaseType> returnval(MemoryManager<NodalTriFekete>::AllocateSharedPtr(key));
             returnval->Initialize();
             return returnval;
         }
@@ -581,6 +581,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriFekete.cpp,v $
+* Revision 1.15  2007/07/11 16:33:13  ehan
+* Fixed bugs in Visual Studio 8
+*
 * Revision 1.14  2007/07/11 09:12:13  ehan
 * Fixed bug
 *

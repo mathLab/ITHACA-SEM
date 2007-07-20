@@ -37,7 +37,7 @@
 #define FOURIERPOINTS_H
 
 #include <math.h>
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/BasicUtils/SharedPtr.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
@@ -45,71 +45,71 @@
 
 namespace Nektar
 {
-	namespace LibUtilities 
-	{
-		class FourierPoints: public Points<NekDouble>
-		{
-		public:
-		    typedef Points<NekDouble> PointsBaseType;
-			virtual ~FourierPoints()
-			{
-			}            
+    namespace LibUtilities 
+    {
+        class FourierPoints: public Points<NekDouble>
+        {
+            public:
+                typedef Points<NekDouble> PointsBaseType;
+                virtual ~FourierPoints()
+                {
+                }            
 
-			static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
-			boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
+                static ptr< PointsBaseType > Create(const PointsKey &key);
+                ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
 
-            const MatrixSharedPtrType GetI(const PointsKey &pkey);
-            const MatrixSharedPtrType GetI(const ConstArray<OneD, NekDouble>& x);
-            const MatrixSharedPtrType GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x);
+                const MatrixSharedPtrType GetI(const PointsKey &pkey);
+                const MatrixSharedPtrType GetI(const ConstArray<OneD, NekDouble>& x);
+                const MatrixSharedPtrType GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x);
 
-			FourierPoints(const PointsKey &key):PointsBaseType(key)
-			{
-				m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-				m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-				m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPLegendre),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-				m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoLegendre),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-				m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussChebyshev),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-				m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-				m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-				m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-				m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-				m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-                                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),
-                                                                boost::bind(&FourierPoints::CreateMatrix, this, _1));
-                                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),
-                                                                boost::bind(&FourierPoints::CreateMatrix, this, _1));
-				m_InterpManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-				m_InterpManager.RegisterCreator(PointsKey(0, eFourierEvenlySpaced),
-					boost::bind(&FourierPoints::CreateMatrix, this, _1));
-			}
+                FourierPoints(const PointsKey &key):PointsBaseType(key)
+                {
+                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPLegendre),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoLegendre),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussChebyshev),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),
+                                                                    boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),
+                                                                    boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                    m_InterpManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                    m_InterpManager.RegisterCreator(PointsKey(0, eFourierEvenlySpaced),
+                        boost::bind(&FourierPoints::CreateMatrix, this, _1));
+                }
 
-		private:
-			/// Default constructor should not be called except by Create method.
-			FourierPoints();
+            private:
+                /// Default constructor should not be called except by Create method.
+                FourierPoints();
 
-			/// Copy constructor should not be called.
-			FourierPoints(const FourierPoints &points);
+                /// Copy constructor should not be called.
+                FourierPoints(const FourierPoints &points);
 
-			void CalculatePoints();
-			void CalculateWeights();
-			void CalculateDerivMatrix();
+                void CalculatePoints();
+                void CalculateWeights();
+                void CalculateDerivMatrix();
 
-            void CalculateInterpMatrix(unsigned int npts, const ConstArray<OneD, NekDouble>& xpoints, 
-                                       Array<OneD, NekDouble>& interp);
-			               double PeriodicSincFunction(const NekDouble x, const NekDouble h);
-		}; // class FourierPoints
-	} // end of namespace
+                void CalculateInterpMatrix(unsigned int npts, const ConstArray<OneD, NekDouble>& xpoints, 
+                                           Array<OneD, NekDouble>& interp);
+                               double PeriodicSincFunction(const NekDouble x, const NekDouble h);
+        }; // class FourierPoints
+    } // end of namespace
 } // end of namespace 
 
 

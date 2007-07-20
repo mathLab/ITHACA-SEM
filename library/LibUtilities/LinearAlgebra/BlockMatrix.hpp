@@ -44,7 +44,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/BasicUtils/SharedPtr.hpp>
 
 namespace Nektar
 {
@@ -135,7 +135,7 @@ namespace Nektar
                     iterator_base<MatrixType>& operator=(const iterator_base<MatrixType>& rhs);
                                 
                     MatrixType& m_matrix;
-                    //boost::shared_ptr<IteratorInnerType> m_curBlock;
+                    //ptr<IteratorInnerType> m_curBlock;
                     unsigned int m_curRow;
                     unsigned int m_curColumn;
             };
@@ -158,7 +158,7 @@ namespace Nektar
             NekMatrix(unsigned int numberOfBlockRows, unsigned int numberOfBlockColumns,
                       unsigned int rowsPerBlock, unsigned int columnsPerBlock) :
                 BaseType(numberOfBlockRows*rowsPerBlock, numberOfBlockColumns*columnsPerBlock),
-                m_data(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>()),
+                m_data(numberOfBlockRows, numberOfBlockColumns, ptr<InnerType>()),
                 m_rowSizes(numberOfBlockRows),
                 m_columnSizes(numberOfBlockColumns),
                 m_storageSize(this->GetRows()*this->GetColumns()),
@@ -180,7 +180,7 @@ namespace Nektar
                       unsigned int* rowsPerBlock, unsigned int* columnsPerBlock) :
                 BaseType(std::accumulate(rowsPerBlock, rowsPerBlock + numberOfBlockRows, 0),
                          std::accumulate(columnsPerBlock, columnsPerBlock + numberOfBlockColumns, 0)),
-                m_data(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>()),
+                m_data(numberOfBlockRows, numberOfBlockColumns, ptr<InnerType>()),
                 m_rowSizes(numberOfBlockRows),
                 m_columnSizes(numberOfBlockColumns),
                 m_storageSize(this->GetRows()*this->GetColumns()),
@@ -200,7 +200,7 @@ namespace Nektar
                 }
             }
                 
-            boost::shared_ptr<const InnerType> GetBlock(unsigned int row, unsigned int column) const        
+            ptr<const InnerType> GetBlock(unsigned int row, unsigned int column) const        
             {
                 ASSERTL2(row < m_numberOfBlockRows, std::string("Row ") + boost::lexical_cast<std::string>(row) + 
                     std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
@@ -211,7 +211,7 @@ namespace Nektar
                 return m_data[row][column];
             }
             
-            boost::shared_ptr<InnerType> GetBlock(unsigned int row, unsigned int column)       
+            ptr<InnerType> GetBlock(unsigned int row, unsigned int column)       
             {
                 ASSERTL2(row < m_numberOfBlockRows, std::string("Row ") + boost::lexical_cast<std::string>(row) + 
                     std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
@@ -222,7 +222,7 @@ namespace Nektar
                 return m_data[row][column];
             }
             
-            void SetBlock(unsigned int row, unsigned int column, boost::shared_ptr<InnerType>& m)
+            void SetBlock(unsigned int row, unsigned int column, ptr<InnerType>& m)
             {
                 ASSERTL2(row < m_numberOfBlockRows, std::string("Row ") + boost::lexical_cast<std::string>(row) + 
                     std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
@@ -319,7 +319,7 @@ namespace Nektar
                 (*this)(row, column) = d;
             }
             
-            Array<TwoD, boost::shared_ptr<InnerType> > m_data;
+            Array<TwoD, ptr<InnerType> > m_data;
             Array<OneD, unsigned int> m_rowSizes;
             Array<OneD, unsigned int> m_columnSizes;
             unsigned int m_storageSize;

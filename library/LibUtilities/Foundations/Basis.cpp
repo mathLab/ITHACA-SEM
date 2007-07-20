@@ -91,9 +91,9 @@ namespace Nektar
             return os;
         }
 
-        boost::shared_ptr<Basis> Basis::Create(const BasisKey &bkey)
+        ptr<Basis> Basis::Create(const BasisKey &bkey)
         {
-            boost::shared_ptr<Basis> returnval(new Basis(bkey));
+            ptr<Basis> returnval(new Basis(bkey));
 
             returnval->Initialize();
 
@@ -124,7 +124,7 @@ namespace Nektar
             ConstArray<OneD, NekDouble> w;
             const NekDouble *D;
 
-            boost::shared_ptr< Points<NekDouble> > pointsptr = PointsManager()[GetPointsKey()];
+            ptr< Points<NekDouble> > pointsptr = PointsManager()[GetPointsKey()];
             pointsptr->GetZW(z,w);
 
             D = &(pointsptr->GetD()->GetPtr())[0];
@@ -382,7 +382,7 @@ namespace Nektar
             case eGLL_Lagrange: 
                 {
                     mode = m_bdata.data();
-                    boost::shared_ptr< Points<NekDouble> > pointsptr = PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)];
+                    ptr< Points<NekDouble> > pointsptr = PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)];
                     const ConstArray<OneD, NekDouble>& zp(pointsptr->GetZ());
 
                     for (p=0; p<numModes; ++p,mode += numPoints)
@@ -439,7 +439,7 @@ namespace Nektar
                         mode[i] *= scal;
                     }
 
-                    scal *= 4*(p+1)*(p+1)/(2*p+2)/(2*p+1);	
+                    scal *= 4*(p+1)*(p+1)/(2*p+2)/(2*p+1);    
                 }
 
                 // define derivative basis 
@@ -531,6 +531,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.18  2007/05/15 03:37:23  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.17  2007/04/29 00:31:56  jfrazier
 * Updated to use multi_arrays.
 *

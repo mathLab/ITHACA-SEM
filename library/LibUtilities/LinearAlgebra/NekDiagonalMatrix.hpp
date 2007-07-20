@@ -235,12 +235,12 @@ namespace Nektar
 //                return m_data.get() + rowNumber;
 //            }
 //
-//            boost::shared_ptr<DataType> GetPtr()
+//            ptr<DataType> GetPtr()
 //            {
 //                return m_data.get();
 //            }
 //
-//            boost::shared_ptr<const DataType> GetPtr() const
+//            ptr<const DataType> GetPtr() const
 //            {
 //                return m_data.get();
 //            }
@@ -404,6 +404,9 @@ namespace Nektar
 
 /**
     $Log: NekDiagonalMatrix.hpp,v $
+    Revision 1.9  2007/06/10 23:42:15  bnelson
+    Matrix updates.
+
     Revision 1.8  2007/05/15 03:04:21  bnelson
     Updated to use the new Array object.
 

@@ -224,7 +224,7 @@ namespace Nektar
 
             case eGaussRadauMAlpha0Beta2:
                 Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,2.0);
-		        break;
+                break;
 
             case eGaussRadauMAlpha1Beta0:
                 Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,1.0,0.0);
@@ -239,16 +239,16 @@ namespace Nektar
             }
         }
 
-        boost::shared_ptr<Points<NekDouble> > GaussPoints::Create(const PointsKey &pkey)
+        ptr<Points<NekDouble> > GaussPoints::Create(const PointsKey &pkey)
         {
-            boost::shared_ptr< Points<NekDouble> > returnval(MemoryManager< GaussPoints >::AllocateSharedPtr(pkey));
+            ptr< Points<NekDouble> > returnval(MemoryManager< GaussPoints >::AllocateSharedPtr(pkey));
 
             returnval->Initialize();
 
             return returnval;
         }
 
-        boost::shared_ptr< NekMatrix<NekDouble> > GaussPoints::CreateMatrix(const PointsKey &pkey)
+        ptr< NekMatrix<NekDouble> > GaussPoints::CreateMatrix(const PointsKey &pkey)
         {
             int numpoints = pkey.GetNumPoints();
             ConstArray<OneD, NekDouble> xpoints;
@@ -259,14 +259,14 @@ namespace Nektar
             return GetI(numpoints, xpoints);
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const PointsKey &pkey)
+        const ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const PointsKey &pkey)
         {
             ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
 
             return m_InterpManager[pkey];
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const ConstArray<OneD, NekDouble>& x)
+        const ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const ConstArray<OneD, NekDouble>& x)
         {
             int numpoints = 1;
 
@@ -274,13 +274,13 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
+        const ptr<NekMatrix<NekDouble> > GaussPoints::GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
         {
             Array<OneD, NekDouble> interp(GetNumPoints()*numpoints);
 
             CalculateInterpMatrix(numpoints, x, interp);
 
-            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,GetNumPoints(),interp.data()));
+            ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,GetNumPoints(),interp.data()));
 
             return returnval;
         }
@@ -289,6 +289,9 @@ namespace Nektar
 
 /**
 * $Log: GaussPoints.cpp,v $
+* Revision 1.19  2007/05/15 05:17:19  bnelson
+* Updated to use the new Array object.
+*
 * Revision 1.18  2007/05/15 03:37:24  bnelson
 * Updated to use the new Array object.
 *

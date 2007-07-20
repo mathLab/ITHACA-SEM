@@ -37,7 +37,7 @@
 #define NODALTRIELEC_H
 
 #include <math.h>
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/BasicUtils/SharedPtr.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
@@ -57,31 +57,31 @@ namespace Nektar
             {
             }
 
-            static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
+            static ptr<PointsBaseType> Create(const PointsKey &key);
 
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
+            const ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
             {
                 ASSERTL0(false, "NodalTriElec Method not implemented");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
 
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x)
+            const ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x)
             {
                 ASSERTL0(false, "NodalTriElec Method not implemented");
 
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
 
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
+            const ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
             {
                 ASSERTL0(false, "NodalTriElec Method not implemented");
 
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
 
                 return returnval;
            }

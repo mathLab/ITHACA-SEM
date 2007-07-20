@@ -166,11 +166,7 @@ namespace Nektar
         private:
 
             // This should never be called
-            PointsKey()
-            {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for PointsKey should not be called");
-            }
-
+            PointsKey();
         };
 
         static const PointsKey NullPointsKey(0, eNoPointsType);
@@ -184,7 +180,7 @@ namespace Nektar
         {
         public:
             typedef DataT DataType;
-            typedef boost::shared_ptr<NekMatrix<DataType> > MatrixSharedPtrType;
+            typedef ptr<NekMatrix<DataType> > MatrixSharedPtrType;
 
             virtual ~Points()
             {

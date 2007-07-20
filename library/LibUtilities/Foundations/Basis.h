@@ -179,7 +179,7 @@ namespace Nektar
             PointsKey  m_pointsKey;
 
         private:
-	    BasisKey():m_pointsKey(NullPointsKey)
+        BasisKey():m_pointsKey(NullPointsKey)
             {
                 NEKERROR(ErrorUtil::efatal,"Default Constructor BasisKey should never be called");
             }
@@ -193,7 +193,7 @@ namespace Nektar
         {
         public:
 
-            static boost::shared_ptr<Basis> Create(const BasisKey &bkey);
+            static ptr<Basis> Create(const BasisKey &bkey);
 
             // default destructor()
             ~Basis()
@@ -259,7 +259,7 @@ namespace Nektar
             /** \brief return basis definition array m_bdata */
             inline const ConstArray<OneD, NekDouble>& GetBdata() const 
             {
-		return m_bdata;
+        return m_bdata;
             }
 
             /** \brief return basis definition array m_dbdata */
@@ -301,7 +301,7 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const BasisKey& rhs);
 
-        typedef boost::shared_ptr<Basis> BasisSharedPtr;
+        typedef ptr<Basis> BasisSharedPtr;
         typedef std::vector< BasisSharedPtr > BasisVector; 
         typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter; 
 

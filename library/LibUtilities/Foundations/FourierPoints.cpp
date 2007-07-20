@@ -113,9 +113,9 @@ namespace Nektar
             }           
         }
 
-        boost::shared_ptr<Points<NekDouble> > FourierPoints::Create(const PointsKey &key)
+        ptr<Points<NekDouble> > FourierPoints::Create(const PointsKey &key)
         {
-            boost::shared_ptr<Points<NekDouble> > returnval(MemoryManager<FourierPoints>::AllocateSharedPtr(key));
+            ptr<Points<NekDouble> > returnval(MemoryManager<FourierPoints>::AllocateSharedPtr(key));
 
             returnval->Initialize();
 
@@ -123,7 +123,7 @@ namespace Nektar
         }
 
 
-        boost::shared_ptr< NekMatrix<NekDouble> > FourierPoints::CreateMatrix(const PointsKey &pkey)
+        ptr< NekMatrix<NekDouble> > FourierPoints::CreateMatrix(const PointsKey &pkey)
         {
             int numpoints = pkey.GetNumPoints();
             ConstArray<OneD, NekDouble> xpoints;
@@ -134,14 +134,14 @@ namespace Nektar
             return GetI(numpoints, xpoints);
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(const PointsKey& pkey)
+        const ptr<NekMatrix<NekDouble> > FourierPoints::GetI(const PointsKey& pkey)
         {
             ASSERTL0(pkey.GetPointsDim()==1, "Fourier Points can only interp to other 1d point distributions");
 
             return m_InterpManager[pkey];
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(const ConstArray<OneD, NekDouble>& x)
+        const ptr<NekMatrix<NekDouble> > FourierPoints::GetI(const ConstArray<OneD, NekDouble>& x)
         {
             int numpoints = 1;
 
@@ -149,13 +149,13 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
+        const ptr<NekMatrix<NekDouble> > FourierPoints::GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
         {
             Array<OneD, NekDouble> interp(GetNumPoints()*numpoints);
 
             CalculateInterpMatrix(numpoints, x, interp);
 
-            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,GetNumPoints(),interp.data()));
+            ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,GetNumPoints(),interp.data()));
 
             return returnval;
         }

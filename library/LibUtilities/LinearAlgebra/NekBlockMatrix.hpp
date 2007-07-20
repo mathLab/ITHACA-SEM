@@ -41,7 +41,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/BasicUtils/SharedPtr.hpp>
 
 namespace Nektar
 {
@@ -57,7 +57,7 @@ namespace Nektar
 //             class BlockMatrixDataType<ePointerBlock, MatrixType>
 //     {
 //         public:
-//             typedef ConsistentObjectAccess<boost::shared_ptr<MatrixType> > ResultType;
+//             typedef ConsistentObjectAccess<ptr<MatrixType> > ResultType;
 //     };
 
 
@@ -67,6 +67,9 @@ namespace Nektar
 
 /**
     $Log: NekBlockMatrix.hpp,v $
+    Revision 1.3  2007/06/10 23:42:15  bnelson
+    Matrix updates.
+
     Revision 1.2  2006/11/01 04:07:08  bnelson
     Changed block matrices to use the ConsistentObjectAccess object to store matrices or pointers to matrices so that the same pointer syntax works for both.
 

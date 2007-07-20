@@ -40,7 +40,7 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <boost/multi_array.hpp>
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/BasicUtils/SharedPtr.hpp>
 
 namespace Nektar
 {
@@ -330,7 +330,7 @@ namespace Nektar
             friend ConstArray<OneD, T> operator+(unsigned int offset, const ConstArray<OneD, T>& rhs);
             
         protected:
-            boost::shared_ptr<ArrayType> m_data;
+            ptr<ArrayType> m_data;
             unsigned int m_offset;
             
         private:
@@ -412,7 +412,7 @@ namespace Nektar
             size_type GetColumns() const { return m_data->shape()[1]; }
             
         protected:
-            boost::shared_ptr<ArrayType> m_data;
+            ptr<ArrayType> m_data;
             
         private:
             
@@ -475,7 +475,7 @@ namespace Nektar
             size_type num_elements() const { return m_data->num_elements(); }
 
         protected:
-            boost::shared_ptr<ArrayType> m_data;
+            ptr<ArrayType> m_data;
             
         private:
             

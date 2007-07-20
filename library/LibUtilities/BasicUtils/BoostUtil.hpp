@@ -37,14 +37,14 @@
 #ifndef NEKTAR_LIB_UTILITIES_BOOST_UTIL_HPP
 #define NEKTAR_LIB_UTILITIES_BOOST_UTIL_HPP
 
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/BasicUtils/SharedPtr.hpp>
 
 namespace Nektar
 {
     template<typename DataType>
-    boost::shared_ptr<DataType> MakePtr(DataType* d)
+    ptr<DataType> MakePtr(DataType* d)
     {
-        return boost::shared_ptr<DataType>(d);
+        return ptr<DataType>(d);
     }
 }
 

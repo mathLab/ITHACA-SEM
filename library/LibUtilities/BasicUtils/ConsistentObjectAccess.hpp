@@ -39,7 +39,7 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/BasicUtils/SharedPtr.hpp>
 #include <boost/call_traits.hpp>
 
 #include <iostream>
@@ -127,7 +127,7 @@ namespace Nektar
     };
     
     template<typename DataType>
-    class ConsistentObjectAccess<boost::shared_ptr<DataType> >
+    class ConsistentObjectAccess<ptr<DataType> >
     {            
         public:
             ConsistentObjectAccess() :
@@ -143,7 +143,7 @@ namespace Nektar
             {
             }
             
-            explicit ConsistentObjectAccess(boost::shared_ptr<DataType> rhs) :
+            explicit ConsistentObjectAccess(ptr<DataType> rhs) :
                 m_obj(rhs)
             {
             }
@@ -155,11 +155,11 @@ namespace Nektar
             
             ConsistentObjectAccess<DataType>& operator=(const ConsistentObjectAccess<DataType>& rhs)
             {
-                m_obj = boost::shared_ptr<DataType>(new DataType(*rhs.m_obj.get()));
+                m_obj = ptr<DataType>(new DataType(*rhs.m_obj.get()));
                 return *this;
             }
     
-            ConsistentObjectAccess<DataType>& operator=(boost::shared_ptr<DataType> rhs)
+            ConsistentObjectAccess<DataType>& operator=(ptr<DataType> rhs)
             {
                 m_obj = rhs;
                 return *this;
@@ -169,12 +169,12 @@ namespace Nektar
             {
             }
 
-            boost::shared_ptr<DataType> operator->() 
+            ptr<DataType> operator->() 
             {
                 return m_obj;
             }
     
-            boost::shared_ptr<const DataType> operator->() const 
+            ptr<const DataType> operator->() const 
             {
                 return m_obj;
             }
@@ -202,7 +202,7 @@ namespace Nektar
             }
             
         private:
-            boost::shared_ptr<DataType> m_obj;
+            ptr<DataType> m_obj;
     };
     
     template<typename DataType>
@@ -254,6 +254,9 @@ namespace Nektar
 
 /**
     $Log: ConsistentObjectAccess.hpp,v $
+    Revision 1.2  2007/01/29 01:35:17  bnelson
+    Removed memory manager requirements.
+
     Revision 1.1  2006/11/06 17:06:20  bnelson
     *** empty log message ***
 

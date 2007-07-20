@@ -129,11 +129,11 @@ namespace Nektar
                 return result; \
             } \
             \
-            boost::shared_ptr<BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType> \
-            operator*(const boost::shared_ptr<const LhsType>& lhs, const boost::shared_ptr<const RhsType>& rhs) \
+            ptr<BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType> \
+            operator*(const ptr<const LhsType>& lhs, const ptr<const RhsType>& rhs) \
             { \
                 typedef BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType ResultType; \
-                boost::shared_ptr<ResultType> result(MemoryManager::AllocateSharedPtr<ResultType>()); \
+                ptr<ResultType> result(MemoryManager::AllocateSharedPtr<ResultType>()); \
                 NekMultiply(result, lhs, rhs); \
                 return result; \
             }
@@ -159,13 +159,13 @@ namespace Nektar
             } 
             //\
             //template<typename L1, typename L2, typename L3, typename RhsType> \
-            //boost::shared_ptr<typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType> \
-            //operator*(const boost::shared_ptr<const LhsType<L1, L2, L3> > lhs, const RhsType& rhs) \
+            //ptr<typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType> \
+            //operator*(const ptr<const LhsType<L1, L2, L3> > lhs, const RhsType& rhs) \
             //{ \
-            //    return boost::shared_ptr<typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType>(); \
+            //    return ptr<typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType>(); \
             //}
             //    typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType ResultType; \
-            //    boost::shared_ptr<ResultType> result = MemoryManager::AllocateSharedPtr<ResultType>(); \ 
+            //    ptr<ResultType> result = MemoryManager::AllocateSharedPtr<ResultType>(); \ 
             //    NekMultiply(result, lhs, rhs); \
             //    return result; \
             //}

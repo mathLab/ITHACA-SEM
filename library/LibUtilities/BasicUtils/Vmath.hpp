@@ -47,185 +47,185 @@ namespace Vmath
     /// \brief Fill a vector with a constant value
     template<class T>  void Fill( int n, const T alpha,  T *x, const int incx )
     {
-	while( n-- )
-	{
-	    *x = alpha;
-	    x += incx;
-	}
+        while( n-- )
+        {
+            *x = alpha;
+            x += incx;
+        }
     }
     
     
     /// \brief Multiply vector z = x*y
     template<class T>  void Vmul( int n, const T *x, const int incx, const T *y,
-				  const int incy,  T*z, const int incz)
+                  const int incy,  T*z, const int incz)
     {
-	while( n-- )
-	{
-	    *z = (*x) * (*y);
-	    x += incx;
-	    y += incy;
-	    z += incz;
-	}
+        while( n-- )
+        {
+            *z = (*x) * (*y);
+            x += incx;
+            y += incy;
+            z += incz;
+        }
     }
     
     /// \brief Scalar multiply  y = alpha*y
     template<class T>  void Smul( int n, const T alpha, T*x, const int incx,
-				  T *y, const int incy)
+                  T *y, const int incy)
     {
-	while( n-- )
-	{
-	    *y = alpha * (*x);
-	    x += incx;
-	    y += incy;
-	}
+        while( n-- )
+        {
+            *y = alpha * (*x);
+            x += incx;
+            y += incy;
+        }
     }
     
     /// \brief Multiply vector z = x/y
     template<class T>  void Vdiv( int n, const T *x, const int incx, T *y,
-				  const int incy,  T*z, const int incz)
+                  const int incy,  T*z, const int incz)
     {
-	while( n-- )
-	{
-	    *z = (*x) / (*y);
-	    x += incx;
-	    y += incy;
-	    z += incz;
-	}
+        while( n-- )
+        {
+            *z = (*x) / (*y);
+            x += incx;
+            y += incy;
+            z += incz;
+        }
     }
     
     /// \brief Scalar multiply  y = alpha/y
     template<class T>  void Sdiv( int n, const T alpha, T*x, const int incx,
-				  T *y, const int incy)
+                  T *y, const int incy)
     {
-	while( n-- )
-	{
-	    *y = alpha / (*x);
-	    x += incx;
-	    y += incy;
-	}
+        while( n-- )
+        {
+            *y = alpha / (*x);
+            x += incx;
+            y += incy;
+        }
     }
     
     /// \brief Add vector z = x+y
     template<class T>  void Vadd( int n, const T *x, const int incx, const T *y,
-				  const int incy,  T *z, const int incz)
+                  const int incy,  T *z, const int incz)
     {
-	while( n-- )
-	{
-	    *z = (*x) + (*y);
-	    x += incx;
-	    y += incy;
-	    z += incz;
-	}
+        while( n-- )
+        {
+            *z = (*x) + (*y);
+            x += incx;
+            y += incy;
+            z += incz;
+        }
     }
     
     /// \brief Add vector y = alpha + x
     template<class T>  void Sadd( int n, const T alpha, const T *x,
-				  const int incx, T *y, const int incy)
+                  const int incx, T *y, const int incy)
     {
-	while( n-- )
-	{
-	    *y = alpha + (*x);
-	    x += incx;
-	    y += incy;
-	}
+        while( n-- )
+        {
+            *y = alpha + (*x);
+            x += incx;
+            y += incy;
+        }
     }
     
     /// \brief Subtract vector z = x-y
     template<class T>  void Vsub( int n, const T *x, const int incx, T *y,
-				  const int incy,  T *z, const int incz)
+                  const int incy,  T *z, const int incz)
     {
-	while( n-- )
-	{
-	    *z = (*x) - (*y);
-	    x += incx;
-	    y += incy;
-	    z += incz;
-	}
+        while( n-- )
+        {
+            *z = (*x) - (*y);
+            x += incx;
+            y += incy;
+            z += incz;
+        }
     }
     
     /// \brief Zero vector
     template<class T>  void Zero(int n, T *x, const int incx)
     {
-	if(incx == 1)
-	{
-	    std::memset(x,'\0', n*sizeof(T));
-	}
-	else
-	{
-	    T zero = 0;
-	    while(n--)
-	    {
-		*x = zero;
-		x+=incx;
-	    }
-	}
+        if(incx == 1)
+        {
+            std::memset(x,'\0', n*sizeof(T));
+        }
+        else
+        {
+            T zero = 0;
+            while(n--)
+            {
+            *x = zero;
+            x+=incx;
+            }
+        }
     }
     
     /// \brief Negate x = -x
     template<class T>  void Neg( int n, T *x, const int incx)
     {
-	while( n-- )
-	{
-	    *x = -(*x);
-	    x += incx;
-	}
+        while( n-- )
+        {
+            *x = -(*x);
+            x += incx;
+        }
     }
     
     
     /// \brief sqrt y = sqrt(x)
     template<class T> void Vsqrt(int n, const T *x, const int incx,
-				 T *y, const int incy)
+                 T *y, const int incy)
     {
-	while (n--)
-	{
-	    *y  = sqrt( *x );
-	    x  += incx;
-	    y  += incy;
-	}
+        while (n--)
+        {
+            *y  = sqrt( *x );
+            x  += incx;
+            y  += incy;
+        }
     }
     
     /// \brief vabs: y = |x|
     template<class T> void Vabs(int n, const T *x, const int incx, 
-				T *y, const int incy)
+                T *y, const int incy)
     {
-	while( n-- )
-	{
-	    *y = ( *x >0)? *x:-(*x);
-	    x += incx;
-	    y += incy;
-	}
+        while( n-- )
+        {
+            *y = ( *x >0)? *x:-(*x);
+            x += incx;
+            y += incy;
+        }
     }
     
     /********** Triad  routines  ***********************/
     
     /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
     template<class T> void Vvtvp(int n, const T *w, const int incw, const T *x,
-				 const int incx, const T *y, const int incy,
-				 T *z, const int incz)
+                 const int incx, const T *y, const int incy,
+                 T *z, const int incz)
     {
-	while( n-- )
-	{
-	    *z = (*w) * (*x) + (*y);
-	    w += incw;
-	    x += incx;
-	    y += incy;
-	    z += incz;
-	}
+        while( n-- )
+        {
+            *z = (*w) * (*x) + (*y);
+            w += incw;
+            x += incx;
+            y += incy;
+            z += incz;
+        }
     }
     
     /// \brief vvtvm (vector times vector plus vector): z = w*x - y
     template<class T> void Vvtvm(int n, const T *w, const int incw, T *x,
-				 const int incx, const T *y, const int incy,
-				 T *z, const int incz)
+                 const int incx, const T *y, const int incy,
+                 T *z, const int incz)
     {
-	while( n-- )
-	{
-	    *z = (*w) * (*x) - (*y);
-	    w += incw;
-	    x += incx;
-	    y += incy;
-	    z += incz;
-	}
+        while( n-- )
+        {
+            *z = (*w) * (*x) - (*y);
+            w += incw;
+            x += incx;
+            y += incy;
+            z += incz;
+        }
     }
     
     
@@ -233,34 +233,34 @@ namespace Vmath
     
     /// \brief Gather vector z[i] = x[y[i]]
     template<class T>  void Gathr(int n, const T *x, const int *y,
-				  T *z)
+                  T *z)
     {
-	while (n--)
-	{
-	    *z++ = *(x + *y++);
-	}
-	return;
+        while (n--)
+        {
+            *z++ = *(x + *y++);
+        }
+        return;
     }
     
     /// \brief Scatter vector z[y[i]] = x[i]
     template<class T>  void Scatr(int n, const T *x, const int *y,
-				  T *z)
+                  T *z)
     {
-	while (n--)
-	{
-	    *(z + *(y++)) = *(x++);
-	}
+        while (n--)
+        {
+            *(z + *(y++)) = *(x++);
+        }
     }
     
     
     /// \brief Assemble z[y[i]] += x[i]; z should be zero'd first
     template<class T>  void Assmb(int n, const T *x, const int *y,
-				  T *z)
+                  T *z)
     {
-	while (n--)
-	{
-	    *(z + *(y++)) += *(x++);
-	}
+        while (n--)
+        {
+            *(z + *(y++)) += *(x++);
+        }
     }
     
     
@@ -269,119 +269,119 @@ namespace Vmath
     /// \brief Subtract return sum(x)
     template<class T>  T Vsum( int n, const T *x, const int incx)
     {
-	
-	T sum = 0;
-	
-	while( n-- )
-	{
-	    sum += (*x);
-	    x += incx;
-	}
-	
-    return sum;
+    
+        T sum = 0;
+        
+        while( n-- )
+        {
+            sum += (*x);
+            x += incx;
+        }
+        
+        return sum;
     }
     
     
     /// \brief Return the index of the maximum element in x
     template<class T>  int Imax( int n, const T *x, const int incx)
     {
-	
-	int    i, indx = ( n > 0 ) ? 0 : -1;
-	T      xmax = *x;
-	
-	for (i = 0; i < n; i++)
-	{
-	    if (*x > xmax)
-	    {
-		xmax = *x;
-		indx = i;
-	    }
-	    x += incx;
-	}
-	
-	return indx;
+    
+        int    i, indx = ( n > 0 ) ? 0 : -1;
+        T      xmax = *x;
+        
+        for (i = 0; i < n; i++)
+        {
+            if (*x > xmax)
+            {
+            xmax = *x;
+            indx = i;
+            }
+            x += incx;
+        }
+        
+        return indx;
     }
     
     /// \brief Return the maximum element in x -- called vmax to avoid
     /// conflict with max
     template<class T>  T Vmax( int n, const T *x, const int incx)
     {
-	
-	T  xmax = *x;
-	
-	while( n-- )
-	{
-	    if (*x > xmax)
-	    {
-		xmax = *x;
-	    }
-	    x += incx;
-	}
-	
-	return xmax;
+    
+        T  xmax = *x;
+        
+        while( n-- )
+        {
+            if (*x > xmax)
+            {
+            xmax = *x;
+            }
+            x += incx;
+        }
+        
+        return xmax;
     }
     
     /// \brief Return the index of the maximum absolute element in x
     template<class T>  int Iamax( int n, const T *x, const int incx)
     {
-	
-	int    i, indx = ( n > 0 ) ? 0 : -1;
-	T      xmax = *x;
-	T      xm;
-	
-	for (i = 0; i < n; i++)
-	{
-	    xm = (*x > 0)? *x: -*x;
-	    if (xm > xmax)
-	    {
-		xmax = xm;
-		indx = i;
-	    }
-	    x += incx;
-	}
-	
-	return indx;
+    
+        int    i, indx = ( n > 0 ) ? 0 : -1;
+        T      xmax = *x;
+        T      xm;
+        
+        for (i = 0; i < n; i++)
+        {
+            xm = (*x > 0)? *x: -*x;
+            if (xm > xmax)
+            {
+            xmax = xm;
+            indx = i;
+            }
+            x += incx;
+        }
+        
+        return indx;
     }
     
     /// \brief Return the maximum absolute element in x
     /// called vamax to avoid conflict with max
     template<class T>  T Vamax( int n, const T *x, const int incx)
     {
-	
-	T  xmax = *x;
-	T  xm;
-	
-	while( n-- )
-	{
-	    xm = (*x > 0)? *x: -*x;
-	    if (xm > xmax)
-	    {
-		xmax = xm;
-	    }
-	    x += incx;
-	}
-	return xmax;
+    
+        T  xmax = *x;
+        T  xm;
+        
+        while( n-- )
+        {
+            xm = (*x > 0)? *x: -*x;
+            if (xm > xmax)
+            {
+            xmax = xm;
+            }
+            x += incx;
+        }
+        return xmax;
     }
     
     
     /// \brief Return the index of the minimum element in x
     template<class T>  int Imin( int n, const T *x, const int incx)
     {
-	
-	int    i, indx = ( n > 0 ) ? 0 : -1;
-	T      xmin = *x;
-	
-	for(i = 0;i < n;i++)
-	{
-	    if( *x < xmin )
-	    {
-		xmin = *x;
-		indx = i;
-	    }
-	    x += incx;
-	}
-	
-	return indx;
+    
+        int    i, indx = ( n > 0 ) ? 0 : -1;
+        T      xmin = *x;
+        
+        for(i = 0;i < n;i++)
+        {
+            if( *x < xmin )
+            {
+            xmin = *x;
+            indx = i;
+            }
+            x += incx;
+        }
+        
+        return indx;
     }
     
     
@@ -389,19 +389,19 @@ namespace Vmath
     /// conflict with min
     template<class T>  T Vmin( int n, const T *x, const int incx)
     {
-	
-	T    xmin = *x;
-	
-	while( n-- )
-	{
-	    if (*x < xmin)
-	    {
-		xmin = *x;
-	    }
-	    x += incx;
-	}
-	
-	return xmin;
+    
+        T    xmin = *x;
+        
+        while( n-- )
+        {
+            if (*x < xmin)
+            {
+            xmin = *x;
+            }
+            x += incx;
+        }
+        
+        return xmin;
     }
     
     /********** Memory routines  ***********************/
@@ -409,26 +409,28 @@ namespace Vmath
     // \brief copy one double vector to another - This is just a wrapper
     // around Blas
     static void Vcopy(int n, const double *x, int incx, double *y,
-		      int const incy)
+              int const incy)
     {
-	Blas::Dcopy(n,x,incx,y,incy);
+        Blas::Dcopy(n,x,incx,y,incy);
     }
     
     // \brief copy one int vector to another
     static void Vcopy(int n, const int  *x, const int incx, int *y,
-		      int const incy)
+              int const incy)
     {
-	if( incx ==1 && incy == 1)
-	{
-	    memcpy(y,x,n*sizeof(int));
-	}
-	else
-	    while( n-- )
-	    {
-		*y = *x;
-		x += incx;
-		y += incy;
-	    }
+        if( incx ==1 && incy == 1)
+        {
+            memcpy(y,x,n*sizeof(int));
+        }
+        else
+        {
+            while( n-- )
+            {
+                *y = *x;
+                x += incx;
+                y += incy;
+            }
+        }
     }
     
     
@@ -437,6 +439,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.6  2007/04/08 03:30:25  jfrazier
+Made y in z = x*y a constant in the parameter list.
+
 Revision 1.5  2007/04/03 03:51:44  bnelson
 Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
 

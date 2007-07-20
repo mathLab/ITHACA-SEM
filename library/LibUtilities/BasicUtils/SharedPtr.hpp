@@ -63,10 +63,10 @@ namespace Nektar
     struct polymorphic_cast_tag {};
 
     template<class T>
-    class const_ptr
+    class ptr
     {
         private:
-            typedef const_ptr<T> this_type;
+            typedef ptr<T> this_type;
 
         public:
             typedef T element_type;
@@ -75,14 +75,17 @@ namespace Nektar
             typedef T& reference;
             typedef const T& const_reference;
 
-            const_ptr() : 
+            template<typename Y>
+            friend class ptr;
+
+            ptr() : 
                 px(0), 
                 pn()
             {
             }
 
             template<class Y>
-            explicit const_ptr(Y* p ) : 
+            explicit ptr(Y* p ) : 
                 px(p), 
                 pn(p)
             {
@@ -90,41 +93,41 @@ namespace Nektar
 
                 
             template<class Y, class D> 
-            const_ptr(Y* p, const D& d) : 
+            ptr(Y* p, const D& d) : 
                 px(p), 
                 pn(p, d)
             {
             }
 
             template<class Y>
-            const_ptr(const const_ptr<Y>& r) : 
+            ptr(const ptr<Y>& r) : 
                 px(r.px), 
                 pn(r.pn)
             {
             }
 
-            const_ptr(const const_ptr<T>& rhs) :
+            ptr(const ptr<T>& rhs) :
                 px(rhs.px),
                 pn(rhs.pn)
             {
             }
 
             template<class Y>
-            const_ptr(const const_ptr<Y>& r, static_cast_tag) : 
+            ptr(const ptr<Y>& r, static_cast_tag) : 
                 px(static_cast<element_type*>(r.px)), 
                 pn(r.pn)
             {
             }
 
             template<class Y>
-            const_ptr(const const_ptr<Y>& r, const_cast_tag) : 
+            ptr(const ptr<Y>& r, const_cast_tag) : 
                 px(const_cast<element_type*>(r.px)), 
                 pn(r.pn)
             {
             }
 
             template<class Y>
-            const_ptr(const const_ptr<Y>& r, dynamic_cast_tag) : 
+            ptr(const ptr<Y>& r, dynamic_cast_tag) : 
                 px(dynamic_cast<element_type *>(r.px)), 
                 pn(r.pn)
             {
@@ -135,7 +138,7 @@ namespace Nektar
             }
 
             template<class Y>
-            const_ptr(const const_ptr<Y>& r, polymorphic_cast_tag) : 
+            ptr(const ptr<Y>& r, polymorphic_cast_tag) : 
                 px(dynamic_cast<element_type *>(r.px)), 
                 pn(r.pn)
             {
@@ -146,14 +149,14 @@ namespace Nektar
             }
 
             template<class Y>
-            const const_ptr<T>& operator=(const const_ptr<Y>& r)
+            const ptr<T>& operator=(const ptr<Y>& r)
             {
                 px = r.px;
                 pn = r.pn; 
                 return *this;
             }
 
-            const const_ptr<T>& operator=(const const_ptr<T>& r)
+            const ptr<T>& operator=(const ptr<T>& r)
             {
                 px = r.px;
                 pn = r.pn; 
@@ -195,6 +198,23 @@ namespace Nektar
                 return px;
             }
 
+            reference operator*() 
+            {
+                BOOST_ASSERT(this->GetPx() != 0);
+                return *(this->GetPx());
+            }
+
+            T* operator->()
+            {
+                BOOST_ASSERT(this->GetPx() != 0);
+                return this->GetPx();
+            }
+            
+            T* get()
+            {
+                return this->GetPx();
+            }
+
             operator bool() const
             {
                 return px != 0;
@@ -216,22 +236,22 @@ namespace Nektar
                 return pn.use_count();
             }
 
-            void swap(const_ptr<T>& other)
+            void swap(ptr<T>& other)
             {
                 std::swap(px, other.px);
                 pn.swap(other.pn);
             }
 
             template<class Y> bool 
-            internal_less(const const_ptr<Y>& rhs) const
+            internal_less(const ptr<Y>& rhs) const
             {
                 return pn < rhs.pn;
             }
 
         protected:
-            T* GetPx() { return px; }
-            boost::detail::shared_count& GetPn() { return pn; }
-            
+            T* GetPx() const { return px; }
+            boost::detail::shared_count& GetPn() const { return pn; }
+
         private:
             T* px;                     
             boost::detail::shared_count pn;
@@ -239,155 +259,54 @@ namespace Nektar
     };  
 
     template<class T, class U> 
-    inline bool operator==(const const_ptr<T>& a, const const_ptr<U>& b)
+    inline bool operator==(const ptr<T>& a, const ptr<U>& b)
     {
         return a.get() == b.get();
     }
 
     template<class T, class U> 
-    inline bool operator!=(const const_ptr<T>& a, const const_ptr<U>& b)
+    inline bool operator!=(const ptr<T>& a, const ptr<U>& b)
     {
         return a.get() != b.get();
     }
 
 
     template<class T, class U> 
-    inline bool operator<(const const_ptr<T>& a, const const_ptr<U>& b)
+    inline bool operator<(const ptr<T>& a, const ptr<U>& b)
     {
         return a.internal_less(b);
     }
 
     template<class T> 
-    inline void swap(const const_ptr<T>& a, const const_ptr<T>& b)
+    inline void swap(const ptr<T>& a, const ptr<T>& b)
     {
         a.swap(b);
     }
 
     template<class T, class U> 
-    const_ptr<T> static_pointer_cast(const const_ptr<U>& r)
+    ptr<T> static_pointer_cast(const ptr<U>& r)
     {
-        return const_ptr<T>(r, static_cast_tag());
+        return ptr<T>(r, static_cast_tag());
     }
 
     template<class T, class U> 
-    const_ptr<T> const_pointer_cast(const const_ptr<U>& r)
+    ptr<T> const_pointer_cast(const ptr<U>& r)
     {
-        return const_ptr<T>(r, const_cast_tag());
+        return ptr<T>(r, const_cast_tag());
     }
 
-    template<class T, class U> 
-    const_ptr<T> dynamic_pointer_cast(const const_ptr<U>& r)
+    template<class T, class U>
+    ptr<T> dynamic_pointer_cast(const ptr<U>& r)
     {
-        return const_ptr<T>(r, dynamic_cast_tag());
+        return ptr<T>(r, dynamic_cast_tag());
     }
 
 
     template<class T> 
-    inline const T* get_pointer(const const_ptr<T>& p)
+    inline const T* get_pointer(const ptr<T>& p)
     {
         return p.get();
     }
-    
-
-    template<class T>
-    class ptr : public const_ptr<T>
-    {
-        public:
-            typedef const_ptr<T> BaseType;
-            typedef ptr<T> ThisType;
-            using BaseType::element_type;
-            using BaseType::value_type;
-            using BaseType::pointer;
-            using BaseType::reference;
-            using BaseType::const_reference;
-
-            ptr() : 
-                BaseType()
-            {
-            }
-
-            template<class Y>
-            explicit ptr(Y* p ) : 
-                BaseType(p)
-            {
-            }
-
-                
-            template<class Y, class D> 
-            ptr(Y* p, const D& d) : 
-                BaseType(p, d)
-            {
-            }
-
-            template<class Y>
-            ptr(const ptr<Y>& r) : 
-                BaseType(r)
-            {
-            }
-
-            ptr(const ptr<T>& rhs) :
-                BaseType(rhs)
-            {
-            }
-
-            template<class Y>
-            ptr(const ptr<Y>& r, static_cast_tag t) : 
-                BaseType(r, t)
-            {
-            }
-
-            template<class Y>
-            ptr(const ptr<Y>& r, const_cast_tag t) : 
-                BaseType(r, t)
-            {
-            }
-
-            template<class Y>
-            ptr(const const_ptr<Y>& r, dynamic_cast_tag t) : 
-                BaseType(r, t)
-            {
-            }
-
-            template<class Y>
-            ptr(const const_ptr<Y>& r, polymorphic_cast_tag t) : 
-                BaseType(r, t)
-            {
-            }
-
-            template<class Y>
-            const ptr<T>& operator=(const ptr<Y>& r)
-            {
-                BaseType::operator=(r);
-                return *this;
-            }
-
-            const ptr<T>& operator=(const ptr<T>& r)
-            {
-                BaseType::operator=(r);
-                return *this;
-            }
-
-            T& operator*()
-            {
-                BOOST_ASSERT(this->GetPx() != 0);
-                return *(this->GetPx());
-            }
-
-            T* operator->()
-            {
-                BOOST_ASSERT(this->GetPx() != 0);
-                return this->GetPx();
-            }
-            
-            T* get()
-            {
-                return this->GetPx();
-            }
-
-            using BaseType::operator*;
-            using BaseType::operator->;
-            using BaseType::get;
-    };
 
 }
 

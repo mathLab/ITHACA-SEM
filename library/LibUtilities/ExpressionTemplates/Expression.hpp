@@ -39,6 +39,11 @@
 #include <boost/call_traits.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/type_traits/remove_reference.hpp>
+#include <boost/type_traits/remove_const.hpp>
+#include <boost/mpl/and.hpp>
+#include <boost/static_assert.hpp>
+#include <boost/mpl/assert.hpp>
 
 #include <LibUtilities/ExpressionTemplates/Accumulator.hpp>
 
@@ -48,22 +53,67 @@ namespace Nektar
 {
     namespace expt
     {
-//         template<typename ExpressionPolicy>
-//         class Expression;
+        /// \brief An expression is an arbitrary combination of operations acting on arbitrary amountsw of data to 
+        /// produce a result.  The expressions stores the operations and data but does not evaluate it until requested.
+        /// 
+        /// \param PolicyType The type of expression.
         template<typename PolicyType>
         class Expression
         {
             public:
+                // The type of the data which will be the result of evaluating the expression.
                 typedef typename PolicyType::ResultType ResultType;
+
+                // The type of the unevaluated subexpressions or data.
+                typedef typename PolicyType::DataType DataType;
+
                 typedef typename PolicyType::MetadataType MetadataType;
                 
+                typedef typename boost::remove_const<typename boost::remove_reference<DataType>::type >::type BaseDataType;
             public:
-                explicit Expression(typename boost::call_traits<typename PolicyType::DataType>::const_reference data) :
+                /// This constructor allows temporaries.  If m_data is a reference then 
+                /// this should not be allowed.
+                template<typename T>
+                explicit Expression(const T& data,
+                                    typename boost::disable_if<
+                                                               boost::mpl::and_<
+                                                                                boost::is_reference<DataType>,
+                                                                                boost::is_same<BaseDataType, T> 
+                                                                          > 
+                                                              >::type* dummy = 0) :
                     m_data(data),
                     m_metadata()
                 {
                     PolicyType::InitializeMetadata(m_data, m_metadata);
                 }
+
+                explicit Expression(BaseDataType& data) :
+                    m_data(data),
+                    m_metadata()
+                {
+                    //using boost::mpl::and_;
+                    //using boost::is_reference;
+                    //using boost::is_same;
+                    //using boost::is_const;
+
+                    //BOOST_MPL_ASSERT( ( is_const<BaseDataType> ) );
+
+                    PolicyType::InitializeMetadata(m_data, m_metadata);
+                }
+
+                //template<typename T>
+                //explicit Expression(const T& data) :
+                //    m_data(data),
+                //    m_metadata()
+                //{
+                //    //BOOST_STATIC_ASSERT(0);
+                //    using boost::mpl::and_;
+                //    using boost::is_reference;
+                //    using boost::is_same;
+
+                //    BOOST_MPL_ASSERT_NOT( (and_<is_reference<DataType>, is_same<BaseDataType, T> >) );
+                //    PolicyType::InitializeMetadata(m_data, m_metadata);
+                //}
 
                 Expression(const Expression<PolicyType>& rhs) :
                     m_data(rhs.m_data),
@@ -107,12 +157,12 @@ namespace Nektar
                     PolicyType::Print(os, m_data);
                 }
 
-                typename boost::call_traits<typename PolicyType::DataType>::reference operator*()
+                typename boost::call_traits<DataType>::reference operator*()
                 {
                     return m_data;
                 }
                 
-                typename boost::call_traits<typename PolicyType::DataType>::const_reference operator*() const
+                typename boost::call_traits<DataType>::const_reference operator*() const
                 {
                     return m_data;
                 }
@@ -120,7 +170,7 @@ namespace Nektar
             private:
                 Expression<PolicyType>& operator=(const Expression<PolicyType>& rhs);
 
-                typename PolicyType::DataType m_data;
+                DataType m_data;
                 MetadataType m_metadata;
         };
     }
@@ -130,6 +180,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.7  2007/01/30 23:37:16  bnelson
+    *** empty log message ***
+
     Revision 1.6  2007/01/16 17:37:55  bnelson
     Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 

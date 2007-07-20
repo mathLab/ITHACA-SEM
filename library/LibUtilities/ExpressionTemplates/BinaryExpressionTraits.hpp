@@ -18,9 +18,9 @@
 
 namespace Nektar
 {
-	namespace expt
+    namespace expt
     {
-		// Aggregate information about types.
+        // Aggregate information about types.
         
         template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy, typename enabled = void>
         class BinaryExpressionTraits : 
@@ -189,6 +189,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpressionTraits.hpp,v $
+    Revision 1.9  2007/03/14 21:24:07  sherwin
+    Update for working version of MultiRegions up to ExpList1D
+
     Revision 1.8  2007/01/29 01:34:05  bnelson
     Updates to compile in windows.
 

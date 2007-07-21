@@ -79,70 +79,7 @@ namespace Nektar
         return NekMultiply(result, lhs, rhs);
     }
     
-    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
-    void NekAdd(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
-                const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
-                const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
-    {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
-            
-        result = NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>(lhs.GetRows(), lhs.GetColumns());
-        typename NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>::iterator result_iter = result.begin();
-        typename NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>::const_iterator rhs_iter = rhs.begin();
-        typename NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>::const_iterator lhs_iter = lhs.begin();
-        while( result_iter != result.end() )
-        {
-            (*result_iter) = (*lhs_iter) + (*rhs_iter);
-            ++result_iter;
-            ++rhs_iter;
-            ++lhs_iter;
-        }
-    }
-    
-    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
-    void NekAdd(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
-                        const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
-                        const NekMatrix<RhsDataType, DiagonalMatrixTag, RhsMatrixType>& rhs)
-    {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
-        
-        result = NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>(lhs);
-        for(unsigned int i = 0; i < result.GetRows(); ++i)
-        {
-            result(i,i) += rhs(i,i);
-        }
-    }
-    
-    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
-    void NekAdd(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
-                        const NekMatrix<LhsDataType, DiagonalMatrixTag, LhsMatrixType>& lhs,
-                        const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
-    {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
-        
-        result = NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>(rhs);
-        for(unsigned int i = 0; i < result.GetRows(); ++i)
-        {
-            result(i,i) += lhs(i,i);
-        }
-    }
-    
-    
+   
     template<typename DataType>
     void NekMultiply(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
                             const NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& lhs,
@@ -221,6 +158,142 @@ namespace Nektar
            result[i] = lhs(i,i)*rhs(i);
        }
     }
+
+
+	///////////////////////////////////////////////////////////////////
+	// Addition
+	///////////////////////////////////////////////////////////////////
+	    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
+    void NekAdd(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
+                const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
+                const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
+    {
+        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
+        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
+            
+        result = NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>(lhs.GetRows(), lhs.GetColumns());
+        typename NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>::iterator result_iter = result.begin();
+        typename NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>::const_iterator rhs_iter = rhs.begin();
+        typename NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>::const_iterator lhs_iter = lhs.begin();
+        while( result_iter != result.end() )
+        {
+            (*result_iter) = (*lhs_iter) + (*rhs_iter);
+            ++result_iter;
+            ++rhs_iter;
+            ++lhs_iter;
+        }
+    }
+    
+    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
+    void NekAdd(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
+                        const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
+                        const NekMatrix<RhsDataType, DiagonalMatrixTag, RhsMatrixType>& rhs)
+    {
+        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
+        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
+        
+        result = NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>(lhs);
+        for(unsigned int i = 0; i < result.GetRows(); ++i)
+        {
+            result(i,i) += rhs(i,i);
+        }
+    }
+    
+    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
+    void NekAdd(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
+                        const NekMatrix<LhsDataType, DiagonalMatrixTag, LhsMatrixType>& lhs,
+                        const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
+    {
+        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
+        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
+        
+        result = NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>(rhs);
+        for(unsigned int i = 0; i < result.GetRows(); ++i)
+        {
+            result(i,i) += lhs(i,i);
+        }
+    }
+    
+
+	////////////////////////////////////////////////////////////////////////////////////
+	// Subtraction
+	////////////////////////////////////////////////////////////////////////////////////
+	template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
+    void NekSubtract(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
+                const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
+                const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
+    {
+        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
+        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
+            
+        result = NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>(lhs.GetRows(), lhs.GetColumns());
+        typename NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>::iterator result_iter = result.begin();
+        typename NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>::const_iterator rhs_iter = rhs.begin();
+        typename NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>::const_iterator lhs_iter = lhs.begin();
+        while( result_iter != result.end() )
+        {
+            (*result_iter) = (*lhs_iter) - (*rhs_iter);
+            ++result_iter;
+            ++rhs_iter;
+            ++lhs_iter;
+        }
+    }
+    
+    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
+    void NekSubtract(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
+                        const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
+                        const NekMatrix<RhsDataType, DiagonalMatrixTag, RhsMatrixType>& rhs)
+    {
+        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
+        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
+        
+        result = NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>(lhs);
+        for(unsigned int i = 0; i < result.GetRows(); ++i)
+        {
+            result(i,i) -= rhs(i,i);
+        }
+    }
+    
+    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
+    void NekSubtract(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
+                        const NekMatrix<LhsDataType, DiagonalMatrixTag, LhsMatrixType>& lhs,
+                        const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
+    {
+        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
+        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
+        
+        result = NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>(rhs);
+        for(unsigned int i = 0; i < result.GetRows(); ++i)
+        {
+            result(i,i) -= lhs(i,i);
+        }
+    }
+    
+
 }
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_OPERATIONS_HPP
 

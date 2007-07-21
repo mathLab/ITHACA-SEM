@@ -115,13 +115,15 @@ namespace Nektar
     };
     
     template<typename LhsDataType, typename RhsDataType, typename LhsStorageType, typename LhsMatrixType, typename RhsMatrixType>
-    class BinaryExpressionTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>, NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>, SubtractOp>
+    class BinaryExpressionTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>, 
+                                 NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>, 
+                                 SubtractOp,
+                                 typename boost::disable_if<boost::is_same<LhsStorageType, FullMatrixTag> >::type >
     {
         public:
             typedef typename NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>::NumberType NumberType;
             typedef NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> ResultType;
-    };
-    
+    };  
     
     // All multiplications, rows 83 - 163.
     template<typename LhsDataType, typename RhsDataType, typename LhsStorageType, typename RhsStorageType, typename LhsMatrixType, typename RhsMatrixType>

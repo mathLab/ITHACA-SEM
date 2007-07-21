@@ -36,12 +36,15 @@
 #ifndef NODALTRIFEKETE_H
 #define NODALTRIFEKETE_H
 
+#include <iostream>
+
 #include <math.h>
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -55,43 +58,57 @@ namespace Nektar
 
             virtual ~NodalTriFekete()
             {
+                std::cout << "******* ~NodalTriFekete() destructor called!" << endl;
             }
-
+            
+            NodalTriFekete(const PointsKey &key):PointsBaseType(key)
+            {
+            }
+            
             static ptr<PointsBaseType> Create(const PointsKey &key);
 
             const ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
             {
-                ASSERTL0(false, "NodalTriFekete Method not implemented");
-                ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                ASSERTL0(pkey.GetPointsDim()==2, "Fekete Points can only interp to other 2d point distributions");
+                ConstArray<OneD, NekDouble> x, y;
+                PointsManager()[pkey]->GetPoints(x, y);
+                return GetI(x, y);
+            }
 
+            const ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x, const ConstArray<OneD, NekDouble>& y)
+            {
+                int numpoints = x.num_elements();
+                return GetI(numpoints, x, y);
+
+            }
+
+            const ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& xi, const ConstArray<OneD, NekDouble>& yi)
+            {
+                Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
+                CalculateInterpMatrix(xi, yi, interp);
+                ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints, 
+				                                      GetTotNumPoints(),interp.data()));
+                return returnval;
+            }       
+
+
+            const ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x) {
+                ASSERTL0(false, "NodalTriFekete Method not implemented for 1-dimensional input");
+                ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                return returnval;
+            }
+            const ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x){
+                ASSERTL0(false, "NodalTriFekete Method not implemented for 1-dimensional input");
+                ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
-            const ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x)
-            {
-                ASSERTL0(false, "NodalTriFekete Method not implemented");
 
-                ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
-
-                return returnval;
-            }
-
-            const ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
-            {
-                ASSERTL0(false, "NodalTriFekete Method not implemented");
-
-                ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
-
-                return returnval;
-            }
-
-            NodalTriFekete(const PointsKey &key):PointsBaseType(key)
-            {
-            }
 
         private:
             NodalTriFekete():PointsBaseType(NullPointsKey)
             {
+                std::cout << "******* NodalTriFekete() constructor called!" << endl;
             }
 
             void CalculatePoints();
@@ -99,7 +116,8 @@ namespace Nektar
             void CalculateDerivMatrix();
             void NodalPointReorder2d();
 
-           NekDouble LagrangePoly(NekDouble x, int pt, int npts, const ConstArray<OneD, NekDouble>& xpts);
+            void CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xi, const ConstArray<OneD, NekDouble>& yi, Array<OneD, NekDouble>& interp);
+
 
         }; // end of NodalTriFekete
    } // end of namespace

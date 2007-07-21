@@ -76,5 +76,47 @@ namespace Nektar
             //}
             //CountedObject<double>::check(1, 0, 1, 0, 0, 0);
         }
+
+		class Foo
+		{
+			public:
+				void method() { a = 3; };
+				void method_const() const {};
+
+				int a;
+		};
+
+		//void TestConst()
+		//{
+		//	Foo* f1 = new Foo();
+		//	const Foo* f2 = new Foo();
+		//	Foo* const f3 = new Foo();
+		//	const Foo* const f4 = new Foo();
+
+		//	ptr<Foo> sp1(new Foo());
+		//	const ptr<Foo> sp2(new Foo());
+		//	ptr<const Foo> sp3(new Foo());
+		//	const ptr<const Foo> sp4(new Foo());
+
+		//	f1->method();
+		//	f1->method_const();
+		//	f2->method();
+		//	f2->method_const();
+		//	f3->method();
+		//	f3->method_const();
+		//	f4->method();
+		//	f4->method_const();
+
+		//	sp1->method();
+		//	sp1->method_const();
+		//	sp2->method();
+		//	sp2->method_const();
+		//	sp3->method();
+		//	sp3->method_const();
+		//	sp4->method();
+		//	sp4->method_const();
+
+		//}
+
     }
 }

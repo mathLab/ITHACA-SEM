@@ -214,12 +214,16 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsFull), 0);
     test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsDiagonal), 0);
     test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestComboExpression), 0);
+	test->add(BOOST_TEST_CASE(&Nektar::MatrixSubtractionTests::TestLhsFullRhsFull), 0);
     
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.47  2007/07/20 02:24:41  bnelson
+    Replaced boost::shared_ptr with Nektar::ptr
+
     Revision 1.46  2007/07/17 01:58:40  bnelson
     Added SharedPtr tests.
 

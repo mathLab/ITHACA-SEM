@@ -44,6 +44,11 @@ namespace Nektar
         void TestLhsFullRhsDiagonal();
         void TestComboExpression();
     }
+
+	namespace MatrixSubtractionTests
+	{
+		void TestLhsFullRhsFull();
+	}
 }
 
 #endif //NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_OPERATIONS_H

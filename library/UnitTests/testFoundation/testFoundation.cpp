@@ -92,27 +92,12 @@ using namespace Nektar::LibUtilities;
                     }
                     BOOST_CHECK_CLOSE( numericIntegral, exact, 100.0*epsilon);
                     long double relativeError = (exact - numericIntegral)/exact;
-                    cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                        << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;
+          //          cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+          //              << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;
                 }
-    
-    //             cout << "The difference between 1 and the smallest "
-    //                 << "value greater than 1\n for float objects is: "
-    //                 << numeric_limits<float>::epsilon()
-    //                 << endl;
-    //             cout << "The difference between 1 and the smallest "
-    //                 << "value greater than 1\n for double objects is: "
-    //                 << numeric_limits<double>::epsilon()
-    //                 << endl;
-    //             cout << "The difference between 1 and the smallest "
-    //                 << "value greater than 1\n for long double objects is: "
-    //                 << numeric_limits<long double>::epsilon()
-    //                 << endl;
-    // 
-    //             cout << "Half of epsilon is: " << numeric_limits<double>::epsilon() / 2.0 << endl;
-    
-            cout<<"End of Test GaussGaussLegendre()" << endl;
-            cout<<"" << endl;
+        
+         //   cout<<"End of Test GaussGaussLegendre()" << endl;
+         //   cout<<"" << endl;
             }
     
             
@@ -139,11 +124,11 @@ using namespace Nektar::LibUtilities;
     
                     BOOST_CHECK_CLOSE( numericIntegral, exact, 100.0*epsilon);
                     long double relativeError = (exact - numericIntegral)/exact;
-                    cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                    << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;
+//                     cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                     << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;
                 }
-                cout<<"End of Test GaussRadauMLegendre()" << endl;
-                cout<<"" << endl;
+//                 cout<<"End of Test GaussRadauMLegendre()" << endl;
+//                 cout<<"" << endl;
             }
     
             void testGaussRadauPLegendre(){
@@ -166,11 +151,11 @@ using namespace Nektar::LibUtilities;
    
                     BOOST_CHECK_CLOSE( numericIntegral, exact, 100.0*epsilon);
                     long double relativeError = (exact - numericIntegral)/exact;
-                    cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                    << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;
+//                     cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                     << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;
                 }
-                cout<<"End of Test GaussRadauPLegendre()" << endl;
-                cout<<"" << endl;
+//                 cout<<"End of Test GaussRadauPLegendre()" << endl;
+//                 cout<<"" << endl;
             }
     
             void testGaussLobattoLegendre(){
@@ -194,11 +179,11 @@ using namespace Nektar::LibUtilities;
     
                     BOOST_CHECK_CLOSE( numericIntegral, exact, 100.0*epsilon);
                     long double relativeError = (exact - numericIntegral)/exact;
-                    cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                    << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;    
+//                     cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                     << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;    
                 }
-                cout<<"End of Test eGaussLobattoLegendre()" << endl;
-                cout<<"" << endl;
+//                 cout<<"End of Test eGaussLobattoLegendre()" << endl;
+//                 cout<<"" << endl;
             }
 
                void testGaussGaussChebyshev(){
@@ -222,11 +207,11 @@ using namespace Nektar::LibUtilities;
     
                     BOOST_CHECK_CLOSE( numericIntegral, exact, 100.0*epsilon);
                     long double relativeError = (exact - numericIntegral)/exact;
-                    cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                    << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;    
+    /*                cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+                    << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;   */ 
                 }
-                cout<<"End of Test eGaussGaussChebyshev()" << endl;
-                cout<<"" << endl;
+//                 cout<<"End of Test eGaussGaussChebyshev()" << endl;
+//                 cout<<"" << endl;
             }
 
             void testGaussRadauMChebyshev(){
@@ -250,11 +235,11 @@ using namespace Nektar::LibUtilities;
     
                     BOOST_CHECK_CLOSE( numericIntegral, exact, 100.0*epsilon);
                     long double relativeError = (exact - numericIntegral)/exact;
-                    cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                    << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;    
+//                     cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                     << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;    
                 }
-                cout<<"End of Test eGaussRadauMChebyshev()" << endl;
-                cout<<"" << endl;
+//                 cout<<"End of Test eGaussRadauMChebyshev()" << endl;
+//                 cout<<"" << endl;
             }
 
             void testGaussRadauPChebyshev(){
@@ -278,11 +263,11 @@ using namespace Nektar::LibUtilities;
     
                     BOOST_CHECK_CLOSE( numericIntegral, exact, 100.0*epsilon);
                     long double relativeError = (exact - numericIntegral)/exact;
-                    cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                    << ",      relError / nPts = " << relativeError/((nPts + 2)*(nPts + 2)) << ",       epsilon = " << epsilon << endl;
+//                     cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                     << ",      relError / nPts = " << relativeError/((nPts + 2)*(nPts + 2)) << ",       epsilon = " << epsilon << endl;
                 }
-                cout<<"End of Test eGaussRadauPChebyshev()" << endl;
-                cout<<"" << endl;
+//                 cout<<"End of Test eGaussRadauPChebyshev()" << endl;
+//                 cout<<"" << endl;
             }
 
              void testGaussLobattoChebyshev(){
@@ -306,11 +291,11 @@ using namespace Nektar::LibUtilities;
     
                     BOOST_CHECK_CLOSE( numericIntegral, exact, 100.0*epsilon);
                     long double relativeError = (exact - numericIntegral)/exact;
-                    cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                    << ",      relError / nPts = " << relativeError/((nPts + 2)*(nPts + 2)) << ",       epsilon = " << epsilon << endl;
+//                     cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                     << ",      relError / nPts = " << relativeError/((nPts + 2)*(nPts + 2)) << ",       epsilon = " << epsilon << endl;
                 }
-                cout<<"End of Test eGaussLobattoChebyshev()" << endl;
-                cout<<"" << endl;
+//                 cout<<"End of Test eGaussLobattoChebyshev()" << endl;
+//                 cout<<"" << endl;
             }
 
              void testGaussRadauMAlpha0Beta1(){
@@ -334,11 +319,11 @@ using namespace Nektar::LibUtilities;
     
                     BOOST_CHECK_CLOSE( numericIntegral, exact, 100.0*epsilon);
                     long double relativeError = (exact - numericIntegral)/exact;
-                    cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                    << ",      relError / nPts = " << relativeError/(nPts + 4) << ",       epsilon = " << epsilon << endl;
+//                     cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                     << ",      relError / nPts = " << relativeError/(nPts + 4) << ",       epsilon = " << epsilon << endl;
                 }
-                cout<<"End of Test eGaussRadauMAlpha0Beta1()" << endl;
-                cout<<"" << endl;
+//                 cout<<"End of Test eGaussRadauMAlpha0Beta1()" << endl;
+//                 cout<<"" << endl;
             }                                          
             void testGaussRadauMAlpha0Beta2(){
             
@@ -361,11 +346,11 @@ using namespace Nektar::LibUtilities;
     
                     BOOST_CHECK_CLOSE( numericIntegral, exact, 100.0*epsilon);
                     long double relativeError = (exact - numericIntegral)/exact;
-                    cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                    << ",      relError / nPts = " << relativeError/(2*(nPts + 2)) << ",       epsilon = " << epsilon << endl;    
+//                     cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                     << ",      relError / nPts = " << relativeError/(2*(nPts + 2)) << ",       epsilon = " << epsilon << endl;    
                 }
-                cout<<"End of Test eGaussRadauMAlpha0Beta2()" << endl;
-                cout<<"" << endl;
+//                 cout<<"End of Test eGaussRadauMAlpha0Beta2()" << endl;
+//                 cout<<"" << endl;
             }
             
             void testPolyEvenlySpaced(){
@@ -389,11 +374,11 @@ using namespace Nektar::LibUtilities;
     
                     BOOST_CHECK_CLOSE( numericIntegral, exact, 100.0*epsilon);
                     long double relativeError = (exact - numericIntegral)/exact;
-                    cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                    << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl;    
+         /*           cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+                    << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon << endl; */   
                 }
-                cout<<"End of Test ePolyEvenlySpaced()" << endl;
-                cout<<"" << endl;
+//                 cout<<"End of Test ePolyEvenlySpaced()" << endl;
+//                 cout<<"" << endl;
             }
 
             static long double fourierFunc(long double x, int N){
@@ -434,17 +419,17 @@ using namespace Nektar::LibUtilities;
                     for(int j = 0; j < numPoints; ++j) {
                         numericIntegral += w[j] * f(z[j], numPoints);
                     }
-                    cout << "Numeric integral = " << numericIntegral << ", exact = " << exact
-                         << ",  trapezoidal rule = " << TrapezoidalRule(numPoints) << endl;
+//                     cout << "Numeric integral = " << numericIntegral << ", exact = " << exact
+//                          << ",  trapezoidal rule = " << TrapezoidalRule(numPoints) << endl;
 
                     long double absoluteError = exact - numericIntegral;
                     BOOST_CHECK( fabs(absoluteError) < epsilon );
-    
+    /*
                     cout << "nPts: " << nPts << ",     absoluteError = " << absoluteError
-                         << ",       epsilon = " << epsilon << endl;
+                         << ",       epsilon = " << epsilon << endl;*/
                 }
-                cout<<"End of Test eFourierEvenlySpaced()" << endl;
-                cout<<"" << endl;
+//                 cout<<"End of Test eFourierEvenlySpaced()" << endl;
+//                 cout<<"" << endl;
             }                       
         }
     }

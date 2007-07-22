@@ -97,56 +97,56 @@ void testFourierDerivation(PointsType type, long double epsilon);
 
 void testDrivGaussGaussLegendre() {
     testDerivation(eGaussGaussLegendre, 4e-14);
-    cout<<"End of Derivation Test GaussGaussLegendre()" << endl << endl;
+   // cout<<"End of Derivation Test GaussGaussLegendre()" << endl << endl;
 }
 void testDrivGaussRadauMLegendre() {
     testDerivation(eGaussRadauMLegendre, 9e-14);
-    cout<<"End of Derivation Test GaussRadauMLegendre()" << endl << endl;
+   // cout<<"End of Derivation Test GaussRadauMLegendre()" << endl << endl;
 }
 
 void testDrivGaussRadauPLegendre() {
     testDerivation(eGaussRadauPLegendre, 9e-14);
-    cout<<"End of Derivation Test GaussRadauPLegendre()" << endl << endl;
+    //cout<<"End of Derivation Test GaussRadauPLegendre()" << endl << endl;
 }
 
 void testDrivGaussLobattoLegendre() {
     testDerivation(eGaussLobattoLegendre, 9e-14);
-    cout<<"End of Derivation Test GaussLobattoLegendre()" << endl << endl;
+   // cout<<"End of Derivation Test GaussLobattoLegendre()" << endl << endl;
 }
 
 void testDrivGaussGaussChebyshev() {
     testDerivation(eGaussGaussChebyshev, 1e-13);
-    cout<<"End of Derivation Test eGaussGaussChebyshev()" << endl << endl;
+   // cout<<"End of Derivation Test eGaussGaussChebyshev()" << endl << endl;
 }
 
 void testDrivGaussRadauMChebyshev() {
     testDerivation(eGaussRadauMChebyshev, 1e-13);
-    cout<<"End of Derivation Test GaussRadauMChebyshev()" << endl << endl;
+   // cout<<"End of Derivation Test GaussRadauMChebyshev()" << endl << endl;
 }
 
 void testDrivGaussRadauPChebyshev() {
     testDerivation(eGaussRadauPChebyshev, 1e-13);
-    cout<<"End of Derivation Test GaussRadauPChebyshev()" << endl << endl;
+    //cout<<"End of Derivation Test GaussRadauPChebyshev()" << endl << endl;
 }
 
 void testDrivGaussLobattoChebyshev() {
     testDerivation(eGaussLobattoChebyshev, 1e-13);
-    cout<<"End of Derivation Test GaussLobattoChebyshev()" << endl << endl;
+    //cout<<"End of Derivation Test GaussLobattoChebyshev()" << endl << endl;
 }
 
 void testDrivGaussRadauMAlpha0Beta1() {
     testDerivation(eGaussRadauMAlpha0Beta1, 9e-14);
-    cout<<"End of Derivation Test GaussRadauMAlpha0Beta1()" << endl << endl;
+   // cout<<"End of Derivation Test GaussRadauMAlpha0Beta1()" << endl << endl;
 }
 
 void testDrivGaussRadauMAlpha0Beta2() {
     testDerivation(eGaussRadauMAlpha0Beta2, 1e-13);
-    cout<<"End of Derivation Test GaussRadauMAlpha0Beta2()" << endl << endl;
+   // cout<<"End of Derivation Test GaussRadauMAlpha0Beta2()" << endl << endl;
 }
 
 void testDrivPolyEvenlySpaced() {
     testDerivation(ePolyEvenlySpaced, 1e-13);
-    cout<<"End of Derivation Test PolyEvenlySpaced()" << endl << endl;
+   // cout<<"End of Derivation Test PolyEvenlySpaced()" << endl << endl;
 }
 
 void testDrivFourierEvenlySpaced() {
@@ -238,47 +238,47 @@ void testFourierDerivation(PointsType type, long double epsilon) {
 
             // Output the diagnostics if the verbose flag is set
             if( bool isVerbose = true ) {
-                cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon
-                <<",       exact = " << exact <<",       numerical = " << numericDerivative<< endl; //}
+//                 cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                 << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon
+//                 <<",       exact = " << exact <<",       numerical = " << numericDerivative<< endl; 
 
                 long double expectedDerivative = 0.0;              
                 for(int j = 0; j < numPoints; ++j) {
                      expectedDerivative += derivativeMatrixFourier(z, numPoints, i,j) * f(z[j], numPoints);
                 }
-                cout << "expectedFourierDerivative = " << expectedDerivative << endl;
+          //      cout << "expectedFourierDerivative = " << expectedDerivative << endl;
 
                 if( i == numPoints - 1 ) {
-                    cout << "D = " << endl;
+               //     cout << "D = " << endl;
                     for( int k = 0; k < numPoints; ++k ) {
                         for( int j = 0; j < numPoints; ++j ) {
-                            printf("% 5.3f  ", D(k,j));
+                      //      printf("% 5.3f  ", D(k,j));
                         }
                         cout << endl;
                     }
-                    cout << "Expected D = " << endl;
+                //    cout << "Expected D = " << endl;
                     for( int k = 0; k < numPoints; ++k ) {
                         for( int j = 0; j < numPoints; ++j ) {
-                             printf("% 10.3Lf", derivativeMatrixFourier(z, numPoints, k, j));
+                 //            printf("% 10.3Lf", derivativeMatrixFourier(z, numPoints, k, j));
                         }
                         cout << endl;
                     }
-                    cout << "y  = [";
+                  //  cout << "y  = [";
                     for( int j = 0; j < numPoints; ++j ) {
-                        printf("% 4.3Lf", f(z[j], numPoints));
+                //        printf("% 4.3Lf", f(z[j], numPoints));
                         if( j < numPoints-1 ) {
-                            cout << ", ";
+               //             cout << ", ";
                         }
                     }
-                    cout << "]" << endl;
-                    cout << "y' = [";
+                  //  cout << "]" << endl;
+                  //  cout << "y' = [";
                     for( int j = 0; j < numPoints; ++j ) {
-                        printf("% 4.3Lf", d(z[j], numPoints));
+                    //    printf("% 4.3Lf", d(z[j], numPoints));
                         if( j < numPoints-1 ) {
-                            cout << ", ";
+                      //      cout << ", ";
                         }
                     }
-                    cout << "]" << endl;
+                    //cout << "]" << endl;
                 }
             }//
         }
@@ -324,49 +324,49 @@ void testDerivation(PointsType type, long double epsilon) {
 
             // Output the diagnostics if the verbose flag is set
             if( bool isVerbose = true ) {
-                cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-                << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon
-                <<",       exact = " << exact <<",       numerical = " << numericDerivative<< endl; //}
+                //cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                 << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon
+//                 <<",       exact = " << exact <<",       numerical = " << numericDerivative<< endl; 
 
                 long double expectedDerivative = 0.0;
                 for(int j = 0; j < numPoints; ++j) {
                      expectedDerivative += derivativeLegrangePoly(z, numPoints, i,j) * f(z[j]);
                 }
-                cout << "expectedLegrangeDerivative = " << expectedDerivative << endl;
+            //    cout << "expectedLegrangeDerivative = " << expectedDerivative << endl;
 
                 if( i == numPoints - 1 ) {
-                    cout << "D = " << endl;
+              //      cout << "D = " << endl;
                     for( int k = 0; k < numPoints; ++k ) {
                         for( int j = 0; j < numPoints; ++j ) {
-                            printf("% 5.3f  ", D(k,j));
+                //            printf("% 5.3f  ", D(k,j));
                         }
                         cout << endl;
                     }
                     if( bool isEvenlySpaced = true ) {
-                        cout << "Expected D = " << endl;
+                  //      cout << "Expected D = " << endl;
                         for( int k = 0; k < numPoints; ++k ) {
                             for( int j = 0; j < numPoints; ++j ) {
-                                 printf("% 10.3Lf", derivativeLegrangePoly(z, numPoints, k, j));
+                    //             printf("% 10.3Lf", derivativeLegrangePoly(z, numPoints, k, j));
                             }
                             cout << endl;
                         }
                     }
-                    cout << "y  = [";
+//                    cout << "y  = [";
                     for( int j = 0; j < numPoints; ++j ) {
-                        printf("% 4.3Lf", f(z[j]));
+  //                      printf("% 4.3Lf", f(z[j]));
                         if( j < numPoints-1 ) {
-                            cout << ", ";
+    //                        cout << ", ";
                         }
                     }
-                    cout << "]" << endl;
-                    cout << "y' = [";
+      //              cout << "]" << endl;
+      //              cout << "y' = [";
                     for( int j = 0; j < numPoints; ++j ) {
-                        printf("% 4.3Lf", d(z[j]));
+        //                printf("% 4.3Lf", d(z[j]));
                         if( j < numPoints-1 ) {
-                            cout << ", ";
+          //                  cout << ", ";
                         }
                     }
-                    cout << "]" << endl;
+             //       cout << "]" << endl;
                 }
             }//
         }

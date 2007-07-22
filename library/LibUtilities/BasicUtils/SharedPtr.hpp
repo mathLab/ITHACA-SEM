@@ -66,7 +66,7 @@ namespace Nektar
     class ptr
     {
         private:
-            typedef ptr<T> this_type;
+            typedef boost::shared_ptr<T> this_type;
 
         public:
             typedef T element_type;
@@ -100,34 +100,34 @@ namespace Nektar
             }
 
             template<class Y>
-            ptr(const ptr<Y>& r) : 
+            ptr(const boost::shared_ptr<Y>& r) : 
                 px(r.px), 
                 pn(r.pn)
             {
             }
 
-            ptr(const ptr<T>& rhs) :
+            ptr(const boost::shared_ptr<T>& rhs) :
                 px(rhs.px),
                 pn(rhs.pn)
             {
             }
 
             template<class Y>
-            ptr(const ptr<Y>& r, static_cast_tag) : 
+            ptr(const boost::shared_ptr<Y>& r, static_cast_tag) : 
                 px(static_cast<element_type*>(r.px)), 
                 pn(r.pn)
             {
             }
 
             template<class Y>
-            ptr(const ptr<Y>& r, const_cast_tag) : 
+            ptr(const boost::shared_ptr<Y>& r, const_cast_tag) : 
                 px(const_cast<element_type*>(r.px)), 
                 pn(r.pn)
             {
             }
 
             template<class Y>
-            ptr(const ptr<Y>& r, dynamic_cast_tag) : 
+            ptr(const boost::shared_ptr<Y>& r, dynamic_cast_tag) : 
                 px(dynamic_cast<element_type *>(r.px)), 
                 pn(r.pn)
             {
@@ -138,7 +138,7 @@ namespace Nektar
             }
 
             template<class Y>
-            ptr(const ptr<Y>& r, polymorphic_cast_tag) : 
+            ptr(const boost::shared_ptr<Y>& r, polymorphic_cast_tag) : 
                 px(dynamic_cast<element_type *>(r.px)), 
                 pn(r.pn)
             {
@@ -149,14 +149,14 @@ namespace Nektar
             }
 
             template<class Y>
-            const ptr<T>& operator=(const ptr<Y>& r)
+            const boost::shared_ptr<T>& operator=(const boost::shared_ptr<Y>& r)
             {
                 px = r.px;
                 pn = r.pn; 
                 return *this;
             }
 
-            const ptr<T>& operator=(const ptr<T>& r)
+            const boost::shared_ptr<T>& operator=(const boost::shared_ptr<T>& r)
             {
                 px = r.px;
                 pn = r.pn; 
@@ -236,14 +236,14 @@ namespace Nektar
                 return pn.use_count();
             }
 
-            void swap(ptr<T>& other)
+            void swap(boost::shared_ptr<T>& other)
             {
                 std::swap(px, other.px);
                 pn.swap(other.pn);
             }
 
             template<class Y> bool 
-            internal_less(const ptr<Y>& rhs) const
+            internal_less(const boost::shared_ptr<Y>& rhs) const
             {
                 return pn < rhs.pn;
             }
@@ -259,51 +259,51 @@ namespace Nektar
     };  
 
     template<class T, class U> 
-    inline bool operator==(const ptr<T>& a, const ptr<U>& b)
+    inline bool operator==(const boost::shared_ptr<T>& a, const boost::shared_ptr<U>& b)
     {
         return a.get() == b.get();
     }
 
     template<class T, class U> 
-    inline bool operator!=(const ptr<T>& a, const ptr<U>& b)
+    inline bool operator!=(const boost::shared_ptr<T>& a, const boost::shared_ptr<U>& b)
     {
         return a.get() != b.get();
     }
 
 
     template<class T, class U> 
-    inline bool operator<(const ptr<T>& a, const ptr<U>& b)
+    inline bool operator<(const boost::shared_ptr<T>& a, const boost::shared_ptr<U>& b)
     {
         return a.internal_less(b);
     }
 
     template<class T> 
-    inline void swap(const ptr<T>& a, const ptr<T>& b)
+    inline void swap(const boost::shared_ptr<T>& a, const boost::shared_ptr<T>& b)
     {
         a.swap(b);
     }
 
     template<class T, class U> 
-    ptr<T> static_pointer_cast(const ptr<U>& r)
+    boost::shared_ptr<T> static_pointer_cast(const boost::shared_ptr<U>& r)
     {
-        return ptr<T>(r, static_cast_tag());
+        return boost::shared_ptr<T>(r, static_cast_tag());
     }
 
     template<class T, class U> 
-    ptr<T> const_pointer_cast(const ptr<U>& r)
+    boost::shared_ptr<T> const_pointer_cast(const boost::shared_ptr<U>& r)
     {
-        return ptr<T>(r, const_cast_tag());
+        return boost::shared_ptr<T>(r, const_cast_tag());
     }
 
     template<class T, class U>
-    ptr<T> dynamic_pointer_cast(const ptr<U>& r)
+    boost::shared_ptr<T> dynamic_pointer_cast(const boost::shared_ptr<U>& r)
     {
-        return ptr<T>(r, dynamic_cast_tag());
+        return boost::shared_ptr<T>(r, dynamic_cast_tag());
     }
 
 
     template<class T> 
-    inline const T* get_pointer(const ptr<T>& p)
+    inline const T* get_pointer(const boost::shared_ptr<T>& p)
     {
         return p.get();
     }

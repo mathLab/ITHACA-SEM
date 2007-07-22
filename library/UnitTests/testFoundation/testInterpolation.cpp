@@ -148,190 +148,190 @@ long double fourierInterpolationFunction(int j, long double x, const ConstArray<
 
 
 void testFourierInterpolation(PointsType type, long double epsilon) {
-    long double (*f)(long double x, int N) = fourierFunc;
-    const long double eps = epsilon;
-    for(int nPts = 4; nPts<=10; nPts += 2) {
-       const ptr<Points<NekDouble> > points = PointsManager()[PointsKey(nPts, type)];
-
-       const ConstArray<OneD,NekDouble> &z = points->GetZ();
-          
-       // Get the interpolation matrix I
-       int nNodes = nPts * 2;
-       const ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, type)];
-       const ConstArray<OneD, NekDouble> &zNodePtr = nodes->GetZ();
-
-       const ptr<NekMatrix<NekDouble> > Iptr = points->GetI(nNodes, zNodePtr);
-       const NekMatrix<NekDouble> & I = *Iptr;
-
-       //int numPoints = points->GetNumPoints();
-       epsilon = eps*nPts;
-       // Check the derivative at each of the i points
-       for(int i = 0; i < I.GetRows(); ++i) {
-           long double exact = f(zNodePtr[i], nPts);
-           long double numericInterpolation = 0.0;
-
-           // Multiply the derivative matrix with the sample point vector to get the derivative
-            for(int j = 0; j < I.GetColumns(); ++j) {
-               numericInterpolation += I(i,j) * f(z[j], nPts);
-           }
-
-           // Compute the relative error; deals appropiately with the case when x' = 0
-           long double relativeError = (exact - numericInterpolation)/exact;
-           if( fabs(exact) < numeric_limits<double>::epsilon() ) {
-               relativeError = exact - numericInterpolation;
-               BOOST_CHECK( fabs(relativeError) < epsilon );
-           } else {
-               BOOST_CHECK_CLOSE(exact, numericInterpolation, 100.0*epsilon);
-           }
-
-           // Output the diagnostics if the verbose flag is set
-           if( bool isVerbose = true ) {
-               cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-               //<< ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon
-               <<",       exact = " << exact <<",       numerical = " << numericInterpolation<< endl; //}
-
-
-               long double expectedInterpolation = 0.0;
-               for(int j = 0; j<I.GetColumns(); ++j) {
-                   long double F = fourierInterpolationFunction(j, zNodePtr[i], z, nPts);
-                   cout << "h[" << j << "](x[" << i << "]) = " << F << endl;
-                   expectedInterpolation += F * f(z[j], nPts);
-               }
-               cout << "expectedInterpolation = " << expectedInterpolation << endl;
-                   cout << "I = " << endl;
-                   for(int k=0; k<I.GetRows(); ++k) {
-                       for(int j =0; j<I.GetColumns(); ++j) {
-                           printf("% 5.3f  ", I(k, j));
-                       }
-                       cout << endl;
-                   }
-
-               long double L1_interpolationMatrixError = 0;
-               double Linf = 0;
-                long double RMS = 0, mean = 0;
-
-               cout << "Expected I = " << endl;
-               for(int k=0; k<I.GetRows(); ++k) {
-                   for(int j=0; j<I.GetColumns(); ++j) {
-                       long double F = fourierInterpolationFunction(j, zNodePtr[k], z, nPts);
-                       long double error = I(k,j) - F;
-                       Linf = max(Linf, static_cast<double>(fabs(error)));
-                       L1_interpolationMatrixError += fabs(error);
-                       RMS += error*error;
-                       mean += error;
-                       
-                       printf("% 5.3Lf  ", F);
-                   }
-                   cout << endl;
-               }
-               int N = I.GetRows() * I.GetColumns();
-               RMS = sqrt(RMS)/N;
-               mean /= N;
-               long double variance = fabs(RMS*RMS - mean*mean);
-               cout << "Interpolation Matrix Errors:" << endl;
-               cout << "L1       = " << L1_interpolationMatrixError << endl;
-               cout << "Linf     = " << Linf << endl;
-               cout << "RMS      = " << RMS << endl;
-               cout << "mean     = " << mean << endl;
-               cout << "stdDev   = " << sqrt(variance) << endl;
-
-          //     cout << "//////////////////////////////////////////////////////" << endl;
-           }//
-       }
-    }
+//     long double (*f)(long double x, int N) = fourierFunc;
+//     const long double eps = epsilon;
+//     for(int nPts = 4; nPts<=10; nPts += 2) {
+//        const ptr<Points<NekDouble> > points = PointsManager()[PointsKey(nPts, type)];
+// 
+//        const ConstArray<OneD,NekDouble> &z = points->GetZ();
+//           
+//        // Get the interpolation matrix I
+//        int nNodes = nPts * 2;
+//        const ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, type)];
+//        const ConstArray<OneD, NekDouble> &zNodePtr = nodes->GetZ();
+// 
+//        const ptr<NekMatrix<NekDouble> > Iptr = points->GetI(nNodes, zNodePtr);
+//        const NekMatrix<NekDouble> & I = *Iptr;
+// 
+//        //int numPoints = points->GetNumPoints();
+//        epsilon = eps*nPts;
+//        // Check the derivative at each of the i points
+//        for(int i = 0; i < I.GetRows(); ++i) {
+//            long double exact = f(zNodePtr[i], nPts);
+//            long double numericInterpolation = 0.0;
+// 
+//            // Multiply the derivative matrix with the sample point vector to get the derivative
+//             for(int j = 0; j < I.GetColumns(); ++j) {
+//                numericInterpolation += I(i,j) * f(z[j], nPts);
+//            }
+// 
+//            // Compute the relative error; deals appropiately with the case when x' = 0
+//            long double relativeError = (exact - numericInterpolation)/exact;
+//            if( fabs(exact) < numeric_limits<double>::epsilon() ) {
+//                relativeError = exact - numericInterpolation;
+//                BOOST_CHECK( fabs(relativeError) < epsilon );
+//            } else {
+//                BOOST_CHECK_CLOSE(exact, numericInterpolation, 100.0*epsilon);
+//            }
+// 
+//            // Output the diagnostics if the verbose flag is set
+//            if( bool isVerbose = true ) {
+//                cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                //<< ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon
+//                <<",       exact = " << exact <<",       numerical = " << numericInterpolation<< endl; //}
+// 
+// 
+//                long double expectedInterpolation = 0.0;
+//                for(int j = 0; j<I.GetColumns(); ++j) {
+//                    long double F = fourierInterpolationFunction(j, zNodePtr[i], z, nPts);
+//                    cout << "h[" << j << "](x[" << i << "]) = " << F << endl;
+//                    expectedInterpolation += F * f(z[j], nPts);
+//                }
+//                cout << "expectedInterpolation = " << expectedInterpolation << endl;
+//                    cout << "I = " << endl;
+//                    for(int k=0; k<I.GetRows(); ++k) {
+//                        for(int j =0; j<I.GetColumns(); ++j) {
+//                            printf("% 5.3f  ", I(k, j));
+//                        }
+//                        cout << endl;
+//                    }
+// 
+//                long double L1_interpolationMatrixError = 0;
+//                double Linf = 0;
+//                 long double RMS = 0, mean = 0;
+// 
+//                cout << "Expected I = " << endl;
+//                for(int k=0; k<I.GetRows(); ++k) {
+//                    for(int j=0; j<I.GetColumns(); ++j) {
+//                        long double F = fourierInterpolationFunction(j, zNodePtr[k], z, nPts);
+//                        long double error = I(k,j) - F;
+//                        Linf = max(Linf, static_cast<double>(fabs(error)));
+//                        L1_interpolationMatrixError += fabs(error);
+//                        RMS += error*error;
+//                        mean += error;
+//                        
+//                        printf("% 5.3Lf  ", F);
+//                    }
+//                    cout << endl;
+//                }
+//                int N = I.GetRows() * I.GetColumns();
+//                RMS = sqrt(RMS)/N;
+//                mean /= N;
+//                long double variance = fabs(RMS*RMS - mean*mean);
+//                cout << "Interpolation Matrix Errors:" << endl;
+//                cout << "L1       = " << L1_interpolationMatrixError << endl;
+//                cout << "Linf     = " << Linf << endl;
+//                cout << "RMS      = " << RMS << endl;
+//                cout << "mean     = " << mean << endl;
+//                cout << "stdDev   = " << sqrt(variance) << endl;
+// 
+//           //     cout << "//////////////////////////////////////////////////////" << endl;
+//            }//
+//        }
+//     }
 }//
 
 void testPointsInterpolation(PointsType type, long double epsilon) {
-    long double (*f)(long double x) = polyFunc;
-    const long double eps = epsilon;
-     for(int nPts = 8; nPts<=15; ++nPts) {
-       const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
-       const ConstArray<OneD, NekDouble> & z = points->GetZ();
-       
-       
-       // Get the interpolation matrix I
-       int nNodes = nPts * 2;
-       const ptr<Points<double> > nodes = PointsManager()[PointsKey(nNodes, type)];
-        const ConstArray<OneD, NekDouble> & zNodePtr = nodes->GetZ() ;
-
-       const Points<NekDouble>::MatrixSharedPtrType Iptr = points->GetI(nNodes, zNodePtr);
-       const NekMatrix<NekDouble> & I = *Iptr;
-
-       int numPoints = points->GetNumPoints();
-       epsilon = eps*numPoints;
-       
-       // Check the derivative at each of the i points
-       for(int i = 0; i < I.GetRows(); ++i) {
-           long double exact = f(zNodePtr[i]);
-           long double numericInterpolation = 0.0;
-
-           // Multiply the derivative matrix with the sample point vector to get the derivative
-            for(int j = 0; j < I.GetColumns(); ++j) {
-               numericInterpolation += I(i,j) * f(z[j]);
-           }
-
-           // Compute the relative error; deals appropiately with the case when x' = 0
-           long double relativeError = (exact - numericInterpolation)/exact;
-           if( fabs(exact) < numeric_limits<double>::epsilon() ) {
-               relativeError = exact - numericInterpolation;
-               BOOST_CHECK( fabs(relativeError) < epsilon );
-           } else {
-               BOOST_CHECK_CLOSE(exact, numericInterpolation, 100.0*epsilon);
-           }
-
-           // Output the diagnostics if the verbose flag is set
-           if( bool isVerbose = true ) {
-               cout << "nPts: " << nPts << ",     relativeError = " << relativeError
-               << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon
-               <<",       exact = " << exact <<",       numerical = " << numericInterpolation<< endl; //}
-
-
-               long double expectedInterpolation = 0.0;
-               for(int j = 0; j<I.GetColumns(); ++j) {
-                   cout << "h[" << j << "](x[" << i << "]) = " << LagrangeInterpolation(j, zNodePtr[i], z, numPoints) << endl;
-                   expectedInterpolation += LagrangeInterpolation(j, zNodePtr[i], z, nPts) * f(z[j]);
-               }
-               cout << "expectedInterpolation = " << expectedInterpolation << endl;
-
-                   cout << "I = " << endl;
-                   for(int k=0; k<I.GetRows(); ++k) {
-                       for(int j =0; j<I.GetColumns(); ++j) {
-                           printf("% 5.3f  ", I(k, j));
-                       }
-                       cout << endl;
-                   }
-
-               long double L1_interpolationMatrixError = 0;
-                double Linf = 0;
-                long double RMS = 0, mean = 0;
-
-               cout << "Expected I = " << endl;
-               for(int k=0; k<I.GetRows(); ++k) {
-                   for(int j=0; j<I.GetColumns(); ++j) {
-                       long double L = LagrangeInterpolation(j, zNodePtr[k], z, nPts);
-                       long double error = I(k,j) - L;
-                       Linf = max(Linf, static_cast<double>(fabs(error)));
-                       L1_interpolationMatrixError += fabs(error);
-                       RMS += error*error;
-                       mean += error;
-
-                       printf("% 5.3Lf  ", L);
-                   }
-                   cout << endl;
-               }
-               int N = I.GetRows() * I.GetColumns();
-               RMS = sqrt(RMS)/N;
-               mean /= N;
-               long double variance = fabs(RMS*RMS - mean*mean);
-               cout << "Interpolation Matrix Errors:" << endl;
-               cout << "L1       = " << L1_interpolationMatrixError << endl;
-               cout << "Linf     = " << Linf << endl;
-               cout << "RMS      = " << RMS << endl;
-               cout << "mean     = " << mean << endl;
-               cout << "stdDev   = " << sqrt(variance) << endl;
-           }//
-       }
+//     long double (*f)(long double x) = polyFunc;
+//     const long double eps = epsilon;
+//      for(int nPts = 8; nPts<=15; ++nPts) {
+//        const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+//        const ConstArray<OneD, NekDouble> & z = points->GetZ();
+//        
+//        
+//        // Get the interpolation matrix I
+//        int nNodes = nPts * 2;
+//        const ptr<Points<double> > nodes = PointsManager()[PointsKey(nNodes, type)];
+//         const ConstArray<OneD, NekDouble> & zNodePtr = nodes->GetZ() ;
+// 
+//        const Points<NekDouble>::MatrixSharedPtrType Iptr = points->GetI(nNodes, zNodePtr);
+//        const NekMatrix<NekDouble> & I = *Iptr;
+// 
+//        int numPoints = points->GetNumPoints();
+//        epsilon = eps*numPoints;
+//        
+//        // Check the derivative at each of the i points
+//        for(int i = 0; i < I.GetRows(); ++i) {
+//            long double exact = f(zNodePtr[i]);
+//            long double numericInterpolation = 0.0;
+// 
+//            // Multiply the derivative matrix with the sample point vector to get the derivative
+//             for(int j = 0; j < I.GetColumns(); ++j) {
+//                numericInterpolation += I(i,j) * f(z[j]);
+//            }
+// 
+//            // Compute the relative error; deals appropiately with the case when x' = 0
+//            long double relativeError = (exact - numericInterpolation)/exact;
+//            if( fabs(exact) < numeric_limits<double>::epsilon() ) {
+//                relativeError = exact - numericInterpolation;
+//                BOOST_CHECK( fabs(relativeError) < epsilon );
+//            } else {
+//                BOOST_CHECK_CLOSE(exact, numericInterpolation, 100.0*epsilon);
+//            }
+// 
+//            // Output the diagnostics if the verbose flag is set
+//            if( bool isVerbose = true ) {
+//                cout << "nPts: " << nPts << ",     relativeError = " << relativeError
+//                << ",      relError / nPts = " << relativeError/(nPts + 2) << ",       epsilon = " << epsilon
+//                <<",       exact = " << exact <<",       numerical = " << numericInterpolation<< endl; //}
+// 
+// 
+//                long double expectedInterpolation = 0.0;
+//                for(int j = 0; j<I.GetColumns(); ++j) {
+//                    cout << "h[" << j << "](x[" << i << "]) = " << LagrangeInterpolation(j, zNodePtr[i], z, numPoints) << endl;
+//                    expectedInterpolation += LagrangeInterpolation(j, zNodePtr[i], z, nPts) * f(z[j]);
+//                }
+//                cout << "expectedInterpolation = " << expectedInterpolation << endl;
+// 
+//                    cout << "I = " << endl;
+//                    for(int k=0; k<I.GetRows(); ++k) {
+//                        for(int j =0; j<I.GetColumns(); ++j) {
+//                            printf("% 5.3f  ", I(k, j));
+//                        }
+//                        cout << endl;
+//                    }
+// 
+//                long double L1_interpolationMatrixError = 0;
+//                 double Linf = 0;
+//                 long double RMS = 0, mean = 0;
+// 
+//                cout << "Expected I = " << endl;
+//                for(int k=0; k<I.GetRows(); ++k) {
+//                    for(int j=0; j<I.GetColumns(); ++j) {
+//                        long double L = LagrangeInterpolation(j, zNodePtr[k], z, nPts);
+//                        long double error = I(k,j) - L;
+//                        Linf = max(Linf, static_cast<double>(fabs(error)));
+//                        L1_interpolationMatrixError += fabs(error);
+//                        RMS += error*error;
+//                        mean += error;
+// 
+//                        printf("% 5.3Lf  ", L);
+//                    }
+//                    cout << endl;
+//                }
+//                int N = I.GetRows() * I.GetColumns();
+//                RMS = sqrt(RMS)/N;
+//                mean /= N;
+//                long double variance = fabs(RMS*RMS - mean*mean);
+//                cout << "Interpolation Matrix Errors:" << endl;
+//                cout << "L1       = " << L1_interpolationMatrixError << endl;
+//                cout << "Linf     = " << Linf << endl;
+//                cout << "RMS      = " << RMS << endl;
+//                cout << "mean     = " << mean << endl;
+//                cout << "stdDev   = " << sqrt(variance) << endl;
+//            }//
+//        }
     }
-  }//
- }
+//   }//
+  }
 }

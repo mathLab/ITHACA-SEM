@@ -46,7 +46,7 @@
 
 #include <boost/mpl/contains.hpp>
 #include <boost/mpl/list_c.hpp>
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/mpl/integral_c.hpp>
 #include <boost/bind.hpp>
@@ -90,6 +90,28 @@ namespace Nektar
     class MemoryManager
     {
         private:
+            //template<typename DataType, typename enabled = void>
+            //class MakeReference
+            //{
+            //    public:
+            //        typedef typename boost::call_traits<DataType>::reference Type;
+            //};
+
+            //template<typename DataType>
+            //class MakeReference<DataType*>
+            //{
+            //    public:
+            //        typedef DataType* Type;
+            //};
+
+            //template<typename DataType>
+            //class MakeReference<DataType, typename boost::enable_if<boost::is_fundamental<DataType> >::type>
+            //{
+            //    public:
+            //        typedef DataType Type;
+            //};
+
+
             template<typename ObjectType, typename CustomDeallocator>
             class DeallocateSharedPtr
             {
@@ -229,26 +251,26 @@ namespace Nektar
 
             BOOST_PP_REPEAT_FROM_TO(1, NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS, ALLOCATE_METHOD_GENERATOR, Allocate);
 
-            static ptr<DataType> AllocateSharedPtr()
+            static boost::shared_ptr<DataType> AllocateSharedPtr()
             {
                 return AllocateSharedPtrD(DefaultCustomDeallocator());
                 //DataType* data = Allocate(); 
-                //return ptr<DataType>(data, &MemoryManager::DeallocateSharedPtr); 
+                //return boost::shared_ptr<DataType>(data, &MemoryManager::DeallocateSharedPtr); 
             }
             
             #define ALLOCATE_SHARED_PTR_METHOD_GENERATOR(z, i, methodName) \
             template<BOOST_PP_ENUM_PARAMS(i, typename Arg)> \
-            static ptr<DataType> methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, const Arg, & arg)) \
+            static boost::shared_ptr<DataType> methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, const Arg, & arg)) \
             { \
                 return AllocateSharedPtrD(DefaultCustomDeallocator(), BOOST_PP_ENUM_PARAMS(i, arg)); \
             }
 
             #define ALLOCATE_SHARED_PTR_METHOD_WITH_DEALLOCATOR_GENERATOR(z, i, methodName) \
             template<typename DeallocatorType BOOST_PP_ENUM_TRAILING_PARAMS(i, typename Arg)> \
-            static ptr<DataType> methodName(const DeallocatorType& d BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(i, const Arg, & arg)) \
+            static boost::shared_ptr<DataType> methodName(const DeallocatorType& d BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(i, const Arg, & arg)) \
             { \
                 DataType* data = Allocate(BOOST_PP_ENUM_PARAMS(i, arg)); \
-                return ptr<DataType>(data, DeallocateSharedPtr<DataType, DeallocatorType>(d)); \
+                return boost::shared_ptr<DataType>(data, DeallocateSharedPtr<DataType, DeallocatorType>(d)); \
             }
             
             BOOST_PP_REPEAT_FROM_TO(0, NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS, ALLOCATE_SHARED_PTR_METHOD_WITH_DEALLOCATOR_GENERATOR, AllocateSharedPtrD);
@@ -431,6 +453,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.12  2007/07/20 00:19:42  bnelson
+    Replaced boost::shared_ptr with Nektar::ptr
+
     Revision 1.11  2007/05/14 23:50:16  bnelson
     Updated MemoryManager to implement the allocator interface.
 

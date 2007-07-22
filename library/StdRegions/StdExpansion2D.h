@@ -210,7 +210,7 @@ namespace Nektar
          }
         };
 
-        typedef ptr<StdExpansion2D> StdExpansion2DSharedPtr;
+        typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
 
     } //end of namespace
 } //end of namespace
@@ -219,6 +219,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.15  2007/07/20 02:16:53  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.14  2007/05/30 20:49:13  sherwin
 * Updates to do with LocalRegions and SpatialDomains
 *

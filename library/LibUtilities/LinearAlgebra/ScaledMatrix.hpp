@@ -44,7 +44,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
@@ -119,7 +119,7 @@ namespace Nektar
 //             }
             
             NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
-                      ptr<const NekMatrix<DataType, StorageType, OwnedMatrixType> > m) :
+                      boost::shared_ptr<const NekMatrix<DataType, StorageType, OwnedMatrixType> > m) :
                 BaseType(m->GetRows(), m->GetColumns()),
                 m_matrix(m),
                 m_scale(scale)
@@ -151,7 +151,7 @@ namespace Nektar
                 return m_scale;
             }
             
-            ptr<const NekMatrix<DataType, StorageType, OwnedMatrixType> > GetOwnedMatrix() const
+            boost::shared_ptr<const NekMatrix<DataType, StorageType, OwnedMatrixType> > GetOwnedMatrix() const
             {
                 return m_matrix; 
             }
@@ -178,7 +178,7 @@ namespace Nektar
             }
             
 
-            ptr<const NekMatrix<DataType, StorageType, OwnedMatrixType> > m_matrix;
+            boost::shared_ptr<const NekMatrix<DataType, StorageType, OwnedMatrixType> > m_matrix;
             NumberType m_scale;
     };
     

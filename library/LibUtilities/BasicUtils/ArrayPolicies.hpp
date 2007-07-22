@@ -39,7 +39,7 @@
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/bind.hpp>
 
@@ -187,7 +187,7 @@ namespace Nektar
     }
     
     template<Dimension Dim, typename DataType, typename ExtentListType>
-    ptr<boost::multi_array_ref<DataType, Dim> > 
+    boost::shared_ptr<boost::multi_array_ref<DataType, Dim> > 
     CreateStorage(const ExtentListType& extent)
     {
         typedef boost::multi_array_ref<DataType, Dim> ArrayType;
@@ -200,7 +200,7 @@ namespace Nektar
     }
     
     template<typename DataType>
-    ptr<boost::multi_array_ref<DataType, OneD> >
+    boost::shared_ptr<boost::multi_array_ref<DataType, OneD> >
     CreateStorage(unsigned int d1)
     {
         std::vector<unsigned int> extents(1, d1);
@@ -208,7 +208,7 @@ namespace Nektar
     } 
     
     template<typename DataType>
-    ptr<boost::multi_array_ref<DataType, TwoD> >
+    boost::shared_ptr<boost::multi_array_ref<DataType, TwoD> >
     CreateStorage(unsigned int d1, unsigned int d2)
     {
         unsigned int vals[]  = {d1, d2};
@@ -217,7 +217,7 @@ namespace Nektar
     }
     
     template<typename DataType>
-    ptr<boost::multi_array_ref<DataType, ThreeD> >
+    boost::shared_ptr<boost::multi_array_ref<DataType, ThreeD> >
     CreateStorage(unsigned int d1, unsigned int d2, unsigned int d3)
     {
         unsigned int vals[]  = {d1, d2, d3};

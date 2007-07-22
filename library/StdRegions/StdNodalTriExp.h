@@ -137,7 +137,7 @@ namespace Nektar
                  const ConstArray<OneD, NekDouble>& inarray, 
                  Array<OneD, NekDouble> &outarray);
 
-            ptr<LibUtilities::PointsKey> m_nodalPointsKey;
+            boost::shared_ptr<LibUtilities::PointsKey> m_nodalPointsKey;
 
             DNekMatSharedPtr GenMatrix(MatrixType mtype);
 
@@ -252,6 +252,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.13  2007/07/20 02:16:54  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.12  2007/07/12 12:55:16  sherwin
 * Simplified Matrix Generation
 *

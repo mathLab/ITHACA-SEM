@@ -266,7 +266,7 @@ namespace Nektar
     };
 
     // type defines for use of QuadExp in a boost vector
-    typedef ptr<QuadExp> QuadExpSharedPtr;
+    typedef boost::shared_ptr<QuadExp> QuadExpSharedPtr;
     typedef std::vector< QuadExpSharedPtr > QuadExpVector;
     typedef std::vector< QuadExpSharedPtr >::iterator QuadExpVectorIter;
 
@@ -278,6 +278,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.18  2007/07/20 00:45:51  bnelson
+ *    Replaced boost::shared_ptr with Nektar::ptr
+ *
  *    Revision 1.17  2007/07/13 09:02:22  sherwin
  *    Mods for Helmholtz solver
  *

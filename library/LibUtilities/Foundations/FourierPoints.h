@@ -37,7 +37,7 @@
 #define FOURIERPOINTS_H
 
 #include <math.h>
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
@@ -55,8 +55,8 @@ namespace Nektar
                 {
                 }            
 
-                static ptr< PointsBaseType > Create(const PointsKey &key);
-                ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
+                static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
+                boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
 
                 const MatrixSharedPtrType GetI(const PointsKey &pkey);
                 const MatrixSharedPtrType GetI(const ConstArray<OneD, NekDouble>& x);

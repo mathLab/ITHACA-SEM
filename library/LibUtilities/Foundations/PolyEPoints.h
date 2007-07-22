@@ -37,7 +37,7 @@
 #define POLYEPOINTS_H
 
 #include <math.h>
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
@@ -56,11 +56,11 @@ namespace Nektar
             {
             }            
 
-            static ptr< PointsBaseType > Create(const PointsKey &key);
+            static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
 
-            const ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
-            const ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x);
-            const ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x);
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x);
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x);
 
             PolyEPoints(const PointsKey &key):PointsBaseType(key)
             {

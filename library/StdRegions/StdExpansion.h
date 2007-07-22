@@ -755,7 +755,7 @@ namespace Nektar
                 v_PhysDeriv (dir, inarray, outarray);
             }
 
-            ptr<SpatialDomains::GeomFactors> GetMetricInfo(void) const
+            boost::shared_ptr<SpatialDomains::GeomFactors> GetMetricInfo(void) const
             {
                 return v_GetMetricInfo();
             }
@@ -763,7 +763,7 @@ namespace Nektar
             virtual DNekScalMatSharedPtr v_GetLocMatrix(LocalRegions::MatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return ptr<DNekScalMat>();
+                return boost::shared_ptr<DNekScalMat>();
             }
 
             /** \brief this function interpolates a 1D function \f$f\f$ evaluated
@@ -1053,14 +1053,14 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
             }
 
-            virtual ptr<SpatialDomains::GeomFactors> v_GetMetricInfo() const 
+            virtual boost::shared_ptr<SpatialDomains::GeomFactors> v_GetMetricInfo() const 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return ptr<SpatialDomains::GeomFactors>();
+                return boost::shared_ptr<SpatialDomains::GeomFactors>();
             }
         };
 
-        typedef ptr<StdExpansion> StdExpansionSharedPtr;
+        typedef boost::shared_ptr<StdExpansion> StdExpansionSharedPtr;
         typedef std::vector< StdExpansionSharedPtr > StdExpansionVector;
         typedef std::vector< StdExpansionSharedPtr >::iterator StdExpansionVectorIter;
 
@@ -1070,6 +1070,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.62  2007/07/20 02:16:52  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.61  2007/07/16 18:28:43  sherwin
 * Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
 *

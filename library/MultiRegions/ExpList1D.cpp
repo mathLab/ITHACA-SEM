@@ -75,7 +75,7 @@ namespace Nektar
             {
                 SpatialDomains::SegGeomSharedPtr SegmentGeom;
                 
-                if(SegmentGeom = dynamic_pointer_cast<SpatialDomains::SegGeom>((*cmps)[i]))
+                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*cmps)[i]))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba, SegmentGeom);
                     (*m_exp).push_back(seg);
@@ -94,6 +94,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.18  2007/07/20 02:04:12  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.17  2007/07/13 16:48:47  pvos
 * Another HelmHoltz update (homogeneous dir BC multi-elemental solver does work)
 *

@@ -347,7 +347,7 @@ namespace Nektar
         };
 
         // type defines for use of SegExp in a boost vector
-        typedef ptr<SegExp> SegExpSharedPtr;
+        typedef boost::shared_ptr<SegExp> SegExpSharedPtr;
         typedef std::vector< SegExpSharedPtr > SegExpVector;
         typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
     } //end of namespace
@@ -357,6 +357,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.20  2007/07/20 00:45:51  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.19  2007/07/16 18:28:42  sherwin
 // Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
 //

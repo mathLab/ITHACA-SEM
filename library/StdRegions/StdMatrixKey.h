@@ -120,7 +120,7 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs);
 
-        typedef  ptr<StdMatrixKey> StdMatrixKeySharedPtr;
+        typedef  boost::shared_ptr<StdMatrixKey> StdMatrixKeySharedPtr;
 
     } // end of namespace
 } // end of namespace
@@ -129,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.14  2007/07/20 02:16:54  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.13  2007/07/09 15:19:15  sherwin
 * Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
 *

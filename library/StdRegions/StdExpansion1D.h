@@ -203,7 +203,7 @@ namespace Nektar
             }
         };
 
-        typedef ptr<StdExpansion1D> StdExpansion1DSharedPtr;
+        typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
 
     } //end of namespace
 } //end of namespace
@@ -212,6 +212,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.21  2007/07/20 02:16:53  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.20  2007/07/12 12:55:16  sherwin
 * Simplified Matrix Generation
 *

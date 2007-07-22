@@ -41,7 +41,7 @@
 #include <boost/progress.hpp>
 #include <iostream>
 
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <UnitTests/CountedObject.h>
 
 namespace Nektar
@@ -53,11 +53,11 @@ namespace Nektar
             CountedObject<double>::ClearCounters();
 
             {
-                ptr<CountedObject<double> > p(new CountedObject<double>());
-                ptr<CountedObject<double> > p1(p);
+                boost::shared_ptr<CountedObject<double> > p(new CountedObject<double>());
+                boost::shared_ptr<CountedObject<double> > p1(p);
 
                 {
-                    ptr<CountedObject<double> > p2(new CountedObject<double>());
+                    boost::shared_ptr<CountedObject<double> > p2(new CountedObject<double>());
                     CountedObject<double>::check(2, 0, 0, 0, 0, 0);
                 }
                 CountedObject<double>::check(2, 0, 1, 0, 0, 0);
@@ -69,7 +69,7 @@ namespace Nektar
         {
             //CountedObject<double>::ClearCounters();
             //{
-            //    ptr<CountedObject<double> > p(new CountedObject<double>());
+            //    boost::shared_ptr<CountedObject<double> > p(new CountedObject<double>());
             //    const_ptr<CountedObject<double> > p1(p);
 
             //    CountedObject<double>::check(1, 0, 0, 0, 0, 0);
@@ -93,10 +93,10 @@ namespace Nektar
 		//	Foo* const f3 = new Foo();
 		//	const Foo* const f4 = new Foo();
 
-		//	ptr<Foo> sp1(new Foo());
-		//	const ptr<Foo> sp2(new Foo());
-		//	ptr<const Foo> sp3(new Foo());
-		//	const ptr<const Foo> sp4(new Foo());
+		//	boost::shared_ptr<Foo> sp1(new Foo());
+		//	const boost::shared_ptr<Foo> sp2(new Foo());
+		//	boost::shared_ptr<const Foo> sp3(new Foo());
+		//	const boost::shared_ptr<const Foo> sp4(new Foo());
 
 		//	f1->method();
 		//	f1->method_const();

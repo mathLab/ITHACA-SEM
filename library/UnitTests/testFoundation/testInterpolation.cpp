@@ -151,16 +151,16 @@ void testFourierInterpolation(PointsType type, long double epsilon) {
 //     long double (*f)(long double x, int N) = fourierFunc;
 //     const long double eps = epsilon;
 //     for(int nPts = 4; nPts<=10; nPts += 2) {
-//        const ptr<Points<NekDouble> > points = PointsManager()[PointsKey(nPts, type)];
+//        const boost::shared_ptr<Points<NekDouble> > points = PointsManager()[PointsKey(nPts, type)];
 // 
 //        const ConstArray<OneD,NekDouble> &z = points->GetZ();
 //           
 //        // Get the interpolation matrix I
 //        int nNodes = nPts * 2;
-//        const ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, type)];
+//        const boost::shared_ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, type)];
 //        const ConstArray<OneD, NekDouble> &zNodePtr = nodes->GetZ();
 // 
-//        const ptr<NekMatrix<NekDouble> > Iptr = points->GetI(nNodes, zNodePtr);
+//        const boost::shared_ptr<NekMatrix<NekDouble> > Iptr = points->GetI(nNodes, zNodePtr);
 //        const NekMatrix<NekDouble> & I = *Iptr;
 // 
 //        //int numPoints = points->GetNumPoints();
@@ -245,13 +245,13 @@ void testPointsInterpolation(PointsType type, long double epsilon) {
 //     long double (*f)(long double x) = polyFunc;
 //     const long double eps = epsilon;
 //      for(int nPts = 8; nPts<=15; ++nPts) {
-//        const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+//        const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //        const ConstArray<OneD, NekDouble> & z = points->GetZ();
 //        
 //        
 //        // Get the interpolation matrix I
 //        int nNodes = nPts * 2;
-//        const ptr<Points<double> > nodes = PointsManager()[PointsKey(nNodes, type)];
+//        const boost::shared_ptr<Points<double> > nodes = PointsManager()[PointsKey(nNodes, type)];
 //         const ConstArray<OneD, NekDouble> & zNodePtr = nodes->GetZ() ;
 // 
 //        const Points<NekDouble>::MatrixSharedPtrType Iptr = points->GetI(nNodes, zNodePtr);

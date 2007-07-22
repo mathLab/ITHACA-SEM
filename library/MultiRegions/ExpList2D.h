@@ -81,7 +81,7 @@ namespace Nektar
         
     };
     
-        typedef ptr<ExpList2D>      ExpList2DSharedPtr;
+        typedef boost::shared_ptr<ExpList2D>      ExpList2DSharedPtr;
         typedef std::vector< ExpList2DSharedPtr > ExpList2DVector;
         typedef std::vector< ExpList2DSharedPtr >::iterator ExpList2DVectorIter;
     } //end of namespace
@@ -91,6 +91,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.10  2007/07/20 02:04:12  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.9  2007/06/05 16:36:55  pvos
 * Updated Explist2D ContExpList2D and corresponding demo-codes
 *

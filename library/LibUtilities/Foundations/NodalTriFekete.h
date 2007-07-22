@@ -65,9 +65,9 @@ namespace Nektar
             {
             }
             
-            static ptr<PointsBaseType> Create(const PointsKey &key);
+            static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
 
-            const ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
             {
                 ASSERTL0(pkey.GetPointsDim()==2, "Fekete Points can only interp to other 2d point distributions");
                 ConstArray<OneD, NekDouble> x, y;
@@ -75,31 +75,31 @@ namespace Nektar
                 return GetI(x, y);
             }
 
-            const ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x, const ConstArray<OneD, NekDouble>& y)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x, const ConstArray<OneD, NekDouble>& y)
             {
                 int numpoints = x.num_elements();
                 return GetI(numpoints, x, y);
 
             }
 
-            const ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& xi, const ConstArray<OneD, NekDouble>& yi)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& xi, const ConstArray<OneD, NekDouble>& yi)
             {
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
                 CalculateInterpMatrix(xi, yi, interp);
-                ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints, 
+                boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints, 
 				                                      GetTotNumPoints(),interp.data()));
                 return returnval;
             }       
 
 
-            const ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x) {
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x) {
                 ASSERTL0(false, "NodalTriFekete Method not implemented for 1-dimensional input");
-                ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
-            const ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x){
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x){
                 ASSERTL0(false, "NodalTriFekete Method not implemented for 1-dimensional input");
-                ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 

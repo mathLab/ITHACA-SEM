@@ -74,7 +74,7 @@ namespace Nektar
             std::vector< Composite > m_BoundaryComposites;
         };
     
-        typedef ptr< BoundaryEntry > BoundarySharedPtr;
+        typedef boost::shared_ptr< BoundaryEntry > BoundarySharedPtr;
         typedef std::vector< BoundarySharedPtr > BoundaryVector;
         typedef std::vector< BoundarySharedPtr >::iterator BoundaryVectorIter;
         typedef std::vector< Composite > CompositeVector;

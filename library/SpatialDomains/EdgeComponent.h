@@ -127,7 +127,7 @@ namespace Nektar
             private:
         };
 
-        typedef ptr<EdgeComponent> EdgeComponentSharedPtr;
+        typedef boost::shared_ptr<EdgeComponent> EdgeComponentSharedPtr;
         typedef std::vector<EdgeComponentSharedPtr> EdgeComponentVector; 
     }//end of namespace
 }//end of namespace
@@ -136,6 +136,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.15  2007/07/20 02:15:08  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.14  2007/07/05 04:21:10  jfrazier
 // Changed id format and propagated from 1d to 2d.
 //

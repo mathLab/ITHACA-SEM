@@ -164,7 +164,7 @@ namespace Nektar
         private:
         };
 
-        typedef ptr< VertexComponent >  VertexComponentSharedPtr;
+        typedef boost::shared_ptr< VertexComponent >  VertexComponentSharedPtr;
         typedef std::set< VertexComponentSharedPtr >  VertexComponentSet;
         typedef std::vector< VertexComponentSharedPtr >  VertexComponentVector;
         typedef std::vector< VertexComponentSharedPtr >::iterator  VertexComponentVectorIter;
@@ -176,6 +176,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.8  2007/07/20 02:15:08  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.7  2006/10/15 06:18:58  sherwin
 // Moved NekPoint out of namespace LibUtilities
 //

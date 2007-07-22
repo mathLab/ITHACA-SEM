@@ -88,7 +88,7 @@ namespace Nektar
     };
 
     // type defines for use of PyrExp in a boost vector
-    typedef ptr<PyrExp> PyrExpSharedPtr;
+    typedef boost::shared_ptr<PyrExp> PyrExpSharedPtr;
     typedef std::vector< PyrExpSharedPtr > PyrExpVector;
     typedef std::vector< PyrExpSharedPtr >::iterator PyrExpVectorIter;
 
@@ -99,6 +99,9 @@ namespace Nektar
 
 /**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.6  2007/07/20 00:45:51  bnelson
+ *    Replaced boost::shared_ptr with Nektar::ptr
+ *
  *    Revision 1.5  2007/01/15 21:12:26  sherwin
  *    First definition
  *

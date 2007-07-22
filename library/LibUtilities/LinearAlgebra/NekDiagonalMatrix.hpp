@@ -235,12 +235,12 @@ namespace Nektar
 //                return m_data.get() + rowNumber;
 //            }
 //
-//            ptr<DataType> GetPtr()
+//            boost::shared_ptr<DataType> GetPtr()
 //            {
 //                return m_data.get();
 //            }
 //
-//            ptr<const DataType> GetPtr() const
+//            boost::shared_ptr<const DataType> GetPtr() const
 //            {
 //                return m_data.get();
 //            }
@@ -404,6 +404,9 @@ namespace Nektar
 
 /**
     $Log: NekDiagonalMatrix.hpp,v $
+    Revision 1.10  2007/07/20 00:24:12  bnelson
+    Replaced boost::shared_ptr with Nektar::ptr
+
     Revision 1.9  2007/06/10 23:42:15  bnelson
     Matrix updates.
 

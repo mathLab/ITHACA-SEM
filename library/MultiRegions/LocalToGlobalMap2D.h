@@ -118,6 +118,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap2D.h,v $
+/** Revision 1.4  2007/07/20 02:04:13  bnelson
+/** Replaced boost::shared_ptr with Nektar::ptr
+/**
 /** Revision 1.3  2007/06/07 15:54:19  pvos
 /** Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
 /** Also made corrections to various ASSERTL2 calls
@@ -130,6 +133,6 @@ namespace Nektar
 /** Modifications to make MultiRegions work for a connected domain in 2D (Tris)
 /**
 /** Revision 1.3  2006/06/05 00:14:33  bnelson
-/** Fixed a compiler error (couldn't find ptr<) and a couple of formatting updates for the standard.
+/** Fixed a compiler error (couldn't find boost::shared_ptr<) and a couple of formatting updates for the standard.
 /** */
 

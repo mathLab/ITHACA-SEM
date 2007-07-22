@@ -41,7 +41,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
 
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
@@ -57,7 +57,7 @@ namespace Nektar
 //             class BlockMatrixDataType<ePointerBlock, MatrixType>
 //     {
 //         public:
-//             typedef ConsistentObjectAccess<ptr<MatrixType> > ResultType;
+//             typedef ConsistentObjectAccess<boost::shared_ptr<MatrixType> > ResultType;
 //     };
 
 
@@ -67,6 +67,9 @@ namespace Nektar
 
 /**
     $Log: NekBlockMatrix.hpp,v $
+    Revision 1.4  2007/07/20 00:24:12  bnelson
+    Replaced boost::shared_ptr with Nektar::ptr
+
     Revision 1.3  2007/06/10 23:42:15  bnelson
     Matrix updates.
 

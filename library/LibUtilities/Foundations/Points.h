@@ -180,7 +180,7 @@ namespace Nektar
         {
         public:
             typedef DataT DataType;
-            typedef ptr<NekMatrix<DataType> > MatrixSharedPtrType;
+            typedef boost::shared_ptr<NekMatrix<DataType> > MatrixSharedPtrType;
 
             virtual ~Points()
             {

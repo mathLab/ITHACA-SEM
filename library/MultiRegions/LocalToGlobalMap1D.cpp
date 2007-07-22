@@ -58,7 +58,7 @@ namespace Nektar
                 
                 SpatialDomains::SegGeomSharedPtr SegmentGeom;
                 
-                if(SegmentGeom = dynamic_pointer_cast<SpatialDomains::SegGeom>((*cmps)[i]))
+                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*cmps)[i]))
                 {
                     for(j = 0; j < 2; ++j)
                     {
@@ -110,7 +110,7 @@ namespace Nektar
                     {
                         SpatialDomains::VertexComponentSharedPtr vert;
                         
-                        if(vert = dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                        if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                         {
                             dbc_id[cnt++] = vert->GetVid(); 
                         }
@@ -160,6 +160,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.10  2007/07/20 02:04:13  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.9  2007/07/10 08:54:30  pvos
 * Updated ContField1D constructor
 *

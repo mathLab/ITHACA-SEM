@@ -102,7 +102,7 @@ namespace Nektar
                 }
         };
 
-        typedef ptr<TriGeom> TriGeomSharedPtr;
+        typedef boost::shared_ptr<TriGeom> TriGeomSharedPtr;
         typedef std::vector< TriGeomSharedPtr > TriGeomVector;
         typedef std::vector< TriGeomSharedPtr >::iterator TriGeomVectorIter;
 
@@ -113,6 +113,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.10  2007/07/20 02:15:09  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.9  2007/06/06 15:15:21  pvos
 // Some minor updates for 2D routines
 //

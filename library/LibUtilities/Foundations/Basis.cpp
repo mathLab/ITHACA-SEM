@@ -91,9 +91,9 @@ namespace Nektar
             return os;
         }
 
-        ptr<Basis> Basis::Create(const BasisKey &bkey)
+        boost::shared_ptr<Basis> Basis::Create(const BasisKey &bkey)
         {
-            ptr<Basis> returnval(new Basis(bkey));
+            boost::shared_ptr<Basis> returnval(new Basis(bkey));
 
             returnval->Initialize();
 
@@ -124,7 +124,7 @@ namespace Nektar
             ConstArray<OneD, NekDouble> w;
             const NekDouble *D;
 
-            ptr< Points<NekDouble> > pointsptr = PointsManager()[GetPointsKey()];
+            boost::shared_ptr< Points<NekDouble> > pointsptr = PointsManager()[GetPointsKey()];
             pointsptr->GetZW(z,w);
 
             D = &(pointsptr->GetD()->GetPtr())[0];
@@ -382,7 +382,7 @@ namespace Nektar
             case eGLL_Lagrange: 
                 {
                     mode = m_bdata.data();
-                    ptr< Points<NekDouble> > pointsptr = PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)];
+                    boost::shared_ptr< Points<NekDouble> > pointsptr = PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)];
                     const ConstArray<OneD, NekDouble>& zp(pointsptr->GetZ());
 
                     for (p=0; p<numModes; ++p,mode += numPoints)
@@ -531,6 +531,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.19  2007/07/20 00:28:24  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.18  2007/05/15 03:37:23  bnelson
 * Updated to use the new Array object.
 *

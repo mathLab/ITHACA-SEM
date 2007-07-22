@@ -126,8 +126,8 @@ namespace Nektar
         void TestNekMatrixConstruction()
         {
             {
-                ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double>(3,4));
-                ptr<Nektar::NekMatrix<double> > b(new Nektar::NekMatrix<double>(5,6));
+                boost::shared_ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double>(3,4));
+                boost::shared_ptr<Nektar::NekMatrix<double> > b(new Nektar::NekMatrix<double>(5,6));
                 
                 BOOST_CHECK_EQUAL(a->GetRows(), 3);
                 BOOST_CHECK_EQUAL(a->GetColumns(), 4);
@@ -147,8 +147,8 @@ namespace Nektar
             }
             
             {
-                ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3,3));
-                ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > b(new Nektar::NekMatrix<double, DiagonalMatrixTag>(5,5));
+                boost::shared_ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3,3));
+                boost::shared_ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > b(new Nektar::NekMatrix<double, DiagonalMatrixTag>(5,5));
                 
                 BOOST_CHECK_EQUAL(a->GetRows(), 3);
                 BOOST_CHECK_EQUAL(a->GetColumns(), 3);
@@ -198,8 +198,8 @@ namespace Nektar
             BOOST_CHECK_THROW( m(4,3), ErrorUtil::NekError);
             #endif //NEKTAR_FULLDEBUG
             
-            ptr<Nektar::Matrix<double> > m1(new Nektar::NekMatrix<double>(4, 3, data));
-            ptr<Nektar::NekMatrix<double> > m2(new Nektar::NekMatrix<double>(4, 3, data));
+            boost::shared_ptr<Nektar::Matrix<double> > m1(new Nektar::NekMatrix<double>(4, 3, data));
+            boost::shared_ptr<Nektar::NekMatrix<double> > m2(new Nektar::NekMatrix<double>(4, 3, data));
             
             BOOST_CHECK_EQUAL( (*m1)(0,0), 1.0 );
             BOOST_CHECK_EQUAL( (*m1)(0,1), 2.0 );
@@ -251,8 +251,8 @@ namespace Nektar
         {
             double data[] = {8.9, 3.4, 5.7};
             Nektar::NekMatrix<double, DiagonalMatrixTag> m1(3, 3, data);
-            ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
-            ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > m3(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
+            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
+            boost::shared_ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > m3(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
             
             BOOST_CHECK_EQUAL(m1(0,0), 8.9);
             BOOST_CHECK_EQUAL((*m2)(0,0), 8.9);
@@ -313,8 +313,8 @@ namespace Nektar
                              3.0, 4.0,
                              5.0, 6.0};
             Nektar::NekMatrix<double> m1(3, 2, data);
-            ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double>(3, 2, data));
-            ptr<Nektar::NekMatrix<double> > m3(new Nektar::NekMatrix<double>(3, 2, data));
+            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double>(3, 2, data));
+            boost::shared_ptr<Nektar::NekMatrix<double> > m3(new Nektar::NekMatrix<double>(3, 2, data));
             
             m1.SetValue(0,0,-1.0);
             m2->SetValue(1,1,-2.0);
@@ -346,8 +346,8 @@ namespace Nektar
         {
             double data[] = {8.9, 3.4, 5.7};
             Nektar::NekMatrix<double, DiagonalMatrixTag> m1(3, 3, data);
-            ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
-            ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > m3(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
+            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
+            boost::shared_ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > m3(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
             
             m1.SetValue(0,0,1.0);
             m2->SetValue(1,1,2.0);
@@ -839,11 +839,11 @@ namespace Nektar
 //                 
 //                 // Create a 6x6 block diagonal matrix.  Each block is a 2x2 matrix.Blas
 //                 BlockMatrix m(3, 2, 2);
-//                 ptr<InnerMatrixType> d1 = ptr<InnerMatrixType>(new InnerMatrixType(2, 2, 7.0));
-//                 ptr<InnerMatrixType> d2 = ptr<InnerMatrixType>(new InnerMatrixType(2, 2, 8.0));
-//                 ptr<InnerMatrixType> d3 = ptr<InnerMatrixType>(new InnerMatrixType(2, 2, 9.0));
-//                 ptr<InnerMatrixType> d4 = ptr<InnerMatrixType>(new InnerMatrixType(2, 2, 0.0));
-//                 ptr<InnerMatrixType> d5 = ptr<InnerMatrixType>(new InnerMatrixType(3, 3, 9.0));
+//                 boost::shared_ptr<InnerMatrixType> d1 = boost::shared_ptr<InnerMatrixType>(new InnerMatrixType(2, 2, 7.0));
+//                 boost::shared_ptr<InnerMatrixType> d2 = boost::shared_ptr<InnerMatrixType>(new InnerMatrixType(2, 2, 8.0));
+//                 boost::shared_ptr<InnerMatrixType> d3 = boost::shared_ptr<InnerMatrixType>(new InnerMatrixType(2, 2, 9.0));
+//                 boost::shared_ptr<InnerMatrixType> d4 = boost::shared_ptr<InnerMatrixType>(new InnerMatrixType(2, 2, 0.0));
+//                 boost::shared_ptr<InnerMatrixType> d5 = boost::shared_ptr<InnerMatrixType>(new InnerMatrixType(3, 3, 9.0));
 // 
 //                 m(0,0) = d1;
 //                 m(1,1) = d2;
@@ -1102,6 +1102,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.27  2007/07/20 02:24:41  bnelson
+    Replaced boost::shared_ptr with Nektar::ptr
+
     Revision 1.26  2007/07/11 04:00:33  bnelson
     Added invert tests.
 

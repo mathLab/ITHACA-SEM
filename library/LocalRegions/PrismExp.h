@@ -40,7 +40,7 @@
 #include <StdRegions/StdPrismExp.h>
 
 #include <SpatialDomains/PrismGeom.h>
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <StdRegions/StdRegions.hpp>
 
@@ -87,7 +87,7 @@ namespace Nektar
   };
 
     // type defines for use of PrismExp in a boost vector
-    typedef ptr<PrismExp> PrismExpSharedPtr;
+    typedef boost::shared_ptr<PrismExp> PrismExpSharedPtr;
     typedef std::vector< PrismExpSharedPtr > PrismExpVector;
     typedef std::vector< PrismExpSharedPtr >::iterator PrismExpVectorIter;
   } //end of namespace
@@ -98,6 +98,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.h,v $
+ *    Revision 1.5  2007/07/20 00:45:51  bnelson
+ *    Replaced boost::shared_ptr with Nektar::ptr
+ *
  *    Revision 1.4  2007/01/15 21:12:26  sherwin
  *    First definition
  *

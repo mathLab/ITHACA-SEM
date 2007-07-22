@@ -82,7 +82,7 @@ namespace Nektar
             
     };
     
-        typedef ptr<ExpList1D>      ExpList1DSharedPtr;
+        typedef boost::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
         typedef std::vector<ExpList1DSharedPtr>::iterator ExpList1DVectorIter;
     
@@ -93,6 +93,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.h,v $
+* Revision 1.14  2007/07/20 02:04:12  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.13  2007/07/10 08:54:30  pvos
 * Updated ContField1D constructor
 *

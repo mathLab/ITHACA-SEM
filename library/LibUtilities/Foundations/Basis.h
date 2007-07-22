@@ -193,7 +193,7 @@ namespace Nektar
         {
         public:
 
-            static ptr<Basis> Create(const BasisKey &bkey);
+            static boost::shared_ptr<Basis> Create(const BasisKey &bkey);
 
             // default destructor()
             ~Basis()
@@ -301,7 +301,7 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const BasisKey& rhs);
 
-        typedef ptr<Basis> BasisSharedPtr;
+        typedef boost::shared_ptr<Basis> BasisSharedPtr;
         typedef std::vector< BasisSharedPtr > BasisVector; 
         typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter; 
 

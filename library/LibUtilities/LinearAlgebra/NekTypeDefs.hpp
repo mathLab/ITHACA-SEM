@@ -47,22 +47,25 @@ namespace Nektar
     typedef NekVector<NekDouble>                DNekVec;
 
     typedef NekMatrix<NekDouble,FullMatrixTag>  DNekMat;
-    typedef ptr<DNekMat>          DNekMatSharedPtr;
+    typedef boost::shared_ptr<DNekMat>          DNekMatSharedPtr;
 
     typedef LinearSystem <DNekMat>              DNekLinSys;
-    typedef ptr<DNekLinSys>       DNekLinSysSharedPtr;
+    typedef boost::shared_ptr<DNekLinSys>       DNekLinSysSharedPtr;
 
     typedef NekMatrix<NekMatrix<NekDouble>,FullMatrixTag,ScaledMatrixTag> DNekScalMat; 
-    typedef ptr<DNekScalMat>      DNekScalMatSharedPtr;
+    typedef boost::shared_ptr<DNekScalMat>      DNekScalMatSharedPtr;
 
     typedef LinearSystem<DNekScalMat>           DNekScalLinSys; 
-    typedef ptr<DNekScalLinSys>   DNekScalLinSysSharedPtr;
+    typedef boost::shared_ptr<DNekScalLinSys>   DNekScalLinSysSharedPtr;
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP
 
 /**
     $Log: NekTypeDefs.hpp,v $
+    Revision 1.6  2007/07/20 00:24:13  bnelson
+    Replaced boost::shared_ptr with Nektar::ptr
+
     Revision 1.5  2007/07/13 09:02:21  sherwin
     Mods for Helmholtz solver
 

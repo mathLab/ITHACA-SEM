@@ -85,7 +85,7 @@ namespace Nektar
     };
     
     // type defines for use of TetExp in a boost vector
-    typedef ptr<TetExp> TetExpSharedPtr;
+    typedef boost::shared_ptr<TetExp> TetExpSharedPtr;
     typedef std::vector< TetExpSharedPtr > TetExpVector;
     typedef std::vector< TetExpSharedPtr >::iterator TetExpVectorIter;
 
@@ -96,6 +96,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.5  2007/07/20 00:45:51  bnelson
+ *    Replaced boost::shared_ptr with Nektar::ptr
+ *
  *    Revision 1.4  2007/01/15 21:12:26  sherwin
  *    First definition
  *

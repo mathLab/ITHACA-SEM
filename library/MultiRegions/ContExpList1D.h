@@ -106,7 +106,7 @@ namespace Nektar
       	    int                    m_contNcoeffs;
 	    Array<OneD, NekDouble> m_contCoeffs;
 	    
-	    ptr<LocalToGlobalMap1D> m_locToGloMap;
+	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
 	    
 	    GlobalLinSysSharedPtr m_mass;
 	    GlobalLinSysSharedPtr m_helm;
@@ -118,7 +118,7 @@ namespace Nektar
 
 	};
 	
-        typedef ptr<ContExpList1D>      ContExpList1DSharedPtr;
+        typedef boost::shared_ptr<ContExpList1D>      ContExpList1DSharedPtr;
         typedef std::vector<ContExpList1DSharedPtr>   ContExpList1DVector;
         typedef std::vector<ContExpList1DSharedPtr>::iterator ContExpList1DVectorIter;
 
@@ -129,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.18  2007/07/20 02:04:10  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.17  2007/07/19 20:02:25  sherwin
 * Generalised global matrix solver
 *

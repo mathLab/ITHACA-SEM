@@ -147,7 +147,7 @@ namespace Nektar
       TransState m_transState;
       bool       m_physState;
      
-      ptr<StdRegions::StdExpansionVector> m_exp;
+      boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
       
       inline Array<OneD, NekDouble> &UpdateCoeffs()
       {
@@ -188,6 +188,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.21  2007/07/20 02:04:12  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.20  2007/07/17 07:11:05  sherwin
 * Chaned definition of NullExpList
 *

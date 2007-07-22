@@ -91,7 +91,7 @@ namespace Nektar
         private:
         };
 
-        typedef ptr<QuadFaceComponent> QuadFaceComponentSharedPtr;
+        typedef boost::shared_ptr<QuadFaceComponent> QuadFaceComponentSharedPtr;
         typedef std::vector<QuadFaceComponentSharedPtr> QuadFaceComponentVector; 
     }; //end of namespace
 }; //end of namespace
@@ -100,6 +100,9 @@ namespace Nektar
 
 //
 // $Log: QuadFaceComponent.h,v $
+// Revision 1.4  2007/07/20 02:15:09  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.3  2007/06/06 15:15:21  pvos
 // Some minor updates for 2D routines
 //

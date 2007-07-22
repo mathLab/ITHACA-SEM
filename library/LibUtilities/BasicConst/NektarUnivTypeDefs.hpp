@@ -37,7 +37,7 @@
 #define  NEKTARUNIVTYPEDEF_HPP
 
 #include <boost/multi_array.hpp>
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <vector>
 
 namespace Nektar
@@ -57,6 +57,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.10  2007/07/20 00:39:54  bnelson
+Replaced boost::shared_ptr with Nektar::ptr
+
 Revision 1.9  2007/05/14 23:47:43  bnelson
 Removed old SharedArray typedefs.  Added new Dimension enumeration.
 

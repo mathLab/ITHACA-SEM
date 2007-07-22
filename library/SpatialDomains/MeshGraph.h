@@ -48,11 +48,11 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        typedef ptr<InterfaceComponent> SharedInterfaceCompPtr;
+        typedef boost::shared_ptr<InterfaceComponent> SharedInterfaceCompPtr;
         typedef std::vector< VertexComponentSharedPtr >  VertexVector;
         typedef std::list< SharedInterfaceCompPtr > InterfaceCompList;
 
-        typedef ptr< GeometryVector > Composite;
+        typedef boost::shared_ptr< GeometryVector > Composite;
         typedef std::vector< Composite >            CompositeVector;
         typedef std::vector< Composite >::iterator  CompositeVectorIter;
 
@@ -125,6 +125,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.8  2007/07/20 02:15:08  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.7  2007/06/07 23:55:24  jfrazier
 // Intermediate revisions to add parsing for boundary conditions file.
 //

@@ -6,18 +6,18 @@ SET(BasicConstHeaders
 
 SET(LinearAlgebraHeaders
 	./LinearAlgebra/Blas.hpp
-        ./LinearAlgebra/BlockMatrix.hpp
-        ./LinearAlgebra/DiagonalMatrixStoragePolicy.hpp
-        ./LinearAlgebra/FullMatrixStoragePolicy.hpp
+    ./LinearAlgebra/BlockMatrix.hpp
+    ./LinearAlgebra/DiagonalMatrixStoragePolicy.hpp
+    ./LinearAlgebra/FullMatrixStoragePolicy.hpp
 	./LinearAlgebra/Lapack.hpp
-        ./LinearAlgebra/MatrixBase.hpp
+    ./LinearAlgebra/MatrixBase.hpp
 	./LinearAlgebra/MatrixBlockType.h
-        ./LinearAlgebra/MatrixOperations.cpp
-        ./LinearAlgebra/MatrixOperations.hpp
-        ./LinearAlgebra/MatrixStoragePolicy.hpp
-        ./LinearAlgebra/MatrixStorageType.h
-        ./LinearAlgebra/MatrixTraits.hpp
-        ./LinearAlgebra/MatrixType.h
+    ./LinearAlgebra/MatrixOperations.cpp
+    ./LinearAlgebra/MatrixOperations.hpp
+    ./LinearAlgebra/MatrixStoragePolicy.hpp
+    ./LinearAlgebra/MatrixStorageType.h
+    ./LinearAlgebra/MatrixTraits.hpp
+    ./LinearAlgebra/MatrixType.h
 	./LinearAlgebra/NekBlockDiagonalMatrix.hpp
 	./LinearAlgebra/NekBlockFullMatrix.hpp
 	./LinearAlgebra/NekBlockMatrix.hpp
@@ -32,6 +32,7 @@ SET(LinearAlgebraHeaders
 	./LinearAlgebra/NekMatrixImpl.hpp
 	./LinearAlgebra/NekMatrixMetadata.hpp
 	./LinearAlgebra/NekPoint.hpp
+	./LinearAlgebra/NekTypeDefs.hpp
 	./LinearAlgebra/NekVector.hpp
 	./LinearAlgebra/NekVectorObject.hpp
 	./LinearAlgebra/NekVectorCommon.hpp
@@ -113,7 +114,6 @@ SET(BasicUtils
 	./BasicUtils/NekManager.hpp
     ./BasicUtils/OperatorGenerators.hpp
 	./BasicUtils/SharedArray.hpp
-	./BasicUtils/SharedPtr.hpp
     ./BasicUtils/Vmath.hpp
 )
 

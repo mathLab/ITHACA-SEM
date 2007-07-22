@@ -78,7 +78,7 @@ using namespace Nektar::LibUtilities;
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
                     
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();
@@ -110,7 +110,7 @@ using namespace Nektar::LibUtilities;
     
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();
@@ -137,7 +137,7 @@ using namespace Nektar::LibUtilities;
                    long double exact = 2.0;
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();
@@ -165,7 +165,7 @@ using namespace Nektar::LibUtilities;
     
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();
@@ -193,7 +193,7 @@ using namespace Nektar::LibUtilities;
     
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();
@@ -221,7 +221,7 @@ using namespace Nektar::LibUtilities;
 
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();
@@ -249,7 +249,7 @@ using namespace Nektar::LibUtilities;
     
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2)*(nPts + 2);
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();
@@ -277,7 +277,7 @@ using namespace Nektar::LibUtilities;
     
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2)*(nPts + 2);
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();
@@ -305,7 +305,7 @@ using namespace Nektar::LibUtilities;
     
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 4);
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();
@@ -332,7 +332,7 @@ using namespace Nektar::LibUtilities;
     
                 for(int nPts = 4; nPts<=20; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (2*(nPts + 2));
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();
@@ -360,7 +360,7 @@ using namespace Nektar::LibUtilities;
     
                 for(int nPts = 3; nPts<=15; ++nPts){
                     long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();
@@ -408,7 +408,7 @@ using namespace Nektar::LibUtilities;
                
                 for(int nPts = 2; nPts<=50; nPts += 2){
                     long double epsilon = nPts* numeric_limits<double>::epsilon();
-                    const ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
+                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 
                     const ConstArray<OneD,NekDouble> &z = points->GetZ();
                     const ConstArray<OneD,NekDouble> &w = points->GetW();

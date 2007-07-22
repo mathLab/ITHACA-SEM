@@ -86,7 +86,7 @@ namespace Nektar
     };
 
     // type defines for use of HexExp in a boost vector
-    typedef ptr<HexExp> HexExpSharedPtr;
+    typedef boost::shared_ptr<HexExp> HexExpSharedPtr;
     typedef std::vector< HexExpSharedPtr > HexExpVector;
     typedef std::vector< HexExpSharedPtr >::iterator HexExpVectorIter;
     
@@ -97,6 +97,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.6  2007/07/20 00:45:50  bnelson
+ *    Replaced boost::shared_ptr with Nektar::ptr
+ *
  *    Revision 1.5  2007/01/15 21:12:25  sherwin
  *    First definition
  *

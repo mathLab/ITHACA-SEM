@@ -78,7 +78,7 @@ namespace Nektar
             else
             {
                 PointsKey gaussKey(npts, eGaussLobattoLegendre);
-                ptr<PointsBaseType> ptr = PointsManager()[gaussKey];
+                boost::shared_ptr<PointsBaseType> ptr = PointsManager()[gaussKey];
                 ConstArray<OneD, NekDouble> z;
                 ConstArray<OneD, NekDouble> w;
 
@@ -119,16 +119,16 @@ namespace Nektar
             }
         }
 
-        ptr<PolyEPoints::PointsBaseType> PolyEPoints::Create(const PointsKey &key)
+        boost::shared_ptr<PolyEPoints::PointsBaseType> PolyEPoints::Create(const PointsKey &key)
         {
-            ptr<PointsBaseType> returnval(MemoryManager<PolyEPoints>::AllocateSharedPtr(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<PolyEPoints>::AllocateSharedPtr(key));
 
             returnval->Initialize();
 
             return returnval;
         }
 
-        const ptr<NekMatrix<NekDouble> > PolyEPoints::GetI(const PointsKey &pkey)
+        const boost::shared_ptr<NekMatrix<NekDouble> > PolyEPoints::GetI(const PointsKey &pkey)
         {
             ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
 
@@ -140,7 +140,7 @@ namespace Nektar
             return GetI(numpoints, xpoints);
         }
 
-        const ptr<NekMatrix<NekDouble> > PolyEPoints::GetI(const ConstArray<OneD, NekDouble>& x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > PolyEPoints::GetI(const ConstArray<OneD, NekDouble>& x)
         {
             int numpoints = 1;
 
@@ -148,13 +148,13 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const ptr<NekMatrix<NekDouble> > PolyEPoints::GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > PolyEPoints::GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
         {
             Array<OneD, NekDouble> interp(GetNumPoints()*numpoints);
 
             CalculateInterpMatrix(numpoints, x, interp);
 
-            ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,GetNumPoints(),interp.data()));
+            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,GetNumPoints(),interp.data()));
 
             return returnval;
         }

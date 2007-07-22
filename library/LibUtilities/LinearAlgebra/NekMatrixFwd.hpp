@@ -42,7 +42,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
@@ -64,15 +64,18 @@ namespace Nektar
     template<typename DataType, typename StorageType>
     class NekMatrix<DataType, StorageType, StandardMatrixTag>;
     
-    typedef ptr<NekMatrix<NekDouble> > SharedNekMatrixPtr;
+    typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedNekMatrixPtr;
     typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> DNekScalMat;
-    typedef ptr<DNekScalMat> DNekScalMatSharedPtr;
+    typedef boost::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
 };
     
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
 
 /**
     $Log: NekMatrixFwd.hpp,v $
+    Revision 1.11  2007/07/20 00:24:13  bnelson
+    Replaced boost::shared_ptr with Nektar::ptr
+
     Revision 1.10  2007/07/12 04:04:14  bnelson
     *** empty log message ***
 

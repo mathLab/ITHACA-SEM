@@ -106,7 +106,7 @@ namespace Nektar
         };
 
     // shorthand for boost pointer
-    typedef ptr<QuadGeom> QuadGeomSharedPtr;
+    typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
         typedef std::vector< QuadGeomSharedPtr > QuadGeomVector;
         typedef std::vector< QuadGeomSharedPtr >::iterator QuadGeomVectorIter;
 
@@ -117,6 +117,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.11  2007/07/20 02:15:09  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.10  2007/06/06 15:15:21  pvos
 // Some minor updates for 2D routines
 //

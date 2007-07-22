@@ -46,6 +46,9 @@
 
 namespace Nektar
 {
+    ////////////////////////////////////////////////////////////////////////////////////
+	// Multiplication
+	////////////////////////////////////////////////////////////////////////////////////
     template<typename DataType, typename LhsDataType, typename LhsStorageType, typename LhsMatrixType, typename RhsType>
     void NekMultiply(NekMatrix<DataType, LhsStorageType, StandardMatrixTag>& result,
                      const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>& lhs,
@@ -63,8 +66,8 @@ namespace Nektar
     }
 
     template<typename DataType, typename LhsDataType, typename LhsStorageType, typename LhsMatrixType, typename RhsType>
-    void NekMultiply(ptr<NekMatrix<DataType, LhsStorageType, StandardMatrixTag> >& result,
-                     const ptr<const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType> >& lhs,
+    void NekMultiply(boost::shared_ptr<NekMatrix<DataType, LhsStorageType, StandardMatrixTag> >& result,
+                     const boost::shared_ptr<const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType> >& lhs,
                      const RhsType& rhs)
     {
         NekMultiply(*result, *lhs, rhs);
@@ -163,7 +166,7 @@ namespace Nektar
 	///////////////////////////////////////////////////////////////////
 	// Addition
 	///////////////////////////////////////////////////////////////////
-	    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
+	template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
     void NekAdd(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
                 const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
                 const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)

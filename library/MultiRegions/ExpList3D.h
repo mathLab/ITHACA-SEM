@@ -67,7 +67,7 @@ namespace Nektar
         
     };
         
-        typedef ptr<ExpList3D>      ExpList3DSharedPtr;
+        typedef boost::shared_ptr<ExpList3D>      ExpList3DSharedPtr;
         typedef std::vector<ExpList3DSharedPtr>   ExpList3DVector;
         typedef std::vector<ExpList3DSharedPtr>::iterator ExpList3DVectorIter;
 

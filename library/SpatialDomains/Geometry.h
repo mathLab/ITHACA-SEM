@@ -47,7 +47,7 @@ namespace Nektar
     namespace SpatialDomains
     {
         class Geometry; // Forward declaration for typedef.
-        typedef ptr<Geometry> GeometrySharedPtr;
+        typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
         typedef std::vector< GeometrySharedPtr > GeometryVector;
         typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
 
@@ -120,6 +120,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.12  2007/07/20 02:15:08  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.11  2007/07/10 22:21:00  jfrazier
 // Revision of geo fac manager to test for equality.
 //

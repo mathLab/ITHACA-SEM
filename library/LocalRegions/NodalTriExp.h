@@ -262,7 +262,7 @@ namespace Nektar
     };
     
     // type defines for use of TriExp in a boost vector
-    typedef ptr<NodalTriExp> NodalTriExpSharedPtr;
+    typedef boost::shared_ptr<NodalTriExp> NodalTriExpSharedPtr;
     typedef std::vector< NodalTriExpSharedPtr > NodalTriExpVector;
     typedef std::vector< NodalTriExpSharedPtr >::iterator NodalTriExpVectorIter;
     
@@ -273,6 +273,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.11  2007/07/20 00:45:50  bnelson
+ *    Replaced boost::shared_ptr with Nektar::ptr
+ *
  *    Revision 1.10  2007/07/13 09:02:21  sherwin
  *    Mods for Helmholtz solver
  *

@@ -192,9 +192,9 @@ namespace Nektar
            }
         }
 
-        ptr<NodalTriFekete::PointsBaseType> NodalTriFekete::Create(const PointsKey &key)
+        boost::shared_ptr<NodalTriFekete::PointsBaseType> NodalTriFekete::Create(const PointsKey &key)
         {
-            ptr<PointsBaseType> returnval(MemoryManager<NodalTriFekete>::AllocateSharedPtr(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTriFekete>::AllocateSharedPtr(key));
             returnval->Initialize();
             return returnval;
         }
@@ -266,6 +266,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriFekete.cpp,v $
+* Revision 1.17  2007/07/21 05:01:50  ehan
+* Completed version of NodalTriFekete with integration, derivation, and interpolation implemented and tested.
+*
 * Revision 1.12  2007/05/15 03:37:24  bnelson
 * Updated to use the new Array object.
 *

@@ -336,7 +336,7 @@ namespace Nektar
 
         };
 
-        typedef ptr<StdSegExp> StdSegExpSharedPtr;
+        typedef boost::shared_ptr<StdSegExp> StdSegExpSharedPtr;
 
     } //end of namespace
 } //end of namespace
@@ -345,6 +345,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.27  2007/07/20 02:16:55  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.26  2007/07/16 18:28:44  sherwin
 * Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
 *

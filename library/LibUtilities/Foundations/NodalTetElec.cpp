@@ -64,9 +64,9 @@ namespace Nektar
             // No derivative matrix computed
         }
 
-        ptr<NodalTetElec::PointsBaseType> NodalTetElec::Create(const PointsKey &key)
+        boost::shared_ptr<NodalTetElec::PointsBaseType> NodalTetElec::Create(const PointsKey &key)
         {
-            ptr<PointsBaseType> returnval(MemoryManager<NodalTetElec>::AllocateSharedPtr(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTetElec>::AllocateSharedPtr(key));
             returnval->Initialize();
             return returnval;
         }
@@ -81,6 +81,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTetElec.cpp,v $
+* Revision 1.8  2007/07/20 00:28:26  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.7  2007/05/15 03:37:24  bnelson
 * Updated to use the new Array object.
 *

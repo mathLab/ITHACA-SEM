@@ -43,7 +43,7 @@
 #include <boost/call_traits.hpp>
 #include <boost/concept_check.hpp>
 
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 using namespace std;
@@ -67,7 +67,7 @@ namespace Nektar
             public:
                 BOOST_CLASS_REQUIRE(KeyType, boost, LessThanComparableConcept);
 
-                typedef ptr<ValueT> ValueType;
+                typedef boost::shared_ptr<ValueT> ValueType;
                 typedef boost::function<ValueType (const KeyType& key)> CreateFuncType;
                 typedef std::map<KeyType, ValueType> ValueContainer;
                 typedef std::map<KeyType, CreateFuncType, opLessCreator> CreateFuncContainer;

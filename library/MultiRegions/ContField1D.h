@@ -78,7 +78,7 @@ namespace Nektar
                 void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs);
 
 	    };
-        typedef ptr<ContField1D>      ContField1DSharedPtr;
+        typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
 	
     } //end of namespace
 } //end of namespace

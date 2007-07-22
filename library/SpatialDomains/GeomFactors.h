@@ -51,7 +51,7 @@ namespace Nektar
         class GeomFactors;
         bool operator==(const GeomFactors &lhs, const GeomFactors &rhs);
 
-        typedef ptr<GeomFactors>      GeomFactorsSharedPtr;
+        typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
         typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
         typedef GeomFactorsVector::iterator GeomFactorsVectorIter;
 
@@ -128,6 +128,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.12  2007/07/20 02:15:08  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.11  2007/07/10 22:20:59  jfrazier
 // Revision of geo fac manager to test for equality.
 //

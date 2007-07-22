@@ -68,7 +68,7 @@ int main(int argc, char *argv[]){
 
     int degree = nPtsPerSide-1;
 
-    ptr<Points<NekDouble> > points = PointsManager()[PointsKey(nPtsPerSide, pointsType)];
+    boost::shared_ptr<Points<NekDouble> > points = PointsManager()[PointsKey(nPtsPerSide, pointsType)];
 
     NodalTriFekete *ntf = dynamic_cast<NodalTriFekete*>(points.get());
     ConstArray<OneD, NekDouble> ax, ay;
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]){
     }
     
     NekVector<NekDouble> xi = toVector(axi), yi = toVector(ayi);
-    ptr<NekMatrix<NekDouble> > Iptr = ntf->GetI(axi, ayi);
+    boost::shared_ptr<NekMatrix<NekDouble> > Iptr = ntf->GetI(axi, ayi);
     const NekMatrix<NekDouble> & I = *Iptr;
 
     NekMatrix<NekDouble> Vnn = getMonomialVandermonde(x, y);
@@ -124,7 +124,7 @@ int main(int argc, char *argv[]){
     // /////////////////////////////////////////////
     // Test X Derivative 
     //    
-    ptr<NekMatrix<NekDouble> > Dptr = points->GetD();
+    boost::shared_ptr<NekMatrix<NekDouble> > Dptr = points->GetD();
     const NekMatrix<NekDouble> & D = *Dptr;
 
     NekMatrix<NekDouble> Vx = getXDerivativeOfMonomialVandermonde(x, y);

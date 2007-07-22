@@ -1,6 +1,11 @@
 
-FIND_PATH(LOKI_INCLUDE_DIR loki/Typelist.h /usr/include /usr/local/include 
-${CMAKE_SOURCE_DIR}/../ThirdParty/loki/include/ "C:\\Program Files\\Microsoft Visual Studio .NET 2003\\Vc7\\include"  )
+FIND_PATH(LOKI_INCLUDE_DIR loki/Typelist.h 
+	/usr/include 
+	/usr/local/include 
+	${CMAKE_SOURCE_DIR}/../ThirdParty/loki/include/ 
+	"C:\\Program Files\\Microsoft Visual Studio .NET 2003\\Vc7\\include" 
+	"C:\\Program Files\\Microsoft Visual Studio 8\\VC\\include" 
+)
 
 
 IF (LOKI_INCLUDE_DIR)

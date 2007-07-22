@@ -40,7 +40,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/progress.hpp>
-#include <LibUtilities/BasicUtils/SharedPtr.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <iostream>
 
@@ -62,9 +62,9 @@ namespace Nektar
 
         
         // Test stuff.
-        ptr<DoubleWrapper> MyCreator(const int &key)
+        boost::shared_ptr<DoubleWrapper> MyCreator(const int &key)
         {
-            return ptr<DoubleWrapper>(new DoubleWrapper(key + 2.5));;
+            return boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(key + 2.5));;
         };
         
         class Temp
@@ -72,18 +72,18 @@ namespace Nektar
             public:
                 Temp() {};
                 
-                static ptr<DoubleWrapper> create(const int &key)
+                static boost::shared_ptr<DoubleWrapper> create(const int &key)
                 {
-                    return ptr<DoubleWrapper>(new DoubleWrapper(key*1.025));
+                    return boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(key*1.025));
                 }
         };
         
         class GlobalCreator
         {
             public:
-                ptr<DoubleWrapper> operator()(const int& key)
+                boost::shared_ptr<DoubleWrapper> operator()(const int& key)
                 {
-                    return ptr<DoubleWrapper>(new DoubleWrapper(key));
+                    return boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(key));
                 }
         };
 
@@ -102,18 +102,18 @@ namespace Nektar
             // Registering a static class method
             manager.RegisterCreator(20, Temp::create);
             
-            ptr<DoubleWrapper> value = manager[key];
+            boost::shared_ptr<DoubleWrapper> value = manager[key];
             BOOST_CHECK(value->val == 12.5);
 
             value = manager[20];
             BOOST_CHECK(value->val == 20.5);
             
-            manager[17] = ptr<DoubleWrapper>(new DoubleWrapper(-2.0));
+            manager[17] = boost::shared_ptr<DoubleWrapper>(new DoubleWrapper(-2.0));
             BOOST_CHECK_EQUAL(manager[17]->val, -2.0);
         }
         
 
-//         typedef ptr<NekMatrix<double, FullMatrixTag, eBlock> > MatrixType;
+//         typedef boost::shared_ptr<NekMatrix<double, FullMatrixTag, eBlock> > MatrixType;
 //         
 //         MatrixType create(int k)
 //         {
@@ -124,7 +124,7 @@ namespace Nektar
 //         {
 //             NekManager<int, NekMatrix<double, DiagonalMatrixTag> > manager(create);
 //             
-//             manager[10] = ptr<NekMatrix<double, DiagonalMatrixTag> >(new NekMatrix<double, DiagonalMatrixTag>(3, 3));
+//             manager[10] = boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >(new NekMatrix<double, DiagonalMatrixTag>(3, 3));
 //            
 //            if( manager[11] )
 //            {
@@ -135,6 +135,9 @@ namespace Nektar
 
 /**
    $Log: testNekManager.cpp,v $
+   Revision 1.8  2007/07/20 02:24:41  bnelson
+   Replaced boost::shared_ptr with Nektar::ptr
+
    Revision 1.7  2007/06/10 23:45:59  bnelson
    Matrix updates.
 

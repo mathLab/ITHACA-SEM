@@ -225,7 +225,7 @@ namespace Nektar
                             {
                                 first = false;
 
-                                Composite curVector(new std::vector<GeometrySharedPtr>);
+                                Composite curVector = MemoryManager<std::vector<GeometrySharedPtr> >::AllocateSharedPtr();
                                 m_MeshCompositeVector.push_back(curVector);
                             }
 
@@ -347,6 +347,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.11  2007/07/05 04:21:10  jfrazier
+// Changed id format and propagated from 1d to 2d.
+//
 // Revision 1.10  2007/06/10 02:27:10  jfrazier
 // Another checkin with an incremental completion of the boundary conditions reader.
 //

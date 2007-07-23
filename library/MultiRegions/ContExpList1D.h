@@ -108,8 +108,7 @@ namespace Nektar
 	    
 	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
 	    
-	    GlobalLinSysSharedPtr m_mass;
-	    GlobalLinSysSharedPtr m_helm;
+            GlobalLinSysMapShPtr  m_globalMat;
 	    
             GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey,
                                                   const int NumDirBCs);
@@ -118,6 +117,7 @@ namespace Nektar
 
 	};
 	
+
         typedef boost::shared_ptr<ContExpList1D>      ContExpList1DSharedPtr;
         typedef std::vector<ContExpList1DSharedPtr>   ContExpList1DVector;
         typedef std::vector<ContExpList1DSharedPtr>::iterator ContExpList1DVectorIter;
@@ -129,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.19  2007/07/22 23:04:19  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.18  2007/07/20 02:04:10  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

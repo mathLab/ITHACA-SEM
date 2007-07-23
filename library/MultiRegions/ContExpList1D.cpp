@@ -52,7 +52,7 @@ namespace Nektar
             ExpList1D(In),
             m_contNcoeffs(In.m_contNcoeffs),
             m_locToGloMap(In.m_locToGloMap),
-            m_mass(In.m_mass)
+            m_globalMat(In.m_globalMat)
 
         {
             m_contCoeffs = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -68,6 +68,10 @@ namespace Nektar
 		     ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
 		     "Expansion not of an boundary-interior type");
 	    
+
+            // setup Matrix Map
+            m_globalMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
+
 	    // setup mapping array 
 	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,cmps);
 	    
@@ -102,14 +106,22 @@ namespace Nektar
 	{
             IProductWRTBase(In);
 
-	    if(!(m_mass.get()))
-	    {
-                GlobalLinSysKey key(StdRegions::eMass);
-		m_mass = GenGlobalLinSys(key,0);
-	    }
+            GlobalLinSysSharedPtr mass_matrix;
+            GlobalLinSysKey key(StdRegions::eMass);
+            GlobalLinSysMap::iterator matrixIter = m_globalMat->find(key);
+           
+            if(matrixIter == m_globalMat->end())
+            {
+                mass_matrix = GenGlobalLinSys(key,0);
+                (*m_globalMat)[key] = mass_matrix;
+            }
+            else
+            {
+                mass_matrix = matrixIter->second;
+            }
 
 	    DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
-	    m_mass->GetLinSys()->Solve(v,v);
+	    mass_matrix->GetLinSys()->Solve(v,v);
 	    m_transState = eContinuous;
 	    m_physState = false;
 	}
@@ -118,15 +130,24 @@ namespace Nektar
 	{
             IProductWRTBase(In);
             Vmath::Neg(m_contNcoeffs,&m_contCoeffs[0],1);
-            
-	    if(!(m_helm->GetLinSys().get()))
-	    {
-                GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
-		m_helm = GenGlobalLinSys(key,0);
-	    }
+
+            GlobalLinSysSharedPtr helm_matrix;
+            GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
+            GlobalLinSysMap::iterator matrixIter = m_globalMat->find(key);
+           
+            if(matrixIter == m_globalMat->end())
+            {
+                helm_matrix = GenGlobalLinSys(key,0);
+                (*m_globalMat)[key] = helm_matrix;
+            }
+            else
+            {
+                helm_matrix = matrixIter->second;
+            }
+
 
 	    DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
-	    m_helm->GetLinSys()->Solve(v,v);
+	    helm_matrix->GetLinSys()->Solve(v,v);
 	    m_transState = eContinuous;
 	    m_physState = false;
 	}
@@ -193,6 +214,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.17  2007/07/19 20:02:24  sherwin
+* Generalised global matrix solver
+*
 * Revision 1.16  2007/07/16 18:28:42  sherwin
 * Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
 *

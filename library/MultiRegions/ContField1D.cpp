@@ -84,14 +84,17 @@ namespace Nektar
             // list Dirichlet boundaries first
             for(i = 0; i < nbnd; ++i)
             {
-                if(  ((*(bconditions[i]))[variable])
-                      ->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                SpatialDomains::BoundaryConditionShPtr LocBCond = (*(bconditions[i]))[variable];
+                
+                if(LocBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     SpatialDomains::VertexComponentSharedPtr vert;
                     
                     if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
+                        //p_exp->SetValue(((SpatialDomains::DirichletBoundaryCondition) *LocBCond)->Evaluate());
+
                         m_bndConstraint.push_back(p_exp);
                         m_bndTypes.push_back(SpatialDomains::eDirichlet);
                         NumDirichlet++;
@@ -105,7 +108,8 @@ namespace Nektar
 
             for(i = 0; i < nbnd; ++i)
             {
-                if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                SpatialDomains::BoundaryConditionShPtr LocBCond = (*(bconditions[i]))[variable];
+                if(LocBCond->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
                     SpatialDomains:: VertexComponentSharedPtr vert;
                     
@@ -113,7 +117,7 @@ namespace Nektar
                     {
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
                         m_bndConstraint.push_back(p_exp);
-                        m_bndTypes.push_back(((*(bconditions[i]))[variable])->GetBoundaryConditionType());
+                        m_bndTypes.push_back(LocBCond->GetBoundaryConditionType());
                     }
                     else
                     {
@@ -167,7 +171,7 @@ namespace Nektar
                 init[i] = m_bndConstraint[i]->GetValue();
             }
 
-            GeneralMatrixOp(key.GetLinSysType(), init,Dir_fce,
+            GeneralMatrixOp(key.GetLinSysType(), init, Dir_fce,
                             key.GetScaleFactor());
 
             // Set up forcing function
@@ -200,28 +204,21 @@ namespace Nektar
         // could replace with a map
         GlobalLinSysSharedPtr ContField1D::GetGlobalLinSys(const GlobalLinSysKey &mkey) 
        {
-            switch (mkey.GetLinSysType())
+            GlobalLinSysSharedPtr glo_matrix;
+            GlobalLinSysMap::iterator matrixIter = m_globalMat->find(mkey);
+           
+            if(matrixIter == m_globalMat->end())
             {
-            case StdRegions::eMass:
-                if(!m_mass.get())
-                {
-                    m_mass = GenGlobalLinSys(mkey,
-                             m_locToGloMap->GetNumDirichletBCs());
-                }
-                return m_mass;
-                break;
-            case StdRegions::eHelmholtz:
-                if(!m_helm.get())
-                {
-                    m_helm = GenGlobalLinSys(mkey,
-                             m_locToGloMap->GetNumDirichletBCs());
-                }
-                return m_helm;
-                break;
-            default:
-                ASSERTL0(false,"This matrix type is not set up");
-                    break;
+                glo_matrix = GenGlobalLinSys(mkey,
+                                             m_locToGloMap->GetNumDirichletBCs());
+                (*m_globalMat)[mkey] = glo_matrix;
             }
+            else
+            {
+                glo_matrix = matrixIter->second;
+            }
+
+            return glo_matrix;
         }
 
     } // end of namespace

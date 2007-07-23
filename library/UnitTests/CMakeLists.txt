@@ -1,45 +1,45 @@
 
 SET(UnitTestSources
-CountedObject.cpp
-main.cpp
-ScaledMatrixUnitTests.cpp
-BlockMatrixUnitTests.cpp
-testBoostUtil.cpp
-testExpressionTemplates.cpp
-testLinearSystem.cpp
-testNekLinAlgAlgorithms.cpp
-testNekManager.cpp
-testNekMatrix.cpp
-testNekMatrixOperations.cpp
-testNekPoint.cpp
-TestNekPtr.cpp
-testNekVector.cpp
-testNekSharedArray.cpp
-Memory/TestNekMemoryManager.cpp
-StdRegions/testStdSegExp.cpp
-testFoundation/testFoundation.cpp
-testFoundation/testInterpolation.cpp
-testFoundation/testDerivation.cpp
+    CountedObject.cpp
+    main.cpp
+    ScaledMatrixUnitTests.cpp
+    BlockMatrixUnitTests.cpp
+    testBoostUtil.cpp
+    testExpressionTemplates.cpp
+    testLinearSystem.cpp
+    testNekLinAlgAlgorithms.cpp
+    testNekManager.cpp
+    testNekMatrix.cpp
+    testNekMatrixOperations.cpp
+    testNekPoint.cpp
+    TestNekPtr.cpp
+    testNekVector.cpp
+    testNekSharedArray.cpp
+    Memory/TestNekMemoryManager.cpp
+    StdRegions/testStdSegExp.cpp
+    testFoundation/testFoundation.cpp
+    testFoundation/testInterpolation.cpp
+    testFoundation/testDerivation.cpp
 )
 
 SET(UnitTestHeaders
-CountedObject.h
-testBoostUtil.h
-testExpressionTemplates.h
-testLinearSystem.h
-testNekLinAlgAlgorithms.h
-testNekManager.h
-testNekMatrix.h
-testNekMatrixOperations.h
-testNekPoint.h
-TestNekPtr.h
-testNekVector.h
-testNekSharedArray.h
-Memory/TestNekMemoryManager.h
-StdRegions/testStdSegExp.h
-testFoundation/testFoundation.h
-testFoundation/testInterpolation.h
-testFoundation/testDerivation.h
+    CountedObject.h
+    testBoostUtil.h
+    testExpressionTemplates.h
+    testLinearSystem.h
+    testNekLinAlgAlgorithms.h
+    testNekManager.h
+    testNekMatrix.h
+    testNekMatrixOperations.h
+    testNekPoint.h
+    TestNekPtr.h
+    testNekVector.h
+    testNekSharedArray.h
+    Memory/TestNekMemoryManager.h
+    StdRegions/testStdSegExp.h
+    testFoundation/testFoundation.h
+    testFoundation/testInterpolation.h
+    testFoundation/testDerivation.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
@@ -94,4 +94,5 @@ IF( USE_WIN32_LAPACK )
 	TARGET_LINK_LIBRARIES(UnitTests ${WIN32_LAPACK} ${WIN32_BLAS})	
 ENDIF( USE_WIN32_LAPACK )
 
+SUBDIRS(LibUtilities)
 INSTALL(TARGETS UnitTests RUNTIME DESTINATION ${NEKTAR_BIN_DIR})

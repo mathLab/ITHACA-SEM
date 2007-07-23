@@ -58,6 +58,10 @@ namespace Nektar
                             const SpatialDomains::Composite &cmps,
                             SpatialDomains::BoundaryConditions &bcs,
                             const int bc_loc = 0);
+                ContField1D(const LibUtilities::BasisKey &Ba, 
+                            const SpatialDomains::Composite &cmps,
+                            SpatialDomains::BoundaryConditions &bcs,
+                            const std::string variable);
                 ContField1D(const ContField1D &In);
 		~ContField1D();
 		
@@ -78,6 +82,8 @@ namespace Nektar
                 GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
                 void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs);
 
+                void GenerateField1D(SpatialDomains::BoundaryConditions &bcs, 
+                                     const std::string variable);
 	    };
         typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
 	

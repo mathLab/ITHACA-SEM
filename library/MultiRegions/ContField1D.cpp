@@ -53,7 +53,24 @@ namespace Nektar
                                  const SpatialDomains::Composite &cmps,
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc):
+            ContExpList1D(Ba,cmps)  
+        {
+            
+            GenerateField1D(bcs,bcs.GetVariable(bc_loc));
+        }
+
+        ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
+                                 const SpatialDomains::Composite &cmps,
+                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 const std::string variable):
             ContExpList1D(Ba,cmps)
+        {
+            GenerateField1D(bcs,variable);
+        }
+
+        
+        void ContField1D::GenerateField1D(SpatialDomains::BoundaryConditions &bcs, 
+                                     const std::string variable)
         {
 	    int i,nbnd;
             LocalRegions::PointExpSharedPtr  p_exp;
@@ -67,7 +84,8 @@ namespace Nektar
             // list Dirichlet boundaries first
             for(i = 0; i < nbnd; ++i)
             {
-                if(  ((*(bconditions[i]))["u"])->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                if(  ((*(bconditions[i]))[variable])
+                      ->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     SpatialDomains::VertexComponentSharedPtr vert;
                     
@@ -87,7 +105,7 @@ namespace Nektar
 
             for(i = 0; i < nbnd; ++i)
             {
-                if( ((*(bconditions[i]))["u"])->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
                     SpatialDomains:: VertexComponentSharedPtr vert;
                     
@@ -95,7 +113,7 @@ namespace Nektar
                     {
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
                         m_bndConstraint.push_back(p_exp);
-                        m_bndTypes.push_back(((*(bconditions[i]))["u"])->GetBoundaryConditionType());
+                        m_bndTypes.push_back(((*(bconditions[i]))[variable])->GetBoundaryConditionType());
                     }
                     else
                     {

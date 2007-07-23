@@ -170,6 +170,14 @@ namespace Nektar
             /// Get initial condition function based on name of variable.
             ConstInitialConditionShPtr GetInitialCondition(const string &var);
 
+            const std::string &GetVariable(const int indx)
+            {
+
+                ASSERTL0(0 <= indx && indx < m_Variables.size(),"indx is out of range");
+                return m_Variables[indx];
+            }
+
+
         protected:
             void ReadParameters(TiXmlElement *conditions);
             void ReadVariables(TiXmlElement *conditions);

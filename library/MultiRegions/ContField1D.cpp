@@ -51,15 +51,16 @@ namespace Nektar
 
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
                                  const SpatialDomains::Composite &cmps,
-                                 SpatialDomains::BoundaryConditions &bcs):
+                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 const int bc_loc):
             ContExpList1D(Ba,cmps)
         {
 	    int i,nbnd;
             LocalRegions::PointExpSharedPtr  p_exp;
             int NumDirichlet = 0;
 
-            SpatialDomains::BoundaryRegionCollectionType    &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollectionType &bconditions = bcs.GetBoundaryConditions();
+            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
 
             nbnd = bregions.size();
 
@@ -88,9 +89,9 @@ namespace Nektar
             {
                 if( ((*(bconditions[i]))["u"])->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
-                   SpatialDomains:: VertexComponentSharedPtr vert;
-
-                    if(vert = dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                    SpatialDomains:: VertexComponentSharedPtr vert;
+                    
+                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
                         m_bndConstraint.push_back(p_exp);

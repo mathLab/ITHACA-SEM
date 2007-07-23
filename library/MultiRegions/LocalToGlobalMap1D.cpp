@@ -99,8 +99,8 @@ namespace Nektar
                 Array<OneD, int> dbc_id(NumDirichlet);                
 
                 // Find the global ID of the vertices where dirichlet BC are imposed
-                SpatialDomains::BoundaryRegionCollectionType    &bregions = bcs.GetBoundaryRegions();
-                SpatialDomains::BoundaryConditionCollectionType &bconditions = bcs.GetBoundaryConditions();
+                SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+                SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
 
                 nbnd = bregions.size();
 
@@ -160,6 +160,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.11  2007/07/22 23:04:21  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.10  2007/07/20 02:04:13  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

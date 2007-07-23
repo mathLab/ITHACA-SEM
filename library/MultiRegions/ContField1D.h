@@ -56,7 +56,8 @@ namespace Nektar
 		ContField1D();
                 ContField1D(const LibUtilities::BasisKey &Ba, 
                             const SpatialDomains::Composite &cmps,
-                            SpatialDomains::BoundaryConditions &bcs);
+                            SpatialDomains::BoundaryConditions &bcs,
+                            const int bc_loc = 0);
                 ContField1D(const ContField1D &In);
 		~ContField1D();
 		

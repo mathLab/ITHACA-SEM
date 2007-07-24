@@ -39,6 +39,9 @@
         <C ID="1"> V[0]   </C>
         <C ID="2"> V[5]   </C>
     </COMPOSITE>
+
+    <DOMAIN> C[0] </DOMAIN>
+    
 </GEOMETRY>
 
     <CONDITIONS>

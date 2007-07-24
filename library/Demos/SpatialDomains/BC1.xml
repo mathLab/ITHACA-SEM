@@ -37,7 +37,7 @@
         BoundaryRegion definition above.-->
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="u" VALUE="f(x,y)" />
+                <D VAR="u" VALUE="6.789" />
                 <N VAR="v" VALUE="g(x,y)" />
             </REGION>
 

@@ -4,6 +4,8 @@
 #include "SpatialDomains/MeshGraph2D.h"
 #include <SpatialDomains/BoundaryConditions.h>
 
+#include <boost/shared_ptr.hpp>
+
 using namespace Nektar;
 using namespace SpatialDomains; 
 using namespace std;
@@ -33,13 +35,23 @@ int main(int argc, char *argv[]){
     graph2D.Read(in);
     bcs.Read(bcfile);
 
-    ConstForcingFunctionShPtr ffunc = bcs.GetForcingFunction("u");
+    ConstForcingFunctionShPtr ffunc  = bcs.GetForcingFunction("u");
     NekDouble val = ffunc->Evaluate();
     
     ConstInitialConditionShPtr ic = bcs.GetInitialCondition("u");
     val = ic->Evaluate();
 
     NekDouble tolerance = bcs.GetParameter("Tolerance");
+
+    BoundaryConditionCollection &bConditions = bcs.GetBoundaryConditions();
+
+    BoundaryConditionShPtr bcShPtr = (*bConditions[0])["u"];
+
+    if (bcShPtr->GetBoundaryConditionType() == eDirichlet)
+    {
+        DirichletBCShPtr dirichletBCShPtr = boost::static_pointer_cast<DirichletBoundaryCondition>(bcShPtr);
+        NekDouble val = dirichletBCShPtr->m_DirichletCondition.Evaluate();
+    }
     
     return 0;
 }

@@ -81,6 +81,7 @@ namespace Nektar
 
             ReadElements(doc);
             ReadComposites(doc);
+            ReadDomain(doc);
         }
 
         void MeshGraph1D::ReadElements(TiXmlDocument &doc)
@@ -347,6 +348,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.12  2007/07/23 16:54:30  jfrazier
+// Change a dynamic allocation using new to memory manager allocate.
+//
 // Revision 1.11  2007/07/05 04:21:10  jfrazier
 // Changed id format and propagated from 1d to 2d.
 //

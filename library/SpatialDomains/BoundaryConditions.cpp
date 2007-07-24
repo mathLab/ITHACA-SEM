@@ -593,7 +593,7 @@ namespace Nektar
             return paramMapIter->second;
         }
 
-        ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(int indx)
+        ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(int indx) const
         {
             ConstForcingFunctionShPtr returnval;
 
@@ -610,12 +610,12 @@ namespace Nektar
             return GetForcingFunction(m_Variables[indx]);
         }
 
-        ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(const string &var)
+        ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(const string &var) const
         {
             ConstForcingFunctionShPtr returnval;
             
             // Check that var is defined in forcing function list.
-            ForcingFunctionsMap::iterator ffIter = m_ForcingFunctions.find(var);
+            ForcingFunctionsMap::const_iterator ffIter = m_ForcingFunctions.find(var);
 
             bool found = false;
             if( ffIter != m_ForcingFunctions.end() )
@@ -641,7 +641,7 @@ namespace Nektar
             return returnval;
         }
 
-        ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(int indx)
+        ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(int indx) const
         {
             ConstInitialConditionShPtr returnval;
 
@@ -658,12 +658,12 @@ namespace Nektar
             return GetInitialCondition(m_Variables[indx]);
         }
 
-        ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(const string &var)
+        ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(const string &var) const
         {
             ConstInitialConditionShPtr returnval;
             
             // Check that var is defined in forcing function list.
-            InitialConditionsMap::iterator ffIter = m_InitialConditions.find(var);
+            InitialConditionsMap::const_iterator ffIter = m_InitialConditions.find(var);
 
             bool found = false;
             if( ffIter != m_InitialConditions.end() )

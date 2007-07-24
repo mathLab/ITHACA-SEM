@@ -226,6 +226,43 @@ namespace Nektar
             return returnval;
         }
 
+        void MeshGraph::ReadDomain(TiXmlDocument &doc)
+        {
+            TiXmlHandle docHandle(&doc);
+
+            TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
+            TiXmlElement* domain = NULL;
+
+            ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
+
+            /// Look for data in DOMAIN block.
+            domain = mesh->FirstChildElement("DOMAIN");
+
+            ASSERTL0(domain, "Unable to find DOMAIN tag in file.");
+
+            // find the non comment portion of the body.
+            TiXmlNode* elementChild = domain->FirstChild();
+            while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
+            {
+                elementChild = elementChild->NextSibling();
+            }
+
+            ASSERTL0(elementChild, "Unable to read DOMAIN body.");
+            std::string elementStr = elementChild->ToText()->ValueStr();
+
+            elementStr = elementStr.substr(elementStr.find_first_not_of(" "));
+
+            std::string::size_type indxBeg = elementStr.find_first_of('[') + 1;
+            std::string::size_type indxEnd = elementStr.find_last_of(']') - 1;
+            std::string indxStr = elementStr.substr(indxBeg, indxEnd - indxBeg + 1);
+
+            ASSERTL0(!indxStr.empty(), "Unable to read domain's composite index (index missing?).");
+
+            m_Domain = GetComposite(::atof(indxStr.c_str()));
+
+            ASSERTL0(m_Domain, (std::string("Unable to obtain domain's referenced composite: ") + indxStr).c_str());
+        }
+
         void MeshGraph::Write(std::string &outfilename)
         {
         }
@@ -238,6 +275,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.7  2007/06/10 02:27:10  jfrazier
+// Another checkin with an incremental completion of the boundary conditions reader.
+//
 // Revision 1.6  2007/03/29 19:25:10  bnelson
 // *** empty log message ***
 //

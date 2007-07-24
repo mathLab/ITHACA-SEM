@@ -81,6 +81,7 @@ namespace Nektar
             ReadEdges(doc);
             ReadElements(doc);
             ReadComposites(doc);
+            ReadDomain(doc);
         }
 
         void MeshGraph2D::ReadEdges(TiXmlDocument &doc)
@@ -555,6 +556,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.17  2007/07/05 04:21:10  jfrazier
+// Changed id format and propagated from 1d to 2d.
+//
 // Revision 1.16  2007/06/10 02:27:11  jfrazier
 // Another checkin with an incremental completion of the boundary conditions reader.
 //

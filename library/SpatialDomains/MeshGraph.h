@@ -106,6 +106,8 @@ namespace Nektar
                 return returnval;
             }
 
+            void ReadDomain(TiXmlDocument &doc);
+
        protected:
             VertexVector  m_vertset;
             InterfaceCompList m_icomps;
@@ -114,6 +116,7 @@ namespace Nektar
             int m_SpaceDimension;
 
             std::vector< Composite > m_MeshCompositeVector;
+            Composite m_Domain;
 
         private:
             std::string m_FileName;
@@ -125,6 +128,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.9  2007/07/22 23:04:23  bnelson
+// Backed out Nektar::ptr.
+//
 // Revision 1.8  2007/07/20 02:15:08  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

@@ -121,6 +121,9 @@ namespace Nektar
         typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
         typedef std::vector<BoundaryRegionShPtr> BoundaryRegionCollection;
         typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
+        typedef boost::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
+        typedef boost::shared_ptr<NeumannBoundaryCondition> NeumannBCShPtr;
+        typedef boost::shared_ptr<RobinBoundaryCondition> RobinBCShPtr;
         typedef std::map<std::string,BoundaryConditionShPtr> BoundaryConditionMap;
         typedef boost::shared_ptr<BoundaryConditionMap> BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
@@ -157,18 +160,18 @@ namespace Nektar
             /// Get forcing function based on the index of the variable.
             /// The index is the order in which the variable was
             /// defined.
-            ConstForcingFunctionShPtr GetForcingFunction(int indx);
+            ConstForcingFunctionShPtr GetForcingFunction(int indx) const;
 
             /// Get forcing function based on name of variable.
-            ConstForcingFunctionShPtr GetForcingFunction(const string &var);
+            ConstForcingFunctionShPtr GetForcingFunction(const string &var) const;
 
             /// Get initial condition function based on the index of the variable.
             /// The index is the order in which the variable was
             /// defined.
-            ConstInitialConditionShPtr GetInitialCondition(int indx);
+            ConstInitialConditionShPtr GetInitialCondition(int indx) const;
 
             /// Get initial condition function based on name of variable.
-            ConstInitialConditionShPtr GetInitialCondition(const string &var);
+            ConstInitialConditionShPtr GetInitialCondition(const string &var) const;
 
             const std::string &GetVariable(const int indx)
             {

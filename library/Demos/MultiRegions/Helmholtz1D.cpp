@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisType  btype;  
     Array<OneD,NekDouble>  sol,fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
-    NekDouble  lambda = 1.0;
+    NekDouble  lambda;
 
     if(argc != 5)
     {
@@ -67,6 +67,8 @@ int main(int argc, char *argv[])
     SpatialDomains::BoundaryConditions bcs(&graph1D); 
     bcs.Read(in);
 
+    lambda = bcs.GetParameter("Lambda");
+    cout << "Solving Helmholtz problem with Lambda = " << lambda << endl;
     
     // Define Expansion
     const LibUtilities::PointsKey Pkey(nq,Qtype);
@@ -121,7 +123,7 @@ int main(int argc, char *argv[])
     {
         sol[i] = cos(M_PI*xc0[i]);
 
-        fce[i] = -(1.0+M_PI*M_PI)*cos(M_PI*xc0[i]);
+        fce[i] = -(1.0+lambda*M_PI*M_PI)*cos(M_PI*xc0[i]);
     }
     Exp->SetBoundaryCondition(0,sol[0]);
     Exp->SetBoundaryCondition(1,sol[nq-1]);
@@ -130,7 +132,7 @@ int main(int argc, char *argv[])
     {
         sol[i] = sin(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
 
-        fce[i] = -(1.0+pow(M_PI/(xc0[nq-1]-xc0[0]),2))*sin(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
+        fce[i] = -(1.0+lambda*pow(M_PI/(xc0[nq-1]-xc0[0]),2))*sin(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
     }
     Exp->SetBoundaryCondition(0,0.0);
     Exp->SetBoundaryCondition(1,0.0);
@@ -140,7 +142,7 @@ int main(int argc, char *argv[])
     {
         sol[i] = cos(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
 
-        fce[i] = -(1.0+pow(M_PI/(xc0[nq-1]-xc0[0]),2))*cos(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
+        fce[i] = -(1.0+lambda*pow(M_PI/(xc0[nq-1]-xc0[0]),2))*cos(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
     }
     Exp->SetBoundaryCondition(0,0.0);
     Exp->SetBoundaryCondition(1,0.0);

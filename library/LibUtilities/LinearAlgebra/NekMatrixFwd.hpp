@@ -55,11 +55,11 @@ namespace Nektar
     template<typename DataType, typename StorageType = FullMatrixTag, typename MatType = StandardMatrixTag>
     class NekMatrix;
 
-    template<typename DataType, typename StorageType, typename OwnedMatrixType>
-    class NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, ScaledMatrixTag>;
+    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
+    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag>;
     
-    template<typename DataType, typename StorageType, typename InnerMatrixType>
-    class NekMatrix<NekMatrix<DataType, StorageType, InnerMatrixType>, StorageType, BlockMatrixTag>;
+    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
+    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, BlockMatrixTag>;
     
     template<typename DataType, typename StorageType>
     class NekMatrix<DataType, StorageType, StandardMatrixTag>;
@@ -73,6 +73,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrixFwd.hpp,v $
+    Revision 1.12  2007/07/22 23:03:28  bnelson
+    Backed out Nektar::ptr.
+
     Revision 1.11  2007/07/20 00:24:13  bnelson
     Replaced boost::shared_ptr with Nektar::ptr
 

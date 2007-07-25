@@ -76,36 +76,48 @@ namespace Nektar
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
                                                     const ConstArray<OneD, DataType>& d)
             {
+                unsigned int size = rows*(rows+1)/2;
+
                 ASSERTL0(rows==columns, "Triangular matrices must be square.");
-                ASSERTL0(rows*(rows+1)/2 <= d.num_elements(), 
+                ASSERTL0(size <= d.num_elements(), 
                     std::string("An attempt has been made to create a triangular matrix of size ") +
                     boost::lexical_cast<std::string>(rows*(rows+1)/2) + 
                     std::string(" but the array being used to populate it only has ") + 
                     boost::lexical_cast<std::string>(d.num_elements()) + 
                     std::string(" elements."));
-                Array<OneD, DataType> result;
-                CopyArray(d, result);
+                
+                Array<OneD, DataType> result(size, d);
                 return result;
             }
             
-            static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
-                                               unsigned int curRow, unsigned int curColumn,
-                                               Array<OneD, DataType>& data)
-            {
-                if( curRow <= curColumn )
-                {
-                    return data[CalculateIndex(totalRows, curRow, curColumn)];
-                }
-                else
-                {
-                    return ZeroElement;
-                }
-            }
+            //static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
+            //                                   unsigned int curRow, unsigned int curColumn,
+            //                                   Array<OneD, DataType>& data)
+            //{
+            //    if( curRow <= curColumn )
+            //    {
+            //        return data[CalculateIndex(totalRows, curRow, curColumn)];
+            //    }
+            //    else
+            //    {
+            //        return ZeroElement;
+            //    }
+            //}
             
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
                                                                              const Array<OneD, DataType>& data)
             {
+                ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
+                ASSERTL1(curRow < totalRows, "Attemping to retrieve a value from row " +
+                    boost::lexical_cast<std::string>(curRow) + " of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+                ASSERTL1(curColumn < totalColumns, "Attemping to retrieve a value from column " +
+                    boost::lexical_cast<std::string>(curColumn) + " of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+
                 if( curRow <= curColumn )
                 {
                     return data[CalculateIndex(totalRows, curRow, curColumn)];
@@ -120,7 +132,17 @@ namespace Nektar
                                  unsigned int curRow, unsigned int curColumn,
                                  Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d)
             {
+                ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
+                ASSERTL1(curRow < totalRows, "Attemping to set a value from row " +
+                    boost::lexical_cast<std::string>(curRow) + " of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+                ASSERTL1(curColumn < totalColumns, "Attemping to set a value from column " +
+                    boost::lexical_cast<std::string>(curColumn) + " of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
                 ASSERTL0(curRow <= curColumn, "Can only assign into the upper triangular portion of an upper triangular matrix.");
+
                 data[CalculateIndex(totalRows, curRow, curColumn)] = d;
             }
                     

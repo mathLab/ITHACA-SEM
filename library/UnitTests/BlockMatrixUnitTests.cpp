@@ -43,6 +43,8 @@
 #include <boost/progress.hpp>
 #include <iostream>
 
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+
 namespace Nektar
 {
     namespace BlockMatrixUnitTests
@@ -53,15 +55,11 @@ namespace Nektar
                 typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> BlockMatrixType;
                 BlockMatrixType m1(3, 2, 2, 2);
                 boost::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(2, 3, 2, 2));
-                boost::shared_ptr<Matrix<NekDouble> > m3(new BlockMatrixType(3, 3, 2, 2));
                 
                 BOOST_CHECK_EQUAL(m1.GetRows(), 6);
                 BOOST_CHECK_EQUAL(m1.GetColumns(), 4);
                 BOOST_CHECK_EQUAL(m2->GetRows(), 4);
-                BOOST_CHECK_EQUAL(m2->GetColumns(), 6);
-                BOOST_CHECK_EQUAL(m3->GetRows(), 6);
-                BOOST_CHECK_EQUAL(m3->GetColumns(), 6);
-               
+                BOOST_CHECK_EQUAL(m2->GetColumns(), 6);               
             }
             
             // Bad Input
@@ -80,7 +78,6 @@ namespace Nektar
                 typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> BlockMatrixType;
                 BlockMatrixType m1(3, 2, 2, 2);
                 boost::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(3, 2, 2, 2));
-                boost::shared_ptr<Matrix<NekDouble> > m3(new BlockMatrixType(3, 2, 2, 2));
                 
                 double vals1[] = {1.0, 2.0, 3.0, 4.0};
                 double vals2[] = {5.0, 6.0, 7.0, 8.0};
@@ -104,7 +101,6 @@ namespace Nektar
                 m1.SetBlock(2,1, sub6);
                 
                 boost::shared_ptr<BlockMatrixType> m2_cast = boost::dynamic_pointer_cast<BlockMatrixType>(m2);
-                boost::shared_ptr<BlockMatrixType> m3_cast = boost::dynamic_pointer_cast<BlockMatrixType>(m3);
                 
                 m2_cast->SetBlock(0,0, sub1);
                 m2_cast->SetBlock(0,1, sub2);
@@ -112,14 +108,7 @@ namespace Nektar
                 m2_cast->SetBlock(1,1, sub4);
                 m2_cast->SetBlock(2,0, sub5);
                 m2_cast->SetBlock(2,1, sub6);
-                
-                m3_cast->SetBlock(0,0, sub1);
-                m3_cast->SetBlock(0,1, sub2);
-                m3_cast->SetBlock(1,0, sub3);
-                m3_cast->SetBlock(1,1, sub4);
-                m3_cast->SetBlock(2,0, sub5);
-                m3_cast->SetBlock(2,1, sub6);
-               
+                               
                 BOOST_CHECK_EQUAL(m1(0,0), 1.0);               
                 BOOST_CHECK_EQUAL(m1(0,1), 2.0);               
                 BOOST_CHECK_EQUAL(m1(0,2), 5.0);               
@@ -169,31 +158,7 @@ namespace Nektar
                 BOOST_CHECK_EQUAL((*m2)(5,1), 20.0);               
                 BOOST_CHECK_EQUAL((*m2)(5,2), 23.0);               
                 BOOST_CHECK_EQUAL((*m2)(5,3), 24.0);     
-                          
-                BOOST_CHECK_EQUAL((*m3)(0,0), 1.0);               
-                BOOST_CHECK_EQUAL((*m3)(0,1), 2.0);               
-                BOOST_CHECK_EQUAL((*m3)(0,2), 5.0);               
-                BOOST_CHECK_EQUAL((*m3)(0,3), 6.0);               
-                BOOST_CHECK_EQUAL((*m3)(1,0), 3.0);               
-                BOOST_CHECK_EQUAL((*m3)(1,1), 4.0);               
-                BOOST_CHECK_EQUAL((*m3)(1,2), 7.0);               
-                BOOST_CHECK_EQUAL((*m3)(1,3), 8.0);               
-                BOOST_CHECK_EQUAL((*m3)(2,0), 9.0);               
-                BOOST_CHECK_EQUAL((*m3)(2,1), 10.0);               
-                BOOST_CHECK_EQUAL((*m3)(2,2), 13.0);               
-                BOOST_CHECK_EQUAL((*m3)(2,3), 14.0);               
-                BOOST_CHECK_EQUAL((*m3)(3,0), 11.0);               
-                BOOST_CHECK_EQUAL((*m3)(3,1), 12.0);               
-                BOOST_CHECK_EQUAL((*m3)(3,2), 15.0);               
-                BOOST_CHECK_EQUAL((*m3)(3,3), 16.0);               
-                BOOST_CHECK_EQUAL((*m3)(4,0), 17.0);               
-                BOOST_CHECK_EQUAL((*m3)(4,1), 18.0);               
-                BOOST_CHECK_EQUAL((*m3)(4,2), 21.0);               
-                BOOST_CHECK_EQUAL((*m3)(4,3), 22.0);               
-                BOOST_CHECK_EQUAL((*m3)(5,0), 19.0);               
-                BOOST_CHECK_EQUAL((*m3)(5,1), 20.0);               
-                BOOST_CHECK_EQUAL((*m3)(5,2), 23.0);               
-                BOOST_CHECK_EQUAL((*m3)(5,3), 24.0);  
+                         
             }
             
             
@@ -203,7 +168,6 @@ namespace Nektar
                 unsigned int columnSizes[] = {2, 2};
                 BlockMatrixType m1(3, 2, rowSizes, columnSizes);
                 boost::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(3, 2, rowSizes, columnSizes));
-                boost::shared_ptr<Matrix<NekDouble> > m3(new BlockMatrixType(3, 2, rowSizes, columnSizes));
                 
                 double vals1[] = {1.0, 2.0, 3.0, 4.0};
                 double vals2[] = {5.0, 6.0, 7.0, 8.0};
@@ -227,7 +191,6 @@ namespace Nektar
                 m1.SetBlock(2,1, sub6);
                 
                 boost::shared_ptr<BlockMatrixType> m2_cast = boost::dynamic_pointer_cast<BlockMatrixType>(m2);
-                boost::shared_ptr<BlockMatrixType> m3_cast = boost::dynamic_pointer_cast<BlockMatrixType>(m3);
                 
                 m2_cast->SetBlock(0,0, sub1);
                 m2_cast->SetBlock(0,1, sub2);
@@ -235,14 +198,7 @@ namespace Nektar
                 m2_cast->SetBlock(1,1, sub4);
                 m2_cast->SetBlock(2,0, sub5);
                 m2_cast->SetBlock(2,1, sub6);
-                
-                m3_cast->SetBlock(0,0, sub1);
-                m3_cast->SetBlock(0,1, sub2);
-                m3_cast->SetBlock(1,0, sub3);
-                m3_cast->SetBlock(1,1, sub4);
-                m3_cast->SetBlock(2,0, sub5);
-                m3_cast->SetBlock(2,1, sub6);
-               
+                               
                 BOOST_CHECK_EQUAL(m1(0,0), 1.0);               
                 BOOST_CHECK_EQUAL(m1(0,1), 2.0);               
                 BOOST_CHECK_EQUAL(m1(0,2), 5.0);               
@@ -293,30 +249,7 @@ namespace Nektar
                 BOOST_CHECK_EQUAL((*m2)(5,2), 23.0);               
                 BOOST_CHECK_EQUAL((*m2)(5,3), 24.0);     
                           
-                BOOST_CHECK_EQUAL((*m3)(0,0), 1.0);               
-                BOOST_CHECK_EQUAL((*m3)(0,1), 2.0);               
-                BOOST_CHECK_EQUAL((*m3)(0,2), 5.0);               
-                BOOST_CHECK_EQUAL((*m3)(0,3), 6.0);               
-                BOOST_CHECK_EQUAL((*m3)(1,0), 3.0);               
-                BOOST_CHECK_EQUAL((*m3)(1,1), 4.0);               
-                BOOST_CHECK_EQUAL((*m3)(1,2), 7.0);               
-                BOOST_CHECK_EQUAL((*m3)(1,3), 8.0);               
-                BOOST_CHECK_EQUAL((*m3)(2,0), 9.0);               
-                BOOST_CHECK_EQUAL((*m3)(2,1), 10.0);               
-                BOOST_CHECK_EQUAL((*m3)(2,2), 13.0);               
-                BOOST_CHECK_EQUAL((*m3)(2,3), 14.0);               
-                BOOST_CHECK_EQUAL((*m3)(3,0), 11.0);               
-                BOOST_CHECK_EQUAL((*m3)(3,1), 12.0);               
-                BOOST_CHECK_EQUAL((*m3)(3,2), 15.0);               
-                BOOST_CHECK_EQUAL((*m3)(3,3), 16.0);               
-                BOOST_CHECK_EQUAL((*m3)(4,0), 17.0);               
-                BOOST_CHECK_EQUAL((*m3)(4,1), 18.0);               
-                BOOST_CHECK_EQUAL((*m3)(4,2), 21.0);               
-                BOOST_CHECK_EQUAL((*m3)(4,3), 22.0);               
-                BOOST_CHECK_EQUAL((*m3)(5,0), 19.0);               
-                BOOST_CHECK_EQUAL((*m3)(5,1), 20.0);               
-                BOOST_CHECK_EQUAL((*m3)(5,2), 23.0);               
-                BOOST_CHECK_EQUAL((*m3)(5,3), 24.0);  
+                
             }
         }
         
@@ -329,6 +262,25 @@ namespace Nektar
         void TestGetStorageType()
         {
             
+        }
+
+        void TestSpencersCompileErrors()
+        {
+            typedef NekMatrix<DNekScalMat, FullMatrixTag, BlockMatrixTag> DNekScalBlkMat;
+            typedef boost::shared_ptr<DNekScalBlkMat>    DNekScalBlkMatSharedPtr; 
+
+            int n_exp = 5;
+            Array<OneD, int> exp_size(2);
+            DNekScalBlkMatSharedPtr InvMass = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size[0],exp_size[0]); 
+
+            unsigned int m_ncoeffs = 5;
+            Array<OneD, NekDouble> inarray(m_ncoeffs);
+            DNekVec in (m_ncoeffs,inarray);
+            Array<OneD, NekDouble> outarray(m_ncoeffs*m_ncoeffs);
+            DNekVec out(m_ncoeffs,outarray,eWrapper);
+
+            out = (*InvMass)*in;
+
         }
     }
 }

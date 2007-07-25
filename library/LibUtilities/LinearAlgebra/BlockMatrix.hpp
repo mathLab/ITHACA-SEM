@@ -48,14 +48,14 @@
 
 namespace Nektar
 {
-    template<typename DataType, typename StorageType, typename InnerMatrixType>
-    class NekMatrix<NekMatrix<DataType, StorageType, InnerMatrixType>, StorageType, BlockMatrixTag> : public Matrix<DataType>
+    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
+    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, BlockMatrixTag> : public ConstMatrix<typename NekMatrix<DataType, InnerStorageType, InnerMatrixType>::NumberType>
     {
         public:
-            typedef Matrix<DataType> BaseType;
-            typedef NekMatrix<DataType, StorageType, InnerMatrixType> InnerType;
+            typedef NekMatrix<DataType, InnerStorageType, InnerMatrixType> InnerType;
             typedef NekMatrix<InnerType, StorageType, BlockMatrixTag> ThisType;
-            typedef typename NekMatrix<DataType, StorageType, InnerMatrixType>::NumberType NumberType;
+            typedef typename InnerType::NumberType NumberType;
+            typedef ConstMatrix<NumberType> BaseType;
 
             // Each inner matrix type can possible return references or value types from GetValue.
             // Query the type here to find out.
@@ -161,10 +161,11 @@ namespace Nektar
                 m_data(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>()),
                 m_rowSizes(numberOfBlockRows),
                 m_columnSizes(numberOfBlockColumns),
-                m_storageSize(this->GetRows()*this->GetColumns()),
+                m_storageSize(0),
                 m_numberOfBlockRows(numberOfBlockRows),
                 m_numberOfBlockColumns(numberOfBlockColumns)
             {
+                m_storageSize = GetRows()*GetColumns();
                 for(unsigned int i = 1; i <= numberOfBlockRows; ++i)
                 {
                     m_rowSizes[i-1] = i*rowsPerBlock-1;
@@ -183,10 +184,11 @@ namespace Nektar
                 m_data(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>()),
                 m_rowSizes(numberOfBlockRows),
                 m_columnSizes(numberOfBlockColumns),
-                m_storageSize(this->GetRows()*this->GetColumns()),
+                m_storageSize(0),
                 m_numberOfBlockRows(numberOfBlockRows),
                 m_numberOfBlockColumns(numberOfBlockColumns)
             {
+                m_storageSize = GetRows()*GetColumns();
                 m_rowSizes[0] = rowsPerBlock[0] - 1;
                 for(unsigned int i = 1; i < numberOfBlockRows; ++i)
                 {
@@ -257,26 +259,26 @@ namespace Nektar
                 return GetBlock(blockRow, blockColumn)->operator()(actualRow, actualCol);
             }
             
-            GetValueType operator()(unsigned int row, unsigned int col)
-            {
-                ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
-                    std::string(" rows"));
-                ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
-                    std::string(" columns"));
-                    
-                unsigned int blockRow = std::lower_bound(m_rowSizes.begin(), m_rowSizes.end(), row) - m_rowSizes.begin();
-                unsigned int blockColumn = std::lower_bound(m_columnSizes.begin(), m_columnSizes.end(), col) - m_columnSizes.begin();
-                unsigned int actualRow = row-(m_rowSizes[blockRow]-1);
-                unsigned int actualCol = col-(m_columnSizes[blockColumn]-1);
-                
-                ASSERTL2(GetBlock(blockRow, blockColumn), std::string("Attempting to access block (") +
-                    boost::lexical_cast<std::string>(blockRow) + std::string(", ") + 
-                    boost::lexical_cast<std::string>(blockColumn) + std::string(") of a block matrix but it is null."));
-                    
-                return GetBlock(blockRow, blockColumn)->operator()(actualRow, actualCol);
-            }
+            //GetValueType operator()(unsigned int row, unsigned int col)
+            //{
+            //    ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
+            //        std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+            //        std::string(" rows"));
+            //    ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
+            //        std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+            //        std::string(" columns"));
+            //        
+            //    unsigned int blockRow = std::lower_bound(m_rowSizes.begin(), m_rowSizes.end(), row) - m_rowSizes.begin();
+            //    unsigned int blockColumn = std::lower_bound(m_columnSizes.begin(), m_columnSizes.end(), col) - m_columnSizes.begin();
+            //    unsigned int actualRow = row-(m_rowSizes[blockRow]-1);
+            //    unsigned int actualCol = col-(m_columnSizes[blockColumn]-1);
+            //    
+            //    ASSERTL2(GetBlock(blockRow, blockColumn), std::string("Attempting to access block (") +
+            //        boost::lexical_cast<std::string>(blockRow) + std::string(", ") + 
+            //        boost::lexical_cast<std::string>(blockColumn) + std::string(") of a block matrix but it is null."));
+            //        
+            //    return GetBlock(blockRow, blockColumn)->operator()(actualRow, actualCol);
+            //}
             
             unsigned int GetStorageSize() const 
             {
@@ -299,7 +301,7 @@ namespace Nektar
         public:
         
         private:
-            virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const 
+            virtual typename boost::call_traits<NumberType>::value_type v_GetValue(unsigned int row, unsigned int column) const 
             {
                 return (*this)(row, column);
             }
@@ -314,10 +316,10 @@ namespace Nektar
                 return this->GetStorageType();
             }
             
-            virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
-            {
-                (*this)(row, column) = d;
-            }
+            //virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<NumberType>::const_reference d)
+            //{
+            //    (*this)(row, column) = d;
+            //}
             
             Array<TwoD, boost::shared_ptr<InnerType> > m_data;
             Array<OneD, unsigned int> m_rowSizes;

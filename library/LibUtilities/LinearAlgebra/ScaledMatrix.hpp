@@ -48,14 +48,17 @@
 
 namespace Nektar
 {
-    template<typename DataType, typename StorageType, typename OwnedMatrixType>
-    class NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, ScaledMatrixTag> : public ConstMatrix<DataType>
+    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
+    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag> : public ConstMatrix<DataType>
     {
         public:
             typedef ConstMatrix<DataType> BaseType;
-            typedef NekMatrix<NekMatrix<DataType, StorageType, OwnedMatrixType>, StorageType, ScaledMatrixTag> ThisType;
-            typedef typename NekMatrix<DataType, StorageType, OwnedMatrixType>::NumberType NumberType;
-            typedef NekMatrix<DataType, StorageType, OwnedMatrixType> InnerMatrixType;
+            typedef NekMatrix<DataType, InnerStorageType, InnerMatrixType> InnerMatrixType;
+            typedef NekMatrix<InnerMatrixType, StorageType, ScaledMatrixTag> ThisType;
+            typedef typename InnerMatrixType::NumberType NumberType;
+            
+            typedef NumberType GetValueType;
+            typedef NumberType ConstGetValueType;
             
         public:
             /// \brief Iterator through elements of the matrix.
@@ -111,15 +114,15 @@ namespace Nektar
             }
             
 //             NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
-//                       const NekMatrix<DataType, StorageType, OwnedMatrixType>& m) :
+//                       const NekMatrix<DataType, StorageType, InnerMatrixType>& m) :
 //                 BaseType(m.GetRows(), m.GetColumns()),
-//                 m_matrix(&m, DeleteNothing<NekMatrix<DataType, StorageType, OwnedMatrixType> >()),
+//                 m_matrix(&m, DeleteNothing<NekMatrix<DataType, StorageType, InnerMatrixType> >()),
 //                 m_scale(scale)
 //             {
 //             }
             
             NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
-                      boost::shared_ptr<const NekMatrix<DataType, StorageType, OwnedMatrixType> > m) :
+                      boost::shared_ptr<const InnerMatrixType> m) :
                 BaseType(m->GetRows(), m->GetColumns()),
                 m_matrix(m),
                 m_scale(scale)
@@ -151,7 +154,7 @@ namespace Nektar
                 return m_scale;
             }
             
-            boost::shared_ptr<const NekMatrix<DataType, StorageType, OwnedMatrixType> > GetOwnedMatrix() const
+            boost::shared_ptr<const InnerMatrixType> GetOwnedMatrix() const
             {
                 return m_matrix; 
             }
@@ -162,7 +165,8 @@ namespace Nektar
         public:
         
         private:
-            virtual typename boost::call_traits<NumberType>::value_type v_GetValue(unsigned int row, unsigned int column) const 
+            virtual typename boost::call_traits<NumberType>::value_type 
+            v_GetValue(unsigned int row, unsigned int column) const 
             {
                 return ThisType::operator()(row, column);
             }
@@ -178,7 +182,7 @@ namespace Nektar
             }
             
 
-            boost::shared_ptr<const NekMatrix<DataType, StorageType, OwnedMatrixType> > m_matrix;
+            boost::shared_ptr<const InnerMatrixType> m_matrix;
             NumberType m_scale;
     };
     

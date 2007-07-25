@@ -41,7 +41,8 @@ namespace Nektar
     enum MatrixStorage 
     {
         eFULL, 
-        eDIAGONAL
+        eDIAGONAL,
+        eUPPER_TRIANGULAR
     };
       
     class FullMatrixTag {};
@@ -64,6 +65,13 @@ namespace Nektar
     {
         public:
             enum { Value = eDIAGONAL };
+    };
+
+    template<>
+    class ConvertToMatrixStorageEnum<UpperTriangularMatrixTag>
+    {
+        public:
+            enum { Value = eUPPER_TRIANGULAR };
     };
  }   
     

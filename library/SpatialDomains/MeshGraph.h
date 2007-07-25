@@ -106,6 +106,11 @@ namespace Nektar
                 return returnval;
             }
 
+            Composite GetDomain(void) const
+            {
+                return m_Domain;
+            }
+
             void ReadDomain(TiXmlDocument &doc);
 
        protected:
@@ -128,6 +133,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.10  2007/07/24 16:52:09  jfrazier
+// Added domain code.
+//
 // Revision 1.9  2007/07/22 23:04:23  bnelson
 // Backed out Nektar::ptr.
 //

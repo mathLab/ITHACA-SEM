@@ -57,7 +57,7 @@ SpatialDomains.hpp
 SET(TINYXML_SOURCES
 ${TINYXML_SRC_DIR}/tinyxml.cpp
 ${TINYXML_SRC_DIR}/tinyxmlparser.cpp 
-${TINYXML_SRC_DIR}/xmltest.cpp
+#${TINYXML_SRC_DIR}/xmltest.cpp
 ${TINYXML_SRC_DIR}/tinyxmlerror.cpp 
 ${TINYXML_SRC_DIR}/tinystr.cpp
 )

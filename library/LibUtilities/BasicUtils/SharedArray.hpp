@@ -244,7 +244,8 @@ namespace Nektar
             /// \brief Creates an empty, size 0 array.
             ConstArray() :
                 m_data(CreateStorage<DataType>(0)),
-                m_offset(0)
+                m_offset(0),
+                m_size(0)
             {
             }
             
@@ -256,9 +257,10 @@ namespace Nektar
             /// constructor.
             explicit ConstArray(unsigned int dim1Size) :
                 m_data(CreateStorage<DataType>(dim1Size)),
-                m_offset(0)
+                m_offset(0),
+                m_size(dim1Size)
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
+                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size);
             }
             
             /// \brief Creates a 1D array with each element initialized to an initial value.
@@ -270,9 +272,10 @@ namespace Nektar
             /// is used to initialize each element.
             ConstArray(unsigned int dim1Size, const DataType& initValue) :
                 m_data(CreateStorage<DataType>(dim1Size)),
-                m_offset(0)
+                m_offset(0),
+                m_size(dim1Size)
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size, initValue);
             }
             
             /// \brief Creates a 1D array with a copy the given raw array.
@@ -284,14 +287,24 @@ namespace Nektar
             /// is used to copy each element.
             ConstArray(unsigned int dim1Size, const DataType* data) :
                 m_data(CreateStorage<DataType>(dim1Size)),
-                m_offset(0)
+                m_offset(0),
+                m_size(dim1Size)
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), data);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size, data);
             }
             
+            ConstArray(unsigned int dim1Size, const ConstArray<OneD, DataType>& rhs) :
+                m_data(rhs.m_data),
+                m_offset(rhs.m_offset),
+                m_size(dim1Size)
+            {
+                ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
+            }
+
             ConstArray(const ConstArray<OneD, DataType>& rhs) :
                 m_data(rhs.m_data),
-                m_offset(rhs.m_offset)
+                m_offset(rhs.m_offset),
+                m_size(rhs.m_size)
             {
             }
             
@@ -299,17 +312,18 @@ namespace Nektar
             {
                 m_data = rhs.m_data;
                 m_offset = rhs.m_offset;
+                m_size = rhs.m_size;
                 return *this;
             }
             
             const_iterator begin() const { return m_data->begin() + m_offset; }
-            const_iterator end() const { return m_data->end(); }
+            const_iterator end() const { return m_data->begin() + m_offset + m_size; }
             
             const_reference operator[](index i) const 
             {
-                ASSERTL1(static_cast<size_type>(i) < num_elements(), (std::string("Element ") +
+                ASSERTL1(static_cast<size_type>(i) < m_size, (std::string("Element ") +
                     boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
-                    boost::lexical_cast<std::string>(num_elements())));
+                    boost::lexical_cast<std::string>(m_size)));
                 return (*m_data)[i+m_offset]; 
             }
             
@@ -317,7 +331,7 @@ namespace Nektar
             const element* data() const { return m_data->data()+m_offset; }
             size_type num_dimensions() const { return m_data->num_dimensions(); }
             //const size_type* shape() const { return m_data->shape(); }
-            size_type num_elements() const { return m_data->num_elements()-m_offset; }
+            size_type num_elements() const { return m_size; }
             unsigned int GetOffset() const { return m_offset; }
             
             template<typename T>
@@ -332,12 +346,14 @@ namespace Nektar
         protected:
             boost::shared_ptr<ArrayType> m_data;
             unsigned int m_offset;
-            
+            unsigned int m_size;
+
         private:
             static ConstArray<OneD, DataType> CreateWithOffset(const ConstArray<OneD, DataType>& rhs, unsigned int offset)
             {
                 ConstArray<OneD, DataType> result(rhs);
                 result.m_offset = offset;
+                result.m_size = rhs.m_size - offset;
                 return result;
             }
             
@@ -527,8 +543,17 @@ namespace Nektar
                 BaseType(dim1Size, data)
             {
             }
+
+            Array(unsigned int dim1Size, const Array<OneD, DataType>& rhs) :
+                BaseType(dim1Size, rhs)
+            {
+            }
             
-            
+            Array(unsigned int dim1Size, const ConstArray<OneD, DataType>& rhs) :
+                BaseType(dim1Size, rhs.data())
+            {
+            }
+
             Array(const Array<TwoD, DataType>& rhs) :
                 BaseType(rhs)
             {
@@ -549,6 +574,7 @@ namespace Nektar
             {
                 Array<OneD, DataType> result(rhs);
                 result.m_offset = offset;
+                result.m_size = rhs.m_size - offset;
                 return result;
             }
             
@@ -556,7 +582,7 @@ namespace Nektar
             iterator begin() { return this->m_data->begin()+this->m_offset; }
             
             using BaseType::end;
-            iterator end() { return this->m_data->end(); }
+            iterator end() { return this->m_data->begin() + this->m_offset + this->m_size; }
             
             using BaseType::operator[];
             reference operator[](index i)

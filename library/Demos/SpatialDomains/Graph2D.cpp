@@ -52,6 +52,9 @@ int main(int argc, char *argv[]){
         DirichletBCShPtr dirichletBCShPtr = boost::static_pointer_cast<DirichletBoundaryCondition>(bcShPtr);
         NekDouble val = dirichletBCShPtr->m_DirichletCondition.Evaluate();
     }
+
+    ConstExactSolutionShPtr es = bcs.GetExactSolution("u");
+    val = es->Evaluate(2.0, 4.0);
     
     return 0;
 }

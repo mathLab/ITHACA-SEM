@@ -27,13 +27,13 @@
 
         <!-- We can revisit this since the syntax is not complete.
              We will allow domain, composite, or boundary.-->
-        <EXPANSIONTYPE>
+        <EXPANSIONTYPES>
             Minimum: composite, expansion type (simplified), and nummodes = f(x,y,z)
             
             Domain = eModifiedA, eModifiedB, NumModes = N (or f(x,y)), eGLL,
             Ptype = (order + 1)
             BoundaryRegion[0-1] = eLagrangeGLL, eGLR
-        </EXPANSIONTYPE>
+        </EXPANSIONTYPES>
 
         <!--The region numbers below correspond to the regions specified in the
         BoundaryRegion definition above.-->
@@ -67,5 +67,10 @@
             <I VAR ="u" VALUE="12.345" />
             <I VAR ="v" VALUE="g(x,y,z)" />
         </INITIALCONDITIONS>
+
+        <EXACTSOLUTION>
+            <E VAR="u" VALUE="23.456*x + y" />
+            <E VAR="v" VALUE="x*y" />
+        </EXACTSOLUTION>
     </CONDITIONS>
 </NEKTAR>

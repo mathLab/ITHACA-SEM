@@ -49,91 +49,91 @@
 namespace Nektar {
     namespace LibUtilities {
 
-        template< typename T > NekVector<T> getColumn(const NekMatrix<T> & A, int n) {
-            NekVector<T> v(A.GetRows());
-            for( int i=0; i<A.GetRows(); ++i ) {
-                v[i] = A(i,n);
+        template< typename T > NekVector<T> GetColumn(const NekMatrix<T> & matA, int n) {
+            NekVector<T> v(matA.GetRows());
+            for( int i=0; i<matA.GetRows(); ++i ) {
+                v[i] = matA(i,n);
             }
             return v;
         }
     
-        NekMatrix<NekDouble> & setColumn(NekMatrix<NekDouble> & A, int n, const NekVector<NekDouble> & x) {
-            for( int i=0; i<int(A.GetRows()); ++i ) {
-                A(i,n) = x[i];
+        NekMatrix<NekDouble> & SetColumn(NekMatrix<NekDouble> & matA, int n, const NekVector<NekDouble> & x) {
+            for( int i=0; i<int(matA.GetRows()); ++i ) {
+                matA(i,n) = x[i];
             }
-            return A;
+            return matA;
         }
     
         // Standard basis vector in R^M
-            NekVector<NekDouble> getE(int M, int n) {
-            NekVector<NekDouble> e(M, 0.0);
+            NekVector<NekDouble> GetE(int rows, int n) {
+            NekVector<NekDouble> e(rows, 0.0);
             e(n) = 1;
             return e;
         }
     
-        NekMatrix<NekDouble> invert(const NekMatrix<NekDouble> & A) {
-            int M = A.GetRows(), N = A.GetColumns();
-            NekMatrix<NekDouble> X(M,N);
+        NekMatrix<NekDouble> Invert(const NekMatrix<NekDouble> & matA) {
+            int rows = matA.GetRows(), columns = matA.GetColumns();
+            NekMatrix<NekDouble> matX(rows,columns);
     
             // The linear system solver
-            LinearSystem<NekMatrix<NekDouble> > L( SharedNekMatrixPtr(new NekMatrix<NekDouble>(A)) );
+            LinearSystem<NekMatrix<NekDouble> > matL( SharedNekMatrixPtr(new NekMatrix<NekDouble>(matA)) );
     
             // Solve each column for the identity matrix
-            for( int j=0; j<N; ++j ) {
-                setColumn( X, j, L.Solve( getE(M,j) ) );
+            for( int j=0; j<columns; ++j ) {
+                SetColumn( matX, j, matL.Solve( GetE(rows,j) ) );
             }
             
-            return X;
+            return matX;
         }
         
-        NekMatrix<NekDouble> getTranspose(const NekMatrix<NekDouble> & A) {
-            int M = A.GetRows(), N = A.GetColumns();
-            NekMatrix<NekDouble> X(M,N);
+        NekMatrix<NekDouble> GetTranspose(const NekMatrix<NekDouble> & matA) {
+            int rows = matA.GetRows(), columns = matA.GetColumns();
+            NekMatrix<NekDouble> matX(rows,columns);
         
-            for( int i=0; i<M; ++i ) {
-                for( int j=0; j<N; ++j ) {
-                    X(j,i) = A(i,j);
+            for( int i=0; i<rows; ++i ) {
+                for( int j=0; j<columns; ++j ) {
+                    matX(j,i) = matA(i,j);
                 }
             }
-            return X;
+            return matX;
         }
     
-        int getSize(const ConstArray<OneD, NekDouble> & x) {
+        int GetSize(const ConstArray<OneD, NekDouble> & x) {
             return x.num_elements();
         }
         
-        int getSize(const NekVector<NekDouble> & x) {
+        int GetSize(const NekVector<NekDouble> & x) {
             return x.GetRows();
         }
                 
-        NekVector<NekDouble> toVector( const ConstArray<OneD, NekDouble> & x ) {
-            return NekVector<NekDouble>( getSize(x), x.data() );
+        NekVector<NekDouble> ToVector( const ConstArray<OneD, NekDouble> & x ) {
+            return NekVector<NekDouble>( GetSize(x), x.data() );
         }
         
-        Array<OneD, NekDouble> toArray( const NekVector<NekDouble> & x ) {
-            return Array<OneD, NekDouble>( getSize(x), x.GetPtr() );
+        Array<OneD, NekDouble> ToArray( const NekVector<NekDouble> & x ) {
+            return Array<OneD, NekDouble>( GetSize(x), x.GetPtr() );
         }
     
-        NekVector<NekDouble> hadamard( const NekVector<NekDouble> & x, const NekVector<NekDouble> & y ) {
-            int N = getSize(x);
-            NekVector<NekDouble> z(N);
+        NekVector<NekDouble> Hadamard( const NekVector<NekDouble> & x, const NekVector<NekDouble> & y ) {
+            int size = GetSize(x);
+            NekVector<NekDouble> z(size);
     
-            for( int i=0; i<N; ++i ) {
+            for( int i=0; i<size; ++i ) {
                 z[i] = x[i] * y[i];
             }
             return z;
         }
     
         
-        int getDegree(int nBasisFunctions){
+        int GetDegree(int nBasisFunctions){
             return (-3 + int(sqrt(1.0 + 8*nBasisFunctions)))/2;
         }
 
-		NekDouble round(NekDouble x) {
+		NekDouble MakeRound(NekDouble x) {
 			return floor(x + 0.5);
 		}
         
-        NekVector<NekDouble> makeDubinerQuadratureSystem(int nBasisFunctions){
+        NekVector<NekDouble> MakeDubinerQuadratureSystem(int nBasisFunctions){
             // Make the vector of integrals: note that each modal basis function integrates to zero except for the 0th degree
             NekVector<NekDouble> g(nBasisFunctions, 0.0);
             g(0) = sqrt(2.0);
@@ -143,7 +143,7 @@ namespace Nektar {
     
     
         NekVector<NekDouble> JacobiPoly(int degree, const NekVector<NekDouble>& x, int alpha, int beta){
-            int size = getSize(x);
+            int size = GetSize(x);
             NekVector<NekDouble> y(size);
             
             if(degree == 0){
@@ -180,7 +180,7 @@ namespace Nektar {
     
     
         NekVector<NekDouble> LegendrePoly(int degree, const NekVector<NekDouble>& x){
-            int size = getSize(x);
+            int size = GetSize(x);
             NekVector<NekDouble> y(size);
             
             if(degree > 1){
@@ -193,7 +193,7 @@ namespace Nektar {
                     NekDouble c = NekDouble(i-1.0)/i;
     
                     // multiply each elements in matrix
-                    a2 = b * hadamard(a1, x)  -  c * a0;
+                    a2 = b * Hadamard(a1, x)  -  c * a0;
                     a0 = a1;
                     a1 = a2;
                 }
@@ -210,7 +210,7 @@ namespace Nektar {
         
         NekVector<NekDouble> DubinerPoly(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
             // Get the coordinate transform
-            int size = getSize(x);
+            int size = GetSize(x);
             NekVector<NekDouble> eta_1(size);
     
             // Initialize the horizontal coordinate of the triangle (beta in Barycentric coordinates)
@@ -240,11 +240,11 @@ namespace Nektar {
             return psi;
         }
     
-        NekMatrix<NekDouble> getVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
-            int M = getSize(x);
-            int N = (degree + 1) * (degree + 2) / 2;
+        NekMatrix<NekDouble> GetVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
+            int rows = GetSize(x);
+            int cols = (degree + 1) * (degree + 2) / 2;
             
-            NekMatrix<NekDouble> V(M, N, 0.0);
+            NekMatrix<NekDouble> matV(rows, cols, 0.0);
     
             for(int d=0, n=0; d<=degree; ++d){
                 for(int p=0; p<=d; ++p, ++n){
@@ -252,59 +252,59 @@ namespace Nektar {
                     NekVector<NekDouble> columnVector = DubinerPoly(p, q, x, y);
     
                     // Set n-th column of V to the DubinerPoly vector
-                    for(int i=0; i<M; ++i){
-                            V(i,n) = columnVector[i];
+                    for(int i=0; i<rows; ++i){
+                            matV(i,n) = columnVector[i];
                     }
                 }
             }
     
-            return V;
+            return matV;
         }
     
-        NekMatrix<NekDouble> getVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
-            int M = getSize(x);
-            int degree = getDegree(M);
-            return getVandermonde( x, y, degree );
+        NekMatrix<NekDouble> GetVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
+            int rows = GetSize(x);
+            int degree = GetDegree(rows);
+            return GetVandermonde( x, y, degree );
         }
     
     
-        SharedNekMatrixPtr makeVmatrixOfDubinerPolynomial(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
+        SharedNekMatrixPtr MakeVmatrixOfDubinerPolynomial(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
             
             // Construct the Vandermonde matrix of DubinerPolynomials
-            SharedNekMatrixPtr V(new NekMatrix<NekDouble>( getVandermonde(x, y) ));
+            SharedNekMatrixPtr vandermonde(new NekMatrix<NekDouble>( GetVandermonde(x, y) ));
     
-            return V;
+            return vandermonde;
         }
     
-        NekVector<NekDouble> makeQuadratureWeights(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
+        NekVector<NekDouble> MakeQuadratureWeights(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
     
-            NekVector<NekDouble> g = makeDubinerQuadratureSystem(x.GetRows());
+            NekVector<NekDouble> g = MakeDubinerQuadratureSystem(x.GetRows());
             
-            SharedNekMatrixPtr   V = makeVmatrixOfDubinerPolynomial(x, y);
+            SharedNekMatrixPtr   matV = MakeVmatrixOfDubinerPolynomial(x, y);
     
             // Initialize the linear system solver
-            LinearSystem<NekMatrix<NekDouble> > L(V);
+            LinearSystem<NekMatrix<NekDouble> > matL(matV);
     
             // Deduce the quadrature weights
-            return L.SolveTranspose(g);
+            return matL.SolveTranspose(g);
     
         }
     
-        NekMatrix<NekDouble> getInterpolationMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+        NekMatrix<NekDouble> GetInterpolationMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
                                                     const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi){
-            int nNodes = getSize(x);
-            int degree = getDegree(nNodes);
+            int nNodes = GetSize(x);
+            int degree = GetDegree(nNodes);
     
-            NekMatrix<NekDouble> S = getVandermonde(x, y); // Square 'short' matrix
-            NekMatrix<NekDouble> T = getVandermonde(xi, yi, degree); // Coefficient interpolation matrix (tall)
+            NekMatrix<NekDouble> matS = GetVandermonde(x, y); // Square 'short' matrix
+            NekMatrix<NekDouble> matT = GetVandermonde(xi, yi, degree); // Coefficient interpolation matrix (tall)
     
-            NekMatrix<NekDouble> invertMatrix = invert(S);
+            NekMatrix<NekDouble> invertMatrix = Invert(matS);
             // Get the interpolation matrix
-            return T*invertMatrix;
+            return matT*invertMatrix;
         }
     
         NekVector<NekDouble> LegendrePolyDerivative(int degree, const NekVector<NekDouble>& x){
-            int size = getSize(x);
+            int size = GetSize(x);
             NekVector<NekDouble> y(size), b3(size), a2(size);
             
             if(degree >= 3) {
@@ -312,11 +312,11 @@ namespace Nektar {
                 NekVector<NekDouble> a0(size, 1.0), a1 = x;
     
                 for(int n=3; n<=degree; ++n){
-                    a2 = ((2.0*n - 3.0)/(n - 1.0)) * hadamard(x, a1) - (n - 2.0)/(n - 1.0) * a0;
+                    a2 = ((2.0*n - 3.0)/(n - 1.0)) * Hadamard(x, a1) - (n - 2.0)/(n - 1.0) * a0;
                     a0 = a1;
                     a1 = a2;
     
-                    b3 = (2.0*n - 1.0)/n * (hadamard(b2, x) + a2) - (n - 1.0)/n * b1;
+                    b3 = (2.0*n - 1.0)/n * (Hadamard(b2, x) + a2) - (n - 1.0)/n * b1;
                     b1 = b2;
                     b2 = b3;
                 }
@@ -338,7 +338,7 @@ namespace Nektar {
         NekVector<NekDouble> DubinerPolyXDerivative(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
             
             // Get the coordinate transform
-            int size = getSize(y);
+            int size = GetSize(y);
             NekVector<NekDouble> eta_1(size);
             NekVector<NekDouble> psi_x(x.GetRows());
             if(p>0){
@@ -373,49 +373,49 @@ namespace Nektar {
             return psi_x;
         }
         
-        NekMatrix<NekDouble> getVandermondeForXDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
-            int M = getSize(x);
-            int N = (degree + 1) * (degree + 2)/2;
-            NekMatrix<NekDouble> Vx(M, N, 0.0);
+        NekMatrix<NekDouble> GetVandermondeForXDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
+            int rows = GetSize(x);
+            int cols = (degree + 1) * (degree + 2)/2;
+            NekMatrix<NekDouble> matVx(rows, cols, 0.0);
             for(int d=0, n=0; d<=degree; ++d){
                 for(int p=0; p<=d; ++p, ++n){
                     int q = d - p;
                     NekVector<NekDouble> columnVector = DubinerPolyXDerivative(p, q, x, y);
     
                     // Set n-th column of Vx to the DubinerPolyXDerivative vector
-                    for(int i=0; i<M; ++i){
-                        Vx(i, n) = columnVector[i];
+                    for(int i=0; i<rows; ++i){
+                        matVx(i, n) = columnVector[i];
                     }
                 }
             }
             // cout << "Vx = \n"  << Vx << endl;
-            return Vx;
+            return matVx;
         }
     
             
-        NekMatrix<NekDouble> getVandermondeForXDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
-            int M = getSize(x);
-            int degree = getDegree(M);
-            return getVandermondeForXDerivative(x, y, degree);
+        NekMatrix<NekDouble> GetVandermondeForXDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
+            int rows = GetSize(x);
+            int degree = GetDegree(rows);
+            return GetVandermondeForXDerivative(x, y, degree);
         }
             
-        Points<NekDouble>::MatrixSharedPtrType getXDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+        Points<NekDouble>::MatrixSharedPtrType GetXDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
                                                                     const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi){
-            int nNodes = getSize(x);
-            int degree = getDegree(nNodes);
-            NekMatrix<NekDouble> S  = getVandermonde(x, y); // Square 'short' matrix
-            NekMatrix<NekDouble> Tx = getVandermondeForXDerivative(xi, yi, degree); // Tall matrix
+            int nNodes = GetSize(x);
+            int degree = GetDegree(nNodes);
+            NekMatrix<NekDouble> matS  = GetVandermonde(x, y); // Square 'short' matrix
+            NekMatrix<NekDouble> matTx = GetVandermondeForXDerivative(xi, yi, degree); // Tall matrix
     
-            NekMatrix<NekDouble> invertMatrix = invert(S);
+            NekMatrix<NekDouble> invertMatrix = Invert(matS);
     
             // Get the Derivation matrix
     
-            return Points<NekDouble>::MatrixSharedPtrType( new NekMatrix<NekDouble>(Tx*invertMatrix) );
+            return Points<NekDouble>::MatrixSharedPtrType( new NekMatrix<NekDouble>(matTx*invertMatrix) );
         }
     
     
         NekVector<NekDouble> JacobiPolyDerivative(int degree, const NekVector<NekDouble>& x, int alpha, int beta){
-            int size = getSize(x);
+            int size = GetSize(x);
             NekVector<NekDouble> y(size);
     
             if(degree == 0){
@@ -430,7 +430,7 @@ namespace Nektar {
     
         NekVector<NekDouble> DubinerPolyYDerivative(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
             // Get the coordinate transform
-            int size = getSize(y);
+            int size = GetSize(y);
             NekVector<NekDouble> eta_1(size), psi_y(size);
     
             // Initialize the horizontal coordinate of the triangle (beta in Barycentric coordinates)
@@ -447,153 +447,153 @@ namespace Nektar {
             // Orthogonal Dubiner y-polynomial
             int alpha = 2*p + 1; int beta = 0;
             
-            NekVector<NekDouble> Pq = JacobiPoly(q, eta_2, alpha, beta);
+            NekVector<NekDouble> vecPq = JacobiPoly(q, eta_2, alpha, beta);
             NekVector<NekDouble> upsilon = LegendrePolyDerivative(p, eta_1);
             NekVector<NekDouble> zeta = LegendrePoly(p, eta_1);
-            NekVector<NekDouble> Jp = JacobiPolyDerivative(q, eta_2, alpha, beta);
-            NekVector<NekDouble> Pq2(x.GetRows());
-            NekVector<NekDouble> Ly(x.GetRows());
+            NekVector<NekDouble> vecJp = JacobiPolyDerivative(q, eta_2, alpha, beta);
+            NekVector<NekDouble> vecPq2(x.GetRows());
+            NekVector<NekDouble> vecLy(x.GetRows());
             
             if(p > 0){
                 for(int i=0; i<size; ++i){
-                    Pq2[i] = p/2.0 * pow(((1.0 - eta_2[i]) / 2.0), p - 1.0) * Pq[i];
-                    Ly[i] = (1.0 + eta_1[i])/2.0 * upsilon[i] * pow((1.0 - eta_2[i])/2.0, p-1.0) * Pq[i];
+                    vecPq2[i] = p/2.0 * pow(((1.0 - eta_2[i]) / 2.0), p - 1.0) * vecPq[i];
+                    vecLy[i] = (1.0 + eta_1[i])/2.0 * upsilon[i] * pow((1.0 - eta_2[i])/2.0, p-1.0) * vecPq[i];
                 }
                 
             } else {
                 for(int i=0; i<size; ++i){
-                    Pq2[i] = 0.0;
-                    Ly[i] = 0.0;
+                    vecPq2[i] = 0.0;
+                    vecLy[i] = 0.0;
                 }
             }
             for(int k=0; k<size; ++k){
-                psi_y[k] = Ly[k] + zeta[k] * (pow((1.0 -  eta_2[k])/2.0, p) * Jp[k] - Pq2[k]);
+                psi_y[k] = vecLy[k] + zeta[k] * (pow((1.0 -  eta_2[k])/2.0, p) * vecJp[k] - vecPq2[k]);
             }
             NekDouble w = sqrt((2.0*p + 1.0)*(p + q + 1.0)/2.0); // Normalizing Orthonormal weight
     
             return w * psi_y;
         }
         
-        NekMatrix<NekDouble> getVandermondeForYDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
-            int M = getSize(y);
-            int N = (degree + 1) * (degree + 2)/2;
-            NekMatrix<NekDouble> Vy(M, N, 0.0);
+        NekMatrix<NekDouble> GetVandermondeForYDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
+            int rows = GetSize(y);
+            int cols = (degree + 1) * (degree + 2)/2;
+            NekMatrix<NekDouble> matVy(rows, cols, 0.0);
             
             for(int d=0, n=0; d<=degree; ++d){
                 for(int p=0; p<=d; ++p, ++n){
                     int q = d - p;
                     NekVector<NekDouble> columnVector = DubinerPolyYDerivative(p, q, x, y);
     
-                    for(int i=0; i<M; ++i){
-                        Vy(i, n) = columnVector[i];
+                    for(int i=0; i<rows; ++i){
+                        matVy(i, n) = columnVector[i];
                     }
                 }
             }
-            return Vy;
+            return matVy;
         }
     
         
-        Points<NekDouble>::MatrixSharedPtrType getYDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+        Points<NekDouble>::MatrixSharedPtrType GetYDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
                                                                     const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi){
-            int nNodes = getSize(y);
-            int degree = getDegree(nNodes);
+            int nNodes = GetSize(y);
+            int degree = GetDegree(nNodes);
     
-            NekMatrix<NekDouble> S  = getVandermonde(x, y); // Square 'short' matrix
-            NekMatrix<NekDouble> Ty = getVandermondeForYDerivative(xi, yi, degree); // Tall matrix
+            NekMatrix<NekDouble> matS  = GetVandermonde(x, y); // Square 'short' matrix
+            NekMatrix<NekDouble> matTy = GetVandermondeForYDerivative(xi, yi, degree); // Tall matrix
     
-            NekMatrix<NekDouble> invertMatrix = invert(S);
+            NekMatrix<NekDouble> invertMatrix = Invert(matS);
     
             // Get the Derivation matrix
-            return Points<NekDouble>::MatrixSharedPtrType( new NekMatrix<NekDouble>(Ty*invertMatrix) );
+            return Points<NekDouble>::MatrixSharedPtrType( new NekMatrix<NekDouble>(matTy*invertMatrix) );
         }
     
     
     
-        NekMatrix<NekDouble> getVandermondeForYDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
-            int M = getSize(y);
-            int degree = getDegree(M);
-            return getVandermondeForYDerivative(x, y, degree);
+        NekMatrix<NekDouble> GetVandermondeForYDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
+            int rows = GetSize(y);
+            int degree = GetDegree(rows);
+            return GetVandermondeForYDerivative(x, y, degree);
         }
     
-        NekMatrix<NekDouble> getMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
-            int M = getSize(x);
-            int N = (degree + 1)*(degree + 2)/2;
-            NekMatrix<NekDouble>V(M,N, 0.0);
+        NekMatrix<NekDouble> GetMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
+            int rows = GetSize(x);
+            int cols = (degree + 1)*(degree + 2)/2;
+            NekMatrix<NekDouble>matV(rows,cols, 0.0);
             for(int d=0, n=0; d <= degree; ++d){
                 for(int p=0; p <= d; ++p, ++n){
                     int q = d - p;
                     
-                    for(int i=0; i<M; ++i){
-                            V(i, n) = pow(x[i], p) * pow(y[i], q);
+                    for(int i=0; i<rows; ++i){
+                            matV(i, n) = pow(x[i], p) * pow(y[i], q);
                     }
                 }
             }
-            return V;
+            return matV;
         }
         
-        NekMatrix<NekDouble> getMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
-            int M = getSize(x);
-            int degree = getDegree(M);
-            return getMonomialVandermonde(x, y, degree);
+        NekMatrix<NekDouble> GetMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
+            int rows = GetSize(x);
+            int degree = GetDegree(rows);
+            return GetMonomialVandermonde(x, y, degree);
         }
         
-        NekMatrix<NekDouble> getXDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
-            int M = getSize(x);
-            int N = (degree + 1) * (degree + 2) / 2;
-            NekMatrix<NekDouble> Vx(M, N, 0.0);
+        NekMatrix<NekDouble> GetXDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
+            int rows = GetSize(x);
+            int cols = (degree + 1) * (degree + 2) / 2;
+            NekMatrix<NekDouble> matVx(rows, cols, 0.0);
             for(int d=0, n=0; d <= degree; ++d){
                 for(int p=0; p <= d; ++p, ++n){
                     int q = d - p;
                     if(p > 0){
-                        for(int i=0; i<M; ++i){
-                            Vx(i, n) = p * pow(x[i], p-1.0) * pow(y[i],q);
+                        for(int i=0; i<rows; ++i){
+                            matVx(i, n) = p * pow(x[i], p-1.0) * pow(y[i],q);
                         }
                     } else {
-                        for(int j=0; j<M; ++j){
-                            Vx(j, n) = 0.0;
+                        for(int j=0; j<rows; ++j){
+                            matVx(j, n) = 0.0;
                         }
                     }
                 }
             }
-            return Vx;
+            return matVx;
         }
         
-        NekMatrix<NekDouble> getXDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
-            int M = getSize(x);
-            int degree = getDegree(M);
-            return getXDerivativeOfMonomialVandermonde(x, y, degree);
+        NekMatrix<NekDouble> GetXDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
+            int rows = GetSize(x);
+            int degree = GetDegree(rows);
+            return GetXDerivativeOfMonomialVandermonde(x, y, degree);
         }
     
-        NekMatrix<NekDouble> getYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
-            int M = getSize(x);
-            int N = (degree + 1) * (degree + 2) / 2;
-            NekMatrix<NekDouble> Vy(M, N, 0.0);
+        NekMatrix<NekDouble> GetYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree){
+            int rows = GetSize(x);
+            int cols = (degree + 1) * (degree + 2) / 2;
+            NekMatrix<NekDouble> matVy(rows, cols, 0.0);
             for(int d=0, n=0; d <= degree; ++d){
                 for(int p=0; p <= d; ++p, ++n){
                     int q = d - p;
                     if(q > 0){
-                        for(int i=0; i<M; ++i){
-                            Vy(i, n) = q * pow(x[i], p) * pow(y[i], q-1.0);
+                        for(int i=0; i<rows; ++i){
+                            matVy(i, n) = q * pow(x[i], p) * pow(y[i], q-1.0);
                         }
                         }else {
-                        for(int j=0; j<M; ++j){
-                            Vy(j, n) = 0.0;
+                        for(int j=0; j<rows; ++j){
+                            matVy(j, n) = 0.0;
                         }
                     }
                 }
             }
-            return Vy;
+            return matVy;
         }
     
-        NekMatrix<NekDouble> getYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
-            int M = getSize(x);
-            int degree = getDegree(M);
-            return getYDerivativeOfMonomialVandermonde(x, y, degree);
+        NekMatrix<NekDouble> GetYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y){
+            int rows = GetSize(x);
+            int degree = GetDegree(rows);
+            return GetYDerivativeOfMonomialVandermonde(x, y, degree);
         }
         
-        NekVector<NekDouble> getIntegralOfMonomialVandermonde(int degree){
-            int N = (degree + 1) * (degree + 2) / 2;
-            NekVector<NekDouble>VI(N, 0.0);
+        NekVector<NekDouble> GetIntegralOfMonomialVandermonde(int degree){
+            int cols = (degree + 1) * (degree + 2) / 2;
+            NekVector<NekDouble>integralMVandermonde(cols, 0.0);
             for(int d=0, n=0; d <= degree; ++d){
                 for(int p=0; p <= d; ++p, ++n){
                     int q = d - p;
@@ -601,10 +601,10 @@ namespace Nektar {
                     int sp = 1 - 2 * (p % 2);
                     int sq = 1 - 2 * (q % 2);
         
-                    VI(n) = NekDouble(sp * (p+1) + sq * (q+1) + sp * sq * (p+q+2)) / ((p+1) * (q+1) * (p+q+2));
+                    integralMVandermonde(n) = NekDouble(sp * (p+1) + sq * (q+1) + sp * sq * (p+q+2)) / ((p+1) * (q+1) * (p+q+2));
                 }
             }
-            return VI;
+            return integralMVandermonde;
         }        
     }
 }

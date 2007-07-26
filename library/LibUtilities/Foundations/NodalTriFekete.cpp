@@ -146,7 +146,7 @@ namespace Nektar
             typedef DataType T;
             
             // Solve the Vandermonde system of integrals for the weight vector
-            NekVector<T> w = makeQuadratureWeights(NekVector<T>(m_points[0]), NekVector<T>(m_points[1]));
+            NekVector<T> w = MakeQuadratureWeights(NekVector<T>(m_points[0]), NekVector<T>(m_points[1]));
             
             m_weights = Array<OneD,T>( w.GetRows(), w.GetPtr() );
 
@@ -159,12 +159,12 @@ namespace Nektar
              NekVector<NekDouble>  y( m_points[1] );
              NekVector<NekDouble> xi( xia );
              NekVector<NekDouble> yi( yia );
-             NekMatrix<NekDouble> I = getInterpolationMatrix(x, y, xi, yi);
+             NekMatrix<NekDouble> interMat = GetInterpolationMatrix(x, y, xi, yi);
 
-             int M = xi.GetRows(), N = GetTotNumPoints();
-             for( int i = 0; i < M; ++i ) {
-                for( int j = 0; j < N; ++j ) {
-                    interp[j + i*N] = I(i,j);
+             int rows = xi.GetRows(), cols = GetTotNumPoints();
+             for( int i = 0; i < rows; ++i ) {
+                for( int j = 0; j < cols; ++j ) {
+                    interp[j + i*cols] = interMat(i,j);
                 }
              }
          }
@@ -184,11 +184,11 @@ namespace Nektar
 
             bool isTestingXDerivative = true;
             if( isTestingXDerivative ) {
-                m_derivmatrix = getXDerivativeMatrix(x,y,xi,yi);
-               // cout << "getXDerivativeMatrix() =  \n" << *m_derivmatrix << endl;
+                m_derivmatrix = GetXDerivativeMatrix(x,y,xi,yi);
+               // cout << "GetXDerivativeMatrix() =  \n" << *m_derivmatrix << endl;
             } else {
-                m_derivmatrix = getYDerivativeMatrix(x,y,xi,yi);
-               // cout << "getYDerivativeMatrix() =  \n" << *m_derivmatrix << endl;
+                m_derivmatrix = GetYDerivativeMatrix(x,y,xi,yi);
+               // cout << "GetYDerivativeMatrix() =  \n" << *m_derivmatrix << endl;
            }
         }
 
@@ -266,6 +266,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriFekete.cpp,v $
+* Revision 1.18  2007/07/22 23:03:27  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.17  2007/07/21 05:01:50  ehan
 * Completed version of NodalTriFekete with integration, derivation, and interpolation implemented and tested.
 *

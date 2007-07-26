@@ -40,8 +40,15 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Polylib/Polylib.h>
-#include <LibUtilities/Foundations/NodalTriElec.h>
 #include <LibUtilities/Foundations/NodalTriElecData.h>
+
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+#include <LibUtilities/LinearAlgebra/Lapack.hpp>
+#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include <LibUtilities/Foundations/NodalTriElec.h>
+#include <LibUtilities/Foundations/NodalUtil.h>
 
 namespace Nektar
 {
@@ -129,13 +136,54 @@ namespace Nektar
 
         void NodalTriElec::CalculateWeights()
         {
-            // No weights computed
+            // Allocate the storage for points
+            PointsBaseType::CalculateWeights();
+
+            typedef DataType T;
+            
+            // Solve the Vandermonde system of integrals for the weight vector
+            NekVector<T> w = MakeQuadratureWeights(NekVector<T>(m_points[0]), NekVector<T>(m_points[1]));
+            
+            m_weights = Array<OneD,T>( w.GetRows(), w.GetPtr() );
         }
 
         void NodalTriElec::CalculateDerivMatrix()
         {
-            // No derivative matrix computed
+             // Allocate the derivative matrix.
+            PointsBaseType::CalculateDerivMatrix();
+
+            NekVector<NekDouble> x( m_points[0] );
+            NekVector<NekDouble> y( m_points[1] );
+            NekVector<NekDouble> xi = x;
+            NekVector<NekDouble> yi = y;
+
+            bool isTestingXDerivative = true;
+            if( isTestingXDerivative ) {
+                m_derivmatrix = GetXDerivativeMatrix(x,y,xi,yi);
+               // cout << "GetXDerivativeMatrix() =  \n" << *m_derivmatrix << endl;
+            } else {
+                m_derivmatrix = GetYDerivativeMatrix(x,y,xi,yi);
+               // cout << "GetYDerivativeMatrix() =  \n" << *m_derivmatrix << endl;
+           }
         }
+
+           // ////////////////////////////////////////
+        //        CalculateInterpMatrix()
+        void NodalTriElec::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia, Array<OneD, NekDouble>& interp){
+             NekVector<NekDouble>  x( m_points[0] );
+             NekVector<NekDouble>  y( m_points[1] );
+             NekVector<NekDouble> xi( xia );
+             NekVector<NekDouble> yi( yia );
+             NekMatrix<NekDouble> interMat = GetInterpolationMatrix(x, y, xi, yi);
+
+             int rows = xi.GetRows(), cols = GetTotNumPoints();
+             for( int i = 0; i < rows; ++i ) {
+                for( int j = 0; j < cols; ++j ) {
+                    interp[j + i*cols] = interMat(i,j);
+                }
+             }
+         }
+
 
         boost::shared_ptr<NodalTriElec::PointsBaseType> NodalTriElec::Create(const PointsKey &key)
         {
@@ -210,6 +258,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriElec.cpp,v $
+* Revision 1.9  2007/07/22 23:03:26  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.8  2007/07/20 00:28:26  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

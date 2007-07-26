@@ -62,27 +62,38 @@ namespace Nektar
 
             const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
             {
-                ASSERTL0(false, "NodalTriElec Method not implemented");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                ASSERTL0(pkey.GetPointsDim()==2, "NodalTriElec Points can only interp to other 2d point distributions");
+                ConstArray<OneD, NekDouble> x, y;
+                PointsManager()[pkey]->GetPoints(x, y);
+                return GetI(x, y);
+            }
 
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x, const ConstArray<OneD, NekDouble>& y){
+                
+                int numpoints = x.num_elements();
+                return GetI(numpoints, x, y);            
+            }
+
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& xi, const ConstArray<OneD, NekDouble>& yi){
+                    
+                Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
+                CalculateInterpMatrix(xi, yi, interp);
+                boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints, 
+                                                                   GetTotNumPoints(),interp.data()));
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x)
-            {
-                ASSERTL0(false, "NodalTriElec Method not implemented");
+            
 
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x)         {
+                ASSERTL0(false, "NodalTriElec Method not implemented for 1-dimensional input");
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
-
                 return returnval;
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
-            {
-                ASSERTL0(false, "NodalTriElec Method not implemented");
-
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)       {
+                ASSERTL0(false, "NodalTriElec Method not implemented for 1-dimensional input");
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
-
                 return returnval;
            }
 
@@ -99,6 +110,8 @@ namespace Nektar
             void CalculateWeights();
             void CalculateDerivMatrix();
             void NodalPointReorder2d();
+
+            void NodalTriElec::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& , const ConstArray<OneD, NekDouble>& , Array<OneD, NekDouble>& );
         };
    } // end of namespace
 } // end of namespace 

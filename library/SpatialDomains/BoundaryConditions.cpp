@@ -89,6 +89,7 @@ namespace Nektar
             ReadBoundaryConditions(conditions);
             ReadForcingFunctions(conditions);
             ReadInitialConditions(conditions);
+            ReadExactSolution(conditions);
         }
 
         void BoundaryConditions::ReadParameters(TiXmlElement *conditions)
@@ -150,12 +151,8 @@ namespace Nektar
 
                     nextVariableNumber++;
 
-                    TiXmlAttribute *attr = variableElement->FirstAttribute();
-                    std::string attrName(attr->Name());
-
-                    ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
                     int indx;
-                    int err = attr->QueryIntValue(&indx);
+                    int err = variableElement->QueryIntAttribute("ID", &indx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
                     ASSERTL0(indx == nextVariableNumber, "Composite IDs must begin with zero and be sequential.");
 
@@ -204,12 +201,8 @@ namespace Nektar
 
                 nextBoundaryRegionNumber++;
 
-                TiXmlAttribute *attr = boundaryRegionsElement->FirstAttribute();
-                std::string attrName(attr->Name());
-
-                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
                 int indx;
-                int err = attr->QueryIntValue(&indx);
+                int err = boundaryRegionsElement->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
                 ASSERTL0(indx == nextBoundaryRegionNumber, "Boundary region IDs must begin with zero and be sequential.");
 
@@ -271,7 +264,12 @@ namespace Nektar
 
         void BoundaryConditions::ReadExpansionTypes(TiXmlElement *conditions)
         {
-            NEKERROR(ErrorUtil::ewarning, "ExpansionTypes not currently implemented.");
+            TiXmlElement *expansionTypes = conditions->FirstChildElement("EXPANSIONTYPES");
+
+            if (expansionTypes)
+            {
+                NEKERROR(ErrorUtil::ewarning, "ExpansionTypes not currently implemented.");
+            }
         }
 
         void BoundaryConditions::ReadBoundaryConditions(TiXmlElement *conditions)
@@ -290,15 +288,8 @@ namespace Nektar
             {
                 BoundaryConditionMapShPtr boundaryConditions = MemoryManager<BoundaryConditionMap>::AllocateSharedPtr();
 
-                TiXmlAttribute *attr = regionElement->FirstAttribute();
-                ASSERTL0(attr,
-                    "The REF attribute must be present to specify the boundary region to which the condition applies.");
-                std::string attrName(attr->Name());
-                ASSERTL0(attrName == "REF",
-                    "The REF attribute must be present to specify the boundary region to which the condition applies.");
-
                 int boundaryRegionID;
-                int err = attr->QueryIntValue(&boundaryRegionID);
+                int err = regionElement->QueryIntAttribute("REF", &boundaryRegionID);
                 ASSERTL0(err == TIXML_SUCCESS, "Error reading boundary region reference.");
 
                 // Find the boundary region corresponding to this ID.
@@ -326,9 +317,10 @@ namespace Nektar
                     std::string attrData;
 
                     // All have var specified, or else all variables are zero.
-                    attr = conditionElement->FirstAttribute();
+                    TiXmlAttribute *attr = conditionElement->FirstAttribute();
 
                     Variable::iterator iter;
+                    std::string attrName;
 
                     if (attr)
                     {
@@ -520,7 +512,9 @@ namespace Nektar
                     TiXmlAttribute *functionAttr = variableAttr->Next();
                     if (functionAttr)
                     {
-                        ForcingFunctionsMap::iterator forcingFcnsIter = m_ForcingFunctions.find(variableStr);
+                       std::string fcnStr = functionAttr->Name();
+                       ASSERTL0(fcnStr == "VALUE", (std::string("Missing VALUE tag specifying forcing function for variable: ") + variableAttrName).c_str());
+                       ForcingFunctionsMap::iterator forcingFcnsIter = m_ForcingFunctions.find(variableStr);
 
                         if (forcingFcnsIter != m_ForcingFunctions.end())
                         {
@@ -533,6 +527,57 @@ namespace Nektar
                     }
 
                     forcingFunction = forcingFunction->NextSiblingElement("F");
+                }
+            }
+        }
+
+        void BoundaryConditions::ReadExactSolution(TiXmlElement *solution)
+        {
+            TiXmlElement *exactSolutionElement = solution->FirstChildElement("EXACTSOLUTION");
+
+            if (exactSolutionElement)
+            {
+                TiXmlElement *exactSolution = exactSolutionElement->FirstChildElement("E");
+
+                // All exact solution functions are initialized to "0" so they only have to be
+                // partially specified.  That is, not all variables have to have functions
+                // specified.  For those that are missing it is assumed they are "0".
+                for (Variable::iterator varIter = m_Variables.begin();
+                    varIter != m_Variables.end(); ++varIter)
+                {
+                    ExactSolutionShPtr exactSolutionShPtr(MemoryManager<ExactSolution>::AllocateSharedPtr("0"));
+                    m_ExactSolution[*varIter] = exactSolutionShPtr;
+                }
+
+                while (exactSolution)
+                {
+                    TiXmlAttribute *variableAttr = exactSolution->FirstAttribute();
+
+                    ASSERTL0(variableAttr, "The variable must be specified for the exact solution.");
+                    std::string variableAttrName = variableAttr->Name();
+                    ASSERTL0(variableAttrName == "VAR", (std::string("Error in exact solution attribute name: ") + variableAttrName).c_str());
+
+                    std::string variableStr = variableAttr->Value();
+
+                    TiXmlAttribute *solnAttr = variableAttr->Next();
+                    if (solnAttr)
+                    {
+                        std::string solnValStr = solnAttr->Name();
+                        ASSERTL0(solnValStr == "VALUE", "Missing VALUE tag specifying exact solution.");
+
+                        ExactSolutionMap::iterator exactSolutionIter = m_ExactSolution.find(variableStr);
+
+                        if (exactSolutionIter != m_ExactSolution.end())
+                        {
+                            m_ExactSolution[variableStr]->SetEquation(solnAttr->Value());
+                        }
+                        else
+                        {
+                            NEKERROR(ErrorUtil::efatal, (std::string("Error setting exact solution for variable: ") + variableStr).c_str());
+                        }
+                    }
+
+                    exactSolution = exactSolution->NextSiblingElement("E");
                 }
             }
         }
@@ -611,7 +656,7 @@ namespace Nektar
             return GetForcingFunction(m_Variables[indx]);
         }
 
-        ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(const string &var) const
+        ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(const std::string &var) const
         {
             ConstForcingFunctionShPtr returnval;
             
@@ -637,6 +682,43 @@ namespace Nektar
                     NEKERROR(ErrorUtil::efatal,
                         (std::string("Default forcing function used for variable: ") + var).c_str());
                 }
+            }
+
+            return returnval;
+        }
+
+        ConstExactSolutionShPtr BoundaryConditions::GetExactSolution(int indx) const
+        {
+            ConstExactSolutionShPtr returnval;
+
+            if (indx >= m_Variables.size() || indx < 0)
+            {
+                string errStr;
+                std::ostringstream strStream(errStr);
+                strStream << indx;
+
+                NEKERROR(ErrorUtil::efatal,
+                    (std::string("Unable to find variable corresponding to index: ") + errStr).c_str());
+            }
+
+            return GetExactSolution(m_Variables[indx]);
+        }
+
+        ConstExactSolutionShPtr BoundaryConditions::GetExactSolution(const std::string &var) const
+        {
+            ConstExactSolutionShPtr returnval;
+            
+            // Check that var is defined in forcing function list.
+            ExactSolutionMap::const_iterator exSolnIter = m_ExactSolution.find(var);
+
+            if(exSolnIter != m_ExactSolution.end())
+            {
+                returnval = exSolnIter->second;
+            }
+            else
+            {
+                NEKERROR(ErrorUtil::efatal,
+                    (std::string("Unable to find variable used in obtaining exact solution: ") + var).c_str());
             }
 
             return returnval;

@@ -116,10 +116,12 @@ namespace Nektar
 
         typedef std::map<std::string, NekDouble> ParamMap;
         typedef std::vector<std::string> Variable;
+
         typedef std::vector<Composite> BoundaryRegion;
         typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
         typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
         typedef std::vector<BoundaryRegionShPtr> BoundaryRegionCollection;
+
         typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
         typedef boost::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
         typedef boost::shared_ptr<NeumannBoundaryCondition> NeumannBCShPtr;
@@ -127,10 +129,17 @@ namespace Nektar
         typedef std::map<std::string,BoundaryConditionShPtr> BoundaryConditionMap;
         typedef boost::shared_ptr<BoundaryConditionMap> BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
+
         typedef Equation<NekDouble> ForcingFunction;
         typedef boost::shared_ptr<ForcingFunction> ForcingFunctionShPtr;
         typedef boost::shared_ptr<const ForcingFunction> ConstForcingFunctionShPtr;
         typedef std::map<std::string, ForcingFunctionShPtr> ForcingFunctionsMap;
+
+        typedef Equation<NekDouble> ExactSolution;
+        typedef boost::shared_ptr<ExactSolution> ExactSolutionShPtr;
+        typedef boost::shared_ptr<const ExactSolution> ConstExactSolutionShPtr;
+        typedef std::map<std::string, ExactSolutionShPtr> ExactSolutionMap;
+
         typedef Equation<NekDouble> InitialCondition;
         typedef boost::shared_ptr<InitialCondition> InitialConditionShPtr;
         typedef boost::shared_ptr<const InitialCondition> ConstInitialConditionShPtr;
@@ -163,7 +172,10 @@ namespace Nektar
             ConstForcingFunctionShPtr GetForcingFunction(int indx) const;
 
             /// Get forcing function based on name of variable.
-            ConstForcingFunctionShPtr GetForcingFunction(const string &var) const;
+            ConstForcingFunctionShPtr GetForcingFunction(const std::string &var) const;
+
+            ConstExactSolutionShPtr GetExactSolution(int indx) const;
+            ConstExactSolutionShPtr GetExactSolution(const std::string &var) const;
 
             /// Get initial condition function based on the index of the variable.
             /// The index is the order in which the variable was
@@ -171,7 +183,7 @@ namespace Nektar
             ConstInitialConditionShPtr GetInitialCondition(int indx) const;
 
             /// Get initial condition function based on name of variable.
-            ConstInitialConditionShPtr GetInitialCondition(const string &var) const;
+            ConstInitialConditionShPtr GetInitialCondition(const std::string &var) const;
 
             const std::string &GetVariable(const int indx)
             {
@@ -185,15 +197,15 @@ namespace Nektar
                 return m_Parameters;
             }
 
-
         protected:
-            void ReadParameters(TiXmlElement *conditions);
-            void ReadVariables(TiXmlElement *conditions);
-            void ReadBoundaryRegions(TiXmlElement *conditions);
-            void ReadExpansionTypes(TiXmlElement *conditions);
+            void ReadParameters(TiXmlElement *parameters);
+            void ReadVariables(TiXmlElement *variables);
+            void ReadBoundaryRegions(TiXmlElement *regions);
+            void ReadExpansionTypes(TiXmlElement *types);
             void ReadBoundaryConditions(TiXmlElement *conditions);
-            void ReadForcingFunctions(TiXmlElement *conditions);
+            void ReadForcingFunctions(TiXmlElement *functions);
             void ReadInitialConditions(TiXmlElement *conditions);
+            void ReadExactSolution(TiXmlElement *solution);
 
             // Containers to hold conditions and associated data
             static ParamMap m_Parameters;
@@ -202,6 +214,7 @@ namespace Nektar
             BoundaryConditionCollection m_BoundaryConditions;
             ForcingFunctionsMap m_ForcingFunctions;
             InitialConditionsMap m_InitialConditions;
+            ExactSolutionMap m_ExactSolution;
 
             /// The mesh graph to use for referencing geometry info.
             const MeshGraph *m_MeshGraph;

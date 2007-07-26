@@ -61,7 +61,7 @@ namespace Nektar
         GeomFactorsVector Geometry::m_RegGeomFactorsManager;
         GeomFactorsSharedPtr Geometry::ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor)
         {
-            GeomFactorsSharedPtr returnval;
+            GeomFactorsSharedPtr returnval = geomFactor;
             bool found = false;
             if (geomFactor->GetGtype() == eRegular)
             {
@@ -76,13 +76,14 @@ namespace Nektar
                         break;
                     }
                 }
+
+                if (!found)
+                {
+                    m_RegGeomFactorsManager.push_back(geomFactor);
+                    returnval = geomFactor;
+                }
             }
 
-            if (!found)
-            {
-                m_RegGeomFactorsManager.push_back(geomFactor);
-                returnval = geomFactor;
-            }
 
             return returnval;
         }
@@ -92,6 +93,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.cpp,v $
+// Revision 1.7  2007/07/20 02:15:08  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.6  2007/07/10 22:21:00  jfrazier
 // Revision of geo fac manager to test for equality.
 //

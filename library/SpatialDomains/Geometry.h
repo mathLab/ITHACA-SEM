@@ -86,7 +86,7 @@ namespace Nektar
                         GenGeomFactors();
                     }
 
-                    return m_geomfactors;
+                    return ValidateRegGeomFactor(m_geomfactors);
                 }
 
 
@@ -120,6 +120,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.13  2007/07/22 23:04:23  bnelson
+// Backed out Nektar::ptr.
+//
 // Revision 1.12  2007/07/20 02:15:08  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

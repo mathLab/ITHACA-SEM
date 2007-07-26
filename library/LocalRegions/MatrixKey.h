@@ -61,13 +61,13 @@ namespace Nektar
             /// Used to lookup the create function in NekManager.
             struct opLess
             {
-                bool operator()(const MatrixKey &lhs, const MatrixKey &rhs);
+                bool operator()(const MatrixKey &lhs, const MatrixKey &rhs) const;
             };
 
             /// Used for finding value given the key in NekManager.
             friend bool operator<(const MatrixKey &lhs, const MatrixKey &rhs);
             friend bool opLess::operator()(const MatrixKey &lhs, 
-                const MatrixKey &rhs);
+                const MatrixKey &rhs) const;
 
             StdRegions::MatrixType GetMatrixType() const
             {
@@ -128,6 +128,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.11  2007/07/12 12:53:00  sherwin
+* Updated to have a helmholtz matrix
+*
 * Revision 1.10  2007/07/10 17:17:22  sherwin
 * Introduced Scaled Matrices into the MatrixManager
 *

@@ -79,7 +79,7 @@ namespace Nektar
         }
 
         bool StdMatrixKey::opLess::operator()(const StdMatrixKey &lhs, 
-                          const StdMatrixKey &rhs)
+                          const StdMatrixKey &rhs) const
         {        
         return (lhs.m_matrixType < rhs.m_matrixType);
     }
@@ -145,6 +145,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.cpp,v $
+* Revision 1.8  2007/07/20 02:16:54  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.7  2007/07/09 15:19:15  sherwin
 * Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
 *

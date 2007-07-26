@@ -53,7 +53,7 @@ namespace Nektar
             m_metricinfo  = stdExpansion.GetMetricInfo(); 
         }
 
-        bool MatrixKey::opLess::operator()(const MatrixKey &lhs, const MatrixKey &rhs)
+        bool MatrixKey::opLess::operator()(const MatrixKey &lhs, const MatrixKey &rhs) const
         {        
             {
                 return (lhs.GetMatrixType() < rhs.GetMatrixType());
@@ -119,6 +119,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.10  2007/07/20 00:45:50  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.9  2007/07/12 12:52:58  sherwin
 * Updated to have a helmholtz matrix
 *

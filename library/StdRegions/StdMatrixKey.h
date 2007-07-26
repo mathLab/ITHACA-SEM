@@ -68,12 +68,12 @@ namespace Nektar
             /// Used to lookup the create function in NekManager.
             struct opLess
             {
-                bool operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
+                bool operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs) const;
             };
 
             /// Used for finding value given the key in NekManager.
             friend bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
-            friend bool opLess::operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
+            friend bool opLess::operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs) const;
 
             MatrixType GetMatrixType() const
             {
@@ -129,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.15  2007/07/22 23:04:26  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.14  2007/07/20 02:16:54  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

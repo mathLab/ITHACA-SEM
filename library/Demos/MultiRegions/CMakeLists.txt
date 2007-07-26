@@ -7,6 +7,7 @@ ADD_NEKTAR_EXECUTABLE(ProjectLoc1D ProjectLoc1DSource)
     optimized StdRegions debug StdRegions-g    
     optimized tinyxml debug tinyxml
     )
+    SET_LAPACK_LINK_LIBRARIES(ProjectLoc1D)
 
 SET(ProjectCont1DSource  ProjectCont1D.cpp)
 ADD_NEKTAR_EXECUTABLE(ProjectCont1D ProjectCont1DSource)
@@ -17,6 +18,7 @@ ADD_NEKTAR_EXECUTABLE(ProjectCont1D ProjectCont1DSource)
     optimized StdRegions debug StdRegions-g    
     optimized tinyxml debug tinyxml
     )
+    SET_LAPACK_LINK_LIBRARIES(ProjectCont1D)
 
 SET(HelmholtzCont1DSource  Helmholtz1D.cpp)
 ADD_NEKTAR_EXECUTABLE(Helmholtz1D HelmholtzCont1DSource)
@@ -27,6 +29,7 @@ ADD_NEKTAR_EXECUTABLE(Helmholtz1D HelmholtzCont1DSource)
     optimized StdRegions debug StdRegions-g    
     optimized tinyxml debug tinyxml
     )
+    SET_LAPACK_LINK_LIBRARIES(Helmholtz1D)
 
 
 #SET(ProjectLoc2DSource  ProjectLoc2D.cpp)
@@ -49,11 +52,5 @@ ADD_NEKTAR_EXECUTABLE(Helmholtz1D HelmholtzCont1DSource)
 #    optimized tinyxml debug tinyxml
 #    )
 
-IF( USE_FRAMEWORK )
-    TARGET_LINK_LIBRARIES(ProjectLoc1D ${FRAMEWORK_LINK_FLAGS})
-    TARGET_LINK_LIBRARIES(ProjectCont1D ${FRAMEWORK_LINK_FLAGS})
-    TARGET_LINK_LIBRARIES(Helmholtz1D ${FRAMEWORK_LINK_FLAGS})
-#    TARGET_LINK_LIBRARIES(ProjectLoc2D ${FRAMEWORK_LINK_FLAGS})
-#    TARGET_LINK_LIBRARIES(ProjectCont2D ${FRAMEWORK_LINK_FLAGS})
-ENDIF ( USE_FRAMEWORK )
+
 

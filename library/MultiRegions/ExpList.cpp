@@ -144,15 +144,15 @@ namespace Nektar
                                 Array<OneD, NekDouble> &out_d0, 
                                 Array<OneD, NekDouble> &out_d1, 
                                 Array<OneD, NekDouble> &out_d2)
-    {
-        int  cnt = 0;
-        int  i;
+        {
+            int  cnt = 0;
+            int  i;
             Array<OneD, NekDouble> e_out_d0;
             Array<OneD, NekDouble> e_out_d1;
             Array<OneD, NekDouble> e_out_d2;
-
-        for(i= 0; i < GetExpSize(); ++i)
-        {
+            
+            for(i= 0; i < GetExpSize(); ++i)
+            {
                 e_out_d0 = out_d0 + cnt;
                 if(out_d1.num_elements())
                 {
@@ -164,37 +164,83 @@ namespace Nektar
                     e_out_d2 = out_d2 + cnt;
                 }
                 
-        (*m_exp)[i]->PhysDeriv(inarray,e_out_d0,e_out_d1,e_out_d2);
-        cnt  += (*m_exp)[i]->GetTotPoints();
+                (*m_exp)[i]->PhysDeriv(inarray,e_out_d0,e_out_d1,e_out_d2);
+                cnt  += (*m_exp)[i]->GetTotPoints();
+            }
         }
-    }
-
+        
         void ExpList::FwdTrans(const ExpList &Sin)
         {
             ASSERTL2(Sin.GetPhysState() == true,
                      "Sin physical space is not true ");
-
+            
             FwdTrans(Sin.GetPhys(),m_coeffs);
-        m_transState = eLocal;
+            m_transState = eLocal;
         }
-
-    void ExpList::FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
-                               Array<OneD, NekDouble>    &outarray)
-    {
-        int cnt  = 0;
-        int cnt1 = 0;
-        int i;
+        
+        void ExpList::FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
+                               Array<OneD, NekDouble> &outarray)
+        {
+#if 1
+            int cnt  = 0;
+            int cnt1 = 0;
+            int i;
             ConstArray<OneD,NekDouble> e_inarray;
             Array<OneD,NekDouble> e_outarray;
-
-        for(i= 0; i < GetExpSize(); ++i)
-        {
+            
+            for(i= 0; i < GetExpSize(); ++i)
+            {
                 (*m_exp)[i]->FwdTrans(e_inarray  = inarray+cnt, 
                                       e_outarray = outarray+cnt1);
-        cnt  += (*m_exp)[i]->GetTotPoints();
-        cnt1 += (*m_exp)[i]->GetNcoeffs();
+                cnt  += (*m_exp)[i]->GetTotPoints();
+                cnt1 += (*m_exp)[i]->GetNcoeffs();
+            }
+#else
+            static DNekScalBlkMatSharedPtr InvMass;
+
+            if(!InvMass.get())
+            {
+                InvMass = SetupBlockMatrix(StdRegions::eInvMass);
+            }
+            
+            DNekVec in (m_ncoeffs,inarray);
+            DNekVec out(m_ncoeffs,outarray,eWrapper);
+            
+            out = (*InvMass)*in;
+#endif
         }
-    }
+        
+        DNekScalBlkMatSharedPtr  ExpList::SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar)
+        {
+            int i;
+            int n_exp = GetExpSize();
+            Array<OneD,int> exp_size(n_exp);
+            DNekScalMatSharedPtr loc_mat;
+            DNekScalBlkMatSharedPtr BlkMatrix;
+            
+            // set up an array of integers for block matrix construction
+            for(i = 0; i < n_exp; ++i)
+            {
+                exp_size[i] = (*m_exp)[i]->GetNcoeffs();
+            }
+            
+            BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size[0],exp_size[0]);
+            
+            //InvMass = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size,exp_size);
+            // Cannot get this call to work with array of integers
+            
+
+            for(i = 0; i < n_exp; ++i)
+            {
+                LocalRegions::MatrixKey mkey(mtype, (*m_exp)[i]->DetShapeType(),*(*m_exp)[i],scalar);
+                loc_mat = (*m_exp)[i]->GetLocMatrix(mkey);
+                BlkMatrix->SetBlock(i,i,loc_mat);
+
+                cout<< "Expansion " << i << " Pointer: "  << loc_mat->GetOwnedMatrix() << endl;
+            }
+            
+            return BlkMatrix;
+        }
 
         
     void ExpList::GeneralMatrixOp(const StdRegions::MatrixType mtype,
@@ -226,152 +272,152 @@ namespace Nektar
         m_physState = true;
         }
         
-    void ExpList::BwdTrans(const ConstArray<OneD, NekDouble> &inarray,
-                   Array<OneD, NekDouble> &outarray)
-    {
-        int  i;
-        int  cnt  = 0;
-        int  cnt1 = 0;
+        void ExpList::BwdTrans(const ConstArray<OneD, NekDouble> &inarray,
+                               Array<OneD, NekDouble> &outarray)
+        {
+            int  i;
+            int  cnt  = 0;
+            int  cnt1 = 0;
             ConstArray<OneD,NekDouble> e_inarray;
             Array<OneD,NekDouble> e_outarray;
-
-        for(i= 0; i < GetExpSize(); ++i)
-        {
-        (*m_exp)[i]->BwdTrans(e_inarray = inarray + cnt, 
+            
+            for(i= 0; i < GetExpSize(); ++i)
+            {
+                (*m_exp)[i]->BwdTrans(e_inarray = inarray + cnt, 
                                       e_outarray = outarray+cnt1);
-        cnt   += (*m_exp)[i]->GetNcoeffs();
-        cnt1  += (*m_exp)[i]->GetTotPoints();
-        }        
-    }
-
-    void ExpList::GetCoords(Array<OneD, NekDouble> &coord_0,
-                Array<OneD, NekDouble> &coord_1,
-                Array<OneD, NekDouble> &coord_2)
-    {
-        int    i, cnt = 0;
-        Array<OneD, NekDouble> e_coord_0;
-        Array<OneD, NekDouble> e_coord_1;
-        Array<OneD, NekDouble> e_coord_2;
-
-        switch(GetExp(0)->GetCoordim())
-        {
-        case 1:
-        for(i= 0; i < GetExpSize(); ++i)
-        {
-                    e_coord_0 = coord_0 + cnt;
-            (*m_exp)[i]->GetCoords(e_coord_0);
-            cnt  += (*m_exp)[i]->GetTotPoints();
+                cnt   += (*m_exp)[i]->GetNcoeffs();
+                cnt1  += (*m_exp)[i]->GetTotPoints();
+            }        
         }
-        break;
-        case 2: 
-        ASSERTL0(coord_1.num_elements() != 0, 
-             "output coord_1 is not defined");
-    
-        for(i= 0; i < GetExpSize(); ++i)
+        
+        void ExpList::GetCoords(Array<OneD, NekDouble> &coord_0,
+                                Array<OneD, NekDouble> &coord_1,
+                                Array<OneD, NekDouble> &coord_2)
         {
+            int    i, cnt = 0;
+            Array<OneD, NekDouble> e_coord_0;
+            Array<OneD, NekDouble> e_coord_1;
+            Array<OneD, NekDouble> e_coord_2;
+            
+            switch(GetExp(0)->GetCoordim())
+            {
+            case 1:
+                for(i= 0; i < GetExpSize(); ++i)
+                {
+                    e_coord_0 = coord_0 + cnt;
+                    (*m_exp)[i]->GetCoords(e_coord_0);
+                    cnt  += (*m_exp)[i]->GetTotPoints();
+                }
+                break;
+            case 2: 
+                ASSERTL0(coord_1.num_elements() != 0, 
+                         "output coord_1 is not defined");
+                
+                for(i= 0; i < GetExpSize(); ++i)
+                {
                     e_coord_0 = coord_0 + cnt;
                     e_coord_1 = coord_1 + cnt;
-            (*m_exp)[i]->GetCoords(e_coord_0,e_coord_1);
-            cnt  += (*m_exp)[i]->GetTotPoints();
-        }
-        break;
-        case 3: 
-        ASSERTL0(coord_1.num_elements() != 0,
-             "output coord_1 is not defined");
-        ASSERTL0(coord_2.num_elements() != 0,
-             "output coord_2 is not defined");
-    
-        for(i= 0; i < GetExpSize(); ++i)
-        {
+                    (*m_exp)[i]->GetCoords(e_coord_0,e_coord_1);
+                    cnt  += (*m_exp)[i]->GetTotPoints();
+                }
+                break;
+            case 3: 
+                ASSERTL0(coord_1.num_elements() != 0,
+                         "output coord_1 is not defined");
+                ASSERTL0(coord_2.num_elements() != 0,
+                         "output coord_2 is not defined");
+                
+                for(i= 0; i < GetExpSize(); ++i)
+                {
                     e_coord_0 = coord_0 + cnt;
                     e_coord_1 = coord_1 + cnt;
                     e_coord_2 = coord_2 + cnt;
-
-            (*m_exp)[i]->GetCoords(e_coord_0,e_coord_1,e_coord_2);
-            cnt  += (*m_exp)[i]->GetTotPoints();
-        }
-        break;
+                    
+                    (*m_exp)[i]->GetCoords(e_coord_0,e_coord_1,e_coord_2);
+                    cnt  += (*m_exp)[i]->GetTotPoints();
+                }
+                break;
             }
         }
     
-    void ExpList::WriteToFile(std::ofstream &out)
+        void ExpList::WriteToFile(std::ofstream &out)
         {
-        int i,cnt = 0;
-        std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-        StdRegions::StdExpansionVectorIter def;
-        ConstArray<OneD, NekDouble> phys = m_phys;
-        
-        if(m_physState == false)
-        {
-        BwdTrans(*this);
-        }
-
+            int i,cnt = 0;
+            std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
+            StdRegions::StdExpansionVectorIter def;
+            ConstArray<OneD, NekDouble> phys = m_phys;
+            
+            if(m_physState == false)
+            {
+                BwdTrans(*this);
+            }
+            
             (*m_exp)[0]->SetPhys(phys);
-        (*m_exp)[0]->WriteToFile(out,1);
+            (*m_exp)[0]->WriteToFile(out,1);
             cnt  += (*m_exp)[0]->GetTotPoints();
-        
-        for(i= 1; i < GetExpSize(); ++i)
-        {
+            
+            for(i= 1; i < GetExpSize(); ++i)
+            {
                 (*m_exp)[i]->SetPhys(phys+cnt);
-        (*m_exp)[i]->WriteToFile(out,0); 
+                (*m_exp)[i]->WriteToFile(out,0); 
                 cnt  += (*m_exp)[i]->GetTotPoints();
+            }
         }
-    }
     
-    NekDouble  ExpList::Linf(const ExpList &Sol)
-    {
+        NekDouble  ExpList::Linf(const ExpList &Sol)
+        {
             ASSERTL2(Sol.GetPhysState() == true,
                      "local physical space is not true ");
-
-        std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-        StdRegions::StdExpansionVectorIter def;
-        NekDouble err = 0.0;
-        int       i,cnt = 0;
-        ConstArray<OneD, NekDouble> soln = Sol.GetPhys();
-        ConstArray<OneD, NekDouble> phys = m_phys;
-
-        if(m_physState == false)
-        {
-        BwdTrans(*this);
-        }
-        
-        for(i= 0; i < GetExpSize(); ++i)
-        {
+            
+            std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
+            StdRegions::StdExpansionVectorIter def;
+            NekDouble err = 0.0;
+            int       i,cnt = 0;
+            ConstArray<OneD, NekDouble> soln = Sol.GetPhys();
+            ConstArray<OneD, NekDouble> phys = m_phys;
+            
+            if(m_physState == false)
+            {
+                BwdTrans(*this);
+            }
+            
+            for(i= 0; i < GetExpSize(); ++i)
+            {
                 // set up physical solution in local element
                 (*m_exp)[i]->SetPhys(phys+cnt);
-        err  = std::max(err,(*m_exp)[i]->Linf(soln + cnt));
-        cnt  += (*m_exp)[i]->GetTotPoints();
+                err  = std::max(err,(*m_exp)[i]->Linf(soln + cnt));
+                cnt  += (*m_exp)[i]->GetTotPoints();
+            }
+            
+            return err;
         }
-        
-        return err;
-    }
     
-    NekDouble  ExpList::L2(const ExpList &Sol)
-    {
+        NekDouble  ExpList::L2(const ExpList &Sol)
+        {
             ASSERTL2(Sol.GetPhysState() == true,
                      "local physical space is not true ");
-
-        NekDouble err = 0.0,errl2;
-        int    i,cnt = 0;
-        ConstArray<OneD, NekDouble> soln = Sol.GetPhys();
-        ConstArray<OneD, NekDouble> phys = m_phys;
-        
-        if(m_physState == false)
-        {
-        BwdTrans(*this);
-        }
-        
-        for(i= 0; i < GetExpSize(); ++i)
-        {
+            
+            NekDouble err = 0.0,errl2;
+            int    i,cnt = 0;
+            ConstArray<OneD, NekDouble> soln = Sol.GetPhys();
+            ConstArray<OneD, NekDouble> phys = m_phys;
+            
+            if(m_physState == false)
+            {
+                BwdTrans(*this);
+            }
+            
+            for(i= 0; i < GetExpSize(); ++i)
+            {
                 // set up physical solution in local element
                 (*m_exp)[i]->SetPhys(phys+cnt);
-        errl2 = (*m_exp)[i]->L2(soln+cnt);
-        err += errl2*errl2;
-        cnt  += (*m_exp)[i]->GetTotPoints();
+                errl2 = (*m_exp)[i]->L2(soln+cnt);
+                err += errl2*errl2;
+                cnt  += (*m_exp)[i]->GetTotPoints();
+            }
+            
+            return sqrt(err);
         }
-        
-        return sqrt(err);
-    }
     
     } //end of namespace
 } //end of namespace

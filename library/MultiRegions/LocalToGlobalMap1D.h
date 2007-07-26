@@ -56,7 +56,8 @@ namespace Nektar
             virtual ~LocalToGlobalMap1D();
 
             void ResetMapping(const int NumDirichlet, 
-                              SpatialDomains::BoundaryConditions &bcs);
+                              SpatialDomains::BoundaryConditions &bcs,
+                              const std::string variable);
         
         protected:
         
@@ -70,6 +71,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.9  2007/07/22 23:04:21  bnelson
+/** Backed out Nektar::ptr.
+/**
 /** Revision 1.8  2007/07/20 02:04:13  bnelson
 /** Replaced boost::shared_ptr with Nektar::ptr
 /**

@@ -93,7 +93,8 @@ namespace Nektar
                     if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
-                        //p_exp->SetValue(((SpatialDomains::DirichletBoundaryCondition) *LocBCond)->Evaluate());
+                        p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(LocBCond)->m_DirichletCondition.Evaluate());
+
 
                         m_bndConstraint.push_back(p_exp);
                         m_bndTypes.push_back(SpatialDomains::eDirichlet);
@@ -109,13 +110,27 @@ namespace Nektar
             for(i = 0; i < nbnd; ++i)
             {
                 SpatialDomains::BoundaryConditionShPtr LocBCond = (*(bconditions[i]))[variable];
-                if(LocBCond->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                SpatialDomains::BoundaryConditionType BCtype  = LocBCond->GetBoundaryConditionType();
+
+                if(BCtype != SpatialDomains::eDirichlet)
                 {
                     SpatialDomains:: VertexComponentSharedPtr vert;
                     
                     if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
+
+                        if(BCtype == SpatialDomains::eNeumann)
+                        {
+                            p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(LocBCond)->m_NeumannCondition.Evaluate());
+                        }
+                        else // Robin boundary condition
+                        {
+                            boost::shared_ptr<SpatialDomains::RobinBoundaryCondition> robinBC  = boost::static_pointer_cast<SpatialDomains::RobinBoundaryCondition>(LocBCond);
+                            p_exp->SetValue(robinBC->m_a.Evaluate()/robinBC->m_b.Evaluate());
+
+                        }
+
                         m_bndConstraint.push_back(p_exp);
                         m_bndTypes.push_back(LocBCond->GetBoundaryConditionType());
                     }
@@ -128,7 +143,7 @@ namespace Nektar
             
 
             // Need to reset numbering according to Dirichlet Bondary Condition
-            m_locToGloMap->ResetMapping(NumDirichlet,bcs);
+            m_locToGloMap->ResetMapping(NumDirichlet,bcs,variable);
             // Need to know how to get global vertex id 
             // I note that boundary Regions is a composite vector and so belive we can use this to get the desired quantities. 
 
@@ -200,8 +215,6 @@ namespace Nektar
 	    m_physState = false;
 	}
 
-
-        // could replace with a map
         GlobalLinSysSharedPtr ContField1D::GetGlobalLinSys(const GlobalLinSysKey &mkey) 
        {
             GlobalLinSysSharedPtr glo_matrix;

@@ -89,7 +89,8 @@ namespace Nektar
     }
 
         void LocalToGlobalMap1D::ResetMapping(const int NumDirichlet, 
-                                         SpatialDomains::BoundaryConditions &bcs)
+                                         SpatialDomains::BoundaryConditions &bcs,
+                                              const std::string variable)
         {
             m_numDirichletBCs = NumDirichlet;
 
@@ -106,7 +107,7 @@ namespace Nektar
 
                 for(i = cnt = 0; i < nbnd; ++i)
                 {
-                    if(  ((*(bconditions[i]))["u"])->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                    if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                     {
                         SpatialDomains::VertexComponentSharedPtr vert;
                         
@@ -160,6 +161,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.12  2007/07/23 09:13:57  sherwin
+* Update for name change where we removed 'type' from the end
+*
 * Revision 1.11  2007/07/22 23:04:21  bnelson
 * Backed out Nektar::ptr.
 *

@@ -107,15 +107,20 @@ int main(int argc, char *argv[])
         break;
     }
     
-#if 0 // constant solution 
+    // Get Forcing function for variable 0
+    SpatialDomains::ConstForcingFunctionShPtr ffunc 
+        = bcs.GetForcingFunction(bcs.GetVariable(0));
+
     for(i = 0; i < nq; ++i)
     {
-        sol[i] = 2.0; 
-        
-        fce[i] = -2.0; 
+        fce[i] = ffunc->Evaluate();
     }
-    Exp->SetBoundaryCondition(0,sol[0]);
-    Exp->SetBoundaryCondition(1,sol[nq-1]);
+
+#if 1 // constant solution 
+    for(i = 0; i < nq; ++i)
+    {
+        sol[i] = -fce[i]; 
+    }
 #else
 #if 1
 #if 1 // non-zero dirichlet solution 

@@ -39,6 +39,8 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
 
+#include <LocalRegions/MatrixKey.h>
+
 namespace Nektar
 {
   namespace MultiRegions
@@ -104,11 +106,13 @@ namespace Nektar
 
       void   WriteToFile(std::ofstream &out);
     
+      DNekScalBlkMatSharedPtr  ExpList::SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar = 0.0);
+
       inline int GetCoordim(int eid)
       {
-      ASSERTL2(eid <= (*m_exp).size(),"eid is larger than number of elements");
-    
-      return (*m_exp)[eid]->GetCoordim();
+          ASSERTL2(eid <= (*m_exp).size(),"eid is larger than number of elements");
+          
+          return (*m_exp)[eid]->GetCoordim();
       }
       
 
@@ -188,6 +192,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.22  2007/07/22 23:04:20  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.21  2007/07/20 02:04:12  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

@@ -57,12 +57,19 @@ namespace Nektar
 
     typedef LinearSystem<DNekScalMat>           DNekScalLinSys; 
     typedef boost::shared_ptr<DNekScalLinSys>   DNekScalLinSysSharedPtr;
+
+    typedef NekMatrix<DNekScalMat, FullMatrixTag, BlockMatrixTag> DNekScalBlkMat;
+
+    typedef boost::shared_ptr<DNekScalBlkMat>    DNekScalBlkMatSharedPtr;
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP
 
 /**
     $Log: NekTypeDefs.hpp,v $
+    Revision 1.7  2007/07/22 23:03:28  bnelson
+    Backed out Nektar::ptr.
+
     Revision 1.6  2007/07/20 00:24:13  bnelson
     Replaced boost::shared_ptr with Nektar::ptr
 

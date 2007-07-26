@@ -107,7 +107,7 @@ namespace Vmath
     
     /// \brief Add vector z = x+y
     template<class T>  void Vadd( int n, const T *x, const int incx, const T *y,
-                  const int incy,  T *z, const int incz)
+                                  const int incy,  T *z, const int incz)
     {
         while( n-- )
         {
@@ -131,8 +131,8 @@ namespace Vmath
     }
     
     /// \brief Subtract vector z = x-y
-    template<class T>  void Vsub( int n, const T *x, const int incx, T *y,
-                  const int incy,  T *z, const int incz)
+    template<class T>  void Vsub( int n, const T *x, const int incx, const T *y,
+                                  const int incy,  T *z, const int incz)
     {
         while( n-- )
         {
@@ -439,6 +439,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.7  2007/07/20 00:39:37  bnelson
+Replaced boost::shared_ptr with Nektar::ptr
+
 Revision 1.6  2007/04/08 03:30:25  jfrazier
 Made y in z = x*y a constant in the parameter list.
 

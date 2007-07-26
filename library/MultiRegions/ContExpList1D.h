@@ -54,7 +54,7 @@ namespace Nektar
             //const SpatialDomains::MeshGraph1D &graph1D);
             ContExpList1D(const LibUtilities::BasisKey &Ba, 
                           const SpatialDomains::Composite &cmps);
-            ContExpList1D::ContExpList1D(const ContExpList1D &In);
+            ContExpList1D(const ContExpList1D &In);
 	    ~ContExpList1D();
 	    
 	    inline int GetContNcoeffs()
@@ -129,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.20  2007/07/23 16:06:30  sherwin
+* Put a std::map to hold global matrix systems
+*
 * Revision 1.19  2007/07/22 23:04:19  bnelson
 * Backed out Nektar::ptr.
 *

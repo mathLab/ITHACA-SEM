@@ -111,7 +111,7 @@ namespace Nektar
             void CalculateDerivMatrix();
             void NodalPointReorder2d();
 
-            void NodalTriElec::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& , const ConstArray<OneD, NekDouble>& , Array<OneD, NekDouble>& );
+            void CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& , const ConstArray<OneD, NekDouble>& , Array<OneD, NekDouble>& );
         };
    } // end of namespace
 } // end of namespace 

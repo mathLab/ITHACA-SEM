@@ -50,7 +50,7 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
-				DisableSpecificWarnings="4996;4348;4244;4267;4018"
+				DisableSpecificWarnings="4996;4348;4244;4267;4018;4351"
 				ForcedIncludeFiles=""
 			/>
 			<Tool
@@ -178,6 +178,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\SpatialDomains\ExpressionEvaluator.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\SpatialDomains\Geometry.cpp"
 				>
 			</File>
@@ -272,6 +276,10 @@
 			</File>
 			<File
 				RelativePath="..\..\SpatialDomains\Equation.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\SpatialDomains\ExpressionEvaluator.h"
 				>
 			</File>
 			<File

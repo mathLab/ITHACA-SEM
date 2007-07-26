@@ -206,7 +206,7 @@ ENDMACRO(ADD_NEKTAR_EXECUTABLE name sources)
 MACRO(SET_LAPACK_LINK_LIBRARIES name)
     IF( USE_BLAS_LAPACK )
         IF( USE_MKL AND MKL_FOUND )
-            TARGET_LINK_LIBRARIES(${name}${MKL_LAPACK} optimized ${MKL} debug ${MKL} ${MKL_GUIDE})
+            TARGET_LINK_LIBRARIES(${name} ${MKL_LAPACK} optimized ${MKL} debug ${MKL} ${MKL_GUIDE})
         ENDIF( USE_MKL AND MKL_FOUND )
         
         IF( USE_ACML AND ACML_FOUND )

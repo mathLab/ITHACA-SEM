@@ -42,6 +42,8 @@
 #include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/GeomFactors.h>
 
+#include<boost/shared_ptr.hpp>
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -81,7 +83,7 @@ namespace Nektar
 
                 inline GeomFactorsSharedPtr GetGeomFactors(void)
                 {
-                    if(!(m_geomfactors.get()))
+                    if(!m_geomfactors)
                     {
                         GenGeomFactors();
                     }
@@ -120,6 +122,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.14  2007/07/26 18:02:42  jfrazier
+// Manage the storage of geofactors.
+//
 // Revision 1.13  2007/07/22 23:04:23  bnelson
 // Backed out Nektar::ptr.
 //

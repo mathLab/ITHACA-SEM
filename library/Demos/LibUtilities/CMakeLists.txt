@@ -13,12 +13,16 @@ SET(VecMatSources
 	
 SET(NodalTriFeketeSources
 	NodalTriFeketeDemo.cpp)	
-	
+
+SET(NodalTriElecSources
+    NodalTriElecDemo.cpp)		
+
 	   
 ADD_NEKTAR_EXECUTABLE(Graph GraphSources )
 #ADD_NEKTAR_EXECUTABLE(MemoryManager MemoryManagerSources )
 ADD_NEKTAR_EXECUTABLE(Matrix VecMatSources )
 #ADD_NEKTAR_EXECUTABLE(Foundation FoundationSources )
 ADD_NEKTAR_EXECUTABLE(NodalTriFeketeDemo NodalTriFeketeSources )
-SET_LAPACK_LINK_LIBRARIES(NodalTriFeketeDemo)
+ADD_NEKTAR_EXECUTABLE(NodalTriElecDemo NodalTriElecSources)
+
 

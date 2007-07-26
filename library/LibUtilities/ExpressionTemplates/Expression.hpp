@@ -41,6 +41,7 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/type_traits/remove_const.hpp>
+#include <boost/type_traits/is_reference.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/mpl/assert.hpp>
@@ -180,6 +181,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.8  2007/07/20 00:36:05  bnelson
+    *** empty log message ***
+
     Revision 1.7  2007/01/30 23:37:16  bnelson
     *** empty log message ***
 

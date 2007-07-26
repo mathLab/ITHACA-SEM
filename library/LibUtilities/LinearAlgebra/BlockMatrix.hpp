@@ -165,7 +165,7 @@ namespace Nektar
                 m_numberOfBlockRows(numberOfBlockRows),
                 m_numberOfBlockColumns(numberOfBlockColumns)
             {
-                m_storageSize = GetRows()*GetColumns();
+                m_storageSize = this->GetRows()*this->GetColumns();
                 for(unsigned int i = 1; i <= numberOfBlockRows; ++i)
                 {
                     m_rowSizes[i-1] = i*rowsPerBlock-1;
@@ -188,7 +188,7 @@ namespace Nektar
                 m_numberOfBlockRows(numberOfBlockRows),
                 m_numberOfBlockColumns(numberOfBlockColumns)
             {
-                m_storageSize = GetRows()*GetColumns();
+                m_storageSize = this->GetRows()*this->GetColumns();
                 m_rowSizes[0] = rowsPerBlock[0] - 1;
                 for(unsigned int i = 1; i < numberOfBlockRows; ++i)
                 {

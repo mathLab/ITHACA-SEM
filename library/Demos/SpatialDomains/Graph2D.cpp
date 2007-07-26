@@ -36,7 +36,7 @@ int main(int argc, char *argv[]){
     bcs.Read(bcfile);
 
     ConstForcingFunctionShPtr ffunc  = bcs.GetForcingFunction("u");
-    NekDouble val = ffunc->Evaluate();
+    NekDouble val = ffunc->Evaluate(8.0);
     
     ConstInitialConditionShPtr ic = bcs.GetInitialCondition("u");
     val = ic->Evaluate();

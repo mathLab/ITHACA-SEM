@@ -69,5 +69,8 @@
 			<C ID="1"> E[5-7] </C>
 			<C ID="2"> T[0-2] T[4] T[6-7] </C>
 		</COMPOSITE>
-	</GEOMETRY>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
 </NEKTAR>

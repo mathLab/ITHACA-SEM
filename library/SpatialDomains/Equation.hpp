@@ -37,6 +37,8 @@
 #define NEKTAR_SPATIALDOMAINS_EQUATION_HPP
 
 #include <string>
+#include <SpatialDomains/ExpressionEvaluator.h>
+#include <SpatialDomains/BoundaryConditions.h>
 
 namespace Nektar
 {
@@ -52,34 +54,48 @@ namespace Nektar
             }
         };
 
-        template <typename T, template<typename> class Evaluator = ConstantEvaluator>
+        template <typename T>
+        class EquationEvaluator
+        {
+        public:
+            static T Evaluate(const std::string &eqn, T x=0, T y=0, T z=0, T t=0)
+            {
+                ExpressionEvaluator evaluator;
+
+                evaluator.DefineFunction("x y z t", eqn.c_str());
+                evaluator.SetParameters(BoundaryConditions::GetParameters());
+                return evaluator.Evaluate(x, y, z, t);
+            }
+        };
+
+        template <typename T, template<typename> class Evaluator = EquationEvaluator>
         class Equation
         {
         public:
             Equation(const std::string &eqn):
               m_eqn(eqn)
-              {
-              }
+            {
+            }
 
-              T Evaluate(T x=0, T y=0, T z=0) const
-              {
-                  return Evaluator<T>::Evaluate(m_eqn, x, y, z);
-              }
+            T Evaluate(T x=0, T y=0, T z=0, T t=0) const
+            {
+              return Evaluator<T>::Evaluate(m_eqn, x, y, z);
+            }
 
-              std::string GetEquation(void) const
-              {
-                  return m_eqn;
-              }
+            std::string GetEquation(void) const
+            {
+              return m_eqn;
+            }
 
-              void SetEquation(std::string eqn)
-              {
-                  m_eqn = eqn;
-              }
+            void SetEquation(std::string eqn)
+            {
+              m_eqn = eqn;
+            }
 
-              void SetEquation(const char *eqn)
-              {
-                  m_eqn = eqn;
-              }
+            void SetEquation(const char *eqn)
+            {
+              m_eqn = eqn;
+            }
 
         private:
             std::string m_eqn;

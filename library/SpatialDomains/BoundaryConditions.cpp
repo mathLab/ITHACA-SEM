@@ -46,6 +46,7 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        ParamMap BoundaryConditions::m_Parameters;
 
         BoundaryConditions::BoundaryConditions(const MeshGraph *meshGraph):
             m_MeshGraph(meshGraph)

@@ -180,6 +180,11 @@ namespace Nektar
                 return m_Variables[indx];
             }
 
+            static const ParamMap &GetParameters(void)
+            {
+                return m_Parameters;
+            }
+
 
         protected:
             void ReadParameters(TiXmlElement *conditions);
@@ -191,7 +196,7 @@ namespace Nektar
             void ReadInitialConditions(TiXmlElement *conditions);
 
             // Containers to hold conditions and associated data
-            ParamMap m_Parameters;
+            static ParamMap m_Parameters;
             Variable m_Variables;
             BoundaryRegionCollection m_BoundaryRegions;
             BoundaryConditionCollection m_BoundaryConditions;

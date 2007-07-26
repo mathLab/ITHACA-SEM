@@ -84,7 +84,6 @@ namespace Nektar
                 }
             }
 
-
             return returnval;
         }
 
@@ -93,6 +92,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.cpp,v $
+// Revision 1.8  2007/07/26 18:02:42  jfrazier
+// Manage the storage of geofactors.
+//
 // Revision 1.7  2007/07/20 02:15:08  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

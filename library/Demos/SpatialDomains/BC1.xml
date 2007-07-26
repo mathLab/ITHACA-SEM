@@ -28,6 +28,8 @@
         <!-- We can revisit this since the syntax is not complete.
              We will allow domain, composite, or boundary.-->
         <EXPANSIONTYPE>
+            Minimum: composite, expansion type (simplified), and nummodes = f(x,y,z)
+            
             Domain = eModifiedA, eModifiedB, NumModes = N (or f(x,y)), eGLL,
             Ptype = (order + 1)
             BoundaryRegion[0-1] = eLagrangeGLL, eGLR
@@ -57,7 +59,7 @@
         </BOUNDARYCONDITIONS>
 
         <FORCING>
-            <F VAR="u" VALUE="5.0" />
+            <F VAR="u" VALUE="5.0*sin(x)" />
             <F VAR="v" VALUE="g(x,y,z,t)" />
         </FORCING>
 

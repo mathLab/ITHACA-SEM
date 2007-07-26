@@ -96,10 +96,7 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find ELEMENT tag in file.");
 
-            TiXmlAttribute *attr = field->FirstAttribute();
-            int indx = 0;
             int nextElementNumber = -1;
-            int err = 0;
 
             /// All elements are of the form: "<S ID = n> ... </S>", with
             /// ? being the element type.
@@ -110,12 +107,8 @@ namespace Nektar
             {
                 nextElementNumber++;
 
-                TiXmlAttribute *attr = segment->FirstAttribute();
-                std::string attrName(attr->Name());
-
-                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
                 int indx;
-                int err = attr->QueryIntValue(&indx);
+                int err = segment->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
                 ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
 
@@ -184,12 +177,8 @@ namespace Nektar
 
                 nextCompositeNumber++;
 
-                TiXmlAttribute *attr = node->FirstAttribute();
-                std::string attrName(attr->Name());
-
-                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
                 int indx;
-                int err = attr->QueryIntValue(&indx);
+                int err = node->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
                 ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
 
@@ -348,6 +337,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.13  2007/07/24 16:52:09  jfrazier
+// Added domain code.
+//
 // Revision 1.12  2007/07/23 16:54:30  jfrazier
 // Change a dynamic allocation using new to memory manager allocate.
 //

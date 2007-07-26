@@ -96,9 +96,6 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find EDGE tag in file.");
 
-            TiXmlAttribute *attr = field->FirstAttribute();
-            int err = 0;
-
             /// All elements are of the form: "<E ID="#"> ... </E>", with
             /// ? being the element type.
             /// Read the ID field first.
@@ -111,17 +108,14 @@ namespace Nektar
             /// with missing element numbers due to the text block format.
             std::string edgeStr;
             int indx;
+            int err = 0;
             int nextEdgeNumber = -1;
 
             while(edge)
             {
                 nextEdgeNumber++;
 
-                TiXmlAttribute *attr = edge->FirstAttribute();
-                std::string attrName(attr->Name());
-
-                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
-                int err = attr->QueryIntValue(&indx);
+                int err = edge->QueryIntAttribute("ID",&indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
                 ASSERTL0(indx == nextEdgeNumber, "Edge IDs must begin with zero and be sequential.");
 
@@ -176,7 +170,6 @@ namespace Nektar
             ASSERTL0(field, "Unable to find ELEMENT tag in file.");
 
             int nextElementNumber = -1;
-            int err = 0;
 
             /// All elements are of the form: "<? ID="#"> ... </?>", with
             /// ? being the element type.
@@ -194,12 +187,8 @@ namespace Nektar
                 nextElementNumber++;
 
                 /// Read id attribute.
-                TiXmlAttribute *attr = element->FirstAttribute();
-                std::string attrName(attr->Name());
-
-                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
                 int indx;
-                int err = attr->QueryIntValue(&indx);
+                int err = element->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
                 ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
 
@@ -316,9 +305,7 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find COMPOSITE tag in file.");
 
-            TiXmlAttribute *attr = field->FirstAttribute();
             int nextCompositeNumber = -1;
-            int err = 0;
 
             /// All elements are of the form: "<C ID = N> ... </C>".
 
@@ -329,12 +316,8 @@ namespace Nektar
             {
                 nextCompositeNumber++;
 
-                TiXmlAttribute *attr = composite->FirstAttribute();
-                std::string attrName(attr->Name());
-
-                ASSERTL0(attrName == "ID", (std::string("Unknown attribute: ") + attrName).c_str());
                 int indx;
-                int err = attr->QueryIntValue(&indx);
+                int err = composite->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
                 ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
 
@@ -556,6 +539,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.18  2007/07/24 16:52:09  jfrazier
+// Added domain code.
+//
 // Revision 1.17  2007/07/05 04:21:10  jfrazier
 // Changed id format and propagated from 1d to 2d.
 //

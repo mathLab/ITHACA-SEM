@@ -10,6 +10,7 @@ using namespace std;
 
 
 #include <LibUtilities/Foundations/NodalUtil.h>
+#include <LibUtilities/Foundations/NodalTriFekete.h>
 
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include <LibUtilities/BasicUtils/NekManager.hpp>
@@ -17,7 +18,6 @@ using namespace std;
 #include <LibUtilities/Foundations/GaussPoints.h>
 #include <LibUtilities/Foundations/PolyEPoints.h>
 #include <LibUtilities/Foundations/Basis.h>
-#include <LibUtilities/Foundations/NodalTriFekete.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace Nektar;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
     NodalTriFekete *ntf = dynamic_cast<NodalTriFekete*>(points.get());
     ConstArray<OneD, NekDouble> ax, ay;
     ntf->GetPoints(ax,ay);
-    NekVector<NekDouble> x = toVector(ax), y = toVector(ay);
+    NekVector<NekDouble> x = ToVector(ax), y = ToVector(ay);
 
     
     // /////////////////////////////////////////////
@@ -89,35 +89,35 @@ int main(int argc, char *argv[]){
         }
     }
     
-    NekVector<NekDouble> xi = toVector(axi), yi = toVector(ayi);
+    NekVector<NekDouble> xi = ToVector(axi), yi = ToVector(ayi);
     boost::shared_ptr<NekMatrix<NekDouble> > Iptr = ntf->GetI(axi, ayi);
-    const NekMatrix<NekDouble> & I = *Iptr;
+    const NekMatrix<NekDouble> & interpMat = *Iptr;
 
-    NekMatrix<NekDouble> Vnn = getMonomialVandermonde(x, y);
-    NekMatrix<NekDouble> Vmn = getMonomialVandermonde(xi, yi, degree);
-    NekMatrix<NekDouble> VmnTilde = I * Vnn;
-    NekMatrix<NekDouble> E(xi.GetRows(), x.GetRows());
-    NekMatrix<NekDouble> relativeError(getSize(xi), getSize(x));
+    NekMatrix<NekDouble> matVnn = GetMonomialVandermonde(x, y);
+    NekMatrix<NekDouble> matVmn = GetMonomialVandermonde(xi, yi, degree);
+    NekMatrix<NekDouble> matVmnTilde = interpMat * matVnn;
+    NekMatrix<NekDouble> err(xi.GetRows(), x.GetRows());
+    NekMatrix<NekDouble> relativeError(GetSize(xi), GetSize(x));
     long double epsilon = 1e-15;
 
     for( int i = 0; i < int(xi.GetRows()); ++i ) {
         for( int j = 0; j < int(x.GetRows()); ++j ) {
-            E(i,j) = LibUtilities::round(1e16 * fabs(VmnTilde(i,j) - Vmn(i,j)))/1e16;
+            err(i,j) = LibUtilities::MakeRound(1e16 * fabs(matVmnTilde(i,j) - matVmn(i,j)))/1e16;
 
                 // Compute relative error
-            relativeError(i,j) = (Vmn(i,j) - VmnTilde(i,j))/Vmn(i,j);
-            if( fabs(Vmn(i,j)) < numeric_limits<double>::epsilon() ) {
-                relativeError(i,j) = Vmn(i,j) - VmnTilde(i,j);
+            relativeError(i,j) = (matVmn(i,j) - matVmnTilde(i,j))/matVmn(i,j);
+            if( fabs(matVmn(i,j)) < numeric_limits<double>::epsilon() ) {
+                relativeError(i,j) = matVmn(i,j) - matVmnTilde(i,j);
          }
       }
    }
    
     cout << "------------------------------- NodalTriFekete Interpolation Test -------------------------------" << endl;
-    cout << "\n Result of NumericInterpolation = \n" << VmnTilde << endl;
-    cout << "\n Result of I matrix = \n" << I << endl;
+    cout << "\n Result of NumericInterpolation = \n" << matVmnTilde << endl;
+    cout << "\n Result of I matrix = \n" << interpMat << endl;
     cout << "\n epsilon = \n" << epsilon << endl;
     cout << "\n relativeError : Interpolation = \n" << relativeError << endl;
-    cout << "\n Error : abs(NumericInterpolation - exact) = \n" << E << endl;
+    cout << "\n Error : abs(NumericInterpolation - exact) = \n" << err << endl;
     cout << "---------------------------------- End of Interpolation Test ------------------------------------" << endl;
 
 
@@ -125,58 +125,58 @@ int main(int argc, char *argv[]){
     // Test X Derivative 
     //    
     boost::shared_ptr<NekMatrix<NekDouble> > Dptr = points->GetD();
-    const NekMatrix<NekDouble> & D = *Dptr;
+    const NekMatrix<NekDouble> & derivativeMat = *Dptr;
 
-    NekMatrix<NekDouble> Vx = getXDerivativeOfMonomialVandermonde(x, y);
-    NekMatrix<NekDouble> NumericXDerivative = D * Vnn;
-    NekMatrix<NekDouble> Error(x.GetRows(), y.GetRows());
+    NekMatrix<NekDouble> matVx = GetXDerivativeOfMonomialVandermonde(x, y);
+    NekMatrix<NekDouble> numericXDerivative = derivativeMat * matVnn;
+    NekMatrix<NekDouble> error(x.GetRows(), y.GetRows());
     NekMatrix<NekDouble> relativeErrorDx(x.GetRows(), y.GetRows());
     long double epsilonDx = 1e-14;
     for(int i=0; i< int(x.GetRows()); ++i ){
         for(int j=0; j< int(y.GetRows()); ++j){
 
-                Error(i,j) = LibUtilities::round(1e15 * fabs(NumericXDerivative(i,j) - Vx(i, j)))/1e15;
+                error(i,j) = LibUtilities::MakeRound(1e15 * fabs(numericXDerivative(i,j) - matVx(i, j)))/1e15;
 
             // Compute relative error
-            relativeErrorDx(i,j) = (Vx(i,j) - NumericXDerivative(i,j))/Vx(i,j);
-            if( fabs(Vx(i,j)) < numeric_limits<double>::epsilon() ) {
-                relativeErrorDx(i,j) = Vx(i,j) - NumericXDerivative(i,j);
+            relativeErrorDx(i,j) = (matVx(i,j) - numericXDerivative(i,j))/matVx(i,j);
+            if( fabs(matVx(i,j)) < numeric_limits<double>::epsilon() ) {
+                relativeErrorDx(i,j) = matVx(i,j) - numericXDerivative(i,j);
             }
         }
     }
 
     cout << "------------------ NodalTriFekete X Derivative Floating Point Error Precision ---------------------------" << endl;
-    cout << "\n Result of NumericXDerivative = \n" << NumericXDerivative << endl;
-    cout << "\n Result of D matrix = \n" << D << endl;
+    cout << "\n Result of NumericXDerivative = \n" << numericXDerivative << endl;
+    cout << "\n Result of D matrix = \n" << derivativeMat << endl;
     cout << "epsilon = \n" << epsilonDx <<endl;
     cout << "\n relativeError : X Derivative = \n" << relativeErrorDx << endl;
-    cout << "\n Error : abs(exact - NumericXDerivative) = \n" << Error << endl;
+    cout << "\n Error : abs(exact - NumericXDerivative) = \n" << error << endl;
     cout << "\n --------------- End of Testing X Derivative Matrix                          --------------------------" << endl;
 
 
      // /////////////////////////////////////////////
     // Test Integral
     // 
-    const ConstArray<OneD,NekDouble> &W = points->GetW();
-    NekVector<NekDouble> Vwi = getIntegralOfMonomialVandermonde(degree);
-    NekVector<NekDouble> NumericIntegral = getTranspose(Vnn) * toVector(W);
-    NekVector<NekDouble> ErrorIntegral = NumericIntegral - Vwi;
-    NekVector<NekDouble> relativeErrorIntegral(getSize(x));
+    const ConstArray<OneD,NekDouble> &weight = points->GetW();
+    NekVector<NekDouble> integMVandermonde = GetIntegralOfMonomialVandermonde(degree);
+    NekVector<NekDouble> numericIntegral = GetTranspose(matVnn) * ToVector(weight);
+    NekVector<NekDouble> errorIntegral = numericIntegral - integMVandermonde;
+    NekVector<NekDouble> relativeErrorIntegral(GetSize(x));
     long double epsilonIntegral = 1e-16;
     
     for(int i=0; i<int(x.GetRows()); ++i){
-        relativeErrorIntegral(i) = (Vwi(i) -  NumericIntegral(i))/Vwi(i);
-        if(fabs(Vwi(i)) < epsilonIntegral){
-            relativeErrorIntegral(i) = (Vwi(i) -  NumericIntegral(i));
+        relativeErrorIntegral(i) = (integMVandermonde(i) -  numericIntegral(i))/integMVandermonde(i);
+        if(fabs(integMVandermonde(i)) < epsilonIntegral){
+            relativeErrorIntegral(i) = (integMVandermonde(i) -  numericIntegral(i));
         }
     }
 
     cout << "------------------------------- NodalTriFekete Integral Test -------------------------------" << endl;
-    cout << "\n Result of NumericIntegral = \n" << NumericIntegral << endl;
+    cout << "\n Result of NumericIntegral = \n" << numericIntegral << endl;
     cout << "epsilon = \n" << epsilonIntegral << endl;
     cout << "\n relativeError : Integral = \n" << relativeErrorIntegral << endl;
-    cout << "\n ErrorIntegral : (NumericIntegral - exact) = \n" << ErrorIntegral << endl;
-    cout << "\n W = \n" << toVector(W) << endl;
+    cout << "\n ErrorIntegral : (NumericIntegral - exact) = \n" << errorIntegral << endl;
+    cout << "\n W = \n" << ToVector(weight) << endl;
     cout << "------------------------------- End of Integral Test ---------------------------------------" << endl;
  
 }

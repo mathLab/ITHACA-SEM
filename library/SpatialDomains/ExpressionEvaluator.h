@@ -224,7 +224,7 @@ private:
 	// This function evaluates the AST created from CreateAST(...) and returns
 	// the result as a double. It will throw an exception if it encounters a
 	// parameter that isn't defined.
-	double ExpressionEvaluator::EvaluateExpression(Node* const n);
+	double EvaluateExpression(Node* const n);
 
 	
 	// This function walks the AST that is created with the spirit parser and creates a
@@ -234,7 +234,7 @@ private:
 	// the calculation doesn't need to be done for every evaluation. It also performs the
 	// checks to make sure everything is in the correct range so these don't need to be
 	// performed at evaluation either.
-	Node* ExpressionEvaluator::CreateAST(boost::spirit::tree_match<const char*>::tree_iterator const& n);
+	Node* CreateAST(boost::spirit::tree_match<const char*>::tree_iterator const& n);
 
 };
 

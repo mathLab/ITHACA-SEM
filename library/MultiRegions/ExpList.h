@@ -106,7 +106,7 @@ namespace Nektar
 
       void   WriteToFile(std::ofstream &out);
     
-      DNekScalBlkMatSharedPtr  ExpList::SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar = 0.0);
+      DNekScalBlkMatSharedPtr  SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar = 0.0);
 
       inline int GetCoordim(int eid)
       {
@@ -192,6 +192,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.23  2007/07/26 08:40:49  sherwin
+* Update to use generalised i/o hooks in Helmholtz1D
+*
 * Revision 1.22  2007/07/22 23:04:20  bnelson
 * Backed out Nektar::ptr.
 *

@@ -172,7 +172,9 @@ namespace Nektar
             DNekLinSysSharedPtr   linsys;
             GlobalLinSysSharedPtr returnlinsys;
             
-            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs - NumDirBCs,m_contNcoeffs - NumDirBCs,0.0);
+            unsigned int rows = m_contNcoeffs - NumDirBCs;
+            unsigned int cols = m_contNcoeffs - NumDirBCs;
+            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,0.0);
             
             // fill global matrix 
             for(n = cnt = 0; n < (*m_exp).size(); ++n)
@@ -214,6 +216,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.18  2007/07/23 16:06:30  sherwin
+* Put a std::map to hold global matrix systems
+*
 * Revision 1.17  2007/07/19 20:02:24  sherwin
 * Generalised global matrix solver
 *

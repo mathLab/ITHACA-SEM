@@ -43,14 +43,14 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;NOMINMAX;_USE_MATH_DEFINES;NEKTAR_USE_EXPRESSION_TEMPLATES;NEKTAR_USING_BLAS;NEKTAR_USING_LAPACK"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 				CallingConvention="0"
-				DisableSpecificWarnings="4996"
+				DisableSpecificWarnings="4996;4348;4244;4267;4018;4351"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -160,6 +160,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\StdRegions\StdExpansion2D.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\StdRegions\StdExpMap.cpp"
 				>
 			</File>
@@ -168,7 +172,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\StdRegions\StdQuadExp.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\StdRegions\StdSegExp.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\StdRegions\StdTriExp.cpp"
 				>
 			</File>
 		</Filter>
@@ -198,6 +210,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\StdRegions\StdExpansion2D.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\StdRegions\StdExpMap.h"
 				>
 			</File>
@@ -210,11 +226,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\StdRegions\StdQuadExp.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\StdRegions\StdRegions.hpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\StdRegions\StdSegExp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\StdRegions\StdTriExp.h"
 				>
 			</File>
 		</Filter>

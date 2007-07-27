@@ -87,16 +87,18 @@ namespace Nektar
     void SegGeom::GenGeomFactors(void)
     {
         GeomFactorsSharedPtr gfac;
+        const SpatialDomains::GeomType kRegularType = eRegular;
+        const SpatialDomains::GeomType kDeformedType = eDeformed;
 
         FillGeom();
 
         if(m_xmap[0]->GetBasisNumModes(0)==2)
         {// assumes all direction have same order
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(eRegular, m_coordim, m_xmap);
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(kRegularType, m_coordim, m_xmap);
         }
         else
         {
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(eDeformed, m_coordim, m_xmap);
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(kDeformedType, m_coordim, m_xmap);
         }
     }
 
@@ -200,6 +202,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.17  2007/07/20 02:15:09  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.16  2007/06/06 15:15:21  pvos
 // Some minor updates for 2D routines
 //

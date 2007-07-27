@@ -1,9 +1,9 @@
 // Expression Evaluator
 //
 // File:		ExpressionEvaluator.cpp
-// Description:	Parses char* math expressions with Spirit.
+// Description:	Parses string math expressions with Spirit.
 // Author:		Michael DeLisi
-// Date:		July 25, 2007
+// Date:		July 27, 2007
 
 #include "ExpressionEvaluator.h"
 
@@ -183,12 +183,27 @@ static struct functions : symbols<func>
 template <typename ScannerT>
 ExpressionEvaluator::MathExpression::definition<ScannerT>::definition(MathExpression const& self)
 {
-	expression	=	multdiv >>
-					*(  (root_node_d[ch_p('+')] >> multdiv)
-					  | (root_node_d[ch_p('-')] >> multdiv)
+	expression	=	logical_or;
+
+	logical_or	=	logical_and >> *(  (root_node_d[str_p("||")] >> logical_and) );
+
+	logical_and	=	equality >> *(  (root_node_d[str_p("&&")] >> equality) );
+
+	equality	=	lt_gt >> *(  (root_node_d[str_p("==")] >> lt_gt) );
+
+	lt_gt		=	add_sub >>
+					*(  (root_node_d[ch_p('<')] >> add_sub)
+					  | (root_node_d[ch_p('>')] >> add_sub)
+					  | (root_node_d[str_p("<=")] >> add_sub)
+					  | (root_node_d[str_p(">=")] >> add_sub)
 					);
 
-	multdiv		=	exponential >>
+	add_sub		=	mult_div >>
+					*(  (root_node_d[ch_p('+')] >> mult_div)
+					  | (root_node_d[ch_p('-')] >> mult_div)
+					);
+
+	mult_div	=	exponential >>
 					*(  (root_node_d[ch_p('*')] >> exponential)
 					  | (root_node_d[ch_p('/')] >> exponential)
 					);
@@ -205,7 +220,7 @@ ExpressionEvaluator::MathExpression::definition<ScannerT>::definition(MathExpres
 				|	(root_node_d[ch_p('-')] >> factor);
 
 	parameter	=	leaf_node_d[ lexeme_d[
-						+alpha_p
+						(alpha_p | '_' | '$') >> *(alnum_p | '_' | '$')
 					] ];
 
 	function	=	root_node_d[functions_p] >> infix_node_d[inner_node_d[ch_p('(') >> expression >> *(',' >> expression) >> ch_p(')')]];
@@ -233,6 +248,7 @@ ExpressionEvaluator::ExpressionEvaluator(void)
 {
 	ParsedMap = new map<string, ParsedAST*>;
 	ParsedData = NULL;
+	ParametersMap = new map<string, double>;
 }
 
 // Destroys the evaluator object and deletes all of the saves ASTs.
@@ -245,6 +261,7 @@ ExpressionEvaluator::~ExpressionEvaluator(void)
 				delete it->second;
 		delete ParsedMap;
 	}
+	if (ParametersMap != NULL) delete ParametersMap;
 }
 
 
@@ -258,10 +275,12 @@ ExpressionEvaluator::~ExpressionEvaluator(void)
 // note that if you have previously set a function to use a certain "vlist", and then
 // you call DefineFunction again with the same function string but a different vlist string,
 // it will use the old vlist string from the first declaration.
-void ExpressionEvaluator::DefineFunction(char const *vlist, char const *function)
+void ExpressionEvaluator::DefineFunction(string const& vlist, string const& function)
 {
+	string functionStr(function.c_str());
+	string vlistStr(vlist.c_str());
+
 	// Find the previous parsing, or create a new one if it doesn't exist.
-	string functionStr(function);
 	map<string, ParsedAST*>::iterator it = ParsedMap->find(functionStr);
 	if (it == ParsedMap->end())
 	{
@@ -270,6 +289,7 @@ void ExpressionEvaluator::DefineFunction(char const *vlist, char const *function
 	else
 	{
 		ParsedData = it->second;
+		ParsedData->ASTMode = Node::SAVE_PARAMETERS;
 		return;
 	}
 
@@ -277,22 +297,26 @@ void ExpressionEvaluator::DefineFunction(char const *vlist, char const *function
 	// in a vector<string> object. These need to be ordered because this is
 	// the order the variables will get assigned to in the Map when Evaluate(...)
 	// is called.
-	ParsedData->VariableVector->clear();
-	parse(vlist, ( *space_p >>
+	vector<string> VariableVector;
+	parse((char*) vlistStr.c_str(), ( *space_p >>
 				   *(
-						+(+graph_p)[push_back_a(*(ParsedData->VariableVector))]
+						+(+graph_p)[push_back_a(VariableVector)]
 							>> +space_p
 					 )
 				 )
 		 );
-	ParsedData->NumberVariables = ParsedData->VariableVector->size();
-	for (vector<string>::iterator it = ParsedData->VariableVector->begin();
-			it != ParsedData->VariableVector->end(); it++)
+	ParsedData->NumberVariables = VariableVector.size();
+	vector<double*> mapAddresses;
+	for (vector<string>::iterator it = VariableVector.begin(); it != VariableVector.end(); it++)
+	{
 		(*ParsedData->VariableMap)[*it] = 0;
+		mapAddresses.push_back(&(*ParsedData->VariableMap)[*it]);
+	}
+	ParsedData->NextMapVar = new NextMapVariable(mapAddresses);
 
 	// Do the actual parsing with spirit and alert the user if there was an error with an exception.
-	MathExpression myGrammar(ParsedData->VariableVector);
-	tree_parse_info<> parseInfo = ast_parse(function, myGrammar, space_p);
+	MathExpression myGrammar(VariableVector);
+	tree_parse_info<> parseInfo = ast_parse((char*) functionStr.c_str(), myGrammar, space_p);
 	if (parseInfo.full == false)
 	{
 		delete ParsedData;
@@ -309,25 +333,114 @@ void ExpressionEvaluator::DefineFunction(char const *vlist, char const *function
 	(*ParsedMap)[functionStr] = ParsedData;
 }
 
-// This function accepts parameters in the form of <parameter_name, double_value>.
-// It is called after DefineFunction(...) and before Evaluate(...). This function
-// will replace all of the parameters with whatever is in the input stl map. It will
-// not add to what was originally set.
-void ExpressionEvaluator::SetParameters(map<string, double> const& params)
+// Constants are evaluated and inserted into the function at the time it is parsed
+// when calling the DefineFunction(...) function. After parsing, if a constant is
+// changed, it will not be reflected in the function when Evaluate is called. This
+// also means that if a function with an unknown constant is added, and then the
+// constant is added, the function will not see the added constant and through an
+// exception. This function will add all of the constants in the map argument to
+// the global internal constants. If a constant was already loaded previously, it will
+// throw an exception stating which constants in the map had this issue. It will add
+// all of the constants it can and output the constants it couldn't add in the string
+// exception.
+void ExpressionEvaluator::AddConstants(map<string, double> const& constants)
 {
-	if (ParsedData == NULL)
+	vector<string> AlreadyAdded;
+	for (map<string, double>::const_iterator it = constants.begin(); it != constants.end(); it++)
 	{
-		throw string("Unable to set parameters because a function must first be defined with DefineFunction(...).");
-		return;
+		if (find(constants_p, it->first.c_str()) != NULL)
+			AlreadyAdded.push_back(it->first);
+		else
+			constants_p.add(it->first.c_str(), it->second);
 	}
 
-	if (ParsedData->ParametersMap == NULL)
-		ParsedData->ParametersMap = new map<string, double>;
+	if (AlreadyAdded.size() > 0)
+	{
+		string exception("The following constant(s) were not added since they already existed: ");
+		for (vector<string>::iterator it = AlreadyAdded.begin(); it != AlreadyAdded.end(); it++)
+		{
+			if (it == AlreadyAdded.begin())
+				exception += *it;
+			else
+				exception += ", " + *it;
+		}
+
+		throw exception + ".";
+	}
+}
+
+// This function behaves in the same way as AddConstants(...), but it only adds one
+// constant at a time. If the constant existed previously, an exception will be thrown
+// stating the fact. If it did not exist previously, it will be added to the global
+// constants and will be used the next time DefineFunction(...) is called.
+void ExpressionEvaluator::AddConstant(string const& name, double value)
+{
+	if (find(constants_p, name.c_str()))
+		throw "Cannot add specified constant because it is already added: " + name;
 	else
-		ParsedData->ParametersMap->clear();
+		constants_p.add(name.c_str(), value);
+}
+
+// If a constant with the specified name exists, it returns the double value that the
+// constant stores. If the constant doesn't exist, it throws an exception.
+double ExpressionEvaluator::GetConstant(string const& name)
+{
+	double* value = find(constants_p, name.c_str());
+	if (value == NULL)
+	{
+		throw "Constant variable not found: " + name;
+		return -1;
+	}
+	
+	return *value;
+}
+
+// Parameters are like constants, but they are inserted into the function at the time
+// Evaluate(...) is called instead of when the function is parsed. This function can
+// be called at any time, and it will take effect in the next call to Evaluate(...).
+// This function will delete all of the parameters, and replace all of them with only
+// the ones in the map argument.
+void ExpressionEvaluator::SetParameters(map<string, double> const& params)
+{
+	if (ParsedData != NULL)
+		ParsedData->ASTMode = Node::SAVE_PARAMETERS;
+
+	if (ParametersMap == NULL)
+		ParametersMap = new map<string, double>;
+	else
+		ParametersMap->clear();
 
 	for (map<string, double>::const_iterator it = params.begin(); it != params.end(); it++)
-		(*ParsedData->ParametersMap)[it->first] = it->second;
+		(*ParametersMap)[it->first] = it->second;
+}
+
+// This function behaves in the same way as SetParameters(...), but it only adds one
+// parameter and it does not delete the others. If the parameter existed previously,
+// it will be overridden and replaced with the new value. If it did not exist previously,
+// it will be added to the current parameters.
+void ExpressionEvaluator::SetParameter(string const& name, double value)
+{
+	if (ParsedData != NULL)
+		ParsedData->ASTMode = Node::SAVE_PARAMETERS;
+
+	if (ParametersMap == NULL)
+		ParametersMap = new map<string, double>;
+
+	(*ParametersMap)[name] = value;
+}
+
+// If a parameter with the specified name exists, it returns the double value that the
+// parameter stores. If the parameter doesn't exist, it throws an exception.
+double ExpressionEvaluator::GetParameter(string const& name)
+{
+	map<string, double>::iterator it;
+	if (ParametersMap == NULL || (it = ParametersMap->find(name)) == ParametersMap->end())
+	{
+		throw "Parameter not found: " + name;
+		return -1;
+	}
+
+	return it->second;
 }
 
 // This function evaluates the function defined from DefineFunction(...).
@@ -350,44 +463,94 @@ double ExpressionEvaluator::Evaluate(double start, ...)
 	}
 	else
 	{
-		ParsedData->VariableMap->clear();
 		if (ParsedData->NumberVariables > 0)
 		{
-			(*ParsedData->VariableMap)[(*ParsedData->VariableVector)[0]] = start;
+			ParsedData->NextMapVar->ResetIndex();
+			*(ParsedData->NextMapVar->GetNext()) = start;
 			for (string::size_type i = 1 ; i < ParsedData->NumberVariables; i++)
-				(*ParsedData->VariableMap)[(*ParsedData->VariableVector)[i]] = va_arg(ap, double);
+				*(ParsedData->NextMapVar->GetNext()) = va_arg(ap, double);
 		}
 	}
 	va_end(ap);
 
-	return EvaluateExpression(ParsedData->AST);
+	if (ParsedData->ASTMode == Node::SAVE_PARAMETERS)
+	{
+		ParsedData->ASTMode = Node::USE_SAVED_PARAMETERS;
+		return EvaluateExpression(ParsedData->AST, Node::SAVE_PARAMETERS);
+	}
+	else
+	{
+		return EvaluateExpression(ParsedData->AST, ParsedData->ASTMode);
+	}
 }
 
-// This function evaluates the function defined from DefineFunction(...).
-// This function accepts one vector<double> argument that has the values
-// for the variables that were listed in the first argument (vlist) of the
-// DefineFunction(...) function. They must be in the vector in the same
-// order as they appeared in the vlist.
-double ExpressionEvaluator::Evaluate(vector<double> const& vars)
+// This function evaluates the function defined from DefineFunction(...). It accepts
+// a "vector<double> const*" argument for each of the variables given in the first
+// argument (vlist) of the DefineFunction(...) function. The vectors for each variable
+// must be in the same order as they appear in the vlist argument. This function will
+// calculate the function from DefineFunction(...) with values from each of the vectors
+// and then store the result in another vector. If the vectors aren't the same length,
+// an exception will be thrown.
+// For example: vlist = "x y", Function: "x+y", arg1={1,2}, arg2={5,10}, out={6,12}
+vector<double> ExpressionEvaluator::Evaluate(vector<double> const* start, ...)
 {
+	va_list ap;
+	vector<vector<double> const*> vectors;
+	vector<double> rtn;
+	
+	va_start(ap, start);
 	if (ParsedData == NULL)
 	{
+		va_end(ap);
 		throw string("Unable to evaluate because a function must first be defined with DefineFunction(...).");
-		return -1;
+		return rtn;
 	}
-
-	if (ParsedData->NumberVariables != vars.size())
+	else
 	{
-		throw string("Illegal number of variables in the Evaluate input vector.");
-		return -1;
+		vectors.push_back(start);
+		for (string::size_type i = 1 ; i < ParsedData->NumberVariables; i++)
+			vectors.push_back(va_arg(ap, vector<double> const*));
+		va_end(ap);
 	}
 
-	ParsedData->VariableMap->clear();
-	if (ParsedData->NumberVariables > 0)
-		for (string::size_type i = 0 ; i < ParsedData->NumberVariables; i++)
-			(*ParsedData->VariableMap)[(*ParsedData->VariableVector)[i]] = vars[i];
+	vector<vector<double> const*>::size_type size = vectors.size();
+	if (size != ParsedData->NumberVariables)
+	{
+		throw string("The input vectors must all be the same length as the number of function variables.");
+		return rtn;
+	}
 
-	return EvaluateExpression(ParsedData->AST);
+	vector<double>::size_type entries = vectors[0]->size();
+	for (vector<vector<double> const*>::iterator it = vectors.begin()+1; it != vectors.end(); it++)
+	{
+		if ((*it)->size() != entries)
+		{
+			throw string("The input vectors must all be the same length.");
+			return rtn;
+		}
+	}
+
+	// Do the work of constructing the return array. For the first run through, save the parameters
+	// in the DoubleValue variable for each node, and then use that value all of the other run
+	// throughs since it won't change.
+	ParsedData->NextMapVar->ResetIndex();
+	vector<double>::size_type i;
+	vector<vector<double> const*>::size_type j;
+	if (entries > 0)
+	{
+		for (j = 0; j < size; j++)
+			*(ParsedData->NextMapVar->GetNext()) = (*vectors[j])[0];
+		rtn.push_back( EvaluateExpression(ParsedData->AST, Node::SAVE_PARAMETERS) );
+		ParsedData->ASTMode = Node::USE_SAVED_PARAMETERS;
+	}
+	for (i = 1; i < entries; i++)
+	{
+		for (j = 0; j < size; j++)
+			*(ParsedData->NextMapVar->GetNext()) = (*vectors[j])[i];
+		rtn.push_back( EvaluateExpression(ParsedData->AST, ParsedData->ASTMode) );
+	}
+
+	return rtn;
 }
 
 // This function walks the AST that is created with the spirit parser and creates a
@@ -464,9 +627,20 @@ ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(tree_match<const char*
 			return NULL;
 		}
 
+		string* varname = new string(i->value.begin(), i->value.end());
+		map<string, double>::iterator it;
+		if (ParsedData->VariableMap == NULL ||
+				(it = ParsedData->VariableMap->find(*varname)) == ParsedData->VariableMap->end())
+		{
+			delete varname;
+			throw "Unknown variable parsed: " + string(i->value.begin(), i->value.end());
+			return NULL;
+		}
+
 		Node* n = new Node;
 		n->DataType = Node::VARIABLE;
-		n->StringValue = new string(i->value.begin(), i->value.end());
+		n->StringValue = varname;
+		n->PointerToVariable = &it->second;
 		return n;
 	}
 	else if (parserID == MathExpression::parameterID)
@@ -598,7 +772,7 @@ ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(tree_match<const char*
 			return subtraction;
 		}
 	}
-	else if (parserID == MathExpression::expressionID)
+	else if (parserID == MathExpression::operatorID)
 	{
 		if (i->children.size() != 2)
 		{
@@ -631,6 +805,28 @@ ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(tree_match<const char*
 			case '^':
 				node->DoubleValue = pow(left->DoubleValue, right->DoubleValue);
 				break;
+			case '<':
+				if (*(i->value.end()-1) == '=')
+					node->DoubleValue = left->DoubleValue <= right->DoubleValue;
+				else
+					node->DoubleValue = left->DoubleValue < right->DoubleValue;
+				break;
+			case '>':
+				if (*(i->value.end()-1) == '=')
+					node->DoubleValue = left->DoubleValue >= right->DoubleValue;
+				else
+					node->DoubleValue = left->DoubleValue > right->DoubleValue;
+				break;
+			case '=':
+				node->DoubleValue = left->DoubleValue == right->DoubleValue;
+				break;
+			case '&':
+				node->DoubleValue = left->DoubleValue && right->DoubleValue;
+				break;
+			case '|':
+				node->DoubleValue = left->DoubleValue || right->DoubleValue;
+				break;
+
 			default:
 				delete left;
 				delete right;
@@ -662,6 +858,27 @@ ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(tree_match<const char*
 			case '^':
 				node->DataType = Node::EXPONENTIATION;
 				break;
+			case '<':
+				if (*(i->value.end()-1) == '=')
+					node->DataType = Node::LTEQ;
+				else
+					node->DataType = Node::LT;
+				break;
+			case '>':
+				if (*(i->value.end()-1) == '=')
+					node->DataType = Node::GTEQ;
+				else
+					node->DataType = Node::GT;
+				break;
+			case '=':
+				node->DataType = Node::EQUAL;
+				break;
+			case '&':
+				node->DataType = Node::LOGICAL_AND;
+				break;
+			case '|':
+				node->DataType = Node::LOGICAL_OR;
+				break;
 			default:
 				delete left;
 				delete right;
@@ -684,8 +901,14 @@ ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(tree_match<const char*
 
 // This function evaluates the AST created from CreateAST(...) and returns
 // the result as a double. It will throw an exception if it encounters a
-// parameter that isn't defined.
-double ExpressionEvaluator::EvaluateExpression(Node* const n)
+// parameter that isn't defined. If the "mode" argument is DEFAULT, it will
+// look up the parameters from the ParametersMap. If "mode" is SAVE_PARAMETERS,
+// it will get the current value from the map and then save it in the DoubleValue
+// field. This can then be used with the USE_SAVED_PARAMETERS mode which will use
+// the DoubleValue field for the parameter instead of the map. This can be used to
+// speed up the vector Evaluate(...) function some since the parameters don't
+// change there.
+double ExpressionEvaluator::EvaluateExpression(Node* const n, Node::AST_Mode mode)
 {
 	switch (n->DataType)
 	{
@@ -693,16 +916,21 @@ double ExpressionEvaluator::EvaluateExpression(Node* const n)
 	case Node::DOUBLE:
 		return n->DoubleValue;
 	case Node::VARIABLE:
-		return (*ParsedData->VariableMap)[*n->StringValue];
+		return *n->PointerToVariable;	// this is a pointer to the entry in the map
 	case Node::PARAMETER:
+		if (mode == Node::USE_SAVED_PARAMETERS)
+		{
+			return n->DoubleValue;
+		}
+		else
 		{
 			map<string, double>::iterator it;
-			if (ParsedData->ParametersMap == NULL ||
-					(it = ParsedData->ParametersMap->find(*n->StringValue)) == ParsedData->ParametersMap->end())
+			if (ParametersMap == NULL || (it = ParametersMap->find(*n->StringValue)) == ParametersMap->end())
 			{
 				throw "Illegal parameter specified: " + *n->StringValue;
 				return -1;
 			}
+			if (mode == Node::SAVE_PARAMETERS) n->DoubleValue = it->second;
 			return it->second;
 		}
 	case Node::FUNCTION:
@@ -712,31 +940,45 @@ double ExpressionEvaluator::EvaluateExpression(Node* const n)
 			switch (n->children->size())
 			{
 			case 1:
-				result = (*n->Function1)( EvaluateExpression((*n->children)[0]) );
+				result = (*n->Function1)( EvaluateExpression((*n->children)[0], mode) );
 				break;
 			case 2:
-				result = (*n->Function2)( EvaluateExpression((*n->children)[0]), EvaluateExpression((*n->children)[1]) );
+				result = (*n->Function2)( EvaluateExpression((*n->children)[0], mode), EvaluateExpression((*n->children)[1], mode) );
 				break;
 			case 3:
-				result = (*n->Function3)( EvaluateExpression((*n->children)[0]), EvaluateExpression((*n->children)[1]), EvaluateExpression((*n->children)[2]) );
+				result = (*n->Function3)( EvaluateExpression((*n->children)[0], mode), EvaluateExpression((*n->children)[1], mode), EvaluateExpression((*n->children)[2], mode) );
 				break;
 			case 4:
-				result = (*n->Function4)( EvaluateExpression((*n->children)[0]), EvaluateExpression((*n->children)[1]), EvaluateExpression((*n->children)[2]), EvaluateExpression((*n->children)[3]) );
+				result = (*n->Function4)( EvaluateExpression((*n->children)[0], mode), EvaluateExpression((*n->children)[1], mode), EvaluateExpression((*n->children)[2], mode), EvaluateExpression((*n->children)[3], mode) );
 				break;
 			}
 			CheckMathOperationForErrors(*n->StringValue);
 			return result;
 		}
 	case Node::ADDITION:
-		return EvaluateExpression((*n->children)[0]) + EvaluateExpression((*n->children)[1]);
+		return EvaluateExpression((*n->children)[0], mode) + EvaluateExpression((*n->children)[1], mode);
 	case Node::SUBTRACTION:
-		return EvaluateExpression((*n->children)[0]) - EvaluateExpression((*n->children)[1]);
+		return EvaluateExpression((*n->children)[0], mode) - EvaluateExpression((*n->children)[1], mode);
 	case Node::MULTIPLICATION:
-		return EvaluateExpression((*n->children)[0]) * EvaluateExpression((*n->children)[1]);
+		return EvaluateExpression((*n->children)[0], mode) * EvaluateExpression((*n->children)[1], mode);
 	case Node::DIVISION:
-		return EvaluateExpression((*n->children)[0]) / EvaluateExpression((*n->children)[1]);
+		return EvaluateExpression((*n->children)[0], mode) / EvaluateExpression((*n->children)[1], mode);
 	case Node::EXPONENTIATION:
-		return pow(EvaluateExpression((*n->children)[0]), EvaluateExpression((*n->children)[1]));
+		return pow(EvaluateExpression((*n->children)[0], mode), EvaluateExpression((*n->children)[1], mode));
+	case Node::LT:
+		return EvaluateExpression((*n->children)[0], mode) < EvaluateExpression((*n->children)[1], mode);
+	case Node::LTEQ:
+		return EvaluateExpression((*n->children)[0], mode) <= EvaluateExpression((*n->children)[1], mode);
+	case Node::GT:
+		return EvaluateExpression((*n->children)[0], mode) > EvaluateExpression((*n->children)[1], mode);
+	case Node::GTEQ:
+		return EvaluateExpression((*n->children)[0], mode) >= EvaluateExpression((*n->children)[1], mode);
+	case Node::EQUAL:
+		return EvaluateExpression((*n->children)[0], mode) == EvaluateExpression((*n->children)[1], mode);
+	case Node::LOGICAL_AND:
+		return EvaluateExpression((*n->children)[0], mode) && EvaluateExpression((*n->children)[1], mode);
+	case Node::LOGICAL_OR:
+		return EvaluateExpression((*n->children)[0], mode) || EvaluateExpression((*n->children)[1], mode);
 	}
 
 	throw string("Illegal expression was encountered.");

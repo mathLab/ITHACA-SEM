@@ -60,10 +60,16 @@ namespace Nektar
         public:
             static T Evaluate(const std::string &eqn, T x=0, T y=0, T z=0, T t=0)
             {
-                ExpressionEvaluator evaluator;
+                static ExpressionEvaluator evaluator;
+                static bool inited=false;
 
                 evaluator.DefineFunction("x y z t", eqn.c_str());
-                evaluator.SetParameters(BoundaryConditions::GetParameters());
+
+                if (!inited)
+                {
+                    evaluator.AddConstants(BoundaryConditions::GetParameters());
+                    inited = true;
+                }
                 return evaluator.Evaluate(x, y, z, t);
             }
         };

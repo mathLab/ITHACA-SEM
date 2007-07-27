@@ -178,10 +178,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\SpatialDomains\ExpressionEvaluator.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\SpatialDomains\Geometry.cpp"
 				>
 			</File>
@@ -276,10 +272,6 @@
 			</File>
 			<File
 				RelativePath="..\..\SpatialDomains\Equation.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\SpatialDomains\ExpressionEvaluator.h"
 				>
 			</File>
 			<File

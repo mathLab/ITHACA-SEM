@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: TestUpperTriangularMatrix.cpp
+// File: main.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,27 +29,35 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description: Unit tests for LibUtilities
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <UnitTests/LibUtilities/TestUpperTriangularMatrix.h>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/test/test_case_template.hpp>
-#include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/test_tools.hpp>
+#include <boost/test/included/unit_test_framework.hpp>
+#include <UnitTests/LibUtilities/TestMatrixStoragePolicies.h>
+#include <UnitTests/LibUtilities/TestUpperTriangularMatrix.h>
 
-#include <boost/test/auto_unit_test.hpp>
+using boost::unit_test_framework::test_suite;
 
-namespace Nektar
-{
-    namespace UpperTriangularMatrixUnitTests
-    {
-        typedef MatrixStoragePolicy<NekDouble, UpperTriangularMatrixTag> Policy;
+// The boost unit test framework provides the main function for us.
+// All we need to do is provide a test suite.
 
-    }
+// On Windows, to turn off memory leak detection, --detect_memory_leaks=0
+test_suite* init_unit_test_suite( int, char* [] )
+{   
+    test_suite* test= BOOST_TEST_SUITE( "Lib Utilities Test Suite" );
+
+    // Nektar::ptr tests.
+    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::Test0ParameterInitialize), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::Test2ParameterInitialize), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestSingleValuePopulationInitialize), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestCArrayInitialization), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestArrayInitialization), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestConstGetValue), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestSetValue), 0);
+    
+    return test;
 }
-
 

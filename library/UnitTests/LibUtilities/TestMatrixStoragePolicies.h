@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: TestUpperTriangularMatrix.cpp
+// File: TestMatrixStoragePolicies.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,23 +33,22 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <UnitTests/LibUtilities/TestUpperTriangularMatrix.h>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/test/test_case_template.hpp>
-#include <boost/test/floating_point_comparison.hpp>
-#include <boost/test/unit_test.hpp>
-
-#include <boost/test/auto_unit_test.hpp>
+#ifndef NEKTAR_UNIT_TESTS_LIB_UTILITIES_TEST_MATRIX_STORAGE_POLICIES_H
+#define NEKTAR_UNIT_TESTS_LIB_UTILITIES_TEST_MATRIX_STORAGE_POLICIES_H
 
 namespace Nektar
 {
-    namespace UpperTriangularMatrixUnitTests
+    namespace UpperTriangularUnitTests
     {
-        typedef MatrixStoragePolicy<NekDouble, UpperTriangularMatrixTag> Policy;
-
+        void Test0ParameterInitialize();
+        void Test2ParameterInitialize();
+        void TestSingleValuePopulationInitialize();
+        void TestCArrayInitialization();
+        void TestArrayInitialization();
+        void TestConstGetValue();
+        void TestSetValue();
     }
 }
 
+#endif //NEKTAR_UNIT_TESTS_LIB_UTILITIES_TEST_MATRIX_STORAGE_POLICIES_H
 

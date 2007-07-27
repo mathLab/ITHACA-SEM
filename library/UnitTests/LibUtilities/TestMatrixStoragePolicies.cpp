@@ -33,8 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define BOOST_TEST_MODULE MatrixStoragePolicies test
-
+#include <UnitTests/LibUtilities/TestMatrixStoragePolicies.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
@@ -50,7 +49,7 @@ namespace Nektar
     {
         typedef MatrixStoragePolicy<NekDouble, UpperTriangularMatrixTag> Policy;
 
-        BOOST_AUTO_TEST_CASE(Test0ParameterInitialize)
+        void Test0ParameterInitialize()
         {
             Array<OneD, NekDouble> result = Policy::Initialize();
             BOOST_CHECK_EQUAL(result.num_elements(), 0);
@@ -58,7 +57,7 @@ namespace Nektar
             BOOST_CHECK(result.data() != 0);
         }
 
-        BOOST_AUTO_TEST_CASE(Test2ParameterInitialize)
+        void Test2ParameterInitialize()
         {
             {
                 Array<OneD, NekDouble> result = Policy::Initialize(5, 5);
@@ -71,7 +70,7 @@ namespace Nektar
             }
         }
 
-        BOOST_AUTO_TEST_CASE(TestSingleValuePopulationInitialize)
+        void TestSingleValuePopulationInitialize()
         {
             {
                 Array<OneD, NekDouble> result = Policy::Initialize(5, 5, 7.2);
@@ -88,7 +87,7 @@ namespace Nektar
             }
         }
 
-        BOOST_AUTO_TEST_CASE(TestCArrayInitialization)
+        void TestCArrayInitialization()
         {
             NekDouble buf[] = {1.0, 2.0, 3.0,
                                     5.0, 6.0,
@@ -113,7 +112,7 @@ namespace Nektar
             }
         }
 
-        BOOST_AUTO_TEST_CASE(TestArrayInitialization)
+        void TestArrayInitialization()
         {
             NekDouble buf[] = {1.0, 2.0, 3.0,
                                     5.0, 6.0,
@@ -155,12 +154,9 @@ namespace Nektar
             }
         }
 
-        //BOOST_AUTO_TEST_CASE(TestNonConstGetValue)
-        //{
 
-        //}
 
-        BOOST_AUTO_TEST_CASE(TestConstGetValue)
+        void TestConstGetValue()
         {
             NekDouble buf[] = {1.0, 2.0, 3.0,
                                     5.0, 6.0,
@@ -190,7 +186,7 @@ namespace Nektar
             #endif
         }
 
-        BOOST_AUTO_TEST_CASE(TestSetValue)
+        void TestSetValue()
         {
             NekDouble buf[] = {1.0, 2.0, 3.0,
                                     5.0, 6.0,

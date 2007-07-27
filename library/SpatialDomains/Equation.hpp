@@ -37,7 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_EQUATION_HPP
 
 #include <string>
-#include <SpatialDomains/ExpressionEvaluator.h>
+#include <LibUtilities/Interpreter/ExpressionEvaluator.h>
 #include <SpatialDomains/BoundaryConditions.h>
 
 namespace Nektar

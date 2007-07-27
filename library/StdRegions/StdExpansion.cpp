@@ -51,6 +51,7 @@ namespace Nektar
         /** define list of number of faces corresponding to each ShapeType */
         const int g_shapenfaces[SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
 
+        LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> StdExpansion::m_stdMatrixManager;
 
         StdExpansion::StdExpansion(void): 
         m_ncoeffs(0),
@@ -500,6 +501,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.49  2007/07/27 00:22:53  bnelson
+* Memory manager now accepts non-const parameters to the allocate methods.
+*
 * Revision 1.48  2007/07/22 23:04:25  bnelson
 * Backed out Nektar::ptr.
 *

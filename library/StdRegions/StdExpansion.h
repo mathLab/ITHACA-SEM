@@ -905,7 +905,7 @@ namespace Nektar
 
         private:
 
-            LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
+            static LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
 
             // Virtual functions
 
@@ -1070,6 +1070,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.63  2007/07/22 23:04:25  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.62  2007/07/20 02:16:52  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

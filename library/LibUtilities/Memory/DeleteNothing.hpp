@@ -39,8 +39,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_MEMORY_DELETE_NOTHING_HPP
 #define NEKTAR_LIB_UTILITIES_MEMORY_DELETE_NOTHING_HPP
 
-#include <LibUtilities/LinearAlgebra/MatrixBlockType.h>
-
 namespace Nektar
 {
     template<typename DataType>
@@ -57,6 +55,9 @@ namespace Nektar
 
 /**
     $Log: DeleteNothing.hpp,v $
+    Revision 1.3  2007/02/15 06:55:42  bnelson
+    *** empty log message ***
+
     Revision 1.2  2007/02/04 04:27:49  bnelson
     Updated linear systems to work with normal objects instead of only shared pointers.
 

@@ -37,7 +37,6 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_IMPL_HPP
 
 #include <LibUtilities/LinearAlgebra/NekMatrixForm.h>
-#include <LibUtilities/LinearAlgebra/MatrixBlockType.h>
 
 namespace Nektar
 {
@@ -258,6 +257,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrixImpl.hpp,v $
+    Revision 1.3  2007/06/10 23:42:16  bnelson
+    Matrix updates.
+
     Revision 1.2  2007/03/29 18:59:05  bnelson
     Refactoring in preparation for scaled matrices.  Fixed transpose problem.
 

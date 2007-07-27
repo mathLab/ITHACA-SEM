@@ -86,8 +86,11 @@ namespace Nektar
             {
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
                 CalculateInterpMatrix(xi, yi, interp);
+                
+                unsigned int np = GetTotNumPoints();
+                NekDouble* d = interp.data();
                 boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints, 
-                                                                   GetTotNumPoints(),interp.data()));
+                                                                   np, d));
                 return returnval;
             }       
 

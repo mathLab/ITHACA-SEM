@@ -280,7 +280,9 @@ namespace Nektar
 
             CalculateInterpMatrix(numpoints, x, interp);
 
-            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,GetNumPoints(),interp.data()));
+            NekDouble* t = interp.data();
+            unsigned int np = GetNumPoints();
+            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,np,t));
 
             return returnval;
         }
@@ -289,6 +291,9 @@ namespace Nektar
 
 /**
 * $Log: GaussPoints.cpp,v $
+* Revision 1.21  2007/07/22 23:03:26  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.20  2007/07/20 00:28:26  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

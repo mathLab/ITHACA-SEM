@@ -56,19 +56,22 @@ namespace Nektar
             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 0);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf3ParameterConstructions, 0);
 
-            CountedObject<int>* ob2 = MemoryManager<CountedObject<int> >::Allocate(1);
+            unsigned int one = 1;
+            CountedObject<int>* ob2 = MemoryManager<CountedObject<int> >::Allocate(one);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 1);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 1);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 0);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf3ParameterConstructions, 0);
 
-            CountedObject<int>* ob3 = MemoryManager<CountedObject<int> >::Allocate(1, 2);
+            unsigned int two = 2;
+            CountedObject<int>* ob3 = MemoryManager<CountedObject<int> >::Allocate(one, two);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 1);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 1);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 1);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf3ParameterConstructions, 0);
 
-            CountedObject<int>* ob4 = MemoryManager<CountedObject<int> >::Allocate(1, 2, 3);
+            unsigned int three = 3;
+            CountedObject<int>* ob4 = MemoryManager<CountedObject<int> >::Allocate(one, two, three);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 1);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 1);
             BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 1);
@@ -103,19 +106,22 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 0);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf3ParameterConstructions, 0);
 
-                boost::shared_ptr<CountedObject<int> > ob2 = MemoryManager<CountedObject<int> >::AllocateSharedPtr(1);
+                int one = 1;
+                boost::shared_ptr<CountedObject<int> > ob2 = MemoryManager<CountedObject<int> >::AllocateSharedPtr(one);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 1);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 1);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 0);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf3ParameterConstructions, 0);
 
-                boost::shared_ptr<CountedObject<int> > ob3 = MemoryManager<CountedObject<int> >::AllocateSharedPtr(1, 2);
+                int two = 2;
+                boost::shared_ptr<CountedObject<int> > ob3 = MemoryManager<CountedObject<int> >::AllocateSharedPtr(one, two);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 1);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 1);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 1);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf3ParameterConstructions, 0);
 
-                boost::shared_ptr<CountedObject<int> > ob4 = MemoryManager<CountedObject<int> >::AllocateSharedPtr(1, 2, 3);
+                int three = 3;
+                boost::shared_ptr<CountedObject<int> > ob4 = MemoryManager<CountedObject<int> >::AllocateSharedPtr(one, two, three);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberDefaultConstructed, 1);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf1ParameterConstructions, 1);
                 BOOST_CHECK_EQUAL(CountedObject<int>::numberOf2ParameterConstructions, 1);

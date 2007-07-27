@@ -154,7 +154,9 @@ namespace Nektar
 
             CalculateInterpMatrix(numpoints, x, interp);
 
-            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,GetNumPoints(),interp.data()));
+            unsigned int np = GetTotNumPoints();
+            NekDouble* d = interp.data();
+            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints,np, d));
 
             return returnval;
         }

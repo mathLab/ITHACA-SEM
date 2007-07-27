@@ -50,7 +50,8 @@ namespace Nektar
                 "Nodal basis initiated with different orders in the a "
                 "and b directions");
 
-            m_nodalPointsKey = MemoryManager<LibUtilities::PointsKey>::AllocateSharedPtr (Ba.GetNumModes(),Ntype);
+            int numModes = Ba.GetNumModes();
+            m_nodalPointsKey = MemoryManager<LibUtilities::PointsKey>::AllocateSharedPtr (numModes,Ntype);
 
         }
 
@@ -335,6 +336,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.16  2007/07/20 02:16:54  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.15  2007/07/12 12:55:16  sherwin
 * Simplified Matrix Generation
 *

@@ -179,7 +179,8 @@ namespace Nektar
                         invtmpmat.Solve(v,v);
                     }
 
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(dim,dim,invdata.data());
+                    NekDouble* t = invdata.data();
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(dim,dim,t);
                 }
                 break;
             default:
@@ -499,6 +500,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.48  2007/07/22 23:04:25  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.47  2007/07/16 18:28:43  sherwin
 * Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
 *

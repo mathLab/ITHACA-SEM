@@ -129,7 +129,7 @@ namespace Nektar
             SpatialDomains::TriGeomSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
             
-            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+            static LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             
             /** \brief  Inner product of \a inarray over region with respect to
                 the expansion basis \a base and return in \a outarray */
@@ -273,6 +273,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.12  2007/07/22 23:04:17  bnelson
+ *    Backed out Nektar::ptr.
+ *
  *    Revision 1.11  2007/07/20 00:45:50  bnelson
  *    Replaced boost::shared_ptr with Nektar::ptr
  *

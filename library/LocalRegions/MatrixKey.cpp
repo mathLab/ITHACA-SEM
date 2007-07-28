@@ -82,16 +82,27 @@ namespace Nektar
                 return false;
             }
 
-            if(lhs.m_metricinfo < rhs.m_metricinfo)
+            if(lhs.m_metricinfo.get() < rhs.m_metricinfo.get())
             {
                 return true;
             }
 
+
+            if(lhs.m_metricinfo.get() > rhs.m_metricinfo.get())
+            {
+                return false;
+            }
+
             for(unsigned int i = 0; i < StdRegions::ShapeTypeDimMap[lhs.GetShapeType()]; ++i)
             {
-                if(lhs.GetBasis(i) < rhs.GetBasis(i))
+                if(lhs.GetBasis(i).get() < rhs.GetBasis(i).get())
                 {
                     return true;
+                }
+
+                if(lhs.GetBasis(i).get() > rhs.GetBasis(i).get())
+                {
+                    return false;
                 }
             }
 
@@ -119,6 +130,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.11  2007/07/26 02:39:21  bnelson
+* Fixed Visual C++ compiler errors when compiling in release mode.
+*
 * Revision 1.10  2007/07/20 00:45:50  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

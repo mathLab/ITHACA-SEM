@@ -42,6 +42,8 @@ namespace Nektar
     namespace LocalRegions 
     {
         
+        LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> NodalTriExp::m_matrixManager;
+
         NodalTriExp::NodalTriExp(const LibUtilities::BasisKey &Ba,
                                  const LibUtilities::BasisKey &Bb,
                                  const LibUtilities::PointsType Ntype,
@@ -559,6 +561,7 @@ namespace Nektar
             // and generate matrix. Otherwise direct call is OK. 
             if(!StdMatManagerAlreadyCreated(mkey))
             {
+                
                 NodalTriExpSharedPtr tmp = MemoryManager<NodalTriExp>::
                     AllocateSharedPtr(m_base[0]->GetBasisKey(),
                                       m_base[1]->GetBasisKey(),
@@ -593,14 +596,15 @@ namespace Nektar
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
+                        NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                     }
                     else
                     {
-                        returnval = MemoryManager<DNekScalMat>::
-                            AllocateSharedPtr((m_metricinfo->GetJac())[0],
-                                     GetStdMatrix(*mkey.GetStdMatKey()));
+                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
 
                     }
                 }
@@ -609,16 +613,17 @@ namespace Nektar
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
+                        NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
-                        ASSERTL0(false,"Need a matrix inverse routine");
+                        mat->Invert();
 
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                     }
                     else
-                    {
-                        returnval = MemoryManager<DNekScalMat>::
-                            AllocateSharedPtr(1.0/(m_metricinfo->GetJac())[0],
-                                     GetStdMatrix(*mkey.GetStdMatKey()));
+                    {                       
+                        NekDouble fac = 1.0/(m_metricinfo->GetJac())[0];
+                        DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
                     }
                 }
                 break;
@@ -635,6 +640,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.12  2007/07/20 00:45:50  bnelson
+ *    Replaced boost::shared_ptr with Nektar::ptr
+ *
  *    Revision 1.11  2007/07/12 12:53:00  sherwin
  *    Updated to have a helmholtz matrix
  *

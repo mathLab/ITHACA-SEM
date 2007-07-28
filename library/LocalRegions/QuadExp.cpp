@@ -44,6 +44,7 @@ namespace Nektar
     namespace LocalRegions 
     {
     
+        LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> QuadExp::m_matrixManager;
     
     QuadExp::QuadExp(const LibUtilities::BasisKey &Ba, 
              const LibUtilities::BasisKey &Bb, 
@@ -651,14 +652,16 @@ namespace Nektar
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
+                        
+                        NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                     }
                     else
                     {
-                        returnval = MemoryManager<DNekScalMat>::
-                            AllocateSharedPtr((m_metricinfo->GetJac())[0],
-                                     GetStdMatrix(*mkey.GetStdMatKey()));
+                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
                 }
                 break;
@@ -666,24 +669,26 @@ namespace Nektar
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
+                        NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
-                        ASSERTL0(false,"Need a matrix inverse routine");
+                        mat->Invert();
 
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                     }
                     else
                     {
-                        returnval = MemoryManager<DNekScalMat>::
-                            AllocateSharedPtr(1.0/(m_metricinfo->GetJac())[0],
-                                     GetStdMatrix(*mkey.GetStdMatKey()));
+                        NekDouble fac = 1.0/(m_metricinfo->GetJac())[0];
+                        DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
+                        
                     }
                 }
                 break;
             default:
                 NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
                 break;
-            }
-
+             }
+                
             return returnval;
         }
 
@@ -693,6 +698,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.20  2007/07/20 00:45:51  bnelson
+ *    Replaced boost::shared_ptr with Nektar::ptr
+ *
  *    Revision 1.19  2007/07/12 12:53:00  sherwin
  *    Updated to have a helmholtz matrix
  *

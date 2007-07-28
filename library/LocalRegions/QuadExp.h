@@ -142,7 +142,7 @@ namespace Nektar
         SpatialDomains::QuadGeomSharedPtr m_geom;
         SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
-        LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+        static LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
         
 
         /** \brief  Inner product of \a inarray over region with respect to
@@ -278,6 +278,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.19  2007/07/22 23:04:18  bnelson
+ *    Backed out Nektar::ptr.
+ *
  *    Revision 1.18  2007/07/20 00:45:51  bnelson
  *    Replaced boost::shared_ptr with Nektar::ptr
  *

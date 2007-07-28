@@ -132,9 +132,10 @@ namespace Nektar
                     elementDataStrm >> vertex2;
 
                     ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for SEGMENT: ") + elementStr).c_str());
-
-                    SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, 
-                        GetVertex(vertex1), GetVertex(vertex2));
+                    
+                    VertexComponentSharedPtr v1 = GetVertex(vertex1);
+                    VertexComponentSharedPtr v2 = GetVertex(vertex2);
+                    SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, v1,v2);
                     m_seggeoms.push_back(seg);                        
                 }
                 catch(...)
@@ -337,6 +338,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.14  2007/07/26 01:38:32  jfrazier
+// Cleanup of some attribute reading code.
+//
 // Revision 1.13  2007/07/24 16:52:09  jfrazier
 // Added domain code.
 //

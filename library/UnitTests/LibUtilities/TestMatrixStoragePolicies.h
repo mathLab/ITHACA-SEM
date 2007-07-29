@@ -47,6 +47,7 @@ namespace Nektar
         void TestArrayInitialization();
         void TestConstGetValue();
         void TestSetValue();
+        void TestAdvance();
     }
 }
 

@@ -38,6 +38,7 @@
 #include <boost/test/included/unit_test_framework.hpp>
 #include <UnitTests/LibUtilities/TestMatrixStoragePolicies.h>
 #include <UnitTests/LibUtilities/TestUpperTriangularMatrix.h>
+#include <UnitTests/LibUtilities/TestNekMatrixOperations.h>
 
 using boost::unit_test_framework::test_suite;
 
@@ -57,7 +58,17 @@ test_suite* init_unit_test_suite( int, char* [] )
     test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestArrayInitialization), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestConstGetValue), 0);
     test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestSetValue), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestAdvance), 0);
     
+    // Matrix operations
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsFull), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsDiagonal), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestComboExpression), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsUpperTriangularRhsUpperTriangular), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsLowerTriangularRhsLowerTriangular), 0);
+
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixSubtractionTests::TestLhsFullRhsFull), 0);
+
     return test;
 }
 

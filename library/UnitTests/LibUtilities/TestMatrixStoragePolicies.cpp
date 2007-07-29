@@ -224,6 +224,78 @@ namespace Nektar
             }
             #endif
         }
+        void TestAdvance()
+        {
+            {
+                NekDouble buf[] = {1.0, 2.0, 3.0,
+                                        5.0, 6.0,
+                                             9.0};
+                Array<OneD, NekDouble> array_buf(6, buf);
+                Array<OneD, NekDouble> data = Policy::Initialize(3, 3, array_buf);
+                BOOST_CHECK_EQUAL(data.num_elements(), 6);
+
+                unsigned int curRow = 0; 
+                unsigned int curColumn = 0;
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                BOOST_CHECK_EQUAL(0, curRow);
+                BOOST_CHECK_EQUAL(1, curColumn);
+
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                BOOST_CHECK_EQUAL(0, curRow);
+                BOOST_CHECK_EQUAL(2, curColumn);
+
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                BOOST_CHECK_EQUAL(1, curRow);
+                BOOST_CHECK_EQUAL(1, curColumn);
+
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                BOOST_CHECK_EQUAL(1, curRow);
+                BOOST_CHECK_EQUAL(2, curColumn);
+
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                BOOST_CHECK_EQUAL(2, curRow);
+                BOOST_CHECK_EQUAL(2, curColumn);
+
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
+                BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);
+                BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curColumn);
+            }
+
+            {
+                NekDouble buf[] = {1.0};
+                Array<OneD, NekDouble> array_buf(1, buf);
+                Array<OneD, NekDouble> data = Policy::Initialize(1, 1, array_buf);
+                BOOST_CHECK_EQUAL(data.num_elements(), 1);
+
+                unsigned int curRow = 0; 
+                unsigned int curColumn = 0;
+                boost::tie(curRow, curColumn) = Policy::Advance(1, 1, curRow, curColumn);
+                BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);
+                BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curColumn);
+            }
+
+            {
+                NekDouble buf[] = {1.0, 2.0,
+                                        5.0};
+                Array<OneD, NekDouble> array_buf(3, buf);
+                Array<OneD, NekDouble> data = Policy::Initialize(2, 2, array_buf);
+                BOOST_CHECK_EQUAL(data.num_elements(), 3);
+
+                unsigned int curRow = 0; 
+                unsigned int curColumn = 0;
+                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
+                BOOST_CHECK_EQUAL(0, curRow);
+                BOOST_CHECK_EQUAL(1, curColumn);
+
+                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
+                BOOST_CHECK_EQUAL(1, curRow);
+                BOOST_CHECK_EQUAL(1, curColumn);
+
+                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
+                BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);
+                BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curColumn);
+            }
+        }
     }
 }
 

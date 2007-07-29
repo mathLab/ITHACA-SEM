@@ -1,11 +1,13 @@
 
 SET(UnitTestSources
+        TestNekMatrixOperations.cpp
 	TestMatrixStoragePolicies.cpp
 	TestUpperTriangularMatrix.cpp
     main.cpp   
 )
 
 SET(UnitTestHeaders
+    TestNekMatrixOperations.h
     TestMatrixStoragePolicies.h
     TestUpperTriangularMatrix.h
 )

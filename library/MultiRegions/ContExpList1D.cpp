@@ -174,7 +174,8 @@ namespace Nektar
             
             unsigned int rows = m_contNcoeffs - NumDirBCs;
             unsigned int cols = m_contNcoeffs - NumDirBCs;
-            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,0.0);
+            NekDouble zero = 0.0;
+            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);
             
             // fill global matrix 
             for(n = cnt = 0; n < (*m_exp).size(); ++n)
@@ -186,23 +187,23 @@ namespace Nektar
                 loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
                 loc_lda = loc_mat->GetColumns();
 		    
-		    for(i = 0; i < loc_lda; ++i)
-		    {
-			gid1 = m_locToGloMap->GetMap(cnt + i);
-                        if(gid1 >= NumDirBCs)
+                for(i = 0; i < loc_lda; ++i)
+                {
+                    gid1 = m_locToGloMap->GetMap(cnt + i);
+                    if(gid1 >= NumDirBCs)
+                    {
+                        for(j = 0; j < loc_lda; ++j)
                         {
-                            for(j = 0; j < loc_lda; ++j)
+                            gid2 = m_locToGloMap->GetMap(cnt + j);
+                            if(gid2 >= NumDirBCs)
                             {
-                                gid2 = m_locToGloMap->GetMap(cnt + j);
-                                if(gid2 >= NumDirBCs)
-                                {
-                                    (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                        += (*loc_mat)(i,j);
-                                }
-                            }		
-                        }
+                                (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
+                                    += (*loc_mat)(i,j);
+                            }
+                        }		
                     }
-                    cnt += (*m_exp)[n]->GetNcoeffs();
+                }
+                cnt += (*m_exp)[n]->GetNcoeffs();
             }
             
             linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
@@ -216,6 +217,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.19  2007/07/27 03:10:48  bnelson
+* Fixed g++ compile error.
+*
 * Revision 1.18  2007/07/23 16:06:30  sherwin
 * Put a std::map to hold global matrix systems
 *

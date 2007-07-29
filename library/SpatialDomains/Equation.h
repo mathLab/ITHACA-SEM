@@ -38,43 +38,12 @@
 
 #include <string>
 #include <LibUtilities/Interpreter/ExpressionEvaluator.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
-        template <typename T>
-        class ConstantEvaluator
-        {
-        public:
-            static T Evaluate(const std::string &eqn, T x=0, T y=0, T z=0)
-            {
-                return atof(eqn.c_str());
-            }
-        };
-
-        template <typename T>
-        class EquationEvaluator
-        {
-        public:
-            static T Evaluate(const std::string &eqn, T x=0, T y=0, T z=0, T t=0)
-            {
-                static ExpressionEvaluator evaluator;
-                static bool inited=false;
-
-                evaluator.DefineFunction("x y z t", eqn.c_str());
-
-                if (!inited)
-                {
-                    evaluator.AddConstants(BoundaryConditions::GetParameters());
-                    inited = true;
-                }
-                return evaluator.Evaluate(x, y, z, t);
-            }
-        };
-
-        template <typename T, template<typename> class Evaluator = EquationEvaluator>
         class Equation
         {
         public:
@@ -83,9 +52,16 @@ namespace Nektar
             {
             }
 
-            T Evaluate(T x=0, T y=0, T z=0, T t=0) const
+            NekDouble Evaluate(NekDouble x=0, NekDouble y=0, NekDouble z=0, NekDouble t=0) const
             {
-              return Evaluator<T>::Evaluate(m_eqn, x, y, z);
+                m_evaluator.DefineFunction("x y z t", m_eqn.c_str());
+
+                return m_evaluator.Evaluate(x, y, z, t);
+            }
+
+            static void SetConstParameters(const std::map<std::string, NekDouble> &constants)
+            {
+                m_evaluator.AddConstants(constants);
             }
 
             std::string GetEquation(void) const
@@ -98,13 +74,9 @@ namespace Nektar
               m_eqn = eqn;
             }
 
-            void SetEquation(const char *eqn)
-            {
-              m_eqn = eqn;
-            }
-
         private:
             std::string m_eqn;
+            static ExpressionEvaluator m_evaluator;
         };
     }
 }

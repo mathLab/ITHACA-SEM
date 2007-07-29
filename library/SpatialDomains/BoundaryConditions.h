@@ -41,7 +41,7 @@
 #include <iostream>
 #include <sstream>
 
-#include <SpatialDomains/Equation.hpp>
+#include <SpatialDomains/Equation.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <SpatialDomains/MeshGraph.h>
 
@@ -87,7 +87,7 @@ namespace Nektar
             {
             };
 
-            Equation<NekDouble> m_DirichletCondition;
+            Equation m_DirichletCondition;
         };
 
         struct NeumannBoundaryCondition : public BoundaryConditionBase
@@ -98,7 +98,7 @@ namespace Nektar
             {
             };
 
-            Equation<NekDouble> m_NeumannCondition;
+            Equation m_NeumannCondition;
         };
 
         struct RobinBoundaryCondition : public BoundaryConditionBase
@@ -110,8 +110,8 @@ namespace Nektar
             }
 
             // u = a(x,y,z) + b(x,y,z)*\frac{\partial{u}}{\partial{n}}
-            Equation<NekDouble> m_a;
-            Equation<NekDouble> m_b;
+            Equation m_a;
+            Equation m_b;
         };
 
         typedef std::map<std::string, NekDouble> ParamMap;
@@ -130,17 +130,17 @@ namespace Nektar
         typedef boost::shared_ptr<BoundaryConditionMap> BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
 
-        typedef Equation<NekDouble> ForcingFunction;
+        typedef Equation ForcingFunction;
         typedef boost::shared_ptr<ForcingFunction> ForcingFunctionShPtr;
         typedef boost::shared_ptr<const ForcingFunction> ConstForcingFunctionShPtr;
         typedef std::map<std::string, ForcingFunctionShPtr> ForcingFunctionsMap;
 
-        typedef Equation<NekDouble> ExactSolution;
+        typedef Equation ExactSolution;
         typedef boost::shared_ptr<ExactSolution> ExactSolutionShPtr;
         typedef boost::shared_ptr<const ExactSolution> ConstExactSolutionShPtr;
         typedef std::map<std::string, ExactSolutionShPtr> ExactSolutionMap;
 
-        typedef Equation<NekDouble> InitialCondition;
+        typedef Equation InitialCondition;
         typedef boost::shared_ptr<InitialCondition> InitialConditionShPtr;
         typedef boost::shared_ptr<const InitialCondition> ConstInitialConditionShPtr;
         typedef std::map<std::string, InitialConditionShPtr> InitialConditionsMap;

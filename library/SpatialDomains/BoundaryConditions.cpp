@@ -36,9 +36,9 @@
 
 #include <SpatialDomains/pchSpatialDomains.h>
 
+#include <SpatialDomains/Equation.h>
 #include <SpatialDomains/BoundaryConditions.h>
 #include <SpatialDomains/ParseUtils.hpp>
-#include <SpatialDomains/Equation.hpp>
 
 #include <string>
 
@@ -127,6 +127,9 @@ namespace Nektar
 
                     parameter = parameter->NextSiblingElement();
                 }
+
+                // Set ourselves up for evaluation later.
+                Equation::SetConstParameters(m_Parameters);
             }
         }
 

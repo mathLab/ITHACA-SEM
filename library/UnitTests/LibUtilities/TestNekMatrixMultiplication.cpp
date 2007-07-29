@@ -47,13 +47,146 @@
 
 namespace Nektar
 {
+    // Note - All tests should excercise both the blas and normal code.
+    // The easiest way to do this is to perform one test with integers and 
+    // one with doubles.
     namespace MatrixMultiplicationTests
     {
-        void TestStandardFullTimesStandardFull();
-        void TestStandardFullTimesVector();
+        void TestStandardFullTimesStandardFull()
+        {
+            {
+                 unsigned int buf1[] = {1, 2, 3,
+                                        4, 5, 6,
+                                        7, 8, 9};
+                 unsigned int buf2[] = { 10, 11, 12, 14,
+                                         15, 16, 17, 18,
+                                         19, 20, 21, 22 };
+ 
+                                        
+                 NekMatrix<unsigned int> lhs(3, 3, buf1);
+                 NekMatrix<unsigned int> rhs(3, 4, buf2);
+                 NekMatrix<unsigned int> result = lhs*rhs;
+ 
+                 BOOST_CHECK_EQUAL(3, result.GetRows());
+                 BOOST_CHECK_EQUAL(4, result.GetColumns());
+ 
+                 BOOST_CHECK(result(0,0) == 97);
+                 BOOST_CHECK(result(0,1) == 103);
+                 BOOST_CHECK(result(0,2) == 109);
+                 BOOST_CHECK(result(0,3) == 116);
+ 
+                 BOOST_CHECK(result(1,0) == 229);
+                 BOOST_CHECK(result(1,1) == 244);
+                 BOOST_CHECK(result(1,2) == 259);
+                 BOOST_CHECK(result(1,3) == 278);
+ 
+                 BOOST_CHECK(result(2,0) == 361);
+                 BOOST_CHECK(result(2,1) == 385);
+                 BOOST_CHECK(result(2,2) == 409);
+                 BOOST_CHECK(result(2,3) == 440);
+             }
 
-        void TestScaledFullTimesScaledFull();
-        void TestScaledFullTimesVector();
+             {
+                 double buf1[] = {1, 2, 3,
+                                 4, 5, 6,
+                                 7, 8, 9};
+                 double buf2[] = { 10, 11, 12,
+                     15, 16, 17,
+                     19, 20, 21 };
+ 
+                                  
+                 NekMatrix<double> lhs(3, 3, buf1);
+                 NekMatrix<double> rhs(3, 3, buf2);
+ 
+                 NekMatrix<double> result = lhs*rhs;
+ 
+                 BOOST_CHECK(result.GetRows() == 3);
+                 BOOST_CHECK(result.GetColumns() == 3);
+ 
+                 double epsilon = 1e-12;
+                 BOOST_CHECK_CLOSE(result(0,0), 97.0, epsilon);
+                 BOOST_CHECK_CLOSE(result(0,1), 103.0, epsilon);
+                 BOOST_CHECK_CLOSE(result(0,2), 109.0, epsilon);
+ 
+                 BOOST_CHECK_CLOSE(result(1,0), 229.0, epsilon);
+                 BOOST_CHECK_CLOSE(result(1,1), 244.0, epsilon);
+                 BOOST_CHECK_CLOSE(result(1,2), 259.0, epsilon);
+ 
+                 BOOST_CHECK_CLOSE(result(2,0), 361.0, epsilon);
+                 BOOST_CHECK_CLOSE(result(2,1), 385.0, epsilon);
+                 BOOST_CHECK_CLOSE(result(2,2), 409.0, epsilon);
+             }
+        }
+
+        void TestStandardFullTimesVector()
+        {
+            {
+                 unsigned int buf1[] = {1, 2, 3,
+                                        4, 5, 6,
+                                        7, 8, 9};
+                 unsigned int buf2[] = { 10, 11, 12 };
+                                        
+                 NekMatrix<unsigned int> lhs(3, 3, buf1);
+                 NekVector<unsigned int> rhs(3, buf2);
+                 NekVector<unsigned int> result = lhs*rhs;
+ 
+                 BOOST_CHECK_EQUAL(3, result.GetRows());
+ 
+                 BOOST_CHECK_EQUAL(68, result[0]);
+                 BOOST_CHECK_EQUAL(167, result[1]);
+                 BOOST_CHECK_EQUAL(266, result[2]);
+             }
+
+             {
+                 double buf1[] = {1, 2, 3,
+                                 4, 5, 6,
+                                 7, 8, 9};
+                 double buf2[] = { 10, 11, 12};
+ 
+                                  
+                 NekMatrix<double> lhs(3, 3, buf1);
+                 NekVector<double> rhs(3, buf2); 
+                 NekVector<double> result = lhs*rhs;
+ 
+                 BOOST_CHECK(result.GetRows() == 3);
+
+ 
+                 double epsilon = 1e-12;
+                 BOOST_CHECK_CLOSE(result[0], 68.0, epsilon);
+                 BOOST_CHECK_CLOSE(result[1], 167.0, epsilon);
+                 BOOST_CHECK_CLOSE(result[2], 266.0, epsilon);
+             }
+
+             {
+                 double buf1[] = {1, 2, 3,
+                                 4, 5, 6,
+                                 7, 8, 9,
+                                 10, 11, 12};
+                 double buf2[] = { 10, 11, 12};
+ 
+                                  
+                 NekMatrix<double> lhs(4, 3, buf1);
+                 NekVector<double> rhs(3, buf2); 
+                 NekVector<double> result = lhs*rhs;
+ 
+                 BOOST_CHECK(result.GetRows() == 4);
+
+ 
+                 double epsilon = 1e-12;
+                 BOOST_CHECK_CLOSE(result[0], 68.0, epsilon);
+                 BOOST_CHECK_CLOSE(result[1], 167.0, epsilon);
+                 BOOST_CHECK_CLOSE(result[2], 266.0, epsilon);
+                 BOOST_CHECK_CLOSE(result[3], 365.0, epsilon);
+             }
+        }
+
+        void TestScaledFullTimesScaledFull()
+        {
+        }
+
+        void TestScaledFullTimesVector()
+        {
+        }
     }
 }
 

@@ -39,6 +39,7 @@
 #include <UnitTests/LibUtilities/TestMatrixStoragePolicies.h>
 #include <UnitTests/LibUtilities/TestUpperTriangularMatrix.h>
 #include <UnitTests/LibUtilities/TestNekMatrixOperations.h>
+#include <UnitTests/LibUtilities/TestNekMatrixMultiplication.h>
 
 using boost::unit_test_framework::test_suite;
 
@@ -69,6 +70,14 @@ test_suite* init_unit_test_suite( int, char* [] )
 
     test->add(BOOST_TEST_CASE(&Nektar::MatrixSubtractionTests::TestLhsFullRhsFull), 0);
 
+
+    ////////////////////////////////////////////////////
+    // Matrix Multiplication
+    ////////////////////////////////////////////////////
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixMultiplicationTests::TestStandardFullTimesStandardFull), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixMultiplicationTests::TestStandardFullTimesVector), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixMultiplicationTests::TestScaledFullTimesScaledFull), 0);
+    test->add(BOOST_TEST_CASE(&Nektar::MatrixMultiplicationTests::TestScaledFullTimesVector), 0);
     return test;
 }
 

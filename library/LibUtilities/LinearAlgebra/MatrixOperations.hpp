@@ -115,9 +115,9 @@ namespace Nektar
     /// \brief Floating point specialization when blas is in use.
     ///
     /// The signature of this function should match the unspecialized NekMultiply.
-    void NekMultiply(NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& result,
-                     const NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& lhs,
-                     const NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& rhs);
+    void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
+                     const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
+                     const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs);
     #endif //NEKTAR_USING_BLAS
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -144,6 +144,35 @@ namespace Nektar
            result[i] = accum;
        }
     }
+
+    #ifdef NEKTAR_USING_BLAS    
+    /// \brief Floating point specialization when blas is in use.
+    template<unsigned int dim, unsigned int space>
+    void NekMultiply(NekVector<double, dim, space>& result,
+                    const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
+                    const NekVector<double, dim, space>& rhs)
+    {
+        ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+           boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+           std::string(" and a right side vector with row count ") + 
+           boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+
+        result = NekVector<double, dim, space>(lhs.GetRows());
+
+        int m = lhs.GetRows();
+        int n = lhs.GetColumns();
+        double alpha = 1.0;
+        const double* a = lhs.GetRawPtr();
+        int lda = m;
+        const double* x = rhs.GetPtr();
+        int incx = 1;
+        double beta = 0.0;
+        double* y = result.GetPtr();
+        int incy = 1;
+        
+        Blas::Dgemv('T', m, n, alpha, a, lda, x, incx, beta, y, incy);
+    }
+    #endif //NEKTAR_USING_BLAS
 
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
     void NekMultiply(NekVector<DataType, dim, space>& result,

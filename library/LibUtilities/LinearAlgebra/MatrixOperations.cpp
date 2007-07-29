@@ -38,11 +38,11 @@
 namespace Nektar
 {    
     #ifdef NEKTAR_USING_BLAS    
-    void NekMultiply(NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& result,
-                            const NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& lhs,
-                            const NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>& rhs)
+    void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
+                            const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
+                            const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
     {
-        result = NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>(lhs.GetRows(), rhs.GetColumns());
+        result = NekMatrix<double, FullMatrixTag, StandardMatrixTag>(lhs.GetRows(), rhs.GetColumns());
         Blas::Cdgemm(lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(), 1.0,
                     lhs.GetRawPtr(), lhs.GetRows(), rhs.GetRawPtr(), rhs.GetRows(), 0.0, 
                     result.GetRawPtr(), lhs.GetRows());

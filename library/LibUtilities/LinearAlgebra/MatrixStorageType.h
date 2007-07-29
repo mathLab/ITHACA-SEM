@@ -42,7 +42,8 @@ namespace Nektar
     {
         eFULL, 
         eDIAGONAL,
-        eUPPER_TRIANGULAR
+        eUPPER_TRIANGULAR,
+        eLOWER_TRIANGULAR
     };
       
     class FullMatrixTag {};
@@ -72,6 +73,13 @@ namespace Nektar
     {
         public:
             enum { Value = eUPPER_TRIANGULAR };
+    };
+    
+    template<>
+    class ConvertToMatrixStorageEnum<LowerTriangularMatrixTag>
+    {
+        public:
+            enum { Value = eLOWER_TRIANGULAR };
     };
  }   
     

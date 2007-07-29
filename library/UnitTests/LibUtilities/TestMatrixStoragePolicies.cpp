@@ -211,17 +211,15 @@ namespace Nektar
             Policy::SetValue(3,3,2,2,data,50.0);
             BOOST_CHECK_EQUAL(50.0, Policy::GetValue(3,3,2,2,data));
 
-            // Can't set in the lower triangle.
-            BOOST_CHECK_THROW(Policy::SetValue(3,3,1,0,data,8.0), ErrorUtil::NekError);
-            BOOST_CHECK_THROW(Policy::SetValue(3,3,2,0,data,8.0), ErrorUtil::NekError);
-            BOOST_CHECK_THROW(Policy::SetValue(3,3,2,1,data,8.0), ErrorUtil::NekError);
-
             #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
-            {
+                // Can't set in the lower triangle.
+                BOOST_CHECK_THROW(Policy::SetValue(3,3,1,0,data,8.0), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::SetValue(3,3,2,0,data,8.0), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::SetValue(3,3,2,1,data,8.0), ErrorUtil::NekError);
+
                 BOOST_CHECK_THROW(Policy::SetValue(3,4,3,3,data,8.0), ErrorUtil::NekError);
                 BOOST_CHECK_THROW(Policy::SetValue(3,3,4,3,data,8.0), ErrorUtil::NekError);
                 BOOST_CHECK_THROW(Policy::SetValue(3,3,3,4,data,8.0), ErrorUtil::NekError);
-            }
             #endif
         }
         void TestAdvance()

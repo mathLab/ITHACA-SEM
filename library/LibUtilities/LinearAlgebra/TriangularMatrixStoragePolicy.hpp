@@ -98,7 +98,7 @@ namespace Nektar
     class MatrixStoragePolicy<DataType, UpperTriangularMatrixTag> : public TriangularMatrixStoragePolicy<DataType>
     {
         public:
-            typedef TriangularMatrixStoragePolicy<DataType>::BaseType;
+            typedef TriangularMatrixStoragePolicy<DataType> BaseType;
             typedef typename BaseType::GetValueReturnType GetValueReturnType;
             
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
@@ -145,8 +145,7 @@ namespace Nektar
                     
             static unsigned int CalculateIndex(unsigned int totalRows, unsigned int curRow, unsigned int curColumn)
             {
-                unsigned int base = curRow*(-static_cast<int>(curRow) + 1 + 2*totalRows)/2;
-                return static_cast<unsigned int>(base + curColumn - curRow);
+                return curColumn + (2*totalRows - curRow - 1)*(curRow)/2;
             }
     };
     
@@ -157,7 +156,7 @@ namespace Nektar
     class MatrixStoragePolicy<DataType, LowerTriangularMatrixTag>
     {
         public:
-            typedef TriangularMatrixStoragePolicy<DataType>::BaseType;
+            typedef TriangularMatrixStoragePolicy<DataType> BaseType;
             typedef typename BaseType::GetValueReturnType GetValueReturnType;
             
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,

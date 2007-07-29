@@ -125,6 +125,48 @@ namespace Nektar
             typedef NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> ResultType;
     };  
     
+    // Upper triangular row 22
+    template<typename LhsDataType, typename RhsDataType, typename LhsMatrixType, typename RhsMatrixType>
+    class BinaryExpressionTraits<NekMatrix<LhsDataType, UpperTriangularMatrixTag, LhsMatrixType>, 
+                                 NekMatrix<RhsDataType, UpperTriangularMatrixTag, RhsMatrixType>, 
+                                 AddOp>
+    {
+        public:
+            typedef typename NekMatrix<RhsDataType, UpperTriangularMatrixTag, RhsMatrixType>::NumberType NumberType;
+            typedef NekMatrix<NumberType, UpperTriangularMatrixTag, StandardMatrixTag> ResultType;
+    };  
+
+    template<typename LhsDataType, typename RhsDataType, typename LhsMatrixType, typename RhsMatrixType>
+    class BinaryExpressionTraits<NekMatrix<LhsDataType, UpperTriangularMatrixTag, LhsMatrixType>, 
+                                 NekMatrix<RhsDataType, UpperTriangularMatrixTag, RhsMatrixType>, 
+                                 SubtractOp>
+    {
+        public:
+            typedef typename NekMatrix<RhsDataType, UpperTriangularMatrixTag, RhsMatrixType>::NumberType NumberType;
+            typedef NekMatrix<NumberType, UpperTriangularMatrixTag, StandardMatrixTag> ResultType;
+    };  
+
+    // Lower triangular, line 33
+    template<typename LhsDataType, typename RhsDataType, typename LhsMatrixType, typename RhsMatrixType>
+    class BinaryExpressionTraits<NekMatrix<LhsDataType, LowerTriangularMatrixTag, LhsMatrixType>, 
+                                 NekMatrix<RhsDataType, LowerTriangularMatrixTag, RhsMatrixType>, 
+                                 AddOp>
+    {
+        public:
+            typedef typename NekMatrix<RhsDataType, LowerTriangularMatrixTag, RhsMatrixType>::NumberType NumberType;
+            typedef NekMatrix<NumberType, LowerTriangularMatrixTag, StandardMatrixTag> ResultType;
+    };  
+
+    template<typename LhsDataType, typename RhsDataType, typename LhsMatrixType, typename RhsMatrixType>
+    class BinaryExpressionTraits<NekMatrix<LhsDataType, LowerTriangularMatrixTag, LhsMatrixType>, 
+                                 NekMatrix<RhsDataType, LowerTriangularMatrixTag, RhsMatrixType>, 
+                                 SubtractOp>
+    {
+        public:
+            typedef typename NekMatrix<RhsDataType, LowerTriangularMatrixTag, RhsMatrixType>::NumberType NumberType;
+            typedef NekMatrix<NumberType, LowerTriangularMatrixTag, StandardMatrixTag> ResultType;
+    };  
+
     // All multiplications, rows 83 - 163.
     template<typename LhsDataType, typename RhsDataType, typename LhsStorageType, typename RhsStorageType, typename LhsMatrixType, typename RhsMatrixType>
     class BinaryExpressionTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>, NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>, MultiplyOp>

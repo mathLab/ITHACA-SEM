@@ -38,6 +38,7 @@
 
 #include <LibUtilities/LinearAlgebra/MatrixStoragePolicy.hpp>
 #include <boost/call_traits.hpp>
+#include "boost/tuple/tuple.hpp"
 
 namespace Nektar
 {
@@ -138,7 +139,11 @@ namespace Nektar
                     boost::lexical_cast<std::string>(curColumn) + " of a (" +
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-                ASSERTL0(curRow <= curColumn, "Can only assign into the upper triangular portion of an upper triangular matrix.");
+                ASSERTL1(curRow <= curColumn, "Attemping to set element (" +
+                    boost::lexical_cast<std::string>(curRow) + ", " +
+                    boost::lexical_cast<std::string>(curColumn) + ") of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
 
                 data[CalculateIndex(totalRows, curRow, curColumn)] = d;
             }
@@ -146,6 +151,48 @@ namespace Nektar
             static unsigned int CalculateIndex(unsigned int totalRows, unsigned int curRow, unsigned int curColumn)
             {
                 return curColumn + (2*totalRows - curRow - 1)*(curRow)/2;
+            }
+
+            static boost::tuples::tuple<unsigned int, unsigned int> 
+            Advance(const unsigned int totalRows, const unsigned int totalColumns,
+                    const unsigned int curRow, const unsigned int curColumn)
+            {
+                ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
+                ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
+                    boost::lexical_cast<std::string>(curRow) + " of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+                ASSERTL1(curColumn < totalColumns, "Attemping to iterate through an element on row " +
+                    boost::lexical_cast<std::string>(curColumn) + " of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+                ASSERTL1(curRow <= curColumn, "Attemping to iterate through element (" +
+                    boost::lexical_cast<std::string>(curRow) + ", " +
+                    boost::lexical_cast<std::string>(curColumn) + ") of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+
+                unsigned int nextRow = curRow;
+                unsigned int nextColumn = curColumn;
+
+                if( nextColumn < totalColumns )
+                {
+                    ++nextColumn;
+                }
+
+                if( nextColumn >= totalColumns )
+                {
+                    ++nextRow;
+                    nextColumn = nextRow;
+                }
+                
+                if( nextRow >= totalRows )
+                {
+                    nextRow = std::numeric_limits<unsigned int>::max();
+                    nextColumn = std::numeric_limits<unsigned int>::max();
+                }
+
+                return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
             }
     };
     
@@ -196,15 +243,60 @@ namespace Nektar
                     boost::lexical_cast<std::string>(curColumn) + " of a (" +
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-                ASSERTL0(curRow <= curColumn, "Can only assign into the upper triangular portion of an upper triangular matrix.");
+                ASSERTL1(curRow >= curColumn, "Attemping to set element (" +
+                    boost::lexical_cast<std::string>(curRow) + ", " +
+                    boost::lexical_cast<std::string>(curColumn) + ") of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
 
                 data[CalculateIndex(totalRows, curRow, curColumn)] = d;
             }
                     
             static unsigned int CalculateIndex(unsigned int totalRows, unsigned int curRow, unsigned int curColumn)
             {
-                unsigned int base = curRow*(-static_cast<int>(curRow) + 1 + 2*totalRows)/2;
-                return static_cast<unsigned int>(base + curColumn - curRow);
+                return curColumn + curRow*(curRow+1)/2;
+            }
+
+            static boost::tuples::tuple<unsigned int, unsigned int> 
+            Advance(const unsigned int totalRows, const unsigned int totalColumns,
+                    const unsigned int curRow, const unsigned int curColumn)
+            {
+                ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
+                ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
+                    boost::lexical_cast<std::string>(curRow) + " of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
+                ASSERTL1(curColumn < totalColumns, "Attemping to iterate through an element on row " +
+                    boost::lexical_cast<std::string>(curColumn) + " of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
+                ASSERTL1(curRow >= curColumn, "Attemping to iterate through element (" +
+                    boost::lexical_cast<std::string>(curRow) + ", " +
+                    boost::lexical_cast<std::String>(curColumn) + ") of a (" +
+                    boost::lexical_cast<std::string>(totalRows) + ", " +
+                    boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
+
+                unsigned int nextRow = curRow;
+                unsigned int nextColumn = curColumn;
+
+                if( nextColumn < curRow )
+                {
+                    ++nextColumn;
+                }
+
+                if( nextColumn >= curRow )
+                {
+                    ++nextRow;
+                    nextColumn = 0;
+                }
+
+                if( nextRow >= totalRows )
+                {
+                    nextRow = std::numeric_limits<unsigned int>::max();
+                    nextColumn = std::numeric_limits<unsigned int>::max();
+                }
+
+                return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
             }
     };
 }

@@ -43,6 +43,9 @@
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
+#include <LibUtilities/LinearAlgebra/FullMatrixStoragePolicy.hpp>
+#include <LibUtilities/LinearAlgebra/DiagonalMatrixStoragePolicy.hpp>
+#include <LibUtilities/LinearAlgebra/TriangularMatrixStoragePolicy.hpp>
 
 #include <boost/shared_ptr.hpp>
 
@@ -68,7 +71,8 @@ namespace Nektar
             {
                 public:
                     typedef typename MatrixType::InnerType IteratorInnerType;
-                    
+                    typedef MatrixStoragePolicy<NumberType, StorageType> StoragePolicy;
+
                 public:                   
                     iterator_base(MatrixType& m, unsigned int curRow, unsigned int curCol) :
                         m_matrix(m),
@@ -93,26 +97,10 @@ namespace Nektar
                     
                     void operator++()
                     {
-                        if( m_curColumn != std::numeric_limits<unsigned int>::max() )
+                        if( m_curRow != std::numeric_limits<unsigned int>::max() )
                         {
-                            ++m_curColumn;
-                            
-                            if( m_curColumn >= m_matrix.GetColumns() )
-                            {
-                                m_curColumn = 0;
-                                ++m_curRow;
-                                
-                                if( m_curRow >= m_matrix.GetRows() )
-                                {
-                                    m_curColumn = std::numeric_limits<unsigned int>::max();
-                                    m_curRow = std::numeric_limits<unsigned int>::max();
-                                }
-                            }
-                            
-//                             if( m_curColumn != std::numeric_limits<unsigned int>::max() )
-//                             {
-//                                 m_curBlock = m_matrix.GetBlock(m_curRow, m_curColumn);
-//                             }
+                            boost::tie(m_curRow, m_curColumn) = StoragePolicy::Advance(
+                                m_matrix.GetRows(), m_matrix.GetColumns(), m_curRow, m_curColumn);
                         }
                     }
                     

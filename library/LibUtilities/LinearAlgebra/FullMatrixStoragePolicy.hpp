@@ -39,6 +39,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixStoragePolicy.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
+#include "boost/tuple/tuple.hpp"
 
 namespace Nektar
 {
@@ -105,6 +106,32 @@ namespace Nektar
                 data[curRow*totalColumns + curColumn] = d;
             }
             
+            static boost::tuples::tuple<unsigned int, unsigned int> 
+            Advance(const unsigned int totalRows, const unsigned int totalColumns,
+                    const unsigned int curRow, const unsigned int curColumn)
+            {
+                unsigned int nextRow = curRow;
+                unsigned int nextColumn = curColumn;
+
+                if( nextColumn < totalColumns )
+                {
+                    ++nextColumn;
+                }
+
+                if( nextColumn >= totalColumns )
+                {
+                    nextColumn = 0;
+                    ++nextRow;
+                }
+
+                if( nextRow >= totalRows )
+                {
+                    nextRow = std::numeric_limits<unsigned int>::max();
+                    nextColumn = std::numeric_limits<unsigned int>::max();
+                }
+
+                return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
+            }
             
             static void Invert(unsigned int rows, unsigned int columns,
                                Array<OneD, DataType>& data)

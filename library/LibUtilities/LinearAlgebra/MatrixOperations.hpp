@@ -170,7 +170,7 @@ namespace Nektar
         double* y = result.GetPtr();
         int incy = 1;
         
-        Blas::Dgemv('T', m, n, alpha, a, lda, x, incx, beta, y, incy);
+        Blas::Dgemv('T', n, m, alpha, a, n, x, incx, beta, y, incy);
     }
     #endif //NEKTAR_USING_BLAS
 

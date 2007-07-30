@@ -211,6 +211,11 @@ namespace Nektar
                 return m_data;
             }
             
+            DataType Scale() const
+            {
+                return DataType(1);
+            }
+
             DataType* GetRawPtr()
             {
                 return m_data.data();

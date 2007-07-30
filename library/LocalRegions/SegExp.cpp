@@ -66,9 +66,7 @@ namespace Nektar
 
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                StdRegions::eNoShapeType,*this),
-                boost::bind(&SegExp::CreateMatrix, this, _1));
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoShapeType,*this),  boost::bind(&SegExp::CreateMatrix, this, _1));
             }
 
             // Set up unit geometric factors. 
@@ -609,7 +607,8 @@ namespace Nektar
 
             if(!StdMatManagerAlreadyCreated(mkey))
             {
-                SegExpSharedPtr tmp = MemoryManager<SegExp>::AllocateSharedPtr(m_base[0]->GetBasisKey());
+                LibUtilities::BasisKey bkey = m_base[0]->GetBasisKey();
+                SegExpSharedPtr tmp = MemoryManager<SegExp>::AllocateSharedPtr(bkey);
                 
                 return tmp->StdSegExp::GetStdMatrix(mkey);                
             }
@@ -696,11 +695,20 @@ namespace Nektar
                     NekDouble factor = mkey.GetScaleFactor();
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetShapeType(), *this);    
-                    DNekScalMatSharedPtr mass = m_matrixManager[masskey];
+                    DNekScalMatSharedPtr mass = this->m_matrixManager[masskey];
+#if 0
                     MatrixKey lapkey(StdRegions::eLaplacian,
                                      mkey.GetShapeType(), *this);
-                    DNekScalMatSharedPtr lap = m_matrixManager[lapkey];
-                    
+                    DNekScalMatSharedPtr lap = this->m_matrixManager[lapkey];
+#else
+                    MatrixKey lapkey(StdRegions::eLaplacian,
+                                     mkey.GetShapeType(), *this);
+                    DNekMatSharedPtr mat = GetStdMatrix(*lapkey.GetStdMatKey());
+                    NekDouble  gfac = m_metricinfo->GetGmat()[0][0];
+                    NekDouble  jac  = m_metricinfo->GetJac()[0];
+                    NekDouble  fac = gfac*gfac*jac;
+                    DNekScalMatSharedPtr lap = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
+#endif
                     int rows = lap->GetRows();
                     int cols = lap->GetColumns();
                     
@@ -725,6 +733,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.26  2007/07/28 05:09:33  sherwin
+// Fixed version with updated MemoryManager
+//
 // Revision 1.25  2007/07/20 00:45:51  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

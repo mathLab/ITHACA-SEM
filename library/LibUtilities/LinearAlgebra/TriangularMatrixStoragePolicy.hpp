@@ -272,7 +272,7 @@ namespace Nektar
                     boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
                 ASSERTL1(curRow >= curColumn, "Attemping to iterate through element (" +
                     boost::lexical_cast<std::string>(curRow) + ", " +
-                    boost::lexical_cast<std::String>(curColumn) + ") of a (" +
+                    boost::lexical_cast<std::string>(curColumn) + ") of a (" +
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
 

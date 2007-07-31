@@ -51,7 +51,155 @@ namespace Nektar
         {
             // Allocate the storage for points
             Points<double>::CalculatePoints();
-            ASSERTL0(false, "3D Point Expansion Not Implemented Yet");
+
+            int index=0,isum=0;
+            const int offset = 5; //offset to match Datafile
+            NekDouble a,b,c,d;
+            unsigned int numPoints = GetNumPoints();
+
+            // initialize values
+            for(unsigned int i=0; i < numPoints-2; ++i)
+            {
+                index += NodalTetElecNPTS[i];
+            }
+
+            for(unsigned int i=0; i < NodalTetElecNPTS[numPoints-2]; ++i, ++index)
+            {
+                // 1 Point Symmetry: aaaa
+                if(int(NodalTetElecData[index][0]))
+                {
+                    a = NodalTetElecData[index][5];
+                    b = NodalTetElecData[index][6];
+                    c = NodalTetElecData[index][7];
+                    d = NodalTetElecData[index][8];
+
+                    m_points[0][isum] = 2.0*b - 1.0;
+                    m_points[1][isum] = 2.0*c - 1.0;
+                    m_points[2][isum] = 2.0*d - 1.0;
+                    isum++;
+                    continue;
+                }//end symmetry 1
+
+                
+                // 4 Point symmetry: aaab or abbb
+                if(int(NodalTetElecData[index][1]))
+                {
+                    for(unsigned int j=0; j < 4; ++j)
+                    {
+                        a = NodalTetElecData[index][offset + perm4_3d[j][0]];
+                        b = NodalTetElecData[index][offset + perm4_3d[j][1]];
+                        c = NodalTetElecData[index][offset + perm4_3d[j][2]];
+                        d = NodalTetElecData[index][offset + perm4_3d[j][3]];
+                        
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
+                        m_points[2][isum] = 2.0*d - 1.0;
+                        isum++;
+                    }//end j
+                    continue;
+                }//end symmetry 4
+
+                
+                // 6 Point symmetry: aabb
+                if(int(NodalTetElecData[index][2]))
+                {
+                    for(unsigned int j=0; j < 6; ++j)
+                    {
+                        a = NodalTetElecData[index][offset + perm6_3d[j][0]];
+                        b = NodalTetElecData[index][offset + perm6_3d[j][1]];
+                        c = NodalTetElecData[index][offset + perm6_3d[j][2]];
+                        d = NodalTetElecData[index][offset + perm6_3d[j][3]];
+                        
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
+                        m_points[2][isum] = 2.0*d - 1.0;
+                        isum++;
+                    }//end j
+                    continue;   
+                }//end symmetry6                
+                
+
+                // 12 Point symmetry: case aabc
+                if(int(NodalTetElecData[index][3]) == 1)
+                {
+                    for(unsigned int j=0; j < 12; ++j)
+                    {
+                        a = NodalTetElecData[index][offset + perm12A_3d[j][0]];
+                        b = NodalTetElecData[index][offset + perm12A_3d[j][1]];
+                        c = NodalTetElecData[index][offset + perm12A_3d[j][2]];
+                        d = NodalTetElecData[index][offset + perm12A_3d[j][3]];
+                        
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
+                        m_points[2][isum] = 2.0*d - 1.0;
+                        isum++;
+                    }//end j
+                    continue;
+                }//end symmetry 12 aabc
+
+                
+                // 12 Point symmetry: case abcc
+                if(int(NodalTetElecData[index][3]) == 2)
+                {
+                    for(unsigned int j=0; j < 12; ++j)
+                    {
+                        a = NodalTetElecData[index][offset + perm12B_3d[j][0]];
+                        b = NodalTetElecData[index][offset + perm12B_3d[j][1]];
+                        c = NodalTetElecData[index][offset + perm12B_3d[j][2]];
+                        d = NodalTetElecData[index][offset + perm12B_3d[j][3]];
+                        
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
+                        m_points[2][isum] = 2.0*d - 1.0;
+                        isum++;
+                    }//end j
+                    continue;
+                }//end symmetry 12 abcc
+
+
+                // 12 Point symmetry: case abbc
+                if(int(NodalTetElecData[index][3]) == 3)
+                {
+                    for(unsigned int j=0; j < 12; ++j)
+                    {
+                        a = NodalTetElecData[index][offset + perm12C_3d[j][0]];
+                        b = NodalTetElecData[index][offset + perm12C_3d[j][1]];
+                        c = NodalTetElecData[index][offset + perm12C_3d[j][2]];
+                        d = NodalTetElecData[index][offset + perm12C_3d[j][3]];
+                        
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
+                        m_points[2][isum] = 2.0*d - 1.0;
+                        isum++;
+                    }//end j
+                    continue;
+                }//end symmetry 12 abbc
+
+                
+                // 24 Point symmetry: case abcd
+                if(int(NodalTetElecData[index][4]))
+                {
+                    for(unsigned int j=0; j < 24; ++j)
+                    {
+                        a = NodalTetElecData[index][offset + perm24_3d[j][0]];
+                        b = NodalTetElecData[index][offset + perm24_3d[j][1]];
+                        c = NodalTetElecData[index][offset + perm24_3d[j][2]];
+                        d = NodalTetElecData[index][offset + perm24_3d[j][3]];
+                        
+                        m_points[0][isum] = 2.0*b - 1.0;
+                        m_points[1][isum] = 2.0*c - 1.0;
+                        m_points[2][isum] = 2.0*d - 1.0;
+                        isum++;
+                    }//end j
+                    continue;
+                }//end symmetry24abcd
+                                
+
+            }//end npts
+
+            NodalPointReorder3d();
+
+            ASSERTL1((isum==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");            
         }
 
         void NodalTetElec::CalculateWeights()
@@ -81,6 +229,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTetElec.cpp,v $
+* Revision 1.9  2007/07/22 23:03:26  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.8  2007/07/20 00:28:26  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

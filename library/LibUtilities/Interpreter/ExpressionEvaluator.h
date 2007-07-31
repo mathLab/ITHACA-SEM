@@ -312,7 +312,7 @@ private:
 	// the calculation doesn't need to be done for every evaluation. It also performs the
 	// checks to make sure everything is in the correct range so these don't need to be
 	// performed at evaluation either.
-	Node* ExpressionEvaluator::CreateAST(boost::spirit::tree_match<const char*>::tree_iterator const& n);
+	Node* CreateAST(boost::spirit::tree_match<const char*>::tree_iterator const& n);
 
 };
 

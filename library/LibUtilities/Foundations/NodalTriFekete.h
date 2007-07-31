@@ -82,7 +82,8 @@ namespace Nektar
 
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& xi, const ConstArray<OneD, NekDouble>& yi)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& xi,
+                                                                const ConstArray<OneD, NekDouble>& yi)
             {
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
                 CalculateInterpMatrix(xi, yi, interp);
@@ -90,7 +91,7 @@ namespace Nektar
                 unsigned int np = GetTotNumPoints();
                 NekDouble* d = interp.data();
                 boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints, 
-                                                                   np, d));
+                                                                    np, d));
                 return returnval;
             }       
 

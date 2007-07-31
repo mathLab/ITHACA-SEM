@@ -129,9 +129,9 @@ namespace Nektar {
             return (-3 + int(sqrt(1.0 + 8*nBasisFunctions)))/2;
         }
 
-		NekDouble MakeRound(NekDouble x) {
-			return floor(x + 0.5);
-		}
+        NekDouble MakeRound(NekDouble x) {
+            return floor(x + 0.5);
+            }
         
         NekVector<NekDouble> MakeDubinerQuadratureSystem(int nBasisFunctions){
             // Make the vector of integrals: note that each modal basis function integrates to zero except for the 0th degree

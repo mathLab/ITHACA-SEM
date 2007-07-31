@@ -154,7 +154,9 @@ namespace Nektar
            
         // ////////////////////////////////////////
         //        CalculateInterpMatrix()
-        void NodalTriFekete::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia, Array<OneD, NekDouble>& interp){
+        void NodalTriFekete::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia,
+                                                   Array<OneD, NekDouble>& interp)
+        {
              NekVector<NekDouble>  x( m_points[0] );
              NekVector<NekDouble>  y( m_points[1] );
              NekVector<NekDouble> xi( xia );
@@ -169,7 +171,6 @@ namespace Nektar
              }
          }
 
-        
          // ////////////////////////////////////////
         //        CalculateDerivMatrix()
         void NodalTriFekete::CalculateDerivMatrix()
@@ -266,6 +267,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriFekete.cpp,v $
+* Revision 1.19  2007/07/26 22:24:24  ehan
+* conform to Coding Style Standard
+*
 * Revision 1.18  2007/07/22 23:03:27  bnelson
 * Backed out Nektar::ptr.
 *

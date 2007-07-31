@@ -169,7 +169,9 @@ namespace Nektar
 
            // ////////////////////////////////////////
         //        CalculateInterpMatrix()
-        void NodalTriElec::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia, Array<OneD, NekDouble>& interp){
+        void NodalTriElec::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia,
+                                                       Array<OneD, NekDouble>& interp)
+        {
              NekVector<NekDouble>  x( m_points[0] );
              NekVector<NekDouble>  y( m_points[1] );
              NekVector<NekDouble> xi( xia );
@@ -249,7 +251,6 @@ namespace Nektar
                     }
                 }
             }
-
             return;
         }     
     } // end of namespace stdregion
@@ -258,6 +259,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriElec.cpp,v $
+* Revision 1.10  2007/07/26 22:54:40  ehan
+* completed testing and implementation of integration, interpolation, and derivation
+*
 * Revision 1.9  2007/07/22 23:03:26  bnelson
 * Backed out Nektar::ptr.
 *

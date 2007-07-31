@@ -37,6 +37,7 @@
 
 #include <LocalRegions/NodalTriExp.h>
 
+
 namespace Nektar
 {
     namespace LocalRegions 
@@ -562,10 +563,11 @@ namespace Nektar
             if(!StdMatManagerAlreadyCreated(mkey))
             {
                 
+                const LibUtilities::BasisKey& key0 = m_base[0]->GetBasisKey();
+                const LibUtilities::BasisKey& key1 = m_base[1]->GetBasisKey();
+                const LibUtilities::PointsType& pointsType = m_nodalPointsKey->GetPointsType();
                 NodalTriExpSharedPtr tmp = MemoryManager<NodalTriExp>::
-                    AllocateSharedPtr(m_base[0]->GetBasisKey(),
-                                      m_base[1]->GetBasisKey(),
-                                      m_nodalPointsKey->GetPointsType());
+                    AllocateSharedPtr(key0, key1, pointsType);
 
                 return tmp->StdNodalTriExp::GetStdMatrix(mkey);                
             }
@@ -640,6 +642,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.13  2007/07/28 05:09:32  sherwin
+ *    Fixed version with updated MemoryManager
+ *
  *    Revision 1.12  2007/07/20 00:45:50  bnelson
  *    Replaced boost::shared_ptr with Nektar::ptr
  *

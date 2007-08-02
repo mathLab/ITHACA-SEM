@@ -11,8 +11,7 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    //    MultiRegions::ContExpList1DSharedPtr Exp,Sol;
-    MultiRegions::ContField1DSharedPtr Exp,Sol;
+    MultiRegions::ContField1DSharedPtr Exp,Fce;
     int     i,j,k;
     int     order, nq;
     int     coordim;
@@ -73,10 +72,9 @@ int main(int argc, char *argv[])
     // Define Expansion
     const LibUtilities::PointsKey Pkey(nq,Qtype);
     const LibUtilities::BasisKey Bkey(btype,order,Pkey);
+    SpatialDomains::Composite domain = graph1D.GetDomain();
 
-    Exp.reset(new MultiRegions::ContField1D(Bkey,graph1D.GetComposite(0),bcs));
-    
-    //Exp = MemoryManager<MultiRegions::ContExpList1D>::AllocateSharedPtr(Bkey,graph1D.GetComposite(0),bcs);
+    Exp = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(Bkey,domain,bcs);
 
     //----------------------------------------------
     // Define solution to be projected 
@@ -113,57 +111,19 @@ int main(int argc, char *argv[])
 
     for(i = 0; i < nq; ++i)
     {
-        fce[i] = ffunc->Evaluate();
+        fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
     }
-
-#if 1 // constant solution 
-    for(i = 0; i < nq; ++i)
-    {
-        sol[i] = -fce[i]; 
-    }
-#else
-#if 1
-#if 1 // non-zero dirichlet solution 
-    for(i = 0; i < nq; ++i)
-    {
-        sol[i] = cos(M_PI*xc0[i]);
-
-        fce[i] = -(1.0+lambda*M_PI*M_PI)*cos(M_PI*xc0[i]);
-    }
-    Exp->SetBoundaryCondition(0,sol[0]);
-    Exp->SetBoundaryCondition(1,sol[nq-1]);
-#else // zero Dirichlet solution 
-    for(i = 0; i < nq; ++i)
-    {
-        sol[i] = sin(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
-
-        fce[i] = -(1.0+lambda*pow(M_PI/(xc0[nq-1]-xc0[0]),2))*sin(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
-    }
-    Exp->SetBoundaryCondition(0,0.0);
-    Exp->SetBoundaryCondition(1,0.0);
-#endif
-#else // zero neumann solution
-    for(i = 0; i < nq; ++i)
-    {
-        sol[i] = cos(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
-
-        fce[i] = -(1.0+lambda*pow(M_PI/(xc0[nq-1]-xc0[0]),2))*cos(M_PI*(xc0[i] - xc0[0])/(xc0[nq-1]-xc0[0]));
-    }
-    Exp->SetBoundaryCondition(0,0.0);
-    Exp->SetBoundaryCondition(1,0.0);
-#endif
-#endif
 
     //----------------------------------------------
     // Setup Temporary expansion and put in solution
     //Sol = MemoryManager<MultiRegions::ContExpList1D>::AllocateSharedPtr(*Exp);
-    Sol = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(*Exp);
-    Sol->SetPhys(fce);
+    Fce = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(*Exp);
+    Fce->SetPhys(fce);
     //----------------------------------------------
   
     //---------------------------------------------
     // Helmholtz solution taking physical forcing 
-    Exp->HelmSolve(*Sol, lambda);
+    Exp->HelmSolve(*Fce, lambda);
     //---------------------------------------------
     
     //-------------------------------------------
@@ -177,13 +137,24 @@ int main(int argc, char *argv[])
     Exp->WriteToFile(outfile);
     //-------------------------------------------
     
-    //--------------------------------------------
-    // Calculate L_inf error 
-    Sol->SetPhys(sol);
-    cout << "L infinity error: " << Exp->Linf(*Sol) << endl;
-    cout << "L 2 error:        " << Exp->L2  (*Sol) << endl;
-    //--------------------------------------------
-    
+    SpatialDomains::ConstExactSolutionShPtr ex_sol =
+        bcs.GetExactSolution(bcs.GetVariable(0));
+
+    if(ex_sol)
+    {
+        for(i = 0; i < nq; ++i)
+        {
+            fce[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
+        }
+
+        //--------------------------------------------
+        // Calculate L_inf error 
+        Fce->SetPhys(fce);
+        cout << "L infinity error: " << Exp->Linf(*Fce) << endl;
+        cout << "L 2 error:        " << Exp->L2  (*Fce) << endl;
+        //--------------------------------------------
+        
+    }
     return 0;
 }
 

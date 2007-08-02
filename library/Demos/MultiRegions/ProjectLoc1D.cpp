@@ -76,7 +76,8 @@ int main(int argc, char *argv[])
     // Define Expansion
     const LibUtilities::PointsKey Pkey(nq,Qtype);
     const LibUtilities::BasisKey Bkey(btype,order,Pkey);
-    Exp = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(Bkey,graph1D.GetDomain());
+    SpatialDomains::Composite domain = graph1D.GetDomain();
+    Exp = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(Bkey,domain);
     
     //----------------------------------------------
     // Define solution to be projected 

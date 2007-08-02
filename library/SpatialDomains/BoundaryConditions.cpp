@@ -588,47 +588,49 @@ namespace Nektar
         void BoundaryConditions::ReadInitialConditions(TiXmlElement *conditions)
         {
             TiXmlElement *initialConditionsElement = conditions->FirstChildElement("INITIALCONDITIONS");
-            ASSERTL0(initialConditionsElement, "Initial conditions must be specified.");
 
-            TiXmlElement *initialCondition = initialConditionsElement->FirstChildElement("I");
-
-            // All initial conditions are initialized to "0" so they only have to be
-            // partially specified.  That is, not all variables have to have functions
-            // specified.  For those that are missing it is assumed they are "0".
-            for (Variable::iterator varIter = m_Variables.begin();
-                varIter != m_Variables.end(); ++varIter)
+            if (initialConditionsElement)
             {
-                InitialConditionShPtr initialConditionShPtr(MemoryManager<InitialCondition>::AllocateSharedPtr("00.0"));
-                m_InitialConditions[*varIter] = initialConditionShPtr;
-            }
+                TiXmlElement *initialCondition = initialConditionsElement->FirstChildElement("I");
 
-            while (initialCondition)
-            {
-                TiXmlAttribute *initialConditionAttr = initialCondition->FirstAttribute();
-
-                ASSERTL0(initialConditionAttr, "The variable must be specified for the forcing function.");
-                std::string intialConditionAttrName = initialConditionAttr->Name();
-                ASSERTL0(intialConditionAttrName == "VAR", (std::string("Error in initial condition attribute name: ") + intialConditionAttrName).c_str());
-
-                std::string initialConditionStr = initialConditionAttr->Value();
-
-                TiXmlAttribute *functionAttr = initialConditionAttr->Next();
-                if (functionAttr)
+                // All initial conditions are initialized to "0" so they only have to be
+                // partially specified.  That is, not all variables have to have functions
+                // specified.  For those that are missing it is assumed they are "0".
+                for (Variable::iterator varIter = m_Variables.begin();
+                    varIter != m_Variables.end(); ++varIter)
                 {
-                    InitialConditionsMap::iterator initialConditionFcnsIter =
-                        m_InitialConditions.find(initialConditionStr);
-
-                    if (initialConditionFcnsIter != m_InitialConditions.end())
-                    {
-                        m_InitialConditions[initialConditionStr]->SetEquation(functionAttr->Value());
-                    }
-                    else
-                    {
-                        NEKERROR(ErrorUtil::efatal, (std::string("Error setting initial condition for variable: ") + initialConditionStr).c_str());
-                    }
+                    InitialConditionShPtr initialConditionShPtr(MemoryManager<InitialCondition>::AllocateSharedPtr("00.0"));
+                    m_InitialConditions[*varIter] = initialConditionShPtr;
                 }
 
-                initialCondition = initialCondition->NextSiblingElement("I");
+                while (initialCondition)
+                {
+                    TiXmlAttribute *initialConditionAttr = initialCondition->FirstAttribute();
+
+                    ASSERTL0(initialConditionAttr, "The variable must be specified for the forcing function.");
+                    std::string intialConditionAttrName = initialConditionAttr->Name();
+                    ASSERTL0(intialConditionAttrName == "VAR", (std::string("Error in initial condition attribute name: ") + intialConditionAttrName).c_str());
+
+                    std::string initialConditionStr = initialConditionAttr->Value();
+
+                    TiXmlAttribute *functionAttr = initialConditionAttr->Next();
+                    if (functionAttr)
+                    {
+                        InitialConditionsMap::iterator initialConditionFcnsIter =
+                            m_InitialConditions.find(initialConditionStr);
+
+                        if (initialConditionFcnsIter != m_InitialConditions.end())
+                        {
+                            m_InitialConditions[initialConditionStr]->SetEquation(functionAttr->Value());
+                        }
+                        else
+                        {
+                            NEKERROR(ErrorUtil::efatal, (std::string("Error setting initial condition for variable: ") + initialConditionStr).c_str());
+                        }
+                    }
+
+                    initialCondition = initialCondition->NextSiblingElement("I");
+                }
             }
         }
 

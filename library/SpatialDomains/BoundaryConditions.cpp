@@ -101,6 +101,7 @@ namespace Nektar
             if (parametersElement)
             {
                 TiXmlElement *parameter = parametersElement->FirstChildElement("P");
+                LibUtilities::ExpressionEvaluator expEvaluator;
 
                 // Multiple nodes will only occur if there is a comment in between
                 // definitions.
@@ -117,12 +118,24 @@ namespace Nektar
                     {
                         // Format is "paramName = value"
                         std::string line = node->ToText()->Value();
-                        std::string symbol;
-                        double value;
 
-                        if (ParseUtils::ParseRealAssignment(line.c_str(), symbol, value))
+                        /// Pull out lhs and rhs and eliminate any spaces.
+                        std::string lhs = line.substr(line.find_first_not_of(" "), line.find_first_of("="));
+                        lhs = lhs.substr(0, lhs.find_last_not_of(" ")+1);
+
+                        std::string rhs = line.substr(line.find_last_of("=")+1);
+                        rhs = rhs.substr(rhs.find_first_not_of(" "));
+                        rhs = rhs.substr(0, rhs.find_last_not_of(" ")+1);
+
+                        /// We want the list of parameters to have their RHS evaluated,
+                        /// so we use the expression evaluator to do the dirty work.
+                        if (!lhs.empty() && !rhs.empty())
                         {
-                            m_Parameters[symbol] = value;
+                            NekDouble value=0.0;
+                            expEvaluator.DefineFunction("", rhs);
+                            value =  expEvaluator.Evaluate();
+                            m_Parameters[lhs] = value;
+                            expEvaluator.SetParameter(lhs, value);
                         }
                     }
 

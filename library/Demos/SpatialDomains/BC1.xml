@@ -8,6 +8,8 @@
             <P> Lambda = 10 </P>
             <!-- Some comment here -->
             <P> Tolerance = 0.0000000001 </P>
+            <P> Test = 2.0*Tolerance </P>
+            <P> Test2 = Test * Lambda </P>
         </PARAMETERS>
 
         <FUNCTIONS>

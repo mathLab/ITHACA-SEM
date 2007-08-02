@@ -10,6 +10,13 @@
             <P> Tolerance = 0.0000000001 </P>
         </PARAMETERS>
 
+        <FUNCTIONS>
+            <F LHS="F1" VALUE="2.0*sin(x)" />
+            <F LHS="F2" VALUE="3.0*cos(x)" />
+            <F LHS="F3" VALUE="tan(x)" />
+            <F LHS="F4" VALUE="5.0*sec(x)" />
+        </FUNCTIONS>
+
         <!--One of these for each dimension. These are the vector components, say,
         s = (u,v); comprised of two components in this example for a 2D
         dimension.-->
@@ -40,7 +47,7 @@
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
                 <D VAR="u" VALUE="6.789" />
-                <N VAR="v" VALUE="g(x,y)" />
+                <D VAR="v" VALUE="F1" />
             </REGION>
 
             <!-- Notice that the variable order has been reversed. -->
@@ -60,17 +67,17 @@
 
         <FORCING>
             <F VAR="u" VALUE="5.0*sin(x)" />
-            <F VAR="v" VALUE="g(x,y,z,t)" />
+            <F VAR="v" VALUE="F1" />
         </FORCING>
 
         <INITIALCONDITIONS>
-            <I VAR ="u" VALUE="12.345" />
-            <I VAR ="v" VALUE="g(x,y,z)" />
+            <F VAR ="u" VALUE="12.345" />
+            <F VAR ="v" VALUE="F2" />
         </INITIALCONDITIONS>
 
         <EXACTSOLUTION>
-            <E VAR="u" VALUE="23.456*x + y" />
-            <E VAR="v" VALUE="x*y" />
+            <F VAR="u" VALUE="F3" />
+            <F VAR="v" VALUE="x*y" />
         </EXACTSOLUTION>
     </CONDITIONS>
 </NEKTAR>

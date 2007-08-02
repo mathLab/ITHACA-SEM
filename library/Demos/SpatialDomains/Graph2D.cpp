@@ -35,26 +35,40 @@ int main(int argc, char *argv[]){
     graph2D.Read(in);
     bcs.Read(bcfile);
 
-    ConstForcingFunctionShPtr ffunc  = bcs.GetForcingFunction("u");
-    NekDouble val = ffunc->Evaluate(8.0);
-    
-    ConstInitialConditionShPtr ic = bcs.GetInitialCondition("u");
-    val = ic->Evaluate();
-
-    NekDouble tolerance = bcs.GetParameter("Tolerance");
-
-    BoundaryConditionCollection &bConditions = bcs.GetBoundaryConditions();
-
-    BoundaryConditionShPtr bcShPtr = (*bConditions[0])["u"];
-
-    if (bcShPtr->GetBoundaryConditionType() == eDirichlet)
+    try
     {
-        DirichletBCShPtr dirichletBCShPtr = boost::static_pointer_cast<DirichletBoundaryCondition>(bcShPtr);
-        NekDouble val = dirichletBCShPtr->m_DirichletCondition.Evaluate();
-    }
+        ConstForcingFunctionShPtr ffunc  = bcs.GetForcingFunction("u");
+        NekDouble val = ffunc->Evaluate(8.0);
+        
+        ConstForcingFunctionShPtr ffunc2  = bcs.GetForcingFunction("v");
+        val = ffunc->Evaluate(1.5);
+        
+        ConstInitialConditionShPtr ic = bcs.GetInitialCondition("v");
+        val = ic->Evaluate(1.5);
 
-    ConstExactSolutionShPtr es = bcs.GetExactSolution("u");
-    val = es->Evaluate(2.0, 4.0);
+        NekDouble tolerance = bcs.GetParameter("Tolerance");
+
+        BoundaryConditionCollection &bConditions = bcs.GetBoundaryConditions();
+
+        BoundaryConditionShPtr bcShPtr = (*bConditions[0])["v"];
+
+        if (bcShPtr->GetBoundaryConditionType() == eDirichlet)
+        {
+            DirichletBCShPtr dirichletBCShPtr = boost::static_pointer_cast<DirichletBoundaryCondition>(bcShPtr);
+            val = dirichletBCShPtr->m_DirichletCondition.Evaluate(1.5);
+        }
+
+        std::string fcn1 = bcs.GetFunction("F1");
+        std::string fcn2 = bcs.GetFunction("F2");
+        std::string fcn3 = bcs.GetFunction("F3");
+        std::string fcn4 = bcs.GetFunction("F4");
+
+        Equation eqn1 = bcs.GetFunctionAsEquation("F3");
+    }
+    catch(std::string err)
+    {
+        cout << err << endl;
+    }
     
     return 0;
 }

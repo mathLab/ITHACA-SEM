@@ -100,6 +100,8 @@ namespace Nektar
                 void AddElmtConnected(int gvo_id, int locid);
                 int  NumElmtConnected() const;
                 bool IsElmtConnected(int gvo_id, int locid) const;
+                void GetCoords(double &x, double &y, double &z);
+                void GetCoords(Array<OneD,NekDouble> &coords);
                 void UpdatePosition(double x, double y, double z);
 
                 inline int GetCoordim() const
@@ -176,6 +178,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.9  2007/07/22 23:04:23  bnelson
+// Backed out Nektar::ptr.
+//
 // Revision 1.8  2007/07/20 02:15:08  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

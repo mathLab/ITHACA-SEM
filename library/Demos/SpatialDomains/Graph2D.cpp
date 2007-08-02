@@ -64,6 +64,8 @@ int main(int argc, char *argv[]){
         std::string fcn4 = bcs.GetFunction("F4");
 
         Equation eqn1 = bcs.GetFunctionAsEquation("F3");
+
+        ConstExpansionElementShPtr exp = bcs.GetExpansionElement(0);
     }
     catch(std::string err)
     {

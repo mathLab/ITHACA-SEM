@@ -223,53 +223,52 @@ namespace Nektar
             {
                 exp_size[i] = (*m_exp)[i]->GetNcoeffs();
             }
-            
+
             BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size[0],exp_size[0]);
             
             //InvMass = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size,exp_size);
             // Cannot get this call to work with array of integers
             
-
+            
             for(i = 0; i < n_exp; ++i)
             {
-                LocalRegions::MatrixKey mkey(mtype, (*m_exp)[i]->DetShapeType(),*(*m_exp)[i],scalar);
+                LocalRegions::MatrixKey mkey(mtype,(*m_exp)[i]->DetShapeType(),*((*m_exp)[i]),scalar);
                 loc_mat = (*m_exp)[i]->GetLocMatrix(mkey);
+                
                 BlkMatrix->SetBlock(i,i,loc_mat);
-
-                cout<< "Expansion " << i << " Pointer: "  << loc_mat->GetOwnedMatrix() << endl;
             }
             
             return BlkMatrix;
         }
-
         
-    void ExpList::GeneralMatrixOp(const StdRegions::MatrixType mtype,
-                                        const ConstArray<OneD,NekDouble> &inarray,                     
+        
+        void ExpList::GeneralMatrixOp(const StdRegions::MatrixType mtype,
+                                      const ConstArray<OneD,NekDouble> &inarray,                     
                                       Array<OneD, NekDouble>    &outarray,
                                       NekDouble lambda)
         {
-        int  i;
-        int  cnt  = 0;
-        int  cnt1 = 0;
+            int  i;
+            int  cnt  = 0;
+            int  cnt1 = 0;
             ConstArray<OneD,NekDouble> e_inarray;
             Array<OneD,NekDouble>      e_outarray;
-
-        for(i= 0; i < GetExpSize(); ++i)
-        {
-        (*m_exp)[i]->GeneralMatrixOp(mtype, e_inarray = inarray + cnt, 
+            
+            for(i= 0; i < GetExpSize(); ++i)
+            {
+                (*m_exp)[i]->GeneralMatrixOp(mtype, e_inarray = inarray + cnt, 
                                              e_outarray = outarray+cnt,lambda);
-        cnt   += (*m_exp)[i]->GetNcoeffs();
-        }        
+                cnt   += (*m_exp)[i]->GetNcoeffs();
+            }        
         }
-
+        
         void ExpList::BwdTrans(const ExpList &Sin)
         {
             ASSERTL2(Sin.GetTransState() == eLocal ||
                      Sin.GetTransState() == eLocalCont, 
                      "Error input state is not in transformed space");
-
+            
             BwdTrans(Sin.GetCoeffs(),m_phys);
-        m_physState = true;
+            m_physState = true;
         }
         
         void ExpList::BwdTrans(const ConstArray<OneD, NekDouble> &inarray,

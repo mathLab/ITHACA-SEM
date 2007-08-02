@@ -76,7 +76,7 @@ namespace Nektar
 	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,cmps);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
-	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs);
+	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
 	}
               
 	void ContExpList1D::IProductWRTBase(const ExpList &In)
@@ -217,6 +217,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.20  2007/07/29 07:45:30  sherwin
+* Updated for new memory manager call
+*
 * Revision 1.19  2007/07/27 03:10:48  bnelson
 * Fixed g++ compile error.
 *

@@ -92,8 +92,11 @@ namespace Nektar
                     
                     if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
+                        Array<OneD,NekDouble> coords(3,0.0);
+
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
-                        p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(LocBCond)->m_DirichletCondition.Evaluate());
+                        vert->GetCoords(coords);
+                        p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(LocBCond)->m_DirichletCondition.Evaluate(coords[0],coords[1],coords[2]));
 
 
                         m_bndConstraint.push_back(p_exp);
@@ -118,16 +121,18 @@ namespace Nektar
                     
                     if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
+                        Array<OneD,NekDouble> coords(3,0.0);
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
+                        vert->GetCoords(coords);
 
                         if(BCtype == SpatialDomains::eNeumann)
                         {
-                            p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(LocBCond)->m_NeumannCondition.Evaluate());
+                            p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(LocBCond)->m_NeumannCondition.Evaluate(coords[0],coords[1],coords[2]));
                         }
                         else // Robin boundary condition
                         {
                             boost::shared_ptr<SpatialDomains::RobinBoundaryCondition> robinBC  = boost::static_pointer_cast<SpatialDomains::RobinBoundaryCondition>(LocBCond);
-                            p_exp->SetValue(robinBC->m_a.Evaluate()/robinBC->m_b.Evaluate());
+                            p_exp->SetValue(robinBC->m_a.Evaluate(coords[0],coords[1],coords[2])/robinBC->m_b.Evaluate(coords[0],coords[1],coords[2]));
 
                         }
 
@@ -176,8 +181,9 @@ namespace Nektar
             int i;
             int NumDirBcs = m_locToGloMap->GetNumDirichletBCs();
             Array<OneD,NekDouble> sln;
-            Array<OneD,NekDouble> init    = Array<OneD,NekDouble>(m_contNcoeffs);
-            Array<OneD,NekDouble> Dir_fce = Array<OneD,NekDouble>(m_contNcoeffs);
+            Array<OneD,NekDouble> init(m_contNcoeffs,0.0);
+            Array<OneD,NekDouble> Dir_fce(m_contNcoeffs,0.0);
+
             //assume m_contCoeffs contains initial estimate
             // Set BCs in m_contCoeffs
             Blas::Dcopy(m_contNcoeffs,&m_contCoeffs[0],1,&init[0],1);

@@ -115,6 +115,7 @@ namespace Nektar
         };
 
         typedef std::map<std::string, NekDouble> ParamMap;
+        typedef std::map<std::string, std::string> FunctionMap;
         typedef std::vector<std::string> Variable;
 
         typedef std::vector<Composite> BoundaryRegion;
@@ -154,7 +155,7 @@ namespace Nektar
             void Read(std::string &infilename);
             void Read(TiXmlDocument &doc);
 
-            NekDouble GetParameter(const std::string &parmName);
+            static NekDouble GetParameter(const std::string &parmName);
 
             BoundaryRegionCollection &GetBoundaryRegions(void) 
             {
@@ -187,7 +188,6 @@ namespace Nektar
 
             const std::string &GetVariable(const int indx)
             {
-
                 ASSERTL0(0 <= indx && indx < m_Variables.size(),"indx is out of range");
                 return m_Variables[indx];
             }
@@ -197,9 +197,19 @@ namespace Nektar
                 return m_Parameters;
             }
 
+            const std::string &GetFunction(const std::string &lhs);
+            Equation GetFunctionAsEquation(const std::string &lhs);
+
+            /// Will look for the lhs equal to str and if found
+            /// will return the function in str and return true.
+            /// If not found it will return false and leave str
+            /// as it was coming in.
+            bool SubstituteFunction(std::string &str);
+
         protected:
             void ReadParameters(TiXmlElement *parameters);
             void ReadVariables(TiXmlElement *variables);
+            void ReadFunctions(TiXmlElement *conditions);
             void ReadBoundaryRegions(TiXmlElement *regions);
             void ReadExpansionTypes(TiXmlElement *types);
             void ReadBoundaryConditions(TiXmlElement *conditions);
@@ -209,6 +219,7 @@ namespace Nektar
 
             // Containers to hold conditions and associated data
             static ParamMap m_Parameters;
+            FunctionMap m_Functions;
             Variable m_Variables;
             BoundaryRegionCollection m_BoundaryRegions;
             BoundaryConditionCollection m_BoundaryConditions;

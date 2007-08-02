@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Equation.hpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Equation.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -42,7 +42,7 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        ExpressionEvaluator Equation::m_evaluator;
+        LibUtilities::ExpressionEvaluator Equation::m_evaluator;
     }
 }
 

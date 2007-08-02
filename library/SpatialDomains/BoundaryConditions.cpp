@@ -83,6 +83,7 @@ namespace Nektar
 
             // Now read all the different tagged sections
             ReadParameters(conditions);
+            ReadFunctions(conditions);
             ReadVariables(conditions);
             ReadBoundaryRegions(conditions);
             ReadExpansionTypes(conditions);
@@ -130,6 +131,32 @@ namespace Nektar
 
                 // Set ourselves up for evaluation later.
                 Equation::SetConstParameters(m_Parameters);
+            }
+        }
+
+        void BoundaryConditions::ReadFunctions(TiXmlElement *conditions)
+        {
+            TiXmlElement *functionElement = conditions->FirstChildElement("FUNCTIONS");
+
+            if (functionElement)
+            {
+                TiXmlElement *function = functionElement->FirstChildElement("F");
+
+                while (function)
+                {
+                    std::string lhsString = function->Attribute("LHS");
+                    ASSERTL0(!lhsString.empty(), "Unable to find LHS value.");
+
+                    std::string fcnString = function->Attribute("VALUE");
+                    ASSERTL0(!fcnString.empty(), "Unable to find function value.");
+
+                    FunctionMap::iterator fcnIter = m_Functions.find(lhsString);
+                    ASSERTL0(fcnIter == m_Functions.end(),
+                        (std::string("Function value: ") + lhsString + std::string("already specified.")).c_str());
+
+                    m_Functions[lhsString] = fcnString;
+                    function = function->NextSiblingElement("F");
+                }
             }
         }
 
@@ -325,20 +352,12 @@ namespace Nektar
                     Variable::iterator iter;
                     std::string attrName;
 
-                    if (attr)
+                    attrData = conditionElement->Attribute("VAR");
+
+                    if (!attrData.empty())
                     {
-                        attrName = attr->Name();
-
-                        ASSERTL0(attrName == "VAR", "First attribute must be VAR.");
-
-                        attrData = attr->Value();
-
-                        if (!attrData.empty())
-                        {
-                            iter = std::find(m_Variables.begin(), m_Variables.end(), attrData);
-
-                            ASSERTL0(iter != m_Variables.end(), (std::string("Cannot find variable: ") + attrData).c_str());
-                        }
+                        iter = std::find(m_Variables.begin(), m_Variables.end(), attrData);
+                        ASSERTL0(iter != m_Variables.end(), (std::string("Cannot find variable: ") + attrData).c_str());
                     }
 
                     if (conditionType == "N")
@@ -366,8 +385,9 @@ namespace Nektar
                                 ASSERTL0(attrName == "VALUE", (std::string("Unknown attribute: ") + attrName).c_str());
 
                                 attrData = attr->Value();
+                                ASSERTL0(!attrData.empty(), "VALUE attribute must be specified.");
 
-                                ASSERTL0(!attrData.empty(), "VALUE attribute must have associated value.");
+                                SubstituteFunction(attrData);
 
                                 BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(attrData));
                                 (*boundaryConditions)[*iter]  = neumannCondition;
@@ -405,8 +425,9 @@ namespace Nektar
                                 ASSERTL0(attrName == "VALUE", (std::string("Unknown attribute: ") + attrName).c_str());
 
                                 attrData = attr->Value();
-
                                 ASSERTL0(!attrData.empty(), "VALUE attribute must have associated value.");
+
+                                SubstituteFunction(attrData);
 
                                 BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(attrData));
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
@@ -443,12 +464,12 @@ namespace Nektar
                                 std::string attrData1, attrData2;
 
                                 attrName1 = attr->Name();
-
                                 ASSERTL0(attrName1 == "A", (std::string("Unknown attribute: ") + attrName1).c_str());
 
                                 attrData1 = attr->Value();
-
                                 ASSERTL0(!attrData1.empty(), "A attributes must have associated values.");
+
+                                SubstituteFunction(attrData1);
 
                                 attr = attr->Next();
                                 ASSERTL0(attr, "Unable to read B attribute.");
@@ -457,8 +478,9 @@ namespace Nektar
                                 ASSERTL0(attrName2 == "B", (std::string("Unknown attribute: ") + attrName2).c_str());
 
                                 attrData2 = attr->Value();
-
                                 ASSERTL0(!attrData2.empty(), "B attributes must have associated values.");
+
+                                SubstituteFunction(attrData2);
 
                                 BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(attrData1, attrData2));
                                 (*boundaryConditions)[*iter]  = robinCondition;
@@ -504,29 +526,27 @@ namespace Nektar
 
                 while (forcingFunction)
                 {
-                    TiXmlAttribute *variableAttr = forcingFunction->FirstAttribute();
+                    std::string variableStr = forcingFunction->Attribute("VAR");
+                    ASSERTL0(!variableStr.empty(), "The variable must be specified for the forcing function.");
 
-                    ASSERTL0(variableAttr, "The variable must be specified for the forcing function.");
-                    std::string variableAttrName = variableAttr->Name();
-                    ASSERTL0(variableAttrName == "VAR", (std::string("Error in forcing function attribute name: ") + variableAttrName).c_str());
+                    std::string fcnStr = forcingFunction->Attribute("VALUE");
+                    ASSERTL0(!fcnStr.empty(),
+                        (std::string("Forcing function for var: ") + variableStr + std::string(" must be specified.")).c_str());
 
-                    std::string variableStr = variableAttr->Value();
+                    /// Check the RHS against the functions defined in m_Functions.  If the name on the RHS
+                    /// is found in the function map, then use the function contained in the function
+                    /// map in place of the RHS.
+                    SubstituteFunction(fcnStr);
 
-                    TiXmlAttribute *functionAttr = variableAttr->Next();
-                    if (functionAttr)
+                    ForcingFunctionsMap::iterator forcingFcnsIter = m_ForcingFunctions.find(variableStr);
+
+                    if (forcingFcnsIter != m_ForcingFunctions.end())
                     {
-                       std::string fcnStr = functionAttr->Name();
-                       ASSERTL0(fcnStr == "VALUE", (std::string("Missing VALUE tag specifying forcing function for variable: ") + variableAttrName).c_str());
-                       ForcingFunctionsMap::iterator forcingFcnsIter = m_ForcingFunctions.find(variableStr);
-
-                        if (forcingFcnsIter != m_ForcingFunctions.end())
-                        {
-                            m_ForcingFunctions[variableStr]->SetEquation(functionAttr->Value());
-                        }
-                        else
-                        {
-                            NEKERROR(ErrorUtil::efatal, (std::string("Error setting forcing function for variable: ") + variableStr).c_str());
-                        }
+                        m_ForcingFunctions[variableStr]->SetEquation(fcnStr);
+                    }
+                    else
+                    {
+                        NEKERROR(ErrorUtil::efatal, (std::string("Error setting forcing function for variable: ") + variableStr).c_str());
                     }
 
                     forcingFunction = forcingFunction->NextSiblingElement("F");
@@ -540,7 +560,7 @@ namespace Nektar
 
             if (exactSolutionElement)
             {
-                TiXmlElement *exactSolution = exactSolutionElement->FirstChildElement("E");
+                TiXmlElement *exactSolution = exactSolutionElement->FirstChildElement("F");
 
                 // All exact solution functions are initialized to "0" so they only have to be
                 // partially specified.  That is, not all variables have to have functions
@@ -554,33 +574,30 @@ namespace Nektar
 
                 while (exactSolution)
                 {
-                    TiXmlAttribute *variableAttr = exactSolution->FirstAttribute();
+                    std::string variableStr = exactSolution->Attribute("VAR");
+                    ASSERTL0(!variableStr.empty(), "The variable must be specified for the exact solution.");
 
-                    ASSERTL0(variableAttr, "The variable must be specified for the exact solution.");
-                    std::string variableAttrName = variableAttr->Name();
-                    ASSERTL0(variableAttrName == "VAR", (std::string("Error in exact solution attribute name: ") + variableAttrName).c_str());
+                    std::string fcnStr = exactSolution->Attribute("VALUE");
+                    ASSERTL0(!fcnStr.empty(),
+                        (std::string("The exact solution function must be specified for variable: ") + variableStr).c_str());
 
-                    std::string variableStr = variableAttr->Value();
+                    /// Check the RHS against the functions defined in m_Functions.  If the name on the RHS
+                    /// is found in the function map, then use the function contained in the function
+                    /// map in place of the RHS.
+                    SubstituteFunction(fcnStr);
 
-                    TiXmlAttribute *solnAttr = variableAttr->Next();
-                    if (solnAttr)
+                    ExactSolutionMap::iterator exactSolutionIter = m_ExactSolution.find(variableStr);
+
+                    if (exactSolutionIter != m_ExactSolution.end())
                     {
-                        std::string solnValStr = solnAttr->Name();
-                        ASSERTL0(solnValStr == "VALUE", "Missing VALUE tag specifying exact solution.");
-
-                        ExactSolutionMap::iterator exactSolutionIter = m_ExactSolution.find(variableStr);
-
-                        if (exactSolutionIter != m_ExactSolution.end())
-                        {
-                            m_ExactSolution[variableStr]->SetEquation(solnAttr->Value());
-                        }
-                        else
-                        {
-                            NEKERROR(ErrorUtil::efatal, (std::string("Error setting exact solution for variable: ") + variableStr).c_str());
-                        }
+                        m_ExactSolution[variableStr]->SetEquation(fcnStr);
+                    }
+                    else
+                    {
+                        NEKERROR(ErrorUtil::efatal, (std::string("Error setting exact solution for variable: ") + variableStr).c_str());
                     }
 
-                    exactSolution = exactSolution->NextSiblingElement("E");
+                    exactSolution = exactSolution->NextSiblingElement("F");
                 }
             }
         }
@@ -591,7 +608,7 @@ namespace Nektar
 
             if (initialConditionsElement)
             {
-                TiXmlElement *initialCondition = initialConditionsElement->FirstChildElement("I");
+                TiXmlElement *initialCondition = initialConditionsElement->FirstChildElement("F");
 
                 // All initial conditions are initialized to "0" so they only have to be
                 // partially specified.  That is, not all variables have to have functions
@@ -605,31 +622,32 @@ namespace Nektar
 
                 while (initialCondition)
                 {
-                    TiXmlAttribute *initialConditionAttr = initialCondition->FirstAttribute();
+                    std::string variableStr = initialCondition->Attribute("VAR");
+                    ASSERTL0(!variableStr.empty(), "The variable must be specified for the exact solution.");
 
-                    ASSERTL0(initialConditionAttr, "The variable must be specified for the forcing function.");
-                    std::string intialConditionAttrName = initialConditionAttr->Name();
-                    ASSERTL0(intialConditionAttrName == "VAR", (std::string("Error in initial condition attribute name: ") + intialConditionAttrName).c_str());
+                    std::string fcnStr = initialCondition->Attribute("VALUE");
+                    ASSERTL0(!fcnStr.empty(),
+                        (std::string("The initial condition function must be specified for variable: ") + variableStr).c_str());
 
-                    std::string initialConditionStr = initialConditionAttr->Value();
+                    /// Check the RHS against the functions defined in m_Functions.  If the name on the RHS
+                    /// is found in the function map, then use the function contained in the function
+                    /// map in place of the RHS.
+                    SubstituteFunction(fcnStr);
 
-                    TiXmlAttribute *functionAttr = initialConditionAttr->Next();
-                    if (functionAttr)
+                    InitialConditionsMap::iterator initialConditionFcnsIter =
+                        m_InitialConditions.find(variableStr);
+
+                    if (initialConditionFcnsIter != m_InitialConditions.end())
                     {
-                        InitialConditionsMap::iterator initialConditionFcnsIter =
-                            m_InitialConditions.find(initialConditionStr);
-
-                        if (initialConditionFcnsIter != m_InitialConditions.end())
-                        {
-                            m_InitialConditions[initialConditionStr]->SetEquation(functionAttr->Value());
-                        }
-                        else
-                        {
-                            NEKERROR(ErrorUtil::efatal, (std::string("Error setting initial condition for variable: ") + initialConditionStr).c_str());
-                        }
+                        m_InitialConditions[variableStr]->SetEquation(fcnStr);
+                    }
+                    else
+                    {
+                        NEKERROR(ErrorUtil::efatal,
+                            (std::string("Error setting initial condition for variable: ") + variableStr).c_str());
                     }
 
-                    initialCondition = initialCondition->NextSiblingElement("I");
+                    initialCondition = initialCondition->NextSiblingElement("F");
                 }
             }
         }
@@ -642,6 +660,42 @@ namespace Nektar
                 (std::string("Unable to find requested parameter: ") + parmName).c_str());
 
             return paramMapIter->second;
+        }
+
+
+        const std::string &BoundaryConditions::GetFunction(const std::string &lhs)
+        {
+            FunctionMap::iterator fcnIter = m_Functions.find(lhs);
+
+            ASSERTL1(fcnIter != m_Functions.end(),
+                (std::string("Unable to find requested function: ") + lhs).c_str());
+
+            return fcnIter->second;
+        }
+
+        Equation BoundaryConditions::GetFunctionAsEquation(const std::string &lhs)
+        {
+            FunctionMap::iterator fcnIter = m_Functions.find(lhs);
+
+            ASSERTL1(fcnIter != m_Functions.end(),
+                (std::string("Unable to find requested function: ") + lhs).c_str());
+
+            return Equation(fcnIter->second);
+        }
+
+
+        bool BoundaryConditions::SubstituteFunction(std::string &str)
+        {
+            FunctionMap::iterator fcnIter = m_Functions.find(str);
+            bool returnval = false;
+
+            if (fcnIter != m_Functions.end())
+            {
+                str = fcnIter->second;
+                returnval = true;
+            }
+
+            return returnval;
         }
 
         ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(int indx) const

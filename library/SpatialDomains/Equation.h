@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Equation.hpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Equation.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -47,6 +47,12 @@ namespace Nektar
         class Equation
         {
         public:
+
+            Equation(const Equation &eqn):
+              m_eqn(eqn.m_eqn)
+            {
+            }
+
             Equation(const std::string &eqn):
               m_eqn(eqn)
             {
@@ -76,7 +82,7 @@ namespace Nektar
 
         private:
             std::string m_eqn;
-            static ExpressionEvaluator m_evaluator;
+            static LibUtilities::ExpressionEvaluator m_evaluator;
         };
     }
 }

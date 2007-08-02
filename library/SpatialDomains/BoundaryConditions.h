@@ -61,6 +61,24 @@ namespace Nektar
             eRobin
         };
 
+        enum ExpansionType
+        {
+            eNoExpansionType,
+            eModified,
+            eOrthogonal,
+
+            eExpanionTypeSize
+        };
+
+        // Keep this consistent with the enums in ExpansionType.
+        // This is used in the BC file to specify the expansion type.
+        const std::string kExpansionTypeStr[] = 
+        {
+            "NOTYPE",
+            "MODIFIED",
+            "ORTHOGONAL"
+        };
+
         struct BoundaryConditionBase
         {
             BoundaryConditionBase(BoundaryConditionType type):
@@ -146,6 +164,22 @@ namespace Nektar
         typedef boost::shared_ptr<const InitialCondition> ConstInitialConditionShPtr;
         typedef std::map<std::string, InitialConditionShPtr> InitialConditionsMap;
 
+        struct ExpansionElement
+        {
+            ExpansionElement(Composite composite, int numModes, ExpansionType expansionType):
+                m_Composite(composite),
+                m_NumModes(numModes),
+                m_ExpansionType(expansionType)
+            {};
+
+            Composite m_Composite;
+            int m_NumModes;
+            ExpansionType m_ExpansionType;
+        };
+        typedef boost::shared_ptr<ExpansionElement> ExpansionElementShPtr;
+        typedef boost::shared_ptr<const ExpansionElement> ConstExpansionElementShPtr;
+        typedef std::vector<ExpansionElementShPtr> ExpansionCollection;
+
         class BoundaryConditions
         {
         public:
@@ -188,7 +222,7 @@ namespace Nektar
 
             const std::string &GetVariable(const int indx)
             {
-                ASSERTL0(0 <= indx && indx < m_Variables.size(),"indx is out of range");
+                ASSERTL0(0 <= indx && indx < m_Variables.size(),"Variable index is out of range");
                 return m_Variables[indx];
             }
 
@@ -205,6 +239,17 @@ namespace Nektar
             /// If not found it will return false and leave str
             /// as it was coming in.
             bool SubstituteFunction(std::string &str);
+
+            int GetNumExpansionElements(void)
+            {
+                return m_ExpansionCollection.size();
+            }
+
+            ConstExpansionElementShPtr GetExpansionElement(int indx)
+            {
+                ASSERTL0(0 <= indx && indx < m_ExpansionCollection.size(), "Expansion index out of range.");
+                return m_ExpansionCollection[indx];
+            }
 
         protected:
             void ReadParameters(TiXmlElement *parameters);
@@ -226,6 +271,7 @@ namespace Nektar
             ForcingFunctionsMap m_ForcingFunctions;
             InitialConditionsMap m_InitialConditions;
             ExactSolutionMap m_ExactSolution;
+            ExpansionCollection m_ExpansionCollection;
 
             /// The mesh graph to use for referencing geometry info.
             const MeshGraph *m_MeshGraph;

@@ -120,7 +120,9 @@ namespace Nektar
                         std::string line = node->ToText()->Value();
 
                         /// Pull out lhs and rhs and eliminate any spaces.
-                        std::string lhs = line.substr(line.find_first_not_of(" "), line.find_first_of("="));
+                        int beg=line.find_first_not_of(" ");
+                        int end=line.find_first_of("=");
+                        std::string lhs = line.substr(line.find_first_not_of(" "), end-beg-1);
                         lhs = lhs.substr(0, lhs.find_last_not_of(" ")+1);
 
                         std::string rhs = line.substr(line.find_last_of("=")+1);
@@ -311,6 +313,48 @@ namespace Nektar
 
             if (expansionTypes)
             {
+                /// Expansiontypes will contain one composite, nummodes, and expansiontype
+                /// (eModified, or eOrthogonal)
+               
+                TiXmlElement *expansion = expansionTypes->FirstChildElement("E");
+
+                while (expansion)
+                {
+                    /// Mandatory components...optional are to follow later.
+                    std::string compositeStr = expansion->Attribute("COMPOSITE");
+                    ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
+                    int beg = compositeStr.find_first_of("[");
+                    int end = compositeStr.find_first_of("]");
+                    std::string compositeNumStr = compositeStr.substr(beg+1,end-beg-1);
+                    int compositeNum = atoi(compositeNumStr.c_str());
+                    Composite composite = m_MeshGraph->GetComposite(compositeNum);
+                    ASSERTL0(composite, (std::string("Unable to find composite: ") + compositeNumStr).c_str());
+
+                    std::string nummodesStr = expansion->Attribute("NUMMODES");
+                    ASSERTL0(!nummodesStr.empty(), "NUMMODES must be specified in expansion definition");
+                    int nummodes = atoi(nummodesStr.c_str());
+
+                    std::string typeStr = expansion->Attribute("TYPE");
+                    ASSERTL0(!typeStr.empty(), "TYPE must be specified in expansion definition");
+                    std::transform(typeStr.begin(), typeStr.end(), typeStr.begin(), toupper);
+                    ExpansionType type;
+                    int i=1;
+                    for (; i<eExpanionTypeSize; ++i)
+                    {
+                        if (kExpansionTypeStr[i] == typeStr)
+                        {
+                            break;
+                        }
+                    }
+
+                    ASSERTL0(i < eExpanionTypeSize, "Invalid expansion type.")
+                    type = (ExpansionType)i;
+
+                    ExpansionElementShPtr expansionElementShPtr = MemoryManager<ExpansionElement>::AllocateSharedPtr(composite, nummodes, type);
+                    m_ExpansionCollection.push_back(expansionElementShPtr);
+
+                    expansion = expansion->NextSiblingElement("E");
+                }
                 NEKERROR(ErrorUtil::ewarning, "ExpansionTypes not currently implemented.");
             }
         }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/MeshComponents.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshComponents.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -96,6 +96,35 @@ namespace Nektar
             return(false);
         }
 
+        void VertexComponent::GetCoords(double &x, double &y, double &z)
+        {
+            switch(m_coordim)
+            {
+            case 3:
+                z = (*this)(2);
+            case 2: 
+                y = (*this)(1);
+            case 1:
+                x = (*this)(0);
+                break;
+            }
+        }
+        
+        void VertexComponent::GetCoords(Array<OneD,NekDouble> &coords)
+        {
+            switch(m_coordim)
+            {
+            case 3:
+                coords[2] = (*this)(2);
+            case 2: 
+                coords[1] = (*this)(1);
+            case 1:
+                coords[0] = (*this)(0);
+                break;
+            }
+        }
+        
+
         void VertexComponent::UpdatePosition(double x, double y, double z)
         {
             (*this)(0) = x;
@@ -182,6 +211,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.cpp,v $
+// Revision 1.4  2006/10/15 06:18:57  sherwin
+// Moved NekPoint out of namespace LibUtilities
+//
 // Revision 1.3  2006/05/09 13:37:01  jfrazier
 // Removed duplicate definition of shared vertex pointer.
 //

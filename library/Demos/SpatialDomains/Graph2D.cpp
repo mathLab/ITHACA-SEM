@@ -66,6 +66,7 @@ int main(int argc, char *argv[]){
         Equation eqn1 = bcs.GetFunctionAsEquation("F3");
 
         ConstExpansionElementShPtr exp = bcs.GetExpansionElement(0);
+        val = exp->m_NumModesEqn.Evaluate(1.22);
     }
     catch(std::string err)
     {

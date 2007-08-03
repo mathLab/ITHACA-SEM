@@ -43,7 +43,7 @@
             Ptype = (order + 1)
             BoundaryRegion[0-1] = eLagrangeGLL, eGLR-->
 
-            <E COMPOSITE="C[0]" NUMMODES="4" TYPE="Modified" />
+            <E COMPOSITE="C[0]" NUMMODES="floor(4*x + 0.5)" TYPE="Modified" />
             <E COMPOSITE="C[1]" NUMMODES="3" TYPE="Modified" />
             <E COMPOSITE="C[2]" NUMMODES="7" TYPE="Modified" />
         </EXPANSIONTYPES>

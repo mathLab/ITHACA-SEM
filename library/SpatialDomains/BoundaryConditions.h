@@ -166,14 +166,14 @@ namespace Nektar
 
         struct ExpansionElement
         {
-            ExpansionElement(Composite composite, int numModes, ExpansionType expansionType):
+            ExpansionElement(Composite composite, Equation numModesEqn, ExpansionType expansionType):
                 m_Composite(composite),
-                m_NumModes(numModes),
+                m_NumModesEqn(numModesEqn),
                 m_ExpansionType(expansionType)
             {};
 
             Composite m_Composite;
-            int m_NumModes;
+            Equation m_NumModesEqn;
             ExpansionType m_ExpansionType;
         };
         typedef boost::shared_ptr<ExpansionElement> ExpansionElementShPtr;

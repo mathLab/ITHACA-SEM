@@ -332,7 +332,7 @@ namespace Nektar
 
                     std::string nummodesStr = expansion->Attribute("NUMMODES");
                     ASSERTL0(!nummodesStr.empty(), "NUMMODES must be specified in expansion definition");
-                    int nummodes = atoi(nummodesStr.c_str());
+                    Equation nummodesEqn(nummodesStr);
 
                     std::string typeStr = expansion->Attribute("TYPE");
                     ASSERTL0(!typeStr.empty(), "TYPE must be specified in expansion definition");
@@ -350,7 +350,7 @@ namespace Nektar
                     ASSERTL0(i < eExpanionTypeSize, "Invalid expansion type.")
                     type = (ExpansionType)i;
 
-                    ExpansionElementShPtr expansionElementShPtr = MemoryManager<ExpansionElement>::AllocateSharedPtr(composite, nummodes, type);
+                    ExpansionElementShPtr expansionElementShPtr = MemoryManager<ExpansionElement>::AllocateSharedPtr(composite, nummodesEqn, type);
                     m_ExpansionCollection.push_back(expansionElementShPtr);
 
                     expansion = expansion->NextSiblingElement("E");

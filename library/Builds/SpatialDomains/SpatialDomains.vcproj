@@ -178,6 +178,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\SpatialDomains\Equation.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\SpatialDomains\Geometry.cpp"
 				>
 			</File>
@@ -271,7 +275,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\SpatialDomains\Equation.hpp"
+				RelativePath="..\..\SpatialDomains\Equation.h"
 				>
 			</File>
 			<File

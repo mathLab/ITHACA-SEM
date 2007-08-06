@@ -51,12 +51,23 @@ namespace Nektar
         ThreeD = 3
     };
 
+    enum Direction
+    {
+        xDir = 0,
+        yDir = 1,
+        zDir = 2
+    };
+
+
 } //end of namespace 
 
 #endif
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.11  2007/07/22 23:03:24  bnelson
+Backed out Nektar::ptr.
+
 Revision 1.10  2007/07/20 00:39:54  bnelson
 Replaced boost::shared_ptr with Nektar::ptr
 

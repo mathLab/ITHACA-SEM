@@ -124,7 +124,7 @@ int main(int argc, char *argv[]){
     // /////////////////////////////////////////////
     // Test X Derivative 
     //    
-    boost::shared_ptr<NekMatrix<NekDouble> > Dptr = points->GetD();
+    boost::shared_ptr<NekMatrix<NekDouble> > Dptr = points->GetD(xDir);
     const NekMatrix<NekDouble> & derivativeMat = *Dptr;
 
     NekMatrix<NekDouble> matVx = GetXDerivativeOfMonomialVandermonde(x, y);

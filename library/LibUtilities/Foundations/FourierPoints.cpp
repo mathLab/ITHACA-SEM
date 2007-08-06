@@ -96,19 +96,19 @@ namespace Nektar
 
             for(unsigned int i=1;i<npts;++i)
             {
-                (*m_derivmatrix)(i,i) = 0.0;
+                (*m_derivmatrix[0])(i,i) = 0.0;
             }
 
             for(unsigned int i=1;i<npts;++i)
             {
-                (*m_derivmatrix)(0,i) = -0.5*M_PI*pow(-1.0,double(i))*cos(M_PI*i/npts)/sin(M_PI*i/npts);
+                (*m_derivmatrix[0])(0,i) = -0.5*M_PI*pow(-1.0,double(i))*cos(M_PI*i/npts)/sin(M_PI*i/npts);
             }
 
             for(unsigned int i=1;i<npts;++i)
             {
                 for(unsigned int j=0;j<npts;++j)
                 {
-                    (*m_derivmatrix)(i,j) = (*m_derivmatrix)(0,(j-i+npts)%npts);
+                    (*m_derivmatrix[0])(i,j) = (*m_derivmatrix[0])(0,(j-i+npts)%npts);
                 }
             }           
         }

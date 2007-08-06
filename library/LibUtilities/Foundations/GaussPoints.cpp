@@ -179,7 +179,7 @@ namespace Nektar
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
             }
 
-            std::copy(dmtemp,dmtemp+totpoints*totpoints,m_derivmatrix->begin());
+            std::copy(dmtemp,dmtemp+totpoints*totpoints,m_derivmatrix[0]->begin());
         }
 
         void GaussPoints::CalculateInterpMatrix(unsigned int npts, const ConstArray<OneD, NekDouble>& xpoints, Array<OneD, NekDouble>& interp)
@@ -291,6 +291,9 @@ namespace Nektar
 
 /**
 * $Log: GaussPoints.cpp,v $
+* Revision 1.22  2007/07/27 00:22:26  bnelson
+* Memory manager now accepts non-const parameters to the allocate methods.
+*
 * Revision 1.21  2007/07/22 23:03:26  bnelson
 * Backed out Nektar::ptr.
 *

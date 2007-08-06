@@ -103,7 +103,7 @@ namespace Nektar
             {
                 for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
                 {
-                    (*m_derivmatrix)(i,j) = LagrangePolyDeriv(m_points[0][i],j,m_pointsKey.GetNumPoints(),m_points[0]);
+                    (*m_derivmatrix[0])(i,j) = LagrangePolyDeriv(m_points[0][i],j,m_pointsKey.GetNumPoints(),m_points[0]);
                 }
             }
         }

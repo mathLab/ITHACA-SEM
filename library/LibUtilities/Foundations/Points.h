@@ -251,9 +251,9 @@ namespace Nektar
                 z = m_points[2];
             }
 
-            inline const MatrixSharedPtrType GetD() const
+            inline const MatrixSharedPtrType GetD(Direction dir = xDir) const
             {
-                return m_derivmatrix;
+                return m_derivmatrix[(int)dir];
             }
 
             virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)=0;
@@ -264,7 +264,7 @@ namespace Nektar
             PointsKey m_pointsKey;
             Array<OneD, DataType> m_points[3];
             Array<OneD, DataType> m_weights;
-            MatrixSharedPtrType m_derivmatrix;
+            MatrixSharedPtrType m_derivmatrix[3];
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_InterpManager;
 
             virtual void CalculatePoints()
@@ -286,9 +286,11 @@ namespace Nektar
             virtual void CalculateDerivMatrix()
             {
                 int totNumPoints = GetTotNumPoints();
-                m_derivmatrix.reset(MemoryManager<NekMatrix<DataType> >::Allocate(totNumPoints,totNumPoints));
+                for(unsigned int i = 0; i < m_pointsKey.GetPointsDim(); ++i)
+                {
+                    m_derivmatrix[i].reset(MemoryManager<NekMatrix<DataType> >::Allocate(totNumPoints,totNumPoints));
+                }
             }
-
             Points(const PointsKey &key):m_pointsKey(key)
             {
             }

@@ -156,15 +156,10 @@ namespace Nektar
             NekVector<NekDouble> y( m_points[1] );
             NekVector<NekDouble> xi = x;
             NekVector<NekDouble> yi = y;
+                
+            m_derivmatrix[0] = GetXDerivativeMatrix(x,y,xi,yi);
+            m_derivmatrix[1] = GetYDerivativeMatrix(x,y,xi,yi);
 
-            bool isTestingXDerivative = true;
-            if( isTestingXDerivative ) {
-                m_derivmatrix = GetXDerivativeMatrix(x,y,xi,yi);
-               // cout << "GetXDerivativeMatrix() =  \n" << *m_derivmatrix << endl;
-            } else {
-                m_derivmatrix = GetYDerivativeMatrix(x,y,xi,yi);
-               // cout << "GetYDerivativeMatrix() =  \n" << *m_derivmatrix << endl;
-           }
         }
 
            // ////////////////////////////////////////
@@ -259,6 +254,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriElec.cpp,v $
+* Revision 1.11  2007/07/31 18:17:21  ehan
+* Conform to Coding Style Standard
+*
 * Revision 1.10  2007/07/26 22:54:40  ehan
 * completed testing and implementation of integration, interpolation, and derivation
 *

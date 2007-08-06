@@ -183,14 +183,9 @@ namespace Nektar
             NekVector<NekDouble> xi = x;
             NekVector<NekDouble> yi = y;
 
-            bool isTestingXDerivative = true;
-            if( isTestingXDerivative ) {
-                m_derivmatrix = GetXDerivativeMatrix(x,y,xi,yi);
-               // cout << "GetXDerivativeMatrix() =  \n" << *m_derivmatrix << endl;
-            } else {
-                m_derivmatrix = GetYDerivativeMatrix(x,y,xi,yi);
-               // cout << "GetYDerivativeMatrix() =  \n" << *m_derivmatrix << endl;
-           }
+            m_derivmatrix[0] = GetXDerivativeMatrix(x,y,xi,yi);
+            m_derivmatrix[1] = GetYDerivativeMatrix(x,y,xi,yi);
+
         }
 
         boost::shared_ptr<NodalTriFekete::PointsBaseType> NodalTriFekete::Create(const PointsKey &key)
@@ -267,6 +262,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriFekete.cpp,v $
+* Revision 1.20  2007/07/31 18:19:11  ehan
+* Conform to Coding Style Standard
+*
 * Revision 1.19  2007/07/26 22:24:24  ehan
 * conform to Coding Style Standard
 *

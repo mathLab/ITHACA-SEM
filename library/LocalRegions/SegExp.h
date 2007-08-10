@@ -144,8 +144,8 @@ namespace Nektar
 
             SpatialDomains::SegGeomSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-            
-            static LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess>    m_matrixManager;
+
+            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
 
             /// \brief  Inner product of \a inarray over region with respect to
             /// the expansion basis \a base and return in \a outarray 
@@ -155,6 +155,8 @@ namespace Nektar
                     const int coll_check);
 
         private:
+
+            SegExp();
 
             virtual StdRegions::ShapeType v_DetShapeType() const
             {
@@ -357,6 +359,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.22  2007/07/28 05:09:33  sherwin
+// Fixed version with updated MemoryManager
+//
 // Revision 1.21  2007/07/22 23:04:19  bnelson
 // Backed out Nektar::ptr.
 //

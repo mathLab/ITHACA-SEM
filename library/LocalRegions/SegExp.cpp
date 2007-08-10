@@ -41,12 +41,11 @@ namespace Nektar
     namespace LocalRegions 
     {
 
-        LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> SegExp::m_matrixManager;
-
         // constructor
         SegExp::SegExp(const LibUtilities::BasisKey &Ba, 
                        const SpatialDomains::SegGeomSharedPtr &geom):
-        StdRegions::StdSegExp(Ba)
+            StdRegions::StdSegExp(Ba),
+                m_matrixManager(std::string("StdExp"))
         {
             m_geom = geom;    
 
@@ -61,12 +60,15 @@ namespace Nektar
         }
 
         SegExp::SegExp(const LibUtilities::BasisKey &Ba):
-            StdRegions::StdSegExp(Ba)
+            StdRegions::StdSegExp(Ba),
+            m_matrixManager(std::string("StdExp"))
         {
 
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoShapeType,*this),  boost::bind(&SegExp::CreateMatrix, this, _1));
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
+                    StdRegions::eNoShapeType,*this),
+                    boost::bind(&SegExp::CreateMatrix, this, _1));
             }
 
             // Set up unit geometric factors. 
@@ -80,7 +82,8 @@ namespace Nektar
 
         // copy constructor
         SegExp::SegExp(const SegExp &S):
-        StdRegions::StdSegExp(S)
+            StdRegions::StdSegExp(S),
+            m_matrixManager(std::string("StdExp"))
         {
             m_geom        = S.m_geom;
             m_metricinfo  = S.m_metricinfo;
@@ -696,7 +699,7 @@ namespace Nektar
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetShapeType(), *this);    
                     DNekScalMatSharedPtr mass = this->m_matrixManager[masskey];
-#if 0
+#if 1
                     MatrixKey lapkey(StdRegions::eLaplacian,
                                      mkey.GetShapeType(), *this);
                     DNekScalMatSharedPtr lap = this->m_matrixManager[lapkey];
@@ -733,6 +736,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.27  2007/07/30 21:00:06  sherwin
+// Temporary fix in CreateMatrix
+//
 // Revision 1.26  2007/07/28 05:09:33  sherwin
 // Fixed version with updated MemoryManager
 //

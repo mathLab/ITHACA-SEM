@@ -65,6 +65,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.12  2007/08/06 05:35:45  ehan
+Added enumerations for the 3 principal directions. These are to be used in GetD(Direction).
+
 Revision 1.11  2007/07/22 23:03:24  bnelson
 Backed out Nektar::ptr.
 

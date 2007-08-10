@@ -728,7 +728,7 @@ namespace Nektar
     template<typename DataType>
     bool operator==(const ConstArray<OneD, DataType>& lhs, const ConstArray<OneD, DataType>& rhs) 
     {
-        return lhs.m_data == rhs.m_data;
+        return *lhs.m_data == *rhs.m_data;
     }
     
     template<typename DataType>
@@ -771,7 +771,7 @@ namespace Nektar
     template<typename DataType>
     bool operator==(const ConstArray<TwoD, DataType>& lhs, const ConstArray<TwoD, DataType>& rhs) 
     {
-        return *(lhs.m_data) == *(rhs.m_data);
+        return *lhs.m_data == *rhs.m_data;
     }
     
     template<typename DataType>

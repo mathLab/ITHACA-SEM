@@ -70,20 +70,57 @@ namespace Nektar
                 typedef boost::shared_ptr<ValueT> ValueType;
                 typedef boost::function<ValueType (const KeyType& key)> CreateFuncType;
                 typedef std::map<KeyType, ValueType> ValueContainer;
+                typedef boost::shared_ptr<ValueContainer> ValueContainerShPtr;
                 typedef std::map<KeyType, CreateFuncType, opLessCreator> CreateFuncContainer;
+                typedef std::map<std::string, boost::shared_ptr<ValueContainer> > ValueContainerPool;
 
-                NekManager() :
+                NekManager(std::string whichPool="") :
                     m_values(), 
                     m_globalCreateFunc(),
                     m_keySpecificCreateFuncs()
                 {
+                    if (!whichPool.empty())
+                    {
+                        ValueContainerPool::iterator iter = m_ValueContainerPool.find(whichPool);
+                        if (iter != m_ValueContainerPool.end())
+                        {
+                            m_values = iter->second;
+                        }
+                        else
+                        {
+                            m_values = ValueContainerShPtr(new ValueContainer);
+                            m_ValueContainerPool[whichPool] = m_values;
+                        }
+                    }
+                    else
+                    {
+                        m_values = ValueContainerShPtr(new ValueContainer);
+                    }
                 };
 
-                explicit NekManager(CreateFuncType f) :
+                    explicit NekManager(CreateFuncType f, std::string whichPool="") :
                     m_values(),
                     m_globalCreateFunc(f),
                     m_keySpecificCreateFuncs()
                 {
+                    if (!whichPool.empty())
+                    {
+                        ValueContainerPool::iterator iter = m_ValueContainerPool.find(whichPool);
+                        if (iter != m_ValueContainerPool.end())
+                        {
+                            m_values = iter->second;
+                        }
+                        else
+                        {
+                            m_values = ValueContainerShPtr(new ValueContainer);
+                            m_ValueContainerPool[whichPool] = m_values;
+                        }
+
+                    }
+                    else
+                    {
+                        m_values = ValueContainerShPtr(new ValueContainer);
+                    }
                 }
                 
                 ~NekManager() {}
@@ -101,8 +138,8 @@ namespace Nektar
                 bool AlreadyCreated(typename boost::call_traits<KeyType>::const_reference key)
                 {
                     bool value = false;
-                    typename ValueContainer::iterator found = m_values.find(key);
-                    if( found != m_values.end() )
+                    typename ValueContainer::iterator found = m_values->find(key);
+                    if( found != m_values->end() )
                     {
                         value = true;
                     }
@@ -112,15 +149,15 @@ namespace Nektar
 
                 ValueType &operator[](typename boost::call_traits<KeyType>::const_reference key)
                 {
-                    typename ValueContainer::iterator found = m_values.find(key);
-                    if( found != m_values.end() )
+                    typename ValueContainer::iterator found = m_values->find(key);
+                    static ValueType result;
+
+                    if( found != m_values->end() )
                     {
-                        return (*found).second;
+                        result = (*found).second;
                     }
                     else
                     {
-                        static ValueType result;
-                    
                         // No object, create a new one.
                         CreateFuncType f = m_globalCreateFunc;
                         typename CreateFuncContainer::iterator keyFound = m_keySpecificCreateFuncs.find(key);
@@ -132,8 +169,7 @@ namespace Nektar
                         if( f )
                         {
                             result = f(key);
-                            m_values[key] = result;
-                            return m_values[key];
+                            (*m_values)[key] = result;
                         }
                         else
                         {
@@ -141,16 +177,17 @@ namespace Nektar
                             std::string message = std::string("No create func found for key ") + keyAsString;
                             NEKERROR(ErrorUtil::efatal, message.c_str());
                         }
-                        
-                        return result;
                     }
+
+                    return result;
                 }
                 
             private:
                 NekManager(const NekManager<KeyType, ValueType, opLessCreator>& rhs);
                 NekManager<KeyType, ValueType, opLessCreator>& operator=(const NekManager<KeyType, ValueType, opLessCreator>& rhs);
 
-                ValueContainer m_values;
+                ValueContainerShPtr m_values;
+                static ValueContainerPool m_ValueContainerPool;
                 CreateFuncType m_globalCreateFunc;
                 CreateFuncContainer m_keySpecificCreateFuncs;
         };

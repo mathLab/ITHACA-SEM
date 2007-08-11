@@ -41,6 +41,7 @@
 #include <MultiRegions/GlobalLinSys.h>
 
 #include <LocalRegions/PointExp.h>
+#include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/BoundaryConditions.h>
 
 
@@ -54,6 +55,10 @@ namespace Nektar
 	    {
 	    public:
 		ContField1D();
+                ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+                            SpatialDomains::BoundaryConditions &bcs, 
+                            const int bc_loc = 0);
+
                 ContField1D(const LibUtilities::BasisKey &Ba, 
                             const SpatialDomains::Composite &cmps,
                             SpatialDomains::BoundaryConditions &bcs,

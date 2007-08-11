@@ -235,6 +235,7 @@ namespace Nektar
                 LocalRegions::MatrixKey mkey(mtype,(*m_exp)[i]->DetShapeType(),*((*m_exp)[i]),scalar);
                 loc_mat = (*m_exp)[i]->GetLocMatrix(mkey);
                 
+                cout << loc_mat->GetOwnedMatrix() << endl;
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
             

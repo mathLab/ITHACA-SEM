@@ -58,7 +58,6 @@ namespace Nektar
             m_contCoeffs = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
         
-
         ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba, 
                                      const SpatialDomains::Composite &cmps):
 	    ExpList1D(Ba,cmps)
@@ -217,6 +216,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.21  2007/08/02 12:36:18  sherwin
+* ...
+*
 * Revision 1.20  2007/07/29 07:45:30  sherwin
 * Updated for new memory manager call
 *

@@ -49,6 +49,14 @@ namespace Nektar
         {
         }
 
+        ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 const int bc_loc):
+            ContExpList1D(bcs.GetBasisKey(graph1D.GetDomain(),0),graph1D.GetDomain())  
+        {
+            GenerateField1D(bcs,bcs.GetVariable(bc_loc));
+        }
+
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
                                  const SpatialDomains::Composite &cmps,
                                  SpatialDomains::BoundaryConditions &bcs, 

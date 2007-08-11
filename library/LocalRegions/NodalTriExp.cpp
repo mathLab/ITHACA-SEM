@@ -562,7 +562,6 @@ namespace Nektar
             // and generate matrix. Otherwise direct call is OK. 
             if(!StdMatManagerAlreadyCreated(mkey))
             {
-                
                 const LibUtilities::BasisKey& key0 = m_base[0]->GetBasisKey();
                 const LibUtilities::BasisKey& key1 = m_base[1]->GetBasisKey();
                 const LibUtilities::PointsType& pointsType = m_nodalPointsKey->GetPointsType();
@@ -642,6 +641,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.14  2007/07/31 01:29:43  bnelson
+ *    *** empty log message ***
+ *
  *    Revision 1.13  2007/07/28 05:09:32  sherwin
  *    Fixed version with updated MemoryManager
  *

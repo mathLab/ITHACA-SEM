@@ -619,9 +619,10 @@ namespace Nektar
             // and generate matrix. Otherwise direct call is OK. 
             if(!StdMatManagerAlreadyCreated(mkey))
             {
+                LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
+                LibUtilities::BasisKey bkey1 = m_base[0]->GetBasisKey();
                 QuadExpSharedPtr tmp = MemoryManager<QuadExp>::
-                    AllocateSharedPtr(m_base[0]->GetBasisKey(),
-                                      m_base[1]->GetBasisKey());
+                    AllocateSharedPtr(bkey0,bkey1);
 
                 return tmp->StdQuadExp::GetStdMatrix(mkey);                
             }
@@ -698,6 +699,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.21  2007/07/28 05:09:32  sherwin
+ *    Fixed version with updated MemoryManager
+ *
  *    Revision 1.20  2007/07/20 00:45:51  bnelson
  *    Replaced boost::shared_ptr with Nektar::ptr
  *

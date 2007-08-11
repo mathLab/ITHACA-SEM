@@ -61,6 +61,15 @@ namespace Nektar
                 m_value = value;
             }
 
+            inline void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
+            {
+                m_geom->GetCoords(x,y,z);
+            }
+
+            inline void GetCoords(Array<OneD,NekDouble> &coords)
+            {
+                m_geom->GetCoords(coords);
+            }
     protected:
             NekDouble      m_value; //!< Array containing expansion coefficients
         SpatialDomains::VertexComponentSharedPtr m_geom;

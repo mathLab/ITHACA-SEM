@@ -104,6 +104,7 @@ namespace Nektar
                 void GetCoords(Array<OneD,NekDouble> &coords);
                 void UpdatePosition(double x, double y, double z);
 
+
                 inline int GetCoordim() const
                 {
                     return m_coordim;
@@ -178,6 +179,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.10  2007/08/02 18:56:06  jfrazier
+// Added methods missing from declaration.
+//
 // Revision 1.9  2007/07/22 23:04:23  bnelson
 // Backed out Nektar::ptr.
 //

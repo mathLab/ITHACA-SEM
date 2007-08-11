@@ -106,7 +106,7 @@ namespace Nektar
                 return returnval;
             }
 
-            Composite GetDomain(void) const
+            const Composite &GetDomain(void) const
             {
                 return m_Domain;
             }
@@ -133,6 +133,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.11  2007/07/25 11:01:57  sherwin
+// Added GetDomain methods
+//
 // Revision 1.10  2007/07/24 16:52:09  jfrazier
 // Added domain code.
 //

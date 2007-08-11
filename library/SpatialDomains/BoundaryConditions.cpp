@@ -331,12 +331,15 @@ namespace Nektar
                     ASSERTL0(composite, (std::string("Unable to find composite: ") + compositeNumStr).c_str());
 
                     std::string nummodesStr = expansion->Attribute("NUMMODES");
+
                     ASSERTL0(!nummodesStr.empty(), "NUMMODES must be specified in expansion definition");
                     Equation nummodesEqn(nummodesStr);
 
                     std::string typeStr = expansion->Attribute("TYPE");
-                    ASSERTL0(!typeStr.empty(), "TYPE must be specified in expansion definition");
-                    std::transform(typeStr.begin(), typeStr.end(), typeStr.begin(), toupper);
+                    ASSERTL0(!typeStr.empty(), "TYPE must be specified in "
+                             "expansion definition");
+                    //std::transform(typeStr.begin(), typeStr.end(), 
+                    //typeStr.begin(), toupper);
                     ExpansionType type;
                     int i=1;
                     for (; i<eExpanionTypeSize; ++i)
@@ -355,7 +358,6 @@ namespace Nektar
 
                     expansion = expansion->NextSiblingElement("E");
                 }
-                NEKERROR(ErrorUtil::ewarning, "ExpansionTypes not currently implemented.");
             }
         }
 
@@ -886,6 +888,73 @@ namespace Nektar
             }
 
             return returnval;
+        }
+
+        LibUtilities::BasisKey BoundaryConditions::GetBasisKey(const Composite &in, 
+                                                               const int flag)
+        {
+            ConstExpansionElementShPtr exp = GetExpansionElement(in);
+            int order = (int) exp->m_NumModesEqn.Evaluate();
+            
+            switch(exp->m_ExpansionType)
+            {
+            case eModified:
+                switch (flag)
+                {
+                case 0:
+                    {
+                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                        return LibUtilities::BasisKey(LibUtilities::eModified_A,order,pkey);
+                    }
+                    break;
+                case 1:
+                    {
+                        const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        return LibUtilities::BasisKey(LibUtilities::eModified_B,order,pkey);
+                    }
+                    break;
+                case 2:
+                    {
+                        const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha2Beta0);
+                        return LibUtilities::BasisKey(LibUtilities::eModified_C,order,pkey);
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"invalid value to flag");
+                    break;
+                }
+                break;
+            case eOrthogonal:
+                switch (flag)
+                {
+                case 0:
+                    {
+                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                        return LibUtilities::BasisKey(LibUtilities::eOrtho_A,order,pkey);
+                    }
+                    break;
+                case 1:
+                    {
+                        const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        return LibUtilities::BasisKey(LibUtilities::eOrtho_B,order,pkey);
+                    }
+                    break;
+                case 2:
+                    {
+                        const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha2Beta0);
+                        return LibUtilities::BasisKey(LibUtilities::eOrtho_C,order,pkey);
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"invalid value to flag");
+                    break;
+                }
+                break;
+            default:
+                ASSERTL0(false,"expansion type unknonw");
+                break;
+            }
+        
         }
     }
 }

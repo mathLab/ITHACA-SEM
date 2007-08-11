@@ -66,7 +66,6 @@ namespace Nektar
             eNoExpansionType,
             eModified,
             eOrthogonal,
-
             eExpanionTypeSize
         };
 
@@ -179,6 +178,7 @@ namespace Nektar
         typedef boost::shared_ptr<ExpansionElement> ExpansionElementShPtr;
         typedef boost::shared_ptr<const ExpansionElement> ConstExpansionElementShPtr;
         typedef std::vector<ExpansionElementShPtr> ExpansionCollection;
+        typedef std::vector<ExpansionElementShPtr>::iterator  ExpansionCollectionIter;
 
         class BoundaryConditions
         {
@@ -251,6 +251,27 @@ namespace Nektar
                 return m_ExpansionCollection[indx];
             }
 
+
+            ConstExpansionElementShPtr GetExpansionElement(const Composite &input)
+            {
+                ExpansionCollectionIter iter;
+
+                for(iter = m_ExpansionCollection.begin(); iter != m_ExpansionCollection.end(); ++iter)
+                {
+                    if((*iter)->m_Composite.get() == input.get())
+                    {
+                        break;
+                    }
+                }
+
+                ASSERTL0(iter != m_ExpansionCollection.end(), "Expansion element not found.");
+                                   
+                return *iter;
+            }
+
+
+            LibUtilities::BasisKey GetBasisKey(const Composite &in, const int flag = 0);
+
         protected:
             void ReadParameters(TiXmlElement *parameters);
             void ReadVariables(TiXmlElement *variables);
@@ -283,3 +304,4 @@ namespace Nektar
 }
 
 #endif //NEKTAR_SPATIALDOMAINS_BOUNDARYCONDITIONS_H
+    

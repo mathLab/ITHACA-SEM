@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////
+
 //
 // File Stdexpansion.h
 //
@@ -898,7 +898,7 @@ namespace Nektar
          
             DNekMatSharedPtr CreateStdMatrix(const StdMatrixKey &mkey);
 
-            DNekMatSharedPtr GetStdMatrix(const StdMatrixKey &mkey)
+            DNekMatSharedPtr GetStdMatrix(const StdMatrixKey &mkey) 
             {
                 return m_stdMatrixManager[mkey];
             }
@@ -1070,6 +1070,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.64  2007/07/27 16:56:55  jfrazier
+* Changed manager to static.
+*
 * Revision 1.63  2007/07/22 23:04:25  bnelson
 * Backed out Nektar::ptr.
 *

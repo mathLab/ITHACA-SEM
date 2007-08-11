@@ -41,34 +41,34 @@ namespace Nektar
     namespace StdRegions
     {
     
-    // Register Mass Matrix creator. 
-    StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
-                   const ShapeType shapeType,
-                   const StdExpansion &stdExpansion,
-                   LibUtilities::PointsType nodalType) :
+        // Register Mass Matrix creator. 
+        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+                                   const ShapeType shapeType,
+                                   const StdExpansion &stdExpansion,
+                                   LibUtilities::PointsType nodalType) :
             m_shapeType(shapeType),
             m_base(stdExpansion.GetBase()),
             m_ncoeffs(stdExpansion.GetNcoeffs()),
-        m_matrixType(matrixType),
-        m_nodalPointsType(nodalType)
-    {
-    }
+            m_matrixType(matrixType),
+            m_nodalPointsType(nodalType)
+        {
+        }
 
 
-    // Register Mass Matrix creator. 
-    StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
-                   const ShapeType shapeType,
+        // Register Mass Matrix creator. 
+        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+                                   const ShapeType shapeType,
                                    const ConstArray<OneD,LibUtilities::BasisSharedPtr> &base,
-                   const int ncoeffs,
-                   LibUtilities::PointsType nodalType) :
+                                   const int ncoeffs,
+                                   LibUtilities::PointsType nodalType) :
             m_shapeType(shapeType),
             m_base(base),
             m_ncoeffs(ncoeffs),
-        m_matrixType(matrixType),
-        m_nodalPointsType(nodalType)
-    {
-    }
-    
+            m_matrixType(matrixType),
+            m_nodalPointsType(nodalType)
+        {
+        }
+        
         StdMatrixKey::StdMatrixKey(const StdMatrixKey& rhs) :
             m_shapeType(rhs.m_shapeType),
             m_base(rhs.m_base),
@@ -77,56 +77,61 @@ namespace Nektar
             m_nodalPointsType(rhs.m_nodalPointsType)
         {
         }
-
+        
         bool StdMatrixKey::opLess::operator()(const StdMatrixKey &lhs, 
                           const StdMatrixKey &rhs) const
         {        
-        return (lhs.m_matrixType < rhs.m_matrixType);
-    }
-
-    bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs)
-    {   
-        if(lhs.m_matrixType < rhs.m_matrixType)
-        {
-        return true;
-        }
-        
-        if(lhs.m_matrixType > rhs.m_matrixType)
-        {
-        return false;
-        }
-            
-        if(lhs.m_ncoeffs < rhs.m_ncoeffs)
-        {
-        return true;
-        }
-            
-        if(lhs.m_ncoeffs > rhs.m_ncoeffs)
-        {
-        return false;
-        }
-            
-        for(unsigned int i = 0; i < ShapeTypeDimMap[lhs.m_shapeType]; ++i)
-        {
-        if(lhs.m_base[i] < rhs.m_base[i])
-        {
-            return true;
-        }
-        }
-            
-        if(lhs.m_nodalPointsType < rhs.m_nodalPointsType)
-        {
-        return true;
-        }
-        
-        if(lhs.m_nodalPointsType > rhs.m_nodalPointsType)
-        {
-        return false;
+            return (lhs.m_matrixType < rhs.m_matrixType);
         }
 
-        return false;
-    }
-    
+        bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs)
+        {   
+            if(lhs.m_matrixType < rhs.m_matrixType)
+            {
+                return true;
+            }
+            
+            if(lhs.m_matrixType > rhs.m_matrixType)
+            {
+                return false;
+            }
+            
+            if(lhs.m_ncoeffs < rhs.m_ncoeffs)
+            {
+                return true;
+            }
+            
+            if(lhs.m_ncoeffs > rhs.m_ncoeffs)
+            {
+                return false;
+            }
+            
+            for(unsigned int i = 0; i < ShapeTypeDimMap[lhs.m_shapeType]; ++i)
+            {
+                if(lhs.m_base[i].get() < rhs.m_base[i].get())
+                {
+                    return true;
+                }
+                
+                if(lhs.m_base[i].get() > rhs.m_base[i].get())
+                {
+                    return false;
+                }
+            }
+            
+            if(lhs.m_nodalPointsType < rhs.m_nodalPointsType)
+            {
+                return true;
+            }
+            
+            if(lhs.m_nodalPointsType > rhs.m_nodalPointsType)
+            {
+                return false;
+            }
+            
+            return false;
+        }
+        
         std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs)
         {
             os << "MatrixType: " << MatrixTypeMap[rhs.GetMatrixType()] << ", ShapeType: " 
@@ -145,6 +150,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.cpp,v $
+* Revision 1.9  2007/07/26 02:39:21  bnelson
+* Fixed Visual C++ compiler errors when compiling in release mode.
+*
 * Revision 1.8  2007/07/20 02:16:54  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

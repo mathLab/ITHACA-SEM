@@ -122,6 +122,7 @@ namespace Nektar
 
         void StdNodalTriExp::NodalToModal(Array<OneD, NekDouble> &in_out_array)
         {
+            ASSERTL0(false,"This function needs fixing");
             //StdMatrixKey   Nkey(eInvNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
             //DNekMatSharedPtr  matsys = m_stdMatManager[Nkey];
 
@@ -336,6 +337,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.17  2007/07/27 00:22:54  bnelson
+* Memory manager now accepts non-const parameters to the allocate methods.
+*
 * Revision 1.16  2007/07/20 02:16:54  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

@@ -49,16 +49,16 @@ namespace Nektar
         {
         public:
             StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                const StdRegions::ShapeType shapeType, 
-                const StdRegions::StdExpansion &stdExpansion,
-                LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
+                          const StdRegions::ShapeType shapeType, 
+                          const StdRegions::StdExpansion &stdExpansion,
+                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+            
             StdMatrixKey(const MatrixType matrixType, 
                          const ShapeType shapeType,
                          const ConstArray<OneD,LibUtilities::BasisSharedPtr> &base,
                          const int ncoeffs,
                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
+            
             StdMatrixKey(const StdMatrixKey& rhs);
 
             virtual ~StdMatrixKey()
@@ -129,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.16  2007/07/26 02:39:21  bnelson
+* Fixed Visual C++ compiler errors when compiling in release mode.
+*
 * Revision 1.15  2007/07/22 23:04:26  bnelson
 * Backed out Nektar::ptr.
 *

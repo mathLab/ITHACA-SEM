@@ -12,78 +12,51 @@ using namespace Nektar;
 int main(int argc, char *argv[])
 {
     MultiRegions::ContField1DSharedPtr Exp,Fce;
-    int     i,j,k;
-    int     order, nq;
-    int     coordim;
-    char    *infile;
-    LibUtilities::PointsType Qtype;
-    LibUtilities::BasisType  btype;  
-    Array<OneD,NekDouble>  sol,fce; 
+    int     i, nq,  coordim;
+    Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
     NekDouble  lambda;
 
-    if(argc != 5)
+    if(argc != 3)
     {
-        fprintf(stderr,"Usage: ProjectCont1D Type order nq  mesh \n");
-        
-        fprintf(stderr,"Where type is an integer value which "
-                "dictates the basis as:\n");
-        fprintf(stderr,"\t Modified_A = 4\n");
-        fprintf(stderr,"\t GLL Lagrange   = 8\n");
-        
-        fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
-        
+        fprintf(stderr,"Usage: Helmholtz1D  meshfile boundaryfile\n");
         exit(1);
     }
-    
-    btype =   (LibUtilities::BasisType) atoi(argv[1]);
-    
-    // Check to see that only continuous 1D Expansions are used
-    if((btype != LibUtilities::eModified_A)&&(btype != LibUtilities::eGLL_Lagrange))
-    {
-        NEKERROR(ErrorUtil::efatal,
-                         "This basis is only for 1D Modified_A or GLL_Lagrange expansions");
-    }
-    
-    // Do not use Fourier expansion
-    if(btype == LibUtilities::eFourier)
-    {
-        NEKERROR(ErrorUtil::efatal,
-                         "Demo not set up for Fourier Expanison");
-    }
-    
-    order  =   atoi(argv[2]);
-    nq     =   atoi(argv[3]);
-    infile =   argv[4];
-    
-    Qtype = LibUtilities::eGaussLobattoLegendre; 
-    
-    // read in mesh
-    string in(infile);
-    SpatialDomains::MeshGraph1D graph1D; 
-    graph1D.Read(in);
-
-    SpatialDomains::BoundaryConditions bcs(&graph1D); 
-    bcs.Read(in);
-
-    lambda = bcs.GetParameter("Lambda");
-    cout << "Solving Helmholtz problem with Lambda = " << lambda << endl;
-    
-    // Define Expansion
-    const LibUtilities::PointsKey Pkey(nq,Qtype);
-    const LibUtilities::BasisKey Bkey(btype,order,Pkey);
-    SpatialDomains::Composite domain = graph1D.GetDomain();
-
-    Exp = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(Bkey,domain,bcs);
 
     //----------------------------------------------
-    // Define solution to be projected 
+    // Read in mesh from input file
+    string meshfile(argv[1]);
+    SpatialDomains::MeshGraph1D graph1D; 
+    graph1D.Read(meshfile);
+    //----------------------------------------------
+
+    //----------------------------------------------
+    // read the problem parameters from input file
+    string bcfile(argv[2]);
+    SpatialDomains::BoundaryConditions bcs(&graph1D); 
+    bcs.Read(bcfile);
+    //----------------------------------------------
+
+    //----------------------------------------------
+    // Print summary of solution details
+    lambda = bcs.GetParameter("Lambda");
+    LibUtilities::BasisKey bkey = bcs.GetBasisKey(graph1D.GetDomain());
+    cout << "Solving 1D Helmholtz:"  << endl; 
+    cout << "         Lambda     : " << lambda << endl; 
+    cout << "         Expansion  : " << LibUtilities::BasisTypeMap[bkey.GetBasisType()] << endl;
+    cout << "         No. modes  : " << bkey.GetNumModes() << endl << endl;
+    //----------------------------------------------
+   
+    //----------------------------------------------
+    // Define Expansion 
+    Exp = MemoryManager<MultiRegions::ContField1D>::
+        AllocateSharedPtr(graph1D,bcs);
+    //----------------------------------------------
+    
+    //----------------------------------------------
+    // Set up coordinates of mesh for Forcing function evaluation
     coordim = Exp->GetCoordim(0);
     nq      = Exp->GetPointsTot();
-    
-    // define coordinates and solution
-    sol = Array<OneD,NekDouble>(nq);
-    fce = Array<OneD,NekDouble>(nq);
     
     xc0 = Array<OneD,NekDouble>(nq);
     xc1 = Array<OneD,NekDouble>(nq);
@@ -104,57 +77,66 @@ int main(int argc, char *argv[])
         Exp->GetCoords(xc0,xc1,xc2);
         break;
     }
+    //----------------------------------------------
     
-    // Get Forcing function for variable 0
+    //----------------------------------------------
+    // Define forcing function for first variable defined in file 
+    fce = Array<OneD,NekDouble>(nq);
     SpatialDomains::ConstForcingFunctionShPtr ffunc 
         = bcs.GetForcingFunction(bcs.GetVariable(0));
-
     for(i = 0; i < nq; ++i)
     {
         fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
     }
+    //----------------------------------------------
 
     //----------------------------------------------
-    // Setup Temporary expansion and put in solution
-    //Sol = MemoryManager<MultiRegions::ContExpList1D>::AllocateSharedPtr(*Exp);
+    // Setup expansion containing the  forcing function
     Fce = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //----------------------------------------------
   
-    //---------------------------------------------
+    //----------------------------------------------
     // Helmholtz solution taking physical forcing 
     Exp->HelmSolve(*Fce, lambda);
-    //---------------------------------------------
+    //----------------------------------------------
     
-    //-------------------------------------------
-    // Backward Transform Solution to get projected values
+    //----------------------------------------------
+    // Backward Transform Solution to get solved values at 
     Exp->BwdTrans(*Exp);
-    //-------------------------------------------  
+    //----------------------------------------------
     
-    //--------------------------------------------
+    //----------------------------------------------
     // Write solution 
     ofstream outfile("HelmholtzFile1D.dat");
     Exp->WriteToFile(outfile);
-    //-------------------------------------------
+    //----------------------------------------------
     
+    //----------------------------------------------
+    // See if there is an exact solution, if so 
+    // evaluate and plot errors
     SpatialDomains::ConstExactSolutionShPtr ex_sol =
         bcs.GetExactSolution(bcs.GetVariable(0));
 
     if(ex_sol)
     {
+        //----------------------------------------------
+        // evaluate exact solution 
         for(i = 0; i < nq; ++i)
         {
             fce[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
         }
+        //----------------------------------------------
 
         //--------------------------------------------
         // Calculate L_inf error 
         Fce->SetPhys(fce);
         cout << "L infinity error: " << Exp->Linf(*Fce) << endl;
         cout << "L 2 error:        " << Exp->L2  (*Fce) << endl;
-        //--------------------------------------------
-        
+        //--------------------------------------------        
     }
+    //----------------------------------------------
+
     return 0;
 }
 

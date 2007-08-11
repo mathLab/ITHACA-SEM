@@ -38,15 +38,15 @@ int main(int argc, char *argv[]){
     graph1D.Read(meshfile);
     bcs.Read(bcfile);
 
-    BoundaryRegionCollectionType &boundaryRegions = bcs.GetBoundaryRegions();
-    BoundaryConditionCollectionType &boundaryConditions = bcs.GetBoundaryConditions();
+    BoundaryRegionCollection &boundaryRegions = bcs.GetBoundaryRegions();
+    BoundaryConditionCollection &boundaryConditions = bcs.GetBoundaryConditions();
 
     // Region 1, v component
-    BoundaryConditionShPtrType bcShPtr((*boundaryConditions[1])["v"]);
+    BoundaryConditionShPtr bcShPtr((*boundaryConditions[1])["v"]);
     boost::shared_ptr<RobinBoundaryCondition> rbBC(boost::dynamic_pointer_cast<RobinBoundaryCondition>(bcShPtr));
 
-    ForcingFunctionsMapType &forcingfcns = bcs.GetForcingFunctions();
-    InitialConditionsMapType &initialConditions = bcs.GetInitialConditions();
+    ConstForcingFunctionShPtr ffunc  = bcs.GetForcingFunction("u");
+    ConstInitialConditionShPtr ic = bcs.GetInitialCondition("v");
 
     return 0;
 }

@@ -59,21 +59,15 @@ namespace Nektar
                               SpatialDomains::BoundaryConditions &bcs,
                               const std::string variable);
 
-            inline const ConstArray<OneD, int> &GetNatBCglobID() const 
+            inline const ConstArray<OneD, int> &GetWeakBCglobID() const 
             {
-                return m_natBCglobID;
-            }
-
-            inline const ConstArray<OneD, NekDouble> &GetNatBCsign() const 
-            {
-                return m_natBCsign;
+                return m_weakBCglobID;
             }
         
         protected:
         
         private:
-            Array<OneD,int> m_natBCglobID;
-            Array<OneD,NekDouble> m_natBCsign;
+            Array<OneD,int> m_weakBCglobID;
     };
     
     } // end of namespace
@@ -83,6 +77,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.11  2007/08/13 11:09:42  pvos
+/** Implementation of Neumann BC
+/**
 /** Revision 1.10  2007/07/26 08:40:50  sherwin
 /** Update to use generalised i/o hooks in Helmholtz1D
 /**

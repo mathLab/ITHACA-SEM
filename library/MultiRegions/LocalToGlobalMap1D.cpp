@@ -93,7 +93,7 @@ namespace Nektar
                                               const std::string variable)
         {
             int i,j,cnt;
-            int NumNaturalBC;
+            int NumWeakBC;
             int nbnd;
             m_numDirichletBCs = NumDirichlet;  
         
@@ -103,7 +103,7 @@ namespace Nektar
             SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
             
             nbnd = bregions.size();
-            NumNaturalBC = nbnd - NumDirichlet;
+            NumWeakBC = nbnd - NumDirichlet;
 
             Array<OneD, int> bcGlobOldID(nbnd);   
 
@@ -141,30 +141,21 @@ namespace Nektar
                 }                     
             }
 
-            // Find the index of the natural BCs entry in the mapping array
-            // Also find the corresponding sign of this natural BC's
-            Array<OneD, int> natBCindex;
-            if(NumNaturalBC)
+            // Find the index of the weak BCs entry in the mapping array
+            // Also find the corresponding sign of this weak BC's
+            Array<OneD, int> weakBCindex;
+            if(NumWeakBC)
             {
-                natBCindex = Array<OneD, int>(NumNaturalBC); 
+                weakBCindex = Array<OneD, int>(NumWeakBC); 
                 for(i = 0; i < m_totLocLen; ++i)
                 {        
                     for(j = NumDirichlet; j<nbnd; ++j)
                     {
                         if(m_locToContMap[i] == bcGlobOldID[j])
                         {
-                            natBCindex[j-NumDirichlet] = i;
+                            weakBCindex[j-NumDirichlet] = i;
                             break;
                         }
-                    }
-                }
-
-                m_natBCsign = Array<OneD, NekDouble>(NumNaturalBC,1.0); 
-                for(i = 0; i < NumNaturalBC; ++i)
-                { 
-                    if(natBCindex[i]==0)
-                    {
-                        m_natBCsign[i] = -1.0;
                     }
                 }
             }
@@ -201,13 +192,13 @@ namespace Nektar
                 }    
             } 
 
-            // Store the new global id of the vertices where the natural BC are imposed
-            if(NumNaturalBC)
+            // Store the new global id of the vertices where the weak BC are imposed
+            if(NumWeakBC)
             {
-                m_natBCglobID = Array<OneD, int>(NumNaturalBC);   
-                for(i = 0; i < (NumNaturalBC); ++i)
+                m_weakBCglobID = Array<OneD, int>(NumWeakBC);   
+                for(i = 0; i < (NumWeakBC); ++i)
                 {
-                    m_natBCglobID[i] = m_locToContMap[ natBCindex[i] ];
+                    m_weakBCglobID[i] = m_locToContMap[ weakBCindex[i] ];
                 }
             }
         }
@@ -216,6 +207,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.14  2007/08/13 11:09:42  pvos
+* Implementation of Neumann BC
+*
 * Revision 1.13  2007/07/26 08:40:50  sherwin
 * Update to use generalised i/o hooks in Helmholtz1D
 *

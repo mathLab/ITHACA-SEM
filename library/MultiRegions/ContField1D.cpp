@@ -211,11 +211,10 @@ namespace Nektar
             Vmath::Vsub(m_contNcoeffs,&m_contCoeffs[0],1,
                         &Dir_fce[0],1,&m_contCoeffs[0],1);
 
-            // Forcing function with Natural boundary conditions 
+            // Forcing function with weak boundary conditions 
             for(i = 0; i < m_bndConstraint.size()-NumDirBcs; ++i)
             {
-                m_contCoeffs[ (m_locToGloMap->GetNatBCglobID())[i] ] += 
-                    ((m_locToGloMap->GetNatBCsign())[i]) * 
+                m_contCoeffs[ (m_locToGloMap->GetWeakBCglobID())[i] ] +=  
                     key.GetScaleFactor() * (m_bndConstraint[i+NumDirBcs]->GetValue());
             }
 

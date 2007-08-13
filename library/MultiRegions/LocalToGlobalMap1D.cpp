@@ -40,21 +40,21 @@ namespace Nektar
     namespace MultiRegions
     {
         LocalToGlobalMap1D::LocalToGlobalMap1D(const int loclen, 
-                             const StdRegions::StdExpansionVector &locexp, 
-                             const SpatialDomains::Composite &cmps)
-    {
-        int i,j,gid,cnt;
-        
-        // set up Local to Continuous mapping 
-        StdRegions::StdExpMap vmap;
-
+                                               const StdRegions::StdExpansionVector &locexp, 
+                                               const SpatialDomains::Composite &cmps)
+        {
+            int i,j,gid,cnt;
+            
+            // set up Local to Continuous mapping 
+            StdRegions::StdExpMap vmap;
+            
             m_totLocLen    = loclen;        
             m_locToContMap = Array<OneD, int>(m_totLocLen,-1);
-
-        // set up simple map based on vertex and edge id's
-        for(i = cnt = gid = 0; i < locexp.size(); ++i)
-        {
-        locexp[i]->MapTo(StdRegions::eForwards,vmap);
+            
+            // set up simple map based on vertex and edge id's
+            for(i = cnt = gid = 0; i < locexp.size(); ++i)
+            {
+                locexp[i]->MapTo(StdRegions::eForwards,vmap);
                 
                 SpatialDomains::SegGeomSharedPtr SegmentGeom;
                 
@@ -65,14 +65,14 @@ namespace Nektar
                         m_locToContMap[cnt + vmap[j]] =  SegmentGeom->GetVid(j);
                         gid = max(gid,m_locToContMap[cnt + vmap[j]]);
                     }
-        }
+                }
                 else
                 {
                     ASSERTL0(false,"dynamic cast to a SegGeom failed");
                 }
                 cnt += locexp[i]->GetNcoeffs();
-        }
-        
+            }
+            
             for(i = 0; i < m_totLocLen; ++i)
             {
                 if(m_locToContMap[i] == -1)
@@ -80,62 +80,107 @@ namespace Nektar
                     m_locToContMap[i] = ++gid;
                 }
             }
-        m_totGloLen = ++gid;
-    }
-    
-    
-    LocalToGlobalMap1D::~LocalToGlobalMap1D()
-    {
-    }
-
+            m_totGloLen = ++gid;
+        }
+        
+        
+        LocalToGlobalMap1D::~LocalToGlobalMap1D()
+        {
+        }
+        
         void LocalToGlobalMap1D::ResetMapping(const int NumDirichlet, 
-                                         SpatialDomains::BoundaryConditions &bcs,
+                                              SpatialDomains::BoundaryConditions &bcs,
                                               const std::string variable)
         {
-            m_numDirichletBCs = NumDirichlet;
+            int i,j,cnt;
+            int NumNaturalBC;
+            int nbnd;
+            m_numDirichletBCs = NumDirichlet;  
+        
+            // Find the old (before the reset of the mapping) global ID of the vertices where the BC are imposed
+            // The Dir BC are listed before the others
+            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
+            
+            nbnd = bregions.size();
+            NumNaturalBC = nbnd - NumDirichlet;
 
-            if(NumDirichlet)
+            Array<OneD, int> bcGlobOldID(nbnd);   
+
+            for(i = cnt = 0; i < nbnd; ++i)
             {
-                int i,j, nbnd, cnt;
-                Array<OneD, int> dbc_id(NumDirichlet);                
-
-                // Find the global ID of the vertices where dirichlet BC are imposed
-                SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-                SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
-
-                nbnd = bregions.size();
-
-                for(i = cnt = 0; i < nbnd; ++i)
+                if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                    if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                    SpatialDomains::VertexComponentSharedPtr vert;
+                    
+                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
-                        SpatialDomains::VertexComponentSharedPtr vert;
-                        
-                        if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                        bcGlobOldID[cnt++] = vert->GetVid(); 
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a vertex failed");
+                    }        
+                }                     
+            }
+
+            for(i = 0; i < nbnd; ++i)
+            {
+                if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                {
+                    SpatialDomains::VertexComponentSharedPtr vert;
+                    
+                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                    {
+                        bcGlobOldID[cnt++] = vert->GetVid(); 
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a vertex failed");
+                    }        
+                }                     
+            }
+
+            // Find the index of the natural BCs entry in the mapping array
+            // Also find the corresponding sign of this natural BC's
+            Array<OneD, int> natBCindex;
+            if(NumNaturalBC)
+            {
+                natBCindex = Array<OneD, int>(NumNaturalBC); 
+                for(i = 0; i < m_totLocLen; ++i)
+                {        
+                    for(j = NumDirichlet; j<nbnd; ++j)
+                    {
+                        if(m_locToContMap[i] == bcGlobOldID[j])
                         {
-                            dbc_id[cnt++] = vert->GetVid(); 
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"dynamic cast to a vertex failed");
-                        }                        
-                        if(cnt==NumDirichlet)
-                        {
+                            natBCindex[j-NumDirichlet] = i;
                             break;
                         }
                     }
                 }
 
+                m_natBCsign = Array<OneD, NekDouble>(NumNaturalBC,1.0); 
+                for(i = 0; i < NumNaturalBC; ++i)
+                { 
+                    if(natBCindex[i]==0)
+                    {
+                        m_natBCsign[i] = -1.0;
+                    }
+                }
+            }
+
+            // Reset the mapping   
+            if(NumDirichlet)
+            {
                 bool check;
                 int incr;
-                // Modify the numbering 
                 for(i = 0; i < m_totLocLen; ++i)
                 {
                     check=true;
                     incr=0;
                     for(j = 0; j<NumDirichlet; ++j)
                     {
-                        if(m_locToContMap[i] == dbc_id[j])
+                        if(m_locToContMap[i] == bcGlobOldID[j])
                         {
                             m_locToContMap[i] = j;
                             check=false;
@@ -146,7 +191,7 @@ namespace Nektar
                     {
                         for(j = 0; j<NumDirichlet; ++j)
                         {
-                            if(m_locToContMap[i] < dbc_id[j])
+                            if(m_locToContMap[i] < bcGlobOldID[j])
                             {
                                 ++incr;
                             }
@@ -154,13 +199,26 @@ namespace Nektar
                         m_locToContMap[i]=m_locToContMap[i]+incr;
                     }
                 }    
-            }            
+            } 
+
+            // Store the new global id of the vertices where the natural BC are imposed
+            if(NumNaturalBC)
+            {
+                m_natBCglobID = Array<OneD, int>(NumNaturalBC);   
+                for(i = 0; i < (NumNaturalBC); ++i)
+                {
+                    m_natBCglobID[i] = m_locToContMap[ natBCindex[i] ];
+                }
+            }
         }
     }
 }
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.13  2007/07/26 08:40:50  sherwin
+* Update to use generalised i/o hooks in Helmholtz1D
+*
 * Revision 1.12  2007/07/23 09:13:57  sherwin
 * Update for name change where we removed 'type' from the end
 *

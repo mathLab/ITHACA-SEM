@@ -211,6 +211,14 @@ namespace Nektar
             Vmath::Vsub(m_contNcoeffs,&m_contCoeffs[0],1,
                         &Dir_fce[0],1,&m_contCoeffs[0],1);
 
+            // Forcing function with Natural boundary conditions 
+            for(i = 0; i < m_bndConstraint.size()-NumDirBcs; ++i)
+            {
+                m_contCoeffs[ (m_locToGloMap->GetNatBCglobID())[i] ] += 
+                    ((m_locToGloMap->GetNatBCsign())[i]) * 
+                    key.GetScaleFactor() * (m_bndConstraint[i+NumDirBcs]->GetValue());
+            }
+
             if(m_contNcoeffs - NumDirBcs > 0)
             {
                 GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);

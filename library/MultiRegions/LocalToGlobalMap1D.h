@@ -58,10 +58,22 @@ namespace Nektar
             void ResetMapping(const int NumDirichlet, 
                               SpatialDomains::BoundaryConditions &bcs,
                               const std::string variable);
+
+            inline const ConstArray<OneD, int> &GetNatBCglobID() const 
+            {
+                return m_natBCglobID;
+            }
+
+            inline const ConstArray<OneD, NekDouble> &GetNatBCsign() const 
+            {
+                return m_natBCsign;
+            }
         
         protected:
         
         private:
+            Array<OneD,int> m_natBCglobID;
+            Array<OneD,NekDouble> m_natBCsign;
     };
     
     } // end of namespace
@@ -71,6 +83,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.10  2007/07/26 08:40:50  sherwin
+/** Update to use generalised i/o hooks in Helmholtz1D
+/**
 /** Revision 1.9  2007/07/22 23:04:21  bnelson
 /** Backed out Nektar::ptr.
 /**

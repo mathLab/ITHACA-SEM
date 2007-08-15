@@ -2,16 +2,12 @@
 SET(UnitTestSources
     TestNekMatrixMultiplication.cpp
     TestNekMatrixOperations.cpp
-	TestMatrixStoragePolicies.cpp
-	TestUpperTriangularMatrix.cpp
+    TestMatrixStoragePolicies.cpp
+    TestUpperTriangularMatrix.cpp
     main.cpp   
 )
 
 SET(UnitTestHeaders
-    TestNekMatrixMultiplication.h
-    TestNekMatrixOperations.h
-    TestMatrixStoragePolicies.h
-    TestUpperTriangularMatrix.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)

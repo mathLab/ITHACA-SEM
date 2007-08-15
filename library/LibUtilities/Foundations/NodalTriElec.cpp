@@ -129,9 +129,18 @@ namespace Nektar
                 }//end symmetry6
             }//end npts
 
+        //    std::cout << "(x y) = (" << ToVector(m_points[0]) << ", " << ToVector(m_points[1]) <<  ")" << std::endl;
+        //    cout << "numPoints = " << numPoints << endl;
+        //    cout << "NodalTriElecNPTS[numPoints-2] = " << NodalTriElecNPTS[numPoints-2] << endl;
+        //    cout << "isum = " << isum << endl;
+        //    for( int i = 0; i <= numPoints-2; ++i ) {
+        //        cout << "NodalTriElecNPTS[" << i << "] = " << NodalTriElecNPTS[i] << endl;
+        //    }
             NodalPointReorder2d();
 
             ASSERTL1((isum==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
+
+           //exit(0);
         }
 
         void NodalTriElec::CalculateWeights()
@@ -254,6 +263,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriElec.cpp,v $
+* Revision 1.12  2007/08/06 05:41:25  ehan
+* Fixed derivative matrix
+*
 * Revision 1.11  2007/07/31 18:17:21  ehan
 * Conform to Coding Style Standard
 *

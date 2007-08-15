@@ -104,8 +104,8 @@ namespace Nektar
             void CalculateWeights();
             void CalculateDerivMatrix();
             void NodalPointReorder3d();
-            void NodalTetElec::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia,
-                                                     const ConstArray<OneD, NekDouble>& zia, Array<OneD, NekDouble>& interp);
+            void CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia,
+                                       const ConstArray<OneD, NekDouble>& zia, Array<OneD, NekDouble>& interp);
         };
    } // end of namespace
 } // end of namespace 

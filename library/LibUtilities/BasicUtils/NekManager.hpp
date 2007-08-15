@@ -81,7 +81,7 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
-                        ValueContainerPool::iterator iter = m_ValueContainerPool.find(whichPool);
+                        typename ValueContainerPool::iterator iter = m_ValueContainerPool.find(whichPool);
                         if (iter != m_ValueContainerPool.end())
                         {
                             m_values = iter->second;
@@ -105,7 +105,7 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
-                        ValueContainerPool::iterator iter = m_ValueContainerPool.find(whichPool);
+                        typename ValueContainerPool::iterator iter = m_ValueContainerPool.find(whichPool);
                         if (iter != m_ValueContainerPool.end())
                         {
                             m_values = iter->second;

@@ -96,19 +96,6 @@ namespace Nektar
             }       
 
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x) {
-                ASSERTL0(false, "NodalTriFekete Method not implemented for 1-dimensional input");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
-                return returnval;
-            }
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x){
-                ASSERTL0(false, "NodalTriFekete Method not implemented for 1-dimensional input");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
-                return returnval;
-            }
-
-
-
         private:
             NodalTriFekete():PointsBaseType(NullPointsKey)
             {

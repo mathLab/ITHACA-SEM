@@ -43,6 +43,8 @@
 #include <LibUtilities/Foundations/NodalTetElec.h>
 #include <LibUtilities/Foundations/NodalTetElecData.h>
 
+#include <LibUtilities/Foundations/NodalUtil.h>
+
 namespace Nektar
 {
     namespace LibUtilities 
@@ -175,7 +177,6 @@ namespace Nektar
                     continue;
                 }//end symmetry 12 abbc
 
-                
                 // 24 Point symmetry: case abcd
                 if(int(NodalTetElecData[index][4]))
                 {
@@ -199,17 +200,61 @@ namespace Nektar
 
             NodalPointReorder3d();
 
-            ASSERTL1((isum==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");            
+            ASSERTL1((isum==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
         }
 
         void NodalTetElec::CalculateWeights()
         {
-            // No weights computed
+            // Allocate the storage for points
+            PointsBaseType::CalculateWeights();
+
+            typedef DataType T;
+            
+            // Solve the Vandermonde system of integrals for the weight vector
+            NekVector<T> w = MakeTetWeights(NekVector<T>(m_points[0]), NekVector<T>(m_points[1]), NekVector<T>(m_points[2]));
+            
+            m_weights = Array<OneD,T>( w.GetRows(), w.GetPtr() );
         }
+
+          // ////////////////////////////////////////
+        //        CalculateInterpMatrix()
+        void NodalTetElec::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia,
+                                                 const ConstArray<OneD, NekDouble>& zia, Array<OneD, NekDouble>& interp)
+                                                   
+        {
+             NekVector<NekDouble>  x( m_points[0] );
+             NekVector<NekDouble>  y( m_points[1] );
+             NekVector<NekDouble>  z( m_points[2] );
+             NekVector<NekDouble> xi( xia );
+             NekVector<NekDouble> yi( yia );
+             NekVector<NekDouble> zi( zia );
+             NekMatrix<NekDouble> interMat = GetTetInterpolationMatrix(x, y, z, xi, yi, zi);
+
+             int rows = xi.GetRows(), cols = GetTotNumPoints();
+             for( int i = 0; i < rows; ++i ) {
+                for( int j = 0; j < cols; ++j ) {
+                    interp[j + i*cols] = interMat(i,j);
+                }
+             }             
+         }
 
         void NodalTetElec::CalculateDerivMatrix()
         {
-            // No derivative matrix computed
+             // Allocate the derivative matrix.
+            PointsBaseType::CalculateDerivMatrix();
+
+            NekVector<NekDouble> x( m_points[0] );
+            NekVector<NekDouble> y( m_points[1] );
+            NekVector<NekDouble> z( m_points[2] );
+            NekVector<NekDouble> xi = x;
+            NekVector<NekDouble> yi = y;
+            NekVector<NekDouble> zi = z;
+
+            *m_derivmatrix[0] = *GetTetXDerivativeMatrix(x,y,z,xi,yi,zi);
+
+            *m_derivmatrix[1] = *GetTetYDerivativeMatrix(x,y,z,xi,yi,zi);
+
+            *m_derivmatrix[2] = *GetTetZDerivativeMatrix(x,y,z,xi,yi,zi);
         }
 
         boost::shared_ptr<NodalTetElec::PointsBaseType> NodalTetElec::Create(const PointsKey &key)
@@ -229,6 +274,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTetElec.cpp,v $
+* Revision 1.10  2007/07/31 18:12:01  ehan
+* Updated Tetrahedron symmetry and calculate points
+*
 * Revision 1.9  2007/07/22 23:03:26  bnelson
 * Backed out Nektar::ptr.
 *

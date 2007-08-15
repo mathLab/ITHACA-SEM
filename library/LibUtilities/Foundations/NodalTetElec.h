@@ -55,36 +55,40 @@ namespace Nektar
 
             virtual ~NodalTetElec()
             {
+             cout << "****************Nodal Tet Elec distructor called **************************" << endl;
             }
 
             static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
 
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
+              const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
             {
-                ASSERTL0(false, "NodalTetElec Method not implemented");
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
-
-                return returnval;
+                ASSERTL0(pkey.GetPointsDim()==3, "NodalTetElec Points can only interp to other 3d point distributions");
+                ConstArray<OneD, NekDouble> x, y, z;
+                PointsManager()[pkey]->GetPoints(x, y, z);
+                return GetI(x, y, z);
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x)
-            {
-                ASSERTL0(false, "NodalTetElec Method not implemented");
-
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
-
-                return returnval;
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x, const ConstArray<OneD, NekDouble>& y,
+                                                                const ConstArray<OneD, NekDouble>& z)
+           {
+                
+                int numpoints = x.num_elements();
+                return GetI(numpoints, x, y, z);            
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
-            {
-                ASSERTL0(false, "NodalTetElec Method not implemented");
-
-                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
-
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& xi,
+                                                                const ConstArray<OneD, NekDouble>& yi, const ConstArray<OneD, NekDouble>& zi){
+                    
+                Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
+                CalculateInterpMatrix(xi, yi, zi, interp);
+                
+                unsigned int np = GetTotNumPoints();
+                NekDouble* d = interp.data();
+                boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints, 
+                                                                    np, d));
                 return returnval;
-           }
+            }
 
             NodalTetElec(const PointsKey &key):PointsBaseType(key)
             {
@@ -93,12 +97,15 @@ namespace Nektar
         private:
             NodalTetElec():PointsBaseType(NullPointsKey)
             {
+                cout << "&&&&&&&&& Nodal Tet Elec constructor called *****************" << endl;
             }
 
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
             void NodalPointReorder3d();
+            void NodalTetElec::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia,
+                                                     const ConstArray<OneD, NekDouble>& zia, Array<OneD, NekDouble>& interp);
         };
    } // end of namespace
 } // end of namespace 

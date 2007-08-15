@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <UnitTests/testNekMatrixOperations.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/BasicUtils/BoostUtil.hpp>
 #include <boost/test/auto_unit_test.hpp>
@@ -52,7 +51,7 @@ namespace Nektar
     // one with doubles.
     namespace MatrixMultiplicationTests
     {
-        void TestStandardFullTimesStandardFull()
+        BOOST_AUTO_TEST_CASE(TestStandardFullTimesStandardFull)
         {
             {
                  unsigned int buf1[] = {1, 2, 3,
@@ -118,7 +117,7 @@ namespace Nektar
              }
         }
 
-        void TestStandardFullTimesVector()
+        BOOST_AUTO_TEST_CASE(TestStandardFullTimesVector)
         {
             {
                  unsigned int buf1[] = {1, 2, 3,
@@ -180,7 +179,7 @@ namespace Nektar
              }
         }
 
-        void TestScaledFullTimesScaledFull()
+        BOOST_AUTO_TEST_CASE(TestScaledFullTimesScaledFull)
         {
             {
                 unsigned int buf1[] = {1, 2, 3,
@@ -253,7 +252,7 @@ namespace Nektar
             }
         }
 
-        void TestScaledFullTimesVector()
+        BOOST_AUTO_TEST_CASE(TestScaledFullTimesVector)
         {
             {
                  unsigned int buf1[] = {1, 2, 3,

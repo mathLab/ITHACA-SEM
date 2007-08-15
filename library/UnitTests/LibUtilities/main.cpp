@@ -33,51 +33,5 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
+
 #include <boost/test/included/unit_test_framework.hpp>
-#include <UnitTests/LibUtilities/TestMatrixStoragePolicies.h>
-#include <UnitTests/LibUtilities/TestUpperTriangularMatrix.h>
-#include <UnitTests/LibUtilities/TestNekMatrixOperations.h>
-#include <UnitTests/LibUtilities/TestNekMatrixMultiplication.h>
-
-using boost::unit_test_framework::test_suite;
-
-// The boost unit test framework provides the main function for us.
-// All we need to do is provide a test suite.
-
-// On Windows, to turn off memory leak detection, --detect_memory_leaks=0
-test_suite* init_unit_test_suite( int, char* [] )
-{   
-    test_suite* test= BOOST_TEST_SUITE( "Lib Utilities Test Suite" );
-
-    // Nektar::ptr tests.
-    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::Test0ParameterInitialize), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::Test2ParameterInitialize), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestSingleValuePopulationInitialize), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestCArrayInitialization), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestArrayInitialization), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestConstGetValue), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestSetValue), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::UpperTriangularUnitTests::TestAdvance), 0);
-    
-    // Matrix operations
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsFull), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsDiagonal), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestComboExpression), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsUpperTriangularRhsUpperTriangular), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsLowerTriangularRhsLowerTriangular), 0);
-
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixSubtractionTests::TestLhsFullRhsFull), 0);
-
-
-    ////////////////////////////////////////////////////
-    // Matrix Multiplication
-    ////////////////////////////////////////////////////
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixMultiplicationTests::TestStandardFullTimesStandardFull), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixMultiplicationTests::TestStandardFullTimesVector), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixMultiplicationTests::TestScaledFullTimesScaledFull), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixMultiplicationTests::TestScaledFullTimesVector), 0);
-    return test;
-}
-

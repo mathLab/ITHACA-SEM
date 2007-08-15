@@ -181,7 +181,7 @@ namespace Nektar
         void ExpList::FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
                                Array<OneD, NekDouble> &outarray)
         {
-#if 1
+#if 0  // elemental matrix inverse
             int cnt  = 0;
             int cnt1 = 0;
             int i;
@@ -195,17 +195,20 @@ namespace Nektar
                 cnt  += (*m_exp)[i]->GetTotPoints();
                 cnt1 += (*m_exp)[i]->GetNcoeffs();
             }
-#else
+#else  // block matrix inverse 
             static DNekScalBlkMatSharedPtr InvMass;
-
+            Array<OneD,Double> f(m_ncoeffs);
             if(!InvMass.get())
             {
                 InvMass = SetupBlockMatrix(StdRegions::eInvMass);
             }
             
-            DNekVec in (m_ncoeffs,inarray);
-            DNekVec out(m_ncoeffs,outarray,eWrapper);
-            
+            // Inner product
+            IProductWRTBase(inarray,f);
+
+            // Inverse mass matrix
+            DNekVec in (m_ncoeffs,f);
+            DNekVec out(m_ncoeffs,outarray,eWrapper);            
             out = (*InvMass)*in;
 #endif
         }
@@ -227,7 +230,7 @@ namespace Nektar
             BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size[0],exp_size[0]);
             
             //InvMass = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size,exp_size);
-            // Cannot get this call to work with array of integers
+            //Cannot get this call to work with array of integers
             
             
             for(i = 0; i < n_exp; ++i)

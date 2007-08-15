@@ -256,9 +256,33 @@ namespace Nektar
                 return m_derivmatrix[(int)dir];
             }
 
-            virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)=0;
-            virtual const MatrixSharedPtrType GetI(const ConstArray<OneD, DataType>& x) = 0;
-            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const ConstArray<OneD, DataType>& x) = 0;
+            virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)
+            {
+                ASSERTL0(false, "Method not implemented ");
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                return returnval;
+            }
+            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const ConstArray<OneD, DataType>& x)
+            {
+                ASSERTL0(false, "Method not implemented");
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                return returnval;
+            }
+            virtual const MatrixSharedPtrType GetI(const ConstArray<OneD, DataType>& x, const ConstArray<OneD, DataType>& y)
+            {
+                ASSERTL0(false, "Method not implemented");
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                return returnval;
+            }
+
+            virtual const MatrixSharedPtrType GetI(const ConstArray<OneD, DataType>& x, const ConstArray<OneD, DataType>& y,
+                                                   const ConstArray<OneD, DataType>& z)
+            {
+                ASSERTL0(false, "Method not implemented");
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                return returnval;
+            }
+
 
         protected:
             PointsKey m_pointsKey;

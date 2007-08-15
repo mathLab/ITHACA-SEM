@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: 2D Nodal Triangle Fekete Utilities header file --
+// Description: 2D and 3D Nodal Triangle and Tetrahedron Utilities header file --
 //              Basis function, Interpolation, Integral, Derivation, etc. 
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -37,18 +37,19 @@
 #ifndef NODALUTIL_H
 #define NODALUTIL_H
 
-#include <iostream>
+#include <iosfwd>
 
-#include <math.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
-namespace Nektar {
-    namespace LibUtilities{
 
+namespace Nektar
+{
+    namespace LibUtilities
+    {
+
+        // /////////////////////////////////////
+        // General matrix and vector stuff        
         template< typename T > NekVector<T> GetColumn(const NekMatrix<T> & matA, int n);
         NekMatrix<NekDouble> & SetColumn(NekMatrix<NekDouble> & matA, int n, const NekVector<NekDouble> & x);
         NekVector<NekDouble> GetE(int rows, int n);
@@ -57,17 +58,30 @@ namespace Nektar {
         int GetSize(const ConstArray<OneD, NekDouble> & x);
         int GetSize(const NekVector<NekDouble> & x);
         int GetDegree(int nBasisFunctions);
+        NekDouble MakeRound(NekDouble);
         NekVector<NekDouble> ToVector( const ConstArray<OneD, NekDouble> & x );
         Array<OneD, NekDouble> ToArray( const NekVector<NekDouble> & x );
         NekVector<NekDouble> Hadamard( const NekVector<NekDouble> & x, const NekVector<NekDouble> & y );
+        NekVector<NekDouble> VectorPower( const NekVector<NekDouble> & x, NekDouble p );
+        std::string MatrixToString( const NekMatrix<NekDouble> & A, int precision = 2, double threshold = 1e12 );
+        std::string VectorToString( const NekVector<NekDouble> & v, int precision = 2, double threshold = 1e12 );
+        
+        // ////////////////////////////////////////////////////////////////
+        // Polynomials(Jacobi, Legendre, and Dubiner) and its derivations        
+        NekVector<NekDouble> LegendrePoly(int degree, const NekVector<NekDouble>& x);
+        NekVector<NekDouble> DubinerPoly(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y);
+        NekVector<NekDouble> JacobiPoly(int degree, const NekVector<NekDouble>& x, NekDouble alpha, NekDouble beta);
+        NekDouble JacobiPoly(int degree, NekDouble x, NekDouble alpha, NekDouble beta);
+        NekVector<NekDouble> LegendrePolyDerivative(int degree, const NekVector<NekDouble>& x);
+        NekVector<NekDouble> DubinerPolyXDerivative(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y);
+        NekVector<NekDouble> DubinerPolyYDerivative(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y);
+        NekVector<NekDouble> JacobiPolyDerivative(int degree, const NekVector<NekDouble>& x, int alpha, int beta);        
 
+        // /////////////////////////////
+        // Triangle stuff        
         NekVector<NekDouble> MakeDubinerQuadratureSystem(int nBasisFunctions);
         SharedNekMatrixPtr MakeVmatrixOfDubinerPolynomial(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y);
         NekVector<NekDouble> MakeQuadratureWeights(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y);
-
-        NekVector<NekDouble> LegendrePoly(int degree, const NekVector<NekDouble>& x);
-        NekVector<NekDouble> JacobiPoly(int degree, const NekVector<NekDouble>& x, int alpha, int beta);
-        NekVector<NekDouble> DubinerPoly(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y);
         NekMatrix<NekDouble> GetVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y);
         NekMatrix<NekDouble> GetVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree);
         NekMatrix<NekDouble> GetVandermondeForXDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree);
@@ -80,12 +94,46 @@ namespace Nektar {
                                                                     const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi);
         Points<NekDouble>::MatrixSharedPtrType GetXDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
                                                                     const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi);
-                                                                                          
-        NekVector<NekDouble> LegendrePolyDerivative(int degree, const NekVector<NekDouble>& x);
-        NekVector<NekDouble> DubinerPolyXDerivative(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y);
-        NekVector<NekDouble> DubinerPolyYDerivative(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y);
-        NekVector<NekDouble> JacobiPolyDerivative(int degree, const NekVector<NekDouble>& x, int alpha, int beta);
+        
+        // /////////////////////////////
+        // Tetrahedron stuff
+        int GetTetDegree(int nBasisFunc);
+        NekVector<NekDouble> TetrahedralBasis(int p, int q, int r, const NekVector<NekDouble>& x,
+                                              const NekVector<NekDouble>& y, const NekVector<NekDouble>& z);
+        NekMatrix<NekDouble> GetTetVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z, int degree);
+        NekMatrix<NekDouble> GetTetVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z);
+        SharedNekMatrixPtr MakeVmatrixOfTet(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z);
+        NekMatrix<NekDouble> GetTetInterpolationMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z,
+                                                       const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi, const NekVector<NekDouble>& zi);
+        NekVector<NekDouble> MakeTetWeights(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z);
+        NekVector<NekDouble> MakeTetQuadratureSystem(int nBasisFunctions);
+        NekVector<NekDouble> TetXDerivative(int p, int q, int r, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                                            const NekVector<NekDouble>& z);
+        NekMatrix<NekDouble> GetVandermondeForTetXDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z);
+        NekMatrix<NekDouble> GetVandermondeForTetXDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z,
+                                                             int degree);
+        Points<NekDouble>::MatrixSharedPtrType GetTetXDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                 const NekVector<NekDouble>& z, const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi, const NekVector<NekDouble>& zi);
 
+        NekVector<NekDouble> TetYDerivative(int p, int q, int r, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                                            const NekVector<NekDouble>& z);
+        NekMatrix<NekDouble> GetVandermondeForTetYDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z);
+        NekMatrix<NekDouble> GetVandermondeForTetYDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z,
+                                                             int degree);
+        Points<NekDouble>::MatrixSharedPtrType GetTetYDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                 const NekVector<NekDouble>& z, const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi, const NekVector<NekDouble>& zi);
+
+        NekVector<NekDouble> TetZDerivative(int p, int q, int r, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                                            const NekVector<NekDouble>& z);
+        NekMatrix<NekDouble> GetVandermondeForTetZDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z);
+        NekMatrix<NekDouble> GetVandermondeForTetZDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z,
+                                                             int degree);
+        Points<NekDouble>::MatrixSharedPtrType GetTetZDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                 const NekVector<NekDouble>& z, const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi, const NekVector<NekDouble>& zi);
+
+
+        // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Monomial Vandermonde stuff for Triangle : Useful to test triangle(integration, interpolation, and derivation) 
         NekMatrix<NekDouble> GetMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree);
         NekMatrix<NekDouble> GetMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y);
         NekMatrix<NekDouble> GetXDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree);
@@ -93,7 +141,25 @@ namespace Nektar {
         NekMatrix<NekDouble> GetYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree);
         NekMatrix<NekDouble> GetYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y);
         NekVector<NekDouble> GetIntegralOfMonomialVandermonde(int degree);
-        NekDouble MakeRound(NekDouble);
+ 
+                 
+        // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Monomial Vandermonde stuff for Tetrahedron : Useful to test tetrahedron(integration, interpolation, and derivation)
+        NekMatrix<NekDouble> GetMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                                                    const NekVector<NekDouble>& z, int degree);
+        NekMatrix<NekDouble> GetMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z);
+        NekMatrix<NekDouble> GetTetXDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                                                                    const NekVector<NekDouble>& z, int degree);
+        NekMatrix<NekDouble> GetTetXDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                                                                    const NekVector<NekDouble>& z);
+        NekMatrix<NekDouble> GetTetYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                                                                    const NekVector<NekDouble>& z, int degree);
+        NekMatrix<NekDouble> GetTetYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                                                                    const NekVector<NekDouble>& z);
+        NekMatrix<NekDouble> GetTetZDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                                                                    const NekVector<NekDouble>& z, int degree);
+        NekMatrix<NekDouble> GetTetZDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
+                                                                    const NekVector<NekDouble>& z);
 
     } // end of LibUtilities namespace
 } // end of Nektar namespace

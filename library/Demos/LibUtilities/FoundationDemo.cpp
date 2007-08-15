@@ -1,70 +1,79 @@
-#include <cstdio>
-#include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <iosfwd>
+#include <cmath>
+#include <limits>
 
 using namespace std;
 
 #include "LibUtilities/Foundations/Foundations.hpp"
-#include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/GaussPoints.h>
 #include <LibUtilities/Foundations/PolyEPoints.h>
-#include <LibUtilities/Foundations/Basis.h>
-#include <LibUtilities/Foundations/NodalTriFekete.h>
-#include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
 
 
 // Quintic polynomial
-long double polyFunc(long double x) {
+long double polyFunc(long double x)
+{
     return  (((3.0*x*x - 5.0)*x + 1.0)*x - 2.0)*x + 3.0;
 }
 
 // Derivative of the Quintic polynomial
-long double derivativePolyFunc(long double x) {
+long double derivativePolyFunc(long double x)
+{
     return ((15.0*x*x - 15.0)*x   + 2.0)*x - 2.0;
 }
 
 // A Fourier function that integrates to 0 with the Trapezoidal rule
-long double fourierFunc(long double x, int N) {
+long double fourierFunc(long double x, int N)
+{
     long double z = M_PI*(x + 1.0);
     return (cos(N/2.0*z) + sin((N/2.0 - 2.0)*z))/M_PI;
 }
 
 // Derivative of the Fourier function above
-long double derivativeFourierFunc(long double x, int N) {
+long double derivativeFourierFunc(long double x, int N)
+{
     long double z = M_PI*(x + 1.0);
     long double a = (N-4.0)/2.0;
     long double b = N/2.0;
     return M_PI*M_PI*(a*cos(a*z) - b*sin(b*z));
 }
 
-long double function(long double x, int N, PointsType type) {
+long double function(long double x, int N, PointsType type)
+{
     long double y = 0;
-    if( type == eFourierEvenlySpaced) {
+    if( type == eFourierEvenlySpaced)
+    {
         y = fourierFunc(x,N);
-    } else {
+    } else
+    {
         y = polyFunc(x);
     }
     return y;
 }
 
-long double derivativeFunction(long double x, int N, PointsType type){
+long double derivativeFunction(long double x, int N, PointsType type)
+{
     long double yDerivative = 0;
-    if(type == eFourierEvenlySpaced){
+    if(type == eFourierEvenlySpaced)
+    {
          yDerivative = derivativeFourierFunc(x, N);
-    } else {
+    }
+    else
+    {
          yDerivative = derivativePolyFunc(x);
     }
     return yDerivative;
 }
 
-long double integrationFunction(int nPts, PointsType type){
+long double integrationFunction(int nPts, PointsType type)
+{
    long double integral = 0;
-   switch(type){
+   switch(type)
+   {
        case  eFourierEvenlySpaced:
           integral = 0;
        break;
@@ -74,10 +83,12 @@ long double integrationFunction(int nPts, PointsType type){
    return integral;
 }
 
-long double integrandWeightFunction(long double x, PointsType type){
+long double integrandWeightFunction(long double x, PointsType type)
+{
     long double weight = 1;
 
-    switch(type) {
+    switch(type)
+    {
         case eGaussGaussChebyshev:
         case eGaussRadauMChebyshev:
         case eGaussRadauPChebyshev:
@@ -102,10 +113,12 @@ long double integrandWeightFunction(long double x, PointsType type){
 // This routine projects a polynomial or trigonmetric functions which
 // has energy in all modes of the expansions and report an error.
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 
     // Argument check: Display a help message if the count is wrong
-    if(argc != 3) {
+    if(argc != 3)
+    {
         cerr << "Usage: FoundationDemo Points1D-Type nPts" << endl;
 
         cerr << "Where type is an integer value which dictates the basis as:\n";
@@ -122,11 +135,12 @@ int main(int argc, char *argv[]) {
 
     // Read in the type for the points from the caller
     PointsType pointsType = (PointsType) atoi(argv[1]);
-    if(pointsType == eNoPointsType) {
+    if(pointsType == eNoPointsType)
+    {
         cerr << "pointsType = " << pointsType << endl;
         cerr << "PointsTypeMap["<<pointsType<<"] = " << PointsTypeMap[pointsType] << endl;
         ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
-                         "No Points Type requested" );
+                  "No Points Type requested",0);
     }
 
     // Read in the number of points at which the function will be evaluated
@@ -137,10 +151,13 @@ int main(int argc, char *argv[]) {
     cout << "Number of points:          " << nPts << endl;
     
     // Display the example test function to the user
-    if( pointsType == eFourierEvenlySpaced ) {
+    if( pointsType == eFourierEvenlySpaced )
+    {
         cout << "Trigonometric function:    ";
         cout << "f(x) = (cos(N/2.0*z) + sin((N/2.0 - 2.0)*z))/M_PI, where z = M_PI*(x + 1.0)" << endl;
-    } else {
+    }
+    else
+    {
         cout << "Quintic polynomial:        ";
         cout << "p(x) = (((3.0*x*x - 5.0)*x + 1.0)*x - 2.0)*x + 3.0" << endl;
     }
@@ -148,17 +165,21 @@ int main(int argc, char *argv[]) {
     
     // Obtain a reference to a Points object via an appropriate PointsKey object
     PointsKey key(nPts, pointsType);
-    const ptr<Points<NekDouble> > points = PointsManager()[key];
+    boost::shared_ptr<Points<NekDouble> > points = PointsManager()[key];
+    //const ptr<Points<NekDouble> > points = PointsManager()[key];
 
     // Get the abscissas and their matching quadrature weights
-    SharedArray<const NekDouble> z, w;
+   //    SharedArray<const NekDouble> z, w;
+    ConstArray<OneD, NekDouble> z, w;
     points->GetZW(z,w);
 
     // Evaluate the example function at the z[i] points in the interval [-1,1].
     // This generates the data samples, which we store in the y vector and use later
     // during interpolation/integration/differentiation
-    SharedArray<NekDouble> y(nPts);
-    for(int i = 0; i < nPts; ++i) {
+    //    SharedArray<NekDouble> y(nPts);
+    Array<OneD, NekDouble> y(nPts);
+    for(int i = 0; i < nPts; ++i)
+    {
         y[i] = function( z[i], nPts, pointsType );
     }
     
@@ -170,21 +191,27 @@ int main(int argc, char *argv[]) {
 
     // Generate a list of interpolating nodes
     int nNodes = 2*nPts; // Number of interpolating nodes
-    const ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
-    SharedArray<const NekDouble> zNode = nodes->GetZ();
+    boost::shared_ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
+   // const ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
+    //SharedArray<const NekDouble> zNode = nodes->GetZ();
+    ConstArray<OneD, NekDouble> zNode = nodes->GetZ();
     
     // Get the interpolation matrix I
     // Note that I is 2N rows by N columns
-    const Points<NekDouble>::MatrixSharedPtrType Iptr = points->GetI(nNodes, zNode);
+     const Points<NekDouble>::MatrixSharedPtrType Iptr = points->GetI(nNodes,zNode);
+//     const Points<NekDouble>::MatrixSharedPtrType Iptr = points->GetI(nNodes, zNode);
     const NekMatrix<NekDouble> & I = *Iptr;
     
        
     
     // Interpolate the data values in the y vector using the interpolation matrix I
-    SharedArray<NekDouble> u(I.GetRows());
-    for(int i = 0; i < I.GetRows(); ++i) {
+//     SharedArray<NekDouble> u(I.GetRows());
+    Array<OneD, NekDouble> u(I.GetRows());
+    for(int i = 0; i < int(I.GetRows()); ++i)
+    {
         u[i] = 0;
-        for(int j = 0; j < I.GetColumns(); ++j) {
+        for(int j = 0; j < int(I.GetColumns()); ++j)
+        {
             u[i] += I(i,j) * y[j];
         }
     }
@@ -192,11 +219,13 @@ int main(int argc, char *argv[]) {
     // Display the original samples
     cout << setprecision(3);
     cout << "\nOriginal data: \nx      = ";
-    for(int i = 0; i < nPts; ++i) {
+    for(int i = 0; i < nPts; ++i)
+    {
         cout << setw(6) << z[i] << " ";
     }
     cout << "\ny      = ";
-    for(int i = 0; i < nPts; ++i) {
+    for(int i = 0; i < nPts; ++i)
+    {
         cout << setw(6) << y[i] << " ";
     }
 
@@ -204,13 +233,15 @@ int main(int argc, char *argv[]) {
     cout << "\n\n\n              **** Interpolation ****";
     cout << "\n\nResults of interpolation with " << PointsTypeMap[pointsType] << ":";
     cout << "\ninterp = ";
-    for(int i = 0; i < nNodes; ++i) {
+    for(int i = 0; i < nNodes; ++i)
+    {
         cout << setw(6) << u[i] << " ";
     }
     
     // Determine the exact solutions
     cout << "\nexact  = ";
-    for(int i = 0; i < nNodes; ++i) {
+    for(int i = 0; i < nNodes; ++i)
+    {
         cout << setw(6) << function(zNode[i], nPts, pointsType) << " ";
     }
 
@@ -218,28 +249,32 @@ int main(int argc, char *argv[]) {
     cout << setprecision(1);
     cout << "\nerror  = ";
     long double Linf = 0, RMS = 0;
-    for(int i = 0; i < I.GetRows(); ++i) {
+    for(int i = 0; i < int(I.GetRows()); ++i)
+    {
         //long double exact = function(zNode[i], nNodes, pointsType);
         long double exact = function(zNode[i], nPts, pointsType);
         long double error = exact - u[i];
-        Linf = fmax(Linf, fabs(error));
+        Linf = max(Linf, fabs(error));
         RMS += error*error;
         long double epsilon = 1e-2;
-        if( fabs(exact) > epsilon ) {
+        if( fabs(exact) > epsilon )
+        {
             error /= exact;
         }
         cout << setw(6) << error << " ";
     }
-    RMS = sqrt(RMS) / I.GetRows();
+    RMS = sqrt(RMS) / int(I.GetRows());
     cout << setprecision(6);
     cout << "\nLinf   = " << setw(6) << Linf;
     cout << "\nRMS    = " << setw(6) << RMS << endl;
     
     // Show the interpolation matrix
     cout << "\nI = \n";
-    for(int i = 0; i < I.GetRows(); ++i) {
+    for(int i = 0; i < int(I.GetRows()); ++i)
+    {
         cout << "     ";
-        for(int j = 0; j < I.GetColumns(); ++j) {
+        for(int j = 0; j < int(I.GetColumns()); ++j)
+        {
             printf("% 5.3f  ", I(i,j));
         }
         cout << "\n";
@@ -261,10 +296,12 @@ int main(int argc, char *argv[]) {
     
     
     // Differentiate the data values in the y vector using the derivative matrix D
-    SharedArray<NekDouble> v(nPts);
-    for(int i = 0; i < D.GetRows(); ++i) {
+    Array<OneD, NekDouble> v(nPts);
+    for(int i = 0; i < int(D.GetRows()); ++i)
+    {
         v[i] = 0;
-        for(int j = 0; j < D.GetColumns(); ++j) {
+        for(int j = 0; j < int(D.GetColumns()); ++j)
+        {
             v[i] += D(i,j) * y[j];
         }
     }
@@ -274,13 +311,15 @@ int main(int argc, char *argv[]) {
     cout << "\n\n\n              **** Differentiation ****" << setprecision(3);
     cout << "\n\nResults of differentiation with " << PointsTypeMap[pointsType] << ":";
     cout << "\nderived = ";
-    for(int i = 0; i < nPts; ++i) {
+    for(int i = 0; i < nPts; ++i)
+    {
         cout << setw(6) << v[i] << " ";
     }
     
     // Determine the exact solutions
     cout << "\nexact   = ";
-    for(int i = 0; i < nPts; ++i) {
+    for(int i = 0; i < nPts; ++i)
+    {
         cout << setw(6) << derivativeFunction(z[i], nPts, pointsType) << " ";
     }
 
@@ -288,14 +327,16 @@ int main(int argc, char *argv[]) {
     cout << setprecision(1);
     cout << "\nerror   = ";
     Linf = 0, RMS = 0;
-    for(int i = 0; i < nPts; ++i) {
+    for(int i = 0; i < nPts; ++i)
+    {
         long double exact = derivativeFunction(z[i], nPts, pointsType);
         long double error = exact - v[i];
-        Linf = fmax(Linf, fabs(error));
+        Linf = max(Linf, fabs(error));
         RMS += error*error;
 
         long double epsilon = 1e-2;
-        if( fabs(exact) > epsilon ) {
+        if( fabs(exact) > epsilon )
+        {
             error /= exact;
         }
         cout << setw(6) << error << " ";
@@ -310,9 +351,11 @@ int main(int argc, char *argv[]) {
 
     // Show the derivation matrix
     cout << "\nD = \n";
-    for(int i = 0; i < D.GetRows(); ++i) {
+    for(int i = 0; i < int(D.GetRows()); ++i)
+    {
         cout << "     ";
-        for(int j = 0; j < D.GetColumns(); ++j) {
+        for(int j = 0; j < int(D.GetColumns()); ++j)
+        {
             printf("% 5.3f  ", D(i,j));
         }
         cout << "\n";
@@ -329,7 +372,8 @@ int main(int argc, char *argv[]) {
     // Integrate the function by approximating the integral as a weighted
     // linear combination of function evaluations at the z[i] points: y[i] = f(z[i])
     long double numericalIntegration = 0.0;
-    for(int i = 0; i < nPts; ++i) {
+    for(int i = 0; i < nPts; ++i)
+    {
         numericalIntegration += w[i] * y[i] / integrandWeightFunction(z[i], pointsType);
     }
 
@@ -348,7 +392,8 @@ int main(int argc, char *argv[]) {
         long double exact = integrationFunction(nPts, pointsType);
         long double error = exact - numericalIntegration;
         long double epsilon = 1e-2;
-        if( fabs(exact) > epsilon ) {
+        if( fabs(exact) > epsilon )
+        {
             error /= exact;
         }
         cout << setw(12) << error;
@@ -357,7 +402,8 @@ int main(int argc, char *argv[]) {
 
     // Show the weights
     cout << "\nquatdrature weights =      " << setprecision(3);
-    for(int i = 0; i < nPts; ++i) {
+    for(int i = 0; i < nPts; ++i)
+    {
         cout << setw(7) << w[i] << " ";
     }
     cout << endl;

@@ -61,7 +61,6 @@ namespace Nektar
         void testConstantExpressions()
         {
              using namespace Nektar;
-             using namespace Nektar::expt;
  
              {
                  int t = 7;
@@ -92,7 +91,7 @@ namespace Nektar
              {
                  // TODO - Find a way to prevent temporaries (meaning that the parameter to
                  // this call is temporary and that could cause problems).
-                 Expression<ConstantExpressionPolicy<Point> > e2(Point(1,2,3));
+                 //Expression<ConstantExpressionPolicy<Point> > e2(Point(1,2,3));
              }
         }
 
@@ -1097,6 +1096,9 @@ namespace Nektar
 
 /**
     $Log: testExpressionTemplates.cpp,v $
+    Revision 1.16  2007/07/17 02:00:14  bnelson
+    *** empty log message ***
+
     Revision 1.15  2007/06/10 23:45:59  bnelson
     Matrix updates.
 

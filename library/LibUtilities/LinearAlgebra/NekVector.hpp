@@ -63,7 +63,7 @@ namespace Nektar
 //         };
 //     }
 #endif
-
+    
     template<typename DataType, unsigned int dim, unsigned int space>
     NekVector<DataType, dim, space>
     operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
@@ -211,6 +211,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.18  2007/06/10 23:42:16  bnelson
+    Matrix updates.
+
     Revision 1.17  2007/04/05 05:12:45  bnelson
     *** empty log message ***
 

@@ -37,7 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_NEK_MATRIX_METADATA_HPP
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
 
 namespace Nektar
 {
@@ -240,6 +240,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrixMetadata.hpp,v $
+    Revision 1.7  2007/06/10 23:42:16  bnelson
+    Matrix updates.
+
     Revision 1.6  2007/01/16 05:30:34  bnelson
     Major improvements for expression templates.
 

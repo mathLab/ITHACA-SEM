@@ -38,355 +38,110 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_OPERATOR_GENERATORS_HPP
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_OPERATOR_GENERATORS_HPP
 
-#include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <boost/concept_check.hpp>
+#include <boost/preprocessor/repetition/enum_binary_params.hpp>
+#include <boost/preprocessor/control/expr_if.hpp>
+#include <boost/preprocessor/repetition/enum_trailing_binary_params.hpp>
+#include <boost/preprocessor/control/if.hpp>
+#include <boost/preprocessor/logical/and.hpp>
+#include <boost/preprocessor/comparison/greater.hpp>
+#include <boost/preprocessor/repetition/enum_params.hpp>
+#include <boost/preprocessor/stringize.hpp>
+
+#include <LibUtilities/ExpressionTemplates/ArithmeticTraits.hpp>
+
+// #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+// #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
+// #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 namespace Nektar
 {
-    template<typename LhsType, typename RhsType, typename OpType>
-    class OperatorGenerator;
+
     
-//     template<typename LhsType, typename RhsType>
-//     struct PlusEqualConcept
-//     {
-//         void constraints()
-//         {
-//             lhs += rhs;
+    #define PP_ENUM_TWO_SETS_OF_BINARY_PARAMS(LhsTypeName, LhsVariableName, LhsNumber, RhsTypeName, RhsVariableName, RhsNumber) \
+        BOOST_PP_ENUM_BINARY_PARAMS(LhsNumber, LhsTypeName, LhsVariableName) \
+        BOOST_PP_COMMA_IF(BOOST_PP_AND(BOOST_PP_GREATER(LhsNumber,0), BOOST_PP_GREATER(RhsNumber,0))) \
+        BOOST_PP_ENUM_BINARY_PARAMS(RhsNumber, RhsTypeName, RhsVariableName)
+    
+    #define PP_ENUM_TWO_SETS_OF_TYPES(LhsTypeName, LhsNumber, RhsTypeName, RhsNumber) \
+        BOOST_PP_ENUM_PARAMS(LhsNumber, typename LhsTypeName) \
+        BOOST_PP_COMMA_IF(BOOST_PP_AND(BOOST_PP_GREATER(LhsNumber,0), BOOST_PP_GREATER(RhsNumber,0))) \
+        BOOST_PP_ENUM_PARAMS(RhsNumber, typename RhsTypeName)
+    
+    #define GET_TEMPLATED_TYPE(TypeName, TemplateTypeName, Number) TypeName<BOOST_PP_ENUM_PARAMS(Number, TemplateTypeName)>
+    
+// #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+//     #define GENERATE_MULTIPLICATION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+//         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+//         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,MultiplyOp > > \
+//         operator*(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+//               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+//         { \
+//             return CreateBinaryExpression<MultiplyOp>(lhs, rhs); \
 //         }
 //         
-//         LhsType lhs;
-//         RhsType rhs;
-//     };
-    
-    template<typename LhsType, typename RhsType>
-    class OperatorGenerator<LhsType, RhsType, AddOp>
-    {
-        public:
-            typedef typename BinaryExpressionTraits<LhsType, RhsType, AddOp>::ResultType ResultType;
-            
-            friend ResultType operator+(typename boost::call_traits<LhsType>::const_reference lhs,
-                                        typename boost::call_traits<RhsType>::const_reference rhs)
-            {
-                //boost::function_requires<PlusEqualConcept<LhsType, RhsType> >();
-                ResultType result;
-                NekAdd(result, lhs, rhs);
-                return result;
-            }
-    };
-    
-    template<typename LhsType, typename RhsType>
-    class OperatorGenerator<LhsType, RhsType, SubtractOp>
-    {
-        public:
-            typedef typename BinaryExpressionTraits<LhsType, RhsType, SubtractOp>::ResultType ResultType;
-            
-            friend ResultType operator-(typename boost::call_traits<LhsType>::const_reference lhs,
-                                        typename boost::call_traits<RhsType>::const_reference rhs)
-            {
-                ResultType result;
-                NekSubtract(result, lhs, rhs);
-                return result;
-            }
-    };
-    
-    template<typename LhsType, typename RhsType>
-    class OperatorGenerator<LhsType, RhsType, DivideOp>
-    {
-        public:
-            typedef typename BinaryExpressionTraits<LhsType, RhsType, DivideOp>::ResultType ResultType;
-            
-            friend ResultType operator/(typename boost::call_traits<LhsType>::const_reference lhs,
-                                        typename boost::call_traits<RhsType>::const_reference rhs)
-            {
-                ResultType result;
-                NekDivide(result, lhs, rhs);
-                return result;
-            }
-    };
-    
-//     template<typename LhsType, typename RhsType>
-//     class OperatorGenerator<LhsType, RhsType, MultiplyOp>
-//     {
-//         public:
-//             typedef typename BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType ResultType;
-//             
-//             friend ResultType operator*(typename boost::call_traits<LhsType>::const_reference lhs,
-//                                         typename boost::call_traits<RhsType>::const_reference rhs)
-//             {
-//                 ResultType result;
-//                 NekMultiply(result, lhs, rhs);
-//                 return result;
-//             }
-//     };
-    
-    #define GENERATE_MULTIPLICATION_OPERATOR(LhsType, RhsType) \
-            BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType \
-            operator*(const LhsType& lhs, const RhsType& rhs) \
-            { \
-                BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType result; \
-                NekMultiply(result, lhs, rhs); \
-                return result; \
-            } \
-            \
-            boost::shared_ptr<BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType> \
-            operator*(const boost::shared_ptr<const LhsType>& lhs, const boost::shared_ptr<const RhsType>& rhs) \
-            { \
-                typedef BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType ResultType; \
-                boost::shared_ptr<ResultType> result(MemoryManager::AllocateSharedPtr<ResultType>()); \
-                NekMultiply(result, lhs, rhs); \
-                return result; \
-            }
-    
-    #define GENERATE_MULTIPLICATION_OPERATOR_L3(LhsType, RhsType) \
-            template<typename L1, typename L2, typename L3> \
-            typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType \
-            operator*(const LhsType<L1, L2, L3>& lhs, const RhsType& rhs) \
-            { \
-                typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType result; \
-                NekMultiply(result, lhs, rhs); \
-                return result; \
-            }
-    
-    #define GENERATE_MULTIPLICATION_OPERATOR_L3_R0(LhsType) \
-            template<typename L1, typename L2, typename L3, typename RhsType> \
-            typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType \
-            operator*(const LhsType<L1, L2, L3>& lhs, const RhsType& rhs) \
-            { \
-                typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType result; \
-                NekMultiply(result, lhs, rhs); \
-                return result; \
-            } 
-            //\
-            //template<typename L1, typename L2, typename L3, typename RhsType> \
-            //boost::shared_ptr<typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType> \
-            //operator*(const boost::shared_ptr<const LhsType<L1, L2, L3> > lhs, const RhsType& rhs) \
-            //{ \
-            //    return boost::shared_ptr<typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType>(); \
-            //}
-            //    typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType ResultType; \
-            //    boost::shared_ptr<ResultType> result = MemoryManager::AllocateSharedPtr<ResultType>(); \ 
-            //    NekMultiply(result, lhs, rhs); \
-            //    return result; \
-            //}
-    
-    #define GENERATE_MULTIPLICATION_OPERATOR_L0_R3(RhsType) \
-            template<typename R1, typename R2, typename R3, typename LhsType> \
-            typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, MultiplyOp>::ResultType \
-            operator*(const LhsType& lhs, const RhsType<R1, R2, R3>& rhs) \
-            { \
-                typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, MultiplyOp>::ResultType result; \
-                NekMultiply(result, lhs, rhs); \
-                return result; \
-            }
-    
-//     template<typename LhsType, template<typename, typename, typename> class RhsType, typename OpType>
-//     class OperatorGeneratorR3;
-//     
-//     template<typename LhsType, template<typename, typename, typename> class RhsType>
-//     class OperatorGenerator<LhsType, RhsType, MultiplyOp>
-//     {
-//         public:
-//             //typedef typename BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType ResultType;
-//             
-//             template<typename R1, typename R2, typename R3>
-//             friend typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3> >::ResultType 
-//             operator*(typename boost::call_traits<LhsType>::const_reference lhs,
-//                       typename boost::call_traits<RhsType<R1, R2, R3> >::const_reference rhs)
-//             {
-//                 typedef typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3> >::ResultType ResultType;
-//                 ResultType result;
-//                 ResultType::NekMultiply(result, lhs, rhs);
-//                 return result;
-//             }
-//     };
-    
-    template<template<typename, typename, typename> class LhsType, typename RhsType, typename OpType>
-    class OperatorGeneratorL3;
-    
-    template<template<typename, typename, typename> class LhsType, typename RhsType>
-    class OperatorGeneratorL3<LhsType, RhsType, MultiplyOp>
-    {
-        public:           
-            template<typename L1, typename L2, typename L3>
-            friend typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType 
-            operator*(const LhsType<L1, L2, L3>& lhs,
-                      const RhsType& rhs)
-            {
-                typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType, MultiplyOp>::ResultType ResultType;
-                ResultType result;
-                NekMultiply(result, lhs, rhs);
-                return result;
-            }
-    };
-    
-    
-    template<template<typename, typename, typename> class LhsType, 
-             template<typename, typename, typename> class RhsType, 
-             typename OpType>
-    class OperatorGeneratorL3R3;
-    
-    template<template<typename, typename, typename> class LhsType, 
-             template<typename, typename, typename> class RhsType>
-    class OperatorGeneratorL3R3<LhsType, RhsType, MultiplyOp>
-    {
-        public:           
-            template<typename L1, typename L2, typename L3,
-                     typename R1, typename R2, typename R3>
-            friend typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, MultiplyOp>::ResultType 
-            operator*(const LhsType<L1, L2, L3>& lhs,
-                      const RhsType<R1, R2, R3>& rhs)
-            {
-                typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, MultiplyOp>::ResultType ResultType;
-                ResultType result;
-                NekMultiply(result, lhs, rhs);
-                return result;
-            }
-    };
-    
-    template<template<typename, typename, typename> class LhsType, 
-             template<typename, typename, typename> class RhsType>
-    class OperatorGeneratorL3R3<LhsType, RhsType, AddOp>
-    {
-        public:           
-            template<typename L1, typename L2, typename L3,
-                     typename R1, typename R2, typename R3>
-            friend typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, AddOp>::ResultType 
-            operator+(const LhsType<L1, L2, L3>& lhs,
-                      const RhsType<R1, R2, R3>& rhs)
-            {
-                typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, AddOp>::ResultType ResultType;
-                ResultType result;
-                NekAdd(result, lhs, rhs);
-                return result;
-            }
-    };
-    
-    template<template<typename, typename, typename> class LhsType, 
-             template<typename, typename, typename> class RhsType>
-    class OperatorGeneratorL3R3<LhsType, RhsType, SubtractOp>
-    {
-        public:           
-            template<typename L1, typename L2, typename L3,
-                     typename R1, typename R2, typename R3>
-            friend typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, SubtractOp>::ResultType 
-            operator-(const LhsType<L1, L2, L3>& lhs,
-                      const RhsType<R1, R2, R3>& rhs)
-            {
-                typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, SubtractOp>::ResultType ResultType;
-                ResultType result;
-                NekSubtract(result, lhs, rhs);
-                return result;
-            }
-    };
-    
-    template<template<typename, typename, typename> class LhsType, 
-             template<typename, typename, typename> class RhsType>
-    class OperatorGeneratorL3R3<LhsType, RhsType, DivideOp>
-    {
-        public:           
-            template<typename L1, typename L2, typename L3,
-                     typename R1, typename R2, typename R3>
-            friend typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, DivideOp>::ResultType 
-            operator/(const LhsType<L1, L2, L3>& lhs,
-                      const RhsType<R1, R2, R3>& rhs)
-            {
-                typedef typename BinaryExpressionTraits<LhsType<L1, L2, L3>, RhsType<R1, R2, R3>, DivideOp>::ResultType ResultType;
-                ResultType result;
-                NekDivide(result, lhs, rhs);
-                return result;
-            }
-    };
-    
-    template<typename LhsType, 
-             template<typename, typename, typename> class RhsType>
-    class OperatorGeneratorR3
-    {
-        public:
-            template<typename R1, typename R2, typename R3>
-            friend typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, DivideOp>::ResultType 
-            operator/(const LhsType& lhs,
-                      const RhsType<R1, R2, R3>& rhs)
-            {
-                typedef typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, DivideOp>::ResultType ResultType;
-                ResultType result;
-                NekDivide(result, lhs, rhs);
-                return result;
-            }
-            
-            template<typename R1, typename R2, typename R3>
-            friend typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, MultiplyOp>::ResultType 
-            operator*(const LhsType& lhs,
-                      const RhsType<R1, R2, R3>& rhs)
-            {
-                typedef typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, MultiplyOp>::ResultType ResultType;
-                ResultType result;
-                NekMultiply(result, lhs, rhs);
-                return result;
-            }
-            
-            template<typename R1, typename R2, typename R3>
-            friend typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, AddOp>::ResultType 
-            operator+(const LhsType& lhs,
-                      const RhsType<R1, R2, R3>& rhs)
-            {
-                typedef typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, AddOp>::ResultType ResultType;
-                ResultType result;
-                NekAdd(result, lhs, rhs);
-                return result;
-            }
-            
-            template<typename R1, typename R2, typename R3>
-            friend typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, SubtractOp>::ResultType 
-            operator-(const LhsType& lhs,
-                      const RhsType<R1, R2, R3>& rhs)
-            {
-                typedef typename BinaryExpressionTraits<LhsType, RhsType<R1, R2, R3>, SubtractOp>::ResultType ResultType;
-                ResultType result;
-                NekSubtract(result, lhs, rhs);
-                return result;
-            }
-    };
-
-    template<typename LhsType, typename RhsType>
-    typename BinaryExpressionTraits<LhsType, RhsType, AddOp>::ResultType
-    operator+(const LhsType& lhs, const RhsType& rhs)
-    {
-        typedef typename BinaryExpressionTraits<LhsType, RhsType, AddOp>::ResultType ResultType;
-        ResultType result;
-        NekAdd(result, lhs, rhs);
-        return result;
-    }
-
-    template<typename LhsType, typename RhsType>
-    typename BinaryExpressionTraits<LhsType, RhsType, SubtractOp>::ResultType 
-    operator-(const LhsType& lhs, const RhsType& rhs)
-    {
-        typedef typename BinaryExpressionTraits<LhsType, RhsType, SubtractOp>::ResultType ResultType;
-        ResultType result;
-        NekSubtract(result, lhs, rhs);
-        return result;
-    }
-
-    template<typename LhsType, typename RhsType>
-    typename BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType 
-    operator*(const LhsType& lhs, const RhsType& rhs)
-    {
-        typedef typename BinaryExpressionTraits<LhsType, RhsType, MultiplyOp>::ResultType ResultType;
-        ResultType result;
-        NekMultiply(result, lhs, rhs);
-        return result;
-    }
-
-    template<typename LhsType, typename RhsType>
-    typename BinaryExpressionTraits<LhsType, RhsType, DivideOp>::ResultType 
-    operator/(const LhsType& lhs, const RhsType& rhs)
-    {
-        typedef typename BinaryExpressionTraits<LhsType, RhsType, DivideOp>::ResultType ResultType;
-        ResultType result;
-        NekDivide(result, lhs, rhs);
-        return result;
-    }
+//     #define GENERATE_DIVISION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+//         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+//         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,DivideOp > > \
+//         operator/(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+//               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+//         { \
+//             return CreateBinaryExpression<DivideOp>(lhs, rhs); \
+//         }
+//         
+//     #define GENERATE_ADDITION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+//         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+//         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,AddOp > > \
+//         operator+(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+//               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+//         { \
+//             return CreateBinaryExpression<AddOp>(lhs, rhs); \
+//         }
+//         
+//     #define GENERATE_SUBTRACTION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+//         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+//         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,SubtractOp > > \
+//         operator-(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+//               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+//         { \
+//             return CreateBinaryExpression<SubtractOp>(lhs, rhs); \
+//         }
+// #else //NEKTAR_USE_EXPRESSION_TEMPLATES
+    #define GENERATE_MULTIPLICATION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+        template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+        typename MultiplicationTraits<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams), GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)>::ResultType \
+        operator*(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+              const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+        { \
+            return NekMultiply(lhs, rhs); \
+        }
+        
+    #define GENERATE_DIVISION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+        template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+        typename DivisionTraits<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams), GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)>::ResultType \
+        operator/(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+              const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+        { \
+            return NekDivide(lhs, rhs); \
+        }
+        
+    #define GENERATE_ADDITION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+        template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+        typename AdditionTraits<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams), GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)>::ResultType \
+        operator+(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+              const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+        { \
+            return NekAdd(lhs, rhs); \
+        }
+        
+    #define GENERATE_SUBTRACTION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+        template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+        typename SubtractionTraits<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams), GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)>::ResultType \
+        operator-(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+              const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+        { \
+            return NekSubtract(lhs, rhs); \
+        }
+//#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_OPERATOR_GENERATORS_HPP

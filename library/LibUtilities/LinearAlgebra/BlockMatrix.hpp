@@ -37,11 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLOCK_MATRIX_HPP
 
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
-#include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
-#include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/LinearAlgebra/FullMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/DiagonalMatrixStoragePolicy.hpp>

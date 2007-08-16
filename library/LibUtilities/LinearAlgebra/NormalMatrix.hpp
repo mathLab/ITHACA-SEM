@@ -40,9 +40,6 @@
 #include <LibUtilities/LinearAlgebra/FullMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/DiagonalMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/TriangularMatrixStoragePolicy.hpp>
-#include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
-#include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 

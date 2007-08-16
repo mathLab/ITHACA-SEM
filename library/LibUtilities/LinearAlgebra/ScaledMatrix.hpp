@@ -37,11 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_SCALED_MATRIX_HPP
 
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
-#include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
-#include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/Memory/DeleteNothing.hpp>
-#include <LibUtilities/LinearAlgebra/MatrixTraits.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
 #include <boost/shared_ptr.hpp>
@@ -109,7 +105,7 @@ namespace Nektar
             NekMatrix() :
                 BaseType(0,0),
                 m_matrix(),
-                m_scale(0.0)
+                m_scale(0)
             {
             }
             

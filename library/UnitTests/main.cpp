@@ -210,17 +210,15 @@ test_suite* init_unit_test_suite( int, char* [] )
     /// Linear algebra algorithsm.
     test->add(BOOST_TEST_CASE(&Nektar::NekLinAlgTests::testGramSchmidtOrthogonalizationBookExample), 0);
     
-    // Matrix Operations
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsFull), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestLhsFullRhsDiagonal), 0);
-    test->add(BOOST_TEST_CASE(&Nektar::MatrixOperationTests::TestComboExpression), 0);
-	test->add(BOOST_TEST_CASE(&Nektar::MatrixSubtractionTests::TestLhsFullRhsFull), 0);
     
     return test;
 }
 
 /**
     $Log: main.cpp,v $
+    Revision 1.48  2007/07/21 18:44:51  bnelson
+    Added tests for matrix subtraction.
+
     Revision 1.47  2007/07/20 02:24:41  bnelson
     Replaced boost::shared_ptr with Nektar::ptr
 

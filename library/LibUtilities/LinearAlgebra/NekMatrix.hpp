@@ -46,6 +46,7 @@
 
 namespace Nektar
 {
+    
     template<typename DataType, typename StorageType, typename FormType>
     std::ostream& operator<<(std::ostream& os, const NekMatrix<DataType, StorageType, FormType>& rhs)
     {
@@ -358,6 +359,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.27  2007/06/17 22:57:01  bnelson
+    Added MatrixOperation files.
+
     Revision 1.26  2007/06/10 23:42:15  bnelson
     Matrix updates.
 

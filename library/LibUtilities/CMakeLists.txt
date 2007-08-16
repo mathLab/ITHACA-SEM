@@ -5,60 +5,59 @@ SET(BasicConstHeaders
 )
 
 SET(LinearAlgebraHeaders
-	./LinearAlgebra/Blas.hpp
+    ./LinearAlgebra/Blas.hpp
     ./LinearAlgebra/BlockMatrix.hpp
     ./LinearAlgebra/DiagonalMatrixStoragePolicy.hpp
     ./LinearAlgebra/FullMatrixStoragePolicy.hpp
-	./LinearAlgebra/Lapack.hpp
+    ./LinearAlgebra/Lapack.hpp
     ./LinearAlgebra/MatrixBase.hpp
     ./LinearAlgebra/MatrixOperations.cpp
     ./LinearAlgebra/MatrixOperations.hpp
     ./LinearAlgebra/MatrixStoragePolicy.hpp
     ./LinearAlgebra/MatrixStorageType.h
-    ./LinearAlgebra/MatrixTraits.hpp
     ./LinearAlgebra/MatrixType.h
-	./LinearAlgebra/NekBlockDiagonalMatrix.hpp
-	./LinearAlgebra/NekBlockFullMatrix.hpp
-	./LinearAlgebra/NekBlockMatrix.hpp
-	./LinearAlgebra/NekDiagonalMatrix.hpp
-	./LinearAlgebra/NekFullMatrix.hpp
-	./LinearAlgebra/NekLinAlgAlgorithms.hpp
-	./LinearAlgebra/NekLinSys.hpp
-	./LinearAlgebra/NekMatrix.hpp
-	./LinearAlgebra/NekMatrixObject.hpp
-	./LinearAlgebra/NekMatrixForm.h
-	./LinearAlgebra/NekMatrixFwd.hpp
-	./LinearAlgebra/NekMatrixImpl.hpp
-	./LinearAlgebra/NekMatrixMetadata.hpp
-	./LinearAlgebra/NekPoint.hpp
-	./LinearAlgebra/NekTypeDefs.hpp
-	./LinearAlgebra/NekVector.hpp
-	./LinearAlgebra/NekVectorObject.hpp
-	./LinearAlgebra/NekVectorCommon.hpp
-	./LinearAlgebra/NekVectorConstantSized.hpp
-	./LinearAlgebra/NekVectorFwd.hpp
-	./LinearAlgebra/NekVectorMetadata.hpp
-	./LinearAlgebra/NekVectorTypeTraits.hpp
-	./LinearAlgebra/NekVectorVariableSized.hpp
-        ./LinearAlgebra/NormalMatrix.hpp
-	./LinearAlgebra/PointerWrapper.h
-        ./LinearAlgebra/ScaledMatrix.hpp
-        ./LinearAlgebra/TriangularMatrixStoragePolicy.hpp
-	./LinearAlgebra/TransF77.hpp
+    ./LinearAlgebra/NekBlockDiagonalMatrix.hpp
+    ./LinearAlgebra/NekBlockFullMatrix.hpp
+    ./LinearAlgebra/NekBlockMatrix.hpp
+    ./LinearAlgebra/NekDiagonalMatrix.hpp
+    ./LinearAlgebra/NekFullMatrix.hpp
+    ./LinearAlgebra/NekLinAlgAlgorithms.hpp
+    ./LinearAlgebra/NekLinSys.hpp
+    ./LinearAlgebra/NekMatrix.hpp
+    ./LinearAlgebra/NekMatrixObject.hpp
+    ./LinearAlgebra/NekMatrixForm.h
+    ./LinearAlgebra/NekMatrixFwd.hpp
+    ./LinearAlgebra/NekMatrixImpl.hpp
+    ./LinearAlgebra/NekMatrixMetadata.hpp
+    ./LinearAlgebra/NekPoint.hpp
+    ./LinearAlgebra/NekTypeDefs.hpp
+    ./LinearAlgebra/NekVector.hpp
+    ./LinearAlgebra/NekVectorObject.hpp
+    ./LinearAlgebra/NekVectorCommon.hpp
+    ./LinearAlgebra/NekVectorConstantSized.hpp
+    ./LinearAlgebra/NekVectorFwd.hpp
+    ./LinearAlgebra/NekVectorMetadata.hpp
+    ./LinearAlgebra/NekVectorTypeTraits.hpp
+    ./LinearAlgebra/NekVectorVariableSized.hpp
+    ./LinearAlgebra/NormalMatrix.hpp
+    ./LinearAlgebra/PointerWrapper.h
+    ./LinearAlgebra/ScaledMatrix.hpp
+    ./LinearAlgebra/TriangularMatrixStoragePolicy.hpp
+    ./LinearAlgebra/TransF77.hpp
 )
 
 SET(FoundationHeaders
-	./Foundations/Graph.h
-	./Foundations/Basis.h
-	./Foundations/FourierPoints.h
-	./Foundations/GaussPoints.h
-	./Foundations/ManagerAccess.h
-	./Foundations/NodalTetElec.h
-	./Foundations/NodalTriElec.h
-	./Foundations/NodalTriFekete.h
-	./Foundations/Points.h
-	./Foundations/PolyEPoints.h
-	./Foundations/NodalUtil.h
+    ./Foundations/Graph.h
+    ./Foundations/Basis.h
+    ./Foundations/FourierPoints.h
+    ./Foundations/GaussPoints.h
+    ./Foundations/ManagerAccess.h
+    ./Foundations/NodalTetElec.h
+    ./Foundations/NodalTriElec.h
+    ./Foundations/NodalTriFekete.h
+    ./Foundations/Points.h
+    ./Foundations/PolyEPoints.h
+    ./Foundations/NodalUtil.h
 )
 
 SET(InterpreterHeaders
@@ -71,48 +70,48 @@ SET(PolyLibHeaders
 )	
 
 SET(ExpressionTemplates
-	./ExpressionTemplates/Accumulator.hpp
-	./ExpressionTemplates/ArithmeticConcepts.hpp
-	./ExpressionTemplates/ArithmeticTraits.hpp
-	./ExpressionTemplates/AssignableTraits.hpp
-	./ExpressionTemplates/AssociativeExpressionTraits.hpp
-	./ExpressionTemplates/AssociativeTraits.hpp
-	./ExpressionTemplates/BinaryExpression.hpp
-	./ExpressionTemplates/BinaryExpressionEvaluator.hpp
-	./ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp
-	./ExpressionTemplates/BinaryExpressionOperators.hpp
-	./ExpressionTemplates/BinaryExpressionPolicy.hpp
-	./ExpressionTemplates/BinaryExpressionPolicyFwd.hpp
-	./ExpressionTemplates/BinaryExpressionTraits.hpp
-	./ExpressionTemplates/CommutativeExpressionTraits.hpp
-	./ExpressionTemplates/CommutativeTraits.hpp
-	./ExpressionTemplates/ConstantExpression.hpp
-	./ExpressionTemplates/ConstantExpressionTraits.hpp
-	./ExpressionTemplates/Expression.hpp
-	./ExpressionTemplates/ExpressionConcepts.hpp
-	./ExpressionTemplates/ExpressionMetadata.hpp
-	./ExpressionTemplates/ExpressionReturnType.hpp
-	./ExpressionTemplates/ExpressionTemplateConcepts.hpp
-	./ExpressionTemplates/ExpressionTemplateOperators.hpp
-	./ExpressionTemplates/ExpressionTemplates.hpp
-	./ExpressionTemplates/ExpressionTraits.hpp
-	./ExpressionTemplates/NegateOp.hpp
-	./ExpressionTemplates/NullOp.hpp
-	./ExpressionTemplates/UnaryExpression.hpp
-	./ExpressionTemplates/UnaryExpressionTraits.hpp
+    ./ExpressionTemplates/Accumulator.hpp
+    ./ExpressionTemplates/ArithmeticConcepts.hpp
+    ./ExpressionTemplates/ArithmeticTraits.hpp
+    ./ExpressionTemplates/AssignableTraits.hpp
+    ./ExpressionTemplates/AssociativeExpressionTraits.hpp
+    ./ExpressionTemplates/AssociativeTraits.hpp
+    ./ExpressionTemplates/BinaryExpression.hpp
+    ./ExpressionTemplates/BinaryExpressionEvaluator.hpp
+    ./ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp
+    ./ExpressionTemplates/BinaryExpressionOperators.hpp
+    ./ExpressionTemplates/BinaryExpressionPolicy.hpp
+    ./ExpressionTemplates/BinaryExpressionPolicyFwd.hpp
+    ./ExpressionTemplates/BinaryExpressionTraits.hpp
+    ./ExpressionTemplates/BinaryOperators.hpp
+    ./ExpressionTemplates/CommutativeExpressionTraits.hpp
+    ./ExpressionTemplates/CommutativeTraits.hpp
+    ./ExpressionTemplates/ConstantExpression.hpp
+    ./ExpressionTemplates/ConstantExpressionTraits.hpp
+    ./ExpressionTemplates/Expression.hpp
+    ./ExpressionTemplates/ExpressionConcepts.hpp
+    ./ExpressionTemplates/ExpressionMetadata.hpp
+    ./ExpressionTemplates/ExpressionReturnType.hpp
+    ./ExpressionTemplates/ExpressionTemplateConcepts.hpp
+    ./ExpressionTemplates/ExpressionTemplateOperators.hpp
+    ./ExpressionTemplates/ExpressionTemplates.hpp
+    ./ExpressionTemplates/ExpressionTraits.hpp
+    ./ExpressionTemplates/NegateOp.hpp
+    ./ExpressionTemplates/NullOp.hpp
+    ./ExpressionTemplates/UnaryExpression.hpp
+    ./ExpressionTemplates/UnaryExpressionTraits.hpp
 )
 
 SET(BasicUtils
     ./BasicUtils/ArrayPolicies.hpp
-    ./BasicUtils/BinaryExpressionTraits.hpp
-	./BasicUtils/BoostUtil.hpp
+    ./BasicUtils/BoostUtil.hpp
     ./BasicUtils/Concepts.hpp
-	./BasicUtils/ConsistentObjectAccess.hpp
-	./BasicUtils/ErrorUtil.hpp
-	./BasicUtils/mojo.hpp
-	./BasicUtils/NekManager.hpp
+    ./BasicUtils/ConsistentObjectAccess.hpp
+    ./BasicUtils/ErrorUtil.hpp
+    ./BasicUtils/mojo.hpp
+    ./BasicUtils/NekManager.hpp
     ./BasicUtils/OperatorGenerators.hpp
-	./BasicUtils/SharedArray.hpp
+    ./BasicUtils/SharedArray.hpp
     ./BasicUtils/Vmath.hpp
 )
 

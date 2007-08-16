@@ -43,13 +43,11 @@
 
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/BinaryExpressionTraits.hpp>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/Memory/DeleteNothing.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 
 //#include <functional>
 //#include <algorithm>
@@ -62,12 +60,12 @@
 
 namespace Nektar
 {
-    template<typename MatrixDataType, typename DataType, typename StorageType, typename Type, unsigned int space>
-    class BinaryExpressionTraits<NekMatrix<MatrixDataType, StorageType, Type>, NekVector<DataType, 0, space>, MultiplyOp>
-    {
-        public:
-            typedef NekVector<DataType, 0, space> ResultType;
-    };
+//     template<typename MatrixDataType, typename DataType, typename StorageType, typename Type, unsigned int space>
+//     class BinaryExpressionTraits<NekMatrix<MatrixDataType, StorageType, Type>, NekVector<DataType, 0, space>, MultiplyOp>
+//     {
+//         public:
+//             typedef NekVector<DataType, 0, space> ResultType;
+//     };
         
 
     // \param DataType The type of data held by each element of the vector.
@@ -75,7 +73,7 @@ namespace Nektar
     //            will have a variable number of elements.
     // \param space The space of the vector.
     template<typename DataType, unsigned int space>
-    class NekVector<DataType, 0, space> : public OperatorGeneratorL3<NekMatrix, NekVector<DataType, 0, space>, MultiplyOp>
+    class NekVector<DataType, 0, space> 
     {
         public:
             /// \brief Creates an empty vector.
@@ -216,12 +214,12 @@ namespace Nektar
 
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
-            NekVector(const expt::Expression<ExpressionPolicyType>& rhs) :
+            NekVector(const Expression<ExpressionPolicyType>& rhs) :
                 m_data(rhs.GetMetadata().Rows),
                 m_wrapperType(eCopy)
             {
                 /// TODO Make sure this works correctly with eWrapper
-                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, 0, space> > ));
+                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, 0, space> > ));
                 rhs.Apply(*this);
             }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
@@ -232,10 +230,10 @@ namespace Nektar
 
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
-            NekVector<DataType, 0, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
+            NekVector<DataType, 0, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
             {
                 /// TODO Make sure this works correctly with eWrapper.
-                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, 0, space> > ));
+                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, 0, space> > ));
 
                 m_size = rhs.GetMetadata().Rows;
                 m_data = Array<OneD, DataType>(m_size);

@@ -36,6 +36,9 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP
 
+#include <boost/typeof/typeof.hpp>
+#include  BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
+
 namespace Nektar
 {
     // \param DataType The type of data held by each element of the vector.
@@ -44,6 +47,8 @@ namespace Nektar
     // \param space The space of the vector.
     template<typename DataType, unsigned int dim = 0, unsigned int space = 0>
     class NekVector;
+    
+    BOOST_TYPEOF_REGISTER_TEMPLATE(NekVector, 3);
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP

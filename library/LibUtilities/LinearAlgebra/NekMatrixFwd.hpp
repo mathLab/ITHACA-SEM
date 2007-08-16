@@ -44,6 +44,9 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <boost/typeof/typeof.hpp>
+#include  BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
+
 namespace Nektar
 {
     template<typename DataType>
@@ -67,12 +70,17 @@ namespace Nektar
     typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedNekMatrixPtr;
     typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> DNekScalMat;
     typedef boost::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
+    
+    BOOST_TYPEOF_REGISTER_TEMPLATE(NekMatrix, 3);
 };
     
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
 
 /**
     $Log: NekMatrixFwd.hpp,v $
+    Revision 1.13  2007/07/25 23:47:45  bnelson
+    *** empty log message ***
+
     Revision 1.12  2007/07/22 23:03:28  bnelson
     Backed out Nektar::ptr.
 

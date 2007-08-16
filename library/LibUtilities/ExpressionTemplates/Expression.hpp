@@ -52,8 +52,6 @@
 
 namespace Nektar
 {
-    namespace expt
-    {
         /// \brief An expression is an arbitrary combination of operations acting on arbitrary amountsw of data to 
         /// produce a result.  The expressions stores the operations and data but does not evaluate it until requested.
         /// 
@@ -77,11 +75,11 @@ namespace Nektar
                 template<typename T>
                 explicit Expression(const T& data,
                                     typename boost::disable_if<
-                                                               boost::mpl::and_<
+                                                            boost::mpl::and_<
                                                                                 boost::is_reference<DataType>,
                                                                                 boost::is_same<BaseDataType, T> 
-                                                                          > 
-                                                              >::type* dummy = 0) :
+                                                                        > 
+                                                            >::type* dummy = 0) :
                     m_data(data),
                     m_metadata()
                 {
@@ -174,13 +172,15 @@ namespace Nektar
                 DataType m_data;
                 MetadataType m_metadata;
         };
-    }
 
 }
 
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.10  2007/07/26 00:07:36  bnelson
+    Fixed linux compiler errors.
+
     Revision 1.8  2007/07/20 00:36:05  bnelson
     *** empty log message ***
 

@@ -43,20 +43,16 @@
 
 namespace Nektar
 {
-    namespace expt
+
+    template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy>
+    class CommutativeExpressionTraits
     {
-        template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy>
-        class CommutativeExpressionTraits
-        {
-            public:
-                static const bool IsCommutative = 
-                    CommutativeTraits<typename LhsPolicy::ResultType, OpType, 
-                                      typename RhsPolicy::ResultType>::IsCommutative;
-        };
-        
-     
-        
-    }
+        public:
+            static const bool IsCommutative = 
+                CommutativeTraits<typename LhsPolicy::ResultType, OpType, 
+                                    typename RhsPolicy::ResultType>::IsCommutative;
+    };
+
 }
 
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_COMMUTATIVE_EXPRESSION_TRAITS_HPP

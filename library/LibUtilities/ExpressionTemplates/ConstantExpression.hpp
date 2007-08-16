@@ -49,41 +49,41 @@
 
 namespace Nektar
 {
-    namespace expt
+    template<typename Type>
+    class ConstantExpressionPolicy
     {
-        template<typename Type>
-        class ConstantExpressionPolicy
-        {
-            public:
-                typedef Type ResultType;
-                typedef typename boost::call_traits<Type>::const_reference DataType;
-                typedef ConstantNullOp NullOp;
-                typedef typename ConstantExpressionTraits<Type>::MetadataType MetadataType;
-                
-                
-            public:
-                static void InitializeMetadata(typename boost::call_traits<DataType>::const_reference data, MetadataType& m)
-                {
-                    m = MetadataType(data);
-                }
-                
-                static void Apply(Accumulator<ResultType>& accum, typename boost::call_traits<DataType>::const_reference d)
-                {
-                    *accum = d;
-                }
-                
-                static void Print(std::ostream& os, typename boost::call_traits<DataType>::const_reference data)
-                {
-                    os << data;
-                }
-        };
-    }
+        public:
+            typedef Type ResultType;
+            typedef typename boost::call_traits<Type>::const_reference DataType;
+            typedef ConstantNullOp NullOp;
+            typedef typename ConstantExpressionTraits<Type>::MetadataType MetadataType;
+            
+            
+        public:
+            static void InitializeMetadata(typename boost::call_traits<DataType>::const_reference data, MetadataType& m)
+            {
+                m = MetadataType(data);
+            }
+            
+            static void Apply(Accumulator<ResultType>& accum, typename boost::call_traits<DataType>::const_reference d)
+            {
+                *accum = d;
+            }
+            
+            static void Print(std::ostream& os, typename boost::call_traits<DataType>::const_reference data)
+            {
+                os << data;
+            }
+    };
 }
 
 #endif // NEKTAR_LIB_UTILITIES_CONSTANT_EXPRESSION_HPP
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.8  2007/01/30 23:37:16  bnelson
+    *** empty log message ***
+
     Revision 1.7  2007/01/16 17:37:55  bnelson
     Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 

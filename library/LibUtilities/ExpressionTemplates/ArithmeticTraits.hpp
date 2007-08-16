@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: BinaryExpressionOperators.hpp
+// File: ArithmeticTraits.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -36,22 +36,44 @@
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ARITHMETIC_TRAITS_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ARITHMETIC_TRAITS_HPP
 
+#include <boost/typeof/typeof.hpp>
+
 namespace Nektar
 {
-    namespace expt
+    // The following classes are workarounds for visual studio.
+    // Theoretically, typename BOOST_TYPEOF_TPL(NekAdd(LhsType, RhsType)) would be sufficient,
+    // but it seems to confuse visual studio.
+    template<typename LhsType, typename RhsType>
+    class AdditionTraits
     {
-        template<typename LhsType, typename RhsType>
-        class AdditionTraits;
-        
-        template<typename LhsType, typename RhsType>
-        class SubtractionTraits;
-        
-        template<typename LhsType, typename RhsType>
-        class MultiplicationTraits;
-        
-        template<typename LhsType, typename RhsType>
-        class DivisionTraits;
-    }
+        public:
+            BOOST_TYPEOF_NESTED_TYPEDEF_TPL(nested, NekAdd(LhsType(), RhsType()));
+            typedef typename nested::type ResultType;
+    };
+    
+    template<typename LhsType, typename RhsType>
+    class SubtractionTraits
+    {
+        public:
+            BOOST_TYPEOF_NESTED_TYPEDEF_TPL(nested, NekSubtract(LhsType(), RhsType()));
+            typedef typename nested::type ResultType;
+    };
+    
+    template<typename LhsType, typename RhsType>
+    class MultiplicationTraits
+    {
+        public:
+            BOOST_TYPEOF_NESTED_TYPEDEF_TPL(nested, NekMultiply(LhsType(), RhsType()));
+            typedef typename nested::type ResultType;
+    };
+    
+    template<typename LhsType, typename RhsType>
+    class DivisionTraits
+    {
+        public:
+            BOOST_TYPEOF_NESTED_TYPEDEF_TPL(nested, NekDivide(LhsType(), RhsType()));
+            typedef typename nested::type ResultType;
+    };
 
 }
 

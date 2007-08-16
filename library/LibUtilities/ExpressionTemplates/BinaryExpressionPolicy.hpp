@@ -44,54 +44,53 @@
 
 namespace Nektar
 {
-    namespace expt
+    template<typename LhsPolicy, typename RhsPolicy, template <typename, typename> class OpType>
+    class BinaryExpressionPolicy
     {
-        template<typename LhsPolicy, typename RhsPolicy, 
-                 template <typename, typename> class OpType>
-        class BinaryExpressionPolicy
-        {
-            public:
-                typedef Expression<LhsPolicy> LhsExpressionType;
-                typedef Expression<RhsPolicy> RhsExpressionType;
+        public:
+            typedef Expression<LhsPolicy> LhsExpressionType;
+            typedef Expression<RhsPolicy> RhsExpressionType;
 
-                typedef typename LhsPolicy::ResultType LhsResultType;
-                typedef typename RhsPolicy::ResultType RhsResultType;
+            typedef typename LhsPolicy::ResultType LhsResultType;
+            typedef typename RhsPolicy::ResultType RhsResultType;
 
-                typedef typename OpType<LhsResultType, RhsResultType>::TraitsType OpTraitsType;
-                
-                typedef typename OpType<LhsResultType, RhsResultType>::ResultType ResultType;
-                typedef typename ExpressionMetadataChooser<OpTraitsType>::MetadataType MetadataType;
-                typedef typename LhsPolicy::MetadataType LhsMetadataType;
-                typedef typename RhsPolicy::MetadataType RhsMetadataType;
-
-                typedef std::pair<LhsExpressionType, RhsExpressionType> DataType;
-
-            public:
+            typedef typename OpType<LhsResultType, RhsResultType>::TraitsType OpTraitsType;
             
-                static void Apply(Accumulator<ResultType>& accum, const DataType& d)
-                {
-                    Apply<BinaryNullOp>(accum, d);
-                }
-                    
-                template<template <typename, typename> class ParentOpType>
-                static void Apply(Accumulator<ResultType>& accum, const DataType& d)
-                {
-                    EvaluateBinaryExpression<LhsPolicy, RhsPolicy, 
-                                             ResultType, OpType, ParentOpType>::Eval(d.first, d.second, accum);
-                }
+            typedef typename OpType<LhsResultType, RhsResultType>::ResultType ResultType;
+            typedef typename ExpressionMetadataChooser<OpTraitsType>::MetadataType MetadataType;
+            typedef typename LhsPolicy::MetadataType LhsMetadataType;
+            typedef typename RhsPolicy::MetadataType RhsMetadataType;
+
+            typedef std::pair<LhsExpressionType, RhsExpressionType> DataType;
+
+        public:
+        
+            static void Apply(Accumulator<ResultType>& accum, const DataType& d)
+            {
+                Apply<BinaryNullOp>(accum, d);
+            }
                 
-                static void InitializeMetadata(const DataType& data, MetadataType& m)
-                {
-                    m = MetadataType(data.first.GetMetadata(), data.second.GetMetadata());
-                }
+            template<template <typename, typename> class ParentOpType>
+            static void Apply(Accumulator<ResultType>& accum, const DataType& d)
+            {
+                // Evaluation of a binary expression is separated into another class because
+                // there are a wide variety of diffrent actions which must be taken based upon the 
+                // policy types, operator type, and incoming parent operation type.
+                BinaryExpressionEvaluator<LhsPolicy, RhsPolicy, 
+                                         ResultType, OpType, ParentOpType>::Eval(d.first, d.second, accum);
+            }
+            
+            static void InitializeMetadata(const DataType& data, MetadataType& m)
+            {
+                m = MetadataType(data.first.GetMetadata(), data.second.GetMetadata());
+            }
+            
+            static void Print(std::ostream& os, const DataType& data)
+            {
+                os << "(" << data.first << OpType<LhsResultType, RhsResultType>::AsString() << data.second << ")";
+            }
                 
-                static void Print(std::ostream& os, const DataType& data)
-                {
-                    os << "(" << data.first << OpType<LhsResultType, RhsResultType>::AsString() << data.second << ")";
-                }
-                 
-        };
-    }
+    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_POLICY_HPP

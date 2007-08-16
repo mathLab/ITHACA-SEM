@@ -41,14 +41,12 @@
 
 namespace Nektar
 {
-    namespace expt
-    {
-        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, 
-                 template <typename, typename> class OpType, 
-                 template <typename, typename> class ParentOpType = BinaryNullOp,
-                 typename enabled = void>
-        class EvaluateBinaryExpression;
-    }
+
+    template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, 
+                template <typename, typename> class OpType, 
+                template <typename, typename> class ParentOpType = BinaryNullOp,
+                typename enabled = void>
+    class BinaryExpressionEvaluator;
 }
         
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_EVALUATOR_FWD_HPP

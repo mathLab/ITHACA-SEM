@@ -113,9 +113,9 @@ namespace Nektar
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
-            NekPoint(const expt::Expression<ExpressionPolicyType>& rhs)
+            NekPoint(const Expression<ExpressionPolicyType>& rhs)
             {
-                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
+                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
                 rhs.Apply(*this);
             }
 #endif
@@ -134,9 +134,9 @@ namespace Nektar
 
  #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
            template<typename ExpressionPolicyType>
-            NekPoint<DataType, dim, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
+            NekPoint<DataType, dim, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
             {
-                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
+                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
                 rhs.Apply(*this);
                 return *this;
             }
@@ -558,6 +558,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.14  2007/01/23 03:12:50  jfrazier
+    Added more conditional compilation directives for expression templates.
+
     Revision 1.13  2006/09/30 15:18:37  bnelson
     no message
 

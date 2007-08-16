@@ -38,12 +38,9 @@
 
 namespace Nektar
 {
-    namespace expt
-    {
-        template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, 
-                 template <typename, typename> class OpType>
-        class BinaryExpressionPolicy;
-    }
+    template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, 
+                template <typename, typename> class OpType>
+    class BinaryExpressionPolicy;
 }
 
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_POLICY_FWD_HPP

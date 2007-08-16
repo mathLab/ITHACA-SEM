@@ -36,80 +36,78 @@
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
 
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicyFwd.hpp>
 
 namespace Nektar
 {
-    namespace expt
+
+    template<typename FirstType,
+                template <typename, typename> class FirstOp, 
+                typename SecondType,
+                template <typename, typename> class SecondOp,
+                typename ThirdType>
+    class AssociativeTraits
     {
-        template<typename FirstType,
-                 template <typename, typename> class FirstOp, 
-                 typename SecondType,
-                 template <typename, typename> class SecondOp,
-                 typename ThirdType>
-        class AssociativeTraits
-        {
-            public:
-                static const bool IsStrictlyAssociative = false;
-                static const bool IsAssociativeWithOpChange = false;
-                static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
-        };
-        
-        template<typename FirstType, typename SecondType, typename ThirdType>
-        class AssociativeTraits<FirstType, AddOp, SecondType, AddOp, ThirdType>
-        {
-            public:
-                static const bool IsStrictlyAssociative = true;
-                static const bool IsAssociativeWithOpChange = false;
-                static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
-        };
-        
-        template<typename FirstType, typename SecondType, typename ThirdType>
-        class AssociativeTraits<FirstType, AddOp, SecondType, SubtractOp, ThirdType>
-        {
-            public:
-                static const bool IsStrictlyAssociative = true;
-                static const bool IsAssociativeWithOpChange = false;
-                static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
-        };
-        
-        template<typename FirstType, typename SecondType, typename ThirdType>
-        class AssociativeTraits<FirstType, SubtractOp, SecondType, AddOp, ThirdType>
-        {
-            public:
-                static const bool IsStrictlyAssociative = false;
-                static const bool IsAssociativeWithOpChange = true;
-                static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
-        };
-        
-        template<typename FirstType, typename SecondType, typename ThirdType>
-        class AssociativeTraits<FirstType, MultiplyOp, SecondType, MultiplyOp, ThirdType>
-        {
-            public:
-                static const bool IsStrictlyAssociative = true;
-                static const bool IsAssociativeWithOpChange = false;
-                static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
-        };
-        
-        template<typename FirstType, typename SecondType, typename ThirdType>
-        class AssociativeTraits<FirstType, MultiplyOp, SecondType, DivideOp, ThirdType>
-        {
-            public:
-                static const bool IsStrictlyAssociative = true;
-                static const bool IsAssociativeWithOpChange = false;
-                static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
-        };
-        
-        template<typename FirstType, typename SecondType, typename ThirdType>
-        class AssociativeTraits<FirstType, DivideOp, SecondType, MultiplyOp, ThirdType>
-        {
-            public:
-                static const bool IsStrictlyAssociative = false;
-                static const bool IsAssociativeWithOpChange = true;
-                static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
-        };
-    }
+        public:
+            static const bool IsStrictlyAssociative = false;
+            static const bool IsAssociativeWithOpChange = false;
+            static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
+    };
+    
+    template<typename FirstType, typename SecondType, typename ThirdType>
+    class AssociativeTraits<FirstType, AddOp, SecondType, AddOp, ThirdType>
+    {
+        public:
+            static const bool IsStrictlyAssociative = true;
+            static const bool IsAssociativeWithOpChange = false;
+            static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
+    };
+    
+    template<typename FirstType, typename SecondType, typename ThirdType>
+    class AssociativeTraits<FirstType, AddOp, SecondType, SubtractOp, ThirdType>
+    {
+        public:
+            static const bool IsStrictlyAssociative = true;
+            static const bool IsAssociativeWithOpChange = false;
+            static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
+    };
+    
+    template<typename FirstType, typename SecondType, typename ThirdType>
+    class AssociativeTraits<FirstType, SubtractOp, SecondType, AddOp, ThirdType>
+    {
+        public:
+            static const bool IsStrictlyAssociative = false;
+            static const bool IsAssociativeWithOpChange = true;
+            static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
+    };
+    
+    template<typename FirstType, typename SecondType, typename ThirdType>
+    class AssociativeTraits<FirstType, MultiplyOp, SecondType, MultiplyOp, ThirdType>
+    {
+        public:
+            static const bool IsStrictlyAssociative = true;
+            static const bool IsAssociativeWithOpChange = false;
+            static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
+    };
+    
+    template<typename FirstType, typename SecondType, typename ThirdType>
+    class AssociativeTraits<FirstType, MultiplyOp, SecondType, DivideOp, ThirdType>
+    {
+        public:
+            static const bool IsStrictlyAssociative = true;
+            static const bool IsAssociativeWithOpChange = false;
+            static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
+    };
+    
+    template<typename FirstType, typename SecondType, typename ThirdType>
+    class AssociativeTraits<FirstType, DivideOp, SecondType, MultiplyOp, ThirdType>
+    {
+        public:
+            static const bool IsStrictlyAssociative = false;
+            static const bool IsAssociativeWithOpChange = true;
+            static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
+    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP

@@ -36,35 +36,32 @@
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
 
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
 
 namespace Nektar
 {
-    namespace expt
+    template<typename FirstType,
+                template <typename, typename> class OpType,
+                typename SecondType>
+    class CommutativeTraits
     {
-        template<typename FirstType,
-                 template <typename, typename> class OpType,
-                 typename SecondType>
-        class CommutativeTraits
-        {
-            public:
-                static const bool IsCommutative = false;
-        };
-        
-        template<typename FirstType, typename SecondType>
-        class CommutativeTraits<FirstType, AddOp, SecondType>
-        {
-            public:
-                static const bool IsCommutative = true;
-        };
-        
-        template<typename FirstType, typename SecondType>
-        class CommutativeTraits<FirstType, MultiplyOp, SecondType>
-        {
-            public:
-                static const bool IsCommutative = true;
-        };
-    }
+        public:
+            static const bool IsCommutative = false;
+    };
+    
+    template<typename FirstType, typename SecondType>
+    class CommutativeTraits<FirstType, AddOp, SecondType>
+    {
+        public:
+            static const bool IsCommutative = true;
+    };
+    
+    template<typename FirstType, typename SecondType>
+    class CommutativeTraits<FirstType, MultiplyOp, SecondType>
+    {
+        public:
+            static const bool IsCommutative = true;
+    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP

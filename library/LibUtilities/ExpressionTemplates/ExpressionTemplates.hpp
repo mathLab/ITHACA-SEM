@@ -56,15 +56,15 @@
 #include <LibUtilities/ExpressionTemplates/ConstantExpressionTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpression.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
 
 
-#define ENABLE_EXPRESSION_TEMPLATE_OPERATOR_ADD(lhsClassName, rhsClassName) \
-    expt::BinaryExpressionType<lhsClassName, expt::AddOp, rhsClassName >::Type \
-    operator+(const lhsClassName& lhs, const rhsClassName& rhs) \
-{ \
-    return expt::CreateBinaryExpression<expt::AddOp>(lhs, rhs); \
-}
+// #define ENABLE_EXPRESSION_TEMPLATE_OPERATOR_ADD(lhsClassName, rhsClassName) \
+//     expt::BinaryExpressionType<lhsClassName, expt::AddOp, rhsClassName >::Type \
+//     operator+(const lhsClassName& lhs, const rhsClassName& rhs) \
+// { \
+//     return expt::CreateBinaryExpression<expt::AddOp>(lhs, rhs); \
+// }
 //         typedef expt::ConstantExpressionPolicy<lhsClassName > LhsExpressionPolicy; \
 //         typedef expt::ConstantExpressionPolicy<rhsClassName > RhsExpressionPolicy; \
 //         typedef expt::BinaryExpressionPolicy<LhsExpressionPolicy, RhsExpressionPolicy, expt::AddOp> ResultExpressionPolicyType; \
@@ -74,12 +74,12 @@
 //         return ResultExpressionType(d); \
 // }
 
-#define ENABLE_EXPRESSION_TEMPLATE_OPERATOR_SUBTRACT(lhsClassName, rhsClassName) \
-    expt::BinaryExpressionType<lhsClassName, expt::SubtractOp, rhsClassName >::Type \
-    operator-(const lhsClassName& lhs, const rhsClassName& rhs) \
-{ \
-    return expt::CreateBinaryExpression<expt::SubtractOp>(lhs, rhs); \
-}
+// #define ENABLE_EXPRESSION_TEMPLATE_OPERATOR_SUBTRACT(lhsClassName, rhsClassName) \
+//     expt::BinaryExpressionType<lhsClassName, expt::SubtractOp, rhsClassName >::Type \
+//     operator-(const lhsClassName& lhs, const rhsClassName& rhs) \
+// { \
+//     return expt::CreateBinaryExpression<expt::SubtractOp>(lhs, rhs); \
+// }
 //         typedef expt::ConstantExpressionPolicy<lhsClassName > LhsExpressionPolicy; \
 //         typedef expt::ConstantExpressionPolicy<rhsClassName > RhsExpressionPolicy; \
 //         typedef expt::BinaryExpressionPolicy<LhsExpressionPolicy, RhsExpressionPolicy, expt::SubtractOp> ResultExpressionPolicyType; \
@@ -89,12 +89,12 @@
 //         return ResultExpressionType(d); \
 // }
 
-#define ENABLE_EXPRESSION_TEMPLATE_OPERATOR_MULTIPLY(lhsClassName, rhsClassName) \
-    expt::BinaryExpressionType<lhsClassName, expt::MultiplyOp, rhsClassName >::Type \
-    operator*(const lhsClassName& lhs, const rhsClassName& rhs) \
-{ \
-    return expt::CreateBinaryExpression<expt::MultiplyOp>(lhs, rhs); \
-}
+// #define ENABLE_EXPRESSION_TEMPLATE_OPERATOR_MULTIPLY(lhsClassName, rhsClassName) \
+//     expt::BinaryExpressionType<lhsClassName, expt::MultiplyOp, rhsClassName >::Type \
+//     operator*(const lhsClassName& lhs, const rhsClassName& rhs) \
+// { \
+//     return expt::CreateBinaryExpression<expt::MultiplyOp>(lhs, rhs); \
+// }
 //         typedef expt::ConstantExpressionPolicy<lhsClassName > LhsExpressionPolicy; \
 //         typedef expt::ConstantExpressionPolicy<rhsClassName > RhsExpressionPolicy; \
 //         typedef expt::BinaryExpressionPolicy<LhsExpressionPolicy, RhsExpressionPolicy, expt::MultiplyOp> ResultExpressionPolicyType; \
@@ -104,12 +104,12 @@
 //         return ResultExpressionType(d); \
 // }
 
-#define ENABLE_EXPRESSION_TEMPLATE_OPERATOR_DIVIDE(lhsClassName, rhsClassName) \
-    expt::BinaryExpressionType<lhsClassName, expt::DivideOp, rhsClassName >::Type \
-    operator/(const lhsClassName& lhs, const rhsClassName& rhs) \
-{ \
-    return expt::CreateBinaryExpression<expt::DivideOp>(lhs, rhs); \
-}
+// #define ENABLE_EXPRESSION_TEMPLATE_OPERATOR_DIVIDE(lhsClassName, rhsClassName) \
+//     expt::BinaryExpressionType<lhsClassName, expt::DivideOp, rhsClassName >::Type \
+//     operator/(const lhsClassName& lhs, const rhsClassName& rhs) \
+// { \
+//     return expt::CreateBinaryExpression<expt::DivideOp>(lhs, rhs); \
+// }
 //         typedef expt::ConstantExpressionPolicy<lhsClassName > LhsExpressionPolicy; \
 //         typedef expt::ConstantExpressionPolicy<rhsClassName > RhsExpressionPolicy; \
 //         typedef expt::BinaryExpressionPolicy<LhsExpressionPolicy, RhsExpressionPolicy, expt::DivideOp> ResultExpressionPolicyType; \
@@ -119,21 +119,21 @@
 //         return ResultExpressionType(d); \
 // }
 
-// Utility macros to generate the operators needed by a class supporting expression templates.
-#define ENABLE_EXPRESSION_TEMPLATE_OPERATORS2(lhsClassName, rhsClassName) \
-    ENABLE_EXPRESSION_TEMPLATE_OPERATOR_DIVIDE(lhsClassName, rhsClassName) \
-    ENABLE_EXPRESSION_TEMPLATE_OPERATOR_ADD(lhsClassName, rhsClassName) \
-    ENABLE_EXPRESSION_TEMPLATE_OPERATOR_SUBTRACT(lhsClassName, rhsClassName) \
-    ENABLE_EXPRESSION_TEMPLATE_OPERATOR_MULTIPLY(lhsClassName, rhsClassName) \
+// // Utility macros to generate the operators needed by a class supporting expression templates.
+// #define ENABLE_EXPRESSION_TEMPLATE_OPERATORS2(lhsClassName, rhsClassName) \
+//     ENABLE_EXPRESSION_TEMPLATE_OPERATOR_DIVIDE(lhsClassName, rhsClassName) \
+//     ENABLE_EXPRESSION_TEMPLATE_OPERATOR_ADD(lhsClassName, rhsClassName) \
+//     ENABLE_EXPRESSION_TEMPLATE_OPERATOR_SUBTRACT(lhsClassName, rhsClassName) \
+//     ENABLE_EXPRESSION_TEMPLATE_OPERATOR_MULTIPLY(lhsClassName, rhsClassName) \
+// 
+// 
 
 
-
-
-
+/*
 #define ENABLE_EXPRESSION_TEMPLATE_OPERATORS(className) \
     ENABLE_EXPRESSION_TEMPLATE_OPERATORS2(className, className)
 
-
+*/
 
 
 /// Requirements to enable your type to do expressions.
@@ -143,14 +143,11 @@
 /// Override associative traits if they do not follow standard practice.
 namespace Nektar
 {
-    namespace expt
+    template<typename ExpressionPolicyType>
+    std::ostream& operator<<(std::ostream& os, const Expression<ExpressionPolicyType>& exp)
     {
-        template<typename ExpressionPolicyType>
-        std::ostream& operator<<(std::ostream& os, const Expression<ExpressionPolicyType>& exp)
-        {
-            exp.Print(os);
-            return os;
-        }
+        exp.Print(os);
+        return os;
     }
 }
 
@@ -164,6 +161,9 @@ namespace Nektar
 
 /**
     $Log: ExpressionTemplates.hpp,v $
+    Revision 1.9  2007/01/30 23:37:16  bnelson
+    *** empty log message ***
+
     Revision 1.8  2007/01/16 17:37:55  bnelson
     Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 

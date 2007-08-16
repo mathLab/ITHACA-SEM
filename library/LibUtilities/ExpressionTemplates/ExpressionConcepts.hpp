@@ -38,12 +38,9 @@
 
 namespace Nektar
 {
-    namespace expt
-    {
-        // TODO - We need to add concepts here.  Somehow, we need to embody what an
-        // expression templatable object is, and what makes an operator an operator
-        // (for user defined operators)
-    }
+    // TODO - We need to add concepts here.  Somehow, we need to embody what an
+    // expression templatable object is, and what makes an operator an operator
+    // (for user defined operators)
 }
 
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_EXPRESSION_CONCEPTS_HPP

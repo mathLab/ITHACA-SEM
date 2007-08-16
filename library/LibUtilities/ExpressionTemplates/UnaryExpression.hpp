@@ -48,115 +48,21 @@
 
 namespace Nektar
 {
-    namespace expt
+    template<typename InputExpressionPolicyType, template <typename> class OpType>
+    class UnaryExpressionPolicy
     {
+        public:
+            typedef Expression<InputExpressionPolicyType> InputExpressionType;
+            typedef typename InputExpressionType::ResultType InputExpressionResultType;
+            typedef typename OpType<InputExpressionPolicyType>::ResultType ResultType;
+            
+            typedef InputExpressionType DataType;
+    };
 
-        template<typename InputExpressionPolicyType, template <typename> class OpType>
-        class UnaryExpressionPolicy
-        {
-            public:
-                typedef Expression<InputExpressionPolicyType> InputExpressionType;
-                typedef typename InputExpressionType::ResultType InputExpressionResultType;
-                typedef typename OpType<InputExpressionPolicyType>::ResultType ResultType;
-                
-                typedef InputExpressionType DataType;
-        };
-
-        // OpType - A class with a statis method called Apply that takes a single
-        // parameter and returns a result of the same or different type.
-        // A template parameter to allow a single OpType templated class to be
-        // used for a variety of types.
-        // ParameterType - A type which follows the expression interface.
-        //template<template <typename> class OpType, typename InputExpressionType>
-        //class UnaryExpression
-        //template<unsigned int NumberOfArguments, typename Argument1Type, typename Argument2Type, template <typename> class ArgumentUnaryOpType, template <typename, typename> class BinaryOpType, typename OpType>
-        //class Expression<1, Expression<NumberOfArguments, Argument1Type, Argument2Type, ArgumentUnaryOpType, BinaryOpType>, void, OpType>
-//         template<typename InputExpressionPolicyType, template <typename> class OpType>
-//         class Expression<UnaryExpressionPolicy<Expression<InputExpressionPolicyType>, OpType> >
-//         {
-//             public:
-//                 // Defined by the user who codes the operation.  They need to tell us what
-//                 // the result type of the operation will be.
-//                 typedef UnaryExpressionPolicy<Expression<InputExpressionPolicyType>, OpType > PolicyType;
-//                 typedef Expression<InputExpressionPolicyType> InputExpressionType;
-//                 typedef typename InputExpressionType::ResultType InputExpressionResultType;
-//                 typedef typename OpType<InputExpressionResultType>::ResultType ResultType;
-// 
-//                 typedef typename OpType<InputExpressionResultType>::TraitsType OpTraitsType;
-//                 //typedef typename ExpressionMetadataChooser<OpTraitsType>::MetadataType InputExpressionMetadataType;
-//                 typedef typename ExpressionMetadataChooser<OpTraitsType>::MetadataType MetadataType;
-//                 
-//                 typedef Expression<UnaryExpressionPolicy<Expression<InputExpressionPolicyType>, OpType> > ThisType;
-// 
-//             public:
-//                 explicit Expression(const InputExpressionType& value) :
-//                     m_value(value),
-//                     m_metadata(value.GetMetadata())
-//                 {
-//                 }
-// 
-//                 Expression(const ThisType& rhs) :
-//                     m_value(rhs.m_value),
-//                     m_metadata(rhs.m_metadata)
-//                 {
-//                 }
-// 
-//                 ~Expression() {}
-// 
-//                 // Two cases for the apply method.
-//                 // 1.  Result and Parameter types are the same.
-//                 // 2.  Result and Parameter types are different.
-//                 void Apply(typename boost::call_traits<ResultType>::reference result) const
-//                 {
-//                     Accumulator<ResultType> accum(result);
-//                     Apply(accum);
-//                 }
-// 
-//                 template<typename IncomingOpType>
-//                 void ApplyEqual(typename boost::call_traits<ResultType>::reference result) const
-//                 {
-//                     m_value.ApplyEqual<IncomingOpType>(result);
-//                     OpType<ResultType>::Apply(result);
-//                 }
-// 
-//                 void Apply(Accumulator<ResultType>& accum) const
-//                 {
-//                     // Evaluate the expression up to this point.
-//                     m_value.Apply(accum);
-// 
-//                     // Now apply the operator to the result.
-//                     OpType<ResultType>::Apply(accum.GetData());
-//                 }
-// 
-//                 template<typename IncomingOpType>
-//                 void ApplyEqual(Accumulator<ResultType>& accum) const
-//                 {
-//                     m_value.ApplyEqual<IncomingOpType>(accum.GetData());
-//                     OpType<ResultType>::Apply(accum.GetData());
-//                 }
-//                 
-//                 const MetadataType& GetMetadata() const
-//                 {
-//                     return m_metadata;
-//                 }
-// 
-//                 void Print(std::ostream& os) const
-//                 {
-//                     os << OpType<ResultType>::AsString() << m_value;
-//                 }
-//                 
-//             private:
-//                 ThisType& operator=(const ThisType& rhs);
-// 
-//                 InputExpressionType m_value;
-//                 MetadataType m_metadata;
-//         };
-
-        template<typename InputExpressionPolicyType>
-        Expression<UnaryExpressionPolicy<Expression<InputExpressionPolicyType>, NegateOp> > operator-(const Expression<InputExpressionPolicyType>& rhs)
-        {
-            return Expression<UnaryExpressionPolicy<Expression<InputExpressionPolicyType>,NegateOp> >(rhs);
-        }
+    template<typename InputExpressionPolicyType>
+    Expression<UnaryExpressionPolicy<Expression<InputExpressionPolicyType>, NegateOp> > operator-(const Expression<InputExpressionPolicyType>& rhs)
+    {
+        return Expression<UnaryExpressionPolicy<Expression<InputExpressionPolicyType>,NegateOp> >(rhs);
     }
 }
 
@@ -164,6 +70,9 @@ namespace Nektar
 
 /**
     $Log: UnaryExpression.hpp,v $
+    Revision 1.10  2007/01/30 23:37:17  bnelson
+    *** empty log message ***
+
     Revision 1.9  2007/01/16 17:37:56  bnelson
     Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 

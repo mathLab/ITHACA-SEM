@@ -47,41 +47,41 @@
 namespace Nektar
 {
 
-    namespace expt
+    /// \brief An expression to negate an object of ParameterType.
+    /// Parameter type is the actual object, not the expression that may lead to it.
+    template<typename ParameterType>
+    class NegateOp
     {
-        /// \brief An expression to negate an object of ParameterType.
-        /// Parameter type is the actual object, not the expression that may lead to it.
-        template<typename ParameterType>
-        class NegateOp
-        {
-            public:
-                typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
-                typedef ParameterType InputType;
-                typedef NegateTraits<ParameterType> TraitsType;
-                
-                static void Apply(typename boost::call_traits<ParameterType>::reference result)
-                {
-                    TraitsType::negate(result);
-                }
+        public:
+            typedef typename UnaryExpressionTraits<ParameterType>::NegationType ResultType;
+            typedef ParameterType InputType;
+            typedef NegateTraits<ParameterType> TraitsType;
+            
+            static void Apply(typename boost::call_traits<ParameterType>::reference result)
+            {
+                TraitsType::negate(result);
+            }
 
-                static const std::string& AsString()
-                {
-                    return s_StringRep;
-                }
-                
-            private:
-                static std::string s_StringRep;
-        };
-        
-        template<typename ParameterType>
-        std::string NegateOp<ParameterType>::s_StringRep("-");
-    }
+            static const std::string& AsString()
+            {
+                return s_StringRep;
+            }
+            
+        private:
+            static std::string s_StringRep;
+    };
+    
+    template<typename ParameterType>
+    std::string NegateOp<ParameterType>::s_StringRep("-");
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NEGATE_EXPRESSION_HPP
 
 /**
     $Log: NegateOp.hpp,v $
+    Revision 1.10  2007/01/30 23:37:16  bnelson
+    *** empty log message ***
+
     Revision 1.9  2007/01/30 22:34:13  bnelson
     Fixed the call to negate so it goes through the traits.
 

@@ -44,61 +44,58 @@
 
 namespace Nektar
 {
-
-    namespace expt
+    class NullOp
     {
-        class NullOp
-        {
-            public:
-        };
-        
-        class ConstantNullOp
-        {
-        };
-        
-        template<typename DataType>
-        class UnaryNullOp
-        {
-            public:
-        };
-        
-        template<typename L, typename R>
-        class BinaryNullOpTraits
-        {
-            public:
-                static const bool HasOpEqual = true;
-                static const bool HasOpLeftEqual = false;
-        };
-        
-        template<typename LhsType, typename RhsType>
-        class BinaryNullOp
-        {
-            public:
-                typedef BinaryNullOpTraits<LhsType, RhsType> TraitsType;
-                
-                static void ApplyEqual(Accumulator<LhsType>& result,
-                                       typename boost::call_traits<RhsType>::const_reference rhs)
-                {
-                    *result = rhs;
-                }
-                
-                template<typename L, typename R>
-                class Rebind
-                {
-                    public:
-                        typedef BinaryNullOp<L, R> type;
-                };
-        };
+        public:
+    };
+    
+    class ConstantNullOp
+    {
+    };
+    
+    template<typename DataType>
+    class UnaryNullOp
+    {
+        public:
+    };
+    
+    template<typename L, typename R>
+    class BinaryNullOpTraits
+    {
+        public:
+            static const bool HasOpEqual = true;
+            static const bool HasOpLeftEqual = false;
+    };
+    
+    template<typename LhsType, typename RhsType>
+    class BinaryNullOp
+    {
+        public:
+            typedef BinaryNullOpTraits<LhsType, RhsType> TraitsType;
+            
+            static void ApplyEqual(Accumulator<LhsType>& result,
+                                    typename boost::call_traits<RhsType>::const_reference rhs)
+            {
+                *result = rhs;
+            }
+            
+            template<typename L, typename R>
+            class Rebind
+            {
+                public:
+                    typedef BinaryNullOp<L, R> type;
+            };
+    };
 
-        
-
-    }
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NULL_OP_HPP
 
 /**
     $Log: NullOp.hpp,v $
+    Revision 1.5  2007/01/30 23:37:17  bnelson
+    *** empty log message ***
+
     Revision 1.4  2007/01/29 01:34:05  bnelson
     Updates to compile in windows.
 

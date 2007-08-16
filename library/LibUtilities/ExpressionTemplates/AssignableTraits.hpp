@@ -38,22 +38,19 @@
 
 namespace Nektar
 {
-    namespace expt
+    template<typename L, typename R>
+    class AssignableTraits
     {
-        template<typename L, typename R>
-        class AssignableTraits
-        {
-            public:
-                static const bool IsAssignable = false;
-        };
-        
-        template<typename T>
-        class AssignableTraits<T, T>
-        {
-            public:
-                static const bool IsAssignable = true;
-        };
-    }
+        public:
+            static const bool IsAssignable = false;
+    };
+    
+    template<typename T>
+    class AssignableTraits<T, T>
+    {
+        public:
+            static const bool IsAssignable = true;
+    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ASSIGNABLE_TRAITS_HPP

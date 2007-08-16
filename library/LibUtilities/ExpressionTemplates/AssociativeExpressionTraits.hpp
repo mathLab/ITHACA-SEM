@@ -42,49 +42,47 @@
 
 namespace Nektar
 {
-    namespace expt
-    {
-        // The idea here is to be able to give this object two expression, with an operator type between them, 
-        // and have it figure out if it is associative
-        //
-        // A + (B*C) 
-        // (B*C) + A - Don't even need to look since we'll never check in this scenario.
-        // (A*B) + (B*C) - Look at the type of (A*B)
-        //
-        // Examples of change
-        // A - (A+B) 
-        
-        // The class is responsible for
-        // 1. Indicating yes or no, the expression combination is associative.
-        //    This includes both true associativity and operator changed.
-        // 2. Generate the appropriate return type for this expression.
-        //
 
-        
-        template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy>
-        class AssociativeExpressionTraits
-        {
-            public:
-                static const bool IsStrictlyAssociative = false;
-                static const bool IsAssociativeWithOpChange = false;
-                static const bool IsAssociative = false;
-        };
-        
-        template<typename LhsPolicy, template<typename, typename> class OpType, 
-                 typename RhsLhsPolicy, template<typename, typename> class RhsOpType,
-                 typename RhsRhsPolicy>
-        class AssociativeExpressionTraits<LhsPolicy, OpType, BinaryExpressionPolicy<RhsLhsPolicy, RhsRhsPolicy, RhsOpType> >
-        {
-            public:
-                typedef AssociativeTraits<typename LhsPolicy::ResultType, OpType,
-                                          typename RhsLhsPolicy::ResultType, RhsOpType,
-                                          typename RhsRhsPolicy::ResultType> Traits;
-                                          
-                static const bool IsStrictlyAssociative = Traits::IsStrictlyAssociative;
-                static const bool IsAssociativeWithOpChange = Traits::IsAssociativeWithOpChange;
-                static const bool IsAssociative = Traits::IsAssociative;
-        };
-    }
+    // The idea here is to be able to give this object two expression, with an operator type between them, 
+    // and have it figure out if it is associative
+    //
+    // A + (B*C) 
+    // (B*C) + A - Don't even need to look since we'll never check in this scenario.
+    // (A*B) + (B*C) - Look at the type of (A*B)
+    //
+    // Examples of change
+    // A - (A+B) 
+    
+    // The class is responsible for
+    // 1. Indicating yes or no, the expression combination is associative.
+    //    This includes both true associativity and operator changed.
+    // 2. Generate the appropriate return type for this expression.
+    //
+
+    
+    template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy>
+    class AssociativeExpressionTraits
+    {
+        public:
+            static const bool IsStrictlyAssociative = false;
+            static const bool IsAssociativeWithOpChange = false;
+            static const bool IsAssociative = false;
+    };
+    
+    template<typename LhsPolicy, template<typename, typename> class OpType, 
+                typename RhsLhsPolicy, template<typename, typename> class RhsOpType,
+                typename RhsRhsPolicy>
+    class AssociativeExpressionTraits<LhsPolicy, OpType, BinaryExpressionPolicy<RhsLhsPolicy, RhsRhsPolicy, RhsOpType> >
+    {
+        public:
+            typedef AssociativeTraits<typename LhsPolicy::ResultType, OpType,
+                                        typename RhsLhsPolicy::ResultType, RhsOpType,
+                                        typename RhsRhsPolicy::ResultType> Traits;
+                                        
+            static const bool IsStrictlyAssociative = Traits::IsStrictlyAssociative;
+            static const bool IsAssociativeWithOpChange = Traits::IsAssociativeWithOpChange;
+            static const bool IsAssociative = Traits::IsAssociative;
+    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ASSOCIATIVE_EXPRESSION_TRAITS_HPP

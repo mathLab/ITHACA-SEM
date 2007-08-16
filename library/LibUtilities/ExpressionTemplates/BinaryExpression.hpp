@@ -15,7 +15,7 @@
 #include <boost/mpl/and.hpp>
 #include <boost/mpl/logical.hpp>
 
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
 #include <LibUtilities/ExpressionTemplates/NullOp.hpp>
 #include <LibUtilities/ExpressionTemplates/AssociativeTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/CommutativeTraits.hpp>
@@ -30,9 +30,7 @@
 
 namespace Nektar
 {
-    namespace expt
-    {
-        
+
 
         // To aid evaluation, adjust the expression trees as they are being created.
         // Generic constant + binary expression
@@ -45,25 +43,25 @@ namespace Nektar
         // 1. Generate the correct return type for a given expression.
         // 2. Provide an Apply method which creates the appropriate return type.
         // 3. Some future optimization may include re-arranging the tree to optimize evaluation.
-        template<typename LhsExpressionPolicyType, 
-                 template <typename, typename> class OpType,
-                 typename RhsExpressionPolicyType,
-                 typename enabled = void>
-        class BinaryExpressionGenerator;
-        
-        template<typename LhsExpressionPolicy, template <typename, typename> class OpType, typename RhsDataType>
-        class BinaryExpressionGenerator<LhsExpressionPolicy, OpType, ConstantExpressionPolicy<RhsDataType> >
-        {
-            public:
-                typedef BinaryExpressionPolicy<LhsExpressionPolicy, ConstantExpressionPolicy<RhsDataType>, OpType> ResultPolicy;
-                typedef Expression<ResultPolicy> ResultExpression;
-                
-                static ResultExpression Apply(const Expression<LhsExpressionPolicy>& lhs, typename boost::call_traits<RhsDataType>::const_reference rhs)
-                {
-                    typename ResultPolicy::DataType d(lhs, Expression<ConstantExpressionPolicy<RhsDataType> >(rhs));
-                    return ResultExpression(d);
-                }
-        };
+//         template<typename LhsExpressionPolicyType, 
+//                  template <typename, typename> class OpType,
+//                  typename RhsExpressionPolicyType,
+//                  typename enabled = void>
+//         class BinaryExpressionGenerator;
+//         
+//         template<typename LhsExpressionPolicy, template <typename, typename> class OpType, typename RhsDataType>
+//         class BinaryExpressionGenerator<LhsExpressionPolicy, OpType, ConstantExpressionPolicy<RhsDataType> >
+//         {
+//             public:
+//                 typedef BinaryExpressionPolicy<LhsExpressionPolicy, ConstantExpressionPolicy<RhsDataType>, OpType> ResultPolicy;
+//                 typedef Expression<ResultPolicy> ResultExpression;
+//                 
+//                 static ResultExpression Apply(const Expression<LhsExpressionPolicy>& lhs, typename boost::call_traits<RhsDataType>::const_reference rhs)
+//                 {
+//                     typename ResultPolicy::DataType d(lhs, Expression<ConstantExpressionPolicy<RhsDataType> >(rhs));
+//                     return ResultExpression(d);
+//                 }
+//         };
         
 //         // If the expression is associative, then we can re-order 
 //         template<typename LhsDataType, template <typename, typename> class OpType, typename RhsLhsDataType,
@@ -463,7 +461,6 @@ namespace Nektar
 // 
 //             return Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, DivideOp> >(LhsExpressionType(lhs), RhsExpressionType(rhs));
 //         }
-    }
     
 
 }
@@ -472,6 +469,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpression.hpp,v $
+    Revision 1.11  2007/01/30 23:37:15  bnelson
+    *** empty log message ***
+
     Revision 1.10  2007/01/16 17:37:55  bnelson
     Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
@@ -513,7 +513,7 @@ namespace Nektar
 /*        template<typename LhsDataType, typename RhsLhsPolicyType, typename RhsRhsPolicyType, typename ResultType,
                  template <typename, typename> class RhsOpType, 
                  template <typename, typename> class OpType>
-        class EvaluateBinaryExpression<ConstantExpressionPolicy<LhsDataType>,
+        class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsDataType>,
                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
                                        ResultType, OpType, BinaryNullOp,
                                        typename boost::enable_if
@@ -544,7 +544,7 @@ namespace Nektar
         template<typename RhsDataType, typename LhsLhsPolicyType, typename LhsRhsPolicyType, typename ResultType,
                  template <typename, typename> class LhsOpType, 
                  template <typename, typename> class OpType>
-        class EvaluateBinaryExpression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
+        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
                                        ConstantExpressionPolicy<RhsDataType>,
                                        ResultType, OpType, BinaryNullOp,
                                        typename boost::enable_if
@@ -581,7 +581,7 @@ namespace Nektar
 //                  template <typename, typename> class RhsOpType, 
 //                  template <typename, typename> class OpType,
 //                  template <typename, typename> class ParentOpType>
-//         class EvaluateBinaryExpression<ConstantExpressionPolicy<LhsDataType>,
+//         class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsDataType>,
 //                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
 //                                        ResultType, OpType, ParentOpType,
 //                                        typename boost::enable_if

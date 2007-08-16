@@ -41,7 +41,7 @@
 namespace Nektar
 {
 
-    /// \brief A wrapper for a piece of data to be passed through the expression templates.
+    /// \brief Wraps a piece of data and passes through an expression.
     template<typename DataType>
     class Accumulator
     {
@@ -91,6 +91,9 @@ namespace Nektar
 
 /**
     $Log: Accumulator.hpp,v $
+    Revision 1.4  2007/02/15 06:55:07  bnelson
+    Added comments and removed some unused code.
+
     Revision 1.3  2007/01/30 23:37:15  bnelson
     *** empty log message ***
 

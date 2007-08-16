@@ -88,10 +88,10 @@ namespace Nektar
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
-            NekVector(const expt::Expression<ExpressionPolicyType>& rhs) :
+            NekVector(const Expression<ExpressionPolicyType>& rhs) :
                 m_impl(rhs.GetMetadata().Rows, DataType())
             {
-                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
+                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
                 rhs.Apply(*this);
             }
 #endif
@@ -104,9 +104,9 @@ namespace Nektar
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
-            NekVector<DataType, dim, space>& operator=(const expt::Expression<ExpressionPolicyType>& rhs)
+            NekVector<DataType, dim, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
             {
-                BOOST_MPL_ASSERT(( boost::is_same<typename expt::Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
+                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
                 rhs.Apply(*this);
                 return *this;
             }

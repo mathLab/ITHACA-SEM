@@ -40,16 +40,13 @@
 
 namespace Nektar
 {
-    namespace expt
+    template<typename DataType>
+    class ConstantExpressionTraits
     {
-        template<typename DataType>
-        class ConstantExpressionTraits
-        {
-            public:
-                typedef DataType result_type;
-                typedef DefaultExpressionMetadata<DataType> MetadataType;
-        };
-    }
+        public:
+            typedef DataType result_type;
+            typedef DefaultExpressionMetadata<DataType> MetadataType;
+    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_CONSTANT_EXPRESSION_TRAITS

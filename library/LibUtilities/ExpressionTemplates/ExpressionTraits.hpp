@@ -38,19 +38,16 @@
 
 namespace Nektar
 {
-    namespace expt
-    {
-        template<typename DataType>
-        class ExpressionTraits;
-        
-
-
-    }
+    template<typename DataType>
+    class ExpressionTraits;
 }
 
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_TRAITS_H
 /**
     $Log: ExpressionTraits.hpp,v $
+    Revision 1.4  2007/01/30 23:37:16  bnelson
+    *** empty log message ***
+
     Revision 1.3  2007/01/16 17:37:56  bnelson
     Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 

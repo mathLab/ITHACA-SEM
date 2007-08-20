@@ -262,12 +262,21 @@ namespace Nektar
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
+			
+   		    virtual const MatrixSharedPtrType GetI(const ConstArray<OneD, DataType>& x)
+            {
+                ASSERTL0(false, "Method not implemented");
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                return returnval;
+            }
+			
             virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const ConstArray<OneD, DataType>& x)
             {
                 ASSERTL0(false, "Method not implemented");
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
+			
             virtual const MatrixSharedPtrType GetI(const ConstArray<OneD, DataType>& x, const ConstArray<OneD, DataType>& y)
             {
                 ASSERTL0(false, "Method not implemented");

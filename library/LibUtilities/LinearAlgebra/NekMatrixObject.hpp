@@ -37,10 +37,6 @@
 #define NEKTAR_LIB_UTILITIES_NEK_MATRIX_OBJECT_HPP
 
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/LinearAlgebra/NekDiagonalMatrix.hpp>
-#include <LibUtilities/LinearAlgebra/NekFullMatrix.hpp>
-#include <LibUtilities/LinearAlgebra/NekBlockDiagonalMatrix.hpp>
-#include <LibUtilities/LinearAlgebra/NekBlockFullMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
 
 namespace Nektar

@@ -36,8 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_IMPL_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_IMPL_HPP
 
-#include <LibUtilities/LinearAlgebra/NekMatrixForm.h>
-
 namespace Nektar
 {
 //     template<typename DataType, NekMatrixForm form, MatrixBlockType BlockType, unsigned int space>
@@ -257,6 +255,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrixImpl.hpp,v $
+    Revision 1.4  2007/07/27 03:15:30  bnelson
+    Removed MatrixBlockType.h
+
     Revision 1.3  2007/06/10 23:42:16  bnelson
     Matrix updates.
 

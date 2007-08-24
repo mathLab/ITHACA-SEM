@@ -25,7 +25,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/NekLinSys.hpp
     ./LinearAlgebra/NekMatrix.hpp
     ./LinearAlgebra/NekMatrixObject.hpp
-    ./LinearAlgebra/NekMatrixForm.h
     ./LinearAlgebra/NekMatrixFwd.hpp
     ./LinearAlgebra/NekMatrixImpl.hpp
     ./LinearAlgebra/NekMatrixMetadata.hpp

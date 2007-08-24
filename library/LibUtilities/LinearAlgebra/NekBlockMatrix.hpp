@@ -37,7 +37,6 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_BLOCK_MATRIX_HPP
 
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrixForm.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
 
@@ -67,6 +66,9 @@ namespace Nektar
 
 /**
     $Log: NekBlockMatrix.hpp,v $
+    Revision 1.5  2007/07/22 23:03:27  bnelson
+    Backed out Nektar::ptr.
+
     Revision 1.4  2007/07/20 00:24:12  bnelson
     Replaced boost::shared_ptr with Nektar::ptr
 

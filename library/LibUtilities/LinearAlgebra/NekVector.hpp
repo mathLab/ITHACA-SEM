@@ -38,7 +38,6 @@
 
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorObject.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrixObject.hpp>
 
 #include <functional>
 #include <algorithm>
@@ -211,6 +210,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.19  2007/08/16 02:10:20  bnelson
+    *** empty log message ***
+
     Revision 1.18  2007/06/10 23:42:16  bnelson
     Matrix updates.
 

@@ -19,7 +19,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/NekLinAlgAlgorithms.hpp
     ./LinearAlgebra/NekLinSys.hpp
     ./LinearAlgebra/NekMatrix.hpp
-    ./LinearAlgebra/NekMatrixObject.hpp
     ./LinearAlgebra/NekMatrixFwd.hpp
     ./LinearAlgebra/NekMatrixMetadata.hpp
     ./LinearAlgebra/NekPoint.hpp

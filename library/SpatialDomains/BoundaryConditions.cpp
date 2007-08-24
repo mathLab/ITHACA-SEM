@@ -954,7 +954,12 @@ namespace Nektar
                 ASSERTL0(false,"expansion type unknonw");
                 break;
             }
-        
+            
+            // This never gets hit, but keeps the compiler happy.
+            // Since the default cases above don't return anything
+            // the compiler complains if this is not here.  It is
+            // more proper than, say, suppressing the warning.
+            return LibUtilities::NullBasisKey;
         }
     }
 }

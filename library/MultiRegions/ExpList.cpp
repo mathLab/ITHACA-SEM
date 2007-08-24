@@ -197,7 +197,7 @@ namespace Nektar
             }
 #else  // block matrix inverse 
             static DNekScalBlkMatSharedPtr InvMass;
-            Array<OneD,Double> f(m_ncoeffs);
+            Array<OneD,NekDouble> f(m_ncoeffs);
             if(!InvMass.get())
             {
                 InvMass = SetupBlockMatrix(StdRegions::eInvMass);

@@ -47,6 +47,14 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
 
+#ifdef max
+#undef max
+#endif
+
+#ifdef min
+#undef min
+#endif
+
 namespace Nektar
 {
     template<typename DataType>

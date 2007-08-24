@@ -53,8 +53,7 @@ SET(FoundationHeaders
 )
 
 SET(InterpreterHeaders
-        ./Interpreter/Interpreter.hpp
-        ./Interpreter/defaults.h       
+	  ./Interpreter/ExpressionEvaluator.h   
 )       
 
 SET(PolyLibHeaders
@@ -129,7 +128,7 @@ SET(FoundationSources
 )
 
 SET(InterpreterSources
-        ./Interpreter/initial.y
+        ./Interpreter/ExpressionEvaluator.cpp
 )       
 
 SET(PolylibSources

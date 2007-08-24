@@ -16,17 +16,11 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/MatrixStoragePolicy.hpp
     ./LinearAlgebra/MatrixStorageType.h
     ./LinearAlgebra/MatrixType.h
-    ./LinearAlgebra/NekBlockDiagonalMatrix.hpp
-    ./LinearAlgebra/NekBlockFullMatrix.hpp
-    ./LinearAlgebra/NekBlockMatrix.hpp
-    ./LinearAlgebra/NekDiagonalMatrix.hpp
-    ./LinearAlgebra/NekFullMatrix.hpp
     ./LinearAlgebra/NekLinAlgAlgorithms.hpp
     ./LinearAlgebra/NekLinSys.hpp
     ./LinearAlgebra/NekMatrix.hpp
     ./LinearAlgebra/NekMatrixObject.hpp
     ./LinearAlgebra/NekMatrixFwd.hpp
-    ./LinearAlgebra/NekMatrixImpl.hpp
     ./LinearAlgebra/NekMatrixMetadata.hpp
     ./LinearAlgebra/NekPoint.hpp
     ./LinearAlgebra/NekTypeDefs.hpp

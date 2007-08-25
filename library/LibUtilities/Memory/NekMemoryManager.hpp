@@ -40,8 +40,6 @@
 
 #include <LibUtilities/Memory/ThreadSpecificPool.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-//#include <LibUtilities/BasicUtils/SharedArray.hpp>
-//#include <boost/shared_array.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 #include <boost/mpl/contains.hpp>
@@ -431,6 +429,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.14  2007/07/27 00:22:37  bnelson
+    Memory manager now accepts non-const parameters to the allocate methods.
+
     Revision 1.13  2007/07/22 23:03:28  bnelson
     Backed out Nektar::ptr.
 

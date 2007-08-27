@@ -49,7 +49,7 @@ namespace Nektar
         public:
             typedef TriangularMatrixStoragePolicy<DataType> BaseType;
             typedef typename BaseType::GetValueReturnType GetValueReturnType;
-            typedef TriangularMatrixStoragePolicy<DataType>::PolicySpecificDataHolderType PolicySpecificDataHolderType;
+            typedef typename TriangularMatrixStoragePolicy<DataType>::PolicySpecificDataHolderType PolicySpecificDataHolderType;
             
             using BaseType::Initialize;
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,

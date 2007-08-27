@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: MatrixStoragePolicy.hpp
+// File: TestCombinationRunner.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,45 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Interface classes for matrices
+// Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_STORAGE_POLICY_HPP
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_STORAGE_POLICY_HPP
+#ifndef NEKTAR_UNIT_TESTS_LIB_UTILITIES_TEST_COMBINATION_RUNNER_H
+#ifndef NEKTAR_UNIT_TESTS_LIB_UTILITIES_TEST_COMBINATION_RUNNER_H
 
-#include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-//#include <LibUtilities/LinearAlgebra/Lapack.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/utility/enable_if.hpp>
-
-namespace Nektar
-{
-
-    class DefaultPolicySpecificDataHolder {};
-
-    // Blas divides storage into the following 3 high level storage schemes:
-    //
-    // 1.  Full.  Each element in the matrix has an associated memory location allocated
-    //     for it. 
-    // 2.  Packed.  Allows storage of symmetric and triangular matrices more efficiently.
-    // 3.  Band.  Allows storage of banded matrices more efficiently.
-
-    // Nektar++ supports the following matrix types.
-    // Full Storage - General 
-    // Packed Storage - Symmetric, Upper Triangular, Lower Triangular
-    // Band Storage - General, Symmetric, Upper Triangular, Lower Triangular.
-
-    /// \brief The class which must be specialized for each unique storage type.
-    ///
-    /// Any specialization must include the following methods:
-    /// static Array<OneD, DataType> Initialize();
-    template<typename DataType, typename StorageType>
-    class MatrixStoragePolicy;
-
-
-
-}
-
-#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_STORAGE_POLICY_HPP
+#endif //NEKTAR_UNIT_TESTS_LIB_UTILITIES_TEST_COMBINATION_RUNNER_H

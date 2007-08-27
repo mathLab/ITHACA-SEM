@@ -67,6 +67,12 @@ namespace Nektar
             {
                 public:
                     typedef typename MatrixType::InnerType IteratorInnerType;
+
+                    // TODO
+                    // This won't work if we want to specify the data as banded, 
+                    // because the data type for banded requires consturctor paramters.
+                    // It should work for everything else.  We may need to slightly
+                    // rethink the template parameters.
                     typedef MatrixStoragePolicy<NumberType, StorageType> StoragePolicy;
 
                 public:                   
@@ -96,7 +102,7 @@ namespace Nektar
                         if( m_curRow != std::numeric_limits<unsigned int>::max() )
                         {
                             boost::tie(m_curRow, m_curColumn) = StoragePolicy::Advance(
-                                m_matrix.GetRows(), m_matrix.GetColumns(), m_curRow, m_curColumn);
+                                m_matrix.GetRows(), m_matrix.GetColumns(), m_curRow, m_curColumn, m_data);
                         }
                     }
                     
@@ -122,6 +128,7 @@ namespace Nektar
                     //boost::shared_ptr<IteratorInnerType> m_curBlock;
                     unsigned int m_curRow;
                     unsigned int m_curColumn;
+                    typename StoragePolicy::PolicySpecificDataHolderType m_data;
             };
             
             typedef iterator_base<ThisType> iterator;

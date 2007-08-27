@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: FullMatrixStoragePolicy.hpp
+// File: BandedMatrixStoragePolicy.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,23 +33,76 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_FULL_MATRIX_STORAGE_POLICY_HPP
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_FULL_MATRIX_STORAGE_POLICY_HPP
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BANDED_MATRIX_STORAGE_POLICY_HPP
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BANDED_MATRIX_STORAGE_POLICY_HPP
 
 #include <LibUtilities/LinearAlgebra/MatrixStoragePolicy.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/LinearAlgebra/Lapack.hpp>
-#include "boost/tuple/tuple.hpp"
+#include <boost/call_traits.hpp>
+#include <boost/tuple/tuple.hpp>
 
 namespace Nektar
 {
     template<typename DataType>
-    class MatrixStoragePolicy<DataType, FullMatrixTag>
+    class MatrixStoragePolicy<DataType, BandedMatrixTag>
     {
         public:
-            typedef typename boost::call_traits<DataType>::reference GetValueReturnType;
-            typedef DefaultPolicySpecificDataHolder PolicySpecificDataHolderType;
+            class PolicySpecificDataHolderType
+            {
+                public:
+                    PolicySpecificDataHoderType() :
+                        m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max()),
+                        m_numberOfSuperDiagonals(std::numeric_limits<unsigned int>::max())
+                    {
+                    }
 
+                    PolicySpecificDataHolderType(unsigned int sub, unsigned int super) :
+                        m_numberOfSubDiagonals(sub),
+                        m_numberOfSuperDiagonals(super)
+                    {
+                    }
+
+                    // Get the specified number of sub diagonals, or calculate the 
+                    // number if this object has not been initialized.
+                    unsigned int GetNumberOfSubDiagonals(unsigned int rows) const
+                    {
+                        if( m_numberOfSubDiagonals != std::numeric_limits<unsigned int>::max() )
+                        {
+                            return m_numberOfSubDiagonals;
+                        }
+                        else if( rows > 0 )
+                        {
+                            return rows-1;
+                        }
+                        else
+                        {
+                            return 0;
+                        }
+                    }
+
+                    unsigned int GetNumberOfSuperDiagonals(unsigned int rows) const
+                    {
+                        if( m_numberOfSuperDiagonals != std::numeric_limits<unsigned int>::max() )
+                        {
+                            return m_numberOfSuperDiagonals;
+                        }
+                        else if( rows > 0 )
+                        {
+                            return rows-1;
+                        }
+                        else
+                        {
+                            return 0;
+                        }
+                    }
+
+                private:
+                    unsigned int m_numberOfSubDiagonals;
+                    unsigned int m_numberOfSuperDiagonals;
+            };
+
+            typedef typename boost::call_traits<DataType>::value_type GetValueReturnType;
+            static DataType ZeroElement;
+            
             static Array<OneD, DataType> Initialize()
             {
                 return Array<OneD, DataType>();
@@ -57,30 +110,33 @@ namespace Nektar
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, const PolicySpecificDataHolderType&)
             {
-                return Array<OneD, DataType>(rows*columns);
+                ASSERTL0(rows==columns, "Banded matrices must be square.");
+                return Array<OneD, DataType>(rows);
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
                                                     typename boost::call_traits<DataType>::const_reference d,
                                                     const PolicySpecificDataHolderType&)
             {
-                return Array<OneD, DataType>(rows*columns, d);
+                ASSERTL0(rows==columns, "Diagonal matrices must be square.");
+                return Array<OneD, DataType>(rows, d);
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const DataType* d,
-                                                    const PolicySpecificDataHolderType&)
+                                                    const DataType* d, const PolicySpecificDataHolderType&)
             {
-                return Array<OneD, DataType>(rows*columns, d);
+                ASSERTL0(rows==columns, "Diagonal matrices must be square.");
+                return Array<OneD, DataType>(rows, d);
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
                                                     const ConstArray<OneD, DataType>& d,
                                                     const PolicySpecificDataHolderType&)
             {
-                ASSERTL0(rows*columns <= d.num_elements(), 
-                    std::string("An attempt has been made to create a full matrix of size ") +
-                    boost::lexical_cast<std::string>(rows*columns) + 
+                ASSERTL0(rows==columns, "Diagonal matrices must be square.");
+                ASSERTL0(rows <= d.num_elements(), 
+                    std::string("An attempt has been made to create a diagonal matrix of size ") +
+                    boost::lexical_cast<std::string>(rows) + 
                     std::string(" but the array being used to populate it only has ") + 
                     boost::lexical_cast<std::string>(d.num_elements()) + 
                     std::string(" elements."));
@@ -94,7 +150,14 @@ namespace Nektar
                                                Array<OneD, DataType>& data,
                                                const PolicySpecificDataHolderType&)
             {
-                return data[curRow*totalColumns + curColumn];
+                if( curRow == curColumn )
+                {
+                    return data[curRow];
+                }
+                else
+                {
+                    return ZeroElement;
+                }
             }
             
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
@@ -102,15 +165,23 @@ namespace Nektar
                                                                              const Array<OneD, DataType>& data,
                                                                              const PolicySpecificDataHolderType&)
             {
-                return data[curRow*totalColumns + curColumn];
-            }
+                if( curRow == curColumn )
+                {
+                    return data[curRow];
+                }
+                else
+                {
+                    return ZeroElement;
+                }
+            }            
             
             static void SetValue(unsigned int totalRows, unsigned int totalColumns,
                                  unsigned int curRow, unsigned int curColumn,
                                  Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
                                  const PolicySpecificDataHolderType&)
             {
-                data[curRow*totalColumns + curColumn] = d;
+                ASSERTL0(curRow == curColumn, "Can only assign into the diagonal of a diagonal matrix.");
+                data[curRow] = d;
             }
             
             static boost::tuples::tuple<unsigned int, unsigned int> 
@@ -118,18 +189,15 @@ namespace Nektar
                     const unsigned int curRow, const unsigned int curColumn,
                     const PolicySpecificDataHolderType&)
             {
+                ASSERTL0(curRow == curColumn, "Iteration of a diagonal matrix is only valid along the diagonal.");
+
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;
 
-                if( nextColumn < totalColumns )
+                if( nextRow < totalRows )
                 {
-                    ++nextColumn;
-                }
-
-                if( nextColumn >= totalColumns )
-                {
-                    nextColumn = 0;
                     ++nextRow;
+                    ++nextColumn;
                 }
 
                 if( nextRow >= totalRows )
@@ -140,55 +208,21 @@ namespace Nektar
 
                 return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
             }
-            
+
             static void Invert(unsigned int rows, unsigned int columns,
                                Array<OneD, DataType>& data,
                                const PolicySpecificDataHolderType&)
             {
-                #ifdef NEKTAR_USING_BLAS
-                    ASSERTL0(rows==columns, "Only square matrices can be inverted.");
-                    
-                    int m = rows;
-                    int n = columns;
-                    int pivotSize = n;
-                    int info = 0;
-                    Array<OneD, int> ipivot(n);
-                    Array<OneD, DataType> work(n);
-                    
-                    Lapack::Dgetrf(m, n, data.get(), m, ipivot.get(), info);
-        
-                    if( info < 0 )
-                    {
-                        std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrf";
-                        ASSERTL0(false, message.c_str());
-                    }
-                    else if( info > 0 )
-                    {
-                        std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
-                        ASSERTL0(false, message.c_str());
-                    }   
-                    
-                    Lapack::Dgetri(n, data.get(), n, ipivot.get(),
-                                   work.get(), n, info);
-                    
-                    if( info < 0 )
-                    {
-                        std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetri";
-                        ASSERTL0(false, message.c_str());
-                    }
-                    else if( info > 0 )
-                    {
-                        std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
-                        ASSERTL0(false, message.c_str());
-                    }   
-                    
-                #else
-                    // error Full matrix inversion not supported without blas.
-                    BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
-                #endif
+                ASSERTL0(rows==columns, "Only square matrices can be inverted.");
+                for(unsigned int i = 0; i < rows; ++i)
+                {
+                    data[i] = 1.0/data[i];
+                }
             }
-            
     };
+    
+    template<typename DataType>
+    DataType MatrixStoragePolicy<DataType, DiagonalMatrixTag>::ZeroElement = DataType(0);
 }
 
-#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_FULL_MATRIX_STORAGE_POLICY_HPP
+#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BANDED_MATRIX_STORAGE_POLICY_HPP

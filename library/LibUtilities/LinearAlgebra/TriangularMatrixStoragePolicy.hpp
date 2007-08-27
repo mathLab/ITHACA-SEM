@@ -47,6 +47,7 @@ namespace Nektar
     {
         public:
             typedef typename boost::call_traits<DataType>::value_type GetValueReturnType;
+            typedef DefaultPolicySpecificDataHolder PolicySpecificDataHolderType;
             static DataType ZeroElement;
             
             static Array<OneD, DataType> Initialize()
@@ -54,28 +55,29 @@ namespace Nektar
                 return Array<OneD, DataType>();
             }
             
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns)
+            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(rows==columns, "Triangular matrices must be square.");
                 return Array<OneD, DataType>(rows*(rows+1)/2);
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    typename boost::call_traits<DataType>::const_reference d)
+                                                    typename boost::call_traits<DataType>::const_reference d,
+                                                    const PolicySpecificDataHolderType& )
             {
                 ASSERTL0(rows==columns, "Triangular matrices must be square.");
                 return Array<OneD, DataType>(rows*(rows+1)/2, d);
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const DataType* d)
+                                                    const DataType* d, const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(rows==columns, "Triangular matrices must be square.");
                 return Array<OneD, DataType>(rows*(rows+1)/2, d);
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const ConstArray<OneD, DataType>& d)
+                                                    const ConstArray<OneD, DataType>& d, const PolicySpecificDataHolderType&)
             {
                 unsigned int size = rows*(rows+1)/2;
 
@@ -101,10 +103,12 @@ namespace Nektar
         public:
             typedef TriangularMatrixStoragePolicy<DataType> BaseType;
             typedef typename BaseType::GetValueReturnType GetValueReturnType;
-            
+            typedef typename BaseType::PolicySpecificDataHolderType PolicySpecificDataHolderType;
+
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
-                                                                             const Array<OneD, DataType>& data)
+                                                                             const Array<OneD, DataType>& data,
+                                                                             const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to retrieve a value from row " +
@@ -128,7 +132,8 @@ namespace Nektar
             
             static void SetValue(unsigned int totalRows, unsigned int totalColumns,
                                  unsigned int curRow, unsigned int curColumn,
-                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d)
+                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
+                                 const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to set a value from row " +
@@ -155,7 +160,8 @@ namespace Nektar
 
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
-                    const unsigned int curRow, const unsigned int curColumn)
+                    const unsigned int curRow, const unsigned int curColumn, 
+                    const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
@@ -205,10 +211,12 @@ namespace Nektar
         public:
             typedef TriangularMatrixStoragePolicy<DataType> BaseType;
             typedef typename BaseType::GetValueReturnType GetValueReturnType;
-            
+            typedef typename BaseType::PolicySpecificDataHolderType PolicySpecificDataHolderType;
+
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
-                                                                             const Array<OneD, DataType>& data)
+                                                                             const Array<OneD, DataType>& data,
+                                                                             const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to retrieve a value from row " +
@@ -232,7 +240,8 @@ namespace Nektar
             
             static void SetValue(unsigned int totalRows, unsigned int totalColumns,
                                  unsigned int curRow, unsigned int curColumn,
-                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d)
+                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
+                                 const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to set a value from row " +
@@ -259,7 +268,8 @@ namespace Nektar
 
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
-                    const unsigned int curRow, const unsigned int curColumn)
+                    const unsigned int curRow, const unsigned int curColumn,
+                    const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +

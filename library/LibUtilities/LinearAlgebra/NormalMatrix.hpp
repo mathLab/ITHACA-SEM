@@ -54,7 +54,8 @@ namespace Nektar
             typedef NekMatrix<DataType, StorageType, StandardMatrixTag> ThisType;
             typedef MatrixStoragePolicy<DataType, StorageType> StoragePolicy;
             typedef DataType NumberType;
-            
+            typedef typename StoragePolicy::PolicySpecificDataHolderType PolicySpecificDataHolderType;
+
             typedef typename StoragePolicy::GetValueReturnType GetValueType;
             typedef typename boost::call_traits<DataType>::const_reference ConstGetValueType;
             
@@ -62,53 +63,64 @@ namespace Nektar
             NekMatrix() :
                 BaseType(0, 0),
                 m_data(StoragePolicy::Initialize()),
-                m_wrapperType(eCopy)
+                m_wrapperType(eCopy),
+                m_policySpecificData()
             {
             }
             
-            NekMatrix(unsigned int rows, unsigned int columns) :
+            NekMatrix(unsigned int rows, unsigned int columns, const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
                 BaseType(rows, columns),
-                m_data(StoragePolicy::Initialize(rows, columns)),
-                m_wrapperType(eCopy)
+                m_data(StoragePolicy::Initialize(rows, columns, policySpecificData)),
+                m_wrapperType(eCopy),
+                m_policySpecificData(policySpecificData)
+            {
+            }
+
+            NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference initValue,
+                      const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
+                BaseType(rows, columns),
+                m_data(StoragePolicy::Initialize(rows, columns, initValue, policySpecificData)),
+                m_wrapperType(eCopy),
+                m_policySpecificData(policySpecificData)
             {
             }
             
-            NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference initValue) :
+            NekMatrix(unsigned int rows, unsigned int columns, const DataType* data,
+                      const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
                 BaseType(rows, columns),
-                m_data(StoragePolicy::Initialize(rows, columns, initValue)),
-                m_wrapperType(eCopy)
+                m_data(StoragePolicy::Initialize(rows, columns, data, policySpecificData)),
+                m_wrapperType(eCopy),
+                m_policySpecificData(policySpecificData)
             {
             }
             
-            NekMatrix(unsigned int rows, unsigned int columns, const DataType* data) :
+            NekMatrix(unsigned int rows, unsigned int columns, const ConstArray<OneD, DataType>& d,
+                      const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
                 BaseType(rows, columns),
-                m_data(StoragePolicy::Initialize(rows, columns, data)),
-                m_wrapperType(eCopy)
+                m_data(StoragePolicy::Initialize(rows, columns, d, policySpecificData)),
+                m_wrapperType(eCopy),
+                m_policySpecificData(policySpecificData)
             {
             }
             
-            NekMatrix(unsigned int rows, unsigned int columns, const ConstArray<OneD, DataType>& d) :
+            NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, DataType>& d, PointerWrapper wrapperType = eCopy,
+                      const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
                 BaseType(rows, columns),
-                m_data(StoragePolicy::Initialize(rows, columns, d)),
-                m_wrapperType(eCopy)
-            {
-            }
-            
-            NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, DataType>& d, PointerWrapper wrapperType = eCopy) :
-                BaseType(rows, columns),
-                m_data(wrapperType == eCopy ? StoragePolicy::Initialize(rows, columns, d) : d),
-                m_wrapperType(wrapperType)
+                m_data(wrapperType == eCopy ? StoragePolicy::Initialize(rows, columns, d, policySpecificData) : d),
+                m_wrapperType(wrapperType),
+                m_policySpecificData(policySpecificData)
             {
             }
             
             NekMatrix(const ThisType& rhs) :
                 BaseType(rhs),
                 m_data(),
-                m_wrapperType(rhs.m_wrapperType)
+                m_wrapperType(rhs.m_wrapperType),
+                m_policySpecificData(rhs.m_policySpecificData)
             {
                 if( m_wrapperType == eCopy )
                 {
-                    m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns());
+                    m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
                     CopyArray(rhs.m_data, m_data);
                 }
                 else
@@ -129,6 +141,7 @@ namespace Nektar
                 if( this != &rhs )
                 {
                     BaseType::operator=(rhs);
+                    m_policySpecificData = rhs.m_policySpecificData;
                     if( m_wrapperType == eCopy  )
                     {
                         // If the current vector is a matrix, then regardless of the rhs type 
@@ -161,7 +174,7 @@ namespace Nektar
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
                     std::string(" columns"));
                     
-                return StoragePolicy::GetValue(this->GetRows(), this->GetColumns(), row, column, m_data);    
+                return StoragePolicy::GetValue(this->GetRows(), this->GetColumns(), row, column, m_data, m_policySpecificData);    
             }
             
             GetValueType operator()(unsigned int row, unsigned int column)
@@ -173,7 +186,7 @@ namespace Nektar
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
                     std::string(" columns"));
                     
-                return StoragePolicy::GetValue(this->GetRows(), this->GetColumns(), row, column, m_data);    
+                return StoragePolicy::GetValue(this->GetRows(), this->GetColumns(), row, column, m_data, m_policySpecificData);    
             }
 
             void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
@@ -184,7 +197,7 @@ namespace Nektar
                 ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
                     std::string(" columns"));
-                StoragePolicy::SetValue(this->GetRows(), this->GetColumns(), row, column, m_data, d);
+                StoragePolicy::SetValue(this->GetRows(), this->GetColumns(), row, column, m_data, d, m_policySpecificData);
             }
             
             typename boost::call_traits<DataType>::const_reference GetValue(unsigned int row, unsigned int column) const
@@ -195,7 +208,7 @@ namespace Nektar
                 ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
                     std::string(" columns"));
-                return StoragePolicy::GetValue(this->GetRows(), this->GetColumns(), row, column, m_data);
+                return StoragePolicy::GetValue(this->GetRows(), this->GetColumns(), row, column, m_data, m_policySpecificData);
             }
             
             Array<OneD, DataType>& GetPtr()
@@ -249,7 +262,7 @@ namespace Nektar
             
             void Invert()
             {
-                StoragePolicy::Invert(this->GetRows(), this->GetColumns(), m_data);
+                StoragePolicy::Invert(this->GetRows(), this->GetColumns(), m_data, m_policySpecificData);
             }
             
        protected:
@@ -278,6 +291,7 @@ namespace Nektar
             
             Array<OneD, DataType> m_data;
             PointerWrapper m_wrapperType;
+            PolicySpecificDataHolderType m_policySpecificData;
     };
     
     

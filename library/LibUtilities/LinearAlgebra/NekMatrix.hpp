@@ -43,6 +43,7 @@
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NormalMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
+#include <LibUtilities/LinearAlgebra/SymmetricMatrixStoragePolicy.hpp>
 
 namespace Nektar
 {
@@ -359,6 +360,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.28  2007/08/16 02:12:33  bnelson
+    *** empty log message ***
+
     Revision 1.27  2007/06/17 22:57:01  bnelson
     Added MatrixOperation files.
 

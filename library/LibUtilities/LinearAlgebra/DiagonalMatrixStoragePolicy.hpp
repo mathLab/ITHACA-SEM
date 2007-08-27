@@ -47,6 +47,7 @@ namespace Nektar
     {
         public:
             typedef typename boost::call_traits<DataType>::value_type GetValueReturnType;
+            typedef DefaultPolicySpecificDataHolder PolicySpecificDataHolderType;
             static DataType ZeroElement;
             
             static Array<OneD, DataType> Initialize()
@@ -54,28 +55,30 @@ namespace Nektar
                 return Array<OneD, DataType>();
             }
             
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns)
+            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(rows==columns, "Diagonal matrices must be square.");
                 return Array<OneD, DataType>(rows);
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    typename boost::call_traits<DataType>::const_reference d)
+                                                    typename boost::call_traits<DataType>::const_reference d,
+                                                    const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(rows==columns, "Diagonal matrices must be square.");
                 return Array<OneD, DataType>(rows, d);
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const DataType* d)
+                                                    const DataType* d, const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(rows==columns, "Diagonal matrices must be square.");
                 return Array<OneD, DataType>(rows, d);
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const ConstArray<OneD, DataType>& d)
+                                                    const ConstArray<OneD, DataType>& d,
+                                                    const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(rows==columns, "Diagonal matrices must be square.");
                 ASSERTL0(rows <= d.num_elements(), 
@@ -91,7 +94,8 @@ namespace Nektar
             
             static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                unsigned int curRow, unsigned int curColumn,
-                                               Array<OneD, DataType>& data)
+                                               Array<OneD, DataType>& data,
+                                               const PolicySpecificDataHolderType&)
             {
                 if( curRow == curColumn )
                 {
@@ -105,7 +109,8 @@ namespace Nektar
             
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
-                                                                             const Array<OneD, DataType>& data)
+                                                                             const Array<OneD, DataType>& data,
+                                                                             const PolicySpecificDataHolderType&)
             {
                 if( curRow == curColumn )
                 {
@@ -119,7 +124,8 @@ namespace Nektar
             
             static void SetValue(unsigned int totalRows, unsigned int totalColumns,
                                  unsigned int curRow, unsigned int curColumn,
-                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d)
+                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
+                                 const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(curRow == curColumn, "Can only assign into the diagonal of a diagonal matrix.");
                 data[curRow] = d;
@@ -127,7 +133,8 @@ namespace Nektar
             
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
-                    const unsigned int curRow, const unsigned int curColumn)
+                    const unsigned int curRow, const unsigned int curColumn,
+                    const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(curRow == curColumn, "Iteration of a diagonal matrix is only valid along the diagonal.");
 
@@ -150,7 +157,8 @@ namespace Nektar
             }
 
             static void Invert(unsigned int rows, unsigned int columns,
-                               Array<OneD, DataType>& data)
+                               Array<OneD, DataType>& data,
+                               const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(rows==columns, "Only square matrices can be inverted.");
                 for(unsigned int i = 0; i < rows; ++i)

@@ -29,7 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Interface classes for matrices
+// Description: Defines the classes used in the NekMatrix template parameter list
+// to define different storage types for matrices.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -43,14 +44,24 @@ namespace Nektar
         eFULL, 
         eDIAGONAL,
         eUPPER_TRIANGULAR,
-        eLOWER_TRIANGULAR
+        eLOWER_TRIANGULAR,
+        eSYMMETRIC,
+        eBANDED,
+        eSYMMETRIC_BANDED,
+        eUPPER_TRIANGULAR_BANDED,
+        eLOWER_TRIANGULAR_BANDED
     };
       
     class FullMatrixTag {};
     class DiagonalMatrixTag {};
     class UpperTriangularMatrixTag {};
     class LowerTriangularMatrixTag {};
-    
+    class SymmetricMatrixTag {};
+    class BandedMatrixTag {};
+    class SymmetricBandedMatrixTag{};
+    class UpperTriangularBandedMatrixTag {};
+    class LowerTriangularBandedMatrixTag {};
+
     template<typename T>
     class ConvertToMatrixStorageEnum;
     
@@ -81,6 +92,42 @@ namespace Nektar
         public:
             enum { Value = eLOWER_TRIANGULAR };
     };
+
+    template<>
+    class ConvertToMatrixStorageEnum<SymmetricMatrixTag>
+    {
+        public:
+            enum { Value = eSYMMETRIC };
+    };
+
+    template<>
+    class ConvertToMatrixStorageEnum<BandedMatrixTag>
+    {
+        public:
+            enum { Value = eBANDED };
+    };
+
+    template<>
+    class ConvertToMatrixStorageEnum<SymmetricBandedMatrixTag>
+    {
+        public:
+            enum { Value = eSYMMETRIC_BANDED };
+    };
+
+    template<>
+    class ConvertToMatrixStorageEnum<UpperTriangularBandedMatrixTag>
+    {
+        public:
+            enum { Value = eUPPER_TRIANGULAR_BANDED };
+    };
+
+    template<>
+    class ConvertToMatrixStorageEnum<LowerTriangularBandedMatrixTag>
+    {
+        public:
+            enum { Value = eLOWER_TRIANGULAR_BANDED };
+    };
+        
  }   
     
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_STORAGE_TYPE_H

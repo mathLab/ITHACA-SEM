@@ -8,6 +8,7 @@ SET(UnitTestSources
 )
 
 SET(UnitTestHeaders
+    TestCombinationRunner.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)

@@ -5,6 +5,7 @@ SET(BasicConstHeaders
 )
 
 SET(LinearAlgebraHeaders
+    ./LinearAlgebra/BandedMatrixStoragePolicy.hpp
     ./LinearAlgebra/Blas.hpp
     ./LinearAlgebra/BlockMatrix.hpp
     ./LinearAlgebra/DiagonalMatrixStoragePolicy.hpp
@@ -34,6 +35,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/NormalMatrix.hpp
     ./LinearAlgebra/PointerWrapper.h
     ./LinearAlgebra/ScaledMatrix.hpp
+    ./LinearAlgebra/SymmetricMatrixStoragePolicy.hpp
     ./LinearAlgebra/TriangularMatrixStoragePolicy.hpp
     ./LinearAlgebra/TransF77.hpp
 )

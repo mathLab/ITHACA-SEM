@@ -35,14 +35,23 @@ namespace Nektar
         // requires the first argument to be an integer.
         static double Jn (double i, double x)
         {
+#ifdef jn
+            return jn((int) i, x);
+#else
             return _jn((int) i, x);
+#endif
         }
 
         // Bessel function of the second kind. This is used since the math.h function
         // requires the first argument to be an integer.
         static double Yn (double i, double x)
         {
+#ifdef yn
+            return yn((int) i, x);
+#else
             return _yn((int) i, x);
+#endif
+
         }
 
         // ---------------------------------------------------------------------
@@ -104,12 +113,32 @@ namespace Nektar
                     ("sqrt",	sqrt)
                     ("tan",		tan)
                     ("tanh",	tanh)
+#ifdef hypot
+                    ("hypot",	hypot)
+#else
                     ("hypot",	_hypot)
+#endif
+#ifdef j0
+                    ("j0",		j0)
+#else
                     ("j0",		_j0)
+#endif
+#ifdef j1
+                    ("j1",		j1)
+#else
                     ("j1",		_j1)
+#endif
                     ("jn",		Jn)
+#ifdef y0
+                    ("y0",		y0)
+#else
                     ("y0",		_y0)
+#endif
+#ifdef y1
+                    ("y1",		y1)
+#else
                     ("y1",		_y1)
+#endif
                     ("yn",		Yn)
 
                     // These won't work because they require pointer or integer input. 

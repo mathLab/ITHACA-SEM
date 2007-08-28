@@ -170,16 +170,20 @@ int main(int argc, char *argv[])
           
           // Set up coordinates
           SpatialDomains::VertexComponentSharedPtr verts[3];
-          verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(2,0,coords[0],coords[1],0);
-          verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(2,1,coords[2],coords[3],0);
-          verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(2,2,coords[4],coords[5],0);
+          const int zero = 0;
+          const int one=1;
+          const int two=2;
+          const double dZero = 0.0;
+          verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
+          verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
+          verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
           
           
           // Set up Edges
           SpatialDomains::EdgeComponentSharedPtr edges[3];
-          edges[0] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(0,2);
-          edges[1] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(1,2);
-          edges[2] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(2,2);
+          edges[0] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(zero, two);
+          edges[1] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(one, two);
+          edges[2] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(two, two);
           
           StdRegions::EdgeOrientation eorient[3];
           eorient[0] = edgeDir; 
@@ -231,18 +235,23 @@ int main(int argc, char *argv[])
           coords[7]    =   atof(argv[15]);
           
           // Set up coordinates
+          const int zero=0;
+          const int one=1;
+          const int two=2;
+          const int three=3;
+          const double dZero=0.0;
           SpatialDomains::VertexComponentSharedPtr verts[4];
-          verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(2,0,coords[0],coords[1],0);
-          verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(2,1,coords[2],coords[3],0);
-          verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(2,2,coords[4],coords[5],0);
-          verts[3] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(2,3,coords[6],coords[7],0);
+          verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
+          verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
+          verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
+          verts[3] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,three,coords[6],coords[7],dZero);
       
           // Set up Edges
           SpatialDomains::EdgeComponentSharedPtr edges[4];
-          edges[0] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(0,2);
-          edges[1] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(1,2);
-          edges[2] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(2,2);
-          edges[3] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(3,2);
+          edges[0] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(zero,two);
+          edges[1] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(one,two);
+          edges[2] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(two,two);
+          edges[3] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(three,two);
       
           StdRegions::EdgeOrientation eorient[4];      
           eorient[0] = edgeDir; 

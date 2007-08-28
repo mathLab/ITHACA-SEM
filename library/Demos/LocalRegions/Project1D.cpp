@@ -70,9 +70,13 @@ int main(int argc, char *argv[])
 
     //-----------------------------------------------
     // Define a segment expansion based on basis definition
-    SpatialDomains::VertexComponentSharedPtr  vert1 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(1,0,x[0],0,0);
-    SpatialDomains::VertexComponentSharedPtr  vert2 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(1,0,x[1],0,0);
-    SpatialDomains::SegGeomSharedPtr geom = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(0,vert1,vert2);
+    const int zero=0;
+    const int one=1;
+    const int two=2;
+    const double dZero=0.0;
+    SpatialDomains::VertexComponentSharedPtr  vert1 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(one,zero,x[0],dZero,dZero);
+    SpatialDomains::VertexComponentSharedPtr  vert2 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(one,zero,x[1],dZero,dZero);
+    SpatialDomains::SegGeomSharedPtr geom = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,vert1,vert2);
     geom->SetOwnData();
 
     const LibUtilities::PointsKey Pkey(nq,Qtype);

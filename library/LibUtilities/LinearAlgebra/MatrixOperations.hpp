@@ -276,6 +276,35 @@ namespace Nektar
             NekMultiply(result, lhs, rhs);
             return result;
         }
+
+        template<unsigned int dim, unsigned int space>
+        void NekMultiply(NekVector<double, dim, space>& result,
+                         const NekMatrix<double, UpperTriangularMatrixTag, StandardMatrixTag>& lhs,
+                         const NekVector<double, dim, space>& rhs)
+        {
+            ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+               boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+               std::string(" and a right side vector with row count ") + 
+               boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+
+            result = rhs;
+            int n = lhs.GetRows();
+            const double* a = lhs.GetRawPtr();
+            double* x = result.GetPtr();
+            int incx = 1;
+            
+            Blas::Dtpmv('U', 'N', 'N', n, a, x, incx);
+        }
+
+        template<unsigned int dim, unsigned int space>
+        NekVector<double, dim, space> NekMultiply(
+            const NekMatrix<double, UpperTriangularMatrixTag, StandardMatrixTag>& lhs,
+            const NekVector<double, dim, space>& rhs)
+        {
+            NekVector<double, dim, space> result(lhs.GetRows());
+            NekMultiply(result, lhs, rhs);
+            return result;
+        }
     #endif //NEKTAR_USING_BLAS
 
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>

@@ -68,6 +68,9 @@ namespace Blas
                  const double* x,    const int& incx,
                  const double& beta, double* y, const int& incy);
 
+        void F77NAME(dtpmv) (const char& uplo, const char& trans, const char& diag,
+                 const int& n, const double* ap, double* x, const int& incx);
+
         void F77NAME(dspmv) (const char& trans, const int& n,    const double& alpha,
                  const double* a,   const double* x, const int& incx,
                  const double& beta,      double* y, const int& incy);
@@ -155,6 +158,11 @@ namespace Blas
         F77NAME(dgemv) (trans,m,n,alpha,a,lda,x,incx,beta,y,incy);
     }
 
+    static void Dtpmv(const char& uplo, const char& trans, const char& diag,
+                 const int& n, const double* ap, double* x, const int& incx)
+    {
+        F77NAME(dtpmv) (uplo, trans, diag, n, ap, x, incx);
+    }
 
     /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A
     /// is symmetric packed
@@ -191,6 +199,9 @@ namespace Blas
 
 /***
 $Log: Blas.hpp,v $
+Revision 1.2  2007/06/17 22:54:23  bnelson
+Fixed the row-major matrix multiplication wrapper function.
+
 Revision 1.1  2007/04/03 03:59:24  bnelson
 Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
 

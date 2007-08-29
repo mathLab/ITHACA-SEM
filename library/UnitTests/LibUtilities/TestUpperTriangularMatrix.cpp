@@ -48,6 +48,22 @@ namespace Nektar
     {
         typedef MatrixStoragePolicy<NekDouble, UpperTriangularMatrixTag> Policy;
 
+        BOOST_AUTO_TEST_CASE(TestMatrixVectorMultiply)
+        {
+            double matrix_buf[] = {1, 2,
+                                      3};
+            NekMatrix<double, UpperTriangularMatrixTag> matrix(2,2,matrix_buf);
+
+            double vector_buf[] = {10, 11};
+            NekVector<double> vector(2, vector_buf);
+
+            NekVector<double> result = matrix*vector;
+
+            double expected_buf[] = {32, 33};
+            NekVector<double> expected_result(2, expected_buf);
+
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
     }
 }
 

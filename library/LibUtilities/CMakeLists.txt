@@ -175,14 +175,7 @@ SET(LibUtilitySources
 	${InterpreterSources}
 )
 
-
 ADD_NEKTAR_LIBRARY(LibUtilities STATIC ${LibUtilitySources} ${LibUtilityHeaders})
-
-#IF( ${USE_MKL} AND ${MKL_FOUND} )
-#        TARGET_LINK_LIBRARIES(${name}
-#            optimized ${MKL_LAPACK} debug ${MKL_LAPACK}
-#        )
-#ENDIF( ${USE_MKL} AND ${MKL_FOUND} )
 
 IF( USE_ATLAS AND ATLAS_FOUND )
         TARGET_LINK_LIBRARIES(LibUtilities
@@ -200,7 +193,6 @@ INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilit
 INSTALL(FILES ${BasicUtils} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicUtils)
 INSTALL(FILES ${Memory} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Memory)
 	
-#INSTALL(TARGETS LibUtilities ARCHIVE DESTINATION ${NEKTAR_LIB_DIR})
 
 
 

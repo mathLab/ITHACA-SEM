@@ -905,7 +905,7 @@ namespace Nektar
 
         private:
 
-            static LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
+            LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
 
             // Virtual functions
 
@@ -1070,6 +1070,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.65  2007/08/11 23:42:25  sherwin
+* A few changes
+*
 * Revision 1.64  2007/07/27 16:56:55  jfrazier
 * Changed manager to static.
 *

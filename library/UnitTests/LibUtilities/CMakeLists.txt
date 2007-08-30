@@ -1,8 +1,9 @@
 
 SET(UnitTestSources
+    TestLowerTriangularMatrix.cpp
+    TestMatrixStoragePolicies.cpp
     TestNekMatrixMultiplication.cpp
     TestNekMatrixOperations.cpp
-    TestMatrixStoragePolicies.cpp
     TestUpperTriangularMatrix.cpp
     main.cpp   
 )

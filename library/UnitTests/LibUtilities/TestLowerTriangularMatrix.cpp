@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: TestUpperTriangularMatrix.cpp
+// File: TestLowerTriangularMatrix.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -44,39 +44,39 @@
 
 namespace Nektar
 {
-    namespace UpperTriangularMatrixUnitTests
+    namespace LowerTriangularMatrixUnitTests
     {
-        typedef MatrixStoragePolicy<NekDouble, UpperTriangularMatrixTag> Policy;
+        typedef MatrixStoragePolicy<NekDouble, LowerTriangularMatrixTag> Policy;
 
         BOOST_AUTO_TEST_CASE(TestMatrixVectorMultiply)
         {
             {
-                double matrix_buf[] = {1, 2,
-                                          3};
-                NekMatrix<double, UpperTriangularMatrixTag> matrix(2,2,matrix_buf);
+                double matrix_buf[] = {1, 
+                                       2, 3};
+                NekMatrix<double, LowerTriangularMatrixTag> matrix(2,2,matrix_buf);
 
                 double vector_buf[] = {10, 11};
                 NekVector<double> vector(2, vector_buf);
 
                 NekVector<double> result = matrix*vector;
 
-                double expected_buf[] = {32, 33};
+                double expected_buf[] = {10, 53};
                 NekVector<double> expected_result(2, expected_buf);
 
                 BOOST_CHECK_EQUAL(expected_result, result);
             }
 
             {
-                unsigned int matrix_buf[] = {1, 2,
-                                          3};
-                NekMatrix<unsigned int, UpperTriangularMatrixTag> matrix(2,2,matrix_buf);
+                unsigned int matrix_buf[] = {1, 
+                                             2, 3};
+                NekMatrix<unsigned int, LowerTriangularMatrixTag> matrix(2,2,matrix_buf);
 
                 unsigned int vector_buf[] = {10, 11};
                 NekVector<unsigned int> vector(2, vector_buf);
 
                 NekVector<unsigned int> result = matrix*vector;
 
-                unsigned int expected_buf[] = {32, 33};
+                unsigned int expected_buf[] = {10, 53};
                 NekVector<unsigned int> expected_result(2, expected_buf);
 
                 BOOST_CHECK_EQUAL(expected_result, result);
@@ -86,34 +86,34 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(Test3x3MatrixVectorMultiply)
         {
             {
-                double matrix_buf[] = {1, 2, 3,
-                                          4, 5,
-                                             6};
-                NekMatrix<double, UpperTriangularMatrixTag> matrix(3,3,matrix_buf);
+                double matrix_buf[] = {1, 
+                                       2, 3, 
+                                       4, 5, 6};
+                NekMatrix<double, LowerTriangularMatrixTag> matrix(3,3,matrix_buf);
 
                 double vector_buf[] = {10, 11, 12};
                 NekVector<double> vector(3, vector_buf);
 
                 NekVector<double> result = matrix*vector;
 
-                double expected_buf[] = {68, 104, 72};
+                double expected_buf[] = {10, 53, 167};
                 NekVector<double> expected_result(3, expected_buf);
 
                 BOOST_CHECK_EQUAL(expected_result, result);
             }
 
             {
-                unsigned int matrix_buf[] = {1, 2, 3,
-                                          4, 5,
-                                             6};
-                NekMatrix<unsigned int, UpperTriangularMatrixTag> matrix(3,3,matrix_buf);
+                unsigned int matrix_buf[] = {1, 
+                                             2, 3,
+                                             4, 5, 6};
+                NekMatrix<unsigned int, LowerTriangularMatrixTag> matrix(3,3,matrix_buf);
 
                 unsigned int vector_buf[] = {10, 11, 12};
                 NekVector<unsigned int> vector(3, vector_buf);
 
                 NekVector<unsigned int> result = matrix*vector;
 
-                unsigned int expected_buf[] = {68, 104, 72};
+                unsigned int expected_buf[] = {10, 53, 167};
                 NekVector<unsigned int> expected_result(3, expected_buf);
 
                 BOOST_CHECK_EQUAL(expected_result, result);

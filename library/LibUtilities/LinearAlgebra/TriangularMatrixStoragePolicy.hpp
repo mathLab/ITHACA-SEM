@@ -206,7 +206,7 @@ namespace Nektar
     
     
     template<typename DataType>
-    class MatrixStoragePolicy<DataType, LowerTriangularMatrixTag>
+    class MatrixStoragePolicy<DataType, LowerTriangularMatrixTag> : public TriangularMatrixStoragePolicy<DataType>
     {
         public:
             typedef TriangularMatrixStoragePolicy<DataType> BaseType;
@@ -228,7 +228,7 @@ namespace Nektar
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
 
-                if( curRow <= curColumn )
+                if( curRow >= curColumn )
                 {
                     return data[CalculateIndex(totalRows, curRow, curColumn)];
                 }

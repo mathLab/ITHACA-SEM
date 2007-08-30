@@ -103,11 +103,6 @@ namespace Nektar
                     boost::lexical_cast<std::string>(curColumn) + " of a (" +
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
-                ASSERTL1(curRow <= curColumn, "Attemping to iterate through element (" +
-                    boost::lexical_cast<std::string>(curRow) + ", " +
-                    boost::lexical_cast<std::string>(curColumn) + ") of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
 
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;
@@ -120,7 +115,7 @@ namespace Nektar
                 if( nextColumn >= totalColumns )
                 {
                     ++nextRow;
-                    nextColumn = nextRow;
+                    nextColumn = 0;
                 }
                 
                 if( nextRow >= totalRows )

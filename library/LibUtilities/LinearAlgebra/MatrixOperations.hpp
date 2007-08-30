@@ -196,15 +196,47 @@ namespace Nektar
            result[i] = accum;
        }
     }
-    
+
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-    NekVector<DataType, dim, space> 
-    NekMultiply(const NekMatrix<LhsDataType, FullMatrixTag, MatrixType>& lhs,
-                const NekVector<DataType, dim, space>& rhs)
+    void NekMultiply(NekVector<DataType, dim, space>& result,
+                    const NekMatrix<LhsDataType, UpperTriangularMatrixTag, MatrixType>& lhs,
+                    const NekVector<DataType, dim, space>& rhs)
     {
-       NekVector<DataType, dim, space> result(lhs.GetRows());
-       NekMultiply(result, lhs, rhs);
-       return result;
+       ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+           boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+           std::string(" and a right side vector with row count ") + 
+           boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+
+       for(unsigned int i = 0; i < lhs.GetRows(); ++i)
+       {
+           DataType accum = DataType(0);
+           for(unsigned int j = i; j < lhs.GetColumns(); ++j)
+           {
+               accum += lhs(i,j)*rhs(j);
+           }
+           result[i] = accum;
+       }
+    }
+
+    template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
+    void NekMultiply(NekVector<DataType, dim, space>& result,
+                    const NekMatrix<LhsDataType, LowerTriangularMatrixTag, MatrixType>& lhs,
+                    const NekVector<DataType, dim, space>& rhs)
+    {
+       ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+           boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+           std::string(" and a right side vector with row count ") + 
+           boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+
+       for(unsigned int i = 0; i < lhs.GetRows(); ++i)
+       {
+           DataType accum = DataType(0);
+           for(unsigned int j = 0; j <= i; ++j)
+           {
+               accum += lhs(i,j)*rhs(j);
+           }
+           result[i] = accum;
+       }
     }
 
     #ifdef NEKTAR_USING_BLAS  
@@ -266,16 +298,6 @@ namespace Nektar
             
             Blas::Dgemv('T', n, m, alpha, a, n, x, incx, beta, y, incy);
         }
-           
-        template<unsigned int dim, unsigned int space>
-        NekVector<double, dim, space> NekMultiply(
-                        const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
-                        const NekVector<double, dim, space>& rhs)
-        {
-            NekVector<double, dim, space> result(lhs.GetRows());
-            NekMultiply(result, lhs, rhs);
-            return result;
-        }
 
         template<unsigned int dim, unsigned int space>
         void NekMultiply(NekVector<double, dim, space>& result,
@@ -293,18 +315,32 @@ namespace Nektar
             double* x = result.GetPtr();
             int incx = 1;
             
-            Blas::Dtpmv('U', 'N', 'N', n, a, x, incx);
+            // We call the lower triangular version because transposing the 
+            // matrix changes it into an upper triangular.
+            Blas::Dtpmv('L', 'T', 'N', n, a, x, incx);
         }
 
         template<unsigned int dim, unsigned int space>
-        NekVector<double, dim, space> NekMultiply(
-            const NekMatrix<double, UpperTriangularMatrixTag, StandardMatrixTag>& lhs,
-            const NekVector<double, dim, space>& rhs)
+        void NekMultiply(NekVector<double, dim, space>& result,
+                         const NekMatrix<double, LowerTriangularMatrixTag, StandardMatrixTag>& lhs,
+                         const NekVector<double, dim, space>& rhs)
         {
-            NekVector<double, dim, space> result(lhs.GetRows());
-            NekMultiply(result, lhs, rhs);
-            return result;
+            ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+               boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+               std::string(" and a right side vector with row count ") + 
+               boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+
+            result = rhs;
+            int n = lhs.GetRows();
+            const double* a = lhs.GetRawPtr();
+            double* x = result.GetPtr();
+            int incx = 1;
+            
+            // We call the upper triangular version because transposing the 
+            // matrix changes it into an lower triangular.
+            Blas::Dtpmv('U', 'T', 'N', n, a, x, incx);
         }
+
     #endif //NEKTAR_USING_BLAS
 
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
@@ -322,17 +358,16 @@ namespace Nektar
            result[i] = lhs(i,i)*rhs(i);
        }
     }
-    
-    template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
+   
+    template<typename DataType, typename LhsDataType, typename StorageType, typename MatrixType, unsigned int dim, unsigned int space>
     NekVector<DataType, dim, space> 
-    NekMultiply(const NekMatrix<LhsDataType, DiagonalMatrixTag, MatrixType>& lhs,
+    NekMultiply(const NekMatrix<LhsDataType, StorageType, MatrixType>& lhs,
                 const NekVector<DataType, dim, space>& rhs)
     {
        NekVector<DataType, dim, space> result(lhs.GetRows());
        NekMultiply(result, lhs, rhs);
        return result;
     }
-
 
     ///////////////////////////////////////////////////////////////////
     // Addition

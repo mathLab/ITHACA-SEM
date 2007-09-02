@@ -199,6 +199,39 @@ namespace Nektar
 
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
     void NekMultiply(NekVector<DataType, dim, space>& result,
+                    const NekMatrix<LhsDataType, BandedMatrixTag, MatrixType>& lhs,
+                    const NekVector<DataType, dim, space>& rhs)
+    {
+       ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+           boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+           std::string(" and a right side vector with row count ") + 
+           boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+
+       const NekMatrix<LhsDataType, BandedMatrixTag, MatrixType>::PolicySpecificDataHolderType& 
+           dataHolder = lhs.GetPolicySpecificDataHolderType();
+       unsigned int subDiagonals = dataHolder.GetNumberOfSubDiagonals(lhs.GetRows());
+       unsigned int superDiagonals = dataHolder.GetNumberOfSuperDiagonals(lhs.GetRows());
+
+       for(unsigned int i = 0; i < lhs.GetRows(); ++i)
+       {
+           DataType accum = DataType(0);
+           unsigned int start = subDiagonals > i ? 0 : i-subDiagonals;
+           unsigned int end = i + superDiagonals;
+           if( end > lhs.GetColumns() )
+           {
+               end = lhs.GetColumns(); 
+           }
+
+           for(unsigned int j = start; j < end; ++j)
+           {
+               accum += lhs(i,j)*rhs(j);
+           }
+           result[i] = accum;
+       }
+    }
+
+    template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
+    void NekMultiply(NekVector<DataType, dim, space>& result,
                     const NekMatrix<LhsDataType, UpperTriangularMatrixTag, MatrixType>& lhs,
                     const NekVector<DataType, dim, space>& rhs)
     {
@@ -238,6 +271,8 @@ namespace Nektar
            result[i] = accum;
        }
     }
+
+
 
     #ifdef NEKTAR_USING_BLAS  
         /// \brief Floating point specialization when blas is in use.

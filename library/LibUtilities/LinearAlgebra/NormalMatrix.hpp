@@ -211,6 +211,11 @@ namespace Nektar
                 return StoragePolicy::GetValue(this->GetRows(), this->GetColumns(), row, column, m_data, m_policySpecificData);
             }
             
+            const PolicySpecificDataHolderType& GetPolicySpecificDataHolderType() const 
+            {
+                return m_policySpecificData;
+            }
+
             Array<OneD, DataType>& GetPtr()
             {
                 return m_data;

@@ -1,5 +1,6 @@
 
 SET(UnitTestSources
+    TestBandedMatrix.cpp
     TestLowerTriangularMatrix.cpp
     TestMatrixStoragePolicies.cpp
     TestNekMatrixMultiplication.cpp

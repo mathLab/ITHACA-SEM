@@ -42,6 +42,7 @@
 #include <LibUtilities/LinearAlgebra/FullMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/DiagonalMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/TriangularMatrixStoragePolicy.hpp>
+#include <LibUtilities/LinearAlgebra/BandedMatrixStoragePolicy.hpp>
 
 #include <boost/shared_ptr.hpp>
 

@@ -68,6 +68,13 @@ namespace Blas
                  const double* x,    const int& incx,
                  const double& beta, double* y, const int& incy);
 
+        void F77NAME(dgbmv) (const char& trans,  const int& m,
+                 const int& n, const int& kl, const int& ku,
+                 const double& alpha,
+                 const double* a,    const int& lda,
+                 const double* x,    const int& incx,
+                 const double& beta, double* y, const int& incy);
+
         void F77NAME(dtpmv) (const char& uplo, const char& trans, const char& diag,
                  const int& n, const double* ap, double* x, const int& incx);
 
@@ -158,6 +165,17 @@ namespace Blas
         F77NAME(dgemv) (trans,m,n,alpha,a,lda,x,incx,beta,y,incy);
     }
 
+    static void Dgbmv (const char& trans,  const int& m,
+                 const int& n, const int& kl, const int& ku,
+                 const double& alpha,
+                 const double* a,    const int& lda,
+                 const double* x,    const int& incx,
+                 const double& beta, double* y, const int& incy)
+    {
+        F77NAME(dgbmv) (trans, m, n, kl, ku, alpha, a, lda, x, incx, beta, y, incy);
+    }
+
+
     static void Dtpmv(const char& uplo, const char& trans, const char& diag,
                  const int& n, const double* ap, double* x, const int& incx)
     {
@@ -199,6 +217,9 @@ namespace Blas
 
 /***
 $Log: Blas.hpp,v $
+Revision 1.3  2007/08/29 22:35:21  bnelson
+Added upper triangular matrix time vector.
+
 Revision 1.2  2007/06/17 22:54:23  bnelson
 Fixed the row-major matrix multiplication wrapper function.
 

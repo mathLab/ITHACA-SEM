@@ -149,7 +149,7 @@ namespace Nektar
                 ASSERTL0(storageSize > d.num_elements(), 
                     std::string("An attempt has been made to create a banded matrix of size (") +
                     boost::lexical_cast<std::string>(rows) + 
-                    ", " + boost::lexical_cast<std::string>(columns) + ") "
+                    ", " + boost::lexical_cast<std::string>(columns) + ") " +
                     std::string(" but the array being used to populate it only has ") + 
                     boost::lexical_cast<std::string>(d.num_elements()) + 
                     std::string(" elements."));

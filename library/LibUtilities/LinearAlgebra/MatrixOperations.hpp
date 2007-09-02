@@ -207,7 +207,7 @@ namespace Nektar
            std::string(" and a right side vector with row count ") + 
            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
 
-       const NekMatrix<LhsDataType, BandedMatrixTag, MatrixType>::PolicySpecificDataHolderType& 
+       const typename NekMatrix<LhsDataType, BandedMatrixTag, MatrixType>::PolicySpecificDataHolderType& 
            dataHolder = lhs.GetPolicySpecificDataHolderType();
        unsigned int subDiagonals = dataHolder.GetNumberOfSubDiagonals(lhs.GetRows());
        unsigned int superDiagonals = dataHolder.GetNumberOfSuperDiagonals(lhs.GetRows());

@@ -36,6 +36,7 @@
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/MeshGraph.h>
+#include <SpatialDomains/ParseUtils.hpp>
 
 // Use the stl version, primarily for string.
 #ifndef TIXML_USE_STL
@@ -258,9 +259,36 @@ namespace Nektar
 
             ASSERTL0(!indxStr.empty(), "Unable to read domain's composite index (index missing?).");
 
-            m_Domain = GetComposite(::atof(indxStr.c_str()));
+            // Read the domain composites.
+            // Parse the composites into a list.
+            GetCompositeList(indxStr, m_Domain);
+            ASSERTL0(!m_Domain.empty(), (std::string("Unable to obtain domain's referenced composite: ") + indxStr).c_str());
+        }
 
-            ASSERTL0(m_Domain, (std::string("Unable to obtain domain's referenced composite: ") + indxStr).c_str());
+        void MeshGraph::GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const
+        {
+            // Parse the composites into a list.
+            typedef vector<unsigned int> SeqVector;
+            SeqVector seqVector;
+            bool parseGood = ParseUtils::GenerateSeqVector(compositeStr.c_str(), seqVector);    
+
+            ASSERTL0(parseGood && !seqVector.empty(), (std::string("Unable to read composite index range: ") + compositeStr).c_str());
+
+            for (SeqVector::iterator iter = seqVector.begin(); iter != seqVector.end(); ++iter)
+            {
+                Composite composite = GetComposite(*iter);
+                if (composite)
+                {
+                    compositeVector.push_back(composite);
+                }
+                else
+                {
+                    char str[64];
+                    ::sprintf(str, "%d", *iter);
+                    NEKERROR(ErrorUtil::ewarning, (std::string("Undefined composite: ") + str).c_str());
+
+                }
+            }
         }
 
         void MeshGraph::Write(std::string &outfilename)
@@ -275,6 +303,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.8  2007/07/24 16:52:08  jfrazier
+// Added domain code.
+//
 // Revision 1.7  2007/06/10 02:27:10  jfrazier
 // Another checkin with an incremental completion of the boundary conditions reader.
 //

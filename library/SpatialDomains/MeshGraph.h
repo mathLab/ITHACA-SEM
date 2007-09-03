@@ -106,12 +106,14 @@ namespace Nektar
                 return returnval;
             }
 
-            const Composite &GetDomain(void) const
+            const CompositeVector &GetDomain(void) const
             {
                 return m_Domain;
             }
 
             void ReadDomain(TiXmlDocument &doc);
+
+            void GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const;
 
        protected:
             VertexVector  m_vertset;
@@ -120,8 +122,8 @@ namespace Nektar
             int m_MeshDimension;
             int m_SpaceDimension;
 
-            std::vector< Composite > m_MeshCompositeVector;
-            Composite m_Domain;
+            CompositeVector m_MeshCompositeVector;
+            CompositeVector m_Domain;
 
         private:
             std::string m_FileName;
@@ -133,6 +135,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.12  2007/08/11 23:38:48  sherwin
+// Update for full working version of Helmholtz1D
+//
 // Revision 1.11  2007/07/25 11:01:57  sherwin
 // Added GetDomain methods
 //

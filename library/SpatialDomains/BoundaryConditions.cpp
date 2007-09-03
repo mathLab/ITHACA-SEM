@@ -270,37 +270,14 @@ namespace Nektar
                 ASSERTL0(indxBeg <= indxEnd, (std::string("Error reading boundary region definition:") + boundaryRegionStr).c_str());
 
                 std::string indxStr = boundaryRegionStr.substr(indxBeg, indxEnd - indxBeg + 1);
-                typedef vector<unsigned int> SeqVector;
-                SeqVector seqVector;
 
                 if (!indxStr.empty())
                 {
+                    // Extract the composites from the string and return them in a list.
                     BoundaryRegionShPtr boundaryRegion(MemoryManager<BoundaryRegion>::AllocateSharedPtr());
+                    m_MeshGraph->GetCompositeList(indxStr, *boundaryRegion);
 
-                    if (ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector))
-                    {
-                        for (SeqVector::iterator iter = seqVector.begin(); iter != seqVector.end(); ++iter)
-                        {
-                            Composite composite = m_MeshGraph->GetComposite(*iter);
-                            if (composite)
-                            {
-                                boundaryRegion->push_back(composite);
-                            }
-                            else
-                            {
-                                char str[64];
-                                ::sprintf(str, "%d", *iter);
-                                NEKERROR(ErrorUtil::ewarning, (std::string("Undefined composite: ") + str).c_str());
-
-                            }
-                        }
-
-                        m_BoundaryRegions.push_back(boundaryRegion);
-                    }
-                    else
-                    {
-                        NEKERROR(ErrorUtil::efatal, (std::string("Cannot read composite definition: ") + boundaryRegionStr).c_str());
-                    }
+                    m_BoundaryRegions.push_back(boundaryRegion);
                 }
 
                 boundaryRegionsElement = boundaryRegionsElement->NextSiblingElement("B");
@@ -341,17 +318,12 @@ namespace Nektar
                     //std::transform(typeStr.begin(), typeStr.end(), 
                     //typeStr.begin(), toupper);
                     ExpansionType type;
-                    int i=1;
-                    for (; i<eExpanionTypeSize; ++i)
-                    {
-                        if (kExpansionTypeStr[i] == typeStr)
-                        {
-                            break;
-                        }
-                    }
+                    const std::string* begStr = kExpansionTypeStr;
+                    const std::string* endStr = kExpansionTypeStr+eExpansionTypeSize;
+                    const std::string* expStr = std::find(begStr, endStr, typeStr);
 
-                    ASSERTL0(i < eExpanionTypeSize, "Invalid expansion type.")
-                    type = (ExpansionType)i;
+                    ASSERTL0(expStr != endStr, "Invalid expansion type.")
+                    type = (ExpansionType)(expStr - begStr);
 
                     ExpansionElementShPtr expansionElementShPtr = MemoryManager<ExpansionElement>::AllocateSharedPtr(composite, nummodesEqn, type);
                     m_ExpansionCollection.push_back(expansionElementShPtr);

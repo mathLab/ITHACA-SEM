@@ -66,7 +66,7 @@ namespace Nektar
             eNoExpansionType,
             eModified,
             eOrthogonal,
-            eExpanionTypeSize
+            eExpansionTypeSize
         };
 
         // Keep this consistent with the enums in ExpansionType.

@@ -49,43 +49,43 @@ namespace Nektar
     namespace MultiRegions
     {
 
-    class ExpList1D: 
-        public ExpList
-    {
+        class ExpList1D: 
+            public ExpList
+        {
 
-    public:
-        
-        ExpList1D();
+        public:
 
-        ExpList1D(const ExpList1D &In);
-        
+            ExpList1D();
+
+            ExpList1D(const ExpList1D &In);
+
             //        ExpList1D(const LibUtilities::BasisKey &Ba, 
-        //      const SpatialDomains::MeshGraph1D &graph1D);
+            //      const SpatialDomains::MeshGraph1D &graph1D);
 
             ExpList1D(const LibUtilities::BasisKey &Ba, 
-                      const SpatialDomains::Composite &cmps
-);
-        
-        ~ExpList1D();
+                const SpatialDomains::Composite &cmps
+                );
+
+            ~ExpList1D();
 
 
             void   PhysDeriv  (ExpList &S0,
-                               ExpList &S1 = NullExpList, 
-                               ExpList &S2 = NullExpList)
+                ExpList &S1 = NullExpList, 
+                ExpList &S2 = NullExpList)
             {
                 ExpList::PhysDeriv(S0,S1,S2);
             }
 
-    protected:
-        
-    private:
-            
-    };
-    
+        protected:
+
+        private:
+
+        };
+
         typedef boost::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
         typedef std::vector<ExpList1DSharedPtr>::iterator ExpList1DVectorIter;
-    
+
     } //end of namespace
 } //end of namespace
 
@@ -93,6 +93,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.h,v $
+* Revision 1.15  2007/07/22 23:04:20  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.14  2007/07/20 02:04:12  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

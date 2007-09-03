@@ -39,48 +39,49 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	
-	ContField1D::ContField1D(void)
-	{
-	}
+
+        ContField1D::ContField1D(void)
+        {
+        }
 
         ContField1D::ContField1D(const ContField1D &In):
-            ContExpList1D(In)
+        ContExpList1D(In)
         {
         }
 
+#pragma message("Domain is now a vector of composites, domain[0] used.")
         ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
-                                 SpatialDomains::BoundaryConditions &bcs, 
-                                 const int bc_loc):
-            ContExpList1D(bcs.GetBasisKey(graph1D.GetDomain(),0),graph1D.GetDomain())  
+            SpatialDomains::BoundaryConditions &bcs, 
+            const int bc_loc):
+        ContExpList1D(bcs.GetBasisKey(graph1D.GetDomain()[0],0),graph1D.GetDomain()[0])  
         {
             GenerateField1D(bcs,bcs.GetVariable(bc_loc));
         }
 
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
-                                 const SpatialDomains::Composite &cmps,
-                                 SpatialDomains::BoundaryConditions &bcs, 
-                                 const int bc_loc):
-            ContExpList1D(Ba,cmps)  
+            const SpatialDomains::Composite &cmps,
+            SpatialDomains::BoundaryConditions &bcs, 
+            const int bc_loc):
+        ContExpList1D(Ba,cmps)  
         {
-            
+
             GenerateField1D(bcs,bcs.GetVariable(bc_loc));
         }
 
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
-                                 const SpatialDomains::Composite &cmps,
-                                 SpatialDomains::BoundaryConditions &bcs, 
-                                 const std::string variable):
-            ContExpList1D(Ba,cmps)
+            const SpatialDomains::Composite &cmps,
+            SpatialDomains::BoundaryConditions &bcs, 
+            const std::string variable):
+        ContExpList1D(Ba,cmps)
         {
             GenerateField1D(bcs,variable);
         }
 
-        
+
         void ContField1D::GenerateField1D(SpatialDomains::BoundaryConditions &bcs, 
-                                     const std::string variable)
+            const std::string variable)
         {
-	    int i,nbnd;
+            int i,nbnd;
             LocalRegions::PointExpSharedPtr  p_exp;
             int NumDirichlet = 0;
 
@@ -93,11 +94,11 @@ namespace Nektar
             for(i = 0; i < nbnd; ++i)
             {
                 SpatialDomains::BoundaryConditionShPtr LocBCond = (*(bconditions[i]))[variable];
-                
+
                 if(LocBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     SpatialDomains::VertexComponentSharedPtr vert;
-                    
+
                     if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
                         Array<OneD,NekDouble> coords(3,0.0);
@@ -126,7 +127,7 @@ namespace Nektar
                 if(BCtype != SpatialDomains::eDirichlet)
                 {
                     SpatialDomains:: VertexComponentSharedPtr vert;
-                    
+
                     if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
                         Array<OneD,NekDouble> coords(3,0.0);
@@ -153,7 +154,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
 
             // Need to reset numbering according to Dirichlet Bondary Condition
             m_locToGloMap->ResetMapping(NumDirichlet,bcs,variable);
@@ -163,29 +164,29 @@ namespace Nektar
         }
 
         ContField1D::~ContField1D()
-	{
-	}
+        {
+        }
 
-	void ContField1D::FwdTrans(const ExpList &In)
-	{
+        void ContField1D::FwdTrans(const ExpList &In)
+        {
             GlobalLinSysKey key(StdRegions::eMass);
             GlobalSolve(key,In);
 
-	    m_transState = eContinuous;
-	    m_physState = false;
-	}
+            m_transState = eContinuous;
+            m_physState = false;
+        }
 
         // Solve the helmholtz problem assuming that m_contCoeff vector 
         // contains an intial estimate for solution
-	void ContField1D::HelmSolve(const ExpList &In, NekDouble lambda)
+        void ContField1D::HelmSolve(const ExpList &In, NekDouble lambda)
         {
             GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
             GlobalSolve(key,In);
         }
 
 
-	void ContField1D::GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs)
-	{
+        void ContField1D::GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs)
+        {
             int i;
             int NumDirBcs = m_locToGloMap->GetNumDirichletBCs();
             Array<OneD,NekDouble> sln;
@@ -201,15 +202,15 @@ namespace Nektar
             }
 
             GeneralMatrixOp(key.GetLinSysType(), init, Dir_fce,
-                            key.GetScaleFactor());
+                key.GetScaleFactor());
 
             // Set up forcing function
-	    IProductWRTBase(Rhs);
+            IProductWRTBase(Rhs);
             Vmath::Neg(m_contNcoeffs,&m_contCoeffs[0],1);
 
             // Forcing function with Dirichlet conditions 
             Vmath::Vsub(m_contNcoeffs,&m_contCoeffs[0],1,
-                        &Dir_fce[0],1,&m_contCoeffs[0],1);
+                &Dir_fce[0],1,&m_contCoeffs[0],1);
 
             // Forcing function with weak boundary conditions 
             for(i = 0; i < m_bndConstraint.size()-NumDirBcs; ++i)
@@ -230,21 +231,21 @@ namespace Nektar
             // Recover solution by addinig intial conditons
             Vmath::Zero(NumDirBcs,&m_contCoeffs[0],1);
             Vmath::Vadd(m_contNcoeffs,&init[0],1,&m_contCoeffs[0],1,
-                        &m_contCoeffs[0],1);
+                &m_contCoeffs[0],1);
 
-	    m_transState = eContinuous;
-	    m_physState = false;
-	}
+            m_transState = eContinuous;
+            m_physState = false;
+        }
 
         GlobalLinSysSharedPtr ContField1D::GetGlobalLinSys(const GlobalLinSysKey &mkey) 
-       {
+        {
             GlobalLinSysSharedPtr glo_matrix;
             GlobalLinSysMap::iterator matrixIter = m_globalMat->find(mkey);
-           
+
             if(matrixIter == m_globalMat->end())
             {
                 glo_matrix = GenGlobalLinSys(mkey,
-                                             m_locToGloMap->GetNumDirichletBCs());
+                    m_locToGloMap->GetNumDirichletBCs());
                 (*m_globalMat)[mkey] = glo_matrix;
             }
             else

@@ -49,50 +49,52 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        class ContField1D: public ContExpList1D
+        {
+        public:
+            ContField1D();
 
-	class ContField1D:
-	    public ContExpList1D
-	    {
-	    public:
-		ContField1D();
-                ContField1D(SpatialDomains::MeshGraph1D &graph1D,
-                            SpatialDomains::BoundaryConditions &bcs, 
-                            const int bc_loc = 0);
+            ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+                SpatialDomains::BoundaryConditions &bcs, 
+                const int bc_loc = 0);
 
-                ContField1D(const LibUtilities::BasisKey &Ba, 
-                            const SpatialDomains::Composite &cmps,
-                            SpatialDomains::BoundaryConditions &bcs,
-                            const int bc_loc = 0);
-                ContField1D(const LibUtilities::BasisKey &Ba, 
-                            const SpatialDomains::Composite &cmps,
-                            SpatialDomains::BoundaryConditions &bcs,
-                            const std::string variable);
-                ContField1D(const ContField1D &In);
-		~ContField1D();
-		
-                void SetBoundaryCondition(const int loc, const NekDouble value)
-                {
-                    m_bndConstraint[loc]->SetValue(value);
-                }
+            ContField1D(const LibUtilities::BasisKey &Ba, 
+                const SpatialDomains::Composite &cmps,
+                SpatialDomains::BoundaryConditions &bcs,
+                const int bc_loc = 0);
 
-                void FwdTrans (const ExpList &In);
-                void HelmSolve(const ExpList &In, NekDouble lambda);
+            ContField1D(const LibUtilities::BasisKey &Ba, 
+                const SpatialDomains::Composite &cmps,
+                SpatialDomains::BoundaryConditions &bcs,
+                const std::string variable);
 
-	    protected:
-		
-	    private:
-		LocalRegions::PointExpVector                         m_bndConstraint;
-                std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
+            ContField1D(const ContField1D &In);
 
-                GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
-                void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs);
+            ~ContField1D();
 
-                void GenerateField1D(SpatialDomains::BoundaryConditions &bcs, 
-                                     const std::string variable);
-	    };
+            void SetBoundaryCondition(const int loc, const NekDouble value)
+            {
+                m_bndConstraint[loc]->SetValue(value);
+            }
+
+            void FwdTrans (const ExpList &In);
+            void HelmSolve(const ExpList &In, NekDouble lambda);
+
+        protected:
+
+        private:
+            LocalRegions::PointExpVector                         m_bndConstraint;
+            std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
+
+            GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
+            void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs);
+
+            void GenerateField1D(SpatialDomains::BoundaryConditions &bcs, 
+                const std::string variable);
+        };
         typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
-	
+
     } //end of namespace
 } //end of namespace
-  
+
 #endif // MULTIERGIONS_CONTSOLNFIELD1D_H

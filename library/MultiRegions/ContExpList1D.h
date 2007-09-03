@@ -44,79 +44,78 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	
-	class ContExpList1D: 
-	public ExpList1D 
-	{
-	public:
-	    ContExpList1D();
+
+        class ContExpList1D: public ExpList1D 
+        {
+        public:
+            ContExpList1D();
             //ContExpList1D(const LibUtilities::BasisKey &Ba, 
             //const SpatialDomains::MeshGraph1D &graph1D);
             ContExpList1D(const LibUtilities::BasisKey &Ba, 
-                          const SpatialDomains::Composite &cmps);
+                const SpatialDomains::Composite &cmps);
             ContExpList1D(const ContExpList1D &In);
-	    ~ContExpList1D();
-	    
-	    inline int GetContNcoeffs()
-	    {
-		return m_contNcoeffs;
-	    }
-	    
-	    inline void ContToLocal()
-	    {
-		m_locToGloMap->ContToLocal(m_contCoeffs,m_coeffs);
-	    }
-	    
-	    inline void ContToLocal(const ConstArray<OneD,NekDouble> &inarray,
-                                    Array<OneD,NekDouble> &outarray)
-	    {
-		m_locToGloMap->ContToLocal(inarray,outarray);
-	    }
-	    
-	    inline void LocalToCont()
-	    {
-		m_locToGloMap->LocalToCont(m_coeffs,m_contCoeffs);
-	    }
-	    	    
-	    inline void Assemble()
-	    {
-		m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
-	    }
-	    
-	    inline void Assemble(const ConstArray<OneD,NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray)
-	    {
-		m_locToGloMap->Assemble(inarray,outarray);
-	    }
-	    
-	    void IProductWRTBase(const ExpList &In);
-	    
-	    void FwdTrans(const ExpList &In);
+            ~ContExpList1D();
 
-	    void HelmSolve(const ExpList &In, NekDouble lambda);
-	    
-	    void BwdTrans(const ExpList &In);
+            inline int GetContNcoeffs()
+            {
+                return m_contNcoeffs;
+            }
+
+            inline void ContToLocal()
+            {
+                m_locToGloMap->ContToLocal(m_contCoeffs,m_coeffs);
+            }
+
+            inline void ContToLocal(const ConstArray<OneD,NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray)
+            {
+                m_locToGloMap->ContToLocal(inarray,outarray);
+            }
+
+            inline void LocalToCont()
+            {
+                m_locToGloMap->LocalToCont(m_coeffs,m_contCoeffs);
+            }
+
+            inline void Assemble()
+            {
+                m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
+            }
+
+            inline void Assemble(const ConstArray<OneD,NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray)
+            {
+                m_locToGloMap->Assemble(inarray,outarray);
+            }
+
+            void IProductWRTBase(const ExpList &In);
+
+            void FwdTrans(const ExpList &In);
+
+            void HelmSolve(const ExpList &In, NekDouble lambda);
+
+            void BwdTrans(const ExpList &In);
 
             void GeneralMatrixOp(const StdRegions::MatrixType     mtype,
-                                 const ConstArray<OneD,NekDouble> &inarray,
-                                 Array<OneD, NekDouble>          &outarray,
-                                 NekDouble lambda);
-	    
-	protected:
-      	    int                    m_contNcoeffs;
-	    Array<OneD, NekDouble> m_contCoeffs;
-	    
-	    boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
-	    
+                const ConstArray<OneD,NekDouble> &inarray,
+                Array<OneD, NekDouble>          &outarray,
+                NekDouble lambda);
+
+        protected:
+            int                    m_contNcoeffs;
+            Array<OneD, NekDouble> m_contCoeffs;
+
+            boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
+
             GlobalLinSysMapShPtr  m_globalMat;
-	    
+
             GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey,
-                                                  const int NumDirBCs);
+                const int NumDirBCs);
 
-	private:
+        private:
 
-	};
-	
+        };
+
 
         typedef boost::shared_ptr<ContExpList1D>      ContExpList1DSharedPtr;
         typedef std::vector<ContExpList1DSharedPtr>   ContExpList1DVector;
@@ -129,6 +128,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.21  2007/07/26 00:07:50  bnelson
+* Fixed linux compiler errors.
+*
 * Revision 1.20  2007/07/23 16:06:30  sherwin
 * Put a std::map to hold global matrix systems
 *

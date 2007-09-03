@@ -165,13 +165,13 @@ namespace Nektar
 
         struct ExpansionElement
         {
-            ExpansionElement(Composite composite, Equation numModesEqn, ExpansionType expansionType):
+            ExpansionElement(CompositeVector &composite, Equation numModesEqn, ExpansionType expansionType):
                 m_Composite(composite),
                 m_NumModesEqn(numModesEqn),
                 m_ExpansionType(expansionType)
             {};
 
-            Composite m_Composite;
+            CompositeVector m_Composite;
             Equation m_NumModesEqn;
             ExpansionType m_ExpansionType;
         };
@@ -220,7 +220,7 @@ namespace Nektar
             /// Get initial condition function based on name of variable.
             ConstInitialConditionShPtr GetInitialCondition(const std::string &var) const;
 
-            const std::string &GetVariable(const int indx)
+            const std::string &GetVariable(unsigned int indx)
             {
                 ASSERTL0(0 <= indx && indx < m_Variables.size(),"Variable index is out of range");
                 return m_Variables[indx];
@@ -245,7 +245,7 @@ namespace Nektar
                 return m_ExpansionCollection.size();
             }
 
-            ConstExpansionElementShPtr GetExpansionElement(int indx)
+            ConstExpansionElementShPtr GetExpansionElement(unsigned int indx)
             {
                 ASSERTL0(0 <= indx && indx < m_ExpansionCollection.size(), "Expansion index out of range.");
                 return m_ExpansionCollection[indx];
@@ -255,16 +255,22 @@ namespace Nektar
             ConstExpansionElementShPtr GetExpansionElement(const Composite &input)
             {
                 ExpansionCollectionIter iter;
+                bool found = false;
 
-                for(iter = m_ExpansionCollection.begin(); iter != m_ExpansionCollection.end(); ++iter)
+                for(iter = m_ExpansionCollection.begin(); iter != m_ExpansionCollection.end() && !found; ++iter)
                 {
-                    if((*iter)->m_Composite.get() == input.get())
+                    CompositeVector::iterator compIter;
+                    for (compIter = (*iter)->m_Composite.begin(); compIter != (*iter)->m_Composite.end(); ++compIter)
                     {
-                        break;
+                        if(compIter->get() == input.get())
+                        {
+                            found = true;
+                            break;
+                        }
                     }
                 }
 
-                ASSERTL0(iter != m_ExpansionCollection.end(), "Expansion element not found.");
+                ASSERTL0(found, "Expansion element not found.");
                                    
                 return *iter;
             }

@@ -302,13 +302,12 @@ namespace Nektar
                     ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
                     int beg = compositeStr.find_first_of("[");
                     int end = compositeStr.find_first_of("]");
-                    std::string compositeNumStr = compositeStr.substr(beg+1,end-beg-1);
-                    int compositeNum = atoi(compositeNumStr.c_str());
-                    Composite composite = m_MeshGraph->GetComposite(compositeNum);
-                    ASSERTL0(composite, (std::string("Unable to find composite: ") + compositeNumStr).c_str());
+                    std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
+
+                    CompositeVector compositeVector;
+                    m_MeshGraph->GetCompositeList(compositeListStr, compositeVector);
 
                     std::string nummodesStr = expansion->Attribute("NUMMODES");
-
                     ASSERTL0(!nummodesStr.empty(), "NUMMODES must be specified in expansion definition");
                     Equation nummodesEqn(nummodesStr);
 
@@ -325,7 +324,7 @@ namespace Nektar
                     ASSERTL0(expStr != endStr, "Invalid expansion type.")
                     type = (ExpansionType)(expStr - begStr);
 
-                    ExpansionElementShPtr expansionElementShPtr = MemoryManager<ExpansionElement>::AllocateSharedPtr(composite, nummodesEqn, type);
+                    ExpansionElementShPtr expansionElementShPtr = MemoryManager<ExpansionElement>::AllocateSharedPtr(compositeVector, nummodesEqn, type);
                     m_ExpansionCollection.push_back(expansionElementShPtr);
 
                     expansion = expansion->NextSiblingElement("E");

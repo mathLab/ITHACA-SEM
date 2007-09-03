@@ -106,6 +106,34 @@ namespace Nektar
             NekVector<NekDouble, 4> result(y);
             BOOST_CHECK_EQUAL(expected_result, result);
         }
+        
+        BOOST_AUTO_TEST_CASE(TestSquareDirectBlasCall)
+        {
+            NekDouble x[] = {1, 2, 3, 4};
+            NekDouble y[] = {0,0,0,0};
+
+            NekDouble a[] = {0, 0, 0, 4,
+                             0, 0, 3, 8,
+                             0, 2, 7, 12,
+                             1, 6, 11, 16,
+                             5, 10, 15, 0,
+                             9, 14, 0, 0,
+                             13, 0, 0, 0};
+            int result = Blas::Dgbmv('T', 4, 4, 3, 3, 1.0, a, 3, x, 1, 0.0, y, 1);
+
+            // This works.
+            //NekDouble a[] = {0, 0, 0, 1, 5, 9, 13,
+            //                 0, 0, 2, 6, 10, 14, 0,
+            //                 0, 3, 7, 11, 15, 0, 0,
+            //                 4, 8, 12, 16, 0, 0, 0};
+            //Blas::Dgbmv('N', 4, 4, 3, 3, 1.0, a, 7, x, 1, 0.0, y, 1);
+
+
+            NekDouble expected_result_buf[] = { 30, 70, 110, 150 };
+            NekVector<NekDouble, 4> expected_result(expected_result_buf);
+            NekVector<NekDouble, 4> result(y);
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
 
         BOOST_AUTO_TEST_CASE(TestStandardMatrixVectorMultiply)
         {

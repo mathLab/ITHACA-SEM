@@ -765,6 +765,17 @@ namespace Nektar
         
         std::copy(source.data(), source.data() + source.num_elements(), dest.data());
     }
+
+    template<typename DataType>
+    void CopyArrayN(const ConstArray<OneD, DataType>& source, Array<OneD, DataType>& dest, unsigned int n)
+    {
+        if( dest.num_elements() != n )
+        {
+            dest = Array<OneD, DataType>(n);
+        }
+        
+        std::copy(source.data(), source.data() + n, dest.data());
+    }
     
     static Array<OneD, NekDouble> NullNekDouble1DArray;
 

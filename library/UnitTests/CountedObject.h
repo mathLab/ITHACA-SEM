@@ -37,6 +37,7 @@
 #define NEKTAR_UNIT_TESTS_COUNTED_OBJECT_H
 
 #include <boost/test/unit_test.hpp>
+#include <iostream>
 
 namespace Nektar
 {
@@ -129,6 +130,8 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(numberCloned, expectedCloned);
             }
 
+            unsigned int GetValue() const { return value; }
+
             unsigned int value;
 
             static unsigned int numberDefaultConstructed;
@@ -142,6 +145,13 @@ namespace Nektar
             static unsigned int numberOf3ParameterConstructions;
     };
     
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const CountedObject<T>& lhs)
+    {
+        os << lhs.GetValue();
+        return os;
+    }
+
     template<typename DerivedType>
     unsigned int CountedObject<DerivedType>::numberDefaultConstructed = 0;
     
@@ -174,6 +184,9 @@ namespace Nektar
 
 /**
     $Log: CountedObject.h,v $
+    Revision 1.4  2007/05/16 02:47:29  bnelson
+    Fixed a non-explicit constructor.
+
     Revision 1.3  2007/01/29 01:37:16  bnelson
     *** empty log message ***
 

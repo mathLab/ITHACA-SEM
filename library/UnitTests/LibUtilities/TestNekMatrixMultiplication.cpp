@@ -65,44 +65,56 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestStandardFullTimesStandardFull)
         {
             {
-                 unsigned int buf1[] = {1, 2, 3,
-                                        4, 5, 6,
-                                        7, 8, 9};
-                 unsigned int buf2[] = { 10, 11, 12, 14,
-                                         15, 16, 17, 18,
-                                         19, 20, 21, 22 };
- 
+                 //unsigned int buf1[] = {1, 2, 3,
+                 //                       4, 5, 6,
+                 //                       7, 8, 9};
+                 //unsigned int buf2[] = { 10, 11, 12, 14,
+                 //                        15, 16, 17, 18,
+                 //                        19, 20, 21, 22 };
+                unsigned int buf1[] = { 1, 4, 7,
+                                      2, 5, 8,
+                                      3, 6, 9};
+                unsigned int buf2[] = {10, 15, 19,
+                                       11, 16, 20,
+                                       12, 17, 21,
+                                       14, 18, 22 };
                                         
-                 NekMatrix<unsigned int> lhs(3, 3, buf1);
-                 NekMatrix<unsigned int> rhs(3, 4, buf2);
-                 NekMatrix<unsigned int> result = lhs*rhs;
- 
-                 BOOST_CHECK_EQUAL(3, result.GetRows());
-                 BOOST_CHECK_EQUAL(4, result.GetColumns());
- 
-                 BOOST_CHECK(result(0,0) == 97);
-                 BOOST_CHECK(result(0,1) == 103);
-                 BOOST_CHECK(result(0,2) == 109);
-                 BOOST_CHECK(result(0,3) == 116);
- 
-                 BOOST_CHECK(result(1,0) == 229);
-                 BOOST_CHECK(result(1,1) == 244);
-                 BOOST_CHECK(result(1,2) == 259);
-                 BOOST_CHECK(result(1,3) == 278);
- 
-                 BOOST_CHECK(result(2,0) == 361);
-                 BOOST_CHECK(result(2,1) == 385);
-                 BOOST_CHECK(result(2,2) == 409);
-                 BOOST_CHECK(result(2,3) == 440);
+                NekMatrix<unsigned int> lhs(3, 3, buf1);
+                NekMatrix<unsigned int> rhs(3, 4, buf2);
+                NekMatrix<unsigned int> result = lhs*rhs;
+
+                BOOST_CHECK_EQUAL(3, result.GetRows());
+                BOOST_CHECK_EQUAL(4, result.GetColumns());
+
+                BOOST_CHECK(result(0,0) == 97);
+                BOOST_CHECK(result(0,1) == 103);
+                BOOST_CHECK(result(0,2) == 109);
+                BOOST_CHECK(result(0,3) == 116);
+
+                BOOST_CHECK(result(1,0) == 229);
+                BOOST_CHECK(result(1,1) == 244);
+                BOOST_CHECK(result(1,2) == 259);
+                BOOST_CHECK(result(1,3) == 278);
+
+                BOOST_CHECK(result(2,0) == 361);
+                BOOST_CHECK(result(2,1) == 385);
+                BOOST_CHECK(result(2,2) == 409);
+                BOOST_CHECK(result(2,3) == 440);
              }
 
              {
-                 double buf1[] = {1, 2, 3,
-                                 4, 5, 6,
-                                 7, 8, 9};
-                 double buf2[] = { 10, 11, 12,
-                     15, 16, 17,
-                     19, 20, 21 };
+                 //double buf1[] = {1, 2, 3,
+                 //                4, 5, 6,
+                 //                7, 8, 9};
+                 //double buf2[] = { 10, 11, 12,
+                 //    15, 16, 17,
+                 //    19, 20, 21 };
+                 double buf1[] = {1, 4, 7,
+                                  2, 5, 8,
+                                  3, 6, 9};
+                 double buf2[] = {10, 15, 19,
+                                  11, 16, 20,
+                                  12, 17, 21};
  
                                   
                  NekMatrix<double> lhs(3, 3, buf1);
@@ -131,9 +143,12 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestStandardFullTimesVector)
         {
             {
-                 unsigned int buf1[] = {1, 2, 3,
-                                        4, 5, 6,
-                                        7, 8, 9};
+                 //unsigned int buf1[] = {1, 2, 3,
+                 //                       4, 5, 6,
+                 //                       7, 8, 9};
+                unsigned int buf1[] = {1, 4, 7,
+                                       2, 5, 8,
+                                       3, 6, 9};
                  unsigned int buf2[] = { 10, 11, 12 };
                                         
                  NekMatrix<unsigned int> lhs(3, 3, buf1);
@@ -148,9 +163,12 @@ namespace Nektar
              }
 
              {
-                 double buf1[] = {1, 2, 3,
-                                 4, 5, 6,
-                                 7, 8, 9};
+                 //double buf1[] = {1, 2, 3,
+                 //                4, 5, 6,
+                 //                7, 8, 9};
+                 double buf1[] = {1, 4, 7,
+                                  2, 5, 8,
+                                  3, 6, 9};
                  double buf2[] = { 10, 11, 12};
  
                                   
@@ -168,10 +186,13 @@ namespace Nektar
              }
 
              {
-                 double buf1[] = {1, 2, 3,
-                                 4, 5, 6,
-                                 7, 8, 9,
-                                 10, 11, 12};
+                 //double buf1[] = {1, 2, 3,
+                 //                4, 5, 6,
+                 //                7, 8, 9,
+                 //                10, 11, 12};
+                 double buf1[] = {1, 4, 7, 10,
+                                  2, 5, 8, 11,
+                                  3, 6, 9, 12};
                  double buf2[] = { 10, 11, 12};
  
                                   
@@ -193,12 +214,19 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestScaledFullTimesScaledFull)
         {
             {
-                unsigned int buf1[] = {1, 2, 3,
-                                    4, 5, 6,
-                                    7, 8, 9};
-                unsigned int buf2[] = { 10, 11, 12, 14,
-                                     15, 16, 17, 18,
-                                     19, 20, 21, 22 };
+                //unsigned int buf1[] = {1, 2, 3,
+                //                    4, 5, 6,
+                //                    7, 8, 9};
+                //unsigned int buf2[] = { 10, 11, 12, 14,
+                //                     15, 16, 17, 18,
+                //                     19, 20, 21, 22 };
+                unsigned int buf1[] = {1, 4, 7,
+                                       2, 5, 8,
+                                       3, 6, 9};
+                unsigned int buf2[] = {10, 15, 19,
+                                       11, 16, 20,
+                                       12, 17, 21,
+                                       14, 18, 22};
 
                 boost::shared_ptr<NekMatrix<unsigned int> > lhsInnerMatrix(
                     new NekMatrix<unsigned int>(3, 3, buf1));
@@ -228,12 +256,18 @@ namespace Nektar
             }
 
             {
-                double buf1[] = {1, 2, 3,
-                                 4, 5, 6,
-                                 7, 8, 9};
-                double buf2[] = { 10, 11, 12,
-                                  15, 16, 17,
-                                  19, 20, 21 };
+                //double buf1[] = {1, 2, 3,
+                //                 4, 5, 6,
+                //                 7, 8, 9};
+                //double buf2[] = { 10, 11, 12,
+                //                  15, 16, 17,
+                //                  19, 20, 21 };
+                double buf1[] = {1, 4, 7,
+                                 2, 5, 8,
+                                 3, 6, 9};
+                double buf2[] = { 10, 15, 19,
+                                  11, 16, 20,
+                                  12, 17, 21};
 
                 boost::shared_ptr<NekMatrix<double> > lhsInnerMatrix(                              
                     new NekMatrix<double>(3, 3, buf1));
@@ -266,9 +300,12 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestScaledFullTimesVector)
         {
             {
-                 unsigned int buf1[] = {1, 2, 3,
-                                        4, 5, 6,
-                                        7, 8, 9};
+                 //unsigned int buf1[] = {1, 2, 3,
+                 //                       4, 5, 6,
+                 //                       7, 8, 9};
+                unsigned int buf1[] = {1, 4, 7,
+                                       2, 5, 8,
+                                       3, 6, 9};
                  unsigned int buf2[] = { 10, 11, 12 };
                            
                  boost::shared_ptr<NekMatrix<unsigned int> > innerMatrix(
@@ -286,9 +323,12 @@ namespace Nektar
              }
 
              {
-                 double buf1[] = {1, 2, 3,
-                                 4, 5, 6,
-                                 7, 8, 9};
+                 //double buf1[] = {1, 2, 3,
+                 //                4, 5, 6,
+                 //                7, 8, 9};
+                 double buf1[] = {1, 4, 7,
+                                  2, 5, 8,
+                                  3, 6, 9};
                  double buf2[] = { 10, 11, 12};
  
                                   
@@ -307,10 +347,13 @@ namespace Nektar
              }
 
              {
-                 double buf1[] = {1, 2, 3,
-                                 4, 5, 6,
-                                 7, 8, 9,
-                                 10, 11, 12};
+                 //double buf1[] = {1, 2, 3,
+                 //                4, 5, 6,
+                 //                7, 8, 9,
+                 //                10, 11, 12};
+                 double buf1[] = {1, 4, 7, 10,
+                                  2, 5, 8, 11,
+                                  3, 6, 9, 12};
                  double buf2[] = { 10, 11, 12};
  
                  boost::shared_ptr<NekMatrix<double> > innerMatrix(

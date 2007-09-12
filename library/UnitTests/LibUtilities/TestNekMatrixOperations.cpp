@@ -129,8 +129,8 @@ namespace Nektar
         
         m3 = MakePtr(new NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag>(2, 2, 2, 2));
         m3->SetBlock(0,0, block1);
-        m3->SetBlock(0,1, block2);
-        m3->SetBlock(1,0, block3);
+        m3->SetBlock(1,0, block2);
+        m3->SetBlock(0,1, block3);
         m3->SetBlock(1,1, block4);
     }
 
@@ -204,20 +204,28 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestLhsFullRhsFull)
         {
-            double lhs_values[] = {2, 4, 6, 8,
-                                   10, 12, 14, 16,
-                                   18, 20, 22, 24,
-                                   26, 28, 30, 32};
+            //double lhs_values[] = {2, 4, 6, 8,
+            //                       10, 12, 14, 16,
+            //                       18, 20, 22, 24,
+            //                       26, 28, 30, 32};
+            double lhs_values[] = {2, 10, 18, 26,
+                                 4, 12, 20, 28,
+                                 6, 14, 22, 30,
+                                 8, 16, 24, 32};
                                    
             boost::shared_ptr<NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag> > lhs1;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> > lhs2;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> > lhs3;
             
             GenerateFullMatrices(lhs_values, 2.0, lhs1, lhs2, lhs3);
-            double rhs_values[] = {4, 8, 12, 16,
-                                   20, 24, 28, 32,
-                                   36, 40, 44, 48,
-                                   52, 56, 60, 64};
+            //double rhs_values[] = {4, 8, 12, 16,
+            //                       20, 24, 28, 32,
+            //                       36, 40, 44, 48,
+            //                       52, 56, 60, 64};
+            double rhs_values[] = {4, 20, 36, 52,
+                                   8, 24, 40, 56,
+                                   12, 28, 44, 60,
+                                   16, 32, 48, 64};
             boost::shared_ptr<NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag> > rhs1;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> > rhs2;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> > rhs3; 
@@ -253,7 +261,9 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestComboExpression)
         {
             {
-                double buf[] = {1.0, 2.0, 3.0, 4.0};
+                //double buf[] = {1.0, 2.0, 3.0, 4.0};
+                double buf[] = {1.0, 3.0,
+                                2.0, 4.0};
                 SharedNekMatrixPtr inner1(new NekMatrix<NekDouble>(2,2,buf));
                 SharedNekMatrixPtr inner2(new NekMatrix<NekDouble>(2,2,buf));
                 
@@ -291,20 +301,28 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestLhsUpperTriangularRhsUpperTriangular)
         {
-            double lhs_values[] = {2, 4,  6,  8,
-                                      12, 14, 16,
-                                          22, 24,
-                                              32};
+            //double lhs_values[] = {2, 4,  6,  8,
+            //                          12, 14, 16,
+            //                              22, 24,
+            //                                  32};
+            double lhs_values[] = {2,
+                                   4, 12,
+                                   6, 14, 22,
+                                   8, 16, 24, 32};
 
             boost::shared_ptr<NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> > lhs1;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble, UpperTriangularMatrixTag>, UpperTriangularMatrixTag, ScaledMatrixTag> > lhs2;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, UpperTriangularMatrixTag, BlockMatrixTag> > lhs3;
             GenerateUpperTriangularMatrices(lhs_values, 2.0, lhs1, lhs2, lhs3);
 
-            double rhs_values[] = {4,   8, 12, 16,
-                                       24, 28, 32,
-                                           44, 48,
-                                               64};
+            //double rhs_values[] = {4,   8, 12, 16,
+            //                           24, 28, 32,
+            //                               44, 48,
+            //                                   64};
+            double rhs_values[] = {4,
+                                   8, 24,
+                                   12, 28, 44,
+                                   16, 32, 48, 64};
             boost::shared_ptr<NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> > rhs1;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble, UpperTriangularMatrixTag>, UpperTriangularMatrixTag, ScaledMatrixTag> > rhs2;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, UpperTriangularMatrixTag, BlockMatrixTag> > rhs3; 
@@ -326,20 +344,29 @@ namespace Nektar
     {
         BOOST_AUTO_TEST_CASE(TestLhsFullRhsFull)
         {
-            double lhs_values[] = {2, 4, 6, 8,
-                                    10, 12, 14, 16,
-                                    18, 20, 22, 24,
-                                    26, 28, 30, 32};
+            //double lhs_values[] = {2, 4, 6, 8,
+            //                        10, 12, 14, 16,
+            //                        18, 20, 22, 24,
+            //                        26, 28, 30, 32};
                                     
+            double lhs_values[] = {2, 10, 18, 26,
+                                   4, 12, 20, 28,
+                                   6, 14, 22, 30,
+                                   8, 16, 24, 32};
+
             boost::shared_ptr<NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag> > lhs1;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> > lhs2;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> > lhs3;
             
             GenerateFullMatrices(lhs_values, 2.0, lhs1, lhs2, lhs3);
-            double rhs_values[] = {4, 8, 12, 16,
-                                    20, 24, 28, 32,
-                                    36, 40, 44, 48,
-                                    52, 56, 60, 64};
+            //double rhs_values[] = {4, 8, 12, 16,
+            //                        20, 24, 28, 32,
+            //                        36, 40, 44, 48,
+            //                        52, 56, 60, 64};
+            double rhs_values[] = {4, 20, 36, 52,
+                                   8, 24, 40, 56,
+                                   12, 28, 44, 60,
+                                   16, 32, 48, 64};
             boost::shared_ptr<NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag> > rhs1;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> > rhs2;
             boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> > rhs3; 

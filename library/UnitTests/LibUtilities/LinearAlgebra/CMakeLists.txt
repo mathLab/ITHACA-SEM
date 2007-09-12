@@ -1,0 +1,30 @@
+
+SET(TARGET_NAME LinearAlgebraUnitTests)
+
+SET(Sources
+    main.cpp   
+    TestBandedMatrixStoragePolicy.cpp
+    TestDiagonalMatrixStoragePolicy.cpp
+    TestFullMatrixStoragePolicy.cpp
+    TestLowerTriangularMatrixStoragePolicy.cpp
+    TestSymmetricMatrixStoragePolicy.cpp
+    TestUpperTriangularMatrixStoragePolicy.cpp
+    TestStandardMatrix.cpp
+)
+
+SET(Headers
+)
+
+ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
+
+ADD_NEKTAR_EXECUTABLE(${TARGET_NAME} Sources Headers)
+
+
+TARGET_LINK_LIBRARIES(${TARGET_NAME}
+    optimized LibUtilities debug LibUtilities-g
+    optimized ${BOOST_THREAD_LIB} debug ${BOOST_THREAD_DEBUG_LIB}
+)
+
+SET_LAPACK_LINK_LIBRARIES(${TARGET_NAME})
+
+INSTALL(TARGETS ${TARGET_NAME} RUNTIME DESTINATION ${NEKTAR_BIN_DIR})

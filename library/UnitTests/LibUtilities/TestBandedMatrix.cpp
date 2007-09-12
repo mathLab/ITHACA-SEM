@@ -46,41 +46,6 @@ namespace Nektar
 {
     namespace BandedMatrixPolicyUnitTests
     {
-        typedef MatrixStoragePolicy<NekDouble, BandedMatrixTag> Policy;
-        typedef Policy::PolicySpecificDataHolderType DataHolderType;
-
-        BOOST_AUTO_TEST_CASE(TestUninitializedDataConstructionWithDefaultDataHolder)
-        {
-            Array<OneD, NekDouble> result = Policy::Initialize(10, 10, DataHolderType());
-            BOOST_CHECK_EQUAL(result.num_elements(), 100);
-
-            BOOST_CHECK_THROW(Policy::Initialize(10, 9, DataHolderType()), ErrorUtil::NekError);
-            BOOST_CHECK_THROW(Policy::Initialize(9, 10, DataHolderType()), ErrorUtil::NekError);
-        }
-
-        BOOST_AUTO_TEST_CASE(TestUninitializedDataConstructionWithUserDefinedNumberOfDiagonals)
-        {
-            DataHolderType d1(1,0);
-            Array<OneD, NekDouble> result1 = Policy::Initialize(10, 10, d1);
-            BOOST_CHECK_EQUAL(result1.num_elements(), 30);
-
-            DataHolderType d2(0,1);
-            Array<OneD, NekDouble> result2 = Policy::Initialize(10, 10, d2);
-            BOOST_CHECK_EQUAL(result2.num_elements(), 20);
-
-            DataHolderType d3(1,1);
-            Array<OneD, NekDouble> result3 = Policy::Initialize(10, 10, d3);
-            BOOST_CHECK_EQUAL(result3.num_elements(), 40);
-
-            DataHolderType d4(3,1);
-            Array<OneD, NekDouble> result4 = Policy::Initialize(10, 10, d4);
-            BOOST_CHECK_EQUAL(result4.num_elements(), 80);
-
-            DataHolderType d5(5,1);
-            Array<OneD, NekDouble> result5 = Policy::Initialize(10, 10, d5);
-            BOOST_CHECK_EQUAL(result5.num_elements(), 100);
-
-        }
 
     }
 
@@ -88,18 +53,18 @@ namespace Nektar
     {
         BOOST_AUTO_TEST_CASE(TestDirectBlasCall)
         {
-           
+            // [1 2 0 0 ]
+            // [3 4 5 0 ]
+            // [0 6 7 8 ]
+            // [0 0 9 10]
             NekDouble x[] = {1, 2, 3, 4};
             NekDouble y[] = {0,0,0,0};
 
-            NekDouble a[] = {0.0, 2.0, 5.0, 8.0,
-                               1.0, 4.0, 7.0, 10.0,
-                               3.0, 6.0, 9.0, 0.0 };
-            Blas::Dgbmv('T', 4, 4, 1, 1, 1.0, a, 4, x, 1, 0.0, y, 1);
-
-            // This works.
-            //NekDouble a[] = {0, 1, 3, 2, 4, 6, 5, 7, 9, 8, 10, 0};
-            //Blas::Dgbmv('N', 4, 4, 1, 1, 1.0, a, 3, x, 1, 0.0, y, 1);
+            NekDouble a[] = {0, 1, 2,
+                             3, 4, 5,
+                             6, 7, 8, 
+                             9, 10, 0};
+            Blas::Dgbmv('T', 4, 4, 1, 1, 1.0, a, 3, x, 1, 0.0, y, 1);
 
             NekDouble expected_result_buf[] = { 5, 26, 65, 67 };
             NekVector<NekDouble, 4> expected_result(expected_result_buf);
@@ -109,24 +74,18 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestSquareDirectBlasCall)
         {
+            // [1  2  3  4 ]
+            // [5  6  7  8 ]
+            // [9  10 11 12]
+            // [13 14 15 16]
             NekDouble x[] = {1, 2, 3, 4};
             NekDouble y[] = {0,0,0,0};
 
-            NekDouble a[] = {0, 0, 0, 4,
-                             0, 0, 3, 8,
-                             0, 2, 7, 12,
-                             1, 6, 11, 16,
-                             5, 10, 15, 0,
-                             9, 14, 0, 0,
-                             13, 0, 0, 0};
-            int result = Blas::Dgbmv('T', 4, 4, 3, 3, 1.0, a, 3, x, 1, 0.0, y, 1);
-
-            // This works.
-            //NekDouble a[] = {0, 0, 0, 1, 5, 9, 13,
-            //                 0, 0, 2, 6, 10, 14, 0,
-            //                 0, 3, 7, 11, 15, 0, 0,
-            //                 4, 8, 12, 16, 0, 0, 0};
-            //Blas::Dgbmv('N', 4, 4, 3, 3, 1.0, a, 7, x, 1, 0.0, y, 1);
+            NekDouble a[] = {0, 0, 0, 1, 2, 3, 4,
+                             0, 0, 5, 6, 7, 8, 0, 
+                             0, 9, 10, 11, 12, 0, 0,
+                             13, 14, 15, 16, 0, 0, 0 };
+            Blas::Dgbmv('T', 4, 4, 3, 3, 1.0, a, 7, x, 1, 0.0, y, 1);
 
 
             NekDouble expected_result_buf[] = { 30, 70, 110, 150 };
@@ -135,32 +94,76 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, result);
         }
 
+        BOOST_AUTO_TEST_CASE(TestDifferentNumberOfLowerAndUpperDiagonalsDirectBlasCall)
+        {
+            // [1 2 11 0 ]
+            // [3 4 5  12 ]
+            // [0 6 7  8 ]
+            // [0 0 9  10]
+            NekDouble x[] = {1, 2, 3, 4};
+            NekDouble y[] = {0,0,0,0};
+
+            NekDouble a[] = {0, 1, 2, 11,
+                             3, 4, 5, 12,
+                             6, 7, 8, 0,
+                             9, 10, 0, 0};
+
+            Blas::Dgbmv('T', 4, 4, 2, 1, 1.0, a, 4, x, 1, 0.0, y, 1);
+
+            NekDouble expected_result_buf[] = { 38, 74, 65, 67 };
+            NekVector<NekDouble, 4> expected_result(expected_result_buf);
+            NekVector<NekDouble, 4> result(y);
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
+
+        BOOST_AUTO_TEST_CASE(TestLargerPackedMatrixThanNormal)
+        {
+            // [ 1 2 0 ]
+            // [ 3 4 5 ]
+            // [ 6 7 8 ]
+            NekDouble x[] = {1, 2, 3};
+            NekDouble y[] = {0, 0, 0};
+
+            NekDouble a[] = {0, 1, 3, 6,
+                             2, 4, 7, 0,
+                             5, 8, 0, 0};
+
+            Blas::Dgbmv('N', 3, 3, 2, 1, 1.0, a, 4, x, 1, 0.0, y, 1);
+
+            NekDouble expected_result_buf[] = { 5, 26, 44 };
+            NekVector<NekDouble, 3> expected_result(expected_result_buf);
+            NekVector<NekDouble, 3> result(y);
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
+
         BOOST_AUTO_TEST_CASE(TestStandardMatrixVectorMultiply)
         {
-            typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+            //typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
 
-            {
-                // This is the matrix
-                // [ 1 2 0 0 ]
-                // [ 3 4 5 0 ]
-                // [ 0 6 7 8 ]
-                // [ 0 0 9 10]
-                NekDouble buf[] = { 0.0, 0.0, 0.0, 0.0,
-                                    0.0, 2.0, 5.0, 8.0,
-                                    1.0, 4.0, 7.0, 10.0,
-                                    3.0, 6.0, 9.0, 0.0 };
+            //{
+            //    // This is the matrix
+            //    // [ 1 2 0 0 ]
+            //    // [ 3 4 5 0 ]
+            //    // [ 0 6 7 8 ]
+            //    // [ 0 0 9 10]
+            //    
+            //    NekDouble buf[] = {0, 1, 3,
+            //                       2, 4, 6,
+            //                       5, 7, 9,
+            //                       8, 10, 0};
+            //                  
     
-                MatrixType m(4, 4, buf, MatrixType::PolicySpecificDataHolderType(1, 1));
+            //    MatrixType m(4, 4, buf, MatrixType::PolicySpecificDataHolderType(1, 1));
 
-                NekDouble vector_buf[] = {1.0, 2.0, 3.0, 4.0};
-                NekVector<NekDouble, 4> v(vector_buf);
+            //    NekDouble vector_buf[] = {1.0, 2.0, 3.0, 4.0};
+            //    NekVector<NekDouble, 4> v(vector_buf);
 
-                NekVector<NekDouble, 4> result = m*v;
+            //    NekVector<NekDouble, 4> result = m*v;
 
-                NekDouble expected_result_buf[] = { 5, 26, 65, 67 };
-                NekVector<NekDouble, 4> expected_result(expected_result_buf);
-                BOOST_CHECK_EQUAL(expected_result, result);
-            }
+            //    NekDouble expected_result_buf[] = { 5, 26, 65, 67 };
+            //    NekVector<NekDouble, 4> expected_result(expected_result_buf);
+            //    BOOST_CHECK_EQUAL(expected_result, result);
+            //}
         }
     }
 }

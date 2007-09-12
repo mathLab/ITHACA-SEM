@@ -86,9 +86,12 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(Test3x3MatrixVectorMultiply)
         {
             {
-                double matrix_buf[] = {1, 2, 3,
-                                          4, 5,
-                                             6};
+                //double matrix_buf[] = {1, 2, 3,
+                //                          4, 5,
+                //                             6};
+                double matrix_buf[] = {1,
+                                       2, 4,
+                                       3, 5, 6};
                 NekMatrix<double, UpperTriangularMatrixTag> matrix(3,3,matrix_buf);
 
                 double vector_buf[] = {10, 11, 12};
@@ -103,9 +106,12 @@ namespace Nektar
             }
 
             {
-                unsigned int matrix_buf[] = {1, 2, 3,
-                                          4, 5,
-                                             6};
+                //unsigned int matrix_buf[] = {1, 2, 3,
+                //                          4, 5,
+                //                             6};
+                unsigned int matrix_buf[] = {1,
+                                             2, 4,
+                                             3, 5, 6};
                 NekMatrix<unsigned int, UpperTriangularMatrixTag> matrix(3,3,matrix_buf);
 
                 unsigned int vector_buf[] = {10, 11, 12};

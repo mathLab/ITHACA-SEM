@@ -35,7 +35,10 @@
 
 #include <UnitTests/testNekPoint.h>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
-
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_case_template.hpp>
+#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -91,7 +94,7 @@ namespace Nektar
             TestPoint p1(p);
         }
 
-        void testNekPointConstruction()
+        BOOST_AUTO_TEST_CASE(testNekPointConstruction)
         {
             using namespace Nektar;
 
@@ -173,11 +176,7 @@ namespace Nektar
             }
         }
 
-        void testNekPointArithmetic()
-        {
-        }
-
-        void testNekPointDataAccess()
+        BOOST_AUTO_TEST_CASE(testNekPointDataAccess)
         {
             using namespace Nektar;
 
@@ -226,7 +225,7 @@ namespace Nektar
 
         }
 
-        void testNekPointPointerManipulation()
+        BOOST_AUTO_TEST_CASE(testNekPointPointerManipulation)
         {
             using namespace Nektar;
             NekPoint<int, 3> p(1,2,3);
@@ -235,7 +234,7 @@ namespace Nektar
             BOOST_CHECK(memcmp(expected, ptr, sizeof(int)*3) == 0);
         }
 
-        void testNekPointComparison()
+        BOOST_AUTO_TEST_CASE(testNekPointComparison)
         {
             using namespace Nektar;
             NekPoint<int, 3> lhs(1, 2, 3);
@@ -246,7 +245,7 @@ namespace Nektar
             BOOST_CHECK(lhs != ne);
         }
 
-        void testNekPointOperators()
+        BOOST_AUTO_TEST_CASE(testNekPointOperators)
         {
             using Nektar::NekPoint;
 
@@ -349,7 +348,7 @@ namespace Nektar
 
         }
 
-        void testNekPointMisc()
+        BOOST_AUTO_TEST_CASE(testNekPointMisc)
         {
             using namespace Nektar;
 
@@ -366,7 +365,7 @@ namespace Nektar
             BOOST_CHECK(distanceBetween(dest, source) == sqrt(2.0));
         }
 
-        void testNekPointAssignment()
+        BOOST_AUTO_TEST_CASE(testNekPointAssignment)
         {
             using namespace Nektar;
             NekPoint<int, 3> lhs(1,2,3);
@@ -382,40 +381,3 @@ namespace Nektar
 
     }
 }
-
-/**
-    $Log: testNekPoint.cpp,v $
-    Revision 1.8  2006/09/15 02:19:08  bnelson
-    *** empty log message ***
-
-    Revision 1.7  2006/09/11 03:28:41  bnelson
-    no message
-
-    Revision 1.6  2006/08/28 02:40:51  bnelson
-    *** empty log message ***
-
-    Revision 1.5  2006/08/25 03:04:57  bnelson
-    *** empty log message ***
-
-    Revision 1.4  2006/08/25 01:36:25  bnelson
-    no message
-
-    Revision 1.3  2006/08/14 02:35:45  bnelson
-    Added many LinearAlgebra tests
-
-    Revision 1.2  2006/06/05 02:23:17  bnelson
-    Updates for the reorganization of LibUtilities.
-
-    Revision 1.1  2006/05/04 18:59:56  kirby
-    *** empty log message ***
-
-    Revision 1.3  2006/04/11 02:02:13  bnelson
-    Added more tests.
-
-    Revision 1.2  2006/04/06 03:45:50  bnelson
-    Added some more point tests and fixed compiler errors.
-
-    Revision 1.1  2006/01/31 14:06:23  bnelson
-    Added the new UnitTest project.
-
-**/

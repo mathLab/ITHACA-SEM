@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: TestMatrixStoragePolicies.cpp
+// File: TestStandardMatrix.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,11 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define BOOST_TEST_MODULE LibUtilityUnitTests test
+#define BOOST_TEST_MODULE LinearAlgebraUnitTests test
 #include <boost/test/unit_test.hpp>
 
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -47,6 +46,10 @@
 
 namespace Nektar
 {
+    namespace StandardMatrixUnitTests
+    {
+
+    }
 }
 
 

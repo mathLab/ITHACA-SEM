@@ -33,10 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_UNIT_TESTS_SHARED_ARRAY_HPP
-#define NEKTAR_UNIT_TESTS_SHARED_ARRAY_HPP
-
-#include <UnitTests/testNekSharedArray.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <UnitTests/CountedObject.h>
@@ -44,6 +40,8 @@
 #include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <iostream>
@@ -112,7 +110,7 @@ namespace Nektar
                 ConstArray<OneD, NekDouble> b;
         };
         
-        void TestParameterPopulation()
+        BOOST_AUTO_TEST_CASE(TestParameterPopulation)
         {
             ParameterTestClass obj;
             
@@ -146,7 +144,7 @@ namespace Nektar
             
         }
         
-        void TestEmptyConstructor()
+        BOOST_AUTO_TEST_CASE(TestEmptyConstructor)
         {
             {
                 CountedObject<double>::ClearCounters();
@@ -183,7 +181,7 @@ namespace Nektar
             CountedObject<double>::check(0, 0, 0, 0, 0, 0);
         }
         
-        void TestUninitializedConstructor()
+        BOOST_AUTO_TEST_CASE(TestUninitializedConstructor)
         {
             {
                 CountedObject<double>::ClearCounters();
@@ -250,7 +248,7 @@ namespace Nektar
             CountedObject<double>::check(126, 0, 126, 0, 0, 0);
         }
         
-        void TestSingleValueInitialization()
+        BOOST_AUTO_TEST_CASE(TestSingleValueInitialization)
         {
             {
                 CountedObject<double> initValue(98);
@@ -368,7 +366,7 @@ namespace Nektar
             CountedObject<double>::check(0, 0, 127, 126, 0, 0);
         }
         
-        void TestPopulationFromCArray()
+        BOOST_AUTO_TEST_CASE(TestPopulationFromCArray)
         {
             {
                 CountedObject<double> a_array[] = { CountedObject<double>(1), 
@@ -427,7 +425,7 @@ namespace Nektar
             }
         }
 
-        void TestCopyConstruction()
+        BOOST_AUTO_TEST_CASE(TestCopyConstruction)
         {
             {
                 CountedObject<double> a_array[] = { CountedObject<double>(1), 
@@ -500,7 +498,7 @@ namespace Nektar
             }
         }
         
-        void Test1DAssignmentOperator()
+        BOOST_AUTO_TEST_CASE(Test1DAssignmentOperator)
         {
             {
                 // 1D
@@ -559,7 +557,7 @@ namespace Nektar
             }
         }
         
-        void Test2DAssignmentOperator()
+        BOOST_AUTO_TEST_CASE(Test2DAssignmentOperator)
         {
             {
                 // 2D
@@ -634,7 +632,7 @@ namespace Nektar
             CountedObject<double>::check(0, 0, 151, 150, 0, 0);
         }
     
-        void TestOffsetAssignmentOperator()
+        BOOST_AUTO_TEST_CASE(TestOffsetAssignmentOperator)
         {
             double a[] = {1.0, 2.0, 3.0, 4.0, 5.0};
             double b[] = {10.0, 20.0, 30.0, 40.0 };
@@ -665,7 +663,7 @@ namespace Nektar
             }
         }
         
-        void Test1DAccessOperator()
+        BOOST_AUTO_TEST_CASE(Test1DAccessOperator)
         {
             // Normal access.
             double a[] = {1.0, 2.0, 3.0, 4.0, 5.0};
@@ -692,7 +690,7 @@ namespace Nektar
             #endif
         }
         
-        void Test2DAccessOperator()
+        BOOST_AUTO_TEST_CASE(Test2DAccessOperator)
         {
             {
                 NekDouble a_vals[] = {1.0, 2.0, 
@@ -760,7 +758,7 @@ namespace Nektar
             }
         }
     
-        void TestSharedPtr()
+        BOOST_AUTO_TEST_CASE(TestSharedPtr)
         {
             boost::shared_ptr<double> a(new double[10]);
             boost::shared_ptr<const double> b(a);
@@ -771,4 +769,4 @@ namespace Nektar
     } // End SharedArrayUnitTests
 } // End Nektar
 
-#endif //NEKTAR_UNIT_TESTS_SHARED_ARRAY_HPP
+

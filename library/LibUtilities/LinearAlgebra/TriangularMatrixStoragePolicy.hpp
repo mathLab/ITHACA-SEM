@@ -107,7 +107,7 @@ namespace Nektar
 
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
-                                                                             const Array<OneD, DataType>& data,
+                                                                             const ConstArray<OneD, DataType>& data,
                                                                              const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
@@ -122,7 +122,7 @@ namespace Nektar
 
                 if( curRow <= curColumn )
                 {
-                    return data[CalculateIndex(totalRows, curRow, curColumn)];
+                    return data[CalculateIndex(curRow, curColumn)];
                 }
                 else
                 {
@@ -150,12 +150,12 @@ namespace Nektar
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
 
-                data[CalculateIndex(totalRows, curRow, curColumn)] = d;
+                data[CalculateIndex(curRow, curColumn)] = d;
             }
                     
-            static unsigned int CalculateIndex(unsigned int totalRows, unsigned int curRow, unsigned int curColumn)
+            static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn)
             {
-                return curColumn + (2*totalRows - curRow - 1)*(curRow)/2;
+                return curRow + curColumn*(curColumn+1)/2;
             }
 
             static boost::tuples::tuple<unsigned int, unsigned int> 
@@ -181,18 +181,18 @@ namespace Nektar
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;
 
-                if( nextColumn < totalColumns )
-                {
-                    ++nextColumn;
-                }
-
-                if( nextColumn >= totalColumns )
+                if( nextRow <= nextColumn )
                 {
                     ++nextRow;
-                    nextColumn = nextRow;
+                }
+
+                if( nextRow > nextColumn )
+                {
+                    ++nextColumn;
+                    nextRow = 0;
                 }
                 
-                if( nextRow >= totalRows )
+                if( nextColumn >= totalColumns )
                 {
                     nextRow = std::numeric_limits<unsigned int>::max();
                     nextColumn = std::numeric_limits<unsigned int>::max();
@@ -215,7 +215,7 @@ namespace Nektar
 
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
-                                                                             const Array<OneD, DataType>& data,
+                                                                             const ConstArray<OneD, DataType>& data,
                                                                              const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
@@ -230,7 +230,7 @@ namespace Nektar
 
                 if( curRow >= curColumn )
                 {
-                    return data[CalculateIndex(totalRows, curRow, curColumn)];
+                    return data[CalculateIndex(totalColumns, curRow, curColumn)];
                 }
                 else
                 {
@@ -258,12 +258,12 @@ namespace Nektar
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
 
-                data[CalculateIndex(totalRows, curRow, curColumn)] = d;
+                data[CalculateIndex(totalColumns, curRow, curColumn)] = d;
             }
                     
-            static unsigned int CalculateIndex(unsigned int totalRows, unsigned int curRow, unsigned int curColumn)
+            static unsigned int CalculateIndex(unsigned int totalColumns, unsigned int curRow, unsigned int curColumn)
             {
-                return curColumn + curRow*(curRow+1)/2;
+                return curRow + (2*totalColumns - curColumn - 1)*(curColumn)/2;
             }
 
             static boost::tuples::tuple<unsigned int, unsigned int> 
@@ -289,18 +289,18 @@ namespace Nektar
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;
 
-                if( nextColumn < curRow )
-                {
-                    ++nextColumn;
-                }
-
-                if( nextColumn >= curRow )
+                if( nextRow < totalRows )
                 {
                     ++nextRow;
-                    nextColumn = 0;
                 }
 
                 if( nextRow >= totalRows )
+                {
+                    ++nextColumn;
+                    nextRow = nextColumn;
+                }
+
+                if( nextColumn >= totalColumns )
                 {
                     nextRow = std::numeric_limits<unsigned int>::max();
                     nextColumn = std::numeric_limits<unsigned int>::max();

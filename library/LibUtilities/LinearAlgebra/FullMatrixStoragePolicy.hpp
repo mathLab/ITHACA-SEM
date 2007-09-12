@@ -85,24 +85,29 @@ namespace Nektar
                     boost::lexical_cast<std::string>(d.num_elements()) + 
                     std::string(" elements."));
                 Array<OneD, DataType> result;
-                CopyArray(d, result);
+                CopyArrayN(d, result, rows*columns);
                 return result;
             }
             
+            static unsigned int CalculateIndex(unsigned int totalRows, unsigned int curRow, unsigned int curColumn)
+            {
+                return curColumn*totalRows + curRow;
+            }
+
             static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                unsigned int curRow, unsigned int curColumn,
                                                Array<OneD, DataType>& data,
                                                const PolicySpecificDataHolderType&)
             {
-                return data[curRow*totalColumns + curColumn];
+                return data[CalculateIndex(totalRows, curRow, curColumn)];
             }
             
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
-                                                                             const Array<OneD, DataType>& data,
+                                                                             const ConstArray<OneD, DataType>& data,
                                                                              const PolicySpecificDataHolderType&)
             {
-                return data[curRow*totalColumns + curColumn];
+                return data[CalculateIndex(totalRows, curRow, curColumn)];
             }
             
             static void SetValue(unsigned int totalRows, unsigned int totalColumns,
@@ -110,7 +115,7 @@ namespace Nektar
                                  Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
                                  const PolicySpecificDataHolderType&)
             {
-                data[curRow*totalColumns + curColumn] = d;
+                data[CalculateIndex(totalRows, curRow, curColumn)] = d;
             }
             
             static boost::tuples::tuple<unsigned int, unsigned int> 
@@ -121,18 +126,18 @@ namespace Nektar
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;
 
-                if( nextColumn < totalColumns )
+                if( nextRow < totalRows )
                 {
-                    ++nextColumn;
-                }
-
-                if( nextColumn >= totalColumns )
-                {
-                    nextColumn = 0;
                     ++nextRow;
                 }
 
                 if( nextRow >= totalRows )
+                {
+                    nextRow = 0;
+                    ++nextColumn;
+                }
+
+                if( nextColumn >= totalColumns )
                 {
                     nextRow = std::numeric_limits<unsigned int>::max();
                     nextColumn = std::numeric_limits<unsigned int>::max();

@@ -42,10 +42,9 @@ namespace Nektar
                             const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
                             const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
     {
-        result = NekMatrix<double, FullMatrixTag, StandardMatrixTag>(lhs.GetRows(), rhs.GetColumns());
-        Blas::Cdgemm(lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(), 1.0,
-                    lhs.GetRawPtr(), lhs.GetRows(), rhs.GetRawPtr(), rhs.GetRows(), 0.0, 
-                    result.GetRawPtr(), lhs.GetRows());
+        Blas::Dgemm('N', 'N', lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
+            1.0, lhs.GetRawPtr(), lhs.GetRows(), rhs.GetRawPtr(), rhs.GetRows(), 0.0,
+            result.GetRawPtr(), lhs.GetRows());
     }
     
     NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(
@@ -61,9 +60,10 @@ namespace Nektar
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs)
     {
-        Blas::Cdgemm(lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(), lhs.Scale()*rhs.Scale(),
-                    lhs.GetOwnedMatrix()->GetRawPtr(), lhs.GetRows(), rhs.GetOwnedMatrix()->GetRawPtr(), rhs.GetRows(), 0.0, 
-                    result.GetRawPtr(), lhs.GetRows());
+        Blas::Dgemm('N', 'N', lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
+            lhs.Scale()*rhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), lhs.GetRows(), 
+            rhs.GetOwnedMatrix()->GetRawPtr(), rhs.GetRows(), 0.0,
+            result.GetRawPtr(), lhs.GetRows());
     }
     
     NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(
@@ -79,9 +79,10 @@ namespace Nektar
                      const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs)
     {
-        Blas::Cdgemm(lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(), rhs.Scale(),
-                    lhs.GetRawPtr(), lhs.GetRows(), rhs.GetOwnedMatrix()->GetRawPtr(), rhs.GetRows(), 0.0, 
-                    result.GetRawPtr(), lhs.GetRows());
+        Blas::Dgemm('N', 'N', lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
+            rhs.Scale(), lhs.GetRawPtr(), lhs.GetRows(), 
+            rhs.GetOwnedMatrix()->GetRawPtr(), rhs.GetRows(), 0.0,
+            result.GetRawPtr(), lhs.GetRows());
     }
     
     NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(
@@ -97,9 +98,10 @@ namespace Nektar
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
                      const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
     {
-        Blas::Cdgemm(lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(), lhs.Scale(),
-                    lhs.GetOwnedMatrix()->GetRawPtr(), lhs.GetRows(), rhs.GetRawPtr(), rhs.GetRows(), 0.0, 
-                    result.GetRawPtr(), lhs.GetRows());
+        Blas::Dgemm('N', 'N', lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
+            lhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), lhs.GetRows(), 
+            rhs.GetRawPtr(), rhs.GetRows(), 0.0,
+            result.GetRawPtr(), lhs.GetRows());
     }
     
     NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(

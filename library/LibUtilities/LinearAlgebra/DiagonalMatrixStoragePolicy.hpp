@@ -88,7 +88,7 @@ namespace Nektar
                     boost::lexical_cast<std::string>(d.num_elements()) + 
                     std::string(" elements."));
                 Array<OneD, DataType> result;
-                CopyArray(d, result);
+                CopyArrayN(d, result, rows);
                 return result;
             }
             
@@ -97,6 +97,12 @@ namespace Nektar
                                                Array<OneD, DataType>& data,
                                                const PolicySpecificDataHolderType&)
             {
+                ASSERTL1(curRow < totalRows || curColumn < totalColumns, std::string("Attempting to access element (") +
+                    boost::lexical_cast<std::string>(curRow) + ", " +
+                    boost::lexical_cast<std::string>(curColumn) + std::string(") in a ") + 
+                    boost::lexical_cast<std::string>(totalRows) + ", " + 
+                    boost::lexical_cast<std::string>(totalColumns) + ") matrix.");
+
                 if( curRow == curColumn )
                 {
                     return data[curRow];
@@ -109,9 +115,15 @@ namespace Nektar
             
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
-                                                                             const Array<OneD, DataType>& data,
+                                                                             const ConstArray<OneD, DataType>& data,
                                                                              const PolicySpecificDataHolderType&)
             {
+                ASSERTL1(curRow < totalRows || curColumn < totalColumns, std::string("Attempting to access element (") +
+                    boost::lexical_cast<std::string>(curRow) + ", " +
+                    boost::lexical_cast<std::string>(curColumn) + std::string(") in a ") + 
+                    boost::lexical_cast<std::string>(totalRows) + ", " + 
+                    boost::lexical_cast<std::string>(totalColumns) + ") matrix.");
+
                 if( curRow == curColumn )
                 {
                     return data[curRow];
@@ -127,6 +139,12 @@ namespace Nektar
                                  Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
                                  const PolicySpecificDataHolderType&)
             {
+                ASSERTL1(curRow < totalRows || curColumn < totalColumns, std::string("Attempting to access element (") +
+                    boost::lexical_cast<std::string>(curRow) + ", " +
+                    boost::lexical_cast<std::string>(curColumn) + std::string(") in a ") + 
+                    boost::lexical_cast<std::string>(totalRows) + ", " + 
+                    boost::lexical_cast<std::string>(totalColumns) + ") matrix.");
+
                 ASSERTL0(curRow == curColumn, "Can only assign into the diagonal of a diagonal matrix.");
                 data[curRow] = d;
             }

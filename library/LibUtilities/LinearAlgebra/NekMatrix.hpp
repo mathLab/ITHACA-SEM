@@ -41,7 +41,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
 #include <LibUtilities/LinearAlgebra/BlockMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
-#include <LibUtilities/LinearAlgebra/NormalMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
 #include <LibUtilities/LinearAlgebra/SymmetricMatrixStoragePolicy.hpp>
 
@@ -360,6 +360,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.29  2007/08/27 04:41:29  bnelson
+    Updated the existing storage policies in preparation for banded matrices.
+
     Revision 1.28  2007/08/16 02:12:33  bnelson
     *** empty log message ***
 

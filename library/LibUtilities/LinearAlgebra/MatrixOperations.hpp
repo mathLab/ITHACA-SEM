@@ -38,7 +38,7 @@
 
 // Since this file defines all of the operations for all combination of matrix types, 
 // we have to include all matrix specializations first.
-#include <LibUtilities/LinearAlgebra/NormalMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/BlockMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
@@ -297,7 +297,7 @@ namespace Nektar
             double* y = result.GetPtr();
             int incy = 1;
             
-            Blas::Dgemv('T', n, m, alpha, a, n, x, incx, beta, y, incy);
+            Blas::Dgemv('N', m, n, alpha, a, lda, x, incx, beta, y, incy);
         }
 
         template<unsigned int dim, unsigned int space>
@@ -331,7 +331,7 @@ namespace Nektar
             double* y = result.GetPtr();
             int incy = 1;
             
-            Blas::Dgemv('T', n, m, alpha, a, n, x, incx, beta, y, incy);
+            Blas::Dgemv('N', m, n, alpha, a, lda, x, incx, beta, y, incy);
         }
 
         template<unsigned int dim, unsigned int space>
@@ -352,7 +352,7 @@ namespace Nektar
             
             // We call the lower triangular version because transposing the 
             // matrix changes it into an upper triangular.
-            Blas::Dtpmv('L', 'T', 'N', n, a, x, incx);
+            Blas::Dtpmv('U', 'N', 'N', n, a, x, incx);
         }
 
         template<unsigned int dim, unsigned int space>
@@ -373,7 +373,7 @@ namespace Nektar
             
             // We call the upper triangular version because transposing the 
             // matrix changes it into an lower triangular.
-            Blas::Dtpmv('U', 'T', 'N', n, a, x, incx);
+            Blas::Dtpmv('L', 'N', 'N', n, a, x, incx);
         }
 
     #endif //NEKTAR_USING_BLAS

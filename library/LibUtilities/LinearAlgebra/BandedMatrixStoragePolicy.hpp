@@ -164,8 +164,12 @@ namespace Nektar
             static unsigned int CalculateStorageSize(unsigned int totalRows, unsigned int totalColumns,
                                                      const PolicySpecificDataHolderType& data)
             {
-                unsigned int numberOfRows = std::min(totalRows, (2*data.GetNumberOfSubDiagonals(totalRows) + data.GetNumberOfSuperDiagonals(totalRows) + 1));
-                return  numberOfRows*totalColumns;
+                return CalculateNumberOfRows(totalRows, data)*totalColumns;
+            }
+
+            static unsigned int CalculateNumberOfRows(unsigned int totalRows, const PolicySpecificDataHolderType& data)
+            {
+                return std::min(totalRows, data.GetNumberOfSubDiagonals(totalRows) + data.GetNumberOfSuperDiagonals(totalRows) + 1);
             }
 
             static boost::optional<unsigned int> CalculateIndex(unsigned int totalRows, 
@@ -176,13 +180,12 @@ namespace Nektar
                 if( (column <= row && (row - column) >= data.GetNumberOfSubDiagonals(totalRows)) ||
                     (column > row && (column - row) >= data.GetNumberOfSuperDiagonals(totalRows)) )
                 {
-                    //unsigned int arrayRows = 2*data.GetNumberOfSubDiagonals(totalRows) + data.GetNumberOfSuperDiagonals(totalRows) + 1;
                     unsigned int arrayColumns = totalColumns;
 
-                    unsigned int elementRow = data.GetNumberOfSuperDiagonals(totalRows)+1+row-column;
+                    unsigned int elementRow = data.GetNumberOfSuperDiagonals(totalRows)+row-column;
                     unsigned int elementColumn = column;
 
-                    return arrayColumns*elementRow + elementColumn;
+                    return elementRow + elementColumn*CalculateNumberOfRows(totalRows, data);
                 }
                 else
                 {
@@ -190,25 +193,25 @@ namespace Nektar
                 }
             }
 
-            static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
-                                               unsigned int curRow, unsigned int curColumn,
-                                               Array<OneD, DataType>& d,
-                                               const PolicySpecificDataHolderType& data)
-            {
-                boost::optional<unsigned int> index = CalculateIndex(totalRows, totalColumns, curRow, curColumn, data);
-                if( index )
-                {
-                    return data[*index];
-                }
-                else
-                {
-                    return ZeroElement;
-                }
-            }
+            //static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
+            //                                   unsigned int curRow, unsigned int curColumn,
+            //                                   const ConstArray<OneD, DataType>& d,
+            //                                   const PolicySpecificDataHolderType& data)
+            //{
+            //    boost::optional<unsigned int> index = CalculateIndex(totalRows, totalColumns, curRow, curColumn, data);
+            //    if( index )
+            //    {
+            //        return data[*index];
+            //    }
+            //    else
+            //    {
+            //        return ZeroElement;
+            //    }
+            //}
 
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
-                                                                             const Array<OneD, DataType>& data,
+                                                                             const ConstArray<OneD, DataType>& data,
                                                                              const PolicySpecificDataHolderType& dataHolder)
             {
                 boost::optional<unsigned int> index = CalculateIndex(totalRows, totalColumns, curRow, curColumn, dataHolder);

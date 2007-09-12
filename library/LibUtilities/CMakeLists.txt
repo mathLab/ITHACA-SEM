@@ -32,9 +32,9 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/NekVectorMetadata.hpp
     ./LinearAlgebra/NekVectorTypeTraits.hpp
     ./LinearAlgebra/NekVectorVariableSized.hpp
-    ./LinearAlgebra/NormalMatrix.hpp
     ./LinearAlgebra/PointerWrapper.h
     ./LinearAlgebra/ScaledMatrix.hpp
+    ./LinearAlgebra/StandardMatrix.hpp
     ./LinearAlgebra/SymmetricMatrixStoragePolicy.hpp
     ./LinearAlgebra/TriangularMatrixStoragePolicy.hpp
     ./LinearAlgebra/TransF77.hpp

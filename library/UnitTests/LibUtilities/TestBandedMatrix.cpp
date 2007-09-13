@@ -138,32 +138,60 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestStandardMatrixVectorMultiply)
         {
-            //typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+            
+            {
+                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
 
-            //{
-            //    // This is the matrix
-            //    // [ 1 2 0 0 ]
-            //    // [ 3 4 5 0 ]
-            //    // [ 0 6 7 8 ]
-            //    // [ 0 0 9 10]
-            //    
-            //    NekDouble buf[] = {0, 1, 3,
-            //                       2, 4, 6,
-            //                       5, 7, 9,
-            //                       8, 10, 0};
-            //                  
+                // This is the matrix
+                // [ 1 2 0 0 ]
+                // [ 3 4 5 0 ]
+                // [ 0 6 7 8 ]
+                // [ 0 0 9 10]
+                
+                NekDouble buf[] = {0, 1, 3,
+                                   2, 4, 6,
+                                   5, 7, 9,
+                                   8, 10, 0};
+                              
     
-            //    MatrixType m(4, 4, buf, MatrixType::PolicySpecificDataHolderType(1, 1));
+                MatrixType m(4, 4, buf, MatrixType::PolicySpecificDataHolderType(1, 1));
 
-            //    NekDouble vector_buf[] = {1.0, 2.0, 3.0, 4.0};
-            //    NekVector<NekDouble, 4> v(vector_buf);
+                NekDouble vector_buf[] = {1.0, 2.0, 3.0, 4.0};
+                NekVector<NekDouble> v(4, vector_buf);
 
-            //    NekVector<NekDouble, 4> result = m*v;
+                NekVector<NekDouble> result = m*v;
 
-            //    NekDouble expected_result_buf[] = { 5, 26, 65, 67 };
-            //    NekVector<NekDouble, 4> expected_result(expected_result_buf);
-            //    BOOST_CHECK_EQUAL(expected_result, result);
-            //}
+                NekDouble expected_result_buf[] = { 5, 26, 65, 67 };
+                NekVector<NekDouble> expected_result(4, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+
+            {
+                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [ 1 2 0 0 ]
+                // [ 3 4 5 0 ]
+                // [ 0 6 7 8 ]
+                // [ 0 0 9 10]
+                
+                unsigned int buf[] = {0, 1, 3,
+                                      2, 4, 6,
+                                      5, 7, 9,
+                                      8, 10, 0};
+                              
+    
+                MatrixType m(4, 4, buf, MatrixType::PolicySpecificDataHolderType(1, 1));
+
+                unsigned int vector_buf[] = {1, 2, 3, 4};
+                NekVector<unsigned int> v(4, vector_buf);
+
+                NekVector<unsigned int> result = m*v;
+
+                unsigned int expected_result_buf[] = { 5, 26, 65, 67 };
+                NekVector<unsigned int> expected_result(4, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
         }
     }
 }

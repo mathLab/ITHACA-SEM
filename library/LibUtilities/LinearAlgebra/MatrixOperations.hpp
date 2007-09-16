@@ -218,7 +218,12 @@ namespace Nektar
         for(unsigned int i = 0; i < lhs.GetRows(); ++i)
         {          
             unsigned int start = i <= superDiagonals ? superDiagonals-i : 0;
-            unsigned int end = std::min(superDiagonals+subDiagonals+1, superDiagonals+2*subDiagonals+2-i);
+            unsigned int end = packedRows;
+            if( lhs.GetColumns() - i <= subDiagonals )
+            {
+                end -= subDiagonals - (lhs.GetColumns() - i) + 1;
+            }
+            
             unsigned int resultOffset = (i <= superDiagonals) ? 0 : i - superDiagonals;
 
             for(unsigned int j = start; j < end; ++j, ++resultOffset)

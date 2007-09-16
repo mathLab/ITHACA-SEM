@@ -193,6 +193,490 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(expected_result, result);
             }
         }
+
+        BOOST_AUTO_TEST_CASE(TestUnequalNumbersOfSubAndSuperDiagonalsMatrixVectorMultiply)
+        {
+            {
+                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [ 13  2  7  11  0 ]
+                // [  0 14  3   8 12 ]
+                // [  0  0 15   4  9 ]
+                // [  0  0  0  16  5 ]
+                
+                NekDouble buf[] = {0, 0, 1, 13,
+                                   0, 6, 2, 14,
+                                   10, 7, 3, 15,
+                                   11, 8, 4, 16,
+                                   12, 9, 5, 0};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(1, 2));
+
+                NekDouble vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<NekDouble> v(5, vector_buf);
+
+                NekVector<NekDouble> result = m*v;
+
+                NekDouble expected_result_buf[] = { 43, 82, 129, 106, 89 };
+                NekVector<NekDouble> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+
+            {
+                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [ 13  2  7  11  0 ]
+                // [  0 14  3   8 12 ]
+                // [  0  0 15   4  9 ]
+                // [  0  0  0  16  5 ]
+                
+                unsigned int buf[] = {0, 0, 1, 13,
+                                      0, 6, 2, 14,
+                                     10, 7, 3, 15,
+                                     11, 8, 4, 16,
+                                     12, 9, 5, 0};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(1, 2));
+
+                unsigned int vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<unsigned int> v(5, vector_buf);
+
+                NekVector<unsigned int> result = m*v;
+
+                unsigned int expected_result_buf[] = { 43, 82, 129, 106, 89 };
+                NekVector<unsigned int> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestNoSubdiagonalsTwoSuperDiagonalsMatrixVectorMultiply)
+        {
+            {
+                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [  0  2  7  11  0 ]
+                // [  0  0  3   8 12 ]
+                // [  0  0  0   4  9 ]
+                // [  0  0  0   0  5 ]
+                
+                NekDouble buf[] = { 0, 0, 1,
+                                    0, 6, 2,
+                                    10, 7, 3,
+                                    11, 8, 4,
+                                    12, 9, 5};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 2));
+
+                NekDouble vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<NekDouble> v(5, vector_buf);
+
+                NekVector<NekDouble> result = m*v;
+
+                NekDouble expected_result_buf[] = { 43, 69, 101, 61, 25 };
+                NekVector<NekDouble> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+
+            {
+                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [  0  2  7  11  0 ]
+                // [  0  0  3   8 12 ]
+                // [  0  0  0   4  9 ]
+                // [  0  0  0   0  5 ]
+                
+                unsigned int buf[] = {0, 0, 1,
+                                    0, 6, 2,
+                                    10, 7, 3,
+                                    11, 8, 4,
+                                    12, 9, 5};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 2));
+
+                unsigned int vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<unsigned int> v(5, vector_buf);
+
+                NekVector<unsigned int> result = m*v;
+
+                unsigned int expected_result_buf[] = { 43, 69, 101, 61, 25 };
+                NekVector<unsigned int> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestNoSubdiagonalsThreeSuperDiagonalsMatrixVectorMultiply)
+        {
+            {
+                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   2  0 ]
+                // [  0  2  7  11  5 ]
+                // [  0  0  3   8 12 ]
+                // [  0  0  0   4  9 ]
+                // [  0  0  0   0  5 ]
+                
+                NekDouble buf[] = { 0, 0, 0, 1,
+                                    0, 0, 6, 2,
+                                    0, 10, 7, 3,
+                                    2, 11, 8, 4,
+                                    5, 12, 9, 5};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 3));
+
+                NekDouble vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<NekDouble> v(5, vector_buf);
+
+                NekVector<NekDouble> result = m*v;
+
+                NekDouble expected_result_buf[] = { 51, 94, 101, 61, 25 };
+                NekVector<NekDouble> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+
+            {
+                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [  0  2  7  11  0 ]
+                // [  0  0  3   8 12 ]
+                // [  0  0  0   4  9 ]
+                // [  0  0  0   0  5 ]
+                
+                unsigned int buf[] = {0, 0, 0, 1,
+                                    0, 0, 6, 2,
+                                    0, 10, 7, 3,
+                                    2, 11, 8, 4,
+                                    5, 12, 9, 5};
+                              
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 3));
+
+                unsigned int vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<unsigned int> v(5, vector_buf);
+
+                NekVector<unsigned int> result = m*v;
+
+                unsigned int expected_result_buf[] = { 51, 94, 101, 61, 25 };
+                NekVector<unsigned int> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestNoSubdiagonalsFourSuperDiagonalsMatrixVectorMultiply)
+        {
+            {
+                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   2  8 ]
+                // [  0  2  7  11  5 ]
+                // [  0  0  3   8 12 ]
+                // [  0  0  0   4  9 ]
+                // [  0  0  0   0  5 ]
+                
+                NekDouble buf[] = { 0, 0, 0, 0, 1,
+                                    0, 0, 0, 6, 2,
+                                    0, 0, 10, 7, 3,
+                                    0, 2, 11, 8, 4,
+                                    8, 5, 12, 9, 5};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 4));
+
+                NekDouble vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<NekDouble> v(5, vector_buf);
+
+                NekVector<NekDouble> result = m*v;
+
+                NekDouble expected_result_buf[] = { 91, 94, 101, 61, 25 };
+                NekVector<NekDouble> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+
+            {
+                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [  0  2  7  11  0 ]
+                // [  0  0  3   8 12 ]
+                // [  0  0  0   4  9 ]
+                // [  0  0  0   0  5 ]
+                
+                unsigned int buf[] = {0, 0, 0, 0, 1,
+                                    0, 0, 0, 6, 2,
+                                    0, 0, 10, 7, 3,
+                                    0, 2, 11, 8, 4,
+                                    8, 5, 12, 9, 5};
+                              
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 4));
+
+                unsigned int vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<unsigned int> v(5, vector_buf);
+
+                NekVector<unsigned int> result = m*v;
+
+                unsigned int expected_result_buf[] = { 91, 94, 101, 61, 25 };
+                NekVector<unsigned int> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(Test2Sub2SuperMatrixVectorMultiply)
+        {
+            {
+                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [ 13  2  7  11  0 ]
+                // [  7 14  3   8 12 ]
+                // [  0  5 15   4  9 ]
+                // [  0  0  4  16  5 ]
+                
+                NekDouble buf[] = {0, 0, 1, 13, 7,
+                                   0, 6, 2, 14, 5,
+                                   10, 7, 3, 15, 4,
+                                   11, 8, 4, 16, 0,
+                                   12, 9, 5, 0, 0};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(2, 2));
+
+                NekDouble vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<NekDouble> v(5, vector_buf);
+
+                NekVector<NekDouble> result = m*v;
+
+                NekDouble expected_result_buf[] = { 43, 82, 136, 116, 101 };
+                NekVector<NekDouble> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+
+            {
+                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [ 13  2  7  11  0 ]
+                // [  7 14  3   8 12 ]
+                // [  0  5 15   4  9 ]
+                // [  0  0  4  16  5 ]
+                
+                unsigned int buf[] = {0, 0, 1, 13, 7,
+                                   0, 6, 2, 14, 5,
+                                   10, 7, 3, 15, 4,
+                                   11, 8, 4, 16, 0,
+                                   12, 9, 5, 0, 0};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(2, 2));
+
+                unsigned int vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<unsigned int> v(5, vector_buf);
+
+                NekVector<unsigned int> result = m*v;
+
+                unsigned int expected_result_buf[] = { 43, 82, 136, 116, 101 };
+                NekVector<unsigned int> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+        }
+
+
+        BOOST_AUTO_TEST_CASE(Test3Sub2SuperMatrixVectorMultiply)
+        {
+            {
+                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [ 13  2  7  11  0 ]
+                // [  7 14  3   8 12 ]
+                // [ 20  5 15   4  9 ]
+                // [  0 21  4  16  5 ]
+                
+                NekDouble buf[] = {0, 0, 1, 13, 7, 20,
+                                   0, 6, 2, 14, 5, 21, 
+                                   10, 7, 3, 15, 4, 0,
+                                   11, 8, 4, 16, 0, 0,
+                                   12, 9, 5, 0, 0, 0};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(3, 2));
+
+                NekDouble vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<NekDouble> v(5, vector_buf);
+
+                NekVector<NekDouble> result = m*v;
+
+                NekDouble expected_result_buf[] = { 43, 82, 136, 136, 143 };
+                NekVector<NekDouble> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+
+            {
+                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [ 13  2  7  11  0 ]
+                // [  7 14  3   8 12 ]
+                // [ 20  5 15   4  9 ]
+                // [  0 21  4  16  5 ]
+                
+                unsigned int buf[] = {0, 0, 1, 13, 7, 20,
+                                   0, 6, 2, 14, 5, 21, 
+                                   10, 7, 3, 15, 4, 0,
+                                   11, 8, 4, 16, 0, 0,
+                                   12, 9, 5, 0, 0, 0};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(3, 2));
+
+                unsigned int vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<unsigned int> v(5, vector_buf);
+
+                NekVector<unsigned int> result = m*v;
+
+                unsigned int expected_result_buf[] = { 43, 82, 136, 136, 143 };
+                NekVector<unsigned int> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+        }
+
+
+        BOOST_AUTO_TEST_CASE(Test4Sub2SuperMatrixVectorMultiply)
+        {
+            {
+                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [ 13  2  7  11  0 ]
+                // [  7 14  3   8 12 ]
+                // [ 20  5 15   4  9 ]
+                // [ 30 21  4  16  5 ]
+                
+                NekDouble buf[] = {0, 0, 1, 13, 7, 20, 30,
+                                   0, 6, 2, 14, 5, 21, 0,
+                                   10, 7, 3, 15, 4, 0, 0,
+                                   11, 8, 4, 16, 0, 0, 0,
+                                   12, 9, 5, 0, 0, 0, 0};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(4, 2));
+
+                NekDouble vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<NekDouble> v(5, vector_buf);
+
+                NekVector<NekDouble> result = m*v;
+
+                NekDouble expected_result_buf[] = { 43, 82, 136, 136, 173 };
+                NekVector<NekDouble> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+
+            {
+                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [ 13  2  7  11  0 ]
+                // [  7 14  3   8 12 ]
+                // [ 20  5 15   4  9 ]
+                // [ 30 21  4  16  5 ]
+                
+                unsigned int buf[] = {0, 0, 1, 13, 7, 20, 30,
+                                   0, 6, 2, 14, 5, 21, 0,
+                                   10, 7, 3, 15, 4, 0, 0,
+                                   11, 8, 4, 16, 0, 0, 0,
+                                   12, 9, 5, 0, 0, 0, 0};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(4, 2));
+
+                unsigned int vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<unsigned int> v(5, vector_buf);
+
+                NekVector<unsigned int> result = m*v;
+
+                unsigned int expected_result_buf[] = { 43, 82, 136, 136, 173 };
+                NekVector<unsigned int> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestDiagonalOnlyMatrixVectorMultiply)
+        {
+            {
+                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  5  0  0   0  0 ]
+                // [  0  1  0   0  0 ]
+                // [  0  0  9   0  0 ]
+                // [  0  0  0   4  0 ]
+                // [  0  0  0   0  2 ]
+                
+                NekDouble buf[] = {5, 1, 9, 4, 2};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 0));
+
+                NekDouble vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<NekDouble> v(5, vector_buf);
+
+                NekVector<NekDouble> result = m*v;
+
+                NekDouble expected_result_buf[] = { 5, 2, 27, 16, 10 };
+                NekVector<NekDouble> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+
+            {
+                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  5  0  0   0  0 ]
+                // [  0  1  0   0  0 ]
+                // [  0  0  9   0  0 ]
+                // [  0  0  0   4  0 ]
+                // [  0  0  0   0  2 ]
+                
+                unsigned int buf[] = {5, 1, 9, 4, 2};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 0));
+
+                unsigned int vector_buf[] = {1, 2, 3, 4, 5};
+                NekVector<unsigned int> v(5, vector_buf);
+
+                NekVector<unsigned int> result = m*v;
+
+                unsigned int expected_result_buf[] = { 5, 2, 27, 16, 10 };
+                NekVector<unsigned int> expected_result(5, expected_result_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+        }
     }
 }
 

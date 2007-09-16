@@ -169,7 +169,7 @@ namespace Nektar
 
             static unsigned int CalculateNumberOfRows(unsigned int totalRows, const PolicySpecificDataHolderType& data)
             {
-                return std::min(totalRows, data.GetNumberOfSubDiagonals(totalRows) + data.GetNumberOfSuperDiagonals(totalRows) + 1);
+                return data.GetNumberOfSubDiagonals(totalRows) + data.GetNumberOfSuperDiagonals(totalRows) + 1;
             }
 
             static boost::optional<unsigned int> CalculateIndex(unsigned int totalRows, 

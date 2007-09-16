@@ -148,12 +148,12 @@ namespace Nektar
             new NekMatrix<NekDouble, UpperTriangularMatrixTag>(4, 4, inner_values)); 
         m2 = MakePtr(new NekMatrix<NekMatrix<NekDouble, UpperTriangularMatrixTag>, UpperTriangularMatrixTag, ScaledMatrixTag>(scale, inner));
         
-        double block_1_values[] = {values[0], values[1], 
-                                   0.0, values[4]};
-        double block_2_values[] = {values[2], values[3],
-                                   values[5], values[6]};
-        double block_4_values[] = {values[7], values[8],
-                                   0.0, values[9]};
+        double block_1_values[] = {values[0], 0.0,
+                                   values[1], values[2]};
+        double block_2_values[] = {values[3], values[4],
+                                   values[6], values[7]};
+        double block_4_values[] = {values[5], 0.0,
+                                   values[8], values[9]};
         boost::shared_ptr<NekMatrix<NekDouble> > block1(new NekMatrix<NekDouble>(2, 2, block_1_values));
         boost::shared_ptr<NekMatrix<NekDouble> > block2(new NekMatrix<NekDouble>(2, 2, block_2_values));
         boost::shared_ptr<NekMatrix<NekDouble> > block4(new NekMatrix<NekDouble>(2, 2, block_4_values));

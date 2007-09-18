@@ -98,10 +98,11 @@ namespace Nektar
     
    
     template<typename LhsDataType, typename RhsDataType, typename DataType,
-             typename LhsMatrixType, typename RhsMatrixType>
+             typename LhsMatrixType, typename RhsMatrixType,
+             typename LhsStorageType, typename RhsStorageType>
     void NekMultiply(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
-                            const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
-                            const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
+                     const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>& lhs,
+                     const NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>& rhs)
     {
         ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + 
@@ -125,10 +126,11 @@ namespace Nektar
     }
     
     template<typename LhsDataType, typename RhsDataType,
-             typename LhsMatrixType, typename RhsMatrixType>
+             typename LhsMatrixType, typename RhsMatrixType,
+             typename LhsStorageType, typename RhsStorageType>
     NekMatrix<typename NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>::NumberType, FullMatrixTag, StandardMatrixTag> 
-    NekMultiply(const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
-                const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
+    NekMultiply(const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>& lhs,
+                const NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>& rhs)
     {
         typedef typename NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>::NumberType NumberType;
         NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> result(lhs.GetRows(), rhs.GetColumns());
@@ -411,6 +413,9 @@ namespace Nektar
        }
     }
    
+    /// We need two version of NekMultiply, one for constant sized vectors and one for 
+    /// variable sized vectors because the constructors to initialize the vector to 0 are 
+    /// different in each case.
     template<typename DataType, typename LhsDataType, typename StorageType, typename MatrixType, unsigned int dim, unsigned int space>
     NekVector<DataType, dim, space> 
     NekMultiply(const NekMatrix<LhsDataType, StorageType, MatrixType>& lhs,

@@ -3,6 +3,7 @@ SET(TARGET_NAME LinearAlgebraUnitTests)
 
 SET(Sources
     main.cpp   
+    TestBandedMatrixOperations.cpp
     TestBandedMatrixStoragePolicy.cpp
     TestDiagonalMatrixStoragePolicy.cpp
     TestFullMatrixStoragePolicy.cpp
@@ -13,6 +14,7 @@ SET(Sources
 )
 
 SET(Headers
+    TestCombinationRunner.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)

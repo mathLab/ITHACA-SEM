@@ -55,7 +55,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestUninitializedDataConstructionWithDefaultDataHolder)
         {
             Array<OneD, NekDouble> result = Policy::Initialize(10, 10, DataHolderType());
-            BOOST_CHECK_EQUAL(result.num_elements(), 100);
+            BOOST_CHECK_EQUAL(result.num_elements(), 190);
 
             BOOST_CHECK_THROW(Policy::Initialize(10, 9, DataHolderType()), ErrorUtil::NekError);
             BOOST_CHECK_THROW(Policy::Initialize(9, 10, DataHolderType()), ErrorUtil::NekError);
@@ -85,11 +85,11 @@ namespace Nektar
 
             DataHolderType d6(5,6);
             Array<OneD, NekDouble> result6 = Policy::Initialize(10, 10, d6);
-            BOOST_CHECK_EQUAL(result6.num_elements(), 100);
+            BOOST_CHECK_EQUAL(result6.num_elements(), 120);
 
             DataHolderType d7(8,6);
             Array<OneD, NekDouble> result7 = Policy::Initialize(10, 10, d7);
-            BOOST_CHECK_EQUAL(result7.num_elements(), 100);
+            BOOST_CHECK_EQUAL(result7.num_elements(), 150);
         }
 
         BOOST_AUTO_TEST_CASE(TestSingleValuePopulationInitialize)
@@ -139,8 +139,200 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(result[10], 0.0);
                 BOOST_CHECK_EQUAL(result[11], 0.0);
             }
+
+            
+            {
+                NekDouble buf[] = {0, 1, 3, 6,
+                                   2, 4, 7, 0,
+                                   5, 8, 0, 0};
+
+                BOOST_CHECK_THROW(Policy::Initialize(3, 2, buf, policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::Initialize(2, 3, buf, policyData), ErrorUtil::NekError);
+            }
         }
 
+        BOOST_AUTO_TEST_CASE(TestArrayInitialization)
+        {
+            DataHolderType policyData(2, 1);
+            {
+                NekDouble buf[] = {0, 1, 3, 6,
+                               2, 4, 7, 0,
+                               5, 8, 0, 0};
+                Array<OneD, NekDouble> array_buf(12, buf);
+
+                Array<OneD, NekDouble> result = Policy::Initialize(3, 3, array_buf, policyData);
+                BOOST_CHECK_EQUAL(result.num_elements(), 12);
+
+                BOOST_CHECK_EQUAL(result[0], 0.0);
+                BOOST_CHECK_EQUAL(result[1], 1.0);
+                BOOST_CHECK_EQUAL(result[2], 3.0);
+                BOOST_CHECK_EQUAL(result[3], 6.0);
+                BOOST_CHECK_EQUAL(result[4], 2.0);
+                BOOST_CHECK_EQUAL(result[5], 4.0);
+                BOOST_CHECK_EQUAL(result[6], 7.0);
+                BOOST_CHECK_EQUAL(result[7], 0.0);
+                BOOST_CHECK_EQUAL(result[8], 5.0);
+                BOOST_CHECK_EQUAL(result[9], 8.0);
+                BOOST_CHECK_EQUAL(result[10], 0.0);
+                BOOST_CHECK_EQUAL(result[11], 0.0);
+            }
+
+            {
+                NekDouble buf[] = {0, 1, 3, 6,
+                               2, 4, 7, 0,
+                               5, 8, 0, 0, 10, 11, 12};
+                Array<OneD, NekDouble> array_buf(15, buf);
+
+                Array<OneD, NekDouble> result = Policy::Initialize(3, 3, array_buf, policyData);
+                BOOST_CHECK_EQUAL(result.num_elements(), 12);
+
+                BOOST_CHECK_EQUAL(result[0], 0.0);
+                BOOST_CHECK_EQUAL(result[1], 1.0);
+                BOOST_CHECK_EQUAL(result[2], 3.0);
+                BOOST_CHECK_EQUAL(result[3], 6.0);
+                BOOST_CHECK_EQUAL(result[4], 2.0);
+                BOOST_CHECK_EQUAL(result[5], 4.0);
+                BOOST_CHECK_EQUAL(result[6], 7.0);
+                BOOST_CHECK_EQUAL(result[7], 0.0);
+                BOOST_CHECK_EQUAL(result[8], 5.0);
+                BOOST_CHECK_EQUAL(result[9], 8.0);
+                BOOST_CHECK_EQUAL(result[10], 0.0);
+                BOOST_CHECK_EQUAL(result[11], 0.0);
+            }
+
+            {
+                NekDouble buf[] = {0, 1, 3, 6,
+                                   2, 4, 7, 0,
+                                   5, 8, 0, 0};
+                Array<OneD, NekDouble> array_buf(12, buf);
+
+                BOOST_CHECK_THROW(Policy::Initialize(4, 4, array_buf, policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::Initialize(3, 2, array_buf, policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::Initialize(2, 3, array_buf, policyData), ErrorUtil::NekError);
+            }
+        }
+
+
+        BOOST_AUTO_TEST_CASE(TestCalculateStorageSizeAndCalculateNumberOfRows)
+        {
+            DataHolderType policyData(2, 1);
+            BOOST_CHECK_EQUAL(16, Policy::CalculateStorageSize(4, 4, policyData));
+            BOOST_CHECK_EQUAL(4, Policy::CalculateNumberOfRows(4, policyData));
+            BOOST_CHECK_EQUAL(4, Policy::CalculateNumberOfRows(3, policyData));
+        }
+
+        BOOST_AUTO_TEST_CASE(TestDiagonalOnlyCalculateIndex)
+        {
+            DataHolderType policyData(0, 0);
+            BOOST_CHECK_EQUAL(0, *Policy::CalculateIndex(3, 3, 0, 0, policyData));
+            BOOST_CHECK_EQUAL(1, *Policy::CalculateIndex(3, 3, 1, 1, policyData));
+            BOOST_CHECK_EQUAL(2, *Policy::CalculateIndex(3, 3, 2, 2, policyData));
+            BOOST_CHECK_EQUAL(0, *Policy::CalculateIndex(1, 1, 0, 0, policyData));
+
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 0, 1, policyData)); 
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 0, 2, policyData)); 
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 1, 0, policyData)); 
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 1, 2, policyData)); 
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 2, 0, policyData)); 
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 2, 1, policyData)); 
+        }
+
+        BOOST_AUTO_TEST_CASE(TestSubDiagonalsOnlyCalculateIndex)
+        {
+            DataHolderType oneSubData(1, 0);
+            BOOST_CHECK_EQUAL(0, *Policy::CalculateIndex(3, 3, 0, 0, oneSubData));
+            BOOST_CHECK_EQUAL(2, *Policy::CalculateIndex(3, 3, 1, 1, oneSubData));
+            BOOST_CHECK_EQUAL(4, *Policy::CalculateIndex(3, 3, 2, 2, oneSubData));
+            BOOST_CHECK_EQUAL(1, *Policy::CalculateIndex(3, 3, 1, 0, oneSubData));
+            BOOST_CHECK_EQUAL(3, *Policy::CalculateIndex(3, 3, 2, 1, oneSubData));
+
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 0, 1, oneSubData));
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 0, 2, oneSubData));
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 2, 0, oneSubData));
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 1, 2, oneSubData));
+        }
+
+        BOOST_AUTO_TEST_CASE(TestSuperDiagonalsOnlyCalculateIndex)
+        {
+            DataHolderType oneSubData(0, 2);
+            BOOST_CHECK_EQUAL(2, *Policy::CalculateIndex(3, 3, 0, 0, oneSubData));
+            BOOST_CHECK_EQUAL(5, *Policy::CalculateIndex(3, 3, 1, 1, oneSubData));
+            BOOST_CHECK_EQUAL(8, *Policy::CalculateIndex(3, 3, 2, 2, oneSubData));
+            BOOST_CHECK_EQUAL(4, *Policy::CalculateIndex(3, 3, 0, 1, oneSubData));
+            BOOST_CHECK_EQUAL(7, *Policy::CalculateIndex(3, 3, 1, 2, oneSubData));
+            BOOST_CHECK_EQUAL(6, *Policy::CalculateIndex(3, 3, 0, 2, oneSubData));
+
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 1, 0, oneSubData));
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 2, 0, oneSubData));
+            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 2, 1, oneSubData));
+        }
+
+        BOOST_AUTO_TEST_CASE(TestSupAndSuperDiagonalsCalculateIndex)
+        {
+            DataHolderType oneSubData(1, 2);
+
+            BOOST_CHECK_EQUAL(2, *Policy::CalculateIndex(4, 4, 0, 0, oneSubData));
+            BOOST_CHECK_EQUAL(5, *Policy::CalculateIndex(4, 4, 0, 1, oneSubData));
+            BOOST_CHECK_EQUAL(8, *Policy::CalculateIndex(4, 4, 0, 2, oneSubData));
+            BOOST_CHECK(!Policy::CalculateIndex(4, 4, 0, 3, oneSubData));
+
+            BOOST_CHECK_EQUAL(3, *Policy::CalculateIndex(4, 4, 1, 0, oneSubData));
+            BOOST_CHECK_EQUAL(6, *Policy::CalculateIndex(4, 4, 1, 1, oneSubData));
+            BOOST_CHECK_EQUAL(9, *Policy::CalculateIndex(4, 4, 1, 2, oneSubData));
+            BOOST_CHECK_EQUAL(12, *Policy::CalculateIndex(4, 4, 1, 3, oneSubData));
+
+            BOOST_CHECK(!Policy::CalculateIndex(4, 4, 2, 0, oneSubData));
+            BOOST_CHECK_EQUAL(7, *Policy::CalculateIndex(4, 4, 2, 1, oneSubData));
+            BOOST_CHECK_EQUAL(10, *Policy::CalculateIndex(4, 4, 2, 2, oneSubData));
+            BOOST_CHECK_EQUAL(13, *Policy::CalculateIndex(4, 4, 2, 3, oneSubData));
+
+            BOOST_CHECK(!Policy::CalculateIndex(4, 4, 3, 0, oneSubData));
+            BOOST_CHECK(!Policy::CalculateIndex(4, 4, 3, 1, oneSubData));
+            BOOST_CHECK_EQUAL(11, *Policy::CalculateIndex(4, 4, 3, 2, oneSubData));
+            BOOST_CHECK_EQUAL(14, *Policy::CalculateIndex(4, 4, 3, 3, oneSubData));
+        }
+
+
+        BOOST_AUTO_TEST_CASE(TestGetValue)
+        {
+            typedef MatrixStoragePolicy<CountedObject<NekDouble>, BandedMatrixTag> Policy;
+            Policy::PolicySpecificDataHolderType policyData(1, 2);
+
+            // [ 1 2 3 0 ]
+            // [ 4 5 6 7 ]
+            // [ 0 8 9 10 ]
+            // [ 0 0 11 12 ]
+            CountedObject<NekDouble> buf[] = { CountedObject<NekDouble>(0), CountedObject<NekDouble>(0), CountedObject<NekDouble>(1), CountedObject<NekDouble>(4),
+                                               CountedObject<NekDouble>(0), CountedObject<NekDouble>(2), CountedObject<NekDouble>(5), CountedObject<NekDouble>(8),
+                                               CountedObject<NekDouble>(3), CountedObject<NekDouble>(6), CountedObject<NekDouble>(9), CountedObject<NekDouble>(11),
+                                               CountedObject<NekDouble>(7), CountedObject<NekDouble>(10), CountedObject<NekDouble>(12), CountedObject<NekDouble>(0) };
+            NekMatrix<CountedObject<NekDouble>, BandedMatrixTag> m(4, 4, buf, policyData);
+
+            CountedObject<NekDouble>::ClearCounters();
+
+            BOOST_CHECK_EQUAL(1, m(0,0).GetValue());
+            BOOST_CHECK_EQUAL(2, m(0,1).GetValue());
+            BOOST_CHECK_EQUAL(3, m(0,2).GetValue());
+            BOOST_CHECK_EQUAL(0, m(0,3).GetValue());
+
+            BOOST_CHECK_EQUAL(4, m(1,0).GetValue());
+            BOOST_CHECK_EQUAL(5, m(1,1).GetValue());
+            BOOST_CHECK_EQUAL(6, m(1,2).GetValue());
+            BOOST_CHECK_EQUAL(7, m(1,3).GetValue());
+
+            BOOST_CHECK_EQUAL(0, m(2,0).GetValue());
+            BOOST_CHECK_EQUAL(8, m(2,1).GetValue());
+            BOOST_CHECK_EQUAL(9, m(2,2).GetValue());
+            BOOST_CHECK_EQUAL(10, m(2,3).GetValue());
+
+            BOOST_CHECK_EQUAL(0, m(3,0).GetValue());
+            BOOST_CHECK_EQUAL(0, m(3,1).GetValue());
+            BOOST_CHECK_EQUAL(11, m(3,2).GetValue());
+            BOOST_CHECK_EQUAL(12, m(3,3).GetValue());
+
+            CountedObject<NekDouble>::check(0, 0, 0, 0, 0, 0);
+
+        }
     }
 }
 

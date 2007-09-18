@@ -1,6 +1,5 @@
 
 SET(UnitTestSources
-    TestBandedMatrix.cpp
     TestLowerTriangularMatrix.cpp
     TestMatrixStoragePolicies.cpp
     TestNekMatrixMultiplication.cpp
@@ -10,7 +9,6 @@ SET(UnitTestSources
 )
 
 SET(UnitTestHeaders
-    TestCombinationRunner.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)

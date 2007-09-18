@@ -146,7 +146,7 @@ namespace Nektar
                 ASSERTL0(rows==columns, "Banded matrices must be square.");
 
                 unsigned int storageSize = CalculateStorageSize(rows, columns, data);
-                ASSERTL0(storageSize > d.num_elements(), 
+                ASSERTL0(storageSize <= d.num_elements(), 
                     std::string("An attempt has been made to create a banded matrix of size (") +
                     boost::lexical_cast<std::string>(rows) + 
                     ", " + boost::lexical_cast<std::string>(columns) + ") " +
@@ -177,8 +177,8 @@ namespace Nektar
                                                                 unsigned int row, unsigned int column,
                                                                 const PolicySpecificDataHolderType& data)
             {
-                if( (column <= row && (row - column) >= data.GetNumberOfSubDiagonals(totalRows)) ||
-                    (column > row && (column - row) >= data.GetNumberOfSuperDiagonals(totalRows)) )
+                if( (column <= row && (row - column) <= data.GetNumberOfSubDiagonals(totalRows)) ||
+                    (column > row && (column - row) <= data.GetNumberOfSuperDiagonals(totalRows)) )
                 {
                     unsigned int arrayColumns = totalColumns;
 
@@ -192,22 +192,6 @@ namespace Nektar
                     return boost::optional<unsigned int>();
                 }
             }
-
-            //static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
-            //                                   unsigned int curRow, unsigned int curColumn,
-            //                                   const ConstArray<OneD, DataType>& d,
-            //                                   const PolicySpecificDataHolderType& data)
-            //{
-            //    boost::optional<unsigned int> index = CalculateIndex(totalRows, totalColumns, curRow, curColumn, data);
-            //    if( index )
-            //    {
-            //        return data[*index];
-            //    }
-            //    else
-            //    {
-            //        return ZeroElement;
-            //    }
-            //}
 
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,

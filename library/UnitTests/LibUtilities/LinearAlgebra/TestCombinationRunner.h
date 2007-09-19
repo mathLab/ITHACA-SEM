@@ -217,6 +217,8 @@ namespace Nektar
                 m3->SetBlock(blockRow, blockColumn, block);
             }
         }
+
+        delete [] inner_values;
     }
 }
 

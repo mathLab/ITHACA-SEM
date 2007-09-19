@@ -110,7 +110,7 @@ namespace Nektar
                     unsigned int m_numberOfSuperDiagonals;
             };
 
-            typedef typename boost::call_traits<DataType>::value_type GetValueReturnType;
+            typedef typename boost::call_traits<DataType>::const_reference GetValueReturnType;
             static DataType ZeroElement;
             
             static Array<OneD, DataType> Initialize()
@@ -193,7 +193,7 @@ namespace Nektar
                 }
             }
 
-            static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
+            static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
                                                                              const ConstArray<OneD, DataType>& data,
                                                                              const PolicySpecificDataHolderType& dataHolder)
@@ -217,7 +217,7 @@ namespace Nektar
                 boost::optional<unsigned int> index = CalculateIndex(totalRows, totalColumns, curRow, curColumn, dataHolder);
                 if( index )
                 {
-                    data[curRow] = d;
+                    data[*index] = d;
                 }
                 else
                 {

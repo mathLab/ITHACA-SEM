@@ -677,49 +677,49 @@ namespace Nektar
 
     namespace BandedMatrixMatrixMultiplicationTests
     {
-        //BOOST_AUTO_TEST_CASE(TestMatrixMatrixMultiplication)
-        //{
-        //    // [ 2  10   0  0 ]    [ 30 38  0  0 ]
-        //    // [16   4  12  0 ]    [  0 32 40  0 ]
-        //    // [22  18   6 14 ] *  [  0  0 34 42 ]
-        //    // [ 0  24  20  8 ]    [  0  0  0 36 ]
-        //    
-        //    {
-        //        typedef MatrixStoragePolicy<double, BandedMatrixTag> Policy;
-        //        double lhs_buf[] = { 0, 2, 26, 22, 
-        //                             10, 4, 18, 24, 
-        //                             12, 6, 20, 0,
-        //                             14, 8, 0, 0 };
-        //        double rhs_buf[] = { 0, 30,
-        //                             38, 32,
-        //                             40, 34,
-        //                             42, 36 };
+        BOOST_AUTO_TEST_CASE(TestMatrixMatrixMultiplication)
+        {
+            // [ 2  10   0  0 ]    [ 30 38  0  0 ]
+            // [16   4  12  0 ]    [  0 32 40  0 ]
+            // [22  18   6 14 ] *  [  0  0 34 42 ]
+            // [ 0  24  20  8 ]    [  0  0  0 36 ]
+            
+            {
+                typedef MatrixStoragePolicy<double, BandedMatrixTag> Policy;
+                double lhs_buf[] = { 0, 2, 16, 22, 
+                                     10, 4, 18, 24, 
+                                     12, 6, 20, 0,
+                                     14, 8, 0, 0 };
+                double rhs_buf[] = { 0, 30,
+                                     38, 32,
+                                     40, 34,
+                                     42, 36 };
 
-        //        Policy::PolicySpecificDataHolderType lhsPolicyData(2, 1);
-        //        NekMatrix<double, BandedMatrixTag> lhs1(4, 4, lhs_buf, lhsPolicyData);
-        //        boost::shared_ptr<NekMatrix<NekMatrix<double, BandedMatrixTag, StandardMatrixTag>, BandedMatrixTag, ScaledMatrixTag> > lhs2;
-        //        boost::shared_ptr<NekMatrix<NekMatrix<double>, BandedMatrixTag, BlockMatrixTag> > lhs3;
+                Policy::PolicySpecificDataHolderType lhsPolicyData(2, 1);
+                NekMatrix<double, BandedMatrixTag> lhs1(4, 4, lhs_buf, lhsPolicyData);
+                boost::shared_ptr<NekMatrix<NekMatrix<double, BandedMatrixTag, StandardMatrixTag>, BandedMatrixTag, ScaledMatrixTag> > lhs2;
+                boost::shared_ptr<NekMatrix<NekMatrix<double>, BandedMatrixTag, BlockMatrixTag> > lhs3;
 
-        //        Policy::PolicySpecificDataHolderType rhsPolicyData(0, 1);
-        //        NekMatrix<double, BandedMatrixTag> rhs1(4, 4, rhs_buf, rhsPolicyData);
-        //        boost::shared_ptr<NekMatrix<NekMatrix<double, BandedMatrixTag>, BandedMatrixTag, ScaledMatrixTag> > rhs2;
-        //        boost::shared_ptr<NekMatrix<NekMatrix<double>, BandedMatrixTag, BlockMatrixTag> > rhs3;
+                Policy::PolicySpecificDataHolderType rhsPolicyData(0, 1);
+                NekMatrix<double, BandedMatrixTag> rhs1(4, 4, rhs_buf, rhsPolicyData);
+                boost::shared_ptr<NekMatrix<NekMatrix<double, BandedMatrixTag>, BandedMatrixTag, ScaledMatrixTag> > rhs2;
+                boost::shared_ptr<NekMatrix<NekMatrix<double>, BandedMatrixTag, BlockMatrixTag> > rhs3;
 
-        //        GenerateBandedMatrices(lhs1, 2.0, 2, 2, lhs2, lhs3);
-        //        GenerateBandedMatrices(rhs1, 2.0, 2, 2, rhs2, rhs3);
+                GenerateBandedMatrices(lhs1, 2.0, 2, 2, lhs2, lhs3);
+                //GenerateBandedMatrices(rhs1, 2.0, 2, 2, rhs2, rhs3);
 
-        //        double result_buf[] = {60, 480, 660, 0,
-        //                               306, 736, 1412, 768,
-        //                               400, 568, 924, 1640,
-        //                               0, 504, 756, 1128};
-        //        NekMatrix<double> result(4, 4, result_buf);
-        //        
-        //        RunAllTestCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result, DoMultiplication());
-        //    }
+                //double result_buf[] = {60, 480, 660, 0,
+                //                       396, 736, 1412, 768,
+                //                       400, 568, 924, 1640,
+                //                       0, 504, 756, 1128};
+                //NekMatrix<double> result(4, 4, result_buf);
+                //
+                //RunAllTestCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result, DoMultiplication());
+            }
 
-        //    {
-        //    }
-        //}
+            {
+            }
+        }
     }
 }
 

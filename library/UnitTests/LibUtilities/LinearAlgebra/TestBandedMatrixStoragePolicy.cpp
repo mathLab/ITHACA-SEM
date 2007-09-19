@@ -333,6 +333,69 @@ namespace Nektar
             CountedObject<NekDouble>::check(0, 0, 0, 0, 0, 0);
 
         }
+
+        BOOST_AUTO_TEST_CASE(TestSetValue)
+        {
+            DataHolderType oneSubData(1, 2);
+
+            // [ 1 2 3 0 ]
+            // [ 4 5 6 7 ]
+            // [ 0 8 9 10 ]
+            // [ 0 0 11 12 ]
+            NekDouble buf[] = { 0, 0, 1, 4,
+                                               0, 2, 5, 8,
+                                               3, 6, 9, 11,
+                                               7, 10, 12, 0 };
+            NekMatrix<NekDouble, BandedMatrixTag> m(4, 4, buf, oneSubData);
+
+            BOOST_CHECK_EQUAL(1, m(0,0));
+            m.SetValue(0, 0, 19);
+            BOOST_CHECK_EQUAL(19, m(0,0));
+            BOOST_CHECK_EQUAL(2, m(0,1));
+            m.SetValue(0, 1, 20);
+            BOOST_CHECK_EQUAL(20, m(0,1));
+            BOOST_CHECK_EQUAL(3, m(0,2));
+            m.SetValue(0, 2, 21);
+            BOOST_CHECK_EQUAL(21, m(0,2));
+            BOOST_CHECK_EQUAL(0, m(0,3));
+            BOOST_CHECK_THROW(m.SetValue(0, 3, 21), ErrorUtil::NekError);
+
+            BOOST_CHECK_EQUAL(4, m(1,0));
+            m.SetValue(1, 0, 22);
+            BOOST_CHECK_EQUAL(22, m(1,0));
+            BOOST_CHECK_EQUAL(5, m(1,1));
+            m.SetValue(1, 1, 23);
+            BOOST_CHECK_EQUAL(23, m(1,1));
+            BOOST_CHECK_EQUAL(6, m(1,2));
+            m.SetValue(1, 2, 24);
+            BOOST_CHECK_EQUAL(24, m(1,2));
+            BOOST_CHECK_EQUAL(7, m(1,3));
+            m.SetValue(1, 3, 25);
+            BOOST_CHECK_EQUAL(25, m(1,3));
+
+            BOOST_CHECK_EQUAL(0, m(2,0));
+            BOOST_CHECK_THROW(m.SetValue(2, 0, 21), ErrorUtil::NekError);
+            BOOST_CHECK_EQUAL(8, m(2,1));
+            m.SetValue(2, 1, 26);
+            BOOST_CHECK_EQUAL(26, m(2,1));
+            BOOST_CHECK_EQUAL(9, m(2,2));
+            m.SetValue(2, 2, 27);
+            BOOST_CHECK_EQUAL(27, m(2,2));
+            BOOST_CHECK_EQUAL(10, m(2,3));
+            m.SetValue(2, 3, 28);
+            BOOST_CHECK_EQUAL(28, m(2,3));
+
+            BOOST_CHECK_EQUAL(0, m(3,0));
+            BOOST_CHECK_THROW(m.SetValue(3, 0, 21), ErrorUtil::NekError);
+            BOOST_CHECK_EQUAL(0, m(3,1));
+            BOOST_CHECK_THROW(m.SetValue(3, 1, 21), ErrorUtil::NekError);
+            BOOST_CHECK_EQUAL(11, m(3,2));
+            m.SetValue(3, 2, 29);
+            BOOST_CHECK_EQUAL(29, m(3,2));
+            BOOST_CHECK_EQUAL(12, m(3,3));
+            m.SetValue(3, 3, 30);
+            BOOST_CHECK_EQUAL(30, m(3,3));
+        }
     }
 }
 

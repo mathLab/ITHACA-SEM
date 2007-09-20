@@ -158,21 +158,6 @@ namespace Nektar
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
                      const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs);
                      
-    NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(
-                    const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
-                    const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs);
-
-    NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs);
-
-    NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(
-                     const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs);
-
-    NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
-                     const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs);
     #endif //NEKTAR_USING_BLAS
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -47,15 +47,6 @@ namespace Nektar
             result.GetRawPtr(), lhs.GetRows());
     }
     
-    NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(
-                            const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
-                            const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
-    {
-        NekMatrix<double, FullMatrixTag, StandardMatrixTag> result(lhs.GetRows(), rhs.GetColumns());
-        NekMultiply(result, lhs, rhs);
-        return result;
-    }
-
     void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs)
@@ -66,15 +57,6 @@ namespace Nektar
             result.GetRawPtr(), lhs.GetRows());
     }
     
-    NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs)
-    {
-        NekMatrix<double, FullMatrixTag, StandardMatrixTag> result(lhs.GetRows(), rhs.GetColumns());
-        NekMultiply(result, lhs, rhs);
-        return result;
-    }
-
     void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
                      const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs)
@@ -83,15 +65,6 @@ namespace Nektar
             rhs.Scale(), lhs.GetRawPtr(), lhs.GetRows(), 
             rhs.GetOwnedMatrix()->GetRawPtr(), rhs.GetRows(), 0.0,
             result.GetRawPtr(), lhs.GetRows());
-    }
-    
-    NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(
-                     const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs)
-    {
-        NekMatrix<double, FullMatrixTag, StandardMatrixTag> result(lhs.GetRows(), rhs.GetColumns());
-        NekMultiply(result, lhs, rhs);
-        return result;
     }
 
     void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
@@ -102,15 +75,6 @@ namespace Nektar
             lhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), lhs.GetRows(), 
             rhs.GetRawPtr(), rhs.GetRows(), 0.0,
             result.GetRawPtr(), lhs.GetRows());
-    }
-    
-    NekMatrix<double, FullMatrixTag, StandardMatrixTag> NekMultiply(
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
-                     const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
-    {
-        NekMatrix<double, FullMatrixTag, StandardMatrixTag> result(lhs.GetRows(), rhs.GetColumns());
-        NekMultiply(result, lhs, rhs);
-        return result;
     }
 
 #endif //NEKTAR_USING_BLAS

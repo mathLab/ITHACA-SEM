@@ -86,7 +86,6 @@ namespace Nektar
             ReadFunctions(conditions);
             ReadVariables(conditions);
             ReadBoundaryRegions(conditions);
-            ReadExpansionTypes(conditions);
             ReadBoundaryConditions(conditions);
             ReadForcingFunctions(conditions);
             ReadInitialConditions(conditions);
@@ -281,54 +280,6 @@ namespace Nektar
                 }
 
                 boundaryRegionsElement = boundaryRegionsElement->NextSiblingElement("B");
-            }
-        }
-
-        void BoundaryConditions::ReadExpansionTypes(TiXmlElement *conditions)
-        {
-            TiXmlElement *expansionTypes = conditions->FirstChildElement("EXPANSIONTYPES");
-
-            if (expansionTypes)
-            {
-                /// Expansiontypes will contain one composite, nummodes, and expansiontype
-                /// (eModified, or eOrthogonal)
-               
-                TiXmlElement *expansion = expansionTypes->FirstChildElement("E");
-
-                while (expansion)
-                {
-                    /// Mandatory components...optional are to follow later.
-                    std::string compositeStr = expansion->Attribute("COMPOSITE");
-                    ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
-                    int beg = compositeStr.find_first_of("[");
-                    int end = compositeStr.find_first_of("]");
-                    std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
-
-                    CompositeVector compositeVector;
-                    m_MeshGraph->GetCompositeList(compositeListStr, compositeVector);
-
-                    std::string nummodesStr = expansion->Attribute("NUMMODES");
-                    ASSERTL0(!nummodesStr.empty(), "NUMMODES must be specified in expansion definition");
-                    Equation nummodesEqn(nummodesStr);
-
-                    std::string typeStr = expansion->Attribute("TYPE");
-                    ASSERTL0(!typeStr.empty(), "TYPE must be specified in "
-                             "expansion definition");
-                    //std::transform(typeStr.begin(), typeStr.end(), 
-                    //typeStr.begin(), toupper);
-                    ExpansionType type;
-                    const std::string* begStr = kExpansionTypeStr;
-                    const std::string* endStr = kExpansionTypeStr+eExpansionTypeSize;
-                    const std::string* expStr = std::find(begStr, endStr, typeStr);
-
-                    ASSERTL0(expStr != endStr, "Invalid expansion type.")
-                    type = (ExpansionType)(expStr - begStr);
-
-                    ExpansionElementShPtr expansionElementShPtr = MemoryManager<ExpansionElement>::AllocateSharedPtr(compositeVector, nummodesEqn, type);
-                    m_ExpansionCollection.push_back(expansionElementShPtr);
-
-                    expansion = expansion->NextSiblingElement("E");
-                }
             }
         }
 
@@ -861,76 +812,5 @@ namespace Nektar
             return returnval;
         }
 
-        LibUtilities::BasisKey BoundaryConditions::GetBasisKey(const Composite &in, 
-                                                               const int flag)
-        {
-            ConstExpansionElementShPtr exp = GetExpansionElement(in);
-            int order = (int) exp->m_NumModesEqn.Evaluate();
-            
-            switch(exp->m_ExpansionType)
-            {
-            case eModified:
-                switch (flag)
-                {
-                case 0:
-                    {
-                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                        return LibUtilities::BasisKey(LibUtilities::eModified_A,order,pkey);
-                    }
-                    break;
-                case 1:
-                    {
-                        const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-                        return LibUtilities::BasisKey(LibUtilities::eModified_B,order,pkey);
-                    }
-                    break;
-                case 2:
-                    {
-                        const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha2Beta0);
-                        return LibUtilities::BasisKey(LibUtilities::eModified_C,order,pkey);
-                    }
-                    break;
-                default:
-                    ASSERTL0(false,"invalid value to flag");
-                    break;
-                }
-                break;
-            case eOrthogonal:
-                switch (flag)
-                {
-                case 0:
-                    {
-                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                        return LibUtilities::BasisKey(LibUtilities::eOrtho_A,order,pkey);
-                    }
-                    break;
-                case 1:
-                    {
-                        const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-                        return LibUtilities::BasisKey(LibUtilities::eOrtho_B,order,pkey);
-                    }
-                    break;
-                case 2:
-                    {
-                        const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha2Beta0);
-                        return LibUtilities::BasisKey(LibUtilities::eOrtho_C,order,pkey);
-                    }
-                    break;
-                default:
-                    ASSERTL0(false,"invalid value to flag");
-                    break;
-                }
-                break;
-            default:
-                ASSERTL0(false,"expansion type unknonw");
-                break;
-            }
-            
-            // This never gets hit, but keeps the compiler happy.
-            // Since the default cases above don't return anything
-            // the compiler complains if this is not here.  It is
-            // more proper than, say, suppressing the warning.
-            return LibUtilities::NullBasisKey;
-        }
     }
 }

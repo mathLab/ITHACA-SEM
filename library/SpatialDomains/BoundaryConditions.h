@@ -61,23 +61,6 @@ namespace Nektar
             eRobin
         };
 
-        enum ExpansionType
-        {
-            eNoExpansionType,
-            eModified,
-            eOrthogonal,
-            eExpansionTypeSize
-        };
-
-        // Keep this consistent with the enums in ExpansionType.
-        // This is used in the BC file to specify the expansion type.
-        const std::string kExpansionTypeStr[] = 
-        {
-            "NOTYPE",
-            "MODIFIED",
-            "ORTHOGONAL"
-        };
-
         struct BoundaryConditionBase
         {
             BoundaryConditionBase(BoundaryConditionType type):
@@ -163,23 +146,6 @@ namespace Nektar
         typedef boost::shared_ptr<const InitialCondition> ConstInitialConditionShPtr;
         typedef std::map<std::string, InitialConditionShPtr> InitialConditionsMap;
 
-        struct ExpansionElement
-        {
-            ExpansionElement(CompositeVector &composite, Equation numModesEqn, ExpansionType expansionType):
-                m_Composite(composite),
-                m_NumModesEqn(numModesEqn),
-                m_ExpansionType(expansionType)
-            {};
-
-            CompositeVector m_Composite;
-            Equation m_NumModesEqn;
-            ExpansionType m_ExpansionType;
-        };
-        typedef boost::shared_ptr<ExpansionElement> ExpansionElementShPtr;
-        typedef boost::shared_ptr<const ExpansionElement> ConstExpansionElementShPtr;
-        typedef std::vector<ExpansionElementShPtr> ExpansionCollection;
-        typedef std::vector<ExpansionElementShPtr>::iterator  ExpansionCollectionIter;
-
         class BoundaryConditions
         {
         public:
@@ -240,51 +206,11 @@ namespace Nektar
             /// as it was coming in.
             bool SubstituteFunction(std::string &str);
 
-            int GetNumExpansionElements(void)
-            {
-                return m_ExpansionCollection.size();
-            }
-
-            ConstExpansionElementShPtr GetExpansionElement(unsigned int indx)
-            {
-                ASSERTL0(0 <= indx && indx < m_ExpansionCollection.size(), "Expansion index out of range.");
-                return m_ExpansionCollection[indx];
-            }
-
-
-            ConstExpansionElementShPtr GetExpansionElement(const Composite &input)
-            {
-                ExpansionCollectionIter iter;
-                ConstExpansionElementShPtr returnval;
-                bool found = false;
-
-                for(iter = m_ExpansionCollection.begin(); iter != m_ExpansionCollection.end() && !found; ++iter)
-                {
-                    CompositeVector::iterator compIter;
-                    for (compIter = (*iter)->m_Composite.begin(); compIter != (*iter)->m_Composite.end(); ++compIter)
-                    {
-                        if(compIter->get() == input.get())
-                        {
-                            returnval = *iter;
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-
-                ASSERTL0(returnval, "Expansion element not found.");   
-                return returnval;
-            }
-
-
-            LibUtilities::BasisKey GetBasisKey(const Composite &in, const int flag = 0);
-
         protected:
             void ReadParameters(TiXmlElement *parameters);
             void ReadVariables(TiXmlElement *variables);
             void ReadFunctions(TiXmlElement *conditions);
             void ReadBoundaryRegions(TiXmlElement *regions);
-            void ReadExpansionTypes(TiXmlElement *types);
             void ReadBoundaryConditions(TiXmlElement *conditions);
             void ReadForcingFunctions(TiXmlElement *functions);
             void ReadInitialConditions(TiXmlElement *conditions);
@@ -299,7 +225,6 @@ namespace Nektar
             ForcingFunctionsMap m_ForcingFunctions;
             InitialConditionsMap m_InitialConditions;
             ExactSolutionMap m_ExactSolution;
-            ExpansionCollection m_ExpansionCollection;
 
             /// The mesh graph to use for referencing geometry info.
             const MeshGraph *m_MeshGraph;

@@ -59,8 +59,8 @@ namespace Nektar
             MeshGraph2D();
             virtual ~MeshGraph2D();
 
-            void Read(std::string &infilename);
-            void Read(TiXmlDocument &doc);
+            void ReadGeometry(std::string &infilename);
+            void ReadGeometry(TiXmlDocument &doc);
             void Write(std::string &outfilename);
 
             EdgeComponentSharedPtr GetEdgeComponent(int eID);
@@ -229,6 +229,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.14  2007/07/22 23:04:24  bnelson
+// Backed out Nektar::ptr.
+//
 // Revision 1.13  2007/07/20 02:15:08  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

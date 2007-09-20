@@ -55,265 +55,429 @@ namespace Nektar
     {
 
         MeshGraph::MeshGraph():
-            m_MeshDimension(3),
-            m_SpaceDimension(3)
+    m_MeshDimension(3),
+        m_SpaceDimension(3)
+    {
+    }
+
+    // \brief Read will read the meshgraph vertices given a filename.
+    void MeshGraph::ReadGeometry(std::string &infilename)
+    {
+        TiXmlDocument doc(infilename);
+        bool loadOkay = doc.LoadFile();
+
+        std::string errstr = "Unable to load file: ";
+        errstr += infilename;
+        ASSERTL0(loadOkay, errstr.c_str());
+
+        ReadGeometry(doc);
+    }
+
+    // \brief Read will read the meshgraph vertices given a TiXmlDocument.
+    void MeshGraph::ReadGeometry(TiXmlDocument &doc)
+    {
+        TiXmlHandle docHandle(&doc);
+        TiXmlNode* node = NULL;
+        TiXmlElement* mesh = NULL;
+        TiXmlElement* master = NULL;    // Master tag within which all data is contained.
+
+        int err;    /// Error value returned by TinyXML.
+
+        master = doc.FirstChildElement("NEKTAR");
+        ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+
+        // Find the Mesh tag and same the dim and space attributes
+        mesh = master->FirstChildElement("GEOMETRY");
+
+        ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
+        TiXmlAttribute *attr = mesh->FirstAttribute();
+
+        // Initialize the mesh and space dimensions to 3 dimensions.
+        // We want to do this each time we read a file, so it should
+        // be done here and not just during class initialization.
+        m_MeshDimension = 3;
+        m_SpaceDimension = 3;
+
+        while (attr)
         {
-        }
-
-        // \brief Read will read the meshgraph vertices given a filename.
-        void MeshGraph::Read(std::string &infilename)
-        {
-            SetFileName(infilename);
-            TiXmlDocument doc(infilename);
-            bool loadOkay = doc.LoadFile();
-
-            std::string errstr = "Unable to load file: ";
-            errstr += infilename;
-            ASSERTL0(loadOkay, errstr.c_str());
-
-            Read(doc);
-        }
-
-        // \brief Read will read the meshgraph vertices given a TiXmlDocument.
-        void MeshGraph::Read(TiXmlDocument &doc)
-        {
-            TiXmlHandle docHandle(&doc);
-            TiXmlNode* node = NULL;
-            TiXmlElement* mesh = NULL;
-            TiXmlElement* master = NULL;    // Master tag within which all data is contained.
-
-            int err;    /// Error value returned by TinyXML.
-
-            master = doc.FirstChildElement("NEKTAR");
-            ASSERTL0(master, "Unable to find NEKTAR tag in file");
-
-            // Find the Mesh tag and same the dim and space attributes
-            mesh = master->FirstChildElement("GEOMETRY");
-
-            ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
-            TiXmlAttribute *attr = mesh->FirstAttribute();
-
-            // Initialize the mesh and space dimensions to 3 dimensions.
-            // We want to do this each time we read a file, so it should
-            // be done here and not just during class initialization.
-            m_MeshDimension = 3;
-            m_SpaceDimension = 3;
-
-            while (attr)
+            std::string attrName(attr->Name());
+            if (attrName == "DIM")
             {
-                std::string attrName(attr->Name());
-                if (attrName == "DIM")
-                {
-                    err = attr->QueryIntValue(&m_MeshDimension);
-                    ASSERTL1(err==TIXML_SUCCESS, "Unable to read mesh dimension.");
-                }
-                else if (attrName == "SPACE")
-                {
-                    err = attr->QueryIntValue(&m_SpaceDimension);
-                    ASSERTL1(err==TIXML_SUCCESS, "Unable to read mesh dimension.");
-                }
-                else
-                {
-                    std::string errstr("Unknown attribute: ");
-                    errstr += attrName;
-                    ASSERTL1(false, errstr.c_str());
-                }
-
-                // Get the next attribute.
-                attr = attr->Next();
+                err = attr->QueryIntValue(&m_MeshDimension);
+                ASSERTL1(err==TIXML_SUCCESS, "Unable to read mesh dimension.");
+            }
+            else if (attrName == "SPACE")
+            {
+                err = attr->QueryIntValue(&m_SpaceDimension);
+                ASSERTL1(err==TIXML_SUCCESS, "Unable to read mesh dimension.");
+            }
+            else
+            {
+                std::string errstr("Unknown attribute: ");
+                errstr += attrName;
+                ASSERTL1(false, errstr.c_str());
             }
 
-            ASSERTL1(m_MeshDimension<=m_SpaceDimension, "Mesh dimension greater than space dimension");
+            // Get the next attribute.
+            attr = attr->Next();
+        }
 
-            // Now read the vertices
-            TiXmlElement* element = mesh->FirstChildElement("VERTEX");
-            ASSERTL0(element, "Unable to find mesh VERTEX tag in file.");
+        ASSERTL1(m_MeshDimension<=m_SpaceDimension, "Mesh dimension greater than space dimension");
 
-            TiXmlElement *vertex = element->FirstChildElement("V");
+        // Now read the vertices
+        TiXmlElement* element = mesh->FirstChildElement("VERTEX");
+        ASSERTL0(element, "Unable to find mesh VERTEX tag in file.");
 
-            int indx;
-            int nextVertexNumber = -1;
+        TiXmlElement *vertex = element->FirstChildElement("V");
 
-            while (vertex)
+        int indx;
+        int nextVertexNumber = -1;
+
+        while (vertex)
+        {
+            nextVertexNumber++;
+
+            TiXmlAttribute *vertexAttr = vertex->FirstAttribute();
+            std::string attrName(vertexAttr->Name());
+
+            ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
+
+            err = vertexAttr->QueryIntValue(&indx);
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
+            ASSERTL0(indx == nextVertexNumber, "Element IDs must begin with zero and be sequential.");
+
+            // Now read body of vertex
+            std::string vertexBodyStr;
+
+            TiXmlNode *vertexBody = vertex->FirstChild();
+
+            while (vertexBody)
             {
-                nextVertexNumber++;
-
-                TiXmlAttribute *vertexAttr = vertex->FirstAttribute();
-                std::string attrName(vertexAttr->Name());
-
-                ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
-
-                err = vertexAttr->QueryIntValue(&indx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-                ASSERTL0(indx == nextVertexNumber, "Element IDs must begin with zero and be sequential.");
-
-                // Now read body of vertex
-                std::string vertexBodyStr;
-
-                TiXmlNode *vertexBody = vertex->FirstChild();
-
-                while (vertexBody)
+                // Accumulate all non-comment body data.
+                if (vertexBody->Type() == TiXmlNode::TEXT)
                 {
-                    // Accumulate all non-comment body data.
-                    if (vertexBody->Type() == TiXmlNode::TEXT)
-                    {
-                        vertexBodyStr += vertexBody->ToText()->Value();
-                        vertexBodyStr += " ";
-                    }
-
-                    vertexBody = vertexBody->NextSibling();
+                    vertexBodyStr += vertexBody->ToText()->Value();
+                    vertexBodyStr += " ";
                 }
 
-                ASSERTL0(!vertexBodyStr.empty(), "Vertex definitions must contain vertex data.");
-
-                // Get vertex data from the data string.
-                double xval, yval, zval;
-                std::istrstream vertexDataStrm(vertexBodyStr.c_str());
-
-                try
-                {
-                    while(!vertexDataStrm.fail())
-                    {
-                        vertexDataStrm >> xval >> yval >> zval;
-
-                        // Need to check it here because we may not be good after the read
-                        // indicating that there was nothing to read.
-                        if (!vertexDataStrm.fail())
-                        {
-                            VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, indx, xval, yval, zval));
-                            m_vertset.push_back(vert);
-                        }
-                    }
-                }
-                catch(...)
-                {
-                    ASSERTL0(false, "Unable to read VERTEX data.");
-                }
- 
-                vertex = vertex->NextSiblingElement("V");
+                vertexBody = vertexBody->NextSibling();
             }
 
-       }
+            ASSERTL0(!vertexBodyStr.empty(), "Vertex definitions must contain vertex data.");
 
-        GeometrySharedPtr MeshGraph::GetCompositeItem(int whichComposite, int whichItem)
-        {
-            GeometrySharedPtr returnval;
-            bool error = false;
+            // Get vertex data from the data string.
+            double xval, yval, zval;
+            std::istrstream vertexDataStrm(vertexBodyStr.c_str());
 
-            if (whichComposite >= 0 && whichComposite < int(m_MeshCompositeVector.size()))
+            try
             {
-                if (whichItem >= 0 && whichItem < int(m_MeshCompositeVector[whichComposite]->size()))
+                while(!vertexDataStrm.fail())
                 {
-                    returnval = m_MeshCompositeVector[whichComposite]->at(whichItem);
+                    vertexDataStrm >> xval >> yval >> zval;
+
+                    // Need to check it here because we may not be good after the read
+                    // indicating that there was nothing to read.
+                    if (!vertexDataStrm.fail())
+                    {
+                        VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, indx, xval, yval, zval));
+                        m_vertset.push_back(vert);
+                    }
                 }
-                else
+            }
+            catch(...)
+            {
+                ASSERTL0(false, "Unable to read VERTEX data.");
+            }
+
+            vertex = vertex->NextSiblingElement("V");
+        }
+
+    }
+
+    // \brief Read the expansions given the XML file path.
+    void MeshGraph::ReadExpansions(std::string &infilename)
+    {
+        TiXmlDocument doc(infilename);
+        bool loadOkay = doc.LoadFile();
+
+        std::string errstr = "Unable to load file: ";
+        errstr += infilename;
+        ASSERTL0(loadOkay, errstr.c_str());
+
+        ReadExpansions(doc);
+    }
+
+    // \brief Read the expansions given the XML document reference.
+    void MeshGraph::ReadExpansions(TiXmlDocument &doc)
+    {
+        TiXmlElement *master = doc.FirstChildElement("NEKTAR");
+        ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+
+        // Find the Expansions tag
+        TiXmlElement *expansionTypes = master->FirstChildElement("EXPANSIONS");
+        ASSERTL0(expansionTypes, "Unable to find EXPANSIONS tag in file.");
+
+        if (expansionTypes)
+        {
+            /// Expansiontypes will contain composite, nummodes, and expansiontype
+            /// (eModified, or eOrthogonal)
+
+            TiXmlElement *expansion = expansionTypes->FirstChildElement("E");
+
+            while (expansion)
+            {
+                /// Mandatory components...optional are to follow later.
+                std::string compositeStr = expansion->Attribute("COMPOSITE");
+                ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
+                int beg = compositeStr.find_first_of("[");
+                int end = compositeStr.find_first_of("]");
+                std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
+
+                CompositeVector compositeVector;
+                GetCompositeList(compositeListStr, compositeVector);
+
+                std::string nummodesStr = expansion->Attribute("NUMMODES");
+                ASSERTL0(!nummodesStr.empty(), "NUMMODES must be specified in expansion definition");
+                Equation nummodesEqn(nummodesStr);
+
+                std::string typeStr = expansion->Attribute("TYPE");
+                ASSERTL0(!typeStr.empty(), "TYPE must be specified in "
+                    "expansion definition");
+
+                ExpansionType type;
+                const std::string* begStr = kExpansionTypeStr;
+                const std::string* endStr = kExpansionTypeStr+eExpansionTypeSize;
+                const std::string* expStr = std::find(begStr, endStr, typeStr);
+
+                ASSERTL0(expStr != endStr, "Invalid expansion type.")
+                    type = (ExpansionType)(expStr - begStr);
+
+                ExpansionElementShPtr expansionElementShPtr = MemoryManager<ExpansionElement>::AllocateSharedPtr(compositeVector, nummodesEqn, type);
+                m_ExpansionCollection.push_back(expansionElementShPtr);
+
+                expansion = expansion->NextSiblingElement("E");
+            }
+        }
+    }
+
+    ConstExpansionElementShPtr MeshGraph::GetExpansionElement(const Composite &input)
+    {
+        ExpansionCollectionIter iter;
+        ConstExpansionElementShPtr returnval;
+        bool found = false;
+
+        for(iter = m_ExpansionCollection.begin(); iter != m_ExpansionCollection.end() && !found; ++iter)
+        {
+            CompositeVector::iterator compIter;
+            for (compIter = (*iter)->m_Composite.begin(); compIter != (*iter)->m_Composite.end(); ++compIter)
+            {
+                if(compIter->get() == input.get())
                 {
-                    error = true;
+                    returnval = *iter;
+                    found = true;
+                    break;
                 }
+            }
+        }
+
+        ASSERTL0(returnval, "Expansion element not found.");   
+        return returnval;
+    }
+
+    LibUtilities::BasisKey MeshGraph::GetBasisKey(const Composite &in, 
+        const int flag)
+    {
+        ConstExpansionElementShPtr exp = GetExpansionElement(in);
+        int order = (int) exp->m_NumModesEqn.Evaluate();
+
+        switch(exp->m_ExpansionType)
+        {
+        case eModified:
+            switch (flag)
+            {
+            case 0:
+                {
+                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(LibUtilities::eModified_A,order,pkey);
+                }
+                break;
+            case 1:
+                {
+                    const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+                    return LibUtilities::BasisKey(LibUtilities::eModified_B,order,pkey);
+                }
+                break;
+            case 2:
+                {
+                    const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha2Beta0);
+                    return LibUtilities::BasisKey(LibUtilities::eModified_C,order,pkey);
+                }
+                break;
+            default:
+                ASSERTL0(false,"invalid value to flag");
+                break;
+            }
+            break;
+        case eOrthogonal:
+            switch (flag)
+            {
+            case 0:
+                {
+                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(LibUtilities::eOrtho_A,order,pkey);
+                }
+                break;
+            case 1:
+                {
+                    const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+                    return LibUtilities::BasisKey(LibUtilities::eOrtho_B,order,pkey);
+                }
+                break;
+            case 2:
+                {
+                    const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha2Beta0);
+                    return LibUtilities::BasisKey(LibUtilities::eOrtho_C,order,pkey);
+                }
+                break;
+            default:
+                ASSERTL0(false,"invalid value to flag");
+                break;
+            }
+            break;
+        default:
+            ASSERTL0(false,"expansion type unknonw");
+            break;
+        }
+
+        // This never gets hit, but keeps the compiler happy.
+        // Since the default cases above don't return anything
+        // the compiler complains if this is not here.  It is
+        // more proper than, say, suppressing the warning.
+        return LibUtilities::NullBasisKey;
+    }
+
+    GeometrySharedPtr MeshGraph::GetCompositeItem(int whichComposite, int whichItem)
+    {
+        GeometrySharedPtr returnval;
+        bool error = false;
+
+        if (whichComposite >= 0 && whichComposite < int(m_MeshCompositeVector.size()))
+        {
+            if (whichItem >= 0 && whichItem < int(m_MeshCompositeVector[whichComposite]->size()))
+            {
+                returnval = m_MeshCompositeVector[whichComposite]->at(whichItem);
             }
             else
             {
                 error = true;
             }
-
-            if (error)
-            {
-                std::ostringstream errStream;
-                errStream << "Unable to access composite item [" << whichComposite << "][" << whichItem << "].";
-                
-                std::string testStr = errStream.str();
-
-                NEKERROR(ErrorUtil::efatal, testStr.c_str());
-            }
-
-            return returnval;
+        }
+        else
+        {
+            error = true;
         }
 
-        void MeshGraph::ReadDomain(TiXmlDocument &doc)
+        if (error)
         {
-            TiXmlHandle docHandle(&doc);
+            std::ostringstream errStream;
+            errStream << "Unable to access composite item [" << whichComposite << "][" << whichItem << "].";
 
-            TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
-            TiXmlElement* domain = NULL;
+            std::string testStr = errStream.str();
 
-            ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
-
-            /// Look for data in DOMAIN block.
-            domain = mesh->FirstChildElement("DOMAIN");
-
-            ASSERTL0(domain, "Unable to find DOMAIN tag in file.");
-
-            // find the non comment portion of the body.
-            TiXmlNode* elementChild = domain->FirstChild();
-            while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
-            {
-                elementChild = elementChild->NextSibling();
-            }
-
-            ASSERTL0(elementChild, "Unable to read DOMAIN body.");
-            std::string elementStr = elementChild->ToText()->ValueStr();
-
-            elementStr = elementStr.substr(elementStr.find_first_not_of(" "));
-
-            std::string::size_type indxBeg = elementStr.find_first_of('[') + 1;
-            std::string::size_type indxEnd = elementStr.find_last_of(']') - 1;
-            std::string indxStr = elementStr.substr(indxBeg, indxEnd - indxBeg + 1);
-
-            ASSERTL0(!indxStr.empty(), "Unable to read domain's composite index (index missing?).");
-
-            // Read the domain composites.
-            // Parse the composites into a list.
-            GetCompositeList(indxStr, m_Domain);
-            ASSERTL0(!m_Domain.empty(), (std::string("Unable to obtain domain's referenced composite: ") + indxStr).c_str());
+            NEKERROR(ErrorUtil::efatal, testStr.c_str());
         }
 
-        void MeshGraph::GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const
+        return returnval;
+    }
+
+    void MeshGraph::ReadDomain(TiXmlDocument &doc)
+    {
+        TiXmlHandle docHandle(&doc);
+
+        TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
+        TiXmlElement* domain = NULL;
+
+        ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
+
+        /// Look for data in DOMAIN block.
+        domain = mesh->FirstChildElement("DOMAIN");
+
+        ASSERTL0(domain, "Unable to find DOMAIN tag in file.");
+
+        // find the non comment portion of the body.
+        TiXmlNode* elementChild = domain->FirstChild();
+        while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
         {
-            // Parse the composites into a list.
-            typedef vector<unsigned int> SeqVector;
-            SeqVector seqVector;
-            bool parseGood = ParseUtils::GenerateSeqVector(compositeStr.c_str(), seqVector);
+            elementChild = elementChild->NextSibling();
+        }
 
-            ASSERTL0(parseGood && !seqVector.empty(), (std::string("Unable to read composite index range: ") + compositeStr).c_str());
+        ASSERTL0(elementChild, "Unable to read DOMAIN body.");
+        std::string elementStr = elementChild->ToText()->ValueStr();
 
-            SeqVector addedVector;    // Vector of those composites already added to compositeVector;
-            for (SeqVector::iterator iter = seqVector.begin(); iter != seqVector.end(); ++iter)
+        elementStr = elementStr.substr(elementStr.find_first_not_of(" "));
+
+        std::string::size_type indxBeg = elementStr.find_first_of('[') + 1;
+        std::string::size_type indxEnd = elementStr.find_last_of(']') - 1;
+        std::string indxStr = elementStr.substr(indxBeg, indxEnd - indxBeg + 1);
+
+        ASSERTL0(!indxStr.empty(), "Unable to read domain's composite index (index missing?).");
+
+        // Read the domain composites.
+        // Parse the composites into a list.
+        GetCompositeList(indxStr, m_Domain);
+        ASSERTL0(!m_Domain.empty(), (std::string("Unable to obtain domain's referenced composite: ") + indxStr).c_str());
+    }
+
+    void MeshGraph::GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const
+    {
+        // Parse the composites into a list.
+        typedef vector<unsigned int> SeqVector;
+        SeqVector seqVector;
+        bool parseGood = ParseUtils::GenerateSeqVector(compositeStr.c_str(), seqVector);
+
+        ASSERTL0(parseGood && !seqVector.empty(), (std::string("Unable to read composite index range: ") + compositeStr).c_str());
+
+        SeqVector addedVector;    // Vector of those composites already added to compositeVector;
+        for (SeqVector::iterator iter = seqVector.begin(); iter != seqVector.end(); ++iter)
+        {
+            // Only add a new one if it does not already exist in vector.
+            // Can't go back and delete with a vector, so prevent it from
+            // being added in the first place.
+            if (std::find(addedVector.begin(), addedVector.end(), *iter) == addedVector.end())
             {
-                // Only add a new one if it does not already exist in vector.
-                // Can't go back and delete with a vector, so prevent it from
-                // being added in the first place.
-                if (std::find(addedVector.begin(), addedVector.end(), *iter) == addedVector.end())
+                addedVector.push_back(*iter);
+                Composite composite = GetComposite(*iter);
+                CompositeVector::iterator compIter;
+                if (composite)
                 {
-                    addedVector.push_back(*iter);
-                    Composite composite = GetComposite(*iter);
-                    CompositeVector::iterator compIter;
-                    if (composite)
-                    {
-                        compositeVector.push_back(composite);
-                    }
-                    else
-                    {
-                        char str[64];
-                        ::sprintf(str, "%d", *iter);
-                        NEKERROR(ErrorUtil::ewarning, (std::string("Undefined composite: ") + str).c_str());
+                    compositeVector.push_back(composite);
+                }
+                else
+                {
+                    char str[64];
+                    ::sprintf(str, "%d", *iter);
+                    NEKERROR(ErrorUtil::ewarning, (std::string("Undefined composite: ") + str).c_str());
 
-                    }
                 }
             }
         }
+    }
 
-        void MeshGraph::Write(std::string &outfilename)
-        {
-        }
+    void MeshGraph::Write(std::string &outfilename)
+    {
+    }
 
-        MeshGraph::~MeshGraph()
-        {
-        }
+    MeshGraph::~MeshGraph()
+    {
+    }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.10  2007/09/20 02:06:15  jfrazier
+// General cleanup.
+//
 // Revision 1.9  2007/09/03 17:05:01  jfrazier
 // Cleanup and addition of composite range in domain specification.
 //

@@ -52,8 +52,8 @@ namespace Nektar
             MeshGraph1D();
             virtual ~MeshGraph1D();
 
-            void Read(std::string &infilename);
-            void Read(TiXmlDocument &doc);
+            void ReadGeometry(std::string &infilename);
+            void ReadGeometry(TiXmlDocument &doc);
             void ReadElements(TiXmlDocument &doc);
             void ReadComposites(TiXmlDocument &doc);
             void ResolveGeomRef(const std::string &prevToken, const std::string &token);
@@ -91,6 +91,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.h,v $
+// Revision 1.7  2007/06/07 23:55:24  jfrazier
+// Intermediate revisions to add parsing for boundary conditions file.
+//
 // Revision 1.6  2007/05/28 16:15:01  sherwin
 // Updated files in MultiRegions to make 1D demos work
 //

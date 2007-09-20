@@ -41,6 +41,7 @@
 
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/InterfaceComponent.h>
+#include <SpatialDomains/Equation.h>
 
 class TiXmlDocument;
 
@@ -48,6 +49,23 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        enum ExpansionType
+        {
+            eNoExpansionType,
+            eModified,
+            eOrthogonal,
+            eExpansionTypeSize
+        };
+
+        // Keep this consistent with the enums in ExpansionType.
+        // This is used in the BC file to specify the expansion type.
+        const std::string kExpansionTypeStr[] = 
+        {
+            "NOTYPE",
+            "MODIFIED",
+            "ORTHOGONAL"
+        };
+
         typedef boost::shared_ptr<InterfaceComponent> SharedInterfaceCompPtr;
         typedef std::vector< VertexComponentSharedPtr >  VertexVector;
         typedef std::list< SharedInterfaceCompPtr > InterfaceCompList;
@@ -56,14 +74,34 @@ namespace Nektar
         typedef std::vector< Composite >            CompositeVector;
         typedef std::vector< Composite >::iterator  CompositeVectorIter;
 
+        struct ExpansionElement
+        {
+            ExpansionElement(CompositeVector &composite, const Equation &numModesEqn, ExpansionType expansionType):
+                m_Composite(composite),
+                m_NumModesEqn(numModesEqn),
+                m_ExpansionType(expansionType)
+            {};
+
+            CompositeVector m_Composite;
+            Equation m_NumModesEqn;
+            ExpansionType m_ExpansionType;
+        };
+
+        typedef boost::shared_ptr<ExpansionElement> ExpansionElementShPtr;
+        typedef boost::shared_ptr<const ExpansionElement> ConstExpansionElementShPtr;
+        typedef std::vector<ExpansionElementShPtr> ExpansionCollection;
+        typedef std::vector<ExpansionElementShPtr>::iterator  ExpansionCollectionIter;
+
         class MeshGraph
         {
         public:
             MeshGraph();
             virtual ~MeshGraph();
 
-            void Read(std::string &infilename);
-            void Read(TiXmlDocument &doc);
+            void ReadGeometry(std::string &infilename);
+            void ReadGeometry(TiXmlDocument &doc);
+            void ReadExpansions(std::string &infilename);
+            void ReadExpansions(TiXmlDocument &doc);
 
             inline VertexComponentSharedPtr GetVertex(int id)
             {
@@ -83,16 +121,6 @@ namespace Nektar
             }
 
             void Write(std::string &outfilename);
-
-            inline const std::string &GetFileName(void) const
-            {
-                return m_FileName;
-            };
-
-            inline void SetFileName(const std::string &inString)
-            {
-                m_FileName = inString;
-            };
 
             GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
             Composite GetComposite(int whichComposite) const
@@ -115,6 +143,22 @@ namespace Nektar
 
             void GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const;
 
+
+            LibUtilities::BasisKey GetBasisKey(const Composite &in, const int flag = 0);
+            ConstExpansionElementShPtr GetExpansionElement(const Composite &input);
+            int GetNumExpansionElements(void) const
+            {
+                return m_ExpansionCollection.size();
+            }
+
+            ConstExpansionElementShPtr GetExpansionElement(unsigned int indx)
+            {
+                ASSERTL0(0 <= indx && indx < m_ExpansionCollection.size(), "Expansion index out of range.");
+                return m_ExpansionCollection[indx];
+            }
+
+
+
        protected:
             VertexVector  m_vertset;
             InterfaceCompList m_icomps;
@@ -124,10 +168,8 @@ namespace Nektar
 
             CompositeVector m_MeshCompositeVector;
             CompositeVector m_Domain;
-
-        private:
-            std::string m_FileName;
-        };
+            ExpansionCollection m_ExpansionCollection;
+       };
     }; //end of namespace
 }; //end of namespace
 
@@ -135,6 +177,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.13  2007/09/03 17:05:01  jfrazier
+// Cleanup and addition of composite range in domain specification.
+//
 // Revision 1.12  2007/08/11 23:38:48  sherwin
 // Update for full working version of Helmholtz1D
 //

@@ -52,23 +52,22 @@ namespace Nektar
         }
 
         // \brief Read segments (and general MeshGraph) given filename.
-        void MeshGraph1D::Read(std::string &infilename)
+        void MeshGraph1D::ReadGeometry(std::string &infilename)
         {
-            SetFileName(infilename);
             TiXmlDocument doc(infilename);
 
             bool loadOkay = doc.LoadFile();
 
             ASSERTL0(loadOkay, (std::string("Unable to load file:") + infilename + ".").c_str());
 
-            Read(doc);
+            ReadGeometry(doc);
         }
 
         // \brief Read segments (and general MeshGraph) given TiXmlDocument.
-        void MeshGraph1D::Read(TiXmlDocument &doc)
+        void MeshGraph1D::ReadGeometry(TiXmlDocument &doc)
         {
              // Read mesh first
-            MeshGraph::Read(doc);
+            MeshGraph::ReadGeometry(doc);
             TiXmlHandle docHandle(&doc);
 
             TiXmlNode* node = NULL;
@@ -338,6 +337,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.15  2007/07/28 05:44:27  sherwin
+// Fixed for new MemoryManager call
+//
 // Revision 1.14  2007/07/26 01:38:32  jfrazier
 // Cleanup of some attribute reading code.
 //

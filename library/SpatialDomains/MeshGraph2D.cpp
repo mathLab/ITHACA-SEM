@@ -51,23 +51,22 @@ namespace Nektar
         {
         }
 
-        void MeshGraph2D::Read(std::string &infilename)
+        void MeshGraph2D::ReadGeometry(std::string &infilename)
         {
-            SetFileName(infilename);
             TiXmlDocument doc(infilename);
             bool loadOkay = doc.LoadFile();
 
             ASSERTL0(loadOkay, (std::string("Unable to load file: ") + 
                 infilename).c_str());
 
-            Read(doc);
+            ReadGeometry(doc);
         }
 
         // \brief Read segments (and general MeshGraph) given TiXmlDocument.
-        void MeshGraph2D::Read(TiXmlDocument &doc)
+        void MeshGraph2D::ReadGeometry(TiXmlDocument &doc)
         {
             // Read mesh first
-            MeshGraph::Read(doc);
+            MeshGraph::ReadGeometry(doc);
             TiXmlHandle docHandle(&doc);
 
             TiXmlNode* node = NULL;
@@ -539,6 +538,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.19  2007/07/26 01:38:33  jfrazier
+// Cleanup of some attribute reading code.
+//
 // Revision 1.18  2007/07/24 16:52:09  jfrazier
 // Added domain code.
 //

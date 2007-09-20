@@ -35,6 +35,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "pchSpatialDomains.h"
 
+#include <boost/foreach.hpp>
+
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/ParseUtils.hpp>
 
@@ -270,23 +272,32 @@ namespace Nektar
             // Parse the composites into a list.
             typedef vector<unsigned int> SeqVector;
             SeqVector seqVector;
-            bool parseGood = ParseUtils::GenerateSeqVector(compositeStr.c_str(), seqVector);    
+            bool parseGood = ParseUtils::GenerateSeqVector(compositeStr.c_str(), seqVector);
 
             ASSERTL0(parseGood && !seqVector.empty(), (std::string("Unable to read composite index range: ") + compositeStr).c_str());
 
+            SeqVector addedVector;    // Vector of those composites already added to compositeVector;
             for (SeqVector::iterator iter = seqVector.begin(); iter != seqVector.end(); ++iter)
             {
-                Composite composite = GetComposite(*iter);
-                if (composite)
+                // Only add a new one if it does not already exist in vector.
+                // Can't go back and delete with a vector, so prevent it from
+                // being added in the first place.
+                if (std::find(addedVector.begin(), addedVector.end(), *iter) == addedVector.end())
                 {
-                    compositeVector.push_back(composite);
-                }
-                else
-                {
-                    char str[64];
-                    ::sprintf(str, "%d", *iter);
-                    NEKERROR(ErrorUtil::ewarning, (std::string("Undefined composite: ") + str).c_str());
+                    addedVector.push_back(*iter);
+                    Composite composite = GetComposite(*iter);
+                    CompositeVector::iterator compIter;
+                    if (composite)
+                    {
+                        compositeVector.push_back(composite);
+                    }
+                    else
+                    {
+                        char str[64];
+                        ::sprintf(str, "%d", *iter);
+                        NEKERROR(ErrorUtil::ewarning, (std::string("Undefined composite: ") + str).c_str());
 
+                    }
                 }
             }
         }
@@ -303,6 +314,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.9  2007/09/03 17:05:01  jfrazier
+// Cleanup and addition of composite range in domain specification.
+//
 // Revision 1.8  2007/07/24 16:52:08  jfrazier
 // Added domain code.
 //

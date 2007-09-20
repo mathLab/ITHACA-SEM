@@ -255,6 +255,7 @@ namespace Nektar
             ConstExpansionElementShPtr GetExpansionElement(const Composite &input)
             {
                 ExpansionCollectionIter iter;
+                ConstExpansionElementShPtr returnval;
                 bool found = false;
 
                 for(iter = m_ExpansionCollection.begin(); iter != m_ExpansionCollection.end() && !found; ++iter)
@@ -264,15 +265,15 @@ namespace Nektar
                     {
                         if(compIter->get() == input.get())
                         {
+                            returnval = *iter;
                             found = true;
                             break;
                         }
                     }
                 }
 
-                ASSERTL0(found, "Expansion element not found.");
-                                   
-                return *iter;
+                ASSERTL0(returnval, "Expansion element not found.");   
+                return returnval;
             }
 
 

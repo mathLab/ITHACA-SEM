@@ -76,7 +76,6 @@ namespace Nektar
             rhs.GetRawPtr(), rhs.GetRows(), 0.0,
             result.GetRawPtr(), lhs.GetRows());
     }
-
 #endif //NEKTAR_USING_BLAS
 }
 

@@ -8,6 +8,7 @@ SET(Sources
     TestDiagonalMatrixStoragePolicy.cpp
     TestFullMatrixStoragePolicy.cpp
     TestLowerTriangularMatrixStoragePolicy.cpp
+    TestNekVector.cpp
     TestSymmetricMatrixStoragePolicy.cpp
     TestUpperTriangularMatrixStoragePolicy.cpp
     TestStandardMatrix.cpp

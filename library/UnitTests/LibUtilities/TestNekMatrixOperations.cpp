@@ -33,8 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_OPERATIONS_H
-#define NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_OPERATIONS_H
+#include "LibUtilitiesUnitTestsPrecompiledHeader.h"
 
 #include <UnitTests/testNekMatrixOperations.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
@@ -289,7 +288,7 @@ namespace Nektar
                 boost::shared_ptr<DNekScalMat> m1(new DNekScalMat(2.0, inner1));
                 boost::shared_ptr<DNekScalMat> m2(new DNekScalMat(3.0, inner2));
                 
-                (*m1)*2;
+                (*m1)*2.0;
 
                 //BOOST_CHECK_EQUAL(result->GetValue(0,0), 2.0);
                 //BOOST_CHECK_EQUAL(result->GetValue(0,1), 4.0);
@@ -380,5 +379,4 @@ namespace Nektar
     }
 }
 
-#endif //NEKTAR_UNIT_TESTS_TEST_NEK_MATRIX_OPERATIONS_H
 

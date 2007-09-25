@@ -1,19 +1,23 @@
 
-SET(UnitTestSources
-    TestLowerTriangularMatrix.cpp
+SET(PrecompiledHeaderSources
+	TestLowerTriangularMatrix.cpp
     TestMatrixStoragePolicies.cpp
     TestNekMatrixMultiplication.cpp
     TestNekMatrixOperations.cpp
     TestUpperTriangularMatrix.cpp
-    main.cpp   
 )
 
+SET(UnitTestSources ${PrecompiledHeaderSources} main.cpp)   
+
 SET(UnitTestHeaders
+	LibUtilitiesUnitTestsPrecompiledHeader.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
-
 ADD_NEKTAR_EXECUTABLE(LibUtilitiesUnitTests UnitTestSources UnitTestHeaders)
+
+SET(PrecompiledHeaderName LibUtilitiesUnitTestsPrecompiledHeader.h)
+SETUP_PRECOMPILED_HEADERS(PrecompiledHeaderSources PrecompiledHeaderName)
 
 
 IF( ${CMAKE_COMPILER_IS_GNUCXX} )

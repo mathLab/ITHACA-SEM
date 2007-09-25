@@ -142,6 +142,10 @@ SET(LinearAlgebraSources
 #	./LinearAlgebra/lapack.cpp
 )
 
+SET(PrecompiledHeaders
+	LibUtilities.h
+)
+
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
 SOURCE_GROUP("Basic Utils" FILES ${BasicUtils})
 SOURCE_GROUP("Expression Templates" FILES ${ExpressionTemplates})
@@ -157,6 +161,8 @@ SOURCE_GROUP("Polylib Sources" FILES ${PolylibSources})
 SOURCE_GROUP("Interpreter Headers" FILES ${InterpreterHeaders})
 SOURCE_GROUP("Interpreter Sources" FILES ${InterpreterSources})
 
+SOURCE_GROUP("Precompiled Headers" FILES ${PrecompiledHeaders})
+
 SET(LibUtilityHeaders
 	${Memory}
 	${BasicUtils}
@@ -166,6 +172,7 @@ SET(LibUtilityHeaders
 	${LinearAlgebraHeaders}
 	${BasicConstHeaders}
 	${InterpreterHeaders}
+	${PrecompiledHeaders}
 )
 
 SET(LibUtilitySources

@@ -33,7 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define BOOST_TEST_MODULE LibUtilityUnitTests test
+#include "LibUtilitiesUnitTestsPrecompiledHeader.h"
+
 #include <boost/test/unit_test.hpp>
 
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>

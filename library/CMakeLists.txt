@@ -19,6 +19,7 @@ SET(USE_NEKTAR_MEMORY_POOLS ON CACHE BOOL "Use memory pools to accelerate memory
 SET(USE_BLAS_LAPACK ON CACHE BOOL "Use Blas and lapack routines.")
 SET(USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
 SET(NEKTAR_FULL_DEBUG OFF CACHE BOOL "Enable Full Debugging.")
+SET(NEKTAR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Enable the use of precompiled headers.")
 
 SET(USE_EXPRESSION_TEMPLATES ON CACHE BOOL "")
 
@@ -54,11 +55,6 @@ SET(NEKTAR_BIN_DIR bin)
 SET(NEKTAR_LIB_DIR lib)
 SET(NEKTAR_INCLUDE_DIR include)
 
-MACRO(SET_PRECOMPILED_HEADER headerName sourceName)
-    IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
-    ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
-ENDMACRO(SET_PRECOMPILED_HEADER headerName sourceName)
-
 MACRO(SET_COMMON_PROPERTIES name)
 	SET_TARGET_PROPERTIES(${name} PROPERTIES VERSION ${NEKTAR_VERSION})
 
@@ -89,10 +85,25 @@ MACRO(SET_COMMON_PROPERTIES name)
 
 ENDMACRO(SET_COMMON_PROPERTIES name)
 
+MACRO(SETUP_PRECOMPILED_HEADERS sourceFiles precompiledHeader)
+    IF( NEKTAR_USE_PRECOMPILED_HEADERS )
+        IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+            # /Yu"stdafx.h" 
+            #MESSAGE(${${precompiledHeader}})
+	    #MESSAGE(${${sourceFiles}})
+            SET_SOURCE_FILES_PROPERTIES(${${sourceFiles}} PROPERTIES COMPILE_FLAGS "/Yu\"${${precompiledHeader}}\"")
+            LIST(GET ${sourceFiles} 0 OUTVAR)
+            #MESSAGE(${OUTVAR})
+            SET_SOURCE_FILES_PROPERTIES(${OUTVAR} PROPERTIES COMPILE_FLAGS "/Yc\"${${precompiledHeader}}\"")
+            
+        ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+    ENDIF( NEKTAR_USE_PRECOMPILED_HEADERS )
+ENDMACRO(SETUP_PRECOMPILED_HEADERS sourceFiles precompiledHeader)
+
 MACRO(ADD_NEKTAR_LIBRARY name type)
     ADD_LIBRARY(${name} ${type} ${ARGN})
 
-	SET_COMMON_PROPERTIES(${name})
+    SET_COMMON_PROPERTIES(${name})
     
     INSTALL(TARGETS ${name} RUNTIME DESTINATION ${NEKTAR_BIN_DIR} OPTIONAL
 		          ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL
@@ -157,10 +168,15 @@ IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
 	ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
 
-MACRO(ADD_NEKTAR_EXECUTABLE name sources  )
-    ADD_EXECUTABLE(${name} ${${sources}} ${${ARGN}} )
-
-	SET_COMMON_PROPERTIES(${name})
+MACRO(ADD_NEKTAR_EXECUTABLE name sources)
+    IF( ${ARGC} LESS 3 )
+        ADD_EXECUTABLE(${name} ${${sources}})
+    ELSE( ${ARGC} LESS 3 )
+        ADD_EXECUTABLE(${name} ${${sources}} ${${ARGV2}})
+    ENDIF( ${ARGC} LESS 3)
+	
+    SET_COMMON_PROPERTIES(${name})
+    
     IF( USE_MKL AND MKL_FOUND )
     #        MESSAGE("Using MKL")
             TARGET_LINK_LIBRARIES(${name}

@@ -52,10 +52,10 @@ namespace Nektar
     ////////////////////////////////////////////////////////////////////////////////////
     // Multiplication
     ////////////////////////////////////////////////////////////////////////////////////
-    template<typename ResultDataType, typename DataType, typename LhsDataType, typename LhsStorageType, typename LhsMatrixType>
+    template<typename ResultDataType, typename LhsDataType, typename LhsStorageType, typename LhsMatrixType>
     void NekMultiply(NekMatrix<ResultDataType, LhsStorageType, StandardMatrixTag>& result,
                      const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>& lhs,
-                     const DataType& rhs)
+                     const ResultDataType& rhs)
     {
         // TODO - optimize for the different matrix types.
         for(unsigned int i = 0; i < lhs.GetRows(); ++i)
@@ -78,9 +78,9 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, typename RhsDataType, typename RhsStorageType, typename RhsMatrixType, typename ResultDataType>
+    template<typename RhsDataType, typename RhsStorageType, typename RhsMatrixType, typename ResultDataType>
     void NekMultiply(NekMatrix<ResultDataType, RhsStorageType, StandardMatrixTag>& result,
-                     const DataType& rhs,
+                     const ResultDataType& rhs,
                      const NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>& lhs)
                      
     {
@@ -124,20 +124,7 @@ namespace Nektar
             }
         }
     }
-    
-    template<typename LhsDataType, typename RhsDataType,
-             typename LhsMatrixType, typename RhsMatrixType,
-             typename LhsStorageType, typename RhsStorageType>
-    NekMatrix<typename NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>::NumberType, FullMatrixTag, StandardMatrixTag> 
-    NekMultiply(const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>& lhs,
-                const NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>& rhs)
-    {
-        typedef typename NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>::NumberType NumberType;
-        NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> result(lhs.GetRows(), rhs.GetColumns());
-        NekMultiply(result, lhs, rhs);
-        return result;
-    }
-    
+        
     #ifdef NEKTAR_USING_BLAS    
     /// \brief Floating point specialization when blas is in use.
     ///
@@ -159,6 +146,20 @@ namespace Nektar
                      const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs);
                      
     #endif //NEKTAR_USING_BLAS
+
+	template<typename LhsDataType, typename RhsDataType,
+             typename LhsMatrixType, typename RhsMatrixType,
+             typename LhsStorageType, typename RhsStorageType>
+    NekMatrix<typename NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>::NumberType, FullMatrixTag, StandardMatrixTag> 
+    NekMultiply(const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>& lhs,
+                const NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>& rhs)
+    {
+        typedef typename NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>::NumberType NumberType;
+        NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> result(lhs.GetRows(), rhs.GetColumns());
+        NekMultiply(result, lhs, rhs);
+        return result;
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Matrix-Vector multiplication

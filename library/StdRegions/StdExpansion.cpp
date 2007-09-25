@@ -480,8 +480,8 @@ namespace Nektar
             // this line should not be needed
             //Vmath::Vcopy(tbasis0.GetNumPoints(),&out[0],1,&to[0],1);
 
-            Blas::Dgemv('T', fbasis0.GetNumPoints(), tbasis0.GetNumPoints(), 
-                1.0, I0->GetPtr().get(), fbasis0.GetNumPoints(), 
+            Blas::Dgemv('N', tbasis0.GetNumPoints(), fbasis0.GetNumPoints(), 
+                1.0, I0->GetPtr().get(), tbasis0.GetNumPoints(), 
                 from, 1, 0.0, to, 1);
         }
 
@@ -500,6 +500,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.51  2007/08/29 23:26:48  jfrazier
+* Created non-static manager that shares data across instances.
+*
 * Revision 1.50  2007/07/27 16:56:50  jfrazier
 * Changed manager to static.
 *

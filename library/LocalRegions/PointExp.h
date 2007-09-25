@@ -70,6 +70,11 @@ namespace Nektar
             {
                 m_geom->GetCoords(coords);
             }
+
+            inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const
+            {
+                return m_geom;
+            }
     protected:
             NekDouble      m_value; //!< Array containing expansion coefficients
         SpatialDomains::VertexComponentSharedPtr m_geom;

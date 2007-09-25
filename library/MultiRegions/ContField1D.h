@@ -58,13 +58,17 @@ namespace Nektar
                 SpatialDomains::BoundaryConditions &bcs, 
                 const int bc_loc = 0);
 
-            ContField1D(const LibUtilities::BasisKey &Ba, 
-                const SpatialDomains::Composite &cmps,
+            ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+                SpatialDomains::BoundaryConditions &bcs, 
+                const std::string variable);
+
+            ContField1D(const LibUtilities::BasisKey &Ba,
+                const SpatialDomains::MeshGraph1D &graph1D,
                 SpatialDomains::BoundaryConditions &bcs,
                 const int bc_loc = 0);
 
-            ContField1D(const LibUtilities::BasisKey &Ba, 
-                const SpatialDomains::Composite &cmps,
+            ContField1D(const LibUtilities::BasisKey &Ba,
+                const SpatialDomains::MeshGraph1D &graph1D,
                 SpatialDomains::BoundaryConditions &bcs,
                 const std::string variable);
 
@@ -87,6 +91,7 @@ namespace Nektar
             std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
 
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
+            GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey);
             void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs);
 
             void GenerateField1D(SpatialDomains::BoundaryConditions &bcs, 

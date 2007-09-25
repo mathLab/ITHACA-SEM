@@ -300,10 +300,11 @@ namespace Nektar
                 }
 
                 // define derivative basis 
-                Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
+                Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
                     numPoints,m_bdata.data(),numPoints,0.0,m_dbdata.data(),
                     numPoints);
                 break;
+
             case eModified_B: case eModified_C:
                 {
 
@@ -531,6 +532,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.20  2007/07/22 23:03:26  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.19  2007/07/20 00:28:24  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

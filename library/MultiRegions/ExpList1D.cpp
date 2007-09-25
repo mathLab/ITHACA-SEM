@@ -40,14 +40,14 @@ namespace Nektar
     namespace MultiRegions
     {
     
-    ExpList1D::ExpList1D()
-    {
-    }
-    
-    ExpList1D::~ExpList1D()
-    {
-    }
-    
+        ExpList1D::ExpList1D()
+        {
+        }
+        
+        ExpList1D::~ExpList1D()
+        {
+        }
+        
         ExpList1D::ExpList1D(const ExpList1D &In):
             ExpList(In)
         {
@@ -55,45 +55,101 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
-    ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba, 
-                             const SpatialDomains::Composite &cmps)
-    {
-            int i;
+        ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba,
+                             const SpatialDomains::MeshGraph1D &graph1D)
+        {
+            int i,j;
             int nel;
-        LocalRegions::SegExpSharedPtr seg;
+            LocalRegions::SegExpSharedPtr seg;
+            SpatialDomains::Composite comp;
             
-            // The actual solution domain is stored in the first composite (index 0)
-            nel = cmps->size();
+            SpatialDomains::CompositeVector domain = (graph1D.GetDomain());
             
-        m_ncoeffs = nel*Ba.GetNumModes();
-        m_npoints = nel*Ba.GetNumPoints();
-        
-        m_transState = eNotSet; 
-        m_physState  = false;
+            m_ncoeffs = 0;
+            m_npoints = 0;
             
-            for(i = 0; i < nel; ++i)
+            m_transState = eNotSet; 
+            m_physState  = false;
+            
+            for(i = 0; i < domain.size(); ++i)
             {
-                SpatialDomains::SegGeomSharedPtr SegmentGeom;
+                comp = domain[i];
                 
-                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*cmps)[i]))
+                for(j = 0; j < comp->size(); ++j)
                 {
-                    seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba, SegmentGeom);
-                    (*m_exp).push_back(seg);
+                    SpatialDomains::SegGeomSharedPtr SegmentGeom;
+                    
+                    if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*comp)[j]))
+                    {
+                        seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba,SegmentGeom);
+                        (*m_exp).push_back(seg);
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a SegGeom failed");
+                    }  
                 }
-                else
-                {
-                    ASSERTL0(false,"dynamic cast to a SegGeom failed");
-                }   
                 
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-                m_phys   = Array<OneD, NekDouble>(m_npoints);
-            }
+                m_ncoeffs += (comp->size())*Ba.GetNumModes();
+                m_npoints += (comp->size())*Ba.GetNumPoints();
+            } 
+            
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
+            
+        }
+
+        ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D)
+        {
+            int i,j;
+            int nel;
+            LocalRegions::SegExpSharedPtr seg;
+            SpatialDomains::Composite comp;
+            
+            SpatialDomains::CompositeVector domain = (graph1D.GetDomain());
+            
+            m_ncoeffs = 0;
+            m_npoints = 0;
+            
+            m_transState = eNotSet; 
+            m_physState  = false;
+            
+            for(i = 0; i < domain.size(); ++i)
+            {
+                comp = domain[i];
+                LibUtilities::BasisKey bkey = graph1D.GetBasisKey(comp,0);
+                
+                for(j = 0; j < comp->size(); ++j)
+                {
+                    SpatialDomains::SegGeomSharedPtr SegmentGeom;
+                    
+                    if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*comp)[j]))
+                    {
+                        seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
+                        (*m_exp).push_back(seg);
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a SegGeom failed");
+                    }  
+                }
+                
+                m_ncoeffs += (comp->size())*bkey.GetNumModes();
+                m_npoints += (comp->size())*bkey.GetNumPoints();
+            } 
+            
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
+            
         }
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.19  2007/07/22 23:04:20  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.18  2007/07/20 02:04:12  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

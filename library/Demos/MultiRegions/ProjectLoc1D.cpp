@@ -71,13 +71,12 @@ int main(int argc, char *argv[])
     // read in mesh
     string  in(infile);
     SpatialDomains::MeshGraph1D graph1D;
-    graph1D.Read(in);
+    graph1D.ReadGeometry(in);
     
     // Define Expansion
     const LibUtilities::PointsKey Pkey(nq,Qtype);
     const LibUtilities::BasisKey Bkey(btype,order,Pkey);
-    SpatialDomains::Composite domain = graph1D.GetDomain();
-    Exp = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(Bkey,domain);
+    Exp = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(Bkey,graph1D);
     
     //----------------------------------------------
     // Define solution to be projected 

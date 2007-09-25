@@ -41,36 +41,45 @@ namespace Nektar
     {
         LocalToGlobalMap1D::LocalToGlobalMap1D(const int loclen, 
                                                const StdRegions::StdExpansionVector &locexp, 
-                                               const SpatialDomains::Composite &cmps)
+                                               const SpatialDomains::CompositeVector &domain)
         {
-            int i,j,gid,cnt;
+            int i,j,k;
+            int gid = 0;
+            int cnt = 0;
+            int cnt2 = 0;
             
             // set up Local to Continuous mapping 
             StdRegions::StdExpMap vmap;
+            SpatialDomains::Composite comp;
+            SpatialDomains::SegGeomSharedPtr SegmentGeom;
             
             m_totLocLen    = loclen;        
             m_locToContMap = Array<OneD, int>(m_totLocLen,-1);
             
             // set up simple map based on vertex and edge id's
-            for(i = cnt = gid = 0; i < locexp.size(); ++i)
+            for(i = 0; i < domain.size(); ++i)
             {
-                locexp[i]->MapTo(StdRegions::eForwards,vmap);
-                
-                SpatialDomains::SegGeomSharedPtr SegmentGeom;
-                
-                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*cmps)[i]))
+                comp = domain[i];
+
+                for(j = 0; j < comp->size(); ++j)
                 {
-                    for(j = 0; j < 2; ++j)
+                    locexp[cnt2]->MapTo(StdRegions::eForwards,vmap);
+                
+                    if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*comp)[j]))
                     {
-                        m_locToContMap[cnt + vmap[j]] =  SegmentGeom->GetVid(j);
-                        gid = max(gid,m_locToContMap[cnt + vmap[j]]);
+                        for(k = 0; k < 2; ++k)
+                        {
+                            m_locToContMap[cnt + vmap[k]] =  SegmentGeom->GetVid(k);
+                            gid = max(gid,m_locToContMap[cnt + vmap[k]]);
+                        }
                     }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a SegGeom failed");
+                    }
+                    cnt += locexp[cnt2]->GetNcoeffs();
+                    ++cnt2;
                 }
-                else
-                {
-                    ASSERTL0(false,"dynamic cast to a SegGeom failed");
-                }
-                cnt += locexp[i]->GetNcoeffs();
             }
             
             for(i = 0; i < m_totLocLen; ++i)
@@ -88,77 +97,39 @@ namespace Nektar
         {
         }
         
-        void LocalToGlobalMap1D::ResetMapping(const int NumDirichlet, 
-                                              SpatialDomains::BoundaryConditions &bcs,
-                                              const std::string variable)
+        void LocalToGlobalMap1D::ResetMapping(const int NumDirichlet, const int NumNeumann, const int NumRobin,
+                                              const LocalRegions::PointExpVector &bndCond)
         {
             int i,j,cnt;
-            int NumWeakBC;
             int nbnd;
-            m_numDirichletBCs = NumDirichlet;  
-        
-            // Find the old (before the reset of the mapping) global ID of the vertices where the BC are imposed
-            // The Dir BC are listed before the others
-            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
-            
-            nbnd = bregions.size();
-            NumWeakBC = nbnd - NumDirichlet;
+            m_numDirichletBCs = NumDirichlet; 
+            m_numNeumannBCs = NumNeumann; 
+            m_numRobinBCs = NumRobin; 
 
-            Array<OneD, int> bcGlobOldID(nbnd);   
+            nbnd = bndCond.size();
+
+            Array<OneD, int> oldGlobalID(nbnd);   
 
             for(i = cnt = 0; i < nbnd; ++i)
             {
-                if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                {
-                    SpatialDomains::VertexComponentSharedPtr vert;
-                    
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
-                    {
-                        bcGlobOldID[cnt++] = vert->GetVid(); 
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a vertex failed");
-                    }        
-                }                     
-            }
+                SpatialDomains::VertexComponentSharedPtr vert = (bndCond[i])->GetVertex();
+                oldGlobalID[cnt++] = vert->GetVid(); 
+            } 
 
-            for(i = 0; i < nbnd; ++i)
-            {
-                if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+            // Find the index of the BCs entry in the mapping array
+            Array<OneD, int> LocalID(nbnd);
+            
+            for(i = 0; i < m_totLocLen; ++i)
+            {        
+                for(j = 0; j<nbnd; ++j)
                 {
-                    SpatialDomains::VertexComponentSharedPtr vert;
-                    
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                    if(m_locToContMap[i] == oldGlobalID[j])
                     {
-                        bcGlobOldID[cnt++] = vert->GetVid(); 
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a vertex failed");
-                    }        
-                }                     
-            }
-
-            // Find the index of the weak BCs entry in the mapping array
-            // Also find the corresponding sign of this weak BC's
-            Array<OneD, int> weakBCindex;
-            if(NumWeakBC)
-            {
-                weakBCindex = Array<OneD, int>(NumWeakBC); 
-                for(i = 0; i < m_totLocLen; ++i)
-                {        
-                    for(j = NumDirichlet; j<nbnd; ++j)
-                    {
-                        if(m_locToContMap[i] == bcGlobOldID[j])
-                        {
-                            weakBCindex[j-NumDirichlet] = i;
+                            LocalID[j] = i;
                             break;
-                        }
                     }
                 }
-            }
+            }      
 
             // Reset the mapping   
             if(NumDirichlet)
@@ -171,7 +142,7 @@ namespace Nektar
                     incr=0;
                     for(j = 0; j<NumDirichlet; ++j)
                     {
-                        if(m_locToContMap[i] == bcGlobOldID[j])
+                        if(m_locToContMap[i] == oldGlobalID[j])
                         {
                             m_locToContMap[i] = j;
                             check=false;
@@ -182,24 +153,22 @@ namespace Nektar
                     {
                         for(j = 0; j<NumDirichlet; ++j)
                         {
-                            if(m_locToContMap[i] < bcGlobOldID[j])
+                            if(m_locToContMap[i] < oldGlobalID[j])
                             {
                                 ++incr;
                             }
                         }
-                        m_locToContMap[i]=m_locToContMap[i]+incr;
+                        m_locToContMap[i]+=incr;
                     }
                 }    
             } 
-
-            // Store the new global id of the vertices where the weak BC are imposed
-            if(NumWeakBC)
+            
+            // Store the new global id of the vertices where the BC are imposed
+            
+            m_bndCondGlobalID = Array<OneD, int>(nbnd);   
+            for(i = 0; i < nbnd; ++i)
             {
-                m_weakBCglobID = Array<OneD, int>(NumWeakBC);   
-                for(i = 0; i < (NumWeakBC); ++i)
-                {
-                    m_weakBCglobID[i] = m_locToContMap[ weakBCindex[i] ];
-                }
+                m_bndCondGlobalID[i] = m_locToContMap[ LocalID[i] ];
             }
         }
     }
@@ -207,6 +176,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.15  2007/08/13 14:36:36  pvos
+* Neumann BC update
+*
 * Revision 1.14  2007/08/13 11:09:42  pvos
 * Implementation of Neumann BC
 *

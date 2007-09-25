@@ -59,12 +59,10 @@ namespace Nektar
 
             ExpList1D(const ExpList1D &In);
 
-            //        ExpList1D(const LibUtilities::BasisKey &Ba, 
-            //      const SpatialDomains::MeshGraph1D &graph1D);
-
             ExpList1D(const LibUtilities::BasisKey &Ba, 
-                const SpatialDomains::Composite &cmps
-                );
+                const SpatialDomains::MeshGraph1D &graph1D);
+
+            ExpList1D(SpatialDomains::MeshGraph1D &graph1D);
 
             ~ExpList1D();
 
@@ -93,6 +91,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.h,v $
+* Revision 1.16  2007/09/03 19:58:31  jfrazier
+* Formatting.
+*
 * Revision 1.15  2007/07/22 23:04:20  bnelson
 * Backed out Nektar::ptr.
 *

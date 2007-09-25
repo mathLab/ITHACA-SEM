@@ -38,38 +38,38 @@
 
 #include <MultiRegions/LocalToGlobalMap.h>
 #include <SpatialDomains/MeshGraph1D.h>
+#include <LocalRegions/PointExp.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-    
+        
     class LocalToGlobalMap1D: 
-            public LocalToGlobalMap
-    {
+        public LocalToGlobalMap
+        {
         public:
             LocalToGlobalMap1D(){};
-        LocalToGlobalMap1D(const int loclen, 
+            LocalToGlobalMap1D(const int loclen, 
                                const StdRegions::StdExpansionVector &locexp, 
-                               const SpatialDomains::Composite &cmps);
-
+                               const SpatialDomains::CompositeVector &domain);
+            
             virtual ~LocalToGlobalMap1D();
-
-            void ResetMapping(const int NumDirichlet, 
-                              SpatialDomains::BoundaryConditions &bcs,
-                              const std::string variable);
-
-            inline const ConstArray<OneD, int> &GetWeakBCglobID() const 
+            
+            void ResetMapping(const int NumDirichlet, const int NumRobin, 
+                              const int NumNeumann, const LocalRegions::PointExpVector &bndCond);
+            
+            inline const ConstArray<OneD, int> &GetBoundCondGlobID() const 
             {
-                return m_weakBCglobID;
+                return m_bndCondGlobalID;
             }
-        
+            
         protected:
-        
+            Array<OneD,int> m_bndCondGlobalID;
+            
         private:
-            Array<OneD,int> m_weakBCglobID;
-    };
-    
+          
+        };        
     } // end of namespace
 } // end of namespace
 
@@ -77,6 +77,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.12  2007/08/13 14:36:36  pvos
+/** Neumann BC update
+/**
 /** Revision 1.11  2007/08/13 11:09:42  pvos
 /** Implementation of Neumann BC
 /**

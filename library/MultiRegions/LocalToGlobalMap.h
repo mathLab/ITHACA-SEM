@@ -49,54 +49,65 @@ namespace Nektar
     
     class LocalToGlobalMap
     {
-        public:
-            LocalToGlobalMap();
+    public:
+        LocalToGlobalMap();
         LocalToGlobalMap(const int totdata, Array<OneD,int> &map);
         
-            ~LocalToGlobalMap();
+        ~LocalToGlobalMap();
         
         inline int GetMap(const int i) const
         {
-        return m_locToContMap[i];
+            return m_locToContMap[i];
         }
-
+        
         inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
-                                    Array<OneD, NekDouble> &cont)
+                                Array<OneD, NekDouble> &cont)
         {
-                Vmath::Scatr(m_totLocLen, &loc[0],&m_locToContMap[0],&cont[0]);
-            }                
-
+            Vmath::Scatr(m_totLocLen, &loc[0],&m_locToContMap[0],&cont[0]);
+        }                
         
         inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
-                                    Array<OneD, NekDouble> &loc)
+                                Array<OneD, NekDouble> &loc)
         {
-                Vmath::Gathr(m_totLocLen,&cont[0],&m_locToContMap[0], &loc[0]);
+            Vmath::Gathr(m_totLocLen,&cont[0],&m_locToContMap[0], &loc[0]);
         }
         
         inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
-                                 Array<OneD, NekDouble> &cont)
+                             Array<OneD, NekDouble> &cont)
         {
-        Vmath::Zero(m_totGloLen,&cont[0],1);
-
-                Vmath::Assmb(m_totLocLen,&loc[0],&m_locToContMap[0],&cont[0]);
+            Vmath::Zero(m_totGloLen,&cont[0],1);
+            
+            Vmath::Assmb(m_totLocLen,&loc[0],&m_locToContMap[0],&cont[0]);
         }
         
         inline int GetTotGloLen()
         {
-        return m_totGloLen;
+            return m_totGloLen;
         }
-           
-            inline int GetNumDirichletBCs()
-            {
-                return m_numDirichletBCs;
-            }
+        
+        inline int GetNumDirichletBCs()
+        {
+            return m_numDirichletBCs;
+        }
 
-        protected:
+        inline int GetNumNeumannBCs()
+        {
+            return m_numNeumannBCs;
+        }
+
+        inline int GetNumRobinBCs()
+        {
+            return m_numRobinBCs;
+        }
+        
+    protected:
         int             m_totLocLen;    //< length of local dofs
         int             m_totGloLen;    //< length of global dofs
-            int             m_numDirichletBCs;  //< number of Dirichlet conditions 
-            Array<OneD,int> m_locToContMap; //< Vector of boost pointers to integer maps
-        private:
+        int             m_numDirichletBCs;  //< number of Dirichlet conditions 
+        int             m_numNeumannBCs;  //< number of Neumann conditions 
+        int             m_numRobinBCs;  //< number of Robin conditions 
+        Array<OneD,int> m_locToContMap; //< Vector of boost pointers to integer maps
+    private:
     };
     
     } // end of namespace
@@ -106,6 +117,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.10  2007/07/22 23:04:21  bnelson
+/** Backed out Nektar::ptr.
+/**
 /** Revision 1.9  2007/07/20 02:04:13  bnelson
 /** Replaced boost::shared_ptr with Nektar::ptr
 /**

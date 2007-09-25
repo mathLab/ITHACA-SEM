@@ -1,13 +1,9 @@
 #include <cstdio>
 #include <cstdlib>
 
-//#include <MultiRegions/ContExpList1D.h>
 #include <MultiRegions/ContField1D.h>
 
 using namespace Nektar;
-
-// This routine projects a which has energy in all mdoes of the
-// expansions and report an error.
 
 int main(int argc, char *argv[])
 {
@@ -27,7 +23,8 @@ int main(int argc, char *argv[])
     // Read in mesh from input file
     string meshfile(argv[1]);
     SpatialDomains::MeshGraph1D graph1D; 
-    graph1D.Read(meshfile);
+    graph1D.ReadGeometry(meshfile);
+    graph1D.ReadExpansions(meshfile);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -40,11 +37,17 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
-    LibUtilities::BasisKey bkey = bcs.GetBasisKey(graph1D.GetDomain());
+    const SpatialDomains::CompositeVector domain = (graph1D.GetDomain());
     cout << "Solving 1D Helmholtz:"  << endl; 
     cout << "         Lambda     : " << lambda << endl; 
-    cout << "         Expansion  : " << LibUtilities::BasisTypeMap[bkey.GetBasisType()] << endl;
-    cout << "         No. modes  : " << bkey.GetNumModes() << endl << endl;
+    for(i = 0; i < domain.size(); ++i)
+    {
+        LibUtilities::BasisKey bkey = graph1D.GetBasisKey(domain[i],0);
+        cout << "      Composite " << i << "   : " << endl;
+        cout << "         Expansion  : " << LibUtilities::BasisTypeMap[bkey.GetBasisType()] << endl;
+        cout << "         No. modes  : " << bkey.GetNumModes() << endl;
+    }
+    cout << endl;
     //----------------------------------------------
    
     //----------------------------------------------

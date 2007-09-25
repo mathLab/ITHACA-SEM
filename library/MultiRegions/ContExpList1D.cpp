@@ -57,22 +57,43 @@ namespace Nektar
         {
             m_contCoeffs = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
+
+        ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba,
+                                    const SpatialDomains::MeshGraph1D &graph1D):
+	    ExpList1D(Ba,graph1D)
+	{   
+            ASSERTL1((Ba.GetBasisType() == LibUtilities::eModified_A)
+                     ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
+                     "Expansion not of an boundary-interior type");
+            
+            // setup Matrix Map
+            m_globalMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
+            
+	    // setup mapping array 
+	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph1D.GetDomain());
+            
+            m_contNcoeffs = m_locToGloMap->GetTotGloLen();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+	}
         
-        ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba, 
-                                     const SpatialDomains::Composite &cmps):
-	    ExpList1D(Ba,cmps)
+        ContExpList1D::ContExpList1D(SpatialDomains::MeshGraph1D &graph1D):
+	    ExpList1D(graph1D)
 	{
-	    
-	    ASSERTL1((Ba.GetBasisType() == LibUtilities::eModified_A)
-		     ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
-		     "Expansion not of an boundary-interior type");
-	    
+
+            SpatialDomains::CompositeVector domain = (graph1D.GetDomain());
+
+            for(int i = 0; i < domain.size(); ++i)
+            {	    
+                ASSERTL1(((graph1D.GetBasisKey(domain[i],0)).GetBasisType() == LibUtilities::eModified_A)
+                         ||((graph1D.GetBasisKey(domain[i],0)).GetBasisType() == LibUtilities::eGLL_Lagrange),
+                         "Expansion not of an boundary-interior type");
+	    }
 
             // setup Matrix Map
             m_globalMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-
+            
 	    // setup mapping array 
-	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,cmps);
+	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,domain);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -111,7 +132,7 @@ namespace Nektar
            
             if(matrixIter == m_globalMat->end())
             {
-                mass_matrix = GenGlobalLinSys(key,0);
+                mass_matrix = GenGlobalLinSys(key);
                 (*m_globalMat)[key] = mass_matrix;
             }
             else
@@ -136,7 +157,7 @@ namespace Nektar
            
             if(matrixIter == m_globalMat->end())
             {
-                helm_matrix = GenGlobalLinSys(key,0);
+                helm_matrix = GenGlobalLinSys(key);
                 (*m_globalMat)[key] = helm_matrix;
             }
             else
@@ -163,7 +184,7 @@ namespace Nektar
 	}
 	
 	
-	GlobalLinSysSharedPtr ContExpList1D::GenGlobalLinSys(const GlobalLinSysKey &mkey, const int NumDirBCs)
+	GlobalLinSysSharedPtr ContExpList1D::GenGlobalLinSys(const GlobalLinSysKey &mkey)
 	{
             int i,j,n,gid1,gid2,loc_lda,cnt;
             DNekScalMatSharedPtr loc_mat;
@@ -171,36 +192,28 @@ namespace Nektar
             DNekLinSysSharedPtr   linsys;
             GlobalLinSysSharedPtr returnlinsys;
             
-            unsigned int rows = m_contNcoeffs - NumDirBCs;
-            unsigned int cols = m_contNcoeffs - NumDirBCs;
             NekDouble zero = 0.0;
-            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);
+            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs,zero);
             
             // fill global matrix 
             for(n = cnt = 0; n < (*m_exp).size(); ++n)
             {
                 LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
-                                          (*m_exp)[n]->DetShapeType(),
-                                         *(*m_exp)[n],mkey.GetScaleFactor());
+                                               (*m_exp)[n]->DetShapeType(),
+                                               *(*m_exp)[n],mkey.GetScaleFactor());
                 
                 loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
                 loc_lda = loc_mat->GetColumns();
-		    
+		
                 for(i = 0; i < loc_lda; ++i)
                 {
-                    gid1 = m_locToGloMap->GetMap(cnt + i);
-                    if(gid1 >= NumDirBCs)
+                    gid1 = m_locToGloMap->GetMap(cnt + i);                    
+                    for(j = 0; j < loc_lda; ++j)
                     {
-                        for(j = 0; j < loc_lda; ++j)
-                        {
-                            gid2 = m_locToGloMap->GetMap(cnt + j);
-                            if(gid2 >= NumDirBCs)
-                            {
-                                (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                    += (*loc_mat)(i,j);
-                            }
-                        }		
-                    }
+                        gid2 = m_locToGloMap->GetMap(cnt + j);                        
+                        (*Gmat)(gid1,gid2) += (*loc_mat)(i,j);                          
+                    }		
+                    
                 }
                 cnt += (*m_exp)[n]->GetNcoeffs();
             }
@@ -216,6 +229,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.22  2007/08/11 23:43:25  sherwin
+* Expansion bases reader part for Helmholtz1D
+*
 * Revision 1.21  2007/08/02 12:36:18  sherwin
 * ...
 *
@@ -239,7 +255,7 @@ namespace Nektar
 *
 * Revision 1.14  2007/07/13 09:02:23  sherwin
 * Mods for Helmholtz solver
-*
+\*
 * Revision 1.13  2007/07/10 08:54:29  pvos
 * Updated ContField1D constructor
 *

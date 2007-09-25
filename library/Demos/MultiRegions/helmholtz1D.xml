@@ -14,12 +14,12 @@
 
     <VERTEX>
         <!-- Always must have four values per entry. -->
-        <V ID="0"> 0.0 1.0 0.0 </V>
+        <V ID="0"> 0.1 1.0 0.0 </V>
         <V ID="1"> 1.0 1.0 0.0 </V>
         <V ID="2"> 2.0 1.0 0.0 </V>
         <V ID="3"> 3.0 1.0 0.0 </V>
         <V ID="4"> 4.0 1.0 0.0 </V>
-        <V ID="5"> 5.0 1.0 0.0 </V>
+        <V ID="5"> 4.9 1.0 0.0 </V>
     </VERTEX>
     
     <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, R - prism, H - hex -->
@@ -35,13 +35,19 @@
     
     <!-- V - vertex, S - Segment, E - edge, F - face -->
     <COMPOSITE>
-        <C ID="0"> S[0-4] </C>
+        <C ID="0"> S[0-1] </C>
         <C ID="1"> V[0]   </C>
         <C ID="2"> V[5]   </C>
+        <C ID="3"> S[2-4] </C>
     </COMPOSITE>
 
-    <DOMAIN> C[0] </DOMAIN>
+    <DOMAIN> C[0,3] </DOMAIN>
 </GEOMETRY>
+
+<EXPANSIONS>
+  <E COMPOSITE="C[0]" NUMMODES="7" TYPE="MODIFIED" />
+  <E COMPOSITE="C[3]" NUMMODES="5" TYPE="MODIFIED" />
+</EXPANSIONS>
 
 <CONDITIONS>
 
@@ -64,14 +70,6 @@
             <B ID="1"> C[2] </B>
         </BOUNDARYREGIONS>
 
-        <!-- We can revisit this since the syntax is not complete.
-             We will allow domain, composite, or boundary.-->
-        <EXPANSIONTYPE>
-            Domain = eModifiedA, NumModes = N (or f(x,y)), eGLL,
-            Ptype = (order + 1)
-            BoundaryRegion[0-1] = eLagrangeGLL, eGLR
-        </EXPANSIONTYPE>
-
         <!--The region numbers below correspond to the regions specified in the
         BoundaryRegion definition above.-->
         <BOUNDARYCONDITIONS>
@@ -79,7 +77,7 @@
                 <D VAR="u" VALUE="cos(PI*x)" />
             </REGION>
             <REGION REF="1">
-                <D VAR="u" VALUE="cos(PI*x)" />
+                <N VAR="u" VALUE="-PI*sin(PI*x)" />
             </REGION>
         </BOUNDARYCONDITIONS>
         

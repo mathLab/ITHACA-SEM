@@ -49,10 +49,9 @@ namespace Nektar
         {
         public:
             ContExpList1D();
-            //ContExpList1D(const LibUtilities::BasisKey &Ba, 
-            //const SpatialDomains::MeshGraph1D &graph1D);
-            ContExpList1D(const LibUtilities::BasisKey &Ba, 
-                const SpatialDomains::Composite &cmps);
+            ContExpList1D(const LibUtilities::BasisKey &Ba,
+                const SpatialDomains::MeshGraph1D &graph1D);
+            ContExpList1D(SpatialDomains::MeshGraph1D &graph1D);
             ContExpList1D(const ContExpList1D &In);
             ~ContExpList1D();
 
@@ -109,8 +108,7 @@ namespace Nektar
 
             GlobalLinSysMapShPtr  m_globalMat;
 
-            GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey,
-                const int NumDirBCs);
+            GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey);
 
         private:
 
@@ -128,6 +126,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.22  2007/09/03 19:58:30  jfrazier
+* Formatting.
+*
 * Revision 1.21  2007/07/26 00:07:50  bnelson
 * Fixed linux compiler errors.
 *

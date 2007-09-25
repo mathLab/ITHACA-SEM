@@ -297,10 +297,10 @@ namespace Polylib {
                 for (j = 0; j < np; j++){
 
                     if (i != j) 
-                        D[i*np+j] = pd[i]/(pd[j]*(z[i]-z[j]));
+                        D[i*np+j] = pd[j]/(pd[i]*(z[j]-z[i]));
                     else    
-                        D[i*np+j] = (alpha - beta + (alpha + beta + two)*z[i])/
-                        (two*(one - z[i]*z[i]));
+                        D[i*np+j] = (alpha - beta + (alpha + beta + two)*z[j])/
+                        (two*(one - z[j]*z[j]));
                 }
             }
             free(pd);
@@ -706,7 +706,7 @@ namespace Polylib {
                 for (j = 0; j < mz; j++)
                 {
                     zp = zm[j];
-                    im [i*nz+j] = hgrjp(i, zp, zgrj, nz, alpha, beta);
+                    im [i*mz+j] = hgrjp(i, zp, zgrj, nz, alpha, beta);
                 }
             }
 
@@ -737,7 +737,7 @@ namespace Polylib {
             for (j = 0; j < mz; j++)
             {
                 zp = zm[j];
-                im[i*nz+j] = hglj(i, zp, zglj, nz, alpha, beta);
+                im[i*mz+j] = hglj(i, zp, zglj, nz, alpha, beta);
             }
         }
 

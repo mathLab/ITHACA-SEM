@@ -191,7 +191,6 @@ namespace Nektar
 
             vertex = vertex->NextSiblingElement("V");
         }
-
     }
 
     // \brief Read the expansions given the XML file path.
@@ -222,6 +221,9 @@ namespace Nektar
             /// Expansiontypes will contain composite, nummodes, and expansiontype
             /// (eModified, or eOrthogonal)
 
+            // Clear the default linear expansion over the domain.
+#pragma message("Todo:  validate that the entire domain is specified")
+            m_ExpansionCollection.clear();
             TiXmlElement *expansion = expansionTypes->FirstChildElement("E");
 
             while (expansion)
@@ -426,6 +428,13 @@ namespace Nektar
         // Parse the composites into a list.
         GetCompositeList(indxStr, m_Domain);
         ASSERTL0(!m_Domain.empty(), (std::string("Unable to obtain domain's referenced composite: ") + indxStr).c_str());
+
+        // NumModes = 2, default to linear for the entire domain.
+        Equation nummodesEqn("2");
+        ExpansionType type = eModified;
+        ExpansionElementShPtr expansionElementShPtr = MemoryManager<ExpansionElement>::AllocateSharedPtr(m_Domain, nummodesEqn, type);
+        m_ExpansionCollection.clear();  // Don't want any other entries at this point.
+        m_ExpansionCollection.push_back(expansionElementShPtr);
     }
 
     void MeshGraph::GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const
@@ -475,6 +484,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.11  2007/09/20 22:25:05  jfrazier
+// Added expansion information to meshgraph class.
+//
 // Revision 1.10  2007/09/20 02:06:15  jfrazier
 // General cleanup.
 //

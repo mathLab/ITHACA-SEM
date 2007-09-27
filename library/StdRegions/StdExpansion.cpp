@@ -442,15 +442,15 @@ namespace Nektar
             I1 = LibUtilities::PointsManager()[fbasis1.GetPointsKey()]
             ->GetI(tbasis1.GetPointsKey());
 
-            Blas::Dgemm('T', 'T', tbasis1.GetNumPoints(), fbasis0.GetNumPoints(),
+            Blas::Dgemm('N', 'T', tbasis1.GetNumPoints(), fbasis0.GetNumPoints(),
                 fbasis1.GetNumPoints(), 1.0, I1->GetPtr().get(),  
-                fbasis1.GetNumPoints(),
+                tbasis1.GetNumPoints(),
                 from,fbasis0.GetNumPoints(), 0.0, wsp.get(),
                 tbasis1.GetNumPoints());
 
-            Blas::Dgemm('T', 'T',tbasis0.GetNumPoints(),tbasis1.GetNumPoints(),
+            Blas::Dgemm('N', 'T',tbasis0.GetNumPoints(),tbasis1.GetNumPoints(),
                 fbasis0.GetNumPoints(),1.0,I0->GetPtr().get(),
-                fbasis0.GetNumPoints(),wsp.get(), tbasis1.GetNumPoints(),
+                tbasis0.GetNumPoints(),wsp.get(), tbasis1.GetNumPoints(),
                 0.0,to, tbasis0.GetNumPoints());
         }
 
@@ -500,6 +500,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.52  2007/09/25 14:25:56  pvos
+* Update for helmholtz1D with different expansion orders
+*
 * Revision 1.51  2007/08/29 23:26:48  jfrazier
 * Created non-static manager that shares data across instances.
 *

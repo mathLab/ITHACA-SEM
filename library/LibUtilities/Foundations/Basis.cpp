@@ -151,7 +151,7 @@ namespace Nektar
                 }
 
                 // define derivative basis
-                Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
+                Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
                     numPoints,m_bdata.data(),numPoints,0.0,
                     m_dbdata.data(),numPoints);
                 break;
@@ -212,7 +212,7 @@ namespace Nektar
                     }
 
                     // define derivative basis 
-                    Blas::Dgemm('t','n',numPoints,numModes*(numModes+1)/2,numPoints,1.0,D,numPoints,
+                    Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)/2,numPoints,1.0,D,numPoints,
                         m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
                 }
                 break; 
@@ -273,7 +273,7 @@ namespace Nektar
                     }
 
                     // define derivative basis 
-                    Blas::Dgemm('t','n',numPoints,numModes*(numModes+1)*
+                    Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)*
                         (numModes+2)/6,numPoints,1.0,D,numPoints,
                         m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
                 }       
@@ -374,7 +374,7 @@ namespace Nektar
                         }
                     }
 
-                    Blas::Dgemm('t','n',numPoints,numModes*(numModes+1)/2,
+                    Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)/2,
                         numPoints,1.0,D,numPoints,
                         m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
                 }
@@ -395,7 +395,7 @@ namespace Nektar
                     }
 
                     // define derivative basis 
-                    Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
+                    Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
                         numPoints, m_bdata.data(),numPoints,0.0,
                         m_dbdata.data(),numPoints);
 
@@ -444,7 +444,7 @@ namespace Nektar
                 }
 
                 // define derivative basis 
-                Blas::Dgemm('t','n',numPoints,numModes,numPoints,1.0,D,
+                Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
                     numPoints, m_bdata.data(),numPoints,0.0,m_dbdata.data(),
                     numPoints);
                 break;
@@ -532,6 +532,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.21  2007/09/25 14:24:40  pvos
+* Update for helmholtz1D with different expansion orders
+*
 * Revision 1.20  2007/07/22 23:03:26  bnelson
 * Backed out Nektar::ptr.
 *

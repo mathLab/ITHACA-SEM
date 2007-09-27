@@ -87,7 +87,7 @@ namespace Nektar
 
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
-                Blas::Dgemm('T', 'N', nquad0, nquad1, nquad0, 1.0,
+                Blas::Dgemm('N', 'N', nquad0, nquad1, nquad0, 1.0,
                             &(D0->GetPtr())[0], nquad0, &wsp[0], nquad0, 0.0,
                             &outarray_d0[0], nquad0);
             }
@@ -95,7 +95,7 @@ namespace Nektar
             // calculate du/dx_1
             if (outarray_d1.num_elements() > 0)
             {
-                Blas:: Dgemm('N', 'N', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,
+                Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,
                          &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
             }
 
@@ -170,6 +170,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.15  2007/07/20 02:16:53  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.14  2007/05/30 23:56:55  sherwin
 * Silly errors
 *

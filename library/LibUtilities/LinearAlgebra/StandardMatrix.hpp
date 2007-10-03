@@ -42,6 +42,7 @@
 #include <LibUtilities/LinearAlgebra/TriangularMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 
 namespace Nektar
 {
@@ -129,6 +130,20 @@ namespace Nektar
                 }
             }
             
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+                template<typename ExpressionPolicyType>
+                NekMatrix(const Expression<ExpressionPolicyType>& rhs) :
+                    BaseType(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns),
+                    m_data(),
+                    m_wrapperType(eCopy),
+                    m_policySpecificData()
+                {
+                    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StorageType, StandardMatrixTag> > ));
+                    m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
+                    rhs.Apply(*this);
+                }
+            #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+
             MatrixStorage GetStorageType() const 
             {
                 return static_cast<MatrixStorage>(ConvertToMatrixStorageEnum<StorageType>::Value);
@@ -164,6 +179,19 @@ namespace Nektar
                 return *this;
             }
             
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+                template<typename ExpressionPolicyType>
+                ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
+                {
+                    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StorageType, StandardMatrixTag> > ));
+                    m_policySpecificData = PolicySpecificDataHolderType();
+                    Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
+                    m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
+                    m_wrapperType = eCopy;
+                    rhs.Apply(*this);
+                    return *this;
+                }
+            #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
             
             ConstGetValueType operator()(unsigned int row, unsigned int column) const
             {

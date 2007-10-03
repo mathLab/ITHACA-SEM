@@ -108,6 +108,14 @@ namespace Nektar
                 return *this;
             }
             
+            /// \brief Resets the rows and columns in the array.
+            /// This method does not update the data storage to match the new row and column counts.
+            void Resize(unsigned int rows, unsigned int columns)
+            {
+                m_size[0] = rows;
+                m_size[1] = columns;
+            }
+
         private:
             
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const = 0;            

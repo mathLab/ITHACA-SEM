@@ -38,6 +38,7 @@
 
 #include <math.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
+#include <LibUtilities/Foundations/Points.h>
 
 namespace Nektar
 {

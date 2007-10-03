@@ -36,8 +36,104 @@
 #ifndef NEKTAR_LIB_UTILITIES_LIB_UTILITIES_H
 #define NEKTAR_LIB_UTILITIES_LIB_UTILITIES_H
 
+#ifdef NEKTAR_USE_PRECOMPILED_HEADERS
+
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/Polylib/Polylib.h>
+#include <LibUtilities/Memory/DeleteNothing.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/Memory/ThreadSpecificPool.hpp>
+
+#include <LibUtilities/LinearAlgebra/BandedMatrixStoragePolicy.hpp>
+#include <LibUtilities/LinearAlgebra/Blas.hpp>
+#include <LibUtilities/LinearAlgebra/BlockMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/DiagonalMatrixStoragePolicy.hpp>
+#include <LibUtilities/LinearAlgebra/FullMatrixStoragePolicy.hpp>
+#include <LibUtilities/LinearAlgebra/Lapack.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixStoragePolicy.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
+#include <LibUtilities/LinearAlgebra/NekLinAlgAlgorithms.hpp>
+#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
+#include <LibUtilities/LinearAlgebra/NekPoint.hpp>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorCommon.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorConstantSized.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorMetadata.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorObject.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorTypeTraits.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
+#include <LibUtilities/LinearAlgebra/PointerWrapper.h>
+#include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/SymmetricMatrixStoragePolicy.hpp>
+#include <LibUtilities/LinearAlgebra/TransF77.hpp>
+#include <LibUtilities/LinearAlgebra/TriangularMatrixStoragePolicy.hpp>
+
+#include <LibUtilities/Interpreter/ExpressionEvaluator.h>
+
+#include <LibUtilities/Foundations/Basis.h>
+#include <LibUtilities/Foundations/FourierPoints.h>
+#include <LibUtilities/Foundations/GaussPoints.h>
+#include <LibUtilities/Foundations/Graph.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/Foundations/NodalTetElec.h>
+#include <LibUtilities/Foundations/NodalTriElec.h>
+#include <LibUtilities/Foundations/NodalTriFekete.h>
+#include <LibUtilities/Foundations/NodalUtil.h>
+#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/PolyEPoints.h>
+
+#include <LibUtilities/ExpressionTemplates/Accumulator.hpp>
+#include <LibUtilities/ExpressionTemplates/ArithmeticConcepts.hpp>
+#include <LibUtilities/ExpressionTemplates/ArithmeticTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/AssignableTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/AssociativeExpressionTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/AssociativeTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionEvaluator.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicy.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicyFwd.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/CommutativeExpressionTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/CommutativeTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/ConstantExpressionTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/Expression.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionConcepts.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionReturnType.hpp>
+//#include <LibUtilities/ExpressionTemplates/ExpressionTemplateConcepts.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionTemplateOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
+#include <LibUtilities/ExpressionTemplates/NegateOp.hpp>
+#include <LibUtilities/ExpressionTemplates/NullOp.hpp>
+#include <LibUtilities/ExpressionTemplates/UnaryExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/UnaryExpressionTraits.hpp>
+
+#include <LibUtilities/BasicUtils/ArrayPolicies.hpp>
+#include <LibUtilities/BasicUtils/BoostUtil.hpp>
+#include <LibUtilities/BasicUtils/Concepts.hpp>
+#include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/mojo.hpp>
+#include <LibUtilities/BasicUtils/NekManager.hpp>
+#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/Vmath.hpp>
+
+
+#endif //NEKTAR_USE_PRECOMPILED_HEADERS
 
 #endif NEKTAR_LIB_UTILITIES_LIB_UTILITIES_H
 

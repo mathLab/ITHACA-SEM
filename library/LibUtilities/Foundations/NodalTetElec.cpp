@@ -32,7 +32,7 @@
 // Description: 3D Nodal Tet Electrostatic Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LibUtilities/LibUtilities.h>
 #include <iostream>
 #include <algorithm>
 #include <LibUtilities/Foundations/Points.h>
@@ -274,6 +274,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTetElec.cpp,v $
+* Revision 1.11  2007/08/15 01:43:48  ehan
+* Added calculating weights, interpolation, and derivation for Tetrahedron.
+*
 * Revision 1.10  2007/07/31 18:12:01  ehan
 * Updated Tetrahedron symmetry and calculate points
 *

@@ -32,7 +32,7 @@
 // Description: 2D Nodal Triangle Fekete Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LibUtilities/LibUtilities.h>
 #include <iostream>
 #include <algorithm>
 #include <LibUtilities/Foundations/Points.h>
@@ -263,6 +263,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriElec.cpp,v $
+* Revision 1.13  2007/08/15 01:48:39  ehan
+* *** empty log message ***
+*
 * Revision 1.12  2007/08/06 05:41:25  ehan
 * Fixed derivative matrix
 *

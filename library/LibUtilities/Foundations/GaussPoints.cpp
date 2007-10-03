@@ -32,7 +32,7 @@
 // Description: GaussPoints Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LibUtilities/LibUtilities.h>
 #include <iostream>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
@@ -291,6 +291,9 @@ namespace Nektar
 
 /**
 * $Log: GaussPoints.cpp,v $
+* Revision 1.23  2007/08/06 05:42:28  ehan
+* Fixed m_derivativematrix so that compatible with 3-dimension
+*
 * Revision 1.22  2007/07/27 00:22:26  bnelson
 * Memory manager now accepts non-const parameters to the allocate methods.
 *

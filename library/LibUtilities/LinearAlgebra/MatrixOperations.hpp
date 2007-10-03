@@ -479,6 +479,7 @@ namespace Nektar
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
         
+        result = lhs;
         for(unsigned int i = 0; i < result.GetRows(); ++i)
         {
             result(i,i) += rhs(i,i);
@@ -491,7 +492,7 @@ namespace Nektar
            const NekMatrix<RhsDataType, DiagonalMatrixTag, RhsMatrixType>& rhs)
     {
         typedef typename NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>::NumberType NumberType;
-        NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> result(lhs);
+        NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> result(lhs.GetRows(), lhs.GetColumns());
         NekAdd(result, lhs, rhs);
         return result;
     }
@@ -508,6 +509,7 @@ namespace Nektar
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
 
+        result = rhs;
         for(unsigned int i = 0; i < result.GetRows(); ++i)
         {
             result(i,i) += lhs(i,i);
@@ -520,7 +522,7 @@ namespace Nektar
            const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
     {
         typedef typename NekMatrix<LhsDataType, DiagonalMatrixTag, LhsMatrixType>::NumberType NumberType;
-        NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> result(rhs);
+        NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> result(lhs.GetRows(), lhs.GetColumns());
         NekAdd(result, lhs, rhs);
         return result;
     }
@@ -537,6 +539,7 @@ namespace Nektar
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
 
+        result = lhs;
         for(unsigned int i = 0; i < result.GetRows(); ++i)
         {
             for(unsigned int j = i; j < result.GetColumns(); ++j)
@@ -552,7 +555,7 @@ namespace Nektar
            const NekMatrix<RhsDataType, UpperTriangularMatrixTag, RhsMatrixType>& rhs)
     {
         typedef typename NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>::NumberType NumberType;
-        NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> result(rhs);
+        NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> result(lhs.GetRows(), lhs.GetColumns());
         NekAdd(result, lhs, rhs);
         return result;
     }

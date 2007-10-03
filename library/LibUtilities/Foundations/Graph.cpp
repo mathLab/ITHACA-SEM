@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LibUtilities/Foundations/Graph.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LibUtilities/Foundations/Graph.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,6 +33,7 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
+#include <LibUtilities/LibUtilities.h>
 #include <LibUtilities/Foundations/Graph.h>
 
 namespace Nektar
@@ -81,6 +82,9 @@ namespace Nektar
 
 //
 // $Log: Graph.cpp,v $
+// Revision 1.3  2006/08/16 03:26:36  jfrazier
+// Optimized the equality and inequality operators.
+//
 // Revision 1.2  2006/06/01 14:59:58  sherwin
 // Modified header file path
 //

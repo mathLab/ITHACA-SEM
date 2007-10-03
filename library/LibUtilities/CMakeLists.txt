@@ -184,6 +184,9 @@ SET(LibUtilitySources
 
 ADD_NEKTAR_LIBRARY(LibUtilities STATIC ${LibUtilitySources} ${LibUtilityHeaders})
 
+SET(PrecompiledHeaderName LibUtilities/LibUtilities.h)
+SETUP_PRECOMPILED_HEADERS(LibUtilitySources PrecompiledHeaderName)
+
 IF( USE_ATLAS AND ATLAS_FOUND )
         TARGET_LINK_LIBRARIES(LibUtilities
             ${ATLAS_LAPACK}

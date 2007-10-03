@@ -32,13 +32,16 @@
 // Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LibUtilities/LibUtilities.h>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 
 
 
 /**
     $Log: blas.cpp,v $
+    Revision 1.7  2007/04/03 03:59:24  bnelson
+    Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
+
     Revision 1.6  2007/02/15 06:56:55  bnelson
     *** empty log message ***
 

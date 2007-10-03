@@ -32,6 +32,8 @@
 // Description: Basis definition 
 //
 ///////////////////////////////////////////////////////////////////////////////
+#include <LibUtilities/LibUtilities.h>
+
 #include <math.h>
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -532,6 +534,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.22  2007/09/27 12:52:03  pvos
+* Column major Blas calls corrections
+*
 * Revision 1.21  2007/09/25 14:24:40  pvos
 * Update for helmholtz1D with different expansion orders
 *

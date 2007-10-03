@@ -71,6 +71,45 @@ namespace Nektar
         return os;
     }
 
+    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+        template<typename DataType, typename StorageType, typename MatrixType>
+        class ConstantExpressionTraits<NekMatrix<DataType, StorageType, MatrixType> >
+        {
+            public:
+                typedef NekMatrix<DataType, StorageType, MatrixType> result_type;
+                typedef NekMatrixConstantMetadata MetadataType;
+        };
+
+        template<typename LhsDataType, typename LhsStorageType, typename LhsMatrixType,
+                 typename RhsDataType, typename RhsStorageType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>,
+                                              NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>,
+                                              AddOp>
+        {
+            public:
+                typedef NekMatrixAdditionAndSubtractionMetadata MetadataType;
+        };
+
+        template<typename LhsDataType, typename LhsStorageType, typename LhsMatrixType,
+                 typename RhsDataType, typename RhsStorageType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>,
+                                              NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>,
+                                              SubtractOp>
+        {
+            public:
+                typedef NekMatrixAdditionAndSubtractionMetadata MetadataType;
+        };
+
+        template<typename LhsDataType, typename LhsStorageType, typename LhsMatrixType,
+                 typename RhsDataType, typename RhsStorageType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>,
+                                              NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>,
+                                              MultiplyOp>
+        {
+            public:
+                typedef NekMatrixMultiplicationMetadata MetadataType;
+        };
+    #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 // #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 //     // All of the expression interfaces for NekMatrix should go here.
 //     namespace expt
@@ -360,6 +399,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.30  2007/09/12 04:01:18  bnelson
+    Updates for column major matrices.
+
     Revision 1.29  2007/08/27 04:41:29  bnelson
     Updated the existing storage policies in preparation for banded matrices.
 

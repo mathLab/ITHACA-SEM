@@ -32,7 +32,7 @@
 // Description: C functions to provide access to managers. 
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LibUtilities/LibUtilities.h>
 #include <iostream>
 #include <loki/Singleton.h>
 #include <LibUtilities/Foundations/GaussPoints.h>
@@ -100,6 +100,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.14  2007/07/20 00:28:26  bnelson
+Replaced boost::shared_ptr with Nektar::ptr
+
 Revision 1.13  2007/06/01 17:08:07  pvos
 Modification to make LocalRegions/Project2D run correctly (PART1)
 

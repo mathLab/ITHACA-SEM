@@ -186,7 +186,9 @@ namespace Nektar
 
             ASSERTL0(nbnd==NumDirichlet+NumNeumann+NumRobin,"missed some boundary conditions");
 
-            m_locToGloMap->ResetMapping(NumDirichlet,NumNeumann,NumRobin,m_bndConstraint);
+            m_locToGloMap->ResetMapping     (NumDirichlet,bcs,variable);
+            m_locToGloMap->SetNumNeumannBCs (NumNeumann);
+            m_locToGloMap->SetNumRobinBCs   (NumRobin);
         }
 
         ContField1D::~ContField1D()
@@ -241,17 +243,16 @@ namespace Nektar
             // Forcing function with weak boundary conditions 
             for(i = 0; i < m_bndConstraint.size()-NumDirBcs; ++i)
             {
-                m_contCoeffs[ (m_locToGloMap->GetBoundCondGlobID())[i+NumDirBcs] ] +=  
+                m_contCoeffs[ (m_locToGloMap->GetBndCondGlobalID())[i+NumDirBcs] ] +=  
                     key.GetScaleFactor() * (m_bndConstraint[i+NumDirBcs]->GetValue());
             }
 
             if(m_contNcoeffs - NumDirBcs > 0)
             {
                 GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
-
+                
                 sln = m_contCoeffs+NumDirBcs;
-                DNekVec v(m_contNcoeffs-NumDirBcs,sln,eWrapper);
-                LinSys->GetLinSys()->Solve(v,v);
+                LinSys->Solve(sln,sln,m_locToGloMap);
             }
 
             // Recover solution by addinig intial conditons
@@ -270,7 +271,7 @@ namespace Nektar
 
             if(matrixIter == m_globalMat->end())
             {
-                glo_matrix = GenGlobalLinSys(mkey);
+                glo_matrix = GenGlobalLinSys(mkey,m_locToGloMap);
                 (*m_globalMat)[mkey] = glo_matrix;
             }
             else
@@ -281,65 +282,6 @@ namespace Nektar
             return glo_matrix;
         }
 
-	GlobalLinSysSharedPtr ContField1D::GenGlobalLinSys(const GlobalLinSysKey &mkey)
-	{
-            int i,j,n,gid1,gid2,loc_lda,cnt;
-            DNekScalMatSharedPtr loc_mat;
-            StdRegions::StdExpansionVectorIter def;
-            DNekLinSysSharedPtr   linsys;
-            GlobalLinSysSharedPtr returnlinsys;
-
-            int NumDirBCs = m_locToGloMap->GetNumDirichletBCs();
-            int NumRobinBCs = m_locToGloMap->GetNumRobinBCs();
-            
-            unsigned int rows = m_contNcoeffs - NumDirBCs;
-            unsigned int cols = m_contNcoeffs - NumDirBCs;
-            NekDouble zero = 0.0;
-            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);
-            
-            // fill global matrix 
-            for(n = cnt = 0; n < (*m_exp).size(); ++n)
-            {
-                LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
-                                          (*m_exp)[n]->DetShapeType(),
-                                         *(*m_exp)[n],mkey.GetScaleFactor());
-                
-                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
-                loc_lda = loc_mat->GetColumns();
-		    
-                for(i = 0; i < loc_lda; ++i)
-                {
-                    gid1 = m_locToGloMap->GetMap(cnt + i);
-                    if(gid1 >= NumDirBCs)
-                    {
-                        for(j = 0; j < loc_lda; ++j)
-                        {
-                            gid2 = m_locToGloMap->GetMap(cnt + j);
-                            if(gid2 >= NumDirBCs)
-                            {
-                                (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                    += (*loc_mat)(i,j);
-                            }
-                        }		
-                    }
-                }
-                cnt += (*m_exp)[n]->GetNcoeffs();
-            }
-
-            for(i = NumDirBCs; i < NumDirBCs+NumRobinBCs; ++i)
-            {
-                // Find a way to deal with second parameter of the Robin BC
-                NekDouble b=1.0;
-                (*Gmat)((m_locToGloMap->GetBoundCondGlobID())[i]-NumDirBCs,
-                        (m_locToGloMap->GetBoundCondGlobID())[i]-NumDirBCs)
-                    -= mkey.GetScaleFactor() * b;
-            }
-            
-            linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
-            
-            returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys);
-            return returnlinsys;
-        }
 
     } // end of namespace
 } //end of namespace

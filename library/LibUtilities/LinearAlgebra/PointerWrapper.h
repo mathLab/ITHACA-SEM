@@ -40,7 +40,11 @@ namespace Nektar
 {
     /// \brief Specifies if the pointer passed to a NekMatrix or NekVector is copied into an internal 
     ///         representation or used directly.
-    enum PointerWrapper { eWrapper, eCopy };
+    enum PointerWrapper 
+    { 
+        eWrapper, 
+        eCopy 
+    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_POINTER_WRAPPER_H

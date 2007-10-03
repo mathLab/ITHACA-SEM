@@ -182,26 +182,27 @@ namespace Nektar
                 &inarray[0],1,0.0,&outarray[0],1);
         }
     }
-    
-    void StdSegExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
-    {
+        
+     void StdSegExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> &outarray)
+     {
         if(m_base[0]->Collocation())
         {
-        Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
+            Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
         }
         else
         {
-        IProductWRTBase(inarray,outarray);
+            IProductWRTBase(inarray,outarray);
         
-        // get Mass matrix inverse
-        StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
-        DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
-        
-                // copy inarray in case inarray == outarray
-                DNekVec in (m_ncoeffs,outarray);
-                DNekVec out(m_ncoeffs,outarray,eWrapper);
-                
-                out = (*matsys)*in;
+            // get Mass matrix inverse
+            StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
+            DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
+            
+            // copy inarray in case inarray == outarray
+            DNekVec in (m_ncoeffs,outarray);
+            DNekVec out(m_ncoeffs,outarray,eWrapper);
+            
+            out = (*matsys)*in;
         }
     }
     
@@ -265,6 +266,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.39  2007/07/20 02:16:55  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.38  2007/07/12 12:55:16  sherwin
 * Simplified Matrix Generation
 *

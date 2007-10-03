@@ -144,6 +144,11 @@ namespace Nektar
             DNekMatSharedPtr GenNBasisTransMatrix();
         
         private:
+            
+            virtual int v_NumBndryCoeffs() const
+            {
+                return 3 + (GetBasisNumModes(0)-2) + 2*(GetBasisNumModes(1)-2);
+            } 
 
 
             virtual ShapeType v_DetShapeType() const
@@ -252,6 +257,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.14  2007/07/22 23:04:27  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.13  2007/07/20 02:16:54  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

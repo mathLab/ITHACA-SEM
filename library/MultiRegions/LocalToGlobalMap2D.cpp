@@ -48,8 +48,8 @@ namespace Nektar
             StdRegions::EdgeOrientation eorient;
             LibUtilities::BasisType Btype;
            
-            m_totLocLen = loclen; 
-            m_locToContMap =  Array<OneD, int>(m_totLocLen,-1);
+            m_totLocDofs = loclen; 
+            m_locToContMap =  Array<OneD, int>(m_totLocDofs,-1);
             
             // set up mapping based 
             StdRegions::StdExpMap vmap;
@@ -81,7 +81,7 @@ namespace Nektar
             // set up sign vector
             if(m_sign_change)
             {
-                m_sign = Array<OneD, NekDouble>(m_totLocLen,1.0);
+                m_sign = Array<OneD, NekDouble>(m_totLocDofs,1.0);
             }
 
             edge_offset[0] = nGloVerts; 
@@ -173,17 +173,17 @@ namespace Nektar
             
             }
                 
-            gid = Vmath::Vmax(m_totLocLen,&m_locToContMap[0],1)+1;
+            gid = Vmath::Vmax(m_totLocDofs,&m_locToContMap[0],1)+1;
             
             // setup interior mapping 
-            for(i = 0; i < m_totLocLen; ++i)
+            for(i = 0; i < m_totLocDofs; ++i)
             {
                 if(m_locToContMap[i] == -1)
                 {
                     m_locToContMap[i] = gid++;
                 }
             }
-            m_totGloLen = gid;
+            m_totGloDofs = gid;
         }
     
         
@@ -196,6 +196,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap2D.cpp,v $
+* Revision 1.6  2007/07/20 02:04:13  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.5  2007/06/05 16:36:55  pvos
 * Updated Explist2D ContExpList2D and corresponding demo-codes
 *

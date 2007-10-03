@@ -32,21 +32,32 @@
 // Description: GlobalLinSys header 
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef GLOBALLINSYS_H
-#define GLOBALLINSYS_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
+#define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
 
-#include <MultiRegions/ExpList.h>
 #include <MultiRegions/GlobalLinSysKey.h>
+#include <MultiRegions/LocalToGlobalMap.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
+
+        class LocalToGlobalMap;
+
 	class GlobalLinSys
         {
         public:
             GlobalLinSys(const GlobalLinSysKey &mkey, 
                          const DNekLinSysSharedPtr linSys);
+
+            GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &mkey, 
+                                       const DNekLinSysSharedPtr linsys,
+                                       const DNekScalBlkMatSharedPtr BinvD,
+                                       const DNekScalBlkMatSharedPtr invDC,
+                                       const DNekScalBlkMatSharedPtr invD);
+
 
             const GlobalLinSysKey &GetKey(void) const
             {
@@ -57,9 +68,15 @@ namespace Nektar
             {
                 return m_linSys;
             }
+
+            void Solve(const ConstArray<OneD,NekDouble> &in, 
+                       Array<OneD,NekDouble> &out,
+                       boost::shared_ptr<LocalToGlobalMap>  &locToGloMap);
+
         private:
-            GlobalLinSysKey      m_linSysKey;
-            DNekLinSysSharedPtr  m_linSys;
+            GlobalLinSysKey                     m_linSysKey;
+            DNekLinSysSharedPtr                 m_linSys;
+            Array<OneD,DNekScalBlkMatSharedPtr> m_blkMatrices;
 	};
 
         typedef boost::shared_ptr<GlobalLinSys> GlobalLinSysSharedPtr;

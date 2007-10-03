@@ -38,6 +38,8 @@
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
+#include <MultiRegions/LocalToGlobalMap.h>
+#include <MultiRegions/GlobalLinSys.h>
 
 #include <LocalRegions/MatrixKey.h>
 
@@ -46,152 +48,168 @@ namespace Nektar
     namespace MultiRegions
     {
 
+        class GlobalLinSys; 
+        class LocalToGlobalMap;
+        
         class ExpList
         {
         public:
             ExpList();
-
+            
             ExpList(const ExpList &in);
             virtual ~ExpList();
-
+            
             inline int GetNcoeffs(void) const
-            {
-                return m_ncoeffs;
-            }
+      {
+          return m_ncoeffs;
+      }
+      
+      inline int GetPointsTot(void) const
+      {
+          return m_npoints;
+      }
+      
+      inline void SetTransState(const TransState transState)
+      {
+          m_transState = transState;
+      }
 
-            inline int GetPointsTot(void) const
-            {
-                return m_npoints;
-            }
+      inline TransState GetTransState(void) const 
+      {
+          return m_transState; 
+      }
+      
+      inline void SetPhys(ConstArray<OneD, NekDouble> &inarray)
+      {
+          Vmath::Vcopy(m_npoints,&inarray[0],1,&m_phys[0],1);
+      }
 
-            inline void SetTransState(const TransState transState)
-            {
-                m_transState = transState;
-            }
+      inline void SetPhysState(const bool physState)
+      {
+          m_physState = physState;
+      }
 
-            inline TransState GetTransState(void) const 
-            {
-                return m_transState; 
-            }
-
-            inline void SetPhys(ConstArray<OneD, NekDouble> &inarray)
-            {
-                Vmath::Vcopy(m_npoints,&inarray[0],1,&m_phys[0],1);
-            }
-
-            inline void SetPhysState(const bool physState)
-            {
-                m_physState = physState;
-            }
-
-            inline bool GetPhysState(void) const
-            {
-                return m_physState;
-            }
-
-            NekDouble PhysIntegral (void);
-            void   IProductWRTBase (const ExpList &Sin);
-            void   FwdTrans        (const ExpList &Sin);
-            void   BwdTrans        (const ExpList &Sin); 
-            void   PhysDeriv       (ExpList &S0, ExpList &S1, ExpList &S2); 
-
-            void   GeneralMatrixOp(const StdRegions::MatrixType     mtype,
-                const ConstArray<OneD,NekDouble> &inarray,
-                Array<OneD, NekDouble>          &outarray,
-                NekDouble lambda = 1.0);
-
-            void   GetCoords(Array<OneD, NekDouble> &coord_0,
-                Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
-                Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
-
-            void   WriteToFile(std::ofstream &out);
-
-            DNekScalBlkMatSharedPtr  SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar = 0.0);
-
-            inline int GetCoordim(int eid)
-            {
-                ASSERTL2(eid <= (*m_exp).size(),"eid is larger than number of elements");
-
-                return (*m_exp)[eid]->GetCoordim();
-            }
+      inline bool GetPhysState(void) const
+      {
+          return m_physState;
+      }
+      
+      NekDouble PhysIntegral (void);
+      void   IProductWRTBase (const ExpList &Sin);
+      void   FwdTrans        (const ExpList &Sin);
+      void   BwdTrans        (const ExpList &Sin); 
+      void   PhysDeriv       (ExpList &S0, ExpList &S1, ExpList &S2); 
+      
 
 
-            inline const ConstArray<OneD, NekDouble> &GetCoeffs() const 
-            {
-                return m_coeffs;
-            }
+      //---------------
+      void   GetCoords(Array<OneD, NekDouble> &coord_0,
+               Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
+               Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 
-            inline const ConstArray<OneD, NekDouble> &GetPhys()  const
-            {
-                return m_phys;
-            }
+      void   WriteToFile(std::ofstream &out);
+    
+      DNekScalBlkMatSharedPtr  SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar = 0.0);
+
+      inline int GetCoordim(int eid)
+      {
+          ASSERTL2(eid <= (*m_exp).size(),"eid is larger than number of elements");
+          
+          return (*m_exp)[eid]->GetCoordim();
+      }
+      
+
+      inline const ConstArray<OneD, NekDouble> &GetCoeffs() const 
+      {
+          return m_coeffs;
+      }
+
+      inline const ConstArray<OneD, NekDouble> &GetPhys()  const
+      {
+          return m_phys;
+      }
 
 
-            NekDouble Linf (const ExpList &Sol);
-            NekDouble L2   (const ExpList &Sol);
+      NekDouble Linf (const ExpList &Sol);
+      NekDouble L2   (const ExpList &Sol);
 
 
-            inline int GetExpSize(void)
-            {
-                return (*m_exp).size();
-            }
+      inline int GetExpSize(void)
+      {
+      return (*m_exp).size();
+      }
+      
 
+      inline StdRegions::StdExpansionSharedPtr& GetExp(int n)
+      {
+      return (*m_exp)[n];
+      }
+      
+    protected:
+      int m_ncoeffs; 
+      int m_npoints;
+      Array<OneD, NekDouble> m_coeffs;
+      Array<OneD, NekDouble> m_phys;
 
-            inline StdRegions::StdExpansionSharedPtr& GetExp(int n)
-            {
-                return (*m_exp)[n];
-            }
+      TransState m_transState;
+      bool       m_physState;
+     
+      boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
+      
+      inline Array<OneD, NekDouble> &UpdateCoeffs()
+      {
+          m_transState = eLocal;
+          return m_coeffs;
+      }
 
-        protected:
-            int m_ncoeffs; 
-            int m_npoints;
-            Array<OneD, NekDouble> m_coeffs;
-            Array<OneD, NekDouble> m_phys;
+      inline Array<OneD, NekDouble> &UpdatePhys()
+      {
+          m_physState = true;
+          return m_phys;
+      }
 
-            TransState m_transState;
-            bool       m_physState;
+      NekDouble PhysIntegral(const ConstArray<OneD, NekDouble> &inarray);
+      void   IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
+                 Array<OneD, NekDouble> &outarray);
+      
+      void   PhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
+               Array<OneD, NekDouble> &out_d0, 
+               Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+               Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
+      void   FwdTrans (const ConstArray<OneD, NekDouble> &inarray,
+               Array<OneD, NekDouble> &outarray);
 
-            boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
+      void   BwdTrans (const ConstArray<OneD, NekDouble> &inarray, 
+               Array<OneD, NekDouble> &outarray); 
+      
+      // Routines for continous matrix solution 
+      void   GeneralMatrixOp(const StdRegions::MatrixType     mtype,
+                             const ConstArray<OneD,NekDouble> &inarray,
+                             Array<OneD, NekDouble>          &outarray,
+                             NekDouble lambda = 1.0);
 
-            inline Array<OneD, NekDouble> &UpdateCoeffs()
-            {
-                m_transState = eLocal;
-                return m_coeffs;
-            }
+      boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
 
-            inline Array<OneD, NekDouble> &UpdatePhys()
-            {
-                m_physState = true;
-                return m_phys;
-            }
+      boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey,  boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
 
-            NekDouble PhysIntegral(const ConstArray<OneD, NekDouble> &inarray);
-            void   IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
-                Array<OneD, NekDouble> &outarray);
+      boost::shared_ptr<GlobalLinSys>  GenGlobalLinSys(const GlobalLinSysKey &mkey, boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
 
-            void   PhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
-                Array<OneD, NekDouble> &out_d0, 
-                Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
-            void   FwdTrans (const ConstArray<OneD, NekDouble> &inarray,
-                Array<OneD, NekDouble> &outarray);
+    private:
 
-            void   BwdTrans (const ConstArray<OneD, NekDouble> &inarray, 
-                Array<OneD, NekDouble> &outarray); 
+    };
 
-        private:
-
-        };
-
-        static ExpList NullExpList;
-
-    } //end of namespace
+    static ExpList NullExpList;
+    
+  } //end of namespace
 } //end of namespace
 
 #endif // EXPLIST_H
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.25  2007/09/03 19:58:31  jfrazier
+* Formatting.
+*
 * Revision 1.24  2007/07/27 03:10:49  bnelson
 * Fixed g++ compile error.
 *

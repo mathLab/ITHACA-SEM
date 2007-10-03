@@ -109,7 +109,7 @@ namespace Nektar
 
         if(!(m_mass.get()))
         {
-        GenMassMatrixLinSys();
+            GenMassMatrixLinSys();
         }        
         
         DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
@@ -170,6 +170,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.7  2007/07/20 02:04:10  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.6  2007/07/13 16:48:46  pvos
 * Another HelmHoltz update (homogeneous dir BC multi-elemental solver does work)
 *

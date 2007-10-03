@@ -229,16 +229,15 @@ namespace Nektar
 
             BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size[0],exp_size[0]);
             
-            //InvMass = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size,exp_size);
+            //BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size,exp_size);
             //Cannot get this call to work with array of integers
-            
             
             for(i = 0; i < n_exp; ++i)
             {
                 LocalRegions::MatrixKey mkey(mtype,(*m_exp)[i]->DetShapeType(),*((*m_exp)[i]),scalar);
                 loc_mat = (*m_exp)[i]->GetLocMatrix(mkey);
                 
-                cout << loc_mat->GetOwnedMatrix() << endl;
+                // cout << loc_mat->GetOwnedMatrix() << endl;
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
             
@@ -265,6 +264,179 @@ namespace Nektar
             }        
         }
         
+	
+	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, LocalToGlobalMapSharedPtr &locToGloMap)
+	{
+            int i,j,n,gid1,gid2,loc_lda,cnt;
+            DNekScalMatSharedPtr loc_mat;
+            StdRegions::StdExpansionVectorIter def;
+            DNekLinSysSharedPtr   linsys;
+            GlobalLinSysSharedPtr returnlinsys;
+
+            int totDofs     = locToGloMap->GetTotGloDofs();
+            int NumDirBCs   = locToGloMap->GetNumDirichletBCs();
+            int NumRobinBCs = locToGloMap->GetNumRobinBCs();
+
+            unsigned int rows = totDofs - NumDirBCs;
+            unsigned int cols = totDofs - NumDirBCs;
+            NekDouble zero = 0.0;
+            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);
+            
+            // fill global matrix 
+            for(n = cnt = 0; n < (*m_exp).size(); ++n)
+            {
+                LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
+                                          (*m_exp)[n]->DetShapeType(),
+                                         *(*m_exp)[n],mkey.GetScaleFactor());
+                
+                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
+                loc_lda = loc_mat->GetColumns();
+		    
+                for(i = 0; i < loc_lda; ++i)
+                {
+                    gid1 = locToGloMap->GetMap(cnt + i);
+                    if(gid1 >= NumDirBCs)
+                    {
+                        for(j = 0; j < loc_lda; ++j)
+                        {
+                            gid2 = locToGloMap->GetMap(cnt + j);
+                            if(gid2 >= NumDirBCs)
+                            {
+                                (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
+                                    += (*loc_mat)(i,j);
+                            }
+                        }		
+                    }
+                }
+                cnt += (*m_exp)[n]->GetNcoeffs();
+            }
+            
+            for(i = NumDirBCs; i < NumDirBCs+NumRobinBCs; ++i)
+            {
+                // Find a way to deal with second parameter of the Robin BC
+                NekDouble b=1.0;
+                (*Gmat)((locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs,
+                        (locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs)
+                    -= mkey.GetScaleFactor() * b;
+            }
+            
+
+            // Believe that we need a call of the type:
+            //linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,eWrapper);
+            linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
+            
+            returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys);
+            return returnlinsys;
+        }
+
+
+	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey, LocalToGlobalMapSharedPtr &locToGloMap)
+	{
+            int i,j,n,gid1,gid2,loc_lda,cnt;
+            DNekScalBlkMatSharedPtr loc_mat;
+            DNekLinSysSharedPtr   linsys;
+            GlobalLinSysSharedPtr returnlinsys;
+            
+            int nBndDofs = locToGloMap->GetTotGloBndDofs();
+            int NumDirBCs = locToGloMap->GetNumDirichletBCs();
+
+            unsigned int rows = nBndDofs - NumDirBCs;
+            unsigned int cols = nBndDofs - NumDirBCs;
+            NekDouble zero = 0.0;
+            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);
+            
+            // Setup Block Matrix systems
+            int n_exp = GetExpSize();
+            Array<OneD,int> nbdry_size(n_exp);
+            Array<OneD,int> nint_size(n_exp);
+            DNekScalBlkMatSharedPtr BinvD;
+            DNekScalBlkMatSharedPtr invD;
+            DNekScalBlkMatSharedPtr C;
+
+            // set up an array of integers for block matrix construction
+            for(i = 0; i < n_exp; ++i)
+            {
+                nbdry_size[i] = (*m_exp)[i]->NumBndryCoeffs();
+                nint_size[i]  = (*m_exp)[i]->GetNcoeffs() - (*m_exp)[i]->NumBndryCoeffs();
+            }
+            
+            BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nbdry_size[0],nint_size[0]);
+            invD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size[0],nint_size[0]);
+            C = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size[0],nbdry_size[0]);
+
+            // needs to be formed as: 
+            //BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,bndry_size,nint_size);
+            //invDC = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size,nint_size]);
+            //invD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size,nint_bndry);
+
+            DNekScalMatSharedPtr tmp_mat; 
+
+            // fill global matrix 
+            for(n = cnt = 0; n < (*m_exp).size(); ++n)
+            {
+                LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
+                                          (*m_exp)[n]->DetShapeType(),
+                                         *(*m_exp)[n],mkey.GetScaleFactor());
+
+                loc_mat = (*m_exp)[n]->GetLocStaticCondMatrix(matkey);
+                loc_lda = (*m_exp)[n]->NumBndryCoeffs(); 		    
+                
+                BinvD->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
+                invD->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
+                C->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
+                
+                // Set up interior Matrix; 
+                for(i = 0; i < loc_lda; ++i)
+                {
+                    gid1 = locToGloMap->GetMap(cnt + i);
+                    if(gid1 >= NumDirBCs)
+                    {
+                        for(j = 0; j < loc_lda; ++j)
+                        {
+                            gid2 = locToGloMap->GetMap(cnt + j);
+                            if(gid2 >= NumDirBCs)
+                            {
+                                (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
+                                    += (*loc_mat)(i,j);
+                            }
+                        }		
+                    }
+                }
+                cnt += (*m_exp)[n]->GetNcoeffs();
+            }
+            
+            // Believe that we need a call of the type:
+            //linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,eWrapper);
+            if(rows)
+            {
+                linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
+            }
+
+            returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys,BinvD,C,invD);
+            return returnlinsys;
+        }
+
+
+	GlobalLinSysSharedPtr ExpList::GenGlobalLinSys(const GlobalLinSysKey &mkey, LocalToGlobalMapSharedPtr &locToGloMap)
+	{
+            GlobalLinSysSharedPtr returnlinsys; 
+
+            switch(mkey.GetGlobalSysSolnType())
+            {
+            case eDirectFullMatrix:
+                returnlinsys = GenGlobalLinSysFullDirect(mkey, locToGloMap);
+                break;
+            case eDirectStaticCond:
+                returnlinsys = GenGlobalLinSysStaticCond(mkey, locToGloMap);
+                break;
+            default:
+                ASSERTL0(false,"Matrix solution type not defined");
+                break;
+            }
+            
+            return returnlinsys;
+        }
+
         void ExpList::BwdTrans(const ExpList &Sin)
         {
             ASSERTL2(Sin.GetTransState() == eLocal ||

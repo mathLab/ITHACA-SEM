@@ -46,6 +46,7 @@ namespace Nektar
             int i,j,k;
             int gid = 0;
             int cnt = 0;
+            int cnt1 = 0;
             int cnt2 = 0;
             
             // set up Local to Continuous mapping 
@@ -53,10 +54,13 @@ namespace Nektar
             SpatialDomains::Composite comp;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             
-            m_totLocLen    = loclen;        
-            m_locToContMap = Array<OneD, int>(m_totLocLen,-1);
-            
+            m_totLocDofs      = loclen;        
+            m_totLocBndDofs   = 2*locexp.size();
+            m_locToContMap    = Array<OneD, int>(m_totLocDofs,-1);
+            m_locToContBndMap = Array<OneD, int>(m_totLocBndDofs,-1);
+
             // set up simple map based on vertex and edge id's
+
             for(i = 0; i < domain.size(); ++i)
             {
                 comp = domain[i];
@@ -77,49 +81,64 @@ namespace Nektar
                     {
                         ASSERTL0(false,"dynamic cast to a SegGeom failed");
                     }
-                    cnt += locexp[cnt2]->GetNcoeffs();
+                    cnt  += locexp[cnt2]->GetNcoeffs();
+                    cnt1 += locexp[cnt2]->NumBndryCoeffs();
                     ++cnt2;
                 }
             }
+
+            m_totGloBndDofs = gid+1;
             
-            for(i = 0; i < m_totLocLen; ++i)
+            for(i = 0; i < m_totLocDofs; ++i)
             {
                 if(m_locToContMap[i] == -1)
                 {
                     m_locToContMap[i] = ++gid;
                 }
             }
-            m_totGloLen = ++gid;
+            m_totGloDofs = ++gid;
         }
-        
         
         LocalToGlobalMap1D::~LocalToGlobalMap1D()
         {
         }
-        
-        void LocalToGlobalMap1D::ResetMapping(const int NumDirichlet, const int NumNeumann, const int NumRobin,
-                                              const LocalRegions::PointExpVector &bndCond)
+
+        void LocalToGlobalMap1D::v_ResetMapping(const int NumDirichlet, 
+                            SpatialDomains::BoundaryConditions &bcs,
+                            const std::string variable)
         {
             int i,j,cnt;
             int nbnd;
             m_numDirichletBCs = NumDirichlet; 
-            m_numNeumannBCs = NumNeumann; 
-            m_numRobinBCs = NumRobin; 
 
-            nbnd = bndCond.size();
+            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
+            
+            nbnd = bregions.size();
 
             Array<OneD, int> oldGlobalID(nbnd);   
 
             for(i = cnt = 0; i < nbnd; ++i)
             {
-                SpatialDomains::VertexComponentSharedPtr vert = (bndCond[i])->GetVertex();
-                oldGlobalID[cnt++] = vert->GetVid(); 
+                if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                {
+                    SpatialDomains::VertexComponentSharedPtr vert;
+                    
+                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                    {
+                        oldGlobalID[cnt++] = vert->GetVid(); 
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a vertex failed");
+                    }        
+                }                     
             } 
 
             // Find the index of the BCs entry in the mapping array
             Array<OneD, int> LocalID(nbnd);
             
-            for(i = 0; i < m_totLocLen; ++i)
+            for(i = 0; i < m_totLocDofs; ++i)
             {        
                 for(j = 0; j<nbnd; ++j)
                 {
@@ -136,7 +155,7 @@ namespace Nektar
             {
                 bool check;
                 int incr;
-                for(i = 0; i < m_totLocLen; ++i)
+                for(i = 0; i < m_totLocDofs; ++i)
                 {
                     check=true;
                     incr=0;
@@ -158,7 +177,33 @@ namespace Nektar
                                 ++incr;
                             }
                         }
-                        m_locToContMap[i]+=incr;
+                        m_locToContMap[i] += incr;
+                    }
+                }    
+
+                for(i = 0; i < m_totLocBndDofs; ++i)
+                {
+                    check=true;
+                    incr=0;
+                    for(j = 0; j<NumDirichlet; ++j)
+                    {
+                        if(m_locToContBndMap[i] == oldGlobalID[j])
+                        {
+                            m_locToContBndMap[i] = j;
+                            check=false;
+                            break;
+                        }
+                    }
+                    if(check)
+                    {
+                        for(j = 0; j<NumDirichlet; ++j)
+                        {
+                            if(m_locToContBndMap[i] < oldGlobalID[j])
+                            {
+                                ++incr;
+                            }
+                        }
+                        m_locToContBndMap[i]+=incr;
                     }
                 }    
             } 
@@ -176,6 +221,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.16  2007/09/25 14:25:30  pvos
+* Update for helmholtz1D with different expansion orders
+*
 * Revision 1.15  2007/08/13 14:36:36  pvos
 * Neumann BC update
 *

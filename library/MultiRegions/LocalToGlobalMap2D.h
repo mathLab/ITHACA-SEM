@@ -70,37 +70,38 @@ namespace Nektar
         inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
                                     Array<OneD, NekDouble> &cont)
         {
-                Array<OneD, NekDouble> tmp(m_totLocLen);
+                Array<OneD, NekDouble> tmp(m_totLocDofs);
         if(m_sign_change)
         {
-            Vmath::Vmul(m_totLocLen,&m_sign[0],1,&loc[0],1,&tmp[0],1);
+            Vmath::Vmul(m_totLocDofs,&m_sign[0],1,&loc[0],1,&tmp[0],1);
         }
         
-                Vmath::Scatr(m_totLocLen, &tmp[0],&m_locToContMap[0],&cont[0]);
+                Vmath::Scatr(m_totLocDofs, &tmp[0],&m_locToContMap[0],&cont[0]);
         }
         
         inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
                                     Array<OneD, NekDouble> &loc)
         {
-                Vmath::Gathr(m_totLocLen,&cont[0],&m_locToContMap[0], &loc[0]);
+                Vmath::Gathr(m_totLocDofs,&cont[0],&m_locToContMap[0], &loc[0]);
         
         if(m_sign_change)
         {
-            Vmath::Vmul(m_totLocLen,&m_sign[0],1,&loc[0],1,&loc[0],1);
+            Vmath::Vmul(m_totLocDofs,&m_sign[0],1,&loc[0],1,&loc[0],1);
         }
         }
         
         inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
                                  Array<OneD, NekDouble> &cont)
         {
-        Vmath::Zero(m_totGloLen,&cont[0],1);
-                Array<OneD, NekDouble> tmp(m_totLocLen);
-        if(m_sign_change)
-        {
-            Vmath::Vmul(m_totLocLen,&m_sign[0],1,&loc[0],1,&tmp[0],1);
-        }
+            Vmath::Zero(m_totGloDofs,&cont[0],1);
+            Array<OneD, NekDouble> tmp(m_totLocDofs);
 
-                Vmath::Assmb(m_totLocLen,&tmp[0],&m_locToContMap[0],&cont[0]);
+            if(m_sign_change)
+            {
+                Vmath::Vmul(m_totLocDofs,&m_sign[0],1,&loc[0],1,&tmp[0],1);
+            }
+            
+            Vmath::Assmb(m_totLocDofs,&tmp[0],&m_locToContMap[0],&cont[0]);
         }
 
 
@@ -118,6 +119,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap2D.h,v $
+/** Revision 1.5  2007/07/22 23:04:22  bnelson
+/** Backed out Nektar::ptr.
+/**
 /** Revision 1.4  2007/07/20 02:04:13  bnelson
 /** Replaced boost::shared_ptr with Nektar::ptr
 /**

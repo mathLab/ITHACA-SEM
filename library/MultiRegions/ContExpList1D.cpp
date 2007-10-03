@@ -59,7 +59,7 @@ namespace Nektar
         }
 
         ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba,
-                                    const SpatialDomains::MeshGraph1D &graph1D):
+                                     const SpatialDomains::MeshGraph1D &graph1D):
 	    ExpList1D(Ba,graph1D)
 	{   
             ASSERTL1((Ba.GetBasisType() == LibUtilities::eModified_A)
@@ -72,7 +72,7 @@ namespace Nektar
 	    // setup mapping array 
 	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph1D.GetDomain());
             
-            m_contNcoeffs = m_locToGloMap->GetTotGloLen();
+            m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
 	}
         
@@ -95,7 +95,7 @@ namespace Nektar
 	    // setup mapping array 
 	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,domain);
 	    
-	    m_contNcoeffs = m_locToGloMap->GetTotGloLen();
+	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
 	}
               
@@ -132,7 +132,7 @@ namespace Nektar
            
             if(matrixIter == m_globalMat->end())
             {
-                mass_matrix = GenGlobalLinSys(key);
+                mass_matrix = GenGlobalLinSys(key,m_locToGloMap);
                 (*m_globalMat)[key] = mass_matrix;
             }
             else
@@ -140,8 +140,7 @@ namespace Nektar
                 mass_matrix = matrixIter->second;
             }
 
-	    DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
-	    mass_matrix->GetLinSys()->Solve(v,v);
+            mass_matrix->Solve(m_contCoeffs,m_contCoeffs,m_locToGloMap);
 	    m_transState = eContinuous;
 	    m_physState = false;
 	}
@@ -157,7 +156,7 @@ namespace Nektar
            
             if(matrixIter == m_globalMat->end())
             {
-                helm_matrix = GenGlobalLinSys(key);
+                helm_matrix = GenGlobalLinSys(key,m_locToGloMap);
                 (*m_globalMat)[key] = helm_matrix;
             }
             else
@@ -166,8 +165,7 @@ namespace Nektar
             }
 
 
-	    DNekVec v(m_contNcoeffs,m_contCoeffs,eWrapper);
-	    helm_matrix->GetLinSys()->Solve(v,v);
+            helm_matrix->Solve(m_contCoeffs,m_contCoeffs,m_locToGloMap);
 	    m_transState = eContinuous;
 	    m_physState = false;
 	}
@@ -183,52 +181,14 @@ namespace Nektar
 	    ExpList1D::BwdTrans(In);
 	}
 	
-	
-	GlobalLinSysSharedPtr ContExpList1D::GenGlobalLinSys(const GlobalLinSysKey &mkey)
-	{
-            int i,j,n,gid1,gid2,loc_lda,cnt;
-            DNekScalMatSharedPtr loc_mat;
-            StdRegions::StdExpansionVectorIter def;
-            DNekLinSysSharedPtr   linsys;
-            GlobalLinSysSharedPtr returnlinsys;
-            
-            NekDouble zero = 0.0;
-            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(m_contNcoeffs,m_contNcoeffs,zero);
-            
-            // fill global matrix 
-            for(n = cnt = 0; n < (*m_exp).size(); ++n)
-            {
-                LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
-                                               (*m_exp)[n]->DetShapeType(),
-                                               *(*m_exp)[n],mkey.GetScaleFactor());
-                
-                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
-                loc_lda = loc_mat->GetColumns();
-		
-                for(i = 0; i < loc_lda; ++i)
-                {
-                    gid1 = m_locToGloMap->GetMap(cnt + i);                    
-                    for(j = 0; j < loc_lda; ++j)
-                    {
-                        gid2 = m_locToGloMap->GetMap(cnt + j);                        
-                        (*Gmat)(gid1,gid2) += (*loc_mat)(i,j);                          
-                    }		
-                    
-                }
-                cnt += (*m_exp)[n]->GetNcoeffs();
-            }
-            
-            linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
-            
-            returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys);
-            return returnlinsys;
-        }
-
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.23  2007/09/25 14:25:29  pvos
+* Update for helmholtz1D with different expansion orders
+*
 * Revision 1.22  2007/08/11 23:43:25  sherwin
 * Expansion bases reader part for Helmholtz1D
 *

@@ -260,7 +260,7 @@ namespace Nektar
             /** \brief return basis definition array m_bdata */
             inline const ConstArray<OneD, NekDouble>& GetBdata() const 
             {
-        return m_bdata;
+                return m_bdata;
             }
 
             /** \brief return basis definition array m_dbdata */

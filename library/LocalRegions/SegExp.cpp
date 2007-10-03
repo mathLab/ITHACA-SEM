@@ -45,30 +45,30 @@ namespace Nektar
         SegExp::SegExp(const LibUtilities::BasisKey &Ba, 
                        const SpatialDomains::SegGeomSharedPtr &geom):
             StdRegions::StdSegExp(Ba),
-                m_matrixManager(std::string("StdExp"))
+            m_matrixManager(std::string("StdExp")),
+            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
         {
             m_geom = geom;    
 
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                StdRegions::eNoShapeType,*this),
-                boost::bind(&SegExp::CreateMatrix, this, _1));
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,  StdRegions::eNoShapeType,*this),   boost::bind(&SegExp::CreateMatrix, this, _1));
+                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoShapeType,*this),   boost::bind(&SegExp::CreateStaticCondMatrix, this, _1));
             }
 
             GenMetricInfo();
         }
 
         SegExp::SegExp(const LibUtilities::BasisKey &Ba):
-            StdRegions::StdSegExp(Ba),
-            m_matrixManager(std::string("StdExp"))
+                    StdRegions::StdSegExp(Ba),
+                    m_matrixManager(std::string("StdExp")),
+                    m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
         {
 
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                    StdRegions::eNoShapeType,*this),
-                    boost::bind(&SegExp::CreateMatrix, this, _1));
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoShapeType,*this),  boost::bind(&SegExp::CreateMatrix, this, _1));
+                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoShapeType,*this),  boost::bind(&SegExp::CreateStaticCondMatrix, this, _1));
             }
 
             // Set up unit geometric factors. 
@@ -82,8 +82,9 @@ namespace Nektar
 
         // copy constructor
         SegExp::SegExp(const SegExp &S):
-            StdRegions::StdSegExp(S),
-            m_matrixManager(std::string("StdExp"))
+                    StdRegions::StdSegExp(S),
+                    m_matrixManager(std::string("StdExp")),
+                    m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
         {
             m_geom        = S.m_geom;
             m_metricinfo  = S.m_metricinfo;
@@ -142,7 +143,7 @@ namespace Nektar
                     // interpolate Jacobian
                     ndata = Array<OneD,NekDouble>(nq);    
                     odata = Xgfac->GetJac();
-
+                    
                     Interp1D(CBasis0->GetBasisKey(),odata,
                         m_base[0]->GetBasisKey(), ndata);
 
@@ -418,10 +419,10 @@ namespace Nektar
             {
                 IProductWRTBase(inarray,outarray);
 
-        // get Mass matrix inverse
-        MatrixKey             masskey(StdRegions::eInvMass, DetShapeType(),*this);
-        DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
-
+                // get Mass matrix inverse
+                MatrixKey             masskey(StdRegions::eInvMass, DetShapeType(),*this);
+                DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
+                
                 // copy inarray in case inarray == outarray
                 DNekVec in (m_ncoeffs,outarray);
                 DNekVec out(m_ncoeffs,outarray,eWrapper);
@@ -621,6 +622,26 @@ namespace Nektar
             }
         }
 
+
+        DNekBlkMatSharedPtr SegExp::GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            // Need to check if matrix exists in stdStaticCondMatrixManager.
+            // If not then make a local expansion with standard metric info
+            // and generate matrix. Otherwise direct call is OK. 
+
+            if(!StdStaticCondMatManagerAlreadyCreated(mkey))
+            {
+                LibUtilities::BasisKey bkey = m_base[0]->GetBasisKey();
+                SegExpSharedPtr tmp = MemoryManager<SegExp>::AllocateSharedPtr(bkey);
+                
+                return tmp->StdSegExp::GetStdStaticCondMatrix(mkey);                
+            }
+            else
+            {
+                return StdSegExp::GetStdStaticCondMatrix(mkey);
+            }
+        }
+
         NekDouble SegExp::PhysEvaluate(const ConstArray<OneD,NekDouble>& coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(1);
@@ -694,33 +715,23 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-
                     NekDouble factor = mkey.GetScaleFactor();
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetShapeType(), *this);    
-                    DNekScalMatSharedPtr mass = this->m_matrixManager[masskey];
-#if 1
+                    DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
                                      mkey.GetShapeType(), *this);
-                    DNekScalMatSharedPtr lap = this->m_matrixManager[lapkey];
-#else
-                    MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetShapeType(), *this);
-                    DNekMatSharedPtr mat = GetStdMatrix(*lapkey.GetStdMatKey());
-                    NekDouble  gfac = m_metricinfo->GetGmat()[0][0];
-                    NekDouble  jac  = m_metricinfo->GetJac()[0];
-                    NekDouble  fac = gfac*gfac*jac;
-                    DNekScalMatSharedPtr lap = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
-#endif
-                    int rows = lap->GetRows();
-                    int cols = lap->GetColumns();
-                    
+                    DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
+
+                    int rows = LapMat.GetRows();
+                    int cols = LapMat.GetColumns();
+
                     DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
 
-                    (*helm) = (*lap) + 1.0/factor*(*mass);
-                    // Even better:          helm  = lap + 1.0/factor*mass;
+                    NekDouble one = 1.0;
+                    (*helm) = factor*LapMat + MassMat;
                     
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,helm);            
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                 }
                 break;
             default:
@@ -731,11 +742,122 @@ namespace Nektar
             return returnval;
         }
 
+
+        DNekScalBlkMatSharedPtr SegExp::CreateStaticCondMatrix(const MatrixKey &mkey)
+        {
+            DNekScalBlkMatSharedPtr returnval;
+
+            ASSERTL2(m_metricinfo->GetGtype == SpatialDomains::eNoGeomType,"Geometric information is not set up");
+
+            // set up block matrix system
+            int nbdry = NumBndryCoeffs();
+            int nint = m_ncoeffs - nbdry;
+            unsigned int exp_size[] = {nbdry,nint};
+            int nblks = 2;
+            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks,nblks,exp_size,exp_size); //Really need a constructor which takes Arrays
+            NekDouble factor = 1.0;
+
+            switch(mkey.GetMatrixType())
+            {
+            case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
+
+                // use Deformed case for both regular and deformed geometries 
+                factor = 1.0;
+                goto UseLocRegionsMatrix;
+                break;
+            default:
+                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    factor = 1.0;
+                    goto UseLocRegionsMatrix;
+                }
+                else
+                {
+                    DNekScalMatSharedPtr mat = GetLocMatrix(mkey);
+                    factor = mat->Scale();
+                    goto UseStdRegionsMatrix;
+                }
+                break;
+            UseStdRegionsMatrix:
+                {
+                    NekDouble            invfactor = 1.0/factor;
+                    NekDouble            one = 1.0;
+                    DNekBlkMatSharedPtr  mat = GetStdStaticCondMatrix(*(mkey.GetStdMatKey()));                    
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr     Asubmat;
+
+                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,Asubmat = mat->GetBlock(0,0)));
+                    returnval->SetBlock(0,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Asubmat = mat->GetBlock(0,1)));
+                    returnval->SetBlock(1,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,Asubmat = mat->GetBlock(1,0)));
+                    returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,Asubmat = mat->GetBlock(1,1)));
+                }
+                break;
+            UseLocRegionsMatrix:
+                {
+                    int i,j;
+                    NekDouble            invfactor = 1.0/factor;
+                    NekDouble            one = 1.0;
+                    DNekScalMat &mat = *GetLocMatrix(mkey);
+                    DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry);
+                    DNekMatSharedPtr B = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
+                    DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
+                    DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
+                    
+                    for(i = 0; i < nbdry; ++i)
+                    {
+                        for(j = 0; j < nbdry; ++j)
+                        {
+                            (*A)(i,j) = mat(i,j);
+                        }
+                        
+                        for(j = 0; j < nint; ++j)
+                        {
+                            (*B)(i,j) = mat(i,nbdry+j);
+                        }
+                    }
+                    
+                    for(i = 0; i < nint; ++i)
+                    {
+                        for(j = 0; j < nbdry; ++j)
+                        {
+                            (*C)(i,j) = mat(nbdry+i,j);
+                        }
+                        
+                        for(j = 0; j < nint; ++j)
+                        {
+                            (*D)(i,j) = mat(nbdry+i,nbdry+j);
+                        }
+                    }
+                    
+                    // Calculate static condensed system 
+                    if(nint)
+                    {
+                        D->Invert();
+                        (*B) = (*B)*(*D);
+                        (*A) = (*A) - (*B)*(*C);
+                    }
+                    
+                    DNekScalMatSharedPtr     Atmp;
+
+                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,A));
+                    returnval->SetBlock(0,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,B));
+                    returnval->SetBlock(1,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,C));
+                    returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,D));
+
+                }
+            }
+            
+            return returnval;
+        }
+
     } // end of namespace    
  }//end of namespace
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.28  2007/08/10 03:38:08  jfrazier
+// Updated with new rev of NekManager.
+//
 // Revision 1.27  2007/07/30 21:00:06  sherwin
 // Temporary fix in CreateMatrix
 //

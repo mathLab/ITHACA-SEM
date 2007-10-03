@@ -91,7 +91,7 @@ namespace Nektar
             std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
 
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
-            GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey);
+
             void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs);
 
             void GenerateField1D(SpatialDomains::BoundaryConditions &bcs, 

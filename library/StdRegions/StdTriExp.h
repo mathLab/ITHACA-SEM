@@ -246,6 +246,16 @@ namespace Nektar
                 return 3;
             }
 
+            virtual int v_NumBndryCoeffs() const
+            {
+                ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A,
+                         "BasisType is not a boundary interior form");
+                ASSERTL1(GetBasisType(1) == LibUtilities::eModified_B,
+                         "BasisType is not a boundary interior form");
+
+                return 3 + (GetBasisNumModes(0)-2) + 2*(GetBasisNumModes(1)-2);
+            } 
+
             virtual int v_GetEdgeNcoeffs(const int i) const
             {
                 return GetEdgeNcoeffs(i);
@@ -256,7 +266,6 @@ namespace Nektar
             {
                 return GenMatrix(mtype);
             }
-
 
 
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
@@ -362,6 +371,9 @@ namespace Nektar
 
 /**
 * $Log: StdTriExp.h,v $
+* Revision 1.18  2007/07/20 02:16:55  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.17  2007/07/12 12:55:16  sherwin
 * Simplified Matrix Generation
 *

@@ -219,6 +219,11 @@ namespace Nektar
                 return 2;
             } 
 
+            virtual int v_NumBndryCoeffs() const
+            {
+                return 2;
+            } 
+
             virtual ShapeType v_DetShapeType() const
             {
                 return DetShapeType();
@@ -345,6 +350,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.28  2007/07/22 23:04:27  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.27  2007/07/20 02:16:55  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

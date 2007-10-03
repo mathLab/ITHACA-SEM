@@ -47,7 +47,12 @@ namespace Nektar
         {
         public:
             GlobalLinSysKey(const StdRegions::MatrixType matrixType, 
-                            const double scalefactor = 1.0);
+                            const double scalefactor = 1.0,
+#if 0
+                            const GlobalSysSolnType solnType = eDirectFullMatrix);
+#else
+                            const GlobalSysSolnType solnType = eDirectStaticCond);
+#endif
 
             GlobalLinSysKey(const GlobalLinSysKey &key);
 
@@ -62,6 +67,11 @@ namespace Nektar
             {
                 return m_linSysType; 
             }
+
+            const GlobalSysSolnType  GetGlobalSysSolnType() const
+            {
+                return m_solnType; 
+            }
             
             const NekDouble GetScaleFactor() const 
             {
@@ -69,11 +79,11 @@ namespace Nektar
             }
 
         protected:
-            GlobalLinSysKey();
-
+            GlobalLinSysKey(); 
+            GlobalSysSolnType      m_solnType;
             StdRegions::MatrixType m_linSysType;
             NekDouble              m_scaleFactor;
-
+            
         private:
         };
 
@@ -85,5 +95,8 @@ namespace Nektar
 #endif //GLOBALMATRIXKEY_H
 
 /**
-* $Log:$
+* $Log: GlobalLinSysKey.h,v $
+* Revision 1.1  2007/07/19 20:02:26  sherwin
+* Generalised global matrix solver
+*
 ***/

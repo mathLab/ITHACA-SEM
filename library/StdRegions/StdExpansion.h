@@ -42,7 +42,6 @@
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
 #include <StdRegions/LocalRegionsDeclarations.hpp>
-
 #include <StdRegions/StdExpMap.h>
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/StdLinSysKey.hpp>
@@ -384,6 +383,12 @@ namespace Nektar
                 return v_GetEdgeNcoeffs(i);
             }
 
+
+            int NumBndryCoeffs(void)  const
+            {
+                return v_NumBndryCoeffs();
+            }
+
             /** \brief This function returns the type of expansion basis on the
             *  \a i-th edge  
             *  
@@ -650,9 +655,15 @@ namespace Nektar
                 v_WriteToFile(outfile,dumpVar);
             }
 
-            DNekScalMatSharedPtr GetLocMatrix(LocalRegions::MatrixKey &mkey)
+            DNekScalMatSharedPtr GetLocMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 return v_GetLocMatrix(mkey);
+            }
+
+
+            DNekScalBlkMatSharedPtr GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
+            {
+                return v_GetLocStaticCondMatrix(mkey);
             }
 
 
@@ -760,10 +771,16 @@ namespace Nektar
                 return v_GetMetricInfo();
             }
 
-            virtual DNekScalMatSharedPtr v_GetLocMatrix(LocalRegions::MatrixKey &mkey)
+            virtual DNekScalMatSharedPtr v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return boost::shared_ptr<DNekScalMat>();
+            }
+
+            virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return boost::shared_ptr<DNekScalBlkMat>();
             }
 
             /** \brief this function interpolates a 1D function \f$f\f$ evaluated
@@ -896,16 +913,42 @@ namespace Nektar
                 return m_stdMatrixManager.AlreadyCreated(mkey);
             }
          
+            bool StdStaticCondMatManagerAlreadyCreated(const StdMatrixKey &mkey)
+            {
+                return m_stdStaticCondMatrixManager.AlreadyCreated(mkey);
+            }
+         
             DNekMatSharedPtr CreateStdMatrix(const StdMatrixKey &mkey);
+
+            /** \brief Create the static condensation of a matrix when
+                using a boundary interior decomposition
+
+                If a matrix system can be represented by 
+                \f$ Mat = \left [ \begin{array}{cc}
+                              A & B \\ 
+                              C & D \end{array} \right ] \f$
+               This routine creates a matrix containing the statically
+               condense system of the form
+               \f$ Mat = \left [ \begin{array}{cc}
+                              A - B D^{-1} C & B D^{-1} \\ 
+                              D^{-1} C       & D^{-1} \end{array} \right ] \f$
+            **/
+            DNekBlkMatSharedPtr CreateStdStaticCondMatrix(const StdMatrixKey &mkey);
 
             DNekMatSharedPtr GetStdMatrix(const StdMatrixKey &mkey) 
             {
                 return m_stdMatrixManager[mkey];
             }
 
+            DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdMatrixKey &mkey) 
+            {
+                return m_stdStaticCondMatrixManager[mkey];
+            }
+
         private:
 
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
+            LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
 
             // Virtual functions
 
@@ -913,6 +956,12 @@ namespace Nektar
             virtual int v_GetNedges() const = 0;
             virtual int v_GetNfaces() const = 0;
 
+            virtual int v_NumBndryCoeffs() const 
+            {
+                ASSERTL0(false, "This function is needs defining for this shape");
+                return 0;
+            }
+            
             virtual int v_GetEdgeNcoeffs(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
@@ -1070,6 +1119,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.66  2007/08/29 23:26:49  jfrazier
+* Created non-static manager that shares data across instances.
+*
 * Revision 1.65  2007/08/11 23:42:25  sherwin
 * A few changes
 *

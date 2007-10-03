@@ -142,10 +142,14 @@ namespace Nektar
             DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
 
+            DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
+            DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
+
             SpatialDomains::SegGeomSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
             /// \brief  Inner product of \a inarray over region with respect to
             /// the expansion basis \a base and return in \a outarray 
@@ -342,9 +346,14 @@ namespace Nektar
                 return StdExpansion::L2();
             }
 
-            virtual DNekScalMatSharedPtr v_GetLocMatrix(MatrixKey &mkey)
+            virtual DNekScalMatSharedPtr v_GetLocMatrix(const MatrixKey &mkey)
             {
                 return m_matrixManager[mkey];
+            }
+
+            virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+            {
+                return m_staticCondMatrixManager[mkey];
             }
         };
 
@@ -359,6 +368,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.23  2007/08/10 03:38:15  jfrazier
+// Updated with new rev of NekManager.
+//
 // Revision 1.22  2007/07/28 05:09:33  sherwin
 // Fixed version with updated MemoryManager
 //

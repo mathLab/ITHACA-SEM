@@ -58,6 +58,10 @@ namespace Nektar
     typedef LinearSystem<DNekScalMat>           DNekScalLinSys; 
     typedef boost::shared_ptr<DNekScalLinSys>   DNekScalLinSysSharedPtr;
 
+    typedef NekMatrix<DNekMat, FullMatrixTag, BlockMatrixTag> DNekBlkMat;
+
+    typedef boost::shared_ptr<DNekBlkMat>    DNekBlkMatSharedPtr;
+
     typedef NekMatrix<DNekScalMat, FullMatrixTag, BlockMatrixTag> DNekScalBlkMat;
 
     typedef boost::shared_ptr<DNekScalBlkMat>    DNekScalBlkMatSharedPtr;
@@ -67,6 +71,9 @@ namespace Nektar
 
 /**
     $Log: NekTypeDefs.hpp,v $
+    Revision 1.8  2007/07/26 08:40:49  sherwin
+    Update to use generalised i/o hooks in Helmholtz1D
+
     Revision 1.7  2007/07/22 23:03:28  bnelson
     Backed out Nektar::ptr.
 

@@ -46,6 +46,84 @@ namespace Nektar
             m_linSys(linsys)
 	{
 	}
+
+	GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &mkey, 
+                                   const DNekLinSysSharedPtr linsys,
+                                   const DNekScalBlkMatSharedPtr BinvD,
+                                   const DNekScalBlkMatSharedPtr C,
+                                   const DNekScalBlkMatSharedPtr invD):
+            m_linSysKey(mkey),
+            m_linSys(linsys)
+	{
+            m_blkMatrices = Array<OneD,DNekScalBlkMatSharedPtr>(3);
+
+            m_blkMatrices[0] = BinvD;
+            m_blkMatrices[1] = C;
+            m_blkMatrices[2] = invD;
+	}
+
+
+        void GlobalLinSys::Solve(const ConstArray<OneD,NekDouble> &in, 
+                                 Array<OneD,NekDouble>  &out,
+                                 LocalToGlobalMapSharedPtr &locToGloMap)
+        {
+            switch(m_linSysKey.GetGlobalSysSolnType())
+            {
+            case eDirectFullMatrix:
+                {
+                    DNekVec Vin(in.num_elements(),in);
+                    DNekVec Vout(out.num_elements(),out,eWrapper);
+                    m_linSys->Solve(Vin,Vout);
+                }
+                break;
+            case eDirectStaticCond:
+                {
+                    int i;
+                    int nbndry  = m_linSys->GetRows();
+                    int nint    = in.num_elements() -nbndry; 
+                    int nDirBCs = locToGloMap->GetNumDirichletBCs();
+                    DNekScalBlkMat &BinvD = *m_blkMatrices[0];
+                    DNekScalBlkMat &C     = *m_blkMatrices[1];
+                    DNekScalBlkMat &invD  = *m_blkMatrices[2];
+                    
+                    Array<OneD,NekDouble>  offset;  
+                    DNekVec Fbnd(nbndry,in);
+                    DNekVec Vloc;
+                    DNekVec Vbnd(nbndry,out,eWrapper);
+
+                    DNekVec Fint(nint,in + nbndry);
+                    DNekVec Vint(nint,offset = out + nbndry,eWrapper);
+
+                    if(nbndry)
+                    {
+                        // construct boundary forcing 
+                        Vloc = BinvD*Fint;
+                        locToGloMap->AssembleBnd(Vloc,Vbnd,nDirBCs);
+                        Fbnd = Fbnd - Vbnd;
+                        
+                        // solve boundary system 
+                        m_linSys->Solve(Fbnd,Vbnd);
+                    }
+
+                    // solve interior system 
+                    if(nint)
+                    {
+                         if(nbndry)
+                         {
+                             Vmath::Zero(Vloc.GetDimension(),Vloc.GetPtr(),1);
+                             locToGloMap->ContToLocalBnd(Vbnd,Vloc,nDirBCs);
+                             Fint = Fint - C*Vloc;
+                         }
+                         Vint = invD*Fint;
+                                        
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false,"Matrix solution type not defined");
+                break;
+            }
+        }
 	
     } //end of namespace
 } //end of namespace

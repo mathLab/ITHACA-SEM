@@ -43,13 +43,16 @@ namespace Nektar
     {
         // Register Mass Matrix creator. 
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
-                                         const NekDouble    scalefactor):
+                                         const NekDouble    scalefactor, 
+                                         const GlobalSysSolnType solnType):
+            m_solnType(solnType),
             m_linSysType(matrixType),
             m_scaleFactor(scalefactor)
         {
         }
 
         GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
+            m_solnType(key.m_solnType),
             m_linSysType(key.m_linSysType),
             m_scaleFactor(key.m_scaleFactor)
         {
@@ -63,6 +66,16 @@ namespace Nektar
             }
 
             if(lhs.m_linSysType > rhs.m_linSysType)
+            {
+                return false;
+            }
+
+            if(lhs.m_solnType < rhs.m_solnType)
+            {
+                return true;
+            }
+
+            if(lhs.m_solnType > rhs.m_solnType)
             {
                 return false;
             }
@@ -82,7 +95,10 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs)
         {
-            os << "MatrixType: " << rhs.GetLinSysType() << ", ScaleFactor: " <<rhs.GetScaleFactor() << std::endl;
+            os << "MatrixType: " << rhs.GetLinSysType() << ", ScaleFactor: "
+               <<rhs.GetScaleFactor() << ", Solution Type: "
+               << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()] 
+               << std::endl;
 
             return os;
         }
@@ -90,6 +106,9 @@ namespace Nektar
 }
 
 /**
-* $Log: $
+* $Log: GlobalLinSysKey.cpp,v $
+* Revision 1.1  2007/07/19 20:02:26  sherwin
+* Generalised global matrix solver
+*
 ***/
 

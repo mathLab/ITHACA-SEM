@@ -61,9 +61,10 @@ namespace Nektar
             const LibUtilities::BasisKey &Ba, 
             const LibUtilities::BasisKey &Bb, 
             const LibUtilities::BasisKey &Bc):
-        m_ncoeffs(numcoeffs),
+            m_ncoeffs(numcoeffs),
             m_numbases(numbases),
-            m_stdMatrixManager(std::string("StdExpansion"))
+            m_stdMatrixManager(std::string("StdExpansion")),
+            m_stdStaticCondMatrixManager(std::string("StdExpansionStaticCondMat"))
         {
 
             m_base = Array<OneD, LibUtilities::BasisSharedPtr>(m_numbases);
@@ -100,6 +101,7 @@ namespace Nektar
             {
                 m_stdMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoShapeType,*this),
                                   boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
+                m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoShapeType,*this),  boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1));
             }
 
         } //end constructor
@@ -188,6 +190,70 @@ namespace Nektar
                 break;
             }
 
+            return returnval;
+        }
+
+
+        DNekBlkMatSharedPtr StdExpansion::CreateStdStaticCondMatrix(const StdMatrixKey &mkey) 
+        {
+            DNekBlkMatSharedPtr returnval;
+            MatrixType mtype = mkey.GetMatrixType();
+            
+            DNekMatSharedPtr  mat = GetStdMatrix(mkey);
+            int nbdry = NumBndryCoeffs(); // also checks to see if this is a boundary interior decomposed expansion
+            int nint = m_ncoeffs - nbdry;
+            DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry);
+            DNekMatSharedPtr B = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
+            DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
+            DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
+            
+            int i,j;
+            
+            for(i = 0; i < nbdry; ++i)
+            {
+                for(j = 0; j < nbdry; ++j)
+                {
+                    (*A)(i,j) = (*mat)(i,j);
+                }
+                
+                for(j = 0; j < nint; ++j)
+                {
+                    (*B)(i,j) = (*mat)(i,nbdry+j);
+                }
+            }
+            
+            
+            for(i = 0; i < nint; ++i)
+            {
+                for(j = 0; j < nbdry; ++j)
+                {
+                    (*C)(i,j) = (*mat)(nbdry+i,j);
+                }
+                
+                for(j = 0; j < nint; ++j)
+                {
+                    (*D)(i,j) = (*mat)(nbdry+i,nbdry+j);
+                }
+            }
+            
+            // Calculate static condensed system 
+            if(nint)
+            {
+                D->Invert();
+                (*B) = (*B)*(*D);
+                (*A) = (*A) - (*B)*(*C);
+            }
+
+            // set up block matrix system
+            unsigned int exp_size[] = { nbdry,nint};
+            int nblks = 2;
+            returnval = MemoryManager<DNekBlkMat>::AllocateSharedPtr(nblks,nblks,exp_size,exp_size); //Really need a constructor which takes Array<OneD,int>
+            
+            returnval->SetBlock(0,0,A);
+            returnval->SetBlock(0,1,B);
+            returnval->SetBlock(1,0,C);
+            returnval->SetBlock(1,1,D);
+            
             return returnval;
         }
 
@@ -500,6 +566,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.53  2007/09/27 12:55:57  pvos
+* Column major Blas calls corrections
+*
 * Revision 1.52  2007/09/25 14:25:56  pvos
 * Update for helmholtz1D with different expansion orders
 *

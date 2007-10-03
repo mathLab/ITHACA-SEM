@@ -51,15 +51,30 @@ namespace Nektar
     {
 
         
-    // multiregion stuff here
-    enum TransState
-    {
-        eNotSet,      ///< No transformed state set 
-        eLocal,       ///< Local  Modal space array contains "true" expansion values
-        eContinuous,  ///< Continuous Modal space array contains "true" expansion values
-        eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values 
-    };
-    
+        // multiregion stuff here
+        enum TransState
+        {
+            eNotSet,      ///< No transformed state set 
+            eLocal,       ///< Local  Modal space array contains "true" expansion values
+            eContinuous,  ///< Continuous Modal space array contains "true" expansion values
+            eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values 
+        };
+        
+        enum GlobalSysSolnType
+        {
+            eNoSolnType,    ///< No Solution type specified
+            eDirectFullMatrix,
+            eDirectStaticCond,
+        };
+
+        const char* const GlobalSysSolnTypeMap[] = 
+        {
+            "No Solution Type",
+            "Direct Solve: Full Matrix",
+            "Direct Solve: Static Condensation"
+        };
+
+
         typedef std::vector<SpatialDomains::BoundaryConditionType>  BndTypesVector;
         typedef std::vector<SpatialDomains::BoundaryConditionType>::iterator BndTypesVectorIter;
 

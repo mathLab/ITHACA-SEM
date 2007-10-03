@@ -49,27 +49,22 @@ namespace Nektar
         public LocalToGlobalMap
         {
         public:
-            LocalToGlobalMap1D(){};
-            LocalToGlobalMap1D(const int loclen, 
-                               const StdRegions::StdExpansionVector &locexp, 
-                               const SpatialDomains::CompositeVector &domain);
-            
+        LocalToGlobalMap1D(){};
+        LocalToGlobalMap1D(const int loclen, 
+                           const StdRegions::StdExpansionVector &locexp, 
+                           const SpatialDomains::CompositeVector &domain);
+        
             virtual ~LocalToGlobalMap1D();
-            
-            void ResetMapping(const int NumDirichlet, const int NumRobin, 
-                              const int NumNeumann, const LocalRegions::PointExpVector &bndCond);
-            
-            inline const ConstArray<OneD, int> &GetBoundCondGlobID() const 
-            {
-                return m_bndCondGlobalID;
-            }
-            
+
         protected:
             Array<OneD,int> m_bndCondGlobalID;
             
         private:
-          
-        };        
+            virtual void v_ResetMapping(const int NumDirichlet, 
+                                        SpatialDomains::BoundaryConditions &bcs,
+                                        const std::string variable);
+    };
+    
     } // end of namespace
 } // end of namespace
 
@@ -77,6 +72,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.13  2007/09/25 14:25:30  pvos
+/** Update for helmholtz1D with different expansion orders
+/**
 /** Revision 1.12  2007/08/13 14:36:36  pvos
 /** Neumann BC update
 /**

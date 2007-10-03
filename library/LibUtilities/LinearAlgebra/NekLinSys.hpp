@@ -251,6 +251,8 @@ namespace Nektar
         }
 
 
+        unsigned int GetRows() const { return A.GetRows(); }
+        unsigned int GetColumns() const { return A.GetColumns(); }
     private:
         void FactorMatrix(NekMatrix<DataType,DiagonalMatrixTag> &theA)
         {

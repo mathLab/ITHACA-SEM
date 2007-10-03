@@ -143,7 +143,7 @@ namespace Nektar
                     {
                         value = true;
                     }
-
+                    
                     return value;
                 }
 
@@ -191,7 +191,6 @@ namespace Nektar
                 CreateFuncType m_globalCreateFunc;
                 CreateFuncContainer m_keySpecificCreateFuncs;
         };
-
         template <typename KeyType, typename ValueT, typename opLessCreator> typename NekManager<KeyType, ValueT, opLessCreator>::ValueContainerPool NekManager<KeyType, ValueT, opLessCreator>::m_ValueContainerPool;
     }
 }

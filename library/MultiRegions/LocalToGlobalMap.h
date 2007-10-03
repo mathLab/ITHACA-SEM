@@ -51,8 +51,8 @@ namespace Nektar
     {
     public:
         LocalToGlobalMap();
-        LocalToGlobalMap(const int totdata, Array<OneD,int> &map);
-        
+        LocalToGlobalMap(const int totdata, const int totbnddata, 
+                             Array<OneD,int> &map);
         ~LocalToGlobalMap();
         
         inline int GetMap(const int i) const
@@ -63,26 +63,71 @@ namespace Nektar
         inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
                                 Array<OneD, NekDouble> &cont)
         {
-            Vmath::Scatr(m_totLocLen, &loc[0],&m_locToContMap[0],&cont[0]);
+            Vmath::Scatr(m_totLocDofs, &loc[0],&m_locToContMap[0],&cont[0]);
         }                
+
         
         inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
                                 Array<OneD, NekDouble> &loc)
         {
-            Vmath::Gathr(m_totLocLen,&cont[0],&m_locToContMap[0], &loc[0]);
+            Vmath::Gathr(m_totLocDofs,&cont[0],&m_locToContMap[0], &loc[0]);
         }
         
         inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
                              Array<OneD, NekDouble> &cont)
         {
-            Vmath::Zero(m_totGloLen,&cont[0],1);
+        Vmath::Zero(m_totGloDofs,&cont[0],1);
+        
+                Vmath::Assmb(m_totLocDofs,&loc[0],&m_locToContMap[0],&cont[0]);
+        }
+
+
+        inline void ContToLocalBnd(const DNekVec &cont, DNekVec &loc, int offset = 0)
+        {
+            ASSERTL1(loc.GetDimension() >= m_totLocBndDofs,"Local vector is not of correct dimension");
+            ASSERTL1(cont.GetDimension() >= m_totGloBndDofs-offset,"Global vector is not of correct dimension");
+
+            // offset input data by length "offset" for Dirichlet boundary conditions.
+            Array<OneD,NekDouble> tmp(cont.GetDimension()+offset,0.0);
+            Vmath::Vcopy(cont.GetDimension(),cont.GetPtr(),1,&tmp[offset],1);
             
-            Vmath::Assmb(m_totLocLen,&loc[0],&m_locToContMap[0],&cont[0]);
+            Vmath::Gathr(m_totLocBndDofs,&tmp[0],&m_locToContBndMap[0], loc.GetPtr());
+        }
+
+
+        inline void AssembleBnd(const DNekVec &loc, DNekVec &cont, int offset = 0)
+        {
+            ASSERTL1(loc.GetDimension() >= m_totLocBndDofs,"Local vector is not of correct dimension");
+            ASSERTL1(cont.GetDimension() >= m_totGloBndDofs-offset,"Global vector is not of correct dimension");
+            Array<OneD,NekDouble> tmp(cont.GetDimension()+offset,0.0);
+
+            Vmath::Assmb(m_totLocBndDofs,loc.GetPtr(), &m_locToContBndMap[0], &tmp[0]);
+            Vmath::Vcopy(cont.GetDimension(),&tmp[offset],1,cont.GetPtr(),1);
         }
         
-        inline int GetTotGloLen()
+        inline int GetTotGloDofs()
         {
-            return m_totGloLen;
+            return m_totGloDofs;
+        }
+        
+        inline int GetTotGloBndDofs()
+        {
+            return m_totGloBndDofs;
+        }
+        
+        inline void SetNumDirichetBCs(const int NumDirichlet)
+        {
+            m_numDirichletBCs = NumDirichlet;
+        }
+
+        inline void SetNumNeumannBCs(const int NumNeumann)
+        {
+            m_numNeumannBCs = NumNeumann;
+        }
+
+        inline void SetNumRobinBCs(const int NumNeumann)
+        {
+            m_numNeumannBCs = NumNeumann;
         }
         
         inline int GetNumDirichletBCs()
@@ -100,16 +145,41 @@ namespace Nektar
             return m_numRobinBCs;
         }
         
-    protected:
-        int             m_totLocLen;    //< length of local dofs
-        int             m_totGloLen;    //< length of global dofs
-        int             m_numDirichletBCs;  //< number of Dirichlet conditions 
-        int             m_numNeumannBCs;  //< number of Neumann conditions 
-        int             m_numRobinBCs;  //< number of Robin conditions 
-        Array<OneD,int> m_locToContMap; //< Vector of boost pointers to integer maps
-    private:
+        void ResetMapping(const int NumDirichlet,
+                          SpatialDomains::BoundaryConditions &bcs,
+                          const std::string variable)
+        {
+            v_ResetMapping(NumDirichlet,bcs,variable);
+        }
+        
+        inline const ConstArray<OneD, int> &GetBndCondGlobalID() const 
+        {
+            return m_bndCondGlobalID;
+        }
+
+        protected:
+            int             m_totLocDofs;      //< number of local dofs
+            int             m_totLocBndDofs;   //< number of local dofs
+            int             m_totGloDofs;      //< number of global dofs 
+            int             m_totGloBndDofs;   //< number of global boundary dofs;
+            int             m_numDirichletBCs; //< number of Dirichlet conditions 
+            int             m_numNeumannBCs;   //< number of Neumann conditions 
+            int             m_numRobinBCs;     //< number of Robin conditions 
+            Array<OneD,int> m_locToContMap;    //< integer map
+            Array<OneD,int> m_locToContBndMap; //< integer maps of boundary dofs
+            Array<OneD,int> m_bndCondGlobalID; //< global id of all boundary conditions
+
+        private:
+            virtual void v_ResetMapping(const int NumDirichlet, 
+                                        SpatialDomains::BoundaryConditions &bcs,
+                                        const std::string variable)
+            {
+                ASSERTL0(false,"ResetMapping needs defining");
+            }
     };
     
+    typedef boost::shared_ptr<LocalToGlobalMap>  LocalToGlobalMapSharedPtr;
+
     } // end of namespace
 } // end of namespace
 
@@ -117,6 +187,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.11  2007/09/25 14:25:29  pvos
+/** Update for helmholtz1D with different expansion orders
+/**
 /** Revision 1.10  2007/07/22 23:04:21  bnelson
 /** Backed out Nektar::ptr.
 /**

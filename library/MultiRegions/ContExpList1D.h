@@ -40,17 +40,20 @@
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/LocalToGlobalMap1D.h>
 #include <MultiRegions/GlobalLinSys.h>
+
 namespace Nektar
 {
     namespace MultiRegions
     {
-
-        class ContExpList1D: public ExpList1D 
-        {
-        public:
-            ContExpList1D();
-            ContExpList1D(const LibUtilities::BasisKey &Ba,
-                const SpatialDomains::MeshGraph1D &graph1D);
+	class ContExpList1D: 
+	public ExpList1D 
+	{
+	public:
+	    ContExpList1D();
+            //ContExpList1D(const LibUtilities::BasisKey &Ba, 
+            //const SpatialDomains::MeshGraph1D &graph1D);
+            ContExpList1D(const LibUtilities::BasisKey &Ba, 
+                          const SpatialDomains::MeshGraph1D &graph1D);
             ContExpList1D(SpatialDomains::MeshGraph1D &graph1D);
             ContExpList1D(const ContExpList1D &In);
             ~ContExpList1D();
@@ -70,7 +73,7 @@ namespace Nektar
             {
                 m_locToGloMap->ContToLocal(inarray,outarray);
             }
-
+            
             inline void LocalToCont()
             {
                 m_locToGloMap->LocalToCont(m_coeffs,m_contCoeffs);
@@ -96,20 +99,16 @@ namespace Nektar
             void BwdTrans(const ExpList &In);
 
             void GeneralMatrixOp(const StdRegions::MatrixType     mtype,
-                const ConstArray<OneD,NekDouble> &inarray,
-                Array<OneD, NekDouble>          &outarray,
-                NekDouble lambda);
-
-        protected:
-            int                    m_contNcoeffs;
-            Array<OneD, NekDouble> m_contCoeffs;
-
-            boost::shared_ptr<LocalToGlobalMap1D> m_locToGloMap;
-
-            GlobalLinSysMapShPtr  m_globalMat;
-
-            GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey);
-
+                                 const ConstArray<OneD,NekDouble> &inarray,
+                                 Array<OneD, NekDouble>          &outarray,
+                                 NekDouble lambda);
+	    
+	protected:
+      	    int                       m_contNcoeffs;
+	    Array<OneD, NekDouble>    m_contCoeffs;
+	    LocalToGlobalMapSharedPtr m_locToGloMap;	    
+            GlobalLinSysMapShPtr      m_globalMat;
+	    
         private:
 
         };
@@ -126,6 +125,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.23  2007/09/25 14:25:29  pvos
+* Update for helmholtz1D with different expansion orders
+*
 * Revision 1.22  2007/09/03 19:58:30  jfrazier
 * Formatting.
 *

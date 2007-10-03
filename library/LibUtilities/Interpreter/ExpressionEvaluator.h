@@ -23,6 +23,17 @@
 #include <errno.h>
 #include <stdlib.h>
 
+// Microsoft fix for math functions
+#ifndef _MSC_VER 
+#define _hypot hypot
+#define _jn jn
+#define _j0 j0
+#define _j1 j1
+#define _yn yn
+#define _y0 y0
+#define _y1 y1
+#endif
+
 namespace Nektar
 {
     namespace LibUtilities

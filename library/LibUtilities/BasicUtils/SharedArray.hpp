@@ -352,7 +352,7 @@ namespace Nektar
             static ConstArray<OneD, DataType> CreateWithOffset(const ConstArray<OneD, DataType>& rhs, unsigned int offset)
             {
                 ConstArray<OneD, DataType> result(rhs);
-                result.m_offset = offset;
+                result.m_offset += offset;
                 result.m_size = rhs.m_size - offset;
                 return result;
             }
@@ -573,7 +573,7 @@ namespace Nektar
             static Array<OneD, DataType> CreateWithOffset(const Array<OneD, DataType>& rhs, unsigned int offset)
             {
                 Array<OneD, DataType> result(rhs);
-                result.m_offset = offset;
+                result.m_offset += offset;
                 result.m_size = rhs.m_size - offset;
                 return result;
             }

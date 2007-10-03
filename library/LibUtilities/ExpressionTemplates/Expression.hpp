@@ -70,16 +70,11 @@ namespace Nektar
                 
                 typedef typename boost::remove_const<typename boost::remove_reference<DataType>::type >::type BaseDataType;
             public:
-                /// This constructor allows temporaries.  If m_data is a reference then 
-                /// this should not be allowed.
+                /// This constructor allows temporaries.  I can't find a way to prevent this 
+                /// from happening without also preventing constant parameters, so this will
+                /// need to be a "don't do that" type warning.
                 template<typename T>
-                explicit Expression(const T& data,
-                                    typename boost::disable_if<
-                                                            boost::mpl::and_<
-                                                                                boost::is_reference<DataType>,
-                                                                                boost::is_same<BaseDataType, T> 
-                                                                        > 
-                                                            >::type* dummy = 0) :
+                explicit Expression(const T& data) :
                     m_data(data),
                     m_metadata()
                 {
@@ -178,6 +173,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.11  2007/08/16 02:14:21  bnelson
+    Moved expression templates to the Nektar namespace.
+
     Revision 1.10  2007/07/26 00:07:36  bnelson
     Fixed linux compiler errors.
 

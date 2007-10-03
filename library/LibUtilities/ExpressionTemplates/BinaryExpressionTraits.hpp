@@ -177,7 +177,10 @@ namespace Nektar
         
         // Note the () around the first parameter.  Failure to do this will result in a compiler error.
         // For more information, lookup Scott Myers discussion on C++'s most vexing parse.
-        typename ResultPolicy::DataType d((Expression<LhsPolicy>(lhs)), Expression<RhsPolicy>(rhs)); 
+        Expression<LhsPolicy> lhsTemp(lhs);
+        Expression<RhsPolicy> rhsTemp(rhs);
+        typename ResultPolicy::DataType d(lhsTemp, rhsTemp); 
+        //typename ResultPolicy::DataType d((Expression<LhsPolicy>(lhs)), Expression<RhsPolicy>(rhs)); 
         return ResultExpressionType(d); 
     }
 }
@@ -186,6 +189,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpressionTraits.hpp,v $
+    Revision 1.11  2007/08/16 02:14:21  bnelson
+    Moved expression templates to the Nektar namespace.
+
     Revision 1.10  2007/07/20 00:36:05  bnelson
     *** empty log message ***
 

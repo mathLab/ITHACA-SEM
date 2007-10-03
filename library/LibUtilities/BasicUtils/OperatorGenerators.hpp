@@ -49,9 +49,9 @@
 
 #include <LibUtilities/ExpressionTemplates/ArithmeticTraits.hpp>
 
-// #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-// #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
-// #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+#include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 namespace Nektar
 {
@@ -69,43 +69,43 @@ namespace Nektar
     
     #define GET_TEMPLATED_TYPE(TypeName, TemplateTypeName, Number) TypeName<BOOST_PP_ENUM_PARAMS(Number, TemplateTypeName)>
     
-// #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-//     #define GENERATE_MULTIPLICATION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
-//         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
-//         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,MultiplyOp > > \
-//         operator*(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
-//               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
-//         { \
-//             return CreateBinaryExpression<MultiplyOp>(lhs, rhs); \
-//         }
-//         
-//     #define GENERATE_DIVISION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
-//         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
-//         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,DivideOp > > \
-//         operator/(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
-//               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
-//         { \
-//             return CreateBinaryExpression<DivideOp>(lhs, rhs); \
-//         }
-//         
-//     #define GENERATE_ADDITION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
-//         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
-//         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,AddOp > > \
-//         operator+(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
-//               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
-//         { \
-//             return CreateBinaryExpression<AddOp>(lhs, rhs); \
-//         }
-//         
-//     #define GENERATE_SUBTRACTION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
-//         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
-//         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,SubtractOp > > \
-//         operator-(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
-//               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
-//         { \
-//             return CreateBinaryExpression<SubtractOp>(lhs, rhs); \
-//         }
-// #else //NEKTAR_USE_EXPRESSION_TEMPLATES
+ #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+     #define GENERATE_MULTIPLICATION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,MultiplyOp > > \
+         operator*(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+         { \
+             return CreateBinaryExpression<MultiplyOp>(lhs, rhs); \
+         }
+         
+     #define GENERATE_DIVISION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,DivideOp > > \
+         operator/(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+         { \
+             return CreateBinaryExpression<DivideOp>(lhs, rhs); \
+         }
+         
+     #define GENERATE_ADDITION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,AddOp > > \
+         operator+(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+         { \
+             return CreateBinaryExpression<AddOp>(lhs, rhs); \
+         }
+         
+     #define GENERATE_SUBTRACTION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
+         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams) >, ConstantExpressionPolicy<GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams) >,SubtractOp > > \
+         operator-(const GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+               const GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)& rhs) \
+         { \
+             return CreateBinaryExpression<SubtractOp>(lhs, rhs); \
+         }
+ #else //NEKTAR_USE_EXPRESSION_TEMPLATES
     #define GENERATE_MULTIPLICATION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
         template<PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams)> \
         typename MultiplicationTraits<GET_TEMPLATED_TYPE(LeftType, LhsType, NumLeftParams), GET_TEMPLATED_TYPE(RightType, RhsType, NumRightParams)>::ResultType \
@@ -141,7 +141,7 @@ namespace Nektar
         { \
             return NekSubtract(lhs, rhs); \
         }
-//#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_OPERATOR_GENERATORS_HPP

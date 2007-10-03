@@ -57,7 +57,8 @@ namespace Nektar
             typedef typename OpType<LhsResultType, RhsResultType>::TraitsType OpTraitsType;
             
             typedef typename OpType<LhsResultType, RhsResultType>::ResultType ResultType;
-            typedef typename ExpressionMetadataChooser<OpTraitsType>::MetadataType MetadataType;
+            //typedef typename ExpressionMetadataChooser<OpTraitsType>::MetadataType MetadataType;
+            typedef typename BinaryExpressionMetadataTraits<LhsResultType, RhsResultType, OpType>::MetadataType MetadataType;
             typedef typename LhsPolicy::MetadataType LhsMetadataType;
             typedef typename RhsPolicy::MetadataType RhsMetadataType;
 

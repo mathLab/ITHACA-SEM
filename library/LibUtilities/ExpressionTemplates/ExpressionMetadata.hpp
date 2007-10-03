@@ -74,27 +74,67 @@ namespace Nektar
         private:
     };
 
-    
-    template<typename TraitsType, typename enabled = void>
-    class ExpressionMetadataChooser
+    template<typename LhsType, typename RhsType>
+    class DefaultBinaryExpressionMetadata
     {
         public:
-            typedef DefaultExpressionMetadata<typename TraitsType::result_type> MetadataType;
+            //DefaultExpressionMetadata(typename boost::call_traits<DataType>::const_reference)
+            //{
+            //}
+
+            template<typename MetadataType>
+            DefaultBinaryExpressionMetadata(const MetadataType& rhs)
+            {
+            }
+            
+            template<typename LhsMetadataType, typename RhsMetadataType>
+            DefaultBinaryExpressionMetadata(const LhsMetadataType& lhs, 
+                                      const RhsMetadataType& rhs)
+            {
+            }
+            
+            DefaultBinaryExpressionMetadata(const DefaultBinaryExpressionMetadata<LhsType, RhsType>& rhs)
+            {
+            }
+            
+            DefaultBinaryExpressionMetadata()
+            {
+            }
+            
+
+        private:
     };
-    
-    template<typename TraitsType>
-    class ExpressionMetadataChooser<TraitsType,
-                                    typename boost::enable_if<boost::is_same<typename TraitsType::MetadataType, typename TraitsType::MetadataType> >::type >
-                                    //typename boost::enable_if<boost::is_same<typename TraitsType::MetadataType, typename TraitsType::MetadataType> >::type >
+
+    template<typename LhsType, typename RhsType, template<typename, typename> class OpType>
+    class BinaryExpressionMetadataTraits
     {
         public:
-            typedef typename TraitsType::MetadataType MetadataType;
+            typedef DefaultBinaryExpressionMetadata<LhsType, RhsType> MetadataType;
     };
+
+    //template<typename TraitsType, typename enabled = void>
+    //class ExpressionMetadataChooser
+    //{
+    //    public:
+    //        typedef DefaultExpressionMetadata<typename TraitsType::ResultType> MetadataType;
+    //};
+    //
+    //template<typename TraitsType>
+    //class ExpressionMetadataChooser<TraitsType,
+    //                                typename boost::enable_if<boost::is_same<typename TraitsType::MetadataType, typename TraitsType::MetadataType> >::type >
+    //                                //typename boost::enable_if<boost::is_same<typename TraitsType::MetadataType, typename TraitsType::MetadataType> >::type >
+    //{
+    //    public:
+    //        typedef typename TraitsType::MetadataType MetadataType;
+    //};
 }
 
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_METADATA_H
 /**
     $Log: ExpressionMetadata.hpp,v $
+    Revision 1.6  2007/08/16 02:14:21  bnelson
+    Moved expression templates to the Nektar namespace.
+
     Revision 1.5  2007/01/30 23:37:16  bnelson
     *** empty log message ***
 

@@ -59,8 +59,12 @@ namespace Nektar
         class GetTraitsValues
         {
             public:
-                static const bool HasOpEqual = TraitsType::HasOpEqual;
-                static const bool HasOpLeftEqual = TraitsType::HasOpLeftEqual;
+                //static const bool HasOpEqual = TraitsType::HasOpEqual;
+                //static const bool HasOpLeftEqual = TraitsType::HasOpLeftEqual;
+                /// TODO - this needs to be reworked.  I'm just doing this to get things
+                /// to compile to make sure the high level stuff is working.
+                static const bool HasOpEqual = true;
+                static const bool HasOpLeftEqual = true;
         };
 
         ////////////////////////////////////////////////

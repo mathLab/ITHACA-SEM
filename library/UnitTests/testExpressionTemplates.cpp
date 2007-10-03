@@ -58,7 +58,7 @@
 //    {
 //        using namespace Nektar;
 //
-//        void testConstantExpressions()
+//        BOOST_AUTO_TEST_CASE(testConstantExpressions)
 //        {
 //             using namespace Nektar;
 // 
@@ -95,7 +95,7 @@
 //             }
 //        }
 //
-//        void testUnaryExpressions()
+//        BOOST_AUTO_TEST_CASE(testUnaryExpressions)
 //        {
 ////             using namespace Nektar;
 //// 
@@ -108,7 +108,7 @@
 ////             NekMatrix<double, FullMatrixTag> m1(-m);
 //        }
 //
-//        void testNekMatrixMetadata()
+//        BOOST_AUTO_TEST_CASE(testNekMatrixMetadata)
 //        {
 ////             using namespace Nektar;
 ////             using namespace Nektar::expt;
@@ -139,7 +139,7 @@
 //            // TODO
 //         }
 // 
-//         void testBinaryExpressions()
+//         BOOST_AUTO_TEST_CASE(testBinaryExpressions)
 //         {
 ////             using namespace Nektar;
 ////             using namespace Nektar::expt;
@@ -192,7 +192,7 @@
 ////             }
 //        }
 //        
-//        void testNekMatrixMultiplication()
+//        BOOST_AUTO_TEST_CASE(testNekMatrixMultiplication)
 //        {
 ////             {
 ////                 unsigned int m1_buf[] = {1, 1, 1, 1};
@@ -239,7 +239,7 @@
 ////             }
 //        }
 //        
-//        void testNekMatrixSomewhatComplicatedExpression()
+//        BOOST_AUTO_TEST_CASE(testNekMatrixSomewhatComplicatedExpression)
 //        {
 ////             {
 ////                 double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
@@ -274,7 +274,7 @@
 ////             }
 //        }
 //        
-//        void testNekMatrixComplicatedExpression()
+//        BOOST_AUTO_TEST_CASE(testNekMatrixComplicatedExpression)
 //        {
 ////             {
 ////                 double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
@@ -303,7 +303,7 @@
 //        
 //        
 //
-///*        class TestTemporary : public CountedObject<TestTemporary>
+//        class TestTemporary : public CountedObject<TestTemporary>
 //        {
 //            public:
 //                TestTemporary() : CountedObject<TestTemporary>() {}
@@ -332,17 +332,14 @@
 //                }
 //                
 //            private:
-//        };*/
+//        };
 //        
-///*        void add(const TestTemporary& lhs, const TestTemporary& rhs, TestTemporary& result)
-//        {
-//        }*/
-//        
+//       
 //        //ENABLE_EXPRESSION_TEMPLATE_OPERATORS(TestTemporary);
 //
 //        // For these tests I will be testing items of the form A = B op C, where I vary
 //        // the data types for A, B, and C, as well as op types, to get all possible combinations.
-//        void testTemporaryGenerationFromSingleLevelBinaryExpressions()
+//        BOOST_AUTO_TEST_CASE(testTemporaryGenerationFromSingleLevelBinaryExpressions)
 //        {
 ////             TestTemporary a;
 ////             TestTemporary b;
@@ -1094,58 +1091,3 @@
 //     }
 //}}
 //
-///**
-//    $Log: testExpressionTemplates.cpp,v $
-//    Revision 1.17  2007/08/16 02:17:46  bnelson
-//    *** empty log message ***
-//
-//    Revision 1.16  2007/07/17 02:00:14  bnelson
-//    *** empty log message ***
-//
-//    Revision 1.15  2007/06/10 23:45:59  bnelson
-//    Matrix updates.
-//
-//    Revision 1.14  2007/05/15 05:19:54  bnelson
-//    Updated to use the new Array object.
-//
-//    Revision 1.13  2007/01/29 01:37:16  bnelson
-//    *** empty log message ***
-//
-//    Revision 1.12  2007/01/16 05:31:33  bnelson
-//    Major improvements for expression templates.
-//
-//    Revision 1.11  2006/11/12 17:59:47  bnelson
-//    *** empty log message ***
-//
-//    Revision 1.10  2006/11/11 01:32:52  bnelson
-//    *** empty log message ***
-//
-//    Revision 1.9  2006/11/08 04:18:22  bnelson
-//    Added more expression template tests.
-//
-//    Revision 1.8  2006/11/06 17:10:04  bnelson
-//    *** empty log message ***
-//
-//    Revision 1.7  2006/09/30 15:38:29  bnelson
-//    no message
-//
-//    Revision 1.6  2006/09/15 02:01:16  bnelson
-//    no message
-//
-//    Revision 1.5  2006/09/11 03:28:41  bnelson
-//    no message
-//
-//    Revision 1.4  2006/08/28 02:40:51  bnelson
-//    *** empty log message ***
-//
-//    Revision 1.3  2006/08/27 02:14:09  bnelson
-//    Added support for negating an expression.
-//
-//    Revision 1.2  2006/08/25 01:37:34  bnelson
-//    no message
-//
-//    Revision 1.1  2006/08/25 01:36:25  bnelson
-//    no message
-//
-//
-//**/

@@ -35,6 +35,7 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ACCUMULATOR_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ACCUMULATOR_HPP
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <boost/call_traits.hpp>
 
@@ -86,11 +87,15 @@ namespace Nektar
     };
 }
 
+#endif NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ACCUMULATOR_HPP
 
 
 /**
     $Log: Accumulator.hpp,v $
+    Revision 1.5  2007/08/16 02:14:21  bnelson
+    Moved expression templates to the Nektar namespace.
+
     Revision 1.4  2007/02/15 06:55:07  bnelson
     Added comments and removed some unused code.
 

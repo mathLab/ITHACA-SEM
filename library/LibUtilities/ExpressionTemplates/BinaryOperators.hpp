@@ -82,7 +82,7 @@ namespace Nektar
                                 typename boost::call_traits<LhsType>::const_reference lhs, 
                                 typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                TraitsType::Add(*result, lhs, rhs);
+                NekAdd(*result, lhs, rhs);
             }
 
             static void ApplyEqual(Accumulator<LhsType>& result,
@@ -143,7 +143,7 @@ namespace Nektar
                                 typename boost::call_traits<LhsType>::const_reference lhs, 
                                 typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                TraitsType::Multiply(*result, lhs, rhs);
+                NekMultiply(*result, lhs, rhs);
             }
             
             static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
@@ -199,7 +199,7 @@ namespace Nektar
                                 typename boost::call_traits<LhsType>::const_reference lhs, 
                                 typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                TraitsType::Divide(*result, lhs, rhs);
+                NekDivide(*result, lhs, rhs);
             }
             
             static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
@@ -256,7 +256,7 @@ namespace Nektar
                                 typename boost::call_traits<LhsType>::const_reference lhs, 
                                 typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                TraitsType::Subtract(*result, lhs, rhs);
+                NekSubtract(*result, lhs, rhs);
             }
             
             static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 

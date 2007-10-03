@@ -65,6 +65,13 @@ namespace Nektar
         public:
             BOOST_TYPEOF_NESTED_TYPEDEF_TPL(nested, NekMultiply(LhsType(), RhsType()));
             typedef typename nested::type ResultType;
+
+            //static void Multiply(ResultType& result, 
+            //                     typename boost::call_traits<LhsType>::const_reference lhs,
+            //                     typename boost::call_traits<RhsType>::const_reference rhs)
+            //{
+            //    NekMultiply(result, lhs, rhs);
+            //}
     };
     
     template<typename LhsType, typename RhsType>

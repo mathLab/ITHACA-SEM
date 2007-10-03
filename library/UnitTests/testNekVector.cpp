@@ -84,7 +84,7 @@ namespace Nektar
         }
 
 
-        void testNekVectorConstruction()
+        BOOST_AUTO_TEST_CASE(TestNekVectorConstruction)
         {
             // Test the constructors on a numeric type.
             {
@@ -180,7 +180,7 @@ namespace Nektar
             }
         }
 
-        void testNekVectorOperators()
+        BOOST_AUTO_TEST_CASE(TestNekVectorOperators)
         {
             NekVector<double> v1(3, 1.0);
             v1(0) = 1.1;
@@ -227,7 +227,7 @@ namespace Nektar
 
         }
 
-        void testNekVectorArithmetic()
+        BOOST_AUTO_TEST_CASE(TestNekVectorArithmetic)
         {
             {
                 NekVector<double, 3> v1(1.0);
@@ -339,7 +339,7 @@ namespace Nektar
 
         }
         
-        void testNorms()
+        BOOST_AUTO_TEST_CASE(TestNorms)
         {
             double vals[] = {1,-2,3};
             NekVector<double, 3> v(vals);
@@ -350,12 +350,15 @@ namespace Nektar
             BOOST_CHECK_EQUAL(v.InfinityNorm(), 3);
         }
 
-        void TestMatrixVectorMultiply()
+        BOOST_AUTO_TEST_CASE(TestMatrixVectorMultiply)
         {
             {
-                double matrix_buf[] = {1.0, 2.0, 3.0,
-                                    4.0, 5.0, 6.0,
-                                    7.0, 8.0, 9.0};
+                //double matrix_buf[] = {1.0, 2.0, 3.0,
+                //                    4.0, 5.0, 6.0,
+                //                    7.0, 8.0, 9.0};
+                double matrix_buf[] = {1.0, 4.0, 7.0,
+                                       2.0, 5.0, 8.0,
+                                       3.0, 6.0, 9.0};
                 double vector_buf[] = {20.0, 30.0, 40.0};
                 
                 NekMatrix<double> m(3, 3, matrix_buf);
@@ -369,9 +372,12 @@ namespace Nektar
             }
             
             {
-                double matrix_buf[] = {1.0, 2.0, 3.0,
-                    4.0, 5.0, 6.0,
-                    7.0, 8.0, 9.0};
+                //double matrix_buf[] = {1.0, 2.0, 3.0,
+                //                    4.0, 5.0, 6.0,
+                //                    7.0, 8.0, 9.0};
+                double matrix_buf[] = {1.0, 4.0, 7.0,
+                                       2.0, 5.0, 8.0,
+                                       3.0, 6.0, 9.0};
                 double vector_buf[] = {20.0, 30.0, 40.0};
                 
                 boost::shared_ptr<NekMatrix<double> > m(new NekMatrix<double>(3, 3, matrix_buf));
@@ -386,9 +392,12 @@ namespace Nektar
             }
             
             {
-                double m1_buf[] = {1.0, 2.0, 3.0, 4.0};
-                double m2_buf[] = {5.0, 6.0, 7.0, 8.0};
-                double m3_buf[] = {9.0, 10.0, 11.0, 12.0};
+                //double m1_buf[] = {1.0, 2.0, 3.0, 4.0};
+                //double m2_buf[] = {5.0, 6.0, 7.0, 8.0};
+                //double m3_buf[] = {9.0, 10.0, 11.0, 12.0};
+                double m1_buf[] = {1.0, 3.0, 2.0, 4.0};
+                double m2_buf[] = {5.0, 7.0, 6.0, 8.0};
+                double m3_buf[] = {9.0, 11.0, 10.0, 12.0};
                 double vector_buf[] = {20.0, 30.0};
                 
                 boost::shared_ptr<NekMatrix<double> > m1(new NekMatrix<double>(2, 2, m1_buf));
@@ -410,7 +419,7 @@ namespace Nektar
             }
         }
 
-        void TestVectorConstructorsWithSizeArguments()
+        BOOST_AUTO_TEST_CASE(TestVectorConstructorsWithSizeArguments)
         {
             {
                 double buf[] = {1.0, 2.0, 3.0, 4.0};

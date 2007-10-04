@@ -36,6 +36,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
 #include <boost/call_traits.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
@@ -170,9 +172,13 @@ namespace Nektar
 
 }
 
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.12  2007/10/03 02:57:39  bnelson
+    Removed the restriction on passing temporaries to expressions.
+
     Revision 1.11  2007/08/16 02:14:21  bnelson
     Moved expression templates to the Nektar namespace.
 

@@ -87,12 +87,15 @@ namespace Nektar
     };
 }
 
-#endif NEKTAR_USE_EXPRESSION_TEMPLATES
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ACCUMULATOR_HPP
 
 
 /**
     $Log: Accumulator.hpp,v $
+    Revision 1.6  2007/10/03 02:58:03  bnelson
+    *** empty log message ***
+
     Revision 1.5  2007/08/16 02:14:21  bnelson
     Moved expression templates to the Nektar namespace.
 

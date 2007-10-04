@@ -35,6 +35,7 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicyFwd.hpp>
@@ -110,4 +111,5 @@ namespace Nektar
     };
 }
 
+#endif // NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP

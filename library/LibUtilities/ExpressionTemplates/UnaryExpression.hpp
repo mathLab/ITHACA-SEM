@@ -35,6 +35,7 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_HPP
 #define NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_HPP
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
@@ -66,10 +67,14 @@ namespace Nektar
     }
 }
 
+#endif // NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_UNARY_EXPRESSION_HPP
 
 /**
     $Log: UnaryExpression.hpp,v $
+    Revision 1.11  2007/08/16 02:14:21  bnelson
+    Moved expression templates to the Nektar namespace.
+
     Revision 1.10  2007/01/30 23:37:17  bnelson
     *** empty log message ***
 

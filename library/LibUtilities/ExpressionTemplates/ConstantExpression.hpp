@@ -35,6 +35,7 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_CONSTANT_EXPRESSION_HPP
 #define NEKTAR_LIB_UTILITIES_CONSTANT_EXPRESSION_HPP
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <boost/call_traits.hpp>
 
@@ -77,10 +78,14 @@ namespace Nektar
     };
 }
 
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_CONSTANT_EXPRESSION_HPP
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.9  2007/08/16 02:14:21  bnelson
+    Moved expression templates to the Nektar namespace.
+
     Revision 1.8  2007/01/30 23:37:16  bnelson
     *** empty log message ***
 

@@ -38,7 +38,7 @@ SET(ACML_SEARCH_PATHS INTERNAL)
 
 # The various supported versions.  When new versions come out this will need
 # to be updated to allow automatic detection.
-SET(ACML_VERSIONS 3.5.0 3.6.0 3.6.1)
+SET(ACML_VERSIONS 4.0.0 3.5.0 3.6.0 3.6.1)
 
 SET(MP_COMPILER_VERSIONS gfortran64_mp_int64 pgi32_mp)
 SET(COMPILER_VERSIONS gfortran64_int64 pgi32)

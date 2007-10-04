@@ -35,6 +35,7 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_OPERATORS_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_OPERATORS_HPP
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <LibUtilities/ExpressionTemplates/ArithmeticTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/Expression.hpp>
@@ -295,6 +296,7 @@ namespace Nektar
     std::string SubtractOp<LhsType, RhsType>::s_StringRep("-");
 }
 
+#endif // NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_OPERATORS_HPP
 
 

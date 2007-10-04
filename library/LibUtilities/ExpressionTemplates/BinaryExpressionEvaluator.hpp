@@ -64,7 +64,7 @@ namespace Nektar
                 /// TODO - this needs to be reworked.  I'm just doing this to get things
                 /// to compile to make sure the high level stuff is working.
                 static const bool HasOpEqual = true;
-                static const bool HasOpLeftEqual = true;
+                static const bool HasOpLeftEqual = false;
         };
 
         ////////////////////////////////////////////////

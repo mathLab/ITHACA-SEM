@@ -9,6 +9,7 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_TEMPLATES_EXPRESSION_TRAITS_H
 #define NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_TEMPLATES_EXPRESSION_TRAITS_H
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <LibUtilities/ExpressionTemplates/AssociativeTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/CommutativeTraits.hpp>
@@ -185,10 +186,14 @@ namespace Nektar
     }
 }
 
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_TEMPLATES_EXPRESSION_TRAITS_H
 
 /**
     $Log: BinaryExpressionTraits.hpp,v $
+    Revision 1.12  2007/10/03 02:58:03  bnelson
+    *** empty log message ***
+
     Revision 1.11  2007/08/16 02:14:21  bnelson
     Moved expression templates to the Nektar namespace.
 

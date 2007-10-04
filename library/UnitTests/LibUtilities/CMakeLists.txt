@@ -36,4 +36,4 @@ SET_LAPACK_LINK_LIBRARIES(LibUtilitiesUnitTests)
 
 INSTALL(TARGETS LibUtilitiesUnitTests RUNTIME DESTINATION ${NEKTAR_BIN_DIR})
 
-# SUBDIRS(LinearAlgebra)
+SUBDIRS(LinearAlgebra)

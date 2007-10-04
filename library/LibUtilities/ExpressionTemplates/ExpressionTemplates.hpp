@@ -44,6 +44,7 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <LibUtilities/ExpressionTemplates/Expression.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionReturnType.hpp>
@@ -157,10 +158,15 @@ namespace Nektar
 // If you want to be able to add two objects together, you must
 // 1. Provide an add method that takes three parameters: lhs, rhs, result.
 // 2. Provide a += method.
+
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
 
 /**
     $Log: ExpressionTemplates.hpp,v $
+    Revision 1.10  2007/08/16 02:14:21  bnelson
+    Moved expression templates to the Nektar namespace.
+
     Revision 1.9  2007/01/30 23:37:16  bnelson
     *** empty log message ***
 

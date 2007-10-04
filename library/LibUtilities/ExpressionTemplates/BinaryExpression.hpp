@@ -9,6 +9,7 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_HPP
 #define NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_HPP
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
@@ -347,7 +348,7 @@ namespace Nektar
         typename BinaryExpressionTraits<LhsPolicyType, SubtractOp, RhsPolicyType>::ResultType
         operator-(const Expression<LhsPolicyType>& lhs, const Expression<RhsPolicyType>& rhs)
         {
-            typedef BinaryExpressionTraits<LhsPolicyType, AddOp, RhsPolicyType> Traits;
+            typedef BinaryExpressionTraits<LhsPolicyType, SubtractOp, RhsPolicyType> Traits;
             return Traits::Apply(lhs, rhs);
         }
         
@@ -465,10 +466,14 @@ namespace Nektar
 
 }
 
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_BINARY_EXPRESSION_HPP
 
 /**
     $Log: BinaryExpression.hpp,v $
+    Revision 1.12  2007/08/16 02:14:21  bnelson
+    Moved expression templates to the Nektar namespace.
+
     Revision 1.11  2007/01/30 23:37:15  bnelson
     *** empty log message ***
 

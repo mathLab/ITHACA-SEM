@@ -125,9 +125,9 @@ namespace Nektar
             m_numNeumannBCs = NumNeumann;
         }
 
-        inline void SetNumRobinBCs(const int NumNeumann)
+        inline void SetNumRobinBCs(const int NumRobin)
         {
-            m_numNeumannBCs = NumNeumann;
+            m_numRobinBCs = NumRobin;
         }
         
         inline int GetNumDirichletBCs()
@@ -187,6 +187,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.12  2007/10/03 11:37:50  sherwin
+/** Updates relating to static condensation implementation
+/**
 /** Revision 1.11  2007/09/25 14:25:29  pvos
 /** Update for helmholtz1D with different expansion orders
 /**

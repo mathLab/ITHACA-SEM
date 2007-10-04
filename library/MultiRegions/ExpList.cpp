@@ -217,7 +217,8 @@ namespace Nektar
         {
             int i;
             int n_exp = GetExpSize();
-            Array<OneD,int> exp_size(n_exp);
+            //Array<OneD,unsigned int> exp_size(n_exp);
+            Array<OneD,unsigned int> exp_size(n_exp);
             DNekScalMatSharedPtr loc_mat;
             DNekScalBlkMatSharedPtr BlkMatrix;
             
@@ -227,7 +228,9 @@ namespace Nektar
                 exp_size[i] = (*m_exp)[i]->GetNcoeffs();
             }
 
-            BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size[0],exp_size[0]);
+            unsigned int *exp_size_2 = new unsigned int[n_exp];
+            exp_size_2 = &exp_size[0];
+            BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size_2,exp_size_2);
             
             //BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size,exp_size);
             //Cannot get this call to work with array of integers
@@ -347,8 +350,10 @@ namespace Nektar
             
             // Setup Block Matrix systems
             int n_exp = GetExpSize();
-            Array<OneD,int> nbdry_size(n_exp);
-            Array<OneD,int> nint_size(n_exp);
+            //Array<OneD,unsigned int> nbdry_size(n_exp);
+            //Array<OneD,unsigned int> nint_size(n_exp);
+            Array<OneD,unsigned int> nbdry_size(n_exp);
+            Array<OneD,unsigned int> nint_size(n_exp);
             DNekScalBlkMatSharedPtr BinvD;
             DNekScalBlkMatSharedPtr invD;
             DNekScalBlkMatSharedPtr C;
@@ -359,10 +364,15 @@ namespace Nektar
                 nbdry_size[i] = (*m_exp)[i]->NumBndryCoeffs();
                 nint_size[i]  = (*m_exp)[i]->GetNcoeffs() - (*m_exp)[i]->NumBndryCoeffs();
             }
+
+            unsigned int *nbdry_size_2 = new unsigned int[n_exp];
+            unsigned int *nint_size_2 = new unsigned int[n_exp];
+            nbdry_size_2 = &nbdry_size[0];
+            nint_size_2 = &nint_size[0];
             
-            BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nbdry_size[0],nint_size[0]);
-            invD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size[0],nint_size[0]);
-            C = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size[0],nbdry_size[0]);
+            BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nbdry_size_2,nint_size_2);
+            invD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size_2,nint_size_2);
+            C = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size_2,nbdry_size_2);
 
             // needs to be formed as: 
             //BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,bndry_size,nint_size);

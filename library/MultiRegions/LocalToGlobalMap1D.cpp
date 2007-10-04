@@ -136,6 +136,40 @@ namespace Nektar
                 }                     
             } 
 
+            for(i = 0; i < nbnd; ++i)
+            {
+                if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eRobin)
+                {
+                    SpatialDomains::VertexComponentSharedPtr vert;
+                    
+                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                    {
+                        oldGlobalID[cnt++] = vert->GetVid(); 
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a vertex failed");
+                    }        
+                }                     
+            } 
+
+            for(i = 0; i < nbnd; ++i)
+            {
+                if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                {
+                    SpatialDomains::VertexComponentSharedPtr vert;
+                    
+                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
+                    {
+                        oldGlobalID[cnt++] = vert->GetVid(); 
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a vertex failed");
+                    }        
+                }                     
+            } 
+
             // Find the index of the BCs entry in the mapping array
             Array<OneD, int> LocalID(nbnd);
             
@@ -222,6 +256,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.19  2007/10/04 12:10:04  sherwin
+* Update for working version of static condensation in Helmholtz1D and put lambda coefficient on the mass matrix rather than the Laplacian operator.
+*
 * Revision 1.18  2007/10/04 11:01:31  pvos
 * fixed some errors
 *

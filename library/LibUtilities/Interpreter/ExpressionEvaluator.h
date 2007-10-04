@@ -341,7 +341,7 @@ namespace Nektar
 	        // the calculation doesn't need to be done for every evaluation. It also performs the
 	        // checks to make sure everything is in the correct range so these don't need to be
 	        // performed at evaluation either.
-	        Node* ExpressionEvaluator::CreateAST(boost::spirit::tree_match<const char*,
+	        Node* CreateAST(boost::spirit::tree_match<const char*,
 				        boost::spirit::node_val_data_factory<double> >::tree_iterator const& n);
 
         };

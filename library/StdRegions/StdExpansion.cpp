@@ -458,8 +458,8 @@ namespace Nektar
                                              const double lambda)
         {
             Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(m_ncoeffs);
-            LaplacianMatrixOp(inarray,tmp);
-            MassMatrixOp(inarray,outarray);
+            MassMatrixOp(inarray,tmp);
+            LaplacianMatrixOp(inarray,outarray);
 
             Blas::Daxpy(m_ncoeffs,lambda,&tmp[0],1,&outarray[0],1);
         }
@@ -566,6 +566,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.54  2007/10/03 11:37:51  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.53  2007/09/27 12:55:57  pvos
 * Column major Blas calls corrections
 *

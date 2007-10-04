@@ -729,7 +729,7 @@ namespace Nektar
                     DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
 
                     NekDouble one = 1.0;
-                    (*helm) = factor*LapMat + MassMat;
+                    (*helm) = LapMat + factor*MassMat;
                     
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                 }
@@ -855,6 +855,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.29  2007/10/03 11:37:50  sherwin
+// Updates relating to static condensation implementation
+//
 // Revision 1.28  2007/08/10 03:38:08  jfrazier
 // Updated with new rev of NekManager.
 //

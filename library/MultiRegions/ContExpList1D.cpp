@@ -145,30 +145,6 @@ namespace Nektar
 	    m_physState = false;
 	}
 
-	void ContExpList1D::HelmSolve(const ExpList &In, NekDouble lambda)
-	{
-            IProductWRTBase(In);
-            Vmath::Neg(m_contNcoeffs,&m_contCoeffs[0],1);
-
-            GlobalLinSysSharedPtr helm_matrix;
-            GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
-            GlobalLinSysMap::iterator matrixIter = m_globalMat->find(key);
-           
-            if(matrixIter == m_globalMat->end())
-            {
-                helm_matrix = GenGlobalLinSys(key,m_locToGloMap);
-                (*m_globalMat)[key] = helm_matrix;
-            }
-            else
-            {
-                helm_matrix = matrixIter->second;
-            }
-
-
-            helm_matrix->Solve(m_contCoeffs,m_contCoeffs,m_locToGloMap);
-	    m_transState = eContinuous;
-	    m_physState = false;
-	}
 	
 	void ContExpList1D::BwdTrans(const ExpList &In)
 	{
@@ -186,6 +162,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.24  2007/10/03 11:37:50  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.23  2007/09/25 14:25:29  pvos
 * Update for helmholtz1D with different expansion orders
 *

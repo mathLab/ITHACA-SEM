@@ -58,6 +58,12 @@ namespace Nektar
             ContExpList1D(const ContExpList1D &In);
             ~ContExpList1D();
 
+            inline Array<OneD, NekDouble> &UpdateContCoeffs()
+            {
+                m_transState = eContinuous;
+                return m_contCoeffs;
+            }
+
             inline int GetContNcoeffs()
             {
                 return m_contNcoeffs;
@@ -94,8 +100,6 @@ namespace Nektar
 
             void FwdTrans(const ExpList &In);
 
-            void HelmSolve(const ExpList &In, NekDouble lambda);
-
             void BwdTrans(const ExpList &In);
 
             void GeneralMatrixOp(const StdRegions::MatrixType     mtype,
@@ -125,6 +129,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.24  2007/10/03 11:37:50  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.23  2007/09/25 14:25:29  pvos
 * Update for helmholtz1D with different expansion orders
 *

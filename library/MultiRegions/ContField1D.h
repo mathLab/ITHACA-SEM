@@ -92,7 +92,8 @@ namespace Nektar
 
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
-            void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs);
+            void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs, 
+                             NekDouble ScaleForcing=1.0);
 
             void GenerateField1D(SpatialDomains::BoundaryConditions &bcs, 
                 const std::string variable);

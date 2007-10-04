@@ -209,11 +209,13 @@ namespace Nektar
         void ContField1D::HelmSolve(const ExpList &In, NekDouble lambda)
         {
             GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
-            GlobalSolve(key,In);
+            // Note -1.0 term necessary to invert forcing function to
+            // be consistent with matrix definition
+            GlobalSolve(key,In,-1.0);
         }
 
-
-        void ContField1D::GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs)
+        void ContField1D::GlobalSolve(const GlobalLinSysKey &key, 
+                                      const ExpList &Rhs, NekDouble ScaleForcing)
         {
             int i;
             int NumDirBcs = m_locToGloMap->GetNumDirichletBCs();
@@ -234,7 +236,9 @@ namespace Nektar
 
             // Set up forcing function
             IProductWRTBase(Rhs);
-            Vmath::Neg(m_contNcoeffs,&m_contCoeffs[0],1);
+            
+            // apply scaling of forcing term; (typically used to negate helmholtz forcing);
+            Vmath::Smul(m_contNcoeffs, ScaleForcing,&m_contCoeffs[0],1,&m_contCoeffs[0],1);
 
             // Forcing function with Dirichlet conditions 
             Vmath::Vsub(m_contNcoeffs,&m_contCoeffs[0],1,
@@ -244,7 +248,7 @@ namespace Nektar
             for(i = 0; i < m_bndConstraint.size()-NumDirBcs; ++i)
             {
                 m_contCoeffs[ (m_locToGloMap->GetBndCondGlobalID())[i+NumDirBcs] ] +=  
-                    key.GetScaleFactor() * (m_bndConstraint[i+NumDirBcs]->GetValue());
+                     (m_bndConstraint[i+NumDirBcs]->GetValue());
             }
 
             if(m_contNcoeffs - NumDirBcs > 0)

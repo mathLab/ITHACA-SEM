@@ -15,11 +15,11 @@
     <VERTEX>
         <!-- Always must have four values per entry. -->
         <V ID="0"> 0.1 1.0 0.0 </V>
-        <V ID="1"> 1.0 1.0 0.0 </V>
+        <V ID="1"> 1.1 1.0 0.0 </V>
         <V ID="2"> 2.0 1.0 0.0 </V>
         <V ID="3"> 3.0 1.0 0.0 </V>
         <V ID="4"> 4.0 1.0 0.0 </V>
-        <V ID="5"> 4.9 1.0 0.0 </V>
+        <V ID="5"> 5.0 1.0 0.0 </V>
     </VERTEX>
     
     <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, R - prism, H - hex -->
@@ -45,8 +45,8 @@
 </GEOMETRY>
 
 <EXPANSIONS>
-  <E COMPOSITE="C[0]" NUMMODES="7" TYPE="MODIFIED" />
-  <E COMPOSITE="C[3]" NUMMODES="5" TYPE="MODIFIED" />
+  <E COMPOSITE="C[0]" NUMMODES="8" TYPE="MODIFIED" />
+  <E COMPOSITE="C[3]" NUMMODES="8" TYPE="MODIFIED" />
 </EXPANSIONS>
 
 <CONDITIONS>
@@ -82,7 +82,7 @@
         </BOUNDARYCONDITIONS>
         
         <FORCING>
-            <F VAR="u" VALUE="-(1.0+Lambda*PI*PI)*cos(PI*x)" />
+            <F VAR="u" VALUE="-(Lambda + PI*PI)*cos(PI*x)" />
         </FORCING>
 
         <EXACTSOLUTION>

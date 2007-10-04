@@ -10,8 +10,8 @@
 using namespace std;
 using namespace boost::spirit;
 
-#ifdef _MSCVER
-#define NEKTAR_MATH_NAME(x) ##_x
+#ifdef _MSC_VER
+#define NEKTAR_MATH_NAME(x) _##x
 #else
 #define NEKTAR_MATH_NAME(x) x
 #endif
@@ -41,14 +41,14 @@ namespace Nektar
         // requires the first argument to be an integer.
         static double Jn (double i, double x)
         {
-            NEKTAR_MATH_NAME(jn) ((int) i, x);
+            return NEKTAR_MATH_NAME(jn) ((int) i, x);
         }
 
         // Bessel function of the second kind. This is used since the math.h function
         // requires the first argument to be an integer.
         static double Yn (double i, double x)
         {
-            NEKTAR_MATH_NAME(yn) ((int) i, x);
+            return NEKTAR_MATH_NAME(yn) ((int) i, x);
         }
 
         // ---------------------------------------------------------------------

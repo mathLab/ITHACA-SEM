@@ -74,6 +74,7 @@ namespace Nektar
                         for(k = 0; k < 2; ++k)
                         {
                             m_locToContMap[cnt + vmap[k]] =  SegmentGeom->GetVid(k);
+                            m_locToContBndMap[cnt1 + vmap[k]] =  SegmentGeom->GetVid(k);
                             gid = max(gid,m_locToContMap[cnt + vmap[k]]);
                         }
                     }
@@ -221,6 +222,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.17  2007/10/03 11:37:50  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.16  2007/09/25 14:25:30  pvos
 * Update for helmholtz1D with different expansion orders
 *

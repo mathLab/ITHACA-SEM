@@ -57,7 +57,6 @@ namespace Nektar
             virtual ~LocalToGlobalMap1D();
 
         protected:
-            Array<OneD,int> m_bndCondGlobalID;
             
         private:
             virtual void v_ResetMapping(const int NumDirichlet, 
@@ -72,6 +71,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.14  2007/10/03 11:37:51  sherwin
+/** Updates relating to static condensation implementation
+/**
 /** Revision 1.13  2007/09/25 14:25:30  pvos
 /** Update for helmholtz1D with different expansion orders
 /**

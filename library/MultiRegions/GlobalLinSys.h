@@ -52,11 +52,11 @@ namespace Nektar
             GlobalLinSys(const GlobalLinSysKey &mkey, 
                          const DNekLinSysSharedPtr linSys);
 
-            GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &mkey, 
-                                       const DNekLinSysSharedPtr linsys,
-                                       const DNekScalBlkMatSharedPtr BinvD,
-                                       const DNekScalBlkMatSharedPtr invDC,
-                                       const DNekScalBlkMatSharedPtr invD);
+            GlobalLinSys(const GlobalLinSysKey &mkey, 
+                         const DNekLinSysSharedPtr linsys,
+                         const DNekScalBlkMatSharedPtr BinvD,
+                         const DNekScalBlkMatSharedPtr invDC,
+                         const DNekScalBlkMatSharedPtr invD);
 
 
             const GlobalLinSysKey &GetKey(void) const

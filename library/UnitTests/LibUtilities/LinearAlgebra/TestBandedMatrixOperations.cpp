@@ -705,8 +705,8 @@ namespace Nektar
                 boost::shared_ptr<NekMatrix<NekMatrix<double, BandedMatrixTag>, BandedMatrixTag, ScaledMatrixTag> > rhs2;
                 boost::shared_ptr<NekMatrix<NekMatrix<double>, BandedMatrixTag, BlockMatrixTag> > rhs3;
 
-                GenerateBandedMatrices(lhs1, 2.0, 2, 2, lhs2, lhs3);
-                GenerateBandedMatrices(rhs1, 2.0, 2, 2, rhs2, rhs3);
+                GenerateMatrices<BandedMatrixTag>(lhs1, 2.0, 2, 2, lhs2, lhs3);
+                GenerateMatrices<BandedMatrixTag>(rhs1, 2.0, 2, 2, rhs2, rhs3);
 
                 double result_buf[] = {60, 480, 660, 0,
                                        396, 736, 1412, 768,

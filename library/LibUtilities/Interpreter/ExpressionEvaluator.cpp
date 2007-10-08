@@ -7,11 +7,15 @@
 #include <LibUtilities/LibUtilities.h>
 #include "ExpressionEvaluator.h"
 
+#ifdef _MSC_VER
+#include <boost/preprocessor/cat.hpp>  
+#endif //MSC_VER
+
 using namespace std;
 using namespace boost::spirit;
 
 #ifdef _MSC_VER
-#define NEKTAR_MATH_NAME(x) _##x
+#define NEKTAR_MATH_NAME(x) BOOST_PP_CAT(_, x)
 #else
 #define NEKTAR_MATH_NAME(x) x
 #endif

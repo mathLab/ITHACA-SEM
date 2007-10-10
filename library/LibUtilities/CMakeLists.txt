@@ -77,6 +77,7 @@ SET(ExpressionTemplates
     ./ExpressionTemplates/BinaryExpressionPolicyFwd.hpp
     ./ExpressionTemplates/BinaryExpressionTraits.hpp
     ./ExpressionTemplates/BinaryOperators.hpp
+    ./ExpressionTemplates/BinaryOperatorsFwd.hpp
     ./ExpressionTemplates/CommutativeExpressionTraits.hpp
     ./ExpressionTemplates/CommutativeTraits.hpp
     ./ExpressionTemplates/ConstantExpression.hpp

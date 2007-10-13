@@ -174,19 +174,19 @@ namespace Nektar
             NekMatrix<double> rhs(4, 4, rhs_buf);
             NekMatrix<double> middle(4, 4, middle_buf);
 
-            Expression<BinaryExpressionPolicy<
-                       ConstantExpressionPolicy<NekMatrix<double> >,
-                       BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, 
-                                              ConstantExpressionPolicy<NekMatrix<double> >, AddOp>,
-                                              SubtractOp> > expr = lhs - (middle + rhs);
-            NekMatrix<double> result(expr);
-
-            double expected_result_buf[] = {-4, -8, -12, -16,
-                                            -20, -24, -28, -32,
-                                            -36, -40, -44, -48,
-                                            -52, -56, -60, -64};
-            NekMatrix<double> expected_result(4, 4, expected_result_buf);
-            BOOST_CHECK_EQUAL(expected_result, result);
+//             Expression<BinaryExpressionPolicy<
+//                        ConstantExpressionPolicy<NekMatrix<double> >,
+//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, 
+//                                               ConstantExpressionPolicy<NekMatrix<double> >, AddOp>,
+//                                               SubtractOp> > expr = lhs - (middle + rhs);
+//             NekMatrix<double> result(lhs - (middle+rhs));
+// 
+//             double expected_result_buf[] = {-4, -8, -12, -16,
+//                                             -20, -24, -28, -32,
+//                                             -36, -40, -44, -48,
+//                                             -52, -56, -60, -64};
+//             NekMatrix<double> expected_result(4, 4, expected_result_buf);
+//             BOOST_CHECK_EQUAL(expected_result, result);
         }
     }
 }

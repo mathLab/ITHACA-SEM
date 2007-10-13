@@ -120,7 +120,7 @@ namespace Nektar
                     ParentOpType<ResultType, LhsDataType>::ApplyEqual(accum, *lhs);
 
                     typedef AssociativeTraits<ResultType, ParentOpType, LhsDataType, OpType, RhsDataType> AssociativeTraits;
-                    typedef ChooseOpChangeType<AssociativeTraits, OpType<LhsDataType, RhsDataType> >::Type OpChangeType;
+                    typedef typename ChooseOpChangeType<AssociativeTraits, OpType<LhsDataType, RhsDataType> >::Type OpChangeType;
                     //typedef typename AssociativeTraits<ResultType, ParentOpType, LhsDataType, OpType, RhsDataType>::OpChangeType OpChangeType;
                     OpChangeType::ApplyEqual(accum, *rhs);
                 }
@@ -350,7 +350,7 @@ namespace Nektar
                                 const Expression<ConstantExpressionPolicy<C> >& rhs, 
                                 Accumulator<R>& accum)
                 {
-                    lhs.Apply<BinaryNullOp>(accum);
+                    lhs.template Apply<BinaryNullOp>(accum);
                     OpType<R, C>::ApplyEqual(accum, *rhs);
                 }
         };

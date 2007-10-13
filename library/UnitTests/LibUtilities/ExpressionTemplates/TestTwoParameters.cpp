@@ -49,8 +49,7 @@ namespace Nektar
 {
     namespace TestTwoParameters
     {
-        // Tests the creation of a single binary expression from the + 
-        // operator.
+        // Tests 1op Specialization #1
         BOOST_AUTO_TEST_CASE(TestAddingTwoMatrices)
         {
             double lhs_buf[] = {1, 2, 3, 4,
@@ -68,6 +67,35 @@ namespace Nektar
                                               ConstantExpressionPolicy<NekMatrix<double> >,
                                               AddOp> > expr = lhs + rhs;
             NekMatrix<double> result(expr);
+        }
+
+        BOOST_AUTO_TEST_CASE(Test1OpSpecialization2_WithNoOperatorChange)
+        {
+            double lhs_buf[] = {1, 2, 3, 4,
+                                5, 6, 7, 8,
+                                9, 10, 11, 12,
+                                13, 14, 15, 16};
+            double middle_buf[] = {4, 8, 16, 20,
+                                   24, 28, 36, 40,
+                                   44, 48, 56, 60,
+                                   64, 58, 76, 80};
+            double rhs_buf[] = {2, 4, 6, 8,
+                                10, 12, 14, 16,
+                                18, 20, 22, 24,
+                                26, 28, 30, 32};
+
+            NekMatrix<double> lhs(4, 4, lhs_buf);
+            NekMatrix<double> rhs(4, 4, rhs_buf);
+            NekMatrix<double> middle(4, 4, middle_buf);
+            
+            NekMatrix<double> result(lhs + (middle+rhs));
+
+            double expected_result_buf[] = {7, 14, 25, 32,
+                                        39, 46, 57, 64,
+                                        71, 78, 89, 96,
+                                        103, 100, 121, 128};
+            NekMatrix<double> expected_result(4, 4, expected_result_buf);
+            BOOST_CHECK_EQUAL(expected_result, result);
         }
 
         // Tests aliasing.

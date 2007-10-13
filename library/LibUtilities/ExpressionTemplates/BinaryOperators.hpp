@@ -35,13 +35,13 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_OPERATORS_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_OPERATORS_HPP
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <LibUtilities/ExpressionTemplates/ArithmeticTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/Expression.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
 #include <LibUtilities/ExpressionTemplates/Accumulator.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionConcepts.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryOperatorsFwd.hpp>
 
 #include <boost/concept_check.hpp>
 #include <boost/call_traits.hpp>
@@ -50,19 +50,6 @@
 
 namespace Nektar
 {
-    // Forward declarations needed to declare inverse operators.
-    template<typename LhsType, typename RhsType>
-    class AddOp;
-    
-    template<typename LhsType, typename RhsType>
-    class SubtractOp;
-            
-    template<typename LhsType, typename RhsType>
-    class MultiplyOp;
-            
-    template<typename LhsType, typename RhsType>
-    class DivideOp;
-        
     /// \brief An expression to negate an object of ParameterType.
     /// Parameter type is the actual object, not the expression that may lead to it.
     template<typename LhsType, typename RhsType>
@@ -71,6 +58,8 @@ namespace Nektar
         public:
             typedef AdditionTraits<LhsType, RhsType> TraitsType;
             typedef typename TraitsType::ResultType ResultType;
+            static const bool HasOpEqual = TraitsType::HasOpEqual;
+            static const bool HasOpLeftEqual = TraitsType::HasOpLeftEqual;
 
             template<typename L, typename R>
             class Rebind
@@ -80,19 +69,18 @@ namespace Nektar
             };
 
             static void Apply(Accumulator<ResultType>& result,
-                                typename boost::call_traits<LhsType>::const_reference lhs, 
-                                typename boost::call_traits<RhsType>::const_reference rhs)
+                              typename boost::call_traits<LhsType>::const_reference lhs, 
+                              typename boost::call_traits<RhsType>::const_reference rhs)
             {
                 NekAdd(*result, lhs, rhs);
             }
 
             static void ApplyEqual(Accumulator<LhsType>& result,
-                                    typename boost::call_traits<RhsType>::const_reference rhs)
+                                   typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                //TraitsType::AddEqual(*result, rhs);
                 if( result.IsInitialized() )
                 {
-                    *result += rhs;
+                    NekAddEqual(*result, rhs);
                 }
                 else
                 {
@@ -101,11 +89,11 @@ namespace Nektar
             }
             
             static void ApplyLeftEqual(Accumulator<ResultType>& result,
-                                        typename boost::call_traits<LhsType>::const_reference lhs)
+                                       typename boost::call_traits<LhsType>::const_reference lhs)
             {
                 if( result.IsInitialized() )
                 {
-                    TraitsType::AddLeftEqual(*result, lhs);
+                    NekAddLeftEqual(*result, lhs);
                 }
                 else
                 {
@@ -132,7 +120,9 @@ namespace Nektar
         public:
             typedef MultiplicationTraits<LhsType, RhsType> TraitsType;
             typedef typename TraitsType::ResultType ResultType;
-            
+            static const bool HasOpEqual = TraitsType::HasOpEqual;
+            static const bool HasOpLeftEqual = TraitsType::HasOpLeftEqual;
+
             template<typename L, typename R>
             class Rebind
             {
@@ -147,25 +137,39 @@ namespace Nektar
                 NekMultiply(*result, lhs, rhs);
             }
             
-            static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
-                                    typename boost::call_traits<RhsType>::const_reference rhs,
-                                    Accumulator<ResultType>& result)
-            {
-                TraitsType::MultiplyEqual(lhs, rhs, *result);
-            }
+            //static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
+            //                        typename boost::call_traits<RhsType>::const_reference rhs,
+            //                        Accumulator<ResultType>& result)
+            //{
+            //    NekMultiplyEqual(lhs, rhs, *result);
+            //}
             
             static void ApplyEqual(Accumulator<LhsType>& result,
                                     typename boost::call_traits<RhsType>::const_reference rhs)
             {
                 if( result.IsInitialized() )
                 {
-                    *result *= rhs;
+                    NekMultiplyEqual(*result, rhs);
                 }
                 else
                 {
                     *result = rhs;
                 }
             }
+
+            static void ApplyLeftEqual(Accumulator<ResultType>& result,
+                                       typename boost::call_traits<LhsType>::const_reference lhs)
+            {
+                if( result.IsInitialized() )
+                {
+                    NekMultiplyLeftEqual(*result, lhs);
+                }
+                else
+                {
+                    *result = lhs;
+                }
+            }
+
 
             static const std::string& AsString()
             {
@@ -186,7 +190,8 @@ namespace Nektar
         public:
             typedef DivisionTraits<LhsType, RhsType> TraitsType;
             typedef typename TraitsType::ResultType ResultType;
-
+            static const bool HasOpEqual = TraitsType::HasOpEqual;
+            static const bool HasOpLeftEqual = TraitsType::HasOpLeftEqual;
             
             template<typename L, typename R>
             class Rebind
@@ -203,12 +208,12 @@ namespace Nektar
                 NekDivide(*result, lhs, rhs);
             }
             
-            static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
-                                    typename boost::call_traits<RhsType>::const_reference rhs,
-                                    Accumulator<ResultType>& result)
-            {
-                TraitsType::DivideEqual(lhs, rhs, *result);
-            }
+            //static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
+            //                        typename boost::call_traits<RhsType>::const_reference rhs,
+            //                        Accumulator<ResultType>& result)
+            //{
+            //    TraitsType::DivideEqual(lhs, rhs, *result);
+            //}
 
             static void ApplyEqual(Accumulator<LhsType>& result,
                                     typename boost::call_traits<RhsType>::const_reference rhs)
@@ -216,7 +221,7 @@ namespace Nektar
                 //TraitsType::DivideEqual(*result, rhs);
                 if( result.IsInitialized() )
                 {
-                    *result /= rhs;
+                    NekDivideEqual(*result, rhs);
                 }
                 else
                 {
@@ -224,6 +229,20 @@ namespace Nektar
                 }
             }
             
+            static void ApplyLeftEqual(Accumulator<ResultType>& result,
+                                       typename boost::call_traits<LhsType>::const_reference lhs)
+            {
+                if( result.IsInitialized() )
+                {
+                    NekDivideLeftEqual(*result, lhs);
+                }
+                else
+                {
+                    *result = lhs;
+                }
+            }
+
+
             static const std::string& AsString()
             {
                 return s_StringRep;
@@ -243,7 +262,8 @@ namespace Nektar
         public:
             typedef SubtractionTraits<LhsType, RhsType> TraitsType;
             typedef typename TraitsType::ResultType ResultType;
-            
+            static const bool HasOpEqual = TraitsType::HasOpEqual;
+            static const bool HasOpLeftEqual = TraitsType::HasOpLeftEqual;
             
             template<typename L, typename R>
             class Rebind
@@ -260,19 +280,19 @@ namespace Nektar
                 NekSubtract(*result, lhs, rhs);
             }
             
-            static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
-                                    typename boost::call_traits<RhsType>::const_reference rhs,
-                                    Accumulator<ResultType>& result)
-            {
-                TraitsType::SubtractEqual(lhs, rhs, *result);
-            }
+            //static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
+            //                        typename boost::call_traits<RhsType>::const_reference rhs,
+            //                        Accumulator<ResultType>& result)
+            //{
+            //    TraitsType::SubtractEqual(lhs, rhs, *result);
+            //}
 
             static void ApplyEqual(Accumulator<LhsType>& result,
-                                    typename boost::call_traits<RhsType>::const_reference rhs)
+                                   typename boost::call_traits<RhsType>::const_reference rhs)
             {
                 if( result.IsInitialized() )
                 {
-                    *result -= rhs;
+                    NekSubtractEqual(*result, rhs);
                 }
                 else
                 {
@@ -280,6 +300,19 @@ namespace Nektar
                 }
             }
             
+            static void ApplyLeftEqual(Accumulator<ResultType>& result,
+                                       typename boost::call_traits<LhsType>::const_reference lhs)
+            {
+                if( result.IsInitialized() )
+                {
+                    NekSubtractLeftEqual(*result, lhs);
+                }
+                else
+                {
+                    *result = lhs;
+                }
+            }
+
 
             static const std::string& AsString()
             {
@@ -296,7 +329,6 @@ namespace Nektar
     std::string SubtractOp<LhsType, RhsType>::s_StringRep("-");
 }
 
-#endif // NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_OPERATORS_HPP
 
 

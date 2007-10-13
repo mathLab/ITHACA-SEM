@@ -6,6 +6,8 @@ SET(Sources
     TestTwoParameters.cpp
     TestThreeParameters.cpp
     TestFourParameters.cpp
+    TestBinaryExpressionEvaluatorWithConstantConstantParameters.cpp
+    TestBinaryExpressionEvaluatorWithBinaryConstantParameters.cpp
 )
 
 SET(Headers

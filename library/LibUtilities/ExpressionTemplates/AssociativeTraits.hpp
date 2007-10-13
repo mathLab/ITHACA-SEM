@@ -39,6 +39,7 @@
 
 #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicyFwd.hpp>
+#include <boost/utility/enable_if.hpp>
 
 namespace Nektar
 {
@@ -81,6 +82,17 @@ namespace Nektar
             static const bool IsStrictlyAssociative = false;
             static const bool IsAssociativeWithOpChange = true;
             static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
+            typedef SubtractOp<SecondType, ThirdType> OpChangeType;
+    };
+
+    template<typename FirstType, typename SecondType, typename ThirdType>
+    class AssociativeTraits<FirstType, SubtractOp, SecondType, SubtractOp, ThirdType>
+    {
+        public:
+            static const bool IsStrictlyAssociative = false;
+            static const bool IsAssociativeWithOpChange = true;
+            static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
+            typedef AddOp<SecondType, ThirdType> OpChangeType;
     };
     
     template<typename FirstType, typename SecondType, typename ThirdType>
@@ -108,6 +120,22 @@ namespace Nektar
             static const bool IsStrictlyAssociative = false;
             static const bool IsAssociativeWithOpChange = true;
             static const bool IsAssociative = IsStrictlyAssociative || IsAssociativeWithOpChange;
+            typedef DivideOp<SecondType, ThirdType> OpChangeType;
+    };
+
+    template<typename AssociativeTraitsType, typename DefaultType, typename enabled = void>
+    class ChooseOpChangeType
+    {
+        public:
+            typedef DefaultType Type;
+    };
+
+    template<typename AssociativeTraitsType, typename DefaultType>
+    class ChooseOpChangeType<AssociativeTraitsType, DefaultType, 
+        typename boost::disable_if<boost::is_same<typename AssociativeTraitsType::OpChangeType, DefaultType> >::type >
+    {
+        public:
+            typedef typename AssociativeTraitsType::OpChangeType Type;
     };
 }
 

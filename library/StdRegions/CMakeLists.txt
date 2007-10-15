@@ -12,7 +12,7 @@ StdNodalTriExp.cpp
 #StdPyrExp.cpp
 StdQuadExp.cpp
 StdSegExp.cpp
-#StdTetExp.cpp
+StdTetExp.cpp
 StdTriExp.cpp
 )
 

@@ -167,6 +167,7 @@ namespace Nektar
 
                     mode = m_bdata.data();
 
+
                     for(i = 0; i < numPoints; ++i)
                         mode[i] = 1.0;
 
@@ -219,66 +220,32 @@ namespace Nektar
                 }
                 break; 
 
-            case eOrtho_C:
+            // This is tilde psi_pqr in Spen's book, page 105
+            // The 4-dimensional array is laid out in memory such that 
+            // 1) Eta_z values are the changing the fastest, then r, q, and finally p.
+            // 2) r index increases by the stride of numPoints.
+            case eOrtho_C:  
                 {
-                    const NekDouble *one_m_z_pow;
-                    double scal;//,fac;
+                    int P = numModes - 1, Q = numModes - 1, R = numModes - 1;
+                    NekDouble *mode = m_bdata.data();
 
-                    // bdata should be of size _order*(order+1)*(order+2)/6*zorder;
-
-                    mode = m_bdata.data();
-                    for(i = 0; i < numPoints; ++i)
-                    {
-                        mode[0] = 1.0;
-                    }
-
-                    mode += numPoints;
-                    for (q = 1; q < numModes; ++q, mode += numPoints)
-                    {
-                        Polylib::jacobfd(numPoints, z.data(), mode, NULL, q, 2.0, 0.0);
-                    }
-
-                    one_m_z_pow = m_bdata.data();
-                    for(p = 1; p < numModes; ++p)
-                    {
-                        for(i = 0; i < numPoints; ++i)
-                        {
-                            mode[i] = 0.5*(1-z[i])*one_m_z_pow[i];
-                        }
-
-                        one_m_z_pow = mode;
-                        mode += numPoints;
-
-                        for(q = 1; q < numModes-p; ++q,mode+=numPoints)
-                        {
-                            Polylib::jacobfd(numPoints, z.data(), mode, NULL, q, 2.0*p+2.0, 0.0);
-
-                            for(i = 0; i < numPoints; ++i)
-                            {
-                                mode[i] *= one_m_z_pow[i];
+                    for( int p = 0, m = 0; p <= P; ++p ) {
+                        for( int q = 0; q <= Q - p; ++q ) {
+                            for( int r = 0; r <= R - p - q; ++r, mode += numPoints ) {
+                                Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*p + 2*q + 1.0, 0.0);
+                                for( int k = 0; k < numPoints; ++k ) {
+                                    mode[k] *= 0.5*pow(1.0 - z[k], p+q);
+                                }
                             }
                         }
                     }
 
-                    ASSERTL2(false, "Normalisation might need fixing");
 
-                    for(p = 0, mode=m_bdata.data(); p < numModes; ++p)
-                    {
-                        for(q = 0; q < numModes-p; ++q,mode+=numPoints)
-                        {
-                            scal = sqrt((p+q+1.5));
-                            for(i = 0; i < numPoints; ++i)
-                            {
-                                mode[i] *= scal;
-                            }
-                        }
-                    }
-
-                    // define derivative basis 
+                    // Define derivative basis
                     Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)*
-                        (numModes+2)/6,numPoints,1.0,D,numPoints,
+                        (numModes+2)/6,numPoints,1.0, D, numPoints,
                         m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
-                }       
+                }
                 break;
 
             case eModified_A:
@@ -534,6 +501,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.23  2007/10/03 03:00:13  bnelson
+* Added precompiled headers.
+*
 * Revision 1.22  2007/09/27 12:52:03  pvos
 * Column major Blas calls corrections
 *

@@ -47,6 +47,108 @@ namespace Nektar
 {
     namespace TestThreeParametersWithNekMatrix
     {
+        class Foo
+        {
+            public:
+                Foo() : Value(0) {}
+                Foo(int v) : Value(v) {}
+                int Value;
+        };
+        
+        class Bar
+        {
+            public:
+                Bar() : Value(0) {}
+                Bar(int v) : Value(v) {}
+                int Value;
+        };
+        
+        void NekAdd(Bar& result, const Foo& lhs, const Bar& rhs)
+        {
+            result.Value = lhs.Value + rhs.Value;
+        }
+        
+        Bar NekAdd(const Foo& lhs, const Bar& rhs)
+        {
+            Bar result;
+            NekAdd(result, lhs, rhs);
+            return result;
+        }
+        
+        void NekAdd(Foo& result, const Bar& lhs, const Bar& rhs)
+        {
+            result.Value = lhs.Value + rhs.Value;
+        }
+        
+        Foo NekAdd(const Bar& lhs, const Bar& rhs)
+        {
+            Foo result;
+            NekAdd(result, lhs, rhs);
+            return result;
+        }
+        
+            
+         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<Bar>, ConstantExpressionPolicy<Bar>,AddOp > > 
+         operator+(const Bar& lhs, const Bar& rhs) 
+         { 
+             return CreateBinaryExpression<AddOp>(lhs, rhs); 
+         }
+         
+         Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<Foo>, ConstantExpressionPolicy<Bar>,AddOp > > 
+         operator+(const Foo& lhs, const Bar& rhs) 
+         { 
+             return CreateBinaryExpression<AddOp>(lhs, rhs); 
+         }
+        
+        BOOST_AUTO_TEST_CASE(TestLhsBinaryRhsConstantSpecialization1)
+        {
+            double lhs_buf[] = {1, 2, 3, 4,
+                                5, 6, 7, 8,
+                                9, 10, 11, 12,
+                                13, 14, 15, 16};
+            double middle_buf[] = {2, 4, 6, 8,
+                                10, 12, 14, 16,
+                                18, 20, 22, 24,
+                                26, 28, 30, 32};
+
+            double rhs_buf[] = { 3, 6, 9, 12,
+                                 15, 18, 21, 24,
+                                 27, 30, 33, 36,
+                                 39, 42, 45, 48};
+
+            NekMatrix<double> lhs(4, 4, lhs_buf);
+            NekMatrix<double> rhs(4, 4, rhs_buf);
+            NekMatrix<double> middle(4, 4, middle_buf);
+
+            Expression<BinaryExpressionPolicy<
+                       BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, 
+                                              ConstantExpressionPolicy<NekMatrix<double> >, AddOp>,
+                                              ConstantExpressionPolicy<NekMatrix<double> >,
+                                              AddOp> > expr = (lhs + middle) + rhs;
+            NekMatrix<double> result(expr);
+
+            double expected_result_buf[] = {6, 12, 18, 24,
+                                            30, 36, 42, 48,
+                                            54, 60, 66, 72,
+                                            78, 84, 90, 96};
+            NekMatrix<double> expected_result(4, 4, expected_result_buf);
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
+        
+        
+        BOOST_AUTO_TEST_CASE(TestLhsBinaryRhsConstantSpecialization2)
+        {
+            Foo lhs(1);
+            Bar middle(2);
+            Bar rhs(3);
+            
+            Foo result;
+            
+            ((lhs + middle) + rhs).Apply(result);
+            
+            BOOST_CHECK_EQUAL(result.Value, 6);
+        }
+        
         // Tests the creation of a single binary expression from the + 
         // operator.
         BOOST_AUTO_TEST_CASE(TestAddingThreeMatrices_LhsIsBinary_TopOperationIsCommutative)

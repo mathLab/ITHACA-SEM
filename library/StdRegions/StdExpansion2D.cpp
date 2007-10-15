@@ -69,7 +69,6 @@ namespace Nektar
         //----------------------------
         // Differentiation Methods
         //----------------------------
-
         void StdExpansion2D::PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray,
                          Array<OneD, NekDouble> &outarray_d0, 
                          Array<OneD, NekDouble> &outarray_d1)
@@ -87,7 +86,8 @@ namespace Nektar
 
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
-                Blas::Dgemm('N', 'N', nquad0, nquad1, nquad0, 1.0,
+                Blas::Dgemm('T', 'T', nquad0, nquad1, nquad0, 1.0,
+//                             Blas::Dgemm('N', 'N', nquad0, nquad1, nquad0, 1.0,//make colomn major 
                             &(D0->GetPtr())[0], nquad0, &wsp[0], nquad0, 0.0,
                             &outarray_d0[0], nquad0);
             }
@@ -95,7 +95,8 @@ namespace Nektar
             // calculate du/dx_1
             if (outarray_d1.num_elements() > 0)
             {
-                Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,
+                Blas:: Dgemm('T', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,
+//                         Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,//make colomn major matrix                        
                          &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
             }
 
@@ -170,6 +171,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.16  2007/09/27 12:55:57  pvos
+* Column major Blas calls corrections
+*
 * Revision 1.15  2007/07/20 02:16:53  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

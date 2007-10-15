@@ -42,6 +42,7 @@
 #endif
 
 namespace Nektar
+
 {
     namespace StdRegions
     {
@@ -78,42 +79,45 @@ namespace Nektar
         DNekMatSharedPtr D0,D1,D2;
         Array<OneD, NekDouble> wsp;
             wsp = Array<OneD, NekDouble>(nquad0*nquad1*nquad2);
-        
+
         // copy inarray to wsp in case inarray is used as outarray
             Vmath::Vcopy(nquad0*nquad1*nquad2,&inarray[0],1,&wsp[0],1);
-        
+
         D0 = ExpPointsProperties(0)->GetD();
         D1 = ExpPointsProperties(1)->GetD();
         D2 = ExpPointsProperties(2)->GetD();
-        
+
         // calculate du/dx_0
         if(outarray_d0.num_elements() > 0)
         {
         for(i=0; i < nquad2; ++i)
         {
-            Blas::Dgemm('T','N',nquad0,nquad1,nquad0,1.0,&(D0->GetPtr())[0],
+//             Blas::Dgemm('T','N',nquad0,nquad1,nquad0,1.0,&(D0->GetPtr())[0],
+                Blas::Dgemm('N','N',nquad0,nquad1,nquad0,1.0,&(D0->GetPtr())[0], // change to column major matrix
                 nquad0,&wsp[0]+i*nquad0*nquad1, nquad0,0.0,
                 &outarray_d0[0]+i*nquad0*nquad1,nquad0);
         }
         }
-        
+
         // calculate du/dx_1
         if(outarray_d1.num_elements() > 0 )
         {
         for(i=0; i < nquad2; ++i)
         {
-            Blas:: Dgemm('N','N',nquad0,nquad1,nquad1,1.0,
+//             Blas:: Dgemm('N','N',nquad0,nquad1,nquad1,1.0,
+                 Blas:: Dgemm('N','T',nquad0,nquad1,nquad1,1.0, // change to column major matrix
                  &wsp[0]+i*nquad0*nquad1,nquad0,&(D1->GetPtr())[0],
                  nquad1,0.0, &outarray_d1[0]+i*nquad0*nquad1,nquad0);
         }
         }
-        
+
         // calculate du/dx_2
         if(outarray_d2.num_elements() > 0)
         {
         for(i=0; i < nquad0*nquad1; ++i)
         {
-            Blas:: Dgemv('T',nquad2,nquad2,1.0,&(D2->GetPtr())[0],
+//             Blas:: Dgemv('T',nquad2,nquad2,1.0,&(D2->GetPtr())[0],
+                 Blas:: Dgemv('N',nquad2,nquad2,1.0,&(D2->GetPtr())[0],  // change to column major matrix
                  nquad2, &wsp[0]+i,nquad0*nquad1,0.0,
                  &outarray_d2[0]+i,nquad0*nquad1);
         }
@@ -140,6 +144,7 @@ namespace Nektar
         ASSERTL2(coords[2] < -1,"coord[2] < -1");
         ASSERTL2(coords[2] >  1,"coord[2] >  1");
         
+       
         // interpolate first coordinate direction
             I = ExpPointsProperties(0)->GetI(coords);
 
@@ -147,19 +152,19 @@ namespace Nektar
         {
         wsp[i] =  Blas::Ddot(nq1,&(I->GetPtr())[0],1,&m_phys[0]+i*nq1,1);
         }
-        
+
         // interpolate in second coordinate direction 
             I = ExpPointsProperties(1)->GetI(coords+1);
         for(i =0; i < nq3; ++i)
         {
         wsp1[i] = Blas::Ddot(nq2,&wsp[0]+i*nq2,1,&(I->GetPtr())[0],1);
         }
-        
+
         // interpolate in third coordinate direction 
             I = ExpPointsProperties(2)->GetI(coords+2);
         val = Blas::Ddot(nq3,&wsp1[0],1,&(I->GetPtr())[0],1);
-        
-        return val;    
+
+        return val;
     }
     
     }//end namespace
@@ -167,6 +172,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.11  2007/07/20 02:16:53  bnelson
+ * Replaced boost::shared_ptr with Nektar::ptr
+ *
  * Revision 1.10  2007/05/22 02:01:49  bnelson
  * Changed Array::size to Array::num_elements.
  *

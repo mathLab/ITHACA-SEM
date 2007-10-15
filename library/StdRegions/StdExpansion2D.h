@@ -54,8 +54,7 @@ namespace Nektar
                 StdExpansion2D(const StdExpansion2D &T);
                 ~StdExpansion2D();
 
-            // Generic operations in different elements
-
+            // Generic operations in different element
 
             /** \brief Calculate the 2D derivative in the local
              *  tensor/collapsed coordinate at the physical points 
@@ -89,9 +88,10 @@ namespace Nektar
              *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
              *  \end{array} \f$
              */
-                void PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-                     Array<OneD, NekDouble> &outarray_d0,
-                                     Array<OneD, NekDouble> &outarray_d1);
+
+        void PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray_d0,
+                                Array<OneD, NekDouble> &outarray_d1);
 
                 // Change names from Deriv to PhysDeriv
         void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
@@ -102,12 +102,12 @@ namespace Nektar
             v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
         }
 
-                void StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-                  Array<OneD, NekDouble> &outarray_d1,
-                                  Array<OneD, NekDouble> &outarray_d2)
-                {
-                    v_StdPhysDeriv(inarray, outarray_d1, outarray_d2);
-                }
+        void StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+            Array<OneD, NekDouble> &outarray_d1,
+                            Array<OneD, NekDouble> &outarray_d2)
+        {
+            v_StdPhysDeriv(inarray, outarray_d1, outarray_d2);
+        }
 
         /** \brief This function evaluates the expansion at a single
          *  (arbitrary) point of the domain
@@ -151,13 +151,13 @@ namespace Nektar
          {
          return v_GetNodalPoints(x, y);
          }
-         
+
     protected:
-         
+
     private:
-         
+
          // Virtual Functions ----------------------------------------
-         
+
          virtual int v_GetNverts() const = 0;
          virtual int v_GetNedges() const = 0;
          virtual int v_GetNfaces() const
@@ -166,7 +166,7 @@ namespace Nektar
               "expansions");
             return 0;
          }
-         
+
          virtual ShapeType v_DetShapeType() const = 0;
          virtual int v_GetNodalPoints(const ConstArray<OneD, NekDouble> &x,
                       const ConstArray<OneD, NekDouble> &y)
@@ -175,39 +175,39 @@ namespace Nektar
               "expansions");
          return 0;
          }
-         
+
          virtual DNekMatSharedPtr v_GenNBasisTransMatrix()
          {
             ASSERTL0(false, "This function is only valid for nodal "
               "expansions");
             return DNekMatSharedPtr(static_cast<DNekMat*>(0));
          }
-         
+
          virtual int v_GetCoordim(void)
              {
          return 2;
          }
-         
+
          virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
                      Array<OneD, NekDouble> &outarray) = 0;
          virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
                      Array<OneD, NekDouble> &outarray) = 0;
-         
+
          virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray ) = 0;
-         
+
          virtual void   v_PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
                      Array<OneD, NekDouble> &out_d0,
                      Array<OneD, NekDouble> &out_d1,
                      Array<OneD, NekDouble> &out_d2) = 0;
-         
+
          virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
                      Array<OneD, NekDouble> &outarray_d1, 
                      Array<OneD, NekDouble> &outarray_d2) = 0;
-         
+
          virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
-         {
-         return PhysEvaluate2D(coords);
-         }
+            {
+            return PhysEvaluate2D(coords);
+            }
         };
 
         typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
@@ -219,6 +219,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.16  2007/07/22 23:04:26  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.15  2007/07/20 02:16:53  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

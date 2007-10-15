@@ -135,7 +135,8 @@ namespace Nektar
             }
             else
             {
-                Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),
+//                 Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),
+                    Blas::Dgemm('N','N',order0,nquad1,nquad0,1.0,base0.get(), // make column major matrix
                     nquad0,&tmp[0],nquad0,0.0,&tmp1[0],order0);
             }
 
@@ -145,7 +146,8 @@ namespace Nektar
             }
             else
             {
-                Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, &tmp1[0],
+//                 Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, &tmp1[0],
+                    Blas::Dgemm('N', 'T',order0,order1, nquad1,1.0, &tmp1[0],//make column major matrix
                     order0, base1.get(), nquad1, 0.0, 
                     &outarray[0],order0);
             }
@@ -250,7 +252,8 @@ namespace Nektar
             }
             else
             {
-                Blas::Dgemm('N','N', nquad0,order1,order0,1.0, base0.get(), 
+//                 Blas::Dgemm('N','N', nquad0,order1,order0,1.0, base0.get(),
+                    Blas::Dgemm('N','T', nquad0,order1,order0,1.0, base0.get(), // make column major matrix 
                     nquad0, &inarray[0], order0,0.0,&tmp[0], nquad0);
             }
 
@@ -260,7 +263,8 @@ namespace Nektar
             }
             else
             {
-                Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &tmp[0], 
+//                 Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &tmp[0],
+                    Blas::Dgemm('N','N', nquad0, nquad1,order1, 1.0, &tmp[0],//make column major matrix
                     nquad0, base1.get(), nquad1, 0.0, &outarray[0], 
                     nquad0);
             }    
@@ -489,6 +493,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.22  2007/07/20 02:16:54  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.21  2007/07/12 12:55:16  sherwin
 * Simplified Matrix Generation
 *

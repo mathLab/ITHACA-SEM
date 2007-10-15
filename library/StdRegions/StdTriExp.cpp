@@ -156,13 +156,15 @@ namespace Nektar
             }
 
             // Inner product with respect to 'a' direction 
-            Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
+//             Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
+                Blas::Dgemm('N','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,//make column major matrix
                 base0.get(),nquad0,0.0,&tmp1[0],nquad1);
 
             // Inner product with respect to 'b' direction 
             for(mode=i=0; i < order0; ++i)
             {
-                Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
+//                 Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
+                    Blas::Dgemv('N',nquad1,order1-i,1.0, base1.get()+mode*nquad1, // make column major matrix
                     nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
                     &outarray[0] + mode,1);
                 mode += order1-i;
@@ -308,7 +310,8 @@ namespace Nektar
 
             for(i = mode = 0; i < order0; ++i)
             {
-                Blas::Dgemv('N', nquad1,order1-i,1.0,base1.get()+mode*nquad1,
+//                 Blas::Dgemv('N', nquad1,order1-i,1.0,base1.get()+mode*nquad1,
+                    Blas::Dgemv('T', nquad1,order1-i,1.0,base1.get()+mode*nquad1,//make column major matrix
                     nquad1,&inarray[0]+mode,1,0.0,&tmp[0]+i*nquad1,1);
                 mode += order1-i;
             }
@@ -320,7 +323,8 @@ namespace Nektar
                     &tmp[0]+nquad1,1);
             }
 
-            Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0.get(),nquad0, 
+//             Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0.get(),nquad0,
+                Blas::Dgemm('N','N', nquad0,nquad1,order0,1.0, base0.get(),nquad0,  //make column major matrix
                 &tmp[0], nquad1,0.0, &outarray[0], nquad0);
         }
 
@@ -538,6 +542,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.22  2007/07/20 02:16:55  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.21  2007/07/11 13:35:18  kirby
 * *** empty log message ***
 *

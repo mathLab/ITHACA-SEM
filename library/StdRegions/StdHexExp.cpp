@@ -201,6 +201,7 @@ namespace Nektar
             else
             {
                 Blas::Dgemm('T','N',order0,nquad1*nquad2,nquad0,1.0,base0,nquad0,
+//                    Blas::Dgemm('N','N',order0,nquad1*nquad2,nquad0,1.0,base0,nquad0, // make column major matrix
                     tmp.get(),nquad0,0.0,tmp1.get(),order0);
             }
 
@@ -214,6 +215,7 @@ namespace Nektar
                 for(i=0;i<nquad2;++i)
                 {
                     Blas::Dgemm('N','N',order0,order1,nquad1,1.0,tmp1.get()+i*order0*nquad1,
+//                        Blas::Dgemm('N','T',order0,order1,nquad1,1.0,tmp1.get()+i*order0*nquad1, // make column major matrix
                         order0,base1, nquad1, 0.0, tmp.get()+i*order0*order1,order0);
                 }
             }
@@ -224,7 +226,8 @@ namespace Nektar
             }
             else
             {
-                Blas::Dgemm('N','N',order0*order1,order2,nquad2,1.0,tmp.get(), 
+                Blas::Dgemm('N','N',order0*order1,order2,nquad2,1.0,tmp.get(),
+//                    Blas::Dgemm('N','T',order0*order1,order2,nquad2,1.0,tmp.get(), // make column major matrix
                     order0*order1, base2, nquad2, 0.0, outarray, 
                     order0*order1);
             }
@@ -383,6 +386,7 @@ namespace Nektar
             else
             {
                 Blas::Dgemm('N','N', nquad0,order1*order2,order0,1.0, base0, nquad0,
+//                    Blas::Dgemm('N','T', nquad0,order1*order2,order0,1.0, base0, nquad0,// make column major matrix
                     m_coeffs, order0,0.0,tmp,nquad0);
             }
 
@@ -396,6 +400,7 @@ namespace Nektar
                 for(i = 0; i < order2; ++i)
                 {
                     Blas::Dgemm('N','T',nquad0,nquad1,order1,1.0,tmp+i*nquad0*order1,
+//                         Blas::Dgemm('N','T',nquad0,nquad1,order1,1.0,tmp+i*nquad0*order1,
                         nquad0,base1,nquad1,0.0,tmp1+i*nquad0*nquad1,nquad0);
                 }
             }
@@ -535,6 +540,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.7  2007/07/20 02:16:54  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.6  2007/01/18 18:44:45  bnelson
 * Updates to compile on Visual Studio 2005.
 *

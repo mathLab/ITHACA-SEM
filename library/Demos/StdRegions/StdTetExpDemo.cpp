@@ -1,0 +1,211 @@
+
+// #include <boost/test/unit_test.hpp>
+// #include <boost/test/test_tools.hpp>
+// #include <boost/test/included/unit_test_framework.hpp>
+// #include <boost/test/floating_point_comparison.hpp>
+// 
+// using boost::unit_test_framework::test_suite;
+
+// #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+// #include <LibUtilities/LinearAlgebra/Lapack.hpp>
+// #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
+// #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+// #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+
+
+
+
+
+#include <algorithm>
+#include <iostream>
+#include <limits>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+using namespace std;
+
+
+// #include "StdRegions/StdExpansion2D.h"
+// #include "StdRegions/StdQuadExp.h"
+// #include "StdRegions/StdTriExp.h"
+// #include "StdRegions/StdNodalTriExp.h"
+// #include <StdRegions/StdTriExp.h>
+
+
+
+#include "StdRegions/StdExpUtil.h"
+#include "StdRegions/StdTetExp.h"
+#include "StdRegions/StdExpansion3D.h"
+#include "StdRegions/StdRegions.hpp"
+#include "LibUtilities/Foundations/Foundations.hpp"
+#include "LibUtilities/Foundations/Basis.h"
+
+
+using namespace Nektar;
+
+
+NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z, int order1, int order2, int order3);
+
+// using namespace boost;
+using namespace Nektar::LibUtilities;
+using namespace Nektar::StdRegions;
+
+
+int main(int argc, char *argv[])
+ {
+    if( argc != 10 ) {
+        cerr << "Usage: TetDemo Type_x Type_y Type_z numModes_x numModes_y numModes_z Qx Qy Qz" << endl;
+        cerr << "Where type is an interger value which dictates the basis as:" << endl;
+        cerr << "\t Ortho_A    = 1\n";
+        cerr << "\t Ortho_B    = 2\n";
+        cerr << "\t Ortho_C    = 3\n";
+        cerr << "\t Modified_A = 4\n";
+        cerr << "\t Modified_B = 5\n";
+        cerr << "\t Modified_C = 6\n";
+        cerr << "\t Fourier    = 7\n";
+        cerr << "\t Lagrange   = 8\n";
+        cerr << "\t Legendre   = 9\n";
+        cerr << "\t Chebyshev  = 10\n";
+        cerr << "\t Nodal Tet (Electro) = 13    (3D Nodal Electrostatic Points on a Tetrahedron)\n";
+        cerr << "\n\n" << "Example: " << argv[0] << " 1 2 3 2 2 2 5 5 5" << endl;
+        cerr << endl;
+
+        exit(1);
+    }
+
+    StdRegions::ShapeType regionShape = StdRegions::eTetrahedron;
+    int bType_x_val = atoi(argv[1]);
+    int bType_y_val = atoi(argv[2]);
+    int bType_z_val = atoi(argv[3]);
+    
+    LibUtilities::BasisType   bType_x = static_cast<LibUtilities::BasisType>( bType_x_val );
+    LibUtilities::BasisType   bType_y = static_cast<LibUtilities::BasisType>( bType_y_val );
+    LibUtilities::BasisType   bType_z = static_cast<LibUtilities::BasisType>( bType_z_val );
+    LibUtilities::PointsType  NodalType = LibUtilities::eNoPointsType;
+    
+    if( (bType_x_val == 13) || (bType_y_val == 13) || (bType_z_val == 13) )
+    {
+        bType_x =   LibUtilities::eOrtho_A;
+        bType_y =   LibUtilities::eOrtho_B;
+        bType_z =   LibUtilities::eOrtho_C;
+        
+        NodalType = LibUtilities::eNodalTetElec;
+    }
+
+    // Check to see that correct Expansions are used
+    if( regionShape == StdRegions::eTetrahedron ) 
+    {
+        if( (bType_x == LibUtilities::eOrtho_B) || (bType_x == LibUtilities::eModified_B) ) {
+            NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B or Modified_B");
+        }
+        if( (bType_x == LibUtilities::eOrtho_C) || (bType_x == LibUtilities::eModified_C) ) {
+            NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_C or Modified_C");
+        }
+        if( (bType_y == LibUtilities::eOrtho_C) || (bType_y == LibUtilities::eModified_C) ) {
+            NEKERROR(ErrorUtil::efatal, "Basis 2 cannot be of type Ortho_C or Modified_C");
+        }
+    }
+      
+    int xModes   = atoi(argv[4]);
+    int yModes   = atoi(argv[5]);
+    int zModes   = atoi(argv[6]);
+    int Qx = atoi(argv[7]);
+    int Qy = atoi(argv[8]);
+    int Qz = atoi(argv[9]);
+    int P = xModes - 1, Q = yModes - 1, R = zModes - 1;
+    
+    Array<OneD, NekDouble> solution( Qx * Qy * Qz );
+
+    LibUtilities::PointsType    Qtype_x = eGaussLobattoLegendre;
+    LibUtilities::PointsType    Qtype_y = eGaussRadauMAlpha1Beta0;
+    LibUtilities::PointsType    Qtype_z = eGaussRadauMAlpha2Beta0;
+        
+    //-----------------------------------------------
+    // Define a 3D expansion based on basis definition
+    
+    StdRegions::StdExpansion3D *ste;
+    
+    if( regionShape == StdRegions::eTetrahedron ) 
+    {
+        const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
+        const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
+        const LibUtilities::PointsKey   pointsKey_z( Qz, Qtype_z );
+
+        const LibUtilities::BasisKey    basisKey_x( bType_x, xModes, pointsKey_x );
+        const LibUtilities::BasisKey    basisKey_y( bType_y, yModes, pointsKey_y );
+        const LibUtilities::BasisKey    basisKey_z( bType_z, zModes, pointsKey_z );
+
+        if( bType_x_val < 10 ) {
+            ste = new StdTetExp( basisKey_x, basisKey_y, basisKey_z );
+        } else {
+            cerr << "Implement the next line!!!!!!" << endl;
+            //ste = new StdRegions::StdNodalTetExp( basisKey_x, basisKey_y, basisKey_z, NodalType );
+            exit(1);
+        }
+    
+        Array<OneD,NekDouble> x = Array<OneD,NekDouble>( Qx * Qy * Qz );
+        Array<OneD,NekDouble> y = Array<OneD,NekDouble>( Qx * Qy * Qz );
+        Array<OneD,NekDouble> z = Array<OneD,NekDouble>( Qx * Qy * Qz );
+        
+        ste->GetCoords(x,y,z);
+    
+        //----------------------------------------------
+        // Define solution to be projected
+        for(int n = 0; n < Qx * Qy * Qz; ++n) {
+            solution[n]  = Tet_sol( x[n], y[n], z[n], P, Q, R );
+        }
+        //----------------------------------------------
+    }
+           
+    //---------------------------------------------
+    // Project onto Expansion 
+    ste->FwdTrans( solution, ste->UpdateCoeffs() );
+    //---------------------------------------------
+    
+    //-------------------------------------------
+    // Backward Transform Solution to get projected values
+    ste->BwdTrans( ste->GetCoeffs(), ste->UpdatePhys() );
+    //-------------------------------------------  
+    
+    //--------------------------------------------
+    // Calculate L_p error 
+    cout << "L infinity error: " << ste->Linf(solution) << endl;
+    cout << "L 2 error:        " << ste->L2  (solution) << endl;
+    //--------------------------------------------
+    
+    //-------------------------------------------
+    // Evaulate solution at x = y = z = 0  and print error
+    Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
+    t[0] = 0;
+    t[1] = -0.25;
+    t[2] = 0.25;
+    
+    if( regionShape == StdRegions::eTetrahedron ) {
+        solution[0] = Tet_sol( t[0], t[1], t[2], P, Q, R ); 
+    }
+    
+    // TODO: Implement
+    NekDouble numericSolution = ste->PhysEvaluate(t);
+    cout << "Interpolation difference from actual solution at x = ( " << 
+        t[0] << ", " << t[1] << ", " << t[2] << " ): " << numericSolution - solution[0] << endl;
+    //-------------------------------------------
+    
+    return 0;
+}
+
+
+NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R) {
+    NekDouble sol = 0;
+
+    for(int i = 0; i <= P; ++i) {
+        for(int j = 0; j <= Q - j; ++j) {
+            for(int k = 0; k <= R - i - j; ++k) {
+                sol += pow(x,i) * pow(y,j) * pow(z,k);
+            }
+        }
+    }
+
+    return sol;
+}
+

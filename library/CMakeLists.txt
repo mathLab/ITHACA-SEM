@@ -1,6 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4.2)
 PROJECT(Nektar++)
 
+INCLUDE(CMakeExportBuildSettings)
+
 # Find the modules included with Nektar
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE FILEPATH "" FORCE)
@@ -249,4 +251,4 @@ ENDMACRO(SET_LAPACK_LINK_LIBRARIES name)
 
 SUBDIRS(LibUtilities LocalRegions MultiRegions SpatialDomains StdRegions Stochastic UnitTests Demos)
 
-
+CMAKE_EXPORT_BUILD_SETTINGS("Nektar++BuildSettings.cmake")

@@ -125,6 +125,33 @@ namespace Nektar
         }
     }
         
+    // Temporary only for testing.
+    template<typename DataType>
+    void NekMultiplyEqual(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
+                          const NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& rhs)
+    {
+        Array<OneD, DataType> cache(result.GetColumns(), DataType(0));
+        for(unsigned int i = 0; i < result.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < result.GetColumns(); ++j)
+            {
+                DataType t = DataType(0);
+
+                // Set the result(i,j) element.
+                for(unsigned int k = 0; k < result.GetColumns(); ++k)
+                {
+                    t += result(i,k)*rhs(k,j);
+                }
+                cache[j] = t;
+            }
+            
+            for(unsigned int j = 0; j < result.GetColumns(); ++j)
+            {
+                result(i,j) = cache[j];
+            }
+        }
+    }
+        
     #ifdef NEKTAR_USING_BLAS    
     /// \brief Floating point specialization when blas is in use.
     ///
@@ -144,6 +171,9 @@ namespace Nektar
     void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
                      const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs);
+                     
+    void NekMultiplyEqual(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
+                          const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs);
                      
     #endif //NEKTAR_USING_BLAS
 

@@ -179,12 +179,14 @@ namespace Nektar
             {
                 std::cout << "Implement me" << std::endl;
                 int foo = 0;
+                return DNekMatSharedPtr();
             } // TODO: Implement
             
             virtual DNekMatSharedPtr v_GetLapMatrix() 
             {
                 std::cout << "Implement me" << std::endl;
                 int foo = 0;
+                return DNekMatSharedPtr();
             }  // TODO: Implement
 
 
@@ -310,6 +312,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.8  2007/10/15 20:40:07  ehan
+ * Completed Basis, Backward, and Forward transformation
+ *
  * Revision 1.7  2007/07/20 02:16:55  bnelson
  * Replaced boost::shared_ptr with Nektar::ptr
  *

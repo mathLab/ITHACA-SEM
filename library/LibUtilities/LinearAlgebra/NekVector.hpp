@@ -63,6 +63,78 @@ namespace Nektar
 //     }
 #endif
     
+    // Temporary only - at least until we determine expression templates are the way to go.
+    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES   
+    class VectorMetadata
+    {
+        public:
+            template<typename VectorType>
+            VectorMetadata(const VectorType& v) : Rows(v.GetDimension()) {}
+            
+            VectorMetadata(const VectorMetadata& rhs) : Rows(rhs.Rows) {}
+            
+            VectorMetadata(const VectorMetadata& lhs, const VectorMetadata& rhs) : Rows(rhs.Rows) {}
+            
+            VectorMetadata() : Rows(0) {}
+            int Rows;
+    };
+    
+    template<typename DataType, unsigned int dim, unsigned int space>
+    class ConstantExpressionTraits<NekVector<DataType, dim, space> >
+    {
+        public:
+            typedef NekVector<DataType, dim, space> result_type;
+            typedef VectorMetadata MetadataType;
+    };
+
+    template<typename DataType, unsigned int dim, unsigned int space, 
+             template<typename, typename> class OpType>
+    class BinaryExpressionMetadataTraits<NekVector<DataType, dim, space>,
+                                         NekVector<DataType, dim, space>,
+                                         OpType>
+    {
+        public:
+            typedef VectorMetadata MetadataType;
+    };
+        
+    template<typename DataType, unsigned int dim, unsigned int space>
+    void NekAdd(NekVector<DataType, dim, space>& result,
+           const NekVector<DataType, dim, space>& lhs,
+           const NekVector<DataType, dim, space>& rhs)
+    {
+        for(int i = 0; i < lhs.GetDimension(); ++i)
+        {
+            result[i] = lhs[i] + rhs[i];
+        }
+    }
+    
+    template<typename DataType, unsigned int dim, unsigned int space>
+    void NekAddEqual(NekVector<DataType, dim, space>& result,
+           const NekVector<DataType, dim, space>& rhs)
+    {
+        for(int i = 0; i < rhs.GetDimension(); ++i)
+        {
+            result[i] += rhs[i];
+        }
+    }
+    
+    template<typename DataType, unsigned int dim, unsigned int space>
+    NekVector<DataType, dim, space> NekAdd(const NekVector<DataType, dim, space>& lhs, 
+                                           const NekVector<DataType, dim, space>& rhs)
+    {
+        NekVector<DataType, dim, space> result(lhs.GetDimension());
+        NekAdd(result, lhs, rhs);
+        return result;
+    }
+    
+    template<typename DataType, unsigned int dim, unsigned int space>
+    Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<NekVector<DataType, dim, space> >,
+                                      ConstantExpressionPolicy<NekVector<DataType, dim, space> >, AddOp> >
+    operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
+    {
+        return CreateBinaryExpression<AddOp>(lhs, rhs);
+    }
+#else
     template<typename DataType, unsigned int dim, unsigned int space>
     NekVector<DataType, dim, space>
     operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
@@ -71,6 +143,7 @@ namespace Nektar
         result += rhs;
         return result;
     }
+#endif
 
     template<typename DataType, unsigned int dim, unsigned int space>
     NekVector<DataType, dim, space>
@@ -210,6 +283,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.20  2007/08/24 18:13:48  bnelson
+    Removed various old matrix files.
+
     Revision 1.19  2007/08/16 02:10:20  bnelson
     *** empty log message ***
 

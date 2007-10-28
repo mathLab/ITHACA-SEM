@@ -185,8 +185,12 @@ namespace Nektar
                 {
                     BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StorageType, StandardMatrixTag> > ));
                     m_policySpecificData = PolicySpecificDataHolderType();
-                    Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
-                    m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
+                    if( this->GetRows() != rhs.GetMetadata().Rows ||
+                        this->GetColumns() != rhs.GetMetadata().Columns )
+                    {
+                        Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
+                        m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
+                    }
                     m_wrapperType = eCopy;
                     rhs.Apply(*this);
                     return *this;

@@ -236,7 +236,10 @@ namespace Nektar
                 BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, 0, space> > ));
 
                 m_size = rhs.GetMetadata().Rows;
-                m_data = Array<OneD, DataType>(m_size);
+                if( m_data.num_elements() != m_size )
+                {
+                    m_data = Array<OneD, DataType>(m_size);
+                }
                 m_wrapperType = eCopy;
 
                 rhs.Apply(*this);

@@ -34,6 +34,6 @@ TARGET_LINK_LIBRARIES(LibUtilitiesUnitTests
 
 SET_LAPACK_LINK_LIBRARIES(LibUtilitiesUnitTests)
 
-INSTALL(TARGETS LibUtilitiesUnitTests RUNTIME DESTINATION ${NEKTAR_BIN_DIR})
 
-SUBDIRS(LinearAlgebra ExpressionTemplates)
+SUBDIRS(LinearAlgebra )
+#ExpressionTemplates)

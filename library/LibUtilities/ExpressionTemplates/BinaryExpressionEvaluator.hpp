@@ -75,6 +75,27 @@ namespace Nektar
                 }
         };
         
+        
+        // Temporary
+        template<typename C, typename LhsLhsPolicyType, typename LhsRhsPolicyType, typename R,
+                 template <typename, typename> class LhsOpType, 
+                 template <typename, typename> class OpType>
+        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
+                                        ConstantExpressionPolicy<C>,
+                                        R, OpType, BinaryNullOp, void>
+        {
+            public:
+                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs,
+                                 const Expression<ConstantExpressionPolicy<C> >& rhs, 
+                                 Accumulator<R>& accum)
+                {
+                    typedef typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>::ResultType LhsResultType;
+                    lhs.template Apply<BinaryNullOp>(accum);
+                    OpType<LhsResultType, C>::ApplyEqual(accum, *rhs);
+                }
+        };
+
+
         /// \brief Constant-Constant specialization 2
         /// 
         /// This case occurs as part of a larger expression, such as 
@@ -96,35 +117,35 @@ namespace Nektar
         ///
         /// A - (B + C) will enter with ParentOpType = -, OPType = +, and evaluate to 
         /// A -= B, A -= C.
-        template<typename LhsDataType, typename RhsDataType, typename ResultType, 
-                 template <typename, typename> class OpType,
-                 template <typename, typename> class ParentOpType>
-        class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsDataType>,
-                                        ConstantExpressionPolicy<RhsDataType>,
-                                        ResultType, OpType, ParentOpType,
-                                        typename boost::enable_if_c
-                                        <
-                                                ParentOpType<ResultType, LhsDataType>::HasOpEqual &&
-                                                OpType<ResultType, RhsDataType>::HasOpEqual &&
-                                                AssociativeTraits<ResultType, ParentOpType, LhsDataType, OpType, RhsDataType>::IsAssociative &&
-                                                !boost::is_same<BinaryNullOp<void, void>, typename ParentOpType<LhsDataType, RhsDataType>::template Rebind<void, void>::type >::value,
-                                                void
-                                        >::type >
-        {
-            public:
-                
-                static void Eval(const Expression<ConstantExpressionPolicy<LhsDataType> >& lhs, 
-                                const Expression<ConstantExpressionPolicy<RhsDataType> >& rhs,
-                                Accumulator<ResultType>& accum)
-                {
-                    ParentOpType<ResultType, LhsDataType>::ApplyEqual(accum, *lhs);
-
-                    typedef AssociativeTraits<ResultType, ParentOpType, LhsDataType, OpType, RhsDataType> AssociativeTraits;
-                    typedef typename ChooseOpChangeType<AssociativeTraits, OpType<LhsDataType, RhsDataType> >::Type OpChangeType;
-                    //typedef typename AssociativeTraits<ResultType, ParentOpType, LhsDataType, OpType, RhsDataType>::OpChangeType OpChangeType;
-                    OpChangeType::ApplyEqual(accum, *rhs);
-                }
-        };
+//         template<typename LhsDataType, typename RhsDataType, typename ResultType, 
+//                  typename <typename, typename> class OpType,
+//                  template <typename, typename> class ParentOpType>
+//         class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsDataType>,
+//                                         ConstantExpressionPolicy<RhsDataType>,
+//                                         ResultType, OpType, ParentOpType,
+//                                         typename boost::enable_if_c
+//                                         <
+//                                                 ParentOpType<ResultType, LhsDataType>::HasOpEqual &&
+//                                                 OpType<ResultType, RhsDataType>::HasOpEqual &&
+//                                                 AssociativeTraits<ResultType, ParentOpType, LhsDataType, OpType, RhsDataType>::IsAssociative &&
+//                                                 !boost::is_same<BinaryNullOp<void, void>, typename ParentOpType<LhsDataType, RhsDataType>::template Rebind<void, void>::type >::value,
+//                                                 void
+//                                         >::type >
+//         {
+//             public:
+//                 
+//                 static void Eval(const Expression<ConstantExpressionPolicy<LhsDataType> >& lhs, 
+//                                 const Expression<ConstantExpressionPolicy<RhsDataType> >& rhs,
+//                                 Accumulator<ResultType>& accum)
+//                 {
+//                     ParentOpType<ResultType, LhsDataType>::ApplyEqual(accum, *lhs);
+// 
+//                     typedef AssociativeTraits<ResultType, ParentOpType, LhsDataType, OpType, RhsDataType> AssociativeTraits;
+//                     typedef typename ChooseOpChangeType<AssociativeTraits, OpType<LhsDataType, RhsDataType> >::Type OpChangeType;
+//                     //typedef typename AssociativeTraits<ResultType, ParentOpType, LhsDataType, OpType, RhsDataType>::OpChangeType OpChangeType;
+//                     OpChangeType::ApplyEqual(accum, *rhs);
+//                 }
+//         };
         
         // The only other case is where the OpEquals are not defined, but this is such a bizarre case that
         // I imagine if they aren't defined they are more likely user errors than a true part of the math.
@@ -167,31 +188,31 @@ namespace Nektar
         ///
         /// 1. R = (B*C)
         /// 2. R += A
-        template<typename A, typename RhsLhsPolicyType, typename RhsRhsPolicyType, typename R,
-                 template <typename, typename> class RhsOpType, 
-                 template <typename, typename> class OpType>
-        class BinaryExpressionEvaluator<ConstantExpressionPolicy<A>,
-                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
-                                        R, OpType, BinaryNullOp,
-                                        typename boost::enable_if_c
-                                        <
-                                                boost::is_same
-                                                <
-                                                    R, 
-                                                    typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
-                                                >::value &&
-                                                CommutativeTraits<A, OpType, R>::IsCommutative
-                                            >::type >
-        {
-            public:
-                static void Eval(const Expression<ConstantExpressionPolicy<A> >& lhs, 
-                                const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
-                                Accumulator<R>& accum)
-                {
-                    rhs.template Apply<BinaryNullOp>(accum);
-                    OpType<R, A>::ApplyEqual(accum, *lhs);
-                }
-        };
+//         template<typename A, typename RhsLhsPolicyType, typename RhsRhsPolicyType, typename R,
+//                  template <typename, typename> class RhsOpType, 
+//                  template <typename, typename> class OpType>
+//         class BinaryExpressionEvaluator<ConstantExpressionPolicy<A>,
+//                                         BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
+//                                         R, OpType, BinaryNullOp,
+//                                         typename boost::enable_if_c
+//                                         <
+//                                                 boost::is_same
+//                                                 <
+//                                                     R, 
+//                                                     typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
+//                                                 >::value &&
+//                                                 CommutativeTraits<A, OpType, R>::IsCommutative
+//                                             >::type >
+//         {
+//             public:
+//                 static void Eval(const Expression<ConstantExpressionPolicy<A> >& lhs, 
+//                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
+//                                 Accumulator<R>& accum)
+//                 {
+//                     rhs.template Apply<BinaryNullOp>(accum);
+//                     OpType<R, A>::ApplyEqual(accum, *lhs);
+//                 }
+//         };
         
         /// ----------------------------------------------------------------------------------
         /// Case #2
@@ -206,36 +227,36 @@ namespace Nektar
         /// 1. Create T, typeof(B*C)
         /// 2. T = (B*C)
         /// 3. Result = A + T
-        template<typename A, typename RhsLhsPolicyType, typename RhsRhsPolicyType, typename R,
-                template <typename, typename> class RhsOpType, 
-                template <typename, typename> class OpType>
-        class BinaryExpressionEvaluator<ConstantExpressionPolicy<A>,
-                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
-                                        R, OpType, BinaryNullOp,
-                                        typename boost::enable_if_c
-                                        <
-                                                !boost::is_same
-                                                <
-                                                    R, 
-                                                    typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
-                                                >::value ||
-                                                (!CommutativeTraits<A, OpType, R>::IsCommutative &&
-                                                AssociativeTraits<A, OpType, typename RhsLhsPolicyType::ResultType, RhsOpType, typename RhsRhsPolicyType::ResultType>::IsAssociative &&
-                                                !AssignableTraits<R, A>::IsAssignable &&
-                                                !OpType<R, A>::HasOpLeftEqual)
-                                            >::type >
-        {
-            public:
-                typedef typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType RhsDataType;
-
-                static void Eval(const Expression<ConstantExpressionPolicy<A> >& lhs, 
-                                const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
-                                Accumulator<R>& accum)
-                {
-                    RhsDataType temp = rhs;
-                    OpType<A, RhsDataType>::Apply(accum, *lhs, rhs);
-                }
-        };
+//         template<typename A, typename RhsLhsPolicyType, typename RhsRhsPolicyType, typename R,
+//                 template <typename, typename> class RhsOpType, 
+//                 template <typename, typename> class OpType>
+//         class BinaryExpressionEvaluator<ConstantExpressionPolicy<A>,
+//                                         BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
+//                                         R, OpType, BinaryNullOp,
+//                                         typename boost::enable_if_c
+//                                         <
+//                                                 !boost::is_same
+//                                                 <
+//                                                     R, 
+//                                                     typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
+//                                                 >::value ||
+//                                                 (!CommutativeTraits<A, OpType, R>::IsCommutative &&
+//                                                 AssociativeTraits<A, OpType, typename RhsLhsPolicyType::ResultType, RhsOpType, typename RhsRhsPolicyType::ResultType>::IsAssociative &&
+//                                                 !AssignableTraits<R, A>::IsAssignable &&
+//                                                 !OpType<R, A>::HasOpLeftEqual)
+//                                             >::type >
+//         {
+//             public:
+//                 typedef typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType RhsDataType;
+// 
+//                 static void Eval(const Expression<ConstantExpressionPolicy<A> >& lhs, 
+//                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
+//                                 Accumulator<R>& accum)
+//                 {
+//                     RhsDataType temp = rhs;
+//                     OpType<A, RhsDataType>::Apply(accum, *lhs, rhs);
+//                 }
+//         };
 
         /// ----------------------------------------------------------------------------------
         /// Case #3 (1 scenario)
@@ -249,34 +270,34 @@ namespace Nektar
         ///
         /// 1. R = A
         /// 2. R += B*C
-        template<typename A, typename RhsLhsPolicyType, typename RhsRhsPolicyType, typename R,
-                template <typename, typename> class RhsOpType, 
-                template <typename, typename> class OpType>
-        class BinaryExpressionEvaluator<ConstantExpressionPolicy<A>,
-                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
-                                        R, OpType, BinaryNullOp,
-                                        typename boost::enable_if_c
-                                        <
-                                                boost::is_same
-                                                <
-                                                    R, 
-                                                    typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>::ResultType
-                                                >::value &&
-                                                !CommutativeTraits<A, OpType, R>::IsCommutative &&
-                                                AssociativeTraits<A, OpType, typename RhsLhsPolicyType::ResultType, RhsOpType, typename RhsRhsPolicyType::ResultType>::IsAssociative &&
-                                                !OpType<R, A>::HasOpLeftEqual &&
-                                                AssignableTraits<R, A>::IsAssignable
-                                            >::type >
-        {
-            public:
-                static void Eval(const Expression<ConstantExpressionPolicy<A> >& lhs, 
-                                const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
-                                Accumulator<R>& accum)
-                {
-                    *accum = *lhs;
-                    rhs.template Apply<OpType>(accum);
-                }
-        };
+//         template<typename A, typename RhsLhsPolicyType, typename RhsRhsPolicyType, typename R,
+//                 template <typename, typename> class RhsOpType, 
+//                 template <typename, typename> class OpType>
+//         class BinaryExpressionEvaluator<ConstantExpressionPolicy<A>,
+//                                         BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
+//                                         R, OpType, BinaryNullOp,
+//                                         typename boost::enable_if_c
+//                                         <
+//                                                 boost::is_same
+//                                                 <
+//                                                     R, 
+//                                                     typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>::ResultType
+//                                                 >::value &&
+//                                                 !CommutativeTraits<A, OpType, R>::IsCommutative &&
+//                                                 AssociativeTraits<A, OpType, typename RhsLhsPolicyType::ResultType, RhsOpType, typename RhsRhsPolicyType::ResultType>::IsAssociative &&
+//                                                 !OpType<R, A>::HasOpLeftEqual &&
+//                                                 AssignableTraits<R, A>::IsAssignable
+//                                             >::type >
+//         {
+//             public:
+//                 static void Eval(const Expression<ConstantExpressionPolicy<A> >& lhs, 
+//                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
+//                                 Accumulator<R>& accum)
+//                 {
+//                     *accum = *lhs;
+//                     rhs.template Apply<OpType>(accum);
+//                 }
+//         };
 
 
         /// ----------------------------------------------------------------------------------
@@ -288,33 +309,33 @@ namespace Nektar
         ///
         /// 1. R = B*C
         /// 2. R +left= A
-        template<typename A, typename RhsLhsPolicyType, typename RhsRhsPolicyType, typename R,
-                template <typename, typename> class RhsOpType, 
-                template <typename, typename> class OpType>
-        class BinaryExpressionEvaluator<ConstantExpressionPolicy<A>,
-                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
-                                        R, OpType, BinaryNullOp,
-                                        typename boost::enable_if_c
-                                        <
-                                                boost::is_same
-                                                <
-                                                    R, 
-                                                    typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
-                                                >::value &&
-                                                !CommutativeTraits<A, OpType, R>::IsCommutative &&
-                                                OpType<R, A>::HasOpLeftEqual,
-                                                void
-                                            >::type >
-        {
-            public:
-                static void Eval(const Expression<ConstantExpressionPolicy<A> >& lhs, 
-                                const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
-                                Accumulator<R>& accum)
-                {
-                    rhs.template Apply<BinaryNullOp>(accum);
-                    OpType<A, R>::ApplyLeftEqual(accum, *lhs);
-                }
-        };
+//         template<typename A, typename RhsLhsPolicyType, typename RhsRhsPolicyType, typename R,
+//                 template <typename, typename> class RhsOpType, 
+//                 template <typename, typename> class OpType>
+//         class BinaryExpressionEvaluator<ConstantExpressionPolicy<A>,
+//                                         BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
+//                                         R, OpType, BinaryNullOp,
+//                                         typename boost::enable_if_c
+//                                         <
+//                                                 boost::is_same
+//                                                 <
+//                                                     R, 
+//                                                     typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
+//                                                 >::value &&
+//                                                 !CommutativeTraits<A, OpType, R>::IsCommutative &&
+//                                                 OpType<R, A>::HasOpLeftEqual,
+//                                                 void
+//                                             >::type >
+//         {
+//             public:
+//                 static void Eval(const Expression<ConstantExpressionPolicy<A> >& lhs, 
+//                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
+//                                 Accumulator<R>& accum)
+//                 {
+//                     rhs.template Apply<BinaryNullOp>(accum);
+//                     OpType<A, R>::ApplyLeftEqual(accum, *lhs);
+//                 }
+//         };
 
 
         /// ----------------------------------------------------------------------------------
@@ -327,30 +348,30 @@ namespace Nektar
         ///
         /// 1. R = A+B
         /// 2. R += C;
-        template<typename C, typename LhsLhsPolicyType, typename LhsRhsPolicyType, typename R,
-                 template <typename, typename> class LhsOpType, 
-                 template <typename, typename> class OpType>
-        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
-                                        ConstantExpressionPolicy<C>,
-                                        R, OpType, BinaryNullOp,
-                                        typename boost::enable_if
-                                        <
-                                            boost::is_same
-                                            <
-                                                R, 
-                                                typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>::ResultType
-                                            >
-                                        >::type >
-        {
-            public:
-                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs,
-                                 const Expression<ConstantExpressionPolicy<C> >& rhs, 
-                                 Accumulator<R>& accum)
-                {
-                    lhs.template Apply<BinaryNullOp>(accum);
-                    OpType<R, C>::ApplyEqual(accum, *rhs);
-                }
-        };
+//         template<typename C, typename LhsLhsPolicyType, typename LhsRhsPolicyType, typename R,
+//                  template <typename, typename> class LhsOpType, 
+//                  template <typename, typename> class OpType>
+//         class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
+//                                         ConstantExpressionPolicy<C>,
+//                                         R, OpType, BinaryNullOp,
+//                                         typename boost::enable_if
+//                                         <
+//                                             boost::is_same
+//                                             <
+//                                                 R, 
+//                                                 typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>::ResultType
+//                                             >
+//                                         >::type >
+//         {
+//             public:
+//                 static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs,
+//                                  const Expression<ConstantExpressionPolicy<C> >& rhs, 
+//                                  Accumulator<R>& accum)
+//                 {
+//                     lhs.template Apply<BinaryNullOp>(accum);
+//                     OpType<R, C>::ApplyEqual(accum, *rhs);
+//                 }
+//         };
         
         /// LhsBinaryRhsConstant Specialization 2
         /// Conditions: R = (A+B) * C
@@ -363,35 +384,35 @@ namespace Nektar
         /// 2. R += A
         ///
         /// TODO - This doesn't work with changed op types.
-        template<typename C, typename LhsLhsPolicyType, typename LhsRhsPolicyType, typename R,
-                 template <typename, typename> class LhsOpType, 
-                 template <typename, typename> class OpType>
-        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
-                                        ConstantExpressionPolicy<C>,
-                                        R, OpType, BinaryNullOp,
-                                        typename boost::enable_if_c
-                                        <
-                                            !boost::is_same
-                                            <
-                                                R,
-                                                typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>::ResultType
-                                            >::value &&
-                                            AssociativeTraits<typename LhsLhsPolicyType::ResultType, LhsOpType, typename LhsRhsPolicyType::ResultType, OpType, C>::IsStrictlyAssociative &&
-                                            boost::is_same
-                                            <
-                                                R,
-                                                typename BinaryExpressionPolicy<LhsRhsPolicyType, ConstantExpressionPolicy<C>, OpType>::ResultType
-                                            >::value &&
-                                            CommutativeTraits<typename LhsLhsPolicyType::ResultType, LhsOpType, R>::IsCommutative
-                                        >::type >
-        {
-            public:
-                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs,
-                                 const Expression<ConstantExpressionPolicy<C> >& rhs, 
-                                 Accumulator<R>& accum)
-                {
-                }
-        };
+//         template<typename C, typename LhsLhsPolicyType, typename LhsRhsPolicyType, typename R,
+//                  template <typename, typename> class LhsOpType, 
+//                  template <typename, typename> class OpType>
+//         class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
+//                                         ConstantExpressionPolicy<C>,
+//                                         R, OpType, BinaryNullOp,
+//                                         typename boost::enable_if_c
+//                                         <
+//                                             !boost::is_same
+//                                             <
+//                                                 R,
+//                                                 typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>::ResultType
+//                                             >::value &&
+//                                             AssociativeTraits<typename LhsLhsPolicyType::ResultType, LhsOpType, typename LhsRhsPolicyType::ResultType, OpType, C>::IsStrictlyAssociative &&
+//                                             boost::is_same
+//                                             <
+//                                                 R,
+//                                                 typename BinaryExpressionPolicy<LhsRhsPolicyType, ConstantExpressionPolicy<C>, OpType>::ResultType
+//                                             >::value &&
+//                                             CommutativeTraits<typename LhsLhsPolicyType::ResultType, LhsOpType, R>::IsCommutative
+//                                         >::type >
+//         {
+//             public:
+//                 static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs,
+//                                  const Expression<ConstantExpressionPolicy<C> >& rhs, 
+//                                  Accumulator<R>& accum)
+//                 {
+//                 }
+//         };
 
         /// Conditions: R = (A+B) * C
         ///             typeof(A+B) != C
@@ -556,174 +577,174 @@ namespace Nektar
         /// - Both expressions have the same type as the accumulator.
         /// - The expresison is associative
         /// Incoming ParentOp [ (A lop B) op (C rop D) ]
-        template<typename LhsLhsPolicyType, template<typename, typename> class LhsOpType, typename LhsRhsPolicyType,
-                typename RhsLhsPolicyType, template<typename, typename> class RhsOpType, typename RhsRhsPolicyType,
-                template <typename, typename> class OpType,
-                template <typename, typename> class ParentOpType, 
-                typename ResultType>
-        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
-                                    BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
-                                    ResultType, OpType, ParentOpType,
-                                    typename boost::enable_if_c
-                                    <
-                                            boost::is_same
-                                            <
-                                                ResultType, 
-                                                typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
-                                            >::value &&
-                                            boost::is_same
-                                            <
-                                                ResultType, 
-                                                typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType
-                                            >::value &&
-
-                                            AssociativeTraits<typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType,
-                                                            OpType,
-                                                            typename RhsLhsPolicyType::ResultType,
-                                                            RhsOpType,
-                                                            typename RhsRhsPolicyType::ResultType>::IsAssociative
-                                        >::type >
-        {
-            public:
-                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs, 
-                                const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
-                                Accumulator<ResultType>& accum)
-                {
-                    lhs.template ApplyEqual<ParentOpType>(accum);
-                    rhs.template ApplyEqual<OpType>(accum);
-                }
-        };
-        
-        template<typename LhsLhsPolicyType, template<typename, typename> class LhsOpType, typename LhsRhsPolicyType,
-                typename RhsLhsPolicyType, template<typename, typename> class RhsOpType, typename RhsRhsPolicyType,
-                template <typename, typename> class OpType,
-                template <typename, typename> class ParentOpType, 
-                typename ResultType>
-        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
-                                    BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
-                                    ResultType, OpType, ParentOpType,
-                                    typename boost::enable_if_c
-                                    <
-                                            boost::is_same
-                                            <
-                                                ResultType, 
-                                                typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
-                                            >::value &&
-                                            boost::is_same
-                                            <
-                                                ResultType, 
-                                                typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType
-                                            >::value &&
-
-                                            !AssociativeTraits<typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType,
-                                                            OpType,
-                                                            typename RhsLhsPolicyType::ResultType,
-                                                            RhsOpType,
-                                                            typename RhsRhsPolicyType::ResultType>::IsAssociative
-                                        >::type >
-        {
-            public:
-                typedef typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType RhsType;
-                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs, 
-                                const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
-                                Accumulator<ResultType>& accum)
-                {
-                    lhs.template Apply<ParentOpType>(accum);
-                    RhsType temp = rhs;
-                    OpType<ResultType, RhsType>::ApplyEqual(accum, temp);
-                }
-        };
-        
-        template<typename LhsLhsPolicyType, template<typename, typename> class LhsOpType, typename LhsRhsPolicyType,
-                typename RhsLhsPolicyType, template<typename, typename> class RhsOpType, typename RhsRhsPolicyType,
-                template <typename, typename> class OpType,
-                template <typename, typename> class ParentOpType, 
-                typename ResultType>
-        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
-                                    BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
-                                    ResultType, OpType, ParentOpType,
-                                    typename boost::enable_if_c
-                                    <
-                                            boost::is_same
-                                            <
-                                                ResultType, 
-                                                typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
-                                            >::value &&
-                                            !boost::is_same
-                                            <
-                                                ResultType, 
-                                                typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType
-                                            >::value &&
-
-                                            CommutativeTraits<typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType,
-                                                            OpType, 
-                                                            typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType>::IsCommutative
-                                        >::type >
-        {
-            public:
-                typedef typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType LhsType;
-                
-                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs, 
-                                const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
-                                Accumulator<ResultType>& accum)
-                {
-                    rhs.template ApplyEqual<ParentOpType>(accum);
-                    LhsType temp = lhs;
-                    OpType<ResultType, LhsType>::ApplyEqual(accum, temp);
-                }
-        };
-        
-        
-        
-        template<typename LhsLhsPolicyType, template<typename, typename> class LhsOpType, typename LhsRhsPolicyType,
-                typename RhsLhsPolicyType, template<typename, typename> class RhsOpType, typename RhsRhsPolicyType,
-                template <typename, typename> class OpType,
-                template <typename, typename> class ParentOpType, 
-                typename ResultType>
-        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
-                                    BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
-                                    ResultType, OpType, ParentOpType,
-                                    typename boost::enable_if_c
-                                    <
-                                            (!boost::is_same
-                                            <
-                                                ResultType, 
-                                                typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
-                                            >::value &&
-                                            !boost::is_same
-                                            <
-                                                ResultType, 
-                                                typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType
-                                            >::value) ||
-                                            
-                                            (boost::is_same
-                                            <
-                                                ResultType, 
-                                                typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
-                                            >::value &&
-                                            !boost::is_same
-                                            <
-                                                ResultType, 
-                                                typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType
-                                            >::value &&
-                                            !CommutativeTraits<typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType,
-                                                            OpType, 
-                                                            typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType>::IsCommutative)
-                                        >::type >
-        {
-            public:
-                typedef typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType LhsType;
-                typedef typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType RhsType;
-                
-                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs, 
-                                const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
-                                Accumulator<ResultType>& accum)
-                {
-                    LhsType lhs_temp = lhs;
-                    RhsType rhs_temp = rhs;
-                    OpType<LhsType, RhsType>::Apply(accum, lhs_temp, rhs_temp);
-                }
-        };
+//         template<typename LhsLhsPolicyType, template<typename, typename> class LhsOpType, typename LhsRhsPolicyType,
+//                 typename RhsLhsPolicyType, template<typename, typename> class RhsOpType, typename RhsRhsPolicyType,
+//                 template <typename, typename> class OpType,
+//                 template <typename, typename> class ParentOpType, 
+//                 typename ResultType>
+//         class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
+//                                     BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
+//                                     ResultType, OpType, ParentOpType,
+//                                     typename boost::enable_if_c
+//                                     <
+//                                             boost::is_same
+//                                             <
+//                                                 ResultType, 
+//                                                 typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
+//                                             >::value &&
+//                                             boost::is_same
+//                                             <
+//                                                 ResultType, 
+//                                                 typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType
+//                                             >::value &&
+// 
+//                                             AssociativeTraits<typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType,
+//                                                             OpType,
+//                                                             typename RhsLhsPolicyType::ResultType,
+//                                                             RhsOpType,
+//                                                             typename RhsRhsPolicyType::ResultType>::IsAssociative
+//                                         >::type >
+//         {
+//             public:
+//                 static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs, 
+//                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
+//                                 Accumulator<ResultType>& accum)
+//                 {
+//                     lhs.template ApplyEqual<ParentOpType>(accum);
+//                     rhs.template ApplyEqual<OpType>(accum);
+//                 }
+//         };
+//         
+//         template<typename LhsLhsPolicyType, template<typename, typename> class LhsOpType, typename LhsRhsPolicyType,
+//                 typename RhsLhsPolicyType, template<typename, typename> class RhsOpType, typename RhsRhsPolicyType,
+//                 template <typename, typename> class OpType,
+//                 template <typename, typename> class ParentOpType, 
+//                 typename ResultType>
+//         class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
+//                                     BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
+//                                     ResultType, OpType, ParentOpType,
+//                                     typename boost::enable_if_c
+//                                     <
+//                                             boost::is_same
+//                                             <
+//                                                 ResultType, 
+//                                                 typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
+//                                             >::value &&
+//                                             boost::is_same
+//                                             <
+//                                                 ResultType, 
+//                                                 typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType
+//                                             >::value &&
+// 
+//                                             !AssociativeTraits<typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType,
+//                                                             OpType,
+//                                                             typename RhsLhsPolicyType::ResultType,
+//                                                             RhsOpType,
+//                                                             typename RhsRhsPolicyType::ResultType>::IsAssociative
+//                                         >::type >
+//         {
+//             public:
+//                 typedef typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType RhsType;
+//                 static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs, 
+//                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
+//                                 Accumulator<ResultType>& accum)
+//                 {
+//                     lhs.template Apply<ParentOpType>(accum);
+//                     RhsType temp = rhs;
+//                     OpType<ResultType, RhsType>::ApplyEqual(accum, temp);
+//                 }
+//         };
+//         
+//         template<typename LhsLhsPolicyType, template<typename, typename> class LhsOpType, typename LhsRhsPolicyType,
+//                 typename RhsLhsPolicyType, template<typename, typename> class RhsOpType, typename RhsRhsPolicyType,
+//                 template <typename, typename> class OpType,
+//                 template <typename, typename> class ParentOpType, 
+//                 typename ResultType>
+//         class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
+//                                     BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
+//                                     ResultType, OpType, ParentOpType,
+//                                     typename boost::enable_if_c
+//                                     <
+//                                             boost::is_same
+//                                             <
+//                                                 ResultType, 
+//                                                 typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
+//                                             >::value &&
+//                                             !boost::is_same
+//                                             <
+//                                                 ResultType, 
+//                                                 typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType
+//                                             >::value &&
+// 
+//                                             CommutativeTraits<typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType,
+//                                                             OpType, 
+//                                                             typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType>::IsCommutative
+//                                         >::type >
+//         {
+//             public:
+//                 typedef typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType LhsType;
+//                 
+//                 static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs, 
+//                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
+//                                 Accumulator<ResultType>& accum)
+//                 {
+//                     rhs.template ApplyEqual<ParentOpType>(accum);
+//                     LhsType temp = lhs;
+//                     OpType<ResultType, LhsType>::ApplyEqual(accum, temp);
+//                 }
+//         };
+//         
+//         
+//         
+//         template<typename LhsLhsPolicyType, template<typename, typename> class LhsOpType, typename LhsRhsPolicyType,
+//                 typename RhsLhsPolicyType, template<typename, typename> class RhsOpType, typename RhsRhsPolicyType,
+//                 template <typename, typename> class OpType,
+//                 template <typename, typename> class ParentOpType, 
+//                 typename ResultType>
+//         class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
+//                                     BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
+//                                     ResultType, OpType, ParentOpType,
+//                                     typename boost::enable_if_c
+//                                     <
+//                                             (!boost::is_same
+//                                             <
+//                                                 ResultType, 
+//                                                 typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
+//                                             >::value &&
+//                                             !boost::is_same
+//                                             <
+//                                                 ResultType, 
+//                                                 typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType
+//                                             >::value) ||
+//                                             
+//                                             (boost::is_same
+//                                             <
+//                                                 ResultType, 
+//                                                 typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType
+//                                             >::value &&
+//                                             !boost::is_same
+//                                             <
+//                                                 ResultType, 
+//                                                 typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType
+//                                             >::value &&
+//                                             !CommutativeTraits<typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType,
+//                                                             OpType, 
+//                                                             typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType>::IsCommutative)
+//                                         >::type >
+//         {
+//             public:
+//                 typedef typename Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >::ResultType LhsType;
+//                 typedef typename Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >::ResultType RhsType;
+//                 
+//                 static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs, 
+//                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs,
+//                                 Accumulator<ResultType>& accum)
+//                 {
+//                     LhsType lhs_temp = lhs;
+//                     RhsType rhs_temp = rhs;
+//                     OpType<LhsType, RhsType>::Apply(accum, lhs_temp, rhs_temp);
+//                 }
+//         };
 }
 
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

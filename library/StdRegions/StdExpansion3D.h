@@ -84,11 +84,17 @@ namespace Nektar
                  Array<OneD, NekDouble> &outarray_d2, 
                  Array<OneD, NekDouble> &outarray_d3);
 
+
+            NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+             {
+                 return v_PhysEvaluate(coords);
+             }
+             
             /** \brief Evaluate a function at points coords which is assumed
          *  to be in local collapsed coordinate format. The function is
          *  assumed to be in physical space
          */
-            NekDouble PhysEvaluate(ConstArray<OneD, NekDouble> &coords);
+            NekDouble PhysEvaluate3D(const ConstArray<OneD, NekDouble> &coords);
 
             void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
                Array<OneD, NekDouble> &outarray_d0, 
@@ -105,8 +111,7 @@ namespace Nektar
             {
                 v_StdPhysDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
             }
-
-
+        
         protected:
 
         private:
@@ -151,6 +156,11 @@ namespace Nektar
                       Array<OneD, NekDouble> &outarray_d0,
                       Array<OneD, NekDouble> &outarray_d1,
                       Array<OneD, NekDouble> &outarray_d2) = 0;
+                      
+            virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+            {
+            return PhysEvaluate3D(coords);
+            }
 
         virtual int v_GetCoordim(void)
         {
@@ -166,6 +176,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.9  2007/07/20 02:16:54  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.8  2007/05/15 05:18:23  bnelson
 * Updated to use the new Array object.
 *

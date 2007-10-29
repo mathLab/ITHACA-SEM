@@ -262,7 +262,6 @@ namespace Nektar
                 break;
             }
 
-
             // Convert wz into wz_hat, which includes the 1/4 scale factor.
             // Nothing else need be done if the point distribution is
             // Jacobi (2,0) since (1-eta_z)^2 is aready factored into the weights.
@@ -296,7 +295,6 @@ namespace Nektar
                                             const ConstArray<OneD, NekDouble>& inarray, 
                                             Array<OneD, NekDouble> & outarray)
         {
-
             int     Qx = m_base[0]->GetNumPoints();
             int     Qy = m_base[1]->GetNumPoints();
             int     Qz = m_base[2]->GetNumPoints();
@@ -324,7 +322,6 @@ namespace Nektar
                 }
             }
 
-
             // Compute innerproduct over each mode in the Tetrahedral domain
             for( int p = 0; p <= P; ++p ) {
                 for( int q = 0; q <= Q - p; ++q ) {
@@ -334,7 +331,6 @@ namespace Nektar
                         int mode_p      = p;
                         int mode_pq     = pq[q + (Q+1)*p];
                         int mode_pqr    = pqr[r + (R+1)*(q + (Q+1)*p)];
-
 
                         // Compute tensor product of inarray with the 3 basis functions
                         Array<OneD, NekDouble> g_pqr = Array<OneD, NekDouble>( Qx*Qy*Qz, 0.0 );
@@ -437,68 +433,128 @@ namespace Nektar
         // Differentiation Methods
         //-----------------------------
 
-        void StdTetExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+//         void StdTetExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+//             Array<OneD, NekDouble> &out_d0, 
+//             Array<OneD, NekDouble> &out_d1,
+//             Array<OneD, NekDouble> &out_d2)
+//         {
+//             int    i;
+//             int    nquad0 = m_base[0]->GetNumPoints();
+//             int    nquad1 = m_base[1]->GetNumPoints();
+//             int    nquad2 = m_base[2]->GetNumPoints();
+// 
+//             ConstArray<OneD, NekDouble> eta_x, eta_y, eta_z;
+//             Array<OneD, NekDouble> d0;
+//             Array<OneD, NekDouble> wsp1  = Array<OneD, NekDouble>(nquad0*nquad1, 0.0);
+//             NekDouble *gfac = wsp1.get();
+// 
+//             eta_x = ExpPointsProperties(0)->GetZ();
+//             eta_y = ExpPointsProperties(1)->GetZ();
+//             eta_z = ExpPointsProperties(2)->GetZ();
+// 
+//             // set up geometric factor: 2/(1-z1)
+//             for(i = 0; i < nquad1; ++i)
+//             {
+//                 gfac[i] = 2.0/(1-eta_y[i]);
+//             }
+// 
+//             if(out_d1.num_elements() > 0)// if no d1 required do not need to calculate both deriv
+//             {
+//                 PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
+// 
+//                 for(i = 0; i < nquad1; ++i)  
+//                 {
+//                     Blas::Dscal(nquad0,gfac[i],&out_d0[0]+i*nquad0,1);
+//                 }
+//             }
+//             else
+//             {
+//                 if(out_d0.num_elements() > 0)// need other local callopsed derivative for d1 
+//                 {
+//                     d0 = Array<OneD, NekDouble>(nquad0*nquad1, 0.0);
+//                 }
+// 
+//                 PhysTensorDeriv(inarray, d0, out_d1, out_d2);
+// 
+//                 for(i = 0; i < nquad1; ++i)  
+//                 {
+//                     Blas::Dscal(nquad0,gfac[i],&d0[0]+i*nquad0,1);
+//                 }
+// 
+//                 // set up geometric factor: (1_z0)/(1-z1)
+//                 for(i = 0; i < nquad0; ++i)
+//                 {
+//                     gfac[i] = 0.5*(1+eta_x[i]);
+//                 }
+// 
+//                 for(i = 0; i < nquad1; ++i) 
+//                 {
+//                     Vmath::Vvtvp(nquad0,gfac,1,&d0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
+//                         &out_d1[0]+i*nquad0,1);
+//                 }    
+//             }
+//         }
+
+    void StdTetExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
             Array<OneD, NekDouble> &out_d0, 
             Array<OneD, NekDouble> &out_d1,
             Array<OneD, NekDouble> &out_d2)
         {
             int    i;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nquad2 = m_base[2]->GetNumPoints();
+            int    Qx = m_base[0]->GetNumPoints();
+            int    Qy = m_base[1]->GetNumPoints();
+            int    Qz = m_base[2]->GetNumPoints();
 
-            ConstArray<OneD, NekDouble> z0,z1,z2;
+            ConstArray<OneD, NekDouble> eta_x, eta_y, eta_z;
             Array<OneD, NekDouble> d0;
-            Array<OneD, NekDouble> wsp1  = Array<OneD, NekDouble>(nquad0*nquad1, 0.0);
+            Array<OneD, NekDouble> wsp1  = Array<OneD, NekDouble>(Qx*Qy, 0.0);
             NekDouble *gfac = wsp1.get();
 
-            z0 = ExpPointsProperties(0)->GetZ();
-            z1 = ExpPointsProperties(1)->GetZ();
-            z2 = ExpPointsProperties(2)->GetZ();
+            eta_x = ExpPointsProperties(0)->GetZ();
+            eta_y = ExpPointsProperties(1)->GetZ();
+            eta_z = ExpPointsProperties(2)->GetZ();
 
             // set up geometric factor: 2/(1-z1)
-            for(i = 0; i < nquad1; ++i)
+            for(i = 0; i < Qx; ++i)
             {
-                gfac[i] = 2.0/(1-z1[i]);
+                gfac[i] = 2.0/(1-eta_y[i]);
             }
 
             if(out_d1.num_elements() > 0)// if no d1 required do not need to calculate both deriv
             {
                 PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
 
-                for(i = 0; i < nquad1; ++i)  
+                for(i = 0; i < Qy; ++i)  
                 {
-                    Blas::Dscal(nquad0,gfac[i],&out_d0[0]+i*nquad0,1);
+                    Blas::Dscal(Qx,gfac[i],&out_d0[0]+i*Qx,1);
                 }
             }
             else
             {
                 if(out_d0.num_elements() > 0)// need other local callopsed derivative for d1 
                 {
-                    d0 = Array<OneD, NekDouble>(nquad0*nquad1, 0.0);
+                    d0 = Array<OneD, NekDouble>(Qx*Qy, 0.0);
                 }
 
                 PhysTensorDeriv(inarray, d0, out_d1, out_d2);
 
-                for(i = 0; i < nquad1; ++i)  
+                for(i = 0; i < Qy; ++i)  
                 {
-                    Blas::Dscal(nquad0,gfac[i],&d0[0]+i*nquad0,1);
+                    Blas::Dscal(Qx,gfac[i],&d0[0]+i*Qx,1);
                 }
 
                 // set up geometric factor: (1_z0)/(1-z1)
-                for(i = 0; i < nquad0; ++i)
+                for(i = 0; i < Qx; ++i)
                 {
-                    gfac[i] = 0.5*(1+z0[i]);
+                    gfac[i] = 0.5*(1+eta_x[i]);
                 }
 
-                for(i = 0; i < nquad1; ++i) 
+                for(i = 0; i < Qy; ++i) 
                 {
-                    Vmath::Vvtvp(nquad0,gfac,1,&d0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
-                        &out_d1[0]+i*nquad0,1);
+                    Vmath::Vvtvp(Qx, gfac, 1, &d0[0]+i*Qx, 1, &out_d1[0]+i*Qx, 1, &out_d1[0]+i*Qx, 1);
                 }    
             }
         }
-
 
         ///////////////////////////////
         // Evaluation Methods
@@ -530,7 +586,6 @@ namespace Nektar
             ConstArray<OneD, NekDouble> zBasis  = m_base[2]->GetBdata();
 
 
-
             // Build an index map from the rectangle to the triangle
             Array<OneD, int> pq  = Array<OneD, int>( (P+1)*(Q+1), -1 );
             for( int p = 0, mode = 0; p <= P; ++p ) {
@@ -549,8 +604,6 @@ namespace Nektar
                     }
                 }
             }
-
-
 
             // Sum-factorize the triple summation starting with the z-dimension
             for( int k = 0; k < Qz; ++k ) {
@@ -609,55 +662,42 @@ namespace Nektar
             out = (*matsys)*in;
         }
 
-        NekDouble StdTetExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
-        {
-            Array<OneD, NekDouble> coll = Array<OneD, NekDouble>(2);
 
-            // set up local coordinate system 
-            if((fabs(coords[0]+1.0) < NekConstants::kEvaluateTol)
-                &&(fabs(coords[1]-1.0) < NekConstants::kEvaluateTol))
+
+        NekDouble StdTetExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& xi)
+        {
+            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
+
+            if( fabs(xi[2]-1.0) < NekConstants::kEvaluateTol )    // NekConstants::kEvaluateTol = 1e-12
             {
-                coll[0] = 0.0;
-                coll[1] = 1.0;
+                // Very top point of the tetrahedron
+                eta[0] = -1.0;
+                eta[1] = -1.0;
+                eta[2] = xi[2];
             }
             else
             {
-                coll[0] = 2*(1+coords[0])/(1-coords[1])-1.0; 
-                coll[1] = coords[1]; 
-            }
+                eta[2] = xi[2]; // eta_z = xi_z
+                eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0; //eta_y = 2(1 + xi_y)/(1 - xi_z) - 1
+                if( fabs(eta[1]-1.0) < NekConstants::kEvaluateTol ) 
+                {
+                    // Distant diagonal edge shared by all eta_x coordinate planes: the xi_y == -xi_z line
+                    eta[0] = -1.0;
+                } 
+                else 
+                {
+                    //eta[0] = 4.0*(1 + xi[0])/((1 - eta[1])*(1 - eta[2])) - 1;
+                    eta[0] = 2.0*(1.0+xi[0])/(-xi[1]-xi[2]) - 1.0; //eta_x = 2(1 + xi_x)/(-xi_y - xi_z) - 1
+                }
 
-            return  StdExpansion3D::PhysEvaluate(coll); 
+            } 
+
+            // cout << "x i = " << xi[0] << ", " << xi[1] << ", " << xi[2]  << endl;
+            // cout << "eta = " << eta[0] << ", " << eta[1] << ", " << eta[2]  << endl;
+
+            return  StdExpansion3D::PhysEvaluate3D(eta);  
         }
 
-//         NekDouble StdTetExp::PhysEvaluate3D(const ConstArray<OneD, NekDouble>& coords)
-//         {
-//             NekDouble val;
-//             int i;
-//             int nq0 = m_base[0]->GetNumPoints();
-//             int nq1 = m_base[1]->GetNumPoints();
-//             Array<OneD, NekDouble> wsp1 = Array<OneD, NekDouble>(nq1, 0.0);
-// 
-//             DNekMatSharedPtr I;
-// 
-//             ASSERTL2(coords[0] < -1, "coord[0] < -1");
-//             ASSERTL2(coords[0] > 1, "coord[0] >  1");
-//             ASSERTL2(coords[1] < -1, "coord[1] < -1");
-//             ASSERTL2(coords[1] > 1, "coord[1] >  1");
-// 
-//             // interpolate first coordinate direction
-//             I = ExpPointsProperties(0)->GetI(coords);
-//             for (i = 0; i < nq1;++i)
-//         {
-//                 wsp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1,&m_phys[i * nq0], 1);
-//         }
-// 
-//             // interpolate in second coordinate direction
-//             I = ExpPointsProperties(1)->GetI(coords+1);
-// 
-//             val = Blas::Ddot(nq1, &(I->GetPtr())[0], 1, &wsp1[0], 1);
-// 
-//             return val;
-//         }
 
 
         void StdTetExp::WriteToFile(std::ofstream &outfile)
@@ -773,6 +813,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.4  2007/10/15 20:40:06  ehan
+ * Completed Basis, Backward, and Forward transformation
+ *
  * Revision 1.3  2007/07/20 02:16:55  bnelson
  * Replaced boost::shared_ptr with Nektar::ptr
  *

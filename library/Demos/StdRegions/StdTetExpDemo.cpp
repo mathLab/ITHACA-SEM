@@ -1,22 +1,4 @@
 
-// #include <boost/test/unit_test.hpp>
-// #include <boost/test/test_tools.hpp>
-// #include <boost/test/included/unit_test_framework.hpp>
-// #include <boost/test/floating_point_comparison.hpp>
-// 
-// using boost::unit_test_framework::test_suite;
-
-// #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-// #include <LibUtilities/LinearAlgebra/Lapack.hpp>
-// #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
-// #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-// #include <LibUtilities/BasicUtils/SharedArray.hpp>
-
-
-
-
-
-
 #include <algorithm>
 #include <iostream>
 #include <limits>
@@ -24,14 +6,6 @@
 #include <cstdlib>
 #include <cmath>
 using namespace std;
-
-
-// #include "StdRegions/StdExpansion2D.h"
-// #include "StdRegions/StdQuadExp.h"
-// #include "StdRegions/StdTriExp.h"
-// #include "StdRegions/StdNodalTriExp.h"
-// #include <StdRegions/StdTriExp.h>
-
 
 
 #include "StdRegions/StdExpUtil.h"
@@ -177,9 +151,9 @@ int main(int argc, char *argv[])
     //-------------------------------------------
     // Evaulate solution at x = y = z = 0  and print error
     Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
-    t[0] = 0;
-    t[1] = -0.25;
-    t[2] = 0.25;
+    t[0] = -0.9;
+    t[1] = -0.75;
+    t[2] = -0.85;
     
     if( regionShape == StdRegions::eTetrahedron ) {
         solution[0] = Tet_sol( t[0], t[1], t[2], P, Q, R ); 

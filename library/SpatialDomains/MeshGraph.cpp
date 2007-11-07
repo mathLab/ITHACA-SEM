@@ -221,9 +221,40 @@ namespace Nektar
             /// Expansiontypes will contain composite, nummodes, and expansiontype
             /// (eModified, or eOrthogonal)
 
+            // Need a vector of all elements and their associated expansion information.
+            // Default all elements in the domain to linear (2 modes) and Modified type.
+            const CompositeVector &domain = this->GetDomain();
+            CompositeVector::const_iterator compIter;
+
+            for (compIter = domain.begin(); compIter != domain.end(); ++compIter)
+            {
+                boost::shared_ptr<GeometryVector> geomVectorShPtr = *compIter;
+                GeometryVectorIter geomIter;
+                for (geomIter = geomVectorShPtr->begin(); geomIter != geomVectorShPtr->end(); ++geomIter)
+                {
+                    // Make sure we only have one instance of the GeometrySharedPtr stored in the list.
+                    ExpansionVector::iterator elemIter;
+                    for (elemIter = m_ExpansionVector.begin(); elemIter != m_ExpansionVector.end(); ++elemIter)
+                    {
+                        if ((*elemIter)->m_GeomShPtr == *geomIter)
+                        {
+                            break;
+                        }
+                    }
+
+                    // Not found in list.
+                    if (elemIter == m_ExpansionVector.end())
+                    {
+                        Equation eqn("2");
+                        ExpansionType type = eModified;
+                        ExpansionShPtr expansionElementShPtr =
+                            MemoryManager<Expansion>::AllocateSharedPtr(*geomIter, eqn, type);
+                        m_ExpansionVector.push_back(expansionElementShPtr);
+                    }
+                }
+            }
+
             // Clear the default linear expansion over the domain.
-#pragma message("Todo:  validate that the entire domain is specified")
-            m_ExpansionCollection.clear();
             TiXmlElement *expansion = expansionTypes->FirstChildElement("E");
 
             while (expansion)
@@ -251,48 +282,43 @@ namespace Nektar
                 const std::string* endStr = kExpansionTypeStr+eExpansionTypeSize;
                 const std::string* expStr = std::find(begStr, endStr, typeStr);
 
-                ASSERTL0(expStr != endStr, "Invalid expansion type.")
-                    type = (ExpansionType)(expStr - begStr);
+                ASSERTL0(expStr != endStr, "Invalid expansion type.");
+                type = (ExpansionType)(expStr - begStr);
 
-                ExpansionElementShPtr expansionElementShPtr = MemoryManager<ExpansionElement>::AllocateSharedPtr(compositeVector, nummodesEqn, type);
-                m_ExpansionCollection.push_back(expansionElementShPtr);
+#pragma message("Todo: Update the element list with this information")
+                // Now have composite, modes, and type.
+                // Cycle through all composites for the geomShPtrs and set the modes and types for the
+                // elements contained in the element list.
+                CompositeVectorIter compVecIter;
+                for (compVecIter = compositeVector.begin(); compVecIter != compositeVector.end(); ++compVecIter)
+                {
+                    GeometryVectorIter geomVecIter;
+                    for (geomVecIter = (*compVecIter)->begin(); geomVecIter != (*compVecIter)->end(); ++geomVecIter)
+                    {
+                        ExpansionVectorIter expVecIter;
+                        for (expVecIter = m_ExpansionVector.begin(); expVecIter != m_ExpansionVector.end(); ++expVecIter)
+                        {
+                            if (*geomVecIter == (*expVecIter)->m_GeomShPtr)
+                            {
+                                (*expVecIter)->m_ExpansionType = type;
+                                (*expVecIter)->m_NumModesEqn = nummodesEqn;
+                                break;
+                            }
+                        }
+                    }
+                }
 
                 expansion = expansion->NextSiblingElement("E");
             }
         }
     }
 
-    ConstExpansionElementShPtr MeshGraph::GetExpansionElement(const Composite &input)
-    {
-        ExpansionCollectionIter iter;
-        ConstExpansionElementShPtr returnval;
-        bool found = false;
-
-        for(iter = m_ExpansionCollection.begin(); iter != m_ExpansionCollection.end() && !found; ++iter)
-        {
-            CompositeVector::iterator compIter;
-            for (compIter = (*iter)->m_Composite.begin(); compIter != (*iter)->m_Composite.end(); ++compIter)
-            {
-                if(compIter->get() == input.get())
-                {
-                    returnval = *iter;
-                    found = true;
-                    break;
-                }
-            }
-        }
-
-        ASSERTL0(returnval, "Expansion element not found.");   
-        return returnval;
-    }
-
-    LibUtilities::BasisKey MeshGraph::GetBasisKey(const Composite &in, 
+    LibUtilities::BasisKey MeshGraph::GetBasisKey(ExpansionShPtr in, 
         const int flag)
     {
-        ConstExpansionElementShPtr exp = GetExpansionElement(in);
-        int order = (int) exp->m_NumModesEqn.Evaluate();
+        int order = (int) in->m_NumModesEqn.Evaluate();
 
-        switch(exp->m_ExpansionType)
+        switch(in->m_ExpansionType)
         {
         case eModified:
             switch (flag)
@@ -428,13 +454,6 @@ namespace Nektar
         // Parse the composites into a list.
         GetCompositeList(indxStr, m_Domain);
         ASSERTL0(!m_Domain.empty(), (std::string("Unable to obtain domain's referenced composite: ") + indxStr).c_str());
-
-        // NumModes = 2, default to linear for the entire domain.
-        Equation nummodesEqn("2");
-        ExpansionType type = eModified;
-        ExpansionElementShPtr expansionElementShPtr = MemoryManager<ExpansionElement>::AllocateSharedPtr(m_Domain, nummodesEqn, type);
-        m_ExpansionCollection.clear();  // Don't want any other entries at this point.
-        m_ExpansionCollection.push_back(expansionElementShPtr);
     }
 
     void MeshGraph::GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const
@@ -484,6 +503,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.12  2007/09/25 04:45:14  jfrazier
+// Added default linear expansions for the entire domain.
+//
 // Revision 1.11  2007/09/20 22:25:05  jfrazier
 // Added expansion information to meshgraph class.
 //

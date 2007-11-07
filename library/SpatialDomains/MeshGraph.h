@@ -87,10 +87,21 @@ namespace Nektar
             ExpansionType m_ExpansionType;
         };
 
-        typedef boost::shared_ptr<ExpansionElement> ExpansionElementShPtr;
-        typedef boost::shared_ptr<const ExpansionElement> ConstExpansionElementShPtr;
-        typedef std::vector<ExpansionElementShPtr> ExpansionCollection;
-        typedef std::vector<ExpansionElementShPtr>::iterator  ExpansionCollectionIter;
+        struct Expansion
+        {
+            Expansion(GeometrySharedPtr geomShPtr, const Equation &numModesEqn, ExpansionType expansionType):
+                m_GeomShPtr(geomShPtr),
+                m_NumModesEqn(numModesEqn),
+                m_ExpansionType(expansionType)
+            {};
+            GeometrySharedPtr m_GeomShPtr;
+            Equation m_NumModesEqn;
+            ExpansionType m_ExpansionType;
+        };
+
+        typedef boost::shared_ptr<Expansion> ExpansionShPtr;
+        typedef std::vector<ExpansionShPtr> ExpansionVector;
+        typedef std::vector<ExpansionShPtr>::iterator ExpansionVectorIter;
 
         class MeshGraph
         {
@@ -140,24 +151,30 @@ namespace Nektar
             }
 
             void ReadDomain(TiXmlDocument &doc);
-
             void GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const;
+            LibUtilities::BasisKey GetBasisKey(ExpansionShPtr in, const int flag = 0);
 
-
-            LibUtilities::BasisKey GetBasisKey(const Composite &in, const int flag = 0);
-            ConstExpansionElementShPtr GetExpansionElement(const Composite &input);
-            int GetNumExpansionElements(void) const
+            ExpansionShPtr GetExpansion(GeometrySharedPtr geom)
             {
-                return m_ExpansionCollection.size();
+                ExpansionVectorIter iter;
+                ExpansionShPtr returnval;
+
+                for (iter = m_ExpansionVector.begin(); iter!=m_ExpansionVector.end(); ++iter)
+                {
+                    if ((*iter)->m_GeomShPtr == geom)
+                    {
+                        returnval = *iter;
+                        break;
+                    }
+                }
+
+                return returnval;
             }
 
-            ConstExpansionElementShPtr GetExpansionElement(unsigned int indx)
+            const ExpansionVector &GetExpansions(void) const
             {
-                ASSERTL0(0 <= indx && indx < m_ExpansionCollection.size(), "Expansion index out of range.");
-                return m_ExpansionCollection[indx];
+                return m_ExpansionVector;
             }
-
-
 
        protected:
             VertexVector  m_vertset;
@@ -168,7 +185,7 @@ namespace Nektar
 
             CompositeVector m_MeshCompositeVector;
             CompositeVector m_Domain;
-            ExpansionCollection m_ExpansionCollection;
+            ExpansionVector m_ExpansionVector;
        };
     }; //end of namespace
 }; //end of namespace
@@ -177,6 +194,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.14  2007/09/20 22:25:06  jfrazier
+// Added expansion information to meshgraph class.
+//
 // Revision 1.13  2007/09/03 17:05:01  jfrazier
 // Cleanup and addition of composite range in domain specification.
 //

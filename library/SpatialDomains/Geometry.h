@@ -91,7 +91,6 @@ namespace Nektar
                     return ValidateRegGeomFactor(m_geomfactors);
                 }
 
-
                 // Wrappers around virtual Functions
                 void GenGeomFactors(void)
                 {
@@ -113,7 +112,6 @@ namespace Nektar
                     NEKERROR(ErrorUtil::efatal,
                         "This function is only valid for shape type geometries");
                 }
-
         };
     }; //end of namespace
 }; // end of namespace
@@ -122,6 +120,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.15  2007/07/26 18:19:18  jfrazier
+// Minor change to reflect presence of bool operator for shared_ptrs.
+//
 // Revision 1.14  2007/07/26 18:02:42  jfrazier
 // Manage the storage of geofactors.
 //

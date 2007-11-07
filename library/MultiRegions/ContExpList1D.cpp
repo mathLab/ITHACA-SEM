@@ -39,17 +39,17 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	
-	ContExpList1D::ContExpList1D()
-	{
-	}
-	
-	ContExpList1D::~ContExpList1D()
-	{
-	}
+
+        ContExpList1D::ContExpList1D()
+        {
+        }
+
+        ContExpList1D::~ContExpList1D()
+        {
+        }
 
         ContExpList1D::ContExpList1D(const ContExpList1D &In):
-            ExpList1D(In),
+        ExpList1D(In),
             m_contNcoeffs(In.m_contNcoeffs),
             m_locToGloMap(In.m_locToGloMap),
             m_globalMat(In.m_globalMat)
@@ -59,77 +59,77 @@ namespace Nektar
         }
 
         ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba,
-                                     const SpatialDomains::MeshGraph1D &graph1D):
-	    ExpList1D(Ba,graph1D)
-	{   
+            const SpatialDomains::MeshGraph1D &graph1D):
+        ExpList1D(Ba,graph1D)
+        {   
             ASSERTL1((Ba.GetBasisType() == LibUtilities::eModified_A)
-                     ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
-                     "Expansion not of an boundary-interior type");
-            
+                ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
+                "Expansion not of an boundary-interior type");
+
             // setup Matrix Map
             m_globalMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-            
-	    // setup mapping array 
-	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph1D.GetDomain());
-            
+
+            // setup mapping array 
+            m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph1D.GetDomain());
+
             m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
-	}
-        
+        }
+
         ContExpList1D::ContExpList1D(SpatialDomains::MeshGraph1D &graph1D):
-	    ExpList1D(graph1D)
-	{
+        ExpList1D(graph1D)
+        {
+            const SpatialDomains::CompositeVector &domain = graph1D.GetDomain();
+            const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
 
-            SpatialDomains::CompositeVector domain = (graph1D.GetDomain());
-
-            for(int i = 0; i < domain.size(); ++i)
+            for(int i = 0; i < expansions.size(); ++i)
             {	    
-                ASSERTL1(((graph1D.GetBasisKey(domain[i],0)).GetBasisType() == LibUtilities::eModified_A)
-                         ||((graph1D.GetBasisKey(domain[i],0)).GetBasisType() == LibUtilities::eGLL_Lagrange),
-                         "Expansion not of an boundary-interior type");
-	    }
+                ASSERTL1(((graph1D.GetBasisKey(expansions[i],0)).GetBasisType() == LibUtilities::eModified_A)
+                    ||((graph1D.GetBasisKey(expansions[i],0)).GetBasisType() == LibUtilities::eGLL_Lagrange),
+                    "Expansion not of an boundary-interior type");
+            }
 
             // setup Matrix Map
             m_globalMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-            
-	    // setup mapping array 
-	    m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,domain);
-	    
-	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
-	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
-	}
-              
-	void ContExpList1D::IProductWRTBase(const ExpList &In)
-	{
+
+            // setup mapping array 
+            m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,domain);
+
+            m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+        }
+
+        void ContExpList1D::IProductWRTBase(const ExpList &In)
+        {
             if(m_transState == eContinuous)
             {
                 ContToLocal();
             }
-	    ExpList1D::IProductWRTBase(In);
-	    Assemble();
-	    m_transState = eLocalCont;
-	}
+            ExpList1D::IProductWRTBase(In);
+            Assemble();
+            m_transState = eLocalCont;
+        }
 
-	void ContExpList1D::GeneralMatrixOp(const StdRegions::MatrixType mtype,
-                                            const ConstArray<OneD, NekDouble> &inarray,
-                                            Array<OneD, NekDouble> &outarray, 
-                                            NekDouble lambda = 1.0)
+        void ContExpList1D::GeneralMatrixOp(const StdRegions::MatrixType mtype,
+            const ConstArray<OneD, NekDouble> &inarray,
+            Array<OneD, NekDouble> &outarray, 
+            NekDouble lambda = 1.0)
 
-	{
+        {
             Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(m_ncoeffs);
             ContToLocal(inarray,tmp);
-	    ExpList1D::GeneralMatrixOp(mtype,tmp,tmp,lambda);
-	    Assemble(tmp,outarray);
-	}
-	
-	void ContExpList1D::FwdTrans(const ExpList &In)
-	{
+            ExpList1D::GeneralMatrixOp(mtype,tmp,tmp,lambda);
+            Assemble(tmp,outarray);
+        }
+
+        void ContExpList1D::FwdTrans(const ExpList &In)
+        {
             IProductWRTBase(In);
 
             GlobalLinSysSharedPtr mass_matrix;
             GlobalLinSysKey key(StdRegions::eMass);
             GlobalLinSysMap::iterator matrixIter = m_globalMat->find(key);
-           
+
             if(matrixIter == m_globalMat->end())
             {
                 mass_matrix = GenGlobalLinSys(key,m_locToGloMap);
@@ -141,27 +141,30 @@ namespace Nektar
             }
 
             mass_matrix->Solve(m_contCoeffs,m_contCoeffs,m_locToGloMap);
-	    m_transState = eContinuous;
-	    m_physState = false;
-	}
+            m_transState = eContinuous;
+            m_physState = false;
+        }
 
-	
-	void ContExpList1D::BwdTrans(const ExpList &In)
-	{
-	    
-	    if(m_transState == eContinuous)
-	    {
-		ContToLocal();
-	    }
-	    
-	    ExpList1D::BwdTrans(In);
-	}
-	
+
+        void ContExpList1D::BwdTrans(const ExpList &In)
+        {
+
+            if(m_transState == eContinuous)
+            {
+                ContToLocal();
+            }
+
+            ExpList1D::BwdTrans(In);
+        }
+
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.25  2007/10/04 12:10:04  sherwin
+* Update for working version of static condensation in Helmholtz1D and put lambda coefficient on the mass matrix rather than the Laplacian operator.
+*
 * Revision 1.24  2007/10/03 11:37:50  sherwin
 * Updates relating to static condensation implementation
 *

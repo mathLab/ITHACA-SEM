@@ -101,7 +101,7 @@ namespace Nektar
 
         ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D)
         {
-            int i,j;
+            int i;
             int nel;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::Composite comp;
@@ -113,31 +113,28 @@ namespace Nektar
             
             m_transState = eNotSet; 
             m_physState  = false;
+
+            const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
             
-            for(i = 0; i < domain.size(); ++i)
+            for(i = 0; i < expansions.size(); ++i)
             {
-                comp = domain[i];
-                LibUtilities::BasisKey bkey = graph1D.GetBasisKey(comp,0);
-                
-                for(j = 0; j < comp->size(); ++j)
+                SpatialDomains::SegGeomSharedPtr SegmentGeom;
+                LibUtilities::BasisKey bkey = graph1D.GetBasisKey(expansions[i],0);
+
+                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(expansions[i]->m_GeomShPtr))
                 {
-                    SpatialDomains::SegGeomSharedPtr SegmentGeom;
-                    
-                    if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*comp)[j]))
-                    {
-                        seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
-                        (*m_exp).push_back(seg);
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a SegGeom failed");
-                    }  
+                    seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
+                    (*m_exp).push_back(seg);
                 }
-                
-                m_ncoeffs += (comp->size())*bkey.GetNumModes();
-                m_npoints += (comp->size())*bkey.GetNumPoints();
-            } 
-            
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a SegGeom failed");
+                }  
+
+                m_ncoeffs += bkey.GetNumModes();
+                m_npoints += bkey.GetNumPoints();
+            }
+      
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
             
@@ -147,6 +144,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.20  2007/09/25 14:25:29  pvos
+* Update for helmholtz1D with different expansion orders
+*
 * Revision 1.19  2007/07/22 23:04:20  bnelson
 * Backed out Nektar::ptr.
 *

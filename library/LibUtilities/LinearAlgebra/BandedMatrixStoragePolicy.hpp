@@ -196,8 +196,10 @@ namespace Nektar
             static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
                                                                              const ConstArray<OneD, DataType>& data,
+                                                                             const char transpose,
                                                                              const PolicySpecificDataHolderType& dataHolder)
             {
+                ASSERTL0(transpose == 'N', "Banded transpose matrices not yet supported.");
                 boost::optional<unsigned int> index = CalculateIndex(totalRows, totalColumns, curRow, curColumn, dataHolder);
                 if( index )
                 {
@@ -212,8 +214,10 @@ namespace Nektar
             static void SetValue(unsigned int totalRows, unsigned int totalColumns,
                                  unsigned int curRow, unsigned int curColumn,
                                  Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
+                                 const char transpose,
                                  const PolicySpecificDataHolderType& dataHolder)
             {
+                ASSERTL0(transpose == 'N', "Banded transpose matrices not yet supported.");
                 boost::optional<unsigned int> index = CalculateIndex(totalRows, totalColumns, curRow, curColumn, dataHolder);
                 if( index )
                 {

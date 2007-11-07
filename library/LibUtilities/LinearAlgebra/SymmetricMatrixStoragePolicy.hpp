@@ -55,6 +55,7 @@ namespace Nektar
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                                    unsigned int curRow, unsigned int curColumn,
                                                                                    const ConstArray<OneD, DataType>& data,
+                                                                                   const char tranpose,
                                                                                    const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Symmetric matrices must be square.");
@@ -80,6 +81,7 @@ namespace Nektar
             static void SetValue(unsigned int totalRows, unsigned int totalColumns,
                                  unsigned int curRow, unsigned int curColumn,
                                  Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
+                                 const char transpose,
                                  const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Symmetric matrices must be square.");
@@ -110,6 +112,7 @@ namespace Nektar
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
                     const unsigned int curRow, const unsigned int curColumn,
+                    const char transpose,
                     const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Symmetric matrices must be square.");

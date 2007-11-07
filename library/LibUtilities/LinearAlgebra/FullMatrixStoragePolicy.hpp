@@ -89,58 +89,91 @@ namespace Nektar
                 return result;
             }
             
-            static unsigned int CalculateIndex(unsigned int totalRows, unsigned int curRow, unsigned int curColumn)
+            static unsigned int CalculateIndex(unsigned int totalRows, unsigned int totalColumns, unsigned int curRow, unsigned int curColumn, const char transpose)
             {
-                return curColumn*totalRows + curRow;
+                if( transpose == 'N' )
+                {
+                    return curColumn*totalRows + curRow;
+                }
+                else
+                {
+                    return curRow*totalColumns + curColumn;
+                }
             }
 
             static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                unsigned int curRow, unsigned int curColumn,
                                                Array<OneD, DataType>& data,
+                                               const char transpose,
                                                const PolicySpecificDataHolderType&)
             {
-                return data[CalculateIndex(totalRows, curRow, curColumn)];
+                return data[CalculateIndex(totalRows, totalColumns, curRow, curColumn, transpose)];
             }
             
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
                                                                              const ConstArray<OneD, DataType>& data,
+                                                                             const char transpose,
                                                                              const PolicySpecificDataHolderType&)
             {
-                return data[CalculateIndex(totalRows, curRow, curColumn)];
+                return data[CalculateIndex(totalRows, totalColumns, curRow, curColumn, transpose)];
             }
             
             static void SetValue(unsigned int totalRows, unsigned int totalColumns,
                                  unsigned int curRow, unsigned int curColumn,
                                  Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
+                                 const char transpose,
                                  const PolicySpecificDataHolderType&)
             {
-                data[CalculateIndex(totalRows, curRow, curColumn)] = d;
+                data[CalculateIndex(totalRows, totalColumns, curRow, curColumn, transpose)] = d;
             }
             
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
                     const unsigned int curRow, const unsigned int curColumn,
+                    const char transpose,
                     const PolicySpecificDataHolderType&)
             {
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;
 
-                if( nextRow < totalRows )
+                if( transpose == 'N' )
                 {
-                    ++nextRow;
-                }
+                    if( nextRow < totalRows )
+                    {
+                        ++nextRow;
+                    }
 
-                if( nextRow >= totalRows )
-                {
-                    nextRow = 0;
-                    ++nextColumn;
-                }
+                    if( nextRow >= totalRows )
+                    {
+                        nextRow = 0;
+                        ++nextColumn;
+                    }
 
-                if( nextColumn >= totalColumns )
+                    if( nextColumn >= totalColumns )
+                    {
+                        nextRow = std::numeric_limits<unsigned int>::max();
+                        nextColumn = std::numeric_limits<unsigned int>::max();
+                    }
+                }
+                else
                 {
-                    nextRow = std::numeric_limits<unsigned int>::max();
-                    nextColumn = std::numeric_limits<unsigned int>::max();
+                    if( nextColumn < totalColumns )
+                    {
+                        ++nextColumn;
+                    }
+
+                    if( nextColumn >= totalColumns )
+                    {
+                        nextColumn = 0;
+                        ++nextRow;
+                    }
+
+                    if( nextRow >= totalRows )
+                    {
+                        nextRow = std::numeric_limits<unsigned int>::max();
+                        nextColumn = std::numeric_limits<unsigned int>::max();
+                    }
                 }
 
                 return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
@@ -148,11 +181,13 @@ namespace Nektar
             
             static void Invert(unsigned int rows, unsigned int columns,
                                Array<OneD, DataType>& data,
+                               const char transpose,
                                const PolicySpecificDataHolderType&)
             {
                 #ifdef NEKTAR_USING_BLAS
                     ASSERTL0(rows==columns, "Only square matrices can be inverted.");
-                    
+                    ASSERTL0(transpose=='N', "Only untransposed matrices may be inverted.");
+
                     int m = rows;
                     int n = columns;
                     int pivotSize = n;

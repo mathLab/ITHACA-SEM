@@ -95,6 +95,7 @@ namespace Nektar
             static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                unsigned int curRow, unsigned int curColumn,
                                                Array<OneD, DataType>& data,
+                                               const char transpose,
                                                const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(curRow < totalRows || curColumn < totalColumns, std::string("Attempting to access element (") +
@@ -116,6 +117,7 @@ namespace Nektar
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
                                                                              const ConstArray<OneD, DataType>& data,
+                                                                             const char transpose,
                                                                              const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(curRow < totalRows || curColumn < totalColumns, std::string("Attempting to access element (") +
@@ -137,6 +139,7 @@ namespace Nektar
             static void SetValue(unsigned int totalRows, unsigned int totalColumns,
                                  unsigned int curRow, unsigned int curColumn,
                                  Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
+                                 const char transpose,
                                  const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(curRow < totalRows || curColumn < totalColumns, std::string("Attempting to access element (") +
@@ -152,6 +155,7 @@ namespace Nektar
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
                     const unsigned int curRow, const unsigned int curColumn,
+                    const char transpose,
                     const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(curRow == curColumn, "Iteration of a diagonal matrix is only valid along the diagonal.");
@@ -176,6 +180,7 @@ namespace Nektar
 
             static void Invert(unsigned int rows, unsigned int columns,
                                Array<OneD, DataType>& data,
+                               const char transpose,
                                const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(rows==columns, "Only square matrices can be inverted.");

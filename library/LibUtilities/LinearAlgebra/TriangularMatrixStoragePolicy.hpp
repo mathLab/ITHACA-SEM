@@ -105,10 +105,12 @@ namespace Nektar
             typedef typename BaseType::GetValueReturnType GetValueReturnType;
             typedef typename BaseType::PolicySpecificDataHolderType PolicySpecificDataHolderType;
 
-            static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
-                                                                             unsigned int curRow, unsigned int curColumn,
-                                                                             const ConstArray<OneD, DataType>& data,
-                                                                             const PolicySpecificDataHolderType&)
+            static typename boost::call_traits<DataType>::const_reference 
+            GetValue(unsigned int totalRows, unsigned int totalColumns,
+                     unsigned int curRow, unsigned int curColumn,
+                     const ConstArray<OneD, DataType>& data,
+                     const char transpose,
+                     const PolicySpecificDataHolderType& policySpecificData)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to retrieve a value from row " +
@@ -120,20 +122,30 @@ namespace Nektar
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
 
-                if( curRow <= curColumn )
+                if( transpose == 'N' )
                 {
-                    return data[CalculateIndex(curRow, curColumn)];
+                    if( curRow <= curColumn )
+                    {
+                        return data[CalculateIndex(curRow, curColumn)];
+                    }
+                    else
+                    {
+                        return BaseType::ZeroElement;
+                    }
                 }
                 else
                 {
-                    return BaseType::ZeroElement;
+                    return MatrixStoragePolicy<DataType, LowerTriangularMatrixTag>::GetValue(
+                        totalColumns, totalRows, curColumn, curRow, 
+                        data, 'N', policySpecificData);
                 }
             }            
             
             static void SetValue(unsigned int totalRows, unsigned int totalColumns,
                                  unsigned int curRow, unsigned int curColumn,
                                  Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
-                                 const PolicySpecificDataHolderType&)
+                                 const char transpose,
+                                 const PolicySpecificDataHolderType& policySpecificData)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to set a value from row " +
@@ -150,7 +162,15 @@ namespace Nektar
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
 
-                data[CalculateIndex(curRow, curColumn)] = d;
+                if( transpose == 'N' )
+                {
+                    data[CalculateIndex(curRow, curColumn)] = d;
+                }
+                else
+                {
+                    MatrixStoragePolicy<DataType, LowerTriangularMatrixTag>::SetValue(totalColumns, 
+                        totalRows, curColumn, curRow, data, d, 'N', policySpecificData);
+                }
             }
                     
             static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn)
@@ -161,7 +181,8 @@ namespace Nektar
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
                     const unsigned int curRow, const unsigned int curColumn, 
-                    const PolicySpecificDataHolderType&)
+                    const char transpose,
+                    const PolicySpecificDataHolderType& data)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
@@ -177,6 +198,12 @@ namespace Nektar
                     boost::lexical_cast<std::string>(curColumn) + ") of a (" +
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
+
+                if( transpose == 'T' )
+                {
+                    return MatrixStoragePolicy<DataType, LowerTriangularMatrixTag>::Advance(totalColumns, 
+                        totalRows, curColumn, curRow, 'N', data);
+                }
 
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;
@@ -213,10 +240,12 @@ namespace Nektar
             typedef typename BaseType::GetValueReturnType GetValueReturnType;
             typedef typename BaseType::PolicySpecificDataHolderType PolicySpecificDataHolderType;
 
-            static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
-                                                                             unsigned int curRow, unsigned int curColumn,
-                                                                             const ConstArray<OneD, DataType>& data,
-                                                                             const PolicySpecificDataHolderType&)
+            static typename boost::call_traits<DataType>::const_reference 
+            GetValue(unsigned int totalRows, unsigned int totalColumns,
+                     unsigned int curRow, unsigned int curColumn,
+                     const ConstArray<OneD, DataType>& data,
+                     const char transpose,
+                     const PolicySpecificDataHolderType& policySpecificData)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to retrieve a value from row " +
@@ -228,20 +257,30 @@ namespace Nektar
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
 
-                if( curRow >= curColumn )
+                if( transpose == 'N' )
                 {
-                    return data[CalculateIndex(totalColumns, curRow, curColumn)];
+                    if( curRow >= curColumn )
+                    {
+                        return data[CalculateIndex(totalColumns, curRow, curColumn)];
+                    }
+                    else
+                    {
+                        return BaseType::ZeroElement;
+                    }
                 }
                 else
                 {
-                    return BaseType::ZeroElement;
+                    return MatrixStoragePolicy<DataType, UpperTriangularMatrixTag>::GetValue(
+                        totalColumns, totalRows, curColumn, curRow, 
+                        data, 'N', policySpecificData);
                 }
             }            
             
             static void SetValue(unsigned int totalRows, unsigned int totalColumns,
                                  unsigned int curRow, unsigned int curColumn,
                                  Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
-                                 const PolicySpecificDataHolderType&)
+                                 const char transpose,
+                                 const PolicySpecificDataHolderType& policySpecificData)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to set a value from row " +
@@ -258,7 +297,15 @@ namespace Nektar
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
 
-                data[CalculateIndex(totalColumns, curRow, curColumn)] = d;
+                if( transpose == 'N' )
+                {
+                    data[CalculateIndex(totalColumns, curRow, curColumn)] = d;
+                }
+                else
+                {
+                    MatrixStoragePolicy<DataType, UpperTriangularMatrixTag>::SetValue(totalColumns,
+                        totalRows, curColumn, curRow, data, d, 'N', policySpecificData);
+                }
             }
                     
             static unsigned int CalculateIndex(unsigned int totalColumns, unsigned int curRow, unsigned int curColumn)
@@ -269,7 +316,8 @@ namespace Nektar
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
                     const unsigned int curRow, const unsigned int curColumn,
-                    const PolicySpecificDataHolderType&)
+                    const char transpose,
+                    const PolicySpecificDataHolderType& data)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
@@ -285,6 +333,12 @@ namespace Nektar
                     boost::lexical_cast<std::string>(curColumn) + ") of a (" +
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
+
+                if( transpose == 'T' )
+                {
+                    return MatrixStoragePolicy<DataType, UpperTriangularMatrixTag>::Advance(
+                        totalColumns, totalRows, curColumn, curRow, 'N', data);
+                }
 
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;

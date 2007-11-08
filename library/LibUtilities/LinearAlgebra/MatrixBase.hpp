@@ -116,6 +116,11 @@ namespace Nektar
                 m_size[1] = columns;
             }
 
+            void PerformRowColumnInterchange()
+            {
+                std::swap(m_size[0], m_size[1]);
+            }
+
         private:
             
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const = 0;            

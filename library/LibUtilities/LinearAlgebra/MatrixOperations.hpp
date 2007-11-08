@@ -195,7 +195,7 @@ namespace Nektar
     // Matrix-Vector multiplication
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-    void NekMultiply(NekVector<DataType, dim, space>& result,
+    void NekMultiply(NekVector<DataType, 0, space>& result,
                     const NekMatrix<LhsDataType, FullMatrixTag, MatrixType>& lhs,
                     const NekVector<DataType, dim, space>& rhs)
     {
@@ -216,7 +216,7 @@ namespace Nektar
     }
 
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-    void NekMultiply(NekVector<DataType, dim, space>& result,
+    void NekMultiply(NekVector<DataType, 0, space>& result,
                     const NekMatrix<LhsDataType, BandedMatrixTag, MatrixType>& lhs,
                     const NekVector<DataType, dim, space>& rhs)
     {
@@ -252,7 +252,7 @@ namespace Nektar
     }
 
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-    void NekMultiply(NekVector<DataType, dim, space>& result,
+    void NekMultiply(NekVector<DataType, 0, space>& result,
                     const NekMatrix<LhsDataType, UpperTriangularMatrixTag, MatrixType>& lhs,
                     const NekVector<DataType, dim, space>& rhs)
     {
@@ -273,7 +273,7 @@ namespace Nektar
     }
 
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-    void NekMultiply(NekVector<DataType, dim, space>& result,
+    void NekMultiply(NekVector<DataType, 0, space>& result,
                     const NekMatrix<LhsDataType, LowerTriangularMatrixTag, MatrixType>& lhs,
                     const NekVector<DataType, dim, space>& rhs)
     {
@@ -298,7 +298,7 @@ namespace Nektar
     #ifdef NEKTAR_USING_BLAS  
         /// \brief Floating point specialization when blas is in use.
         template<unsigned int dim, unsigned int space>
-        void NekMultiply(NekVector<double, dim, space>& result,
+        void NekMultiply(NekVector<double, 0, space>& result,
                         const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
                         const NekVector<double, dim, space>& rhs)
         {
@@ -309,20 +309,26 @@ namespace Nektar
 
             int m = lhs.GetRows();
             int n = lhs.GetColumns();
+
+            if( lhs.GetTransposeFlag() == 'T' )
+            {
+                std::swap(m, n);
+            }
+
             double alpha = 1.0;
             const double* a = lhs.GetRawPtr();
-            int lda = m;
+            int lda = lhs.GetLeadingDimension();
             const double* x = rhs.GetPtr();
             int incx = 1;
             double beta = 0.0;
             double* y = result.GetPtr();
             int incy = 1;
             
-            Blas::Dgemv('N', m, n, alpha, a, lda, x, incx, beta, y, incy);
+            Blas::Dgemv(lhs.GetTransposeFlag(), m, n, alpha, a, lda, x, incx, beta, y, incy);
         }
                
         template<unsigned int dim, unsigned int space>
-        void NekMultiply(NekVector<double, dim, space>& result,
+        void NekMultiply(NekVector<double, 0, space>& result,
                         const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
                         const NekVector<double, dim, space>& rhs)
         {
@@ -342,11 +348,11 @@ namespace Nektar
             double* y = result.GetPtr();
             int incy = 1;
             
-            Blas::Dgemv('N', m, n, alpha, a, lda, x, incx, beta, y, incy);
+            Blas::Dgemv(lhs.GetTransposeFlag(), m, n, alpha, a, lda, x, incx, beta, y, incy);
         }
 
         template<unsigned int dim, unsigned int space>
-        void NekMultiply(NekVector<double, dim, space>& result,
+        void NekMultiply(NekVector<double, 0, space>& result,
                          const NekMatrix<double, UpperTriangularMatrixTag, StandardMatrixTag>& lhs,
                          const NekVector<double, dim, space>& rhs)
         {
@@ -361,11 +367,11 @@ namespace Nektar
             double* x = result.GetPtr();
             int incx = 1;
             
-            Blas::Dtpmv('U', 'N', 'N', n, a, x, incx);
+            Blas::Dtpmv('U', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
         }
 
         template<unsigned int dim, unsigned int space>
-        void NekMultiply(NekVector<double, dim, space>& result,
+        void NekMultiply(NekVector<double, 0, space>& result,
                          const NekMatrix<double, LowerTriangularMatrixTag, StandardMatrixTag>& lhs,
                          const NekVector<double, dim, space>& rhs)
         {
@@ -380,11 +386,11 @@ namespace Nektar
             double* x = result.GetPtr();
             int incx = 1;
             
-            Blas::Dtpmv('L', 'N', 'N', n, a, x, incx);
+            Blas::Dtpmv('L', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
         }
 
         template<typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-        void NekMultiply(NekVector<double, dim, space>& result,
+        void NekMultiply(NekVector<double, 0, space>& result,
                         const NekMatrix<LhsDataType, BandedMatrixTag, MatrixType>& lhs,
                         const NekVector<double, dim, space>& rhs)
         {
@@ -414,7 +420,7 @@ namespace Nektar
     #endif //NEKTAR_USING_BLAS
 
     template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-    void NekMultiply(NekVector<DataType, dim, space>& result,
+    void NekMultiply(NekVector<DataType, 0, space>& result,
                     const NekMatrix<LhsDataType, DiagonalMatrixTag, MatrixType>& lhs,
                     const NekVector<DataType, dim, space>& rhs)
     {
@@ -432,12 +438,15 @@ namespace Nektar
     /// We need two version of NekMultiply, one for constant sized vectors and one for 
     /// variable sized vectors because the constructors to initialize the vector to 0 are 
     /// different in each case.
+    ///
+    /// Note that I can't make a compile time decision about the size of the result vector
+    /// because the matrix dimensions are runtime only.
     template<typename DataType, typename LhsDataType, typename StorageType, typename MatrixType, unsigned int dim, unsigned int space>
-    NekVector<DataType, dim, space> 
+    NekVector<DataType, 0, space> 
     NekMultiply(const NekMatrix<LhsDataType, StorageType, MatrixType>& lhs,
                 const NekVector<DataType, dim, space>& rhs)
     {
-       NekVector<DataType, dim, space> result(DataType(0));
+       NekVector<DataType, 0, space> result(lhs.GetRows(), DataType(0));
        NekMultiply(result, lhs, rhs);
        return result;
     }

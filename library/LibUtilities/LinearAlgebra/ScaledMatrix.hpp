@@ -158,6 +158,16 @@ namespace Nektar
             const_iterator begin() const { return const_iterator(m_matrix->begin(), m_scale); }
             const_iterator end() const { return const_iterator(m_matrix->end(), m_scale); }
             
+            const char GetTransposeFlag() const 
+            {
+                return m_matrix->GetTransposeFlag();
+            }
+
+            unsigned int GetLeadingDimension() const
+            {
+                return m_matrix->GetLeadingDimension();
+            }
+
         public:
         
         private:

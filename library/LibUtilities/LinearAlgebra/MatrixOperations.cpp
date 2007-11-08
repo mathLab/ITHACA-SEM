@@ -42,8 +42,8 @@ namespace Nektar
                             const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
                             const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
     {
-        Blas::Dgemm('N', 'N', lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
-            1.0, lhs.GetRawPtr(), lhs.GetRows(), rhs.GetRawPtr(), rhs.GetRows(), 0.0,
+        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
+            1.0, lhs.GetRawPtr(), lhs.GetLeadingDimension(), rhs.GetRawPtr(), rhs.GetLeadingDimension(), 0.0,
             result.GetRawPtr(), lhs.GetRows());
     }
     
@@ -51,9 +51,9 @@ namespace Nektar
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs)
     {
-        Blas::Dgemm('N', 'N', lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
-            lhs.Scale()*rhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), lhs.GetRows(), 
-            rhs.GetOwnedMatrix()->GetRawPtr(), rhs.GetRows(), 0.0,
+        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
+            lhs.Scale()*rhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), lhs.GetLeadingDimension(), 
+            rhs.GetOwnedMatrix()->GetRawPtr(), rhs.GetLeadingDimension(), 0.0,
             result.GetRawPtr(), lhs.GetRows());
     }
     
@@ -61,9 +61,9 @@ namespace Nektar
                      const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs)
     {
-        Blas::Dgemm('N', 'N', lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
-            rhs.Scale(), lhs.GetRawPtr(), lhs.GetRows(), 
-            rhs.GetOwnedMatrix()->GetRawPtr(), rhs.GetRows(), 0.0,
+        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
+            rhs.Scale(), lhs.GetRawPtr(), lhs.GetLeadingDimension(), 
+            rhs.GetOwnedMatrix()->GetRawPtr(), rhs.GetLeadingDimension(), 0.0,
             result.GetRawPtr(), lhs.GetRows());
     }
 
@@ -71,9 +71,9 @@ namespace Nektar
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
                      const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
     {
-        Blas::Dgemm('N', 'N', lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
-            lhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), lhs.GetRows(), 
-            rhs.GetRawPtr(), rhs.GetRows(), 0.0,
+        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
+            lhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), lhs.GetLeadingDimension(), 
+            rhs.GetRawPtr(), rhs.GetLeadingDimension(), 0.0,
             result.GetRawPtr(), lhs.GetRows());
     }
     
@@ -81,8 +81,8 @@ namespace Nektar
                           const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
     {
         double* buf = new double[result.GetRows()*result.GetColumns()];
-        Blas::Dgemm('N', 'N', result.GetRows(), rhs.GetColumns(), result.GetColumns(),
-            1.0, result.GetRawPtr(), result.GetRows(), rhs.GetRawPtr(), rhs.GetRows(), 0.0,
+        Blas::Dgemm(result.GetTransposeFlag(), rhs.GetTransposeFlag(), result.GetRows(), rhs.GetColumns(), result.GetColumns(),
+            1.0, result.GetRawPtr(), result.GetLeadingDimension(), rhs.GetRawPtr(), rhs.GetLeadingDimension(), 0.0,
             buf, result.GetRows());
         result = NekMatrix<double, FullMatrixTag, StandardMatrixTag>(result.GetRows(), result.GetColumns(), buf);
         delete buf;

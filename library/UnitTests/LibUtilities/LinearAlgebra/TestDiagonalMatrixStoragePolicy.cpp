@@ -163,37 +163,37 @@ namespace Nektar
             ConstArray<OneD, NekDouble>& cdata = data;
             BOOST_CHECK_EQUAL(data.num_elements(), 3);
             {
-                BOOST_CHECK_EQUAL(1.0, Policy::GetValue(3, 3, 0, 0, data, policyData));
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 0, 1, data, policyData));
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 0, 2, data, policyData));
+                BOOST_CHECK_EQUAL(1.0, Policy::GetValue(3, 3, 0, 0, data, 'N', policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 0, 1, data, 'N', policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 0, 2, data, 'N', policyData));
 
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 1, 0, data, policyData));
-                BOOST_CHECK_EQUAL(2.0, Policy::GetValue(3, 3, 1, 1, data, policyData));
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 1, 2, data, policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 1, 0, data, 'N', policyData));
+                BOOST_CHECK_EQUAL(2.0, Policy::GetValue(3, 3, 1, 1, data, 'N', policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 1, 2, data, 'N', policyData));
 
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 2, 0, data, policyData));
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 2, 1, data, policyData));
-                BOOST_CHECK_EQUAL(3.0, Policy::GetValue(3, 3, 2, 2, data, policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 2, 0, data, 'N', policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 2, 1, data, 'N', policyData));
+                BOOST_CHECK_EQUAL(3.0, Policy::GetValue(3, 3, 2, 2, data, 'N', policyData));
                 
 
-                BOOST_CHECK_EQUAL(1.0, Policy::GetValue(3, 3, 0, 0, cdata, policyData));
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 0, 1, cdata, policyData));
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 0, 2, cdata, policyData));
+                BOOST_CHECK_EQUAL(1.0, Policy::GetValue(3, 3, 0, 0, cdata, 'N', policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 0, 1, cdata, 'N', policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 0, 2, cdata, 'N', policyData));
 
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 1, 0, cdata, policyData));
-                BOOST_CHECK_EQUAL(2.0, Policy::GetValue(3, 3, 1, 1, cdata, policyData));
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 1, 2, cdata, policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 1, 0, cdata, 'N', policyData));
+                BOOST_CHECK_EQUAL(2.0, Policy::GetValue(3, 3, 1, 1, cdata, 'N', policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 1, 2, cdata, 'N', policyData));
 
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 2, 0, cdata, policyData));
-                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 2, 1, cdata, policyData));
-                BOOST_CHECK_EQUAL(3.0, Policy::GetValue(3, 3, 2, 2, cdata, policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 2, 0, cdata, 'N', policyData));
+                BOOST_CHECK_EQUAL(0.0, Policy::GetValue(3, 3, 2, 1, cdata, 'N', policyData));
+                BOOST_CHECK_EQUAL(3.0, Policy::GetValue(3, 3, 2, 2, cdata, 'N', policyData));
             }
 
             #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
             {
-                BOOST_CHECK_THROW(Policy::GetValue(3,3,3,4,data, policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::GetValue(3,3,4,3,data, policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::GetValue(3,3,4,4,data, policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::GetValue(3,3,3,4,data, 'N', policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::GetValue(3,3,4,3,data, 'N', policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::GetValue(3,3,4,4,data, 'N', policyData), ErrorUtil::NekError);
             }
             #endif
         }
@@ -207,33 +207,33 @@ namespace Nektar
             BOOST_CHECK_EQUAL(data.num_elements(), 3);
 
             {
-                BOOST_CHECK_EQUAL(1.0, Policy::GetValue(3, 3, 0, 0, data, policyData));
-                Policy::SetValue(3, 3, 0, 0, data, 100.0, policyData);
-                BOOST_CHECK_EQUAL(100.0, Policy::GetValue(3, 3, 0, 0, data, policyData));
+                BOOST_CHECK_EQUAL(1.0, Policy::GetValue(3, 3, 0, 0, data, 'N', policyData));
+                Policy::SetValue(3, 3, 0, 0, data, 100.0, 'N', policyData);
+                BOOST_CHECK_EQUAL(100.0, Policy::GetValue(3, 3, 0, 0, data, 'N', policyData));
 
-                BOOST_CHECK_EQUAL(2.0, Policy::GetValue(3, 3, 1, 1, data, policyData));
-                Policy::SetValue(3, 3, 1, 1, data, 101.0, policyData);
-                BOOST_CHECK_EQUAL(101.0, Policy::GetValue(3, 3, 1, 1, data, policyData));
+                BOOST_CHECK_EQUAL(2.0, Policy::GetValue(3, 3, 1, 1, data, 'N', policyData));
+                Policy::SetValue(3, 3, 1, 1, data, 101.0, 'N', policyData);
+                BOOST_CHECK_EQUAL(101.0, Policy::GetValue(3, 3, 1, 1, data, 'N', policyData));
 
-                BOOST_CHECK_EQUAL(3.0, Policy::GetValue(3, 3, 2, 2, data, policyData));
-                Policy::SetValue(3, 3, 2, 2, data, 103.0, policyData);
-                BOOST_CHECK_EQUAL(103.0, Policy::GetValue(3, 3, 2, 2, data, policyData));
+                BOOST_CHECK_EQUAL(3.0, Policy::GetValue(3, 3, 2, 2, data, 'N', policyData));
+                Policy::SetValue(3, 3, 2, 2, data, 103.0, 'N', policyData);
+                BOOST_CHECK_EQUAL(103.0, Policy::GetValue(3, 3, 2, 2, data, 'N', policyData));
             }
 
             {
-                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 0, 1, data, 1.0, policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 0, 2, data, 1.0, policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 1, 0, data, 1.0, policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 1, 2, data, 1.0, policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 2, 0, data, 1.0, policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 2, 1, data, 1.0, policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 0, 1, data, 1.0, 'N', policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 0, 2, data, 1.0, 'N', policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 1, 0, data, 1.0, 'N', policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 1, 2, data, 1.0, 'N', policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 2, 0, data, 1.0, 'N', policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::SetValue(3, 3, 2, 1, data, 1.0, 'N', policyData), ErrorUtil::NekError);
             }
 
             #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
             {
-                BOOST_CHECK_THROW(Policy::SetValue(3,3,3,3,data, 1.0, policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::SetValue(3,3,4,3,data, 1.0, policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::SetValue(3,3,4,4,data, 1.0, policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::SetValue(3,3,3,3,data, 1.0, 'N', policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::SetValue(3,3,4,3,data, 1.0, 'N', policyData), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(Policy::SetValue(3,3,4,4,data, 1.0, 'N', policyData), ErrorUtil::NekError);
             }
             #endif
         }
@@ -249,19 +249,19 @@ namespace Nektar
 
                 unsigned int curRow = 0; 
                 unsigned int curColumn = 0;
-                boost::tie(curRow, curColumn) = Policy::Advance(4, 4, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(4, 4, curRow, curColumn, 'N', policyData);
                 BOOST_CHECK_EQUAL(1, curRow);
                 BOOST_CHECK_EQUAL(1, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(4, 4, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(4, 4, curRow, curColumn, 'N', policyData);
                 BOOST_CHECK_EQUAL(2, curRow);
                 BOOST_CHECK_EQUAL(2, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(4, 4, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(4, 4, curRow, curColumn, 'N', policyData);
                 BOOST_CHECK_EQUAL(3, curRow);
                 BOOST_CHECK_EQUAL(3, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn, 'N', policyData);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curColumn);
             }
@@ -272,7 +272,7 @@ namespace Nektar
 
                 unsigned int curRow = 0; 
                 unsigned int curColumn = 0;
-                boost::tie(curRow, curColumn) = Policy::Advance(1, 1, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(1, 1, curRow, curColumn, 'N', policyData);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curColumn);
             }
@@ -286,10 +286,10 @@ namespace Nektar
             NekDouble buf[] = {8.0};
             Array<OneD, NekDouble> data = Policy::Initialize(1, 1, buf, policyData);
 
-            Policy::Invert(1, 1, data, policyData);
-            BOOST_CHECK_EQUAL(1.0/8.0, Policy::GetValue(1, 1, 0, 0, data, policyData));
-            Policy::Invert(1, 1, data, policyData);
-            BOOST_CHECK_EQUAL(8.0, Policy::GetValue(1, 1, 0, 0, data, policyData));
+            Policy::Invert(1, 1, data, 'N', policyData);
+            BOOST_CHECK_EQUAL(1.0/8.0, Policy::GetValue(1, 1, 0, 0, data, 'N', policyData));
+            Policy::Invert(1, 1, data, 'N', policyData);
+            BOOST_CHECK_EQUAL(8.0, Policy::GetValue(1, 1, 0, 0, data, 'N', policyData));
         }
 
         BOOST_AUTO_TEST_CASE(TestTwoByTwoMatrixInversion)
@@ -299,12 +299,12 @@ namespace Nektar
 
             NekDouble buf[] = {8.0, 10.0, 17.0, 2.0};
             Array<OneD, NekDouble> data = Policy::Initialize(4, 4, buf, policyData);
-            Policy::Invert(4, 4, data, policyData);
+            Policy::Invert(4, 4, data, 'N', policyData);
 
-            BOOST_CHECK_CLOSE(1.0/8.0, Policy::GetValue(4, 4, 0, 0, data, policyData), .0001);
-            BOOST_CHECK_CLOSE(1.0/10.0, Policy::GetValue(4, 4, 1, 1, data, policyData), .0001);
-            BOOST_CHECK_CLOSE(1.0/17.0, Policy::GetValue(4, 4, 2, 2, data, policyData), .0001);
-            BOOST_CHECK_CLOSE(1.0/2.0, Policy::GetValue(4, 4, 3, 3, data, policyData), .0001);
+            BOOST_CHECK_CLOSE(1.0/8.0, Policy::GetValue(4, 4, 0, 0, data, 'N', policyData), .0001);
+            BOOST_CHECK_CLOSE(1.0/10.0, Policy::GetValue(4, 4, 1, 1, data, 'N', policyData), .0001);
+            BOOST_CHECK_CLOSE(1.0/17.0, Policy::GetValue(4, 4, 2, 2, data, 'N', policyData), .0001);
+            BOOST_CHECK_CLOSE(1.0/2.0, Policy::GetValue(4, 4, 3, 3, data, 'N', policyData), .0001);
         }
     }
 }

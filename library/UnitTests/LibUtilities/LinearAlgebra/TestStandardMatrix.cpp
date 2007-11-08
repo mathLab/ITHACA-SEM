@@ -137,6 +137,87 @@ namespace Nektar
 
             NekMatrix<double> result = lhs+middle+rhs;
         }
+
+        BOOST_AUTO_TEST_CASE(TestTransposedMultiplication)
+        {
+            {
+                unsigned int buf1[] = { 1, 4,
+                                  2, 5,
+                                  3, 6};
+                unsigned int buf2[] = { 10, 11, 12,
+                                  13, 14, 15};
+
+                unsigned int result_buf[] = {68, 167, 
+                                       86, 212};
+
+                unsigned int transposed_result_buf[] = {62, 85, 108,
+                                                  67, 92, 117,
+                                                  72, 99, 126};
+
+                NekMatrix<unsigned int> m1(2, 3, buf1);
+                NekMatrix<unsigned int> m2(3, 2, buf2);
+                NekMatrix<unsigned int> expected_result(2, 2, result_buf);
+                NekMatrix<unsigned int> expected_transposed_result(3, 3, transposed_result_buf);
+
+                BOOST_CHECK_EQUAL(expected_result, m1*m2);
+                m1.Transpose();
+                m2.Transpose();
+                BOOST_CHECK_EQUAL(expected_transposed_result, m1*m2);
+                m1.Transpose();
+                m2.Transpose();
+                BOOST_CHECK_EQUAL(expected_result, m1*m2);
+
+                NekMatrix<unsigned int> tm1 = Transpose(m1);
+                NekMatrix<unsigned int> tm2 = Transpose(m2);
+                BOOST_CHECK_EQUAL(expected_result, m1*m2);
+                BOOST_CHECK_EQUAL(expected_transposed_result, tm1*tm2);
+            }
+
+            {
+                double buf1[] = { 1, 4,
+                                  2, 5,
+                                  3, 6};
+                double buf2[] = { 10, 11, 12,
+                                  13, 14, 15};
+
+                double transposed_buf1[] = {1, 2, 3,
+                                            4, 5, 6};
+
+                double transposed_buf2[] = {10, 13,
+                                            11, 14,
+                                            12, 15};
+
+                double result_buf[] = {68, 167, 
+                                       86, 212};
+
+                double transposed_result_buf[] = {62, 85, 108,
+                                                  67, 92, 117,
+                                                  72, 99, 126};
+
+                NekMatrix<double> m1(2, 3, buf1);
+                NekMatrix<double> m2(3, 2, buf2);
+                NekMatrix<double> transposed_m1(3, 2, transposed_buf1);
+                NekMatrix<double> transposed_m2(2, 3, transposed_buf2);
+
+                NekMatrix<double> expected_result(2, 2, result_buf);
+                NekMatrix<double> expected_transposed_result(3, 3, transposed_result_buf);
+
+                BOOST_CHECK_EQUAL(expected_result, m1*m2);
+                BOOST_CHECK_EQUAL(expected_transposed_result, transposed_m1*transposed_m2);
+                m1.Transpose();
+                m2.Transpose();
+                BOOST_CHECK_EQUAL(expected_transposed_result, m1*m2);
+                m1.Transpose();
+                m2.Transpose();
+                BOOST_CHECK_EQUAL(expected_result, m1*m2);
+
+                NekMatrix<double> tm1 = Transpose(m1);
+                NekMatrix<double> tm2 = Transpose(m2);
+                BOOST_CHECK_EQUAL(expected_result, m1*m2);
+                BOOST_CHECK_EQUAL(expected_transposed_result, tm1*tm2);
+            }
+            
+        }
     }
 
 }

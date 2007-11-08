@@ -417,6 +417,199 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(result, expected_result);
                 BOOST_CHECK_EQUAL(6, result.GetDimension());
             }
+
+            {
+                double m_buf[] = {1, 4, 7,
+                                   2, 5, 8,
+                                   3, 6, 9};
+                double v_buf[] = {10, 11, 12};
+                double expected_result_buf[] = {68, 167, 266};
+                double expected_transpose_result_buf[] = {138, 171, 204};
+
+                NekMatrix<double> m(3, 3, m_buf);
+                NekVector<double> v_variable(3, v_buf);
+                NekVector<double, 3> v_constant(v_buf);
+                NekVector<double> expected_result(3, expected_result_buf);
+                NekVector<double> expected_transpose_result(3, expected_transpose_result_buf);
+
+                BOOST_CHECK_EQUAL(m*v_variable, expected_result);
+                BOOST_CHECK_EQUAL(m*v_constant, expected_result);
+
+                m.Transpose();
+                BOOST_CHECK_EQUAL(m*v_variable, expected_transpose_result);
+                BOOST_CHECK_EQUAL(m*v_constant, expected_transpose_result);
+                
+                m.Transpose();
+                BOOST_CHECK_EQUAL(m*v_variable, expected_result);
+                BOOST_CHECK_EQUAL(m*v_constant, expected_result);
+
+                NekMatrix<double> transposed = Transpose(m);
+                BOOST_CHECK_EQUAL(transposed*v_variable, expected_transpose_result);
+                BOOST_CHECK_EQUAL(transposed*v_constant, expected_transpose_result);
+            }
+
+            {
+                double m_buf[] = {1, 4, 
+                                  2, 5,
+                                  3, 6};
+                double v_non_transposed_buf[] = {10, 11, 12};
+                double v_transposed_buf[] = {20, 21};
+                double expected_result_buf[] = {68, 167};
+                double expected_transpose_result_buf[] = {104, 145, 186};
+
+                NekMatrix<double> m(2, 3, m_buf);
+                NekVector<double> v_non_transposed_variable(3, v_non_transposed_buf);
+                NekVector<double, 3> v_non_transposed_constant(v_non_transposed_buf);
+                NekVector<double> v_transposed_variable(2, v_transposed_buf);
+                NekVector<double, 2> v_transposed_constant(v_transposed_buf);
+                NekVector<double> expected_result(2, expected_result_buf);
+                NekVector<double> expected_transpose_result(3, expected_transpose_result_buf);
+
+                BOOST_CHECK_EQUAL(m*v_non_transposed_variable, expected_result);
+                BOOST_CHECK_EQUAL(m*v_non_transposed_constant, expected_result);
+
+                m.Transpose();
+                BOOST_CHECK_EQUAL(m*v_transposed_variable, expected_transpose_result);
+                BOOST_CHECK_EQUAL(m*v_transposed_constant, expected_transpose_result);
+                
+                m.Transpose();
+                BOOST_CHECK_EQUAL(m*v_non_transposed_variable, expected_result);
+                BOOST_CHECK_EQUAL(m*v_non_transposed_constant, expected_result);
+
+                NekMatrix<double> transposed = Transpose(m);
+                BOOST_CHECK_EQUAL(transposed*v_transposed_variable, expected_transpose_result);
+                BOOST_CHECK_EQUAL(transposed*v_transposed_constant, expected_transpose_result);
+            }
+
+
+            {
+                //unsigned int matrix_buf[] = {1.0, 2.0, 3.0,
+                //                    4.0, 5.0, 6.0,
+                //                    7.0, 8.0, 9.0};
+                unsigned int matrix_buf[] = {1, 4, 7,
+                                       2, 5, 8,
+                                       3, 6, 9};
+                unsigned int vector_buf[] = {20, 30, 40};
+                
+                NekMatrix<unsigned int> m(3, 3, matrix_buf);
+                NekVector<unsigned int> v(3, vector_buf);
+                NekVector<unsigned int> result = m*v;
+                
+                unsigned int result_buf[] = {200, 470, 740};
+                NekVector<unsigned int> expected_result(3, result_buf);
+                BOOST_CHECK_EQUAL(result, expected_result);
+                BOOST_CHECK_EQUAL(3, result.GetDimension());
+            }
+            
+            {
+                //unsigned int matrix_buf[] = {1.0, 2.0, 3.0,
+                //                    4.0, 5.0, 6.0,
+                //                    7.0, 8.0, 9.0};
+                unsigned int matrix_buf[] = {1, 4, 7,
+                                       2, 5, 8,
+                                       3, 6, 9};
+                unsigned int vector_buf[] = {20, 30, 40};
+                
+                boost::shared_ptr<NekMatrix<unsigned int> > m(new NekMatrix<unsigned int>(3, 3, matrix_buf));
+                NekMatrix<NekMatrix<unsigned int>, FullMatrixTag, ScaledMatrixTag> s(2, m);
+                NekVector<unsigned int> v(3, vector_buf);
+                NekVector<unsigned int> result = s*v;
+                
+                unsigned int result_buf[] = {400, 940, 1480};
+                NekVector<unsigned int> expected_result(3, result_buf);
+                BOOST_CHECK_EQUAL(result, expected_result);
+                BOOST_CHECK_EQUAL(3, result.GetDimension());
+            }
+            
+            {
+                //unsigned int m1_buf[] = {1.0, 2.0, 3.0, 4.0};
+                //unsigned int m2_buf[] = {5.0, 6.0, 7.0, 8.0};
+                //unsigned int m3_buf[] = {9.0, 10.0, 11.0, 12.0};
+                unsigned int m1_buf[] = {1, 3, 2, 4};
+                unsigned int m2_buf[] = {5, 7, 6, 8};
+                unsigned int m3_buf[] = {9, 11, 10, 12};
+                unsigned int vector_buf[] = {20, 30};
+                
+                boost::shared_ptr<NekMatrix<unsigned int> > m1(new NekMatrix<unsigned int>(2, 2, m1_buf));
+                boost::shared_ptr<NekMatrix<unsigned int> > m2(new NekMatrix<unsigned int>(2, 2, m2_buf));
+                boost::shared_ptr<NekMatrix<unsigned int> > m3(new NekMatrix<unsigned int>(2, 2, m3_buf));
+                
+                NekMatrix<NekMatrix<unsigned int>, FullMatrixTag, BlockMatrixTag> b(3, 1, 2, 2);
+                b.SetBlock(0,0,m1);
+                b.SetBlock(1,0,m2);
+                b.SetBlock(2,0,m3);
+                
+                NekVector<unsigned int> v(2, vector_buf);
+                NekVector<unsigned int> result = b*v;
+                
+                unsigned int result_buf[] = {80, 180, 280, 380, 480, 580};
+                NekVector<unsigned int> expected_result(6, result_buf);
+                BOOST_CHECK_EQUAL(result, expected_result);
+                BOOST_CHECK_EQUAL(6, result.GetDimension());
+            }
+
+            {
+                unsigned int m_buf[] = {1, 4, 7,
+                                   2, 5, 8,
+                                   3, 6, 9};
+                unsigned int v_buf[] = {10, 11, 12};
+                unsigned int expected_result_buf[] = {68, 167, 266};
+                unsigned int expected_transpose_result_buf[] = {138, 171, 204};
+
+                NekMatrix<unsigned int> m(3, 3, m_buf);
+                NekVector<unsigned int> v_variable(3, v_buf);
+                NekVector<unsigned int, 3> v_constant(v_buf);
+                NekVector<unsigned int> expected_result(3, expected_result_buf);
+                NekVector<unsigned int> expected_transpose_result(3, expected_transpose_result_buf);
+
+                BOOST_CHECK_EQUAL(m*v_variable, expected_result);
+                BOOST_CHECK_EQUAL(m*v_constant, expected_result);
+
+                m.Transpose();
+                BOOST_CHECK_EQUAL(m*v_variable, expected_transpose_result);
+                BOOST_CHECK_EQUAL(m*v_constant, expected_transpose_result);
+                
+                m.Transpose();
+                BOOST_CHECK_EQUAL(m*v_variable, expected_result);
+                BOOST_CHECK_EQUAL(m*v_constant, expected_result);
+
+                NekMatrix<unsigned int> transposed = Transpose(m);
+                BOOST_CHECK_EQUAL(transposed*v_variable, expected_transpose_result);
+                BOOST_CHECK_EQUAL(transposed*v_constant, expected_transpose_result);
+            }
+
+            {
+                unsigned int m_buf[] = {1, 4, 
+                                        2, 5,
+                                        3, 6};
+                unsigned int v_non_transposed_buf[] = {10, 11, 12};
+                unsigned int v_transposed_buf[] = {20, 21};
+                unsigned int expected_result_buf[] = {68, 167};
+                unsigned int expected_transpose_result_buf[] = {104, 145, 186};
+
+                NekMatrix<unsigned int> m(2, 3, m_buf);
+                NekVector<unsigned int> v_non_transposed_variable(3, v_non_transposed_buf);
+                NekVector<unsigned int, 3> v_non_transposed_constant(v_non_transposed_buf);
+                NekVector<unsigned int> v_transposed_variable(2, v_transposed_buf);
+                NekVector<unsigned int, 2> v_transposed_constant(v_transposed_buf);
+                NekVector<unsigned int> expected_result(2, expected_result_buf);
+                NekVector<unsigned int> expected_transpose_result(3, expected_transpose_result_buf);
+
+                BOOST_CHECK_EQUAL(m*v_non_transposed_variable, expected_result);
+                BOOST_CHECK_EQUAL(m*v_non_transposed_constant, expected_result);
+
+                m.Transpose();
+                BOOST_CHECK_EQUAL(m*v_transposed_variable, expected_transpose_result);
+                BOOST_CHECK_EQUAL(m*v_transposed_constant, expected_transpose_result);
+                
+                m.Transpose();
+                BOOST_CHECK_EQUAL(m*v_non_transposed_variable, expected_result);
+                BOOST_CHECK_EQUAL(m*v_non_transposed_constant, expected_result);
+
+                NekMatrix<unsigned int> transposed = Transpose(m);
+                BOOST_CHECK_EQUAL(transposed*v_transposed_variable, expected_transpose_result);
+                BOOST_CHECK_EQUAL(transposed*v_transposed_constant, expected_transpose_result);
+            }
         }
 
         BOOST_AUTO_TEST_CASE(TestVectorConstructorsWithSizeArguments)

@@ -319,7 +319,7 @@ namespace Nektar
 
             void Transpose() 
             {
-                PerformRowColumnInterchange();
+                this->PerformRowColumnInterchange();
                 if( m_transpose == 'N' )
                 {
                     m_transpose = 'T';
@@ -334,11 +334,11 @@ namespace Nektar
             {
                 if( m_transpose == 'N' )
                 {
-                    return GetRows();
+                    return this->GetRows();
                 }
                 else
                 {
-                    return GetColumns();
+                    return this->GetColumns();
                 }
             }
 

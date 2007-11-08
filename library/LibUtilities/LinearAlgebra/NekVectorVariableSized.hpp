@@ -385,21 +385,6 @@ namespace Nektar
                 m_data[2] = val;
             }
 
-            bool operator==(const NekVector<DataType, 0, space>& rhs) const
-            {
-                if( GetDimension() != rhs.GetDimension() )
-                {
-                    return false;
-                }
-
-                return std::equal(m_data.get(), m_data.get()+GetDimension(), rhs.m_data.get());
-            }
-
-            bool operator!=(const NekVector<DataType, 0, space>& rhs) const
-            {
-                return !(*this == rhs);
-            }
-
             /// Arithmetic Routines
 
             // Unitary operators

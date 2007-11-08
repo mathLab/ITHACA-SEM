@@ -252,16 +252,6 @@ namespace Nektar
                 m_impl[3] = val;
             }
 
-            bool operator==(const NekVector<DataType, dim, space>& rhs) const
-            {
-                return std::equal(m_impl, m_impl+dim, rhs.m_impl);
-            }
-
-            bool operator!=(const NekVector<DataType, dim, space>& rhs) const
-            {
-                return !(*this == rhs);
-            }
-
             /// Arithmetic Routines
 
             // Unitary operators

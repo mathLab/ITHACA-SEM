@@ -214,6 +214,24 @@ namespace Nektar
         return result;
     }
 
+    template<typename DataType, unsigned int lhsDim, unsigned int rhsDim, unsigned int space>
+    bool operator==(const NekVector<DataType, lhsDim, space>& lhs,
+                    const NekVector<DataType, rhsDim, space>& rhs)
+    {
+        if( lhs.GetDimension() != rhs.GetDimension() )
+        {
+            return false;
+        }
+        
+        return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+
+    template<typename DataType, unsigned int lhsDim, unsigned int rhsDim, unsigned int space>
+    bool operator!=(const NekVector<DataType, lhsDim, space>& lhs,
+                    const NekVector<DataType, rhsDim, space>& rhs)
+    {
+        return !(lhs == rhs);
+    }
 
 //     template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, unsigned int space, unsigned int dim>
 //     NekVector<DataType, dim, space> operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs,
@@ -283,6 +301,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.21  2007/10/28 18:29:21  bnelson
+    Temporarily enabled expression templates for vectors.
+
     Revision 1.20  2007/08/24 18:13:48  bnelson
     Removed various old matrix files.
 

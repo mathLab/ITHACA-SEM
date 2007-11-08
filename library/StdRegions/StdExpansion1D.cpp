@@ -95,8 +95,7 @@ namespace Nektar
         
         I = ExpPointsProperties(0)->GetI(Lcoord);
 
-        val = Blas::Ddot(m_base[0]->GetNumPoints(),&((*I).GetPtr())[0],
-                 1,&m_phys[0],1);
+        val = Blas::Ddot(m_base[0]->GetNumPoints(), &((*I).GetPtr())[0], 1, &m_phys[0], 1);
         
         return val;    
     }
@@ -106,6 +105,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.19  2007/07/20 02:16:53  bnelson
+ * Replaced boost::shared_ptr with Nektar::ptr
+ *
  * Revision 1.18  2007/05/28 08:35:26  sherwin
  * Updated for localregions up to Project1D
  *

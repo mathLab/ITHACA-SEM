@@ -67,61 +67,151 @@ namespace Nektar
     { 
     }
     
+    namespace {    
+        // Physical tenser terivative based on Spen's book page 151.
+        void EasyDerivatives(const ConstArray<OneD, NekDouble> &inarray, 
+                         Array<OneD, NekDouble> &outarray_dx, 
+                         Array<OneD, NekDouble> &outarray_dy, 
+                         Array<OneD, NekDouble> &outarray_dz, 
+                         int Qx, int Qy, int Qz, DNekMatSharedPtr derivativeMatrix[3])
+        {
+                        
+            Array<OneD, NekDouble> wsp = Array<OneD, NekDouble>(Qx*Qy*Qz);
+    
+            // copy inarray to wsp in case inarray is used as outarray
+            Vmath::Vcopy(Qx*Qy*Qz, &inarray[0], 1, &wsp[0], 1);
+            
+            Array<OneD, NekDouble> & u = wsp;
+            
+            double *Dx = &(derivativeMatrix[0]->GetPtr())[0];            
+            double *Dy = &(derivativeMatrix[1]->GetPtr())[0];            
+            double *Dz = &(derivativeMatrix[2]->GetPtr())[0];            
+                
+                
+            for( int k = 0, ijk = 0; k < Qz; ++k ) {
+                for( int j = 0; j < Qy; ++j ) {
+                    for( int i = 0; i < Qx; ++i, ++ijk ) {
+                        
+                        // calculate du/dx_0
+                        if(outarray_dx.num_elements() > 0 ) {
+                            outarray_dx[ijk] = 0;
+                            for( int p = 0; p < Qx; ++p ) {                            
+                                int pjk = p + Qx*(j + Qy*k);
+                                int ip =  i + Qx*p;
+                                                    
+                                outarray_dx[ijk] += Dx[ip] * u[pjk];
+                                
+//                                 cout<<"u[ " << pjk <<"] = "<<  u[pjk] << endl <<"Dx[ip] = "<<  Dx[ip] << endl;
+//                                 cout<<"outarray_dx[ " << ijk << "] = "<<  outarray_dx[ijk]<<"\n" << endl;
+                            }
+                        }
+                        
+                        
+                        // calculate du/dx_1
+                        if(outarray_dy.num_elements() > 0 ) {
+                            for( int q = 0; q < Qy; ++q ) {
+                                int iqk = i + Qx*(q + Qy*k);
+                                int jq  = j + Qy*q;
+                                                        
+                                outarray_dy[ijk] += Dy[jq] * u[iqk];
+                                
+//                                 cout<<"u[ " << iqk <<"] = "<<  u[iqk] << endl << "Dy[jq] = "<<  Dy[jq] << endl;
+//                                 cout<<"outarray_dy[ " << ijk << "] = "<<  outarray_dy[ijk]<<"\n" << endl;
+                            }
+                        }
+                        
+                        
+                        // calculate du/dx_2
+                        if(outarray_dz.num_elements() > 0 ) {
+                            outarray_dz[ijk] = 0;
+                            for( int r = 0; r < Qz; ++r ) {
+                                int ijr = i + Qx*(j + Qy*r);
+                                int kr  = k + Qz*r;
+                                                    
+                                outarray_dz[ijk] += Dz[kr] * u[ijr];
+                                
+//                                cout<<"u[ " << ijr <<"] = "<<  u[ijr] << endl << "Dz[kr] = "<<  Dz[kr] << endl;
+//                                cout<<"outarray_dz[ " << ijk << "] = "<<  outarray_dz[ijk]<<"\n" << endl;
+                            }
+                        }
+                    }
+                }
+            }
+            
+        }
+        
+                   
+        // This is not working
+        void AlternativeMethodForComputingTheDerivatives(const ConstArray<OneD, NekDouble> &inarray, 
+                         Array<OneD, NekDouble> &outarray_dx, 
+                         Array<OneD, NekDouble> &outarray_dy, 
+                         Array<OneD, NekDouble> &outarray_dz, 
+                         int Qx, int Qy, int Qz, DNekMatSharedPtr derivativeMatrix[3])
+        {
+            
+            Array<OneD, NekDouble> wsp = Array<OneD, NekDouble>(Qx*Qy*Qz);
+    
+            // copy inarray to wsp in case inarray is used as outarray
+            Vmath::Vcopy(Qx*Qy*Qz, &inarray[0], 1, &wsp[0], 1);
+    
+            DNekMatSharedPtr D0,D1,D2;
+            D0 = derivativeMatrix[0];
+            D1 = derivativeMatrix[1];
+            D2 = derivativeMatrix[2];
+            double *Dx = &(derivativeMatrix[0]->GetPtr())[0];            
+            double *Dy = &(derivativeMatrix[1]->GetPtr())[0];            
+            double *Dz = &(derivativeMatrix[2]->GetPtr())[0];            
+   
+    
+            if(outarray_dx.num_elements() > 0)
+            {
+                Dx = &(D0->GetPtr())[0];
+                for(int i=0; i < Qz; ++i)
+                {
+                    Blas::Dgemm('T', 'N', Qx, Qy, Qx, 1.0, Dx, Qx, &wsp[i*Qx*Qy], Qx, 0.0, &outarray_dx[i*Qx*Qy], Qx);
+                }
+            }
+    
+   
+            if(outarray_dy.num_elements() > 0 ) {
+                    Dy = &(D1->GetPtr())[0];                
+                    for(int j=0; j<Qz; ++j){
+                    
+                    Blas:: Dgemm('T','N', Qx, Qy, Qy, 1.0, &wsp[j*Qx*Qy], Qx, Dy, Qy, 0.0, &outarray_dy[j*Qx*Qy], Qx);                   
+                    //  Blas:: Dgemm('N','N', Qx, Qy, Qy, 1.0, &wsp[j*Qx*Qy], Qy, Dy, Qy, 0.0, &outarray_dy[j*Qx*Qy], Qy);    
+                    }            
+            }
+     
+            // calculate du/dx_2
+            if(outarray_dz.num_elements() > 0) {   
+                Dz = &(D2->GetPtr())[0];           
+                for(int k=0; k < Qx*Qy; ++k)
+                {
+                        Blas:: Dgemv('N', Qz, Qz, 1.0, Dz, Qz, &wsp[0]+k, Qx*Qy, 0.0,  &outarray_dz[0]+k, Qx*Qy);
+                }
+            }   
+        }        
+    } // End of anonymous namespace
+
+   
+   
     void StdExpansion3D::PhysTensorDeriv(const ConstArray<OneD, NekDouble> &inarray, 
-                         Array<OneD, NekDouble> &outarray_d0, 
-                         Array<OneD, NekDouble> &outarray_d1, 
-                         Array<OneD, NekDouble> &outarray_d2)
+                         Array<OneD, NekDouble> &outarray_dx, 
+                         Array<OneD, NekDouble> &outarray_dy, 
+                         Array<OneD, NekDouble> &outarray_dz)
     {
-        int    i;
-        int    nquad0 = m_base[0]->GetNumPoints();
-        int    nquad1 = m_base[1]->GetNumPoints();
-        int    nquad2 = m_base[2]->GetNumPoints();
-        DNekMatSharedPtr D0,D1,D2;
-        Array<OneD, NekDouble> wsp;
-            wsp = Array<OneD, NekDouble>(nquad0*nquad1*nquad2);
-
-        // copy inarray to wsp in case inarray is used as outarray
-            Vmath::Vcopy(nquad0*nquad1*nquad2, &inarray[0], 1, &wsp[0], 1);
-
-        D0 = ExpPointsProperties(0)->GetD();
-        D1 = ExpPointsProperties(1)->GetD();
-        D2 = ExpPointsProperties(2)->GetD();
-
-        // calculate du/dx_0
-        if(outarray_d0.num_elements() > 0)
-        {
-            for(i=0; i < nquad2; ++i)
-            {
-    //             Blas::Dgemm('T','N',nquad0,nquad1,nquad0,1.0,&(D0->GetPtr())[0],
-                    Blas::Dgemm('N', 'N', nquad0, nquad1, nquad0, 1.0, &(D0->GetPtr())[0], // change to column major matrix
-                                nquad0, &wsp[0]+i*nquad0*nquad1, nquad0, 0.0,
-                                &outarray_d0[0]+i*nquad0*nquad1, nquad0);
-            }
-        }
-
-        // calculate du/dx_1
-        if(outarray_d1.num_elements() > 0 )
-        {
-            for(i=0; i < nquad2; ++i)
-            {
-    //             Blas:: Dgemm('N','N',nquad0,nquad1,nquad1,1.0,
-                    Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, // change to column major matrix
-                                 &wsp[0]+i*nquad0*nquad1, nquad0, &(D1->GetPtr())[0],
-                                 nquad1, 0.0, &outarray_d1[0]+i*nquad0*nquad1, nquad0);
-            }
-        }
-
-        // calculate du/dx_2
-        if(outarray_d2.num_elements() > 0)
-        {
-            for(i=0; i < nquad0*nquad1; ++i)
-            {
-    //             Blas:: Dgemv('T',nquad2,nquad2,1.0,&(D2->GetPtr())[0],
-                    Blas:: Dgemv('N', nquad2, nquad2, 1.0, &(D2->GetPtr())[0],  // change to column major matrix
-                                  nquad2, &wsp[0]+i, nquad0*nquad1, 0.0,
-                                  &outarray_d2[0]+i, nquad0*nquad1);
-            }
-        }   
+        int    Qx = m_base[0]->GetNumPoints();
+        int    Qy = m_base[1]->GetNumPoints();
+        int    Qz = m_base[2]->GetNumPoints();
+        DNekMatSharedPtr D[3];
+        D[0] = ExpPointsProperties(0)->GetD();
+        D[1] = ExpPointsProperties(1)->GetD();
+        D[2] = ExpPointsProperties(2)->GetD();
+    
+        EasyDerivatives(inarray, outarray_dx, outarray_dy, outarray_dz, Qx, Qy, Qz, D); 
+        
+        // This is not working
+        // AlternativeMethodForComputingTheDerivatives(inarray, outarray_dx, outarray_dy, outarray_dz, Qx, Qy, Qz, D); ;
     }
     
     
@@ -136,21 +226,17 @@ namespace Nektar
         ASSERTL2(coords[2] < -1,"coord[2] < -1");
         ASSERTL2(coords[2] >  1,"coord[2] >  1");
 
-
         int Qx = m_base[0]->GetNumPoints();
         int Qy = m_base[1]->GetNumPoints();
         int Qz = m_base[2]->GetNumPoints();
-
   
-
         Array<OneD, NekDouble> sumFactorization_qr = Array<OneD, NekDouble>(Qy*Qz);
         Array<OneD, NekDouble> sumFactorization_r  = Array<OneD, NekDouble>(Qz);
         
         // Lagrangian interpolation matrix
         DNekMatSharedPtr I;
         double *interpolatingNodes = 0;
-        
-        
+                
          // Interpolate first coordinate direction
         I = ExpPointsProperties(0)->GetI(coords);
         interpolatingNodes = &I->GetPtr()[0];
@@ -161,7 +247,6 @@ namespace Nektar
             sumFactorization_qr[i] =  Blas::Ddot(Qx, interpolatingNodes, 1, &m_phys[ i*Qx ], 1);
         }
 
-
         // Interpolate in second coordinate direction 
         I = ExpPointsProperties(1)->GetI(coords+1);
         interpolatingNodes = &I->GetPtr()[0];
@@ -171,54 +256,13 @@ namespace Nektar
             sumFactorization_r[j] = Blas::Ddot(Qy, interpolatingNodes, 1, &sumFactorization_qr[ j*Qy ], 1);
         }
 
-
-
         // Interpolate in third coordinate direction 
         I = ExpPointsProperties(2)->GetI(coords+2);
-        interpolatingNodes = &I->GetPtr()[0];
+        interpolatingNodes = &I->GetPtr()[0];       
         
-        
-        value = Blas::Ddot(Qz, interpolatingNodes, 1, &sumFactorization_r[0], 1);
-            
+        value = Blas::Ddot(Qz, interpolatingNodes, 1, &sumFactorization_r[0], 1);            
         cout << "Value: = " << value << endl;
-              
-              
-        //val = Blas::Ddot(Qz, &(I->GetPtr())[0], 1, &wsp1[0], 1);
-/*        for(int i = 0; i < Qy*Qz;++i) {
-            cout << "sumFactorization_qr[" << i << "] = " << sumFactorization_qr[i] << endl;            
-        }
-        for(int j =0; j < Qz; ++j) {
-            cout << "sumFactorization_r[" << j << "] = " << sumFactorization_r[j] << endl;
-        }*/
-              
-// /*        for(int j = 0; j < Qx; ++j) {
-//             cout << "I->GetPtr()[" << j << "] = " << I->GetPtr()[j] << endl;
-//         }
-//         for(int j = 0; j < Qx; ++j) {
-//             cout << "m_phys[]" << j << "] = " << m_phys[j] << endl;
-//         }*/
-              
-//         // interpolate first coordinate direction
-//         I = ExpPointsProperties(0)->GetI(coords);
-//         for(int i = 0; i < nq2*nq3;++i)
-//         {
-// //         wsp[i] =  Blas::Ddot(nq1, &(I->GetPtr())[0], 1, &m_phys[0]+i*nq1, 1);
-//             wsp[i] =  Blas::Ddot(nq1, &(I->GetPtr())[0], 1, &m_phys[i*nq1], 1);
-//         }
-// 
-//         // interpolate in second coordinate direction 
-//         I = ExpPointsProperties(1)->GetI(coords+1);
-//         for(int j =0; j < nq3; ++j)
-//         {
-// //             wsp1[j] = Blas::Ddot(nq2, &wsp[0]+j*nq2, 1, &(I->GetPtr())[0], 1);
-//               wsp1[j] = Blas::Ddot(nq2, &(I->GetPtr())[0], 1, &wsp[0]+j*nq2, 1);
-//         }
-// 
-//         // interpolate in third coordinate direction 
-//         I = ExpPointsProperties(2)->GetI(coords+2);
-// //         val = Blas::Ddot(nq3, &wsp1[0], 1, &(I->GetPtr())[0], 1);
-// 
-//             val = Blas::Ddot(nq3, &(I->GetPtr())[0], 1, &wsp1[0], 1);
+
 
         return value;
     }
@@ -228,6 +272,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.13  2007/10/29 20:30:44  ehan
+ * Fixed floating point approximation up to 1-e15 for PhysEvaluate.
+ *
  * Revision 1.12  2007/10/15 20:37:59  ehan
  * Make changes of column major matrix
  *

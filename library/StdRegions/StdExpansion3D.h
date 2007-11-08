@@ -146,7 +146,7 @@ namespace Nektar
                        Array<OneD, NekDouble> &outarray)      = 0;
 
             virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble> &inarray ) = 0;
-            virtual NekDouble v_Evaluate(const ConstArray<OneD, NekDouble> &coords) = 0;
+//             virtual NekDouble v_Evaluate(const ConstArray<OneD, NekDouble> &coords) = 0;
 
             virtual void   v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
                        Array<OneD, NekDouble> &outarray_d0,
@@ -159,7 +159,7 @@ namespace Nektar
                       
             virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
             {
-            return PhysEvaluate3D(coords);
+                return PhysEvaluate3D(coords);
             }
 
         virtual int v_GetCoordim(void)
@@ -176,6 +176,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.10  2007/10/29 20:31:04  ehan
+* Fixed floating point approximation up to 1-e15 for PhysEvaluate.
+*
 * Revision 1.9  2007/07/20 02:16:54  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

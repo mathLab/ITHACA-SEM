@@ -158,8 +158,7 @@ int main(int argc, char *argv[])
     if( regionShape == StdRegions::eTetrahedron ) {
         solution[0] = Tet_sol( t[0], t[1], t[2], P, Q, R ); 
     }
-    
-    // TODO: Implement
+ 
     NekDouble numericSolution = ste->PhysEvaluate(t);
     cout << "Interpolation difference from actual solution at x = ( " << 
         t[0] << ", " << t[1] << ", " << t[2] << " ): " << numericSolution - solution[0] << endl;

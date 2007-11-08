@@ -97,6 +97,10 @@ namespace Nektar
         void IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
                              Array<OneD, NekDouble> &outarray);
 
+        void IProductWRTDerivBase(const int dir,
+                                  const ConstArray<OneD, NekDouble>& inarray,
+                                  Array<OneD, NekDouble> & outarray);
+
         //-----------------------------
         // Differentiation Methods
         //-----------------------------
@@ -123,13 +127,16 @@ namespace Nektar
         void GenMetricInfo();
 
         DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
-
         DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
+
+        DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
+        DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
         SpatialDomains::TriGeomSharedPtr m_geom;
         SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
-        static LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+        LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+        LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
         /** \brief  Inner product of \a inarray over region with respect to
         the expansion basis \a base and return in \a outarray */
@@ -139,6 +146,7 @@ namespace Nektar
                                     Array<OneD, NekDouble> &outarray);
 
     private:
+        TriExp();
 
         virtual StdRegions::ShapeType v_DetShapeType() const
         {
@@ -193,6 +201,13 @@ namespace Nektar
             IProductWRTBase(inarray,outarray);
         }
 
+        virtual void v_IProductWRTDerivBase (const int dir,
+                                             const ConstArray<OneD,NekDouble> &inarray,
+                                             Array<OneD, NekDouble> &outarray)
+        {
+            IProductWRTDerivBase(dir,inarray,outarray);
+        }
+
          /// Virtual call to SegExp::PhysDeriv
         virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
                                     Array<OneD, NekDouble> &out_d0,
@@ -205,10 +220,35 @@ namespace Nektar
                                  Array<OneD, NekDouble> &out_d0,
                                  Array<OneD, NekDouble> &out_d1,
                                  Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
-     {
-             PhysDeriv(inarray, out_d0, out_d1);
-         }
-
+        {
+            PhysDeriv(inarray, out_d0, out_d1);
+        }
+        
+        virtual void v_PhysDeriv(const int dir, 
+                                 const ConstArray<OneD, NekDouble>& inarray,
+                                 Array<OneD, NekDouble> &outarray)
+        {
+            Array<OneD,NekDouble> tmp;
+            switch(dir)
+            {
+            case 0:
+                {
+                    PhysDeriv(inarray, outarray, tmp);   
+                }
+                break;
+            case 1:
+                {
+                    PhysDeriv(inarray, tmp, outarray);   
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
+                }
+                break;
+            }             
+        }
+        
         /// Virtual call to SegExp::FwdTrans
         virtual void v_FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
                                 Array<OneD, NekDouble> &outarray)
@@ -243,14 +283,19 @@ namespace Nektar
         {
             return StdExpansion::L2();
         }
-
-        virtual DNekScalMatSharedPtr v_GetLocMatrix(MatrixKey &mkey)
+        
+        virtual DNekScalMatSharedPtr v_GetLocMatrix(const MatrixKey &mkey)
         {
             return m_matrixManager[mkey];
         }
-
+        
+        virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+        {
+            return m_staticCondMatrixManager[mkey];
+        }
+        
     };
-
+        
     // type defines for use of TriExp in a boost vector
     typedef boost::shared_ptr<TriExp> TriExpSharedPtr;
     typedef std::vector< TriExpSharedPtr > TriExpVector;
@@ -263,6 +308,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.19  2007/07/28 05:09:33  sherwin
+ *    Fixed version with updated MemoryManager
+ *
  *    Revision 1.18  2007/07/22 23:04:19  bnelson
  *    Backed out Nektar::ptr.
  *

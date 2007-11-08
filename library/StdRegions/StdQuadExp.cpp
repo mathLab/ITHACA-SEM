@@ -82,6 +82,33 @@ namespace Nektar
                 inarray,outarray,1);
         }
 
+        void StdQuadExp::IProductWRTDerivBase(const int dir, 
+                                             const ConstArray<OneD, NekDouble>& inarray, 
+                                             Array<OneD, NekDouble> & outarray)
+        {
+            switch(dir)
+            {
+            case 0:
+                {
+                    IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),
+                                    inarray,outarray,1);
+                }
+                break;
+            case 1:
+                {
+                    IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),
+                                    inarray,outarray,1);  
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
+                }
+                break;
+            }             
+        }
+        
+
         void StdQuadExp:: IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
             const ConstArray<OneD, NekDouble>& base1,
             const ConstArray<OneD, NekDouble>& inarray, 
@@ -135,8 +162,8 @@ namespace Nektar
             }
             else
             {
-//                 Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),
-                    Blas::Dgemm('N','N',order0,nquad1,nquad0,1.0,base0.get(), // make column major matrix
+                 Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),
+                             //                    Blas::Dgemm('N','N',order0,nquad1,nquad0,1.0,base0.get(), // make column major matrix
                     nquad0,&tmp[0],nquad0,0.0,&tmp1[0],order0);
             }
 
@@ -146,8 +173,8 @@ namespace Nektar
             }
             else
             {
-//                 Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, &tmp1[0],
-                    Blas::Dgemm('N', 'T',order0,order1, nquad1,1.0, &tmp1[0],//make column major matrix
+                 Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, &tmp1[0],
+                             //                    Blas::Dgemm('N', 'T',order0,order1, nquad1,1.0, &tmp1[0],//make column major matrix
                     order0, base1.get(), nquad1, 0.0, 
                     &outarray[0],order0);
             }
@@ -252,8 +279,8 @@ namespace Nektar
             }
             else
             {
-//                 Blas::Dgemm('N','N', nquad0,order1,order0,1.0, base0.get(),
-                    Blas::Dgemm('N','T', nquad0,order1,order0,1.0, base0.get(), // make column major matrix 
+                 Blas::Dgemm('N','N', nquad0,order1,order0,1.0, base0.get(),
+                             //                    Blas::Dgemm('N','T', nquad0,order1,order0,1.0, base0.get(), // make column major matrix 
                     nquad0, &inarray[0], order0,0.0,&tmp[0], nquad0);
             }
 
@@ -263,8 +290,8 @@ namespace Nektar
             }
             else
             {
-//                 Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &tmp[0],
-                    Blas::Dgemm('N','N', nquad0, nquad1,order1, 1.0, &tmp[0],//make column major matrix
+                Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &tmp[0],
+                            //                    Blas::Dgemm('N','N', nquad0, nquad1,order1, 1.0, &tmp[0],//make column major matrix
                     nquad0, base1.get(), nquad1, 0.0, &outarray[0], 
                     nquad0);
             }    
@@ -357,7 +384,7 @@ namespace Nektar
             }
 
             order0 = m_base[0]->GetNumModes();
-            order1 = m_base[0]->GetNumModes();
+            order1 = m_base[1]->GetNumModes();
 
             // Set up Mapping details
             if((eid == 0)||(eid == 2))
@@ -493,6 +520,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.23  2007/10/15 20:38:54  ehan
+* Make changes of column major matrix
+*
 * Revision 1.22  2007/07/20 02:16:54  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

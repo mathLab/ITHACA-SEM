@@ -102,6 +102,32 @@ namespace Nektar
                 outarray);
         }
 
+        void StdTriExp::IProductWRTDerivBase(const int dir, 
+                                             const ConstArray<OneD, NekDouble>& inarray, 
+                                             Array<OneD, NekDouble> & outarray)
+        {
+            switch(dir)
+            {
+            case 0:
+                {
+                    IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),
+                                    inarray,outarray);
+                }
+                break;
+            case 1:
+                {
+                    IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),
+                                    inarray,outarray);  
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
+                }
+                break;
+            }             
+        }
+
         void StdTriExp:: IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
             const ConstArray<OneD, NekDouble>& base1, 
             const ConstArray<OneD, NekDouble>& inarray, 
@@ -156,15 +182,15 @@ namespace Nektar
             }
 
             // Inner product with respect to 'a' direction 
-//             Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
-                Blas::Dgemm('N','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,//make column major matrix
+             Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
+                         //                Blas::Dgemm('N','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,//make column major matrix
                 base0.get(),nquad0,0.0,&tmp1[0],nquad1);
 
             // Inner product with respect to 'b' direction 
             for(mode=i=0; i < order0; ++i)
             {
-//                 Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
-                    Blas::Dgemv('N',nquad1,order1-i,1.0, base1.get()+mode*nquad1, // make column major matrix
+                Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
+                            //                    Blas::Dgemv('N',nquad1,order1-i,1.0, base1.get()+mode*nquad1, // make column major matrix
                     nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
                     &outarray[0] + mode,1);
                 mode += order1-i;
@@ -249,29 +275,15 @@ namespace Nektar
                 gfac[i] = 2.0/(1-z1[i]);
             }
 
+            PhysTensorDeriv(inarray, out_d0, out_d1);
+            
+            for(i = 0; i < nquad1; ++i)  
+            {
+                Blas::Dscal(nquad0,gfac[i],&out_d0[0]+i*nquad0,1);
+            }
+
             if(out_d1.num_elements() > 0)// if no d1 required do not need to calculate both deriv
             {
-                PhysTensorDeriv(inarray, out_d0, out_d1);
-
-                for(i = 0; i < nquad1; ++i)  
-                {
-                    Blas::Dscal(nquad0,gfac[i],&out_d0[0]+i*nquad0,1);
-                }
-            }
-            else
-            {
-                if(out_d0.num_elements() > 0)// need other local callopsed derivative for d1 
-                {
-                    d0 = Array<OneD, NekDouble>(nquad0*nquad1);
-                }
-
-                PhysTensorDeriv(inarray, d0, out_d1);
-
-                for(i = 0; i < nquad1; ++i)  
-                {
-                    Blas::Dscal(nquad0,gfac[i],&d0[0]+i*nquad0,1);
-                }
-
                 // set up geometric factor: (1_z0)/(1-z1)
                 for(i = 0; i < nquad0; ++i)
                 {
@@ -280,7 +292,7 @@ namespace Nektar
 
                 for(i = 0; i < nquad1; ++i) 
                 {
-                    Vmath::Vvtvp(nquad0,gfac,1,&d0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
+                    Vmath::Vvtvp(nquad0,gfac,1,&out_d0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
                         &out_d1[0]+i*nquad0,1);
                 }    
             }
@@ -310,8 +322,8 @@ namespace Nektar
 
             for(i = mode = 0; i < order0; ++i)
             {
-//                 Blas::Dgemv('N', nquad1,order1-i,1.0,base1.get()+mode*nquad1,
-                    Blas::Dgemv('T', nquad1,order1-i,1.0,base1.get()+mode*nquad1,//make column major matrix
+                Blas::Dgemv('N', nquad1,order1-i,1.0,base1.get()+mode*nquad1,
+                            //                    Blas::Dgemv('T', nquad1,order1-i,1.0,base1.get()+mode*nquad1,//make column major matrix
                     nquad1,&inarray[0]+mode,1,0.0,&tmp[0]+i*nquad1,1);
                 mode += order1-i;
             }
@@ -323,8 +335,8 @@ namespace Nektar
                     &tmp[0]+nquad1,1);
             }
 
-//             Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0.get(),nquad0,
-                Blas::Dgemm('N','N', nquad0,nquad1,order0,1.0, base0.get(),nquad0,  //make column major matrix
+            Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0.get(),nquad0,
+                        //                Blas::Dgemm('N','N', nquad0,nquad1,order0,1.0, base0.get(),nquad0,  //make column major matrix
                 &tmp[0], nquad1,0.0, &outarray[0], nquad0);
         }
 
@@ -542,6 +554,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.23  2007/10/15 20:40:24  ehan
+* Make changes of column major matrix
+*
 * Revision 1.22  2007/07/20 02:16:55  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

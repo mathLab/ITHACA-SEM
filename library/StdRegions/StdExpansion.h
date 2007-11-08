@@ -571,6 +571,13 @@ namespace Nektar
                 v_IProductWRTBase(inarray, outarray);
             }
 
+            void   IProductWRTDerivBase(const int dir, 
+                                         const ConstArray<OneD,NekDouble>& inarray, 
+                                         Array<OneD, NekDouble> &outarray)
+            {
+                v_IProductWRTDerivBase(dir,inarray, outarray);
+            }
+
             /** \brief this function returns the physical coordinates of the
             *  quadrature points of the expansion
             *
@@ -1119,6 +1126,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.67  2007/10/03 11:37:51  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.66  2007/08/29 23:26:49  jfrazier
 * Created non-static manager that shares data across instances.
 *

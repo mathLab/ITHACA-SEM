@@ -187,6 +187,10 @@ namespace Nektar
                                         Array<OneD, NekDouble> &out_d0,
                                         Array<OneD, NekDouble> &out_d1,
                                         Array<OneD, NekDouble> &out_d2) = 0;
+
+            virtual void   v_PhysDeriv(const int dir, 
+                                       const ConstArray<OneD, NekDouble>& inarray,
+                                       Array<OneD, NekDouble> &out_d0) = 0;
             
             virtual void   v_StdPhysDeriv (const ConstArray<OneD, NekDouble>& inarray, 
                                            Array<OneD, NekDouble> &outarray) = 0;
@@ -212,6 +216,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.22  2007/07/22 23:04:26  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.21  2007/07/20 02:16:53  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

@@ -200,10 +200,18 @@ namespace Nektar
                      Array<OneD, NekDouble> &out_d1,
                      Array<OneD, NekDouble> &out_d2) = 0;
 
+         virtual void   v_PhysDeriv(const int dir, 
+                                    const ConstArray<OneD, NekDouble>& inarray,
+                                    Array<OneD, NekDouble> &out_d0) = 0;
+         
          virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
                      Array<OneD, NekDouble> &outarray_d1, 
                      Array<OneD, NekDouble> &outarray_d2) = 0;
 
+         virtual void   v_StdPhysDeriv (const int dir, 
+                                        const ConstArray<OneD, NekDouble>& inarray, 
+                                        Array<OneD, NekDouble> &outarray) = 0;
+         
          virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
             {
             return PhysEvaluate2D(coords);
@@ -219,6 +227,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.17  2007/10/15 20:37:40  ehan
+* Make changes of column major matrix
+*
 * Revision 1.16  2007/07/22 23:04:26  bnelson
 * Backed out Nektar::ptr.
 *

@@ -86,8 +86,8 @@ namespace Nektar
 
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
-                Blas::Dgemm('T', 'T', nquad0, nquad1, nquad0, 1.0,
-//                             Blas::Dgemm('N', 'N', nquad0, nquad1, nquad0, 1.0,//make colomn major 
+                //               Blas::Dgemm('T', 'T', nquad0, nquad1, nquad0, 1.0,
+                            Blas::Dgemm('N', 'N', nquad0, nquad1, nquad0, 1.0,//make colomn major 
                             &(D0->GetPtr())[0], nquad0, &wsp[0], nquad0, 0.0,
                             &outarray_d0[0], nquad0);
             }
@@ -95,8 +95,8 @@ namespace Nektar
             // calculate du/dx_1
             if (outarray_d1.num_elements() > 0)
             {
-                Blas:: Dgemm('T', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,
-//                         Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,//make colomn major matrix                        
+                //               Blas:: Dgemm('T', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,
+                        Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,//make colomn major matrix                        
                          &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
             }
 
@@ -159,7 +159,6 @@ namespace Nektar
                 Vmath::Vmul(nquad1, &tmp[0]+ i, nquad0, w1.get(), 1,
                             &tmp[0] + i, nquad0);
             }
-
             Int = Vmath::Vsum(nquad0 * nquad1, &tmp[0], 1);
 
             return Int;
@@ -171,6 +170,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.17  2007/10/15 20:37:14  ehan
+* Make changes of column major matrix
+*
 * Revision 1.16  2007/09/27 12:55:57  pvos
 * Column major Blas calls corrections
 *

@@ -154,23 +154,6 @@ namespace Nektar
                         mkey.GetNcoeffs(),mkey.GetNodalPointsType());
                     DNekMatSharedPtr mmat = m_stdMatrixManager[masskey];
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*mmat); //Populate standard mass matrix.
-                    cout << "Mass matrix:\n" << *returnval << endl;
-                    cout << "Mass matrix:\n" << *mmat << endl;
-                    cout << "StdMatrixKey:\n" << mkey << endl;
-                    
-                    for( int i = 0; i < 3; ++i ) 
-                    {
-                        ConstArray<OneD, NekDouble> basisData = mkey.GetBasis(i)->GetBdata();
-                        cout << "basis["<<i<<"]: \n";
-                        for( int j = 0; j < basisData.num_elements(); ++j ) 
-                        {
-                            cout << " " << basisData[j];
-                        }
-                        cout << endl;
-                    }
-//                     cout << "basis[0] = " << mkey.GetBasis(0)->GetBdata() << endl;
-//                     cout << "basis[1] = " << mkey.GetBasis(1)->GetBdata() << endl;
-//                     cout << "basis[2] = " << mkey.GetBasis(2)->GetBdata() << endl;
                     returnval->Invert();
                 }
                 break;
@@ -346,7 +329,6 @@ namespace Nektar
                 //Vmath::Vcopy(m_ncoeffs,&tmp[0],1,&((*Mat).GetPtr())[0]+i*m_ncoeffs,1);
                 Vmath::Vcopy(m_ncoeffs,&tmp[0],1, &((*Mat).GetPtr())[0]+i, m_ncoeffs ); // Column Major matrix
             }
-            cout << "Mat = \n" << *Mat << endl;
 
             return Mat;
         }
@@ -396,27 +378,8 @@ namespace Nektar
         {
             Array<OneD, NekDouble> tmp   = Array<OneD, NekDouble>(GetTotPoints());
 
-            cout << "inarray: " << endl;
-            for( int i = 0 ; i < inarray.num_elements(); ++i ) {
-                cout << " " << inarray[i];
-            }
-            cout << endl;
-
-            v_BwdTrans(inarray,tmp);
-            cout << "tmp: " << endl;
-            for( int i = 0 ; i < tmp.num_elements(); ++i ) {
-                cout << " " << double(int(100.0*tmp[i] + 0.5))/100.0;
-            }
-            cout << endl;
-            
+            v_BwdTrans(inarray,tmp);            
             v_IProductWRTBase(tmp, outarray);
-            cout << "outarray: " << endl;
-            for( int i = 0 ; i < outarray.num_elements(); ++i ) {
-//                 cout << " " << outarray[i];
-                cout << " " << double(int(100.0*outarray[i] + 0.5))/100.0;
-            }
-            cout << endl;
-
         }
 
         void StdExpansion::LaplacianMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
@@ -435,7 +398,7 @@ namespace Nektar
                     
                     LaplacianMatrixOp(0,0,inarray,store);
                     LaplacianMatrixOp(1,1,inarray,outarray);
-                    
+                   
                     Vmath::Vadd(m_ncoeffs,&store[0],1,&outarray[0],1,&outarray[0],1);
                 }
                 break;
@@ -604,6 +567,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.56  2007/10/15 20:38:32  ehan
+* Tested standard mass matrix
+*
 * Revision 1.55  2007/10/04 12:10:04  sherwin
 * Update for working version of static condensation in Helmholtz1D and put lambda coefficient on the mass matrix rather than the Laplacian operator.
 *

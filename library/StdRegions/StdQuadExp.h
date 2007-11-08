@@ -90,6 +90,10 @@ namespace Nektar
             void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray);
 
+            void IProductWRTDerivBase(const int dir, 
+                                      const ConstArray<OneD, NekDouble>& inarray, 
+                                      Array<OneD, NekDouble> & outarray);
+            
             /** \brief Calculate the inner product of inarray with respect to
             *  the basis B=base0*base1 and put into outarray
             *
@@ -264,6 +268,13 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
             }
 
+            virtual void v_IProductWRTDerivBase (const int dir, 
+                                                 const ConstArray<OneD,NekDouble> &inarray, 
+                                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTDerivBase(dir,inarray,outarray);
+            }
+
             virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype)
             {
                 return GenMatrix(mtype);
@@ -277,11 +288,61 @@ namespace Nektar
                 PhysDeriv(inarray,out_d0, out_d1);
             }
 
+            virtual void v_PhysDeriv(const int dir, 
+                const ConstArray<OneD, NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray)
+            {
+                Array<OneD,NekDouble> tmp;
+                switch(dir)
+                {
+                case 0:
+                    {
+                        PhysDeriv(inarray, outarray, tmp);   
+                    }
+                    break;
+                case 1:
+                    {
+                        PhysDeriv(inarray, tmp, outarray);   
+                    }
+                    break;
+                default:
+                    {
+                        ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
+                    }
+                    break;
+                }             
+            }
+
             virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
                 Array<OneD, NekDouble> &out_d0,
                 Array<OneD, NekDouble> &out_d1)
             {
                 PhysDeriv(inarray, out_d0,  out_d1);
+            }
+
+            virtual void   v_StdPhysDeriv (const int dir, 
+                                           const ConstArray<OneD, NekDouble>& inarray, 
+                                           Array<OneD, NekDouble> &outarray)
+            {
+                Array<OneD,NekDouble> tmp;
+                switch(dir)
+                {
+                case 0:
+                    {
+                        PhysDeriv(inarray, outarray, tmp);   
+                    }
+                    break;
+                case 1:
+                    {
+                        PhysDeriv(inarray, tmp, outarray);   
+                    }
+                    break;
+                default:
+                    {
+                        ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
+                    }
+                    break;
+                }             
             }
 
             virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
@@ -320,6 +381,7 @@ namespace Nektar
             }
 
         };
+    typedef boost::shared_ptr<StdQuadExp> StdQuadExpSharedPtr;
 
     } //end of namespace
 } //end of namespace
@@ -328,6 +390,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.20  2007/10/03 11:37:51  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.19  2007/07/20 02:16:54  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

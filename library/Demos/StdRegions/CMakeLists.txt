@@ -24,5 +24,15 @@ ADD_NEKTAR_EXECUTABLE(StdTetExpDemo StdTetExpDemoSource)
     TARGET_LINK_LIBRARIES(StdTetExpDemo
     optimized StdRegions debug StdRegions-g    
     )
+    
+SET(StdTetExp_Diff3DSource StdTetExp_Diff3D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdTetExp_Diff3D StdTetExp_Diff3DSource)
+    TARGET_LINK_LIBRARIES(StdTetExp_Diff3D
+    optimized StdRegions debug StdRegions-g    
+    )    
 
-
+# SET(StdProject_Diff2DSource  Project_Diff2D.cpp)
+# ADD_NEKTAR_EXECUTABLE(StdProject_Diff2D StdProject_Diff2DSource)
+#     TARGET_LINK_LIBRARIES(StdProject_Diff2D
+#     optimized StdRegions debug StdRegions-g    
+#     )

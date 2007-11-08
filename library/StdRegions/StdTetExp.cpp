@@ -77,7 +77,6 @@ namespace Nektar
         StdTetExp::StdTetExp( const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc ) :
             StdExpansion3D( getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc)
         {
-
             if(Ba.GetNumModes() >  Bb.GetNumModes())
             {
                 ASSERTL0(false, "order in 'a' direction is higher than order in 'b' direction");
@@ -169,7 +168,8 @@ namespace Nektar
             }
             
 
-            // Inner-Product with respect to the weights: i.e., this is the triple sum of the product of the four inputs over the Hexahedron
+            // Inner-Product with respect to the weights: i.e., this is the triple sum of the product 
+            // of the four inputs over the Hexahedron
             // x-dimension is the row, it is the index that changes the fastest
             // y-dimension is the column
             // z-dimension is the stack, it is the index that changes the slowest
@@ -219,12 +219,14 @@ namespace Nektar
         }
 
 
-        NekDouble StdTetExp::Integral3D(const ConstArray<OneD, NekDouble>& inarray, const ConstArray<OneD, NekDouble>& wx,
-                                        const ConstArray<OneD, NekDouble>& wy, const ConstArray<OneD, NekDouble>& wz)
+        NekDouble StdTetExp::Integral3D(const ConstArray<OneD, NekDouble>& inarray, 
+                                        const ConstArray<OneD, NekDouble>& wx,
+                                        const ConstArray<OneD, NekDouble>& wy, 
+                                        const ConstArray<OneD, NekDouble>& wz)
         {
             return TripleInnerProduct( inarray, wx, wy, wz );
 
-         }
+        }
 
 
         NekDouble StdTetExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
@@ -284,16 +286,18 @@ namespace Nektar
             return Integral3D( inarray, wx, wy_hat, wz_hat );
         }
 
+
         void StdTetExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
         }
 
+
         void StdTetExp::IProductWRTBase(    const ConstArray<OneD, NekDouble>& bx, 
                                             const ConstArray<OneD, NekDouble>& by, 
                                             const ConstArray<OneD, NekDouble>& bz, 
                                             const ConstArray<OneD, NekDouble>& inarray, 
-                                            Array<OneD, NekDouble> & outarray)
+                                            Array<OneD, NekDouble> & outarray )
         {
             int     Qx = m_base[0]->GetNumPoints();
             int     Qy = m_base[1]->GetNumPoints();
@@ -350,8 +354,6 @@ namespace Nektar
                     }
                 }
             }
-
-
         }
 
        void StdTetExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
@@ -402,8 +404,6 @@ namespace Nektar
             const ConstArray<OneD, NekDouble>& by = m_base[1]->GetBdata();
             const ConstArray<OneD, NekDouble>& bz = m_base[2]->GetBdata();
 
-
-
             int p = mode_p, q = mode_q, r = mode_r;
 
             // Determine the index for specifying which mode to use in the basis
@@ -429,131 +429,51 @@ namespace Nektar
 
         }
 
+
+
         //-----------------------------
         // Differentiation Methods
         //-----------------------------
-
-//         void StdTetExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-//             Array<OneD, NekDouble> &out_d0, 
-//             Array<OneD, NekDouble> &out_d1,
-//             Array<OneD, NekDouble> &out_d2)
-//         {
-//             int    i;
-//             int    nquad0 = m_base[0]->GetNumPoints();
-//             int    nquad1 = m_base[1]->GetNumPoints();
-//             int    nquad2 = m_base[2]->GetNumPoints();
-// 
-//             ConstArray<OneD, NekDouble> eta_x, eta_y, eta_z;
-//             Array<OneD, NekDouble> d0;
-//             Array<OneD, NekDouble> wsp1  = Array<OneD, NekDouble>(nquad0*nquad1, 0.0);
-//             NekDouble *gfac = wsp1.get();
-// 
-//             eta_x = ExpPointsProperties(0)->GetZ();
-//             eta_y = ExpPointsProperties(1)->GetZ();
-//             eta_z = ExpPointsProperties(2)->GetZ();
-// 
-//             // set up geometric factor: 2/(1-z1)
-//             for(i = 0; i < nquad1; ++i)
-//             {
-//                 gfac[i] = 2.0/(1-eta_y[i]);
-//             }
-// 
-//             if(out_d1.num_elements() > 0)// if no d1 required do not need to calculate both deriv
-//             {
-//                 PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
-// 
-//                 for(i = 0; i < nquad1; ++i)  
-//                 {
-//                     Blas::Dscal(nquad0,gfac[i],&out_d0[0]+i*nquad0,1);
-//                 }
-//             }
-//             else
-//             {
-//                 if(out_d0.num_elements() > 0)// need other local callopsed derivative for d1 
-//                 {
-//                     d0 = Array<OneD, NekDouble>(nquad0*nquad1, 0.0);
-//                 }
-// 
-//                 PhysTensorDeriv(inarray, d0, out_d1, out_d2);
-// 
-//                 for(i = 0; i < nquad1; ++i)  
-//                 {
-//                     Blas::Dscal(nquad0,gfac[i],&d0[0]+i*nquad0,1);
-//                 }
-// 
-//                 // set up geometric factor: (1_z0)/(1-z1)
-//                 for(i = 0; i < nquad0; ++i)
-//                 {
-//                     gfac[i] = 0.5*(1+eta_x[i]);
-//                 }
-// 
-//                 for(i = 0; i < nquad1; ++i) 
-//                 {
-//                     Vmath::Vvtvp(nquad0,gfac,1,&d0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
-//                         &out_d1[0]+i*nquad0,1);
-//                 }    
-//             }
-//         }
-
-    void StdTetExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
-            Array<OneD, NekDouble> &out_d0, 
-            Array<OneD, NekDouble> &out_d1,
-            Array<OneD, NekDouble> &out_d2)
+               
+    // PhysDerivative implementation based on Spen's book page 152.    
+    void StdTetExp::PhysDeriv(const ConstArray<OneD, NekDouble>& u_physical, 
+            Array<OneD, NekDouble> &out_dxi1, 
+            Array<OneD, NekDouble> &out_dxi2,
+            Array<OneD, NekDouble> &out_dxi3 )
         {
-            int    i;
+
             int    Qx = m_base[0]->GetNumPoints();
             int    Qy = m_base[1]->GetNumPoints();
             int    Qz = m_base[2]->GetNumPoints();
 
-            ConstArray<OneD, NekDouble> eta_x, eta_y, eta_z;
-            Array<OneD, NekDouble> d0;
-            Array<OneD, NekDouble> wsp1  = Array<OneD, NekDouble>(Qx*Qy, 0.0);
-            NekDouble *gfac = wsp1.get();
+            // Compute the physical derivative
+            Array<OneD, NekDouble> out_dEta1(Qx*Qy*Qz,0.0), out_dEta2(Qx*Qy*Qz,0.0), out_dEta3(Qx*Qy*Qz,0.0);
+            PhysTensorDeriv(u_physical, out_dEta1, out_dEta2, out_dEta3);
 
+
+            ConstArray<OneD, NekDouble> eta_x, eta_y, eta_z;
             eta_x = ExpPointsProperties(0)->GetZ();
             eta_y = ExpPointsProperties(1)->GetZ();
             eta_z = ExpPointsProperties(2)->GetZ();
 
-            // set up geometric factor: 2/(1-z1)
-            for(i = 0; i < Qx; ++i)
-            {
-                gfac[i] = 2.0/(1-eta_y[i]);
-            }
-
-            if(out_d1.num_elements() > 0)// if no d1 required do not need to calculate both deriv
-            {
-                PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
-
-                for(i = 0; i < Qy; ++i)  
-                {
-                    Blas::Dscal(Qx,gfac[i],&out_d0[0]+i*Qx,1);
+            
+            for(int k=0, n=0; k<Qz; ++k)
+                for(int j=0; j<Qy; ++j){
+                    for(int i=0; i<Qx; ++i, ++n){
+                    {
+                        out_dxi1[n] = 4.0 / ((1.0 - eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n];
+                        out_dxi2[n] = 2.0*(1.0 + eta_x[i]) / ((1.0-eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n]  +  2.0/(1.0 - eta_z[k])*out_dEta2[n];
+                        out_dxi3[n] = 2.0*(1.0 + eta_x[i]) / ((1.0 - eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n] + (1.0 + eta_y[j]) / (1.0 - eta_z[k])*out_dEta2[n] + out_dEta3[n];
+                        
+                        
+                        //cout << "eta_x["<<i<<"] = " <<  eta_x[i] << ",  eta_y["<<j<<"] = " << eta_y[j] << ", eta_z["<<k<<"] = " <<eta_z[k] << endl;
+                        //cout << "out_dEta1["<<n<<"] = " << out_dEta1[n] << ",  out_dEta2["<<n<<"] = " << out_dEta2[n] << ", out_dEta3["<<n<<"] = " <<out_dEta3[n] << endl;
+                        //cout << "out_dxi1["<<n<<"] = " << out_dxi1[n] << ",  out_dxi2["<<n<<"] = " << out_dxi2[n] << ", out_dxi3["<<n<<"] = " << out_dxi3[n] << endl;
+                        
+                    }
                 }
             }
-            else
-            {
-                if(out_d0.num_elements() > 0)// need other local callopsed derivative for d1 
-                {
-                    d0 = Array<OneD, NekDouble>(Qx*Qy, 0.0);
-                }
-
-                PhysTensorDeriv(inarray, d0, out_d1, out_d2);
-
-                for(i = 0; i < Qy; ++i)  
-                {
-                    Blas::Dscal(Qx,gfac[i],&d0[0]+i*Qx,1);
-                }
-
-                // set up geometric factor: (1_z0)/(1-z1)
-                for(i = 0; i < Qx; ++i)
-                {
-                    gfac[i] = 0.5*(1+eta_x[i]);
-                }
-
-                for(i = 0; i < Qy; ++i) 
-                {
-                    Vmath::Vvtvp(Qx, gfac, 1, &d0[0]+i*Qx, 1, &out_d1[0]+i*Qx, 1, &out_d1[0]+i*Qx, 1);
-                }    
-            }
+                        
         }
 
         ///////////////////////////////
@@ -645,9 +565,7 @@ namespace Nektar
             }
         }
 
-        void StdTetExp::FwdTrans(
-            const ConstArray<OneD, NekDouble>& inarray, 
-            Array<OneD, NekDouble> &outarray)
+        void StdTetExp::FwdTrans( const ConstArray<OneD, NekDouble>& inarray,  Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
 
@@ -656,8 +574,8 @@ namespace Nektar
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
             // copy inarray in case inarray == outarray
-            DNekVec in (m_ncoeffs,outarray);
-            DNekVec out(m_ncoeffs,outarray,eWrapper);
+            DNekVec in (m_ncoeffs, outarray);
+            DNekVec out(m_ncoeffs, outarray, eWrapper);
 
             out = (*matsys)*in;
         }
@@ -697,72 +615,9 @@ namespace Nektar
 
             return  StdExpansion3D::PhysEvaluate3D(eta);  
         }
+        
 
-
-
-        void StdTetExp::WriteToFile(std::ofstream &outfile)
-        {
-            int  i,j;
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<OneD, NekDouble> z0,z1;
-
-            z0 = ExpPointsProperties(0)->GetZ();
-            z1 = ExpPointsProperties(1)->GetZ();
-
-            outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
-            outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
-
-            for(j = 0; j < nquad1; ++j)
-            {
-                for(i = 0; i < nquad0; ++i)
-                {
-                    outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << 
-                        z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
-                }
-            }
-
-        }
-
-        //   I/O routine
-        void StdTetExp::WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int  i,j;
-            int  order0 = m_base[0]->GetNumModes();
-            int  order1 = m_base[1]->GetNumModes();
-            int  cnt = 0;
-            Array<OneD, NekDouble> wsp  = Array<OneD, NekDouble>(order0*order1, 0.0);
-
-            NekDouble *mat = wsp.get(); 
-
-            // put coeffs into matrix and reverse order so that p index is fastest
-            // recall q is fastest for tri's
-
-            Vmath::Zero(order0*order1,mat,1);
-
-            for(i = 0; i < order0; ++i)
-            {
-                for(j = 0; j < order1-i; ++j,cnt++)
-                {
-                    mat[i+j*order1] = m_coeffs[cnt];
-                }
-            }
-
-            outfile <<"Coeffs = [" << " "; 
-
-            for(j = 0; j < order1; ++j)
-            {
-                for(i = 0; i < order0; ++i)
-                {
-                    outfile << mat[j*order0+i] <<" ";
-                }
-                outfile << std::endl; 
-            }
-            outfile << "]" ; 
-        }
-
-        void StdTetExp::GetCoords( Array<OneD, NekDouble> & xi_x, 
-            Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
+        void StdTetExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
         {
             ConstArray<OneD, NekDouble> eta_x = ExpPointsProperties(0)->GetZ();
             ConstArray<OneD, NekDouble> eta_y = ExpPointsProperties(1)->GetZ();
@@ -783,6 +638,84 @@ namespace Nektar
                 }
             }
         }
+
+
+        //TODO: This function need to test
+        void StdTetExp::WriteToFile(std::ofstream &outfile)
+        {
+            int  Qx = m_base[0]->GetNumPoints();
+            int  Qy = m_base[1]->GetNumPoints();
+            int  Qz = m_base[2]->GetNumPoints();
+            
+            ConstArray<OneD, NekDouble> eta_x, eta_y, eta_z;
+            eta_x = ExpPointsProperties(0)->GetZ();
+            eta_y = ExpPointsProperties(1)->GetZ();
+            eta_z = ExpPointsProperties(2)->GetZ();
+
+            outfile << "Variables = z1,  z2,  z3,  Coeffs \n" << std::endl;      
+            outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
+
+            for(int k = 0; k < Qz; ++k) 
+            {
+                for(int j = 0; j < Qy; ++j)
+                {
+                    for(int i = 0; i < Qx; ++i)
+                    {
+                        //outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
+                        outfile <<  (eta_x[i] + 1.0) * (1.0 - eta_y[j]) * (1.0 - eta_z[k]) / 4  -  1.0 <<  " " << eta_z[k] << " " << m_phys[i + Qx*(j + Qy*k)] << std::endl;
+                    }
+                }
+            }
+
+        }
+
+
+        //TODO: This function need to test
+        //   I/O routine        
+        void StdTetExp::WriteCoeffsToFile(std::ofstream &outfile)
+        {
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  order2 = m_base[2]->GetNumModes();
+
+            Array<OneD, NekDouble> wsp  = Array<OneD, NekDouble>(order0*order1*order2, 0.0);
+
+            NekDouble *mat = wsp.get(); 
+
+            // put coeffs into matrix and reverse order so that p index is fastest recall q is fastest for tri's
+            Vmath::Zero(order0*order1*order2, mat, 1);
+
+            for(int i = 0, cnt=0; i < order0; ++i)
+            {
+                for(int j = 0; j < order1-i; ++j)
+                {
+                    for(int k = 0; k < order2-i-j; ++k, cnt++)
+                    {
+//                         mat[i+j*order1] = m_coeffs[cnt];
+                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
+                    }
+                }
+            }
+
+            outfile <<"Coeffs = [" << " "; 
+
+            for(int k = 0; k < order2; ++k)
+            {            
+                for(int j = 0; j < order1; ++j)
+                {
+                    for(int i = 0; i < order0; ++i)
+                    {
+//                         outfile << mat[j*order0+i] <<" ";
+                           outfile << mat[i + order0*(j + order1*k)] <<" ";
+                    }
+                    outfile << std::endl; 
+                }
+            }
+            outfile << "]" ; 
+        }
+        
+
+
 
 
 //            StdMatrix StdTetExp::s_elmtmats;
@@ -813,6 +746,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.5  2007/10/29 20:35:07  ehan
+ * Fixed floating point approximation up to 1-e15 for PhysEvaluate.
+ *
  * Revision 1.4  2007/10/15 20:40:06  ehan
  * Completed Basis, Backward, and Forward transformation
  *

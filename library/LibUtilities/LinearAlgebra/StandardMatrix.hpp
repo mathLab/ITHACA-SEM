@@ -166,6 +166,7 @@ namespace Nektar
                 m_policySpecificData = PolicySpecificDataHolderType();
                 m_transpose = 'N';
                 m_data = data;
+                return *this;
             }
              
             ThisType& operator=(const ThisType& rhs)

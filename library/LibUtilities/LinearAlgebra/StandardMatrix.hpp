@@ -159,6 +159,15 @@ namespace Nektar
             
             // TODO - Copy constructors from other types of matrices.
             
+            ThisType& Assign(unsigned int newRows, unsigned int newColumns, Array<OneD, DataType>& data)
+            {
+                this->Resize(newRows, newColumns);
+                m_wrapperType = eWrapper;
+                m_policySpecificData = PolicySpecificDataHolderType();
+                m_transpose = 'N';
+                m_data = data;
+            }
+             
             ThisType& operator=(const ThisType& rhs)
             {
                 if( this != &rhs )

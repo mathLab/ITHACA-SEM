@@ -22,6 +22,7 @@ SET(USE_BLAS_LAPACK ON CACHE BOOL "Use Blas and lapack routines.")
 SET(USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
 SET(NEKTAR_FULL_DEBUG OFF CACHE BOOL "Enable Full Debugging.")
 SET(NEKTAR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Enable the use of precompiled headers.")
+SET(NEKTAR_BUILD_DEMOS OFF CACHE BOOL "Build Demo Projects")
 
 SET(USE_EXPRESSION_TEMPLATES ON CACHE BOOL "")
 
@@ -249,6 +250,14 @@ MACRO(SET_LAPACK_LINK_LIBRARIES name)
     ENDIF( USE_BLAS_LAPACK )
 ENDMACRO(SET_LAPACK_LINK_LIBRARIES name)
 
-SUBDIRS(LibUtilities LocalRegions MultiRegions SpatialDomains StdRegions Stochastic UnitTests Demos)
+SET(LibrarySubDirs LibUtilities LocalRegions MultiRegions SpatialDomains
+StdRegions Stochastic Profile)
+SET(UnitTestSubDirs UnitTests)
+SET(DemoSubDirs Demos)
+
+SUBDIRS(${LibrarySubDirs} ${UnitTestSubDirs} )
+IF( NEKTAR_BUILD_DEMOS )
+    SUBDIRS(${Demos})
+ENDIF( NEKTAR_BUILD_DEMOS )
 
 CMAKE_EXPORT_BUILD_SETTINGS("Nektar++BuildSettings.cmake")

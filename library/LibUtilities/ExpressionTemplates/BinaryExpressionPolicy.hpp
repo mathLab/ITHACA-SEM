@@ -78,7 +78,8 @@ namespace Nektar
                 // there are a wide variety of diffrent actions which must be taken based upon the 
                 // policy types, operator type, and incoming parent operation type.
                 BinaryExpressionEvaluator<LhsPolicy, RhsPolicy, 
-                                         ResultType, OpType, ParentOpType>::Eval(d.first, d.second, accum);
+                                         ResultType, OpType, 
+                                         ParentOpType>::Eval(d.first, d.second, accum);
             }
             
             static void InitializeMetadata(const DataType& data, MetadataType& m)

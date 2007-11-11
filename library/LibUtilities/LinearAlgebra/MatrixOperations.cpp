@@ -80,12 +80,14 @@ namespace Nektar
     void NekMultiplyEqual(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
                           const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
     {
-        double* buf = new double[result.GetRows()*result.GetColumns()];
+        Array<OneD, double> buf(result.GetRows()*result.GetColumns());
+        //double* buf = new double[result.GetRows()*result.GetColumns()];
         Blas::Dgemm(result.GetTransposeFlag(), rhs.GetTransposeFlag(), result.GetRows(), rhs.GetColumns(), result.GetColumns(),
             1.0, result.GetRawPtr(), result.GetLeadingDimension(), rhs.GetRawPtr(), rhs.GetLeadingDimension(), 0.0,
-            buf, result.GetRows());
-        result = NekMatrix<double, FullMatrixTag, StandardMatrixTag>(result.GetRows(), result.GetColumns(), buf);
-        delete buf;
+            buf.data(), result.GetRows());
+        //result = NekMatrix<double, FullMatrixTag, StandardMatrixTag>(result.GetRows(), result.GetColumns(), buf);
+        result.Assign(result.GetRows(), result.GetColumns(), buf);
+        //delete buf;
     }
 #endif //NEKTAR_USING_BLAS
 }

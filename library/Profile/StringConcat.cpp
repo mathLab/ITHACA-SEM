@@ -85,11 +85,77 @@ void AddStrings(std::string& result, const std::string& str1,
     result = str1 + str2 + str3 + str4 + str5 + str6 + str7;
 }
 
-void AddStringsAccum(std::string& result, const std::string*const strVals, unsigned int n)
+
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2)
 {
-    result = strVals[0];
-    for(unsigned int i = 1; i < n; ++i)
-    {
-        result += strVals[i];
-    }    
+    result = str1;
+    result += str2;
 }
+                                     
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2,
+                const std::string& str3)
+{
+    result = str1;
+    result += str2;
+    result += str3;
+}
+
+                                    
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2,
+                const std::string& str3,
+                const std::string& str4)
+{
+    result = str1;
+    result += str2;
+    result += str3;
+    result += str4;
+}
+                                     
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2,
+                const std::string& str3,
+                const std::string& str4,
+                const std::string& str5)
+{
+    result = str1;
+    result += str2;
+    result += str3;
+    result += str4;
+    result += str5;
+}
+                                                                          
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2,
+                const std::string& str3,
+                const std::string& str4,
+                const std::string& str5,
+                const std::string& str6)
+{
+    result = str1;
+    result += str2;
+    result += str3;
+    result += str4;
+    result += str5;
+    result += str6;
+}
+                                                                                                               
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2,
+                const std::string& str3,
+                const std::string& str4,
+                const std::string& str5,
+                const std::string& str6,
+                const std::string& str7)
+{
+    result = str1;
+    result += str2;
+    result += str3;
+    result += str4;
+    result += str5;
+    result += str6;
+    result += str7;
+}
+

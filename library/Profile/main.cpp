@@ -15,21 +15,21 @@ void Run2StringTests(unsigned int numTests, int stringSize)
     std::string strVals[] = { std::string(stringSize, 'a'), std::string(stringSize, 'a')};
     std::string result;
     
-    cout << "2 String Addition Tests" << endl;
-    cout << "---------------------" << endl;
+    //cout << "2 String Addition Tests" << endl;
+    //cout << "---------------------" << endl;
+    //t.restart();
+    //for(unsigned int i = 0; i < numTests; ++i)
+    //{
+    //    AddStrings(result, strVals[0], strVals[1]);    
+    //}
+    //elapsedTime = t.elapsed();
+    //cout << "Straight Addition - Total : " << elapsedTime << endl;
+    //cout << "Straight Addition - PerOp : " << elapsedTime/(double)numTests << endl;
+    //
     t.restart();
     for(unsigned int i = 0; i < numTests; ++i)
     {
-        AddStrings(result, strVals[0], strVals[1]);    
-    }
-    elapsedTime = t.elapsed();
-    cout << "Straight Addition - Total : " << elapsedTime << endl;
-    cout << "Straight Addition - PerOp : " << elapsedTime/(double)numTests << endl;
-    
-    t.restart();
-    for(unsigned int i = 0; i < numTests; ++i)
-    {
-        AddStringsAccum(result, strVals, 2);
+        AddStringsAccum(result, strVals[0], strVals[1]);
     }
     elapsedTime = t.elapsed();
     cout << "Manual Accumulator - Total : " << elapsedTime << endl;

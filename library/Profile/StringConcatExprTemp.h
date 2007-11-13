@@ -54,8 +54,10 @@ namespace Nektar
             StringMetadata& operator=(const StringMetadata& rhs)
             {
                 m_size = rhs.m_size; 
+                return *this;
             }
             
+            unsigned int GetSize() const { return m_size; }
         private:
             unsigned int m_size;
     };

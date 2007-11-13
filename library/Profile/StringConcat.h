@@ -69,7 +69,41 @@ void AddStrings(std::string& result, const std::string& str1,
                 const std::string& str6,
                 const std::string& str7);
                 
-void AddStringsAccum(std::string& result, const std::string*const strVals, unsigned int n);
+
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2);
+                                     
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2,
+                const std::string& str3);
+                                     
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2,
+                const std::string& str3,
+                const std::string& str4);
+                                     
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2,
+                const std::string& str3,
+                const std::string& str4,
+                const std::string& str5);
+                                                                          
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2,
+                const std::string& str3,
+                const std::string& str4,
+                const std::string& str5,
+                const std::string& str6);
+                                                                                                               
+void AddStringsAccum(std::string& result, const std::string& str1,
+                const std::string& str2,
+                const std::string& str3,
+                const std::string& str4,
+                const std::string& str5,
+                const std::string& str6,
+                const std::string& str7);
+
+
 
 #endif //NEKTAR_PROFILE_STRING_CONCAT_H
 

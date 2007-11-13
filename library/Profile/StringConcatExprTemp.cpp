@@ -36,6 +36,12 @@
 //#include <LibUtilities/ExpressionTemplates/BinaryExpression.hpp>
 //#include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
 
+template<typename ExpressionType>
+void DoAssign(std::string& result, const ExpressionType& exp)
+{
+    result.resize(exp.GetMetadata().GetSize());
+    exp.Apply(result);
+}
 
 void AddStringsExprTemp(std::string& result, const std::string& str1,
                 const std::string& str2)

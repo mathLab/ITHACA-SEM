@@ -76,6 +76,12 @@ namespace Nektar
                 os << data;
             }
     };
+    
+    template<typename DataType>
+    Expression<ConstantExpressionPolicy<DataType> > MakeExpr(const DataType& rhs)
+    {
+        return Expression<ConstantExpressionPolicy<DataType> >(rhs);
+    }
 }
 
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
@@ -83,6 +89,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.10  2007/10/04 03:48:54  bnelson
+    *** empty log message ***
+
     Revision 1.9  2007/08/16 02:14:21  bnelson
     Moved expression templates to the Nektar namespace.
 

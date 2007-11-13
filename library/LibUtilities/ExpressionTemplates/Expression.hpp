@@ -169,6 +169,12 @@ namespace Nektar
                 DataType m_data;
                 MetadataType m_metadata;
         };
+        
+        template<typename DataType, typename PolicyType>
+        void Assign(DataType& result, const Expression<PolicyType>& expr)
+        {
+            expr.Apply(result);
+        }
 
 }
 
@@ -176,6 +182,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.13  2007/10/04 03:48:54  bnelson
+    *** empty log message ***
+
     Revision 1.12  2007/10/03 02:57:39  bnelson
     Removed the restriction on passing temporaries to expressions.
 

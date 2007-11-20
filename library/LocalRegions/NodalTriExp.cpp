@@ -359,7 +359,7 @@ namespace Nektar
 
             // get Mass matrix inverse
             MatrixKey             masskey(StdRegions::eInvMass,
-                                          DetShapeType(),*this,
+                                          DetShapeType(),*this, 0.0,0.0,
                                           m_nodalPointsKey->GetPointsType());
             DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
             
@@ -641,6 +641,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.15  2007/08/11 23:41:21  sherwin
+ *    Various updates
+ *
  *    Revision 1.14  2007/07/31 01:29:43  bnelson
  *    *** empty log message ***
  *

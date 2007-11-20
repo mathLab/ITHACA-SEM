@@ -133,11 +133,20 @@ namespace Nektar
               Array<OneD,NekDouble> &outarray);
 
             NekDouble PhysEvaluate(const ConstArray<OneD,NekDouble>& coord);
-
+            
+            void UDGHelmholtzBoundaryTerms(const NekDouble tau, 
+                                           const ConstArray<OneD,NekDouble> &inarray,
+                                           Array<OneD,NekDouble> outarray,
+                                           bool MatrixForm = false);
+                
         protected:
 
 
             void GenMetricInfo();    
+            
+            DNekMatSharedPtr GenMatrix(StdRegions::MatrixType mtype, 
+                                       NekDouble lambda = NekUnsetDouble,
+                                       NekDouble tau = NekUnsetDouble);
             
             DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
@@ -355,6 +364,14 @@ namespace Nektar
             {
                 return m_staticCondMatrixManager[mkey];
             }
+
+            virtual void v_UDGHelmholtzBoundaryTerms(const NekDouble tau, 
+                                                     const ConstArray<OneD,NekDouble> &inarray,
+                                                     Array<OneD,NekDouble> outarray)
+            {
+                UDGHelmholtzBoundaryTerms(tau,inarray,outarray);
+            }
+            
         };
 
         // type defines for use of SegExp in a boost vector
@@ -368,6 +385,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.24  2007/10/03 11:37:50  sherwin
+// Updates relating to static condensation implementation
+//
 // Revision 1.23  2007/08/10 03:38:15  jfrazier
 // Updated with new rev of NekManager.
 //

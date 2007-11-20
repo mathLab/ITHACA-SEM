@@ -45,11 +45,13 @@ namespace Nektar
                              StdRegions::ShapeType shapeType,
                              StdRegions::StdExpansion &stdExpansion,
                              NekDouble    scalefactor,
+                             NekDouble    constant, 
                              LibUtilities::PointsType nodalType)
         {
             m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion,nodalType);
 
             m_scalefactor = scalefactor;
+            m_constant    = constant;
             m_metricinfo  = stdExpansion.GetMetricInfo(); 
         }
 
@@ -116,6 +118,16 @@ namespace Nektar
                 return true;
             }
 
+            if(lhs.m_constant > rhs.m_constant)
+            {
+                return false;
+            }
+
+            if(lhs.m_constant < rhs.m_constant)
+            {
+                return true;
+            }
+
             return false;
         }
 
@@ -130,6 +142,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.12  2007/07/28 05:09:32  sherwin
+* Fixed version with updated MemoryManager
+*
 * Revision 1.11  2007/07/26 02:39:21  bnelson
 * Fixed Visual C++ compiler errors when compiling in release mode.
 *

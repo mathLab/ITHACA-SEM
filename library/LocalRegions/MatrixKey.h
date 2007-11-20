@@ -52,6 +52,7 @@ namespace Nektar
                        StdRegions::ShapeType shapeType, 
                        StdRegions::StdExpansion &stdExpansion,
                        double scalefactor = 1.0,
+                       double constant = 0.0,
                        LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             virtual ~MatrixKey()
@@ -109,12 +110,18 @@ namespace Nektar
                 return m_scalefactor;
             }
 
+            const double GetConstant() const 
+            {
+                return m_constant;
+            }
+
         protected:
             MatrixKey();
 
             StdRegions::StdMatrixKeySharedPtr     m_stdMatKey;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo; 
             NekDouble                             m_scalefactor;
+            NekDouble                             m_constant;
 
         private:
         };
@@ -128,6 +135,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.12  2007/07/26 02:39:21  bnelson
+* Fixed Visual C++ compiler errors when compiling in release mode.
+*
 * Revision 1.11  2007/07/12 12:53:00  sherwin
 * Updated to have a helmholtz matrix
 *

@@ -100,6 +100,11 @@ namespace Nektar
             eInvNBasisTrans,
             eBwdTrans,
             eHelmholtz,
+            eUnifiedDGHelmholtz,
+            eInvUnifiedDGHelmholtz,
+            eUnifiedDGHelmBndSys,
+            eUnifiedDGLamToQ,
+            eUnifiedDGLamToU,
             SIZE_MatrixType
         };
 
@@ -120,7 +125,10 @@ namespace Nektar
             "NBasisTrans",
             "InvNBasisTrans", 
             "BwdTrans",
-            "Helmholtz"
+            "Helmholtz",
+            "UnifiedDGHelmholz",
+            "UnifiedDGQIprodWRTQ",
+            "UnifiedDGLamToQ"
         };
 
         /** enum list of StdExpansion regions */
@@ -222,6 +230,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.20  2007/07/20 02:16:55  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.19  2007/07/12 12:55:16  sherwin
 * Simplified Matrix Generation
 *

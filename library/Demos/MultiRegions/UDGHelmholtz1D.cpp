@@ -1,13 +1,13 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/DisContField1D.h>
 
 using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    MultiRegions::ContField1DSharedPtr Exp,Fce;
+    MultiRegions::DisContField1DSharedPtr Exp,Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ContField1D>::
+    Exp = MemoryManager<MultiRegions::DisContField1D>::
         AllocateSharedPtr(graph1D,bcs);
     //----------------------------------------------
     
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Setup expansion containing the  forcing function
-    Fce = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(*Exp);
+    Fce = MemoryManager<MultiRegions::DisContField1D>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //----------------------------------------------
   
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     
     //----------------------------------------------
     // Write solution 
-    ofstream outfile("HelmholtzFile1D.dat");
+    ofstream outfile("UDGHelmholtzFile1D.dat");
     Exp->WriteToFile(outfile);
     //----------------------------------------------
     

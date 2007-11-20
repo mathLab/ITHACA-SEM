@@ -65,7 +65,7 @@ namespace Nektar
 
         void GlobalLinSys::Solve(const ConstArray<OneD,NekDouble> &in, 
                                  Array<OneD,NekDouble>  &out,
-                                 LocalToGlobalMapSharedPtr &locToGloMap)
+                                 LocalToGlobalBndryMap  &locToGloMap)
         {
             switch(m_linSysKey.GetGlobalSysSolnType())
             {
@@ -79,13 +79,9 @@ namespace Nektar
             case eDirectStaticCond:
                 {
                     int i;
-                    int nbndry  = m_linSys->GetRows();
+                    int nDirBCs = locToGloMap.GetNumDirichletBCs();
+                    int nbndry  = locToGloMap.GetTotGloBndDofs() - nDirBCs; 
                     int nint    = in.num_elements() -nbndry; 
-                    int nDirBCs = locToGloMap->GetNumDirichletBCs();
-                    DNekScalBlkMat &BinvD = *m_blkMatrices[0];
-                    DNekScalBlkMat &C     = *m_blkMatrices[1];
-                    DNekScalBlkMat &invD  = *m_blkMatrices[2];
-                    
                     Array<OneD,NekDouble>  offset;  
                     DNekVec Fbnd(nbndry,in);
                     DNekVec Vloc;
@@ -96,9 +92,11 @@ namespace Nektar
 
                     if(nbndry)
                     {
+                        DNekScalBlkMat &BinvD = *m_blkMatrices[0];
+                    
                         // construct boundary forcing 
                         Vloc = BinvD*Fint;
-                        locToGloMap->AssembleBnd(Vloc,Vbnd,nDirBCs);
+                        locToGloMap.AssembleBnd(Vloc,Vbnd,nDirBCs);
                         Fbnd = Fbnd - Vbnd;
                         
                         // solve boundary system 
@@ -108,14 +106,17 @@ namespace Nektar
                     // solve interior system 
                     if(nint)
                     {
-                         if(nbndry)
+                        DNekScalBlkMat &invD  = *m_blkMatrices[2];
+
+                        if(nbndry)
                          {
+                             DNekScalBlkMat &C     = *m_blkMatrices[1];
+
                              Vmath::Zero(Vloc.GetDimension(),Vloc.GetPtr(),1);
-                             locToGloMap->ContToLocalBnd(Vbnd,Vloc,nDirBCs);
+                             locToGloMap.ContToLocalBnd(Vbnd,Vloc,nDirBCs);
                              Fint = Fint - C*Vloc;
                          }
-                         Vint = invD*Fint;
-                                        
+                        Vint = invD*Fint;
                     }
                 }
                 break;

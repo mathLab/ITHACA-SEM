@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ContSolnField1D.h
+// File DisContField1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,78 +29,67 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Field definition in one-dimension
+// Description: Field definition in one-dimension for a discontinuous
+// LDG-H expansion
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
-#define NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
+#ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD1D_H
+#define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD1D_H
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ContExpList1D.h>
-#include <MultiRegions/GlobalLinSys.h>
-
+#include <MultiRegions/ExpList1D.h>
 #include <LocalRegions/PointExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/BoundaryConditions.h>
-
+#include <MultiRegions/LocalToGlobalBndryMap1D.h>
+#include <MultiRegions/GlobalLinSys.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-        class ContField1D: public ContExpList1D
+        class DisContField1D: public ExpList1D
         {
         public:
-            ContField1D();
+            DisContField1D();
 
-            ContField1D(SpatialDomains::MeshGraph1D &graph1D,
-                SpatialDomains::BoundaryConditions &bcs, 
-                const int bc_loc = 0);
+            DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
+                SpatialDomains::BoundaryConditions &bcs, const int bc_loc = 0);
 
-            ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
                 SpatialDomains::BoundaryConditions &bcs, 
                 const std::string variable);
 
-            ContField1D(const LibUtilities::BasisKey &Ba,
-                const SpatialDomains::MeshGraph1D &graph1D,
-                SpatialDomains::BoundaryConditions &bcs,
-                const int bc_loc = 0);
+            DisContField1D(const DisContField1D &In);
 
-            ContField1D(const LibUtilities::BasisKey &Ba,
-                const SpatialDomains::MeshGraph1D &graph1D,
-                SpatialDomains::BoundaryConditions &bcs,
-                const std::string variable);
+            ~DisContField1D();
 
-            ContField1D(const ContField1D &In);
-
-            ~ContField1D();
+            void HelmSolve(DisContField1D &Fce, NekDouble lambda);
 
             void SetBoundaryCondition(const int loc, const NekDouble value)
             {
                 m_bndConstraint[loc]->SetValue(value);
             }
 
-            void FwdTrans (const ExpList &In);
-            void HelmSolve(const ExpList &In, NekDouble lambda);
+            GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
+            GlobalLinSysSharedPtr GenGlobalBndLinSys(const GlobalLinSysKey &mkey);
+            //void HelmSolve(const ExpList &In, NekDouble lambda);
 
         protected:
 
         private:
             LocalRegions::PointExpVector                         m_bndConstraint;
             std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
+	    LocalToGlobalBndryMapSharedPtr                       m_lambdaMap;	    
+            GlobalLinSysMapShPtr                                 m_globalBndMat;
 
-            GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
-
-            void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs, 
-                             NekDouble ScaleForcing=NekUnsetDouble);
-
-            void GenerateField1D(SpatialDomains::BoundaryConditions &bcs, 
-                const std::string variable);
+            void GenerateField1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::BoundaryConditions &bcs,  const std::string variable);
         };
-        typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
+
+        typedef boost::shared_ptr<DisContField1D>   DisContField1DSharedPtr;
 
     } //end of namespace
 } //end of namespace
 
-#endif // MULTIERGIONS_CONTSOLNFIELD1D_H
+#endif // MULTIERGIONS_DISCONTFIELD1D_H

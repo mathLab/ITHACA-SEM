@@ -82,6 +82,7 @@ namespace Nektar
       inline void SetPhys(ConstArray<OneD, NekDouble> &inarray)
       {
           Vmath::Vcopy(m_npoints,&inarray[0],1,&m_phys[0],1);
+          m_physState = true;
       }
 
       inline void SetPhysState(const bool physState)
@@ -109,7 +110,7 @@ namespace Nektar
 
       void   WriteToFile(std::ofstream &out);
     
-      DNekScalBlkMatSharedPtr  SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar = 0.0);
+      DNekScalBlkMatSharedPtr  SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar = 0.0, NekDouble constant = 0.0);
 
       inline int GetCoordim(int eid)
       {
@@ -207,6 +208,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.26  2007/10/03 11:37:50  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.25  2007/09/03 19:58:31  jfrazier
 * Formatting.
 *

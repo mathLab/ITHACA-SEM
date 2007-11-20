@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File DisContExpList1D.h
+// File Loc2GlobalBndryMap.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,30 +29,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Discontinuous Galerkin Expansion List in 1D, Header file
+// Description: Local to Global mapping routines
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef DISCONTEXPLIST1D_H
-#define DISCONTEXPLIST1D_H
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/LocalToGlobalBndryMap.h>
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
-
-    class DisContExpList1D: 
-      public ExpList1D 
+    namespace MultiRegions
     {
-    public:
-      DisContExpList1D();
-      ~DisContExpList1D();
-    protected:
-    private:
-    };
-  } //end of namespace
-} //end of namespace
-
-#endif
+        LocalToGlobalBndryMap::LocalToGlobalBndryMap():
+            m_totGloBndDofs(0),
+            m_numDirichletBCs(0)
+        {
+        }
+        
+        LocalToGlobalBndryMap::~LocalToGlobalBndryMap()
+        {
+        }
+        
+    }
+}

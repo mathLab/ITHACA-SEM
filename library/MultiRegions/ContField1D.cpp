@@ -45,7 +45,9 @@ namespace Nektar
         }
 
         ContField1D::ContField1D(const ContField1D &In):
-        ContExpList1D(In)
+            ContExpList1D(In),
+            m_bndConstraint(In.m_bndConstraint),
+            m_bndTypes(In.m_bndTypes)
         {
         }
 
@@ -208,6 +210,8 @@ namespace Nektar
         // contains an intial estimate for solution
         void ContField1D::HelmSolve(const ExpList &In, NekDouble lambda)
         {
+            ASSERTL0(lambda != NekUnsetDouble,"Helmholtz constant is not specified");
+
             GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
@@ -215,7 +219,8 @@ namespace Nektar
         }
 
         void ContField1D::GlobalSolve(const GlobalLinSysKey &key, 
-                                      const ExpList &Rhs, NekDouble ScaleForcing)
+                                      const ExpList &Rhs, 
+                                      NekDouble ScaleForcing)
         {
             int i;
             int NumDirBcs = m_locToGloMap->GetNumDirichletBCs();
@@ -232,7 +237,7 @@ namespace Nektar
             }
 
             GeneralMatrixOp(key.GetLinSysType(), init, Dir_fce,
-                key.GetScaleFactor());
+                            key.GetFactor1());
 
             // Set up forcing function
             IProductWRTBase(Rhs);
@@ -247,8 +252,7 @@ namespace Nektar
             // Forcing function with weak boundary conditions 
             for(i = 0; i < m_bndConstraint.size()-NumDirBcs; ++i)
             {
-                m_contCoeffs[ (m_locToGloMap->GetBndCondGlobalID())[i+NumDirBcs] ] +=  
-                     (m_bndConstraint[i+NumDirBcs]->GetValue());
+                m_contCoeffs[ (m_locToGloMap->GetBndCondGlobalID())[i+NumDirBcs] ] +=   (m_bndConstraint[i+NumDirBcs]->GetValue());
             }
 
             if(m_contNcoeffs - NumDirBcs > 0)
@@ -256,7 +260,7 @@ namespace Nektar
                 GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
                 
                 sln = m_contCoeffs+NumDirBcs;
-                LinSys->Solve(sln,sln,m_locToGloMap);
+                LinSys->Solve(sln,sln,*m_locToGloMap);
             }
 
             // Recover solution by addinig intial conditons

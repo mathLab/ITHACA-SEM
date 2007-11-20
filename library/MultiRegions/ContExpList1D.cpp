@@ -125,11 +125,11 @@ namespace Nektar
         void ContExpList1D::FwdTrans(const ExpList &In)
         {
             IProductWRTBase(In);
-
+            
             GlobalLinSysSharedPtr mass_matrix;
             GlobalLinSysKey key(StdRegions::eMass);
             GlobalLinSysMap::iterator matrixIter = m_globalMat->find(key);
-
+            
             if(matrixIter == m_globalMat->end())
             {
                 mass_matrix = GenGlobalLinSys(key,m_locToGloMap);
@@ -139,8 +139,8 @@ namespace Nektar
             {
                 mass_matrix = matrixIter->second;
             }
-
-            mass_matrix->Solve(m_contCoeffs,m_contCoeffs,m_locToGloMap);
+            
+            mass_matrix->Solve(m_contCoeffs,m_contCoeffs,*m_locToGloMap);
             m_transState = eContinuous;
             m_physState = false;
         }
@@ -162,6 +162,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.26  2007/11/07 20:29:48  jfrazier
+* Modified to use new expansion list contained in meshgraph.
+*
 * Revision 1.25  2007/10/04 12:10:04  sherwin
 * Update for working version of static condensation in Helmholtz1D and put lambda coefficient on the mass matrix rather than the Laplacian operator.
 *

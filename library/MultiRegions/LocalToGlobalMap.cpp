@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Loc2GloMap.cpp
+// File Loc2GlobalMap.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -40,20 +40,19 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        LocalToGlobalMap::LocalToGlobalMap():
+        LocalToGlobalMap::LocalToGlobalMap(): 
+            LocalToGlobalBndryMap(),
             m_totLocDofs(0),
-            m_totGloDofs(0),
-            m_totGloBndDofs(0),
-            m_numDirichletBCs(0)
+            m_totGloDofs(0)
         {
         }
         
         LocalToGlobalMap::LocalToGlobalMap(const int totlocdata, 
-                                       const int totglobnddata, 
+                                           const int totglobnddata, 
                                            Array<OneD,int> &map):
-            m_totLocDofs(totlocdata),
-            m_totGloBndDofs(totglobnddata)
+            m_totLocDofs(totlocdata)
         {
+            m_totGloBndDofs = totglobnddata;
             m_locToContMap = map; 
             m_totGloDofs = Vmath::Vmax(m_totLocDofs,&map[0],1);
         }

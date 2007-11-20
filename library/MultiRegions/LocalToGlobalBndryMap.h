@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File LocalToGlobalMap.h
+// File LocalToGlobalBndryMap.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,84 +33,104 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_MULTIREGIONS_LOC2GLOMAP_H
-#define NEKTAR_LIB_MULTIREGIONS_LOC2GLOMAP_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_LOC2GLOBNDMAP_H
+#define NEKTAR_LIB_MULTIREGIONS_LOC2GLOBNDMAP_H
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList.h>
-#include <MultiRegions/LocalToGlobalBndryMap.h>
 #include <vector>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-
 
 namespace Nektar
 {
     namespace MultiRegions
     {
     
-        class LocalToGlobalMap: 
-            public LocalToGlobalBndryMap
-            {
+        class LocalToGlobalBndryMap
+        {
             public:
-                LocalToGlobalMap();
-                LocalToGlobalMap(const int totdata, const int totbnddata, 
-                                 Array<OneD,int> &map);
-                ~LocalToGlobalMap();
+                LocalToGlobalBndryMap();
+                ~LocalToGlobalBndryMap();
+        
                 
-                inline int GetMap(const int i) const
+                inline void ContToLocalBnd(const DNekVec &cont, DNekVec &loc, int offset = 0)
                 {
-                    return m_locToContMap[i];
-                }
-                
-                inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
-                                        Array<OneD, NekDouble> &cont)
-                {
-                    Vmath::Scatr(m_totLocDofs, &loc[0],&m_locToContMap[0],&cont[0]);
+                    ASSERTL1(loc.GetDimension() >= m_totLocBndDofs,"Local vector is not of correct dimension");
+                    ASSERTL1(cont.GetDimension() >= m_totGloBndDofs-offset,"Global vector is not of correct dimension");
+                    
+                    // offset input data by length "offset" for Dirichlet boundary conditions.
+                    Array<OneD,NekDouble> tmp(cont.GetDimension()+offset,0.0);
+                    Vmath::Vcopy(cont.GetDimension(),cont.GetPtr(),1,&tmp[offset],1);
+                    
+                    Vmath::Gathr(m_totLocBndDofs,&tmp[0],&m_locToContBndMap[0], loc.GetPtr());
                 }                
                 
-        
-                inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
-                                        Array<OneD, NekDouble> &loc)
+                inline void AssembleBnd(const DNekVec &loc, DNekVec &cont, int offset = 0)
                 {
-                    Vmath::Gathr(m_totLocDofs,&cont[0],&m_locToContMap[0], &loc[0]);
-                }
-        
-                inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
-                                     Array<OneD, NekDouble> &cont)
-                {
-                    Vmath::Zero(m_totGloDofs,&cont[0],1);
+                    ASSERTL1(loc.GetDimension() >= m_totLocBndDofs,"Local vector is not of correct dimension");
+                    ASSERTL1(cont.GetDimension() >= m_totGloBndDofs-offset,"Global vector is not of correct dimension");
+                    Array<OneD,NekDouble> tmp(cont.GetDimension()+offset,0.0);
                     
-                    Vmath::Assmb(m_totLocDofs,&loc[0],&m_locToContMap[0],&cont[0]);
+                    Vmath::Assmb(m_totLocBndDofs,loc.GetPtr(), &m_locToContBndMap[0], &tmp[0]);
+                    Vmath::Vcopy(cont.GetDimension(),&tmp[offset],1,cont.GetPtr(),1);
                 }
-
-
-                inline int GetTotGloDofs()
+                
+                inline int GetTotGloBndDofs()
                 {
-                    return m_totGloDofs;
+                    return m_totGloBndDofs;
                 }
         
-                void ResetMapping(const int NumDirichlet,
-                                  SpatialDomains::BoundaryConditions &bcs,
-                                  const std::string variable)
+                inline int GetBndMap(const int i) const
                 {
-                    v_ResetMapping(NumDirichlet,bcs,variable);
+                    return m_locToContBndMap[i];
+                }
+                
+                inline void SetNumDirichletBCs(const int NumDirichlet)
+                {
+                    m_numDirichletBCs = NumDirichlet;
+                }
+
+                inline void SetNumNeumannBCs(const int NumNeumann)
+                {
+                    m_numNeumannBCs = NumNeumann;
+                }
+                
+                inline void SetNumRobinBCs(const int NumRobin)
+                {
+                    m_numRobinBCs = NumRobin;
+                }
+        
+                inline int GetNumDirichletBCs()
+                {
+                    return m_numDirichletBCs;
+                }
+
+                inline int GetNumNeumannBCs()
+                {
+                    return m_numNeumannBCs;
+                }
+
+                inline int GetNumRobinBCs()
+                {
+                    return m_numRobinBCs;
+                }
+                
+                inline const ConstArray<OneD, int> &GetBndCondGlobalID() const 
+                {
+                    return m_bndCondGlobalID;
                 }
                 
             protected:
-                int             m_totLocDofs;   //< number of local dofs
-                int             m_totGloDofs;   //< number of global boundary dofs;
-                Array<OneD,int> m_locToContMap;    //< integer map
-
+                int             m_totLocBndDofs;   //< number of local dofs
+                int             m_totGloBndDofs;   //< number of global boundary dofs;
+                int             m_numDirichletBCs; //< number of Dirichlet conditions 
+                int             m_numNeumannBCs;   //< number of Neumann conditions 
+                int             m_numRobinBCs;     //< number of Robin conditions 
+                Array<OneD,int> m_locToContBndMap; //< integer maps of boundary dofs
+                Array<OneD,int> m_bndCondGlobalID; //< global id of all boundary conditions
+                
             private:
-                virtual void v_ResetMapping(const int NumDirichlet, 
-                                            SpatialDomains::BoundaryConditions &bcs,
-                                        const std::string variable)
-                    {
-                        ASSERTL0(false,"ResetMapping needs defining");
-                    }
             };
         
-        typedef boost::shared_ptr<LocalToGlobalMap>       LocalToGlobalMapSharedPtr;
         typedef boost::shared_ptr<LocalToGlobalBndryMap>  LocalToGlobalBndryMapSharedPtr;
         
     } // end of namespace

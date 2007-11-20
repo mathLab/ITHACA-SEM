@@ -43,18 +43,21 @@ namespace Nektar
     {
         // Register Mass Matrix creator. 
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
-                                         const NekDouble    scalefactor, 
+                                         const NekDouble    factor1, 
+                                         const NekDouble    factor2, 
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
             m_linSysType(matrixType),
-            m_scaleFactor(scalefactor)
+            m_factor1(factor1),
+            m_factor2(factor2)
         {
         }
 
         GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
             m_solnType(key.m_solnType),
             m_linSysType(key.m_linSysType),
-            m_scaleFactor(key.m_scaleFactor)
+            m_factor1(key.m_factor1),
+            m_factor2(key.m_factor2)
         {
         }
 
@@ -80,12 +83,23 @@ namespace Nektar
                 return false;
             }
 
-            if(lhs.m_scaleFactor > rhs.m_scaleFactor)
+            if(lhs.m_factor1 > rhs.m_factor1)
             {
                 return false;
             }
 
-            if(lhs.m_scaleFactor < rhs.m_scaleFactor)
+            if(lhs.m_factor1 < rhs.m_factor1)
+            {
+                return true;
+            }
+
+
+            if(lhs.m_factor2 > rhs.m_factor2)
+            {
+                return false;
+            }
+
+            if(lhs.m_factor2 < rhs.m_factor2)
             {
                 return true;
             }
@@ -95,11 +109,11 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs)
         {
-            os << "MatrixType: " << rhs.GetLinSysType() << ", ScaleFactor: "
-               <<rhs.GetScaleFactor() << ", Solution Type: "
-               << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()] 
-               << std::endl;
-
+            os << "MatrixType: " << rhs.GetLinSysType() << ", factor1 (ScaleFactor): "
+               <<rhs.GetFactor1() << ", Solution Type: "
+               << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()]  << 
+                ", factor2 (tau value): " << rhs.GetFactor2()  << std::endl;
+            
             return os;
         }
     }
@@ -107,6 +121,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.cpp,v $
+* Revision 1.2  2007/10/03 11:37:50  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.1  2007/07/19 20:02:26  sherwin
 * Generalised global matrix solver
 *

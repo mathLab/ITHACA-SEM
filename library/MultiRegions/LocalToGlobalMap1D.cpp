@@ -100,6 +100,7 @@ namespace Nektar
             m_totGloDofs = ++gid;
         }
         
+        
         LocalToGlobalMap1D::~LocalToGlobalMap1D()
         {
         }
@@ -112,12 +113,12 @@ namespace Nektar
             int nbnd;
             m_numDirichletBCs = NumDirichlet; 
 
-            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryRegionCollection    &bregions    = bcs.GetBoundaryRegions();
             SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
             
             nbnd = bregions.size();
 
-            Array<OneD, int> oldGlobalID(nbnd);   
+            Array<OneD, int> oldGlobalID(nbnd);
 
             for(i = cnt = 0; i < nbnd; ++i)
             {
@@ -256,6 +257,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.20  2007/10/04 13:57:01  pvos
+* fixed some more errors
+*
 * Revision 1.19  2007/10/04 12:10:04  sherwin
 * Update for working version of static condensation in Helmholtz1D and put lambda coefficient on the mass matrix rather than the Laplacian operator.
 *

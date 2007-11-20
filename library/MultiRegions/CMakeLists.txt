@@ -1,6 +1,7 @@
 SET(MULTI_REGIONS_SOURCES
 ContExpList1D.cpp
 ContField1D.cpp
+DisContField1D.cpp
 #ContExpList2D.cpp
 #DisContExpList1D.cpp
 ExpList1D.cpp
@@ -9,7 +10,9 @@ ExpList2D.cpp
 ExpList.cpp
 GlobalLinSys.cpp
 GlobalLinSysKey.cpp
+LocalToGlobalBndryMap.cpp
 LocalToGlobalMap.cpp
+LocalToGlobalBndryMap1D.cpp
 LocalToGlobalMap1D.cpp
 LocalToGlobalMap2D.cpp
 #LocalToGlobalMap3D.cpp
@@ -18,7 +21,7 @@ LocalToGlobalMap2D.cpp
 SET(MULTI_REGIONS_HEADERS
 ContExpList1D.h
 ContField1D.h
-DisContExpList1D.h
+DisContField1D.h
 ExpList1D.h
 ExpList2D.h
 ExpList3D.h

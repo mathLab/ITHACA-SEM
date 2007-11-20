@@ -47,7 +47,8 @@ namespace Nektar
         {
         public:
             GlobalLinSysKey(const StdRegions::MatrixType matrixType, 
-                            const double scalefactor = 1.0,
+                            const double factor1 = NekUnsetDouble,
+                            const double factor2 = NekUnsetDouble,
 #if 0
                             const GlobalSysSolnType solnType = eDirectFullMatrix);
 #else
@@ -73,16 +74,23 @@ namespace Nektar
                 return m_solnType; 
             }
             
-            const NekDouble GetScaleFactor() const 
+            const NekDouble GetFactor1() const 
             {
-                return m_scaleFactor;
+                return m_factor1;
+            }
+
+
+            const NekDouble GetFactor2() const 
+            {
+                return m_factor2;
             }
 
         protected:
             GlobalLinSysKey(); 
             GlobalSysSolnType      m_solnType;
             StdRegions::MatrixType m_linSysType;
-            NekDouble              m_scaleFactor;
+            NekDouble              m_factor1;
+            NekDouble              m_factor2;
             
         private:
         };
@@ -96,6 +104,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.h,v $
+* Revision 1.2  2007/10/03 11:37:50  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.1  2007/07/19 20:02:26  sherwin
 * Generalised global matrix solver
 *

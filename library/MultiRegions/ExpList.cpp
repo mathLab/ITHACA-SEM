@@ -89,11 +89,11 @@ namespace Nektar
         int       i;
         int       cnt = 0;
         NekDouble sum = 0.0;
-
+        
         for(i = 0; i < GetExpSize(); ++i)
         {
-        sum += (*m_exp)[i]->Integral(inarray + cnt);
-        cnt += (*m_exp)[i]->GetTotPoints();
+            sum += (*m_exp)[i]->Integral(inarray + cnt);
+            cnt += (*m_exp)[i]->GetTotPoints();
         }
             
         return sum; 
@@ -102,9 +102,10 @@ namespace Nektar
     void ExpList::IProductWRTBase(const ExpList &Sin)
     {
             ASSERTL2(Sin.GetPhysState() == true,
-                     "Sin physical space is not true ");
+                     "Physical space is not set to true ");
 
             IProductWRTBase(Sin.GetPhys(),m_coeffs);
+            m_physState = false;
     }
 
     void ExpList::IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
@@ -213,7 +214,7 @@ namespace Nektar
 #endif
         }
         
-        DNekScalBlkMatSharedPtr  ExpList::SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar)
+        DNekScalBlkMatSharedPtr  ExpList::SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar, NekDouble constant)
         {
             int i;
             int n_exp = GetExpSize();
@@ -237,7 +238,7 @@ namespace Nektar
             
             for(i = 0; i < n_exp; ++i)
             {
-                LocalRegions::MatrixKey mkey(mtype,(*m_exp)[i]->DetShapeType(),*((*m_exp)[i]),scalar);
+                LocalRegions::MatrixKey mkey(mtype,(*m_exp)[i]->DetShapeType(),*((*m_exp)[i]),scalar,constant);
                 loc_mat = (*m_exp)[i]->GetLocMatrix(mkey);
                 
                 // cout << loc_mat->GetOwnedMatrix() << endl;
@@ -290,7 +291,7 @@ namespace Nektar
             {
                 LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
                                           (*m_exp)[n]->DetShapeType(),
-                                         *(*m_exp)[n],mkey.GetScaleFactor());
+                                          *(*m_exp)[n],mkey.GetFactor1());
                 
                 loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
                 loc_lda = loc_mat->GetColumns();
@@ -320,7 +321,7 @@ namespace Nektar
                 NekDouble b=1.0;
                 (*Gmat)((locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs,
                         (locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs)
-                    -= mkey.GetScaleFactor() * b;
+                    -= mkey.GetFactor1() * b;
             }
             
 
@@ -366,13 +367,13 @@ namespace Nektar
             }
 
             unsigned int *nbdry_size_2 = new unsigned int[n_exp];
-            unsigned int *nint_size_2 = new unsigned int[n_exp];
+            unsigned int *nint_size_2  = new unsigned int[n_exp];
             nbdry_size_2 = &nbdry_size[0];
-            nint_size_2 = &nint_size[0];
+            nint_size_2  = &nint_size[0];
             
             BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nbdry_size_2,nint_size_2);
-            invD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size_2,nint_size_2);
-            C = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size_2,nbdry_size_2);
+            invD  = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size_2,nint_size_2);
+            C     = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size_2,nbdry_size_2);
 
             // needs to be formed as: 
             //BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,bndry_size,nint_size);
@@ -386,7 +387,7 @@ namespace Nektar
             {
                 LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
                                           (*m_exp)[n]->DetShapeType(),
-                                         *(*m_exp)[n],mkey.GetScaleFactor());
+                                          *(*m_exp)[n],mkey.GetFactor1());
 
                 loc_mat = (*m_exp)[n]->GetLocStaticCondMatrix(matkey);
                 loc_lda = (*m_exp)[n]->NumBndryCoeffs(); 		    

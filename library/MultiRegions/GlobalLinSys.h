@@ -36,7 +36,6 @@
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
 
 #include <MultiRegions/GlobalLinSysKey.h>
-#include <MultiRegions/LocalToGlobalMap.h>
 #include <MultiRegions/ExpList.h>
 
 namespace Nektar
@@ -44,7 +43,7 @@ namespace Nektar
     namespace MultiRegions
     {
 
-        class LocalToGlobalMap;
+        class LocalToGlobalBndryMap;
 
 	class GlobalLinSys
         {
@@ -71,7 +70,7 @@ namespace Nektar
 
             void Solve(const ConstArray<OneD,NekDouble> &in, 
                        Array<OneD,NekDouble> &out,
-                       boost::shared_ptr<LocalToGlobalMap>  &locToGloMap);
+                       LocalToGlobalBndryMap &locToGloMap);
 
         private:
             GlobalLinSysKey                     m_linSysKey;

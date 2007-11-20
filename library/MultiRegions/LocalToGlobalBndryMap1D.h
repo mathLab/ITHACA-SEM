@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File LocalToGlobalMap1D.h
+// File LocalToGlobalBndryMap1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,10 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_MULTIREGIONS_LOC2GLOMAP1D_H
-#define NEKTAR_LIB_MULTIREGIONS_LOC2GLOMAP1D_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_LOC2GLOBNDMAP1D_H
+#define NEKTAR_LIB_MULTIREGIONS_LOC2GLOBNDMAP1D_H
 
-#include <MultiRegions/LocalToGlobalMap.h>
+#include <MultiRegions/LocalToGlobalBndryMap.h>
 #include <SpatialDomains/MeshGraph1D.h>
 #include <LocalRegions/PointExp.h>
 
@@ -44,25 +44,27 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class LocalToGlobalMap1D: 
-            public LocalToGlobalMap
+        
+        class LocalToGlobalBndryMap1D: 
+            public LocalToGlobalBndryMap
         {
         public:
-            LocalToGlobalMap1D(){};
-            LocalToGlobalMap1D(const int loclen, 
-                               const StdRegions::StdExpansionVector &locexp, 
-                               const SpatialDomains::CompositeVector &domain);
-        
-            virtual ~LocalToGlobalMap1D();
-
-        protected:
+            LocalToGlobalBndryMap1D(){};
             
+            LocalToGlobalBndryMap1D(const int NumDirichlet,
+                                    SpatialDomains::BoundaryConditions &bcs,
+                                    const std::string variable,
+                                    StdRegions::StdExpansionVector &locexp,
+                                    const SpatialDomains::CompositeVector &domain);
+            
+            virtual ~LocalToGlobalBndryMap1D();
+            
+        protected:
+        
         private:
-            virtual void v_ResetMapping(const int NumDirichlet, 
-                                        SpatialDomains::BoundaryConditions &bcs,
-                                        const std::string variable);
-    };
-    
+            
+        };
+        
     } // end of namespace
 } // end of namespace
 

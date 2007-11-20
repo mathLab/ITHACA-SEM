@@ -106,18 +106,53 @@ namespace Nektar
                                              const ConstArray<OneD, NekDouble>& inarray, 
                                              Array<OneD, NekDouble> & outarray)
         {
+            int    i;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nqtot = nquad0*nquad1; 
+
+            Array<OneD, NekDouble> gfac0(nqtot);
+            Array<OneD, NekDouble> tmp0(nqtot);
+
+            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            
+            // set up geometric factor: 2/(1-z1)
+            for(i = 0; i < nquad1; ++i)
+            {
+                gfac0[i] = 2.0/(1-z1[i]);
+            }
+
+            for(i = 0; i < nquad1; ++i)  
+            {
+                Vmath::Smul(nquad0,gfac0[i],&inarray[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
+            }
+                 
             switch(dir)
             {
             case 0:
-                {
+                {                    
                     IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),
-                                    inarray,outarray);
+                                    tmp0,outarray);
                 }
                 break;
             case 1:
                 {
-                    IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),
-                                    inarray,outarray);  
+                    Array<OneD, NekDouble> tmp3(m_ncoeffs);    
+                    ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+
+                    for(i = 0; i < nquad0; ++i)
+                    {
+                        gfac0[i] = 0.5*(1+z0[i]);
+                    }        
+
+                    for(i = 0; i < nquad1; ++i) 
+                    {
+                        Vmath::Vmul(nquad0,&gfac0[0],1,&tmp0[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
+                    }       
+          
+                    IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp0,tmp3); 
+                    IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),inarray,outarray);  
+                    Vmath::Vadd(m_ncoeffs,&tmp3[0],1,&outarray[0],1,&outarray[0],1);      
                 }
                 break;
             default:
@@ -554,6 +589,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.24  2007/11/08 16:55:14  pvos
+* Updates towards 2D helmholtz solver
+*
 * Revision 1.23  2007/10/15 20:40:24  ehan
 * Make changes of column major matrix
 *

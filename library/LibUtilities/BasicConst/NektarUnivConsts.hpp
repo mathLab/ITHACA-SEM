@@ -41,12 +41,17 @@
 namespace Nektar
 {
 
+#define NekUnsetDouble  -9999
+
 } //end of namespace 
 
 #endif
 
 /***
 $Log: NektarUnivConsts.hpp,v $
+Revision 1.6  2007/05/14 23:25:15  bnelson
+Removed unneeded code.
+
 Revision 1.5  2007/05/14 23:24:40  bnelson
 Removed unneeded code.
 

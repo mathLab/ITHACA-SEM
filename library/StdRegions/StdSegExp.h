@@ -112,7 +112,7 @@ namespace Nektar
             // Generate Matrix Routine
             //----------------------------------
 
-            DNekMatSharedPtr GenMatrix(MatrixType mtype);
+            DNekMatSharedPtr GenMatrix(MatrixType mtype, NekDouble lambda = 1.0);
 
             //-----------------------------
             // Differentiation Methods
@@ -227,7 +227,25 @@ namespace Nektar
             virtual ShapeType v_DetShapeType() const
             {
                 return DetShapeType();
-            };
+            }
+
+
+            virtual bool v_IsBoundaryInteriorExpansion()
+            {
+                bool returnval = false;
+                
+                if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+                {
+                    returnval = true;
+                }
+                
+                if(m_base[0]->GetBasisType() == LibUtilities::eGLL_Lagrange)
+                {
+                    returnval = true;
+                }
+                
+                return returnval;
+            }
 
             /** \brief Virtual call to integrate the physical point list \a inarray 
             *  over region (see StdSegExp::Integral)
@@ -350,6 +368,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.29  2007/10/03 11:37:51  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.28  2007/07/22 23:04:27  bnelson
 * Backed out Nektar::ptr.
 *

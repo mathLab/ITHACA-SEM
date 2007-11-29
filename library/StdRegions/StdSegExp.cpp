@@ -77,11 +77,11 @@ namespace Nektar
         
         return Int;
     }
-    
+        
     void StdSegExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& base, 
-                    const ConstArray<OneD, NekDouble>& inarray, 
-                    Array<OneD, NekDouble> &outarray, 
-                    int coll_check)
+                                    const ConstArray<OneD, NekDouble>& inarray,
+                                    Array<OneD, NekDouble> &outarray, 
+                                    int coll_check)
     {
         int    nquad = m_base[0]->GetNumPoints();
         ConstArray<OneD, NekDouble> z;
@@ -130,21 +130,23 @@ namespace Nektar
     }
 
     
-    DNekMatSharedPtr StdSegExp::GenMatrix(MatrixType mtype) 
+    DNekMatSharedPtr StdSegExp::GenMatrix(MatrixType mtype, NekDouble lambda) 
     {
-        DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mtype);
+        DNekMatSharedPtr Mat;
+
+        Mat = StdExpansion::CreateGeneralMatrix(mtype,lambda);
         
-            switch(mtype)
+        switch(mtype)
+        {
+        case eMass:
+            // For Fourier basis set the imaginary component of mean mode
+            // to have a unit diagonal component in mass matrix 
+            if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
             {
-            case eMass:
-                // For Fourier basis set the imaginary component of mean mode
-                // to have a unit diagonal component in mass matrix 
-                if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
-                {
-                    (*Mat)(1,1) = 1.0;
-                }
-                break;
+                (*Mat)(1,1) = 1.0;
             }
+            break;
+        }
         
         return Mat;
     }
@@ -172,7 +174,7 @@ namespace Nektar
         
         if(m_base[0]->Collocation())
         {
-        Vmath::Vcopy(nquad,&inarray[0],1,&outarray[0],1);
+            Vmath::Vcopy(nquad,&inarray[0],1,&outarray[0],1);
         }
         else
         {
@@ -217,41 +219,41 @@ namespace Nektar
         
         if(Map.GetLen() < 2)
         {
-        Map.SetMapMemory(2);
+            Map.SetMapMemory(2);
         }
         
         switch(m_base[0]->GetBasisType())
         {
         case LibUtilities::eGLL_Lagrange:
-        {
-            int order = m_base[0]->GetNumModes();
+            {
+                int order = m_base[0]->GetNumModes();
+                if(dir == eForwards)
+                {
+                    Map[0] = 0;
+                    Map[1] = order-1;
+                }
+                else
+                {
+                    Map[0] = order-1;
+                    Map[1] = 0;
+                }
+            }
+            break;
+        case LibUtilities::eModified_A:
+            
             if(dir == eForwards)
             {
-            Map[0] = 0;
-            Map[1] = order-1;
+                Map[0] = 0;
+                Map[1] = 1;
             }
             else
             {
-            Map[0] = order-1;
-            Map[1] = 0;
+                Map[0] = 1;
+                Map[1] = 0;
             }
-        }
-        break;
-        case LibUtilities::eModified_A:
-        
-        if(dir == eForwards)
-        {
-            Map[0] = 0;
-            Map[1] = 1;
-        }
-        else
-        {
-            Map[0] = 1;
-            Map[1] = 0;
-        }
-        break;
+            break;
         default:
-        ASSERTL0(0,"Mapping not defined for this expansion");
+            ASSERTL0(0,"Mapping not defined for this expansion");
         }
     }    
     
@@ -266,6 +268,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.40  2007/10/03 11:37:51  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.39  2007/07/20 02:16:55  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

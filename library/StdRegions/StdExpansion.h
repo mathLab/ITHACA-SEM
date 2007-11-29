@@ -1,4 +1,4 @@
-
+///////////////////////////////////////////////////////////////////////////////
 //
 // File Stdexpansion.h
 //
@@ -436,6 +436,13 @@ namespace Nektar
                 return v_DetShapeType();
             }
 
+
+            bool IsBoundaryInteriorExpansion() 
+            {
+                return v_IsBoundaryInteriorExpansion();
+            }
+
+
             /** \brief This function performs the Backward transformation from 
             *  coefficient space to physical space
             *
@@ -503,8 +510,8 @@ namespace Nektar
             *  \param outarray array of the function coefficieints 
             */
             void  FwdTrans (const ConstArray<OneD, NekDouble>& inarray, 
-                Array<OneD, NekDouble> &outarray)
-        {
+                            Array<OneD, NekDouble> &outarray)
+            {
                 v_FwdTrans(inarray,outarray);
             }
 
@@ -673,6 +680,12 @@ namespace Nektar
                 return v_GetLocStaticCondMatrix(mkey);
             }
 
+            void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
+                                           const ConstArray<OneD,NekDouble> &inarray,
+                                           Array<OneD,NekDouble> outarray)
+            {
+                v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
+            }
 
             // virtual functions related to LocalRegions
 
@@ -715,11 +728,12 @@ namespace Nektar
             * 
             *  \return returns the mass matrix
             */
-            DNekMatSharedPtr CreateGeneralMatrix(MatrixType mtype);
+            DNekMatSharedPtr CreateGeneralMatrix(MatrixType mtype, 
+                                                 NekDouble lambda = 1.0);
             void GeneralMatrixOp(MatrixType mtype, 
                                  const ConstArray<OneD,NekDouble> &inarray,
                                  Array<OneD,NekDouble> &outarray,
-                                 double lambda = 1.0);
+                                 NekDouble lambda = 1.0);
 
             
             void MassMatrixOp(const ConstArray<OneD,NekDouble> &inarray, 
@@ -767,7 +781,7 @@ namespace Nektar
             }
 
             virtual void PhysDeriv(const int dir, 
-                const ConstArray<OneD, NekDouble>& inarray,
+                                   const ConstArray<OneD, NekDouble>& inarray,
                                    Array<OneD, NekDouble> &outarray)
             {
                 v_PhysDeriv (dir, inarray, outarray);
@@ -790,6 +804,13 @@ namespace Nektar
                 return boost::shared_ptr<DNekScalBlkMat>();
             }
 
+            virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
+                                                        const ConstArray<OneD,NekDouble> &inarray,
+                                                        Array<OneD,NekDouble> outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+            
             /** \brief this function interpolates a 1D function \f$f\f$ evaluated
             *  at the quadrature points of the basis \a fbasis0 to the 
             *  function values at the quadrature points of the basis \a tbasis0
@@ -987,6 +1008,13 @@ namespace Nektar
                 return eNoShapeType;
             }
 
+            virtual bool  v_IsBoundaryInteriorExpansion() 
+            {
+                ASSERTL0(false,"This function has not been defined for this expansion");
+                return false;
+            }
+
+
             virtual void   v_BwdTrans   (const ConstArray<OneD, NekDouble>& inarray, 
                      Array<OneD, NekDouble> &outarray) = 0;
             virtual void   v_FwdTrans   (const ConstArray<OneD, NekDouble>& inarray, 
@@ -1126,6 +1154,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.68  2007/11/08 16:55:13  pvos
+* Updates towards 2D helmholtz solver
+*
 * Revision 1.67  2007/10/03 11:37:51  sherwin
 * Updates relating to static condensation implementation
 *

@@ -71,10 +71,10 @@ namespace Nektar
         DNekMatSharedPtr     D  = ExpPointsProperties(0)->GetD();
             
         // copy inarray in case inarray == outarray
-            DNekVec in (nquad,inarray);
-            DNekVec out(nquad,outarray,eWrapper);
+        DNekVec in (nquad,inarray);
+        DNekVec out(nquad,outarray,eWrapper);
             
-            out = (*D)*in;
+        out = (*D)*in;
 
             // this line should not be needed
             //Vmath::Vcopy(nquad,&out[0],1,&outarray[0],1);
@@ -105,6 +105,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.20  2007/11/08 14:23:33  ehan
+ * Removed white space
+ *
  * Revision 1.19  2007/07/20 02:16:53  bnelson
  * Replaced boost::shared_ptr with Nektar::ptr
  *

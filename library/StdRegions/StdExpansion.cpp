@@ -143,6 +143,9 @@ namespace Nektar
             case eLaplacian11:
             case eLaplacian12:
             case eLaplacian22:
+            case eWeakDeriv0:
+            case eWeakDeriv1:
+            case eWeakDeriv2:
             case eBwdTrans:
             case eNBasisTrans:
                 returnval = StdExpansion::GenMatrix(mtype);
@@ -311,7 +314,8 @@ namespace Nektar
 
         
 
-        DNekMatSharedPtr StdExpansion::CreateGeneralMatrix(MatrixType mtype)
+        DNekMatSharedPtr StdExpansion::CreateGeneralMatrix(MatrixType mtype, 
+                                                           NekDouble lambda)
         {
             int     i;
             DNekMatSharedPtr  Mat;
@@ -324,7 +328,7 @@ namespace Nektar
                 Vmath::Zero(m_ncoeffs,&tmp[0],1);
                 tmp[i] = 1.0;
                 
-                GeneralMatrixOp(mtype,tmp,tmp);
+                GeneralMatrixOp(mtype,tmp,tmp,lambda);
 
                 //Vmath::Vcopy(m_ncoeffs,&tmp[0],1,&((*Mat).GetPtr())[0]+i*m_ncoeffs,1);
                 Vmath::Vcopy(m_ncoeffs,&tmp[0],1, &((*Mat).GetPtr())[0]+i, m_ncoeffs ); // Column Major matrix
@@ -337,12 +341,21 @@ namespace Nektar
         void StdExpansion::GeneralMatrixOp(MatrixType mtype, 
                                            const ConstArray<OneD,NekDouble> &inarray,
                                            Array<OneD,NekDouble> &outarray,
-                                           double lambda)
+                                           NekDouble lambda)
         {
             switch(mtype)
             {
             case eMass:
                 MassMatrixOp(inarray,outarray);
+                break;
+            case eWeakDeriv0:
+                WeakDerivMatrixOp(0,inarray,outarray);
+                break;
+            case eWeakDeriv1:
+                WeakDerivMatrixOp(1,inarray,outarray);
+                break;
+            case eWeakDeriv2:
+                WeakDerivMatrixOp(2,inarray,outarray);
                 break;
             case eLaplacian:
                 LaplacianMatrixOp(inarray,outarray);
@@ -439,11 +452,16 @@ namespace Nektar
         }
 
 
-        void StdExpansion::WeakDerivMatrixOp(const int i,
+        void StdExpansion::WeakDerivMatrixOp(const int k1,
                                              const ConstArray<OneD,NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray)
         {
-            NEKERROR(ErrorUtil::efatal, "Method not populated yet.");
+            ASSERTL1(k1 >= 0 && k1 < ShapeTypeDimMap[v_DetShapeType()],"invalid first  argument");
+                                  
+            Array<OneD, NekDouble> tmp   = Array<OneD, NekDouble>(GetTotPoints());
+            v_BwdTrans(inarray,tmp);
+            v_PhysDeriv(k1,tmp,tmp);
+            v_IProductWRTBase(tmp, outarray);
         }
 
 
@@ -567,6 +585,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.57  2007/11/08 16:55:12  pvos
+* Updates towards 2D helmholtz solver
+*
 * Revision 1.56  2007/10/15 20:38:32  ehan
 * Tested standard mass matrix
 *

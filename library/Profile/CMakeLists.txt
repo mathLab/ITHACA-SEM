@@ -3,11 +3,17 @@ SET(Sources
     main.cpp
     StringConcat.cpp
     StringConcatExprTemp.cpp
+    IntWrapper.cpp
+    IntWrapperExprTemp.cpp
+    VectorOpsExprTemp.cpp
 )
 
 SET(Headers
     StringConcat.h
     StringConcatExprTemp.h
+    IntWrapper.h
+    VectorOps.h
+    VectorOpsExprTemp.h
 )
 
 ADD_NEKTAR_EXECUTABLE(Profile Sources Headers)

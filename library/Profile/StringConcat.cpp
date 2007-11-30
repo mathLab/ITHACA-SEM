@@ -36,7 +36,7 @@
 void AddStrings(std::string& result, const std::string& str1,
                 const std::string& str2)
 {
-    result = str1 + str2;
+    std::string r = str1 + str2;
 }
                                      
 void AddStrings(std::string& result, const std::string& str1,
@@ -89,8 +89,8 @@ void AddStrings(std::string& result, const std::string& str1,
 void AddStringsAccum(std::string& result, const std::string& str1,
                 const std::string& str2)
 {
-    result = str1;
-    result += str2;
+    std::string r = str1;
+    r += str2;
 }
                                      
 void AddStringsAccum(std::string& result, const std::string& str1,

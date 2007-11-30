@@ -39,7 +39,7 @@
 template<typename ExpressionType>
 void DoAssign(std::string& result, const ExpressionType& exp)
 {
-    result.resize(exp.GetMetadata().GetSize());
+    std::string r(exp.GetMetadata().GetSize());
     exp.Apply(result);
 }
 

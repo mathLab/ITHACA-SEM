@@ -257,7 +257,7 @@ SET(DemoSubDirs Demos)
 
 SUBDIRS(${LibrarySubDirs} ${UnitTestSubDirs} )
 IF( NEKTAR_BUILD_DEMOS )
-    SUBDIRS(${Demos})
+    SUBDIRS(${DemoSubDirs})
 ENDIF( NEKTAR_BUILD_DEMOS )
 
 CMAKE_EXPORT_BUILD_SETTINGS("Nektar++BuildSettings.cmake")

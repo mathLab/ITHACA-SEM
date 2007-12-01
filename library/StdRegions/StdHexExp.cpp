@@ -44,27 +44,20 @@ namespace Nektar
     namespace StdRegions
     {
 
-        StdMatrix StdHexExp::s_elmtmats;
-
-
-        StdHexExp::StdHexExp(const BasisKey &Ba, const BasisKey &Bb, 
-            const BasisKey &Bc):
-        StdExpansion3D(Ba,Bb,Bc,Ba.GetBasisOrder()*Bb.GetBasisOrder()*Bc.GetBasisOrder(),
-            NULL,NULL,true)
-        {    
+        StdHexExp::StdHexExp() // Deafult construct of standard expansion directly called. 
+        {
         }
 
-        StdHexExp::StdHexExp(const BasisKey &Ba, const BasisKey &Bb, 
-            const BasisKey &Bc, double *coeffs, double *phys):
-        StdExpansion3D(Ba,Bb,Bc,Ba.GetBasisOrder()*Bb.GetBasisOrder()*Bc.
-            GetBasisOrder(),coeffs,phys,false)
-        {
+        StdHexExp::StdHexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc):
+        StdExpansion3D(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(), Ba, Bb, Bc)
+        {    
         }
 
         StdHexExp::StdHexExp(const StdHexExp &T):
         StdExpansion3D(T)
         {
         }
+
 
         // Destructor
         StdHexExp::~StdHexExp()
@@ -75,175 +68,391 @@ namespace Nektar
         /// Integration Methods
         //////////////////////////////
 
-        double StdHexExp::Integral(const double *inarray)
+        namespace 
         {
-            int    i,j;
-            double Int = 0.0;
-            const double *z,*w0,*w1,*w2;
-            int    nquad0 = m_base[0]->GetPointsOrder();
-            int    nquad1 = m_base[1]->GetPointsOrder();
-            int    nquad2 = m_base[2]->GetPointsOrder();
-            BstShrDArray tmp = GetDoubleTmpSpace(nquad0*nquad1*nquad2);
-
-            BasisManagerSingleton::Instance().GetZW(m_base[0],z,w0);
-            BasisManagerSingleton::Instance().GetZW(m_base[1],z,w1);
-            BasisManagerSingleton::Instance().GetZW(m_base[2],z,w2);
-
-            // multiply by integration constants
-
-            for(i = 0; i < nquad1*nquad2; ++i)
+            void TripleTensorProduct(   const ConstArray<OneD, NekDouble>& fx, 
+                                        const ConstArray<OneD, NekDouble>& gy, 
+                                        const ConstArray<OneD, NekDouble>& hz, 
+                                        const ConstArray<OneD, NekDouble>& inarray, 
+                                        Array<OneD, NekDouble> & outarray )
             {
-                Vmath::Vmul(nquad0,(double*)inarray+i*nquad0,1,(double*)w0,1,
-                    tmp.get()+i*nquad0,1);
-            }
+            
+            // Using matrix operation, not sum-factorization.
+            // Regarding the 3D array, inarray[k][j][i], x is changing the fastest and z the slowest.
+            // Thus, the first x-vector of points refers to the first row of the first stack. The first y-vector
+            // refers to the first column of the first stack. The first z-vector refers to the vector of stacks
+            // intersecting the first row and first column. So in C++, i refers to column, j to row, and k to stack.
+            // Contrasting this with the usual C++ matrix convention, note that i does not refer to a C++ row, nor j to C++ column.
 
-            for(j = 0; j < nquad2; ++j)
-            {
-                for(i = 0; i < nquad0; ++i)
+                int nx = fx.num_elements();
+                int ny = gy.num_elements();
+                int nz = hz.num_elements();
+
+
+                // Multiply by integration constants...
+                // Hadamard multiplication refers to elementwise multiplication of two vectors.
+
+                // Hadamard each row with the first vector (x-vector); the index i is changing the fastest.
+                for (int jk = 0; jk < ny*nz; ++jk)  // For each j and k, iterate over each row in all of the stacks at once
                 {
-                    Vmath::Vmul(nquad1,tmp.get()+i+j*nquad0*nquad1,nquad0,(double*)w1,1,
-                        tmp.get()+i+j*nquad0*nquad1, nquad0);
+                    Vmath::Vmul(
+                        nx,                         // Size of first weight vector
+                        &inarray[0] + jk*nx, 1,     // Offset and stride of each row-vector (x is changing fastest)
+                        fx.get(), 1,                // First weight vector (with stride of 1)
+                        &outarray[0] + jk*nx, 1     // Output has same offset and stride as input
+                    );
                 }
-            }
 
-            for(i = 0; i < nquad2; ++i)
+                // Hadamard each column with the second vector (y-vector)
+                for (int k = 0; k < nz; ++k)                    // For each stack in the 3D-array, do the following...
+                {
+                    for (int i = 0; i < nx; ++i)                // Iterate over each column in the current stack
+                    {
+                        Vmath::Vmul(
+                            ny,                                 // Size of second weight vector
+                            &outarray[0] + i + nx*ny*k, nx,     // Offset and stride of each column-vector
+                            gy.get(), 1,                        // second weight vector (with stride of 1)
+                            &outarray[0] + i + nx*ny*k, nx      // Output has same offset and stride as input
+                        );
+                    }
+                }
+
+                // Hadamard each stack-vector with the third vector (z-vector)
+                for (int ij = 0; ij < nx*ny; ++ij)              // Iterate over each element in the topmost stack
+                {
+                    Vmath::Vmul(
+                        nz,                                     // Size of third weight vector
+                        &outarray[0] + ij, nx*ny,               // Offset and stride of each stack-vector
+                        hz.get(), 1,                            // Third weight vector (with stride of 1)
+                        &outarray[0] + ij, nx*ny                // Output has same offset and stride as input
+                    );
+                }
+
+            }
+            
+
+            // Inner-Product with respect to the weights: i.e., this is the triple sum of the product 
+            // of the four inputs over the Hexahedron
+            // x-dimension is the row, it is the index that changes the fastest
+            // y-dimension is the column
+            // z-dimension is the stack, it is the index that changes the slowest
+            NekDouble TripleInnerProduct( 
+                                        const ConstArray<OneD, NekDouble>& fxyz, 
+                                        const ConstArray<OneD, NekDouble>& wx, 
+                                        const ConstArray<OneD, NekDouble>& wy, 
+                                        const ConstArray<OneD, NekDouble>& wz
+                                        )
             {
-                Blas::Dscal(nquad0*nquad1,(double) w2[i],tmp.get()+i*nquad0*nquad1,1);
+                int Qx = wx.num_elements();
+                int Qy = wy.num_elements();
+                int Qz = wz.num_elements();
+
+                if( fxyz.num_elements() != Qx*Qy*Qz ) {
+                    cerr << "TripleTetrahedralInnerProduct expected " << fxyz.num_elements() << 
+                        " quadrature points from the discretized input function but got " << 
+                        Qx*Qy*Qz << " instead." << endl;
+                }
+
+                // Sum-factorizing over the stacks
+                Array<OneD, NekDouble> A(Qx*Qy, 0.0);
+                for( int i = 0; i < Qx; ++i ) {
+                    for( int j = 0; j < Qy; ++j ) {
+                        for( int k = 0; k < Qz; ++k ) {
+                            A[i + Qx*j] +=  fxyz[i + Qx*(j + Qy*k)] * wz[k];
+                        }
+                    }
+                }
+
+                // Sum-factorizing over the columns
+                Array<OneD, NekDouble> b(Qx, 0.0);
+                for( int i = 0; i < Qx; ++i ) {
+                    for( int j = 0; j < Qy; ++j ) {
+                        b[i] +=  A[i + Qx*j] * wy[j];
+                    }
+                }
+
+                // Sum-factorizing over the rows
+                NekDouble c = 0;
+                for( int i = 0; i < Qx; ++i ) {
+                    c +=  b[i] * wx[i];
+                }
+
+                return c;
             }
+        }
+        
+        NekDouble StdHexExp::Integral3D(const ConstArray<OneD, NekDouble>& inarray, 
+                                        const ConstArray<OneD, NekDouble>& wx,
+                                        const ConstArray<OneD, NekDouble>& wy, 
+                                        const ConstArray<OneD, NekDouble>& wz)
+        {
+            return TripleInnerProduct( inarray, wx, wy, wz );
 
-            Int = Vmath::Vsum(nquad0*nquad1*nquad2,tmp.get(),1);
-
-            return Int;
         }
 
+
+        NekDouble StdHexExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
+        {
+            ConstArray<OneD, NekDouble> w0, w1, w2;
+
+            w0 = ExpPointsProperties(0)->GetW();
+            w1 = ExpPointsProperties(1)->GetW();
+            w2 = ExpPointsProperties(2)->GetW();
+
+            return Integral3D(inarray, w0, w1, w2);
+        }
+        
 
         /**
         f_pq = (phi_p phi_q, u)
 
         **/
-
-        void StdHexExp::IProductWRTBase(const double * inarray, double * outarray)
+        
+        void StdHexExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
         {
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-                m_base[2]->GetBdata(),inarray,outarray,1);
+            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
         }
 
 
-
-        void StdHexExp:: IProductWRTBase(const double *base0, const double *base1, 
-            const double *base2, const double *inarray,
-            double *outarray, int coll_check)
+        void StdHexExp::IProductWRTBase(    const ConstArray<OneD, NekDouble>& bx, 
+                                            const ConstArray<OneD, NekDouble>& by, 
+                                            const ConstArray<OneD, NekDouble>& bz, 
+                                            const ConstArray<OneD, NekDouble>& inarray, 
+                                            Array<OneD, NekDouble> & outarray )
         {
-            int i,j;
-            int    nquad0 = m_base[0]->GetPointsOrder();
-            int    nquad1 = m_base[1]->GetPointsOrder();
-            int    nquad2 = m_base[2]->GetPointsOrder();
-            int    order0 = m_base[0]->GetBasisOrder();
-            int    order1 = m_base[1]->GetBasisOrder();
-            int    order2 = m_base[2]->GetBasisOrder();
+            int     Qx = m_base[0]->GetNumPoints();
+            int     Qy = m_base[1]->GetNumPoints();
+            int     Qz = m_base[2]->GetNumPoints();
 
-            const double *z,*w0,*w1,*w2;
+            int     P = m_base[0]->GetNumModes() - 1;
+            int     Q = m_base[1]->GetNumModes() - 1;
+            int     R = m_base[2]->GetNumModes() - 1;
 
-            int size = std::max(order0,nquad0)*std::max(order1,nquad1)*
-                std::max(order2,nquad2);
-            BstShrDArray tmp  = GetDoubleTmpSpace(size);
-            BstShrDArray tmp1 = GetDoubleTmpSpace(size);
-
-#if FULLDEBUG
-            if((m_base[0]->GetAlpha() != 0.0)||(m_base[1]->GetAlpha() != 0.0)||
-                m_base[2]->GetAlpha() != 0.0)
-            {
-                ErrorUtil::Error(ErrorUtil::ewarning,"StdHexExp::IProductWRTBase",
-                    "Basis has non-zero alpha weight");
-            }
-
-            if((m_base[0]->GetBeta() != 0.0)||(m_base[1]->GetBeta() != 0.0)||
-                m_base[2]->GetBeta() != 0.0)
-            {
-                ASSERTL0(false, "Basis has non-zero beta weight");
-            }
-#endif
-
-            BasisManagerSingleton::Instance().GetZW(m_base[0],z,w0);
-            BasisManagerSingleton::Instance().GetZW(m_base[1],z,w1);
-            BasisManagerSingleton::Instance().GetZW(m_base[2],z,w2);
-
-            // Note cannot use outarray as tmp space since dimensions are not always
-            // guarenteed to be sufficient 
-
-            // multiply by integration constants 
-
-            for(i = 0; i < nquad1*nquad2; ++i)
-            {
-                Vmath::Vmul(nquad0,(double*)inarray+i*nquad0,1,(double*)w0,1,
-                    tmp.get()+i*nquad0,1);
-            }
-
-            for(j = 0; j < nquad2; ++j)
-            {
-                for(i = 0; i < nquad0; ++i)
-                {
-                    Vmath::Vmul(nquad1,tmp.get()+i+j*nquad0*nquad1,nquad0,(double*)w1,1,
-                        tmp.get()+i+j*nquad0*nquad1, nquad0);
+            // Build an index map from the rectangle to the triangle -- This is not necessary for hexahedron
+            Array<OneD, int> pq  = Array<OneD, int>( (P+1)*(Q+1), -1 );
+            for( int p = 0, mode = 0; p <= P; ++p ) {
+                for( int q = 0; q <= Q ; ++q, ++mode ) {
+                    pq[q + (Q+1)*p] = mode;
                 }
             }
 
-            for(i = 0; i < nquad2; ++i)
-            {
-                Blas::Dscal(nquad0*nquad1,(double) w2[i],tmp.get()+i*nquad0*nquad1,1);
-            }
-
-
-            if(coll_check&&m_base[0]->Collocation())
-            {
-                Vmath::Vcopy(order0*nquad1*nquad2,tmp.get(),1,tmp1.get(),1);
-            }
-            else
-            {
-                Blas::Dgemm('T','N',order0,nquad1*nquad2,nquad0,1.0,base0,nquad0,
-//                    Blas::Dgemm('N','N',order0,nquad1*nquad2,nquad0,1.0,base0,nquad0, // make column major matrix
-                    tmp.get(),nquad0,0.0,tmp1.get(),order0);
-            }
-
-
-            if(coll_check&&m_base[1]->Collocation())
-            {
-                Vmath::Vcopy(order0*order1*nquad2,tmp.get(),1,tmp.get(),1);
-            }
-            else
-            {
-                for(i=0;i<nquad2;++i)
-                {
-                    Blas::Dgemm('N','N',order0,order1,nquad1,1.0,tmp1.get()+i*order0*nquad1,
-//                        Blas::Dgemm('N','T',order0,order1,nquad1,1.0,tmp1.get()+i*order0*nquad1, // make column major matrix
-                        order0,base1, nquad1, 0.0, tmp.get()+i*order0*order1,order0);
+            // Create an index map from the hexahedron to the tetrahedron. -- This is not necessary for hexahedron
+            // The actual index is too difficult to compute explicitly.
+            Array<OneD, int> pqr = Array<OneD, int>( (P+1)*(Q+1)*(R+1), -1 );
+            for( int p = 0, mode = 0; p <= P; ++p ) {
+                for( int q = 0; q <= Q; ++q ) {
+                    for( int r = 0; r <= R; ++r, ++mode ) {
+                        pqr[r + (R+1)*(q + (Q+1)*p)] = mode;
+                    }
                 }
             }
 
-            if(coll_check&&m_base[2]->Collocation())
-            {
-                Vmath::Vcopy(order0*order1*order2,tmp.get(),1,outarray,1);
+            // Compute innerproduct over each mode in the Hexahedron domain
+            for( int p = 0; p <= P; ++p ) {
+                for( int q = 0; q <= Q; ++q ) {
+                    for( int r = 0; r <= R; ++r ) {
+
+                        // Determine the index for specifying which mode to use in the basis
+                        int mode_p      = p;
+                        int mode_pq     = pq[q + (Q+1)*p];
+                        int mode_pqr    = pqr[r + (R+1)*(q + (Q+1)*p)];
+
+                        // Compute tensor product of inarray with the 3 basis functions
+                        Array<OneD, NekDouble> g_pqr = Array<OneD, NekDouble>( Qx*Qy*Qz, 0.0 );
+                        for( int k = 0; k < Qz; ++k ) {
+                            for( int j = 0; j < Qy; ++j ) {
+                                for( int i = 0; i < Qx; ++i ) {
+                                    int s = i + Qx*(j + Qy*k);
+                                     g_pqr[s] += inarray[s] * 
+                                            bx[i + Qx*p] * 
+                                            by[j + Qy*q] * 
+                                            bz[k + Qz*r];
+                                }
+                            }
+                        }
+
+                        outarray[r + (R+1)*(q + (Q+1)*p)] = Integral( g_pqr );
+                    }
+                }
             }
-            else
-            {
-                Blas::Dgemm('N','N',order0*order1,order2,nquad2,1.0,tmp.get(),
-//                    Blas::Dgemm('N','T',order0*order1,order2,nquad2,1.0,tmp.get(), // make column major matrix
-                    order0*order1, base2, nquad2, 0.0, outarray, 
-                    order0*order1);
+        }
+        
+        
+        ///////////////////////////////
+        /// Differentiation Methods
+        ///////////////////////////////
+        
+        void StdHexExp::PhysDeriv( Array<OneD, NekDouble> &out_d0,
+                                   Array<OneD, NekDouble> &out_d1,
+                                   Array<OneD, NekDouble> &out_d2)
+        {
+            PhysTensorDeriv(this->m_phys, out_d0, out_d1, out_d2);
+        }
+        void StdHexExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+                                   Array<OneD, NekDouble> &out_d0,
+                                   Array<OneD, NekDouble> &out_d1,
+                                   Array<OneD, NekDouble> &out_d2)
+        {
+            PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
+        }
+
+        //------------------------------
+        // Evaluation Methods
+        //-----------------------------
+
+       void StdHexExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                                Array<OneD, NekDouble> &outarray)
+        {
+
+            ASSERTL1( (m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
+                      (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
+                "Basis[1] is not a general tensor type");
+
+            ASSERTL1( (m_base[2]->GetBasisType() != LibUtilities::eOrtho_C) ||
+                      (m_base[2]->GetBasisType() != LibUtilities::eModified_C),
+                "Basis[2] is not a general tensor type");
+
+            int     Qx = m_base[0]->GetNumPoints();
+            int     Qy = m_base[1]->GetNumPoints();
+            int     Qz = m_base[2]->GetNumPoints();
+
+            int     P = m_base[0]->GetNumModes() - 1;
+            int     Q = m_base[1]->GetNumModes() - 1;
+            int     R = m_base[2]->GetNumModes() - 1;
+
+            ConstArray<OneD, NekDouble> xBasis  = m_base[0]->GetBdata();
+            ConstArray<OneD, NekDouble> yBasis  = m_base[1]->GetBdata();
+            ConstArray<OneD, NekDouble> zBasis  = m_base[2]->GetBdata();
+
+
+            // Build an index map from the rectangle to the triangle -- This is not necessary for hexahedron
+            Array<OneD, int> pq  = Array<OneD, int>( (P+1)*(Q+1), -1 );
+            for( int p = 0, mode = 0; p <= P; ++p ) {
+                for( int q = 0; q <= Q; ++q, ++mode ) {
+                    pq[q + (Q+1)*p] = mode;
+                }
+            }
+
+            // Create an index map from the hexahedron to the tetrahedron.-- This is not necessary for hexahedron
+            // Explicit computation of the actual index is error-prone and too difficult.
+            Array<OneD, int> pqr = Array<OneD, int>( (P+1)*(Q+1)*(R+1), -1 );
+            for( int p = 0, mode = 0; p <= P; ++p ) {
+                for( int q = 0; q <= Q; ++q ) {
+                    for( int r = 0; r <= R; ++r, ++mode ) {
+                        pqr[r + (R+1)*(q + (Q+1)*p)] = mode;
+                    }
+                }
+            }
+
+            // Sum-factorize the triple summation starting with the z-dimension
+            for( int k = 0; k < Qz; ++k ) {
+
+                // Create the matrix of coefficients summed over the z-modes
+                Array<OneD, NekDouble> Ak((P+1)*(Q+1), 0.0);
+                for( int p = 0; p <= P; ++p ) {
+                    for( int q = 0; q <= Q; ++q ) {
+                        for( int r = 0; r <= R; ++r ) {
+//                             int mode = r + (R+1)*(q + (Q+1)*p);
+                             int mode = r + (R+1)*(q + (Q+1)*p);
+                            Ak[q + (Q+1)*p]   +=   inarray[mode]  *  zBasis[k + Qz*r];
+                        }
+                    }
+                }
+
+                // Factorize the y-dimension
+                for( int j = 0; j < Qy; ++j ) {
+
+                    // Create the vector of coefficients summed over the y and z-modes
+                    Array<OneD, NekDouble> bjk(P+1, 0.0);
+                    for( int p = 0; p <= P; ++p ) {
+                        for( int q = 0; q <= Q; ++q ) {
+//                             int mode = pq[q + (Q+1)*p];
+                            int mode = q + (Q+1)*p;
+                            bjk[p]   +=   Ak[q + (Q+1)*p]  *  yBasis[j + Qy*q];
+                        }
+                    }
+
+                    // Factorize the x-dimension
+                    for( int i = 0; i < Qx; ++i ) {
+
+                        NekDouble cijk = 0.0;
+                        for( int p = 0; p <= P; ++p ) {
+                            int mode = p;
+                            cijk   +=   bjk[p]  *  xBasis[i + Qx*p];
+                        }
+                        outarray[i + Qx*(j + Qy*k)] = cijk;
+                    }
+                }
             }
         }
 
-        void StdHexExp::FillMode(const int mode, double *outarray)
+ 
+        void StdHexExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+                                 Array<OneD, NekDouble> &outarray)
+        {
+            if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
+            {
+                Vmath::Vcopy(GetNcoeffs(), &inarray[0], 1, &outarray[0], 1);
+            }
+            else
+            {
+                IProductWRTBase(inarray,outarray);
+                
+                // get Mass matrix inverse
+                StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
+                DNekMatSharedPtr matsys = GetStdMatrix(masskey);
+                
+                // copy inarray in case inarray == outarray
+                DNekVec in (m_ncoeffs,outarray);
+                DNekVec out(m_ncoeffs,outarray,eWrapper);
+
+                out = (*matsys)*in;
+
+            }
+        }
+
+        /// Single Point Evaluation
+        NekDouble StdHexExp::PhysEvaluate(ConstArray<OneD, NekDouble>& coords)
+        {
+             return  StdExpansion3D::PhysEvaluate3D(coords);  
+        }
+        
+       void StdHexExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
+        {
+            ConstArray<OneD, NekDouble> eta_x = ExpPointsProperties(0)->GetZ();
+            ConstArray<OneD, NekDouble> eta_y = ExpPointsProperties(1)->GetZ();
+            ConstArray<OneD, NekDouble> eta_z = ExpPointsProperties(2)->GetZ();
+            int Qx = GetNumPoints(0);
+            int Qy = GetNumPoints(1);
+            int Qz = GetNumPoints(2);
+
+            // Convert collapsed coordinates into cartesian coordinates: eta --> xi
+            for( int k = 0; k < Qz; ++k ) {
+                for( int j = 0; j < Qy; ++j ) {
+                    for( int i = 0; i < Qx; ++i ) {
+                            int s = i + Qx*(j + Qy*k);
+                            xi_x[s] = eta_x[i];
+                            xi_y[s] = eta_y[j];
+                            xi_z[s] = eta_z[k];
+
+                    }
+                }
+            }
+        }
+
+        void StdHexExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
             int    i,j;
-            int   nquad0 = m_base[0]->GetPointsOrder();
-            int   nquad1 = m_base[1]->GetPointsOrder();
-            int   nquad2 = m_base[2]->GetPointsOrder();
-            const double * base0  = m_base[0]->GetBdata();
-            const double * base1  = m_base[1]->GetBdata();
-            const double * base2  = m_base[2]->GetBdata();
-            int   btmp0 = m_base[0]->GetBasisOrder();
-            int   btmp1 = m_base[1]->GetBasisOrder();
+            int   nquad0 = m_base[0]->GetNumPoints();
+            int   nquad1 = m_base[1]->GetNumPoints();
+            int   nquad2 = m_base[2]->GetNumPoints();
+            
+             ConstArray<OneD, NekDouble> base0  = m_base[0]->GetBdata();
+             ConstArray<OneD, NekDouble> base1  = m_base[1]->GetBdata();
+             ConstArray<OneD, NekDouble> base2  = m_base[2]->GetBdata();
+            
+            int   btmp0 = m_base[0]->GetNumModes();
+            int   btmp1 = m_base[1]->GetNumModes();
             int   mode2 = mode/(btmp0*btmp1);
             int   mode1 = (mode-mode2*btmp0*btmp1)/btmp0;
             int   mode0 = (mode-mode2*btmp0*btmp1)%btmp0;
@@ -255,70 +464,80 @@ namespace Nektar
             ASSERTL2(m_ncoeffs <= modes,
                 "calling argument mode is larger than total expansion order");
 
-
             for(i = 0; i < nquad1*nquad2; ++i)
             {
-                Vmath::Vcopy(nquad0,(double *)(base0 + mode0*nquad0),1,
-                    outarray+i*nquad0,1);
+                Vmath::Vcopy(nquad0,(double *)(base0.get() + mode0*nquad0),1,
+                             &outarray[0]+i*nquad0, 1);
             }
 
             for(j = 0; j < nquad2; ++j)
             {
                 for(i = 0; i < nquad0; ++i)
                 {
-                    Vmath::Vmul(nquad1,(double *)(base1 + mode1*nquad1),1,
-                        outarray+i+j*nquad0*nquad1,nquad0,
-                        outarray+i+j*nquad0*nquad1,nquad0);
+                    Vmath::Vmul(nquad1,(double *)(base1.get() + mode1*nquad1),1,
+                        &outarray[0]+i+j*nquad0*nquad1, nquad0,
+                        &outarray[0]+i+j*nquad0*nquad1, nquad0);
                 }
             }
 
             for(i = 0; i < nquad2; i++)
             {
                 Blas::Dscal(nquad0*nquad1,base2[mode2*nquad2+i],
-                    outarray+i*nquad0*nquad1,1);
+                            &outarray[0]+i*nquad0*nquad1,1);
             }
         }
 
-        void StdHexExp::GenMassMatrix(double * outarray)
+        //void StdHexExp::GenMassMatrix(double * outarray)        
+        DNekMatSharedPtr StdHexExp::GenMatrixHex(MatrixType mtype)
         {
             int      i,j;
-            int      order0    = GetBasisOrder(0);
-            int      order1    = GetBasisOrder(1);
-            int      order2    = GetBasisOrder(2);
+         
+            int      order0    = GetBasisNumModes(0);
+            int      order1    = GetBasisNumModes(1);
+            int      order2    = GetBasisNumModes(2);
             int      tot_order = GetNcoeffs();
 
-            StdExpansion::GenerateMassMatrix(outarray);
+             //StdExpansion::GenerateMassMatrix(outarray);
+            DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mtype);
 
 
+        switch(mtype)
+        {
+        case eMass:
             // For Fourier basis set the imaginary component of mean mode
             // to have a unit diagonal component in mass matrix 
-            if(m_base[0]->GetBasisType() == eFourier)
+            if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
             {
                 for(i = 0; i < order1*order2; ++i)
                 {
-                    outarray[(order0*i+1)*tot_order+i*order0+1] = 1.0;
+//                     outarray[(order0*i+1)*tot_order+i*order0+1] = 1.0;
+                         //(*Mat)((order0*i+1)*tot_order+i*order0+1) = 1.0;
                 }
             }
 
-            if(m_base[1]->GetBasisType() == eFourier)
+            if(m_base[1]->GetBasisType() == LibUtilities::eFourier)
             {
                 for(j = 0; j < order2; ++j)
                 {
                     for(i = 0; i < order0; ++i)
                     {
-                        outarray[(order0+i)*tot_order+order0+i + 
-                            j*(order0*order1)*(tot_order+1)] = 1.0;
+                        //(*Mat)((order0+i)*tot_order+order0+i+j*(order0*order1)*(tot_order+1)) = 1.0;
                     }
                 }
             }
 
-            if(m_base[2]->GetBasisType() == eFourier)
+            if(m_base[2]->GetBasisType() == LibUtilities::eFourier)
             {
                 for(i = 0; i < order0*order1; ++i)
                 {
-                    outarray[(order0*order1)*(tot_order+1)+i*tot_order +i] = 1.0;
+                    //(*Mat)((order0*order1)*(tot_order+1)+i*tot_order +i) = 1.0;
                 }
             }
+            break;
+            
+          }
+          
+          return Mat;
         }
 
         void StdHexExp::GenLapMatrix(double * outarray)
@@ -326,220 +545,18 @@ namespace Nektar
             ASSERTL0(false, "Not implemented");
         }
 
-        StdMatContainer * StdHexExp::GetMassMatrix() 
-        {
-            StdMatContainer * tmp;
-            tmp = s_elmtmats.GetLocalMass(this);
-            return tmp;
-        }
-
-        StdMatContainer * StdHexExp::GetLapMatrix() 
-        {
-            StdMatContainer * tmp;
-            tmp = s_elmtmats.GetLocalLap(this);
-            return tmp;
-        }
 
 
-        ///////////////////////////////
-        /// Differentiation Methods
-        ///////////////////////////////
 
-        void StdHexExp::Deriv(double *outarray_d0, double *outarray_d1, 
-            double *outarray_d2)
-        {
-            TensorDeriv(this->m_phys, outarray_d0, outarray_d1, outarray_d2);
-        }
-
-        void StdHexExp::Deriv(const double *inarray, double *outarray_d0, 
-            double *outarray_d1, double *outarray_d2)
-        {
-            TensorDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
-        }
-
-        //------------------------------
-        // Evaluation Methods
-        //-----------------------------
-
-        void StdHexExp::BwdTrans(double * outarray)
-        {
-            int           i;
-            int           nquad0 = m_base[0]->GetPointsOrder();
-            int           nquad1 = m_base[1]->GetPointsOrder();
-            int           nquad2 = m_base[2]->GetPointsOrder();
-
-            int           order0 = m_base[0]->GetBasisOrder();
-            int           order1 = m_base[1]->GetBasisOrder();
-            int           order2 = m_base[2]->GetBasisOrder();
-
-            const double *base0  = m_base[0]->GetBdata();
-            const double *base1  = m_base[1]->GetBdata();
-            const double *base2  = m_base[2]->GetBdata();
-
-            double *tmp  = new double [nquad0*std::max(nquad1,order1)*order2];
-            double *tmp1 = new double [nquad0*nquad1*std::max(nquad2,order2)];
-
-            if(m_base[0]->Collocation())
-            {
-                Vmath::Vcopy(nquad0*order1*order2,m_coeffs,1,tmp,1);
-            }
-            else
-            {
-                Blas::Dgemm('N','N', nquad0,order1*order2,order0,1.0, base0, nquad0,
-//                    Blas::Dgemm('N','T', nquad0,order1*order2,order0,1.0, base0, nquad0,// make column major matrix
-                    m_coeffs, order0,0.0,tmp,nquad0);
-            }
-
-
-            if(m_base[1]->Collocation())
-            {
-                Vmath::Vcopy(nquad0*nquad1*order2,tmp,1,tmp1,1);
-            }
-            else
-            {
-                for(i = 0; i < order2; ++i)
-                {
-                    Blas::Dgemm('N','T',nquad0,nquad1,order1,1.0,tmp+i*nquad0*order1,
-//                         Blas::Dgemm('N','T',nquad0,nquad1,order1,1.0,tmp+i*nquad0*order1,
-                        nquad0,base1,nquad1,0.0,tmp1+i*nquad0*nquad1,nquad0);
-                }
-            }
-
-            if(m_base[2]->Collocation())
-            {
-                Vmath::Vcopy(nquad0*nquad1*nquad2,tmp1,1,outarray,1);
-            }
-            else
-            {
-                Blas::Dgemm('N','T',nquad0*nquad1,nquad2,order2,1.0,tmp1,
-                    nquad0*nquad1,base2,nquad2,0.0,outarray,nquad0*nquad1);
-            }
-        }
-
-        void StdHexExp::FwdTrans(const double *inarray)
-        {
-            StdMatContainer *M;
-
-            if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&
-                (m_base[2]->Collocation()))
-            {
-                Vmath::Vcopy(GetNcoeffs(),inarray,1,m_coeffs,1);
-            }
-            else
-            {
-                IProductWRTBase(inarray,m_coeffs);
-                M = GetMassMatrix();
-                M->Solve(m_coeffs,1);
-            }
-        }
-
-        /// Single Point Evaluation
-        double StdHexExp::Evaluate(const double * coords)
-        {
-            return  PhysEvaluate(coords); 
-        }
-
-    void StdHexExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-    {
-        mat->SetLda(m_ncoeffs);
-        mat->SetMatForm(eSymmetric_Positive);
-      
-        if(GeoFacType() == eRegular)
-        {
-        switch(Mform)
-        {
-        case eMassMatrix:
-            switch(m_base[2]->GetBasisType())
-            {
-            case eOrtho_A: case eLegendre:
-            if(m_base[2]->ExactIprodInt())
-            {
-                goto eHexOrtho1;
-            }
-            break;
-            case eGLL_Lagrange:
-            if(m_base[1]->Collocation())
-            {
-                goto eHexOrtho1;
-            }
-            break;
-            case eFourier:
-            goto eHexOrtho1;
-            break;
-            eHexOrtho1:
-            {
-                switch(m_base[1]->GetBasisType())
-                {
-                case eOrtho_A: case eLegendre:
-                if(m_base[1]->ExactIprodInt())
-                {
-                    goto eHexOrtho2;
-                }
-                break;
-                case eGLL_Lagrange:
-                if(m_base[1]->Collocation())
-                {
-                    goto eHexOrtho2;
-                                        }
-                break;
-                case eFourier:
-                goto eHexOrtho2;
-                break;
-                default:
-                mat->SetMatForm(eSymmetric_Positive_Banded);
-                mat->SetBwidth(m_base[0]->GetBasisOrder()*m_base[1]->GetBasisOrder());
-                break;
-                eHexOrtho2:
-                {
-                    switch(m_base[0]->GetBasisType())
-                    {
-                    case eOrtho_A: case eLegendre:
-                    if(m_base[0]->ExactIprodInt())
-                    {
-                        goto eHexOrtho3;
-                    }
-                    break;
-                    case eGLL_Lagrange:
-                    if(m_base[0]->Collocation())
-                    {
-                        goto eHexOrtho3;
-                    }
-                    break;
-                    case eFourier:
-                    goto eHexOrtho3;
-                    break;
-                    default:
-                    mat->SetMatForm(eSymmetric_Positive_Banded);
-                    mat->SetBwidth(m_base[0]->GetBasisOrder());
-                    break;
-                    eHexOrtho3:
-                    {
-                        mat->SetMatForm(eSymmetric_Positive_Banded);
-                        mat->SetBwidth(1);
-                        break;
-                    }
-                    }
-                }
-                }
-            }
-            }
-            break;
-        case eLapMatrix:
-            mat->SetMatForm(eSymmetric);    
-            break;
-        default:
-            ASSERTL0(false, "MatrixType not known");
-            break;
-        
-        }
-        }
-    }
   
     }//end namespace
 }//end namespace
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.8  2007/10/15 20:38:41  ehan
+* Make changes of column major matrix
+*
 * Revision 1.7  2007/07/20 02:16:54  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

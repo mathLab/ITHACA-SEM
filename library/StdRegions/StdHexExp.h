@@ -49,17 +49,19 @@ namespace Nektar
         {
 
         public:
+        
+            StdHexExp();
 
             /** \brief Constructor using BasisKey class for quadrature
             *  points and order definition 
             */
-            StdHexExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
+            StdHexExp(const  LibUtilities::BasisKey &Ba, const  LibUtilities::BasisKey &Bb, const  LibUtilities::BasisKey &Bc);
 
             /** \brief Constructor using BasisKey class for quadrature
             *  points and order definition where m_coeffs and m_phys 
             *  are all set. 
             */
-            StdHexExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
+            StdHexExp(const  LibUtilities::BasisKey &Ba, const  LibUtilities::BasisKey &Bb, const  LibUtilities::BasisKey &Bc,
                 double *coeffs, double *phys);
 
             /** \brief Copy Constructor */
@@ -67,39 +69,54 @@ namespace Nektar
 
             /** \brief Destructor */
             ~StdHexExp();
+            
 
             /** \brief Return Shape of region, using  ShapeType enum list. 
             *  i.e. Hexahedron
             */
-            ShapeType DetShapeType()
+      
+            ShapeType DetShapeType() const
             {
                 return eHexahedron;
-            };
+            }
 
             /** \brief Fill outarray with mode \a mode of expansion
             *
             *    Note for hexahedral expansions _base[0] (i.e. p)  modes run 
             *  fastest
             */
-            void FillMode(int mode, double *array);
+            //void FillMode(int mode, double *array);
+            void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
 
             //////////////////////////////
             /// Integration Methods
             //////////////////////////////
 
-            double Integral(const double *inarray);
-            void IProductWRTBase(const double * inarray, double * outarray);
+            NekDouble Integral3D(const ConstArray<OneD, NekDouble>& inarray, 
+                                const ConstArray<OneD, NekDouble>& wx,
+                                const ConstArray<OneD, NekDouble>& wy, 
+                                const ConstArray<OneD, NekDouble>& wz);
+            NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray);
+            
+            void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> & outarray);
+
+            void IProductWRTBase(const ConstArray<OneD, NekDouble>& bx, 
+                                 const ConstArray<OneD, NekDouble>& by, 
+                                 const ConstArray<OneD, NekDouble>& bz, 
+                                 const ConstArray<OneD, NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> & outarray );
 
             //----------------------------------
             // Local Matrix Routines
             //----------------------------------
+            //void GenMassMatrix(double * outarray);
+              DNekMatSharedPtr GenMatrixHex(MatrixType mtype);
+           // DNekMatSharedPtr GenMatrix(MatrixType mtype);
 
-            void GenMassMatrix(double * outarray);
+             void GenLapMatrix(double * outarray);
 
-            void GenLapMatrix(double * outarray);
-
-            StdMatContainer * GetMassMatrix();
-            StdMatContainer * GetLapMatrix();
+//             StdMatContainer * GetMassMatrix();
+//             StdMatContainer * GetLapMatrix();
 
             //----------------------------
             // Differentiation Methods
@@ -110,26 +127,40 @@ namespace Nektar
             *  For quadrilateral region can use the Tensor_Deriv function
             *  defined under StdExpansion.
             */
-            void Deriv(double * outarray_d1, double *outarray_d2, double *outarray_d3);
+           // void Deriv(double * outarray_d1, double *outarray_d2, double *outarray_d3);
 
             /** \brief Calculate the deritive of the physical points 
             *
             *  For quadrilateral region can use the Tensor_Deriv function
             *  defined under StdExpansion.
             */
-            void Deriv(const double *inarray, double * outarray_d1,
-                double *outarray_d2, double * outarray_d3);
+//             void Deriv(const double *inarray, double * outarray_d1,
+//                 double *outarray_d2, double * outarray_d3);
+                
+         void PhysDeriv( Array<OneD, NekDouble> &out_d0,
+                                   Array<OneD, NekDouble> &out_d1,
+                                   Array<OneD, NekDouble> &out_d2);
+
+         void PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+                                   Array<OneD, NekDouble> &out_d0,
+                                   Array<OneD, NekDouble> &out_d1,
+                                   Array<OneD, NekDouble> &out_d2);
+                                   
+          void GetCoords(Array<OneD, NekDouble> &coords_0, 
+               Array<OneD, NekDouble> &coords_1, Array<OneD, NekDouble> &coords_2);
 
             //----------------------------
             // Evaluations Methods
             //---------------------------
 
-            void BwdTrans(double * outarray);
-            void FwdTrans(const double * inarray);
-            double Evaluate(const double * coords);
+            //void BwdTrans(double * outarray);
+            void BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
 
-            // Matrix related methods 
-            void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
+            void FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
+            NekDouble PhysEvaluate(ConstArray<OneD, NekDouble>& coords);
+
 
             //----------------------------------
             // Local Matrix Routines
@@ -147,13 +178,19 @@ namespace Nektar
 
             DNekMatSharedPtr GenBwdTransMatrix();
 
+
+            DNekMatSharedPtr GenMatrix(MatrixType mtype)
+            {
+                return StdExpansion::CreateGeneralMatrix(mtype);
+            }
+
         protected:
-
-            static StdMatrix s_elmtmats;
-
-            void IProductWRTBase(const double *base0, const double *base1,
-                const double *base2, const double *inarray,
-                double *outarray, int coll_check);
+                
+            void IProductWRTBase(const ConstArray<OneD, NekDouble>&base0, 
+                                 const ConstArray<OneD, NekDouble>& base1, 
+                                 const ConstArray<OneD, NekDouble>& base2,
+                                 const ConstArray<OneD, NekDouble>& inarray,
+                                 Array<OneD, NekDouble>& outarray, int coll_check);
 
         private:
 
@@ -176,97 +213,108 @@ namespace Nektar
             {
                 return DetShapeType();
             };
-
-            virtual void v_FillMode(const int mode, double *array)
+            
+            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype) 
             {
-                FillMode(mode,array);
+                return GenMatrix(mtype);
+            }
+           
+            virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+            {
+                return FillMode(mode, outarray);
             }
 
-            virtual double v_Integral(const double *inarray )
+            virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray )
             {
                 return Integral(inarray);
             }
-
-            virtual void v_IProductWRTBase(const double * inarray, double * outarray)
+            
+            virtual void v_GetCoords(
+                Array<OneD, NekDouble> &coords_x,
+                Array<OneD, NekDouble> &coords_y,
+                Array<OneD, NekDouble> &coords_z)
             {
-                IProductWRTBase(inarray,outarray);
+                GetCoords(coords_x, coords_y, coords_z);
+            }
+            
+            virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(inarray, outarray);
             }
 
             /** \brief Virtual call to GenMassMatrix */
-            virtual DNekMatSharedPtr v_GenMassMatrix() 
+
+            virtual void v_PhysDeriv( Array<OneD, NekDouble> &out_d0,
+                                   Array<OneD, NekDouble> &out_d1,
+                                   Array<OneD, NekDouble> &out_d2)
             {
-                return GenMassMatrix();
+                    PhysDeriv(out_d0, out_d1, out_d2);
+            }
+            virtual void v_StdPhysDeriv( Array<OneD, NekDouble> &out_d0,
+                                   Array<OneD, NekDouble> &out_d1,
+                                   Array<OneD, NekDouble> &out_d2)
+            {
+                                   
+                    PhysDeriv(out_d0, out_d1, out_d2);                
             }
 
-            virtual DNekMatSharedPtr v_GenLaplacianMatrix() 
+            virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+                                   Array<OneD, NekDouble> &out_d0,
+                                   Array<OneD, NekDouble> &out_d1,
+                                   Array<OneD, NekDouble> &out_d2)
             {
-                return GenLaplacianMatrix();
+                    PhysDeriv(inarray, out_d0, out_d1, out_d2);
+            }                                  
+            virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+                                   Array<OneD, NekDouble> &out_d0,
+                                   Array<OneD, NekDouble> &out_d1,
+                                   Array<OneD, NekDouble> &out_d2)
+            {
+                    PhysDeriv(inarray, out_d0, out_d1, out_d2);
             }
 
-            virtual DNekMatSharedPtr v_GenLaplacianMatrix(const int i, const int j) 
+            
+            virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray)
             {
-                return GenLaplacianMatrix(i,j);
+                BwdTrans(inarray, outarray);
             }
 
-            virtual DNekMatSharedPtr v_GenWeakDerivMatrix(const int i) 
+            virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray)
             {
-                return GenWeakDerivMatrix(i);
+                FwdTrans(inarray, outarray);
             }
-
-            virtual DNekMatSharedPtr v_GenNBasisTransMatrix() 
+            
+            virtual NekDouble v_PhysEvaluate(ConstArray<OneD, NekDouble>& Lcoords)
             {
-                return GenNBasisTransMatrix();
+                return PhysEvaluate(Lcoords);
             }
-
-            virtual DNekMatSharedPtr v_GenBwdTransMatrix() 
+            
+             virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray) 
             {
-                return GenBwdTransMatrix();
-            }
-
-            virtual void v_Deriv(double * outarray_d1, double *outarray_d2,
-                double *outarray_d3)
+                 std::cout << "Implement me" << std::endl;
+                 return;
+            } 
+            
+            virtual void v_GenLapMatrix (Array<OneD, NekDouble> & outarray)
             {
-                Deriv(outarray_d1, outarray_d2, outarray_d3);
+                std::cout << "Implement me" << std::endl;
+                return;
             }
-
-            virtual void v_StdDeriv(double * outarray_d1, double *outarray_d2,
-                double *outarray_d3)
+            
+            virtual DNekMatSharedPtr v_GetMassMatrix() 
             {
-                Deriv(outarray_d1, outarray_d2, outarray_d3);
-            }
-
-            virtual void v_Deriv(const double *inarray, double * outarray_d1,
-                double *outarray_d2, double *outarray_d3)
+                std::cout << "Implement me" << std::endl;
+                int foo = 0;
+            } 
+            
+            virtual DNekMatSharedPtr v_GetLapMatrix()
             {
-                Deriv(inarray, outarray_d1, outarray_d2, outarray_d3);
-            }
-
-            virtual void v_StdDeriv(const double *inarray, double * outarray_d1,
-                double *outarray_d2, double *outarray_d3)
-            {
-                Deriv(inarray, outarray_d1, outarray_d2, outarray_d3);
-            }
-
-
-            virtual void v_BwdTrans(double * outarray)
-            {
-                BwdTrans(outarray);
-            }
-
-            virtual void v_FwdTrans(const double * inarray)
-            {
-                FwdTrans(inarray);
-            }
-
-            virtual double v_Evaluate(const double * coords)
-            {
-                return Evaluate(coords);
-            }
-
-            virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-            {
-                SetInvInfo(mat,Mform);
-            }
+                std::cout << "Implement me" << std::endl;
+                int foo = 0;
+            }  
 
         };
 
@@ -277,6 +325,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.10  2007/07/20 02:16:54  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.9  2007/07/10 21:05:16  kirby
 * even more fixes
 *

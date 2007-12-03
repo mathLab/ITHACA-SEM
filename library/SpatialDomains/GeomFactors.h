@@ -101,6 +101,11 @@ namespace Nektar
                 return m_jac;
             }
 
+            inline const ConstArray<TwoD,NekDouble> &GetNormals() const
+            {
+                return m_normals;
+            }
+
             inline void ResetGmat(const ConstArray<OneD,NekDouble> &ndata, 
                                   const int nq, const int expdim, 
                                   const int coordim)
@@ -116,6 +121,7 @@ namespace Nektar
         protected:
             Array<TwoD,NekDouble> m_gmat;
             Array<OneD,NekDouble> m_jac;
+            Array<TwoD,NekDouble> m_normals;
 
             GeomType m_gtype;
             int m_expdim;
@@ -128,6 +134,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.13  2007/07/22 23:04:23  bnelson
+// Backed out Nektar::ptr.
+//
 // Revision 1.12  2007/07/20 02:15:08  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

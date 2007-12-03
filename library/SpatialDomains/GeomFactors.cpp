@@ -76,12 +76,13 @@ namespace Nektar
             nquad = Coords[0]->GetNumPoints(0);
             m_expdim = nquad;
             ptype = Coords[0]->GetPointsType(0);
+            NekDouble fac0,fac1;
 
             Array<OneD,NekDouble> der[3] = {Array<OneD, NekDouble>(nquad),
                                             Array<OneD, NekDouble>(nquad), 
                                             Array<OneD, NekDouble>(nquad)};
 
-            // Calculate local derivatives using physical space storage
+            // Calculate local derivatives usin g physical space storage
             for(i = 0; i < coordim; ++i)
             {
                 ASSERTL2(Coords[i]->GetNumPoints(0) == nquad,
@@ -100,29 +101,57 @@ namespace Nektar
             {
                 m_jac  = Array<OneD, NekDouble>(1,0.0);
                 m_gmat = Array<TwoD, NekDouble>(coordim,1,0.0);
+                m_normals = Array<TwoD,NekDouble>(2,coordim,0.0);
 
+                fac0 = fac1 = 0.0;
                 for(i = 0; i < coordim; ++i)
                 {
                     m_gmat[i][0] = 1.0/der[i][0];
                     m_jac[0] += der[i][0]*der[i][0];
-                }
 
+                    m_normals[0][i] = -m_gmat[i][0];
+                    m_normals[1][i] =  m_gmat[i][0];
+
+                    fac0 += m_gmat[i][0]*m_gmat[i][0];
+                }
                 m_jac[0] = sqrt(m_jac[0]);
+                
+                fac0 = fac1 = sqrt(fac0);
             }
             else
             {
-                m_jac  = Array<OneD, NekDouble>(nquad);
-                m_gmat = Array<TwoD, NekDouble>(coordim,nquad);
+                m_jac     = Array<OneD, NekDouble>(nquad);
+                m_gmat    = Array<TwoD, NekDouble>(coordim,nquad);
+                m_normals = Array<TwoD,NekDouble>(2,coordim,0.0);
 
                 // invert local derivative for gmat;
+                fac0 = fac1 = 0.0;
                 for(i = 0; i < coordim; ++i)
                 {
                     Vmath::Sdiv(nquad,1.0,&der[i][0],1,&m_gmat[i][0],1);
                     Vmath::Vmul(nquad,&der[i][0],1,&der[i][0],1,&m_jac[0],1);
+
+                    m_normals[0][i] = m_gmat[i][0];
+                    m_normals[1][i] = -m_gmat[i][nquad-1];
+
+                    fac0 += m_gmat[i][0]*m_gmat[i][0];
+                    fac1 += m_gmat[i][nquad-1]*m_gmat[i][nquad-1];
                 }
                 Vmath::Vsqrt(nquad,&m_jac[0],1,&m_jac[0],1);
+
+                fac0 = sqrt(fac0);
+                fac1 = sqrt(fac1);
+
+            } 
+
+            // normalise normals 
+            for(i = 0; i  < coordim; ++i)
+            {
+                m_normals[0][i] /= fac0;
+                m_normals[1][i] /= fac1;
             }
-        }
+
+       }
 
 
         /**
@@ -182,7 +211,7 @@ namespace Nektar
         GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
                                  const ConstArray<OneD,StdRegions::StdExpansion2DSharedPtr> &Coords)
         {
-            int i,nquad0,nquad1,nqtot;
+            int i,j,nquad0,nquad1,nqtot;
             LibUtilities::PointsType  ptype0, ptype1;
 
             ASSERTL1((coordim >= 2)&&(coordim <= 3),
@@ -224,12 +253,12 @@ namespace Nektar
                 Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1[i],d2[i]);
             }
 
-            if((m_gtype == eRegular)||
-               (m_gtype == eMovingRegular))
+            if((m_gtype == eRegular)||(m_gtype == eMovingRegular))
             {
                 m_jac  = Array<OneD, NekDouble>(1,0.0);
                 m_gmat = Array<TwoD, NekDouble>(2*coordim,1,0.0);
-
+                m_normals = Array<TwoD,NekDouble>(coordim,1,0.0);
+                
                 if(coordim == 2) // assume g = [0,0,1]
                 {
                     m_jac[0] = d1[0][0]*d2[1][0] - d2[0][0]*d1[1][0];
@@ -260,6 +289,62 @@ namespace Nektar
 
                     m_jac[0] = sqrt(m_jac[0]);
                 }
+
+
+                // Set up normals
+                switch(Coords[0]->DetShapeType())
+                {
+                case StdRegions::eTriangle:
+                    {
+                        Array<OneD,NekDouble> fac(3,0.0);
+                        m_normals = Array<TwoD,NekDouble>(3,coordim,0.0);
+                        
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            m_normals[0][i] = -m_gmat[2*i+1][0];
+                            fac[0] += m_normals[0][i]*m_normals[0][i];
+                            m_normals[1][i] =  m_gmat[2*i+1][0] - m_gmat[2*i][0];
+                            fac[1] += m_normals[1][i]*m_normals[1][i];
+                            m_normals[2][i] = -m_gmat[2*i][0];
+                            fac[2] += m_normals[2][i]*m_normals[2][i];
+                        }
+
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            m_normals[0][i] /= sqrt(fac[0]);
+                            m_normals[1][i] /= sqrt(fac[1]);
+                            m_normals[2][i] /= sqrt(fac[2]);
+                        }
+                    }
+                    break;
+                case StdRegions::eQuadrilateral:
+                    {
+                        Array<OneD,NekDouble> fac(4,0.0);
+                        m_normals = Array<TwoD,NekDouble>(4,coordim,0.0);
+                        
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            m_normals[0][i] = -m_gmat[2*i+1][0];
+                            fac[0] += m_normals[0][i]*m_normals[0][i];
+                            m_normals[1][i] =  m_gmat[2*i][0];
+                            fac[1] += m_normals[1][i]*m_normals[1][i];
+                            m_normals[2][i] =  m_gmat[2*i+1][0];
+                            fac[2] += m_normals[2][i]*m_normals[2][i];
+                            m_normals[3][i] = -m_gmat[2*i][0];
+                            fac[3] += m_normals[3][i]*m_normals[3][i];
+                        }
+
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            m_normals[0][i] /= sqrt(fac[0]);
+                            m_normals[1][i] /= sqrt(fac[1]);
+                            m_normals[2][i] /= sqrt(fac[2]);
+                            m_normals[3][i] /= sqrt(fac[3]);
+                        }
+                    }
+                    break;
+                }
+
             }  
             else
             {
@@ -277,9 +362,9 @@ namespace Nektar
                     
                     Vmath::Vdiv(nqtot,&d2[1][0],1,&m_jac[0],1,&m_gmat[0][0],1); // d xi_1/d x_1
                     Vmath::Vdiv(nqtot,&d1[1][0],1,&m_jac[0],1,&m_gmat[1][0],1); 
-                    Vmath::Neg(nqtot,&m_gmat[1][0],1);                  // d xi_2/d x_1
+                    Vmath::Neg(nqtot,&m_gmat[1][0],1);                          // d xi_2/d x_1
                     Vmath::Vdiv(nqtot,&d2[0][0],1,&m_jac[0],1,&m_gmat[2][0],1); 
-                    Vmath::Neg(nqtot,&m_gmat[2][0],1);                  // d xi_1/d x_2
+                    Vmath::Neg(nqtot,&m_gmat[2][0],1);                          // d xi_1/d x_2
                     Vmath::Vdiv(nqtot,&d1[0][0],1,&m_jac[0],1,&m_gmat[3][0],1); // d xi_2/d x_2
                 }
                 else
@@ -309,37 +394,151 @@ namespace Nektar
 
                     // d xi_2/d x_1
                     Vmath::Vmul (nqtot,&d1[1][0],1,&g[2][0],1,&m_gmat[1][0],1);
-                    Vmath::Vvtvm(nqtot,&d1[2][0],1,&g[1][0],1,&m_gmat[1][0],1
-                                 ,&m_gmat[1][0],1);
+                    Vmath::Vvtvm(nqtot,&d1[2][0],1,&g[1][0],1,&m_gmat[1][0],1,&m_gmat[1][0],1);
                     Vmath::Vdiv(nqtot,&m_gmat[1][0],1,&m_jac[0],1,&m_gmat[1][0],1);
 
                     // d xi_1/d x_2
                     Vmath::Vmul (nqtot,&d2[0][0],1,&g[2][0],1,&m_gmat[2][0],1);
-                    Vmath::Vvtvm(nqtot,&d2[2][0],1,&g[0][0],1,&m_gmat[2][0],1,
-                                 &m_gmat[2][0],1);
+                    Vmath::Vvtvm(nqtot,&d2[2][0],1,&g[0][0],1,&m_gmat[2][0],1,&m_gmat[2][0],1);
                     Vmath::Vdiv(nqtot,&m_gmat[2][0],1,&m_jac[0],1,&m_gmat[2][0],1);
 
                     // d xi_2/d x_2
                     Vmath::Vmul (nqtot,&d1[2][0],1,&g[0][0],1,&m_gmat[3][0],1);
-                    Vmath::Vvtvm(nqtot,&d1[0][0],1,&g[2][0],1,&m_gmat[3][0],1,
-                                 &m_gmat[3][0],1);
+                    Vmath::Vvtvm(nqtot,&d1[0][0],1,&g[2][0],1,&m_gmat[3][0],1,&m_gmat[3][0],1);
                     Vmath::Vdiv(nqtot,&m_gmat[3][0],1,&m_jac[0],1,&m_gmat[3][0],1);
 
                     // d xi_1/d x_3
                     Vmath::Vmul (nqtot,&d2[1][0],1,&g[0][0],1,&m_gmat[4][0],1);
-                    Vmath::Vvtvm(nqtot,&d2[0][0],1,&g[1][0],1,&m_gmat[4][0],1,
-                                 &m_gmat[4][0],1);
+                    Vmath::Vvtvm(nqtot,&d2[0][0],1,&g[1][0],1,&m_gmat[4][0],1,&m_gmat[4][0],1);
                     Vmath::Vdiv(nqtot,&m_gmat[4][0],1,&m_jac[0],1,&m_gmat[4][0],1);
 
                     // d xi_2/d x_3
                     Vmath::Vmul (nqtot,&d1[0][0],1,&g[1][0],1,&m_gmat[5][0],1);
-                    Vmath::Vvtvm(nqtot,&d1[1][0],1,&g[0][0],1,&m_gmat[5][0],1,
-                                 &m_gmat[5][0],1);
+                    Vmath::Vvtvm(nqtot,&d1[1][0],1,&g[0][0],1,&m_gmat[5][0],1,&m_gmat[5][0],1);
                     Vmath::Vdiv(nqtot,&m_gmat[5][0],1,&m_jac[0],1,&m_gmat[5][0],1);
 
                     // J = sqrt(J_3D)
                     Vmath::Vsqrt(nqtot,&m_jac[0],1,&m_jac[0],1);
+                }
 
+                // Set up normals
+                int nquad_m = max(nquad0,nquad1);                
+                switch(Coords[0]->DetShapeType())
+                {
+                case StdRegions::eTriangle:
+                    {
+                        m_normals = Array<TwoD,NekDouble>(3,coordim*nquad_m,0.0);
+
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            for(j = 0; j < nquad0; ++j)
+                            {
+                                m_normals[0][i*nquad0*j] = -m_gmat[2*i+1][j];
+                            }
+
+                            
+                            for(j = 0; j < nquad1; ++j)
+                            {
+                                m_normals[1][i*nquad1+j] = -m_gmat[2*i][nquad0*j + nquad0-1] +
+                                    m_gmat[2*i+1][nquad0*j + nquad0-1];
+                                m_normals[3][i*nquad1+j] = -m_gmat[2*i][nquad0*j];
+                            }
+                        }
+
+                        //normalise normal vectors
+                        Array<OneD,NekDouble> norm(nquad_m,0.0);
+
+                        //edges 0
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            Vmath::Vvtvp(nquad0,&m_normals[0][i*nquad0],1,
+                                         &m_normals[0][i*nquad0],1,&norm[0],1,&norm[0],1);
+                        }
+                        Vmath::Vsqrt(nquad0,&norm[0],1,&norm[0],1);
+                        Vmath::Sdiv(nquad0,1.0,&norm[0],1,&norm[0],1);
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            Vmath::Vmul(nquad0,&m_normals[0][i*nquad0],1,&norm[0],1,
+                                        &m_normals[0][i*nquad0],1);
+                        }
+                        
+                        // edge 1 + 2
+                        for(j = 1; j < 3; ++j)
+                        {
+                            Vmath::Zero(nquad1,&norm[0],1);
+                            for(i = 0; i < coordim; ++i)
+                            {
+                                Vmath::Vvtvp(nquad1,&m_normals[j][i*nquad1],1,
+                                             &m_normals[j][i*nquad1],1,&norm[0],1,&norm[0],1);
+                            }
+                            Vmath::Vsqrt(nquad1,&norm[0],1,&norm[0],1);
+                            Vmath::Sdiv(nquad1,1.0,&norm[0],1,&norm[0],1);
+                            for(i = 0; i < coordim; ++i)
+                            {
+                                Vmath::Vmul(nquad1,&m_normals[j][i*nquad1],1,&norm[0],1,
+                                            &m_normals[j][i*nquad1],1);
+                            }
+                        }
+                    }
+                    break;
+                case StdRegions::eQuadrilateral:
+                    {
+                        m_normals = Array<TwoD,NekDouble>(4,coordim*nquad_m,0.0);
+                        
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            for(j = 0; j < nquad0; ++j)
+                            {
+                                m_normals[0][i*nquad0*j] = -m_gmat[2*i+1][j];
+                                m_normals[2][i*nquad0+j] =  m_gmat[2*i+1][nquad0*(nquad1-1)+j];
+                            }
+                            
+                            for(j = 0; j < nquad1; ++j)
+                            {
+                                m_normals[1][i*nquad1+j] =  m_gmat[2*i][nquad0*j + nquad0-1];
+                                m_normals[3][i*nquad1+j] = -m_gmat[2*i][nquad0*j];
+                            }
+                        }
+                        
+                        //normalise normal vectors
+                        Array<OneD,NekDouble> norm(nquad_m,0.0);
+                        //edges 0 + 2 
+                        for(j = 0; j < 4; j += 2)
+                        {
+                            Vmath::Zero(nquad0,&norm[0],1);
+                            for(i = 0; i < coordim; ++i)
+                            {
+                                Vmath::Vvtvp(nquad0,&m_normals[j][i*nquad0],1,
+                                             &m_normals[j][i*nquad0],1,&norm[0],1,&norm[0],1);
+                            }
+                            Vmath::Vsqrt(nquad0,&norm[0],1,&norm[0],1);
+                            Vmath::Sdiv(nquad0,1.0,&norm[0],1,&norm[0],1);
+                            for(i = 0; i < coordim; ++i)
+                            {
+                                Vmath::Vmul(nquad0,&m_normals[j][i*nquad0],1,&norm[0],1,
+                                        &m_normals[j][i*nquad0],1);
+                            }
+                        }
+                        // edge 1 + 3
+                        for(j = 1; j < 4; j += 2)
+                        {
+                            Vmath::Zero(nquad1,&norm[0],1);
+                            for(i = 0; i < coordim; ++i)
+                            {
+                                Vmath::Vvtvp(nquad1,&m_normals[j][i*nquad1],1,
+                                             &m_normals[j][i*nquad1],1,&norm[0],1,&norm[0],1);
+                            }
+                            Vmath::Vsqrt(nquad1,&norm[0],1,&norm[0],1);
+                            Vmath::Sdiv(nquad1,1.0,&norm[0],1,&norm[0],1);
+                            for(i = 0; i < coordim; ++i)
+                            {
+                                Vmath::Vmul(nquad1,&m_normals[j][i*nquad1],1,&norm[0],1,
+                                            &m_normals[j][i*nquad1],1);
+                            }
+                        }
+                        
+                    }
+                    break;
                 }
             }
         }
@@ -565,6 +764,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.13  2007/07/20 02:15:08  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.12  2007/07/13 09:02:24  sherwin
 // Mods for Helmholtz solver
 //

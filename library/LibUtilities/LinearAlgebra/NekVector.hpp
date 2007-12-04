@@ -102,9 +102,12 @@ namespace Nektar
            const NekVector<DataType, dim, space>& lhs,
            const NekVector<DataType, dim, space>& rhs)
     {
+        DataType* r_buf = result.GetPtr();
+        const DataType* lhs_buf = lhs.GetPtr();
+        const DataType* rhs_buf = rhs.GetPtr();
         for(int i = 0; i < lhs.GetDimension(); ++i)
         {
-            result[i] = lhs[i] + rhs[i];
+            r_buf[i] = lhs_buf[i] + rhs_buf[i];
         }
     }
     
@@ -112,9 +115,12 @@ namespace Nektar
     void NekAddEqual(NekVector<DataType, dim, space>& result,
            const NekVector<DataType, dim, space>& rhs)
     {
+        DataType* r_buf = result.GetPtr();
+        const DataType* rhs_buf = rhs.GetPtr();
         for(int i = 0; i < rhs.GetDimension(); ++i)
         {
-            result[i] += rhs[i];
+            //result[i] += rhs[i];
+            r_buf[i] += rhs_buf[i];
         }
     }
     
@@ -301,6 +307,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.22  2007/11/08 03:22:29  bnelson
+    Updated operator== so constant sized and variable sized vectors can be compared.
+
     Revision 1.21  2007/10/28 18:29:21  bnelson
     Temporarily enabled expression templates for vectors.
 

@@ -121,10 +121,11 @@ namespace Nektar
     void PlusEqual(NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
     {
         ASSERTL1(lhs.GetDimension() == rhs.GetDimension(), "Two vectors must have the same size in PlusEqual.")
-        
+        DataType* lhs_buf = lhs.GetPtr();
+        const DataType* rhs_buf = rhs.GetPtr();
         for(unsigned int i=0; i < lhs.GetDimension(); ++i)
         {
-            lhs[i] += rhs[i];
+            lhs_buf[i] += rhs_buf[i];
         }
     }
 

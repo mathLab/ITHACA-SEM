@@ -467,6 +467,13 @@ namespace Nektar
     template<typename ResultType, typename RhsType>
     void AddEqualMatricesWithSameStorageType(ResultType& result, const RhsType& rhs)
     {
+        //typename ResultType::NumberType* r = result.GetRawPtr();
+        //const typename RhsType::NumberType* rhs_buf = rhs.GetRawPtr();
+        //unsigned int numElements = result.GetStorageSize();
+        //for(unsigned int i = 0; i < numElements; ++i)
+        //{
+        //    r[i] += rhs_buf[i];
+        //}
         typename ResultType::iterator result_iter = result.begin();
         typename RhsType::const_iterator rhs_iter = rhs.begin();
         while( result_iter != result.end() )
@@ -481,16 +488,32 @@ namespace Nektar
     template<typename ResultType, typename LhsType, typename RhsType>
     void AddMatricesWithSameStorageType(ResultType& result, const LhsType& lhs, const RhsType& rhs)
     {
-        typename ResultType::iterator result_iter = result.begin();
-        typename RhsType::const_iterator rhs_iter = rhs.begin();
-        typename LhsType::const_iterator lhs_iter = lhs.begin();
-        while( result_iter != result.end() )
-        {
-            (*result_iter) = (*lhs_iter) + (*rhs_iter);
-            ++result_iter;
-            ++rhs_iter;
-            ++lhs_iter;
-        }
+        //if( lhs.GetTransposeFlag() == rhs.GetTransposeFlag() )
+        //{
+        //    // This is much more efficient if we don't need to worry about stepping through 
+        //    // the data in different ways for each operand.
+        //    typename ResultType::NumberType* r = result.GetRawPtr();
+        //    const typename LhsType::NumberType* lhs_buf = lhs.GetRawPtr();
+        //    const typename RhsType::NumberType* rhs_buf = rhs.GetRawPtr();
+        //    unsigned int end = result.GetStorageSize();
+        //    for(unsigned int i = 0; i < end; ++i)
+        //    {
+        //        r[i] = lhs_buf[i] + rhs_buf[i];
+        //    }
+        //}
+        //else
+        //{
+            typename ResultType::iterator result_iter = result.begin();
+            typename RhsType::const_iterator rhs_iter = rhs.begin();
+            typename LhsType::const_iterator lhs_iter = lhs.begin();
+            while( result_iter != result.end() )
+            {
+                (*result_iter) = (*lhs_iter) + (*rhs_iter);
+                ++result_iter;
+                ++rhs_iter;
+                ++lhs_iter;
+            } 
+        //}
     }
 
 

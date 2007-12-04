@@ -74,19 +74,6 @@ namespace Nektar
         typedef std::vector< Composite >            CompositeVector;
         typedef std::vector< Composite >::iterator  CompositeVectorIter;
 
-        struct ExpansionElement
-        {
-            ExpansionElement(CompositeVector &composite, const Equation &numModesEqn, ExpansionType expansionType):
-                m_Composite(composite),
-                m_NumModesEqn(numModesEqn),
-                m_ExpansionType(expansionType)
-            {};
-
-            CompositeVector m_Composite;
-            Equation m_NumModesEqn;
-            ExpansionType m_ExpansionType;
-        };
-
         struct Expansion
         {
             Expansion(GeometrySharedPtr geomShPtr, const Equation &numModesEqn, ExpansionType expansionType):
@@ -194,6 +181,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.15  2007/11/07 20:31:04  jfrazier
+// Added new expansion list to replace the expansion composite list.
+//
 // Revision 1.14  2007/09/20 22:25:06  jfrazier
 // Added expansion information to meshgraph class.
 //

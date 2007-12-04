@@ -60,6 +60,141 @@ namespace Nektar
             typedef typename StoragePolicy::GetValueReturnType GetValueType;
             typedef typename boost::call_traits<DataType>::const_reference ConstGetValueType;
             
+            public:
+                template<typename T, typename MatrixType>
+                class iterator_impl
+                {
+                    public:
+                        typedef typename StoragePolicy::reference<T>::type value_type;
+                        typedef std::input_iterator_tag iterator_category;
+                        typedef unsigned int difference_type;
+                        typedef typename boost::call_traits<value_type>::reference reference;
+                        typedef typename boost::call_traits<value_type>::const_reference const_reference;
+                        typedef typename boost::remove_reference<value_type>::type* pointer;
+
+                    public:
+                        iterator_impl(pointer d, pointer e, bool isEnd = false) :
+                            m_data(d),
+                            m_end(e),
+                            m_curRow(std::numeric_limits<unsigned int>::max()),
+                            m_curColumn(std::numeric_limits<unsigned int>::max()),
+                            m_matrix(NULL)
+                        {
+                            if( isEnd )
+                            {
+                                m_data = m_end;
+                            }
+                        }
+
+                        iterator_impl(MatrixType* m, bool isEnd = false) :
+                            m_data(NULL),
+                            m_end(NULL),
+                            m_curRow(0),
+                            m_curColumn(0),
+                            m_matrix(m)
+                        {
+                            if( isEnd )
+                            {
+                                m_curRow = std::numeric_limits<unsigned int>::max();
+                                m_curColumn = std::numeric_limits<unsigned int>::max();
+                            }
+                        }
+
+                        iterator_impl(const iterator_impl<T, MatrixType>& rhs) :
+                            m_data(rhs.m_data),
+                            m_end(rhs.m_end),
+                            m_curRow(rhs.m_curRow),
+                            m_curColumn(rhs.m_curColumn),
+                            m_matrix(rhs.m_matrix)
+                        {
+                        }
+
+                        iterator_impl<T, MatrixType>& operator=(const iterator_impl<T, MatrixType>& rhs)
+                        {
+                            m_data = rhs.m_data;
+                            m_end = rhs.m_end;
+                            m_curRow = rhs.m_curRow;
+                            m_curColumn = rhs.m_curColumn;
+                            m_matrix = rhs.m_matrix;
+                            return *this;
+                        }
+
+                        reference operator*()
+                        {
+                            if( m_data )
+                            {
+                                ASSERTL1(m_data < m_end, "Attempt to dereference matrix iterator after its end.");
+                                return *m_data;
+                            }
+                            else
+                            {
+                                return (*m_matrix)(m_curRow, m_curColumn);
+                            }
+                        }
+
+                        const_reference operator*() const
+                        {
+                            if( m_data )
+                            {
+                                ASSERTL1(m_data < m_end, "Attempt to dereference matrix iterator after its end.");
+                                return *m_data;
+                            }
+                            else
+                            {
+                                return (*m_matrix)(m_curRow, m_curColumn);
+                            }
+                        }
+
+                        /// \brief Prefix increment operator.
+                        iterator_impl<T, MatrixType>& operator++()
+                        {
+                            if( m_data )
+                            {
+                                ++m_data;
+                            }
+                            else
+                            {
+                                boost::tie(m_curRow, m_curColumn) = 
+                                    StoragePolicy::Advance(m_matrix->GetRows(), m_matrix->GetColumns(),
+                                        m_curRow, m_curColumn, 
+                                        m_matrix->GetPolicySpecificDataHolderType());
+                            }
+                            return *this;
+                        }
+
+                        /// \postfix increment operator.
+                        iterator_impl<T, MatrixType> operator++(int)
+                        {
+                            iterator_impl<T, MatrixType> result = *this;
+                            ++(*this);
+                            return result;
+                        }
+
+                        bool operator==(const iterator_impl<T, MatrixType>& rhs)
+                        {
+                            return m_data == rhs.m_data &&
+                                   m_end == rhs.m_end &&
+                                   m_curRow == rhs.m_curRow &&
+                                   m_curColumn == rhs.m_curColumn &&
+                                   m_matrix == rhs.m_matrix;
+                        }
+
+                        bool operator!=(const iterator_impl<T, MatrixType>& rhs)
+                        {
+                            return !(*this == rhs);
+                        }
+
+                    private:
+                        // Used when the matrix is not transposed
+                        T* m_data;
+                        T* m_end;
+
+                        // Used when the matrix is transposed.
+                        unsigned int m_curRow;
+                        unsigned int m_curColumn;
+                        MatrixType* m_matrix;
+            };
+
         public:
             NekMatrix() :
                 BaseType(0, 0),
@@ -293,14 +428,66 @@ namespace Nektar
                 return m_data.data();
             }
             
-            typedef DataType* iterator;
-            typedef const DataType* const_iterator;
+            //typedef DataType* iterator;
+            //typedef const DataType* const_iterator;
+            //iterator begin() { return m_data.data(); }
+            //iterator end() { return m_data.data() + m_data.num_elements(); }
             
-            iterator begin() { return m_data.data(); }
-            iterator end() { return m_data.data() + m_data.num_elements(); }
+            //const_iterator begin() const { return m_data.data(); }
+            //const_iterator end() const { return m_data.data() + m_data.num_elements(); }
+
+
+            typedef iterator_impl<DataType, ThisType> iterator;
+            typedef iterator_impl<const DataType, const ThisType> const_iterator;
             
-            const_iterator begin() const { return m_data.data(); }
-            const_iterator end() const { return m_data.data() + m_data.num_elements(); }
+            iterator begin() 
+            { 
+                if( GetTransposeFlag() == 'N' )
+                {
+                    return iterator(m_data.data(), m_data.data() + m_data.num_elements());
+                }
+                else
+                {
+                    return iterator(this);
+                }
+            }
+
+            iterator end()
+            {
+                if( GetTransposeFlag() == 'N' )
+                {
+                    return iterator(m_data.data(), m_data.data() + m_data.num_elements(), true);
+                }
+                else
+                {
+                    return iterator(this, true);
+                }
+            }
+
+            const_iterator begin() const
+            { 
+                if( GetTransposeFlag() == 'N' )
+                {
+                    return const_iterator(m_data.data(), m_data.data() + m_data.num_elements());
+                }
+                else
+                {
+                    return const_iterator(this);
+                }
+            }
+
+            const_iterator end() const
+            {
+                if( GetTransposeFlag() == 'N' )
+                {
+                    return const_iterator(m_data.data(), m_data.data() + m_data.num_elements(), true);
+                }
+                else
+                {
+                    return const_iterator(this, true);
+                }
+            }
+            
             
             unsigned int GetStorageSize() const
             {
@@ -314,7 +501,31 @@ namespace Nektar
                     return false;
                 }
                 
-                return std::equal(begin(), end(), rhs.begin());
+                if( GetRows() != rhs.GetRows() ||
+                    GetColumns() != rhs.GetColumns() )
+                {
+                    return false;
+                }
+
+                if( GetTransposeFlag() == rhs.GetTransposeFlag() )
+                {
+                    return std::equal(begin(), end(), rhs.begin());
+                }
+                else
+                {
+                    for(unsigned int i = 0; i < GetRows(); ++i)
+                    {
+                        for(unsigned int j = 0; j < GetColumns(); ++j)
+                        {
+                            if( (*this)(i,j) != rhs(i,j) )
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+
+                return true;
             }
             
             void Invert()
@@ -352,7 +563,9 @@ namespace Nektar
                 }
             }
 
-       protected:
+       
+
+        protected:
             
             
         private:
@@ -384,9 +597,10 @@ namespace Nektar
 
     template<typename DataType, typename StorageType>
     NekMatrix<DataType, StorageType, StandardMatrixTag>
-    Transpose(const NekMatrix<DataType, StorageType, StandardMatrixTag>& rhs)
+    Transpose(NekMatrix<DataType, StorageType, StandardMatrixTag>& rhs)
     {
-        NekMatrix<DataType, StorageType, StandardMatrixTag> result(rhs);
+        NekMatrix<DataType, StorageType, StandardMatrixTag> result(rhs.GetRows(), rhs.GetColumns(), 
+            rhs.GetPtr(), eWrapper, rhs.GetPolicySpecificDataHolderType());
         result.Transpose();
         return result;
     }

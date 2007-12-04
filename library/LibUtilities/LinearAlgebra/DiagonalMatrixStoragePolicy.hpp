@@ -50,6 +50,13 @@ namespace Nektar
             typedef DefaultPolicySpecificDataHolder PolicySpecificDataHolderType;
             static DataType ZeroElement;
             
+            template<typename T>
+            class reference
+            {
+                public:
+                    typedef typename boost::call_traits<T>::value_type type;
+            };
+
             static Array<OneD, DataType> Initialize()
             {
                 return Array<OneD, DataType>();
@@ -155,7 +162,6 @@ namespace Nektar
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
                     const unsigned int curRow, const unsigned int curColumn,
-                    const char transpose,
                     const PolicySpecificDataHolderType&)
             {
                 ASSERTL0(curRow == curColumn, "Iteration of a diagonal matrix is only valid along the diagonal.");

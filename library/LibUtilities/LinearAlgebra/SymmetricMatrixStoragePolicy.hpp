@@ -51,6 +51,13 @@ namespace Nektar
             typedef typename BaseType::GetValueReturnType GetValueReturnType;
             typedef typename TriangularMatrixStoragePolicy<DataType>::PolicySpecificDataHolderType PolicySpecificDataHolderType;
             
+            template<typename T>
+            class reference
+            {
+                public:
+                    typedef typename boost::call_traits<T>::reference type;
+            };
+
             using BaseType::Initialize;
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                                    unsigned int curRow, unsigned int curColumn,
@@ -112,7 +119,6 @@ namespace Nektar
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
                     const unsigned int curRow, const unsigned int curColumn,
-                    const char transpose,
                     const PolicySpecificDataHolderType&)
             {
                 ASSERTL1(totalRows == totalColumns, "Symmetric matrices must be square.");

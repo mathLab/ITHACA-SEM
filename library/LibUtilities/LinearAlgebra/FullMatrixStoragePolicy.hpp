@@ -50,6 +50,13 @@ namespace Nektar
             typedef typename boost::call_traits<DataType>::reference GetValueReturnType;
             typedef DefaultPolicySpecificDataHolder PolicySpecificDataHolderType;
 
+            template<typename T>
+            class reference
+            {
+                public:
+                    typedef typename boost::call_traits<T>::reference type;
+            };
+
             static Array<OneD, DataType> Initialize()
             {
                 return Array<OneD, DataType>();
@@ -131,49 +138,26 @@ namespace Nektar
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
                     const unsigned int curRow, const unsigned int curColumn,
-                    const char transpose,
                     const PolicySpecificDataHolderType&)
             {
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;
 
-                if( transpose == 'N' )
+                if( nextRow < totalRows )
                 {
-                    if( nextRow < totalRows )
-                    {
-                        ++nextRow;
-                    }
-
-                    if( nextRow >= totalRows )
-                    {
-                        nextRow = 0;
-                        ++nextColumn;
-                    }
-
-                    if( nextColumn >= totalColumns )
-                    {
-                        nextRow = std::numeric_limits<unsigned int>::max();
-                        nextColumn = std::numeric_limits<unsigned int>::max();
-                    }
+                    ++nextRow;
                 }
-                else
+
+                if( nextRow >= totalRows )
                 {
-                    if( nextColumn < totalColumns )
-                    {
-                        ++nextColumn;
-                    }
+                    nextRow = 0;
+                    ++nextColumn;
+                }
 
-                    if( nextColumn >= totalColumns )
-                    {
-                        nextColumn = 0;
-                        ++nextRow;
-                    }
-
-                    if( nextRow >= totalRows )
-                    {
-                        nextRow = std::numeric_limits<unsigned int>::max();
-                        nextColumn = std::numeric_limits<unsigned int>::max();
-                    }
+                if( nextColumn >= totalColumns )
+                {
+                    nextRow = std::numeric_limits<unsigned int>::max();
+                    nextColumn = std::numeric_limits<unsigned int>::max();
                 }
 
                 return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);

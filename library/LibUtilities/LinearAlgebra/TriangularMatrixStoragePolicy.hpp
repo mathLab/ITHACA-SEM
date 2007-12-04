@@ -49,6 +49,12 @@ namespace Nektar
             typedef typename boost::call_traits<DataType>::value_type GetValueReturnType;
             typedef DefaultPolicySpecificDataHolder PolicySpecificDataHolderType;
             static DataType ZeroElement;
+            template<typename T>
+            class reference
+            {
+                public:
+                    typedef typename boost::call_traits<T>::value_type type;
+            };
             
             static Array<OneD, DataType> Initialize()
             {
@@ -181,7 +187,6 @@ namespace Nektar
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
                     const unsigned int curRow, const unsigned int curColumn, 
-                    const char transpose,
                     const PolicySpecificDataHolderType& data)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
@@ -198,12 +203,6 @@ namespace Nektar
                     boost::lexical_cast<std::string>(curColumn) + ") of a (" +
                     boost::lexical_cast<std::string>(totalRows) + ", " +
                     boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-
-                if( transpose == 'T' )
-                {
-                    return MatrixStoragePolicy<DataType, LowerTriangularMatrixTag>::Advance(totalColumns, 
-                        totalRows, curColumn, curRow, 'N', data);
-                }
 
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;
@@ -337,7 +336,7 @@ namespace Nektar
                 if( transpose == 'T' )
                 {
                     return MatrixStoragePolicy<DataType, UpperTriangularMatrixTag>::Advance(
-                        totalColumns, totalRows, curColumn, curRow, 'N', data);
+                        totalColumns, totalRows, curColumn, curRow, data);
                 }
 
                 unsigned int nextRow = curRow;

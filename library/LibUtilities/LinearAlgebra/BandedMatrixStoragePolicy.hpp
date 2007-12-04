@@ -113,6 +113,13 @@ namespace Nektar
             typedef typename boost::call_traits<DataType>::const_reference GetValueReturnType;
             static DataType ZeroElement;
             
+            template<typename T>
+            class reference
+            {
+                public:
+                    typedef typename boost::call_traits<T>::const_reference type;
+            };
+
             static Array<OneD, DataType> Initialize()
             {
                 return Array<OneD, DataType>();
@@ -229,30 +236,36 @@ namespace Nektar
                 }
             }
             
-            //static boost::tuples::tuple<unsigned int, unsigned int> 
-            //Advance(const unsigned int totalRows, const unsigned int totalColumns,
-            //        const unsigned int curRow, const unsigned int curColumn,
-            //        const PolicySpecificDataHolderType&)
-            //{
-            //    ASSERTL0(curRow == curColumn, "Iteration of a diagonal matrix is only valid along the diagonal.");
+            static boost::tuples::tuple<unsigned int, unsigned int> 
+            Advance(const unsigned int totalRows, const unsigned int totalColumns,
+                    const unsigned int curRow, const unsigned int curColumn,
+                    const PolicySpecificDataHolderType&)
+            {
+                unsigned int nextRow = curRow;
+                unsigned int nextColumn = curColumn;
 
-            //    unsigned int nextRow = curRow;
-            //    unsigned int nextColumn = curColumn;
+                //if( transpose == 'N' )
+                //{
+                //    if( (column <= row && (row - column) <= data.GetNumberOfSubDiagonals(totalRows)) ||
+                //    (column > row && (column - row) <= data.GetNumberOfSuperDiagonals(totalRows)) )
+                //    {
+                //        unsigned int arrayColumns = totalColumns;
 
-            //    if( nextRow < totalRows )
-            //    {
-            //        ++nextRow;
-            //        ++nextColumn;
-            //    }
+                //        unsigned int elementRow = data.GetNumberOfSuperDiagonals(totalRows)+row-column;
+                //        unsigned int elementColumn = column;
 
-            //    if( nextRow >= totalRows )
-            //    {
-            //        nextRow = std::numeric_limits<unsigned int>::max();
-            //        nextColumn = std::numeric_limits<unsigned int>::max();
-            //    }
-
-            //    return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
-            //}
+                //        return elementRow + elementColumn*CalculateNumberOfRows(totalRows, data);
+                //    }
+                //    else
+                //    {
+                //        return boost::optional<unsigned int>();
+                //    }
+                //}
+                //else
+                //{
+                //}
+                return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
+            }
 
             //static void Invert(unsigned int rows, unsigned int columns,
             //                   Array<OneD, DataType>& data,

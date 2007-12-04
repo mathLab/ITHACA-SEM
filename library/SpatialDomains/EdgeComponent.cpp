@@ -189,7 +189,7 @@ namespace Nektar
             else if ((*edge1.GetVertex(1) != *edge2.GetVertex(0)) && 
                 (*edge1.GetVertex(1) != *edge2.GetVertex(1)))
             {
-                std::ostrstream errstrm;
+                std::ostringstream errstrm;
                 errstrm << "Connected edges do not share a vertex. Edges ";
                 errstrm << edge1.GetEid() << ", " << edge2.GetEid();
                 ASSERTL0(false, errstrm.str());
@@ -202,6 +202,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.20  2007/07/05 04:21:09  jfrazier
+*    Changed id format and propagated from 1d to 2d.
+*
 *    Revision 1.19  2007/06/06 15:15:20  pvos
 *    Some minor updates for 2D routines
 *

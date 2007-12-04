@@ -47,7 +47,6 @@
 
 #include <tinyxml/tinyxml.h>
 #include <string>
-#include <strstream>
 
 namespace Nektar
 {
@@ -167,7 +166,7 @@ namespace Nektar
 
             // Get vertex data from the data string.
             double xval, yval, zval;
-            std::istrstream vertexDataStrm(vertexBodyStr.c_str());
+            std::istringstream vertexDataStrm(vertexBodyStr.c_str());
 
             try
             {
@@ -285,7 +284,6 @@ namespace Nektar
                 ASSERTL0(expStr != endStr, "Invalid expansion type.");
                 type = (ExpansionType)(expStr - begStr);
 
-#pragma message("Todo: Update the element list with this information")
                 // Now have composite, modes, and type.
                 // Cycle through all composites for the geomShPtrs and set the modes and types for the
                 // elements contained in the element list.
@@ -503,6 +501,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.13  2007/11/07 20:31:03  jfrazier
+// Added new expansion list to replace the expansion composite list.
+//
 // Revision 1.12  2007/09/25 04:45:14  jfrazier
 // Added default linear expansions for the entire domain.
 //

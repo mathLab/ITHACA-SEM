@@ -127,7 +127,7 @@ namespace Nektar
 
                 /// Now parse out the edges, three fields at a time.
                 int vertex1, vertex2;
-                std::istrstream edgeDataStrm(edgeStr.c_str());
+                std::istringstream edgeDataStrm(edgeStr.c_str());
 
                 try
                 {
@@ -210,7 +210,7 @@ namespace Nektar
                 {
                     // Read three edge numbers
                     int edge1, edge2, edge3;
-                    std::istrstream elementDataStrm(elementStr.c_str());
+                    std::istringstream elementDataStrm(elementStr.c_str());
 
                     try
                     {
@@ -249,7 +249,7 @@ namespace Nektar
                 {
                     // Read four edge numbers
                     int edge1, edge2, edge3, edge4;
-                    std::istrstream elementDataStrm(elementStr.c_str());
+                    std::istringstream elementDataStrm(elementStr.c_str());
 
                     try
                     {
@@ -342,7 +342,7 @@ namespace Nektar
 
                 /// Parse out the element components corresponding to type of element.
 
-                std::istrstream compositeDataStrm(compositeStr.c_str());
+                std::istringstream compositeDataStrm(compositeStr.c_str());
 
                 try
                 {
@@ -538,6 +538,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.20  2007/09/20 22:25:06  jfrazier
+// Added expansion information to meshgraph class.
+//
 // Revision 1.19  2007/07/26 01:38:33  jfrazier
 // Cleanup of some attribute reading code.
 //

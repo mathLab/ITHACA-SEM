@@ -123,7 +123,7 @@ namespace Nektar
                 /// Parse out the element components corresponding to type of element.
                 /// Read two vertex numbers
                 int vertex1, vertex2;
-                std::istrstream elementDataStrm(elementStr.c_str());
+                std::istringstream elementDataStrm(elementStr.c_str());
 
                 try
                 {
@@ -197,7 +197,7 @@ namespace Nektar
 
                 /// Parse out the element components corresponding to type of element.
 
-                std::istrstream compositeDataStrm(compositeStr.c_str());
+                std::istringstream compositeDataStrm(compositeStr.c_str());
 
                 try
                 {
@@ -337,6 +337,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.16  2007/09/20 22:25:06  jfrazier
+// Added expansion information to meshgraph class.
+//
 // Revision 1.15  2007/07/28 05:44:27  sherwin
 // Fixed for new MemoryManager call
 //

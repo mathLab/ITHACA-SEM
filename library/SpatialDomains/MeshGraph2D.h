@@ -199,7 +199,7 @@ namespace Nektar
                 }
                 catch(...)
                 {
-                    std::ostrstream errStream;
+                    std::ostringstream errStream;
                     errStream << "Unable to access composite item [" << whichComposite << "].";
                     NEKERROR(ErrorUtil::efatal, errStream.str());
                 }
@@ -229,6 +229,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.15  2007/09/20 22:25:06  jfrazier
+// Added expansion information to meshgraph class.
+//
 // Revision 1.14  2007/07/22 23:04:24  bnelson
 // Backed out Nektar::ptr.
 //

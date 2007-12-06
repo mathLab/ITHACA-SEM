@@ -47,71 +47,87 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-    
-        class LocalToGlobalMap: 
-            public LocalToGlobalBndryMap
+        
+    class LocalToGlobalMap:
+        public LocalToGlobalBndryMap
+        {
+        public:
+            LocalToGlobalMap();
+            LocalToGlobalMap(const int totdata, const int totbnddata, 
+                             Array<OneD,int> &map);
+            ~LocalToGlobalMap();
+            
+            inline int GetMap(const int i) const
             {
-            public:
-                LocalToGlobalMap();
-                LocalToGlobalMap(const int totdata, const int totbnddata, 
-                                 Array<OneD,int> &map);
-                ~LocalToGlobalMap();
-                
-                inline int GetMap(const int i) const
-                {
-                    return m_locToContMap[i];
-                }
-                
-                inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
-                                        Array<OneD, NekDouble> &cont)
-                {
-                    Vmath::Scatr(m_totLocDofs, &loc[0],&m_locToContMap[0],&cont[0]);
-                }                
-                
-        
-                inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
-                                        Array<OneD, NekDouble> &loc)
-                {
-                    Vmath::Gathr(m_totLocDofs,&cont[0],&m_locToContMap[0], &loc[0]);
-                }
-        
-                inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
-                                     Array<OneD, NekDouble> &cont)
-                {
-                    Vmath::Zero(m_totGloDofs,&cont[0],1);
-                    
-                    Vmath::Assmb(m_totLocDofs,&loc[0],&m_locToContMap[0],&cont[0]);
-                }
+                return m_locToContMap[i];
+            }
+            
+            inline NekDouble GetSign(int i) 
+            {
+                return v_GetSign(i);
+            }
+            
+            inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
+                                    Array<OneD, NekDouble> &cont)
+            {
+                v_LocalToCont(loc,cont);
+            }                            
+            
+            inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
+                                    Array<OneD, NekDouble> &loc)
+            {
+                v_ContToLocal(cont,loc);
+            }
+            
+            inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
+                                 Array<OneD, NekDouble> &cont)
+            {
+                v_Assemble(loc,cont);
+            }
+            
+            inline int GetTotGloDofs()
+            {
+                return m_totGloDofs;
+            }
 
+            inline int GetTotLocDofs()
+            {
+                return m_totLocDofs;
+            }
+            
+        protected:
+            int             m_totLocDofs;         //< number of local dofs
+            int             m_totGloDofs;         //< number of global dofs 
+            Array<OneD,int> m_locToContMap;       //< integer map
+            
+        private:
+            virtual void v_LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
+                                       Array<OneD, NekDouble> &cont)
+            {
+                ASSERTL0(false,"LocalToCont needs defining");
+            }                
+            
+            
+            virtual void v_ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
+                                       Array<OneD, NekDouble> &loc)
+            {
+                ASSERTL0(false,"ContToLocal needs defining");
+            }
+            
+            virtual void v_Assemble(const ConstArray<OneD, NekDouble> &loc, 
+                                    Array<OneD, NekDouble> &cont)
+            {
+                ASSERTL0(false,"Assemble needs defining");
+            }
 
-                inline int GetTotGloDofs()
-                {
-                    return m_totGloDofs;
-                }
-        
-                void ResetMapping(const int NumDirichlet,
-                                  SpatialDomains::BoundaryConditions &bcs,
-                                  const std::string variable)
-                {
-                    v_ResetMapping(NumDirichlet,bcs,variable);
-                }
-                
-            protected:
-                int             m_totLocDofs;   //< number of local dofs
-                int             m_totGloDofs;   //< number of global boundary dofs;
-                Array<OneD,int> m_locToContMap;    //< integer map
+            virtual NekDouble v_GetSign(int i) 
+            {
+                ASSERTL0(false,"GetSign needs defining");
+            }
 
-            private:
-                virtual void v_ResetMapping(const int NumDirichlet, 
-                                            SpatialDomains::BoundaryConditions &bcs,
-                                        const std::string variable)
-                    {
-                        ASSERTL0(false,"ResetMapping needs defining");
-                    }
-            };
+        };
         
-        typedef boost::shared_ptr<LocalToGlobalMap>       LocalToGlobalMapSharedPtr;
-        typedef boost::shared_ptr<LocalToGlobalBndryMap>  LocalToGlobalBndryMapSharedPtr;
+        typedef boost::shared_ptr<LocalToGlobalMap>  LocalToGlobalMapSharedPtr;
         
     } // end of namespace
 } // end of namespace
@@ -120,6 +136,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.14  2007/11/20 16:27:16  sherwin
+/** Zero Dirichlet version of UDG Helmholtz solver
+/**
 /** Revision 1.13  2007/10/04 13:57:01  pvos
 /** fixed some more errors
 /**

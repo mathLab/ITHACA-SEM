@@ -181,6 +181,10 @@ namespace Nektar
             */
             NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& Lcoords);
 
+            const ConstArray<OneD, int> GetBoundaryMap(void);
+
+            const ConstArray<OneD, int> GetInteriorMap(void);
+
             void MapTo(EdgeOrientation dir, StdExpMap& Map);
 
             void GetCoords(Array<OneD, NekDouble> &coords_1);
@@ -352,11 +356,20 @@ namespace Nektar
                 return PhysEvaluate(Lcoords);
             }
 
+            virtual const ConstArray<OneD, int> v_GetBoundaryMap(void)
+            {
+                return GetBoundaryMap();
+            }
+
+            virtual const ConstArray<OneD, int> v_GetInteriorMap(void)
+            {
+                return GetInteriorMap();
+            }
+
             virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
             {
                 MapTo(dir,Map);
             }
-
         };
 
         typedef boost::shared_ptr<StdSegExp> StdSegExpSharedPtr;
@@ -368,6 +381,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.30  2007/11/29 21:40:22  sherwin
+* updates for MultiRegions and DG solver
+*
 * Revision 1.29  2007/10/03 11:37:51  sherwin
 * Updates relating to static condensation implementation
 *

@@ -39,224 +39,172 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        LocalToGlobalMap1D::LocalToGlobalMap1D()
+        {
+        }
+
         LocalToGlobalMap1D::LocalToGlobalMap1D(const int loclen, 
                                                const StdRegions::StdExpansionVector &locexp, 
-                                               const SpatialDomains::CompositeVector &domain)
+                                               const SpatialDomains::MeshGraph1D &graph1D)
         {
-            int i,j,k;
+            int i,j;
+            int vid = 0;
             int gid = 0;
             int cnt = 0;
             int cnt1 = 0;
-            int cnt2 = 0;
             
             // set up Local to Continuous mapping 
             StdRegions::StdExpMap vmap;
-            SpatialDomains::Composite comp;
-            SpatialDomains::SegGeomSharedPtr SegmentGeom;
+            LocalRegions::SegExpSharedPtr locSegExp;
             
             m_totLocDofs      = loclen;        
             m_totLocBndDofs   = 2*locexp.size();
             m_locToContMap    = Array<OneD, int>(m_totLocDofs,-1);
             m_locToContBndMap = Array<OneD, int>(m_totLocBndDofs,-1);
 
+            // Reserve storage for the re-ordering (give a new vertex) of the vertices.
+            // This is needed because the set-up of the mapping is based on the vertex id's, but
+            // because the domain does not necessarily encompassed the entire meshgraph, the original id's
+            // might be unsuitable.
+            Array<OneD, int> renumbVerts(graph1D.GetNvertices(),-1);
+            
             // set up simple map based on vertex and edge id's
-
-            for(i = 0; i < domain.size(); ++i)
+            for(i = 0; i < locexp.size(); ++i)
             {
-                comp = domain[i];
-
-                for(j = 0; j < comp->size(); ++j)
+                if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(locexp[i]))
                 {
-                    locexp[cnt2]->MapTo(StdRegions::eForwards,vmap);
-                
-                    if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*comp)[j]))
-                    {
-                        for(k = 0; k < 2; ++k)
+                    locSegExp->MapTo(StdRegions::eForwards,vmap);
+                    for(j = 0; j < locSegExp->GetNverts(); ++j)
+                    {   
+                        vid = (locSegExp->GetGeom())->GetVid(j);
+                        if(renumbVerts[vid]==-1)
                         {
-                            m_locToContMap[cnt     + vmap[k]] =  SegmentGeom->GetVid(k);
-                            m_locToContBndMap[cnt1 + vmap[k]] =  SegmentGeom->GetVid(k);
-                            gid = max(gid,m_locToContMap[cnt + vmap[k]]);
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a SegGeom failed");
-                    }
-                    cnt  += locexp[cnt2]->GetNcoeffs();
-                    cnt1 += locexp[cnt2]->NumBndryCoeffs();
-                    ++cnt2;
+                            renumbVerts[vid] = gid++;
+                        }   
+                        m_locToContMap[cnt     + vmap[j]] =  renumbVerts[vid];
+                        m_locToContBndMap[cnt1 + vmap[j]] =  renumbVerts[vid];
+                    }    
+                    cnt  += locSegExp->GetNcoeffs();
+                    cnt1 += locSegExp->NumBndryCoeffs();
                 }
-            }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a segment expansion failed");
+                }
+            }  
 
-            m_totGloBndDofs = gid+1;
+            m_totGloBndDofs = gid;
             
             for(i = 0; i < m_totLocDofs; ++i)
             {
                 if(m_locToContMap[i] == -1)
                 {
-                    m_locToContMap[i] = ++gid;
+                    m_locToContMap[i] = gid++;
                 }
             }
-            m_totGloDofs = ++gid;
+            m_totGloDofs = gid;
         }
         
+
+        LocalToGlobalMap1D::LocalToGlobalMap1D(const int loclen, 
+                                               const StdRegions::StdExpansionVector &locexp, 
+                                               const SpatialDomains::MeshGraph1D &graph1D,
+                                               const ConstArray<OneD,LocalRegions::PointExpSharedPtr> &bndCondExp,
+                                               const ConstArray<OneD,SpatialDomains::BoundaryConditionType> &bndCondTypes)
+        {
+            int i,j;
+            int vid = 0;
+            int gid = 0;
+            int cnt = 0;
+            int cnt1 = 0;
+            int nbnd = bndCondExp.num_elements();
+            
+            // set up Local to Continuous mapping 
+            StdRegions::StdExpMap vmap;
+            LocalRegions::SegExpSharedPtr locSegExp;
+            
+            m_totLocDofs      = loclen;        
+            m_totLocBndDofs   = 2*locexp.size();
+            m_locToContMap    = Array<OneD, int>(m_totLocDofs,-1);
+            m_locToContBndMap = Array<OneD, int>(m_totLocBndDofs,-1);
+
+            m_locToContBndCondMap = Array<OneD, int>(nbnd);   
+
+            // re-order the vertices (as domain does not necessarily contains the entire meshgraph)
+             Array<OneD, int> renumbVerts(graph1D.GetNvertices(),-1);
+
+            // This array is used to indicate whether an vertex is part of the boundary of the domain.
+            Array<OneD, int> bndCondVertID(graph1D.GetNvertices(),-1);
+
+            // Order the Dirichlet vertices first.
+            m_numDirichletDofs = 0;
+            for(i = 0; i < nbnd; i++)
+            {
+                vid = ((bndCondExp[i])->GetVertex())->GetVid();
+                bndCondVertID[vid] = i;
+
+                if(bndCondTypes[i]==SpatialDomains::eDirichlet)
+                {
+                    m_numDirichletDofs++;
+                    if(renumbVerts[vid]==-1)
+                    {
+                        renumbVerts[vid] = gid++;
+                    }                    
+                }
+            }
+            
+            // set up simple map based on vertex and edge id's
+            for(i = 0; i < locexp.size(); ++i)
+            {
+                if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(locexp[i]))
+                {
+                    locSegExp->MapTo(StdRegions::eForwards,vmap);
+                    for(j = 0; j < locSegExp->GetNverts(); ++j)
+                    {   
+                        vid = (locSegExp->GetGeom())->GetVid(j);
+                        if(renumbVerts[vid]==-1)
+                        {
+                            renumbVerts[vid] = gid++;
+                        }   
+                        if(bndCondVertID[vid] != -1)
+                        {
+                            m_locToContBndCondMap[bndCondVertID[vid]] = renumbVerts[vid];
+                        }
+                        m_locToContMap[cnt     + vmap[j]] =  renumbVerts[vid];
+                        m_locToContBndMap[cnt1 + j] =  renumbVerts[vid];
+                    }    
+                    cnt  += locSegExp->GetNcoeffs();
+                    cnt1 += locSegExp->NumBndryCoeffs();
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a segment expansion failed");
+                }
+            }  
+
+            m_totGloBndDofs = gid;
+            
+            for(i = 0; i < m_totLocDofs; ++i)
+            {
+                if(m_locToContMap[i] == -1)
+                {
+                    m_locToContMap[i] = gid++;
+                }
+            }
+            m_totGloDofs = gid;
+        }
         
         LocalToGlobalMap1D::~LocalToGlobalMap1D()
         {
-        }
-
-        void LocalToGlobalMap1D::v_ResetMapping(const int NumDirichlet, 
-                            SpatialDomains::BoundaryConditions &bcs,
-                            const std::string variable)
-        {
-            int i,j,cnt;
-            int nbnd;
-            m_numDirichletBCs = NumDirichlet; 
-
-            SpatialDomains::BoundaryRegionCollection    &bregions    = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
-            
-            nbnd = bregions.size();
-
-            Array<OneD, int> oldGlobalID(nbnd);
-
-            for(i = cnt = 0; i < nbnd; ++i)
-            {
-                if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                {
-                    SpatialDomains::VertexComponentSharedPtr vert;
-                    
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
-                    {
-                        oldGlobalID[cnt++] = vert->GetVid(); 
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a vertex failed");
-                    }        
-                }                     
-            } 
-
-            for(i = 0; i < nbnd; ++i)
-            {
-                if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eRobin)
-                {
-                    SpatialDomains::VertexComponentSharedPtr vert;
-                    
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
-                    {
-                        oldGlobalID[cnt++] = vert->GetVid(); 
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a vertex failed");
-                    }        
-                }                     
-            } 
-
-            for(i = 0; i < nbnd; ++i)
-            {
-                if(  ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                {
-                    SpatialDomains::VertexComponentSharedPtr vert;
-                    
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
-                    {
-                        oldGlobalID[cnt++] = vert->GetVid(); 
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a vertex failed");
-                    }        
-                }                     
-            } 
-
-            // Find the index of the BCs entry in the mapping array
-            Array<OneD, int> LocalID(nbnd);
-            
-            for(i = 0; i < m_totLocDofs; ++i)
-            {        
-                for(j = 0; j<nbnd; ++j)
-                {
-                    if(m_locToContMap[i] == oldGlobalID[j])
-                    {
-                            LocalID[j] = i;
-                            break;
-                    }
-                }
-            }      
-
-            // Reset the mapping   
-            if(NumDirichlet)
-            {
-                bool check;
-                int incr;
-                for(i = 0; i < m_totLocDofs; ++i)
-                {
-                    check=true;
-                    incr=0;
-                    for(j = 0; j<NumDirichlet; ++j)
-                    {
-                        if(m_locToContMap[i] == oldGlobalID[j])
-                        {
-                            m_locToContMap[i] = j;
-                            check=false;
-                            break;
-                        }
-                    }
-                    if(check)
-                    {
-                        for(j = 0; j<NumDirichlet; ++j)
-                        {
-                            if(m_locToContMap[i] < oldGlobalID[j])
-                            {
-                                ++incr;
-                            }
-                        }
-                        m_locToContMap[i] += incr;
-                    }
-                }    
-
-                for(i = 0; i < m_totLocBndDofs; ++i)
-                {
-                    check=true;
-                    incr=0;
-                    for(j = 0; j<NumDirichlet; ++j)
-                    {
-                        if(m_locToContBndMap[i] == oldGlobalID[j])
-                        {
-                            m_locToContBndMap[i] = j;
-                            check=false;
-                            break;
-                        }
-                    }
-                    if(check)
-                    {
-                        for(j = 0; j<NumDirichlet; ++j)
-                        {
-                            if(m_locToContBndMap[i] < oldGlobalID[j])
-                            {
-                                ++incr;
-                            }
-                        }
-                        m_locToContBndMap[i]+=incr;
-                    }
-                }    
-            } 
-            
-            // Store the new global id of the vertices where the BC are imposed
-            
-            m_bndCondGlobalID = Array<OneD, int>(nbnd);   
-            for(i = 0; i < nbnd; ++i)
-            {
-                m_bndCondGlobalID[i] = m_locToContMap[ LocalID[i] ];
-            }
         }
     }
 }
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.21  2007/11/20 16:27:16  sherwin
+* Zero Dirichlet version of UDG Helmholtz solver
+*
 * Revision 1.20  2007/10/04 13:57:01  pvos
 * fixed some more errors
 *

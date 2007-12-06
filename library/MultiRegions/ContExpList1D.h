@@ -53,8 +53,10 @@ namespace Nektar
             //ContExpList1D(const LibUtilities::BasisKey &Ba, 
             //const SpatialDomains::MeshGraph1D &graph1D);
             ContExpList1D(const LibUtilities::BasisKey &Ba, 
-                const SpatialDomains::MeshGraph1D &graph1D);
-            ContExpList1D(SpatialDomains::MeshGraph1D &graph1D);
+                          const SpatialDomains::MeshGraph1D &graph1D,
+                          const bool constructMap = true);
+            ContExpList1D(SpatialDomains::MeshGraph1D &graph1D,
+                          const bool constructMap = true);
             ContExpList1D(const ContExpList1D &In);
             ~ContExpList1D();
 
@@ -103,16 +105,16 @@ namespace Nektar
             void BwdTrans(const ExpList &In);
 
             void GeneralMatrixOp(const StdRegions::MatrixType     mtype,
-                const ConstArray<OneD,NekDouble> &inarray,
-                Array<OneD, NekDouble>          &outarray,
-                NekDouble lambda);
-
-        protected:
-            int                       m_contNcoeffs;
-            Array<OneD, NekDouble>    m_contCoeffs;
-            LocalToGlobalMapSharedPtr m_locToGloMap;	    
+                                 const ConstArray<OneD,NekDouble> &inarray,
+                                 Array<OneD, NekDouble>          &outarray,
+                                 NekDouble lambda);
+	    
+	protected:
+      	    int                       m_contNcoeffs;
+	    Array<OneD, NekDouble>    m_contCoeffs;
+	    LocalToGlobalMapSharedPtr m_locToGloMap;	
             GlobalLinSysMapShPtr      m_globalMat;
-
+            
         private:
 
         };
@@ -129,6 +131,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.26  2007/11/07 20:29:52  jfrazier
+* Modified to use new expansion list contained in meshgraph.
+*
 * Revision 1.25  2007/10/04 12:10:04  sherwin
 * Update for working version of static condensation in Helmholtz1D and put lambda coefficient on the mass matrix rather than the Laplacian operator.
 *

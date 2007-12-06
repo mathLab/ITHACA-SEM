@@ -326,7 +326,121 @@ namespace Nektar
             return  StdExpansion2D::PhysEvaluate2D(coords); 
         }
 
+        const ConstArray<OneD, int> StdQuadExp::GetBoundaryMap(void)
+        {
+            int i;
+            int cnt=0;
+            int nummodes0, nummodes1;
+            int value1, value2;
+            Array<OneD, int> returnval(NumBndryCoeffs());
 
+            nummodes0 = m_base[0]->GetNumModes();
+            nummodes1 = m_base[1]->GetNumModes();
+
+            const LibUtilities::BasisType Btype0 = GetBasisType(0);
+            const LibUtilities::BasisType Btype1 = GetBasisType(1);
+
+            switch(Btype1)
+            {
+            case LibUtilities::eGLL_Lagrange:
+                value1 = nummodes0;
+                break;
+            case LibUtilities::eModified_A:
+                value1 = 2*nummodes0;
+                break;
+            default:
+                ASSERTL0(0,"Mapping array is not defined for this expansion");
+                break;
+            }
+
+            for(i = 0; i < value1; i++)
+            {
+                returnval[i]=i;
+            }
+            cnt=value1;
+
+            switch(Btype0)
+            {
+            case LibUtilities::eGLL_Lagrange:
+                value2 = value1+nummodes0-1;
+                break;
+            case LibUtilities::eModified_A:
+                value2 = value1+1;
+                break;
+            default:
+                ASSERTL0(0,"Mapping array is not defined for this expansion");
+                break;
+            }
+
+            for(i = 0; i < nummodes1-2; i++)
+            {
+                returnval[cnt++]=value1+i*nummodes0;
+                returnval[cnt++]=value2+i*nummodes0;
+            }
+
+
+            if(Btype1 == LibUtilities::eGLL_Lagrange)
+            {
+                for(i = nummodes0*(nummodes1-1);i < GetNcoeffs(); i++)
+                { 
+                    returnval[cnt++] = i;
+                }
+            }
+
+            return returnval;
+
+        }
+        const ConstArray<OneD, int> StdQuadExp::GetInteriorMap(void)
+        {
+            int i,j;
+            int cnt=0;
+            int nummodes0, nummodes1;
+            int startvalue;
+            Array<OneD, int> returnval(GetNcoeffs()-NumBndryCoeffs());
+
+            nummodes0 = m_base[0]->GetNumModes();
+            nummodes1 = m_base[1]->GetNumModes();
+
+            const LibUtilities::BasisType Btype0 = GetBasisType(0);
+            const LibUtilities::BasisType Btype1 = GetBasisType(1);
+
+            switch(Btype1)
+            {
+            case LibUtilities::eGLL_Lagrange:
+                startvalue = nummodes0;
+                break;
+            case LibUtilities::eModified_A:
+                startvalue = 2*nummodes0;
+                break;
+            default:
+                ASSERTL0(0,"Mapping array is not defined for this expansion");
+                break;
+            }
+
+            switch(Btype0)
+            {
+            case LibUtilities::eGLL_Lagrange:
+                startvalue++;
+                break;
+            case LibUtilities::eModified_A:
+                startvalue+=2;
+                break;
+            default:
+                ASSERTL0(0,"Mapping array is not defined for this expansion");
+                break;
+            }
+
+            for(i = 0; i < nummodes1-2; i++)
+            {
+                for(j = 0; j < nummodes0-2; j++)
+                {
+                    returnval[cnt++]=startvalue+j;
+                }
+                startvalue+=nummodes0;
+            }
+
+            return returnval;
+        }
 
         // For a specified edge 'eid' this function updates a class
         // StdExpMap which contains the mapping of the edge degrees of
@@ -513,13 +627,14 @@ namespace Nektar
                 Vmath::Fill(nq0,z1[i],&coords_1[0] + i*nq0,1);
             }
         }
-
-
     } //end namespace            
 }//end namespace
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.24  2007/11/08 16:55:14  pvos
+* Updates towards 2D helmholtz solver
+*
 * Revision 1.23  2007/10/15 20:38:54  ehan
 * Make changes of column major matrix
 *

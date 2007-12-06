@@ -412,6 +412,69 @@ namespace Nektar
             return  StdExpansion2D::PhysEvaluate2D(coll); 
         }
 
+        const ConstArray<OneD, int> StdTriExp::GetBoundaryMap(void)
+        {
+            const LibUtilities::BasisType Btype0 = GetBasisType(0);
+            const LibUtilities::BasisType Btype1 = GetBasisType(1);
+
+            ASSERTL1((Btype0 == LibUtilities::eModified_A)&&
+                     (Btype1 == LibUtilities::eModified_B),
+                     "Expansion not of a proper type");
+            int i;
+            int cnt;
+            int nummodes0, nummodes1;
+            int value;
+            Array<OneD, int> returnval(NumBndryCoeffs());
+
+            nummodes0 = m_base[0]->GetNumModes();
+            nummodes1 = m_base[1]->GetNumModes();
+
+            value = 2*nummodes1-1;
+            for(i = 0; i < value; i++)
+            {
+                returnval[i]=i;
+            }
+            cnt = value;
+
+            for(i = 0; i < nummodes0-2; i++)
+            {
+                returnval[cnt++]=value;
+                value += nummodes1-2-i;
+            }
+
+            return returnval;
+        }
+        const ConstArray<OneD, int> StdTriExp::GetInteriorMap(void)
+        {
+            const LibUtilities::BasisType Btype0 = GetBasisType(0);
+            const LibUtilities::BasisType Btype1 = GetBasisType(1);
+
+            ASSERTL1((Btype0 == LibUtilities::eModified_A)&&
+                     (Btype1 == LibUtilities::eModified_B),
+                     "Expansion not of a proper type");
+
+            int i,j;
+            int cnt=0;
+            int nummodes0, nummodes1;
+            int startvalue;
+            Array<OneD, int> returnval(GetNcoeffs()-NumBndryCoeffs());
+
+            nummodes0 = m_base[0]->GetNumModes();
+            nummodes1 = m_base[1]->GetNumModes();
+
+            startvalue = 2*nummodes1;
+
+            for(i = 0; i < nummodes0-2; i++)
+            {
+                for(j = 0; j < nummodes1-3-i; j++)
+                {
+                    returnval[cnt++]=startvalue+j;
+                }
+                startvalue+=nummodes1-2-i;
+            }
+
+            return returnval;
+        }
 
         void  StdTriExp::MapTo(const int edge_ncoeffs, 
             const LibUtilities::BasisType Btype,
@@ -589,6 +652,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.25  2007/11/20 10:16:23  pvos
+* IProductWRTDerivBase routine fix
+*
 * Revision 1.24  2007/11/08 16:55:14  pvos
 * Updates towards 2D helmholtz solver
 *

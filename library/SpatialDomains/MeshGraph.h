@@ -118,6 +118,11 @@ namespace Nektar
                 return m_SpaceDimension;
             }
 
+            inline const int GetNvertices() const 
+            {
+                return int(m_vertset.size());
+            }
+
             void Write(std::string &outfilename);
 
             GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
@@ -154,7 +159,6 @@ namespace Nektar
                         break;
                     }
                 }
-
                 return returnval;
             }
 
@@ -181,6 +185,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.16  2007/12/04 02:54:35  jfrazier
+// Removed unused declaration.
+//
 // Revision 1.15  2007/11/07 20:31:04  jfrazier
 // Added new expansion list to replace the expansion composite list.
 //

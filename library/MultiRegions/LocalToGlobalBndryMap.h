@@ -43,93 +43,72 @@
 namespace Nektar
 {
     namespace MultiRegions
-    {
-    
+    {    
         class LocalToGlobalBndryMap
         {
-            public:
-                LocalToGlobalBndryMap();
-                ~LocalToGlobalBndryMap();
-        
-                
-                inline void ContToLocalBnd(const DNekVec &cont, DNekVec &loc, int offset = 0)
-                {
-                    ASSERTL1(loc.GetDimension() >= m_totLocBndDofs,"Local vector is not of correct dimension");
-                    ASSERTL1(cont.GetDimension() >= m_totGloBndDofs-offset,"Global vector is not of correct dimension");
-                    
-                    // offset input data by length "offset" for Dirichlet boundary conditions.
-                    Array<OneD,NekDouble> tmp(cont.GetDimension()+offset,0.0);
-                    Vmath::Vcopy(cont.GetDimension(),cont.GetPtr(),1,&tmp[offset],1);
-                    
-                    Vmath::Gathr(m_totLocBndDofs,&tmp[0],&m_locToContBndMap[0], loc.GetPtr());
-                }                
-                
-                inline void AssembleBnd(const DNekVec &loc, DNekVec &cont, int offset = 0)
-                {
-                    ASSERTL1(loc.GetDimension() >= m_totLocBndDofs,"Local vector is not of correct dimension");
-                    ASSERTL1(cont.GetDimension() >= m_totGloBndDofs-offset,"Global vector is not of correct dimension");
-                    Array<OneD,NekDouble> tmp(cont.GetDimension()+offset,0.0);
-                    
-                    Vmath::Assmb(m_totLocBndDofs,loc.GetPtr(), &m_locToContBndMap[0], &tmp[0]);
-                    Vmath::Vcopy(cont.GetDimension(),&tmp[offset],1,cont.GetPtr(),1);
-                }
-                
-                inline int GetTotGloBndDofs()
-                {
-                    return m_totGloBndDofs;
-                }
-        
-                inline int GetBndMap(const int i) const
-                {
-                    return m_locToContBndMap[i];
-                }
-                
-                inline void SetNumDirichletBCs(const int NumDirichlet)
-                {
-                    m_numDirichletBCs = NumDirichlet;
-                }
+        public:
+            LocalToGlobalBndryMap();
+            ~LocalToGlobalBndryMap();
+            
+            inline NekDouble GetBndSign(int i) 
+            {
+                return v_GetBndSign(i);
+            }
+            
+            inline int GetBndMap(const int i) const
+            {
+                return m_locToContBndMap[i];
+            } 
+            
+            inline int GetBndCondMap(const int i) const
+            {
+                return m_locToContBndCondMap[i];
+            }              
+            
+            inline void ContToLocalBnd(const DNekVec &cont, DNekVec &loc, int offset = 0)
+            {
+                v_ContToLocalBnd(cont,loc,offset);
+            }            
+            
+            inline void AssembleBnd(const DNekVec &loc, DNekVec &cont, int offset = 0)
+            {
+                v_AssembleBnd(loc,cont,offset);
+            }
+            
+            inline int GetTotGloBndDofs()
+            {
+                return m_totGloBndDofs;
+            }
+            
+            inline int GetNumDirichletDofs()
+            {
+                return m_numDirichletDofs;
+            }
+                                
+        protected:
+            int             m_totLocBndDofs;   //< number of local dofs
+            int             m_totGloBndDofs;   //< number of global boundary dofs;
+            int             m_numDirichletDofs; //< number of Dirichlet conditions  
+            Array<OneD,int> m_locToContBndMap; //< integer maps of boundary dofs
+            Array<OneD,int> m_locToContBndCondMap;//< integer maps of boundary cond dofs
+            
+        private:
 
-                inline void SetNumNeumannBCs(const int NumNeumann)
-                {
-                    m_numNeumannBCs = NumNeumann;
-                }
-                
-                inline void SetNumRobinBCs(const int NumRobin)
-                {
-                    m_numRobinBCs = NumRobin;
-                }
-        
-                inline int GetNumDirichletBCs()
-                {
-                    return m_numDirichletBCs;
-                }
+            virtual void v_ContToLocalBnd(const DNekVec &cont, DNekVec &loc, int offset = 0)
+            {
+                ASSERTL0(false,"ContToLocalBnd needs defining");
+            }
+                        
+            virtual void v_AssembleBnd(const DNekVec &loc, DNekVec &cont, int offset = 0)
+            {
+                ASSERTL0(false,"AssembleBnd needs defining");
+            }
 
-                inline int GetNumNeumannBCs()
-                {
-                    return m_numNeumannBCs;
-                }
-
-                inline int GetNumRobinBCs()
-                {
-                    return m_numRobinBCs;
-                }
-                
-                inline const ConstArray<OneD, int> &GetBndCondGlobalID() const 
-                {
-                    return m_bndCondGlobalID;
-                }
-                
-            protected:
-                int             m_totLocBndDofs;   //< number of local dofs
-                int             m_totGloBndDofs;   //< number of global boundary dofs;
-                int             m_numDirichletBCs; //< number of Dirichlet conditions 
-                int             m_numNeumannBCs;   //< number of Neumann conditions 
-                int             m_numRobinBCs;     //< number of Robin conditions 
-                Array<OneD,int> m_locToContBndMap; //< integer maps of boundary dofs
-                Array<OneD,int> m_bndCondGlobalID; //< global id of all boundary conditions
-                
-            private:
-            };
+            virtual NekDouble v_GetBndSign(int i) 
+            {
+                ASSERTL0(false,"GetSign needs defining");
+            }
+        };
         
         typedef boost::shared_ptr<LocalToGlobalBndryMap>  LocalToGlobalBndryMapSharedPtr;
         
@@ -139,7 +118,10 @@ namespace Nektar
 #endif //LOC2GLOMAP_H
 
 
-/** $Log: LocalToGlobalMap.h,v $
+/** $Log: LocalToGlobalBndryMap.h,v $
+/** Revision 1.1  2007/11/20 16:27:16  sherwin
+/** Zero Dirichlet version of UDG Helmholtz solver
+/**
 /** Revision 1.13  2007/10/04 13:57:01  pvos
 /** fixed some more errors
 /**

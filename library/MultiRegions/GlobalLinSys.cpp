@@ -79,9 +79,11 @@ namespace Nektar
             case eDirectStaticCond:
                 {
                     int i;
-                    int nDirBCs = locToGloMap.GetNumDirichletBCs();
-                    int nbndry  = locToGloMap.GetTotGloBndDofs() - nDirBCs; 
+
+                    int nDirDofs = locToGloMap.GetNumDirichletDofs();
+                    int nbndry  = locToGloMap.GetTotGloBndDofs() - nDirDofs;
                     int nint    = in.num_elements() -nbndry; 
+
                     Array<OneD,NekDouble>  offset;  
                     DNekVec Fbnd(nbndry,in);
                     DNekVec Vloc;
@@ -96,7 +98,7 @@ namespace Nektar
                     
                         // construct boundary forcing 
                         Vloc = BinvD*Fint;
-                        locToGloMap.AssembleBnd(Vloc,Vbnd,nDirBCs);
+                        locToGloMap.AssembleBnd(Vloc,Vbnd,nDirDofs);
                         Fbnd = Fbnd - Vbnd;
                         
                         // solve boundary system 
@@ -113,7 +115,7 @@ namespace Nektar
                              DNekScalBlkMat &C     = *m_blkMatrices[1];
 
                              Vmath::Zero(Vloc.GetDimension(),Vloc.GetPtr(),1);
-                             locToGloMap.ContToLocalBnd(Vbnd,Vloc,nDirBCs);
+                             locToGloMap.ContToLocalBnd(Vbnd,Vloc,nDirDofs);
                              Fint = Fint - C*Vloc;
                          }
                         Vint = invD*Fint;

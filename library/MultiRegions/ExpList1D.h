@@ -43,6 +43,8 @@
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
+#include <SpatialDomains/MeshGraph2D.h>
+//#include <MultiRegions/ContField2D.h>
 
 namespace Nektar
 {
@@ -64,6 +66,9 @@ namespace Nektar
 
             ExpList1D(SpatialDomains::MeshGraph1D &graph1D);
 
+             ExpList1D(const SpatialDomains::CompositeVector &domain, 
+                       SpatialDomains::MeshGraph2D &graph2D); 
+
             ~ExpList1D();
 
 
@@ -73,7 +78,7 @@ namespace Nektar
             {
                 ExpList::PhysDeriv(S0,S1,S2);
             }
-
+            
         protected:
 
         private:
@@ -91,6 +96,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.h,v $
+* Revision 1.17  2007/09/25 14:25:29  pvos
+* Update for helmholtz1D with different expansion orders
+*
 * Revision 1.16  2007/09/03 19:58:31  jfrazier
 * Formatting.
 *

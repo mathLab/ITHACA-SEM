@@ -17,7 +17,6 @@
 // the rights to use, copy, modify, merge, publish, distribute, sublicense,
 // and/or sell copies of the Software, and to permit persons to whom the
 // Software is furnished to do so, subject to the following conditions:
-//
 // The above copyright notice and this permission notice shall be included
 // in all copies or substantial portions of the Software.
 //
@@ -292,7 +291,7 @@ namespace Nektar
             int    nqtot = nquad0*nquad1; 
             int    numModes = m_ncoeffs;
             ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
-
+            
             Array<OneD, NekDouble> tmp0(nqtot);
             Array<OneD, NekDouble> tmp1(nqtot);
             Array<OneD, NekDouble> tmp2(nqtot);
@@ -751,56 +750,75 @@ namespace Nektar
             {
             case StdRegions::eMass:
                 {
-//                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-//                     {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
-//                     }
-//                     else
-//                     {
-//                         NekDouble jac = (m_metricinfo->GetJac())[0];
-//                         DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());                      
-//                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
-//                     }
+                    }
+                    else
+                    {
+                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());                      
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
+                    }
                 }
                 break;
             case StdRegions::eInvMass:
                 {
-//                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-//                     {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
                         mat->Invert();
                         
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
-//                     }
-//                     else
-//                     {
-//                         NekDouble fac = 1.0/(m_metricinfo->GetJac())[0];
-//                         DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
-//                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
+                    }
+                    else
+                    {
+                        NekDouble fac = 1.0/(m_metricinfo->GetJac())[0];
+                        DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
                         
-//                     }
+                    }
                 }
                 break;
             case StdRegions::eLaplacian:
                 {
-//                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-//                     {
+                           if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                          {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(StdRegions::eLaplacian);
-
+                        
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
-//                     }
-//                     else
-//                     {
-//                         DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
-//                         NekDouble  gfac = m_metricinfo->GetGmat()[0][0];
-//                         NekDouble  jac  = m_metricinfo->GetJac()[0];
-//                         NekDouble  fac = gfac*gfac*jac;
-//                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
-//                     }
+                    }
+                    else
+                    {
+                        MatrixKey lap00key(StdRegions::eLaplacian00,
+                                           mkey.GetShapeType(), *this);  
+                        MatrixKey lap01key(StdRegions::eLaplacian01,
+                                           mkey.GetShapeType(), *this);  
+                        MatrixKey lap11key(StdRegions::eLaplacian11,
+                                           mkey.GetShapeType(), *this);  
+                        
+                        DNekMatSharedPtr lap00 = GetStdMatrix(*lap00key.GetStdMatKey());
+                        DNekMatSharedPtr lap01 = GetStdMatrix(*lap01key.GetStdMatKey());
+                        DNekMatSharedPtr lap11 = GetStdMatrix(*lap11key.GetStdMatKey());
+                        
+                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
+                        
+                        int rows = lap00->GetRows();
+                        int cols = lap00->GetColumns();
+                        
+                        DNekMatSharedPtr lap = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
+                        
+                        (*lap) = (gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0]) * (*lap00) + 
+                            (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
+                            (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
+                        
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,lap);
+                    }
                 }
                 break;
             case StdRegions::eHelmholtz:
@@ -815,9 +833,9 @@ namespace Nektar
 
                     int rows = LapMat.GetRows();
                     int cols = LapMat.GetColumns();
-
+                    
                     DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
-
+                    
                     NekDouble one = 1.0;
                     (*helm) = LapMat + factor*MassMat;
                     
@@ -892,29 +910,32 @@ namespace Nektar
                     DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
                     DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
                     
+                    const ConstArray<OneD,int> bmap = GetBoundaryMap();
+                    const ConstArray<OneD,int> imap = GetInteriorMap();
+                    
                     for(i = 0; i < nbdry; ++i)
                     {
                         for(j = 0; j < nbdry; ++j)
                         {
-                            (*A)(i,j) = mat(i,j);
+                            (*A)(i,j) = mat(bmap[i],bmap[j]);
                         }
                         
                         for(j = 0; j < nint; ++j)
                         {
-                            (*B)(i,j) = mat(i,nbdry+j);
+                            (*B)(i,j) = mat(bmap[i],imap[j]);
                         }
-                    }
+                    }                    
                     
                     for(i = 0; i < nint; ++i)
                     {
                         for(j = 0; j < nbdry; ++j)
                         {
-                            (*C)(i,j) = mat(nbdry+i,j);
+                            (*C)(i,j) = mat(imap[i],bmap[j]);
                         }
                         
                         for(j = 0; j < nint; ++j)
                         {
-                            (*D)(i,j) = mat(nbdry+i,nbdry+j);
+                            (*D)(i,j) = mat(imap[i],imap[j]);
                         }
                     }
                     
@@ -944,6 +965,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.22  2007/11/08 16:54:27  pvos
+ *    Updates towards 2D helmholtz solver
+ *
  *    Revision 1.21  2007/08/11 23:41:22  sherwin
  *    Various updates
  *

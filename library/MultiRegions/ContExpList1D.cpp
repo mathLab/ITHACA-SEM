@@ -49,7 +49,7 @@ namespace Nektar
         }
 
         ContExpList1D::ContExpList1D(const ContExpList1D &In):
-        ExpList1D(In),
+            ExpList1D(In),
             m_contNcoeffs(In.m_contNcoeffs),
             m_locToGloMap(In.m_locToGloMap),
             m_globalMat(In.m_globalMat)
@@ -59,46 +59,51 @@ namespace Nektar
         }
 
         ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba,
-            const SpatialDomains::MeshGraph1D &graph1D):
-        ExpList1D(Ba,graph1D)
+                                     const SpatialDomains::MeshGraph1D &graph1D,
+                                     const bool constructMap):
+	    ExpList1D(Ba,graph1D)
         {   
             ASSERTL1((Ba.GetBasisType() == LibUtilities::eModified_A)
-                ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
-                "Expansion not of an boundary-interior type");
+                     ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
+                     "Expansion not of an boundary-interior type");
 
             // setup Matrix Map
             m_globalMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-
-            // setup mapping array 
-            m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph1D.GetDomain());
-
-            m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
-        }
-
-        ContExpList1D::ContExpList1D(SpatialDomains::MeshGraph1D &graph1D):
-        ExpList1D(graph1D)
+            
+	    // setup mapping array 
+            if(constructMap)
+            {
+                m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph1D);
+                m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+                m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+            }
+	}
+        
+        ContExpList1D::ContExpList1D(SpatialDomains::MeshGraph1D &graph1D,
+                                     const bool constructMap):
+	    ExpList1D(graph1D)
         {
-            const SpatialDomains::CompositeVector &domain = graph1D.GetDomain();
             const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
-
+            
             for(int i = 0; i < expansions.size(); ++i)
             {	    
                 ASSERTL1(((graph1D.GetBasisKey(expansions[i],0)).GetBasisType() == LibUtilities::eModified_A)
-                    ||((graph1D.GetBasisKey(expansions[i],0)).GetBasisType() == LibUtilities::eGLL_Lagrange),
-                    "Expansion not of an boundary-interior type");
+                         ||((graph1D.GetBasisKey(expansions[i],0)).GetBasisType() == LibUtilities::eGLL_Lagrange),
+                         "Expansion not of an boundary-interior type");
             }
-
+            
             // setup Matrix Map
             m_globalMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-
-            // setup mapping array 
-            m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,domain);
-
-            m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
-        }
-
+            
+	    // setup mapping array 
+            if(constructMap)
+            {
+                m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph1D);
+                m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+                m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+            }
+	}
+        
         void ContExpList1D::IProductWRTBase(const ExpList &In)
         {
             if(m_transState == eContinuous)
@@ -109,7 +114,7 @@ namespace Nektar
             Assemble();
             m_transState = eLocalCont;
         }
-
+        
         void ContExpList1D::GeneralMatrixOp(const StdRegions::MatrixType mtype,
             const ConstArray<OneD, NekDouble> &inarray,
             Array<OneD, NekDouble> &outarray, 
@@ -162,6 +167,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.27  2007/11/20 16:27:15  sherwin
+* Zero Dirichlet version of UDG Helmholtz solver
+*
 * Revision 1.26  2007/11/07 20:29:48  jfrazier
 * Modified to use new expansion list contained in meshgraph.
 *

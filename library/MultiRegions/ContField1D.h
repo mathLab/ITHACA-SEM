@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ContSolnField1D.h
+// File ContField1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
-#define NEKTAR_LIBS_MULTIREGIONS_CONTSOLNFIELD1D_H
+#ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD1D_H
+#define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD1D_H
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ContExpList1D.h>
@@ -87,8 +87,8 @@ namespace Nektar
         protected:
 
         private:
-            LocalRegions::PointExpVector                         m_bndConstraint;
-            std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
+            Array<OneD,LocalRegions::PointExpSharedPtr>         m_bndConstraint;
+            Array<OneD,SpatialDomains::BoundaryConditionType>   m_bndTypes;
 
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 

@@ -65,7 +65,7 @@ namespace Nektar
                 class iterator_impl
                 {
                     public:
-                        typedef typename StoragePolicy::reference<T>::type value_type;
+                        typedef typename StoragePolicy::template reference<T>::type value_type;
                         typedef std::input_iterator_tag iterator_category;
                         typedef unsigned int difference_type;
                         typedef typename boost::call_traits<value_type>::reference reference;
@@ -501,8 +501,8 @@ namespace Nektar
                     return false;
                 }
                 
-                if( GetRows() != rhs.GetRows() ||
-                    GetColumns() != rhs.GetColumns() )
+                if( this->GetRows() != rhs.GetRows() ||
+                    this->GetColumns() != rhs.GetColumns() )
                 {
                     return false;
                 }
@@ -513,9 +513,9 @@ namespace Nektar
                 }
                 else
                 {
-                    for(unsigned int i = 0; i < GetRows(); ++i)
+                    for(unsigned int i = 0; i < this->GetRows(); ++i)
                     {
-                        for(unsigned int j = 0; j < GetColumns(); ++j)
+                        for(unsigned int j = 0; j < this->GetColumns(); ++j)
                         {
                             if( (*this)(i,j) != rhs(i,j) )
                             {

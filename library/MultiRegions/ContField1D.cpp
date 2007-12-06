@@ -52,38 +52,62 @@ namespace Nektar
         }
 
         ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
-            SpatialDomains::BoundaryConditions &bcs, 
-            const int bc_loc):
-            ContExpList1D(graph1D)  
+                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 const int bc_loc):
+            ContExpList1D(graph1D,false)
         {
             GenerateField1D(bcs,bcs.GetVariable(bc_loc));
+            m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
+                                                                                 graph1D,m_bndConstraint,
+                                                                                 m_bndTypes);
+	    
+	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
         ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
             SpatialDomains::BoundaryConditions &bcs, 
             const std::string variable):
-            ContExpList1D(graph1D)  
+            ContExpList1D(graph1D,false)
         {
             GenerateField1D(bcs,variable);
+            m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
+                                                                                 graph1D,m_bndConstraint,
+                                                                                 m_bndTypes);
+	    
+	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
             const SpatialDomains::MeshGraph1D &graph1D,
             SpatialDomains::BoundaryConditions &bcs, 
             const int bc_loc):
-        ContExpList1D(Ba,graph1D)  
+            ContExpList1D(Ba,graph1D,false)
         {
-
             GenerateField1D(bcs,bcs.GetVariable(bc_loc));
+            m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
+                                                                                 graph1D,m_bndConstraint,
+                                                                                 m_bndTypes);
+	    
+	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+
         }
 
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
             const SpatialDomains::MeshGraph1D &graph1D,
             SpatialDomains::BoundaryConditions &bcs, 
             const std::string variable):
-        ContExpList1D(Ba,graph1D)
+            ContExpList1D(Ba,graph1D,false)
         {
             GenerateField1D(bcs,variable);
+            m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
+                                                                                 graph1D,m_bndConstraint,
+                                                                                 m_bndTypes);
+	    
+	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
 
@@ -91,66 +115,36 @@ namespace Nektar
             const std::string variable)
         {
             int i,nbnd;
+            int cnt=0;
             LocalRegions::PointExpSharedPtr  p_exp;
-            int NumDirichlet = 0;
-            int NumRobin = 0;
-            int NumNeumann = 0;
+            SpatialDomains::BoundaryConditionShPtr locBCond;
+            SpatialDomains::VertexComponentSharedPtr vert;
 
             SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
             SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
 
             nbnd = bregions.size();
+            m_bndConstraint = Array<OneD,LocalRegions::PointExpSharedPtr>(nbnd);
+            m_bndTypes = Array<OneD,SpatialDomains::BoundaryConditionType>(nbnd);
 
             // list Dirichlet boundaries first
             for(i = 0; i < nbnd; ++i)
             {
-                SpatialDomains::BoundaryConditionShPtr LocBCond = (*(bconditions[i]))[variable];
+                locBCond = (*(bconditions[i]))[variable];
 
-                if(LocBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                    SpatialDomains::VertexComponentSharedPtr vert;
-
                     if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
                         Array<OneD,NekDouble> coords(3,0.0);
 
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
                         vert->GetCoords(coords);
-                        p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(LocBCond)->m_DirichletCondition.Evaluate(coords[0],coords[1],coords[2]));
+                        p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(locBCond)
+                                        ->m_DirichletCondition.Evaluate(coords[0],coords[1],coords[2]));
 
-
-                        m_bndConstraint.push_back(p_exp);
-                        m_bndTypes.push_back(SpatialDomains::eDirichlet);
-                        NumDirichlet++;
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a vertex failed");
-                    }
-                }
-            }
-
-            // list Robin boundaries second
-            for(i = 0; i < nbnd; ++i)
-            {
-                SpatialDomains::BoundaryConditionShPtr LocBCond = (*(bconditions[i]))[variable];
-
-                if(LocBCond->GetBoundaryConditionType() == SpatialDomains::eRobin)
-                {
-                    SpatialDomains::VertexComponentSharedPtr vert;
-
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
-                    {
-                        Array<OneD,NekDouble> coords(3,0.0);
-
-                        p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
-                        vert->GetCoords(coords);
-                        boost::shared_ptr<SpatialDomains::RobinBoundaryCondition> robinBC  = boost::static_pointer_cast<SpatialDomains::RobinBoundaryCondition>(LocBCond);
-                        p_exp->SetValue(-robinBC->m_a.Evaluate(coords[0],coords[1],coords[2])/robinBC->m_b.Evaluate(coords[0],coords[1],coords[2]));
-                        
-                        m_bndConstraint.push_back(p_exp);
-                        m_bndTypes.push_back(SpatialDomains::eRobin);
-                        NumRobin++;
+                        m_bndConstraint[cnt] = p_exp;
+                        m_bndTypes[cnt++] = SpatialDomains::eDirichlet;
                     }
                     else
                     {
@@ -161,23 +155,37 @@ namespace Nektar
 
             for(i = 0; i < nbnd; ++i)
             {
-                SpatialDomains::BoundaryConditionShPtr LocBCond = (*(bconditions[i]))[variable];
+                locBCond = (*(bconditions[i]))[variable];
 
-                if(LocBCond->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                if(locBCond->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
-                    SpatialDomains::VertexComponentSharedPtr vert;
-
                     if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
                     {
                         Array<OneD,NekDouble> coords(3,0.0);
 
                         p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
                         vert->GetCoords(coords);
-                        p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(LocBCond)->m_NeumannCondition.Evaluate(coords[0],coords[1],coords[2]));
-                        
-                        m_bndConstraint.push_back(p_exp);
-                        m_bndTypes.push_back(SpatialDomains::eNeumann);
-                        NumNeumann++;
+
+                        if(locBCond->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                        {
+                            p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(locBCond)
+                                            ->m_NeumannCondition.Evaluate(coords[0],coords[1],coords[2]));
+                            m_bndConstraint[cnt] = p_exp;
+                            m_bndTypes[cnt++] = SpatialDomains::eNeumann;
+                        }
+                        else if(locBCond->GetBoundaryConditionType() == SpatialDomains::eRobin)
+                        {
+                            boost::shared_ptr<SpatialDomains::RobinBoundaryCondition> robinBC  = 
+                                boost::static_pointer_cast<SpatialDomains::RobinBoundaryCondition>(locBCond);
+                            p_exp->SetValue(-robinBC->m_a.Evaluate(coords[0],coords[1],coords[2])/
+                                            robinBC->m_b.Evaluate(coords[0],coords[1],coords[2]));
+                            m_bndConstraint[cnt] = p_exp;
+                            m_bndTypes[cnt++] = SpatialDomains::eRobin;
+                        }
+                        else
+                        {
+                            ASSERTL0(false,"This type of BC not implemented yet");
+                        }
                     }
                     else
                     {
@@ -185,12 +193,6 @@ namespace Nektar
                     }
                 }
             }
-
-            ASSERTL0(nbnd==NumDirichlet+NumNeumann+NumRobin,"missed some boundary conditions");
-
-            m_locToGloMap->ResetMapping     (NumDirichlet,bcs,variable);
-            m_locToGloMap->SetNumNeumannBCs (NumNeumann);
-            m_locToGloMap->SetNumRobinBCs   (NumRobin);
         }
 
         ContField1D::~ContField1D()
@@ -223,7 +225,7 @@ namespace Nektar
                                       NekDouble ScaleForcing)
         {
             int i;
-            int NumDirBcs = m_locToGloMap->GetNumDirichletBCs();
+            int NumDirBcs = m_locToGloMap->GetNumDirichletDofs();
             Array<OneD,NekDouble> sln;
             Array<OneD,NekDouble> init(m_contNcoeffs,0.0);
             Array<OneD,NekDouble> Dir_fce(m_contNcoeffs,0.0);
@@ -250,9 +252,10 @@ namespace Nektar
                 &Dir_fce[0],1,&m_contCoeffs[0],1);
 
             // Forcing function with weak boundary conditions 
-            for(i = 0; i < m_bndConstraint.size()-NumDirBcs; ++i)
+            for(i = 0; i < m_bndConstraint.num_elements()-NumDirBcs; ++i)
             {
-                m_contCoeffs[ (m_locToGloMap->GetBndCondGlobalID())[i+NumDirBcs] ] +=   (m_bndConstraint[i+NumDirBcs]->GetValue());
+                m_contCoeffs[m_locToGloMap->GetBndCondMap(i+NumDirBcs)] +=  
+                    m_bndConstraint[i+NumDirBcs]->GetValue();
             }
 
             if(m_contNcoeffs - NumDirBcs > 0)
@@ -289,7 +292,6 @@ namespace Nektar
 
             return glo_matrix;
         }
-
 
     } // end of namespace
 } //end of namespace

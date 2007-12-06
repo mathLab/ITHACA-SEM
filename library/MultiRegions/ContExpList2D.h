@@ -46,64 +46,86 @@ namespace Nektar
     {
     
     class ContExpList2D: 
-    public ExpList2D 
-    {
-    public:
-        ContExpList2D();
+        public ExpList2D 
+        {
+        public:
+            ContExpList2D();
             
-        ContExpList2D(const LibUtilities::BasisKey &TriBa, 
-              const LibUtilities::BasisKey &TriBb, 
-              const LibUtilities::BasisKey &QuadBa, 
-              const LibUtilities::BasisKey &QuadBb, 
-              const SpatialDomains::MeshGraph2D &graph2D,
+            ContExpList2D(const LibUtilities::BasisKey &TriBa, 
+                          const LibUtilities::BasisKey &TriBb, 
+                          const LibUtilities::BasisKey &QuadBa, 
+                          const LibUtilities::BasisKey &QuadBb, 
+                          const SpatialDomains::MeshGraph2D &graph2D,
                           const LibUtilities::PointsType 
-                          TriNb = LibUtilities::SIZE_PointsType);
+                          TriNb = LibUtilities::SIZE_PointsType,
+                          const bool constructMap = true);
 
+            ContExpList2D(SpatialDomains::MeshGraph2D &graph2D,
+                          const bool constructMap = true);
+            
             ContExpList2D::ContExpList2D(const ContExpList2D &In);
-        
-        ~ContExpList2D();
-        
-        inline int getContNcoeffs()
-        {
-        return m_contNcoeffs;
-        }
-        
-        inline void ContToLocal()
-        {
-        m_locToGloMap->ContToLocal(m_contCoeffs,m_coeffs);
-        }
-        
-        inline void LocalToCont()
-        {
-        m_locToGloMap->LocalToCont(m_coeffs,m_contCoeffs);
-        }        
-        
-        inline void Assemble()
-        {
-        m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
-        }
-       
-        void IProductWRTBase(const ExpList &In);
-        
-        void FwdTrans(const ExpList &In);
-        
-        void BwdTrans(const ExpList &In);
-        
-        void GenMassMatrixLinSys(void);
-        
-    protected:
-    
-        
-    private:
-        int                    m_contNcoeffs;
-        Array<OneD, NekDouble> m_contCoeffs;
-        
-        boost::shared_ptr<LocalToGlobalMap2D> m_locToGloMap;
-        
-        DNekLinSysSharedPtr m_mass;
-        
-    };
+            
+            ~ContExpList2D();
 
+            inline Array<OneD, NekDouble> &UpdateContCoeffs()
+            {
+                m_transState = eContinuous;
+                return m_contCoeffs;
+            }
+        
+            inline int getContNcoeffs()
+            {
+                return m_contNcoeffs;
+            }
+            
+            inline void ContToLocal()
+            {
+                m_locToGloMap->ContToLocal(m_contCoeffs,m_coeffs);
+            }
+
+            inline void ContToLocal(const ConstArray<OneD,NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray)
+            {
+                m_locToGloMap->ContToLocal(inarray,outarray);
+            }
+            
+            inline void LocalToCont()
+            {
+                m_locToGloMap->LocalToCont(m_coeffs,m_contCoeffs);
+            }        
+        
+            inline void Assemble()
+            {
+                m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
+            }
+
+            inline void Assemble(const ConstArray<OneD,NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray)
+            {
+                m_locToGloMap->Assemble(inarray,outarray);
+            }
+       
+            void IProductWRTBase(const ExpList &In);
+        
+            void FwdTrans(const ExpList &In);
+        
+            void BwdTrans(const ExpList &In);
+
+            void GeneralMatrixOp(const StdRegions::MatrixType     mtype,
+                                 const ConstArray<OneD,NekDouble> &inarray,
+                                 Array<OneD, NekDouble>          &outarray,
+                                 NekDouble lambda);
+            
+        protected:
+      	    int                       m_contNcoeffs;
+	    Array<OneD, NekDouble>    m_contCoeffs;
+            LocalToGlobalMapSharedPtr m_locToGloMap;
+            GlobalLinSysMapShPtr      m_globalMat;
+                        
+        private:
+            
+        };
+        
         typedef boost::shared_ptr<ContExpList2D>      ContExpList2DSharedPtr;
         typedef std::vector<ContExpList2DSharedPtr>   ContExpList2DVector;
         typedef std::vector<ContExpList2DSharedPtr>::iterator ContExpList2DVectorIter;
@@ -115,6 +137,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.h,v $
+* Revision 1.5  2007/07/20 02:04:12  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.4  2007/06/05 16:36:55  pvos
 * Updated Explist2D ContExpList2D and corresponding demo-codes
 *

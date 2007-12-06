@@ -47,40 +47,41 @@
 namespace Nektar
 {
     namespace MultiRegions
-    {
-
-
+    {      
+        
     class ExpList2D:
         public ExpList
-    {
-    public:
-        ExpList2D(); 
-
-        ExpList2D(const ExpList2D &In);   
-        
-        ExpList2D(const LibUtilities::BasisKey &TriBa, 
-              const LibUtilities::BasisKey &TriBb, 
-              const LibUtilities::BasisKey &QuadBa, 
-              const LibUtilities::BasisKey &QuadBb, 
-              const SpatialDomains::MeshGraph2D &graph2D,
-              const LibUtilities::PointsType 
+        {
+        public:
+            ExpList2D(); 
+            
+            ExpList2D(const ExpList2D &In);   
+            
+            ExpList2D(const LibUtilities::BasisKey &TriBa, 
+                      const LibUtilities::BasisKey &TriBb, 
+                      const LibUtilities::BasisKey &QuadBa, 
+                      const LibUtilities::BasisKey &QuadBb, 
+                      const SpatialDomains::MeshGraph2D &graph2D,
+                      const LibUtilities::PointsType 
                       TriNb = LibUtilities::SIZE_PointsType);
 
-        ~ExpList2D();
-
+            ExpList2D(SpatialDomains::MeshGraph2D &graph2D);
+            
+            ~ExpList2D();
+            
             void   PhysDeriv  (ExpList &S0,
                                ExpList &S1, 
                                ExpList &S2 = NullExpList)
             {
                 ExpList::PhysDeriv(S0,S1,S2);
             }
+            
+        protected:
+            
+        private:
+            
+        };
         
-    protected:
-        
-    private:
-        
-    };
-    
         typedef boost::shared_ptr<ExpList2D>      ExpList2DSharedPtr;
         typedef std::vector< ExpList2DSharedPtr > ExpList2DVector;
         typedef std::vector< ExpList2DSharedPtr >::iterator ExpList2DVectorIter;
@@ -91,6 +92,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.11  2007/07/22 23:04:21  bnelson
+* Backed out Nektar::ptr.
+*
 * Revision 1.10  2007/07/20 02:04:12  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

@@ -79,12 +79,12 @@ namespace Nektar
         protected:
 
         private:
-            LocalRegions::PointExpVector                         m_bndConstraint;
-            std::vector<SpatialDomains::BoundaryConditionType>   m_bndTypes;
+            Array<OneD,LocalRegions::PointExpSharedPtr>         m_bndConstraint;
+            Array<OneD,SpatialDomains::BoundaryConditionType>   m_bndTypes;
 	    LocalToGlobalBndryMapSharedPtr                       m_lambdaMap;	    
             GlobalLinSysMapShPtr                                 m_globalBndMat;
-
-            void GenerateField1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::BoundaryConditions &bcs,  const std::string variable);
+            
+            void GenerateField1D(SpatialDomains::BoundaryConditions &bcs,  const std::string variable);
         };
 
         typedef boost::shared_ptr<DisContField1D>   DisContField1DSharedPtr;

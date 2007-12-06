@@ -196,6 +196,21 @@ namespace Nektar
             return returnval;
         }
 
+        NekDouble StdExpansion::Linf(const ConstArray<OneD, NekDouble>& sol)
+        {
+            int     ntot;
+            NekDouble  val;
+            Array<OneD, NekDouble>  wsp;
+
+            ntot = GetTotPoints();
+            wsp  = Array<OneD, NekDouble>(ntot);
+
+            Vmath::Vsub(ntot,sol.get(),1,&m_phys[0],1,&wsp[0],1);
+            Vmath::Vabs(ntot,&wsp[0],1,&wsp[0],1);
+            val = Vmath::Vamax(ntot,&wsp[0],1);    
+
+            return  val;
+        }
 
         DNekBlkMatSharedPtr StdExpansion::CreateStdStaticCondMatrix(const StdMatrixKey &mkey) 
         {
@@ -211,31 +226,33 @@ namespace Nektar
             DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
             
             int i,j;
+
+            const ConstArray<OneD,int> bmap = GetBoundaryMap();
+            const ConstArray<OneD,int> imap = GetInteriorMap();
             
             for(i = 0; i < nbdry; ++i)
             {
                 for(j = 0; j < nbdry; ++j)
                 {
-                    (*A)(i,j) = (*mat)(i,j);
+                    (*A)(i,j) = (*mat)(bmap[i],bmap[j]);
                 }
                 
                 for(j = 0; j < nint; ++j)
                 {
-                    (*B)(i,j) = (*mat)(i,nbdry+j);
+                    (*B)(i,j) = (*mat)(bmap[i],imap[j]);
                 }
             }
-            
             
             for(i = 0; i < nint; ++i)
             {
                 for(j = 0; j < nbdry; ++j)
                 {
-                    (*C)(i,j) = (*mat)(nbdry+i,j);
+                    (*C)(i,j) = (*mat)(imap[i],bmap[j]);
                 }
                 
                 for(j = 0; j < nint; ++j)
                 {
-                    (*D)(i,j) = (*mat)(nbdry+i,nbdry+j);
+                    (*D)(i,j) = (*mat)(imap[i],imap[j]);
                 }
             }
             
@@ -258,23 +275,6 @@ namespace Nektar
             returnval->SetBlock(1,1,D);
             
             return returnval;
-        }
-
-
-        NekDouble StdExpansion::Linf(const ConstArray<OneD, NekDouble>& sol)
-        {
-            int     ntot;
-            NekDouble  val;
-            Array<OneD, NekDouble>  wsp;
-
-            ntot = GetTotPoints();
-            wsp  = Array<OneD, NekDouble>(ntot);
-
-            Vmath::Vsub(ntot,sol.get(),1,&m_phys[0],1,&wsp[0],1);
-            Vmath::Vabs(ntot,&wsp[0],1,&wsp[0],1);
-            val = Vmath::Vamax(ntot,&wsp[0],1);    
-
-            return  val;
         }
 
         NekDouble StdExpansion::Linf()
@@ -362,6 +362,9 @@ namespace Nektar
                 break;
             case eLaplacian00:
                 LaplacianMatrixOp(0,0,inarray,outarray);
+                break;
+            case eLaplacian01:
+                LaplacianMatrixOp(0,1,inarray,outarray);
                 break;
             case eLaplacian11:
                 LaplacianMatrixOp(1,1,inarray,outarray);
@@ -537,7 +540,7 @@ namespace Nektar
                 fbasis0.GetNumPoints(),1.0,I0->GetPtr().get(),
                 tbasis0.GetNumPoints(),wsp.get(), tbasis1.GetNumPoints(),
                 0.0,to, tbasis0.GetNumPoints());
-        }
+        }        
 
         // 1D Interpolation
         void StdExpansion::Interp1D(const LibUtilities::BasisKey &fbasis0, 
@@ -585,6 +588,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.58  2007/11/29 21:40:20  sherwin
+* updates for MultiRegions and DG solver
+*
 * Revision 1.57  2007/11/08 16:55:12  pvos
 * Updates towards 2D helmholtz solver
 *

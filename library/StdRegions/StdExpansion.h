@@ -680,11 +680,11 @@ namespace Nektar
                 return v_GetLocStaticCondMatrix(mkey);
             }
 
-            void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
+            void UDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                            const ConstArray<OneD,NekDouble> &inarray,
                                            Array<OneD,NekDouble> outarray)
             {
-                v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
+                v_UDGHelmholtzBoundaryTerms(tau,inarray,outarray);
             }
 
             // virtual functions related to LocalRegions
@@ -692,6 +692,16 @@ namespace Nektar
             int GetCoordim()
             {
                 return v_GetCoordim(); 
+            }
+
+            const ConstArray<OneD, int> GetBoundaryMap(void)
+            {
+                return v_GetBoundaryMap();
+            }
+
+            const ConstArray<OneD, int> GetInteriorMap(void)
+            {
+                return v_GetInteriorMap();
             }
 
             // element boundary ordering 
@@ -804,7 +814,7 @@ namespace Nektar
                 return boost::shared_ptr<DNekScalBlkMat>();
             }
 
-            virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
+            virtual void v_UDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                                         const ConstArray<OneD,NekDouble> &inarray,
                                                         Array<OneD,NekDouble> outarray)
             {
@@ -1098,6 +1108,16 @@ namespace Nektar
                 return -1;
             }
 
+            virtual const ConstArray<OneD, int> v_GetBoundaryMap(void)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
+            virtual const ConstArray<OneD, int> v_GetInteriorMap(void)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
             // element boundary ordering 
             virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
             {
@@ -1154,6 +1174,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.69  2007/11/29 21:40:22  sherwin
+* updates for MultiRegions and DG solver
+*
 * Revision 1.68  2007/11/08 16:55:13  pvos
 * Updates towards 2D helmholtz solver
 *

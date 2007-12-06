@@ -39,242 +39,149 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-    
-    ExpList2D::ExpList2D()
-    {
-    }
-    
-    ExpList2D::~ExpList2D()
-    {
-    }
-
+        
+        ExpList2D::ExpList2D()
+        {
+        }
+        
+        ExpList2D::~ExpList2D()
+        {
+        }
+        
         ExpList2D::ExpList2D(const ExpList2D &In):
             ExpList(In)
         {
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
-    
-
-    ExpList2D::ExpList2D(const LibUtilities::BasisKey &TriBa, 
+        
+        ExpList2D::ExpList2D(const LibUtilities::BasisKey &TriBa, 
                              const LibUtilities::BasisKey &TriBb, 
                              const LibUtilities::BasisKey &QuadBa, 
                              const LibUtilities::BasisKey &QuadBb, 
                              const SpatialDomains::MeshGraph2D &graph2D,
                              const LibUtilities::PointsType TriNb)
-    {
-        SpatialDomains::TriGeomVector TriGeoms   = graph2D.GetTrigeoms();
-        SpatialDomains::QuadGeomVector QuadGeoms = graph2D.GetQuadgeoms();
+        {
+            int i,j;
+            int nel;
+            LocalRegions::TriExpSharedPtr tri;
+            LocalRegions::NodalTriExpSharedPtr Ntri;
+            LocalRegions::QuadExpSharedPtr quad;
+            SpatialDomains::Composite comp;
 
-        int tri_ncoeffs_elmt = 0;
-            int quad_ncoeffs_elmt = 0;
-        int tri_npoints_elmt = 0;
-            int quad_npoints_elmt = 0;
-        
-        // determine size of local expansion and quadrature space
-        // and declare memory
-
+            const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
+            
             m_ncoeffs = 0;
             m_npoints = 0;
             
-        if(TriGeoms.size())
-        {        
-        tri_ncoeffs_elmt = tri_ncoeffs_elmt = (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
-                    + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
-        tri_npoints_elmt = (TriBa.GetNumPoints()*
-                    TriBb.GetNumPoints());
-        
-        m_ncoeffs += TriGeoms.size()*tri_ncoeffs_elmt;
-        m_npoints += TriGeoms.size()*tri_npoints_elmt;
-        }        
-        
-        if(QuadGeoms.size())
-        {        
-        quad_ncoeffs_elmt = (QuadBa.GetNumModes() 
-                                     *QuadBb.GetNumModes());
-        quad_npoints_elmt = (QuadBa.GetNumPoints()
-                                     *QuadBb.GetNumPoints());
-        
-        m_ncoeffs += QuadGeoms.size()*quad_ncoeffs_elmt;
-        m_npoints += QuadGeoms.size()*quad_npoints_elmt;
-        }
-        
-        m_transState = eNotSet; 
-        m_physState  = false;
-
+            m_transState = eNotSet; 
+            m_physState  = false;
+            
+            for(i = 0; i < expansions.size(); ++i)
+            {
+                SpatialDomains::TriGeomSharedPtr TriangleGeom;
+                SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
+                
+                if(TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(expansions[i]->m_GeomShPtr))
+                {
+                    if(TriNb < LibUtilities::SIZE_PointsType)
+                    {
+                        Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(TriBa,TriBb,TriNb,TriangleGeom);
+                        (*m_exp).push_back(Ntri);
+                    }
+                    else
+                    {
+                        tri = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(TriBa,TriBb,TriangleGeom);
+                        (*m_exp).push_back(tri);
+                    }
+                    
+                    m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
+                        + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
+                    m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
+                }
+                else if(QuadrilateralGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(expansions[i]->m_GeomShPtr))
+                {
+                    quad = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(QuadBa,QuadBb,QuadrilateralGeom);
+                    (*m_exp).push_back(quad);
+                    m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
+                    m_npoints += QuadBa.GetNumPoints()*QuadBb.GetNumPoints();
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a proper Geometry2D failed");
+                }  
+                
+            }
+            
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
-        
-          // declare triangles using first block of data         
-        if(TriGeoms.size())
-        {        
-        LocalRegions::TriExpSharedPtr tri;
-        LocalRegions::NodalTriExpSharedPtr Ntri;
-        SpatialDomains::TriGeomVectorIter def;
-        
-        for(def = TriGeoms.begin(); def != TriGeoms.end(); ++def)
-        {
-            
-            if(TriNb < LibUtilities::SIZE_PointsType)
-            {
+        }
 
-                        Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(TriBa,TriBb,TriNb,*def);
-                        (*m_exp).push_back(Ntri);
-            }
-            else
+
+
+        ExpList2D::ExpList2D(SpatialDomains::MeshGraph2D &graph2D)
+        {
+            int i,j;
+            int nel;
+            LocalRegions::TriExpSharedPtr tri;
+            LocalRegions::NodalTriExpSharedPtr Ntri;
+            LocalRegions::QuadExpSharedPtr quad;
+            SpatialDomains::Composite comp;
+
+            const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();            
+            
+            m_ncoeffs = 0;
+            m_npoints = 0;
+            
+            m_transState = eNotSet; 
+            m_physState  = false;
+            
+            for(i = 0; i < expansions.size(); ++i)
             {
-                        tri = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(TriBa,TriBb,*def);
-                        (*m_exp).push_back(tri);
-            }
-        }
-        }
-        
-        // set up quads 
-        if(QuadGeoms.size())
-        {        
-        LocalRegions::QuadExpSharedPtr quad;
-        SpatialDomains::QuadGeomVectorIter def;
+                SpatialDomains::TriGeomSharedPtr TriangleGeom;
+                SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
                 
-        for(def = QuadGeoms.begin(); def != QuadGeoms.end(); ++def)
-        {
-                    quad = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(QuadBa,QuadBb,*def);
+                if(TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(expansions[i]->m_GeomShPtr))
+                {
+                    LibUtilities::BasisKey TriBa = graph2D.GetBasisKey(expansions[i],0);
+                    LibUtilities::BasisKey TriBb = graph2D.GetBasisKey(expansions[i],1);
+                    
+                    tri = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(TriBa,TriBb,TriangleGeom);
+                    (*m_exp).push_back(tri);
+                    
+                    m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
+                        + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
+                    m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
+                }
+                else if(QuadrilateralGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(expansions[i]->m_GeomShPtr))
+                {
+                    LibUtilities::BasisKey QuadBa = graph2D.GetBasisKey(expansions[i],0);
+                    LibUtilities::BasisKey QuadBb = graph2D.GetBasisKey(expansions[i],0);
+                    
+                    quad = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(QuadBa,QuadBb,QuadrilateralGeom);
                     (*m_exp).push_back(quad);
+                    
+                    m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
+                    m_npoints += QuadBa.GetNumPoints()*QuadBb.GetNumPoints();
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a proper Geometry2D failed");
+                }  
+                
+            }            
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
-        }
-    }
-        
 
-//     ExpList2D::ExpList2D(const StdRegions::BasisKey  &TriBa, 
-//                  const StdRegions::BasisKey  &TriBb, 
-//                  const StdRegions::BasisKey  &QuadBa, 
-//                  const StdRegions::BasisKey  &QuadBb, 
-//                  SpatialDomains::MeshGraph2D &graph2D,
-//                  SpatialDomains::Domain      &domain2D,
-//                  const StdRegions::NodalBasisType TriNb )
-//     {
-//         SpatialDomains::TriGeomVector TriGeoms   = graph2D.GetTrigeoms();
-//         SpatialDomains::QuadGeomVector QuadGeoms = graph2D.GetQuadgeoms();
-//         int cnt,cnt1;
-//         int tri_ncoeffs_elmt = 0, quad_ncoeffs_elmt = 0;
-//         int tri_npoints_elmt = 0, quad_npoints_elmt = 0;
-//         CompositeVector compVector = domain2D.GetDomain();
-//         BoundaryVector boundVector = domain2D.GetBoundaries();
-
-        
-//         // determine size of local expansion and quadrature space
-//         // and declare memory
-
-//         m_npoints = m_ncoeffs = 0;
-
-
-//         for(
-//         if(TriGeoms.size())
-//         {        
-//         tri_ncoeffs_elmt = (TriBa.GetBasisOrder()*(TriBa.GetBasisOrder()+1))/2 + TriBa.GetBasisOrder()*(TriBb.GetBasisOrder()-TriBa.GetBasisOrder());
-//         tri_npoints_elmt = (TriBa.GetPointsOrder()*
-//                     TriBb.GetPointsOrder());
-        
-//         m_ncoeffs += TriGeoms.size()*tri_ncoeffs_elmt;
-//         m_npoints += TriGeoms.size()*tri_npoints_elmt;
-//         }        
-        
-//         if(QuadGeoms.size())
-//         {        
-//         quad_ncoeffs_elmt = QuadBa.GetBasisOrder() 
-//             *QuadBb.GetBasisOrder();
-//         quad_npoints_elmt = QuadBa.GetPointsOrder()
-//             *QuadBb.GetPointsOrder();
-        
-//         m_ncoeffs += QuadGeoms.size()*quad_ncoeffs_elmt;
-//         m_npoints += QuadGeoms.size()*quad_npoints_elmt;
-//         }
-        
-//         m_coeffs = new double [m_ncoeffs];
-//         m_transState = eNotSet; 
-        
-//         m_phys   = new double [m_npoints];
-//         m_physState  = false;
-        
-        
-//         // make sure Geofacs are defined in MeshGraph2D
-//         if(graph2D.GetGeofac_defined() != true)
-//         {
-//         graph2D.GenXGeoFac();
-//         }
-        
-
-//         // declare triangles using first block of data         
-//         cnt = cnt1 = 0; // use these counts for data offsets
-//         if(TriGeoms.size())
-//         {        
-//         LocalRegions::TriExpSharedPtr tri;
-//         LocalRegions::NodalTriExpSharedPtr Ntri;
-//         SpatialDomains::TriGeomVectorIter def;
-//         StdRegions::StdExpansionVector explist;
-
-//         // make sure Geofacs are defined in MeshGraph1D
-//         if(graph2D.GetGeofac_defined() != true)
-//         {
-//             graph2D.GenXGeoFac();
-//         }
-        
-//         for(def = TriGeoms.begin(); def != TriGeoms.end(); ++def)
-//         {
-//             // removed copy construction of geom
-//             // geom = new SpatialDomains::SegGeom (**def);
-            
-//             if(TriNb < StdRegions::SIZE_NodalBasisType)
-//             {
-//             Ntri.reset(new LocalRegions::NodalTriExp(TriBa,TriBb,
-//                          TriNb, m_coeffs+cnt,
-//                          m_phys+cnt1, *def));
-//             Ntri->SetGeoFac(Ntri->GenGeoFac());
-//             explist.push_back(Ntri);
-//             }
-//             else
-//             {
-//             tri.reset(new LocalRegions::TriExp(TriBa,TriBb,
-//                           m_coeffs+cnt,m_phys+cnt1, 
-//                                *def));
-//             tri->SetGeoFac(tri->GenGeoFac());
-//             explist.push_back(tri);
-//             }
-//             cnt  += tri_ncoeffs_elmt;
-//             cnt1 += tri_npoints_elmt;
-
-//         }
-//         m_exp_shapes.push_back(explist);
-//         }
-        
-//         // set up quads 
-//         if(QuadGeoms.size())
-//         {        
-//         LocalRegions::QuadExpSharedPtr quad;
-//         SpatialDomains::QuadGeomVectorIter def;
-//         StdRegions::StdExpansionVector explist;
-
-//         for(def = QuadGeoms.begin(); def != QuadGeoms.end(); ++def)
-//         {
-//             // removed copy construction of geom
-//             // geom = new SpatialDomains::SegGeom (**def);
-//             quad.reset(new LocalRegions::QuadExp(QuadBa, QuadBb,
-//                     m_coeffs+cnt, m_phys+cnt1, *def));
-//             quad->SetGeoFac(quad->GenGeoFac());
-//             explist.push_back(quad);
-            
-//             cnt  += quad_ncoeffs_elmt;
-//             cnt1 += quad_npoints_elmt;
-//         }
-//         m_exp_shapes.push_back(explist);
-//         }
-//     }
-
-      
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.14  2007/07/20 02:04:12  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.13  2007/06/07 15:54:19  pvos
 * Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
 * Also made corrections to various ASSERTL2 calls

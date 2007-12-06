@@ -40,104 +40,78 @@ namespace Nektar
     namespace MultiRegions
     {
 
-        LocalToGlobalBndryMap1D::LocalToGlobalBndryMap1D(const int NumDirichlet,
-                                SpatialDomains::BoundaryConditions &bcs,
-                                const std::string variable,
-                                StdRegions::StdExpansionVector &locexp,
-                                const SpatialDomains::CompositeVector &domain)
+        LocalToGlobalBndryMap1D::LocalToGlobalBndryMap1D(const StdRegions::StdExpansionVector &locexp, 
+                                                         const SpatialDomains::MeshGraph1D &graph1D,
+                                                         const ConstArray<OneD,LocalRegions::PointExpSharedPtr> &bndCondExp,
+                                                         const ConstArray<OneD,SpatialDomains::BoundaryConditionType> &bndCondTypes)
         {
-            int i,j,k;
+            int i,j;
+            int vid = 0;
             int gid = 0;
             int cnt = 0;
-            int cnt1 = 0;
-            int nbnd; 
-
+            int nbnd = bndCondExp.num_elements();
+            
+            // set up Local to Continuous mapping 
             StdRegions::StdExpMap vmap;
-            SpatialDomains::Composite comp;
-            SpatialDomains::SegGeomSharedPtr SegmentGeom;
-            
-            SpatialDomains::BoundaryRegionCollection    &bregions    = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
+            LocalRegions::SegExpSharedPtr locSegExp;
+              
+            m_totLocBndDofs   = 2*locexp.size();
+            m_locToContBndMap = Array<OneD, int>(m_totLocBndDofs,-1);
+            m_locToContBndCondMap = Array<OneD, int>(nbnd);   
 
-            Array<OneD,int> DirMap(2,-1);
+            // re-order the vertices (as domain does not necessarily contains the entire meshgraph)
+             Array<OneD, int> renumbVerts(graph1D.GetNvertices(),-1);
 
-            m_totLocBndDofs    = 2*locexp.size();
-            m_locToContBndMap  = Array<OneD, int>(m_totLocBndDofs,-1);
-            
-            m_numDirichletBCs = NumDirichlet; 
-            
-            nbnd = bregions.size();
+            // This array is used to indicate whether an vertex is part of the boundary of the domain.
+            Array<OneD, int> bndCondVertID(graph1D.GetNvertices(),-1);
 
+            // Order the Dirichlet vertices first.
+            m_numDirichletDofs = 0;
+            for(i = 0; i < nbnd; i++)
+            {
+                vid = ((bndCondExp[i])->GetVertex())->GetVid();
+                bndCondVertID[vid] = i;
+
+                if(bndCondTypes[i]==SpatialDomains::eDirichlet)
+                {
+                    m_numDirichletDofs++;
+                    if(renumbVerts[vid]==-1)
+                    {
+                        renumbVerts[vid] = gid++;
+                    }                    
+                }
+            }
+            
             // set up simple map based on vertex and edge id's
-            for(i = 0; i < domain.size(); ++i)
+            for(i = 0; i < locexp.size(); ++i)
             {
-                comp = domain[i];
-
-                for(j = 0; j < comp->size(); ++j)
+                if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(locexp[i]))
                 {
-                    locexp[cnt1]->MapTo(StdRegions::eForwards,vmap);
-                
-                    if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*comp)[j]))
-                    {
-                        for(k = 0; k < 2; ++k)
+                    locSegExp->MapTo(StdRegions::eForwards,vmap);
+                    for(j = 0; j < locSegExp->GetNverts(); ++j)
+                    {   
+                        vid = (locSegExp->GetGeom())->GetVid(j);
+                        if(renumbVerts[vid]==-1)
                         {
-                            m_locToContBndMap[cnt + vmap[k]] =  SegmentGeom->GetVid(k);
+                            renumbVerts[vid] = gid++;
+                        }   
+                        if(bndCondVertID[vid] != -1)
+                        {
+                            m_locToContBndCondMap[bndCondVertID[vid]] = renumbVerts[vid];
                         }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a SegGeom failed");
-                    }
-                    cnt += locexp[cnt1]->NumBndryCoeffs();
-                    ++cnt1;
+                        m_locToContBndMap[cnt + j] =  renumbVerts[vid];
+                    }    
+                    cnt += locSegExp->NumBndryCoeffs();
                 }
-            }
-            
-            m_totGloBndDofs = locexp.size()+1;
-
-            // reshuffle Dirichlet boundary conditions
-            for(i = cnt = 0; i < nbnd; ++i)
-            {
-                if(((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                else
                 {
-                    SpatialDomains::VertexComponentSharedPtr vert;
-                    
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
-                    {
-                        DirMap[cnt++] = vert->GetVid(); 
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a vertex failed");
-                    }
+                    ASSERTL0(false,"dynamic cast to a segment expansion failed");
                 }
-            }
+            }  
 
-            // Reset mapping 
-            for(i = 0; i < NumDirichlet; ++i)
-            {
-                for(j = 0; j < m_totLocBndDofs; ++j)
-                {
-                    if(m_locToContBndMap[j] == DirMap[i])
-                    {
-                        m_locToContBndMap[j] = i + m_totLocBndDofs; 
-                    }
-                    else if(m_locToContBndMap[j] < DirMap[i])
-                    {
-                        m_locToContBndMap[j] += 1;
-                    }
-                }
-            }
-
-            for(i = 0; i < m_totLocBndDofs; ++i)
-            {
-                if(m_locToContBndMap[i] >= m_totLocBndDofs)
-                {
-                    m_locToContBndMap[i] -= m_totLocBndDofs;
-                }
-            }
+            m_totGloBndDofs = gid;
         }
-
+ 
         LocalToGlobalBndryMap1D::~LocalToGlobalBndryMap1D()
         {
         }
@@ -145,5 +119,8 @@ namespace Nektar
 }
 
 /**
-* $Log: LocalToGlobalMap1D.cpp,v $
+* $Log: LocalToGlobalBndryMap1D.cpp,v $
+* Revision 1.1  2007/11/20 16:27:16  sherwin
+* Zero Dirichlet version of UDG Helmholtz solver
+*
 **/

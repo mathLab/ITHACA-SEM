@@ -50,9 +50,9 @@ namespace Nektar
                             const double factor1 = NekUnsetDouble,
                             const double factor2 = NekUnsetDouble,
 #if 0
-                            const GlobalSysSolnType solnType = eDirectFullMatrix);
+                            const GlobalSysSolnType solnType = eDirectStaticCond);//eDirectStaticCond
 #else
-                            const GlobalSysSolnType solnType = eDirectStaticCond);
+            const GlobalSysSolnType solnType = eDirectStaticCond);//eDirectFullMatrix
 #endif
 
             GlobalLinSysKey(const GlobalLinSysKey &key);
@@ -104,6 +104,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.h,v $
+* Revision 1.3  2007/11/20 16:27:16  sherwin
+* Zero Dirichlet version of UDG Helmholtz solver
+*
 * Revision 1.2  2007/10/03 11:37:50  sherwin
 * Updates relating to static condensation implementation
 *

@@ -42,6 +42,7 @@
 #include <MultiRegions/GlobalLinSys.h>
 
 #include <LocalRegions/MatrixKey.h>
+#include <SpatialDomains/SegGeom.h>
 
 namespace Nektar
 {
@@ -145,18 +146,7 @@ namespace Nektar
       {
       return (*m_exp)[n];
       }
-      
-    protected:
-      int m_ncoeffs; 
-      int m_npoints;
-      Array<OneD, NekDouble> m_coeffs;
-      Array<OneD, NekDouble> m_phys;
 
-      TransState m_transState;
-      bool       m_physState;
-     
-      boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
-      
       inline Array<OneD, NekDouble> &UpdateCoeffs()
       {
           m_transState = eLocal;
@@ -168,6 +158,17 @@ namespace Nektar
           m_physState = true;
           return m_phys;
       }
+      
+    protected:
+      int m_ncoeffs; 
+      int m_npoints;
+      Array<OneD, NekDouble> m_coeffs;
+      Array<OneD, NekDouble> m_phys;
+
+      TransState m_transState;
+      bool       m_physState;
+     
+      boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
 
       NekDouble PhysIntegral(const ConstArray<OneD, NekDouble> &inarray);
       void   IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
@@ -177,6 +178,7 @@ namespace Nektar
                Array<OneD, NekDouble> &out_d0, 
                Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
+
       void   FwdTrans (const ConstArray<OneD, NekDouble> &inarray,
                Array<OneD, NekDouble> &outarray);
 
@@ -199,6 +201,8 @@ namespace Nektar
 
     };
 
+        typedef boost::shared_ptr<ExpList>      ExpListSharedPtr;
+
     static ExpList NullExpList;
     
   } //end of namespace
@@ -208,6 +212,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.27  2007/11/20 16:27:16  sherwin
+* Zero Dirichlet version of UDG Helmholtz solver
+*
 * Revision 1.26  2007/10/03 11:37:50  sherwin
 * Updates relating to static condensation implementation
 *

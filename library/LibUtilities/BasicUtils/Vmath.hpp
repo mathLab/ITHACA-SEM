@@ -69,7 +69,7 @@ namespace Vmath
     }
     
     /// \brief Scalar multiply  y = alpha*y
-    template<class T>  void Smul( int n, const T alpha, T*x, const int incx,
+    template<class T>  void Smul( int n, const T alpha, const T*x, const int incx,
                   T *y, const int incy)
     {
         while( n-- )
@@ -439,6 +439,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.8  2007/07/26 08:32:57  sherwin
+Made second vector argument to Vsub a constant
+
 Revision 1.7  2007/07/20 00:39:37  bnelson
 Replaced boost::shared_ptr with Nektar::ptr
 

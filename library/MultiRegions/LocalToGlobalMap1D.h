@@ -39,28 +39,111 @@
 #include <MultiRegions/LocalToGlobalMap.h>
 #include <SpatialDomains/MeshGraph1D.h>
 #include <LocalRegions/PointExp.h>
+#include <LocalRegions/SegExp.h>
 
 namespace Nektar
 {
     namespace MultiRegions
-    {
-        class LocalToGlobalMap1D: 
-            public LocalToGlobalMap
+    {        
+    class LocalToGlobalMap1D: 
+        public LocalToGlobalMap
         {
         public:
-            LocalToGlobalMap1D(){};
+            LocalToGlobalMap1D();
             LocalToGlobalMap1D(const int loclen, 
                                const StdRegions::StdExpansionVector &locexp, 
-                               const SpatialDomains::CompositeVector &domain);
-        
+                               const SpatialDomains::MeshGraph1D &graph1D);
+            LocalToGlobalMap1D(const int loclen, 
+                               const StdRegions::StdExpansionVector &locexp, 
+                               const SpatialDomains::MeshGraph1D &graph1D,
+                               const ConstArray<OneD,LocalRegions::PointExpSharedPtr> &bndCondExp,
+                               const ConstArray<OneD,SpatialDomains::BoundaryConditionType> &bndCondTypes);
+            
             virtual ~LocalToGlobalMap1D();
+            
+            inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
+                                    Array<OneD, NekDouble> &cont)
+            {
+                Vmath::Scatr(m_totLocDofs, &loc[0],&m_locToContMap[0],&cont[0]);
+            }                
+            
+            
+            inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
+                                    Array<OneD, NekDouble> &loc)
+            {
+                Vmath::Gathr(m_totLocDofs,&cont[0],&m_locToContMap[0], &loc[0]);
+            }
+            
+            inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
+                                 Array<OneD, NekDouble> &cont)
+            {
+                Vmath::Zero(m_totGloDofs,&cont[0],1);                
+                Vmath::Assmb(m_totLocDofs,&loc[0],&m_locToContMap[0],&cont[0]);
+            }
 
+            inline void ContToLocalBnd(const DNekVec &cont, DNekVec &loc, int offset = 0)
+            {
+                ASSERTL1(loc.GetDimension() >= m_totLocBndDofs,"Local vector is not of correct dimension");
+                ASSERTL1(cont.GetDimension() >= m_totGloBndDofs-offset,"Global vector is not of correct dimension");
+                
+                // offset input data by length "offset" for Dirichlet boundary conditions.
+                Array<OneD,NekDouble> tmp(cont.GetDimension()+offset,0.0);
+                Vmath::Vcopy(cont.GetDimension(),cont.GetPtr(),1,&tmp[offset],1);
+                
+                Vmath::Gathr(m_totLocBndDofs,&tmp[0],&m_locToContBndMap[0], loc.GetPtr());
+            }           
+            
+            inline void AssembleBnd(const DNekVec &loc, DNekVec &cont, int offset = 0)
+            {
+                ASSERTL1(loc.GetDimension() >= m_totLocBndDofs,"Local vector is not of correct dimension");
+                ASSERTL1(cont.GetDimension() >= m_totGloBndDofs-offset,"Global vector is not of correct dimension");
+                Array<OneD,NekDouble> tmp(cont.GetDimension()+offset,0.0);
+                
+                Vmath::Assmb(m_totLocBndDofs,loc.GetPtr(), &m_locToContBndMap[0], &tmp[0]);
+                Vmath::Vcopy(cont.GetDimension(),&tmp[offset],1,cont.GetPtr(),1);
+            }
+            
         protected:
             
         private:
-            virtual void v_ResetMapping(const int NumDirichlet, 
-                                        SpatialDomains::BoundaryConditions &bcs,
-                                        const std::string variable);
+            virtual void v_LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
+                                       Array<OneD, NekDouble> &cont)
+            {
+                LocalToCont(loc,cont);
+            }                
+            
+            
+            virtual void v_ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
+                                       Array<OneD, NekDouble> &loc)
+            {
+                ContToLocal(cont,loc);
+            }
+            
+            virtual void v_Assemble(const ConstArray<OneD, NekDouble> &loc, 
+                                    Array<OneD, NekDouble> &cont)
+            {
+                Assemble(loc,cont);
+            }
+
+           virtual void v_ContToLocalBnd(const DNekVec &cont, DNekVec &loc, int offset = 0)
+            {
+                ContToLocalBnd(cont,loc,offset);
+            }
+                        
+            virtual void v_AssembleBnd(const DNekVec &loc, DNekVec &cont, int offset = 0)
+            {
+                AssembleBnd(loc,cont,offset);
+            }
+            
+            virtual NekDouble v_GetSign(int i) 
+            {
+                return 1.0;
+            }
+
+            virtual NekDouble v_GetBndSign(int i) 
+            {
+                return 1.0;
+            }
     };
     
     } // end of namespace
@@ -70,6 +153,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.16  2007/11/20 16:27:16  sherwin
+/** Zero Dirichlet version of UDG Helmholtz solver
+/**
 /** Revision 1.15  2007/10/04 11:01:32  pvos
 /** fixed some errors
 /**

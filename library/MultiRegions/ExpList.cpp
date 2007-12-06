@@ -114,9 +114,10 @@ namespace Nektar
         int    i;
         int    cnt  = 0;
         int    cnt1 = 0;
-            ConstArray<OneD,NekDouble> e_inarray;
-            Array<OneD,NekDouble> e_outarray;
-            
+
+        ConstArray<OneD,NekDouble> e_inarray;
+        Array<OneD,NekDouble> e_outarray;
+        
         for(i = 0; i < GetExpSize(); ++i)
         {
                 (*m_exp)[i]->IProductWRTBase(e_inarray = inarray+cnt,
@@ -136,8 +137,8 @@ namespace Nektar
                      "local physical space is not true ");
             PhysDeriv(m_phys,
                       out_d0.UpdatePhys(), 
-                      out_d0.UpdatePhys(), 
-                      out_d0.UpdatePhys());
+                      out_d1.UpdatePhys(), 
+                      out_d2.UpdatePhys());
         }
 
     
@@ -154,6 +155,9 @@ namespace Nektar
             
             for(i= 0; i < GetExpSize(); ++i)
             {
+                Array<OneD, NekDouble> myout1((*m_exp)[i]->GetNcoeffs());
+                Array<OneD, NekDouble> myout2((*m_exp)[i]->GetNcoeffs());
+
                 e_out_d0 = out_d0 + cnt;
                 if(out_d1.num_elements())
                 {
@@ -169,7 +173,7 @@ namespace Nektar
                 cnt  += (*m_exp)[i]->GetTotPoints();
             }
         }
-        
+
         void ExpList::FwdTrans(const ExpList &Sin)
         {
             ASSERTL2(Sin.GetPhysState() == true,
@@ -272,14 +276,14 @@ namespace Nektar
 	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, LocalToGlobalMapSharedPtr &locToGloMap)
 	{
             int i,j,n,gid1,gid2,loc_lda,cnt;
+            NekDouble sign1,sign2;
             DNekScalMatSharedPtr loc_mat;
             StdRegions::StdExpansionVectorIter def;
             DNekLinSysSharedPtr   linsys;
             GlobalLinSysSharedPtr returnlinsys;
 
             int totDofs     = locToGloMap->GetTotGloDofs();
-            int NumDirBCs   = locToGloMap->GetNumDirichletBCs();
-            int NumRobinBCs = locToGloMap->GetNumRobinBCs();
+            int NumDirBCs   = locToGloMap->GetNumDirichletDofs();
 
             unsigned int rows = totDofs - NumDirBCs;
             unsigned int cols = totDofs - NumDirBCs;
@@ -295,35 +299,38 @@ namespace Nektar
                 
                 loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
                 loc_lda = loc_mat->GetColumns();
+
+                //cout<<"loc mat "<<endl<<*loc_mat<<endl;
 		    
                 for(i = 0; i < loc_lda; ++i)
                 {
                     gid1 = locToGloMap->GetMap(cnt + i);
+                    sign1 =  locToGloMap->GetSign(cnt + i);
                     if(gid1 >= NumDirBCs)
                     {
                         for(j = 0; j < loc_lda; ++j)
                         {
                             gid2 = locToGloMap->GetMap(cnt + j);
+                            sign2 = locToGloMap->GetSign(cnt + j);
                             if(gid2 >= NumDirBCs)
                             {
                                 (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                    += (*loc_mat)(i,j);
+                                    += sign1*sign2*(*loc_mat)(i,j);
                             }
                         }		
                     }
                 }
                 cnt += (*m_exp)[n]->GetNcoeffs();
-            }
+            }            
             
-            for(i = NumDirBCs; i < NumDirBCs+NumRobinBCs; ++i)
-            {
-                // Find a way to deal with second parameter of the Robin BC
-                NekDouble b=1.0;
-                (*Gmat)((locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs,
-                        (locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs)
-                    -= mkey.GetFactor1() * b;
-            }
-            
+//             for(i = NumDirBCs; i < NumDirBCs+NumRobinBCs; ++i)
+//             {
+//                 // Find a way to deal with second parameter of the Robin BC
+//                 NekDouble b=1.0;
+//                 (*Gmat)((locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs,
+//                         (locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs)
+//                     -= mkey.GetScaleFactor() * b;
+//             }
 
             // Believe that we need a call of the type:
             //linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,eWrapper);
@@ -337,12 +344,13 @@ namespace Nektar
 	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey, LocalToGlobalMapSharedPtr &locToGloMap)
 	{
             int i,j,n,gid1,gid2,loc_lda,cnt;
+            NekDouble sign1,sign2;
             DNekScalBlkMatSharedPtr loc_mat;
             DNekLinSysSharedPtr   linsys;
             GlobalLinSysSharedPtr returnlinsys;
             
             int nBndDofs = locToGloMap->GetTotGloBndDofs();
-            int NumDirBCs = locToGloMap->GetNumDirichletBCs();
+            int NumDirBCs = locToGloMap->GetNumDirichletDofs();
 
             unsigned int rows = nBndDofs - NumDirBCs;
             unsigned int cols = nBndDofs - NumDirBCs;
@@ -399,21 +407,23 @@ namespace Nektar
                 // Set up interior Matrix; 
                 for(i = 0; i < loc_lda; ++i)
                 {
-                    gid1 = locToGloMap->GetMap(cnt + i);
+                    gid1 = locToGloMap->GetBndMap(cnt + i);
+                    sign1 = locToGloMap->GetBndSign(cnt + i);
                     if(gid1 >= NumDirBCs)
                     {
                         for(j = 0; j < loc_lda; ++j)
                         {
-                            gid2 = locToGloMap->GetMap(cnt + j);
+                            gid2 = locToGloMap->GetBndMap(cnt + j);
+                            sign2 = locToGloMap->GetBndSign(cnt + j);
                             if(gid2 >= NumDirBCs)
                             {
                                 (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                    += (*loc_mat)(i,j);
+                                    += sign1*sign2*(*loc_mat)(i,j);
                             }
                         }		
                     }
                 }
-                cnt += (*m_exp)[n]->GetNcoeffs();
+                cnt += (*m_exp)[n]->NumBndryCoeffs();
             }
             
             // Believe that we need a call of the type:
@@ -422,7 +432,7 @@ namespace Nektar
             {
                 linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
             }
-
+            
             returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys,BinvD,C,invD);
             return returnlinsys;
         }
@@ -566,7 +576,7 @@ namespace Nektar
             {
                 BwdTrans(*this);
             }
-            
+
             for(i= 0; i < GetExpSize(); ++i)
             {
                 // set up physical solution in local element

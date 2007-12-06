@@ -433,7 +433,7 @@ namespace Nektar
                         {
                             for(j = 0; j < nquad0; ++j)
                             {
-                                m_normals[0][i*nquad0*j] = -m_gmat[2*i+1][j];
+                                m_normals[0][i*nquad0+j] = -m_gmat[2*i+1][j];
                             }
 
                             
@@ -489,7 +489,7 @@ namespace Nektar
                         {
                             for(j = 0; j < nquad0; ++j)
                             {
-                                m_normals[0][i*nquad0*j] = -m_gmat[2*i+1][j];
+                                m_normals[0][i*nquad0+j] = -m_gmat[2*i+1][j];
                                 m_normals[2][i*nquad0+j] =  m_gmat[2*i+1][nquad0*(nquad1-1)+j];
                             }
                             
@@ -764,6 +764,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.14  2007/12/03 21:30:35  sherwin
+// Added normal details
+//
 // Revision 1.13  2007/07/20 02:15:08  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

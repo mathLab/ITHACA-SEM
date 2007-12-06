@@ -157,6 +157,10 @@ namespace Nektar
 
             NekDouble PhysEvaluate(ConstArray<OneD, NekDouble>& coords);
 
+            const ConstArray<OneD, int> GetBoundaryMap(void);
+
+            const ConstArray<OneD, int> GetInteriorMap(void);
+
             void MapTo(const int edge_ncoeffs, 
                 const LibUtilities::BasisType Btype, 
                 const int eid, 
@@ -362,6 +366,16 @@ namespace Nektar
                 return PhysEvaluate(Lcoords);
             }
 
+            virtual const ConstArray<OneD, int> v_GetBoundaryMap(void)
+            {
+                return GetBoundaryMap();
+            }
+
+            virtual const ConstArray<OneD, int> v_GetInteriorMap(void)
+            {
+                return GetInteriorMap();
+            }
+
             virtual void v_MapTo(const int edge_ncoeffs, 
                 const LibUtilities::BasisType Btype, 
                 const int eid, 
@@ -379,7 +393,6 @@ namespace Nektar
             {
                 MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
             }
-
         };
     typedef boost::shared_ptr<StdQuadExp> StdQuadExpSharedPtr;
 
@@ -390,6 +403,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.21  2007/11/08 16:55:14  pvos
+* Updates towards 2D helmholtz solver
+*
 * Revision 1.20  2007/10/03 11:37:51  sherwin
 * Updates relating to static condensation implementation
 *

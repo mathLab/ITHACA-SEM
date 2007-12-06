@@ -135,9 +135,6 @@ namespace Nektar
                 v_BwdTrans (inarray, outarray);
             }
 
-
-
-
         protected:
 
         private:
@@ -205,6 +202,7 @@ namespace Nektar
                          "local expansions");
                 return 0;
             }
+
         };
 
         typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
@@ -216,6 +214,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.23  2007/11/08 16:55:14  pvos
+* Updates towards 2D helmholtz solver
+*
 * Revision 1.22  2007/07/22 23:04:26  bnelson
 * Backed out Nektar::ptr.
 *

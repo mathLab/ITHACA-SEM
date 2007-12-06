@@ -1209,6 +1209,7 @@ namespace Nektar
             UseLocRegionsMatrix:
                 {
                     int i,j;
+                    int cnt = 0;
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
                     DNekScalMat &mat = *GetLocMatrix(mkey);
@@ -1216,17 +1217,20 @@ namespace Nektar
                     DNekMatSharedPtr B = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
                     DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
                     DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
+
+                    const ConstArray<OneD,int> bmap = GetBoundaryMap();
+                    const ConstArray<OneD,int> imap = GetInteriorMap();
                     
                     for(i = 0; i < nbdry; ++i)
                     {
                         for(j = 0; j < nbdry; ++j)
                         {
-                            (*A)(i,j) = mat(i,j);
+                            (*A)(i,j) = mat(bmap[i],bmap[j]);
                         }
                         
                         for(j = 0; j < nint; ++j)
                         {
-                            (*B)(i,j) = mat(i,nbdry+j);
+                            (*B)(i,j) = mat(bmap[i],imap[j]);
                         }
                     }
                     
@@ -1234,12 +1238,12 @@ namespace Nektar
                     {
                         for(j = 0; j < nbdry; ++j)
                         {
-                            (*C)(i,j) = mat(nbdry+i,j);
+                            (*C)(i,j) = mat(imap[i],bmap[j]);
                         }
                         
                         for(j = 0; j < nint; ++j)
                         {
-                            (*D)(i,j) = mat(nbdry+i,nbdry+j);
+                            (*D)(i,j) = mat(imap[i],imap[j]);
                         }
                     }
                     
@@ -1257,7 +1261,6 @@ namespace Nektar
                     returnval->SetBlock(0,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,B));
                     returnval->SetBlock(1,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,C));
                     returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,D));
-
                 }
             }
 
@@ -1271,6 +1274,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.31  2007/11/20 16:28:46  sherwin
+// Added terms for UDG Helmholtz solver
+//
 // Revision 1.30  2007/10/04 12:10:03  sherwin
 // Update for working version of static condensation in Helmholtz1D and put lambda coefficient on the mass matrix rather than the Laplacian operator.
 //

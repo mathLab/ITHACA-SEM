@@ -42,7 +42,7 @@ namespace Nektar
     {
         LocalToGlobalBndryMap::LocalToGlobalBndryMap():
             m_totGloBndDofs(0),
-            m_numDirichletBCs(0)
+            m_numDirichletDofs(0)
         {
         }
         

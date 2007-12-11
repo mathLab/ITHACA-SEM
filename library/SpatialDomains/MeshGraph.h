@@ -74,6 +74,16 @@ namespace Nektar
         typedef std::vector< Composite >            CompositeVector;
         typedef std::vector< Composite >::iterator  CompositeVectorIter;
 
+        struct ElementEdge
+        {
+            GeometrySharedPtr m_Element;
+            int m_EdgeIndx;
+        };
+
+        typedef boost::shared_ptr<ElementEdge> ElementEdgeSharedPtr;
+        typedef std::vector<ElementEdgeSharedPtr> ElementEdgeVector;
+        typedef boost::shared_ptr<ElementEdgeVector> ElementEdgeVectorSharedPtr;
+
         struct Expansion
         {
             Expansion(GeometrySharedPtr geomShPtr, const Equation &numModesEqn, ExpansionType expansionType):
@@ -186,6 +196,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.18  2007/12/11 18:59:59  jfrazier
+// Updated meshgraph so that a generic read could be performed and the proper type read (based on dimension) will be returned.
+//
 // Revision 1.17  2007/12/06 22:47:44  pvos
 // 2D Helmholtz solver updates
 //

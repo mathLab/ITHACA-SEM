@@ -51,6 +51,7 @@ namespace Nektar
         class Geometry; // Forward declaration for typedef.
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
         typedef std::vector< GeometrySharedPtr > GeometryVector;
+        typedef boost::shared_ptr <GeometryVector> GeometryVectorSharedPtr;
         typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
 
         class Geometry
@@ -120,6 +121,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.16  2007/11/07 20:31:03  jfrazier
+// Added new expansion list to replace the expansion composite list.
+//
 // Revision 1.15  2007/07/26 18:19:18  jfrazier
 // Minor change to reflect presence of bool operator for shared_ptrs.
 //

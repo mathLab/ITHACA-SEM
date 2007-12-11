@@ -207,6 +207,9 @@ namespace Nektar
                 return returnval;
             }
 
+            /// \brief Return the elements (shared ptrs) that have this edge.
+            ElementEdgeVectorSharedPtr GetElementsFromEdge(EdgeComponentSharedPtr edge);
+
         protected:
             void ReadEdges    (TiXmlDocument &doc);
             void ReadElements (TiXmlDocument &doc);
@@ -229,6 +232,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.16  2007/12/04 03:02:27  jfrazier
+// Changed to stringstream.
+//
 // Revision 1.15  2007/09/20 22:25:06  jfrazier
 // Added expansion information to meshgraph class.
 //

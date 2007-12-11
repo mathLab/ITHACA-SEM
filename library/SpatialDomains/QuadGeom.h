@@ -86,6 +86,27 @@ namespace Nektar
                     return m_eorient[i];
                 }
 
+                /// \brief Return the edge number of the given edge, or -1, if 
+                /// not an edge of this element.
+                int WhichEdge(EdgeComponentSharedPtr edge)
+                {
+                    int returnval = -1;
+
+                    EdgeComponentVector::iterator edgeIter;
+                    int i;
+
+                    for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
+                    {
+                        if (*edgeIter == edge)
+                        {
+                            returnval = i;
+                            break;
+                        }
+                    }
+
+                    return returnval;
+                }
+
                 static const int kNverts = 4;
                 static const int kNedges = 4;
 
@@ -117,6 +138,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.12  2007/07/22 23:04:24  bnelson
+// Backed out Nektar::ptr.
+//
 // Revision 1.11  2007/07/20 02:15:09  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

@@ -533,11 +533,53 @@ namespace Nektar
             return;
         }
 
+        ElementEdgeVectorSharedPtr MeshGraph2D::GetElementsFromEdge(EdgeComponentSharedPtr edge)
+        {
+            // Search tris and quads
+            // Need to iterate through vectors because there may be multiple
+            // occurrences.
+            ElementEdgeSharedPtr elementEdge;
+            TriGeomVector::iterator triIter;
+
+            ElementEdgeVectorSharedPtr returnval = MemoryManager<ElementEdgeVector>::AllocateSharedPtr();
+
+            for(triIter = m_trigeoms.begin(); triIter != m_trigeoms.end(); ++triIter)
+            {
+                int edgeNum;
+                if ((edgeNum = (*triIter)->WhichEdge(edge)) > -1)
+                {
+                    elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+                    elementEdge->m_Element = *triIter;
+                    elementEdge->m_EdgeIndx = edgeNum;
+                    returnval->push_back(elementEdge);
+                }
+            }
+
+            QuadGeomVector::iterator quadIter;
+
+            for(quadIter = m_quadgeoms.begin(); quadIter != m_quadgeoms.end(); ++quadIter)
+            {
+                int edgeNum;
+                if ((edgeNum = (*quadIter)->WhichEdge(edge)) > -1)
+                {
+                    elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+                    elementEdge->m_Element = *quadIter;
+                    elementEdge->m_EdgeIndx = edgeNum;
+                    returnval->push_back(elementEdge);
+                }
+            }
+
+            return returnval;
+        }
+
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.21  2007/12/04 03:02:26  jfrazier
+// Changed to stringstream.
+//
 // Revision 1.20  2007/09/20 22:25:06  jfrazier
 // Added expansion information to meshgraph class.
 //

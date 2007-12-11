@@ -48,6 +48,10 @@
 #include <tinyxml/tinyxml.h>
 #include <string>
 
+#include <SpatialDomains/MeshGraph1D.h>
+#include <SpatialDomains/MeshGraph2D.h>
+//#include <SpatialDomains/MeshGraph3D.h>
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -58,6 +62,48 @@ namespace Nektar
         m_SpaceDimension(3)
     {
     }
+
+    boost::shared_ptr<MeshGraph> MeshGraph::Read(std::string &infilename)
+    {
+        boost::shared_ptr<MeshGraph> returnval;
+
+        MeshGraph mesh;
+
+        mesh.ReadGeometry(infilename);
+        int meshDim = mesh.GetMeshDimension();
+
+        switch(meshDim)
+        {
+        case 1:
+            returnval = MemoryManager<MeshGraph1D>::AllocateSharedPtr();
+            break;
+            
+        case 2:
+           returnval = MemoryManager<MeshGraph2D>::AllocateSharedPtr();
+           break;
+
+        case 3:
+ //          returnval = MemoryManager<MeshGraph3D>::AllocateSharedPtr();
+ //          returnval->ReadGeometry(infilename);
+           break;
+
+        default:
+            std::string err = "Invalid mesh dimension: ";
+            std::stringstream strstrm;
+            strstrm << meshDim;
+            err += strstrm.str();
+            NEKERROR(ErrorUtil::efatal, err.c_str());
+        }
+
+        if (returnval)
+        {
+            returnval->ReadGeometry(infilename);
+            returnval->ReadExpansions(infilename);
+        }
+
+        return returnval;
+    }
+
 
     // \brief Read will read the meshgraph vertices given a filename.
     void MeshGraph::ReadGeometry(std::string &infilename)
@@ -501,6 +547,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.14  2007/12/04 03:29:56  jfrazier
+// Changed to stringstream.
+//
 // Revision 1.13  2007/11/07 20:31:03  jfrazier
 // Added new expansion list to replace the expansion composite list.
 //

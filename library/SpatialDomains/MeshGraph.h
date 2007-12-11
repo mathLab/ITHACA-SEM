@@ -96,8 +96,9 @@ namespace Nektar
             MeshGraph();
             virtual ~MeshGraph();
 
-            void ReadGeometry(std::string &infilename);
-            void ReadGeometry(TiXmlDocument &doc);
+            static boost::shared_ptr<MeshGraph> Read(std::string &infilename);
+            virtual void ReadGeometry(std::string &infilename);
+            virtual void ReadGeometry(TiXmlDocument &doc);
             void ReadExpansions(std::string &infilename);
             void ReadExpansions(TiXmlDocument &doc);
 
@@ -185,6 +186,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.17  2007/12/06 22:47:44  pvos
+// 2D Helmholtz solver updates
+//
 // Revision 1.16  2007/12/04 02:54:35  jfrazier
 // Removed unused declaration.
 //

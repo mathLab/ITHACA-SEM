@@ -37,6 +37,7 @@
 
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/ParseUtils.hpp>
 
 namespace Nektar
 {
@@ -306,7 +307,7 @@ namespace Nektar
 
             int nextCompositeNumber = -1;
 
-            /// All elements are of the form: "<C ID = N> ... </C>".
+            /// All elements are of the form: "<C ID = "N"> ... </C>".
 
             /// Read the ID field first.
             TiXmlElement *composite = field->FirstChildElement("C");
@@ -320,25 +321,18 @@ namespace Nektar
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
                 ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
 
-                // Read the body of the composite definition.
                 TiXmlNode* compositeChild = composite->FirstChild();
                 // This is primarily to skip comments that may be present.
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                std::string compositeStr = compositeChild->ToText()->ValueStr();
-                while(compositeChild)
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
                 {
-                    if (compositeChild->Type() == TiXmlNode::TEXT)
-                    {
-                        compositeStr += compositeChild->ToText()->ValueStr();
-                        compositeStr += " ";    // Just in case there is no space between them.
-                    }
-
                     compositeChild = compositeChild->NextSibling();
                 }
 
-                ASSERTL0(!compositeStr.empty(), "Unable to read composite description body.");
+                ASSERTL0(compositeChild, "Unable to read composite definition body.");
+                std::string compositeStr = compositeChild->ToText()->ValueStr();
 
                 /// Parse out the element components corresponding to type of element.
 
@@ -448,81 +442,93 @@ namespace Nektar
 
                 std::string indxStr = token.substr(indxBeg, indxEnd - indxBeg + 1);
 
-                std::istringstream indexStrm(indxStr);
-                int indx1=-1, indx2=-1;
+                std::vector<unsigned int> seqVector;
+                std::vector<unsigned int>::iterator seqIter;
 
-                // Should read either [a] where a is a nonnegative integer, or
-                // [a-b] where a and b are nonnegative integers, b>a.
-                // Easiest way to know is if a '-' is present we have the latter
-                // case.
+                bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
 
-                indexStrm >> indx1;
-                ASSERTL0(indx1 >= 0, (std::string("Error reading range: ") + indxStr).c_str());
-                indx2 = indx1;
+                ASSERTL0(err, (std::string("Error reading composite elements: ") + indxStr).c_str());
 
-                if (!indexStrm.fail())
+                prevTokenStream >> prevType;
+
+                // All composites must be of the same dimension.
+                bool validSequence = (prevToken.empty() ||         // No previous, then current is just fine.
+                    (type == 'V' && prevType == 'V') ||
+                    (type == 'E' && prevType == 'E') ||
+                    ((type == 'T' || type == 'Q') &&
+                    (prevType == 'T' || prevType == 'Q')));
+
+                ASSERTL0(validSequence, (std::string("Invalid combination of composite items: ")
+                    + type + " and " + prevType + ".").c_str()); 
+
+                switch(type)
                 {
-                    std::string::size_type dashLoc=indxStr.find('-');
-                    if (dashLoc != std::string::npos)
+                case 'E':   // Edge
+                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        // Skip up to and including the '-' character, then read
-                        // the other index.  We are safe in doing this because we
-                        // already know it is there...somewhere.
-                        indexStrm.seekg(dashLoc+1);
-                        indexStrm >> indx2;
-
-                        ASSERTL0(indx1 < indx2 && indx2 >= 0,
-                            (std::string("Error reading collection range: ") + indxStr).c_str());
+                        if (*seqIter >= m_ecomps.size())
+                        {
+                            char errStr[16] = "";
+                            ::sprintf(errStr, "%d", *seqIter);
+                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown edge index: ") + errStr).c_str());
+                        }
+                        else
+                        {
+                            m_MeshCompositeVector.back()->push_back(m_ecomps[*seqIter]);
+                        }
                     }
-                }
+                    break;
 
-                if (!indexStrm.fail())
-                {
-                    prevTokenStream >> prevType;
-
-                    // All composites must be of the same dimension.
-                    bool validSequence = (prevToken.empty() ||         // No previous, then current is just fine.
-                        (type == 'V' && prevType == 'V') ||
-                        (type == 'E' && prevType == 'E') ||
-                        ((type == 'T' || type == 'Q') &&
-                        (prevType == 'T' || prevType == 'Q')));
-
-                    ASSERTL0(validSequence, (std::string("Invalid combination of composite items: ")
-                        + type + " and " + prevType + ".").c_str()); 
-
-                    switch(type)
+                case 'T':   // Triangle
+                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                    case 'E':   // Edge
-                        for (int i=indx1; i<=indx2; ++i)
+                        if (*seqIter >= m_trigeoms.size())
                         {
-                            m_MeshCompositeVector.back()->push_back(m_ecomps[i]);
+                            char errStr[16] = "";
+                            ::sprintf(errStr, "%d", *seqIter);
+                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr).c_str());
                         }
-                        break;
-
-                    case 'T':   // Triangle
-                        for (int i=indx1; i<=indx2; ++i)
+                        else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_trigeoms[i]);
+                            m_MeshCompositeVector.back()->push_back(m_trigeoms[*seqIter]);
                         }
-                        break;
-
-                    case 'Q':   // Quad
-                        for (int i=indx1; i<=indx2; ++i)
-                        {
-                            m_MeshCompositeVector.back()->push_back(m_quadgeoms[i]);
-                        }
-                        break;
-
-                    case 'V':   // Vertex
-                        for (int i=indx1; i<=indx2; ++i)
-                        {
-                            m_MeshCompositeVector.back()->push_back(m_vertset[i]);
-                        }
-                        break;
-
-                    default:
-                        NEKERROR(ErrorUtil::efatal, (std::string("Unrecognized composite token: ") + token).c_str());
                     }
+                    break;
+
+                case 'Q':   // Quad
+                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    {
+                        if (*seqIter >= m_quadgeoms.size())
+                        {
+                            char errStr[16] = "";
+                            ::sprintf(errStr, "%d", *seqIter);
+                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown quad index: ") + errStr).c_str());
+                        }
+                        else
+                        {
+                            m_MeshCompositeVector.back()->push_back(m_quadgeoms[*seqIter]);
+                        }
+                    }
+                    break;
+
+                case 'V':   // Vertex
+                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    {
+                        if (*seqIter >= m_vertset.size())
+                        {
+                            char errStr[16] = "";
+                            ::sprintf(errStr, "%d", *seqIter);
+                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown vertex index: ") + errStr).c_str());
+                        }
+                        else
+                        {
+                            m_MeshCompositeVector.back()->push_back(m_vertset[*seqIter]);
+                        }
+                    }
+                    break;
+
+                default:
+                    NEKERROR(ErrorUtil::efatal, (std::string("Unrecognized composite token: ") + token).c_str());
                 }
             }
             catch(...)
@@ -577,6 +583,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.22  2007/12/11 21:51:53  jfrazier
+// Updated 2d components so elements could be retrieved from edges.
+//
 // Revision 1.21  2007/12/04 03:02:26  jfrazier
 // Changed to stringstream.
 //

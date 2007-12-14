@@ -41,6 +41,7 @@ MeshGraph1D.h
 MeshGraph2D.h
 MeshGraph3D.h
 MeshGraph.h
+ParseUtils.hpp
 pchSpatialDomains.h
 PrismGeom.h
 PyrGeom.h

@@ -190,6 +190,7 @@ namespace Nektar
 
             boost::shared_ptr<const InnerType> m_matrix;
             NumberType m_scale;
+            char m_transpose;
     };
     
 }

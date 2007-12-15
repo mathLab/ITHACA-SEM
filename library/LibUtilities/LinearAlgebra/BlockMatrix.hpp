@@ -103,7 +103,7 @@ namespace Nektar
                         if( m_curRow != std::numeric_limits<unsigned int>::max() )
                         {
                             boost::tie(m_curRow, m_curColumn) = StoragePolicy::Advance(
-                                m_matrix.GetRows(), m_matrix.GetColumns(), m_curRow, m_curColumn, 'N', m_data);
+                                m_matrix.GetRows(), m_matrix.GetColumns(), m_curRow, m_curColumn, m_data);
                         }
                     }
                     

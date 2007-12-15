@@ -49,7 +49,58 @@ namespace Nektar
 {
     namespace StandardMatrixUnitTests
     {
+        BOOST_AUTO_TEST_CASE(TestIterators)
+        {
+            double buf1[] = { 1, 4,
+                              2, 5,
+                              3, 6};
 
+            NekMatrix<double> m1(2, 3, buf1);
+            const NekMatrix<double>& m2 = m1;
+
+            NekMatrix<double>::iterator m1_iter = m1.begin();
+            NekMatrix<double>::const_iterator m2_iter = m2.begin();
+
+            BOOST_CHECK_EQUAL(1, *m1_iter);
+            BOOST_CHECK_EQUAL(1, *m2_iter);
+            BOOST_CHECK_EQUAL(1, *m1_iter++);
+            BOOST_CHECK_EQUAL(1, *m2_iter++);
+            BOOST_CHECK_EQUAL(4, *m1_iter++);
+            BOOST_CHECK_EQUAL(4, *m2_iter++);
+            BOOST_CHECK_EQUAL(2, *m1_iter++);
+            BOOST_CHECK_EQUAL(2, *m2_iter++);
+            BOOST_CHECK_EQUAL(5, *m1_iter++);
+            BOOST_CHECK_EQUAL(5, *m2_iter++);
+            BOOST_CHECK_EQUAL(3, *m1_iter++);
+            BOOST_CHECK_EQUAL(3, *m2_iter++);
+            BOOST_CHECK_EQUAL(6, *m1_iter++);
+            BOOST_CHECK_EQUAL(6, *m2_iter++);
+            BOOST_CHECK(m1_iter == m1.end());
+            BOOST_CHECK(m2_iter == m2.end());
+
+            m1.Transpose();
+            m1_iter = m1.begin();
+            m2_iter = m2.begin();
+
+            BOOST_CHECK_EQUAL(1, *m1_iter);
+            BOOST_CHECK_EQUAL(1, *m2_iter);
+            BOOST_CHECK_EQUAL(2, *(++m1_iter));
+            BOOST_CHECK_EQUAL(2, *(++m2_iter));
+            BOOST_CHECK_EQUAL(3, *(++m1_iter));
+            BOOST_CHECK_EQUAL(3, *(++m2_iter));
+            BOOST_CHECK_EQUAL(4, *(++m1_iter));
+            BOOST_CHECK_EQUAL(4, *(++m2_iter));
+            BOOST_CHECK_EQUAL(5, *(++m1_iter));
+            BOOST_CHECK_EQUAL(5, *(++m2_iter));
+            BOOST_CHECK_EQUAL(6, *(++m1_iter));
+            BOOST_CHECK_EQUAL(6, *(++m2_iter));
+            BOOST_CHECK(m1_iter != m1.end());
+            BOOST_CHECK(m2_iter != m2.end());
+            ++m1_iter;
+            ++m2_iter;
+            BOOST_CHECK(m1_iter == m1.end());
+            BOOST_CHECK(m2_iter == m2.end());
+        }
     }
 
     namespace StandardMatrixOperationsUnitTests
@@ -83,6 +134,17 @@ namespace Nektar
             NekMatrix<double> result(4, 4, result_buf);
             
             RunAllTestCombinations(lhs1, *lhs2, *lhs3, rhs1, *rhs2, *rhs3, result, DoAddition());
+
+            NekMatrix<double> rhs_transposed = Transpose(rhs1);
+            NekMatrix<double> result_with_one_operand_transposed = lhs1 + rhs_transposed;
+
+            double expected_result_with_one_operand_transposed[] = 
+                { 5, 19, 33, 47,
+                  16, 30, 44, 58,
+                  27, 41, 55, 69,
+                  38, 52, 66, 80};
+            BOOST_CHECK_EQUAL(NekMatrix<double>(4, 4, expected_result_with_one_operand_transposed),
+                result_with_one_operand_transposed);
         }
 
         BOOST_AUTO_TEST_CASE(TestSubtraction)
@@ -217,6 +279,44 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(expected_transposed_result, tm1*tm2);
             }
             
+        }
+
+        BOOST_AUTO_TEST_CASE(TestGlobalTransposeMethod)
+        {
+            double buf1[] = { 1, 4,
+                                  2, 5,
+                                  3, 6};
+            double buf2[] = { 10, 11, 12,
+                              13, 14, 15};
+
+            double transposed_buf1[] = {1, 2, 3,
+                                        4, 5, 6};
+
+            double transposed_buf2[] = {10, 13,
+                                        11, 14,
+                                        12, 15};
+
+            NekMatrix<double> m1(2, 3, buf1);
+            NekMatrix<double> m2(3, 2, buf2);
+
+            NekMatrix<double> tm1 = Transpose(m1);
+            NekMatrix<double> tm2 = Transpose(m2);
+
+            NekMatrix<double> expected_tm1(3, 2, transposed_buf1);
+            NekMatrix<double> expected_tm2(2, 3, transposed_buf2);
+
+            BOOST_CHECK_EQUAL(tm1, expected_tm1);
+            BOOST_CHECK_EQUAL(tm2, expected_tm2);
+
+            BOOST_CHECK_EQUAL(m1(0, 1), 2);
+            BOOST_CHECK_EQUAL(tm1(1, 0), 2);
+
+            m1(0, 1) = 89;
+            BOOST_CHECK_EQUAL(m1(0, 1), 89);
+            BOOST_CHECK_EQUAL(tm1(1, 0), 89);
+
+            BOOST_CHECK_EQUAL(m1.GetTransposeFlag(), 'N');
+            BOOST_CHECK_EQUAL(tm1.GetTransposeFlag(), 'T');
         }
     }
 

@@ -331,7 +331,7 @@ namespace Nektar
             std::transform(lhs_values, lhs_values+10, rhs_values, result_values, std::plus<NekDouble>());
             NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> result(4, 4, result_values);
             
-            RunAllTestCombinations(*lhs1, *lhs2, *lhs3, *rhs1, *rhs2, *rhs3, result, DoAddition());
+            //RunAllTestCombinations(*lhs1, *lhs2, *lhs3, *rhs1, *rhs2, *rhs3, result, DoAddition());
         }
 
         BOOST_AUTO_TEST_CASE(TestLhsLowerTriangularRhsLowerTriangular)

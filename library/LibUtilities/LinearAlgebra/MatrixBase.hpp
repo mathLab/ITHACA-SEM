@@ -52,6 +52,7 @@ namespace Nektar
     {
         public:
             typedef ConstMatrix<DataType> ThisType;
+            virtual ~ConstMatrix() {}
             
         public:
             typename boost::call_traits<DataType>::value_type operator()(unsigned int row, unsigned int column) const
@@ -138,6 +139,8 @@ namespace Nektar
             typedef ConstMatrix<DataType> BaseType;
             
         public:
+            virtual ~Matrix() {}
+            
             void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
             {
                 ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 

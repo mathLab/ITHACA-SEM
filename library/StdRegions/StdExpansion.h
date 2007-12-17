@@ -680,11 +680,11 @@ namespace Nektar
                 return v_GetLocStaticCondMatrix(mkey);
             }
 
-            void UDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                           const ConstArray<OneD,NekDouble> &inarray,
-                                           Array<OneD,NekDouble> outarray)
+            void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
+                                              const ConstArray<OneD,NekDouble> &inarray,
+                                              Array<OneD,NekDouble> outarray)
             {
-                v_UDGHelmholtzBoundaryTerms(tau,inarray,outarray);
+                v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
             }
 
             // virtual functions related to LocalRegions
@@ -738,12 +738,11 @@ namespace Nektar
             * 
             *  \return returns the mass matrix
             */
-            DNekMatSharedPtr CreateGeneralMatrix(MatrixType mtype, 
-                                                 NekDouble lambda = 1.0);
-            void GeneralMatrixOp(MatrixType mtype, 
+            DNekMatSharedPtr CreateGeneralMatrix(const StdMatrixKey &mkey);
+
+            void GeneralMatrixOp(const StdMatrixKey &mkey, 
                                  const ConstArray<OneD,NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray,
-                                 NekDouble lambda = 1.0);
+                                 Array<OneD,NekDouble> &outarray);
 
             
             void MassMatrixOp(const ConstArray<OneD,NekDouble> &inarray, 
@@ -777,9 +776,9 @@ namespace Nektar
             }
 
 
-            DNekMatSharedPtr GenMatrix (MatrixType mtype)
+            DNekMatSharedPtr GenMatrix (const StdMatrixKey &mkey)
             {
-                return v_GenMatrix(mtype);
+                return v_GenMatrix(mkey);
             }
 
             void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
@@ -814,7 +813,7 @@ namespace Nektar
                 return boost::shared_ptr<DNekScalBlkMat>();
             }
 
-            virtual void v_UDGHelmholtzBoundaryTerms(const NekDouble tau, 
+            virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                                         const ConstArray<OneD,NekDouble> &inarray,
                                                         Array<OneD,NekDouble> outarray)
             {
@@ -1079,7 +1078,7 @@ namespace Nektar
                     "been defined for this shape");
             }
 
-            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype)  
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey)  
             {
                 DNekMatSharedPtr returnval;
 
@@ -1174,6 +1173,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.70  2007/12/06 22:44:47  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.69  2007/11/29 21:40:22  sherwin
 * updates for MultiRegions and DG solver
 *

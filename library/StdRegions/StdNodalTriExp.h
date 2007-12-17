@@ -139,7 +139,7 @@ namespace Nektar
 
             boost::shared_ptr<LibUtilities::PointsKey> m_nodalPointsKey;
 
-            DNekMatSharedPtr GenMatrix(MatrixType mtype);
+            DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
 
             DNekMatSharedPtr GenNBasisTransMatrix();
         
@@ -161,9 +161,9 @@ namespace Nektar
                 return GetEdgeBasisType(i);
             }
 
-            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype) 
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
             {
-                return GenMatrix(mtype);
+                return GenMatrix(mkey);
             }
 
 
@@ -257,6 +257,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.15  2007/10/03 11:37:51  sherwin
+* Updates relating to static condensation implementation
+*
 * Revision 1.14  2007/07/22 23:04:27  bnelson
 * Backed out Nektar::ptr.
 *

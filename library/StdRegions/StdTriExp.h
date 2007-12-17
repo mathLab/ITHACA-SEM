@@ -77,6 +77,22 @@ namespace Nektar
                 return eTriangle;
             }
 
+            virtual bool v_IsBoundaryInteriorExpansion()
+            {
+                bool returnval = false;
+                
+                if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+                {
+                    if(m_base[1]->GetBasisType() == LibUtilities::eModified_B)
+                    {
+                        returnval = true;
+                    }
+                }
+                
+                return returnval;
+            }
+
+
             //////////////////////////////
             // Integration Methods
             //////////////////////////////
@@ -237,9 +253,9 @@ namespace Nektar
             // Generate Matrix Routine
             //----------------------------------
 
-            DNekMatSharedPtr GenMatrix(MatrixType mtype)
+            DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
             {
-                return StdExpansion::CreateGeneralMatrix(mtype);
+                return StdExpansion::CreateGeneralMatrix(mkey);
             }
 
         private:
@@ -270,9 +286,9 @@ namespace Nektar
             }
 
 
-            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype) 
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
             {
-                return GenMatrix(mtype);
+                return GenMatrix(mkey);
             }
 
 
@@ -446,6 +462,9 @@ namespace Nektar
 
 /**
 * $Log: StdTriExp.h,v $
+* Revision 1.21  2007/12/06 22:44:47  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.20  2007/11/08 16:55:14  pvos
 * Updates towards 2D helmholtz solver
 *

@@ -128,15 +128,13 @@ namespace Nektar
             
             Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
         }
-
     
-        DNekMatSharedPtr StdSegExp::GenMatrix(MatrixType mtype, NekDouble lambda) 
+        DNekMatSharedPtr StdSegExp::GenMatrix(const StdMatrixKey &mkey) 
         {
             DNekMatSharedPtr Mat;
+            Mat = StdExpansion::CreateGeneralMatrix(mkey);
             
-            Mat = StdExpansion::CreateGeneralMatrix(mtype,lambda);
-            
-            switch(mtype)
+            switch(mkey.GetMatrixType())
             {
             case eMass:
                 // For Fourier basis set the imaginary component of mean mode
@@ -320,6 +318,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.42  2007/12/06 22:44:47  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.41  2007/11/29 21:40:22  sherwin
 * updates for MultiRegions and DG solver
 *

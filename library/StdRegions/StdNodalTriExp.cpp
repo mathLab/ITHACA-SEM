@@ -67,17 +67,17 @@ namespace Nektar
         { 
         }
         
-        DNekMatSharedPtr StdNodalTriExp::GenMatrix(MatrixType mtype)
+        DNekMatSharedPtr StdNodalTriExp::GenMatrix(const StdMatrixKey &mkey)
         {
             DNekMatSharedPtr Mat;
 
-            switch(mtype)
+            switch(mkey.GetMatrixType())
             {
             case eNBasisTrans:
                 Mat =  GenNBasisTransMatrix();
                 break;
             default:
-                Mat = StdExpansion::CreateGeneralMatrix(mtype);
+                Mat = StdExpansion::CreateGeneralMatrix(mkey);
                 break;
             }
 
@@ -337,6 +337,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.18  2007/08/11 23:42:26  sherwin
+* A few changes
+*
 * Revision 1.17  2007/07/27 00:22:54  bnelson
 * Memory manager now accepts non-const parameters to the allocate methods.
 *

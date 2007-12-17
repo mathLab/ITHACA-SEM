@@ -87,7 +87,7 @@ namespace Nektar
                 }
                 break;
             case LibUtilities::eGaussRadauMAlpha1Beta0: // (0,1) Jacobi Inner product 
-                Vmath::Smul(nquad1,0.5,(NekDouble *)w1.get(),1,w1_tmp.get(),1);      
+                Vmath::Smul(nquad1,0.5,w1.get(),1,w1_tmp.get(),1);      
                 break;
             }
 
@@ -652,6 +652,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.26  2007/12/06 22:44:47  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.25  2007/11/20 10:16:23  pvos
 * IProductWRTDerivBase routine fix
 *

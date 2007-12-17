@@ -101,9 +101,9 @@ namespace Nektar
             // Generate Matrix Routine
             //----------------------------------
 
-            DNekMatSharedPtr GenMatrix(MatrixType mtype)
+            DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
             {
-                return StdExpansion::CreateGeneralMatrix(mtype);
+                return StdExpansion::CreateGeneralMatrix(mkey);
             }
 
 
@@ -157,9 +157,9 @@ namespace Nektar
             }
 
 
-            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype) 
+            virtual DNekMatSharedPtr v_GenMatrix(StdMatrixKey &mkey) 
             {
-                return GenMatrix(mtype);
+                return GenMatrix(mkey);
             }
 
 
@@ -312,6 +312,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.9  2007/10/28 18:32:34  bnelson
+ * Fixed visual c++ compile error.
+ *
  * Revision 1.8  2007/10/15 20:40:07  ehan
  * Completed Basis, Backward, and Forward transformation
  *

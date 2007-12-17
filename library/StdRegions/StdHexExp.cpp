@@ -488,7 +488,7 @@ namespace Nektar
         }
 
         //void StdHexExp::GenMassMatrix(double * outarray)        
-        DNekMatSharedPtr StdHexExp::GenMatrixHex(MatrixType mtype)
+        DNekMatSharedPtr StdHexExp::GenMatrixHex(const StdMatrixKey &mkey)
         {
             int      i,j;
          
@@ -497,8 +497,10 @@ namespace Nektar
             int      order2    = GetBasisNumModes(2);
             int      tot_order = GetNcoeffs();
 
+            MatrixType  mtype = mkey.GetMatrixType();
+
              //StdExpansion::GenerateMassMatrix(outarray);
-            DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mtype);
+            DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mkey);
 
 
         switch(mtype)
@@ -554,6 +556,10 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.9  2007/12/01 00:52:12  ehan
+* Completed implementing and testing following functions:
+* Integral, IProductWRTBase, PhysDeriv. BwdTrans, FwdTrans, and PhysEvaluate.
+*
 * Revision 1.8  2007/10/15 20:38:41  ehan
 * Make changes of column major matrix
 *

@@ -41,7 +41,6 @@ namespace Nektar
     namespace StdRegions
     {
     
-        // Register Mass Matrix creator. 
         StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
                                    const ShapeType shapeType,
                                    const StdExpansion &stdExpansion,
@@ -50,12 +49,47 @@ namespace Nektar
             m_base(stdExpansion.GetBase()),
             m_ncoeffs(stdExpansion.GetNcoeffs()),
             m_matrixType(matrixType),
+            m_nconstants(0),
             m_nodalPointsType(nodalType)
         {
         }
 
+        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+                                   const ShapeType shapeType,
+                                   const StdExpansion &stdExpansion,
+                                   const NekDouble const0,
+                                   LibUtilities::PointsType nodalType) :
+            m_shapeType(shapeType),
+            m_base(stdExpansion.GetBase()),
+            m_ncoeffs(stdExpansion.GetNcoeffs()),
+            m_matrixType(matrixType),
+            m_nconstants(1),
+            m_nodalPointsType(nodalType)
+        {
+            m_constant = Array<OneD,NekDouble>(m_nconstants);
+            m_constant[0] = const0;
+        }
 
-        // Register Mass Matrix creator. 
+
+        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+                                   const ShapeType shapeType,
+                                   const StdExpansion &stdExpansion,
+                                   const NekDouble const0,
+                                   const NekDouble const1,
+                                   LibUtilities::PointsType nodalType) :
+            m_shapeType(shapeType),
+            m_base(stdExpansion.GetBase()),
+            m_ncoeffs(stdExpansion.GetNcoeffs()),
+            m_matrixType(matrixType),
+            m_nconstants(2),
+            m_nodalPointsType(nodalType)
+        {
+            m_constant = Array<OneD,NekDouble>(m_nconstants);
+            m_constant[0] = const0;
+            m_constant[1] = const1;
+        }
+
+
         StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
                                    const ShapeType shapeType,
                                    const ConstArray<OneD,LibUtilities::BasisSharedPtr> &base,
@@ -65,8 +99,46 @@ namespace Nektar
             m_base(base),
             m_ncoeffs(ncoeffs),
             m_matrixType(matrixType),
+            m_nconstants(0),
             m_nodalPointsType(nodalType)
         {
+        }
+
+
+        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+                                   const ShapeType shapeType,
+                                   const ConstArray<OneD,LibUtilities::BasisSharedPtr> &base,
+                                   const int ncoeffs,
+                                   const NekDouble const0,
+                                   LibUtilities::PointsType nodalType) :
+            m_shapeType(shapeType),
+            m_base(base),
+            m_ncoeffs(ncoeffs),
+            m_matrixType(matrixType),
+            m_nconstants(1),
+            m_nodalPointsType(nodalType)
+        {
+            m_constant = Array<OneD,NekDouble>(m_nconstants);
+            m_constant[0] = const0;
+        }
+
+        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+                                   const ShapeType shapeType,
+                                   const ConstArray<OneD,LibUtilities::BasisSharedPtr> &base,
+                                   const int ncoeffs,
+                                   const NekDouble const0,
+                                   const NekDouble const1,
+                                   LibUtilities::PointsType nodalType) :
+            m_shapeType(shapeType),
+            m_base(base),
+            m_ncoeffs(ncoeffs),
+            m_matrixType(matrixType),
+            m_nconstants(2),
+            m_nodalPointsType(nodalType)
+        {
+            m_constant = Array<OneD,NekDouble>(m_nconstants);
+            m_constant[0] = const0;
+            m_constant[1] = const1;
         }
         
         StdMatrixKey::StdMatrixKey(const StdMatrixKey& rhs) :
@@ -74,6 +146,8 @@ namespace Nektar
             m_base(rhs.m_base),
             m_ncoeffs(rhs.m_ncoeffs),
             m_matrixType(rhs.m_matrixType),
+            m_nconstants(rhs.m_nconstants),
+            m_constant(rhs.m_constant),
             m_nodalPointsType(rhs.m_nodalPointsType)
         {
         }
@@ -118,6 +192,26 @@ namespace Nektar
                     return false;
                 }
             }
+
+            if(lhs.m_nconstants != rhs.m_nconstants)
+            {
+                return false;
+            }
+            else {
+
+                for(unsigned int i = 0; i < lhs.m_nconstants; ++i)
+                {
+                    if(lhs.m_constant[i] < rhs.m_constant[i])
+                    {
+                        return true;
+                    }
+                    
+                    if(lhs.m_constant[i] > rhs.m_constant[i])
+                    {
+                        return false;
+                    }
+                }
+            }
             
             if(lhs.m_nodalPointsType < rhs.m_nodalPointsType)
             {
@@ -137,7 +231,16 @@ namespace Nektar
             os << "MatrixType: " << MatrixTypeMap[rhs.GetMatrixType()] << ", ShapeType: " 
                 << ShapeTypeMap[rhs.GetShapeType()] << ", Ncoeffs: " << rhs.GetNcoeffs() 
                 << std::endl;
-        
+
+            if(rhs.GetNconstants())
+            {
+                os << "Constants: " << endl;
+                for(unsigned int i = 0; i < rhs.GetNconstants(); ++i)
+                {
+                    os << "\t value " << i <<" : " << rhs.GetConstant(i) << endl;
+                }
+            }
+            
             for(unsigned int i = 0; i < ShapeTypeDimMap[rhs.GetShapeType()]; ++i)
             {
                 os << rhs.GetBase()[i]->GetBasisKey();
@@ -150,6 +253,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.cpp,v $
+* Revision 1.10  2007/08/11 23:42:26  sherwin
+* A few changes
+*
 * Revision 1.9  2007/07/26 02:39:21  bnelson
 * Fixed Visual C++ compiler errors when compiling in release mode.
 *

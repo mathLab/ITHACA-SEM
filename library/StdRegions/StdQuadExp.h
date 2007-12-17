@@ -74,6 +74,24 @@ namespace Nektar
             };
 
 
+            virtual bool v_IsBoundaryInteriorExpansion()
+            {
+                bool returnval = false;
+                
+                if((m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+                   ||(m_base[0]->GetBasisType() == LibUtilities::eGLL_Lagrange))
+                {
+                   if((m_base[1]->GetBasisType() == LibUtilities::eModified_A)
+                    ||(m_base[1]->GetBasisType() == LibUtilities::eGLL_Lagrange))
+                   {
+                       returnval = true;
+                   }
+                }
+                
+                return returnval;
+            }
+
+
             /** \brief Fill outarray with mode \a mode of expansion
             *
             *    Note for quadrilateral expansions _base[0] (i.e. p)  modes run 
@@ -129,7 +147,7 @@ namespace Nektar
             // Generate Matrix Routine
             //----------------------------------
 
-            DNekMatSharedPtr GenMatrix(MatrixType mtype);
+            DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
 
             //----------------------------
             // Differentiation Methods
@@ -279,9 +297,9 @@ namespace Nektar
                 IProductWRTDerivBase(dir,inarray,outarray);
             }
 
-            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype)
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey)
             {
-                return GenMatrix(mtype);
+                return GenMatrix(mkey);
             }
 
             virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
@@ -403,6 +421,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.22  2007/12/06 22:44:47  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.21  2007/11/08 16:55:14  pvos
 * Updates towards 2D helmholtz solver
 *

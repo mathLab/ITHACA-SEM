@@ -148,7 +148,7 @@ namespace Nektar
             case eWeakDeriv2:
             case eBwdTrans:
             case eNBasisTrans:
-                returnval = StdExpansion::GenMatrix(mtype);
+                returnval = StdExpansion::GenMatrix(mkey);
                 break;
 
             case eInvMass:
@@ -314,8 +314,7 @@ namespace Nektar
 
         
 
-        DNekMatSharedPtr StdExpansion::CreateGeneralMatrix(MatrixType mtype, 
-                                                           NekDouble lambda)
+        DNekMatSharedPtr StdExpansion::CreateGeneralMatrix(const StdMatrixKey &mkey)
         {
             int     i;
             DNekMatSharedPtr  Mat;
@@ -328,22 +327,20 @@ namespace Nektar
                 Vmath::Zero(m_ncoeffs,&tmp[0],1);
                 tmp[i] = 1.0;
                 
-                GeneralMatrixOp(mtype,tmp,tmp,lambda);
+                GeneralMatrixOp(mkey,tmp,tmp);
 
-                //Vmath::Vcopy(m_ncoeffs,&tmp[0],1,&((*Mat).GetPtr())[0]+i*m_ncoeffs,1);
-                Vmath::Vcopy(m_ncoeffs,&tmp[0],1, &((*Mat).GetPtr())[0]+i, m_ncoeffs ); // Column Major matrix
+                Vmath::Vcopy(m_ncoeffs,&tmp[0],1,&((*Mat).GetPtr())[0]+i*m_ncoeffs,1);
             }
 
             return Mat;
         }
 
        
-        void StdExpansion::GeneralMatrixOp(MatrixType mtype, 
+        void StdExpansion::GeneralMatrixOp(const StdMatrixKey &mkey, 
                                            const ConstArray<OneD,NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray,
-                                           NekDouble lambda)
+                                           Array<OneD,NekDouble> &outarray)
         {
-            switch(mtype)
+            switch(mkey.GetMatrixType())
             {
             case eMass:
                 MassMatrixOp(inarray,outarray);
@@ -376,7 +373,7 @@ namespace Nektar
                 BwdTransMatrixOp(inarray,outarray);
                 break;
             case eHelmholtz:
-                HelmholtzMatrixOp(inarray,outarray,lambda);
+                HelmholtzMatrixOp(inarray,outarray,mkey.GetConstant(0));
                 break;
             case eNBasisTrans:
                 NEKERROR(ErrorUtil::efatal,"This is a specialised matrix for nodal "
@@ -588,6 +585,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.59  2007/12/06 22:44:46  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.58  2007/11/29 21:40:20  sherwin
 * updates for MultiRegions and DG solver
 *

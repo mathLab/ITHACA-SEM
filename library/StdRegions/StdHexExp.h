@@ -110,8 +110,7 @@ namespace Nektar
             // Local Matrix Routines
             //----------------------------------
             //void GenMassMatrix(double * outarray);
-              DNekMatSharedPtr GenMatrixHex(MatrixType mtype);
-           // DNekMatSharedPtr GenMatrix(MatrixType mtype);
+            DNekMatSharedPtr GenMatrixHex(const StdMatrixKey &mkey);
 
              void GenLapMatrix(double * outarray);
 
@@ -179,9 +178,9 @@ namespace Nektar
             DNekMatSharedPtr GenBwdTransMatrix();
 
 
-            DNekMatSharedPtr GenMatrix(MatrixType mtype)
+            DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
             {
-                return StdExpansion::CreateGeneralMatrix(mtype);
+                return StdExpansion::CreateGeneralMatrix(mkey);
             }
 
         protected:
@@ -214,9 +213,9 @@ namespace Nektar
                 return DetShapeType();
             };
             
-            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype) 
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
             {
-                return GenMatrix(mtype);
+                return GenMatrix(mkey);
             }
            
             virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
@@ -325,6 +324,10 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.11  2007/12/01 00:52:32  ehan
+* Completed implementing and testing following functions:
+* Integral, IProductWRTBase, PhysDeriv. BwdTrans, FwdTrans, and PhysEvaluate.
+*
 * Revision 1.10  2007/07/20 02:16:54  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

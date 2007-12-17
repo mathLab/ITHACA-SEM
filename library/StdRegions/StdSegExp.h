@@ -112,7 +112,7 @@ namespace Nektar
             // Generate Matrix Routine
             //----------------------------------
 
-            DNekMatSharedPtr GenMatrix(MatrixType mtype, NekDouble lambda = 1.0);
+            DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
 
             //-----------------------------
             // Differentiation Methods
@@ -285,9 +285,9 @@ namespace Nektar
                 FillMode(mode,outarray);
             } 
 
-            virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype) 
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
             {
-                return GenMatrix(mtype);
+                return GenMatrix(mkey);
             }
 
             /** \brief Virtual call to StdSegExp::Deriv */
@@ -381,6 +381,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.31  2007/12/06 22:44:47  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.30  2007/11/29 21:40:22  sherwin
 * updates for MultiRegions and DG solver
 *

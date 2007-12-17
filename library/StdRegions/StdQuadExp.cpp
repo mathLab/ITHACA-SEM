@@ -212,13 +212,14 @@ namespace Nektar
             }
         }
 
-        DNekMatSharedPtr StdQuadExp::GenMatrix(MatrixType mtype)
+        DNekMatSharedPtr StdQuadExp::GenMatrix(const StdMatrixKey &mkey)
         {
             int      i;
             int      order0    = GetBasisNumModes(0);
             int      order1    = GetBasisNumModes(1);
-
-            DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mtype);
+            MatrixType mtype   = mkey.GetMatrixType();
+            
+            DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mkey);
 
             switch(mtype)
             {
@@ -632,6 +633,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.25  2007/12/06 22:44:47  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.24  2007/11/08 16:55:14  pvos
 * Updates towards 2D helmholtz solver
 *

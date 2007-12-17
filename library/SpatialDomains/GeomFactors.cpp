@@ -303,7 +303,7 @@ namespace Nektar
                         {
                             m_normals[0][i] = -m_gmat[2*i+1][0];
                             fac[0] += m_normals[0][i]*m_normals[0][i];
-                            m_normals[1][i] =  m_gmat[2*i+1][0] - m_gmat[2*i][0];
+                            m_normals[1][i] =  m_gmat[2*i+1][0] + m_gmat[2*i][0];
                             fac[1] += m_normals[1][i]*m_normals[1][i];
                             m_normals[2][i] = -m_gmat[2*i][0];
                             fac[2] += m_normals[2][i]*m_normals[2][i];
@@ -764,6 +764,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.15  2007/12/06 22:47:15  pvos
+// 2D Helmholtz solver updates
+//
 // Revision 1.14  2007/12/03 21:30:35  sherwin
 // Added normal details
 //

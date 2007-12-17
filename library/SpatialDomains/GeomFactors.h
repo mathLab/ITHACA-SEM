@@ -106,11 +106,23 @@ namespace Nektar
                 return m_normals;
             }
 
+            
+            inline void  ResetNormals(const ConstArray<TwoD,NekDouble> &newnorm)
+            {
+                m_normals = Array<TwoD,NekDouble>(newnorm.GetRows(),newnorm.GetColumns(),newnorm.data());
+            }
+
             inline void ResetGmat(const ConstArray<OneD,NekDouble> &ndata, 
                                   const int nq, const int expdim, 
                                   const int coordim)
             {
                 m_gmat = Array<TwoD,NekDouble>(expdim*coordim,nq,ndata.data());
+            }
+
+
+            inline void ResetGmat(const ConstArray<TwoD,NekDouble> &ndata)
+            {
+                m_gmat = Array<TwoD,NekDouble>(ndata.GetRows(),ndata.GetColumns(),ndata.data());
             }
 
             inline void ResetJac(int nq, const ConstArray<OneD,NekDouble> &ndata)
@@ -134,6 +146,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.14  2007/12/03 21:30:43  sherwin
+// Added normal details
+//
 // Revision 1.13  2007/07/22 23:04:23  bnelson
 // Backed out Nektar::ptr.
 //

@@ -58,7 +58,7 @@ namespace Nektar
             bool loadOkay = doc.LoadFile();
 
             ASSERTL0(loadOkay, (std::string("Unable to load file: ") + 
-                infilename).c_str());
+                                infilename).c_str());
 
             ReadGeometry(doc);
         }
@@ -583,6 +583,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.23  2007/12/14 17:39:18  jfrazier
+// Fixed composite reader to handle ranges and comma separated lists.
+//
 // Revision 1.22  2007/12/11 21:51:53  jfrazier
 // Updated 2d components so elements could be retrieved from edges.
 //

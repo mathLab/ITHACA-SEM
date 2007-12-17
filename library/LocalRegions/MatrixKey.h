@@ -51,8 +51,19 @@ namespace Nektar
             MatrixKey( StdRegions::MatrixType matrixType, 
                        StdRegions::ShapeType shapeType, 
                        StdRegions::StdExpansion &stdExpansion,
-                       double scalefactor = 1.0,
-                       double constant = 0.0,
+                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+            MatrixKey( StdRegions::MatrixType matrixType, 
+                       StdRegions::ShapeType shapeType, 
+                       StdRegions::StdExpansion &stdExpansion,
+                       double scalefactor,
+                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+            MatrixKey( StdRegions::MatrixType matrixType, 
+                       StdRegions::ShapeType shapeType, 
+                       StdRegions::StdExpansion &stdExpansion,
+                       double scalefactor,
+                       double constant,
                        LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             virtual ~MatrixKey()
@@ -105,14 +116,14 @@ namespace Nektar
                 return m_metricinfo;
             }
 
-            const double GetScaleFactor() const 
+            const NekDouble GetScaleFactor() const 
             {
                 return m_scalefactor;
             }
 
-            const double GetConstant() const 
+            const NekDouble GetConstant(int i) const 
             {
-                return m_constant;
+                return m_stdMatKey->GetConstant(i);
             }
 
         protected:
@@ -121,7 +132,6 @@ namespace Nektar
             StdRegions::StdMatrixKeySharedPtr     m_stdMatKey;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo; 
             NekDouble                             m_scalefactor;
-            NekDouble                             m_constant;
 
         private:
         };
@@ -135,6 +145,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.13  2007/11/20 16:28:45  sherwin
+* Added terms for UDG Helmholtz solver
+*
 * Revision 1.12  2007/07/26 02:39:21  bnelson
 * Fixed Visual C++ compiler errors when compiling in release mode.
 *

@@ -598,7 +598,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
+                        DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                     }
                     else
@@ -615,7 +615,9 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
+                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetShapeType(),
+                                                         *this);
+                        DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
@@ -641,6 +643,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.16  2007/11/20 16:28:45  sherwin
+ *    Added terms for UDG Helmholtz solver
+ *
  *    Revision 1.15  2007/08/11 23:41:21  sherwin
  *    Various updates
  *

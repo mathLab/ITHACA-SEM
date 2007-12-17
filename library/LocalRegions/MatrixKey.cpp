@@ -40,7 +40,27 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-        // Register Mass Matrix creator. 
+        MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
+                             StdRegions::ShapeType shapeType,
+                             StdRegions::StdExpansion &stdExpansion,
+                             LibUtilities::PointsType nodalType)
+        {
+            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion,nodalType);
+            m_metricinfo  = stdExpansion.GetMetricInfo(); 
+        }
+
+        MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
+                             StdRegions::ShapeType shapeType,
+                             StdRegions::StdExpansion &stdExpansion,
+                             NekDouble    scalefactor,
+                             LibUtilities::PointsType nodalType)
+        {
+            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion,scalefactor,nodalType);
+
+            m_scalefactor = scalefactor;
+            m_metricinfo  = stdExpansion.GetMetricInfo(); 
+        }
+
         MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
                              StdRegions::ShapeType shapeType,
                              StdRegions::StdExpansion &stdExpansion,
@@ -48,10 +68,9 @@ namespace Nektar
                              NekDouble    constant, 
                              LibUtilities::PointsType nodalType)
         {
-            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion,nodalType);
+            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion,scalefactor,constant,nodalType);
 
             m_scalefactor = scalefactor;
-            m_constant    = constant;
             m_metricinfo  = stdExpansion.GetMetricInfo(); 
         }
 
@@ -118,16 +137,6 @@ namespace Nektar
                 return true;
             }
 
-            if(lhs.m_constant > rhs.m_constant)
-            {
-                return false;
-            }
-
-            if(lhs.m_constant < rhs.m_constant)
-            {
-                return true;
-            }
-
             return false;
         }
 
@@ -142,6 +151,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.13  2007/11/20 16:28:45  sherwin
+* Added terms for UDG Helmholtz solver
+*
 * Revision 1.12  2007/07/28 05:09:32  sherwin
 * Fixed version with updated MemoryManager
 *

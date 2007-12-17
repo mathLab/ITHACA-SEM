@@ -123,13 +123,15 @@ namespace Nektar
 
                 LibUtilities::BasisSharedPtr CBasis0;
                 LibUtilities::BasisSharedPtr CBasis1;
+                CBasis0 = m_geom->GetBasis(0,0); // assumes all goembasis are same
+                CBasis1 = m_geom->GetBasis(0,1);
+                int Cnq0 = CBasis0->GetNumPoints();
+                int Cnq1 = CBasis1->GetNumPoints();
      
                 ConstArray<OneD,NekDouble> ojac = Xgfac->GetJac();   
                 ConstArray<TwoD,NekDouble> ogmat = Xgfac->GetGmat();
                 Array<OneD,NekDouble> njac(nq);
-                
-                CBasis0 = m_geom->GetBasis(0,0); // this assumes all goembasis are same
-                CBasis1 = m_geom->GetBasis(0,1);
+                Array<OneD,NekDouble> ngmat(2*coordim*nq);
                 
                 m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
                     AllocateSharedPtr(gtype,expdim,coordim); 
@@ -139,6 +141,8 @@ namespace Nektar
                    !(m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
                 {
                     int i;   
+                    int nq0 = m_base[0]->GetNumPoints();
+                    int nq1 = m_base[1]->GetNumPoints();
 
                     // interpolate Jacobian        
                     Interp2D(CBasis0->GetBasisKey(),
@@ -147,12 +151,10 @@ namespace Nektar
                              m_base[0]->GetBasisKey(),
                              m_base[1]->GetBasisKey(), 
                              &njac[0]);
-                    
-                    m_metricinfo->ResetJac(nq,njac);
 
+                    m_metricinfo->ResetJac(nq,njac);
                     
                     // interpolate Geometric data
-                    Array<OneD,NekDouble> ngmat(2*coordim*nq);
                     Array<OneD,NekDouble> dxdxi(nq);
                     for(i = 0; i < 2*coordim; ++i)
                     {
@@ -165,9 +167,26 @@ namespace Nektar
                                  &ngmat[0] + i*nq);
                         Vmath::Vdiv(nq,&ngmat[0]+i*nq,1,&njac[0],1,&ngmat[0]+i*nq,1);
                     }
-                    
                     m_metricinfo->ResetGmat(ngmat,nq,2,coordim); 
-
+                    
+                    // interpolate normals
+                    Array<TwoD,NekDouble> newnorm = Array<TwoD,NekDouble>(4,coordim*max(nq0,nq1));    
+                    ConstArray<TwoD,NekDouble> normals = Xgfac->GetNormals();
+                    
+                    for(i = 0; i < coordim; ++i)
+                    {
+                        Interp1D(CBasis0->GetBasisKey(),&(normals[0])[i*Cnq0],
+                                 m_base[0]->GetBasisKey(),&(newnorm[0])[i*nq0]);
+                        
+                        Interp1D(CBasis1->GetBasisKey(),&(normals[1])[i*Cnq1],
+                                 m_base[1]->GetBasisKey(),&(newnorm[1])[i*nq1]);
+                        
+                        Interp1D(CBasis1->GetBasisKey(),&(normals[2])[i*Cnq1],
+                                 m_base[1]->GetBasisKey(),&(newnorm[2])[i*nq1]);
+                    }
+                    
+                    m_metricinfo->ResetNormals(newnorm);
+                    
                     NEKERROR(ErrorUtil::ewarning,
                              "Need to check/debug routine for deformed elements");
                 }
@@ -178,9 +197,14 @@ namespace Nektar
                     m_metricinfo->ResetJac(nq,njac);
 
                     // interpolate Geometric data
-                    njac = Array<OneD,NekDouble>(2*nq*coordim); 
-                    Blas::Dcopy(2*coordim*nq,&ogmat[0][0],1,&njac[0],1);                    
-                    m_metricinfo->ResetGmat(njac,nq,2,coordim);                 
+                    ngmat = Array<OneD,NekDouble>(2*nq*coordim); 
+                    Blas::Dcopy(2*coordim*nq,&ogmat[0][0],1,ngmat.data(),1);                    
+                    m_metricinfo->ResetGmat(ngmat,nq,2,coordim);                 
+
+                    m_metricinfo->ResetNormals(Xgfac->GetNormals());
+
+                    NEKERROR(ErrorUtil::ewarning,
+                             "Need to check/debug routine for deformed elements");
                 }
             }
         }      
@@ -753,7 +777,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
+                        DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                     }
                     else
@@ -769,7 +793,9 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eMass);
+                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetShapeType(),
+                                                         *this);
+                        DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
                         
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
@@ -785,15 +811,16 @@ namespace Nektar
                 break;
             case StdRegions::eLaplacian:
                 {
-                           if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                          {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
                         NekDouble one = 1.0;
-                        DNekMatSharedPtr mat = GenMatrix(StdRegions::eLaplacian);
+                        DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
                         
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                     }
                     else
-                    {
+                    { 
+                        ASSERTL1(m_geom->GetCoordDim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
                                            mkey.GetShapeType(), *this);  
                         MatrixKey lap01key(StdRegions::eLaplacian01,
@@ -965,6 +992,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.23  2007/12/06 22:49:09  pvos
+ *    2D Helmholtz solver updates
+ *
  *    Revision 1.22  2007/11/08 16:54:27  pvos
  *    Updates towards 2D helmholtz solver
  *

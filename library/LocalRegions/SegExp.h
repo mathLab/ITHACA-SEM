@@ -134,7 +134,7 @@ namespace Nektar
 
             NekDouble PhysEvaluate(const ConstArray<OneD,NekDouble>& coord);
             
-            void UDGHelmholtzBoundaryTerms(const NekDouble tau, 
+            void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                            const ConstArray<OneD,NekDouble> &inarray,
                                            Array<OneD,NekDouble> outarray,
                                            bool MatrixForm = false);
@@ -144,9 +144,7 @@ namespace Nektar
 
             void GenMetricInfo();    
             
-            DNekMatSharedPtr GenMatrix(StdRegions::MatrixType mtype, 
-                                       NekDouble lambda = NekUnsetDouble,
-                                       NekDouble tau = NekUnsetDouble);
+            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
             
             DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
@@ -365,11 +363,11 @@ namespace Nektar
                 return m_staticCondMatrixManager[mkey];
             }
 
-            virtual void v_UDGHelmholtzBoundaryTerms(const NekDouble tau, 
+            virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                                      const ConstArray<OneD,NekDouble> &inarray,
                                                      Array<OneD,NekDouble> outarray)
             {
-                UDGHelmholtzBoundaryTerms(tau,inarray,outarray);
+                AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
             }
             
         };
@@ -385,6 +383,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.25  2007/11/20 16:28:46  sherwin
+// Added terms for UDG Helmholtz solver
+//
 // Revision 1.24  2007/10/03 11:37:50  sherwin
 // Updates relating to static condensation implementation
 //

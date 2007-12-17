@@ -122,7 +122,7 @@ namespace Nektar
 
             SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
             SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
-
+            
             nbnd = bregions.size();
             m_bndConstraint = Array<OneD,LocalRegions::PointExpSharedPtr>(nbnd);
             m_bndTypes = Array<OneD,SpatialDomains::BoundaryConditionType>(nbnd);
@@ -238,8 +238,7 @@ namespace Nektar
                 init[i] = m_bndConstraint[i]->GetValue();
             }
 
-            GeneralMatrixOp(key.GetLinSysType(), init, Dir_fce,
-                            key.GetFactor1());
+            GeneralMatrixOp(key, init, Dir_fce);
 
             // Set up forcing function
             IProductWRTBase(Rhs);

@@ -253,10 +253,9 @@ namespace Nektar
         }
         
         
-        void ExpList::GeneralMatrixOp(const StdRegions::MatrixType mtype,
+        void ExpList::GeneralMatrixOp(const GlobalLinSysKey &gkey,
                                       const ConstArray<OneD,NekDouble> &inarray,                     
-                                      Array<OneD, NekDouble>    &outarray,
-                                      NekDouble lambda)
+                                      Array<OneD, NekDouble>    &outarray)
         {
             int  i;
             int  cnt  = 0;
@@ -266,8 +265,11 @@ namespace Nektar
             
             for(i= 0; i < GetExpSize(); ++i)
             {
-                (*m_exp)[i]->GeneralMatrixOp(mtype, e_inarray = inarray + cnt, 
-                                             e_outarray = outarray+cnt,lambda);
+
+                StdRegions::StdMatrixKey mkey(gkey.GetLinSysType(),(*m_exp)[i]->DetShapeType(),
+                                              *((*m_exp)[i]),gkey.GetFactor1());
+                (*m_exp)[i]->GeneralMatrixOp(mkey, e_inarray = inarray + cnt, 
+                                             e_outarray = outarray+cnt);
                 cnt   += (*m_exp)[i]->GetNcoeffs();
             }        
         }

@@ -186,10 +186,9 @@ namespace Nektar
                Array<OneD, NekDouble> &outarray); 
       
       // Routines for continous matrix solution 
-      void   GeneralMatrixOp(const StdRegions::MatrixType     mtype,
+      void   GeneralMatrixOp(const GlobalLinSysKey &mkey,
                              const ConstArray<OneD,NekDouble> &inarray,
-                             Array<OneD, NekDouble>          &outarray,
-                             NekDouble lambda = 1.0);
+                             Array<OneD, NekDouble>          &outarray);
 
       boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
 
@@ -212,6 +211,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.28  2007/12/06 22:52:30  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.27  2007/11/20 16:27:16  sherwin
 * Zero Dirichlet version of UDG Helmholtz solver
 *

@@ -193,6 +193,7 @@ namespace Nektar
             NekDouble zero = 0.0; 
             NekDouble helmfactor = mkey.GetFactor1();
             NekDouble tau        = mkey.GetFactor2();
+            StdRegions::StdExpMap vmap;
 
             DNekMat LocBlk;
 
@@ -200,7 +201,6 @@ namespace Nektar
             ASSERTL0(mkey.GetLinSysType() == StdRegions::eUnifiedDGHelmBndSys,
                      "Routine is only set up for UnifiedDGHelmholtz");
             
-
             // fill global matrix 
             for(n = cnt = 0; n < (*m_exp).size(); ++n)
             {
@@ -257,7 +257,9 @@ namespace Nektar
             //----------------------------------
             int GloBndDofs = m_lambdaMap->GetTotGloBndDofs();
             int NumDirBCs  = m_lambdaMap->GetNumDirichletDofs();
-            int e_ncoeffs;
+            int e_ncoeffs, loc;
+            NekDouble bval;
+
             Array<OneD,NekDouble> BndSol(GloBndDofs,0.0);
             DNekVec Floc;
 
@@ -282,20 +284,36 @@ namespace Nektar
 #endif           
                 for(i = 0; i < nbndry; ++i)
                 {
-                    BndSol[m_lambdaMap->GetBndMap(i+cnt1)] += Floc[i];
+                    loc = m_lambdaMap->GetBndMap(i+cnt1);
+
+                    // Dirichlet Conditions
+                    if(loc < NumDirBCs)
+                    {
+                        (*m_exp)[n]->MapTo(StdRegions::eForwards,vmap);
+                        LocalRegions::MatrixKey Qmatkey(StdRegions::eUnifiedDGLamToQ, (*m_exp)[n]->DetShapeType(),*((*m_exp)[n]), lambda, tau);
+                        DNekScalMat &LamToQ = *((*m_exp)[n]->GetLocMatrix(Qmatkey)); 
+
+                        bval =  m_bndConstraint[i]->GetValue();
+                        
+                        // first element constribution
+                        if(i == 0)
+                        {
+                            BndSol[m_lambdaMap->GetBndMap(cnt1+1)] -= bval*(-LamToQ(vmap[0],1)  + LamToU(vmap[0],1)*tau);
+                        }
+                        
+                        if(i == 1)
+                        {
+                            BndSol[m_lambdaMap->GetBndMap(cnt1)]   += bval*(-LamToQ(vmap[1],0)  + LamToU(vmap[1],0)*tau);
+                        }
+                    }
+                    else
+                    {
+                        BndSol[loc] += Floc[i];
+                    }
                 }
+
                 cnt  += e_ncoeffs;
                 cnt1 += nbndry;
-            }
-            
-            if(GloBndDofs - NumDirBCs > 0)
-            {
-                GlobalLinSysKey key(StdRegions::eUnifiedDGHelmBndSys,
-                                    lambda,tau,eDirectFullMatrix);
-                GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
-                
-                Array<OneD,NekDouble> sln = BndSol+NumDirBCs;
-                LinSys->Solve(sln,sln,*m_lambdaMap);
             }
 
             // Set Dirichlet Boundary Conditions into BndSol
@@ -305,6 +323,16 @@ namespace Nektar
                 {  
                     BndSol[i] = m_bndConstraint[i]->GetValue();
                 }
+            }
+
+            if(GloBndDofs - NumDirBCs > 0)
+            {
+                GlobalLinSysKey key(StdRegions::eUnifiedDGHelmBndSys,
+                                    lambda,tau,eDirectFullMatrix);
+                GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
+                
+                Array<OneD,NekDouble> sln = BndSol+NumDirBCs;
+                LinSys->Solve(sln,sln,*m_lambdaMap);
             }
 
             //----------------------------------
@@ -323,7 +351,7 @@ namespace Nektar
                     e_bndsol[vmap[j]] = BndSol[m_lambdaMap->GetBndMap(cnt1+j)];
                 }
 
-                (*m_exp)[i]->UDGHelmholtzBoundaryTerms(tau, e_bndsol,e_f);
+                (*m_exp)[i]->AddUDGHelmholtzBoundaryTerms(tau, e_bndsol,e_f);
                 cnt  += (*m_exp)[i]->GetNcoeffs();
                 cnt1 += nbndry;
             }

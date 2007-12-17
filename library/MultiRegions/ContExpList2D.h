@@ -111,10 +111,9 @@ namespace Nektar
         
             void BwdTrans(const ExpList &In);
 
-            void GeneralMatrixOp(const StdRegions::MatrixType     mtype,
+            void GeneralMatrixOp(const GlobalLinSysKey            &gkey,
                                  const ConstArray<OneD,NekDouble> &inarray,
-                                 Array<OneD, NekDouble>          &outarray,
-                                 NekDouble lambda);
+                                 Array<OneD, NekDouble>          &outarray);
             
         protected:
       	    int                       m_contNcoeffs;
@@ -137,6 +136,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.h,v $
+* Revision 1.6  2007/12/06 22:52:29  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.5  2007/07/20 02:04:12  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

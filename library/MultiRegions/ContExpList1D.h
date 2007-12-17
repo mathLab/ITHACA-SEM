@@ -104,10 +104,9 @@ namespace Nektar
 
             void BwdTrans(const ExpList &In);
 
-            void GeneralMatrixOp(const StdRegions::MatrixType     mtype,
+            void GeneralMatrixOp(const GlobalLinSysKey            &gkey,
                                  const ConstArray<OneD,NekDouble> &inarray,
-                                 Array<OneD, NekDouble>          &outarray,
-                                 NekDouble lambda);
+                                 Array<OneD, NekDouble>           &outarray);
 	    
 	protected:
       	    int                       m_contNcoeffs;
@@ -131,6 +130,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.27  2007/12/06 22:52:29  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.26  2007/11/07 20:29:52  jfrazier
 * Modified to use new expansion list contained in meshgraph.
 *

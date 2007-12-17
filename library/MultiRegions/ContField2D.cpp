@@ -297,8 +297,7 @@ namespace Nektar
                 }
             }
 
-            GeneralMatrixOp(key.GetLinSysType(), init, Dir_fce,
-                key.GetFactor1());
+            GeneralMatrixOp(key, init, Dir_fce);
 
             // Set up forcing function
             IProductWRTBase(Rhs);

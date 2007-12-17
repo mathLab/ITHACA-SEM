@@ -115,15 +115,14 @@ namespace Nektar
             m_transState = eLocalCont;
         }
         
-        void ContExpList1D::GeneralMatrixOp(const StdRegions::MatrixType mtype,
-            const ConstArray<OneD, NekDouble> &inarray,
-            Array<OneD, NekDouble> &outarray, 
-            NekDouble lambda = 1.0)
+        void ContExpList1D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
+                                            const ConstArray<OneD, NekDouble> &inarray,
+                                            Array<OneD, NekDouble> &outarray)
 
         {
             Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(m_ncoeffs);
             ContToLocal(inarray,tmp);
-            ExpList1D::GeneralMatrixOp(mtype,tmp,tmp,lambda);
+            ExpList1D::GeneralMatrixOp(gkey,tmp,tmp);
             Assemble(tmp,outarray);
         }
 
@@ -167,6 +166,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.28  2007/12/06 22:52:29  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.27  2007/11/20 16:27:15  sherwin
 * Zero Dirichlet version of UDG Helmholtz solver
 *

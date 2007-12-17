@@ -129,15 +129,14 @@ namespace Nektar
             m_transState = eLocalCont;
         }
 
-	void ContExpList2D::GeneralMatrixOp(const StdRegions::MatrixType mtype,
+	void ContExpList2D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
                                             const ConstArray<OneD, NekDouble> &inarray,
-                                            Array<OneD, NekDouble> &outarray, 
-                                            NekDouble lambda = 1.0)
+                                            Array<OneD, NekDouble> &outarray)
             
 	{
             Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(m_ncoeffs);
             ContToLocal(inarray,tmp);
-	    ExpList2D::GeneralMatrixOp(mtype,tmp,tmp,lambda);
+	    ExpList2D::GeneralMatrixOp(gkey,tmp,tmp);
 	    Assemble(tmp,outarray);
 	}
         
@@ -178,6 +177,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.9  2007/12/06 22:52:29  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.8  2007/10/03 11:37:50  sherwin
 * Updates relating to static condensation implementation
 *

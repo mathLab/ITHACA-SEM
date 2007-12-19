@@ -121,18 +121,18 @@ namespace Nektar
 
                 void Apply(typename boost::call_traits<ResultType>::reference result) const
                 {
-//                    if( !PolicyType::ContainsReference(result, m_data) )
-//                    {
+                   if( !PolicyType::ContainsReference(result, m_data) )
+                   {
                         Accumulator<ResultType> accum(result);
                         PolicyType::Apply(accum, m_data);
-//                    }
-//                    else
-//                    {
-//                        ResultType temp;
-//                        Accumulator<ResultType> accum(result);
-//                        PolicyType::Apply(accum, m_data);
-//                        result = temp;
-//                    }
+                   }
+                   else
+                   {
+                       ResultType temp;
+                       Accumulator<ResultType> accum(result);
+                       PolicyType::Apply(accum, m_data);
+                       result = temp;
+                   }
                         
                 }
 
@@ -193,6 +193,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.15  2007/12/19 05:09:21  bnelson
+    First pass at detecting aliasing.  Still need to test performance implications.
+
     Revision 1.14  2007/11/13 18:07:25  bnelson
     Added Assign helper function for those classes the user can't modfiy.
 

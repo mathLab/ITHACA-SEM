@@ -41,7 +41,12 @@
 namespace Nektar
 {
 
-    /// \brief Wraps a piece of data and passes through an expression.
+    /// \brief Wraps the data passed through the expression.
+    ///
+    /// Instead of using the result type of an expression as the acumulator,
+    /// the data is wrapped in this accumulator object then passed through 
+    /// the expression.  The main advantage to this approach is that we can 
+    /// track if the accumulator has been initialized yet or not.
     template<typename DataType>
     class Accumulator
     {
@@ -57,7 +62,7 @@ namespace Nektar
             /// When starting an expression evaluation, the accumulator starts out in an uninitialized
             /// state and this method will return false.  At some point the accumulator will obtain
             /// valid values, and after this point this method will return true.
-            bool IsInitialized() const 
+            inline bool IsInitialized() const 
             {
                 return m_isInitialized; 
             }
@@ -91,6 +96,9 @@ namespace Nektar
 
 /**
     $Log: Accumulator.hpp,v $
+    Revision 1.8  2007/10/13 03:33:05  bnelson
+    *** empty log message ***
+
     Revision 1.7  2007/10/04 03:48:53  bnelson
     *** empty log message ***
 

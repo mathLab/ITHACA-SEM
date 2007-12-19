@@ -71,6 +71,11 @@ namespace Nektar
                 *accum = d;
             }
             
+            static bool ContainsReference(typename boost::call_traits<Type>::const_reference result, DataType m_data)
+            {
+                return &result == &m_data;
+            }
+            
             static void Print(std::ostream& os, typename boost::call_traits<DataType>::const_reference data)
             {
                 os << data;
@@ -89,6 +94,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.11  2007/11/13 18:05:27  bnelson
+    Added MakeExpr helper function.
+
     Revision 1.10  2007/10/04 03:48:54  bnelson
     *** empty log message ***
 

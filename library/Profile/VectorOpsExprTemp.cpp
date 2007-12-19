@@ -20,4 +20,20 @@ void AddVectorsExprTemp(Nektar::NekVector<double>& result,
     result = MakeExpr(v1) + MakeExpr(v2);
 }
 
+void AddVectorsExprTemp(Nektar::NekVector<double>& result,
+                const Nektar::NekVector<double>& v1,
+                const Nektar::NekVector<double>& v2,
+                const Nektar::NekVector<double>& v3)
+{
+    result = MakeExpr(v1) + MakeExpr(v2) + MakeExpr(v3);
+}
+
+void AddVectorsExprTemp(Nektar::NekVector<double>& result,
+                const Nektar::NekVector<double>& v1,
+                const Nektar::NekVector<double>& v2,
+                const Nektar::NekVector<double>& v3,
+                const Nektar::NekVector<double>& v4)
+{
+    result = MakeExpr(v1) + MakeExpr(v2) + MakeExpr(v3) + MakeExpr(v4);
+}
                 

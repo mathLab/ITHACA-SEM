@@ -31,6 +31,7 @@ class IntWrapper
         IntWrapper& operator=(const Nektar::Expression<PolicyType>& rhs)
         {
             rhs.Apply(*this);
+            return *this;
         }
         #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
         

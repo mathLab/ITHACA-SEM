@@ -845,7 +845,8 @@ namespace Nektar
                         return NULL;
                     }
 
-                    delete left, right;
+                    delete left;
+                    delete right;
                     return node;
                 }
                 else

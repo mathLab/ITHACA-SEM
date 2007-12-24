@@ -128,8 +128,8 @@ namespace Nektar
                    }
                    else
                    {
-                       ResultType temp;
-                       Accumulator<ResultType> accum(result);
+                       ResultType temp(result);
+                       Accumulator<ResultType> accum(temp);
                        PolicyType::Apply(accum, m_data);
                        result = temp;
                    }
@@ -193,6 +193,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.16  2007/12/19 06:00:06  bnelson
+    *** empty log message ***
+
     Revision 1.15  2007/12/19 05:09:21  bnelson
     First pass at detecting aliasing.  Still need to test performance implications.
 

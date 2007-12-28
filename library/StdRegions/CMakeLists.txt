@@ -8,7 +8,7 @@ StdExpMap.cpp
 StdHexExp.cpp
 #StdNodalTetExp.cpp
 StdNodalTriExp.cpp
-#StdPrismExp.cpp
+StdPrismExp.cpp
 #StdPyrExp.cpp
 StdQuadExp.cpp
 StdSegExp.cpp

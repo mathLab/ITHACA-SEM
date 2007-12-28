@@ -37,6 +37,17 @@ ADD_NEKTAR_EXECUTABLE(StdTetExp_Diff3D StdTetExp_Diff3DSource)
     optimized StdRegions debug StdRegions-g    
     )    
     
+SET(StdPrismExpDemoSource StdPrismExpDemo.cpp)
+ADD_NEKTAR_EXECUTABLE(StdPrismExpDemo StdPrismExpDemoSource)
+    TARGET_LINK_LIBRARIES(StdPrismExpDemo
+    optimized StdRegions debug StdRegions-g    
+    )
+    
+SET(StdPrismExp_Diff3DSource StdPrismExp_Diff3D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdPrismExp_Diff3D StdPrismExp_Diff3DSource)
+    TARGET_LINK_LIBRARIES(StdPrismExp_Diff3D
+    optimized StdRegions debug StdRegions-g    
+    ) 
 
     
 

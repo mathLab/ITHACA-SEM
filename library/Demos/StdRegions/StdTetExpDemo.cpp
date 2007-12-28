@@ -1,4 +1,12 @@
 
+#include "StdRegions/StdExpUtil.h"
+#include "StdRegions/StdTetExp.h"
+#include "StdRegions/StdExpansion3D.h"
+#include "StdRegions/StdRegions.hpp"
+#include "LibUtilities/Foundations/Foundations.hpp"
+#include "LibUtilities/Foundations/Basis.h"
+
+
 #include <algorithm>
 #include <iostream>
 #include <limits>
@@ -6,14 +14,6 @@
 #include <cstdlib>
 #include <cmath>
 using namespace std;
-
-
-#include "StdRegions/StdExpUtil.h"
-#include "StdRegions/StdTetExp.h"
-#include "StdRegions/StdExpansion3D.h"
-#include "StdRegions/StdRegions.hpp"
-#include "LibUtilities/Foundations/Foundations.hpp"
-#include "LibUtilities/Foundations/Basis.h"
 
 
 using namespace Nektar;
@@ -29,7 +29,7 @@ using namespace Nektar::StdRegions;
 int main(int argc, char *argv[])
  {
     if( argc != 10 ) {
-        cerr << "Usage: TetDemo Type_x Type_y Type_z numModes_x numModes_y numModes_z Qx Qy Qz" << endl;
+        cerr << "Usage: StdTetDemo Type_x Type_y Type_z numModes_x numModes_y numModes_z Qx Qy Qz" << endl;
         cerr << "Where type is an interger value which dictates the basis as:" << endl;
         cerr << "\t Ortho_A    = 1\n";
         cerr << "\t Ortho_B    = 2\n";

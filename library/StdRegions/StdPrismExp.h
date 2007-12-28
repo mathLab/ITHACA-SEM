@@ -50,16 +50,18 @@ namespace Nektar
         
     public:
         
+        StdPrismExp();
+        
         /** \brief Constructor using BasisKey class for quadrature
          *    points and order definition 
          */
-        StdPrismExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc);
+        StdPrismExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc);
         
         /** \brief Constructor using BasisKey class for quadrature
          *  points and order definition where m_coeffs and m_phys are all
          *    set. 
          */
-        StdPrismExp(const BasisKey &Ba, const BasisKey &Bb, const BasisKey &Bc,
+        StdPrismExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc,
             double *coeffs, double *phys);
         
         /** \brief Copy Constructor */
@@ -71,14 +73,52 @@ namespace Nektar
         /** \brief Return Shape of region, using  ShapeType enum list.
          *  i.e. Prism 
          */
-        ShapeType DetShapeType()
+        ShapeType DetShapeType() const
         {
         return ePrism;
         }
         
+
+        NekDouble Integral3D(const ConstArray<OneD, NekDouble>& inarray, 
+                    const ConstArray<OneD, NekDouble>& wx,
+                    const ConstArray<OneD, NekDouble>& wy, 
+                    const ConstArray<OneD, NekDouble>& wz);
+        NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray);
+        void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
+        void IProductWRTBase(  const ConstArray<OneD, NekDouble>& bx, 
+                               const ConstArray<OneD, NekDouble>& by, 
+                               const ConstArray<OneD, NekDouble>& bz, 
+                               const ConstArray<OneD, NekDouble>& inarray, 
+                               Array<OneD, NekDouble> & outarray );
+        void PhysDeriv( Array<OneD, NekDouble> &out_d0,
+                        Array<OneD, NekDouble> &out_d1,
+                        Array<OneD, NekDouble> &out_d2);
+        void PhysDeriv(const ConstArray<OneD, NekDouble>& u_physical, 
+                       Array<OneD, NekDouble> &out_dxi1, 
+                       Array<OneD, NekDouble> &out_dxi2,
+                       Array<OneD, NekDouble> &out_dxi3 );
+                       
+         void BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+                       Array<OneD, NekDouble> &outarray);
+         void FwdTrans( const ConstArray<OneD, NekDouble>& inarray,  Array<OneD, NekDouble> &outarray);
+         NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& xi);
+         void GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z);
+         void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
+         DNekMatSharedPtr GenMatrixPrism(MatrixType mtype);
+         void GenLapMatrix(double * outarray);
+                       
+         DNekMatSharedPtr GenMatrix(MatrixType mtype)
+         {
+             return StdExpansion::CreateGeneralMatrix(mtype);
+         }
+
+        
+
+        
+        
     protected:
         
-        static StdMatrix s_elmtmats;
+//        static StdMatrix s_elmtmats;
         
         
     private:
@@ -103,6 +143,110 @@ namespace Nektar
             return DetShapeType();
         }
         
+        virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype) 
+        {
+            return GenMatrix(mtype);
+        }
+        
+        virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+        {
+            return FillMode(mode, outarray);
+        }
+
+        virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray )
+        {
+            return Integral(inarray);
+        }
+            
+        virtual void v_GetCoords(
+            Array<OneD, NekDouble> &coords_x,
+            Array<OneD, NekDouble> &coords_y,
+            Array<OneD, NekDouble> &coords_z)
+        {
+            GetCoords(coords_x, coords_y, coords_z);
+        }
+        
+        virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
+            Array<OneD, NekDouble> &outarray)
+        {
+            IProductWRTBase(inarray, outarray);
+        }
+
+        /** \brief Virtual call to GenMassMatrix */
+
+        virtual void v_PhysDeriv( Array<OneD, NekDouble> &out_d0,
+                                Array<OneD, NekDouble> &out_d1,
+                                Array<OneD, NekDouble> &out_d2)
+        {
+                PhysDeriv(out_d0, out_d1, out_d2);
+        }
+        virtual void v_StdPhysDeriv( Array<OneD, NekDouble> &out_d0,
+                                Array<OneD, NekDouble> &out_d1,
+                                Array<OneD, NekDouble> &out_d2)
+        {
+                                
+                PhysDeriv(out_d0, out_d1, out_d2);                
+        }
+
+        virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+                                Array<OneD, NekDouble> &out_d0,
+                                Array<OneD, NekDouble> &out_d1,
+                                Array<OneD, NekDouble> &out_d2)
+        {
+                PhysDeriv(inarray, out_d0, out_d1, out_d2);
+        }                                  
+        virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+                                Array<OneD, NekDouble> &out_d0,
+                                Array<OneD, NekDouble> &out_d1,
+                                Array<OneD, NekDouble> &out_d2)
+        {
+                PhysDeriv(inarray, out_d0, out_d1, out_d2);
+        }
+
+        
+        virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+            Array<OneD, NekDouble> &outarray)
+        {
+            BwdTrans(inarray, outarray);
+        }
+
+        virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+            Array<OneD, NekDouble> &outarray)
+        {
+            FwdTrans(inarray, outarray);
+        }
+        //virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+        virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& Lcoords)
+        {
+            return PhysEvaluate(Lcoords);
+        }
+        
+            virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray) 
+        {
+                std::cout << "Implement me" << std::endl;
+                return;
+        } 
+        
+        virtual void v_GenLapMatrix (Array<OneD, NekDouble> & outarray)
+        {
+            std::cout << "Implement me" << std::endl;
+            return;
+        }
+        
+        virtual DNekMatSharedPtr v_GetMassMatrix() 
+        {
+            std::cout << "Implement me" << std::endl;
+            int foo = 0;
+        } 
+        
+        virtual DNekMatSharedPtr v_GetLapMatrix()
+        {
+            std::cout << "Implement me" << std::endl;
+            int foo = 0;
+        }  
+
+        
+        
     };
     
     } //end of namespace
@@ -112,6 +256,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.5  2007/07/20 02:16:54  bnelson
+ * Replaced boost::shared_ptr with Nektar::ptr
+ *
  * Revision 1.4  2007/07/10 21:05:17  kirby
  * even more fixes
  *

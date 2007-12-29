@@ -62,8 +62,7 @@ namespace Nektar
 
         EdgeComponent::EdgeComponent(int id, const int coordim,
             const VertexComponentSharedPtr vertex[]): 
-        Geometry1D(coordim),
-            m_vertex(2) //always have two vertices per edge
+        Geometry1D(coordim)
         {
             m_eid = id;
 
@@ -80,8 +79,8 @@ namespace Nektar
                 }
             }
 
-            m_vertex[0] = vertex[0];
-            m_vertex[1] = vertex[1];
+            m_verts[0] = vertex[0];
+            m_verts[1] = vertex[1];
         }
 
         EdgeComponent::EdgeComponent(int id, const int coordim, 
@@ -202,6 +201,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.21  2007/12/04 03:27:14  jfrazier
+*    Changed to stringstream.
+*
 *    Revision 1.20  2007/07/05 04:21:09  jfrazier
 *    Changed id format and propagated from 1d to 2d.
 *

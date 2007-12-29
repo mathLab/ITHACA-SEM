@@ -87,9 +87,9 @@ namespace Nektar
                 {
                     VertexComponentSharedPtr returnval;
 
-                    if (i >= 0 && i < int(m_vertex.size()))
+                    if (i >= 0 && i < kNverts)
                     {
-                        returnval = m_vertex[i];
+                        returnval = m_verts[i];
                     }
 
                     return returnval;
@@ -120,10 +120,11 @@ namespace Nektar
             protected:
                 int m_eid;
                 std::list<CompToElmt> m_elmtmap;
-
                 Array<OneD, StdRegions::StdExpansion1DSharedPtr> m_xmap;
 
-                VertexVector m_vertex;
+                static const int kNverts = 2;
+                SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
+
             private:
         };
 
@@ -136,6 +137,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.16  2007/07/22 23:04:23  bnelson
+// Backed out Nektar::ptr.
+//
 // Revision 1.15  2007/07/20 02:15:08  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

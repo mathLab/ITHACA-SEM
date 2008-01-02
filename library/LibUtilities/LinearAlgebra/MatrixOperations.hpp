@@ -871,7 +871,7 @@ namespace Nektar
 
 
     
-    GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
+    GENERATE_TEMPLATED_MULTIPLICATION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
     
     // TODO - Any update possible for this case?  The constant value must be the same as the matrix 
     // number type.  Seems pretty custom to me.
@@ -892,7 +892,7 @@ namespace Nektar
     //GENERATE_MULTIPLICATION_OPERATOR(NekDouble, 0, NekMatrix, 3);
     
     GENERATE_DIVISION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
-    GENERATE_ADDITION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
+    GENERATE_TEMPLATED_ADDITION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
     GENERATE_SUBTRACTION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
     
     // TODO - Either update the GENERATE macros to allow non-type template parameters,

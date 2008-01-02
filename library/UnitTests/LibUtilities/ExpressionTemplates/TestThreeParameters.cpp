@@ -87,7 +87,95 @@ namespace Nektar
             return result;
         }
         
+        
+        class ConstantBinarySpecialization0_Parameter
+        {
+            public:
+                /// \todo Doc note - all classes in expression templates need a default constructor.
+                ConstantBinarySpecialization0_Parameter() : m_value(0) {}
+                explicit ConstantBinarySpecialization0_Parameter(int v) : m_value(v) {}
+                ConstantBinarySpecialization0_Parameter(const ConstantBinarySpecialization0_Parameter& rhs) : m_value(rhs.m_value) {}
+                ConstantBinarySpecialization0_Parameter operator=(const  ConstantBinarySpecialization0_Parameter& rhs)
+                {
+                    m_value = rhs.m_value;
+                    return *this;
+                }
+                
+                int m_value;
+        };
+        
+        void NekMultiply(ConstantBinarySpecialization0_Parameter& result,
+                         const ConstantBinarySpecialization0_Parameter& lhs,
+                         const ConstantBinarySpecialization0_Parameter& rhs)
+        {
+            result.m_value = lhs.m_value * rhs.m_value;
+        }
+        
+        ConstantBinarySpecialization0_Parameter NekMultiply(const ConstantBinarySpecialization0_Parameter& lhs,
+                         const ConstantBinarySpecialization0_Parameter& rhs)
+        {
+            ConstantBinarySpecialization0_Parameter result(0);
+            NekMultiply(result, lhs, rhs);
+            return result;
+        }
+                         
+        class ConstantBinarySpecialization0_Result
+        {
+            public:
+                ConstantBinarySpecialization0_Result() : m_value() {}
+                ConstantBinarySpecialization0_Result(int v) : m_value(v) {}
+                ConstantBinarySpecialization0_Result(const ConstantBinarySpecialization0_Result& rhs) : m_value(rhs.m_value) {}
+                ConstantBinarySpecialization0_Result operator=(const  ConstantBinarySpecialization0_Result& rhs)
+                {
+                    m_value = rhs.m_value;
+                    return *this;
+                }
+                
+                int m_value;
+  
+        };
+  
+        void NekAdd(ConstantBinarySpecialization0_Result& result,
+                    const ConstantBinarySpecialization0_Parameter& lhs,
+                    const ConstantBinarySpecialization0_Parameter& rhs)
+        {
+            result.m_value = lhs.m_value + rhs.m_value;
+        }
+        
+        ConstantBinarySpecialization0_Result NekAdd(const ConstantBinarySpecialization0_Parameter& lhs,
+                         const ConstantBinarySpecialization0_Parameter& rhs)
+        {
+            ConstantBinarySpecialization0_Result result(0);
+            NekAdd(result, lhs, rhs);
+            return result;
+        }
+        
+        GENERATE_ADDITION_OPERATOR(ConstantBinarySpecialization0_Parameter, ConstantBinarySpecialization0_Parameter);
+        GENERATE_MULTIPLICATION_OPERATOR(ConstantBinarySpecialization0_Parameter, ConstantBinarySpecialization0_Parameter);
+        
+        BOOST_AUTO_TEST_CASE(TestConstantBinarySpecialization0_TwoTemporariesRequired)
+        {
+            // This test case requires a left side and a right side that 
+            // don't evaluate to the result type individually, but do add to the
+            // result type.
+            ConstantBinarySpecialization0_Parameter p0(8);
+            ConstantBinarySpecialization0_Parameter p1(2);
+            ConstantBinarySpecialization0_Parameter p2(20);
             
+            typedef BinaryExpressionPolicy<ConstantExpressionPolicy<ConstantBinarySpecialization0_Parameter>,
+                                           ConstantExpressionPolicy<ConstantBinarySpecialization0_Parameter>,
+                                           MultiplyOp> RhsExpressionType;
+            typedef ConstantExpressionPolicy<ConstantBinarySpecialization0_Parameter> LhsExpressionType;
+            
+            BOOST_STATIC_ASSERT(( BinaryExpressionEvaluator<LhsExpressionType, RhsExpressionType, ConstantBinarySpecialization0_Result, AddOp, BinaryNullOp>::ClassNum == 1 ));
+             
+            Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, AddOp> > exp =
+                p0 + (p1*p2);
+
+            ConstantBinarySpecialization0_Result r;
+            Assign(r, exp);
+            BOOST_CHECK_EQUAL(r.m_value, 8+2*20);
+        }
 //          Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<Bar>, ConstantExpressionPolicy<Bar>,AddOp > > 
 //          operator+(const Bar& lhs, const Bar& rhs) 
 //          { 

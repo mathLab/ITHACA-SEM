@@ -71,9 +71,18 @@ namespace Nektar
                 *accum = d;
             }
             
-            static bool ContainsReference(typename boost::call_traits<Type>::const_reference result, DataType m_data)
+            template<typename CheckType>
+            static typename boost::enable_if<boost::is_same<CheckType, DataType>, bool>::type
+            ContainsReference(const CheckType& result, DataType m_data)
             {
                 return &result == &m_data;
+            }
+            
+            template<typename CheckType>
+            static typename boost::disable_if<boost::is_same<CheckType, DataType>, bool>::type
+            ContainsReference(const CheckType& result, DataType m_data)
+            {
+                return false;
             }
             
             static void Print(std::ostream& os, typename boost::call_traits<DataType>::const_reference data)
@@ -94,6 +103,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.12  2007/12/19 05:09:21  bnelson
+    First pass at detecting aliasing.  Still need to test performance implications.
+
     Revision 1.11  2007/11/13 18:05:27  bnelson
     Added MakeExpr helper function.
 

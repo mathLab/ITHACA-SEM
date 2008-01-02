@@ -44,11 +44,16 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/type_traits.hpp>
+#include <boost/mpl/assert.hpp>
+#include <boost/mpl/if.hpp>
+#include <boost/mpl/and.hpp>
 
 namespace Nektar
 {
     namespace TestTwoParameters
     {
+        
         // Tests 1op Specialization #1
         BOOST_AUTO_TEST_CASE(TestAddingTwoMatrices)
         {
@@ -98,9 +103,5 @@ namespace Nektar
 //             BOOST_CHECK_EQUAL(expected_result, result);
         }
 
-        // Tests aliasing.
-        BOOST_AUTO_TEST_CASE(TestMatrixAliasing)
-        {
-        }
     }
 }

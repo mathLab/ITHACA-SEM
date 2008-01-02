@@ -50,6 +50,8 @@
 
 namespace Nektar
 {
+
+        
         ////////////////////////////////////////////////
         // 1 op Specializations
         ////////////////////////////////////////////////
@@ -74,7 +76,38 @@ namespace Nektar
                     OpType<LhsDataType, RhsDataType>::Apply(result, *lhs, *rhs);
                 }
         };
+           
+        // R = -A + B
+        //
+        // Case 1 - typeof(A) == typeof(R)
+        //          Pass accumulator to left side, then += rhs.
+        //
+        // Case 2 - typeof(A) != typeof(R)  
+        //          typeof(A) + typeof(B) is commutative.
+        //          - is convertible to a binary operation.
+        //          Create new expression (B-A) and pass to constant expression evaluator.
+        //
+        // Case 3 - Create a temporary for the left, and then eval total expression.
         
+        /// \brief Unary-Constant Specialization 1
+        ///
+    
+//        class BinaryExpressionEvaluator<UnaryExpressionPolicy<LhsPolicyType, LhsOpType>,
+//                                        ConstantExpressionPolicy<RhdDataType>,
+//                                        ResultType, OpType, BinaryNulOp>
+//        {
+//            public:
+//                typedef Expression<UnaryExpressionPolicy<LhsPolicyType, LhsOpType> > LhsExpressionType;
+//                typedef typename LhsExpressionType::ResultType LhsResultType;
+//                
+//                static void Eval(const LhsExpressionType& lhs,
+//                                 const Expression<ConstantExpressionPolicy<RhsDataType> >& rhs,
+//                                 Accumulator<ResultTpye>& result)
+//                {
+//                    LhsResultType t = lhs;
+//                    OpType<LhsResultType, RhsDataType
+//                }
+//        };
         
         // Temporary
         template<typename C, typename LhsLhsPolicyType, typename LhsRhsPolicyType, typename R,
@@ -153,13 +186,140 @@ namespace Nektar
         // TODO - It may be worth defining it just so I can put a boost static assert to aid debugging.
 
 
+        ////////////////////////////////////////////////////////////////////////
+        // Constant-Binary Expressions
+        //
+        // The main difficulty with these expressions comes from needing to 
+        // evaluate the constant.
+        // first.  If we pass the accumulator to the left side first, then we 
+        // must create a temporary 
+        // on the right side unless the expression is associative.  If the expression 
+        // is associative 
+        // then there is no problem passing the accumulator with a ParentOpType.
+        //
+        // Another option occurs if the expression is commutative and the binary
+        // expression has the same 
+        // type as the accumulator.  In this case, pass the accumulator to the 
+        // right side and then 
+        // op= the left side.
+        //
+        // A last condition assumes the user has defined a left equal operator 
+        // if the expression is 
+        // not commutative nor associative.
+        //
+        // Therefore, the variables of interest are:
+        // a - Expression is Associative.
+        // b - Expression is Commutative.
+        // c - Left Equal Operator is defined.
+        // d - Constant Expression is result type.
+        // e - Binary Expression is result type.
+        // 
+        // Case 0 - Both sides need temporaries.  
+        // Case 1 - Lhs needs temporary.
+        // Case 2 - Rhs needs temporary.
+        // Case 3 - Evaluate Rhs, Left Op equal lhs.
+        // Case 4 - Swap operations.  Evaluate new lhs, op= new rhs.
+        // Case 5 - Evaluate lhs, evaluate rhs with parent op type.
+        //.i 5
+        //.o 6
+        //.ilb a b c d e
+        //.ob c0 c1 c2 c3 c4 c5
+        //.p 9
+        //---00 100000
+        //-0001 010000
+        //-0101 000100
+        //0--10 001000
+        //-1-01 000010
+        //1--1- 000001
+        //001-1 000100
+        //0001- 001000
+        //01--1 000010
+        //.e
 
-    
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        // Constant-Binary specialization 0 - Both sides need temporaries.
+        template<typename LhsResultType, typename RhsLhsPolicyType, typename RhsRhsPolicyType,
+                 template <typename, typename> class RhsOpType,
+                 template <typename, typename> class OpType,
+                 typename ResultType>
+        class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsResultType>,
+                                         BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
+                                         ResultType, OpType, BinaryNullOp>
+        {
+            public:
+                static void Eval(const Expression<ConstantExpressionPolicy<LhsResultType> >& lhs,
+                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs, 
+                                 Accumulator<ResultType>& accum)
+                {
+                    typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>::ResultType RhsResultType;
+                    
+                    // TODO - This is inefficient, but I'm not sure how to detect 
+                    // that the appropriate constructor is availabe.  
+                    LhsResultType lhsTemp; Assign(lhsTemp, lhs);// = lhs;
+                    RhsResultType rhsTemp; Assign(rhsTemp, rhs);// = rhs;
+                    OpType<LhsResultType, RhsResultType>::Apply(accum, lhsTemp, rhsTemp);
+                }
+                
+                #ifdef NEKTAR_UNIT_TESTS
+                static const unsigned int ClassNum = 1;
+                #endif //NEKTAR_UNIT_TESTS
+        };
+
+        
         ////////////////////////////////////////////////////////////////////////////////////////////////
         /// Expression where one side is constant and the other is binary.
         /// If the left side is binary, then we always evaluate it first.  If the return type of the 
         /// lhs is the same as the expression, then we can just call it directly, otherwise we need to 
         /// create a temporary.
+
+        // R = (A + B) - C
+
+
+        
+        // R = (A + B) - C
+        //
+        // Case 1 - typeof(A+B) = typeof(R)
+        // Simply pass the accumulator to the left and then assume -= C exists.
+        
+        
+        // R = (A + B) - C
+        //
+        // Case 2 - typeof(A+B) != typeof(R)
+        //          typeof(A+B) - C is associative (with or without operator change)
+        //          typeof(B-C) == typeof(R)
+        //
+        // Case 2.1
+        //          typeof(A) + typeof(B-C) is commutative
+        //          Pass accumulator to (B-C), then assume += A is available.
+        //
+        // Case 2.2 
+        //          typeof(A) + typeof(B-C) is not commutative.
+        //          typeof(A) =+ typeof(B-C) is defined.
+        //          Pass accumulator to (B-C), the =+ A.
+        //
+        // Case 3 - Temporary to (A+B), then op (A+B) - C
+        
+        
+        
+        
+        // R = A + (B - C)
+        //
+        // Case 1 - typeof(A) + typeof(B-C) is commutative
+        // Evaluate (B-C) + A
+        //
+        // Case 2 - typeof(A) + typeof(B-C) is not comutative
+        // Case 2.1 - typeof(A) + typeof(B-C) is associative
+        //            Evalaute (A+B) - C
+        //
+        // Case 3 - typeof(A) + typeof(B-C) is not associative or commutative.
+        // Case 3.1 - typeof(B-C) = typeof(R)
+        //            typeof(A) =+ typeof(R) is defined.
+        //            Evaluate (B-C), then =+ A.
+        //
+        // Case 4 - Otherwise, create a temproary for (B-C) and call Op directly.
+        
         
         ////////////////////////////////////////////////////////////////////////////////////
         /// 2 op expression, no parent op types.

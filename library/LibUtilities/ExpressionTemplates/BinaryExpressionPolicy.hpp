@@ -82,7 +82,8 @@ namespace Nektar
                                          ParentOpType>::Eval(d.first, d.second, accum);
             }
             
-            static bool ContainsReference(typename boost::call_traits<ResultType>::const_reference result, const DataType& m_data)
+            template<typename CheckType>
+            static bool ContainsReference(const CheckType& result, const DataType& m_data)
             {
                 return LhsPolicy::ContainsReference(result, *m_data.first) ||
                        RhsPolicy::ContainsReference(result, *m_data.second);

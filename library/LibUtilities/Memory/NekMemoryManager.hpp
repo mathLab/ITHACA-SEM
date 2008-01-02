@@ -144,28 +144,6 @@ namespace Nektar
                 
                 data = NULL;
             }
-
-           
-//            template<typename Arg1>
-//             static DataType* Allocate(const Arg1& arg1) 
-//             { 
-//                 DataType* result = static_cast<DataType*>(ThreadSpecificPool<sizeof(DataType)>::Allocate()); 
-//                 
-//                 if( result ) 
-//                 { 
-//                     try 
-//                     { 
-//                         new (result) DataType(arg1);BOOST_PP_ENUM_PARAMS(i, arg)); \
-//                     } \
-//                     catch(...) \
-//                     { \
-//                         ThreadSpecificPool<sizeof(DataType)>::Deallocate(result); \
-//                         throw; \
-//                     } \
-//                 } \
-//                 \
-//                 return result; \
-//             }
                 
             #ifdef NEKTAR_MEMORY_POOL_ENABLED
                 static DataType* Allocate() 
@@ -429,6 +407,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.15  2007/08/25 04:21:49  bnelson
+    *** empty log message ***
+
     Revision 1.14  2007/07/27 00:22:37  bnelson
     Memory manager now accepts non-const parameters to the allocate methods.
 

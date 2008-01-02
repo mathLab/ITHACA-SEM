@@ -72,14 +72,14 @@ namespace Nektar
             }
             
             template<typename CheckType>
-            static typename boost::enable_if<boost::is_same<CheckType, DataType>, bool>::type
+            static typename boost::enable_if<boost::is_same<CheckType, Type>, bool>::type
             ContainsReference(const CheckType& result, DataType m_data)
             {
                 return &result == &m_data;
             }
             
             template<typename CheckType>
-            static typename boost::disable_if<boost::is_same<CheckType, DataType>, bool>::type
+            static typename boost::disable_if<boost::is_same<CheckType, Type>, bool>::type
             ContainsReference(const CheckType& result, DataType m_data)
             {
                 return false;
@@ -103,6 +103,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.13  2008/01/02 18:20:12  bnelson
+    *** empty log message ***
+
     Revision 1.12  2007/12/19 05:09:21  bnelson
     First pass at detecting aliasing.  Still need to test performance implications.
 

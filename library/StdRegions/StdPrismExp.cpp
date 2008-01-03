@@ -630,57 +630,7 @@ namespace Nektar
 
 
 
-        DNekMatSharedPtr StdPrismExp::GenMatrixPrism(MatrixType mtype)
-        {
-            int      i,j;
-         
-            int      order0    = GetBasisNumModes(0);
-            int      order1    = GetBasisNumModes(1);
-            int      order2    = GetBasisNumModes(2);
-            int      tot_order = GetNcoeffs();
-
-             //StdExpansion::GenerateMassMatrix(outarray);
-            DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mtype);
-
-
-        switch(mtype)
-        {
-        case eMass:
-            // For Fourier basis set the imaginary component of mean mode
-            // to have a unit diagonal component in mass matrix 
-            if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
-            {
-                for(i = 0; i < order1*order2; ++i)
-                {
-//                     outarray[(order0*i+1)*tot_order+i*order0+1] = 1.0;
-                         //(*Mat)((order0*i+1)*tot_order+i*order0+1) = 1.0;
-                }
-            }
-
-            if(m_base[1]->GetBasisType() == LibUtilities::eFourier)
-            {
-                for(j = 0; j < order2; ++j)
-                {
-                    for(i = 0; i < order0; ++i)
-                    {
-                        //(*Mat)((order0+i)*tot_order+order0+i+j*(order0*order1)*(tot_order+1)) = 1.0;
-                    }
-                }
-            }
-
-            if(m_base[2]->GetBasisType() == LibUtilities::eFourier)
-            {
-                for(i = 0; i < order0*order1; ++i)
-                {
-                    //(*Mat)((order0*order1)*(tot_order+1)+i*tot_order +i) = 1.0;
-                }
-            }
-            break;
-            
-          }
-          
-          return Mat;
-        }
+      
 
         void StdPrismExp::GenLapMatrix(double * outarray)
         {
@@ -701,6 +651,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.3  2008/01/03 10:54:43  ehan
+ * Fixed standard prismatic domain.
+ *
  * Revision 1.1  2006/05/04 18:58:32  kirby
  * *** empty log message ***
  *

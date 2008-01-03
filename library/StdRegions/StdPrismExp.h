@@ -103,13 +103,12 @@ namespace Nektar
          void FwdTrans( const ConstArray<OneD, NekDouble>& inarray,  Array<OneD, NekDouble> &outarray);
          NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& xi);
          void GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z);
-         void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
-         DNekMatSharedPtr GenMatrixPrism(MatrixType mtype);
+         void FillMode(const int mode, Array<OneD, NekDouble> &outarray);        
          void GenLapMatrix(double * outarray);
                        
-         DNekMatSharedPtr GenMatrix(MatrixType mtype)
+         DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
          {
-             return StdExpansion::CreateGeneralMatrix(mtype);
+             return StdExpansion::CreateGeneralMatrix(mkey);
          }
 
         
@@ -143,9 +142,9 @@ namespace Nektar
             return DetShapeType();
         }
         
-        virtual DNekMatSharedPtr v_GenMatrix(MatrixType mtype) 
+        virtual DNekMatSharedPtr v_GenMatrix(StdMatrixKey &mkey) 
         {
-            return GenMatrix(mtype);
+            return GenMatrix(mkey);
         }
         
         virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
@@ -256,6 +255,10 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.6  2007/12/28 23:20:20  ehan
+ * Completed implementing and testing following functions:
+ * Integral, IProductWRTBase, PhysDeriv. BwdTrans, FwdTrans, and PhysEvaluate.
+ *
  * Revision 1.5  2007/07/20 02:16:54  bnelson
  * Replaced boost::shared_ptr with Nektar::ptr
  *

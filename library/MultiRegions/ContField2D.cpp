@@ -275,7 +275,7 @@ namespace Nektar
         void ContField2D::GlobalSolve(const GlobalLinSysKey &key, 
                                       const ExpList &Rhs, NekDouble ScaleForcing)
         {
-            int i,j,;
+            int i,j;
             int bndcnt=0;
             int NumDirBcs = m_locToGloMap->GetNumDirichletDofs();
             Array<OneD,NekDouble> sln;

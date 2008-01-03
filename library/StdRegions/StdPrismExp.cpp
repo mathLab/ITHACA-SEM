@@ -68,9 +68,9 @@ namespace Nektar
             //  : StdExpansion3D(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(), Ba, Bb, Bc)
         {
 
-            if(Bb.GetNumModes() >  Bc.GetNumModes())
+            if(Ba.GetNumModes() >  Bc.GetNumModes())
             {
-                ASSERTL0(false, "order in 'b' direction is higher than order in 'c' direction");
+                ASSERTL0(false, "order in 'a' direction is higher than order in 'c' direction");
             }    
         }
 

@@ -92,7 +92,7 @@ namespace Nektar
                 m_impl(rhs.GetMetadata().Rows, DataType())
             {
                 BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
-                rhs.Apply(*this);
+                rhs.Evaluate(*this);
             }
 #endif
             ~NekVector()
@@ -107,7 +107,7 @@ namespace Nektar
             NekVector<DataType, dim, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
             {
                 BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
-                rhs.Apply(*this);
+                rhs.Evaluate(*this);
                 return *this;
             }
 #endif

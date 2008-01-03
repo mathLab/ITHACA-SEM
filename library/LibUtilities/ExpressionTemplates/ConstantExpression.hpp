@@ -66,7 +66,7 @@ namespace Nektar
                 m = MetadataType(data);
             }
             
-            static void Apply(Accumulator<ResultType>& accum, typename boost::call_traits<DataType>::const_reference d)
+            static void Evaluate(Accumulator<ResultType>& accum, typename boost::call_traits<DataType>::const_reference d)
             {
                 *accum = d;
             }
@@ -103,6 +103,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.14  2008/01/02 20:11:22  bnelson
+    Fixed error detecting if incoming type was the same as the constant expression's type when looking for aliasing.
+
     Revision 1.13  2008/01/02 18:20:12  bnelson
     *** empty log message ***
 

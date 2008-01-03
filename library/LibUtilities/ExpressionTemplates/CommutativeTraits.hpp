@@ -38,27 +38,28 @@
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
+#include <boost/type_traits.hpp>
 
 namespace Nektar
 {
     template<typename FirstType,
                 template <typename, typename> class OpType,
                 typename SecondType>
-    class CommutativeTraits
+    class CommutativeTraits : public boost::false_type
     {
         public:
             static const bool IsCommutative = false;
     };
     
     template<typename FirstType, typename SecondType>
-    class CommutativeTraits<FirstType, AddOp, SecondType>
+    class CommutativeTraits<FirstType, AddOp, SecondType> : public boost::true_type
     {
         public:
             static const bool IsCommutative = true;
     };
     
     template<typename FirstType, typename SecondType>
-    class CommutativeTraits<FirstType, MultiplyOp, SecondType>
+    class CommutativeTraits<FirstType, MultiplyOp, SecondType> : public boost::true_type
     {
         public:
             static const bool IsCommutative = true;

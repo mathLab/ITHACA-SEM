@@ -283,7 +283,7 @@ namespace Nektar
                 {
                     BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StorageType, StandardMatrixTag> > ));
                     m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
-                    rhs.Apply(*this);
+                    rhs.Evaluate(*this);
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
@@ -347,7 +347,7 @@ namespace Nektar
                     }
                     m_wrapperType = eCopy;
                     m_transpose = 'N';
-                    rhs.Apply(*this);
+                    rhs.Evaluate(*this);
                     return *this;
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

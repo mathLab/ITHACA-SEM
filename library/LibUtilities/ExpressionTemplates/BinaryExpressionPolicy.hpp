@@ -66,13 +66,13 @@ namespace Nektar
 
         public:
         
-            static void Apply(Accumulator<ResultType>& accum, const DataType& d)
+            static void Evaluate(Accumulator<ResultType>& accum, const DataType& d)
             {
-                Apply<BinaryNullOp>(accum, d);
+                Evaluate<BinaryNullOp>(accum, d);
             }
                 
             template<template <typename, typename> class ParentOpType>
-            static void Apply(Accumulator<ResultType>& accum, const DataType& d)
+            static void Evaluate(Accumulator<ResultType>& accum, const DataType& d)
             {
                 // Evaluation of a binary expression is separated into another class because
                 // there are a wide variety of diffrent actions which must be taken based upon the 

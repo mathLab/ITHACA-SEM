@@ -220,7 +220,7 @@ namespace Nektar
             {
                 /// TODO Make sure this works correctly with eWrapper
                 BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, 0, space> > ));
-                rhs.Apply(*this);
+                rhs.Evaluate(*this);
             }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
                     
@@ -242,7 +242,7 @@ namespace Nektar
                 }
                 m_wrapperType = eCopy;
 
-                rhs.Apply(*this);
+                rhs.Evaluate(*this);
                 return *this;
             }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

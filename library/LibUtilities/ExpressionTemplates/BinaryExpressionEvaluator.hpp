@@ -47,6 +47,8 @@
 #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
 
 #include <boost/utility/enable_if.hpp>
+#include <boost/mpl/and.hpp>
+#include <boost/mpl/not.hpp>
 
 namespace Nektar
 {
@@ -110,23 +112,23 @@ namespace Nektar
 //        };
         
         // Temporary
-        template<typename C, typename LhsLhsPolicyType, typename LhsRhsPolicyType, typename R,
-                 template <typename, typename> class LhsOpType, 
-                 template <typename, typename> class OpType>
-        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
-                                        ConstantExpressionPolicy<C>,
-                                        R, OpType, BinaryNullOp, void>
-        {
-            public:
-                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs,
-                                 const Expression<ConstantExpressionPolicy<C> >& rhs, 
-                                 Accumulator<R>& accum)
-                {
-                    typedef typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>::ResultType LhsResultType;
-                    lhs.template Apply<BinaryNullOp>(accum);
-                    OpType<LhsResultType, C>::ApplyEqual(accum, *rhs);
-                }
-        };
+        //template<typename C, typename LhsLhsPolicyType, typename LhsRhsPolicyType, typename R,
+        //         template <typename, typename> class LhsOpType, 
+        //         template <typename, typename> class OpType>
+        //class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>,
+        //                                ConstantExpressionPolicy<C>,
+        //                                R, OpType, BinaryNullOp, void>
+        //{
+        //    public:
+        //        static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType> >& lhs,
+        //                         const Expression<ConstantExpressionPolicy<C> >& rhs, 
+        //                         Accumulator<R>& accum)
+        //        {
+        //            typedef typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsRhsPolicyType, LhsOpType>::ResultType LhsResultType;
+        //            lhs.template Evaluate<BinaryNullOp>(accum);
+        //            OpType<LhsResultType, C>::ApplyEqual(accum, *rhs);
+        //        }
+        //};
 
 
         /// \brief Constant-Constant specialization 2
@@ -240,13 +242,28 @@ namespace Nektar
         
         
         // Constant-Binary specialization 0 - Both sides need temporaries.
+        // a - Expression is Associative.
+        // b - Expression is Commutative.
+        // c - Left Equal Operator is defined.
+        // d - Constant Expression is result type.
+        // e - Binary Expression is result type.
+        //---00 100000
         template<typename LhsResultType, typename RhsLhsPolicyType, typename RhsRhsPolicyType,
                  template <typename, typename> class RhsOpType,
                  template <typename, typename> class OpType,
                  typename ResultType>
         class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsResultType>,
                                          BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
-                                         ResultType, OpType, BinaryNullOp>
+                                         ResultType, OpType, BinaryNullOp,
+                                         typename boost::enable_if
+                                         <
+                                            boost::mpl::and_
+                                            <
+                                                boost::mpl::not_<boost::is_same<ResultType, typename ConstantExpressionPolicy<LhsResultType>::ResultType> >,
+                                                boost::mpl::not_<boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>::ResultType> >
+                                            >
+                                         >::type
+                                         >
         {
             public:
                 static void Eval(const Expression<ConstantExpressionPolicy<LhsResultType> >& lhs,
@@ -255,10 +272,8 @@ namespace Nektar
                 {
                     typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>::ResultType RhsResultType;
                     
-                    // TODO - This is inefficient, but I'm not sure how to detect 
-                    // that the appropriate constructor is availabe.  
-                    LhsResultType lhsTemp; Assign(lhsTemp, lhs);// = lhs;
-                    RhsResultType rhsTemp; Assign(rhsTemp, rhs);// = rhs;
+                    LhsResultType lhsTemp = lhs.Evaluate();
+                    RhsResultType rhsTemp = rhs.Evaluate();
                     OpType<LhsResultType, RhsResultType>::Apply(accum, lhsTemp, rhsTemp);
                 }
                 
@@ -266,6 +281,7 @@ namespace Nektar
                 static const unsigned int ClassNum = 1;
                 #endif //NEKTAR_UNIT_TESTS
         };
+
 
         
         ////////////////////////////////////////////////////////////////////////////////////////////////

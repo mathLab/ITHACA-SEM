@@ -119,33 +119,40 @@ namespace Nektar
 
                 ~Expression() {}
 
-                void Apply(typename boost::call_traits<ResultType>::reference result) const
+                ResultType Evaluate() const
+                {
+                    ResultType result;
+                    Evaluate(result);
+                    return result;
+                }
+
+                void Evaluate(typename boost::call_traits<ResultType>::reference result) const
                 {
                    if( !PolicyType::ContainsReference(result, m_data) )
                    {
                         Accumulator<ResultType> accum(result);
-                        PolicyType::Apply(accum, m_data);
+                        PolicyType::Evaluate(accum, m_data);
                    }
                    else
                    {
                        ResultType temp(result);
                        Accumulator<ResultType> accum(temp);
-                       PolicyType::Apply(accum, m_data);
+                       PolicyType::Evaluate(accum, m_data);
                        result = temp;
                    }
                         
                 }
 
                 template<template <typename, typename> class ParentOpType>
-                void Apply(Accumulator<ResultType>& accum) const
+                void Evaluate(Accumulator<ResultType>& accum) const
                 {
-                    PolicyType::template Apply<ParentOpType>(accum, m_data);
+                    PolicyType::template Evaluate<ParentOpType>(accum, m_data);
                 }
                 
                 template<template <typename> class ParentOpType>
-                void Apply(Accumulator<ResultType>& accum) const
+                void Evaluate(Accumulator<ResultType>& accum) const
                 {
-                    PolicyType::template Apply<ParentOpType>(accum, m_data);
+                    PolicyType::template Evaluate<ParentOpType>(accum, m_data);
                 }
 
 //                 template<template <typename, typename> class ParentOpType>
@@ -184,7 +191,7 @@ namespace Nektar
         template<typename DataType, typename PolicyType>
         void Assign(DataType& result, const Expression<PolicyType>& expr)
         {
-            expr.Apply(result);
+            expr.Evaluate(result);
         }
 
 }
@@ -193,6 +200,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.17  2007/12/24 02:20:01  bnelson
+    Fixed an error with aliasing.
+
     Revision 1.16  2007/12/19 06:00:06  bnelson
     *** empty log message ***
 

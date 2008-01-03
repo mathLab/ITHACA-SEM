@@ -116,7 +116,7 @@ namespace Nektar
             NekPoint(const Expression<ExpressionPolicyType>& rhs)
             {
                 BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
-                rhs.Apply(*this);
+                rhs.Evaluate(*this);
             }
 #endif
 
@@ -137,7 +137,7 @@ namespace Nektar
             NekPoint<DataType, dim, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
             {
                 BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
-                rhs.Apply(*this);
+                rhs.Evaluate(*this);
                 return *this;
             }
 #endif
@@ -558,6 +558,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.15  2007/08/16 02:09:56  bnelson
+    Moved expression templates to the Nektar namespace.
+
     Revision 1.14  2007/01/23 03:12:50  jfrazier
     Added more conditional compilation directives for expression templates.
 

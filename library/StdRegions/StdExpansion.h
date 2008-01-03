@@ -1110,11 +1110,13 @@ namespace Nektar
             virtual const ConstArray<OneD, int> v_GetBoundaryMap(void)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+                return ConstArray<OneD, int>();
             }
 
             virtual const ConstArray<OneD, int> v_GetInteriorMap(void)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+                return ConstArray<OneD, int>();
             }
 
             // element boundary ordering 
@@ -1173,6 +1175,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.71  2007/12/17 13:03:50  sherwin
+* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+*
 * Revision 1.70  2007/12/06 22:44:47  pvos
 * 2D Helmholtz solver updates
 *

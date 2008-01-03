@@ -461,7 +461,7 @@ namespace Nektar
                 "Integer Truncation not Equiv to Floor");
             ASSERTL2(mode1 == (int)floor((1.0*mode-mode2*btmp0*btmp1)/(btmp0*btmp1)),
                 "Integer Truncation not Equiv to Floor");
-            ASSERTL2(m_ncoeffs <= modes,
+            ASSERTL2(m_ncoeffs <= mode,
                 "calling argument mode is larger than total expansion order");
 
             for(i = 0; i < nquad1*nquad2; ++i)
@@ -556,6 +556,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.10  2007/12/17 13:03:51  sherwin
+* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+*
 * Revision 1.9  2007/12/01 00:52:12  ehan
 * Completed implementing and testing following functions:
 * Integral, IProductWRTBase, PhysDeriv. BwdTrans, FwdTrans, and PhysEvaluate.

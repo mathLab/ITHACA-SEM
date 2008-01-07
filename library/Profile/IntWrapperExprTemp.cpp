@@ -60,7 +60,7 @@ IntWrapper NekAdd(const IntWrapper& lhs, const IntWrapper& rhs)
 
 void AddIntWrapperExprTemp(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2)
 {
-    Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<IntWrapper>, ConstantExpressionPolicy<IntWrapper>, AddOp> > exp =
+    Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<IntWrapper>, AddOp, ConstantExpressionPolicy<IntWrapper> > > exp =
             MakeExpr(r1) + MakeExpr(r2);
     result = exp;
 }

@@ -15,12 +15,12 @@
 namespace Nektar
 {
     template<typename MatrixType>
-    class BinaryExpressionEvaluator<BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, ConstantExpressionPolicy<MatrixType>, AddOp>,
-                                    BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, ConstantExpressionPolicy<MatrixType>, AddOp>,
+    class BinaryExpressionEvaluator<BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, AddOp, ConstantExpressionPolicy<MatrixType> >,
+                                    BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, AddOp, ConstantExpressionPolicy<MatrixType> >,
                                     MatrixType, AddOp, BinaryNullOp>
     {
         public:
-            typedef BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, ConstantExpressionPolicy<MatrixType>, AddOp> PolicyType;
+            typedef BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, AddOp, ConstantExpressionPolicy<MatrixType> > PolicyType;
             static void Eval(const Expression<PolicyType>& lhs, 
                              const Expression<PolicyType>& rhs,
                              Accumulator<MatrixType>& result)

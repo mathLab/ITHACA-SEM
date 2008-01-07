@@ -163,13 +163,13 @@ namespace Nektar
             ConstantBinarySpecialization0_Parameter p2(20);
             
             typedef BinaryExpressionPolicy<ConstantExpressionPolicy<ConstantBinarySpecialization0_Parameter>,
-                                           ConstantExpressionPolicy<ConstantBinarySpecialization0_Parameter>,
-                                           MultiplyOp> RhsExpressionType;
+                                           MultiplyOp,
+                                           ConstantExpressionPolicy<ConstantBinarySpecialization0_Parameter> > RhsExpressionType;
             typedef ConstantExpressionPolicy<ConstantBinarySpecialization0_Parameter> LhsExpressionType;
             
             BOOST_STATIC_ASSERT(( BinaryExpressionEvaluator<LhsExpressionType, RhsExpressionType, ConstantBinarySpecialization0_Result, AddOp, BinaryNullOp>::ClassNum == 1 ));
              
-            Expression<BinaryExpressionPolicy<LhsExpressionType, RhsExpressionType, AddOp> > exp =
+            Expression<BinaryExpressionPolicy<LhsExpressionType, AddOp, RhsExpressionType> > exp =
                 p0 + (p1*p2);
 
             ConstantBinarySpecialization0_Result r;

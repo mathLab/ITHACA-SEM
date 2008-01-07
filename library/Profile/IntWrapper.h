@@ -30,7 +30,7 @@ class IntWrapper
         template<typename PolicyType>
         IntWrapper& operator=(const Nektar::Expression<PolicyType>& rhs)
         {
-            rhs.Apply(*this);
+            rhs.Evaluate(*this);
             return *this;
         }
         #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

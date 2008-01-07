@@ -38,6 +38,7 @@
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
+#include <LibUtilities/ExpressionTemplates/Expression.hpp>
 #include <boost/type_traits.hpp>
 
 namespace Nektar
@@ -45,25 +46,42 @@ namespace Nektar
     template<typename FirstType,
                 template <typename, typename> class OpType,
                 typename SecondType>
-    class CommutativeTraits : public boost::false_type
+    class IsCommutative : public boost::false_type
     {
         public:
-            static const bool IsCommutative = false;
+            static const bool IsComm = false;
     };
     
     template<typename FirstType, typename SecondType>
-    class CommutativeTraits<FirstType, AddOp, SecondType> : public boost::true_type
+    class IsCommutative<FirstType, AddOp, SecondType> : public boost::true_type
     {
         public:
-            static const bool IsCommutative = true;
+            static const bool IsComm = true;
     };
     
     template<typename FirstType, typename SecondType>
-    class CommutativeTraits<FirstType, MultiplyOp, SecondType> : public boost::true_type
+    class IsCommutative<FirstType, MultiplyOp, SecondType> : public boost::true_type
     {
         public:
-            static const bool IsCommutative = true;
+            static const bool IsComm = true;
     };
+    
+    template<typename LhsPolicy, template <typename, typename> class OpType, typename RhsPolicy>
+    class IsCommutative<Expression<LhsPolicy>, OpType, Expression<RhsPolicy> > : public boost::mpl::if_
+                                                                                <
+                                                                                    boost::is_base_of
+                                                                                    <
+                                                                                        boost::true_type,
+                                                                                        IsCommutative<typename Expression<LhsPolicy>::ResultType, OpType, typename RhsPolicy::ResultType>
+                                                                                    >,
+                                                                                    boost::true_type,
+                                                                                    boost::false_type
+                                                                                >
+     {
+      public:
+            static const bool IsComm = true;
+     };
+                                                                
 }
 
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

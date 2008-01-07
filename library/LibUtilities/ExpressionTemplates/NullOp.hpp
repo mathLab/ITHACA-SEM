@@ -38,9 +38,11 @@
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
-#include <LibUtilities/ExpressionTemplates/UnaryExpressionTraits.hpp>
-#include <LibUtilities/ExpressionTemplates/Expression.hpp>
-#include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
+//#include <LibUtilities/ExpressionTemplates/UnaryExpressionTraits.hpp>
+//#include <LibUtilities/ExpressionTemplates/Expression.hpp>
+//#include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
+
+#include <LibUtilities/ExpressionTemplates/Accumulator.hpp>
 
 #include <boost/call_traits.hpp>
 
@@ -96,6 +98,9 @@ namespace Nektar
 
 /**
     $Log: NullOp.hpp,v $
+    Revision 1.7  2007/10/04 03:48:54  bnelson
+    *** empty log message ***
+
     Revision 1.6  2007/08/16 02:14:21  bnelson
     Moved expression templates to the Nektar namespace.
 

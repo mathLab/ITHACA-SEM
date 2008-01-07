@@ -49,6 +49,7 @@
 #include <boost/mpl/assert.hpp>
 
 #include <LibUtilities/ExpressionTemplates/Accumulator.hpp>
+#include <LibUtilities/ExpressionTemplates/NullOp.hpp>
 
 #include <algorithm>
 
@@ -143,6 +144,11 @@ namespace Nektar
                         
                 }
 
+                void Evaluate(Accumulator<ResultType>& accum) const
+                {
+                    Evaluate<BinaryNullOp>(accum);
+                }
+                
                 template<template <typename, typename> class ParentOpType>
                 void Evaluate(Accumulator<ResultType>& accum) const
                 {
@@ -200,6 +206,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.18  2008/01/03 04:16:41  bnelson
+    Changed method name in the expression library from Apply to Evaluate.
+
     Revision 1.17  2007/12/24 02:20:01  bnelson
     Fixed an error with aliasing.
 

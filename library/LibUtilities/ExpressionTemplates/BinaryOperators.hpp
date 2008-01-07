@@ -58,8 +58,8 @@ namespace Nektar
         public:
             typedef AdditionTraits<LhsType, RhsType> TraitsType;
             typedef typename TraitsType::ResultType ResultType;
-            static const bool HasOpEqual = TraitsType::HasOpEqual;
-            static const bool HasOpLeftEqual = TraitsType::HasOpLeftEqual;
+            typedef typename TraitsType::HasOpEqual HasOpEqual;
+            typedef typename TraitsType::HasOpLeftEqual HasOpLeftEqual;
 
             template<typename L, typename R>
             class Rebind
@@ -120,8 +120,8 @@ namespace Nektar
         public:
             typedef MultiplicationTraits<LhsType, RhsType> TraitsType;
             typedef typename TraitsType::ResultType ResultType;
-            static const bool HasOpEqual = TraitsType::HasOpEqual;
-            static const bool HasOpLeftEqual = TraitsType::HasOpLeftEqual;
+            typedef typename TraitsType::HasOpEqual HasOpEqual;
+            typedef typename TraitsType::HasOpLeftEqual HasOpLeftEqual;
 
             template<typename L, typename R>
             class Rebind
@@ -190,8 +190,8 @@ namespace Nektar
         public:
             typedef DivisionTraits<LhsType, RhsType> TraitsType;
             typedef typename TraitsType::ResultType ResultType;
-            static const bool HasOpEqual = TraitsType::HasOpEqual;
-            static const bool HasOpLeftEqual = TraitsType::HasOpLeftEqual;
+            typedef typename TraitsType::HasOpEqual HasOpEqual;
+            typedef typename TraitsType::HasOpLeftEqual HasOpLeftEqual;
             
             template<typename L, typename R>
             class Rebind
@@ -262,8 +262,8 @@ namespace Nektar
         public:
             typedef SubtractionTraits<LhsType, RhsType> TraitsType;
             typedef typename TraitsType::ResultType ResultType;
-            static const bool HasOpEqual = TraitsType::HasOpEqual;
-            static const bool HasOpLeftEqual = TraitsType::HasOpLeftEqual;
+            typedef typename TraitsType::HasOpEqual HasOpEqual;
+            typedef typename TraitsType::HasOpLeftEqual HasOpLeftEqual;
             
             template<typename L, typename R>
             class Rebind

@@ -60,30 +60,40 @@ namespace Nektar
     // 2. Generate the appropriate return type for this expression.
     //
 
-    
-    template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy>
-    class AssociativeExpressionTraits
-    {
-        public:
-            static const bool IsStrictlyAssociative = false;
-            static const bool IsAssociativeWithOpChange = false;
-            static const bool IsAssociative = false;
-    };
-    
-    template<typename LhsPolicy, template<typename, typename> class OpType, 
-                typename RhsLhsPolicy, template<typename, typename> class RhsOpType,
-                typename RhsRhsPolicy>
-    class AssociativeExpressionTraits<LhsPolicy, OpType, BinaryExpressionPolicy<RhsLhsPolicy, RhsRhsPolicy, RhsOpType> >
-    {
-        public:
-            typedef AssociativeTraits<typename LhsPolicy::ResultType, OpType,
-                                        typename RhsLhsPolicy::ResultType, RhsOpType,
-                                        typename RhsRhsPolicy::ResultType> Traits;
-                                        
-            static const bool IsStrictlyAssociative = Traits::IsStrictlyAssociative;
-            static const bool IsAssociativeWithOpChange = Traits::IsAssociativeWithOpChange;
-            static const bool IsAssociative = Traits::IsAssociative;
-    };
+//    
+//    template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy>
+//    class AssociativeExpressionTraits : public boost::false_type
+//    {
+//        public:
+//            static const bool IsStrictlyAssociative = false;
+//            static const bool IsAssociativeWithOpChange = false;
+//            static const bool IsAssociative = false;
+//    };
+//    
+//    template<typename LhsPolicy, template<typename, typename> class OpType, 
+//             typename RhsLhsPolicy, template<typename, typename> class RhsOpType,
+//             typename RhsRhsPolicy>
+//    class AssociativeExpressionTraits<LhsPolicy, OpType, BinaryExpressionPolicy<RhsLhsPolicy, RhsRhsPolicy, RhsOpType> > : public
+//          boost::mpl::if_
+//          <
+//            boost::is_base_of
+//            <
+//                boost::true_type,
+//                AssociativeTraits<typename LhsPolicy::ResultType, OpType, typename RhsLhsPolicy::ResultType, RhsOpType, typename RhsRhsPolicy::ResultType>
+//            >,
+//            boost::true_type,
+//            boost::false_type
+//          >::type
+//    {
+//        public:
+//            typedef AssociativeTraits<typename LhsPolicy::ResultType, OpType,
+//                                        typename RhsLhsPolicy::ResultType, RhsOpType,
+//                                        typename RhsRhsPolicy::ResultType> Traits;
+//                                        
+//            static const bool IsStrictlyAssociative = Traits::IsStrictlyAssociative;
+//            static const bool IsAssociativeWithOpChange = Traits::IsAssociativeWithOpChange;
+//            static const bool IsAssociative = Traits::IsAssociative;
+//    };
 }
 
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

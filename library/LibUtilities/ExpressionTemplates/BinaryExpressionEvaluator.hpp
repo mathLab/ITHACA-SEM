@@ -215,62 +215,87 @@ namespace Nektar
         // c - Left Equal Operator is defined.
         // d - Constant Expression is result type.
         // e - Binary Expression is result type.
+        // f - In A + (B-C), (A+B) is the result type.
         // 
         // Case 0 - Both sides need temporaries.  
-        // Case 1 - Lhs needs temporary.
-        // Case 2 - Rhs needs temporary.
-        // Case 3 - Evaluate Rhs, Left Op equal lhs.
-        // Case 4 - Swap operations.  Evaluate new lhs, op= new rhs.
-        // Case 5 - Evaluate lhs, evaluate rhs with parent op type.
-        //.i 5
-        //.o 6
-        //.ilb a b c d e
-        //.ob c0 c1 c2 c3 c4 c5
-        //.p 9
-        //---00 100000
-        //-0001 010000
-        //-0101 000100
-        //0--10 001000
-        //-1-01 000010
-        //1--1- 000001
-        //001-1 000100
-        //0001- 001000
-        //01--1 000010
-        //.e
-
+        // Case 1 - Rhs needs temporary.
+        // Case 2 - Evaluate Rhs, Left Op equal lhs.
+        // Case 3 - Swap operations.  Evaluate new lhs, op= new rhs.
+        // Case 4 - Evaluate lhs, evaluate rhs with parent op type.
+        // Case 5 - Evaluate new (A+B) then op= C
+        
+        // .i 6
+        // .o 6
+        // .ilb a b c d e f
+        // .ob c0 c1 c2 c3 c4 c5
+        // .p 11
+        // -000-0 100000
+        // 0000-- 100000
+        // ---00- 100000
+        // 0--10- 010000
+        // 0001-- 010000
+        // -0101- 001000
+        // 001-1- 001000
+        // -1-01- 000100
+        // 01--1- 000100
+        // 1--1-- 000010       
+        // 100011 000001
+        // .e
         ////////////////////////////////////////////////////////////////////////
         
         
         // Constant-Binary specialization 0 - Both sides need temporaries.
+        // Therefore, the variables of interest are:
         // a - Expression is Associative.
         // b - Expression is Commutative.
         // c - Left Equal Operator is defined.
         // d - Constant Expression is result type.
         // e - Binary Expression is result type.
-        //---00 100000
+        // f - In A + (B-C), (A+B) is the result type.
+        //
+        // -000-0 100000
+        // 0000-- 100000
+        // ---00- 100000
         template<typename LhsResultType, typename RhsLhsPolicyType, typename RhsRhsPolicyType,
                  template <typename, typename> class RhsOpType,
                  template <typename, typename> class OpType,
                  typename ResultType>
         class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsResultType>,
-                                         BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>,
-                                         ResultType, OpType, BinaryNullOp,
-                                         typename boost::enable_if
-                                         <
-                                            boost::mpl::and_
+                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>,
+                                        ResultType, OpType, BinaryNullOp,
+                                        typename boost::enable_if
+                                        <
+                                            boost::mpl::or_
                                             <
-                                                boost::mpl::not_<boost::is_same<ResultType, typename ConstantExpressionPolicy<LhsResultType>::ResultType> >,
-                                                boost::mpl::not_<boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>::ResultType> >
+                                                boost::mpl::and_
+                                                <
+                                                    boost::mpl::not_<IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> > >,
+                                                    boost::mpl::not_<typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual>,
+                                                    boost::mpl::not_<boost::is_same<LhsResultType, ResultType> >,
+                                                    boost::mpl::not_<boost::is_same<ResultType, typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::LhsAsBinaryExpressionResultType> >
+                                                >,
+                                                boost::mpl::and_
+                                                <
+                                                    boost::mpl::not_< typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative>,
+                                                    boost::mpl::not_<IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> > >,
+                                                    boost::mpl::not_<typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual>,
+                                                    boost::mpl::not_<boost::is_same<LhsResultType, ResultType> >
+                                                >,
+                                                boost::mpl::and_
+                                                <
+                                                    boost::mpl::not_<boost::is_same<ResultType, typename ConstantExpressionPolicy<LhsResultType>::ResultType> >,
+                                                    boost::mpl::not_<boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType> >
+                                                >
                                             >
                                          >::type
                                          >
         {
             public:
                 static void Eval(const Expression<ConstantExpressionPolicy<LhsResultType> >& lhs,
-                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType> >& rhs, 
+                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >& rhs, 
                                  Accumulator<ResultType>& accum)
                 {
-                    typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsRhsPolicyType, RhsOpType>::ResultType RhsResultType;
+                    typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType RhsResultType;
                     
                     LhsResultType lhsTemp = lhs.Evaluate();
                     RhsResultType rhsTemp = rhs.Evaluate();
@@ -283,7 +308,351 @@ namespace Nektar
         };
 
 
+        // Constant-Binary specialization 0 - Both sides need temporaries.
+        // Therefore, the variables of interest are:
+        // a - Expression is Associative.
+        // b - Expression is Commutative.
+        // c - Left Equal Operator is defined.
+        // d - Constant Expression is result type.
+        // e - Binary Expression is result type.
+        // f - In A + (B-C), (A+B) is the result type.
+        //
+        // 0--10- 010000
+        // 0001-- 010000
+        template<typename LhsResultType, typename RhsLhsPolicyType, typename RhsRhsPolicyType,
+                 template <typename, typename> class RhsOpType,
+                 template <typename, typename> class OpType,
+                 typename ResultType>
+        class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsResultType>,
+                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>,
+                                        ResultType, OpType, BinaryNullOp,
+                                        typename boost::enable_if
+                                        <
+                                            boost::mpl::or_
+                                            <
+                                                boost::mpl::and_
+                                                <
+                                                    boost::mpl::not_< typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative>,
+                                                    boost::is_same<LhsResultType, ResultType>,
+                                                    boost::mpl::not_<boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType> >
+                                                >,
+                                                boost::mpl::and_
+                                                <
+                                                    boost::mpl::not_< typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative>,
+                                                    boost::mpl::not_<IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> > >,
+                                                    boost::mpl::not_<typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual>,
+                                                    boost::is_same<LhsResultType, ResultType>
+                                                >
+                                            >
+                                         >::type
+                                         >
+        {
+            public:
+                static void Eval(const Expression<ConstantExpressionPolicy<LhsResultType> >& lhs,
+                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >& rhs, 
+                                 Accumulator<ResultType>& accum)
+                {
+                    typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType RhsResultType;
+                    
+                    lhs.Evaluate(accum);
+                    RhsResultType rhsTemp = rhs.Evaluate();
+                    OpType<LhsResultType, RhsResultType>::ApplyEqual(accum, rhsTemp);
+                }
+                
+                #ifdef NEKTAR_UNIT_TESTS
+                static const unsigned int ClassNum = 2;
+                #endif //NEKTAR_UNIT_TESTS
+        };
+
+
+        // a - Expression is Associative.
+        // b - Expression is Commutative.
+        // c - Left Equal Operator is defined.
+        // d - Constant Expression is result type.
+        // e - Binary Expression is result type.
+        // f - In A + (B-C), (A+B) is the result type.
+        // Case 2 - Evaluate Rhs, Left Op equal lhs.
+        // -0101- 001000
+        // 001-1- 001000
+        template<typename LhsResultType, typename RhsLhsPolicyType, typename RhsRhsPolicyType,
+                 template <typename, typename> class RhsOpType,
+                 template <typename, typename> class OpType,
+                 typename ResultType>
+        class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsResultType>,
+                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>,
+                                        ResultType, OpType, BinaryNullOp,
+                                        typename boost::enable_if
+                                        <
+                                            boost::mpl::or_
+                                            <
+                                                boost::mpl::and_
+                                                <
+                                                    boost::mpl::not_<IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> > >,
+                                                    typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual,
+                                                    boost::mpl::not_<boost::is_same<LhsResultType, ResultType> >,
+                                                    boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>
+                                                >,
+                                                boost::mpl::and_
+                                                <
+                                                    boost::mpl::not_< typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative>,
+                                                    typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual,
+                                                    boost::mpl::not_<boost::is_same<LhsResultType, ResultType> >,
+                                                    boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>
+                                                >                                                
+                                            >
+                                         >::type
+                                         >
+        {
+            public:
+                static void Eval(const Expression<ConstantExpressionPolicy<LhsResultType> >& lhs,
+                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >& rhs, 
+                                 Accumulator<ResultType>& accum)
+                {
+                    typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType RhsResultType;
+                    
+                    rhs.Evaluate(accum);
+                    OpType<LhsResultType, RhsResultType>::ApplyLeftEqual(accum, lhs);
+                }
+                
+                #ifdef NEKTAR_UNIT_TESTS
+                static const unsigned int ClassNum = 3;
+                #endif //NEKTAR_UNIT_TESTS
+        };
+
+        // a - Expression is Associative.
+        // b - Expression is Commutative.
+        // c - Left Equal Operator is defined.
+        // d - Constant Expression is result type.
+        // e - Binary Expression is result type.
+        // f - In A + (B-C), (A+B) is the result type.
+        // 
+        // Case 3 - Swap operations.  Evaluate new lhs, op= new rhs.
+        // .i 6
+        // .o 6
+        // .ilb a b c d e f
+        // .ob c0 c1 c2 c3 c4 c5
+        // .p 11
+        // -1-01- 000100
+        // 01--1- 000100
+        template<typename LhsResultType, typename RhsLhsPolicyType, typename RhsRhsPolicyType,
+                 template <typename, typename> class RhsOpType,
+                 template <typename, typename> class OpType,
+                 typename ResultType>
+        class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsResultType>,
+                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>,
+                                        ResultType, OpType, BinaryNullOp,
+                                        typename boost::enable_if
+                                        <
+                                            boost::mpl::or_
+                                            <
+                                                boost::mpl::and_
+                                                <
+                                                    IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >,
+                                                    boost::mpl::not_<boost::is_same<ResultType, typename ConstantExpressionPolicy<LhsResultType>::ResultType> >,
+                                                    boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType> 
+                                                >,
+                                                boost::mpl::and_
+                                                <
+                                                    boost::mpl::not_< typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative>,
+                                                    IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >,
+                                                    boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType> 
+                                                >
+                                            >
+                                         >::type
+                                         >
+        {
+            public:
+                static void Eval(const Expression<ConstantExpressionPolicy<LhsResultType> >& lhs,
+                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >& rhs, 
+                                 Accumulator<ResultType>& accum)
+                {
+                    typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType RhsResultType;
+                    
+                    rhs.Evaluate(accum);
+                    OpType<RhsResultType, LhsResultType>::Apply(accum, lhs);
+                }
+                
+                #ifdef NEKTAR_UNIT_TESTS
+                static const unsigned int ClassNum = 3;
+                #endif //NEKTAR_UNIT_TESTS
+        };
+
+
+        // a - Expression is Associative.
+        // b - Expression is Commutative.
+        // c - Left Equal Operator is defined.
+        // d - Constant Expression is result type.
+        // e - Binary Expression is result type.
+        // f - In A + (B-C), (A+B) is the result type.
+        // 
+        // Case 4 - Evaluate lhs, evaluate rhs with parent op type.
+        // 1--1-- 000010       
+        template<typename LhsResultType, typename RhsLhsPolicyType, typename RhsRhsPolicyType,
+                 template <typename, typename> class RhsOpType,
+                 template <typename, typename> class OpType,
+                 typename ResultType>
+        class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsResultType>,
+                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>,
+                                        ResultType, OpType, BinaryNullOp,
+                                        typename boost::enable_if
+                                        <
+                                            boost::mpl::and_
+                                            <
+                                                typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative,
+                                                boost::is_same<ResultType, typename ConstantExpressionPolicy<LhsResultType>::ResultType>
+                                            >
+                                         >::type
+                                         >
+        {
+            public:
+                static void Eval(const Expression<ConstantExpressionPolicy<LhsResultType> >& lhs,
+                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >& rhs, 
+                                 Accumulator<ResultType>& accum)
+                {
+                    typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType RhsResultType;
+                    
+                    lhs.Evaluate(accum);
+                    rhs.template Evaluate<OpType>(accum);
+                }
+                
+                #ifdef NEKTAR_UNIT_TESTS
+                static const unsigned int ClassNum = 4;
+                #endif //NEKTAR_UNIT_TESTS
+        };
+
+
+        // a - Expression is Associative.
+        // b - Expression is Commutative.
+        // c - Left Equal Operator is defined.
+        // d - Constant Expression is result type.
+        // e - Binary Expression is result type.
+        // f - In A + (B-C), (A+B) is the result type.
+        // 
+        // Case 5 - Evaluate new (A+B) then op= C
+        // 100011 000001
+         template<typename LhsResultType, typename RhsLhsPolicyType, typename RhsRhsPolicyType,
+                 template <typename, typename> class RhsOpType,
+                 template <typename, typename> class OpType,
+                 typename ResultType>
+        class BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsResultType>,
+                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>,
+                                        ResultType, OpType, BinaryNullOp,
+                                        typename boost::enable_if
+                                        <
+                                            boost::mpl::and_
+                                            <
+                                                boost::mpl::and_
+                                                <
+                                                    typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative,
+                                                    boost::mpl::not_<IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> > >,
+                                                    boost::mpl::not_<typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual>,
+                                                    boost::mpl::not_<boost::is_same<ResultType, typename ConstantExpressionPolicy<LhsResultType>::ResultType> >,
+                                                    boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>
+                                                >,
+                                                boost::is_same<ResultType, typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::LhsAsBinaryExpressionResultType>
+                                            >                                            
+                                         >::type
+                                         >
+        {
+            public:
+                static void Eval(const Expression<ConstantExpressionPolicy<LhsResultType> >& lhs,
+                                 const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >& rhs, 
+                                 Accumulator<ResultType>& accum)
+                {
+                    typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType RhsResultType;
+                    
+                    // TODO.
+                }
+                
+                #ifdef NEKTAR_UNIT_TESTS
+                static const unsigned int ClassNum = 5;
+                #endif //NEKTAR_UNIT_TESTS
+        };
+
+
+        ///////////////////////////////////////////////////////////////////////
+        // Binary-Constant Specializations : (A+B) - C
+        ///////////////////////////////////////////////////////////////////////
+        // a - expression is associative.
+        // b - (A+B) is the result type
+        //
+        // Case 1 - Evaluate LHS, the -= rhs.
+        // Case 2 - Create a temporary for the lhs.
+        // Case 3 - Restructure to A + (B-C) and pass to the Constant-Binary specialization.
         
+        // .i 2
+        // .o 3
+        // .ilb a b 
+        // .ob c0 c1 c2 
+        // 00 010
+        // -1 100
+        // 10 001
+        
+        // Case 1 - Evaluate LHS, then -= rhs
+        // a - expression is associative.
+        // b - (A+B) is the result type
+        // -1 100
+        template<typename LhsLhsPolicyType, template<typename, typename> class LhsOpType, typename LhsRhsPolicyType,
+                 typename RhsResultType, typename ResultType,
+                 template<typename, typename> class OpType>
+        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>,
+                                        ConstantExpressionPolicy<RhsResultType>,
+                                        ResultType, OpType, BinaryNullOp,
+                                        typename boost::enable_if
+                                        <
+                                            boost::is_same<typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>::ResultType, ResultType>
+                                        >::type >
+        {
+            public:
+                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType> >& lhs,
+                                 const Expression<ConstantExpressionPolicy<RhsResultType> >& rhs,
+                                 Accumulator<ResultType>& accum)
+                {
+                    typedef typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>::ResultType LhsResultType;
+                    lhs.Evaluate(accum);
+                    OpType<LhsResultType, RhsResultType>::ApplyEqual(accum, *rhs);
+                }
+                
+                #ifdef NEKTAR_UNIT_TESTS
+                static const unsigned int ClassNum = 6;
+                #endif //NEKTAR_UNIT_TESTS
+        };
+
+        // Case 2 - Create a temporary for the lhs.
+        // a - expression is associative.
+        // b - (A+B) is the result type
+        // 00 010
+        template<typename LhsLhsPolicyType, template<typename, typename> class LhsOpType, typename LhsRhsPolicyType,
+                 typename RhsResultType, typename ResultType,
+                 template<typename, typename> class OpType>
+        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>,
+                                        ConstantExpressionPolicy<RhsResultType>,
+                                        ResultType, OpType, BinaryNullOp,
+                                        typename boost::enable_if
+                                        <
+                                            boost::mpl::and_
+                                            <
+                                                boost::mpl::not_<typename AssociativeTraits<BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>, OpType, ConstantExpressionPolicy<RhsResultType> >::IsAssociative>,
+                                                boost::mpl::not_<boost::is_same<typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>::ResultType, ResultType> >
+                                            >
+                                        >::type >
+        {
+            public:
+                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType> >& lhs,
+                                 const Expression<ConstantExpressionPolicy<RhsResultType> >& rhs,
+                                 Accumulator<ResultType>& accum)
+                {
+                    typedef typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>::ResulType LhsResultType;
+                    
+                    LhsResultType lhsTemp = lhs.Evaluate();
+                    OpType<LhsResultType, RhsResultType>::Apply(accum, lhsTemp, rhs);
+                }
+                
+                #ifdef NEKTAR_UNIT_TESTS
+                static const unsigned int ClassNum = 7;
+                #endif //NEKTAR_UNIT_TESTS
+        };
+                                        
         ////////////////////////////////////////////////////////////////////////////////////////////////
         /// Expression where one side is constant and the other is binary.
         /// If the left side is binary, then we always evaluate it first.  If the return type of the 

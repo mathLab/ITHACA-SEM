@@ -44,7 +44,7 @@
 
 namespace Nektar
 {
-    template<typename LhsPolicy, typename RhsPolicy, template <typename, typename> class OpType>
+    template<typename LhsPolicy, template <typename, typename> class OpType, typename RhsPolicy>
     class BinaryExpressionPolicy
     {
         public:

@@ -23,12 +23,13 @@ namespace Nektar
     
     template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy, typename enabled = void>
     class BinaryExpressionTraits : 
-        public CommutativeExpressionTraits<LhsPolicy, OpType, RhsPolicy>, 
-        public AssociativeExpressionTraits<LhsPolicy, OpType, RhsPolicy>
+        public IsCommutativeExpression<LhsPolicy, OpType, RhsPolicy>//, 
+        //public AssociativeExpressionTraits<LhsPolicy, OpType, RhsPolicy>
     {
         public:
-            typedef BinaryExpressionPolicy<LhsPolicy, RhsPolicy, OpType> ResultPolicy;
+            typedef BinaryExpressionPolicy<LhsPolicy, OpType, RhsPolicy> ResultPolicy;
             typedef Expression<ResultPolicy> ResultType;
+            typedef IsCommutative<LhsPolicy, OpType, RhsPolicy> IsCommutative;
             
             static ResultType Apply(const Expression<LhsPolicy>& lhs, const Expression<RhsPolicy>& rhs)
             {
@@ -39,132 +40,132 @@ namespace Nektar
     };
 
     
-    // Just need two more specializations.        
-    // Binary rhs, non-constant rhs rhs
-    // Binary rhs, constant rhs rhs
-    template<typename LhsInputPolicy, typename RhsLhsPolicy, typename RhsRhsDataType> 
-    class BinaryExpressionTraits<LhsInputPolicy, SubtractOp, 
-                                    BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, AddOp>,
-                                    typename boost::enable_if_c
-                                    <
-                                    AssociativeExpressionTraits<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, AddOp> >::IsAssociativeWithOpChange,
-                                    void
-                                    >::type > :
-        public CommutativeExpressionTraits<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, AddOp> >,
-        public AssociativeExpressionTraits<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, AddOp> >
-    {
-        public:
-            typedef BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, AddOp> RhsInputPolicy;
-            
-            typedef BinaryExpressionPolicy<LhsInputPolicy, RhsLhsPolicy, SubtractOp> LhsOutputPolicy;
-            typedef ConstantExpressionPolicy<RhsRhsDataType> RhsOutputPolicy;
-            typedef BinaryExpressionPolicy<LhsOutputPolicy, RhsOutputPolicy, SubtractOp> ResultPolicy;
-            typedef Expression<ResultPolicy> ResultType;
-            
-            static ResultType Apply(const Expression<LhsInputPolicy>& lhs, const Expression<RhsInputPolicy>& rhs)
-            {
-                typename LhsOutputPolicy::DataType lhs_data(lhs, (*rhs).first);
-                typename RhsOutputPolicy::DataType rhs_data((*rhs).second);
-                
-                typename ResultPolicy::DataType d(lhs_data, rhs_data);
-                return ResultType(d);
-            }
-    };
-    
-    
-    template<typename LhsInputPolicy, typename RhsLhsPolicy, typename RhsRhsDataType> 
-    class BinaryExpressionTraits<LhsInputPolicy, SubtractOp, 
-                                    BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, SubtractOp>,
-                                    typename boost::enable_if_c
-                                    <
-                                    AssociativeExpressionTraits<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, SubtractOp> >::IsAssociativeWithOpChange,
-                                    void
-                                    >::type > :
-        public CommutativeExpressionTraits<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, SubtractOp> >,
-        public AssociativeExpressionTraits<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, SubtractOp> >
-    {
-        public:
-            typedef BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, SubtractOp> RhsInputPolicy;
-            
-            typedef BinaryExpressionPolicy<LhsInputPolicy, RhsLhsPolicy, AddOp> LhsOutputPolicy;
-            typedef ConstantExpressionPolicy<RhsRhsDataType> RhsOutputPolicy;
-            typedef BinaryExpressionPolicy<LhsOutputPolicy, RhsOutputPolicy, SubtractOp> ResultPolicy;
-            typedef Expression<ResultPolicy> ResultType;
-            
-            static ResultType Apply(const Expression<LhsInputPolicy>& lhs, const Expression<RhsInputPolicy>& rhs)
-            {
-                typename LhsOutputPolicy::DataType lhs_data(lhs, (*rhs).first);
-                typename RhsOutputPolicy::DataType rhs_data((*rhs).second);
-                
-                typename ResultPolicy::DataType d(lhs_data, rhs_data);
-                return ResultType(d);
-            }
-    };
-    
-    template<typename LhsInputPolicy, typename RhsLhsPolicy, typename RhsRhsDataType> 
-    class BinaryExpressionTraits<LhsInputPolicy, DivideOp, 
-                                    BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, MultiplyOp>,
-                                    typename boost::enable_if_c
-                                    <
-                                    AssociativeExpressionTraits<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, MultiplyOp> >::IsAssociativeWithOpChange,
-                                    void
-                                    >::type > :
-        public CommutativeExpressionTraits<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, MultiplyOp> >,
-        public AssociativeExpressionTraits<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, MultiplyOp> >
-    {
-        public:
-            typedef BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, MultiplyOp> RhsInputPolicy;
-            
-            typedef BinaryExpressionPolicy<LhsInputPolicy, RhsLhsPolicy, DivideOp> LhsOutputPolicy;
-            typedef ConstantExpressionPolicy<RhsRhsDataType> RhsOutputPolicy;
-            typedef BinaryExpressionPolicy<LhsOutputPolicy, RhsOutputPolicy, DivideOp> ResultPolicy;
-            typedef Expression<ResultPolicy> ResultType;
-            
-            static ResultType Apply(const Expression<LhsInputPolicy>& lhs, const Expression<RhsInputPolicy>& rhs)
-            {
-                typename LhsOutputPolicy::DataType lhs_data(lhs, (*rhs).first);
-                typename RhsOutputPolicy::DataType rhs_data((*rhs).second);
-                
-                typename ResultPolicy::DataType d(lhs_data, rhs_data);
-                return ResultType(d);
-            }
-    };
-    
-    template<typename LhsInputPolicy, typename RhsLhsPolicy, typename RhsRhsDataType> 
-    class BinaryExpressionTraits<LhsInputPolicy, DivideOp, 
-                                    BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, DivideOp>,
-                                    typename boost::enable_if_c
-                                    <
-                                    AssociativeExpressionTraits<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, DivideOp> >::IsAssociativeWithOpChange,
-                                    void
-                                    >::type > :
-        public CommutativeExpressionTraits<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, DivideOp> >,
-        public AssociativeExpressionTraits<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, DivideOp> >
-    {
-        public:
-            typedef BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, DivideOp> RhsInputPolicy;
-            
-            typedef BinaryExpressionPolicy<LhsInputPolicy, RhsLhsPolicy, MultiplyOp> LhsOutputPolicy;
-            typedef ConstantExpressionPolicy<RhsRhsDataType> RhsOutputPolicy;
-            typedef BinaryExpressionPolicy<LhsOutputPolicy, RhsOutputPolicy, DivideOp> ResultPolicy;
-            typedef Expression<ResultPolicy> ResultType;
-            
-            static ResultType Apply(const Expression<LhsInputPolicy>& lhs, const Expression<RhsInputPolicy>& rhs)
-            {
-                typename LhsOutputPolicy::DataType lhs_data(lhs, (*rhs).first);
-                typename RhsOutputPolicy::DataType rhs_data((*rhs).second);
-                
-                typename ResultPolicy::DataType d(lhs_data, rhs_data);
-                return ResultType(d);
-            }
-    };
-    
-    
+ //   // Just need two more specializations.        
+//    // Binary rhs, non-constant rhs rhs
+//    // Binary rhs, constant rhs rhs
+//    template<typename LhsInputPolicy, typename RhsLhsPolicy, typename RhsRhsDataType> 
+//    class BinaryExpressionTraits<LhsInputPolicy, SubtractOp, 
+//                                    BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, AddOp>,
+//                                    typename boost::enable_if_c
+//                                    <
+//                                    AssociativeExpressionTraits<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, AddOp> >::IsAssociativeWithOpChange,
+//                                    void
+//                                    >::type > :
+//        public IsCommutativeExpression<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, AddOp> >,
+//        public AssociativeExpressionTraits<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, AddOp> >
+//    {
+//        public:
+//            typedef BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, AddOp> RhsInputPolicy;
+//            
+//            typedef BinaryExpressionPolicy<LhsInputPolicy, RhsLhsPolicy, SubtractOp> LhsOutputPolicy;
+//            typedef ConstantExpressionPolicy<RhsRhsDataType> RhsOutputPolicy;
+//            typedef BinaryExpressionPolicy<LhsOutputPolicy, RhsOutputPolicy, SubtractOp> ResultPolicy;
+//            typedef Expression<ResultPolicy> ResultType;
+//            
+//            static ResultType Apply(const Expression<LhsInputPolicy>& lhs, const Expression<RhsInputPolicy>& rhs)
+//            {
+//                typename LhsOutputPolicy::DataType lhs_data(lhs, (*rhs).first);
+//                typename RhsOutputPolicy::DataType rhs_data((*rhs).second);
+//                
+//                typename ResultPolicy::DataType d(lhs_data, rhs_data);
+//                return ResultType(d);
+//            }
+//    };
+//    
+//    
+//    template<typename LhsInputPolicy, typename RhsLhsPolicy, typename RhsRhsDataType> 
+//    class BinaryExpressionTraits<LhsInputPolicy, SubtractOp, 
+//                                    BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, SubtractOp>,
+//                                    typename boost::enable_if_c
+//                                    <
+//                                    AssociativeExpressionTraits<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, SubtractOp> >::IsAssociativeWithOpChange,
+//                                    void
+//                                    >::type > :
+//        public IsCommutativeExpression<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, SubtractOp> >,
+//        public AssociativeExpressionTraits<LhsInputPolicy, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, SubtractOp> >
+//    {
+//        public:
+//            typedef BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, SubtractOp> RhsInputPolicy;
+//            
+//            typedef BinaryExpressionPolicy<LhsInputPolicy, RhsLhsPolicy, AddOp> LhsOutputPolicy;
+//            typedef ConstantExpressionPolicy<RhsRhsDataType> RhsOutputPolicy;
+//            typedef BinaryExpressionPolicy<LhsOutputPolicy, RhsOutputPolicy, SubtractOp> ResultPolicy;
+//            typedef Expression<ResultPolicy> ResultType;
+//            
+//            static ResultType Apply(const Expression<LhsInputPolicy>& lhs, const Expression<RhsInputPolicy>& rhs)
+//            {
+//                typename LhsOutputPolicy::DataType lhs_data(lhs, (*rhs).first);
+//                typename RhsOutputPolicy::DataType rhs_data((*rhs).second);
+//                
+//                typename ResultPolicy::DataType d(lhs_data, rhs_data);
+//                return ResultType(d);
+//            }
+//    };
+//    
+//    template<typename LhsInputPolicy, typename RhsLhsPolicy, typename RhsRhsDataType> 
+//    class BinaryExpressionTraits<LhsInputPolicy, DivideOp, 
+//                                    BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, MultiplyOp>,
+//                                    typename boost::enable_if_c
+//                                    <
+//                                    AssociativeExpressionTraits<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, MultiplyOp> >::IsAssociativeWithOpChange,
+//                                    void
+//                                    >::type > :
+//        public IsCommutativeExpression<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, MultiplyOp> >,
+//        public AssociativeExpressionTraits<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, MultiplyOp> >
+//    {
+//        public:
+//            typedef BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, MultiplyOp> RhsInputPolicy;
+//            
+//            typedef BinaryExpressionPolicy<LhsInputPolicy, RhsLhsPolicy, DivideOp> LhsOutputPolicy;
+//            typedef ConstantExpressionPolicy<RhsRhsDataType> RhsOutputPolicy;
+//            typedef BinaryExpressionPolicy<LhsOutputPolicy, RhsOutputPolicy, DivideOp> ResultPolicy;
+//            typedef Expression<ResultPolicy> ResultType;
+//            
+//            static ResultType Apply(const Expression<LhsInputPolicy>& lhs, const Expression<RhsInputPolicy>& rhs)
+//            {
+//                typename LhsOutputPolicy::DataType lhs_data(lhs, (*rhs).first);
+//                typename RhsOutputPolicy::DataType rhs_data((*rhs).second);
+//                
+//                typename ResultPolicy::DataType d(lhs_data, rhs_data);
+//                return ResultType(d);
+//            }
+//    };
+//    
+//    template<typename LhsInputPolicy, typename RhsLhsPolicy, typename RhsRhsDataType> 
+//    class BinaryExpressionTraits<LhsInputPolicy, DivideOp, 
+//                                    BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, DivideOp>,
+//                                    typename boost::enable_if_c
+//                                    <
+//                                    AssociativeExpressionTraits<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, DivideOp> >::IsAssociativeWithOpChange,
+//                                    void
+//                                    >::type > :
+//        public IsCommutativeExpression<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, DivideOp> >,
+//        public AssociativeExpressionTraits<LhsInputPolicy, DivideOp, BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, DivideOp> >
+//    {
+//        public:
+//            typedef BinaryExpressionPolicy<RhsLhsPolicy, ConstantExpressionPolicy<RhsRhsDataType>, DivideOp> RhsInputPolicy;
+//            
+//            typedef BinaryExpressionPolicy<LhsInputPolicy, RhsLhsPolicy, MultiplyOp> LhsOutputPolicy;
+//            typedef ConstantExpressionPolicy<RhsRhsDataType> RhsOutputPolicy;
+//            typedef BinaryExpressionPolicy<LhsOutputPolicy, RhsOutputPolicy, DivideOp> ResultPolicy;
+//            typedef Expression<ResultPolicy> ResultType;
+//            
+//            static ResultType Apply(const Expression<LhsInputPolicy>& lhs, const Expression<RhsInputPolicy>& rhs)
+//            {
+//                typename LhsOutputPolicy::DataType lhs_data(lhs, (*rhs).first);
+//                typename RhsOutputPolicy::DataType rhs_data((*rhs).second);
+//                
+//                typename ResultPolicy::DataType d(lhs_data, rhs_data);
+//                return ResultType(d);
+//            }
+//    };
+//    
+//    
     template<typename LhsType, template <typename, typename> class OpType, typename RhsType>
     class BinaryExpressionType
     {
         public:
-            typedef Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<LhsType>, ConstantExpressionPolicy<RhsType>, OpType> > Type;
+            typedef Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<LhsType>, OpType, ConstantExpressionPolicy<RhsType> > > Type;
     };
     
     template<template <typename, typename> class OpType, typename LhsType, typename RhsType>
@@ -173,7 +174,7 @@ namespace Nektar
     {
         typedef ConstantExpressionPolicy<LhsType> LhsPolicy;
         typedef ConstantExpressionPolicy<RhsType> RhsPolicy;
-        typedef BinaryExpressionPolicy<LhsPolicy, RhsPolicy, OpType> ResultPolicy; 
+        typedef BinaryExpressionPolicy<LhsPolicy, OpType, RhsPolicy> ResultPolicy; 
         typedef Expression<ResultPolicy> ResultExpressionType; 
         
         // Note the () around the first parameter.  Failure to do this will result in a compiler error.
@@ -191,6 +192,9 @@ namespace Nektar
 
 /**
     $Log: BinaryExpressionTraits.hpp,v $
+    Revision 1.13  2007/10/04 03:48:54  bnelson
+    *** empty log message ***
+
     Revision 1.12  2007/10/03 02:58:03  bnelson
     *** empty log message ***
 

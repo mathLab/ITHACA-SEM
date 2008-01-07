@@ -46,12 +46,12 @@ namespace Nektar
 {
 
     template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy>
-    class CommutativeExpressionTraits
+    class IsCommutativeExpression
     {
         public:
             static const bool IsCommutative = 
-                CommutativeTraits<typename LhsPolicy::ResultType, OpType, 
-                                    typename RhsPolicy::ResultType>::IsCommutative;
+                IsCommutative<typename LhsPolicy::ResultType, OpType, 
+                                    typename RhsPolicy::ResultType>::IsComm;
     };
 
 }

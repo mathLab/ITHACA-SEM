@@ -38,17 +38,26 @@
 
 #include <boost/typeof/typeof.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryOperatorsFwd.hpp>
+#include <boost/type_traits.hpp>
 
 namespace Nektar
 {
     template<typename LhsType, typename RhsType, template<typename, typename> class OpType>
-    class HasOpEqualTraits
+    class HasOpEqualTraits : public boost::true_type
     {
         public:
             static const bool HasOpEqual = true;
             static const bool HasOpLeftEqual = false;
     };
 
+    template<typename LhsType, typename RhsType, template<typename, typename> class OpType>
+    class HasOpLeftEqualTraits : public boost::false_type
+    {
+        public:
+            static const bool HasOpEqual = true;
+            static const bool HasOpLeftEqual = false;
+    };
+    
     // The following classes are workarounds for visual studio.
     // Theoretically, typename BOOST_TYPEOF_TPL(NekAdd(LhsType, RhsType)) would be sufficient,
     // but it seems to confuse visual studio.
@@ -58,8 +67,8 @@ namespace Nektar
         public:
             BOOST_TYPEOF_NESTED_TYPEDEF_TPL(nested, NekAdd(LhsType(), RhsType()));
             typedef typename nested::type ResultType;
-            static const bool HasOpEqual = HasOpEqualTraits<LhsType, RhsType, AddOp>::HasOpEqual;
-            static const bool HasOpLeftEqual = HasOpEqualTraits<LhsType, RhsType, AddOp>::HasOpLeftEqual;
+            typedef HasOpEqualTraits<LhsType, RhsType, AddOp> HasOpEqual;
+            typedef HasOpLeftEqualTraits<LhsType, RhsType, AddOp> HasOpLeftEqual;
     };
     
     template<typename LhsType, typename RhsType>
@@ -68,8 +77,8 @@ namespace Nektar
         public:
             BOOST_TYPEOF_NESTED_TYPEDEF_TPL(nested, NekSubtract(LhsType(), RhsType()));
             typedef typename nested::type ResultType;
-            static const bool HasOpEqual = HasOpEqualTraits<LhsType, RhsType, SubtractOp>::HasOpEqual;
-            static const bool HasOpLeftEqual = HasOpEqualTraits<LhsType, RhsType, SubtractOp>::HasOpLeftEqual;
+            typedef HasOpEqualTraits<LhsType, RhsType, SubtractOp> HasOpEqual;
+            typedef HasOpLeftEqualTraits<LhsType, RhsType, SubtractOp> HasOpLeftEqual;
     };
     
     template<typename LhsType, typename RhsType>
@@ -78,8 +87,8 @@ namespace Nektar
         public:
             BOOST_TYPEOF_NESTED_TYPEDEF_TPL(nested, NekMultiply(LhsType(), RhsType()));
             typedef typename nested::type ResultType;
-            static const bool HasOpEqual = HasOpEqualTraits<LhsType, RhsType, MultiplyOp>::HasOpEqual;
-            static const bool HasOpLeftEqual = HasOpEqualTraits<LhsType, RhsType, MultiplyOp>::HasOpLeftEqual;
+            typedef HasOpEqualTraits<LhsType, RhsType, MultiplyOp> HasOpEqual;
+            typedef HasOpLeftEqualTraits<LhsType, RhsType, MultiplyOp> HasOpLeftEqual;
     };
     
     template<typename LhsType, typename RhsType>
@@ -88,8 +97,8 @@ namespace Nektar
         public:
             BOOST_TYPEOF_NESTED_TYPEDEF_TPL(nested, NekDivide(LhsType(), RhsType()));
             typedef typename nested::type ResultType;
-            static const bool HasOpEqual = HasOpEqualTraits<LhsType, RhsType, DivideOp>::HasOpEqual;
-            static const bool HasOpLeftEqual = HasOpEqualTraits<LhsType, RhsType, DivideOp>::HasOpLeftEqual;
+            typedef HasOpEqualTraits<LhsType, RhsType, DivideOp> HasOpEqual;
+            typedef HasOpLeftEqualTraits<LhsType, RhsType, DivideOp> HasOpLeftEqual;
     };
 
 }

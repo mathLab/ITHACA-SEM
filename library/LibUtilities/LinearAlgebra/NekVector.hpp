@@ -134,8 +134,8 @@ namespace Nektar
     }
     
     template<typename DataType, unsigned int dim, unsigned int space>
-    Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<NekVector<DataType, dim, space> >,
-                                      ConstantExpressionPolicy<NekVector<DataType, dim, space> >, AddOp> >
+    Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<NekVector<DataType, dim, space> >, AddOp,
+                                      ConstantExpressionPolicy<NekVector<DataType, dim, space> > > >
     operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
     {
         return CreateBinaryExpression<AddOp>(lhs, rhs);
@@ -307,6 +307,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.23  2007/12/04 04:55:23  bnelson
+    *** empty log message ***
+
     Revision 1.22  2007/11/08 03:22:29  bnelson
     Updated operator== so constant sized and variable sized vectors can be compared.
 

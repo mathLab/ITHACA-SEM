@@ -85,7 +85,7 @@ namespace Nektar
             *    Note for hexahedral expansions _base[0] (i.e. p)  modes run 
             *  fastest
             */
-            //void FillMode(int mode, double *array);
+
             void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
 
             //////////////////////////////
@@ -109,37 +109,28 @@ namespace Nektar
             //----------------------------------
             // Local Matrix Routines
             //----------------------------------
-            //void GenMassMatrix(double * outarray);
             DNekMatSharedPtr GenMatrixHex(const StdMatrixKey &mkey);
-
              void GenLapMatrix(double * outarray);
 
-//             StdMatContainer * GetMassMatrix();
-//             StdMatContainer * GetLapMatrix();
 
             //----------------------------
             // Differentiation Methods
             //----------------------------
-
-            /** \brief Calculate the deritive of the physical points 
-            *
-            *  For quadrilateral region can use the Tensor_Deriv function
-            *  defined under StdExpansion.
-            */
-           // void Deriv(double * outarray_d1, double *outarray_d2, double *outarray_d3);
-
-            /** \brief Calculate the deritive of the physical points 
-            *
-            *  For quadrilateral region can use the Tensor_Deriv function
-            *  defined under StdExpansion.
-            */
-//             void Deriv(const double *inarray, double * outarray_d1,
-//                 double *outarray_d2, double * outarray_d3);
                 
+        /** \brief Calculate the deritive of the physical points 
+        *
+        *  For quadrilateral region can use the Tensor_Deriv function
+        *  defined under StdExpansion.
+        */
          void PhysDeriv( Array<OneD, NekDouble> &out_d0,
                                    Array<OneD, NekDouble> &out_d1,
                                    Array<OneD, NekDouble> &out_d2);
 
+        /** \brief Calculate the deritive of the physical points 
+        *
+        *  For quadrilateral region can use the Tensor_Deriv function
+        *  defined under StdExpansion.
+        */
          void PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
                                    Array<OneD, NekDouble> &out_d0,
                                    Array<OneD, NekDouble> &out_d1,
@@ -152,7 +143,6 @@ namespace Nektar
             // Evaluations Methods
             //---------------------------
 
-            //void BwdTrans(double * outarray);
             void BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
@@ -324,6 +314,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.12  2007/12/17 13:03:51  sherwin
+* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+*
 * Revision 1.11  2007/12/01 00:52:32  ehan
 * Completed implementing and testing following functions:
 * Integral, IProductWRTBase, PhysDeriv. BwdTrans, FwdTrans, and PhysEvaluate.

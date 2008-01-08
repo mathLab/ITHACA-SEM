@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File StdexExp.cpp
+// File StdHexExp.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -352,7 +352,6 @@ namespace Nektar
                 for( int p = 0; p <= P; ++p ) {
                     for( int q = 0; q <= Q; ++q ) {
                         for( int r = 0; r <= R; ++r ) {
-//                             int mode = r + (R+1)*(q + (Q+1)*p);
                              int mode = r + (R+1)*(q + (Q+1)*p);
                             Ak[q + (Q+1)*p]   +=   inarray[mode]  *  zBasis[k + Qz*r];
                         }
@@ -366,7 +365,6 @@ namespace Nektar
                     Array<OneD, NekDouble> bjk(P+1, 0.0);
                     for( int p = 0; p <= P; ++p ) {
                         for( int q = 0; q <= Q; ++q ) {
-//                             int mode = pq[q + (Q+1)*p];
                             int mode = q + (Q+1)*p;
                             bjk[p]   +=   Ak[q + (Q+1)*p]  *  yBasis[j + Qy*q];
                         }
@@ -486,8 +484,7 @@ namespace Nektar
                             &outarray[0]+i*nquad0*nquad1,1);
             }
         }
-
-        //void StdHexExp::GenMassMatrix(double * outarray)        
+   
         DNekMatSharedPtr StdHexExp::GenMatrixHex(const StdMatrixKey &mkey)
         {
             int      i,j;
@@ -556,6 +553,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.11  2008/01/03 15:44:38  ehan
+* Fixed bug.
+*
 * Revision 1.10  2007/12/17 13:03:51  sherwin
 * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
 *

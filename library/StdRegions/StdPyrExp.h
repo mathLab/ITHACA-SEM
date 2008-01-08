@@ -109,14 +109,11 @@ namespace Nektar
        }               
         
         
-        
-        
-        
+                     
         
         
     protected:
         
-       // static StdMatrix s_elmtmats;
         
     private:
         
@@ -140,7 +137,7 @@ namespace Nektar
         return DetShapeType();
         }
         
-        virtual DNekMatSharedPtr v_GenMatrix(StdMatrixKey &mkey) 
+        virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
         {
             return GenMatrix(mkey);
         }
@@ -252,6 +249,9 @@ namespace Nektar
 
 /**
  * $Log: StdPyrExp.h,v $
+ * Revision 1.7  2008/01/03 12:33:14  ehan
+ * Fixed errors from StdMatrix to StdMatrixKey.
+ *
  * Revision 1.6  2008/01/03 10:40:52  ehan
  * Added basis, differentiation, backward transform, forward transform, interpolation, integration, and physEval functions.
  *

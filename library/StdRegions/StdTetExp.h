@@ -157,7 +157,7 @@ namespace Nektar
             }
 
 
-            virtual DNekMatSharedPtr v_GenMatrix(StdMatrixKey &mkey) 
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
             {
                 return GenMatrix(mkey);
             }
@@ -312,6 +312,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.10  2007/12/17 13:03:51  sherwin
+ * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+ *
  * Revision 1.9  2007/10/28 18:32:34  bnelson
  * Fixed visual c++ compile error.
  *

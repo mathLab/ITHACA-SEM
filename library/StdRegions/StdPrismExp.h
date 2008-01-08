@@ -117,7 +117,7 @@ namespace Nektar
         
     protected:
         
-//        static StdMatrix s_elmtmats;
+
         
         
     private:
@@ -142,7 +142,7 @@ namespace Nektar
             return DetShapeType();
         }
         
-        virtual DNekMatSharedPtr v_GenMatrix(StdMatrixKey &mkey) 
+        virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
         {
             return GenMatrix(mkey);
         }
@@ -214,7 +214,7 @@ namespace Nektar
         {
             FwdTrans(inarray, outarray);
         }
-        //virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+      
         virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& Lcoords)
         {
             return PhysEvaluate(Lcoords);
@@ -255,6 +255,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.7  2008/01/03 12:32:44  ehan
+ * Fixed errors from StdMatrix to StdMatrixKey.
+ *
  * Revision 1.6  2007/12/28 23:20:20  ehan
  * Completed implementing and testing following functions:
  * Integral, IProductWRTBase, PhysDeriv. BwdTrans, FwdTrans, and PhysEvaluate.

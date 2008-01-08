@@ -652,7 +652,47 @@ namespace Nektar
                 static const unsigned int ClassNum = 7;
                 #endif //NEKTAR_UNIT_TESTS
         };
-                                        
+                  
+        // Case 3 - Restructure to A + (B-C) and pass to the Constant-Binary specialization.
+        // a - expression is associative.
+        // b - (A+B) is the result type
+        // .ilb a b 
+        // 10 001
+        template<typename LhsLhsPolicyType, template<typename, typename> class LhsOpType, typename LhsRhsPolicyType,
+                 typename RhsResultType, typename ResultType,
+                 template<typename, typename> class OpType>
+        class BinaryExpressionEvaluator<BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>,
+                                        ConstantExpressionPolicy<RhsResultType>,
+                                        ResultType, OpType, BinaryNullOp,
+                                        typename boost::enable_if
+                                        <
+                                            boost::mpl::and_
+                                            <
+                                                typename AssociativeTraits<BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>, OpType, ConstantExpressionPolicy<RhsResultType> >::IsAssociative,
+                                                boost::mpl::not_<boost::is_same<typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>::ResultType, ResultType> >
+                                            >
+                                        >::type >
+        {
+            public:
+                static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType> >& lhs,
+                                 const Expression<ConstantExpressionPolicy<RhsResultType> >& rhs,
+                                 Accumulator<ResultType>& accum)
+                {
+                    typedef AssociativeTraits<BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>, OpType, ConstantExpressionPolicy<RhsResultType> > Traits;
+                    typedef typename Traits::AdjustedExpressionEvaluatorType AdjustedExpressionEvaluatorType;
+                    typedef typename Traits::AdjustedLhsType AdjustedLhsType;
+                    typedef typename Traits::AdjustedRhsType AdjustedRhsType;
+                    
+                    AdjustedLhsType newLhs = Traits::CreateNewLhs(lhs, rhs);
+                    AdjustedRhsType newRhs = Traits::CreateNewRhs(lhs, rhs);
+                    AdjustedExpressionEvaluatorType::Eval(newLhs, newRhs, accum);
+                }
+                
+                #ifdef NEKTAR_UNIT_TESTS
+                static const unsigned int ClassNum = 8;
+                #endif //NEKTAR_UNIT_TESTS
+        };
+                      
         ////////////////////////////////////////////////////////////////////////////////////////////////
         /// Expression where one side is constant and the other is binary.
         /// If the left side is binary, then we always evaluate it first.  If the return type of the 

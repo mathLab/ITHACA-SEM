@@ -40,6 +40,8 @@
 #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicyFwd.hpp>
 #include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp>
+
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
 

@@ -6,6 +6,15 @@ SET(Sources
     TestTwoParameters.cpp
     TestThreeParameters.cpp
     TestFourParameters.cpp
+    TestConstantBinarySpecialization0.cpp
+    TestConstantBinarySpecialization1.cpp
+    TestConstantBinarySpecialization2.cpp
+    TestConstantBinarySpecialization3.cpp
+    TestConstantBinarySpecialization4.cpp
+    TestConstantBinarySpecialization5.cpp
+    TestBinaryConstantSpecialization0.cpp
+    TestBinaryConstantSpecialization1.cpp
+    TestBinaryConstantSpecialization2.cpp
     TestBinaryExpressionEvaluatorWithConstantConstantParameters.cpp
     TestBinaryExpressionEvaluatorWithBinaryConstantParameters.cpp
     TestAliasing.cpp

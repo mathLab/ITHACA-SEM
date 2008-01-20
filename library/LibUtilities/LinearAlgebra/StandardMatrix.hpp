@@ -43,6 +43,7 @@
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
 
 namespace Nektar
 {
@@ -273,6 +274,16 @@ namespace Nektar
             }
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+                explicit NekMatrix(const NekMatrixMetadata& d) :
+                    BaseType(d.Rows, d.Columns),
+                    m_data(),
+                    m_wrapperType(eCopy),
+                    m_policySpecificData(),
+                    m_transpose('N')
+                {
+                    m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
+                }
+
                 template<typename ExpressionPolicyType>
                 NekMatrix(const Expression<ExpressionPolicyType>& rhs) :
                     BaseType(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns),

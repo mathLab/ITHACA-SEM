@@ -128,6 +128,16 @@ namespace Nektar
                 typedef NekMatrixMultiplicationMetadata MetadataType;
         };
 
+        template<typename DataType, typename StorageType>
+        struct CreateFromMetadata<NekMatrix<DataType, StorageType, StandardMatrixTag> >
+        {
+            static NekMatrix<DataType, StorageType, StandardMatrixTag> 
+            Apply(const NekMatrixMetadata& d)
+            {
+                return NekMatrix<DataType, StorageType, StandardMatrixTag>(d);
+            }
+        };
+
     #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 // #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 //     // All of the expression interfaces for NekMatrix should go here.
@@ -418,6 +428,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.32  2008/01/20 03:59:36  bnelson
+    Expression template updates.
+
     Revision 1.31  2007/10/03 03:00:14  bnelson
     Added precompiled headers.
 

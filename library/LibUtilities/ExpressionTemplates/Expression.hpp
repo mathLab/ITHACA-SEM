@@ -55,6 +55,9 @@
 
 namespace Nektar
 {
+        template<typename DataType>
+        struct CreateFromMetadata;
+
         /// \brief An expression is an arbitrary combination of operations acting on arbitrary amountsw of data to 
         /// produce a result.  The expressions stores the operations and data but does not evaluate it until requested.
         /// 
@@ -122,7 +125,7 @@ namespace Nektar
 
                 ResultType Evaluate() const
                 {
-                    ResultType result;
+                    ResultType result = CreateFromMetadata<ResultType>::Apply(m_metadata);
                     Evaluate(result);
                     return result;
                 }
@@ -206,6 +209,11 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.19  2008/01/07 04:58:59  bnelson
+    Changed binary expressions so the OpType is listed second instead of third.
+
+    Updates to Commutative and Associative traits so they work with expressions instead of data types.
+
     Revision 1.18  2008/01/03 04:16:41  bnelson
     Changed method name in the expression library from Apply to Evaluate.
 

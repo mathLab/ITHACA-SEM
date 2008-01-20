@@ -56,7 +56,7 @@ void AddMatricesExprTemp(Nektar::NekMatrix<double>& result,
                 const Nektar::NekMatrix<double>& v1,
                 const Nektar::NekMatrix<double>& v2)
 {
-    result = MakeExpr(v1) + MakeExpr(v2);
+    result = v1 + v2;
 }
 
 void AddMatricesExprTemp(Nektar::NekMatrix<double>& result,
@@ -64,7 +64,7 @@ void AddMatricesExprTemp(Nektar::NekMatrix<double>& result,
                 const Nektar::NekMatrix<double>& v2,
                 const Nektar::NekMatrix<double>& v3)
 {
-    result = MakeExpr(v1) + MakeExpr(v2) + MakeExpr(v3);
+    result = v1 + v2 + v3;
 }
 
 void AddMatricesExprTemp(Nektar::NekMatrix<double>& result,
@@ -73,14 +73,14 @@ void AddMatricesExprTemp(Nektar::NekMatrix<double>& result,
                 const Nektar::NekMatrix<double>& v3,
                 const Nektar::NekMatrix<double>& v4)
 {
-    result = MakeExpr(v1) + MakeExpr(v2) + MakeExpr(v3) + MakeExpr(v4);
+    result = v1 + v2 + v3 + v4;
 }
 
 void AddMatricesExprTempResultAlloc(
                 const Nektar::NekMatrix<double>& v1,
                 const Nektar::NekMatrix<double>& v2)
 {
-    Nektar::NekMatrix<double> result = MakeExpr(v1) + MakeExpr(v2);
+    Nektar::NekMatrix<double> result = v1 + v2;
 }
 
 void AddMatricesExprTempResultAlloc(
@@ -88,7 +88,7 @@ void AddMatricesExprTempResultAlloc(
                 const Nektar::NekMatrix<double>& v2,
                 const Nektar::NekMatrix<double>& v3)
 {
-    Nektar::NekMatrix<double> result = MakeExpr(v1) + MakeExpr(v2) + MakeExpr(v3);
+    Nektar::NekMatrix<double> result = v1 + v2 + v3;
 }
 
 void AddMatricesExprTempResultAlloc(
@@ -97,5 +97,5 @@ void AddMatricesExprTempResultAlloc(
                 const Nektar::NekMatrix<double>& v3,
                 const Nektar::NekMatrix<double>& v4)
 {
-    Nektar::NekMatrix<double> result = (MakeExpr(v1) + MakeExpr(v2)) + (MakeExpr(v3) + MakeExpr(v4));
+    Nektar::NekMatrix<double> result = v1 + v2 + v3 + v4;
 }

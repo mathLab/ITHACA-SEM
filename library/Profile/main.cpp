@@ -590,8 +590,8 @@ int main(int argc, char** argv)
     
     //Run2StringTests(numTests, n);
     //RunIntWrapperTests(numTests);
-    Run4MatrixTestsResultAlloc(numTests, n);
-    //Run4MatrixTests(numTests, n);
+    //Run4MatrixTestsResultAlloc(numTests, n);
+    Run4MatrixTests(numTests, n);
     //Run2VectorTests(numTests, n);
     //Run4VectorTests(numTests, n);
     return 0;

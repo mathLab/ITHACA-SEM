@@ -102,6 +102,7 @@ SET(BasicUtils
     ./BasicUtils/Concepts.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/ErrorUtil.hpp
+    ./BasicUtils/ErrorUtil.cpp
     ./BasicUtils/mojo.hpp
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/OperatorGenerators.hpp

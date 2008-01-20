@@ -80,8 +80,8 @@ namespace Nektar
 
     template<typename RhsDataType, typename RhsStorageType, typename RhsMatrixType, typename ResultDataType>
     void NekMultiply(NekMatrix<ResultDataType, RhsStorageType, StandardMatrixTag>& result,
-                     const ResultDataType& rhs,
-                     const NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>& lhs)
+                     const ResultDataType& lhs,
+                     const NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>& rhs)
                      
     {
         NekMultiply(result, rhs, lhs);

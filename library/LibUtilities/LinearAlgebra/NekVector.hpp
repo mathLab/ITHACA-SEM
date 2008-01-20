@@ -52,15 +52,12 @@ namespace Nektar
 {
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-     namespace expt
+     template<typename DataType, unsigned int dim, unsigned int space>
+     class ExpressionTraits<NekVector<DataType, dim, space> >
      {
-         template<typename DataType, unsigned int dim, unsigned int space>
-         class ExpressionTraits<NekVector<DataType, dim, space> >
-         {
-             public:
-                 typedef NekVectorMetadata MetadataType;
-         };
-     }
+         public:
+             typedef NekVectorMetadata MetadataType;
+     };
 #endif
     
     // Temporary only - at least until we determine expression templates are the way to go.
@@ -295,6 +292,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.25  2008/01/20 03:59:36  bnelson
+    Expression template updates.
+
     Revision 1.24  2008/01/07 04:57:40  bnelson
     Changed binary expressions so the OpType is listed second instead of third.
 

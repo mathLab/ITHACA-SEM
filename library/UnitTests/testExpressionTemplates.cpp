@@ -56,6 +56,7 @@ namespace Nektar
 {
     namespace UnitTests
     {
+        #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
         using namespace Nektar;
 
         BOOST_AUTO_TEST_CASE(testConstantExpressions)
@@ -286,7 +287,8 @@ namespace Nektar
                      }
                  }
              }
-        }        
+        }  
+        #endif NEKTAR_USE_EXPRESSION_TEMPLATES      
      }
 }
 

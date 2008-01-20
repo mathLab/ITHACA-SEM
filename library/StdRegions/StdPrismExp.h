@@ -236,12 +236,14 @@ namespace Nektar
         {
             std::cout << "Implement me" << std::endl;
             int foo = 0;
+            return DNekMatSharedPtr();
         } 
         
         virtual DNekMatSharedPtr v_GetLapMatrix()
         {
             std::cout << "Implement me" << std::endl;
             int foo = 0;
+            return DNekMatSharedPtr();
         }  
 
         
@@ -255,6 +257,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.8  2008/01/08 22:48:20  ehan
+ * Fixed the call signature of a shadowed virtual function: Added a const qualifier to the passed parameter StdMatrixKey in the virtual function v_GenMatrix().  This enables Nektar to generate the correct standard mass matrix at initialization time.
+ *
  * Revision 1.7  2008/01/03 12:32:44  ehan
  * Fixed errors from StdMatrix to StdMatrixKey.
  *

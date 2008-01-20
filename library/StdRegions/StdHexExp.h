@@ -297,12 +297,14 @@ namespace Nektar
             {
                 std::cout << "Implement me" << std::endl;
                 int foo = 0;
+                return DNekMatSharedPtr();
             } 
             
             virtual DNekMatSharedPtr v_GetLapMatrix()
             {
                 std::cout << "Implement me" << std::endl;
                 int foo = 0;
+                return DNekMatSharedPtr();
             }  
 
         };
@@ -314,6 +316,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.13  2008/01/08 22:30:43  ehan
+* Clean up the codes.
+*
 * Revision 1.12  2007/12/17 13:03:51  sherwin
 * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
 *

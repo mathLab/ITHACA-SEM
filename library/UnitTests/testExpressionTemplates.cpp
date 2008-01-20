@@ -192,84 +192,73 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(testNekMatrixMultiplication)
         {
-//             {
-//                 unsigned int m1_buf[] = {1, 1, 1, 1};
-//                 NekMatrix<unsigned int> m1(2,2,m1_buf);
-//                 NekMatrix<unsigned int> m2(2,2,m1_buf);
-//                 
-//                 unsigned int result_buf[] = {2, 2, 2, 2};
-//                 NekMatrix<unsigned int> result(2,2,result_buf);
-//                 NekMatrix<unsigned int> m3 = m1*m2;
-//                 BOOST_CHECK_EQUAL(m3, result);
-//             }
-//             
-//             double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
-//             double m2_buf[] = {63, 57, -59, 45, -8, -93, 92, 43, -62};
-//             double m3_buf[] = {77, 66, 54, -5, 99, -61, -50, -12, -18};
-// 
-//             NekMatrix<double> m1(3, 3, m1_buf);
-//             NekMatrix<double> m2(3, 3, m2_buf);
-//             NekMatrix<double> m3(3, 3, m3_buf);
-//             
-//             NekMatrix<double> result = m1*m2*m3;
-//             
-//             double result_buf[] = {-1456238, -1484136, -464512, 1026425, 505353, 583929, 1538925, 1557252, 504714};
-//             NekMatrix<double> expectedResult(3, 3, result_buf);
-//             
-//             double epsilon = 1e-11;
-//             for(unsigned int i = 0; i < 3; ++i)
-//             {
-//                 for(unsigned int j = 0; j < 3; ++j)
-//                 {
-//                     BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
-//                 }
-//             }
-//             
-//             NekMatrix<double> result1 = m1*m2*m3*m1*m2*m3*m1*m2*m3;
-//             double result_buf1[] = {223791291531519928.0, -139146145309301688.0, 241968403742002232.0, -81497861322837100.0, 109613922100149537.0, -116433655760219405.0, -233781330982473300.0, 141216567102193860.0, -250757429804037708.0};
-//             NekMatrix<double> expectedResult1(3,3,result_buf1);
-//             for(unsigned int i = 0; i < 3; ++i)
-//             {
-//                 for(unsigned int j = 0; j < 3; ++j)
-//                 {
-//                     BOOST_CHECK_CLOSE(result1(i,j), expectedResult1(i,j), epsilon);
-//                 }
-//             }
+             {
+                 unsigned int m1_buf[] = {1, 1, 1, 1};
+                 NekMatrix<unsigned int> m1(2,2,m1_buf);
+                 NekMatrix<unsigned int> m2(2,2,m1_buf);
+                 
+                 unsigned int result_buf[] = {2, 2, 2, 2};
+                 NekMatrix<unsigned int> result(2,2,result_buf);
+                 NekMatrix<unsigned int> m3 = m1*m2;
+                 BOOST_CHECK_EQUAL(m3, result);
+             }
+             
+             double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
+             double m2_buf[] = {63, 57, -59, 45, -8, -93, 92, 43, -62};
+             double m3_buf[] = {77, 66, 54, -5, 99, -61, -50, -12, -18};
+ 
+             NekMatrix<double> m1(3, 3, m1_buf);
+             NekMatrix<double> m2(3, 3, m2_buf);
+             NekMatrix<double> m3(3, 3, m3_buf);
+             
+             NekMatrix<double> result = m1*m2*m3;
+             
+             double result_buf[] = { -2411761, -889268, -851464, -150650, -565220, -381906, 987268, 242006, 275320 };
+             NekMatrix<double> expectedResult(3, 3, result_buf);
+             
+             double epsilon = 1e-11;
+             for(unsigned int i = 0; i < 3; ++i)
+             {
+                 for(unsigned int j = 0; j < 3; ++j)
+                 {
+                     BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
+                 }
+             }
         }
         
         BOOST_AUTO_TEST_CASE(testNekMatrixSomewhatComplicatedExpression)
         {
-//             {
-//                 double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
-//                 double m2_buf[] = {63, 57, -59, 45, -8, -93, 92, 43, -62};
-//                 double m3_buf[] = {77, 66, 54, -5, 99, -61, -50, -12, -18};
-//     
-//                 NekMatrix<double> m1(3, 3, m1_buf);
-//                 NekMatrix<double> m2(3, 3, m2_buf);
-//                 NekMatrix<double> m3(3, 3, m3_buf);
-//                 
-//                 NekMatrix<double> result = (m1*m2) + m3;
-//                 
-//                 double result_buf[] = {-11157, -5930, 12478, 6755, -522, -10117, 11955, 6150, -12925};
-//                 NekMatrix<double> expectedResult(3,3,result_buf);
-//                 double epsilon = 1e-11;
-//                 for(unsigned int i = 0; i < 3; ++i)
-//                 {
-//                     for(unsigned int j = 0; j < 3; ++j)
-//                     {
-//                         BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
-//                     }
-//                 }
-//                 
-//                 NekMatrix<double> result1 = m3 + (m1*m2);
-//                 for(unsigned int i = 0; i < 3; ++i)
-//                 {
-//                     for(unsigned int j = 0; j < 3; ++j)
-//                     {
-//                         BOOST_CHECK_CLOSE(result1(i,j), expectedResult(i,j), epsilon);
-//                     }
-//                 }
-//             }
+             {
+                 double m1_buf[] = {-85, -55, -37, -35, 97, 50, 79, 56, 49};
+                 double m2_buf[] = {63, 57, -59, 45, -8, -93, 92, 43, -62};
+                 double m3_buf[] = {77, 66, 54, -5, 99, -61, -50, -12, -18};
+     
+                 NekMatrix<double> m1(3, 3, m1_buf);
+                 NekMatrix<double> m2(3, 3, m2_buf);
+                 NekMatrix<double> m3(3, 3, m3_buf);
+                 
+                 NekMatrix<double> result = (m1*m2) + m3;
+                 
+                 double result_buf[] = { -11934, -1174, -2318, -10897, -8360, -6683, -14273, -4373, -4310 };
+                 NekMatrix<double> expectedResult(3,3,result_buf);
+                 double epsilon = 1e-11;
+                 for(unsigned int i = 0; i < 3; ++i)
+                 {
+                     for(unsigned int j = 0; j < 3; ++j)
+                     {
+                         BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
+                     }
+                 }
+                 
+                 NekMatrix<double> result1 = m3 + (m1*m2);
+                 for(unsigned int i = 0; i < 3; ++i)
+                 {
+                     for(unsigned int j = 0; j < 3; ++j)
+                     {
+                         BOOST_CHECK_CLOSE(result1(i,j), expectedResult(i,j), epsilon);
+                     }
+                 }
+             }
         }
         
         BOOST_AUTO_TEST_CASE(testNekMatrixComplicatedExpression)
@@ -284,8 +273,8 @@ namespace Nektar
                  NekMatrix<double> m3(3, 3, m3_buf);
                  
                  NekMatrix<double> result = (((m3-m1)*m3) * (m1-m2)) + m1*m2*m3;
-                 
-                 double result_buf[] = {-1279130, -1162366, 243990, -1663904, 1197403, 2021293, 547959, 1802365, 1422677};
+                 double result_buf[] = { -2146767, -3204880, -749636, 162494, 2048276, 2549188, -784134, 758853, 1439441 };
+
                  NekMatrix<double> expectedResult(3,3,result_buf);
                  
                  double epsilon = 1e-11;
@@ -297,393 +286,7 @@ namespace Nektar
                      }
                  }
              }
-        }
-
-        
-        
-        class C;
-        class B;
-        class A
-        {
-         public:
-             explicit A(int a) : val(a) {}
-             
-             A& operator=(const A& rhs);
-             A& operator=(const C& rhs);
-             A& operator=(const B& rhs);
-             
-             template<typename ExpressionPolicyType>
-             A(const Expression<ExpressionPolicyType>& rhs)
-             {
-                 rhs.Apply(*this);
-             }
-
-             A& operator+=(const A& rhs)
-             {
-                 val += rhs.val;
-                 return *this;
-             }
-             
-             A& operator-=(const A& rhs)
-             {
-                 val -= rhs.val;
-                 return *this;
-             }
-             
-             A& operator*=(const A& rhs)
-             {
-                 val *= rhs.val;
-                 return *this;
-             }
-             
-             A& operator/=(const A& rhs)
-             {
-                 val /= rhs.val;
-                 return *this;
-             }
-             
-             A& operator+=(const C& rhs);
-             A& operator-=(const C& rhs);
-             A& operator/=(const C& rhs);
-             A& operator*=(const C& rhs);
-             
-             
-             int val;
-        };
-
-        class B
-        {
-         public:
-             explicit B(int a) : val(a) {}
-             
-             B& operator=(const B& rhs)
-             {
-                 val = rhs.val;
-                 return *this;
-             }
-             
-             B& operator=(const A& rhs)
-             {
-                 val = rhs.val;
-                 return *this;
-             }
-             
-             template<typename ExpressionPolicyType>
-             B(const Expression<ExpressionPolicyType>& rhs)
-             {
-                 rhs.Apply(*this);
-             }
-             
-             B& operator+=(const A& rhs)
-             {
-                 val += rhs.val;
-                 return *this;
-             }
-             
-             B& operator-=(const A& rhs)
-             {
-                 val -= rhs.val;
-                 return *this;
-             }
-             
-             B& operator*=(const A& rhs)
-             {
-                 val *= rhs.val;
-                 return *this;
-             }
-             
-             B& operator/=(const A& rhs)
-             {
-                 val /= rhs.val;
-                 return *this;
-             }
-             
-             B& operator+=(const B& rhs)
-             {
-                 val += rhs.val;
-                 return *this;
-             }
-             
-             B& operator-=(const B& rhs)
-             {
-                 val -= rhs.val;
-                 return *this;
-             }
-             
-             B& operator*=(const B& rhs)
-             {
-                 val *= rhs.val;
-                 return *this;
-             }
-             
-             B& operator/=(const B& rhs)
-             {
-                 val /= rhs.val;
-                 return *this;
-             }
-             
-             int val;
-        };
-
-        class C
-        {
-         public:
-             explicit C(int a) : val(a) {}
-             
-             C& operator=(const C& rhs)
-             {
-                 val = rhs.val;
-                 return *this;
-             }
-             
-             template<typename ExpressionPolicyType>
-             C(const Expression<ExpressionPolicyType>& rhs)
-             {
-                 rhs.Apply(*this);
-             }
-             
-             int val;
-        };
-
-        A& A::operator+=(const C& rhs)
-        {
-         val += rhs.val;
-         return *this;
-        }
-
-        A& A::operator-=(const C& rhs)
-        {
-         val -= rhs.val;
-         return *this;
-        }
-
-        A& A::operator*=(const C& rhs)
-        {
-         val *= rhs.val;
-         return *this;
-        }
-
-        A& A::operator/=(const C& rhs)
-        {
-         val /= rhs.val;
-         return *this;
-        }
-
-        A& A::operator=(const A& rhs)
-        {
-         val = rhs.val;
-         return *this;
-        }
-
-        A& A::operator=(const C& rhs)
-        {
-         val = rhs.val;
-         return *this;
-        }
-
-        A& A::operator=(const B& rhs)
-        {
-         val = rhs.val;
-         return *this;
-        }
-        
-//         ENABLE_EXPRESSION_TEMPLATE_OPERATORS(A);
-//         ENABLE_EXPRESSION_TEMPLATE_OPERATORS2(B, A);
-//         ENABLE_EXPRESSION_TEMPLATE_OPERATORS2(A, C);
-//         ENABLE_EXPRESSION_TEMPLATE_OPERATORS2(B, C);
-// 
-//         std::ostream& operator<<(std::ostream& os, const A& rhs)
-//         {
-//             os << rhs.val;
-//             return os;
-//         }
-//         
-//         std::ostream& operator<<(std::ostream& os, const B& rhs)
-//         {
-//             os << rhs.val;
-//             return os;
-//         }
-//         
-//         std::ostream& operator<<(std::ostream& os, const C& rhs)
-//         {
-//             os << rhs.val;
-//             return os;
-//         }
-//                 
-//         typedef expt::BinaryExpressionPolicy<expt::ConstantExpressionPolicy<A>, 
-//                                  expt::ConstantExpressionPolicy<A>, expt::MultiplyOp > FirstType;
-//         typedef expt::BinaryExpressionPolicy<FirstType, expt::ConstantExpressionPolicy<A>, expt::AddOp> SecondType;
-//         typedef expt::BinaryExpressionPolicy<FirstType, FirstType, expt::AddOp> ThirdType;
-               
-//         expt::Expression<SecondType>
-//         operator+(const expt::Expression<FirstType>& lhs, const A& rhs)
-//         {
-//             return lhs + expt::Expression<expt::ConstantExpressionPolicy<A> >(rhs);
-//         }
-        
-//         template<typename LhsPolicyType>
-//         typename expt::BinaryExpressionTraits<LhsPolicyType, expt::AddOp, expt::ConstantExpressionPolicy<A> >::ResultType
-//         operator+(const expt::Expression<LhsPolicyType>& lhs, const A& rhs)
-//         {
-//             return lhs + expt::Expression<expt::ConstantExpressionPolicy<A> >(rhs);
-//         }
-
-        void testExhaustiveSingleLevelBinaryExpressions()
-        {
-//             // These tests are for single A op B type expressions.
-//             {
-//                 A lhs(10);
-//                 A rhs(5);
-//                 
-//                 //cout << (lhs + lhs) + ((rhs*rhs)+lhs) << endl;
-//                 //(rhs*rhs)+lhs;
-//                 
-//                 expt::Expression<FirstType> exp = rhs*rhs;
-//                 
-//                 
-//                 expt::Expression<SecondType> exp1 = exp + lhs;
-//                 //expt::Expression<ThirdType> exp3 = exp + exp;
-//                                  
-//                 A result = lhs + rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 15);
-//             }
-//             a
-//             {
-//                 B lhs(10);
-//                 A rhs(5);
-//                 
-//                 A result = lhs + rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 15);
-//             }
-//             
-//             {
-//                 A lhs(10);
-//                 C rhs(5);
-//                 
-//                 A result = lhs + rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 15);
-//             }
-//             
-//             {
-//                 B lhs(10);
-//                 C rhs(5);
-//                 
-//                 A result = lhs + rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 15);
-//             }
-//             
-//             ///////////////////////
-//             // Subtraction
-//             ///////////////////////
-//             {
-//                 A lhs(10);
-//                 A rhs(5);
-//                 
-//                 A result = lhs - rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 5);
-//             }
-//             
-//             {
-//                 B lhs(10);
-//                 A rhs(5);
-//                 
-//                 A result = lhs - rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 5);
-//             }
-//             
-//             {
-//                 A lhs(10);
-//                 C rhs(5);
-//                 
-//                 A result = lhs - rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 5);
-//             }
-//             
-//             {
-//                 B lhs(10);
-//                 C rhs(5);
-//                 
-//                 A result = lhs - rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 5);
-//             }
-//             
-//             ///////////////////////
-//             // Multiplication
-//             ///////////////////////
-//             {
-//                 A lhs(10);
-//                 A rhs(5);
-//                 
-//                 A result = lhs * rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 50);
-//             }
-//             
-//             {
-//                 B lhs(10);
-//                 A rhs(5);
-//                 
-//                 A result = lhs * rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 50);
-//             }
-//             
-//             {
-//                 A lhs(10);
-//                 C rhs(5);
-//                 
-//                 A result = lhs * rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 50);
-//             }
-//             
-//             {
-//                 B lhs(10);
-//                 C rhs(5);
-//                 
-//                 A result = lhs * rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 50);
-//             }
-//             
-//             //////////////////////
-//             // Division
-//             //////////////////////
-//             {
-//                 A lhs(10);
-//                 A rhs(5);
-//                 
-//                 A result = lhs / rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 2);
-//             }
-//             
-//             {
-//                 B lhs(10);
-//                 A rhs(5);
-//                 
-//                 A result = lhs / rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 2);
-//             }
-//             
-//             {
-//                 A lhs(10);
-//                 C rhs(5);
-//                 
-//                 A result = lhs / rhs;
-//                 BOOST_CHECK_EQUAL(result.val, 2);
-//             }
-//             
-//             {
-//                 B lhs(10);
-//                 C rhs(5);
-//                 
-//                 A result = lhs / rhs;
-//                 cout << lhs/rhs << endl;
-//                 BOOST_CHECK_EQUAL(result.val, 2);
-//             }
-        }
-        
-        void testExhaustive2OpBinaryExpressions()
-        {
-            // Tests all possible combinations of A op B op C,
-            // with varying priorities among the operators.
-        }
+        }        
      }
 }
 

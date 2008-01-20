@@ -54,44 +54,10 @@ namespace ErrorUtil
             NekError(const std::string& message) : std::runtime_error(message) {}
     };
         
-    #ifdef ENABLE_NEKTAR_EXCEPTIONS
-        static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
-        {
-            std::string errorMessage = std::string(routine) + "[" +
-                    boost::lexical_cast<std::string>(lineNumber) + "]:" +
-                    std::string(msg);
-            //std::cerr << errorMessage << std::endl;
-            throw NekError(errorMessage);
-        }
-    #else // ENABLE_NEKTAR_EXCEPTION
-
-        static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
-        {
-            switch(type)
-            {
-                case efatal:
-                    std::cerr << "Fatal: Level " << level << " assertion violation\n" << routine << "[" << lineNumber << "]:" << msg << std::endl;
-                    exit(1);
-                    break;
-                case ewarning:
-                    std::cerr << "Warning: Level " << level << " assertion violation\n" << routine << ": " << msg << std::endl;
-                    break;
-                default:
-                    std::cerr << "Unknown warning type" << std::endl;
-            }
-        }
-        
-        static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
-        {
-            Error(type, routine, lineNumber, msg, 0);
-        }
-    #endif // ENABLE_NEKTAR_EXCEPTION
+    void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level);
+    void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level);
+    void Error(ErrType type, const char *routine, int lineNumber, const char *msg);
     
-    // This method is necessary for ASSERTLX when the message is passed in as a std::string object.
-    static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level)
-    {
-        Error(type, routine, lineNumber, msg.c_str(), level);
-    }
     
 } // end of namespace
 
@@ -146,6 +112,9 @@ namespace ErrorUtil
 
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.8  2007/07/10 22:22:19  jfrazier
+Added an additional indicator of the error severity (fatal or warning).
+
 Revision 1.7  2007/06/10 23:36:59  bnelson
 A previous change to ErrorUtil::Error added an additional level parameter, breaking code which called it directly outside of ErrorUtil.  A new method without this parameter was added.
 

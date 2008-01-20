@@ -67,7 +67,7 @@ namespace Nektar
             {
                 Array<OneD, CountedObject<double> > result = Policy::Initialize(5, 5, policyData);
                 BOOST_CHECK_EQUAL(result.num_elements(), 5);
-                CountedObject<double>::check(5, 0, 0, 0, 0, 0);
+                CountedObject<double>::Check(5, 0, 0, 0, 0, 0);
             }
 
             {
@@ -89,7 +89,7 @@ namespace Nektar
                 {
                     BOOST_CHECK_EQUAL(*iter, initValue);
                 }
-                CountedObject<double>::check(0, 0, 0, 5, 0, 0);
+                CountedObject<double>::Check(0, 0, 0, 5, 0, 0);
             }
 
             {
@@ -107,7 +107,7 @@ namespace Nektar
                 CountedObject<double>::ClearCounters();
                 Array<OneD, CountedObject<double> > result = Policy::Initialize(3, 3, buf, policyData);
                 BOOST_CHECK_EQUAL(result.num_elements(), 3);
-                CountedObject<double>::check(0, 0, 0, 3, 0, 0);
+                CountedObject<double>::Check(0, 0, 0, 3, 0, 0);
 
                 BOOST_CHECK_EQUAL(result[0], CountedObject<double>(1));
                 BOOST_CHECK_EQUAL(result[1], CountedObject<double>(2));
@@ -130,7 +130,7 @@ namespace Nektar
                 CountedObject<double>::ClearCounters();
                 Array<OneD, CountedObject<double> > result = Policy::Initialize(3, 3, array_buf, policyData);
                 BOOST_CHECK_EQUAL(result.num_elements(), 3);
-                CountedObject<double>::check(3, 0, 0, 0, 0, 3);
+                CountedObject<double>::Check(3, 0, 0, 0, 0, 3);
 
                 BOOST_CHECK_EQUAL(result[0], CountedObject<double>(1));
                 BOOST_CHECK_EQUAL(result[1], CountedObject<double>(2));
@@ -141,7 +141,7 @@ namespace Nektar
                 CountedObject<double>::ClearCounters();
                 Array<OneD, CountedObject<double> > result = Policy::Initialize(2, 2, array_buf, policyData);
                 BOOST_CHECK_EQUAL(result.num_elements(), 2);
-                CountedObject<double>::check(2, 0, 0, 0, 0, 2);
+                CountedObject<double>::Check(2, 0, 0, 0, 0, 2);
 
                 BOOST_CHECK_EQUAL(result[0], CountedObject<double>(1));
                 BOOST_CHECK_EQUAL(result[1], CountedObject<double>(2));

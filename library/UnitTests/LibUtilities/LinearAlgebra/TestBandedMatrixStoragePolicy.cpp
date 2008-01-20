@@ -102,7 +102,7 @@ namespace Nektar
                 Array<OneD, CountedObject<NekDouble> > result = Policy::Initialize(5, 5, 
                     initValue, policyData);
                 BOOST_CHECK_EQUAL(result.num_elements(), 20);
-                CountedObject<NekDouble>::check(0, 0, 0, 20, 0, 0);
+                CountedObject<NekDouble>::Check(0, 0, 0, 20, 0, 0);
                 for(Array<OneD, CountedObject<NekDouble> >::iterator iter = result.begin(); iter != result.end(); ++iter)
                 {
                     BOOST_CHECK_EQUAL(*iter, CountedObject<NekDouble>(7) );
@@ -330,7 +330,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(11, m(3,2).GetValue());
             BOOST_CHECK_EQUAL(12, m(3,3).GetValue());
 
-            CountedObject<NekDouble>::check(0, 0, 0, 0, 0, 0);
+            CountedObject<NekDouble>::Check(0, 0, 0, 0, 0, 0);
 
         }
 

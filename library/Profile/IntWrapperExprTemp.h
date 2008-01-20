@@ -1,15 +1,16 @@
 
-#ifndef NEKTAR_PROFILE_INT_WRAPPER_H
-#define NEKTAR_PROFILE_INT_WRAPPER_H
+#ifndef NEKTAR_PROFILE_INT_WRAPPER_EXP_TEMP_H
+#define NEKTAR_PROFILE_INT_WRAPPER_EXP_TEMP_H
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/ExpressionTemplates/Expression.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
 #include <LibUtilities/ExpressionTemplates/ConstantExpressionTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
-namespace norm
+namespace expr
 {
     class IntWrapper
     {
@@ -22,7 +23,7 @@ namespace norm
             template<typename PolicyType>
             explicit IntWrapper(const Nektar::Expression<PolicyType>& rhs)
             {
-                rhs.Apply(*this);
+                rhs.Evaluate(*this);
             }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
             
@@ -48,50 +49,28 @@ namespace norm
             int m_value;
     };
 
-    void AddIntWrapper(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2);
-    void AddIntWrapper(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
+                      
+    void AddIntWrapperExprTemp(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2);
+    void AddIntWrapperExprTemp(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
                       const IntWrapper& r3);
-    void AddIntWrapper(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
+    void AddIntWrapperExprTemp(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
                       const IntWrapper& r3,
                       const IntWrapper& r4);
-    void AddIntWrapper(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
+    void AddIntWrapperExprTemp(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
                       const IntWrapper& r3,
                       const IntWrapper& r4,
                       const IntWrapper& r5);
-    void AddIntWrapper(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
+    void AddIntWrapperExprTemp(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
                       const IntWrapper& r3,
                       const IntWrapper& r4,
                       const IntWrapper& r5,
                       const IntWrapper& r6);                  
-    void AddIntWrapper(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
+    void AddIntWrapperExprTemp(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
                       const IntWrapper& r3,
                       const IntWrapper& r4,
                       const IntWrapper& r5,
                       const IntWrapper& r6,
-                      const IntWrapper& r7);
-
-    void AddIntWrapperManualAccum(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2);
-    void AddIntWrapperManualAccum(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
-                      const IntWrapper& r3);
-    void AddIntWrapperManualAccum(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
-                      const IntWrapper& r3,
-                      const IntWrapper& r4);
-    void AddIntWrapperManualAccum(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
-                      const IntWrapper& r3,
-                      const IntWrapper& r4,
-                      const IntWrapper& r5);
-    void AddIntWrapperManualAccum(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
-                      const IntWrapper& r3,
-                      const IntWrapper& r4,
-                      const IntWrapper& r5,
-                      const IntWrapper& r6);                  
-    void AddIntWrapperManualAccum(IntWrapper& result, const IntWrapper& r1, const IntWrapper& r2,
-                      const IntWrapper& r3,
-                      const IntWrapper& r4,
-                      const IntWrapper& r5,
-                      const IntWrapper& r6,
-                      const IntWrapper& r7);
+                      const IntWrapper& r7);  
 }
-                  
-                                
+                            
 #endif //NEKTAR_PROFILE_INT_WRAPPER_H

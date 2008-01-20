@@ -14,42 +14,42 @@
 
 namespace Nektar
 {
-    template<typename MatrixType>
-    class BinaryExpressionEvaluator<BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, AddOp, ConstantExpressionPolicy<MatrixType> >,
-                                    BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, AddOp, ConstantExpressionPolicy<MatrixType> >,
-                                    MatrixType, AddOp, BinaryNullOp>
-    {
-        public:
-            typedef BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, AddOp, ConstantExpressionPolicy<MatrixType> > PolicyType;
-            static void Eval(const Expression<PolicyType>& lhs, 
-                             const Expression<PolicyType>& rhs,
-                             Accumulator<MatrixType>& result)
-            {
-                const MatrixType& m1 = (*lhs).first;
-                const MatrixType& m2 = (*lhs).second;
-                const MatrixType& m3 = (*rhs).first;
-                const MatrixType& m4 = (*rhs).second;
-                
-                const typename MatrixType::NumberType* b1 = m1.GetRawPtr();
-                const typename MatrixType::NumberType* b2 = m2.GetRawPtr();
-                const typename MatrixType::NumberType* b3 = m3.GetRawPtr();
-                const typename MatrixType::NumberType* b4 = m4.GetRawPtr();
-                
-                unsigned int size = m1.GetStorageSize();
-
-                typename MatrixType::NumberType* r = (*result).GetRawPtr();
-                typename MatrixType::NumberType* end = r+size;
-                while( r < end )
-                {
-                    *r = *b1 + *b2 + *b3 + *b4;
-                    ++b1;
-                    ++b2;
-                    ++b3;
-                    ++b4;
-                    ++r;
-                } 
-            }
-    };
+//    template<typename MatrixType>
+//    class BinaryExpressionEvaluator<BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, AddOp, ConstantExpressionPolicy<MatrixType> >,
+//                                    BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, AddOp, ConstantExpressionPolicy<MatrixType> >,
+//                                    MatrixType, AddOp, BinaryNullOp>
+//    {
+//        public:
+//            typedef BinaryExpressionPolicy<ConstantExpressionPolicy<MatrixType>, AddOp, ConstantExpressionPolicy<MatrixType> > PolicyType;
+//            static void Eval(const Expression<PolicyType>& lhs, 
+//                             const Expression<PolicyType>& rhs,
+//                             Accumulator<MatrixType>& result)
+//            {
+//                const MatrixType& m1 = (*lhs).first;
+//                const MatrixType& m2 = (*lhs).second;
+//                const MatrixType& m3 = (*rhs).first;
+//                const MatrixType& m4 = (*rhs).second;
+//                
+//                const typename MatrixType::NumberType* b1 = m1.GetRawPtr();
+//                const typename MatrixType::NumberType* b2 = m2.GetRawPtr();
+//                const typename MatrixType::NumberType* b3 = m3.GetRawPtr();
+//                const typename MatrixType::NumberType* b4 = m4.GetRawPtr();
+//                
+//                unsigned int size = m1.GetStorageSize();
+//
+//                typename MatrixType::NumberType* r = (*result).GetRawPtr();
+//                typename MatrixType::NumberType* end = r+size;
+//                while( r < end )
+//                {
+//                    *r = *b1 + *b2 + *b3 + *b4;
+//                    ++b1;
+//                    ++b2;
+//                    ++b3;
+//                    ++b4;
+//                    ++r;
+//                } 
+//            }
+//    };
 }
 
 void AddMatricesExprTemp(Nektar::NekMatrix<double>& result,

@@ -346,7 +346,7 @@
 ////             CountedObject<TestTemporary>::clearCounters();
 ////             TestTemporary c = a + b;
 ////             
-////             CountedObject<TestTemporary>::check(1, 0, 0, 0, 0, 1);
+////             CountedObject<TestTemporary>::Check(1, 0, 0, 0, 0, 1);
 //        }
 //        
 //        

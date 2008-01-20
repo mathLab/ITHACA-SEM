@@ -118,7 +118,7 @@ namespace Nektar
                 numberOf3ParameterConstructions = 0;
             }
 
-            static void check(unsigned int expectedDefaultConstructed, unsigned int expectedConstructedFromInt,
+            static void Check(unsigned int expectedDefaultConstructed, unsigned int expectedConstructedFromInt,
                                 unsigned int expectedDestroyed, unsigned int expectedCopied, unsigned int expectedCloned,
                                 unsigned int expectedAssigned)
             {
@@ -184,6 +184,9 @@ namespace Nektar
 
 /**
     $Log: CountedObject.h,v $
+    Revision 1.5  2007/09/12 03:59:41  bnelson
+    *** empty log message ***
+
     Revision 1.4  2007/05/16 02:47:29  bnelson
     Fixed a non-explicit constructor.
 

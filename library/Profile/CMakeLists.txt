@@ -13,6 +13,7 @@ SET(Headers
     StringConcat.h
     StringConcatExprTemp.h
     IntWrapper.h
+    IntWrapperExprTemp.h
     VectorOps.h
     VectorOpsExprTemp.h
     MatrixOps.h

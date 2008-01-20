@@ -1,4 +1,5 @@
 #include "IntWrapper.h"
+#include "IntWrapperExprTemp.h"
 #include <boost/lexical_cast.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <Profile/StringConcat.h>
@@ -9,6 +10,7 @@
 #include "VectorOpsExprTemp.h"
 #include "MatrixOps.h"
 #include "MatrixOpsExprTemp.h"
+
 
 #include <iostream>
 
@@ -532,38 +534,45 @@ void RunIntWrapperTests(unsigned int numTests)
     boost::timer t;
     double elapsedTime = 0.0;
     
-    IntWrapper strVals[] = { IntWrapper(1), IntWrapper(2), IntWrapper(3), IntWrapper(4),
-                             IntWrapper(5), IntWrapper(6) };
-    IntWrapper result;
-    
-    cout << "Int Wrapper Tests" << endl;
-    cout << "---------------------" << endl;
-    t.restart();
-    for(unsigned int i = 0; i < numTests; ++i)
     {
-       AddIntWrapper(result, strVals[0], strVals[1]);    
+        norm::IntWrapper strVals[] = { norm::IntWrapper(1), norm::IntWrapper(2), norm::IntWrapper(3), norm::IntWrapper(4),
+                                 norm::IntWrapper(5), norm::IntWrapper(6) };
+        norm::IntWrapper result;
+        
+        cout << "Int Wrapper Tests" << endl;
+        cout << "---------------------" << endl;
+        t.restart();
+        for(unsigned int i = 0; i < numTests; ++i)
+        {
+           AddIntWrapper(result, strVals[0], strVals[1]);    
+        }
+        elapsedTime = t.elapsed();
+        cout << "Straight Addition - Total : " << elapsedTime << endl;
+        cout << "Straight Addition - PerOp : " << elapsedTime/(double)numTests << endl;
+        
+        t.restart();
+        for(unsigned int i = 0; i < numTests; ++i)
+        {
+            AddIntWrapperManualAccum(result, strVals[0], strVals[1]);
+        }
+        elapsedTime = t.elapsed();
+        cout << "Manual Accumulator - Total : " << elapsedTime << endl;
+        cout << "Manual Accumulator - PerOp : " << elapsedTime/(double)numTests << endl;
     }
-    elapsedTime = t.elapsed();
-    cout << "Straight Addition - Total : " << elapsedTime << endl;
-    cout << "Straight Addition - PerOp : " << elapsedTime/(double)numTests << endl;
     
-    t.restart();
-    for(unsigned int i = 0; i < numTests; ++i)
     {
-        AddIntWrapperManualAccum(result, strVals[0], strVals[1]);
+        expr::IntWrapper strVals[] = { expr::IntWrapper(1), expr::IntWrapper(2), expr::IntWrapper(3), expr::IntWrapper(4),
+                                 expr::IntWrapper(5), expr::IntWrapper(6) };
+        expr::IntWrapper result;
+        t.restart();
+        for(unsigned int i = 0; i < numTests; ++i)
+        {
+            AddIntWrapperExprTemp(result, strVals[0], strVals[1]);
+        }
+        elapsedTime = t.elapsed();
+        cout << "Expression Templates - Total : " << elapsedTime << endl;
+        cout << "Expression Templates - PerOp : " << elapsedTime/(double)numTests << endl;
     }
-    elapsedTime = t.elapsed();
-    cout << "Manual Accumulator - Total : " << elapsedTime << endl;
-    cout << "Manual Accumulator - PerOp : " << elapsedTime/(double)numTests << endl;
-    
-    t.restart();
-    for(unsigned int i = 0; i < numTests; ++i)
-    {
-        AddIntWrapperExprTemp(result, strVals[0], strVals[1]);
-    }
-    elapsedTime = t.elapsed();
-    cout << "Expression Templates - Total : " << elapsedTime << endl;
-    cout << "Expression Templates - PerOp : " << elapsedTime/(double)numTests << endl;
     
     
 }

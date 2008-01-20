@@ -318,6 +318,31 @@ namespace Nektar
             BOOST_CHECK_EQUAL(m1.GetTransposeFlag(), 'N');
             BOOST_CHECK_EQUAL(tm1.GetTransposeFlag(), 'T');
         }
+        
+        BOOST_AUTO_TEST_CASE(TestScalarMatrixMultily)
+        {
+            double buf1[] = { 1, 4,
+                                  2, 5,
+                                  3, 6};
+                                  
+            NekMatrix<double> m1(2, 3, buf1);
+            NekMatrix<double> m2 = m1*2.0;
+            NekMatrix<double> m3 = 3.0*m1;
+            
+            double m2_expected_result_buf[] = { 2.0, 8.0,
+                                          4.0, 10.0,
+                                          6.0, 12.0 };
+                                          
+            double m3_expected_result_buf[] = { 3.0, 12.0,
+                                          6.0, 15.0,
+                                          9.0, 18.0 };
+                                          
+            NekMatrix<double> m2_expected_result(2, 3, m2_expected_result_buf);
+            NekMatrix<double> m3_expected_result(2, 3, m3_expected_result_buf);
+            
+            BOOST_CHECK_EQUAL(m2_expected_result, m2);
+            BOOST_CHECK_EQUAL(m3_expected_result, m3);
+        }
     }
 
 }

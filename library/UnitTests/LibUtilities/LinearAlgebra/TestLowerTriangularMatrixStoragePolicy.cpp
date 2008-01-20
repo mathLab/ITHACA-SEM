@@ -67,7 +67,7 @@ namespace Nektar
                 CountedObject<NekDouble>::ClearCounters();
                 Array<OneD, CountedObject<NekDouble> > result = Policy::Initialize(5, 5, policyData);
                 BOOST_CHECK_EQUAL(result.num_elements(), 15);
-                CountedObject<NekDouble>::check(15, 0, 0, 0, 0, 0);
+                CountedObject<NekDouble>::Check(15, 0, 0, 0, 0, 0);
             }
 
             {
@@ -86,7 +86,7 @@ namespace Nektar
                 Array<OneD, CountedObject<NekDouble> > result = Policy::Initialize(5, 5, 
                     initValue, policyData);
                 BOOST_CHECK_EQUAL(result.num_elements(), 15);
-                CountedObject<NekDouble>::check(0, 0, 0, 15, 0, 0);
+                CountedObject<NekDouble>::Check(0, 0, 0, 15, 0, 0);
                 for(Array<OneD, CountedObject<NekDouble> >::iterator iter = result.begin(); iter != result.end(); ++iter)
                 {
                     BOOST_CHECK_EQUAL(*iter, CountedObject<NekDouble>(7) );
@@ -111,7 +111,7 @@ namespace Nektar
                 CountedObject<NekDouble>::ClearCounters();
                 Array<OneD, CountedObject<NekDouble> > result = Policy::Initialize(3, 3, buf, policyData);
                 BOOST_CHECK_EQUAL(result.num_elements(), 6);
-                CountedObject<NekDouble>::check(0, 0, 0, 6, 0, 0);
+                CountedObject<NekDouble>::Check(0, 0, 0, 6, 0, 0);
 
                 BOOST_CHECK_EQUAL(result[0], CountedObject<NekDouble>(1));
                 BOOST_CHECK_EQUAL(result[1], CountedObject<NekDouble>(2));
@@ -142,7 +142,7 @@ namespace Nektar
                 CountedObject<NekDouble>::ClearCounters();
                 Array<OneD, CountedObject<NekDouble> > result = Policy::Initialize(3, 3, array_buf, policyData);
                 BOOST_CHECK_EQUAL(result.num_elements(), 6);
-                CountedObject<NekDouble>::check(0, 0, 0, 6, 0, 0);
+                CountedObject<NekDouble>::Check(0, 0, 0, 6, 0, 0);
 
                 BOOST_CHECK_EQUAL(result[0], CountedObject<NekDouble>(1));
                 BOOST_CHECK_EQUAL(result[1], CountedObject<NekDouble>(2));
@@ -168,7 +168,7 @@ namespace Nektar
                 CountedObject<NekDouble>::ClearCounters();
                 BOOST_CHECK_NO_THROW(result = Policy::Initialize(3, 3, array_buf, policyData));
                 BOOST_CHECK_EQUAL(6, result.num_elements());
-                CountedObject<NekDouble>::check(0, 0, 0, 6, 0, 0);
+                CountedObject<NekDouble>::Check(0, 0, 0, 6, 0, 0);
             }
 
             {

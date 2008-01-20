@@ -58,7 +58,7 @@ namespace Nektar
                                const StdRegions::StdExpansionVector &locexp, 
                                const SpatialDomains::MeshGraph2D &graph2D);
 
-            LocalToGlobalMap2D::LocalToGlobalMap2D(const int loclen, 
+            LocalToGlobalMap2D(const int loclen, 
                                                    const StdRegions::StdExpansionVector &locexp, 
                                                    const SpatialDomains::MeshGraph2D &graph2D,
                                                    const ConstArray<OneD,MultiRegions::ExpList1DSharedPtr> &bndCondExp,
@@ -224,6 +224,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap2D.h,v $
+/** Revision 1.7  2007/12/06 22:52:30  pvos
+/** 2D Helmholtz solver updates
+/**
 /** Revision 1.6  2007/10/03 11:37:51  sherwin
 /** Updates relating to static condensation implementation
 /**

@@ -63,7 +63,7 @@ namespace Nektar
             ContExpList2D(SpatialDomains::MeshGraph2D &graph2D,
                           const bool constructMap = true);
             
-            ContExpList2D::ContExpList2D(const ContExpList2D &In);
+            ContExpList2D(const ContExpList2D &In);
             
             ~ContExpList2D();
 
@@ -136,6 +136,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.h,v $
+* Revision 1.7  2007/12/17 13:05:04  sherwin
+* Made files compatible with modifications in StdMatrixKey which now holds constants
+*
 * Revision 1.6  2007/12/06 22:52:29  pvos
 * 2D Helmholtz solver updates
 *

@@ -61,10 +61,24 @@ namespace Nektar
     // The following classes are workarounds for visual studio.
     // Theoretically, typename BOOST_TYPEOF_TPL(NekAdd(LhsType, RhsType)) would be sufficient,
     // but it seems to confuse visual studio.
-    template<typename LhsType, typename RhsType>
+    template<typename BaseLhsType, typename BaseRhsType>
     class AdditionTraits
     {
         public:
+            typedef typename boost::remove_const<typename boost::remove_reference<BaseLhsType>::type>::type LhsType;
+            typedef typename boost::remove_const<typename boost::remove_reference<BaseRhsType>::type>::type RhsType;
+            
+            // If you get a compile error here, you may have one of the following:
+            //
+            // LhsType or RhsType don't have default constructors.  The type 
+            // deduction mechanism needs an accessible default constructor.  The 
+            // constructor doesn't need to do anything - it simply needs to exist.
+            //
+            // A two parameter NekAdd has not been defined.  A NekAdd of the form:
+            //
+            // ResultType NekAdd(const LhsType& lhs, const RhsType& rhs);
+            //
+            // must exist for type deduction to work.
             BOOST_TYPEOF_NESTED_TYPEDEF_TPL(nested, NekAdd(LhsType(), RhsType()));
             typedef typename nested::type ResultType;
             typedef HasOpEqualTraits<LhsType, RhsType, AddOp> HasOpEqual;

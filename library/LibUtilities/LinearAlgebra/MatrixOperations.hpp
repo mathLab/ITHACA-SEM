@@ -125,33 +125,43 @@ namespace Nektar
         }
     }
         
-    // Temporary only for testing.
-    template<typename DataType>
-    void NekMultiplyEqual(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
-                          const NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& rhs)
+//    // Temporary only for testing.
+//    template<typename DataType>
+//    void NekMultiplyEqual(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
+//                          const NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& rhs)
+//    {
+//        Array<OneD, DataType> cache(result.GetColumns(), DataType(0));
+//        for(unsigned int i = 0; i < result.GetRows(); ++i)
+//        {
+//            for(unsigned int j = 0; j < result.GetColumns(); ++j)
+//            {
+//                DataType t = DataType(0);
+//
+//                // Set the result(i,j) element.
+//                for(unsigned int k = 0; k < result.GetColumns(); ++k)
+//                {
+//                    t += result(i,k)*rhs(k,j);
+//                }
+//                cache[j] = t;
+//            }
+//            
+//            for(unsigned int j = 0; j < result.GetColumns(); ++j)
+//            {
+//                result(i,j) = cache[j];
+//            }
+//        }
+//    }
+        
+    template<typename LhsDataType, typename MatrixType>
+    void NekMultiplyEqual(NekMatrix<LhsDataType, MatrixType, StandardMatrixTag>& lhs,
+                          typename boost::call_traits<LhsDataType>::const_reference rhs)
     {
-        Array<OneD, DataType> cache(result.GetColumns(), DataType(0));
-        for(unsigned int i = 0; i < result.GetRows(); ++i)
+        typedef typename NekMatrix<LhsDataType, MatrixType, StandardMatrixTag>::iterator iterator;
+        for( iterator iter = lhs.begin(); iter != lhs.end(); ++iter)
         {
-            for(unsigned int j = 0; j < result.GetColumns(); ++j)
-            {
-                DataType t = DataType(0);
-
-                // Set the result(i,j) element.
-                for(unsigned int k = 0; k < result.GetColumns(); ++k)
-                {
-                    t += result(i,k)*rhs(k,j);
-                }
-                cache[j] = t;
-            }
-            
-            for(unsigned int j = 0; j < result.GetColumns(); ++j)
-            {
-                result(i,j) = cache[j];
-            }
+            *iter *= rhs;
         }
     }
-        
     #ifdef NEKTAR_USING_BLAS    
     /// \brief Floating point specialization when blas is in use.
     ///
@@ -871,28 +881,28 @@ namespace Nektar
 
 
     
-    GENERATE_TEMPLATED_MULTIPLICATION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
+    GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
     
-    // TODO - Any update possible for this case?  The constant value must be the same as the matrix 
-    // number type.  Seems pretty custom to me.
-    template<typename DataType, typename LhsDataType, typename StorageType, typename MatrixType>
-    typename MultiplicationTraits<NekMatrix<LhsDataType, StorageType, MatrixType>, DataType>::ResultType
-    operator*(const NekMatrix<LhsDataType, StorageType, MatrixType>& lhs, const DataType& rhs)
-    {
-        return NekMultiply(lhs, rhs);
-    }
-                        
-    template<typename DataType, typename RhsDataType, typename StorageType, typename MatrixType>
-    typename MultiplicationTraits<DataType, NekMatrix<RhsDataType, StorageType, MatrixType> >::ResultType
-    operator*(const DataType& lhs, const NekMatrix<RhsDataType, StorageType, MatrixType>& rhs)
-    {
-        return NekMultiply(lhs, rhs);
-    }
-    //GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 3, NekDouble, 0);
-    //GENERATE_MULTIPLICATION_OPERATOR(NekDouble, 0, NekMatrix, 3);
+//    // TODO - Any update possible for this case?  The constant value must be the same as the matrix 
+//    // number type.  Seems pretty custom to me.
+//    template<typename DataType, typename LhsDataType, typename StorageType, typename MatrixType>
+//    typename MultiplicationTraits<NekMatrix<LhsDataType, StorageType, MatrixType>, DataType>::ResultType
+//    operator*(const NekMatrix<LhsDataType, StorageType, MatrixType>& lhs, const DataType& rhs)
+//    {
+//        return NekMultiply(lhs, rhs);
+//    }
+//                        
+//    template<typename DataType, typename RhsDataType, typename StorageType, typename MatrixType>
+//    typename MultiplicationTraits<DataType, NekMatrix<RhsDataType, StorageType, MatrixType> >::ResultType
+//    operator*(const DataType& lhs, const NekMatrix<RhsDataType, StorageType, MatrixType>& rhs)
+//    {
+//        return NekMultiply(lhs, rhs);
+//    }
+    GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 3, NekDouble, 0);
+    GENERATE_MULTIPLICATION_OPERATOR(NekDouble, 0, NekMatrix, 3);
     
     GENERATE_DIVISION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
-    GENERATE_TEMPLATED_ADDITION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
+    GENERATE_ADDITION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
     GENERATE_SUBTRACTION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
     
     // TODO - Either update the GENERATE macros to allow non-type template parameters,

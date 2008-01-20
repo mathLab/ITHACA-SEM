@@ -109,6 +109,25 @@ namespace Nektar
             public:
                 typedef NekMatrixMultiplicationMetadata MetadataType;
         };
+        
+        template<typename LhsDataType, typename LhsStorageType, typename LhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>,
+                                             typename NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>::NumberType,
+                                             MultiplyOp>
+        {
+            public:
+                typedef NekMatrixMultiplicationMetadata MetadataType;
+        };
+
+        template<typename RhsDataType, typename RhsStorageType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<typename NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>::NumberType,
+                                             NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>,
+                                             MultiplyOp>
+        {
+            public:
+                typedef NekMatrixMultiplicationMetadata MetadataType;
+        };
+
     #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 // #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 //     // All of the expression interfaces for NekMatrix should go here.
@@ -399,6 +418,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.31  2007/10/03 03:00:14  bnelson
+    Added precompiled headers.
+
     Revision 1.30  2007/09/12 04:01:18  bnelson
     Updates for column major matrices.
 

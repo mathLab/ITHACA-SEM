@@ -38,6 +38,8 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits.hpp>
 
 namespace Nektar
 {
@@ -81,31 +83,45 @@ namespace Nektar
              }
      };
      
-     class NekMatrixAdditionAndSubtractionMetadata : public NekMatrixMetadata
-     {
-         public:
-             NekMatrixAdditionAndSubtractionMetadata(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs) :
-                 NekMatrixMetadata(lhs.Rows, lhs.Columns)
-             {
-                 ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree.");
-             }
- 
-             NekMatrixAdditionAndSubtractionMetadata(const NekMatrixAdditionAndSubtractionMetadata& rhs) :
-                 NekMatrixMetadata(rhs)
-             {
-             }
-             
-             NekMatrixAdditionAndSubtractionMetadata() :
-                 NekMatrixMetadata(0,0)
-             {
-             }
-             
-             NekMatrixAdditionAndSubtractionMetadata& operator=(const NekMatrixAdditionAndSubtractionMetadata& rhs)
-             {
-                 NekMatrixMetadata::operator=(rhs);
-                 return *this;
-             }
-         private:
+    class NekMatrixAdditionAndSubtractionMetadata : public NekMatrixMetadata
+    {
+        public:
+            template<typename T>
+            NekMatrixAdditionAndSubtractionMetadata(const T& lhs, const NekMatrixMetadata& rhs,
+                                                    typename boost::disable_if<boost::is_base_of<NekMatrixMetadata, T> >::type* = 0) :
+                NekMatrixMetadata(rhs.Rows, rhs.Columns)
+            {
+            }
+            
+            template<typename T>
+            NekMatrixAdditionAndSubtractionMetadata(const NekMatrixMetadata& lhs, const T& rhs,
+                                                    typename boost::disable_if<boost::is_base_of<NekMatrixMetadata, T> >::type* = 0) :
+                NekMatrixMetadata(lhs.Rows, lhs.Columns)
+            {
+            }
+            
+            NekMatrixAdditionAndSubtractionMetadata(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs) :
+                NekMatrixMetadata(lhs.Rows, lhs.Columns)
+            {
+                ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree.");
+            }
+
+            NekMatrixAdditionAndSubtractionMetadata(const NekMatrixAdditionAndSubtractionMetadata& rhs) :
+                NekMatrixMetadata(rhs)
+            {
+            }
+
+            NekMatrixAdditionAndSubtractionMetadata() :
+                NekMatrixMetadata(0,0)
+            {
+            }
+
+            NekMatrixAdditionAndSubtractionMetadata& operator=(const NekMatrixAdditionAndSubtractionMetadata& rhs)
+            {
+                NekMatrixMetadata::operator=(rhs);
+                return *this;
+            }
+        private:
              
  
      };
@@ -113,27 +129,41 @@ namespace Nektar
      class NekMatrixMultiplicationMetadata : public NekMatrixMetadata
      {
          public:
-             NekMatrixMultiplicationMetadata(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs) :
-                 NekMatrixMetadata(lhs.Rows, rhs.Columns)
-             {
-                 ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree.");
-             }
-             
-             NekMatrixMultiplicationMetadata(const NekMatrixMultiplicationMetadata& rhs) :
-                 NekMatrixMetadata(rhs)
-             {
-             }
-                     
-             NekMatrixMultiplicationMetadata() :
-                 NekMatrixMetadata(0,0)
-             {
-             }
-             
-             NekMatrixMultiplicationMetadata& operator=(const NekMatrixMultiplicationMetadata& rhs)
-             {
-                 NekMatrixMetadata::operator=(rhs);
-                 return *this;
-             }
+            template<typename T>
+            NekMatrixMultiplicationMetadata(const T& lhs, const NekMatrixMetadata& rhs,
+                                            typename boost::disable_if<boost::is_base_of<NekMatrixMetadata, T> >::type* = 0) :
+                NekMatrixMetadata(rhs.Rows, rhs.Columns)
+            {
+            }
+            
+            template<typename T>
+            NekMatrixMultiplicationMetadata(const NekMatrixMetadata& lhs, const T& rhs,
+                                            typename boost::disable_if<boost::is_base_of<NekMatrixMetadata, T> >::type* = 0) :
+                NekMatrixMetadata(lhs.Rows, lhs.Columns)
+            {
+            }
+            
+            NekMatrixMultiplicationMetadata(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs) :
+                NekMatrixMetadata(lhs.Rows, rhs.Columns)
+            {
+                ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree.");
+            }
+
+            NekMatrixMultiplicationMetadata(const NekMatrixMultiplicationMetadata& rhs) :
+                NekMatrixMetadata(rhs)
+            {
+            }
+                 
+            NekMatrixMultiplicationMetadata() :
+                NekMatrixMetadata(0,0)
+            {
+            }
+
+            NekMatrixMultiplicationMetadata& operator=(const NekMatrixMultiplicationMetadata& rhs)
+            {
+                NekMatrixMetadata::operator=(rhs);
+                return *this;
+            }
          private:
              
              
@@ -240,6 +270,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrixMetadata.hpp,v $
+    Revision 1.9  2007/10/03 03:00:14  bnelson
+    Added precompiled headers.
+
     Revision 1.8  2007/08/16 02:11:57  bnelson
     *** empty log message ***
 

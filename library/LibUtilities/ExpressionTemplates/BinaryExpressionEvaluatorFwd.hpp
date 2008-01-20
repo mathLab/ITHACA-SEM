@@ -46,7 +46,7 @@ namespace Nektar
                 template <typename, typename> class OpType, 
                 template <typename, typename> class ParentOpType = BinaryNullOp,
                 typename enabled = void>
-    class BinaryExpressionEvaluator;
+    struct BinaryExpressionEvaluator;
 }
         
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

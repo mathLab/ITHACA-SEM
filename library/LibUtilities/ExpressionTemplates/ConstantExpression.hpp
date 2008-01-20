@@ -71,6 +71,12 @@ namespace Nektar
                 *accum = d;
             }
             
+            template<template <typename, typename> class ParentOpType>
+            static void Evaluate(Accumulator<ResultType>& accum, typename boost::call_traits<DataType>::const_reference d)
+            {
+                ParentOpType<ResultType, DataType>::ApplyEqual(accum, d);
+            }
+            
             template<typename CheckType>
             static typename boost::enable_if<boost::is_same<CheckType, Type>, bool>::type
             ContainsReference(const CheckType& result, DataType m_data)
@@ -96,6 +102,12 @@ namespace Nektar
     {
         return Expression<ConstantExpressionPolicy<DataType> >(rhs);
     }
+    
+    template<typename T>
+    struct IsConstantExpressionPolicy : public boost::false_type {};
+    
+    template<typename T>
+    struct IsConstantExpressionPolicy<ConstantExpressionPolicy<T> > : public boost::true_type {};
 }
 
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
@@ -103,6 +115,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.15  2008/01/03 04:16:41  bnelson
+    Changed method name in the expression library from Apply to Evaluate.
+
     Revision 1.14  2008/01/02 20:11:22  bnelson
     Fixed error detecting if incoming type was the same as the constant expression's type when looking for aliasing.
 

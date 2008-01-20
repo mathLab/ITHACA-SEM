@@ -52,39 +52,25 @@ namespace Nektar
 {
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-//     namespace expt
-//     {
-//         template<typename DataType, unsigned int dim, unsigned int space>
-//         class ExpressionTraits<NekVector<DataType, dim, space> >
-//         {
-//             public:
-//                 typedef NekVectorMetadata MetadataType;
-//         };
-//     }
+     namespace expt
+     {
+         template<typename DataType, unsigned int dim, unsigned int space>
+         class ExpressionTraits<NekVector<DataType, dim, space> >
+         {
+             public:
+                 typedef NekVectorMetadata MetadataType;
+         };
+     }
 #endif
     
     // Temporary only - at least until we determine expression templates are the way to go.
-    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES   
-    class VectorMetadata
-    {
-        public:
-            template<typename VectorType>
-            VectorMetadata(const VectorType& v) : Rows(v.GetDimension()) {}
-            
-            VectorMetadata(const VectorMetadata& rhs) : Rows(rhs.Rows) {}
-            
-            VectorMetadata(const VectorMetadata& lhs, const VectorMetadata& rhs) : Rows(rhs.Rows) {}
-            
-            VectorMetadata() : Rows(0) {}
-            int Rows;
-    };
-    
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES       
     template<typename DataType, unsigned int dim, unsigned int space>
     class ConstantExpressionTraits<NekVector<DataType, dim, space> >
     {
         public:
             typedef NekVector<DataType, dim, space> result_type;
-            typedef VectorMetadata MetadataType;
+            typedef NekVectorMetadata MetadataType;
     };
 
     template<typename DataType, unsigned int dim, unsigned int space, 
@@ -94,8 +80,19 @@ namespace Nektar
                                          OpType>
     {
         public:
-            typedef VectorMetadata MetadataType;
+            typedef NekVectorMetadata MetadataType;
     };
+    
+    template<typename LhsDataType, typename LhsMatrixType, typename LhsStorageType,
+             typename DataType, unsigned int dim, unsigned int space>
+    class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType, LhsStorageType>,
+                                         NekVector<DataType, dim, space>,
+                                         MultiplyOp>
+    {
+        public:
+            typedef NekVectorMetadata MetadataType;
+    };
+#endif
         
     template<typename DataType, unsigned int dim, unsigned int space>
     void NekAdd(NekVector<DataType, dim, space>& result,
@@ -132,15 +129,7 @@ namespace Nektar
         NekAdd(result, lhs, rhs);
         return result;
     }
-    
-    template<typename DataType, unsigned int dim, unsigned int space>
-    Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<NekVector<DataType, dim, space> >, AddOp,
-                                      ConstantExpressionPolicy<NekVector<DataType, dim, space> > > >
-    operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
-    {
-        return CreateBinaryExpression<AddOp>(lhs, rhs);
-    }
-#else
+
     template<typename DataType, unsigned int dim, unsigned int space>
     NekVector<DataType, dim, space>
     operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
@@ -149,7 +138,6 @@ namespace Nektar
         result += rhs;
         return result;
     }
-#endif
 
     template<typename DataType, unsigned int dim, unsigned int space>
     NekVector<DataType, dim, space>
@@ -307,6 +295,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.24  2008/01/07 04:57:40  bnelson
+    Changed binary expressions so the OpType is listed second instead of third.
+
     Revision 1.23  2007/12/04 04:55:23  bnelson
     *** empty log message ***
 

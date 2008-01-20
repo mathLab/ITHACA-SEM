@@ -22,14 +22,14 @@ namespace Nektar
     // Aggregate information about types.
     
     template<typename LhsPolicy, template<typename, typename> class OpType, typename RhsPolicy, typename enabled = void>
-    class BinaryExpressionTraits : 
-        public IsCommutativeExpression<LhsPolicy, OpType, RhsPolicy>//, 
+    class BinaryExpressionTraits// : 
+        //public IsCommutativeExpression<LhsPolicy, OpType, RhsPolicy>//, 
         //public AssociativeExpressionTraits<LhsPolicy, OpType, RhsPolicy>
     {
         public:
             typedef BinaryExpressionPolicy<LhsPolicy, OpType, RhsPolicy> ResultPolicy;
             typedef Expression<ResultPolicy> ResultType;
-            typedef IsCommutative<LhsPolicy, OpType, RhsPolicy> IsCommutative;
+            //typedef IsCommutative<LhsPolicy, OpType, RhsPolicy> IsCommutative;
             
             static ResultType Apply(const Expression<LhsPolicy>& lhs, const Expression<RhsPolicy>& rhs)
             {
@@ -192,6 +192,11 @@ namespace Nektar
 
 /**
     $Log: BinaryExpressionTraits.hpp,v $
+    Revision 1.14  2008/01/07 04:58:59  bnelson
+    Changed binary expressions so the OpType is listed second instead of third.
+
+    Updates to Commutative and Associative traits so they work with expressions instead of data types.
+
     Revision 1.13  2007/10/04 03:48:54  bnelson
     *** empty log message ***
 

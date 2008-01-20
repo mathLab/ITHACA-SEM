@@ -72,33 +72,21 @@ namespace Nektar
                               typename boost::call_traits<LhsType>::const_reference lhs, 
                               typename boost::call_traits<RhsType>::const_reference rhs)
             {
+                // If you get errors here complaining about invalid conversions, make 
+                // sure you have a 3 argument NekAdd defined.
                 NekAdd(*result, lhs, rhs);
             }
 
             static void ApplyEqual(Accumulator<LhsType>& result,
                                    typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                if( result.IsInitialized() )
-                {
-                    NekAddEqual(*result, rhs);
-                }
-                else
-                {
-                    *result = rhs;
-                }
+                NekAddEqual(*result, rhs);
             }
             
             static void ApplyLeftEqual(Accumulator<ResultType>& result,
                                        typename boost::call_traits<LhsType>::const_reference lhs)
             {
-                if( result.IsInitialized() )
-                {
-                    NekAddLeftEqual(*result, lhs);
-                }
-                else
-                {
-                    *result = lhs;
-                }
+                NekAddLeftEqual(*result, lhs);
             }
 
             static const std::string& AsString()
@@ -147,27 +135,13 @@ namespace Nektar
             static void ApplyEqual(Accumulator<LhsType>& result,
                                     typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                if( result.IsInitialized() )
-                {
-                    NekMultiplyEqual(*result, rhs);
-                }
-                else
-                {
-                    *result = rhs;
-                }
+                NekMultiplyEqual(*result, rhs);
             }
 
             static void ApplyLeftEqual(Accumulator<ResultType>& result,
                                        typename boost::call_traits<LhsType>::const_reference lhs)
             {
-                if( result.IsInitialized() )
-                {
-                    NekMultiplyLeftEqual(*result, lhs);
-                }
-                else
-                {
-                    *result = lhs;
-                }
+                NekMultiplyLeftEqual(*result, lhs);
             }
 
 
@@ -218,28 +192,13 @@ namespace Nektar
             static void ApplyEqual(Accumulator<LhsType>& result,
                                     typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                //TraitsType::DivideEqual(*result, rhs);
-                if( result.IsInitialized() )
-                {
-                    NekDivideEqual(*result, rhs);
-                }
-                else
-                {
-                    *result = rhs;
-                }
+                NekDivideEqual(*result, rhs);
             }
             
             static void ApplyLeftEqual(Accumulator<ResultType>& result,
                                        typename boost::call_traits<LhsType>::const_reference lhs)
             {
-                if( result.IsInitialized() )
-                {
-                    NekDivideLeftEqual(*result, lhs);
-                }
-                else
-                {
-                    *result = lhs;
-                }
+                NekDivideLeftEqual(*result, lhs);
             }
 
 
@@ -280,37 +239,16 @@ namespace Nektar
                 NekSubtract(*result, lhs, rhs);
             }
             
-            //static void ApplyEqual(typename boost::call_traits<LhsType>::const_reference lhs, 
-            //                        typename boost::call_traits<RhsType>::const_reference rhs,
-            //                        Accumulator<ResultType>& result)
-            //{
-            //    TraitsType::SubtractEqual(lhs, rhs, *result);
-            //}
-
             static void ApplyEqual(Accumulator<LhsType>& result,
                                    typename boost::call_traits<RhsType>::const_reference rhs)
             {
-                if( result.IsInitialized() )
-                {
-                    NekSubtractEqual(*result, rhs);
-                }
-                else
-                {
-                    *result = rhs;
-                }
+                NekSubtractEqual(*result, rhs);
             }
             
             static void ApplyLeftEqual(Accumulator<ResultType>& result,
                                        typename boost::call_traits<LhsType>::const_reference lhs)
             {
-                if( result.IsInitialized() )
-                {
-                    NekSubtractLeftEqual(*result, lhs);
-                }
-                else
-                {
-                    *result = lhs;
-                }
+                NekSubtractLeftEqual(*result, lhs);
             }
 
 

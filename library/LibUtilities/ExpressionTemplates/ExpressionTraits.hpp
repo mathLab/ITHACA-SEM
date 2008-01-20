@@ -36,15 +36,20 @@
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TRAITS_H
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TRAITS_H
 
+#include <boost/type_traits.hpp>
+
 namespace Nektar
 {
     template<typename DataType>
-    class ExpressionTraits;
+    struct ExpressionTraits;
 }
 
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_TRAITS_H
 /**
     $Log: ExpressionTraits.hpp,v $
+    Revision 1.5  2007/08/16 02:14:21  bnelson
+    Moved expression templates to the Nektar namespace.
+
     Revision 1.4  2007/01/30 23:37:16  bnelson
     *** empty log message ***
 

@@ -100,6 +100,12 @@ namespace Nektar
             }
                 
     };
+    
+    template<typename T>
+    struct IsBinaryExpressionPolicy : public boost::false_type {};
+    
+    template<typename LhsPolicy, template <typename, typename> class OpType, typename RhsPolicy>
+    struct IsBinaryExpressionPolicy<BinaryExpressionPolicy<LhsPolicy, OpType, RhsPolicy> > : public boost::true_type {};
 }
 
 #endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_BINARY_EXPRESSION_POLICY_HPP

@@ -43,6 +43,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
+#include <UnitTests/CountedObject.h>
 
 namespace Nektar
 {
@@ -69,6 +70,9 @@ namespace Nektar
     
     }
     
+    //    .ilb LhsIsResultType RhsIsResultType IsCommutative IsAssociative
+    //    0-0-- 10000
+    //    00--- 10000
     namespace TestConstantBinarySpecialization0_Case1
     {
 //        boost::mpl::and_
@@ -78,81 +82,96 @@ namespace Nektar
 //    >
 
         // Need R = A + (B*B), where C=B*B
-        class A
+        class A : public CountedObject<A>
         {
             public:
-                A() : Value(0) {}
-                A(int v) : Value(v) {}
-                int Value;
+                A() : CountedObject<A>() {}
+                A(int v) : CountedObject<A>(v)  {}
+                A(const A& rhs) : CountedObject<A>(rhs) {}
+                A& operator=(const A& rhs) { CountedObject<A>::operator=(rhs); return *this; }
         };
         
-        class B
+        class B : public CountedObject<B>
         {
             public:
-                B() : Value(0) {}
-                B(int v) : Value(v) {}
-                int Value;
+                B() : CountedObject<B>() {}
+                B(int v) : CountedObject<B>(v) {}
+                B(const B& rhs) : CountedObject<B>(rhs) {}
+                B& operator=(const B& rhs) { CountedObject<B>::operator=(rhs);  return *this; }
         };
         
-        class C
+        class C : public CountedObject<C>
         {
             public:
-                C() : Value(0) {}
-                C(int v) : Value(v) {}
-                int Value;
+                C() : CountedObject<C>() {}
+                C(int v) : CountedObject<C>(v) {}
+                C(const C& rhs) : CountedObject<C>(rhs) {}
+                C& operator=(const C& rhs) { CountedObject<C>::operator=(rhs); return *this; }
         };
         
-        class R
+        class R : public CountedObject<R>
         {
             public:
-                R() : Value(0) {}
-                R(int v) : Value(v) {}
-                int Value;
+                R() : CountedObject<R>() {}
+                R(int v) : CountedObject<R>(v) {}
+                R(const R& rhs) : CountedObject<R>(rhs) {}
+                R& operator=(const R& rhs) { CountedObject<R>::operator=(rhs);  return *this; }                
         };
         
         C NekMultiply(const B& lhs, const B& rhs)
         {
-            return C(lhs.Value*rhs.Value);
+            return C(lhs.value*rhs.value);
         }
         
         void NekMultiply(C& result, const B& lhs, const B& rhs)
         {
-            result.Value = lhs.Value*rhs.Value;
+            result.value = lhs.value*rhs.value;
         }
         
-        GENERATE_MULTIPLICATION_OPERATOR(B, B);     
+        GENERATE_MULTIPLICATION_OPERATOR(B, 0, B, 0);     
         
         R NekAdd(const A& lhs, const C& rhs)
         {
-            return R(lhs.Value + rhs.Value);
+            return R(lhs.value + rhs.value);
         }
         
         void NekAdd(R& result, const A& lhs, const C& rhs)
         {
-            result.Value = lhs.Value + rhs.Value;
+            result.value = lhs.value + rhs.value;
         }
         
-        GENERATE_ADDITION_OPERATOR(A, C);
+        GENERATE_ADDITION_OPERATOR(A, 0, C, 0);
         
         BOOST_AUTO_TEST_CASE(TestConstantBinarySpecialization0_Case1)
         {
-            A obj1(10);
-            B obj2(2);
-            B obj3(8);
+//            A obj1(10);
+//            B obj2(2);
+//            B obj3(8);
+//            
+//            
+//            typedef BinaryExpressionPolicy<ConstantExpressionPolicy<B>,
+//                                           MultiplyOp,
+//                                           ConstantExpressionPolicy<B> > RhsExpressionType;
+//            typedef ConstantExpressionPolicy<A> LhsExpressionType;
+//            
+//            BOOST_STATIC_ASSERT(( BinaryExpressionEvaluator<LhsExpressionType, RhsExpressionType, R, AddOp, BinaryNullOp>::ClassNum == 301 ));
+//             
+//            Expression<BinaryExpressionPolicy<LhsExpressionType, AddOp, RhsExpressionType> > exp =
+//                obj1 + (obj2*obj3);
+//
+//            R r;
+//            
+//            CountedObject<A>::ClearCounters();
+//            CountedObject<B>::ClearCounters();
+//            CountedObject<C>::ClearCounters();
+//            
+//            Assign(r, exp);
+//            BOOST_CHECK_EQUAL(r.value, 10+2*8);
             
-            typedef BinaryExpressionPolicy<ConstantExpressionPolicy<B>,
-                                           MultiplyOp,
-                                           ConstantExpressionPolicy<B> > RhsExpressionType;
-            typedef ConstantExpressionPolicy<A> LhsExpressionType;
-            
-            BOOST_STATIC_ASSERT(( BinaryExpressionEvaluator<LhsExpressionType, RhsExpressionType, R, AddOp, BinaryNullOp>::ClassNum == 1 ));
-             
-            Expression<BinaryExpressionPolicy<LhsExpressionType, AddOp, RhsExpressionType> > exp =
-                obj1 + (obj2*obj3);
-
-            R r;
-            Assign(r, exp);
-            BOOST_CHECK_EQUAL(r.Value, 10+2*8);
+//            CountedObject<A>::Check(1, 0, 1, 0, 0, 1);
+//            CountedObject<B>::Check(0, 0, 0, 0, 0, 0);
+//            CountedObject<C>::Check(1, 0, 1, 0, 0, 1);
+//            CountedObject<R>::Check(0, 0, 0, 0, 0, 0);
         }
     }
 }

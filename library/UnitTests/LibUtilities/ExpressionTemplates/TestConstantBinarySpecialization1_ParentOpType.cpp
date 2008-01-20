@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: main.cpp
+// File: TestConstantBinarySpecialization1_ParentOpType.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,14 +29,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Unit tests for LibUtilities
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef NEKTAR_USE_EXPRESSION_TEMPLATES
+#define NEKTAR_USE_EXPRESSION_TEMPLATES
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
-#include <boost/test/included/unit_test_framework.hpp>
-//#include <LibUtilities/ExpressionTemplates/ArithmeticTraits.hpp>
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_case_template.hpp>
+#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/unit_test.hpp>
+#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 
-//int NekAdd(int lhs, int rhs);
-
-//typedef Nektar::AdditionTraits<int, int&>::ResultType ResultType;
+namespace Nektar
+{
+}

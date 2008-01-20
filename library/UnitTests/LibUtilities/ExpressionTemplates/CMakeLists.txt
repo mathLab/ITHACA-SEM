@@ -1,24 +1,28 @@
 
 SET(TARGET_NAME ExpressionTemplateUnitTests)
 
-SET(Sources
-    main.cpp   
-    TestTwoParameters.cpp
-    TestThreeParameters.cpp
-    TestFourParameters.cpp
-    TestConstantBinarySpecialization0.cpp
+SET(Sources main.cpp TestTwoParameters.cpp TestThreeParameters.cpp
+    TestFourParameters.cpp TestConstantBinarySpecialization0.cpp
     TestConstantBinarySpecialization1.cpp
     TestConstantBinarySpecialization2.cpp
     TestConstantBinarySpecialization3.cpp
     TestConstantBinarySpecialization4.cpp
     TestConstantBinarySpecialization5.cpp
+    TestConstantBinarySpecialization0_ParentOpType.cpp
+    TestConstantBinarySpecialization1_ParentOpType.cpp
+    TestBinaryExpressionEvaluator_ConstantConstantSpecialization0.cpp
+    TestBinaryExpressionEvaluator_ConstantConstantSpecialization1.cpp
+    TestBinaryExpressionEvaluator_GeneralSpecialization0.cpp
+    TestBinaryExpressionEvaluator_GeneralSpecialization1.cpp
+    TestBinaryExpressionEvaluator_GeneralSpecialization2.cpp	
+    TestBinaryExpressionEvaluator_GeneralSpecialization3.cpp
+    TestBinaryExpressionEvaluator_GeneralSpecialization_ParentsOpType1.cpp
     TestBinaryConstantSpecialization0.cpp
     TestBinaryConstantSpecialization1.cpp
     TestBinaryConstantSpecialization2.cpp
     TestBinaryExpressionEvaluatorWithConstantConstantParameters.cpp
     TestBinaryExpressionEvaluatorWithBinaryConstantParameters.cpp
-    TestAliasing.cpp
-)
+    TestAliasing.cpp )
 
 SET(Headers
 )

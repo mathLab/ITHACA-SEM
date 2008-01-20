@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: TestConstantBinarySpecialization4.cpp
+// File: TestConstantBinarySpecialization0_ParentOpType.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,10 +29,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Tests Constant-Binary specializations which require a temporary
-// for each side.
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 
 #ifndef NEKTAR_USE_EXPRESSION_TEMPLATES
 #define NEKTAR_USE_EXPRESSION_TEMPLATES
@@ -46,56 +46,61 @@
 
 namespace Nektar
 {
-//    // a - Expression is Associative.
-//        // b - Expression is Commutative.
-//        // c - Left Equal Operator is defined.
-//        // d - Constant Expression is result type.
-//        // e - Binary Expression is result type.
-//        // f - In A + (B-C), (A+B) is the result type.
-//        // g - In A + (B-C)
-//        // Case 4 - Evaluate lhs, evaluate rhs with parent op type.
-//        // 1--1-- 000010       
+    namespace ConstantBinaryExpressionSpecialization_ParentOpType0
+    {
 //        template<typename LhsResultType, typename RhsLhsPolicyType, typename RhsRhsPolicyType,
 //                 template <typename, typename> class RhsOpType,
 //                 template <typename, typename> class OpType,
+//                 template <typename, typename> class ParentOpType,
 //                 typename ResultType>
 //        struct BinaryExpressionEvaluator<ConstantExpressionPolicy<LhsResultType>,
-//                                        BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>,
-//                                        ResultType, OpType, BinaryNullOp,
-//                                        typename boost::enable_if
-//                                          boost::mpl::and_
+//                                         BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>,
+//                                         ResultType, OpType, ParentOpType,
+//                                         typename boost::enable_if
+//                                         <
+//                                            boost::mpl::and_
 //                                            <
 //                                                typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative,
-//                                     <
-//                                                     boost::is_same<ResultType, typename ConstantExpressionPolicy<LhsResultType>::ResultType>
+//                                                boost::mpl::not_<boost::is_same<BinaryNullOp<int, int>, ParentOpType<int, int> > >
 //                                            >
-//                                         >::type
-//                                         >
+//                                         >::type >
 //        {
 //            static void Eval(const Expression<ConstantExpressionPolicy<LhsResultType> >& lhs,
 //                             const Expression<BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >& rhs, 
 //                             Accumulator<ResultType>& accum)
 //            {
 //                typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType RhsResultType;
+//                typedef Expression<ConstantExpressionPolicy<LhsResultType> > LhsExpressionType;
+//                typedef Expression<ConstantExpressionPolicy<RhsResultType> > RhsExpressionType;
+//
+//                ParentOpType<ResultType, LhsResultType>::ApplyEqual(accum, *lhs);
+//                typedef AssociativeTraits<ConstantExpressionPolicy<ResultType>, ParentOpType,
+//                                          BinaryExpressionPolicy<LhsExpressionType, OpType, RhsExpressionType> > TraitsType;
+//
+//                typedef typename TraitsType::template LhsOpType<ResultType, typename RhsLhsPolicyType::ResultType, ParentOpType>::type NewLhsOpType;
+//                typedef typename TraitsType::template RhsOpType<ResultType, typename RhsRhsPolicyType::ResultType, ParentOpType>::type NewRhsOpType;
 //                
-//                lhs.Evaluate(accum);
-//                rhs.template Evaluate<OpType>(accum);
+//                NewLhsOpType::ApplyEqual(accum, (*rhs).first);
+//                NewRhsOpType::ApplyEqual(accum, (*rhs).second);
 //            }
-//            
-//            #ifdef NEKTAR_UNIT_TESTS
-//            static const unsigned int ClassNum = 4;
-//            #endif //NEKTAR_UNIT_TESTS
 //        };
 
-//        boost::mpl::and_
-//        <
-//            typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative,
-//            boost::is_same<ResultType, typename ConstantExpressionPolicy<LhsResultType>::ResultType>,
-//            typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::OpEqualsAreDefined
-//        >
-        // Need R = R + (B+C), where R += B and R += C exist. 
-        // R = R - (B+C), just need to add r -= B and r -= c
-        
+    // Specialization 0 takes the form of A + (B + (C+D)).  The specialization 
+    // deals with the evaluation of the (B + (C+D)) subexpression when the 
+    // accumulator has already been initialized and set to the value of A.
+    //
+    // This specialization is called from constant-binary specialization 4
+//                                            typename boost::enable_if
+//                                        <
+//                                            boost::mpl::and_
+//                                            <
+//                                                typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative,
+//                                                boost::is_same<ResultType, typename ConstantExpressionPolicy<LhsResultType>::ResultType>,
+//                                                typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::OpEqualsAreDefined
+//                                            >
+//                                         >::type
+//                                         >
+
         class B
         {
             public:
@@ -172,7 +177,7 @@ namespace Nektar
             result.Value = lhs.Value + rhs.Value;
         }
         
-        GENERATE_ADDITION_OPERATOR(R, 0, R,0);
+        GENERATE_ADDITION_OPERATOR(R, 0, R, 0);
         GENERATE_ADDITION_OPERATOR(R, 0, B, 0);
         GENERATE_ADDITION_OPERATOR(R, 0, C, 0);
         
@@ -222,51 +227,18 @@ namespace Nektar
         }
         
         GENERATE_SUBTRACTION_OPERATOR(R, 0, C, 0);
-        
-        BOOST_AUTO_TEST_CASE(TestConstantBinarySpecialization4_Case1_NoOpChange)
+            
+        BOOST_AUTO_TEST_CASE(TestNoOpChange)
         {
-            R obj1(10);
-            B obj2(2);
-            C obj3(8);
-            
-            typedef BinaryExpressionPolicy<ConstantExpressionPolicy<B>,
-                                           AddOp,
-                                           ConstantExpressionPolicy<C> > RhsExpressionType;
-            typedef ConstantExpressionPolicy<R> LhsExpressionType;
-            
-            //BOOST_STATIC_ASSERT(( BinaryExpressionEvaluator<LhsExpressionType, RhsExpressionType, R, AddOp, BinaryNullOp>::ClassNum == 5 ));
-             
-            Expression<BinaryExpressionPolicy<LhsExpressionType, AddOp, RhsExpressionType> > exp =
-                obj1 + (obj2+obj3);
-
-            R r;
-            Assign(r, exp);
-            BOOST_CHECK_EQUAL(r.Value, 10+2+8);
+//            // R = R + (R + (B+C))
+//            R obj1(8);
+//            R obj2(-3);
+//            B obj3(23);
+//            C obj4(1);
+//            
+//            R result;
+//            Assign(result, obj1 + (obj2 + (obj3+obj4)));
+//            BOOST_CHECK_EQUAL(8 - 3 + 23 + 1, result.Value);
         }
-
-        BOOST_AUTO_TEST_CASE(TestConstantBinarySpecialization4_Case2_OpChange)
-        {
-            // R = R - (B+C)
-            R obj1(10);
-            B obj2(2);
-            C obj3(8);
-            
-            typedef BinaryExpressionPolicy<ConstantExpressionPolicy<B>,
-                                           AddOp,
-                                           ConstantExpressionPolicy<C> > RhsExpressionType;
-            typedef ConstantExpressionPolicy<R> LhsExpressionType;
-            
-            //BOOST_STATIC_ASSERT(( BinaryExpressionEvaluator<LhsExpressionType, RhsExpressionType, R, SubtractOp, BinaryNullOp>::ClassNum == 5 ));
-             
-            Expression<BinaryExpressionPolicy<LhsExpressionType, SubtractOp, RhsExpressionType> > exp =
-                obj1 - (obj2+obj3);
-
-            R r;
-            Assign(r, exp);
-            BOOST_CHECK_EQUAL(r.Value, 10-2-8);
-            
-            
-        }
-
+    }
 }
-

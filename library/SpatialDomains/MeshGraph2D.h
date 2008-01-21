@@ -37,7 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH2D_H
 
 #include <SpatialDomains/MeshGraph.h>
-#include <SpatialDomains/EdgeComponent.h>
+#include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>
 
@@ -63,7 +63,7 @@ namespace Nektar
             void ReadGeometry(TiXmlDocument &doc);
             void Write(std::string &outfilename);
 
-            EdgeComponentSharedPtr GetEdgeComponent(int eID);
+            SegGeomSharedPtr GetSegGeom(int eID);
 
             inline const int GetCoordim(void){
                 return GetSpaceDimension();
@@ -88,9 +88,9 @@ namespace Nektar
 
             void GenXGeoFac();
 
-            inline const int GetNecomps() const 
+            inline const int GetNseggeoms() const 
             {
-                return int(m_ecomps.size());
+                return int(m_seggeoms.size());
             }
 
             inline const int GetVidFromElmt(StdRegions::ShapeType shape, 
@@ -208,7 +208,7 @@ namespace Nektar
             }
 
             /// \brief Return the elements (shared ptrs) that have this edge.
-            ElementEdgeVectorSharedPtr GetElementsFromEdge(EdgeComponentSharedPtr edge);
+            ElementEdgeVectorSharedPtr GetElementsFromEdge(SegGeomSharedPtr edge);
 
         protected:
             void ReadEdges    (TiXmlDocument &doc);
@@ -221,9 +221,9 @@ namespace Nektar
 #endif
 
         private:
-            EdgeComponentVector m_ecomps;
-            TriGeomVector       m_trigeoms;
-            QuadGeomVector      m_quadgeoms;
+            SegGeomVector  m_seggeoms;
+            TriGeomVector  m_trigeoms;
+            QuadGeomVector m_quadgeoms;
         };
     };
 };
@@ -232,6 +232,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.17  2007/12/11 21:51:53  jfrazier
+// Updated 2d components so elements could be retrieved from edges.
+//
 // Revision 1.16  2007/12/04 03:02:27  jfrazier
 // Changed to stringstream.
 //

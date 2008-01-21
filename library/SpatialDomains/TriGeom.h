@@ -41,8 +41,8 @@
 
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry2D.h>
+#include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/EdgeComponent.h>
 #include <SpatialDomains/TriFaceComponent.h>
 
 namespace Nektar
@@ -53,8 +53,8 @@ namespace Nektar
         {
             public:
                 TriGeom();
-                TriGeom(const VertexComponentSharedPtr verts[], const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-                TriGeom(const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                TriGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                TriGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
                 ~TriGeom();
 
                 inline void SetOwnData()
@@ -134,6 +134,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.12  2007/12/11 21:51:53  jfrazier
+// Updated 2d components so elements could be retrieved from edges.
+//
 // Revision 1.11  2007/07/22 23:04:24  bnelson
 // Backed out Nektar::ptr.
 //

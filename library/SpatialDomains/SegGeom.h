@@ -53,6 +53,18 @@ namespace Nektar
         {
             public:
                 SegGeom();
+
+                SegGeom(int id, const int coordim):
+                    EdgeComponent(id,coordim)
+                    {
+                    }
+
+                SegGeom(int id, const int coordim,
+                        const VertexComponentSharedPtr vertex[]): 
+                    EdgeComponent(id,coordim,vertex)
+                    {
+                    }
+
                 SegGeom(const int id, const VertexComponentSharedPtr vert1, const VertexComponentSharedPtr  vert2);
 
                 SegGeom(const SegGeom &in);
@@ -114,6 +126,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.12  2007/07/22 23:04:24  bnelson
+// Backed out Nektar::ptr.
+//
 // Revision 1.11  2007/07/20 02:15:09  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

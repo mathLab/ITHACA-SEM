@@ -142,9 +142,9 @@ namespace Nektar
                         if (!edgeDataStrm.fail())
                         {
                             VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
-                            EdgeComponentSharedPtr edge(MemoryManager<EdgeComponent>::AllocateSharedPtr(indx, m_MeshDimension, vertices));
+                            SegGeomSharedPtr edge(MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_MeshDimension, vertices));
 
-                            m_ecomps.push_back(edge);
+                            m_seggeoms.push_back(edge);
                         }
                     }
                 }
@@ -222,18 +222,18 @@ namespace Nektar
                         ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
 
                         /// Create a TriGeom to hold the new definition.
-                        EdgeComponentSharedPtr edges[TriGeom::kNedges] = 
+                        SegGeomSharedPtr edges[TriGeom::kNedges] = 
                         {
-                            GetEdgeComponent(edge1),
-                            GetEdgeComponent(edge2),
-                            GetEdgeComponent(edge3)
+                            GetSegGeom(edge1),
+                            GetSegGeom(edge2),
+                            GetSegGeom(edge3)
                         };
 
                         StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] = 
                         {
-                            EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
-                            EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]), 
-                            EdgeComponent::GetEdgeOrientation(*edges[2], *edges[0])
+                            SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                            SegGeom::GetEdgeOrientation(*edges[1], *edges[2]), 
+                            SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
                         };
 
                         TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(edges, edgeorient));
@@ -262,16 +262,16 @@ namespace Nektar
                         ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
 
                         /// Create a QuadGeom to hold the new definition.
-                        EdgeComponentSharedPtr edges[QuadGeom::kNedges] = 
-                        {GetEdgeComponent(edge1),GetEdgeComponent(edge2),
-                        GetEdgeComponent(edge3),GetEdgeComponent(edge4)};
+                        SegGeomSharedPtr edges[QuadGeom::kNedges] = 
+                        {GetSegGeom(edge1),GetSegGeom(edge2),
+                         GetSegGeom(edge3),GetSegGeom(edge4)};
 
                         StdRegions::EdgeOrientation edgeorient[QuadGeom::kNedges] =
                         {
-                            EdgeComponent::GetEdgeOrientation(*edges[0], *edges[1]),
-                            EdgeComponent::GetEdgeOrientation(*edges[1], *edges[2]),
-                            EdgeComponent::GetEdgeOrientation(*edges[2], *edges[3]),
-                            EdgeComponent::GetEdgeOrientation(*edges[3], *edges[0])
+                            SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                            SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                            SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
+                            SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
                         };
 
                         QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
@@ -378,13 +378,13 @@ namespace Nektar
         }
 
 
-        EdgeComponentSharedPtr MeshGraph2D::GetEdgeComponent(int eID)
+        SegGeomSharedPtr MeshGraph2D::GetSegGeom(int eID)
         {
-            EdgeComponentSharedPtr returnval;
+            SegGeomSharedPtr returnval;
 
-            if (eID >= 0 && eID < int(m_ecomps.size()))
+            if (eID >= 0 && eID < int(m_seggeoms.size()))
             {
-                returnval = m_ecomps[eID];
+                returnval = m_seggeoms[eID];
             }
 
             return returnval;
@@ -466,7 +466,7 @@ namespace Nektar
                 case 'E':   // Edge
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_ecomps.size())
+                        if (*seqIter >= m_seggeoms.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -474,7 +474,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_ecomps[*seqIter]);
+                            m_MeshCompositeVector.back()->push_back(m_seggeoms[*seqIter]);
                         }
                     }
                     break;
@@ -539,7 +539,7 @@ namespace Nektar
             return;
         }
 
-        ElementEdgeVectorSharedPtr MeshGraph2D::GetElementsFromEdge(EdgeComponentSharedPtr edge)
+        ElementEdgeVectorSharedPtr MeshGraph2D::GetElementsFromEdge(SegGeomSharedPtr edge)
         {
             // Search tris and quads
             // Need to iterate through vectors because there may be multiple
@@ -583,6 +583,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.24  2007/12/17 20:27:24  sherwin
+// Added normals to GeomFactors
+//
 // Revision 1.23  2007/12/14 17:39:18  jfrazier
 // Fixed composite reader to handle ranges and comma separated lists.
 //

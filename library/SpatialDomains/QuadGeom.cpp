@@ -55,9 +55,9 @@ namespace Nektar
         }
 
         QuadGeom::QuadGeom(const VertexComponentSharedPtr verts[], 
-               const EdgeComponentSharedPtr edges[], 
+               const SegGeomSharedPtr edges[], 
                const StdRegions::EdgeOrientation eorient[]):
-      QuadFaceComponent(verts[0]->GetCoordim())
+            QuadFaceComponent(verts[0]->GetCoordim())
         {
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+QuadGeom::kNverts);
@@ -76,26 +76,26 @@ namespace Nektar
                 "Cannot call function with dim == 1");
         }
     
-    QuadGeom::QuadGeom(const EdgeComponentSharedPtr edges[], 
-               const StdRegions::EdgeOrientation eorient[]):
-        QuadFaceComponent(edges[0]->GetCoordim())
+        QuadGeom::QuadGeom(const SegGeomSharedPtr edges[], 
+                           const StdRegions::EdgeOrientation eorient[]):
+            QuadFaceComponent(edges[0]->GetCoordim())
         {
-        int j;
-
+            int j;
+            
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
         
-        for(j=0; j <kNedges; ++j)
-        {
-        if(eorient[j] == StdRegions::eForwards)
-        {
-            m_verts.push_back(edges[j]->GetVertex(0));
-        }
-        else
-        {
-            m_verts.push_back(edges[j]->GetVertex(1));
-        }
-        }
+            for(j=0; j <kNedges; ++j)
+            {
+                if(eorient[j] == StdRegions::eForwards)
+                {
+                    m_verts.push_back(edges[j]->GetVertex(0));
+                }
+                else
+                {
+                    m_verts.push_back(edges[j]->GetVertex(1));
+                }
+            }
             
             for (j=0; j<kNedges; ++j)
             {
@@ -155,7 +155,6 @@ namespace Nektar
             m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
 
         }
-
 
         /** \brief put all quadrature information into edge structure 
         and backward transform 
@@ -313,6 +312,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.11  2007/07/20 02:15:09  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.10  2007/06/06 15:15:21  pvos
 // Some minor updates for 2D routines
 //

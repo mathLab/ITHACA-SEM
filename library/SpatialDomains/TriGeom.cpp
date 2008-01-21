@@ -46,7 +46,7 @@ namespace Nektar
         }
 
         TriGeom::TriGeom(const VertexComponentSharedPtr verts[], 
-             const EdgeComponentSharedPtr edges[], 
+             const SegGeomSharedPtr edges[], 
              const StdRegions::EdgeOrientation eorient[]):
         TriFaceComponent(verts[0]->GetCoordim())
         {
@@ -66,7 +66,7 @@ namespace Nektar
                 "Cannot call function with dim == 1");
         }
 
-        TriGeom::TriGeom(const EdgeComponentSharedPtr edges[], 
+        TriGeom::TriGeom(const SegGeomSharedPtr edges[], 
                          const StdRegions::EdgeOrientation eorient[]) :
             TriFaceComponent(edges[0]->GetCoordim())
         {
@@ -261,6 +261,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.11  2007/07/20 02:15:09  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.10  2007/06/06 15:15:21  pvos
 // Some minor updates for 2D routines
 //

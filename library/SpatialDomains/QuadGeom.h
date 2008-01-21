@@ -43,7 +43,7 @@
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/EdgeComponent.h>
+#include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/QuadFaceComponent.h>
 
 
@@ -55,8 +55,8 @@ namespace Nektar
         {
             public:
                 QuadGeom();
-                QuadGeom(const VertexComponentSharedPtr verts[],  const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-                QuadGeom(const EdgeComponentSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                QuadGeom(const VertexComponentSharedPtr verts[],  const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                QuadGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
                 ~QuadGeom();
 
                 inline void SetOwnData()
@@ -80,6 +80,12 @@ namespace Nektar
                     return m_verts[i]->GetVid();
                 }
                 
+                inline EdgeComponentSharedPtr GetEdge(int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                    return m_edges[i];
+                }
+
                 inline StdRegions::EdgeOrientation GetEorient(const int i) const
                 {
                     ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
@@ -126,8 +132,8 @@ namespace Nektar
                 }
         };
 
-    // shorthand for boost pointer
-    typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
+        // shorthand for boost pointer
+        typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
         typedef std::vector< QuadGeomSharedPtr > QuadGeomVector;
         typedef std::vector< QuadGeomSharedPtr >::iterator QuadGeomVectorIter;
 
@@ -138,6 +144,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.13  2007/12/11 21:51:53  jfrazier
+// Updated 2d components so elements could be retrieved from edges.
+//
 // Revision 1.12  2007/07/22 23:04:24  bnelson
 // Backed out Nektar::ptr.
 //

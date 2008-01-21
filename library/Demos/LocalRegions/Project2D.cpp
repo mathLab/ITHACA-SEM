@@ -180,10 +180,10 @@ int main(int argc, char *argv[])
           
           
           // Set up Edges
-          SpatialDomains::EdgeComponentSharedPtr edges[3];
-          edges[0] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(zero, two);
-          edges[1] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(one, two);
-          edges[2] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(two, two);
+          SpatialDomains::SegGeomSharedPtr edges[3];
+          edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero, two);
+          edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one, two);
+          edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two, two);
           
           StdRegions::EdgeOrientation eorient[3];
           eorient[0] = edgeDir; 
@@ -247,11 +247,11 @@ int main(int argc, char *argv[])
           verts[3] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,three,coords[6],coords[7],dZero);
       
           // Set up Edges
-          SpatialDomains::EdgeComponentSharedPtr edges[4];
-          edges[0] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(zero,two);
-          edges[1] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(one,two);
-          edges[2] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(two,two);
-          edges[3] = MemoryManager<SpatialDomains::EdgeComponent>::AllocateSharedPtr(three,two);
+          SpatialDomains::SegGeomSharedPtr edges[4];
+          edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,two);
+          edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,two);
+          edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,two);
+          edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three,two);
       
           StdRegions::EdgeOrientation eorient[4];      
           eorient[0] = edgeDir; 

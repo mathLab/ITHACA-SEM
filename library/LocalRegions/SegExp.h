@@ -136,9 +136,12 @@ namespace Nektar
             
             void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                            const ConstArray<OneD,NekDouble> &inarray,
-                                           Array<OneD,NekDouble> outarray,
+                                           Array<OneD,NekDouble> &outarray,
                                            bool MatrixForm = false);
                 
+            void AddBoundaryInt(ConstArray<OneD,NekDouble> &inarray,
+                                Array<OneD,NekDouble> &outarray);
+            
         protected:
 
 
@@ -358,18 +361,30 @@ namespace Nektar
                 return m_matrixManager[mkey];
             }
 
+
+            virtual DNekScalMatSharedPtr v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
+            {
+                MatrixKey mkey(mtype,DetShapeType(),*this,lambdaval,tau);
+                return m_matrixManager[mkey];
+            }
+
             virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const MatrixKey &mkey)
             {
                 return m_staticCondMatrixManager[mkey];
             }
 
             virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                                     const ConstArray<OneD,NekDouble> &inarray,
-                                                     Array<OneD,NekDouble> outarray)
+                                                        const ConstArray<OneD,NekDouble> &inarray,
+                                                        Array<OneD,NekDouble> &outarray, bool MatrixTerms)
             {
-                AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
+                AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray,MatrixTerms);
             }
-            
+
+            virtual void v_AddBoundaryInt(ConstArray<OneD,NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray)
+            {
+                AddBoundaryInt(inarray,outarray);
+            }
         };
 
         // type defines for use of SegExp in a boost vector
@@ -383,6 +398,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.26  2007/12/17 13:04:30  sherwin
+// Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
+//
 // Revision 1.25  2007/11/20 16:28:46  sherwin
 // Added terms for UDG Helmholtz solver
 //

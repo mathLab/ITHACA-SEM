@@ -778,7 +778,7 @@ namespace Nektar
                 break;
             case StdRegions::eUnifiedDGHelmholtz:
             case StdRegions::eUnifiedDGLamToU:
-            case StdRegions::eUnifiedDGLamToQ:
+            case StdRegions::eUnifiedDGLamToQ0:
             case StdRegions::eUnifiedDGHelmBndSys:
                 {
                     NekDouble one    = 1.0;
@@ -791,7 +791,11 @@ namespace Nektar
                 {
                     NekDouble one = 1.0;
 
-                    DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                    StdRegions::StdMatrixKey hkey(StdRegions::eUnifiedDGHelmholtz,
+                                                  DetShapeType(),*this,
+                                                  mkey.GetConstant(0),
+                                                  mkey.GetConstant(1));
+                    DNekMatSharedPtr mat = GenMatrix(hkey);
 
                     mat->Invert();
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
@@ -824,169 +828,17 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
-            case StdRegions::eUnifiedDGHelmholtz:
-                {
-                    
-                    ASSERTL1(IsBoundaryInteriorExpansion(),
-                             "UnifiedDGHelmholtz matrix not set up "
-                             "for non boundary-interior expansions");
-                    
-                    int i,j;
-                    int nbndry = NumBndryCoeffs();
-                    NekDouble tau = mkey.GetConstant(1);
-
-                    
-                    // Get basis Galerkin Helmholtz matrix
-                    returnval  = GenMatrix(mkey);
-                    DNekMat &Mat = *returnval;
-
-                    Array<OneD,NekDouble> inarray(m_ncoeffs);
-                    Array<OneD,NekDouble> outarray(m_ncoeffs);
-
-                    for(j = 0; j < m_ncoeffs; ++j)
-                    {
-                        Vmath::Zero(m_ncoeffs,&inarray[0],1);
-                        Vmath::Zero(m_ncoeffs,&outarray[0],1);
-                        inarray[j] = 1.0;
-                        
-                        AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray,true);
-                        
-                        for(i = 0; i < m_ncoeffs; ++i)
-                        {
-                            Mat(i,j) += outarray[i];
-                        }
-                    }
-
-                }
-                break;
-            case StdRegions::eUnifiedDGLamToU:
-                {
-                    int i,j,k;
-                    int nbndry = NumBndryCoeffs();
-                    StdRegions::StdExpMap vmap;
-                    const ConstArray<OneD,NekDouble> &Basis  = m_base[0]->GetBdata();
-                    Array<OneD,NekDouble> lambda(m_ncoeffs);
-                    DNekVec Lambda(m_ncoeffs,lambda,eWrapper);                    
-                    Array<OneD,NekDouble> ulam(m_ncoeffs);
-                    DNekVec Ulam(m_ncoeffs,ulam,eWrapper);
-                    Array<OneD,NekDouble> f(m_ncoeffs);
-                    DNekVec F(m_ncoeffs,f,eWrapper);
-                    NekDouble lambdaval = mkey.GetConstant(0);
-                    NekDouble tau       = mkey.GetConstant(1);
-
-                    // declare matrix space
-                    returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nbndry); 
-                    DNekMat &Umat = *returnval;
-
-                    // get mapping for boundary dof
-                    MapTo(StdRegions::eForwards,vmap);
-                    
-                    // Helmholtz matrix
-                    LocalRegions::MatrixKey matkey(StdRegions::eInvUnifiedDGHelmholtz, DetShapeType(), *this, lambdaval,tau);
-                    DNekScalMat  &invHmat = *GetLocMatrix(matkey); 
-
-                    // for each degree of freedom of the lambda space
-                    // calculate Umat entry 
-                    // Generate Lambda to U_lambda matrix 
-                    for(j = 0; j < nbndry; ++j)
-                    {
-                        Vmath::Zero(m_ncoeffs,&lambda[0],1);
-                        Vmath::Zero(m_ncoeffs,&f[0],1);
-                        lambda[vmap[j]] = 1.0;
-                        
-                        AddUDGHelmholtzBoundaryTerms(tau,lambda,f);
-                        
-                        Ulam = invHmat*F; // generate Ulam from lambda
-                        
-                        // fill column of matrix
-                        for(k = 0; k < m_ncoeffs; ++k)
-                        {
-                            Umat(k,j) = Ulam[k]; 
-                        }
-                    }
-                }
-                break;
-            case StdRegions::eUnifiedDGLamToQ:
-                {
-                    int i,j,k;
-                    int nbndry = NumBndryCoeffs();
-                    int nquad  = GetNumPoints(0);
-                    StdRegions::StdExpMap vmap;
-                    const ConstArray<OneD,NekDouble> &Basis  = m_base[0]->GetBdata();
-                    Array<OneD,NekDouble> lambda(m_ncoeffs);
-                    DNekVec Lambda(m_ncoeffs,lambda,eWrapper);                    
-                    Array<OneD,NekDouble> ulam(m_ncoeffs);
-                    DNekVec Ulam(m_ncoeffs,ulam,eWrapper);
-                    Array<OneD,NekDouble> f(m_ncoeffs);
-                    DNekVec F(m_ncoeffs,f,eWrapper);
-                    NekDouble lambdaval = mkey.GetConstant(0);
-                    NekDouble tau       = mkey.GetConstant(1);
-
-                    // declare matrix space
-                    returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nbndry); 
-                    DNekMat &Qmat = *returnval;
-                    
-                    // get mapping for boundary dof
-                    MapTo(StdRegions::eForwards,vmap);
-                    
-                    // Helmholtz matrix
-                    LocalRegions::MatrixKey matkey(StdRegions::eInvUnifiedDGHelmholtz, DetShapeType(),*this, lambdaval,tau);
-                    DNekScalMat &invHmat = *GetLocMatrix(matkey); 
-
-                    // Inverse mass matrix 
-                    LocalRegions::MatrixKey imasskey(StdRegions::eInvMass,
-                                                     DetShapeType(),*this);
-                    DNekScalMat &invMass = *GetLocMatrix(imasskey); 
-                    
-                    //Weak Derivative matrix 
-                    LocalRegions::MatrixKey derivkey(StdRegions::eWeakDeriv0,
-                                                     DetShapeType(),*this);
-                    DNekScalMat &Dmat = *GetLocMatrix(derivkey); 
-                
-                    // for each degree of freedom of the lambda space
-                    // calculate Qmat entry 
-                    // Generate Lambda to Q_lambda matrix 
-                    for(j = 0; j < nbndry; ++j)
-                    {
-                        Vmath::Zero(m_ncoeffs,&lambda[0],1);
-                        Vmath::Zero(m_ncoeffs,&f[0],1);
-                        lambda[vmap[j]] = 1.0;
-                        
-                        AddUDGHelmholtzBoundaryTerms(tau,lambda,f);
-                        
-                        Ulam = invHmat*F; // generate Ulam from lambda
-                        
-                        F = Lambda - Ulam; // F now contains difference btw lambda and ulam
-                        Lambda = Dmat*Ulam; // use Lambda for tmp space
-                        
-                        // add G (\lambda - ulam) = G x F term (can
-                        // assume G is diagonal since one of the basis
-                        // is zero at boundary otherwise)
-                        for(k = 0; k < nbndry; ++k)
-                        {
-                            lambda[vmap[k]] += (Basis[(vmap[k]+1)*nquad-1]*Basis[(vmap[k]+1)*nquad-1] - Basis[vmap[k]*nquad]*Basis[vmap[k]*nquad])*f[vmap[k]];
-                        }
-                        
-                        F = invMass*Lambda; // multiply by inverse mass matrix
-                        
-                        // fill column of matrix
-                        for(k = 0; k < m_ncoeffs; ++k)
-                        {
-                            Qmat(k,j) = F[k]; 
-                        }
-                    }
-                }
-                break;
             case StdRegions::eUnifiedDGHelmBndSys:
                 {
                     int nbndry = NumBndryCoeffs();
                     int nquad  = GetNumPoints(0);
                     int i,j,k;
-                    StdRegions::StdExpMap vmap;
                     Array<OneD,NekDouble> b(nbndry);
                     const ConstArray<OneD,NekDouble> &Basis = m_base[0]->GetBdata();
                     NekDouble lambdaval = mkey.GetConstant(0);
                     NekDouble tau       = mkey.GetConstant(1);
+
+                    ConstArray<OneD,int> bmap = GetBoundaryMap(); 
                     
                     // declare matrix space
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry,
@@ -998,12 +850,10 @@ namespace Nektar
                     DNekScalMat &LamToU = *GetLocMatrix(Umatkey); 
                 
                     // Matrix to map Lambda to Q
-                    LocalRegions::MatrixKey Qmatkey(StdRegions::eUnifiedDGLamToQ,
+                    LocalRegions::MatrixKey Qmatkey(StdRegions::eUnifiedDGLamToQ0,
                                             DetShapeType(),*this, lambdaval,tau);
                     DNekScalMat &LamToQ = *GetLocMatrix(Qmatkey); 
                     
-                    // get mapping for boundary dof
-                    MapTo(StdRegions::eForwards,vmap);
 
 #if 0  // Equivalent symmetric form over all elements
                     // Mass matrix 
@@ -1032,7 +882,7 @@ namespace Nektar
                         b[i] = 0.0;
                         for(k = 0; k < nbndry; ++k)
                         {
-                            b[i] += LamToU(vmap[k],i)*Basis[(vmap[k]+1)*nquad-1];
+                            b[i] += LamToU(bmap[k],i)*Basis[(bmap[k]+1)*nquad-1];
                         }
                     }
                     
@@ -1054,7 +904,7 @@ namespace Nektar
                         b[i] = 0.0;
                         for(k = 0; k < nbndry; ++k)
                         {
-                            b[i] += LamToU(vmap[k],i)*Basis[vmap[k]*nquad];
+                            b[i] += LamToU(bmap[k],i)*Basis[bmap[k]*nquad];
                         }
                     }
                     
@@ -1071,16 +921,16 @@ namespace Nektar
 #else // use flux form directly 
                     for(j = 0; j < nbndry; ++j)
                     {
-                        BndMat(0,j) = -LamToQ(vmap[0],j) + tau*LamToU(vmap[0],j);
+                        BndMat(0,j) = -LamToQ(bmap[0],j) + tau*LamToU(bmap[0],j);
                     }
 
                     for(j = 0; j < nbndry; ++j)
                     {
-                        BndMat(1,j) =  LamToQ(vmap[1],j) - tau*LamToU(vmap[1],j);
+                        BndMat(1,j) =  LamToQ(bmap[1],j) - tau*LamToU(bmap[1],j);
                     }
 
 #endif
-                    cout << BndMat << endl;
+                    //  cout << BndMat << endl;
                 }
                 break;
             default:
@@ -1091,9 +941,30 @@ namespace Nektar
             return returnval;
         }
 
+        void SegExp::AddBoundaryInt(ConstArray<OneD,NekDouble> &inarray,
+                                    Array<OneD,NekDouble> &outarray) 
+       {
+
+            int k;
+            int nbndry = NumBndryCoeffs();
+            int nquad  = GetNumPoints(0);
+            const ConstArray<OneD,NekDouble> &Basis  = m_base[0]->GetBdata();
+            StdRegions::StdExpMap vmap;
+
+            MapTo(StdRegions::eForwards,vmap);
+
+            // add G (\lambda - ulam) = G x F term (can
+            // assume G is diagonal since one of the basis
+            // is zero at boundary otherwise)
+            for(k = 0; k < nbndry; ++k)
+            {
+                outarray[vmap[k]] += (Basis[(vmap[k]+1)*nquad-1]*Basis[(vmap[k]+1)*nquad-1] - Basis[vmap[k]*nquad]*Basis[vmap[k]*nquad])*inarray[vmap[k]];
+            }
+        }
+
         void SegExp::AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                     const ConstArray<OneD,NekDouble> &inarray,
-                                    Array<OneD,NekDouble> outarray,
+                                    Array<OneD,NekDouble> &outarray,
                                     bool MatrixTerms)
         {
             int i,j,k,n;
@@ -1147,13 +1018,13 @@ namespace Nektar
                 }
             }
             
-            // Add F = \tau <phi_i,phi_j> (note phi_i is zero fi phi_j is non-zero)
+            // Add F = \tau <phi_i,phi_j> (note phi_i is zero if phi_j is non-zero)
             for(i = 0; i < nbndry; ++i)
             {
                 outarray[vmap[i]] += tau*Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[i]+1)*nquad-1]*inarray[vmap[i]];
                 outarray[vmap[i]] += tau*Basis[vmap[i]*nquad]*Basis[vmap[i]*nquad]*inarray[vmap[i]];
             }
-#if 1
+
             // Add E M^{-1} G term 
             for(i = 0; i < nbndry; ++i)
             {
@@ -1175,7 +1046,6 @@ namespace Nektar
                     outarray[vmap[i]] += (Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[n]+1)*nquad-1] - Basis[vmap[i]*nquad]*Basis[vmap[n]*nquad])*val1; 
                 }
             }
-#endif
         }
         
         DNekScalBlkMatSharedPtr SegExp::CreateStaticCondMatrix(const MatrixKey &mkey)
@@ -1295,6 +1165,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.33  2007/12/17 13:04:30  sherwin
+// Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
+//
 // Revision 1.32  2007/12/06 22:49:09  pvos
 // 2D Helmholtz solver updates
 //

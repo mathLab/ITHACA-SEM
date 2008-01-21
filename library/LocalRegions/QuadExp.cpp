@@ -896,6 +896,32 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                 }
                 break;
+            case StdRegions::eUnifiedDGHelmholtz:
+            case StdRegions::eUnifiedDGLamToU:
+            case StdRegions::eUnifiedDGLamToQ0:
+            case StdRegions::eUnifiedDGLamToQ1:
+            case StdRegions::eUnifiedDGHelmBndSys:
+                {
+                    NekDouble one    = 1.0;
+                    
+                    DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+            break;
+            case StdRegions::eInvUnifiedDGHelmholtz:
+                {
+                    NekDouble one = 1.0;
+
+                    StdRegions::StdMatrixKey hkey(StdRegions::eUnifiedDGHelmholtz,
+                                                  DetShapeType(),*this,
+                                                  mkey.GetConstant(0),
+                                                  mkey.GetConstant(1));
+                    DNekMatSharedPtr mat = GenMatrix(hkey);
+
+                    mat->Invert();
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
             default:
                 NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
                 break;
@@ -903,6 +929,158 @@ namespace Nektar
                 
             return returnval;
         }
+
+
+#if 0
+        SegExpSharedPtr QuadExp::GetEdgeExp(int edge)
+        {
+            SegExpSharedPtr returnval; 
+            if(edge == 0|| edge == 2)
+            {
+                SpatialDomains::SegGeom MemoryManager<SegGeom>::AllocateSharedPtr<m)geom,m_geom->GetVert(0),m_geom->GetVert(1));
+
+
+                returnval = MemoryManager<SegExp>::AllocateSharedPtr(m_base[0]->GetBasisKey(),m_geom->GetEdge(edge));
+            }
+            else
+            {
+                returnval = MemoryManager<SegExp>::AllocateSharedPtr(m_base[1]->GetBasisKey(),m_geom->GetEdge(edge));
+            }
+            return returnval; 
+        }
+
+        void QuadExp::AddBoundaryInt(const ConstArray<OneD,NekDouble> &inarray,
+                                     Array<OneD,NekDouble> &outarray) 
+       {
+
+            int k;
+            int nbndry = NumBndryCoeffs();
+
+            SegExpSharedPtr EdgeExp;
+
+            StdRegions::StdExpMap vmap;
+
+
+            for(k = 0; k < Nedges; ++k)
+            {
+                // Generate segment expansion
+                EdgeExp = GetEdgeExp(k);
+                
+                MapTo(EdgeExp->GetNcoeffs(),EdgeExp->GetBasisType(0),
+                      k, StdRegions::eForwards,vmap);
+                
+                // Copy in input data
+                for(i = 0; i < EdgeExp->GetNcoeffs(); ++i)
+                {
+                    EdgeExp->SetCoeffs(i,inarray[vmap[i]]);
+                }
+                
+                // Backward Transform
+                EdgeExp->BwdTrans(EdgeExp->GetCoeffs(),EdgeExp->UpdatePhys());
+                
+                
+                // Inner Product
+                EdgeExp->IprodWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
+                
+                // Put data in out array
+                for(i = 0; i < EdgeExp->GetNcoeffs(); ++i)
+                {
+                    outarray[vmap[i]] = EdgeExp->GetCoeff(i);
+                }
+                /// More efficient just to use mass matrix on segment. 
+                
+                // Also need to add in role of normals. 
+
+            }
+        }
+
+        void QuadExp::AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
+                                    const ConstArray<OneD,NekDouble> &inarray,
+                                    Array<OneD,NekDouble> &outarray,
+                                    bool MatrixTerms)
+        {
+            int i,j,k,n;
+            int nbndry = NumBndryCoeffs();
+            int nquad  = GetNumPoints(0);
+            NekDouble  val, val1;
+            StdRegions::StdExpMap vmap;
+            
+            ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
+
+            const ConstArray<OneD,NekDouble> &Dbasis = m_base[0]->GetDbdata();
+            const ConstArray<OneD,NekDouble> &Basis  = m_base[0]->GetBdata();
+            
+            MatrixKey    masskey(StdRegions::eInvMass, DetShapeType(),*this);
+            DNekScalMat  &invMass = *m_matrixManager[masskey];
+            ConstArray<TwoD,NekDouble>  gmat = m_metricinfo->GetGmat();
+            NekDouble rx0,rx1;
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                rx0 = gmat[0][0];
+                rx1 = gmat[0][nquad-1];
+            }
+            else
+            {
+                rx0 = rx1 = gmat[0][0];
+            }
+
+            MapTo(StdRegions::eForwards,vmap);
+
+
+            if(MatrixTerms == true) //term which arise in matrix formulations but not rhs boundary terms. 
+            {
+                // Add -D^T M^{-1}G operation =-<n phi_i, d\phi_j/dx>
+                for(i = 0; i < nbndry; ++i)
+                {
+                    for(j = 0; j < m_ncoeffs; ++j)
+                    {
+                        outarray[vmap[i]] -= Basis[(vmap[i]+1)*nquad-1]*Dbasis[(j+1)*nquad-1]*rx1*inarray[j];
+                        outarray[vmap[i]] += Basis[vmap[i]*nquad]*Dbasis[j*nquad]*rx0*inarray[j];
+                    }
+                }
+            }
+            
+            //Add -E^T M^{-1}D_i^e = -< d\phi_i/dx, n  phi_j>
+            for(i = 0; i < m_ncoeffs; ++i)
+            {
+                for(j = 0; j < nbndry; ++j)
+                {
+                    outarray[i] -= Dbasis[(i+1)*nquad-1]*rx1*Basis[(vmap[j]+1)*nquad-1]*inarray[vmap[j]];
+                    outarray[i] += Dbasis[i*nquad]*rx0*Basis[vmap[j]*nquad]*inarray[vmap[j]];
+                }
+            }
+            
+            // Add F = \tau <phi_i,phi_j> (note phi_i is zero if phi_j is non-zero)
+            for(i = 0; i < nbndry; ++i)
+            {
+                outarray[vmap[i]] += tau*Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[i]+1)*nquad-1]*inarray[vmap[i]];
+                outarray[vmap[i]] += tau*Basis[vmap[i]*nquad]*Basis[vmap[i]*nquad]*inarray[vmap[i]];
+            }
+
+            // Add E M^{-1} G term 
+            for(i = 0; i < nbndry; ++i)
+            {
+                for(n = 0; n < nbndry; ++n)
+                {
+                    // evaluate M^{-1} G
+                    val1 = 0.0;
+                    for(k = 0; k < nbndry; ++k)
+                    {
+                        val = 0.0;
+                        for(j = 0; j < nbndry; ++j)
+                        {
+                            val += (Basis[(vmap[k]+1)*nquad-1]*Basis[(vmap[j]+1)*nquad-1] - Basis[vmap[k]*nquad]*Basis[vmap[j]*nquad])*inarray[vmap[j]];
+                        }
+                        
+                        val1 += invMass(vmap[n],vmap[k])*val; 
+                    }
+
+                    outarray[vmap[i]] += (Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[n]+1)*nquad-1] - Basis[vmap[i]*nquad]*Basis[vmap[n]*nquad])*val1; 
+                }
+            }
+        }
+        
+#endif
 
         DNekScalBlkMatSharedPtr QuadExp::CreateStaticCondMatrix(const MatrixKey &mkey)
         {
@@ -1021,6 +1199,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.25  2007/12/17 13:04:30  sherwin
+ *    Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
+ *
  *    Revision 1.24  2007/12/06 22:49:08  pvos
  *    2D Helmholtz solver updates
  *

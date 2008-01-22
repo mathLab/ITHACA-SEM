@@ -56,7 +56,14 @@
 namespace Nektar
 {
         template<typename DataType>
-        struct CreateFromMetadata;
+        struct CreateFromMetadata
+        {
+            template<typename MetadataType>
+            static DataType Apply(const MetadataType&)
+            {
+                return DataType();
+            }
+        };
 
         /// \brief An expression is an arbitrary combination of operations acting on arbitrary amountsw of data to 
         /// produce a result.  The expressions stores the operations and data but does not evaluate it until requested.
@@ -209,6 +216,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.20  2008/01/20 20:10:09  bnelson
+    *** empty log message ***
+
     Revision 1.19  2008/01/07 04:58:59  bnelson
     Changed binary expressions so the OpType is listed second instead of third.
 

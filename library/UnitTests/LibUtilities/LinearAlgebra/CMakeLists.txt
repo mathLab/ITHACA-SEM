@@ -6,6 +6,7 @@ SET(Sources
     TestBandedMatrixOperations.cpp
     TestBandedMatrixStoragePolicy.cpp
     TestDiagonalMatrixStoragePolicy.cpp
+    TestDiagonalMatrixOperations.cpp
     TestFullMatrixStoragePolicy.cpp
     TestLowerTriangularMatrixStoragePolicy.cpp
     TestNekVector.cpp

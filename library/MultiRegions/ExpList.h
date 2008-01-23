@@ -190,11 +190,13 @@ namespace Nektar
                              const ConstArray<OneD,NekDouble> &inarray,
                              Array<OneD, NekDouble>          &outarray);
 
-      boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
-
-      boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey,  boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
-
-      boost::shared_ptr<GlobalLinSys>  GenGlobalLinSys(const GlobalLinSysKey &mkey, boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
+      boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, const boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
+      
+      boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey, const boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
+      
+      boost::shared_ptr<GlobalLinSys>  GenGlobalLinSys(const GlobalLinSysKey &mkey, const boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
+      
+      boost::shared_ptr<GlobalLinSys>  GenGlobalBndLinSys(const GlobalLinSysKey &mkey, const boost::shared_ptr<LocalToGlobalBndryMap> &locToGloMap);
 
     private:
 
@@ -211,6 +213,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.29  2007/12/17 13:05:04  sherwin
+* Made files compatible with modifications in StdMatrixKey which now holds constants
+*
 * Revision 1.28  2007/12/06 22:52:30  pvos
 * 2D Helmholtz solver updates
 *

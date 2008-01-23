@@ -71,7 +71,7 @@ namespace Nektar
             // because the domain does not necessarily encompassed the entire meshgraph, the original id's
             // might be unsuitable.
             Array<OneD, int> renumbVerts(graph2D.GetNvertices(),-1);
-            Array<OneD, int> renumbEdges(graph2D.GetNecomps(),-1);
+            Array<OneD, int> renumbEdges(graph2D.GetNseggeoms(),-1);
 
             m_totLocBndDofs = 0;
             for(i = 0; i < locexp.size(); ++i)
@@ -135,8 +135,7 @@ namespace Nektar
                         edge_offset[renumbEdges[eid]+1] = nedge_coeffs-2;
                         
                         // need a sign vector if edge_nceoff >=4 
-                        if((nedge_coeffs >= 4)&&(locQuadExp->GetEdgeBasisType(0) == 
-                                                 LibUtilities::eModified_A))
+                        if((nedge_coeffs >= 4)&&(locQuadExp->GetEdgeBasisType(0) ==  LibUtilities::eModified_A))
                         {
                             m_sign_change = true;
                         }
@@ -152,8 +151,7 @@ namespace Nektar
                         edge_offset[renumbEdges[eid]+1] = nedge_coeffs-2;
                         
                         // need a sign vector if edge_nceoff >=4 
-                        if((nedge_coeffs >= 4)&&(locTriExp->GetEdgeBasisType(0) == 
-                                                 LibUtilities::eModified_A))
+                        if((nedge_coeffs >= 4)&&(locTriExp->GetEdgeBasisType(0) ==  LibUtilities::eModified_A))
                         {
                             m_sign_change = true;
                         }
@@ -407,10 +405,10 @@ namespace Nektar
             // might be unsuitable.
             // We will also use these array's to number the dirichlet vertices and edges first.
             Array<OneD, int> renumbVerts(graph2D.GetNvertices(),-1);
-            Array<OneD, int> renumbEdges(graph2D.GetNecomps(),-1);
+            Array<OneD, int> renumbEdges(graph2D.GetNseggeoms(),-1);
 
             // This array is used to indicate whether an edge is part of the boundary of the domain.
-            Array<OneD, int> bndCondEdgeID(graph2D.GetNecomps(),-1);
+            Array<OneD, int> bndCondEdgeID(graph2D.GetNseggeoms(),-1);
             
             // Calculate the number of boundary condition edges
             for(i = 0; i < bndCondExp.num_elements(); i++)
@@ -802,6 +800,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap2D.cpp,v $
+* Revision 1.8  2007/12/06 22:52:30  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.7  2007/10/03 11:37:51  sherwin
 * Updates relating to static condensation implementation
 *

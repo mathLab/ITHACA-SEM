@@ -168,7 +168,8 @@ namespace Nektar
 
             if(matrixIter == m_globalBndMat->end())
             {
-                glo_matrix = GenGlobalBndLinSys(mkey);
+                //glo_matrix = GenGlobalBndLinSys(mkey);
+                glo_matrix = GenGlobalBndLinSys(mkey,m_lambdaMap);
                 (*m_globalBndMat)[mkey] = glo_matrix;
             }
             else
@@ -179,63 +180,6 @@ namespace Nektar
             return glo_matrix;
         }
 
-	GlobalLinSysSharedPtr DisContField1D::GenGlobalBndLinSys(const GlobalLinSysKey &mkey)
-	{
-            int i,j,n,gid1,gid2,loc_lda,cnt;
-            StdRegions::StdExpansionVectorIter def;
-            DNekLinSysSharedPtr   linsys;
-            GlobalLinSysSharedPtr returnlinsys;
-
-            int totDofs       = (*m_exp).size()+1;
-            int NumDirBCs     = m_lambdaMap->GetNumDirichletDofs();
-            unsigned int rows = totDofs - NumDirBCs;
-            unsigned int cols = totDofs - NumDirBCs;
-            NekDouble zero = 0.0; 
-            NekDouble helmfactor = mkey.GetFactor1();
-            NekDouble tau        = mkey.GetFactor2();
-            StdRegions::StdExpMap vmap;
-
-            DNekMat LocBlk;
-
-            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);            
-            ASSERTL0(mkey.GetLinSysType() == StdRegions::eUnifiedDGHelmBndSys,
-                     "Routine is only set up for UnifiedDGHelmholtz");
-            
-            // fill global matrix 
-            for(n = cnt = 0; n < (*m_exp).size(); ++n)
-            {
-                // Matrix to Bnd Sys
-                LocalRegions::MatrixKey Umatkey(StdRegions::eUnifiedDGHelmBndSys, (*m_exp)[n]->DetShapeType(),*((*m_exp)[n]), helmfactor,tau);
-                DNekScalMat &BndSys = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
-                
-                loc_lda = BndSys.GetColumns();
-                
-                for(i = 0; i < loc_lda; ++i)
-                {
-                    gid1 = m_lambdaMap->GetBndMap(cnt + i);
-                    if(gid1 >= NumDirBCs)
-                    {
-                        for(j = 0; j < loc_lda; ++j)
-                        {
-                            gid2 = m_lambdaMap->GetBndMap(cnt + j);
-                            if(gid2 >= NumDirBCs)
-                            {
-                                (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                    += (BndSys)(i,j);
-                            }
-                        }		
-                    }
-                }
-                cnt += (*m_exp)[n]->NumBndryCoeffs(); 		    
-            }
-            
-            // Believe that we need a call of the type:
-            // linsys=MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,eWrapper);
-            linsys       = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
-            returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys);
-            return returnlinsys;
-        }
-        
         void DisContField1D::HelmSolve(DisContField1D &Fce, NekDouble lambda)
         {
             int i,j,n,cnt,cnt1,nbndry;
@@ -276,7 +220,7 @@ namespace Nektar
                 DNekVec ElmtFce(e_ncoeffs, e_f ,eWrapper);
                 DNekScalMat &LamToU = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
 #if 0
-                Floc = LamToU.Transpose()*ElmtFce;
+                Floc = Transpose(LamToU)*ElmtFce;
 #else
                 DNekMat TLamToU = *LamToU.GetOwnedMatrix();
                 TLamToU.Transpose();
@@ -290,7 +234,7 @@ namespace Nektar
                     if(loc < NumDirBCs)
                     {
                         (*m_exp)[n]->MapTo(StdRegions::eForwards,vmap);
-                        LocalRegions::MatrixKey Qmatkey(StdRegions::eUnifiedDGLamToQ, (*m_exp)[n]->DetShapeType(),*((*m_exp)[n]), lambda, tau);
+                        LocalRegions::MatrixKey Qmatkey(StdRegions::eUnifiedDGLamToQ0, (*m_exp)[n]->DetShapeType(),*((*m_exp)[n]), lambda, tau);
                         DNekScalMat &LamToQ = *((*m_exp)[n]->GetLocMatrix(Qmatkey)); 
 
                         bval =  m_bndConstraint[i]->GetValue();

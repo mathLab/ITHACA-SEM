@@ -73,8 +73,6 @@ namespace Nektar
             }
 
             GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
-            GlobalLinSysSharedPtr GenGlobalBndLinSys(const GlobalLinSysKey &mkey);
-            //void HelmSolve(const ExpList &In, NekDouble lambda);
 
         protected:
 

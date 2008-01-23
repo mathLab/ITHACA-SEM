@@ -275,7 +275,7 @@ namespace Nektar
         }
         
 	
-	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, LocalToGlobalMapSharedPtr &locToGloMap)
+	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, const LocalToGlobalMapSharedPtr &locToGloMap)
 	{
             int i,j,n,gid1,gid2,loc_lda,cnt;
             NekDouble sign1,sign2;
@@ -343,7 +343,7 @@ namespace Nektar
         }
 
 
-	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey, LocalToGlobalMapSharedPtr &locToGloMap)
+	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey, const LocalToGlobalMapSharedPtr &locToGloMap)
 	{
             int i,j,n,gid1,gid2,loc_lda,cnt;
             NekDouble sign1,sign2;
@@ -406,7 +406,7 @@ namespace Nektar
                 invD->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
                 C->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
                 
-                // Set up interior Matrix; 
+                // Set up  Matrix; 
                 for(i = 0; i < loc_lda; ++i)
                 {
                     gid1 = locToGloMap->GetBndMap(cnt + i);
@@ -440,7 +440,7 @@ namespace Nektar
         }
 
 
-	GlobalLinSysSharedPtr ExpList::GenGlobalLinSys(const GlobalLinSysKey &mkey, LocalToGlobalMapSharedPtr &locToGloMap)
+	GlobalLinSysSharedPtr ExpList::GenGlobalLinSys(const GlobalLinSysKey &mkey, const LocalToGlobalMapSharedPtr &locToGloMap)
 	{
             GlobalLinSysSharedPtr returnlinsys; 
 
@@ -459,6 +459,64 @@ namespace Nektar
             
             return returnlinsys;
         }
+
+
+
+        GlobalLinSysSharedPtr ExpList::GenGlobalBndLinSys(const GlobalLinSysKey &mkey, const LocalToGlobalBndryMapSharedPtr &LocToGloMap)
+	{
+            int i,j,n,gid1,gid2,loc_lda,cnt;
+            StdRegions::StdExpansionVectorIter def;
+            DNekLinSysSharedPtr   linsys;
+            GlobalLinSysSharedPtr returnlinsys;
+
+            int totDofs       = (*m_exp).size()+1;
+            int NumDirBCs     = LocToGloMap->GetNumDirichletDofs();
+            unsigned int rows = totDofs - NumDirBCs;
+            unsigned int cols = totDofs - NumDirBCs;
+            NekDouble zero = 0.0; 
+            NekDouble factor1 = mkey.GetFactor1();
+            NekDouble factor2 = mkey.GetFactor2();
+            StdRegions::MatrixType linsystype = mkey.GetLinSysType();
+            
+            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);            
+            ASSERTL0(linsystype == StdRegions::eUnifiedDGHelmBndSys,
+                     "Routine currently only tested for UnifiedDGHelmholtz");
+            
+            // fill global matrix 
+            for(n = cnt = 0; n < (*m_exp).size(); ++n)
+            {
+                // Matrix to Bnd Sys
+                LocalRegions::MatrixKey Umatkey(linsystype, (*m_exp)[n]->DetShapeType(),*((*m_exp)[n]), factor1,factor2);
+                DNekScalMat &BndSys = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
+                
+                loc_lda = BndSys.GetColumns();
+                
+                for(i = 0; i < loc_lda; ++i)
+                {
+                    gid1 = LocToGloMap->GetBndMap(cnt + i);
+                    if(gid1 >= NumDirBCs)
+                    {
+                        for(j = 0; j < loc_lda; ++j)
+                        {
+                            gid2 = LocToGloMap->GetBndMap(cnt + j);
+                            if(gid2 >= NumDirBCs)
+                            {
+                                (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
+                                    += (BndSys)(i,j);
+                            }
+                        }		
+                    }
+                }
+                cnt += (*m_exp)[n]->NumBndryCoeffs(); 		    
+            }
+            
+            // Believe that we need a call of the type:
+            // linsys=MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,eWrapper);
+            linsys       = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
+            returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys);
+            return returnlinsys;
+        }
+
 
         void ExpList::BwdTrans(const ExpList &Sin)
         {

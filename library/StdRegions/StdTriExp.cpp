@@ -444,6 +444,7 @@ namespace Nektar
 
             return returnval;
         }
+
         const ConstArray<OneD, int> StdTriExp::GetInteriorMap(void)
         {
             const LibUtilities::BasisType Btype0 = GetBasisType(0);
@@ -652,6 +653,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.27  2007/12/17 13:03:51  sherwin
+* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+*
 * Revision 1.26  2007/12/06 22:44:47  pvos
 * 2D Helmholtz solver updates
 *

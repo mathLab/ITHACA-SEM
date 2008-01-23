@@ -101,6 +101,40 @@ namespace Nektar
                 return m_coeffs;
             }
 
+
+            /** \brief This function returns a NekDouble to the coefficient 
+            *  \f$ \mathbf{\hat{u}}[i]\f$ 
+            *
+            *  The coefficient \f$ \mathbf{\hat{u}}[i]\f$ corresponds
+            *  to the #i th entry of the class attribute #m_coeffs
+            *
+            *  \return returns a NekDouble of the coefficient 
+            *  \f$ \mathbf{\hat{u}}[i]\f$ 
+            */
+            inline NekDouble  GetCoeffs(int i) const
+            {
+                ASSERTL1(i < m_ncoeffs,"index out of range");
+
+                return m_coeffs[i];
+            }
+
+
+            /** \brief This function returns a NekDouble to the coefficient 
+            *  \f$ \mathbf{\hat{u}}[i]\f$ 
+            *
+            *  The coefficient \f$ \mathbf{\hat{u}}[i]\f$ corresponds
+            *  to the #i th entry of the class attribute #m_coeffs
+            *
+            *  \return returns a NekDouble of the coefficient 
+            *  \f$ \mathbf{\hat{u}}[i]\f$ 
+            */
+            inline NekDouble  GetCoeff(int i) const
+            {
+                ASSERTL1(i < m_ncoeffs,"index out of range");
+
+                return m_coeffs[i];
+            }
+
             /** \brief This function returns a pointer to the array
             *  \f$\mathbf{u}\f$ (which is in physical space)
             *
@@ -668,7 +702,12 @@ namespace Nektar
             {
                 v_WriteToFile(outfile,dumpVar);
             }
-
+            
+            DNekScalMatSharedPtr GetLocMatrix(const MatrixType mtype, NekDouble lambdaval = NekUnsetDouble, NekDouble tau = NekUnsetDouble)
+            {
+                return v_GetLocMatrix(mtype,lambdaval,tau);
+            }
+            
             DNekScalMatSharedPtr GetLocMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 return v_GetLocMatrix(mkey);
@@ -682,11 +721,17 @@ namespace Nektar
 
             void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                               const ConstArray<OneD,NekDouble> &inarray,
-                                              Array<OneD,NekDouble> outarray)
+                                              Array<OneD,NekDouble> &outarray,
+                                              bool MatrixTerms = false)
             {
                 v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
             }
 
+            virtual void AddBoundaryInt(ConstArray<OneD,NekDouble> &inarray,
+                                        Array<OneD,NekDouble> &outarray)
+            {
+                v_AddBoundaryInt(inarray,outarray);
+            }
             // virtual functions related to LocalRegions
 
             int GetCoordim()
@@ -807,19 +852,33 @@ namespace Nektar
                 return boost::shared_ptr<DNekScalMat>();
             }
 
+            virtual DNekScalMatSharedPtr v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return boost::shared_ptr<DNekScalMat>();
+            }
+
+
             virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return boost::shared_ptr<DNekScalBlkMat>();
+
             }
 
             virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                                         const ConstArray<OneD,NekDouble> &inarray,
-                                                        Array<OneD,NekDouble> outarray)
+                                                        Array<OneD,NekDouble> &outarray, bool MatrixTerms = false)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
             
+            virtual void v_AddBoundaryInt(ConstArray<OneD,NekDouble> &inarray,
+                                        Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
             /** \brief this function interpolates a 1D function \f$f\f$ evaluated
             *  at the quadrature points of the basis \a fbasis0 to the 
             *  function values at the quadrature points of the basis \a tbasis0
@@ -1162,7 +1221,9 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return boost::shared_ptr<SpatialDomains::GeomFactors>();
+
             }
+
         };
 
         typedef boost::shared_ptr<StdExpansion> StdExpansionSharedPtr;
@@ -1175,6 +1236,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.72  2008/01/03 04:15:17  bnelson
+* Added a return value to some functions that abort to prevent visual studio compile errors.
+*
 * Revision 1.71  2007/12/17 13:03:50  sherwin
 * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
 *

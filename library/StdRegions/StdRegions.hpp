@@ -103,7 +103,9 @@ namespace Nektar
             eUnifiedDGHelmholtz,
             eInvUnifiedDGHelmholtz,
             eUnifiedDGHelmBndSys,
-            eUnifiedDGLamToQ,
+            eUnifiedDGLamToQ0,
+            eUnifiedDGLamToQ1,
+            eUnifiedDGLamToQ2,
             eUnifiedDGLamToU,
             SIZE_MatrixType
         };
@@ -230,6 +232,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.21  2007/11/20 16:29:48  sherwin
+* Added enum matrixtype definitions for UDG solver
+*
 * Revision 1.20  2007/07/20 02:16:55  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

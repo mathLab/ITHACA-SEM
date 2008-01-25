@@ -114,7 +114,7 @@ namespace Nektar
                          {
                              DNekScalBlkMat &C     = *m_blkMatrices[1];
 
-                             Vmath::Zero(Vloc.GetDimension(),Vloc.GetPtr(),1);
+                             Vmath::Zero(Vloc.GetDimension(),Vloc.GetRawPtr(),1);
                              locToGloMap.ContToLocalBnd(Vbnd,Vloc,nDirDofs);
                              Fint = Fint - C*Vloc;
                          }

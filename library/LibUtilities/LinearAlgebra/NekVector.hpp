@@ -96,9 +96,9 @@ namespace Nektar
            const NekVector<DataType, dim, space>& lhs,
            const NekVector<DataType, dim, space>& rhs)
     {
-        DataType* r_buf = result.GetPtr();
-        const DataType* lhs_buf = lhs.GetPtr();
-        const DataType* rhs_buf = rhs.GetPtr();
+        DataType* r_buf = result.GetRawPtr();
+        const DataType* lhs_buf = lhs.GetRawPtr();
+        const DataType* rhs_buf = rhs.GetRawPtr();
         for(int i = 0; i < lhs.GetDimension(); ++i)
         {
             r_buf[i] = lhs_buf[i] + rhs_buf[i];
@@ -109,8 +109,8 @@ namespace Nektar
     void NekAddEqual(NekVector<DataType, dim, space>& result,
            const NekVector<DataType, dim, space>& rhs)
     {
-        DataType* r_buf = result.GetPtr();
-        const DataType* rhs_buf = rhs.GetPtr();
+        DataType* r_buf = result.GetRawPtr();
+        const DataType* rhs_buf = rhs.GetRawPtr();
         for(int i = 0; i < rhs.GetDimension(); ++i)
         {
             //result[i] += rhs[i];
@@ -292,6 +292,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.26  2008/01/20 06:13:11  bnelson
+    Fixed visual c++ errors.
+
     Revision 1.25  2008/01/20 03:59:36  bnelson
     Expression template updates.
 

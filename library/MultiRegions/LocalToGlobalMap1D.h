@@ -88,9 +88,9 @@ namespace Nektar
                 
                 // offset input data by length "offset" for Dirichlet boundary conditions.
                 Array<OneD,NekDouble> tmp(cont.GetDimension()+offset,0.0);
-                Vmath::Vcopy(cont.GetDimension(),cont.GetPtr(),1,&tmp[offset],1);
+                Vmath::Vcopy(cont.GetDimension(),cont.GetRawPtr(),1,&tmp[offset],1);
                 
-                Vmath::Gathr(m_totLocBndDofs,&tmp[0],&m_locToContBndMap[0], loc.GetPtr());
+                Vmath::Gathr(m_totLocBndDofs,&tmp[0],&m_locToContBndMap[0], loc.GetRawPtr());
             }           
             
             inline void AssembleBnd(const DNekVec &loc, DNekVec &cont, int offset = 0)
@@ -99,8 +99,8 @@ namespace Nektar
                 ASSERTL1(cont.GetDimension() >= m_totGloBndDofs-offset,"Global vector is not of correct dimension");
                 Array<OneD,NekDouble> tmp(cont.GetDimension()+offset,0.0);
                 
-                Vmath::Assmb(m_totLocBndDofs,loc.GetPtr(), &m_locToContBndMap[0], &tmp[0]);
-                Vmath::Vcopy(cont.GetDimension(),&tmp[offset],1,cont.GetPtr(),1);
+                Vmath::Assmb(m_totLocBndDofs,loc.GetRawPtr(), &m_locToContBndMap[0], &tmp[0]);
+                Vmath::Vcopy(cont.GetDimension(),&tmp[offset],1,cont.GetRawPtr(),1);
             }
             
         protected:
@@ -153,6 +153,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.17  2007/12/06 22:52:30  pvos
+/** 2D Helmholtz solver updates
+/**
 /** Revision 1.16  2007/11/20 16:27:16  sherwin
 /** Zero Dirichlet version of UDG Helmholtz solver
 /**

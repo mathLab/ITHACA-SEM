@@ -281,24 +281,27 @@ namespace Nektar
                 return m_size;
             }
 
-            DataType* GetPtr()
+            DataType* GetRawPtr()
             {
                 return m_data.get();
             }
             
-            const DataType* GetPtr() const
+            const DataType* GetRawPtr() const
             {
                 return m_data.get();
             }
             
+            Array<OneD, DataType>& GetPtr() { return m_data; }
+            const Array<OneD, DataType>& GetPtr() const { return m_data; }
+
             typedef DataType* iterator;
             typedef const DataType* const_iterator;
             
-            iterator begin() { return GetPtr(); }
-            iterator end() { return GetPtr() + GetDimension(); }
+            iterator begin() { return GetRawPtr(); }
+            iterator end() { return GetRawPtr() + GetDimension(); }
             
-            const_iterator begin() const { return GetPtr(); }
-            const_iterator end() const { return GetPtr() + GetDimension(); }
+            const_iterator begin() const { return GetRawPtr(); }
+            const_iterator end() const { return GetRawPtr() + GetDimension(); }
             
             /// \brief Returns i^{th} element.
             /// \param i The element to return.

@@ -98,7 +98,7 @@ namespace Nektar
         {
             x = b;
             int info = 0;
-            Lapack::Dgetrs('T',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetPtr(),A.GetRows(),info);
+            Lapack::Dgetrs('T',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetRawPtr(),A.GetRows(),info);
             if( info < 0 )
             {
                 std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrs";
@@ -110,7 +110,7 @@ namespace Nektar
         {
             x = b;
             int info = 0;
-            Lapack::Dgetrs('N',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetPtr(),A.GetRows(),info);
+            Lapack::Dgetrs('N',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetRawPtr(),A.GetRows(),info);
 
             if( info < 0 )
             {

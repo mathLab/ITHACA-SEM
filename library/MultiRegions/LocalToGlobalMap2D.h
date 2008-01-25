@@ -140,13 +140,13 @@ namespace Nektar
                 
                 // offset input data by length "offset" for Dirichlet boundary conditions.
                 Array<OneD,NekDouble> tmp(cont.GetDimension()+offset,0.0);
-                Vmath::Vcopy(cont.GetDimension(),cont.GetPtr(),1,&tmp[offset],1);
+                Vmath::Vcopy(cont.GetDimension(),cont.GetRawPtr(),1,&tmp[offset],1);
                 
-                Vmath::Gathr(m_totLocBndDofs,&tmp[0],&m_locToContBndMap[0], loc.GetPtr());
+                Vmath::Gathr(m_totLocBndDofs,&tmp[0],&m_locToContBndMap[0], loc.GetRawPtr());
 
                 if(m_sign_change)
                 {
-                    Vmath::Vmul(m_totLocBndDofs,&m_bndSign[0],1,loc.GetPtr(),1,loc.GetPtr(),1);
+                    Vmath::Vmul(m_totLocBndDofs,&m_bndSign[0],1,loc.GetRawPtr(),1,loc.GetRawPtr(),1);
                 }
             }           
             
@@ -159,14 +159,14 @@ namespace Nektar
                 if(m_sign_change)
                 {
                     Array<OneD, NekDouble> tmp2(m_totLocBndDofs);
-                    Vmath::Vmul(m_totLocBndDofs,&m_bndSign[0],1,loc.GetPtr(),1,&tmp2[0],1);
+                    Vmath::Vmul(m_totLocBndDofs,&m_bndSign[0],1,loc.GetRawPtr(),1,&tmp2[0],1);
                     Vmath::Assmb(m_totLocBndDofs,&tmp2[0], &m_locToContBndMap[0], &tmp[0]);
                 }
                 else
                 {                
-                    Vmath::Assmb(m_totLocBndDofs,loc.GetPtr(), &m_locToContBndMap[0], &tmp[0]);
+                    Vmath::Assmb(m_totLocBndDofs,loc.GetRawPtr(), &m_locToContBndMap[0], &tmp[0]);
                 }
-                Vmath::Vcopy(cont.GetDimension(),&tmp[offset],1,cont.GetPtr(),1);
+                Vmath::Vcopy(cont.GetDimension(),&tmp[offset],1,cont.GetRawPtr(),1);
             }        
             
         protected:
@@ -224,6 +224,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap2D.h,v $
+/** Revision 1.8  2008/01/20 16:31:11  bnelson
+/** Fixed linux compile errors.
+/**
 /** Revision 1.7  2007/12/06 22:52:30  pvos
 /** 2D Helmholtz solver updates
 /**

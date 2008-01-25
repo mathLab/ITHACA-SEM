@@ -299,9 +299,9 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R, 
 }
 
 NekDouble Prism_Diff_Sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R, LibUtilities::BasisType bType_x,
-                  LibUtilities::BasisType bType_y, LibUtilities::BasisType bType_z, int dir){
-  
-      NekDouble sol = 0;
+                  LibUtilities::BasisType bType_y, LibUtilities::BasisType bType_z, int dir)
+{  
+    NekDouble sol = 0;
     // case 1 -- Common case
     if( (bType_x != LibUtilities::eFourier) && (bType_y != LibUtilities::eFourier) && (bType_z != LibUtilities::eFourier)  )
     {
@@ -365,7 +365,7 @@ NekDouble Prism_Diff_Sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, in
             }
         }
     }    
-              
+    return sol;              
 }
 
 

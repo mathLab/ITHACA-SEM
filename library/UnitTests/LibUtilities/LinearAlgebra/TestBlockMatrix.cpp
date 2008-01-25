@@ -99,5 +99,96 @@ namespace Nektar
 
             BOOST_CHECK_EQUAL(expected_result, result);
         }
+
+        BOOST_AUTO_TEST_CASE(TestMultiplication_1)
+        {
+            typedef NekMatrix<double> InnerType;
+            typedef NekMatrix<InnerType, FullMatrixTag, BlockMatrixTag> BlockType;
+
+            double m_00_buf[] = {3, 1, 
+                                 5, 5};
+            double m_01_buf[] = {2, 4,
+                                 4, 1,
+                                 1, 3};
+            double m_02_buf[] = {3, 1,
+                                 2, 2,
+                                 4, 1,
+                                 4, 2};
+            
+            double m_10_buf[] = {1, 3, 5,
+                                 1, 4, 2};
+            double m_11_buf[] = {4, 4, 1,
+                                 1, 1, 4,
+                                 5, 5, 3};
+            double m_12_buf[] = {5, 2, 1,
+                                 2, 3, 1,
+                                 1, 3, 1,
+                                 4, 1, 1};
+
+            double m_20_buf[] = {3, 1, 4, 2,
+                                 5, 1, 4, 2 };
+            double m_21_buf[] = {4, 5, 2, 4,
+                                 4, 2, 3, 5,
+                                 2, 2, 5, 3};
+            double m_22_buf[] = {3, 4, 3, 1,
+                                 2, 1, 2, 4,
+                                 4, 5, 2, 3,
+                                 5, 4, 1, 1};
+
+            double m_30_buf[] = {2, 2, 1,
+                                 4, 5, 5};
+            double m_31_buf[] = {1, 1, 3,
+                                 2, 1, 2, 
+                                 3, 3, 2};
+            double m_32_buf[] = {3, 1, 3,
+                                 1, 2, 2,
+                                 4, 2, 5, 
+                                 5, 1, 1};
+
+
+            boost::shared_ptr<InnerType> m00(new InnerType(2, 2, m_00_buf));
+            boost::shared_ptr<InnerType> m01(new InnerType(2, 3, m_01_buf));
+            boost::shared_ptr<InnerType> m02(new InnerType(2, 4, m_02_buf));
+
+            boost::shared_ptr<InnerType> m10(new InnerType(3, 2, m_10_buf));
+            boost::shared_ptr<InnerType> m11(new InnerType(3, 3, m_11_buf));
+            boost::shared_ptr<InnerType> m12(new InnerType(3, 4, m_12_buf));
+
+            boost::shared_ptr<InnerType> m20(new InnerType(4, 2, m_20_buf));
+            boost::shared_ptr<InnerType> m21(new InnerType(4, 3, m_21_buf));
+            boost::shared_ptr<InnerType> m22(new InnerType(4, 4, m_22_buf));
+
+            boost::shared_ptr<InnerType> m30(new InnerType(3, 2, m_30_buf));
+            boost::shared_ptr<InnerType> m31(new InnerType(3, 3, m_31_buf));
+            boost::shared_ptr<InnerType> m32(new InnerType(3, 4, m_32_buf));
+
+            unsigned int rowCounts[] = {2, 3, 4, 3};
+            unsigned int colCounts[] = {2, 3, 4};
+
+            BlockType b(4, 3, rowCounts, colCounts);
+            b.SetBlock(0, 0, m00);
+            b.SetBlock(0, 1, m01);
+            b.SetBlock(0, 2, m02);
+            b.SetBlock(1, 0, m10);
+            b.SetBlock(1, 1, m11);
+            b.SetBlock(1, 2, m12);
+            b.SetBlock(2, 0, m20);
+            b.SetBlock(2, 1, m21);
+            b.SetBlock(2, 2, m22);
+            b.SetBlock(3, 0, m30);
+            b.SetBlock(3, 1, m31);
+            b.SetBlock(3, 2, m32);
+            
+
+            double rhs_buf[] = {4, 2, 5, 5, 3, 1, 3, 2, 3};
+            NekVector<double> rhs(9, rhs_buf);
+
+            NekVector<double> result = b*rhs;
+
+            double expected_buf[] = {84, 63, 71, 80, 67, 100, 76, 80, 88, 69, 51, 67};
+            NekVector<double> expected_result(12, expected_buf);
+
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
     }
 }

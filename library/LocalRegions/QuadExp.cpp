@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/LocalRegions.hpp>
+
 #include <stdio.h>
 
 #include <LocalRegions/QuadExp.h>
@@ -325,6 +326,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmp2(nqtot);
             Array<OneD, NekDouble> tmp3(numModes);
 
+            
             switch(dir)
             {
             case 0:
@@ -355,9 +357,24 @@ namespace Nektar
                     }
                 }
                 break;
+            case 2:
+                {
+                    ASSERTL1(m_geom->GetCoordim() == 3,"input dir is out of range");
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nqtot,&gmat[4][0],1,&inarray[0],1,&tmp1[0],1);
+                        Vmath::Vmul(nqtot,&gmat[5][0],1,&inarray[0],1,&tmp2[0],1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(nqtot,gmat[4][0],&inarray[0],1,&tmp1[0],1);
+                        Vmath::Smul(nqtot,gmat[5][0],&inarray[0],1,&tmp2[0],1);
+                    }
+                }
+                break;
             default:
                 {
-                    ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
+                    ASSERTL1(dir >= 0 &&dir < 3,"input dir is out of range");
                 }
                 break;
             }   
@@ -397,7 +414,7 @@ namespace Nektar
         ///////////////////////////////
         
         /** 
-            \brief Calculate the deritive of the physical points 
+            \brief Calculate the derivative of the physical points 
             
             For quadrilateral region can use the Tensor_Deriv function
             defined under StdExpansion.
@@ -931,156 +948,382 @@ namespace Nektar
         }
 
 
-#if 0
         SegExpSharedPtr QuadExp::GetEdgeExp(int edge)
         {
             SegExpSharedPtr returnval; 
-            if(edge == 0|| edge == 2)
-            {
-                SpatialDomains::SegGeom MemoryManager<SegGeom>::AllocateSharedPtr<m)geom,m_geom->GetVert(0),m_geom->GetVert(1));
+            int dir = (edge == 0|| edge == 2)? 0:1;
 
+            returnval = MemoryManager<SegExp>::AllocateSharedPtr(m_base[dir]->GetBasisKey(),m_geom->GetEdge(edge));
 
-                returnval = MemoryManager<SegExp>::AllocateSharedPtr(m_base[0]->GetBasisKey(),m_geom->GetEdge(edge));
-            }
-            else
-            {
-                returnval = MemoryManager<SegExp>::AllocateSharedPtr(m_base[1]->GetBasisKey(),m_geom->GetEdge(edge));
-            }
             return returnval; 
         }
 
-        void QuadExp::AddBoundaryInt(const ConstArray<OneD,NekDouble> &inarray,
-                                     Array<OneD,NekDouble> &outarray) 
-       {
 
-            int k;
-            int nbndry = NumBndryCoeffs();
+        void QuadExp::GetEdgePhysVals(const int edge, const ConstArray<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
 
-            SegExpSharedPtr EdgeExp;
-
-            StdRegions::StdExpMap vmap;
-
-
-            for(k = 0; k < Nedges; ++k)
+            switch(edge)
             {
-                // Generate segment expansion
-                EdgeExp = GetEdgeExp(k);
-                
-                MapTo(EdgeExp->GetNcoeffs(),EdgeExp->GetBasisType(0),
-                      k, StdRegions::eForwards,vmap);
-                
-                // Copy in input data
-                for(i = 0; i < EdgeExp->GetNcoeffs(); ++i)
-                {
-                    EdgeExp->SetCoeffs(i,inarray[vmap[i]]);
-                }
-                
-                // Backward Transform
-                EdgeExp->BwdTrans(EdgeExp->GetCoeffs(),EdgeExp->UpdatePhys());
-                
-                
-                // Inner Product
-                EdgeExp->IprodWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
-                
-                // Put data in out array
-                for(i = 0; i < EdgeExp->GetNcoeffs(); ++i)
-                {
-                    outarray[vmap[i]] = EdgeExp->GetCoeff(i);
-                }
-                /// More efficient just to use mass matrix on segment. 
-                
-                // Also need to add in role of normals. 
-
+            case 0:
+                Vmath::Vcopy(nquad0,inarray.get(),1,&outarray[0],1);
+                break;
+            case 1:
+                Vmath::Vcopy(nquad1,inarray.get()+ nquad0-1,nquad0,
+                             &outarray[0],1);
+                break; 
+            case 2:
+                Vmath::Vcopy(nquad0,inarray.get()+nquad0*(nquad1-1),1,
+                      &outarray[0],1);
+                break; 
+            case 3:
+                Vmath::Vcopy(nquad1,inarray.get(),nquad0,&outarray[0],1);
+                break; 
+            default:
+                ASSERTL0(false,"edge value (< 3) is out of range");
+                break;
             }
+
         }
+
 
         void QuadExp::AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                    const ConstArray<OneD,NekDouble> &inarray,
-                                    Array<OneD,NekDouble> &outarray,
-                                    bool MatrixTerms)
+                                                   const ConstArray<OneD,NekDouble> &inarray,
+                                                   Array<OneD,NekDouble> &outarray,
+                                                   bool MatrixTerms)
         {
-            int i,j,k,n;
+            int i,j,k,e,n;
             int nbndry = NumBndryCoeffs();
-            int nquad  = GetNumPoints(0);
-            NekDouble  val, val1;
+            int nquad0  = GetNumPoints(0);
+            int nquad1  = GetNumPoints(1);
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
+            int coordim = m_geom->GetCoordim();
+
             StdRegions::StdExpMap vmap;
-            
+            SpatialDomains::GeomType Gtype = m_metricinfo->GetGtype();
+
+            Array<OneD,NekDouble> in_phys(nquad0*nquad1);
+            Array<OneD,NekDouble> inval(max(nquad0,nquad1));
+            Array<OneD,NekDouble> outcoeff(max(order0,order1));
+
+            Array<OneD,SegExpSharedPtr>        EdgeExp(4);
+            Array<OneD,Array<OneD,NekDouble> > deriv(3);
+
+            ConstArray<TwoD,NekDouble> normals = m_metricinfo->GetNormals();
+            ConstArray<TwoD,NekDouble> gmat    = m_metricinfo->GetGmat();
+            ConstArray<OneD,NekDouble> jac     = m_metricinfo->GetJac();
+
             ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
 
-            const ConstArray<OneD,NekDouble> &Dbasis = m_base[0]->GetDbdata();
-            const ConstArray<OneD,NekDouble> &Basis  = m_base[0]->GetBdata();
+            MatrixKey    imasskey(StdRegions::eInvMass, DetShapeType(),*this);
+            DNekScalMat  &invMass = *m_matrixManager[imasskey];
+
             
-            MatrixKey    masskey(StdRegions::eInvMass, DetShapeType(),*this);
-            DNekScalMat  &invMass = *m_matrixManager[masskey];
-            ConstArray<TwoD,NekDouble>  gmat = m_metricinfo->GetGmat();
-            NekDouble rx0,rx1;
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            // Set up edge segment expansions
+            for(i = 0; i < 4; ++i)
             {
-                rx0 = gmat[0][0];
-                rx1 = gmat[0][nquad-1];
-            }
-            else
-            {
-                rx0 = rx1 = gmat[0][0];
+                EdgeExp[0] = GetEdgeExp(i);
             }
 
-            MapTo(StdRegions::eForwards,vmap);
+            //  Get physical solution. 
+            BwdTrans(inarray,in_phys);
 
-
-            if(MatrixTerms == true) //term which arise in matrix formulations but not rhs boundary terms. 
+            // Calculate derivative if needed for matrix terms.
+            if(MatrixTerms == true) //term which arise in matrix formulations but not rhs
+                //boundary terms.
             {
-                // Add -D^T M^{-1}G operation =-<n phi_i, d\phi_j/dx>
-                for(i = 0; i < nbndry; ++i)
+                deriv[0] = Array<OneD,NekDouble>(nquad0*nquad1);
+                deriv[1] = Array<OneD,NekDouble>(nquad0*nquad1);
+                if(m_geom->GetCoordDim() == 2)
                 {
-                    for(j = 0; j < m_ncoeffs; ++j)
-                    {
-                        outarray[vmap[i]] -= Basis[(vmap[i]+1)*nquad-1]*Dbasis[(j+1)*nquad-1]*rx1*inarray[j];
-                        outarray[vmap[i]] += Basis[vmap[i]*nquad]*Dbasis[j*nquad]*rx0*inarray[j];
-                    }
+                    PhysDeriv(in_phys,deriv[0],deriv[1]);
+                }
+                else
+                {
+                    deriv[2] = Array<OneD,NekDouble>(nquad0*nquad1);
+                    PhysDeriv(in_phys,deriv[0],deriv[1],deriv[2]);
                 }
             }
-            
-            //Add -E^T M^{-1}D_i^e = -< d\phi_i/dx, n  phi_j>
-            for(i = 0; i < m_ncoeffs; ++i)
-            {
-                for(j = 0; j < nbndry; ++j)
-                {
-                    outarray[i] -= Dbasis[(i+1)*nquad-1]*rx1*Basis[(vmap[j]+1)*nquad-1]*inarray[vmap[j]];
-                    outarray[i] += Dbasis[i*nquad]*rx0*Basis[vmap[j]*nquad]*inarray[vmap[j]];
-                }
-            }
-            
-            // Add F = \tau <phi_i,phi_j> (note phi_i is zero if phi_j is non-zero)
-            for(i = 0; i < nbndry; ++i)
-            {
-                outarray[vmap[i]] += tau*Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[i]+1)*nquad-1]*inarray[vmap[i]];
-                outarray[vmap[i]] += tau*Basis[vmap[i]*nquad]*Basis[vmap[i]*nquad]*inarray[vmap[i]];
-            }
 
-            // Add E M^{-1} G term 
-            for(i = 0; i < nbndry; ++i)
+            // Loop over edges
+            for(e = 0; e < 4; ++e)
             {
-                for(n = 0; n < nbndry; ++n)
+                int nquad_e = EdgeExp[e]->GetNumPoints(0);                    
+                int order_e = EdgeExp[e]->GetNcoeffs();                    
+                GetEdgePhysVals(e,in_phys,EdgeExp[e]->UpdatePhys());
+                
+                MapTo(EdgeExp[e]->GetNcoeffs(),EdgeExp[e]->GetBasisType(0),
+                      k, StdRegions::eForwards,vmap);
+
+                //================================================================
+                // Add F = \tau <phi_i,in_phys>
+                // Fill edge and take inner product
+                EdgeExp[e]->IProductWRTBase(EdgeExp[e]->GetPhys(),
+                                            EdgeExp[e]->UpdateCoeffs());
+
+                // add data to out array
+                for(i = 0; i < EdgeExp[e]->GetNcoeffs(); ++i)
                 {
-                    // evaluate M^{-1} G
-                    val1 = 0.0;
-                    for(k = 0; k < nbndry; ++k)
+                    outarray[vmap[i]] += tau*EdgeExp[e]->GetCoeff(i);
+                }
+                //================================================================
+
+                //================================================================
+                //Add -E^T M^{-1}D_i^e = -< d\phi_i/dx.n, in_phys[j]> 
+                //
+                // since \phi_{ij}(r,s) = \phi^a_i(r)\phi^a_j(s) (will drop ^a in what follows):
+                // <d\phi_{ij}/dn, u>|_r = <d\phi_i/dr, (rx.nx+ry.ny+rz.nz).u> \phi_j(s)
+                //                       + <\phi_i, (sx.nx+sy.sy+sz.nz).u> d\phi_j(s)/ds
+                //
+                // So edge inner product can be expressed as two inner
+                // products multiplied by factors, Note \phi_j(s) will
+                // be one for a interior-boundary expansion. An
+                // analogous expression exists for the |_s edges
+
+                if(e == 0|| e == 2) // edges aligned with r
+                {
+                    int st = (e == 0)? 0: nquad0*(nquad1-1);
+                    
+                    // assemble jac*(rx.nx + ry.ny + rz.nz)*in_phys
+                    if(Gtype == SpatialDomains::eDeformed)
                     {
-                        val = 0.0;
-                        for(j = 0; j < nbndry; ++j)
+                        Vmath::Vmul(nquad0,&gmat[0][st],1,&normals[e][0],1,&inval[0],1);
+                        Vmath::Vvtvp(nquad0,&gmat[2][st],1,&normals[e][nquad0],1,&inval[0],1,&inval[0],1);
+                        if(coordim == 3)
                         {
-                            val += (Basis[(vmap[k]+1)*nquad-1]*Basis[(vmap[j]+1)*nquad-1] - Basis[vmap[k]*nquad]*Basis[vmap[j]*nquad])*inarray[vmap[j]];
+                            Vmath::Vvtvp(nquad0,&gmat[4][st],1,&normals[e][2*nquad0],1,&inval[0],1,&inval[0],1);
+
                         }
-                        
-                        val1 += invMass(vmap[n],vmap[k])*val; 
+                        Vmath::Vmul(nquad0,&jac[st],1,&inval[0],1,&inval[0],1);
+                        Vmath::Vmul(nquad0,&in_phys[st],1,&inval[0],1,&inval[0],1);
+                    }
+                    else
+                    {
+                        NekDouble fac = 0.0;
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            fac += jac[0]*gmat[2*i][0]*normals[e][i];
+                        }
+                        Vmath::Smul(nquad0*nquad1,fac,&in_phys[st],1,&inval[0],1);
                     }
 
-                    outarray[vmap[i]] += (Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[n]+1)*nquad-1] - Basis[vmap[i]*nquad]*Basis[vmap[n]*nquad])*val1; 
+
+                    // Innerproduct wrt deriv base 
+                    EdgeExp[e]->StdSegExp::IProductWRTDerivBase(0,inval,
+                                                EdgeExp[e]->UpdateCoeffs());
+                    // add data to out array
+                    for(i = 0; i < EdgeExp[e]->GetNcoeffs(); ++i)
+                    {
+                        outarray[vmap[i]] -= EdgeExp[e]->GetCoeff(i);
+                    }
+                    
+                    // assemble (sx.nx + sy.ny + sz.nz)*in_phys
+                    if(Gtype == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad0,&gmat[1][st],1,&normals[e][0],1,&inval[0],1);
+                        Vmath::Vvtvp(nquad0,&gmat[3][st],1,&normals[e][0]+nquad0,1,&inval[0],1,&inval[0],1);
+                        if(coordim == 3)
+                        {
+                            Vmath::Vvtvp(nquad0,&gmat[5][st],1,&normals[e][0]+2*nquad0,1,&inval[0],1,&inval[0],1);
+
+                        }
+                        Vmath::Vmul(nquad0,&in_phys[st],1,&inval[0],1,&inval[0],1);
+                    }
+                    else
+                    {
+                        NekDouble fac = 0.0;
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            fac += gmat[2*i+1][0]*normals[e][i];
+                        }
+                        Vmath::Smul(nquad0*nquad1,fac,&in_phys[st],1,&inval[0],1);
+                    }
+
+                    // Innerproduct wrt deriv base 
+                    EdgeExp[e]->IProductWRTBase(inval,EdgeExp[e]->UpdateCoeffs());
+
+                    // add data to out array
+                    ConstArray<OneD,NekDouble> Dbase = m_base[1]->GetDbdata();
+                    st = (e == 0)? 0: nquad1-1;
+
+                    for(i = 0; i < order0; ++i)
+                    {
+                        for(j = 0; j < order1; ++j)
+                        {
+                            outarray[j*order0+i] -= Dbase[j*nquad0+st]*EdgeExp[e]->GetCoeff(i);
+                        }
+                    }
                 }
+                else // edges aligned with s
+                {
+                    int st = (e == 1)? nquad0-1: 0 ;
+                    
+                    // assemble jac*(sx.nx + sy.ny + sz.nz)*in_phys
+                    if(Gtype == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad1,&gmat[1][st],nquad0,&normals[e][0],1,&inval[0],1);
+                        Vmath::Vvtvp(nquad1,&gmat[3][st],nquad0,&normals[e][nquad1],1,&inval[0],1,&inval[0],1);
+                        if(coordim == 3)
+                        {
+                            Vmath::Vvtvp(nquad1,&gmat[5][st],nquad0,&normals[e][2*nquad1],1,&inval[0],1,&inval[0],1);
+
+                        }
+                        Vmath::Vmul(nquad1,&jac[st],nquad0,&inval[0],1,&inval[0],1);
+                        Vmath::Vmul(nquad1,&in_phys[st],nquad0,&inval[0],1,&inval[0],1);
+                    }
+                    else
+                    {
+                        NekDouble fac = 0.0;
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            fac += jac[0]*gmat[2*i+1][0]*normals[e][i];
+                        }
+                        Vmath::Smul(nquad1,fac,&in_phys[st],nquad0,&inval[0],1);
+                    }
+
+
+                    // Innerproduct wrt deriv base 
+                    EdgeExp[e]->StdSegExp::IProductWRTDerivBase(0,inval,
+                                                EdgeExp[e]->UpdateCoeffs());
+                    // add data to out array
+                    for(i = 0; i < EdgeExp[e]->GetNcoeffs(); ++i)
+                    {
+                        outarray[vmap[i]] -= EdgeExp[e]->GetCoeff(i);
+                    }
+                    
+                    // assemble (rx.nx + ry.ny + rz.nz)*in_phys
+                    if(Gtype == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad1,&gmat[0][st],nquad0,&normals[e][0],1,&inval[0],1);
+                        Vmath::Vvtvp(nquad1,&gmat[2][st],nquad0,&normals[e][nquad1],1,&inval[0],1,&inval[0],1);
+                        if(coordim == 3)
+                        {
+                            Vmath::Vvtvp(nquad1,&gmat[5][st],nquad0,&normals[e][2*nquad1],1,&inval[0],1,&inval[0],1);
+
+                        }
+                        Vmath::Vmul(nquad1,&in_phys[st],nquad0,&inval[0],1,&inval[0],1);
+                    }
+                    else
+                    {
+                        NekDouble fac = 0.0;
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            fac += gmat[2*i][0]*normals[e][i];
+                        }
+                        Vmath::Smul(nquad1,fac,&in_phys[st],nquad0,&inval[0],1);
+                    }
+
+                    // Innerproduct wrt deriv base 
+                    EdgeExp[e]->IProductWRTBase(inval,EdgeExp[e]->UpdateCoeffs());
+
+                    // add data to out array
+                    ConstArray<OneD,NekDouble> Dbase = m_base[0]->GetDbdata();
+                    st = (e == 1)? nquad0-1:0;
+
+                    for(i = 0; i < order0; ++i)
+                    {
+                        for(j = 0; j < order1; ++j)
+                        {
+                            outarray[j*order0+i] -= Dbase[i*nquad1+st]*EdgeExp[e]->GetCoeff(j);
+                        }
+                    }
+                }
+                //================================================================
+
+
+
+                //===============================================================
+                // Add E M^{-1} G term 
+                for(n = 0; n < coordim; ++n)
+                {
+                    //G;
+                    if(Gtype == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad_e,&normals[e][n*nquad_e],1,
+                              &(EdgeExp[e]->GetPhys())[0],1, &inval[0],1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(nquad_e,normals[e][n],&(EdgeExp[e]->GetPhys())[0],1,
+                              &inval[0],1);
+                    }
+
+                    EdgeExp[e]->IProductWRTBase(inval,EdgeExp[e]->UpdateCoeffs());
+                
+                    // M^{-1} G
+                    for(i = 0; i < order_e; ++i)
+                    {
+                        outcoeff[i] = 0;
+                        for(j = 0; j < order_e; ++j)
+                        {
+                            outcoeff[i] += invMass(vmap[i],vmap[j])*EdgeExp[e]->GetCoeff(j);
+                        }
+                    }
+                    
+                    EdgeExp[e]->BwdTrans(outcoeff,inval);
+                    if(Gtype == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad_e,&normals[e][n*nquad_e],1,
+                              &(EdgeExp[e]->GetPhys())[0],1,&inval[0],1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(nquad_e,normals[e][n],
+                              &(EdgeExp[e]->GetPhys())[0],1,&inval[0],1);
+                    }
+                
+                    EdgeExp[e]->IProductWRTBase(inval,EdgeExp[e]->UpdateCoeffs());
+                
+                    // Put data in out array
+                    for(i = 0; i < order_e; ++i)
+                    {
+                        outarray[vmap[i]] += EdgeExp[e]->GetCoeff(i);
+                    }        
+                }            
+                //===============================================================
+
+
+                //================================================================
+                // Add -D^T M^{-1}G operation =-<n phi_i, n.d(in_phys)/dx]>
+                if(MatrixTerms == true) //term which arise in matrix formulations but not rhs
+                {
+                    Vmath::Zero(nquad_e,&(EdgeExp[e]->UpdatePhys())[0],1);
+
+                    if(Gtype == SpatialDomains::eDeformed)
+                    {
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            GetEdgePhysVals(e,deriv[i],inval);
+                            Vmath::Vvtvp(nquad_e,&inval[0],1,&(normals[e][i*nquad_e]),1,
+                                         &(EdgeExp[e]->UpdatePhys())[0],1,
+                                         &(EdgeExp[e]->UpdatePhys())[0],1);
+                        }
+                    }
+                    else
+                    {
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            GetEdgePhysVals(e,deriv[i],inval);
+                            Vmath::Svtvp(nquad_e,normals[e][i],  &inval[0],1,
+                                         &(EdgeExp[e]->UpdatePhys())[0],1,
+                                         &(EdgeExp[e]->UpdatePhys())[0],1);
+                        }
+                    }
+
+                    // Fill edge and take inner product
+                    EdgeExp[e]->IProductWRTBase(EdgeExp[e]->GetPhys(),EdgeExp[e]->UpdateCoeffs());
+                    
+                    // Put data in out array
+                    for(i = 0; i < order_e; ++i)
+                    {
+                        outarray[vmap[i]] -= EdgeExp[e]->GetCoeff(i);
+                    }                    
+                }
+                //================================================================
             }
         }
-        
-#endif
 
         DNekScalBlkMatSharedPtr QuadExp::CreateStaticCondMatrix(const MatrixKey &mkey)
         {
@@ -1199,6 +1442,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.26  2008/01/21 19:59:32  sherwin
+ *    Updated to take SegGeoms instead of EdgeComponents
+ *
  *    Revision 1.25  2007/12/17 13:04:30  sherwin
  *    Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
  *

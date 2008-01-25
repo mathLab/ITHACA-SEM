@@ -40,6 +40,7 @@
 
 #include <StdRegions/StdQuadExp.h>
 #include <SpatialDomains/QuadGeom.h>
+#include <LocalRegions/SegExp.h>
 
 #include <SpatialDomains/GeomFactors.h>
 
@@ -135,6 +136,14 @@ namespace Nektar
         
         NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble> &coord);        
         
+        SegExpSharedPtr GetEdgeExp(int edge);
+        void GetEdgePhysVals(const int edge, const ConstArray<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+        void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
+                                     const ConstArray<OneD,NekDouble> &inarray,
+                                     Array<OneD,NekDouble> &outarray,
+                                     bool MatrixTerms);
+
+
     protected:
 
         void GenMetricInfo();
@@ -323,6 +332,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.21  2007/11/08 16:54:27  pvos
+ *    Updates towards 2D helmholtz solver
+ *
  *    Revision 1.20  2007/07/28 05:09:33  sherwin
  *    Fixed version with updated MemoryManager
  *

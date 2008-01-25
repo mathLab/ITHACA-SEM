@@ -303,7 +303,47 @@ namespace Nektar
        }
     }
 
+    template<typename DataType, typename LhsInnerMatrixType, unsigned int dim, unsigned int space>
+    void NekMultiply(NekVector<DataType, 0, space>& result,
+                     const NekMatrix<LhsInnerMatrixType, FullMatrixTag, BlockMatrixTag>& lhs,
+                     const NekVector<DataType, dim, space>& rhs)
+    {
+        unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
+        unsigned int numberOfBlockColumns = lhs.GetNumberOfBlockColumns();
 
+        unsigned int curResultRow = 0;
+        for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
+        {
+            unsigned int rowsInBlock = lhs.GetNumberOfRowsInBlockRow(blockRow);
+
+            if( blockRow != 0 )
+            {
+                curResultRow += lhs.GetNumberOfRowsInBlockRow(blockRow-1);
+            }
+
+            NekVector<DataType, 0, space> resultWrapper(rowsInBlock, result.GetPtr() + curResultRow, eWrapper);
+
+            unsigned int curWrapperRow = 0;
+            for(unsigned int blockColumn = 0; blockColumn < numberOfBlockColumns; ++blockColumn)
+            {
+                boost::shared_ptr<const LhsInnerMatrixType>& block = lhs.GetBlock(blockRow, blockColumn);
+                if( !block )
+                {
+                    continue;
+                }
+
+                unsigned int columnsInBlock = lhs.GetNumberOfColumnsInBlockColumn(blockColumn);
+                if( blockColumn != 0 )
+                {
+                    curWrapperRow += lhs.GetNumberOfColumnsInBlockColumn(blockColumn-1);
+                }
+
+                NekVector<DataType, 0, space> rhsWrapper(columnsInBlock, rhs.GetPtr() + curWrapperRow, eWrapper);
+                
+                resultWrapper += (*block)*rhsWrapper;
+            }
+        }
+    }
 
     #ifdef NEKTAR_USING_BLAS  
         /// \brief Floating point specialization when blas is in use.
@@ -328,10 +368,10 @@ namespace Nektar
             double alpha = 1.0;
             const double* a = lhs.GetRawPtr();
             int lda = lhs.GetLeadingDimension();
-            const double* x = rhs.GetPtr();
+            const double* x = rhs.GetRawPtr();
             int incx = 1;
             double beta = 0.0;
-            double* y = result.GetPtr();
+            double* y = result.GetRawPtr();
             int incy = 1;
             
             Blas::Dgemv(lhs.GetTransposeFlag(), m, n, alpha, a, lda, x, incx, beta, y, incy);
@@ -352,10 +392,10 @@ namespace Nektar
             double alpha = lhs.Scale();
             const double* a = lhs.GetOwnedMatrix()->GetRawPtr();
             int lda = m;
-            const double* x = rhs.GetPtr();
+            const double* x = rhs.GetRawPtr();
             int incx = 1;
             double beta = 0.0;
-            double* y = result.GetPtr();
+            double* y = result.GetRawPtr();
             int incy = 1;
             
             Blas::Dgemv(lhs.GetTransposeFlag(), m, n, alpha, a, lda, x, incx, beta, y, incy);
@@ -374,7 +414,7 @@ namespace Nektar
             result = rhs;
             int n = lhs.GetRows();
             const double* a = lhs.GetRawPtr();
-            double* x = result.GetPtr();
+            double* x = result.GetRawPtr();
             int incx = 1;
             
             Blas::Dtpmv('U', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
@@ -393,7 +433,7 @@ namespace Nektar
             result = rhs;
             int n = lhs.GetRows();
             const double* a = lhs.GetRawPtr();
-            double* x = result.GetPtr();
+            double* x = result.GetRawPtr();
             int incx = 1;
             
             Blas::Dtpmv('L', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
@@ -419,10 +459,10 @@ namespace Nektar
             double alpha = 1.0;
             const double* a = lhs.GetRawPtr();
             int lda = kl + ku + 1;
-            const double* x = rhs.GetPtr();
+            const double* x = rhs.GetRawPtr();
             int incx = 1;
             double beta = 0.0;
-            double* y = result.GetPtr();
+            double* y = result.GetRawPtr();
             int incy = 1;
             Blas::Dgbmv('N', m, n, kl, ku, alpha, a, lda, x, incx, beta, y, incy);
 

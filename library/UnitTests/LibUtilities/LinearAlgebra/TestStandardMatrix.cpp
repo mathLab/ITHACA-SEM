@@ -319,7 +319,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(tm1.GetTransposeFlag(), 'T');
         }
         
-        BOOST_AUTO_TEST_CASE(TestScalarMatrixMultily)
+        BOOST_AUTO_TEST_CASE(TestScalarMatrixMultiply)
         {
             double buf1[] = { 1, 4,
                                   2, 5,
@@ -343,6 +343,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(m2_expected_result, m2);
             BOOST_CHECK_EQUAL(m3_expected_result, m3);
         }
+
     }
 
 }

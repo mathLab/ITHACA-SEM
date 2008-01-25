@@ -5,9 +5,11 @@ SET(Sources
     main.cpp   
     TestBandedMatrixOperations.cpp
     TestBandedMatrixStoragePolicy.cpp
+    TestBlockMatrix.cpp
     TestDiagonalMatrixStoragePolicy.cpp
     TestDiagonalMatrixOperations.cpp
     TestFullMatrixStoragePolicy.cpp
+    TestFullMatrixOperations.cpp
     TestLowerTriangularMatrixStoragePolicy.cpp
     TestNekVector.cpp
     TestSymmetricMatrixStoragePolicy.cpp

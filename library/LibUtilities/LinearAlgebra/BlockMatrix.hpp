@@ -277,6 +277,37 @@ namespace Nektar
             unsigned int GetNumberOfBlockRows() const { return m_numberOfBlockRows; }
             unsigned int GetNumberOfBlockColumns() const { return m_numberOfBlockColumns; }
             
+            unsigned int GetNumberOfRowsInBlockRow(unsigned int blockRow) const
+            {
+                ASSERTL2(row < m_numberOfBlockRows, std::string("Block Row ") + boost::lexical_cast<std::string>(row) + 
+                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
+                    std::string(" block rows"));
+                if( blockRow == 0 )
+                {
+                    return m_rowSizes[blockRow]+1;
+                }
+                else
+                {
+                    return m_rowSizes[blockRow] - m_rowSizes[blockRow-1];
+                }
+                
+            }
+
+            unsigned int GetNumberOfColumnsInBlockColumn(unsigned int blockCol) const
+            {
+                ASSERTL2(row < m_numberOfBlockColumns, std::string("Block column ") + boost::lexical_cast<std::string>(row) + 
+                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
+                    std::string(" block columns"));
+                if( blockCol == 0 )
+                {
+                    return m_columnSizes[blockCol]+1;
+                }
+                else
+                {
+                    return m_columnSizes[blockCol] - m_columnSizes[blockCol-1];
+                }
+            }
+
             iterator begin() { return iterator(*this, 0, 0); }
             iterator end() { return iterator(*this); }
             const_iterator begin() const { return const_iterator(*this, 0, 0); }

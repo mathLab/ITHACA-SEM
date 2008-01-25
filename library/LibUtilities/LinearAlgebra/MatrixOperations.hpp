@@ -326,6 +326,11 @@ namespace Nektar
             unsigned int curWrapperRow = 0;
             for(unsigned int blockColumn = 0; blockColumn < numberOfBlockColumns; ++blockColumn)
             {
+                if( blockColumn != 0 )
+                {
+                    curWrapperRow += lhs.GetNumberOfColumnsInBlockColumn(blockColumn-1);
+                }
+
                 const boost::shared_ptr<const LhsInnerMatrixType>& block = lhs.GetBlock(blockRow, blockColumn);
                 if( !block )
                 {
@@ -333,11 +338,6 @@ namespace Nektar
                 }
 
                 unsigned int columnsInBlock = lhs.GetNumberOfColumnsInBlockColumn(blockColumn);
-                if( blockColumn != 0 )
-                {
-                    curWrapperRow += lhs.GetNumberOfColumnsInBlockColumn(blockColumn-1);
-                }
-
                 NekVector<DataType, 0, space> rhsWrapper(columnsInBlock, rhs.GetPtr() + curWrapperRow, eWrapper);
                 
                 resultWrapper += (*block)*rhsWrapper;

@@ -107,6 +107,7 @@ namespace Nektar
             virtual NekDouble v_GetBndSign(int i) 
             {
                 ASSERTL0(false,"GetSign needs defining");
+                return 0.0;
             }
         };
         
@@ -119,6 +120,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalBndryMap.h,v $
+/** Revision 1.2  2007/12/06 22:52:30  pvos
+/** 2D Helmholtz solver updates
+/**
 /** Revision 1.1  2007/11/20 16:27:16  sherwin
 /** Zero Dirichlet version of UDG Helmholtz solver
 /**

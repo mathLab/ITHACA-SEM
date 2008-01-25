@@ -192,7 +192,7 @@ namespace Nektar
                 }
             }
             
-            NekVector(unsigned int size, Array<OneD, DataType>& ptr, PointerWrapper h = eCopy) :
+            NekVector(unsigned int size, Array<OneD, DataType> ptr, PointerWrapper h = eCopy) :
                 m_size(size),
                 m_data(),
                 m_wrapperType(h)

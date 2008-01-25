@@ -326,7 +326,7 @@ namespace Nektar
             unsigned int curWrapperRow = 0;
             for(unsigned int blockColumn = 0; blockColumn < numberOfBlockColumns; ++blockColumn)
             {
-                boost::shared_ptr<const LhsInnerMatrixType>& block = lhs.GetBlock(blockRow, blockColumn);
+                const boost::shared_ptr<const LhsInnerMatrixType>& block = lhs.GetBlock(blockRow, blockColumn);
                 if( !block )
                 {
                     continue;

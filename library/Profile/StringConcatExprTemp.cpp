@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 //
 // Description: 
 //
-///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
 #include "StringConcatExprTemp.h"
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
-//#include <LibUtilities/ExpressionTemplates/BinaryExpression.hpp>
-//#include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpression.hpp>
+#include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
 
 template<typename ExpressionType>
 void DoAssign(std::string& result, const ExpressionType& exp)

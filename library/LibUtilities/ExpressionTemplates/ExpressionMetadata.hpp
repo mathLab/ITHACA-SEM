@@ -38,6 +38,7 @@
 
 #include <boost/utility.hpp>
 #include <boost/type_traits.hpp>
+#include <boost/call_traits.hpp>
 
 #include <LibUtilities/ExpressionTemplates/ExpressionTraits.hpp>
 
@@ -132,6 +133,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_METADATA_H
 /**
     $Log: ExpressionMetadata.hpp,v $
+    Revision 1.7  2007/10/03 02:58:04  bnelson
+    *** empty log message ***
+
     Revision 1.6  2007/08/16 02:14:21  bnelson
     Moved expression templates to the Nektar namespace.
 

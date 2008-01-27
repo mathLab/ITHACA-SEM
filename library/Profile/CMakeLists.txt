@@ -29,3 +29,8 @@ TARGET_LINK_LIBRARIES(Profile
 
 SET_LAPACK_LINK_LIBRARIES(Profile)
 
+SET(GeneratorSources
+	Generator.cpp)
+
+ADD_NEKTAR_EXECUTABLE(ProfileGenerator GeneratorSources)
+

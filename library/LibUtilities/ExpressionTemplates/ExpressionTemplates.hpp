@@ -44,6 +44,10 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
 #define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_HPP
+
+#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
+
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <LibUtilities/ExpressionTemplates/Expression.hpp>
@@ -55,7 +59,6 @@
 #include <LibUtilities/ExpressionTemplates/NullOp.hpp>
 
 #include <LibUtilities/ExpressionTemplates/ConstantExpressionTraits.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpression.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
 
@@ -75,6 +78,9 @@ namespace Nektar
 
 /**
     $Log: ExpressionTemplates.hpp,v $
+    Revision 1.12  2007/12/19 05:09:21  bnelson
+    First pass at detecting aliasing.  Still need to test performance implications.
+
     Revision 1.11  2007/10/04 03:48:54  bnelson
     *** empty log message ***
 

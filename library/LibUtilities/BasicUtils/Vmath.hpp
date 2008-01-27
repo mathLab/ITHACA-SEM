@@ -69,7 +69,8 @@ namespace Vmath
     }
     
     /// \brief Scalar multiply  y = alpha*y
-    template<class T>  void Smul( int n, const T alpha, const T*x, const int incx,
+
+    template<class T>  void Smul( int n, const T alpha, const T *x, const int incx,
                   T *y, const int incy)
     {
         while( n-- )
@@ -207,6 +208,20 @@ namespace Vmath
         {
             *z = (*w) * (*x) + (*y);
             w += incw;
+            x += incx;
+            y += incy;
+            z += incz;
+        }
+    }
+
+    /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
+    template<class T> void Svtvp(int n, const T alpha, const T *x,
+                 const int incx, const T *y, const int incy,
+                 T *z, const int incz)
+    {
+        while( n-- )
+        {
+            *z = alpha * (*x) + (*y);
             x += incx;
             y += incy;
             z += incz;
@@ -439,6 +454,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.9  2007/12/06 22:43:57  pvos
+2D Helmholtz solver updates
+
 Revision 1.8  2007/07/26 08:32:57  sherwin
 Made second vector argument to Vsub a constant
 

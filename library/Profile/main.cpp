@@ -19,8 +19,7 @@ void MatrixAddition2(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1;
 	}
-	cout << "MatrixAddition2 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition2 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication2(unsigned int numIterations, unsigned int matrixSize)
@@ -33,8 +32,7 @@ void MatrixMultiplication2(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1;
 	}
-	cout << "MatrixMultiplication2 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication2 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition2(unsigned int numIterations, unsigned int matrixSize)
@@ -47,8 +45,7 @@ void IntWrapperAddition2(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1;
 	}
-	cout << "IntWrapperAddition2 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition2 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition3(unsigned int numIterations, unsigned int matrixSize)
@@ -62,8 +59,7 @@ void MatrixAddition3(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2;
 	}
-	cout << "MatrixAddition3 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition3 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication3(unsigned int numIterations, unsigned int matrixSize)
@@ -77,8 +73,7 @@ void MatrixMultiplication3(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2;
 	}
-	cout << "MatrixMultiplication3 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication3 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition3(unsigned int numIterations, unsigned int matrixSize)
@@ -92,8 +87,7 @@ void IntWrapperAddition3(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2;
 	}
-	cout << "IntWrapperAddition3 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition3 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition4(unsigned int numIterations, unsigned int matrixSize)
@@ -108,8 +102,7 @@ void MatrixAddition4(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3;
 	}
-	cout << "MatrixAddition4 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition4 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication4(unsigned int numIterations, unsigned int matrixSize)
@@ -124,8 +117,7 @@ void MatrixMultiplication4(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3;
 	}
-	cout << "MatrixMultiplication4 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication4 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition4(unsigned int numIterations, unsigned int matrixSize)
@@ -140,8 +132,7 @@ void IntWrapperAddition4(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2 + m3;
 	}
-	cout << "IntWrapperAddition4 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition4 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition5(unsigned int numIterations, unsigned int matrixSize)
@@ -157,8 +148,7 @@ void MatrixAddition5(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4;
 	}
-	cout << "MatrixAddition5 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition5 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication5(unsigned int numIterations, unsigned int matrixSize)
@@ -174,8 +164,7 @@ void MatrixMultiplication5(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4;
 	}
-	cout << "MatrixMultiplication5 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication5 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition5(unsigned int numIterations, unsigned int matrixSize)
@@ -191,8 +180,7 @@ void IntWrapperAddition5(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2 + m3 + m4;
 	}
-	cout << "IntWrapperAddition5 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition5 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition6(unsigned int numIterations, unsigned int matrixSize)
@@ -209,8 +197,7 @@ void MatrixAddition6(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5;
 	}
-	cout << "MatrixAddition6 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition6 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication6(unsigned int numIterations, unsigned int matrixSize)
@@ -227,8 +214,7 @@ void MatrixMultiplication6(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5;
 	}
-	cout << "MatrixMultiplication6 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication6 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition6(unsigned int numIterations, unsigned int matrixSize)
@@ -245,8 +231,7 @@ void IntWrapperAddition6(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2 + m3 + m4 + m5;
 	}
-	cout << "IntWrapperAddition6 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition6 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition7(unsigned int numIterations, unsigned int matrixSize)
@@ -264,8 +249,7 @@ void MatrixAddition7(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6;
 	}
-	cout << "MatrixAddition7 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition7 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication7(unsigned int numIterations, unsigned int matrixSize)
@@ -283,8 +267,7 @@ void MatrixMultiplication7(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6;
 	}
-	cout << "MatrixMultiplication7 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication7 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition7(unsigned int numIterations, unsigned int matrixSize)
@@ -302,8 +285,7 @@ void IntWrapperAddition7(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2 + m3 + m4 + m5 + m6;
 	}
-	cout << "IntWrapperAddition7 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition7 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition8(unsigned int numIterations, unsigned int matrixSize)
@@ -322,8 +304,7 @@ void MatrixAddition8(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7;
 	}
-	cout << "MatrixAddition8 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition8 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication8(unsigned int numIterations, unsigned int matrixSize)
@@ -342,8 +323,7 @@ void MatrixMultiplication8(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7;
 	}
-	cout << "MatrixMultiplication8 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication8 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition8(unsigned int numIterations, unsigned int matrixSize)
@@ -362,8 +342,7 @@ void IntWrapperAddition8(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7;
 	}
-	cout << "IntWrapperAddition8 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition8 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition9(unsigned int numIterations, unsigned int matrixSize)
@@ -383,8 +362,7 @@ void MatrixAddition9(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8;
 	}
-	cout << "MatrixAddition9 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition9 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication9(unsigned int numIterations, unsigned int matrixSize)
@@ -404,8 +382,7 @@ void MatrixMultiplication9(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8;
 	}
-	cout << "MatrixMultiplication9 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication9 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition9(unsigned int numIterations, unsigned int matrixSize)
@@ -425,8 +402,7 @@ void IntWrapperAddition9(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8;
 	}
-	cout << "IntWrapperAddition9 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition9 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition10(unsigned int numIterations, unsigned int matrixSize)
@@ -447,8 +423,7 @@ void MatrixAddition10(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9;
 	}
-	cout << "MatrixAddition10 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition10 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication10(unsigned int numIterations, unsigned int matrixSize)
@@ -469,8 +444,7 @@ void MatrixMultiplication10(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9;
 	}
-	cout << "MatrixMultiplication10 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication10 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition10(unsigned int numIterations, unsigned int matrixSize)
@@ -491,8 +465,7 @@ void IntWrapperAddition10(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9;
 	}
-	cout << "IntWrapperAddition10 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition10 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition11(unsigned int numIterations, unsigned int matrixSize)
@@ -514,8 +487,7 @@ void MatrixAddition11(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10;
 	}
-	cout << "MatrixAddition11 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition11 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication11(unsigned int numIterations, unsigned int matrixSize)
@@ -537,8 +509,7 @@ void MatrixMultiplication11(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10;
 	}
-	cout << "MatrixMultiplication11 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication11 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition11(unsigned int numIterations, unsigned int matrixSize)
@@ -560,8 +531,7 @@ void IntWrapperAddition11(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10;
 	}
-	cout << "IntWrapperAddition11 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition11 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition12(unsigned int numIterations, unsigned int matrixSize)
@@ -584,8 +554,7 @@ void MatrixAddition12(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10 + m11;
 	}
-	cout << "MatrixAddition12 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition12 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication12(unsigned int numIterations, unsigned int matrixSize)
@@ -608,8 +577,7 @@ void MatrixMultiplication12(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10 + m11;
 	}
-	cout << "MatrixMultiplication12 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication12 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition12(unsigned int numIterations, unsigned int matrixSize)
@@ -632,8 +600,7 @@ void IntWrapperAddition12(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10 + m11;
 	}
-	cout << "IntWrapperAddition12 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition12 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition13(unsigned int numIterations, unsigned int matrixSize)
@@ -657,8 +624,7 @@ void MatrixAddition13(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10 + m11 + m12;
 	}
-	cout << "MatrixAddition13 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition13 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication13(unsigned int numIterations, unsigned int matrixSize)
@@ -682,8 +648,7 @@ void MatrixMultiplication13(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10 + m11 + m12;
 	}
-	cout << "MatrixMultiplication13 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication13 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition13(unsigned int numIterations, unsigned int matrixSize)
@@ -707,8 +672,7 @@ void IntWrapperAddition13(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10 + m11 + m12;
 	}
-	cout << "IntWrapperAddition13 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition13 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixAddition14(unsigned int numIterations, unsigned int matrixSize)
@@ -733,8 +697,7 @@ void MatrixAddition14(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10 + m11 + m12 + m13;
 	}
-	cout << "MatrixAddition14 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixAddition14 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void MatrixMultiplication14(unsigned int numIterations, unsigned int matrixSize)
@@ -759,8 +722,7 @@ void MatrixMultiplication14(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10 + m11 + m12 + m13;
 	}
-	cout << "MatrixMultiplication14 Total Time: " << t.elapsed() << "\n";
-	cout << "MatrixMultiplication14 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 void IntWrapperAddition14(unsigned int numIterations, unsigned int matrixSize)
@@ -785,8 +747,7 @@ void IntWrapperAddition14(unsigned int numIterations, unsigned int matrixSize)
 	{
 		IntWrapper result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10 + m11 + m12 + m13;
 	}
-	cout << "IntWrapperAddition14 Total Time: " << t.elapsed() << "\n";
-	cout << "IntWrapperAddition14 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
 int main(int argc, char** argv)

@@ -105,8 +105,9 @@ void GenerateMatrixTest(std::ostream& outFile, const std::string& testName, unsi
     
     outFile << ";\n";
     outFile << "\t}\n";
-    outFile << "\tcout << \"" << testName << opCount << " Total Time: \" << t.elapsed() << \"\\n\";\n";
-    outFile << "\tcout << \"" << testName << opCount << " Per Op: \" << t.elapsed()/(double)numIterations << \"\\n\";\n";
+    //outFile << "\tcout << \"" << testName << opCount << " Total Time: \" << t.elapsed() << \"\\n\";\n";
+    //outFile << "\tcout << \"" << testName << opCount << " Per Op: \" << t.elapsed()/(double)numIterations << \"\\n\";\n";
+    outFile << "\tcout << t.elapsed()/(double)numIterations << \"\\t\";\n";
     outFile << "}\n\n";
 }
 

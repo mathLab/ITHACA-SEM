@@ -697,6 +697,7 @@ void MatrixAddition14(unsigned int numIterations, unsigned int matrixSize)
 	{
 		Nektar::NekMatrix<double> result = m0 + m1 + m2 + m3 + m4 + m5 + m6 + m7 + m8 + m9 + m10 + m11 + m12 + m13;
 	}
+    cout << t.elapsed() << endl;
 	cout << t.elapsed()/(double)numIterations << "\t";
 }
 
@@ -753,20 +754,21 @@ void IntWrapperAddition14(unsigned int numIterations, unsigned int matrixSize)
 int main(int argc, char** argv)
 {
 	if( argc != 3 ) { cout << "Usage: Profile <numTests> <problemSize>\n"; return 1; }
-
+    cout.precision(20);
 	unsigned int numTests = boost::lexical_cast<unsigned int>(argv[1]);
 	unsigned int problemSize = boost::lexical_cast<unsigned int>(argv[2]);
-MatrixAddition2(numTests, problemSize);
-MatrixAddition3(numTests, problemSize);
-MatrixAddition4(numTests, problemSize);
-MatrixAddition5(numTests, problemSize);
-MatrixAddition6(numTests, problemSize);
-MatrixAddition7(numTests, problemSize);
-MatrixAddition8(numTests, problemSize);
-MatrixAddition9(numTests, problemSize);
-MatrixAddition10(numTests, problemSize);
-MatrixAddition11(numTests, problemSize);
-MatrixAddition12(numTests, problemSize);
-MatrixAddition13(numTests, problemSize);
+// MatrixAddition2(numTests, problemSize);
+// MatrixAddition3(numTests, problemSize);
+// MatrixAddition4(numTests, problemSize);
+// MatrixAddition5(numTests, problemSize);
+// MatrixAddition6(numTests, problemSize);
+// MatrixAddition7(numTests, problemSize);
+// MatrixAddition8(numTests, problemSize);
+// MatrixAddition9(numTests, problemSize);
+// MatrixAddition10(numTests, problemSize);
+// MatrixAddition11(numTests, problemSize);
+// MatrixAddition12(numTests, problemSize);
+// MatrixAddition13(numTests, problemSize);
 MatrixAddition14(numTests, problemSize);
+    cout << "\n";
 }

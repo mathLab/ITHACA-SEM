@@ -5,9 +5,9 @@ Equation.cpp
 GeomFactors.cpp
 Geometry1D.cpp
 Geometry2D.cpp
-#Geometry3D.cpp
+Geometry3D.cpp
 Geometry.cpp
-#HexGeom.cpp
+HexGeom.cpp
 InterfaceComponent.cpp
 MeshComponents.cpp
 MeshGraph.cpp

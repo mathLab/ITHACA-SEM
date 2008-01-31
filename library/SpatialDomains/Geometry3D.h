@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/Geometry3D.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Geometry3D.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -36,6 +36,8 @@
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMETRY3D_H
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY3D_H
 
+
+#include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/Geometry.h>
 
 namespace Nektar
@@ -46,19 +48,26 @@ namespace Nektar
         {
         public:
             Geometry3D();
+            Geometry3D(const int coordim);
             ~Geometry3D();
 
         protected:
+
         private:
+
         };
 
     }; //end of namespace
-};
+}; //end of namespace
+
 
 #endif //NEKTAR_SPATIALDOMAINS_GEOMETRY3D_H
 
 //
 // $Log: Geometry3D.h,v $
+// Revision 1.1  2006/05/04 18:59:00  kirby
+// *** empty log message ***
+//
 // Revision 1.14  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/Geometry3D.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Geometry3D.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,27 +33,38 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/Geometry3D.h>
+#include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdHexExp.h>
 
 namespace Nektar
 {
-    namespace SpatialDomains
-    {
+  namespace SpatialDomains
+  {
         Geometry3D::Geometry3D()
-        {
-            ASSERTL0(0,"Routine needs setting up");
+    {
+        }
+
+        Geometry3D::Geometry3D(const int coordim):
+        Geometry(coordim)
+    {
         }
 
         Geometry3D::~Geometry3D()
-        {
+    {
         }
     }; //end of namespace
 }; //end of namespace
 
-//
+
+
 // $Log: Geometry3D.cpp,v $
+// Revision 1.1  2006/05/04 18:59:00  kirby
+// *** empty log message ***
+//
 // Revision 1.12  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

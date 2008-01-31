@@ -1,5 +1,5 @@
 SET(LOCAL_REGIONS_SOURCES
-#HexExp.cpp
+HexExp.cpp
 MatrixKey.cpp
 #MetricRelatedInfo.cpp
 #NodalTetExp.cpp

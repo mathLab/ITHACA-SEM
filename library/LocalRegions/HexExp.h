@@ -36,11 +36,16 @@
 #ifndef HEXEXP_H
 #define HEXEXP_H
 
-#include <StdRegions/StdBasis.h>
+
+#include <LocalRegions/LocalRegions.hpp>
+
 #include <StdRegions/StdHexExp.h>
 #include <SpatialDomains/HexGeom.h>
 
-#include <StdRegions/StdRegions.hpp>
+#include <SpatialDomains/GeomFactors.h>
+
+#include <LocalRegions/MatrixKey.h>
+
 
 namespace Nektar
 {
@@ -54,34 +59,84 @@ namespace Nektar
     
       ///\brief Constructor using BasisKey class for quadrature
       /// points and order definition 
-      HexExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-         const StdRegions::BasisKey &Bc);
+ 
+      HexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb,
+             const LibUtilities::BasisKey &Bc, const SpatialDomains::HexGeomSharedPtr &geom);
+
+      HexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, 
+             const LibUtilities::BasisKey &Bc);
     
       /// \brief Constructor using BasisKey class for quadrature
-      /// points and order definition where _coeffs and _phys are all set. 
-      HexExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-         const StdRegions::BasisKey &Bc, double *coeffs, double *phys);
+      // points and order definition where _coeffs and _phys are all set. 
+//       HexExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
+//          const StdRegions::BasisKey &Bc, double *coeffs, double *phys);
+
+//        HexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, 
+//               const LibUtilities::BasisKey &Bc, const SpatialDomains::HexGeomSharedPtr &geom);
+
     
       /// Copy Constructor
-      HexExp(HexExp &T);
+      HexExp(const HexExp &T);
 
       /// Destructor
       ~HexExp();
 
-      StdRegions::ShapeType DetShapeType() 
+      StdRegions::ShapeType DetShapeType() const
       { 
-    return StdRegions::eHexahedron; 
+    	 return StdRegions::eHexahedron; 
       }
-    
+
+      //------------------------------
+      //    Integration Method
+      //------------------------------
+      NekDouble Integral(const ConstArray<OneD,NekDouble> &inarray);
+
+      void IProductWRTBase(const ConstArray<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+
+      void IProductWRTBase(const ConstArray<OneD,NekDouble> &base0, 
+			   const ConstArray<OneD,NekDouble> &base1,
+			   const ConstArray<OneD,NekDouble> &base2,  
+			   const ConstArray<OneD,NekDouble> &inarray,
+			   Array<OneD,NekDouble> &outarray );
+      void FwdTrans(const ConstArray<OneD,NekDouble> & inarray, Array<OneD,NekDouble> &outarray);
+ 
+      void GetCoord(const ConstArray<OneD,NekDouble> &Lcoords, Array<OneD,NekDouble> &coords);
+
+      NekDouble PhysEvaluate(const ConstArray<OneD,NekDouble> &coord);
+
+
+
+
     protected:
-      SpatialDomains::HexGeom * m_geom;
+       void GenMetricInfo();
+
+        DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
+        DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
+
+        DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
+        DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
+
+	SpatialDomains::HexGeomSharedPtr m_geom;
+        SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+
+        LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+        LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+
 
     private:
       /// Return Shape of region, using  ShapeType enum list. i.e. Hexahedron
-      virtual StdRegions::ShapeType V_DetShapeType() const
-      {
-        return DetShapeType();
-      }
+       HexExp();
+
+        virtual StdRegions::ShapeType v_DetShapeType() const
+        {
+            return DetShapeType();
+        }
+    
+        virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
+        {
+            return m_metricinfo;
+        }
+
       
     };
 
@@ -89,6 +144,7 @@ namespace Nektar
     typedef boost::shared_ptr<HexExp> HexExpSharedPtr;
     typedef std::vector< HexExpSharedPtr > HexExpVector;
     typedef std::vector< HexExpSharedPtr >::iterator HexExpVectorIter;
+
     
   } //end of namespace
 } //end of namespace
@@ -97,6 +153,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.7  2007/07/22 23:04:17  bnelson
+ *    Backed out Nektar::ptr.
+ *
  *    Revision 1.6  2007/07/20 00:45:50  bnelson
  *    Replaced boost::shared_ptr with Nektar::ptr
  *

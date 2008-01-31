@@ -37,11 +37,11 @@
 #define NEKTAR_SPATIALDOMAINS_HEXGEOM_H
 
 #include <StdRegions/StdHexExp.h>
-
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 
-#include <SpatialDomains/GeoFac.h>
+#include <SpatialDomains/MeshGraph.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/EdgeComponent.h>
@@ -79,7 +79,14 @@ namespace Nektar
             int m_eid;
         
         private:
+
         };
+
+	// shorthand for boost pointer
+        typedef boost::shared_ptr<HexGeom> HexGeomSharedPtr;
+        typedef std::vector< HexGeomSharedPtr > HexGeomVector;
+        typedef std::vector< HexGeomSharedPtr >::iterator HexGeomVectorIter;
+
 
     }; //end of namespace
 }; //end of namespace
@@ -88,6 +95,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.2  2007/07/20 02:15:08  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.1  2006/05/04 18:59:00  kirby
 // *** empty log message ***
 //

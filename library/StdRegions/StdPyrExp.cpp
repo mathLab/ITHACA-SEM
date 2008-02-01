@@ -215,6 +215,21 @@ namespace Nektar
 
         }
         
+	/** \brief Integrate the physical point list \a inarray over pyramidic region and return the value
+            
+	Inputs:\n
+	
+	- \a inarray: definition of function to be returned at quadrature point of expansion. 
+
+	Outputs:\n
+
+	- returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\bar \eta_1, \eta_2, \eta_3) J[i,j,k] d \bar \eta_1 d \eta_2 d \eta_3\f$ \n
+	          \f$= \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1} u(\bar \eta_{1i}^{0,0}, \eta_{2j}^{0,0},\eta_{3k}^{2,0})w_{i}^{0,0} w_{j}^{0,0} \hat w_{k}^{2,0}    \f$ \n
+	          where \f$inarray[i,j, k] = u(\bar \eta_{1i},\eta_{2j}, \eta_{3k}) \f$, \n
+	          \f$\hat w_{k}^{2,0} = \frac {w^{2,0}} {2} \f$ \n
+	          and \f$ J[i,j,k] \f$ is the  Jacobian evaluated at the quadrature point.
+
+        */
         NekDouble StdPyrExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
         {
             // Using implementation from page 146 - 147 of Spencer Sherwin's book
@@ -258,12 +273,50 @@ namespace Nektar
             return Integral3D( inarray, wx, wy, wz_hat );
         }
         
+
+	/** \brief  Inner product of \a inarray over region with respect to the 
+		expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
+	
+		Wrapper call to StdPyrExp::IProductWRTBase
+	
+		Input:\n
+	
+		- \a inarray: array of function evaluated at the physical collocation points
+	
+		Output:\n
+	
+		- \a outarray: array of inner product with respect to each basis over region
+
+        */
         void StdPyrExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
         }
 
 
+        /** 
+            \brief Calculate the inner product of inarray with respect to
+            the basis B=base0*base1*base2 and put into outarray:
+              
+	    \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
+            \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
+	     \psi_{p}^{a} (\bar \eta_{1i}) \psi_{q}^{a} (\eta_{2j}) \psi_{pqr}^{c} (\eta_{3k})
+	     w_i w_j w_k u(\bar \eta_{1,i} \eta_{2,j} \eta_{3,k})	     
+            J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\bar \eta_{1,i})
+            \sum_{j=0}^{nq_1} \psi_{q}^a(\eta_{2,j}) \sum_{k=0}^{nq_2} \psi_{pqr}^c u(\bar \eta_{1i},\eta_{2j},\eta_{3k})
+            J_{i,j,k} \end{array} \f$ \n
+            
+            where
+            
+            \f$\phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\bar \eta_1) \psi_{q}^a (\eta_2) \psi_{pqr}^c (\eta_3) \f$ \n
+            
+            which can be implemented as \n
+            \f$f_{pqr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\bar \eta_{1i},\eta_{2j},\eta_{3k})
+            J_{i,j,k} = {\bf B_3 U}  \f$ \n
+	    \f$ g_{pq} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{q}^a (\xi_{2j}) f_{pqr} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
+	    \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$
+
+        **/
         // Interior pyramid implementation based on Spen's book page 108. 113. and 609.  
         void StdPyrExp::IProductWRTBase(  const ConstArray<OneD, NekDouble>& bx, 
                                             const ConstArray<OneD, NekDouble>& by, 
@@ -319,16 +372,31 @@ namespace Nektar
         }
 
         //-----------------------------
-        // Differentiation Methods
+        /// Differentiation Methods
         //-----------------------------
-        
+       
       void StdPyrExp::PhysDeriv( Array<OneD, NekDouble> &out_d0,
                                    Array<OneD, NekDouble> &out_d1,
                                    Array<OneD, NekDouble> &out_d2)
         {
             PhysDeriv(this->m_phys, out_d0, out_d1, out_d2);
         }
-               
+       
+	/** 
+	\brief Calculate the derivative of the physical points 
+	
+	The derivative is evaluated at the nodal physical points.
+	Derivatives with respect to the local Cartesian coordinates  
+
+	 \f$\begin{matrix} \frac {\partial u^{\delta}} {\partial \xi_1} (\xi_{1i}, \xi_{2j}, \xi_{3k})  \\ 
+	                     \frac {\partial u^{\delta}} {\partial \xi_2} (\xi_{1i}, \xi_{2j}, \xi_{3k})\\ 
+	                     \frac {\partial u^{\delta}} {\partial \xi_3} (\xi_{1i}, \xi_{2j}, \xi_{3k})  \end{matrix} 
+		           = \begin{matrix} \sum_p^P u_{pjk} \frac {\partial h_p (\xi_1)}{\partial \xi_1} |_{\xi_{1i}},  \\ 
+	                                     \sum_p^Q u_{iqk} \frac {\partial h_q (\xi_2)}{\partial \xi_2} |_{\xi_{2j}},  \\
+	                                     \sum_p^R u_{ijr} \frac {\partial h_r (\xi_3)}{\partial \xi_3} |_{\xi_{3k}}
+	                     \end{matrix}\f$
+
+       **/
       // PhysDerivative implementation based on Spen's book page 152.    
       void StdPyrExp::PhysDeriv(const ConstArray<OneD, NekDouble>& u_physical, 
             Array<OneD, NekDouble> &out_dxi1, 
@@ -433,9 +501,26 @@ namespace Nektar
         }
         
         ///////////////////////////////
-        // Evaluation Methods
+        /// Evaluation Methods
         ///////////////////////////////
 
+	/** 
+            \brief Backward transformation is evaluated at the quadrature points 
+		
+	    \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{m(pqr)} \hat u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
+	    
+	     Backward transformation is three dimensional tensorial expansion
+		
+	    \f$ u (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x} \psi_p^a (\xi_{1i}) \lbrace { \sum_{q=0}^{Q_y} \psi_{q}^a (\xi_{2j})
+	    \lbrace { \sum_{r=0}^{Q_z} \hat u_{pqr} \psi_{pqr}^c (\xi_{3k}) \rbrace}
+	    \rbrace}. \f$
+	       
+	     And sumfactorizing step of the form is as:\\
+	      \f$ f_{pqr} (\xi_{3k}) = \sum_{r=0}^{Q_z} \hat u_{pqr} \psi_{pqr}^c (\xi_{3k}),\\ 
+	        g_{p} (\xi_{2j}, \xi_{3k}) = \sum_{r=0}^{Q_y} \psi_{p}^a (\xi_{2j}) f_{pqr} (\xi_{3k}),\\
+		u(\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x} \psi_{p}^a (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).
+	      \f$	
+        **/
         void StdPyrExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
         {
 
@@ -511,6 +596,20 @@ namespace Nektar
             }
         }
 
+
+	/** \brief Forward transform from physical quadrature space
+            stored in \a inarray and evaluate the expansion coefficients and
+            store in \a (this)->m_coeffs  
+            
+            Inputs:\n
+            
+            - \a inarray: array of physical quadrature points to be transformed
+            
+            Outputs:\n
+            
+            - (this)->_coeffs: updated array of expansion coefficients. 
+            
+        */    
         void StdPyrExp::FwdTrans( const ConstArray<OneD, NekDouble>& inarray,  Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
@@ -603,6 +702,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPyrExp.cpp,v $
+ * Revision 1.3  2008/01/03 12:33:00  ehan
+ * Fixed errors from StdMatrix to StdMatrixKey.
+ *
  * Revision 1.2  2008/01/03 10:34:51  ehan
  * Added basis, derivative, physEval, interpolation, integration, backward transform, forward transform functions.
  *

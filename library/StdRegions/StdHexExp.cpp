@@ -190,7 +190,20 @@ namespace Nektar
 
         }
 
+	/** \brief Integrate the physical point list \a inarray over hexahedral region and return the value
+            
+	Inputs:\n
+	
+	- \a inarray: definition of function to be returned at quadrature point of expansion. 
 
+	Outputs:\n
+
+	- returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\xi_1, \xi_2, \xi_3) J[i,j,k] d  \xi_1 d \xi_2 d \xi_3 \f$ \n
+	          \f$ = \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1} u(\xi_{1i}, \xi_{2j},\xi_{3k})w_{i} w_{j}  w_{k}   \f$ \n
+	          where \f$inarray[i,j, k] = u(\xi_{1i},\xi_{2j}, \xi_{3k}) \f$ \n
+	          and \f$ J[i,j,k] \f$ is the  Jacobian evaluated at the quadrature point.
+
+        */
         NekDouble StdHexExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
         {
             ConstArray<OneD, NekDouble> w0, w1, w2;
@@ -201,19 +214,51 @@ namespace Nektar
 
             return Integral3D(inarray, w0, w1, w2);
         }
-        
 
-        /**
-        f_pq = (phi_p phi_q, u)
 
-        **/
-        
+	/** \brief  Inner product of \a inarray over region with respect to the 
+		expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
+	
+		Wrapper call to StdHexExp::IProductWRTBase
+	
+		Input:\n
+	
+		- \a inarray: array of function evaluated at the physical collocation points
+	
+		Output:\n
+	
+		- \a outarray: array of inner product with respect to each basis over region
+
+        */
         void StdHexExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
         }
 
 
+	 /** 
+		\brief Calculate the inner product of inarray with respect to
+		the basis B=base0*base1*base2 and put into outarray:
+		
+		\f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
+		\sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
+		\psi_{p}^{a} (\xi_{1i}) \psi_{q}^{a} (\xi_{2j}) \psi_{r}^{a} (\xi_{3k})
+		w_i w_j w_k u(\xi_{1,i} \xi_{2,j} \xi_{3,k})	     
+		J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\xi_{1,i})
+		\sum_{j=0}^{nq_1} \psi_{q}^a(\xi_{2,j}) \sum_{k=0}^{nq_2} \psi_{r}^a u(\xi_{1i},\xi_{2j},\xi_{3k})
+		J_{i,j,k} \end{array} \f$ \n
+		
+		where
+		
+		\f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a ( \xi_1) \psi_{q}^a (\xi_2) \psi_{r}^a (\xi_3) \f$ \n
+		
+		which can be implemented as \n
+		\f$f_{r} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{r}^a u(\xi_{1i},\xi_{2j},\xi_{3k})
+		J_{i,j,k} = {\bf B_3 U}   \f$ \n
+		\f$ g_{q} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{q}^a (\xi_{2j}) f_{r} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
+		\f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{q} (\xi_{3k})  = {\bf B_1 G} \f$
+
+        **/
         void StdHexExp::IProductWRTBase(    const ConstArray<OneD, NekDouble>& bx, 
                                             const ConstArray<OneD, NekDouble>& by, 
                                             const ConstArray<OneD, NekDouble>& bz, 
@@ -288,6 +333,16 @@ namespace Nektar
         {
             PhysTensorDeriv(this->m_phys, out_d0, out_d1, out_d2);
         }
+
+	 /** 
+            \brief Calculate the derivative of the physical points 
+            
+            For Hexahedral region can use the PhysTensorDeriv function
+            defined under StdExpansion.
+	    Following tenserproduct:
+
+            
+        **/
         void StdHexExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
                                    Array<OneD, NekDouble> &out_d0,
                                    Array<OneD, NekDouble> &out_d1,
@@ -296,10 +351,29 @@ namespace Nektar
             PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
+
+
         //------------------------------
-        // Evaluation Methods
+        /// Evaluation Methods
         //-----------------------------
 
+	/** 
+            \brief Backward transformation is evaluated at the quadrature points 
+		
+	    \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{m(pqr)} \hat u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
+	    
+	     Backward transformation is three dimensional tensorial expansion
+		
+	    \f$ u (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x} \psi_p^a (\xi_{1i}) \lbrace { \sum_{q=0}^{Q_y} \psi_{q}^a (\xi_{2j})
+	       \lbrace { \sum_{r=0}^{Q_z} \hat u_{pqr} \psi_{r}^a (\xi_{3k}) \rbrace}
+	       \rbrace}. \f$
+	       
+	       And sumfactorizing step of the form is as:\\
+	       \f$ f_{r} (\xi_{3k}) = \sum_{r=0}^{Q_z} \hat u_{pqr} \psi_{r}^a (\xi_{3k}),\\ 
+	         g_{p} (\xi_{2j}, \xi_{3k}) = \sum_{r=0}^{Q_y} \psi_{p}^a (\xi_{2j}) f_{r} (\xi_{3k}),\\
+		 u(\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x} \psi_{p}^a (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).
+	       \f$		
+        **/
        void StdHexExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
                                 Array<OneD, NekDouble> &outarray)
         {
@@ -384,7 +458,20 @@ namespace Nektar
             }
         }
 
- 
+
+ 	/** \brief Forward transform from physical quadrature space
+            stored in \a inarray and evaluate the expansion coefficients and
+            store in \a (this)->m_coeffs  
+            
+            Inputs:\n
+            
+            - \a inarray: array of physical quadrature points to be transformed
+            
+            Outputs:\n
+            
+            - (this)->_coeffs: updated array of expansion coefficients. 
+            
+        */    
         void StdHexExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
         {
@@ -553,6 +640,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.12  2008/01/08 22:30:31  ehan
+* Clean up the codes.
+*
 * Revision 1.11  2008/01/03 15:44:38  ehan
 * Fixed bug.
 *

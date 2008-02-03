@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/PrismGeom.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/PrismGeom.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -40,7 +40,7 @@
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 
-#include <SpatialDomains/GeoFac.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/EdgeComponent.h>
@@ -52,6 +52,12 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        class PrismGeom;
+
+        typedef boost::shared_ptr<PrismGeom> PrismGeomSharedPtr;
+        typedef std::vector< PrismGeomSharedPtr > PrismGeomVector;
+        typedef std::vector< PrismGeomSharedPtr >::iterator PrismGeomVectorIter;
+
         class PrismGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
 
@@ -68,16 +74,14 @@ namespace Nektar
             static const int kNtfaces = 2;
             static const int kNfaces = kNqfaces + kNtfaces;
 
-            VertexComponent   * m_verts [kNverts];
-            EdgeComponent     * m_edges [kNedges];
-            QuadFaceComponent * m_qfaces[kNqfaces];
-            TriFaceComponent  * m_tfaces[kNtfaces];
+            VertexComponentVector           m_verts;
+            EdgeComponentVector             m_edges;
+            TriFaceComponentVector          m_tfaces;
+            QuadFaceComponentVector         m_qfaces;
+            StdRegions::EdgeOrientation     m_eorient [kNedges];
+            StdRegions::FaceOrientation     m_forient[kNfaces];
 
             StdRegions::StdPrismExp ** m_xmap;
-
-
-            StdRegions::EdgeOrientation * m_eorient[kNedges];
-            StdRegions::FaceOrientation * m_forient[kNfaces];
 
             int m_eid;
 
@@ -91,6 +95,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.h,v $
+// Revision 1.1  2006/05/04 18:59:02  kirby
+// *** empty log message ***
+//
 // Revision 1.15  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

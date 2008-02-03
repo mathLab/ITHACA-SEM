@@ -95,9 +95,6 @@ namespace Nektar
                 void WriteToFile(std::ofstream &outfile, const int dumpVar);
 
             protected:
-                static const int kNverts = 2;
-
-                SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
 
                 void GenGeomFactors(void);
 
@@ -126,6 +123,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.13  2008/01/21 19:58:14  sherwin
+// Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
+//
 // Revision 1.12  2007/07/22 23:04:24  bnelson
 // Backed out Nektar::ptr.
 //

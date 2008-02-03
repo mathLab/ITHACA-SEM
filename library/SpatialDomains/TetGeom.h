@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/TetGeom.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/TetGeom.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -41,41 +41,43 @@
 
 #include <SpatialDomains/SpatialDomains.hpp>
 
-#include <SpatialDomains/GeoFac.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
-
-#include <SpatialDomains/EdgeComponent.h>
-#include <SpatialDomains/TriFaceComponent.h>
+#include <SpatialDomains/MeshComponents.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        class TetGeom;
+
+        typedef boost::shared_ptr<TetGeom> TetGeomSharedPtr;
+        typedef std::vector< TetGeomSharedPtr > TetGeomVector;
+        typedef std::vector< TetGeomSharedPtr >::iterator TetGeomVectorIter;
+
         class TetGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
-            TetGeom ();
-
-            TetGeom (const int dim, double *verts);
+            TetGeom (const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
             ~TetGeom();
 
-        protected:
             static const int kNverts = 4;
             static const int kNedges = 6;
             static const int kNqfaces = 0;
             static const int kNtfaces = 4;
             static const int kNfaces = kNqfaces + kNtfaces;
 
-            VertexComponent  * m_verts[kNverts];
-            EdgeComponent    * m_edges[kNedges];
-            TriFaceComponent * m_tfaces[kNtfaces];
-
-            StdRegions::EdgeOrientation * m_eorient[kNedges];
-            StdRegions::FaceOrientation * m_forient[kNfaces];
+        protected:
+            VertexComponentVector           m_verts;
+            SegGeomVector                   m_edges;
+            TriGeomVector                   m_tfaces;
+            StdRegions::EdgeOrientation     m_eorient[kNedges];
+            StdRegions::FaceOrientation     m_forient[kNfaces];
 
             int m_eid;
 
         private:
+            TetGeom ();
         };
 
     }; //end of namespace
@@ -85,6 +87,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.2  2006/05/07 11:26:38  sherwin
+// Modifications to get the demo LocalRegions::Project2D to compile
+//
 // Revision 1.1  2006/05/04 18:59:04  kirby
 // *** empty log message ***
 //

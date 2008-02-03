@@ -86,11 +86,11 @@ namespace Nektar
 
                 /// \brief Return the edge number of the given edge, or -1, if 
                 /// not an edge of this element.
-                int WhichEdge(EdgeComponentSharedPtr edge)
+                int WhichEdge(SegGeomSharedPtr edge)
                 {
                     int returnval = -1;
 
-                    EdgeComponentVector::iterator edgeIter;
+                    SegGeomVector::iterator edgeIter;
                     int i;
 
                     for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
@@ -110,7 +110,7 @@ namespace Nektar
 
             protected:
                 VertexComponentVector           m_verts;
-                EdgeComponentVector             m_edges;
+                SegGeomVector                   m_edges;
                 StdRegions::EdgeOrientation     m_eorient [kNedges];
 
                 void GenGeomFactors(void);
@@ -134,6 +134,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.13  2008/01/21 19:58:14  sherwin
+// Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
+//
 // Revision 1.12  2007/12/11 21:51:53  jfrazier
 // Updated 2d components so elements could be retrieved from edges.
 //

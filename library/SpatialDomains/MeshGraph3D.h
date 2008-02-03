@@ -37,7 +37,13 @@
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH3D_H
 
 #include <SpatialDomains/MeshGraph.h>
+#include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/TriGeom.h>
+#include <SpatialDomains/QuadGeom.h>
+#include <SpatialDomains/TetGeom.h>
+#include <SpatialDomains/PyrGeom.h>
 #include <SpatialDomains/PrismGeom.h>
+#include <SpatialDomains/HexGeom.h>
 
 #include <list>
 
@@ -45,34 +51,181 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        class EdgeComponent;
-        class TriFaceComponent;
-        class QuadFaceComponent;
+        class SegGeom;
+        class TriGeom;
+        class QuadGeom;
         class TetGeom;
         class PyrGeom;
-        class PrimsGeom;
+        class PrismGeom;
         class HexGeom;
 
-        class MeshGraph3D: 
-    public MeshGraph
+        class MeshGraph3D: public MeshGraph
         {
         public:
+
             MeshGraph3D();
             virtual ~MeshGraph3D();
 
+            void ReadGeometry(std::string &infilename);
+            void ReadGeometry(TiXmlDocument &doc);
+            void Write(std::string &outfilename);
+
+            SegGeomSharedPtr GetSegGeom(int eID);
+            TriGeomSharedPtr GetTriGeom(int tID);
+
+            inline const int GetCoordim(void){
+                return GetSpaceDimension();
+            }
+
+            inline const TriGeomVector &GetTrigeoms(void) const
+            {
+                return m_trigeoms;
+            }
+
+            inline const QuadGeomVector &GetQuadgeoms(void) const
+            {
+                return m_quadgeoms;
+            }
+
+            void GenXGeoFac();
+
+            inline const int GetNseggeoms() const 
+            {
+                return int(m_seggeoms.size());
+            }
+
+            inline const int GetVidFromElmt(StdRegions::ShapeType shape, 
+                const int vert, const int elmt) const 
+            {
+                if(shape == StdRegions::eTriangle)
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                        "eid is out of range");
+
+                    return m_trigeoms[elmt]->GetVid(vert);
+                }
+                else
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+                        "eid is out of range");
+
+                    return m_quadgeoms[elmt]->GetVid(vert);
+                }
+            }
+
+            inline const int GetEidFromElmt(StdRegions::ShapeType shape, 
+                const int edge, const int elmt) const
+            {
+                if(shape == StdRegions::eTriangle)
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                        "eid is out of range");
+
+                    return m_trigeoms[elmt]->GetEid(edge);
+                }
+                else
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+                        "eid is out of range");
+
+                    return m_quadgeoms[elmt]->GetEid(edge);
+                }
+            }
+
+            inline const StdRegions::EdgeOrientation GetEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt) const 
+            {
+                if(shape == StdRegions::eTriangle)
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                        "eid is out of range");
+
+                    return m_trigeoms[elmt]->GetEorient(edge);
+                }
+                else
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+                        "eid is out of range");
+
+                    return m_quadgeoms[elmt]->GetEorient(edge);
+                }
+            }
+
+
+            inline const StdRegions::EdgeOrientation GetCartesianEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt) const
+            {
+                StdRegions::EdgeOrientation returnval;
+
+                if(shape == StdRegions::eTriangle)
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                        "eid is out of range");
+
+                    returnval = m_trigeoms[elmt]->GetEorient(edge);
+                }
+                else
+                {
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+                        "eid is out of range");
+
+                    returnval =  m_quadgeoms[elmt]->GetEorient(edge);
+                }
+
+                // swap orientation if on edge 2 & 3 (if quad)
+                if(edge >= 2)
+                {
+                    if(returnval == StdRegions::eForwards)
+                    {
+                        returnval = StdRegions::eBackwards;
+                    }
+                    else
+                    {
+                        returnval = StdRegions::eForwards; 
+                    }
+                }
+                return returnval;
+            }
+
+            int GetNumComposites(void)
+            {
+                return int(m_MeshCompositeVector.size());
+            }
+
+            int GetNumCompositeItems(int whichComposite)
+            {
+                int returnval = -1;
+
+                try
+                {
+                    returnval = int(m_MeshCompositeVector[whichComposite]->size());
+                }
+                catch(...)
+                {
+                    std::ostringstream errStream;
+                    errStream << "Unable to access composite item [" << whichComposite << "].";
+                    NEKERROR(ErrorUtil::efatal, errStream.str());
+                }
+
+                return returnval;
+            }
+
+            /// \brief Return the elements (shared ptrs) that have this edge.
+            ElementEdgeVectorSharedPtr GetElementsFromEdge(SegGeomSharedPtr edge);
+
         protected:
+            void ReadEdges    (TiXmlDocument &doc);
+            void ReadFaces    (TiXmlDocument &doc);
+            void ReadElements (TiXmlDocument &doc);
+            void ReadComposites(TiXmlDocument &doc);
+            void ResolveGeomRef(const std::string &prevToken, const std::string &token);
 
         private:
-            std::list<EdgeComponent*>     m_ecomps;
-            std::list<TriFaceComponent*>  m_tfcomps;
-            std::list<QuadFaceComponent*> m_qfcomps;
-            std::list<TetGeom*>           m_tetgeoms;
-            std::list<PyrGeom*>           m_pyrgeoms;
-            std::list<PrismGeom*>         m_prismgeoms;
-            std::list<HexGeom*>           m_hexgeoms;
-
-            virtual void ReadPrivate(std::string &infilename);
-            virtual void WritePrivate(std::string &outfilename);
+            SegGeomVector           m_seggeoms;
+            TriGeomVector           m_trigeoms;
+            QuadGeomVector          m_quadgeoms;
+            TetGeomVector           m_tetgeoms;
+            PyrGeomVector           m_pyrgeoms;
+            PrismGeomVector         m_prismgeoms;
+            HexGeomVector           m_hexgeoms;
         };
     }; // end of namespace
 }; // end of namespace
@@ -81,6 +234,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.h,v $
+// Revision 1.3  2007/07/20 02:15:09  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.2  2006/07/02 17:16:17  sherwin
 //
 // Modifications to make MultiRegions work for a connected domain in 2D (Tris)

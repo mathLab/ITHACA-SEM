@@ -52,6 +52,12 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+	    class HexGeom;
+
+        typedef boost::shared_ptr<HexGeom> HexGeomSharedPtr;
+        typedef std::vector< HexGeomSharedPtr > HexGeomVector;
+        typedef std::vector< HexGeomSharedPtr >::iterator HexGeomVectorIter;
+
         class HexGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
@@ -66,13 +72,11 @@ namespace Nektar
             static const int kNtfaces = 0;
             static const int kNfaces = kNqfaces + kNtfaces;
 
-            VertexComponent*    m_verts [kNverts];
-            EdgeComponent*      m_edges [kNedges];
-            QuadFaceComponent*  m_qfaces[kNqfaces];
-
-            StdRegions::EdgeOrientation* m_eorient[kNedges];
-            StdRegions::FaceOrientation* m_forient[kNfaces];
-
+            VertexComponentVector           m_verts;
+            EdgeComponentVector             m_edges;
+            QuadFaceComponentVector         m_qfaces;
+            StdRegions::EdgeOrientation     m_eorient[kNedges];
+            StdRegions::FaceOrientation     m_forient[kNfaces];
 
             StdRegions::StdHexExp** m_xmap;
 
@@ -82,12 +86,6 @@ namespace Nektar
 
         };
 
-	// shorthand for boost pointer
-        typedef boost::shared_ptr<HexGeom> HexGeomSharedPtr;
-        typedef std::vector< HexGeomSharedPtr > HexGeomVector;
-        typedef std::vector< HexGeomSharedPtr >::iterator HexGeomVectorIter;
-
-
     }; //end of namespace
 }; //end of namespace
 
@@ -95,6 +93,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.3  2008/01/31 11:00:56  ehan
+// Added boost pointer  and included MeshGraph.h
+//
 // Revision 1.2  2007/07/20 02:15:08  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

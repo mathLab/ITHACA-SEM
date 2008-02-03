@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/PyrGeom.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/PyrGeom.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -41,7 +41,7 @@
 
 #include <SpatialDomains/SpatialDomains.hpp>
 
-#include <SpatialDomains/GeoFac.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/EdgeComponent.h>
@@ -52,6 +52,12 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        class PyrGeom;
+
+        typedef boost::shared_ptr<PyrGeom> PyrGeomSharedPtr;
+        typedef std::vector< PyrGeomSharedPtr > PyrGeomVector;
+        typedef std::vector< PyrGeomSharedPtr >::iterator PyrGeomVectorIter;
+
         class PyrGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
@@ -67,21 +73,17 @@ namespace Nektar
             static const int kNtfaces = 4;
             static const int kNfaces  = kNqfaces + kNtfaces;
 
-            VertexComponent   * m_verts[kNverts];
-            EdgeComponent     * m_edges[kNedges];
-            QuadFaceComponent * m_qfaces[kNqfaces];
-            TriFaceComponent  * m_tfaces[kNtfaces];
-
-            StdRegions::StdPyrExp ** m_xmap;
-
-            StdRegions::EdgeOrientation * m_eorient[kNedges];
-            StdRegions::FaceOrientation * m_forient[kNfaces];
+            VertexComponentVector           m_verts;
+            EdgeComponentVector             m_edges;
+            TriFaceComponentVector          m_tfaces;
+            QuadFaceComponentVector         m_qfaces;
+            StdRegions::EdgeOrientation     m_eorient [kNedges];
+            StdRegions::FaceOrientation     m_forient[kNfaces];
 
             int m_eid;
 
         private:
         };
-
     }; //end of namespace
 }; //end of namespace
 
@@ -89,6 +91,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.h,v $
+// Revision 1.2  2006/05/07 11:26:38  sherwin
+// Modifications to get the demo LocalRegions::Project2D to compile
+//
 // Revision 1.1  2006/05/04 18:59:02  kirby
 // *** empty log message ***
 //

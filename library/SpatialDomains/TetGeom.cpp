@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/TetGeom.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/TetGeom.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -35,25 +35,29 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "pchSpatialDomains.h"
 
+#include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/TetGeom.h>
 
 namespace Nektar
 {
-  namespace SpatialDomains
-  {
+    namespace SpatialDomains
+    {
 
-    TetGeom::TetGeom()
-    {
-    }
-  
-    TetGeom::~TetGeom()
-    {
-    }
-  }; //end of namespace
+        TetGeom::TetGeom (const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
+        {
+        }
+
+        TetGeom::~TetGeom()
+        {
+        }
+    }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.1  2006/05/04 18:59:04  kirby
+// *** empty log message ***
+//
 // Revision 1.10  2006/04/09 02:08:36  jfrazier
 // Added precompiled header.
 //

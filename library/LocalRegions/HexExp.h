@@ -65,16 +65,7 @@ namespace Nektar
 
       HexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, 
              const LibUtilities::BasisKey &Bc);
-    
-      /// \brief Constructor using BasisKey class for quadrature
-      // points and order definition where _coeffs and _phys are all set. 
-//       HexExp(const StdRegions::BasisKey &Ba, const StdRegions::BasisKey &Bb, 
-//          const StdRegions::BasisKey &Bc, double *coeffs, double *phys);
 
-//        HexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, 
-//               const LibUtilities::BasisKey &Bc, const SpatialDomains::HexGeomSharedPtr &geom);
-
-    
       /// Copy Constructor
       HexExp(const HexExp &T);
 
@@ -153,6 +144,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.8  2008/01/31 10:57:06  ehan
+ *    Implemented IProductWRTBase, FwdTrans, GetCoord, GetStdMatrix, and GetStdStaticCondMatrix.
+ *
  *    Revision 1.7  2007/07/22 23:04:17  bnelson
  *    Backed out Nektar::ptr.
  *

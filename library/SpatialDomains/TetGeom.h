@@ -36,14 +36,26 @@
 #ifndef NEKTAR_SPATIALDOMAINS_TETGEOM
 #define NEKTAR_SPATIALDOMAINS_TETGEOM
 
-#include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdTetExp.h>
+// #include <StdRegions/StdRegions.hpp>
+// #include <StdRegions/StdTetExp.h>
+// 
+// #include <SpatialDomains/SpatialDomains.hpp>
+// 
+// #include <SpatialDomains/GeomFactors.h>
+// #include <SpatialDomains/Geometry3D.h>
+// #include <SpatialDomains/MeshComponents.h>
 
+
+
+#include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
+#include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/TriFaceComponent.h>
 
 namespace Nektar
 {
@@ -58,15 +70,17 @@ namespace Nektar
         class TetGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
-            TetGeom (const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
-            ~TetGeom();
+	    TetGeom ();
+	    TetGeom(const VertexComponentSharedPtr verts[], const TriGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+	    TetGeom (const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
+	    ~TetGeom();
 
             static const int kNverts = 4;
             static const int kNedges = 6;
             static const int kNqfaces = 0;
             static const int kNtfaces = 4;
             static const int kNfaces = kNqfaces + kNtfaces;
-
+ 
         protected:
             VertexComponentVector           m_verts;
             SegGeomVector                   m_edges;
@@ -77,7 +91,7 @@ namespace Nektar
             int m_eid;
 
         private:
-            TetGeom ();
+           
         };
 
     }; //end of namespace
@@ -87,6 +101,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.3  2008/02/03 05:05:16  jfrazier
+// Initial checkin of 3D components.
+//
 // Revision 1.2  2006/05/07 11:26:38  sherwin
 // Modifications to get the demo LocalRegions::Project2D to compile
 //

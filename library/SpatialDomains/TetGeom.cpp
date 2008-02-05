@@ -35,8 +35,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "pchSpatialDomains.h"
 
+#include <StdRegions/StdRegions.hpp>
+#include <SpatialDomains/SpatialDomains.hpp>
+
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/TetGeom.h>
+
+#include <SpatialDomains/GeomFactors.h>
+#include <SpatialDomains/Geometry3D.h>
+#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/TriFaceComponent.h>
+
 
 namespace Nektar
 {
@@ -55,6 +64,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.2  2008/02/03 05:05:16  jfrazier
+// Initial checkin of 3D components.
+//
 // Revision 1.1  2006/05/04 18:59:04  kirby
 // *** empty log message ***
 //

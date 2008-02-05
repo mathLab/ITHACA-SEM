@@ -314,9 +314,9 @@ namespace Nektar
         {
             int  i;
             
-            ASSERTL1(Lcoords[0] >= -1.0 && Lcoords[1] <= 1.0 && 
-                     Lcoords[1] >= -1.0 && Lcoords[1]  <=1.0 &&
-                     Lcoords[2] >= -1.0 && Lcoords[2]  <=1.0,
+            ASSERTL1(Lcoords[0] <= -1.0 && Lcoords[0] >= 1.0 && 
+                     Lcoords[1] <= -1.0 && Lcoords[1] >= 1.0 &&
+                     Lcoords[2] <= -1.0 && Lcoords[2] >= 1.0,
                      "Local coordinates are not in region [-1,1]");
             
 //             m_geom->FillGeom();
@@ -387,6 +387,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.3  2008/01/31 10:56:50  ehan
+ *    Implemented IProductWRTBase, FwdTrans, GetCoord, GetStdMatrix, and GetStdStaticCondMatrix.
+ *
  *    Revision 1.2  2007/07/20 00:45:50  bnelson
  *    Replaced boost::shared_ptr with Nektar::ptr
  *

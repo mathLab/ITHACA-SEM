@@ -5,11 +5,11 @@ MatrixKey.cpp
 #NodalTetExp.cpp
 NodalTriExp.cpp
 PointExp.cpp
-#PrismExp.cpp
-#PyrExp.cpp
+PrismExp.cpp
+PyrExp.cpp
 QuadExp.cpp
 SegExp.cpp
-#TetExp.cpp
+TetExp.cpp
 TriExp.cpp
 )
 

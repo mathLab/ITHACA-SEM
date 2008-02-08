@@ -106,7 +106,7 @@ namespace Nektar
         physical coordinate in direction i **/
 
 
-        double TriFaceComponent::GetCoord(const int i, 
+        NekDouble TriFaceComponent::GetCoord(const int i, 
                                           const ConstArray<OneD,NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
@@ -119,6 +119,9 @@ namespace Nektar
 
 //
 // $Log: TriFaceComponent.cpp,v $
+// Revision 1.6  2007/07/20 02:15:09  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.5  2007/06/06 15:15:21  pvos
 // Some minor updates for 2D routines
 //

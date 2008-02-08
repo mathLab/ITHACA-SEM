@@ -59,11 +59,51 @@ namespace Nektar
         TetGeom::~TetGeom()
         {
         }
+
+        void TetGeom::AddElmtConnected(int gvo_id, int locid)
+        {
+            CompToElmt ee(gvo_id,locid);
+            m_elmtmap.push_back(ee);
+        }
+
+
+        int TetGeom::NumElmtConnected() const
+        {
+            return int(m_elmtmap.size());
+        }
+
+
+        bool TetGeom::IsElmtConnected(int gvo_id, int locid) const
+        {
+            std::list<CompToElmt>::const_iterator def;
+            CompToElmt ee(gvo_id,locid);
+
+            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+
+            // Found the element connectivity object in the list
+            return (def != m_elmtmap.end());
+        }
+
+        /** given local collapsed coordinate Lcoord return the value of
+        physical coordinate in direction i **/
+
+
+        NekDouble TetGeom::GetCoord(const int i, 
+                                          const ConstArray<OneD,NekDouble> &Lcoord)
+        {
+            ASSERTL1(m_state == ePtsFilled,
+                "Goemetry is not in physical space");
+
+            return m_xmap[i]->PhysEvaluate(Lcoord);
+        }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.3  2008/02/05 00:43:10  ehan
+// Included geometry3D and meshgraphics inorder to prevent compile error.
+//
 // Revision 1.2  2008/02/03 05:05:16  jfrazier
 // Initial checkin of 3D components.
 //

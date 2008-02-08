@@ -43,36 +43,57 @@
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/EdgeComponent.h>
-#include <SpatialDomains/TriFaceComponent.h>
-#include <SpatialDomains/QuadFaceComponent.h>
-
+#include <SpatialDomains/TriGeom.h>
+#include <SpatialDomains/QuadGeom.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
         class PrismGeom;
-
         typedef boost::shared_ptr<PrismGeom> PrismGeomSharedPtr;
         typedef std::vector< PrismGeomSharedPtr > PrismGeomVector;
         typedef std::vector< PrismGeomSharedPtr >::iterator PrismGeomVectorIter;
 
         class PrismGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
-
         public:
-            PrismGeom ();
-
-            PrismGeom (const int dim, double *verts);
+            PrismGeom(const TriGeomSharedPtr faces[], const StdRegions::FaceOrientation forient[]);
             ~PrismGeom();
 
-        protected:
+            void AddElmtConnected(int gvo_id, int locid);
+            int  NumElmtConnected() const;
+            bool IsElmtConnected(int gvo_id, int locid) const;
+
+            inline int GetEid() const 
+            {
+                return m_eid;
+            }
+
+            inline int GetCoordDim() const 
+            {
+                return m_coordim;
+            }
+
+            inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
+            {
+                return m_xmap[i]->GetBasis(j);
+            }
+
+            inline Array<OneD,NekDouble> &UpdatePhys(const int i)
+            {
+                return m_xmap[i]->UpdatePhys();
+            }
+
+            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord);
+
             static const int kNverts = 6;
             static const int kNedges = 9;
             static const int kNqfaces = 3;
             static const int kNtfaces = 2;
             static const int kNfaces = kNqfaces + kNtfaces;
+
+        protected:
 
             VertexComponentVector           m_verts;
             EdgeComponentVector             m_edges;
@@ -81,12 +102,15 @@ namespace Nektar
             StdRegions::EdgeOrientation     m_eorient [kNedges];
             StdRegions::FaceOrientation     m_forient[kNfaces];
 
-            StdRegions::StdPrismExp ** m_xmap;
-
             int m_eid;
 
-        private:
+            bool m_ownverts;
+            std::list<CompToElmt> m_elmtmap;
 
+            Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
+
+        private:
+            PrismGeom ();
         };
     }; //end of namespace
 }; //end of namespace
@@ -95,6 +119,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.h,v $
+// Revision 1.2  2008/02/03 05:05:16  jfrazier
+// Initial checkin of 3D components.
+//
 // Revision 1.1  2006/05/04 18:59:02  kirby
 // *** empty log message ***
 //

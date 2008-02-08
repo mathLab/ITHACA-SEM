@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/PrismGeom.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/PrismGeom.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -41,18 +41,56 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        PrismGeom::PrismGeom()
+        PrismGeom::PrismGeom(const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
         {
         }
 
         PrismGeom::~PrismGeom()
         {
         }
+
+        void PrismGeom::AddElmtConnected(int gvo_id, int locid)
+        {
+            CompToElmt ee(gvo_id,locid);
+            m_elmtmap.push_back(ee);
+        }
+
+
+        int PrismGeom::NumElmtConnected() const
+        {
+            return int(m_elmtmap.size());
+        }
+
+
+        bool PrismGeom::IsElmtConnected(int gvo_id, int locid) const
+        {
+            std::list<CompToElmt>::const_iterator def;
+            CompToElmt ee(gvo_id,locid);
+
+            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+
+            // Found the element connectivity object in the list
+            return (def != m_elmtmap.end());
+        }
+
+        /** given local collapsed coordinate Lcoord return the value of
+        physical coordinate in direction i **/
+        NekDouble PrismGeom::GetCoord(const int i, 
+                                          const ConstArray<OneD,NekDouble> &Lcoord)
+        {
+            ASSERTL1(m_state == ePtsFilled,
+                "Goemetry is not in physical space");
+
+            return m_xmap[i]->PhysEvaluate(Lcoord);
+        }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: PrismGeom.cpp,v $
+// Revision 1.1  2006/05/04 18:59:02  kirby
+// *** empty log message ***
+//
 // Revision 1.10  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

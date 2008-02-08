@@ -49,6 +49,11 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        class TriGeom;
+        typedef boost::shared_ptr<TriGeom> TriGeomSharedPtr;
+        typedef std::vector< TriGeomSharedPtr > TriGeomVector;
+        typedef std::vector< TriGeomSharedPtr >::iterator TriGeomVectorIter;
+
         class TriGeom: public TriFaceComponent
         {
             public:
@@ -122,11 +127,6 @@ namespace Nektar
                     GenGeomFactors();
                 }
         };
-
-        typedef boost::shared_ptr<TriGeom> TriGeomSharedPtr;
-        typedef std::vector< TriGeomSharedPtr > TriGeomVector;
-        typedef std::vector< TriGeomSharedPtr >::iterator TriGeomVectorIter;
-
     }; //end of namespace SpatialDomains
 }; //end of namespace Nektar
 
@@ -134,6 +134,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.14  2008/02/03 05:05:16  jfrazier
+// Initial checkin of 3D components.
+//
 // Revision 1.13  2008/01/21 19:58:14  sherwin
 // Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
 //

@@ -40,12 +40,10 @@
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 
-#include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/EdgeComponent.h>
-#include <SpatialDomains/QuadFaceComponent.h>
+#include <SpatialDomains/QuadGeom.h>
 
 
 namespace Nektar
@@ -61,16 +59,42 @@ namespace Nektar
         class HexGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
-            HexGeom ();
-            HexGeom(double *verts);
+            HexGeom(const QuadGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
             ~HexGeom();
 
-        protected:
+            void AddElmtConnected(int gvo_id, int locid);
+            int  NumElmtConnected() const;
+            bool IsElmtConnected(int gvo_id, int locid) const;
+
+            inline int GetEid() const 
+            {
+                return m_eid;
+            }
+
+            inline int GetCoordDim() const 
+            {
+                return m_coordim;
+            }
+
+            inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
+            {
+                return m_xmap[i]->GetBasis(j);
+            }
+
+            inline Array<OneD,NekDouble> &UpdatePhys(const int i)
+            {
+                return m_xmap[i]->UpdatePhys();
+            }
+
+            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord);
+
             static const int kNverts = 8;
             static const int kNedges = 12;
             static const int kNqfaces = 6;
             static const int kNtfaces = 0;
             static const int kNfaces = kNqfaces + kNtfaces;
+
+       protected:
 
             VertexComponentVector           m_verts;
             EdgeComponentVector             m_edges;
@@ -78,9 +102,11 @@ namespace Nektar
             StdRegions::EdgeOrientation     m_eorient[kNedges];
             StdRegions::FaceOrientation     m_forient[kNfaces];
 
-            StdRegions::StdHexExp** m_xmap;
-
             int m_eid;
+            bool m_ownverts;
+            std::list<CompToElmt> m_elmtmap;
+
+            Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
         
         private:
 
@@ -93,6 +119,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.4  2008/02/03 05:05:06  jfrazier
+// Initial checkin of 3D components.
+//
 // Revision 1.3  2008/01/31 11:00:56  ehan
 // Added boost pointer  and included MeshGraph.h
 //

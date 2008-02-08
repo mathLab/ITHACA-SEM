@@ -36,26 +36,14 @@
 #ifndef NEKTAR_SPATIALDOMAINS_TETGEOM
 #define NEKTAR_SPATIALDOMAINS_TETGEOM
 
-// #include <StdRegions/StdRegions.hpp>
-// #include <StdRegions/StdTetExp.h>
-// 
-// #include <SpatialDomains/SpatialDomains.hpp>
-// 
-// #include <SpatialDomains/GeomFactors.h>
-// #include <SpatialDomains/Geometry3D.h>
-// #include <SpatialDomains/MeshComponents.h>
-
-
-
-#include <StdRegions/StdRegions.hpp>
-#include <SpatialDomains/SpatialDomains.hpp>
-
-#include <SpatialDomains/GeomFactors.h>
-#include <SpatialDomains/Geometry3D.h>
-#include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/TriFaceComponent.h>
+ #include <StdRegions/StdRegions.hpp>
+ #include <StdRegions/StdTetExp.h>
+ 
+ #include <SpatialDomains/SpatialDomains.hpp>
+ 
+ #include <SpatialDomains/GeomFactors.h>
+ #include <SpatialDomains/Geometry3D.h>
+ #include <SpatialDomains/MeshComponents.h>
 
 namespace Nektar
 {
@@ -75,6 +63,32 @@ namespace Nektar
 	    TetGeom (const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
 	    ~TetGeom();
 
+            void AddElmtConnected(int gvo_id, int locid);
+            int  NumElmtConnected() const;
+            bool IsElmtConnected(int gvo_id, int locid) const;
+
+            inline int GetEid() const 
+            {
+                return m_eid;
+            }
+
+            inline int GetCoordDim() const 
+            {
+                return m_coordim;
+            }
+
+            inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
+            {
+                return m_xmap[i]->GetBasis(j);
+            }
+
+            inline Array<OneD,NekDouble> &UpdatePhys(const int i)
+            {
+                return m_xmap[i]->UpdatePhys();
+            }
+
+            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord);
+
             static const int kNverts = 4;
             static const int kNedges = 6;
             static const int kNqfaces = 0;
@@ -89,6 +103,10 @@ namespace Nektar
             StdRegions::FaceOrientation     m_forient[kNfaces];
 
             int m_eid;
+            bool m_ownverts;
+            std::list<CompToElmt> m_elmtmap;
+
+            Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
 
         private:
            
@@ -101,6 +119,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.4  2008/02/05 00:43:22  ehan
+// Included geometry3D and meshgraphics inorder to prevent compile error.
+//
 // Revision 1.3  2008/02/03 05:05:16  jfrazier
 // Initial checkin of 3D components.
 //

@@ -44,9 +44,8 @@
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/EdgeComponent.h>
-#include <SpatialDomains/QuadFaceComponent.h>
-#include <SpatialDomains/TriFaceComponent.h>
+#include <SpatialDomains/TriGeom.h>
+#include <SpatialDomains/QuadGeom.h>
 
 namespace Nektar
 {
@@ -61,17 +60,42 @@ namespace Nektar
         class PyrGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
-            PyrGeom ();
-
-            PyrGeom (const int dim, double *verts);
+            PyrGeom (const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
             ~PyrGeom();
 
-        protected:
+            void AddElmtConnected(int gvo_id, int locid);
+            int  NumElmtConnected() const;
+            bool IsElmtConnected(int gvo_id, int locid) const;
+
+            inline int GetEid() const 
+            {
+                return m_eid;
+            }
+
+            inline int GetCoordDim() const 
+            {
+                return m_coordim;
+            }
+
+            inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
+            {
+                return m_xmap[i]->GetBasis(j);
+            }
+
+            inline Array<OneD,NekDouble> &UpdatePhys(const int i)
+            {
+                return m_xmap[i]->UpdatePhys();
+            }
+
+            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord);
+
             static const int kNverts  = 5;
             static const int kNedges  = 5;
             static const int kNqfaces = 1;
             static const int kNtfaces = 4;
             static const int kNfaces  = kNqfaces + kNtfaces;
+
+        protected:
 
             VertexComponentVector           m_verts;
             EdgeComponentVector             m_edges;
@@ -82,7 +106,13 @@ namespace Nektar
 
             int m_eid;
 
+            bool m_ownverts;
+            std::list<CompToElmt> m_elmtmap;
+
+            Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
+
         private:
+            PyrGeom ();
         };
     }; //end of namespace
 }; //end of namespace
@@ -91,6 +121,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.h,v $
+// Revision 1.3  2008/02/03 05:05:16  jfrazier
+// Initial checkin of 3D components.
+//
 // Revision 1.2  2006/05/07 11:26:38  sherwin
 // Modifications to get the demo LocalRegions::Project2D to compile
 //

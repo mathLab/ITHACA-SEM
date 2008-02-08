@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/PyrGeom.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/PyrGeom.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -42,18 +42,58 @@ namespace Nektar
     namespace SpatialDomains
     {
 
-        PyrGeom::PyrGeom()
+        PyrGeom::PyrGeom(const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
         {
         }
 
         PyrGeom::~PyrGeom()
         {
         }
+        void PyrGeom::AddElmtConnected(int gvo_id, int locid)
+        {
+            CompToElmt ee(gvo_id,locid);
+            m_elmtmap.push_back(ee);
+        }
+
+
+        int PyrGeom::NumElmtConnected() const
+        {
+            return int(m_elmtmap.size());
+        }
+
+
+        bool PyrGeom::IsElmtConnected(int gvo_id, int locid) const
+        {
+            std::list<CompToElmt>::const_iterator def;
+            CompToElmt ee(gvo_id,locid);
+
+            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+
+            // Found the element connectivity object in the list
+            return (def != m_elmtmap.end());
+        }
+
+        /** given local collapsed coordinate Lcoord return the value of
+        physical coordinate in direction i **/
+
+
+        NekDouble PyrGeom::GetCoord(const int i, 
+                                          const ConstArray<OneD,NekDouble> &Lcoord)
+        {
+            ASSERTL1(m_state == ePtsFilled,
+                "Goemetry is not in physical space");
+
+            return m_xmap[i]->PhysEvaluate(Lcoord);
+        }
+
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: PyrGeom.cpp,v $
+// Revision 1.1  2006/05/04 18:59:02  kirby
+// *** empty log message ***
+//
 // Revision 1.10  2006/04/09 02:08:35  jfrazier
 // Added precompiled header.
 //

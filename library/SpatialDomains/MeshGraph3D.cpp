@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph2D.cpp,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph3D.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -504,8 +504,8 @@ namespace Nektar
         // pointer to the Geometry object corresponding to it.
 
         // The only allowable combinations of previous and current items
-        // are V (0D); E (1D); and T and Q (2D).  Only elements of the same
-        // dimension are allowed to be grouped.
+        // are V (0D); E (1D); and T and Q (2D); A (Tet, 3D), P (Pyramid, 3D), R (Prism, 3D), H (Hex, 3D).
+        // Only elements of the same dimension are allowed to be grouped.
         void MeshGraph3D::ResolveGeomRef(const std::string &prevToken, const std::string &token)
         {
             try
@@ -534,18 +534,41 @@ namespace Nektar
 
                 prevTokenStream >> prevType;
 
-                // All composites must be of the same dimension.
-                bool validSequence = (prevToken.empty() ||         // No previous, then current is just fine.
-                    (type == 'V' && prevType == 'V') ||
-                    (type == 'E' && prevType == 'E') ||
-                    ((type == 'T' || type == 'Q') &&
-                    (prevType == 'T' || prevType == 'Q')));
+                // All composites must be of the same dimension.  This map makes things clean to compare.
+                map<char, int> typeMap;
+                typeMap['V'] = 1; // Vertex
+                typeMap['E'] = 1; // Edge
+                typeMap['T'] = 2; // Triangle
+                typeMap['Q'] = 2; // Quad
+                typeMap['A'] = 3; // Tet
+                typeMap['P'] = 3; // Pyramid
+                typeMap['R'] = 3; // Prism
+                typeMap['H'] = 3; // Hex
+
+                // Make sure only geoms of the same dimension are combined.
+                bool validSequence = (prevToken.empty() || (typeMap[type] == typeMap[prevType]));
 
                 ASSERTL0(validSequence, (std::string("Invalid combination of composite items: ")
                     + type + " and " + prevType + ".").c_str()); 
 
                 switch(type)
                 {
+                case 'V':   // Vertex
+                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                    {
+                        if (*seqIter >= m_vertset.size())
+                        {
+                            char errStr[16] = "";
+                            ::sprintf(errStr, "%d", *seqIter);
+                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown vertex index: ") + errStr).c_str());
+                        }
+                        else
+                        {
+                            m_MeshCompositeVector.back()->push_back(m_vertset[*seqIter]);
+                        }
+                    }
+                    break;
+
                 case 'E':   // Edge
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
@@ -590,22 +613,6 @@ namespace Nektar
                         else
                         {
                             m_MeshCompositeVector.back()->push_back(m_quadgeoms[*seqIter]);
-                        }
-                    }
-                    break;
-
-                case 'V':   // Vertex
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
-                    {
-                        if (*seqIter >= m_vertset.size())
-                        {
-                            char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
-                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown vertex index: ") + errStr).c_str());
-                        }
-                        else
-                        {
-                            m_MeshCompositeVector.back()->push_back(m_vertset[*seqIter]);
                         }
                     }
                     break;
@@ -692,39 +699,39 @@ namespace Nektar
 
         ElementEdgeVectorSharedPtr MeshGraph3D::GetElementsFromEdge(SegGeomSharedPtr edge)
         {
-            // Search tris and quads
+            // Search Tets, Pyramids, Prisms, and Hexes
             // Need to iterate through vectors because there may be multiple
             // occurrences.
-            ElementEdgeSharedPtr elementEdge;
-            TriGeomVector::iterator triIter;
+            //ElementEdgeSharedPtr elementEdge;
+            //TriGeomVector::iterator triIter;
 
             ElementEdgeVectorSharedPtr returnval = MemoryManager<ElementEdgeVector>::AllocateSharedPtr();
 
-            for(triIter = m_trigeoms.begin(); triIter != m_trigeoms.end(); ++triIter)
-            {
-                int edgeNum;
-                if ((edgeNum = (*triIter)->WhichEdge(edge)) > -1)
-                {
-                    elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                    elementEdge->m_Element = *triIter;
-                    elementEdge->m_EdgeIndx = edgeNum;
-                    returnval->push_back(elementEdge);
-                }
-            }
+            //for(triIter = m_trigeoms.begin(); triIter != m_trigeoms.end(); ++triIter)
+            //{
+            //    int edgeNum;
+            //    if ((edgeNum = (*triIter)->WhichEdge(edge)) > -1)
+            //    {
+            //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+            //        elementEdge->m_Element = *triIter;
+            //        elementEdge->m_EdgeIndx = edgeNum;
+            //        returnval->push_back(elementEdge);
+            //    }
+            //}
 
-            QuadGeomVector::iterator quadIter;
+            //QuadGeomVector::iterator quadIter;
 
-            for(quadIter = m_quadgeoms.begin(); quadIter != m_quadgeoms.end(); ++quadIter)
-            {
-                int edgeNum;
-                if ((edgeNum = (*quadIter)->WhichEdge(edge)) > -1)
-                {
-                    elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                    elementEdge->m_Element = *quadIter;
-                    elementEdge->m_EdgeIndx = edgeNum;
-                    returnval->push_back(elementEdge);
-                }
-            }
+            //for(quadIter = m_quadgeoms.begin(); quadIter != m_quadgeoms.end(); ++quadIter)
+            //{
+            //    int edgeNum;
+            //    if ((edgeNum = (*quadIter)->WhichEdge(edge)) > -1)
+            //    {
+            //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+            //        elementEdge->m_Element = *quadIter;
+            //        elementEdge->m_EdgeIndx = edgeNum;
+            //        returnval->push_back(elementEdge);
+            //    }
+            //}
 
             return returnval;
         }
@@ -733,5 +740,8 @@ namespace Nektar
 }; //end of namespace
 
 //
-// $Log$
+// $Log: MeshGraph3D.cpp,v $
+// Revision 1.2  2008/02/03 05:05:16  jfrazier
+// Initial checkin of 3D components.
+//
 //

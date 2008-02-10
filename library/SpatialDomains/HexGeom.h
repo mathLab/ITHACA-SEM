@@ -36,8 +36,8 @@
 #ifndef NEKTAR_SPATIALDOMAINS_HEXGEOM_H
 #define NEKTAR_SPATIALDOMAINS_HEXGEOM_H
 
-#include <StdRegions/StdHexExp.h>
 #include <StdRegions/StdRegions.hpp>
+#include <StdRegions/StdHexExp.h>
 #include <SpatialDomains/SpatialDomains.hpp>
 
 #include <SpatialDomains/GeomFactors.h>
@@ -119,6 +119,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.5  2008/02/08 23:05:52  jfrazier
+// More work on 3D components.
+//
 // Revision 1.4  2008/02/03 05:05:06  jfrazier
 // Initial checkin of 3D components.
 //

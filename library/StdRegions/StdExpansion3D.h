@@ -156,18 +156,19 @@ namespace Nektar
                       Array<OneD, NekDouble> &outarray_d0,
                       Array<OneD, NekDouble> &outarray_d1,
                       Array<OneD, NekDouble> &outarray_d2) = 0;
-                      
+
             virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
             {
                 return PhysEvaluate3D(coords);
             }
 
-        virtual int v_GetCoordim(void)
-        {
+            virtual int v_GetCoordim(void)
+            {
                 return 3; 
-        }
-
+            }
         };
+
+	typedef boost::shared_ptr<StdExpansion3D> StdExpansion3DSharedPtr;
 
     } //end of namespace
 } //end of namespace
@@ -176,6 +177,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.11  2007/11/08 14:27:53  ehan
+* Fixed PhysTensorDerivative3D matrix and improved L1 error up to 1e-15.
+*
 * Revision 1.10  2007/10/29 20:31:04  ehan
 * Fixed floating point approximation up to 1-e15 for PhysEvaluate.
 *

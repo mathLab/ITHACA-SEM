@@ -40,7 +40,7 @@
  #include <StdRegions/StdTetExp.h>
  
  #include <SpatialDomains/SpatialDomains.hpp>
- 
+ #include <SpatialDomains/TriGeom.h>
  #include <SpatialDomains/GeomFactors.h>
  #include <SpatialDomains/Geometry3D.h>
  #include <SpatialDomains/MeshComponents.h>
@@ -119,6 +119,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.5  2008/02/08 23:05:52  jfrazier
+// More work on 3D components.
+//
 // Revision 1.4  2008/02/05 00:43:22  ehan
 // Included geometry3D and meshgraphics inorder to prevent compile error.
 //

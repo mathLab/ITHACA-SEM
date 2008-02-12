@@ -45,6 +45,9 @@ namespace Nektar
     namespace StdRegions
     {
 
+	class StdExpansion3D;
+	typedef boost::shared_ptr<StdExpansion3D> StdExpansion3DSharedPtr;
+
         class StdExpansion3D: public StdExpansion
         {
 
@@ -167,9 +170,6 @@ namespace Nektar
                 return 3; 
             }
         };
-
-	typedef boost::shared_ptr<StdExpansion3D> StdExpansion3DSharedPtr;
-
     } //end of namespace
 } //end of namespace
 
@@ -177,6 +177,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.12  2008/02/12 01:30:07  ehan
+* Added typedef StdExpansion3DSharedPtr.
+*
 * Revision 1.11  2007/11/08 14:27:53  ehan
 * Fixed PhysTensorDerivative3D matrix and improved L1 error up to 1e-15.
 *

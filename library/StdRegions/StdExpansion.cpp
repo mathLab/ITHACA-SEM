@@ -207,7 +207,7 @@ namespace Nektar
 
             Vmath::Vsub(ntot,sol.get(),1,&m_phys[0],1,&wsp[0],1);
             Vmath::Vabs(ntot,&wsp[0],1,&wsp[0],1);
-            val = Vmath::Vamax(ntot,&wsp[0],1);    
+            val = Vmath::Vamax(ntot,&wsp[0],1);
 
             return  val;
         }
@@ -312,7 +312,7 @@ namespace Nektar
             return val;
         }
 
-        
+
 
         DNekMatSharedPtr StdExpansion::CreateGeneralMatrix(const StdMatrixKey &mkey)
         {
@@ -324,14 +324,14 @@ namespace Nektar
             {
             case StdRegions::eUnifiedDGHelmholtz:
                 {
-                    
+
                     ASSERTL1(IsBoundaryInteriorExpansion(),
                              "UnifiedDGHelmholtz matrix not set up "
                              "for non boundary-interior expansions");
-                    
+
                     int j;
                     NekDouble tau = mkey.GetConstant(1);
-                    
+
                     // Get basic Galerkin Helmholtz matrix 
                     StdRegions::StdMatrixKey hkey(eHelmholtz,DetShapeType(),*this,
                                                   mkey.GetConstant(0));
@@ -340,21 +340,20 @@ namespace Nektar
 
                     Array<OneD,NekDouble> inarray(m_ncoeffs);
                     Array<OneD,NekDouble> outarray(m_ncoeffs);
-                    
+
                     for(j = 0; j < m_ncoeffs; ++j)
                     {
                         Vmath::Zero(m_ncoeffs,&inarray[0],1);
                         Vmath::Zero(m_ncoeffs,&outarray[0],1);
                         inarray[j] = 1.0;
-                        
+
                         v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray,true);
-                        
+
                         for(i = 0; i < m_ncoeffs; ++i)
                         {
                             Mat(i,j) += outarray[i];
                         }
                     }
-                    
                 }
                 break;
             case StdRegions::eUnifiedDGLamToU:
@@ -378,7 +377,7 @@ namespace Nektar
 
                     // get mapping for boundary dof
                     ConstArray<OneD,int> bmap = GetBoundaryMap();
-                    
+
                     // Helmholtz matrix
                     DNekScalMat  &invHmat = *GetLocMatrix(eInvUnifiedDGHelmholtz,
                                                           lambdaval, tau);
@@ -391,11 +390,11 @@ namespace Nektar
                         Vmath::Zero(m_ncoeffs,&lambda[0],1);
                         Vmath::Zero(m_ncoeffs,&f[0],1);
                         lambda[bmap[j]] = 1.0;
-                        
+
                         v_AddUDGHelmholtzBoundaryTerms(tau,lambda,f);
-                        
+
                         Ulam = invHmat*F; // generate Ulam from lambda
-                        
+
                         // fill column of matrix
                         for(k = 0; k < m_ncoeffs; ++k)
                         {
@@ -413,7 +412,7 @@ namespace Nektar
                     int nquad  = GetNumPoints(0);
                     const ConstArray<OneD,NekDouble> &Basis  = m_base[0]->GetBdata();
                     Array<OneD,NekDouble> lambda(m_ncoeffs);
-                    DNekVec Lambda(m_ncoeffs,lambda,eWrapper);                    
+                    DNekVec Lambda(m_ncoeffs,lambda,eWrapper);
                     Array<OneD,NekDouble> ulam(m_ncoeffs);
                     DNekVec Ulam(m_ncoeffs,ulam,eWrapper);
                     Array<OneD,NekDouble> f(m_ncoeffs);
@@ -613,7 +612,7 @@ namespace Nektar
             
             v_BwdTrans(inarray,tmp);
             v_PhysDeriv(k2,tmp,dtmp);
-            v_IProductWRTDerivBase(k1,dtmp, outarray);
+            v_IProductWRTDerivBase(k1, dtmp, outarray);
         }
 
 
@@ -648,8 +647,6 @@ namespace Nektar
             Blas::Daxpy(m_ncoeffs,lambda,&tmp[0],1,&outarray[0],1);
         }
 
-
-
         void StdExpansion::TensProdBwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
             Array<OneD, NekDouble> &outarray)
         {
@@ -663,6 +660,80 @@ namespace Nektar
             v_out = (*bwdtransmat) * v_in;
             // This line below should be removed once the eWrapper method of NekVEctor works properly
             Vmath::Vcopy(nq,&((v_out).GetPtr())[0],1,&outarray[0],1);
+        }
+
+
+        // 3D interpolation
+	 void StdExpansion::Interp3D(const LibUtilities::BasisKey &fbasis0, 
+				     const LibUtilities::BasisKey &fbasis1, 
+				     const LibUtilities::BasisKey &fbasis2, 
+				     const ConstArray<OneD, NekDouble>& from,  
+				     const LibUtilities::BasisKey &tbasis0,
+				     const LibUtilities::BasisKey &tbasis1,
+	                             const LibUtilities::BasisKey &tbasis2,
+				     Array<OneD, NekDouble> &to)
+        {
+            Interp3D(fbasis0,fbasis1,fbasis2,from.data(),tbasis0,tbasis1,tbasis2,to.data());
+        }
+
+	void StdExpansion::Interp3D(const LibUtilities::BasisKey &fbasis0, 
+				    const LibUtilities::BasisKey &fbasis1,
+				    const LibUtilities::BasisKey &fbasis2,  
+				    const NekDouble *from,  
+				    const LibUtilities::BasisKey &tbasis0,
+				    const LibUtilities::BasisKey &tbasis1,
+				    const LibUtilities::BasisKey &tbasis2,
+				    NekDouble *to)
+        {
+            DNekMatSharedPtr I0, I1, I2;
+
+            Array<OneD, NekDouble> wsp1 = Array<OneD, NekDouble>(tbasis1.GetNumPoints()*fbasis0.GetNumPoints());
+            Array<OneD, NekDouble> wsp2 = Array<OneD, NekDouble>(tbasis2.GetNumPoints()*fbasis1.GetNumPoints());
+
+            I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]->GetI(tbasis0.GetPointsKey());
+            I1 = LibUtilities::PointsManager()[fbasis1.GetPointsKey()]->GetI(tbasis1.GetPointsKey());
+            I2 = LibUtilities::PointsManager()[fbasis2.GetPointsKey()]->GetI(tbasis2.GetPointsKey());
+
+            //TODO : following matrix storiges (rows, columns)
+            Blas::Dgemm('N', 'T',
+                         tbasis2.GetNumPoints(),      //  3
+                         fbasis1.GetNumPoints(),      //  4
+                         fbasis2.GetNumPoints(),      //  5
+                         1.0,                         //  6
+                         I2->GetPtr().get(),          //  7
+                         tbasis1.GetNumPoints(),      //  8
+                         from,                        //  9
+                         fbasis0.GetNumPoints(),      // 10 
+                         0.0,                         // 11
+                         wsp2.get(),                  // 12
+                         tbasis1.GetNumPoints());     // 13
+              //TODO : following matrix storiges (rows, columns)
+            Blas::Dgemm('N', 'T',
+                         tbasis1.GetNumPoints(),      //  3
+                         fbasis0.GetNumPoints(),      //  4
+                         fbasis1.GetNumPoints(),      //  5
+                         1.0,                         //  6
+                         I1->GetPtr().get(),          //  7
+                         tbasis1.GetNumPoints(),      //  8
+                         wsp2.get(),                  //  9
+                         fbasis0.GetNumPoints(),      // 10 
+                         0.0,                         // 11
+                         wsp1.get(),                  // 12
+                         tbasis1.GetNumPoints());     // 13
+
+              //TODO : following matrix storiges (rows, columns)
+            Blas::Dgemm('N', 'T',
+                        tbasis0.GetNumPoints(),      //  3
+                        tbasis1.GetNumPoints(),      //  4
+                        fbasis0.GetNumPoints(),      //  5
+                        1.0,                         //  6
+                        I0->GetPtr().get(),          //  7
+                        tbasis0.GetNumPoints(),      //  8 
+                        wsp1.get(),                  //  9
+                        tbasis1.GetNumPoints(),      // 10
+                        0.0,                         // 11
+                        to,                          // 12
+                        tbasis0.GetNumPoints());     // 13
         }
 
         // 2D Interpolation
@@ -684,25 +755,37 @@ namespace Nektar
             NekDouble *to)
         {
             DNekMatSharedPtr I0,I1;
-            Array<OneD, NekDouble> wsp = Array<OneD, NekDouble>(tbasis1.GetNumPoints()*
-                fbasis0.GetNumPoints());
+            Array<OneD, NekDouble> wsp = Array<OneD, NekDouble>(tbasis1.GetNumPoints()*fbasis0.GetNumPoints());
 
-            I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]
-            ->GetI(tbasis0.GetPointsKey());
-            I1 = LibUtilities::PointsManager()[fbasis1.GetPointsKey()]
-            ->GetI(tbasis1.GetPointsKey());
+            I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]->GetI(tbasis0.GetPointsKey());
+            I1 = LibUtilities::PointsManager()[fbasis1.GetPointsKey()]->GetI(tbasis1.GetPointsKey());
 
-            Blas::Dgemm('N', 'T', tbasis1.GetNumPoints(), fbasis0.GetNumPoints(),
-                fbasis1.GetNumPoints(), 1.0, I1->GetPtr().get(),  
-                tbasis1.GetNumPoints(),
-                from,fbasis0.GetNumPoints(), 0.0, wsp.get(),
-                tbasis1.GetNumPoints());
+            Blas::Dgemm('N', 'T', 
+                         tbasis1.GetNumPoints(),
+                         fbasis0.GetNumPoints(),      
+                         fbasis1.GetNumPoints(),     
+                         1.0,                        
+                         I1->GetPtr().get(),          
+                         tbasis1.GetNumPoints(),      
+                         from,                       
+                         fbasis0.GetNumPoints(),      
+                         0.0,                         
+                         wsp.get(),                  
+                         tbasis1.GetNumPoints());     
 
-            Blas::Dgemm('N', 'T',tbasis0.GetNumPoints(),tbasis1.GetNumPoints(),
-                fbasis0.GetNumPoints(),1.0,I0->GetPtr().get(),
-                tbasis0.GetNumPoints(),wsp.get(), tbasis1.GetNumPoints(),
-                0.0,to, tbasis0.GetNumPoints());
-        }        
+            Blas::Dgemm('N', 'T',
+                        tbasis0.GetNumPoints(),     
+                        tbasis1.GetNumPoints(),      
+                        fbasis0.GetNumPoints(),      
+                        1.0,                         
+                        I0->GetPtr().get(),         
+                        tbasis0.GetNumPoints(),      
+                        wsp.get(),                   
+                        tbasis1.GetNumPoints(),      
+                        0.0,                         
+                        to,                          
+                        tbasis0.GetNumPoints());     
+        }
 
         // 1D Interpolation
         void StdExpansion::Interp1D(const LibUtilities::BasisKey &fbasis0, 
@@ -750,6 +833,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.61  2008/01/23 09:09:46  sherwin
+* Updates for Hybrized DG
+*
 * Revision 1.60  2007/12/17 13:03:45  sherwin
 * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
 *

@@ -929,11 +929,11 @@ namespace Nektar
             *   at the quadrature points of \a tbasis0 (output of the function)
             */
             void Interp2D(const LibUtilities::BasisKey &fbasis0, 
-                const LibUtilities::BasisKey &fbasis1,
-                const ConstArray<OneD, NekDouble>& from,   
-                const LibUtilities::BasisKey &tbasis0,
-                const LibUtilities::BasisKey &tbasis1, 
-                Array<OneD, NekDouble> &to);
+                          const LibUtilities::BasisKey &fbasis1,
+                          const ConstArray<OneD, NekDouble>& from,
+                          const LibUtilities::BasisKey &tbasis0,
+                          const LibUtilities::BasisKey &tbasis1, 
+                          Array<OneD, NekDouble> &to);
 
             void Interp2D(const LibUtilities::BasisKey &fbasis0, 
                           const LibUtilities::BasisKey &fbasis1,
@@ -941,6 +941,47 @@ namespace Nektar
                           const LibUtilities::BasisKey &tbasis0,
                           const LibUtilities::BasisKey &tbasis1, 
                           NekDouble *to);
+
+
+            /** \brief this function interpolates a 3D function \f$f\f$ evaluated
+            *  at the quadrature points of the 3D basis, constructed by 
+            *  \a fbasis0, \a fbasis1, and \a fbasis2 to the function values at the 
+            *  quadrature points of the 3D basis, constructed by \a tbasis0, 
+            *  \a tbasis1, and \a tbasis2.
+            *
+            *  Given a function \f$ f\f$ evaluated at the \a Q quadrature points
+            *  of the first expansion basis, this routine calculates, using 
+            *  \a (Q-1)th order polynomial interpolation, the function values
+            *  at the \a Q2 quadrature points of the second basis, and the function
+            *  values at the \a Q3 quadrature points of the third basis.
+            *
+            *  \param fbasis0 the basis at which's quadrature points the 
+            *  function is given
+            *  \param from the array containg the function \f$ f\f$  evaluated
+            *   at the quadrature points of \a fbasis0
+            *  \param tbasis0 the basis to which's quadrature points the 
+            *  function should be interpolated
+            *  \param to the array containg the function \f$ f\f$  evaluated
+            *   at the quadrature points of \a tbasis0 (output of the function)
+            */
+           void Interp3D(const LibUtilities::BasisKey &fbasis0,
+                         const LibUtilities::BasisKey &fbasis1,
+                         const LibUtilities::BasisKey &fbasis2,
+                         const ConstArray<OneD, NekDouble>& from,
+                         const LibUtilities::BasisKey &tbasis0,
+                         const LibUtilities::BasisKey &tbasis1,
+                         const LibUtilities::BasisKey &tbasis2,
+                         Array<OneD, NekDouble> &to);
+
+           void Interp3D(const LibUtilities::BasisKey &fbasis0,
+                         const LibUtilities::BasisKey &fbasis1,
+                         const LibUtilities::BasisKey &fbasis2,
+                         const NekDouble *from,
+                         const LibUtilities::BasisKey &tbasis0,
+                         const LibUtilities::BasisKey &tbasis1,
+                         const LibUtilities::BasisKey &tbasis2,
+                         NekDouble *to );
+
 
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
             *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
@@ -1236,6 +1277,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.73  2008/01/23 09:09:46  sherwin
+* Updates for Hybrized DG
+*
 * Revision 1.72  2008/01/03 04:15:17  bnelson
 * Added a return value to some functions that abort to prevent visual studio compile errors.
 *

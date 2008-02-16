@@ -94,6 +94,14 @@ namespace Nektar
 
        NekDouble PhysEvaluate(const ConstArray<OneD,NekDouble> &coord);
 
+      //-----------------------------
+      // Differentiation Methods
+      //-----------------------------
+        void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                       Array<OneD, NekDouble> &out_d0,
+                       Array<OneD, NekDouble> &out_d1,
+                       Array<OneD, NekDouble> &out_d2);
+
       /// Return Shape of region, using  ShapeType enum list. i.e. Pyramid
       StdRegions::ShapeType DetShapeType()
       {
@@ -162,6 +170,23 @@ namespace Nektar
         virtual int v_GetCoordim()
         {
             return m_geom->GetCoordim();
+        }
+
+        /// Virtual call to SegExp::PhysDeriv
+        virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                                    Array<OneD, NekDouble> &out_d0,
+                                    Array<OneD, NekDouble> &out_d1,
+                                    Array<OneD, NekDouble> &out_d2)
+        {
+            StdPyrExp::PhysDeriv(inarray, out_d0, out_d1, out_d2);
+        }
+
+        virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
+                                 Array<OneD, NekDouble> &out_d0,
+                                 Array<OneD, NekDouble> &out_d1,
+                                 Array<OneD, NekDouble> &out_d2)
+        {
+            PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
 
@@ -257,6 +282,9 @@ namespace Nektar
 
 /**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.8  2008/02/05 00:40:19  ehan
+ *    Added initial pyramidic expansion.
+ *
  *    Revision 1.7  2007/07/22 23:04:18  bnelson
  *    Backed out Nektar::ptr.
  *

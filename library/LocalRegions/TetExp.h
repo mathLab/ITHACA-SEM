@@ -76,20 +76,28 @@ namespace Nektar
 		       Array<OneD,NekDouble> &coords_1,
           	       Array<OneD,NekDouble> &coords_2);
 
-	void GetCoord(const ConstArray<OneD,NekDouble> &Lcoords, 
-                      Array<OneD,NekDouble> &coords);
+	void GetCoord(const ConstArray<OneD,NekDouble> &Lcoords, Array<OneD,NekDouble> &coords);
 
         //----------------------------
         // Integration Methods
         //----------------------------
 
         /// \brief Integrate the physical point list \a inarray over region
-       NekDouble Integral(const ConstArray<OneD,NekDouble> &inarray);    
+       NekDouble Integral(const ConstArray<OneD,NekDouble> &inarray);
 
        void IProductWRTBase(const ConstArray<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
        void FwdTrans(const ConstArray<OneD,NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
 
        NekDouble PhysEvaluate(const ConstArray<OneD,NekDouble> &coord);
+
+      //-----------------------------
+      // Differentiation Methods
+      //-----------------------------
+
+        void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                       Array<OneD, NekDouble> &out_d0,
+                       Array<OneD, NekDouble> &out_d1,
+                       Array<OneD, NekDouble> &out_d2);
 
 
 	/// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
@@ -140,16 +148,23 @@ namespace Nektar
       }
 
       virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
+      {
+         return m_metricinfo;
+      }
 
-         virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
-                                 Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
-                                 Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray)
-         {
-             GetCoords(coords_0, coords_1, coords_2);
-         }
+//          virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
+//                                  Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
+//                                  Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray)
+//          {
+//              GetCoords(coords_0, coords_1, coords_2);
+//          }
+
+        virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
+                                 Array<OneD, NekDouble> &coords_1,
+                                 Array<OneD, NekDouble> &coords_2)
+        {
+            GetCoords(coords_0, coords_1, coords_2);
+        }
 
         virtual void v_GetCoord(const ConstArray<OneD, NekDouble> &lcoord, 
                                 Array<OneD, NekDouble> &coord)
@@ -162,12 +177,28 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
+                 /// Virtual call to SegExp::PhysDeriv
+        virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                                    Array<OneD, NekDouble> &out_d0,
+                                    Array<OneD, NekDouble> &out_d1,
+                                    Array<OneD, NekDouble> &out_d2)
+        {
+            StdTetExp::PhysDeriv(inarray, out_d0, out_d1, out_d2);
+        }
+
+        virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
+                                 Array<OneD, NekDouble> &out_d0,
+                                 Array<OneD, NekDouble> &out_d1,
+                                 Array<OneD, NekDouble> &out_d2)
+        {
+            PhysDeriv(inarray, out_d0, out_d1, out_d2);
+        }
 
         virtual void v_WriteToFile(FILE *outfile)
         {
             WriteToFile(outfile);
         }
-        
+
         virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
         {
             WriteToFile(outfile,dumpVar);
@@ -181,8 +212,7 @@ namespace Nektar
         }
 
         /** \brief Virtual call to TriExp::IProduct_WRT_B */
-        virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray,
-                                       Array<OneD, NekDouble> &outarray)
+        virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
         }
@@ -200,7 +230,7 @@ namespace Nektar
         {
             FwdTrans(inarray, outarray);
         }
-        
+
         /// Virtual call to TetExp::Evaluate
         virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble> &coords)
         {
@@ -253,6 +283,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.7  2008/02/05 00:41:37  ehan
+ *    Added initial tetrahedral expansion.
+ *
  *    Revision 1.6  2007/07/22 23:04:19  bnelson
  *    Backed out Nektar::ptr.
  *

@@ -1,6 +1,6 @@
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/SpatialDomains/InterfaceComponent.h,v $
+//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/InterfaceComponent.h,v $
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -32,7 +32,7 @@
 //  Description:
 //
 //
-////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_SPATIALDOMAINS_INTERFACECOMPONENT_H
 #define NEKTAR_SPATIALDOMAINS_INTERFACECOMPONENT_H
 
@@ -62,6 +62,9 @@ namespace Nektar
 
 //
 // $Log: InterfaceComponent.h,v $
+// Revision 1.1  2006/05/04 18:59:01  kirby
+// *** empty log message ***
+//
 // Revision 1.7  2006/03/12 14:20:43  sherwin
 //
 // First compiling version of SpatialDomains and associated modifications

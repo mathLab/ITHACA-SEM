@@ -41,6 +41,7 @@
 
 #include <StdRegions/StdHexExp.h>
 #include <SpatialDomains/HexGeom.h>
+#include <LocalRegions/QuadExp.h>
 
 #include <SpatialDomains/GeomFactors.h>
 
@@ -89,14 +90,30 @@ namespace Nektar
 			   const ConstArray<OneD,NekDouble> &base2,  
 			   const ConstArray<OneD,NekDouble> &inarray,
 			   Array<OneD,NekDouble> &outarray );
-      void FwdTrans(const ConstArray<OneD,NekDouble> & inarray, Array<OneD,NekDouble> &outarray);
  
+      void GetCoords(Array<OneD,NekDouble> &coords_1,
+                     Array<OneD,NekDouble> &coords_2, 
+                     Array<OneD,NekDouble> &coords_3);
       void GetCoord(const ConstArray<OneD,NekDouble> &Lcoords, Array<OneD,NekDouble> &coords);
 
+      void WriteToFile(FILE *outfile);
+      void WriteToFile(std::ofstream &outfile, const int dumpVar);
+
+        //-----------------------------
+        // Differentiation Methods
+        //-----------------------------
+
+        void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                       Array<OneD, NekDouble> &out_d0,
+                       Array<OneD, NekDouble> &out_d1,
+                       Array<OneD, NekDouble> &out_d2);
+
+        //----------------------------
+        // Evaluations Methods
+        //---------------------------
+      void FwdTrans(const ConstArray<OneD,NekDouble> & inarray, Array<OneD,NekDouble> &outarray);
       NekDouble PhysEvaluate(const ConstArray<OneD,NekDouble> &coord);
-
-
-
+//       QuadExpSharedPtr GetEdgeExp(int edge);
 
     protected:
        void GenMetricInfo();
@@ -128,6 +145,105 @@ namespace Nektar
             return m_metricinfo;
         }
 
+       virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
+                                 Array<OneD, NekDouble> &coords_1,
+                                 Array<OneD, NekDouble> &coords_2)
+        {
+             GetCoords(coords_0, coords_1, coords_2);
+         }
+
+        virtual void v_GetCoord(const ConstArray<OneD, NekDouble> &lcoord, Array<OneD, NekDouble> &coord)
+        {
+            GetCoord(lcoord, coord);
+        }
+
+        virtual  int v_GetCoordim()
+        {
+            return m_geom->GetCoordim();
+        }
+
+
+        virtual void v_WriteToFile(FILE *outfile)
+        {
+            WriteToFile(outfile);
+        }
+
+        virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
+        {
+            WriteToFile(outfile,dumpVar);
+        }
+
+               /** \brief Virtual call to integrate the physical point list \a inarray
+        over region (see SegExp::Integral) */
+        virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble> &inarray )
+        {
+            return Integral(inarray);
+        }
+
+        /** \brief Virtual call to QuadExp::IProduct_WRT_B */
+        virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray,
+                                       Array<OneD, NekDouble> &outarray)
+        {
+            IProductWRTBase(inarray,outarray);
+        }
+
+        
+        /// Virtual call to SegExp::PhysDeriv
+        virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                                    Array<OneD, NekDouble> &out_d0,
+                                    Array<OneD, NekDouble> &out_d1,
+                                    Array<OneD, NekDouble> &out_d2)
+        {
+            StdHexExp::PhysDeriv(inarray, out_d0, out_d1, out_d2);
+        }
+        
+        virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+                                 Array<OneD, NekDouble> &out_d0,
+                                 Array<OneD, NekDouble> &out_d1,
+                                 Array<OneD, NekDouble> &out_d2)
+        {
+             PhysDeriv(inarray, out_d0, out_d1, out_d2);
+        }
+
+          /// Virtual call to SegExp::FwdTrans
+       virtual void v_FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
+                                Array<OneD, NekDouble> &outarray)
+        {
+            FwdTrans(inarray,outarray);
+        }
+    
+        /// Virtual call to QuadExp::Evaluate
+        virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble> &coords)
+        {
+            return PhysEvaluate(coords);
+        }
+
+        virtual NekDouble v_Linf()
+        {
+            return Linf();
+        }
+    
+        virtual NekDouble v_L2(const ConstArray<OneD, NekDouble> &sol)
+        {
+            return StdExpansion::L2(sol);
+        }
+
+    
+        virtual NekDouble v_L2()
+        {
+            return StdExpansion::L2();
+        }
+
+        virtual DNekScalMatSharedPtr v_GetLocMatrix(const MatrixKey &mkey)
+        {
+            return m_matrixManager[mkey];
+        }
+        
+        virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+        {
+            return m_staticCondMatrixManager[mkey];
+        }
+
       
     };
 
@@ -144,6 +260,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.9  2008/02/05 00:36:23  ehan
+ *    Removed old comments
+ *
  *    Revision 1.8  2008/01/31 10:57:06  ehan
  *    Implemented IProductWRTBase, FwdTrans, GetCoord, GetStdMatrix, and GetStdStaticCondMatrix.
  *

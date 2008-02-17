@@ -7,6 +7,7 @@ SET(Sources
     IntWrapperExprTemp.cpp
     VectorOpsExprTemp.cpp
     MatrixOps.cpp
+    VariableCostObject.cpp
 )
 
 SET(Headers
@@ -18,6 +19,7 @@ SET(Headers
     VectorOpsExprTemp.h
     MatrixOps.h
     MatrixOpsExprTemp.h
+	VariableCostObject.h
 )
 
 ADD_NEKTAR_EXECUTABLE(Profile Sources Headers)

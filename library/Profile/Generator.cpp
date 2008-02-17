@@ -38,6 +38,7 @@
 #include <iostream>
 #include <fstream>
 #include <boost/bind.hpp>
+#include <string>
 
 enum TestType
 {
@@ -54,6 +55,11 @@ void InitializeMatrix(std::ostream& outFile, unsigned int i)
 void InitializeIntWrapper(std::ostream& outFile, unsigned int i)
 {
     outFile << "\tIntWrapper m" << i << ";\n";
+}
+
+void InitializeVariableCostObject(std::ostream& outFile, unsigned int i)
+{
+    outFile << "\tVariableCostObject m" << i << ";\n";
 }
 
 ////    boost::timer t;
@@ -82,7 +88,10 @@ void GenerateMatrixTest(std::ostream& outFile, const std::string& testName, unsi
     const Initializer& f)
 {
     // Create matrix addition and matrix multiplication.
-    outFile << "void " << testName << opCount << "(unsigned int numIterations, unsigned int matrixSize)\n";
+    outFile << "void ";
+    outFile << testName;
+    outFile << opCount;
+    outFile << "(unsigned int numIterations, unsigned int matrixSize)\n";
     outFile << "{\n";
     for(unsigned int i = 0; i < opCount; ++i)
     {
@@ -113,11 +122,12 @@ void GenerateMatrixTest(std::ostream& outFile, const std::string& testName, unsi
 
 int main(int argc, char** argv)
 {
-    std::ofstream outFile("/Users/bnelson/Nektar++/library/Profile/main.cpp");
+    std::ofstream outFile("g:/Nektar++/library/Profile/main.cpp");
     
     outFile << "#include <Profile/IntWrapper.h>\n";
     outFile << "#include <boost/lexical_cast.hpp>\n";
     outFile << "#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>\n";
+    outFile << "#include <Profile/VariableCostObject.h>\n";
 //    outFile << "#include <Profile/StringConcat.h>
 //    outFile << "#include <Profile/StringConcatExprTemp.h>
     outFile << "#include <boost/timer.hpp>\n";
@@ -130,9 +140,10 @@ int main(int argc, char** argv)
     unsigned int maxOpCount = 15;
     for(unsigned int opCount = 2; opCount < maxOpCount; ++opCount)
     {
-        GenerateMatrixTest(outFile, "MatrixAddition", opCount, "+", "Nektar::NekMatrix<double>", boost::bind(InitializeMatrix, _1, _2));
-        GenerateMatrixTest(outFile, "MatrixMultiplication", opCount, "*", "Nektar::NekMatrix<double>", boost::bind(InitializeMatrix, _1, _2));
-        GenerateMatrixTest(outFile, "IntWrapperAddition", opCount, "+", "IntWrapper", boost::bind(InitializeIntWrapper, _1, _2));
+        //GenerateMatrixTest(outFile, "MatrixAddtion", opCount, "+", "Nektar::NekMatrix<double>", boost::bind(InitializeMatrix, _1, _2));
+        //GenerateMatrixTest(outFile, "MatrixMultiplication", opCount, "*", "Nektar::NekMatrix<double>", boost::bind(InitializeMatrix, _1, _2));
+        //GenerateMatrixTest(outFile, "IntWrapperAddition", opCount, "+", "IntWrapper", boost::bind(InitializeIntWrapper, _1, _2));
+        GenerateMatrixTest(outFile, "VariableCostOperationAddition", opCount, "+", "VariableCostObject", boost::bind(InitializeVariableCostObject, _1, _2));
     }
     
     
@@ -141,12 +152,13 @@ int main(int argc, char** argv)
     outFile << "\tif( argc != 3 ) { cout << \"Usage: Profile <numTests> <problemSize>\\n\"; return 1; }\n\n";
     outFile << "\tunsigned int numTests = boost::lexical_cast<unsigned int>(argv[1]);\n";
     outFile << "\tunsigned int problemSize = boost::lexical_cast<unsigned int>(argv[2]);\n";
-    
+    outFile << "\tVariableCostObject::size = problemSize;\n";
     for(unsigned int opCount = 2; opCount < maxOpCount; ++opCount)
     {
         outFile << "MatrixAddition" << opCount << "(numTests, problemSize);\n";
         //outFile << "MatrixMultiplication" << opCount << "(numTests, problemSize);\n";
         //outFile << "IntWrapperAddition" << opCount << "(numTests, problemSize);\n";
+        outFile << "VariableCostOperationAddition" << opCount << "(numTests, problemSize);\n";
     }
     outFile << "}\n";
     

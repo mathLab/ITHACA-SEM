@@ -378,5 +378,45 @@ namespace Nektar
 //             NekMatrix<double> expected_result(4, 4, expected_result_buf);
 //             BOOST_CHECK_EQUAL(expected_result, result);
         }
+        
+        BOOST_AUTO_TEST_CASE(Test3ParameterExpressionWithoutParens)
+        {
+            double buf1[] = {1, 2, 3, 4};
+            double buf2[] = {5, 6, 7, 9};
+            double buf3[] = {10, 11, 12, 13};
+            
+            NekMatrix<double> m1(2, 2, buf1);
+            NekMatrix<double> m2(2, 2, buf2);
+            NekMatrix<double> m3(2, 2, buf3);
+            
+            double expected_result_buf[] = {buf1[0] - buf2[0] + buf3[0],
+                buf1[1] - buf2[1] + buf3[1],
+                buf1[2] - buf2[2] + buf3[2],
+                buf1[3] - buf2[3] + buf3[3]};
+            NekMatrix<double> expected_result(2, 2, expected_result_buf);
+            NekMatrix<double> result = m1-m2+m3;
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
+        
+        BOOST_AUTO_TEST_CASE(Test4ParameterExpressionWithoutParens)
+        {
+            double buf1[] = {1, 2, 3, 4};
+            double buf2[] = {5, 6, 7, 9};
+            double buf3[] = {10, 11, 12, 13};
+            double buf4[] = {14, 15, 16, 17};
+            
+            NekMatrix<double> m1(2, 2, buf1);
+            NekMatrix<double> m2(2, 2, buf2);
+            NekMatrix<double> m3(2, 2, buf3);
+            NekMatrix<double> m4(2, 2, buf4);
+            
+            double expected_result_buf[] = {buf1[0] - buf2[0] * buf3[0] + buf4[0],
+                buf1[1] - buf2[1] * buf3[1] + buf4[1],
+                buf1[2] - buf2[2] * buf3[2] + buf4[2],
+                buf1[3] - buf2[3] * buf3[3] + buf4[3]};
+            NekMatrix<double> expected_result(2, 2, expected_result_buf);
+            NekMatrix<double> result = m1-m2*m3+m4;
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
     }
 }

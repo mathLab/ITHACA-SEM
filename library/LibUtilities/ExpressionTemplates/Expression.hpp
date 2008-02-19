@@ -171,12 +171,6 @@ namespace Nektar
                     PolicyType::template Evaluate<ParentOpType>(accum, m_data);
                 }
 
-//                 template<template <typename, typename> class ParentOpType>
-//                 void ApplyEqual(Accumulator<ResultType>& accum) const
-//                 {
-//                     PolicyType::template ApplyEqual<ParentOpType>(accum, m_data);
-//                 }
-                
                 const MetadataType& GetMetadata() const
                 {
                     return m_metadata;
@@ -195,6 +189,25 @@ namespace Nektar
                 typename boost::call_traits<DataType>::const_reference operator*() const
                 {
                     return m_data;
+                }
+                
+                
+                /// Utility Methods
+                unsigned int CountRequiredTemporaries() const
+                {
+                    return CountRequiredTemporaries<BinaryNullOp>();
+                }
+                
+                template<template <typename> class ParentOpType>
+                unsigned int CountRequiredTemporaries() const
+                {
+                    return PolicyType::template CountRequiredTemporaries<ParentOpType>(m_data);
+                }
+                
+                template<template <typename, typename> class ParentOpType>
+                unsigned int CountRequiredTemporaries() const
+                {
+                    return PolicyType::template CountRequiredTemporaries<ParentOpType>(m_data);
                 }
                 
             private:
@@ -216,6 +229,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.21  2008/01/22 03:15:21  bnelson
+    Added CreateFromMetadata.
+
     Revision 1.20  2008/01/20 20:10:09  bnelson
     *** empty log message ***
 

@@ -180,18 +180,21 @@ namespace Nektar
                 m_numberOfBlockRows(numberOfBlockRows),
                 m_numberOfBlockColumns(numberOfBlockColumns)
             {
-                m_storageSize = this->GetRows()*this->GetColumns();
-                m_rowSizes[0] = rowsPerBlock[0] - 1;
-                for(unsigned int i = 1; i < numberOfBlockRows; ++i)
-                {
-                    m_rowSizes[i] = rowsPerBlock[i] + m_rowSizes[i-1];
-                }
-                
-                m_columnSizes[0] = columnsPerBlock[0] - 1;
-                for(unsigned int i = 1; i < numberOfBlockColumns; ++i)
-                {
-                    m_columnSizes[i] = columnsPerBlock[i] + m_columnSizes[i-1];
-                }
+                Initialize(rowsPerBlock, columnsPerBlock);
+            }
+
+            NekMatrix(const ConstArray<OneD, unsigned int>& rowsPerBlock,
+                      const ConstArray<OneD, unsigned int>& columnsPerBlock) :
+                BaseType(std::accumulate(rowsPerBlock.begin(), rowsPerBlock.end(), 0),
+                         std::accumulate(columnsPerBlock.begin(), columnsPerBlock.end(), 0)),
+                m_data(rowsPerBlock.num_elements(), columnsPerBlock.num_elements(), boost::shared_ptr<InnerType>()),
+                m_rowSizes(rowsPerBlock.num_elements()),
+                m_columnSizes(columnsPerBlock.num_elements()),
+                m_storageSize(0),
+                m_numberOfBlockRows(rowsPerBlock.num_elements()),
+                m_numberOfBlockColumns(columnsPerBlock.num_elements())
+            {
+                Initialize(rowsPerBlock.data(), columnsPerBlock.data());
             }
                 
             boost::shared_ptr<const InnerType> GetBlock(unsigned int row, unsigned int column) const        
@@ -279,7 +282,7 @@ namespace Nektar
             
             unsigned int GetNumberOfRowsInBlockRow(unsigned int blockRow) const
             {
-                ASSERTL2(row < m_numberOfBlockRows, std::string("Block Row ") + boost::lexical_cast<std::string>(row) + 
+                ASSERTL2(blockRow < m_numberOfBlockRows, std::string("Block Row ") + boost::lexical_cast<std::string>(blockRow) + 
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockRows) +
                     std::string(" block rows"));
                 if( blockRow == 0 )
@@ -295,7 +298,7 @@ namespace Nektar
 
             unsigned int GetNumberOfColumnsInBlockColumn(unsigned int blockCol) const
             {
-                ASSERTL2(row < m_numberOfBlockColumns, std::string("Block column ") + boost::lexical_cast<std::string>(row) + 
+                ASSERTL2(blockCol < m_numberOfBlockColumns, std::string("Block column ") + boost::lexical_cast<std::string>(blockCol) + 
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
                     std::string(" block columns"));
                 if( blockCol == 0 )
@@ -316,6 +319,22 @@ namespace Nektar
         public:
         
         private:
+            void Initialize(const unsigned int* rowsPerBlock, const unsigned int* columnsPerBlock) 
+            {
+                m_storageSize = this->GetRows()*this->GetColumns();
+                m_rowSizes[0] = rowsPerBlock[0] - 1;
+                for(unsigned int i = 1; i < m_numberOfBlockRows; ++i)
+                {
+                    m_rowSizes[i] = rowsPerBlock[i] + m_rowSizes[i-1];
+                }
+                
+                m_columnSizes[0] = columnsPerBlock[0] - 1;
+                for(unsigned int i = 1; i < m_numberOfBlockColumns; ++i)
+                {
+                    m_columnSizes[i] = columnsPerBlock[i] + m_columnSizes[i-1];
+                }
+            }
+
             virtual typename boost::call_traits<NumberType>::value_type v_GetValue(unsigned int row, unsigned int column) const 
             {
                 return (*this)(row, column);

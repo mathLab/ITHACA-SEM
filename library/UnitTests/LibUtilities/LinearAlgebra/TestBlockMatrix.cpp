@@ -179,16 +179,33 @@ namespace Nektar
             b.SetBlock(3, 1, m31);
             b.SetBlock(3, 2, m32);
             
+            Array<OneD, unsigned int> arrayRowCounts(4, rowCounts);
+            Array<OneD, unsigned int> arrayColCounts(3, colCounts);
+            BlockType b_initializedWithArray(arrayRowCounts, arrayColCounts);
+            b_initializedWithArray.SetBlock(0, 0, m00);
+            b_initializedWithArray.SetBlock(0, 1, m01);
+            b_initializedWithArray.SetBlock(0, 2, m02);
+            b_initializedWithArray.SetBlock(1, 0, m10);
+            b_initializedWithArray.SetBlock(1, 1, m11);
+            b_initializedWithArray.SetBlock(1, 2, m12);
+            b_initializedWithArray.SetBlock(2, 0, m20);
+            b_initializedWithArray.SetBlock(2, 1, m21);
+            b_initializedWithArray.SetBlock(2, 2, m22);
+            b_initializedWithArray.SetBlock(3, 0, m30);
+            b_initializedWithArray.SetBlock(3, 1, m31);
+            b_initializedWithArray.SetBlock(3, 2, m32);
 
             double rhs_buf[] = {4, 2, 5, 5, 3, 1, 3, 2, 3};
             NekVector<double> rhs(9, rhs_buf);
 
             NekVector<double> result = b*rhs;
+            NekVector<double> result1 = b_initializedWithArray*rhs;
 
             double expected_buf[] = {84, 63, 71, 80, 67, 100, 76, 80, 88, 69, 51, 67};
             NekVector<double> expected_result(12, expected_buf);
 
             BOOST_CHECK_EQUAL(expected_result, result);
+            BOOST_CHECK_EQUAL(expected_result, result1);
         }
     }
 }

@@ -32,20 +32,19 @@ int main(int argc, char *argv[])
   StdRegions::StdExpansion2D *E;
   Array<OneD, NekDouble> sol;
   Array<OneD, NekDouble> coords(8);
-  StdRegions::EdgeOrientation edgeDir = StdRegions::eForwards; 
+  StdRegions::EdgeOrientation edgeDir = StdRegions::eForwards;
 
-  
+
   if((argc != 16)&&(argc != 14))
   {
-    fprintf(stderr,"Usage: Project2D RegionShape Type1 Type2 order1 "       
-        "order2  nq1 nq2 x1, y1, x2, y2,.... \n");
-    
+                   //       arg[0]    arg[1]   arg[2]  arg[3] arg[4] arg[5] arg[6] arg[7] arg[8] arg[9] arg[10] arg[11] arg[12] arg[13]
+    fprintf(stderr,"Usage: Project2D RegionShape Type1 Type2 order1 order2  nq1    nq2     x1,    y1,      x2,     y2,     x3,    y3 \n");
+
     fprintf(stderr,"Where RegionShape is an integer value which "
         "dictates the region shape:\n");
     fprintf(stderr,"\t Triangle      = 2\n");
     fprintf(stderr,"\t Quadrilateral = 3\n");
-    
-    
+
     fprintf(stderr,"Where type is an integer value which "
         "dictates the basis as:\n");
 
@@ -65,18 +64,18 @@ int main(int argc, char *argv[])
     fprintf(stderr,"The last series of values are the coordinates\n");
     exit(1);
   }
-  
+
   regionshape = (StdRegions::ShapeType) atoi(argv[1]);
-  
+
   // Check to see if 2D region 
   if((regionshape != StdRegions::eTriangle)&&(regionshape != StdRegions::eQuadrilateral))
   {
       NEKERROR(ErrorUtil::efatal,"This shape is not a 2D region");
   }
- 
+
   int btype1_val = atoi(argv[2]);
   int btype2_val = atoi(argv[3]);
-  
+
   if(( btype1_val <= 10)&&( btype2_val <= 10))
   {
       btype1 =   (LibUtilities::BasisType) btype1_val;
@@ -86,7 +85,7 @@ int main(int argc, char *argv[])
   {
       btype1 =   LibUtilities::eOrtho_A;
       btype2 =   LibUtilities::eOrtho_B;
-      
+
       if(btype1_val == 11)
       {
       NodalType = LibUtilities::eNodalTriElec;
@@ -108,7 +107,7 @@ int main(int argc, char *argv[])
       NEKERROR(ErrorUtil::efatal,
                "Basis 1 cannot be of type Ortho_B or Modified_B");
       }
-      
+
       break;
   case StdRegions::eQuadrilateral:
       if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_C)||
@@ -117,7 +116,7 @@ int main(int argc, char *argv[])
       NEKERROR(ErrorUtil::efatal,
                "Basis 1 is for 2 or 3D expansions");
       }
-      
+
       if((btype2 == LibUtilities::eOrtho_B)||(btype2 == LibUtilities::eOrtho_C)||
      (btype2 == LibUtilities::eModified_B)||(btype2 == LibUtilities::eModified_C))
       {
@@ -127,7 +126,7 @@ int main(int argc, char *argv[])
       break;
   }
 
-  
+
   order1 =   atoi(argv[4]);
   order2 =   atoi(argv[5]);
   nq1    =   atoi(argv[6]);
@@ -151,11 +150,11 @@ int main(int argc, char *argv[])
   else
   {
       Qtype2 = LibUtilities::eFourierEvenlySpaced;
-  }  
-  
+  }
+
   //-----------------------------------------------
   // Define a 2D expansion based on basis definition
-          
+
   switch(regionshape)
   {
   case StdRegions::eTriangle:
@@ -167,7 +166,7 @@ int main(int argc, char *argv[])
           coords[3]    =   atof(argv[11]);
           coords[4]    =   atof(argv[12]);
           coords[5]    =   atof(argv[13]);
-          
+
           // Set up coordinates
           SpatialDomains::VertexComponentSharedPtr verts[3];
           const int zero = 0;
@@ -177,14 +176,13 @@ int main(int argc, char *argv[])
           verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
           verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
           verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
-          
-          
+
           // Set up Edges
           SpatialDomains::SegGeomSharedPtr edges[3];
           edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero, two);
           edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one, two);
           edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two, two);
-          
+
           StdRegions::EdgeOrientation eorient[3];
           eorient[0] = edgeDir; 
           eorient[1] = edgeDir; 
@@ -198,7 +196,6 @@ int main(int argc, char *argv[])
           const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
           const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
 
-          
       if(btype1_val >= 10)
       {
           E = new LocalRegions::NodalTriExp(Bkey1,Bkey2,NodalType,geom);
@@ -233,7 +230,7 @@ int main(int argc, char *argv[])
           coords[5]    =   atof(argv[13]);
           coords[6]    =   atof(argv[14]);
           coords[7]    =   atof(argv[15]);
-          
+
           // Set up coordinates
           const int zero=0;
           const int one=1;
@@ -245,14 +242,14 @@ int main(int argc, char *argv[])
           verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
           verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
           verts[3] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,three,coords[6],coords[7],dZero);
-      
+
           // Set up Edges
           SpatialDomains::SegGeomSharedPtr edges[4];
           edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,two);
           edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,two);
           edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,two);
           edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three,two);
-      
+
           StdRegions::EdgeOrientation eorient[4];      
           eorient[0] = edgeDir; 
           eorient[1] = edgeDir; 
@@ -261,30 +258,30 @@ int main(int argc, char *argv[])
 
           SpatialDomains::QuadGeomSharedPtr geom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(verts,edges,eorient);
           geom->SetOwnData();
-          
+
           const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
           const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
           const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
           const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
-      
+
           E = new LocalRegions::QuadExp(Bkey1,Bkey2,geom);
 
       //----------------------------------------------
-      // Define solution to be projected      
+      // Define solution to be projected
       Array<OneD, NekDouble> x = Array<OneD, NekDouble>(nq1*nq2);
       Array<OneD, NekDouble> y = Array<OneD, NekDouble>(nq1*nq2);
       E->GetCoords(x,y);
-      
+
       for(i = 0; i < nq1*nq2; ++i)
       {
           sol[i]  = Quad_sol(x[i],y[i],order1,order2,btype1,btype2);
       }
       //---------------------------------------------
       }
-      
+
       break;
   }
-  
+
   //---------------------------------------------
   // Project onto Expansion 
   E->FwdTrans(sol,E->UpdateCoeffs());
@@ -308,10 +305,9 @@ int main(int argc, char *argv[])
   cout << "L 2 error:        " << E->L2  (sol) << endl;
   //--------------------------------------------  
 
-  
   //-------------------------------------------
   // Evaulate solution at x = y =0  and print error
-  
+
   Array<OneD, NekDouble> x = Array<OneD, NekDouble>(2);
   x[0] = (coords[0] + coords[2])*0.5;
   x[1] = (coords[1] + coords[5])*0.5;
@@ -326,7 +322,7 @@ int main(int argc, char *argv[])
   }
   NekDouble nsol = E->PhysEvaluate(x);
   cout << "error at x = (" <<x[0] <<","<<x[1] <<"): " << nsol - sol[0] << endl;
-  
+
   return 0;
 }
 
@@ -334,7 +330,7 @@ int main(int argc, char *argv[])
 NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2){
     int    l,k;
     NekDouble sol = 0.0;
-    
+
     for(k = 0; k < order1; ++k)
     {
     for(l = 0; l < order2-k; ++l)
@@ -342,17 +338,17 @@ NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2){
         sol += pow(x,k)*pow(y,l);
     }
     }
-    
+
     return sol;
 }
 
 NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, 
            LibUtilities::BasisType btype1,
            LibUtilities::BasisType btype2)
-{   
+{
     int k,l;
     NekDouble sol = 0.0;
-    
+
     if(btype1 != LibUtilities::eFourier)
     {
     if(btype2 != LibUtilities::eFourier)
@@ -402,6 +398,6 @@ NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
         }
     }
     }
-    
+
     return sol;
 }

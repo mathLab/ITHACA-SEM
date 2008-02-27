@@ -77,6 +77,11 @@ namespace Nektar
                 return m_coordim;
             }
 
+            inline void SetOwnData()
+            {
+                m_owndata = true; 
+            }
+
             inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
             {
                 return m_xmap[i]->GetBasis(j);
@@ -109,7 +114,8 @@ namespace Nektar
             Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
 
         private:
-           
+            bool m_owndata;
+
         };
 
     }; //end of namespace
@@ -119,6 +125,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.6  2008/02/12 01:28:58  ehan
+// Included TriGeom.h to prevent undefined TriGeom error.
+//
 // Revision 1.5  2008/02/08 23:05:52  jfrazier
 // More work on 3D components.
 //

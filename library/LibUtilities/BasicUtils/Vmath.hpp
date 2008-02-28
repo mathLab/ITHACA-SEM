@@ -38,6 +38,7 @@
 
 #include <string>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
+#include <LibUtilities/BasicUtils/VmathArray.hpp> 
 
 namespace Vmath 
 {
@@ -430,7 +431,7 @@ namespace Vmath
     }
     
     // \brief copy one int vector to another
-    static void Vcopy(int n, const int  *x, const int incx, int *y,
+    static void Vcopy(int n, const int *x, const int incx, int *y,
               int const incy)
     {
         if( incx ==1 && incy == 1)
@@ -454,6 +455,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.10  2008/01/27 09:13:04  sherwin
+Added Svtvp routine
+
 Revision 1.9  2007/12/06 22:43:57  pvos
 2D Helmholtz solver updates
 

@@ -40,6 +40,7 @@
 
 #include <StdRegions/StdQuadExp.h>
 #include <SpatialDomains/QuadGeom.h>
+#include <SpatialDomains/SegGeom.h>
 #include <LocalRegions/SegExp.h>
 
 #include <SpatialDomains/GeomFactors.h>
@@ -51,7 +52,7 @@ namespace Nektar
 
     namespace LocalRegions
     {
-
+        
     class QuadExp: public StdRegions::StdQuadExp
     {
     public:
@@ -138,11 +139,43 @@ namespace Nektar
         
         SegExpSharedPtr GetEdgeExp(int edge);
         void GetEdgePhysVals(const int edge, const ConstArray<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
-        void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                     const ConstArray<OneD,NekDouble> &inarray,
-                                     Array<OneD,NekDouble> &outarray,
-                                     bool MatrixTerms);
+    
+        void AddNormTraceInt(const int dir,
+                             ConstArray<OneD,NekDouble> &inarray,
+                             Array<OneD,NekDouble> &outarray)
+        {
+            AddNormBoundaryInt(dir,inarray,outarray,true);
+        }
 
+        void AddNormBoundaryInt(const int dir,
+                                ConstArray<OneD,NekDouble> &inarray,
+                                Array<OneD,NekDouble> &outarray,
+                                bool InArrayIsTrace = false);
+        
+        void AddEdgeBoundaryInt(const int edge, SegExpSharedPtr &EdgeExp,
+                                Array <OneD,NekDouble > &outarray);          
+
+        void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
+                                          const ConstArray<OneD,NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray);
+        
+        void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                       const ConstArray<OneD,NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray);
+        
+        void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                       const ConstArray<OneD,NekDouble> &inarray,
+                                       Array<OneD,SegExpSharedPtr> &EdgeExp,
+                                       Array<OneD,NekDouble> &outarray,
+                                       bool UseLocalOrient = true);
+
+        void AddUDGHelmholtzEdgeTerms(const NekDouble tau, 
+                                      const int edge,
+                                      SegExpSharedPtr &EdgeExp, 
+                                      Array <OneD,NekDouble > &outarray,
+                                      bool UseLocalOrient = true);
+
+        DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
     protected:
 
@@ -313,10 +346,61 @@ namespace Nektar
             return m_matrixManager[mkey];
         }
         
+        virtual DNekScalMatSharedPtr v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
+        {
+            MatrixKey mkey(mtype,DetShapeType(),*this,lambdaval,tau);
+            return m_matrixManager[mkey];
+        }
+
         virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const MatrixKey &mkey)
         {
             return m_staticCondMatrixManager[mkey];
         }
+
+
+        virtual StdRegions::EdgeOrientation v_GetEorient(int edge)
+        {
+            return m_geom->GetEorient(edge);
+        }
+
+        
+        virtual void v_AddNormTraceInt(const int dir,
+                                       ConstArray<OneD,NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray)
+        {
+            AddNormBoundaryInt(dir,inarray,outarray,true);
+        }
+
+        virtual void v_AddNormBoundaryInt(const int dir,
+                                        ConstArray<OneD,NekDouble> &inarray,
+                                        Array<OneD,NekDouble> &outarray)
+        {
+            AddNormBoundaryInt(dir,inarray,outarray,false);
+        }
+
+        virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
+                                                    const ConstArray<OneD,NekDouble> &inarray,
+                                                    Array<OneD,NekDouble> &outarray)
+        {
+            AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
+        }
+
+        virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                                 const ConstArray<OneD,NekDouble> &inarray,
+                                                 Array<OneD,NekDouble> &outarray)
+         {
+             AddUDGHelmholtzTraceTerms(tau,inarray,outarray);
+         }
+
+        virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                                 const ConstArray<OneD,NekDouble> &inarray,
+                                                 Array<OneD,SegExpSharedPtr> &EdgeExp, 
+                                                 Array <OneD,NekDouble > &outarray,
+                                                 bool UseLocalOrient = true)
+         {
+             AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray,UseLocalOrient);
+         }
+
     };
 
     // type defines for use of QuadExp in a boost vector
@@ -332,6 +416,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.22  2008/01/25 16:47:04  sherwin
+ *    Added UDG work
+ *
  *    Revision 1.21  2007/11/08 16:54:27  pvos
  *    Updates towards 2D helmholtz solver
  *

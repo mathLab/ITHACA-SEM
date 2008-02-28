@@ -60,7 +60,7 @@ namespace Nektar
             /// \brief Constructor using BasisKey class for quadrature
             /// points and order definition 
             SegExp(const LibUtilities::BasisKey &Ba, 
-           const SpatialDomains::SegGeomSharedPtr &geom);
+                   const SpatialDomains::SegGeomSharedPtr &geom);
 
 
             /// \brief Constructor using BasisKey class for quadrature
@@ -135,12 +135,28 @@ namespace Nektar
             NekDouble PhysEvaluate(const ConstArray<OneD,NekDouble>& coord);
             
             void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
+                                              const ConstArray<OneD,NekDouble> &inarray,
+                                              Array<OneD,NekDouble> &outarray,
+                                              bool MatrixTerms = true);
+
+            void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const ConstArray<OneD,NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray,
-                                           bool MatrixForm = false);
-                
-            void AddBoundaryInt(ConstArray<OneD,NekDouble> &inarray,
-                                Array<OneD,NekDouble> &outarray);
+                                           Array<OneD,NekDouble> &outarray)
+            {
+                AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray,false);
+            }
+
+            
+            void AddNormBoundaryInt(const int dir,
+                                    ConstArray<OneD,NekDouble> &inarray,
+                                    Array<OneD,NekDouble> &outarray);
+            
+            void AddNormTraceInt(const int dir,
+                             ConstArray<OneD,NekDouble> &inarray,
+                             Array<OneD,NekDouble> &outarray)
+            {
+                AddNormBoundaryInt(dir,inarray,outarray);
+            }
             
         protected:
 
@@ -373,24 +389,40 @@ namespace Nektar
                 return m_staticCondMatrixManager[mkey];
             }
 
+            virtual void v_AddNormTraceInt(const int dir,
+                                           ConstArray<OneD,NekDouble> &inarray,
+                                           Array<OneD,NekDouble> &outarray)
+            {
+                AddNormBoundaryInt(dir,inarray,outarray);
+            }
+
+            virtual void v_AddNormBoundaryInt(const int dir,
+                                              ConstArray<OneD,NekDouble> &inarray,
+                                              Array<OneD,NekDouble> &outarray)
+            {
+                AddNormBoundaryInt(dir,inarray,outarray);
+            }
+
             virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                                         const ConstArray<OneD,NekDouble> &inarray,
-                                                        Array<OneD,NekDouble> &outarray, bool MatrixTerms)
+                                                        Array<OneD,NekDouble> &outarray)
             {
-                AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray,MatrixTerms);
+                AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray,true);
             }
 
-            virtual void v_AddBoundaryInt(ConstArray<OneD,NekDouble> &inarray,
-                                          Array<OneD,NekDouble> &outarray)
+            virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                                     const ConstArray<OneD,NekDouble> &inarray,
+                                                     Array<OneD,NekDouble> &outarray)
             {
-                AddBoundaryInt(inarray,outarray);
+                AddUDGHelmholtzTraceTerms(tau,inarray,outarray);
             }
+
         };
 
-        // type defines for use of SegExp in a boost vector
-        typedef boost::shared_ptr<SegExp> SegExpSharedPtr;
-        typedef std::vector< SegExpSharedPtr > SegExpVector;
-        typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
+    // type defines for use of SegExp in a boost vector
+    typedef boost::shared_ptr<SegExp>      SegExpSharedPtr;
+    typedef std::vector< SegExpSharedPtr > SegExpVector;
+    typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
     } //end of namespace
 } //end of namespace
 
@@ -398,6 +430,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.27  2008/01/21 19:59:32  sherwin
+// Updated to take SegGeoms instead of EdgeComponents
+//
 // Revision 1.26  2007/12/17 13:04:30  sherwin
 // Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
 //

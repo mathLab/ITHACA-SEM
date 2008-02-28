@@ -288,6 +288,12 @@ namespace Nektar
         {
             return m_matrixManager[mkey];
         }
+
+        virtual DNekScalMatSharedPtr v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
+        {
+            MatrixKey mkey(mtype,DetShapeType(),*this,lambdaval,tau);
+            return m_matrixManager[mkey];
+        }
         
         virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const MatrixKey &mkey)
         {
@@ -308,6 +314,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.20  2007/11/08 16:54:27  pvos
+ *    Updates towards 2D helmholtz solver
+ *
  *    Revision 1.19  2007/07/28 05:09:33  sherwin
  *    Fixed version with updated MemoryManager
  *

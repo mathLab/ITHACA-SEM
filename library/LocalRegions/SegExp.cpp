@@ -941,8 +941,9 @@ namespace Nektar
             return returnval;
         }
 
-        void SegExp::AddBoundaryInt(ConstArray<OneD,NekDouble> &inarray,
-                                    Array<OneD,NekDouble> &outarray) 
+        void SegExp::AddNormBoundaryInt(const int dir, 
+                                        ConstArray<OneD,NekDouble> &inarray,
+                                        Array<OneD,NekDouble> &outarray) 
        {
 
             int k;
@@ -1165,6 +1166,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.34  2008/01/21 19:59:32  sherwin
+// Updated to take SegGeoms instead of EdgeComponents
+//
 // Revision 1.33  2007/12/17 13:04:30  sherwin
 // Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
 //

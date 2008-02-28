@@ -37,6 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLAS_HPP
 
 #include <LibUtilities/LinearAlgebra/TransF77.hpp>
+#include <LibUtilities/LinearAlgebra/BlasArray.hpp>
 
 // Translations for using Fortran version of blas
 namespace Blas
@@ -105,6 +106,7 @@ namespace Blas
     {
         F77NAME(daxpy)(n,alpha,x,incx,y,incy);
     }
+
 
     /// \brief BLAS level 1: Swap \a x with  \a y
     static void Dswap (const int& n,double *x, const int& incx,
@@ -217,6 +219,9 @@ namespace Blas
 
 /***
 $Log: Blas.hpp,v $
+Revision 1.4  2007/09/02 23:33:04  bnelson
+*** empty log message ***
+
 Revision 1.3  2007/08/29 22:35:21  bnelson
 Added upper triangular matrix time vector.
 

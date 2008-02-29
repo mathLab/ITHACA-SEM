@@ -281,8 +281,7 @@ namespace Nektar
             else
             {
                  Blas::Dgemm('N','N', nquad0,order1,order0,1.0, base0.get(),
-                             //                    Blas::Dgemm('N','T', nquad0,order1,order0,1.0, base0.get(), // make column major matrix 
-                    nquad0, &inarray[0], order0,0.0,&tmp[0], nquad0);
+                             nquad0, &inarray[0], order0,0.0,&tmp[0], nquad0);
             }
 
             if(m_base[1]->Collocation())
@@ -292,9 +291,8 @@ namespace Nektar
             else
             {
                 Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &tmp[0],
-                            //                    Blas::Dgemm('N','N', nquad0, nquad1,order1, 1.0, &tmp[0],//make column major matrix
-                    nquad0, base1.get(), nquad1, 0.0, &outarray[0], 
-                    nquad0);
+                            nquad0, base1.get(), nquad1, 0.0, &outarray[0], 
+                            nquad0);
             }    
         }
 
@@ -633,6 +631,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.26  2007/12/17 13:03:51  sherwin
+* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+*
 * Revision 1.25  2007/12/06 22:44:47  pvos
 * 2D Helmholtz solver updates
 *

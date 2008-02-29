@@ -312,8 +312,6 @@ namespace Nektar
             return val;
         }
 
-
-
         DNekMatSharedPtr StdExpansion::CreateGeneralMatrix(const StdMatrixKey &mkey)
         {
             int     i;
@@ -333,8 +331,8 @@ namespace Nektar
                     NekDouble tau = mkey.GetConstant(1);
 
                     // Get basic Galerkin Helmholtz matrix 
-                    StdRegions::StdMatrixKey hkey(eHelmholtz,DetShapeType(),*this,
-                                                  mkey.GetConstant(0));
+                    StdRegions::StdMatrixKey hkey(eHelmholtz,DetShapeType(),
+                                                  *this,mkey.GetConstant(0));
                     returnval  = GenMatrix(hkey);
                     DNekMat &Mat = *returnval;
 
@@ -346,8 +344,8 @@ namespace Nektar
                         Vmath::Zero(m_ncoeffs,&inarray[0],1);
                         Vmath::Zero(m_ncoeffs,&outarray[0],1);
                         inarray[j] = 1.0;
-
-                        v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray,true);
+                        
+                        v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
 
                         for(i = 0; i < m_ncoeffs; ++i)
                         {
@@ -359,12 +357,12 @@ namespace Nektar
             case StdRegions::eUnifiedDGLamToU:
                 {
                     int i,j,k;
-                    int nbndry = NumBndryCoeffs();
+                    int nbndry = NumDGBndryCoeffs();
                     NekDouble lambdaval = mkey.GetConstant(0);
                     NekDouble tau       = mkey.GetConstant(1);
 
-                    Array<OneD,NekDouble> lambda(m_ncoeffs);
-                    DNekVec Lambda(m_ncoeffs,lambda,eWrapper);                    
+                    Array<OneD,NekDouble> lambda(nbndry);
+                    DNekVec Lambda(nbndry,lambda,eWrapper);                    
                     Array<OneD,NekDouble> ulam(m_ncoeffs);
                     DNekVec Ulam(m_ncoeffs,ulam,eWrapper);
                     Array<OneD,NekDouble> f(m_ncoeffs);
@@ -374,6 +372,7 @@ namespace Nektar
                     // declare matrix space
                     returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nbndry); 
                     DNekMat &Umat = *returnval;
+
 
                     // get mapping for boundary dof
                     ConstArray<OneD,int> bmap = GetBoundaryMap();
@@ -387,12 +386,12 @@ namespace Nektar
                     // Generate Lambda to U_lambda matrix 
                     for(j = 0; j < nbndry; ++j)
                     {
-                        Vmath::Zero(m_ncoeffs,&lambda[0],1);
+                        Vmath::Zero(nbndry,&lambda[0],1);
                         Vmath::Zero(m_ncoeffs,&f[0],1);
-                        lambda[bmap[j]] = 1.0;
-
-                        v_AddUDGHelmholtzBoundaryTerms(tau,lambda,f);
-
+                        lambda[j] = 1.0;
+                        
+                        v_AddUDGHelmholtzTraceTerms(tau,lambda,f);
+                        
                         Ulam = invHmat*F; // generate Ulam from lambda
 
                         // fill column of matrix
@@ -407,12 +406,13 @@ namespace Nektar
             case StdRegions::eUnifiedDGLamToQ1:
             case StdRegions::eUnifiedDGLamToQ2:
                 {
-                    int i,j,k;
-                    int nbndry = NumBndryCoeffs();
+                    int i,j,k,dir;
+                    int nbndry = NumDGBndryCoeffs();
                     int nquad  = GetNumPoints(0);
                     const ConstArray<OneD,NekDouble> &Basis  = m_base[0]->GetBdata();
-                    Array<OneD,NekDouble> lambda(m_ncoeffs);
-                    DNekVec Lambda(m_ncoeffs,lambda,eWrapper);
+                    Array<OneD,NekDouble> lambda(nbndry);
+                    DNekVec Lambda(nbndry,lambda,eWrapper);                    
+
                     Array<OneD,NekDouble> ulam(m_ncoeffs);
                     DNekVec Ulam(m_ncoeffs,ulam,eWrapper);
                     Array<OneD,NekDouble> f(m_ncoeffs);
@@ -438,13 +438,16 @@ namespace Nektar
                     switch(mkey.GetMatrixType())
                     {
                     case eUnifiedDGLamToQ0:
+                        dir = 0;
                         Dmat = GetLocMatrix(eWeakDeriv0); 
                         break;
                     case eUnifiedDGLamToQ1:
+                        dir = 1;
                         Dmat = GetLocMatrix(eWeakDeriv1); 
                         break;
                     case eUnifiedDGLamToQ2:
-                        Dmat = GetLocMatrix(eWeakDeriv1); 
+                        dir = 2;
+                        Dmat = GetLocMatrix(eWeakDeriv2); 
                         break;
                     }
 
@@ -453,37 +456,37 @@ namespace Nektar
                     // Generate Lambda to Q_lambda matrix 
                     for(j = 0; j < nbndry; ++j)
                     {
-                        Vmath::Zero(m_ncoeffs,&lambda[0],1);
+                        Vmath::Zero(nbndry,&lambda[0],1);
                         Vmath::Zero(m_ncoeffs,&f[0],1);
-                        lambda[bmap[j]] = 1.0;
+                        lambda[j] = 1.0;
                         
-                        AddUDGHelmholtzBoundaryTerms(tau,lambda,f);
+                        v_AddUDGHelmholtzTraceTerms(tau,lambda,f);
                         
                         Ulam = invHmat*F; // generate Ulam from lambda
+
+                        F = (*Dmat)*Ulam; 
                         
-                        F = Lambda - Ulam; // F now contains difference btw lambda and ulam
-                        Lambda = (*Dmat)*Ulam; // use Lambda for tmp space
-                        
-                        // add G (\lambda - ulam) = G x F term (can
-                        // assume G is diagonal since one of the basis
-                        // is zero at boundary otherwise)
-                        AddBoundaryInt(f,lambda);
-                        F = invMass*Lambda; // multiply by inverse mass matrix
+
+                        v_AddNormTraceInt(dir,lambda,f); // add \tilde{G}\lambda
+
+                        Vmath::Neg(m_ncoeffs,&ulam[0],1);
+                        v_AddNormBoundaryInt(dir,ulam,f); // subtrace G Ulam
+
+                        Ulam = invMass*F; // multiply by inverse mass matrix
                         
                         // fill column of matrix (Qmat is in column major format)
-                        Vmath::Vcopy(m_ncoeffs,&f[0],1,&(Qmat.GetPtr())[0]+j*m_ncoeffs,1);
+                        Vmath::Vcopy(m_ncoeffs,&ulam[0],1,&(Qmat.GetPtr())[0]+j*m_ncoeffs,1);
+
                     }
                 }
                 break;
             default:
                 {
                     Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(m_ncoeffs);
-                    
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);            
                     DNekMat &Mat = *returnval; 
                     
-                    
-                    for(i=0; i<m_ncoeffs; ++i)
+                    for(i=0; i < m_ncoeffs; ++i)
                     {
                         Vmath::Zero(m_ncoeffs,&tmp[0],1);
                         tmp[i] = 1.0;
@@ -499,7 +502,6 @@ namespace Nektar
             return returnval;
         }
 
-       
         void StdExpansion::GeneralMatrixOp(const StdMatrixKey &mkey, 
                                            const ConstArray<OneD,NekDouble> &inarray,
                                            Array<OneD,NekDouble> &outarray)
@@ -833,6 +835,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.62  2008/02/16 05:59:14  ehan
+* Added interpolation 3D.
+*
 * Revision 1.61  2008/01/23 09:09:46  sherwin
 * Updates for Hybrized DG
 *

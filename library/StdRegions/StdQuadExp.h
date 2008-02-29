@@ -256,6 +256,18 @@ namespace Nektar
                 return 4 + 2*(GetBasisNumModes(0)-2) + 2*(GetBasisNumModes(1)-2);
             } 
 
+            virtual int v_NumDGBndryCoeffs() const
+            {
+                ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                         GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                         "BasisType is not a boundary interior form");
+                ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                         GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                         "BasisType is not a boundary interior form");
+
+                return  2*GetBasisNumModes(0) + 2*GetBasisNumModes(1);
+            } 
+
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
                 return GetEdgeBasisType(i);
@@ -421,6 +433,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.23  2007/12/17 13:03:51  sherwin
+* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+*
 * Revision 1.22  2007/12/06 22:44:47  pvos
 * 2D Helmholtz solver updates
 *

@@ -228,6 +228,11 @@ namespace Nektar
                 return 2;
             } 
 
+            virtual int v_NumDGBndryCoeffs() const
+            {
+                return 2;
+            } 
+
             virtual ShapeType v_DetShapeType() const
             {
                 return DetShapeType();
@@ -381,6 +386,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.32  2007/12/17 13:03:51  sherwin
+* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+*
 * Revision 1.31  2007/12/06 22:44:47  pvos
 * 2D Helmholtz solver updates
 *

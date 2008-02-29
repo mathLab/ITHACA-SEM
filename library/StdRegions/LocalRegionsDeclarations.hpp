@@ -42,6 +42,8 @@ namespace Nektar
     {
         class MatrixKey;
         
+        class SegExp; 
+        
     } // end of namespace
 } // end of namespace
 
@@ -49,6 +51,9 @@ namespace Nektar
 
 /**
  * $Log: LocalRegionsDeclarations.hpp,v $
+ * Revision 1.3  2007/07/13 09:02:25  sherwin
+ * Mods for Helmholtz solver
+ *
  * Revision 1.2  2007/03/14 21:24:09  sherwin
  * Update for working version of MultiRegions up to ExpList1D
  *

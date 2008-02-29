@@ -169,7 +169,7 @@ namespace Nektar
                 return 0;
             }
 
-            virtual void v_GenNBasisTransMatrix(Array<OneD, NekDouble> & outarray)
+             virtual void v_GenNBasisTransMatrix(Array<OneD, NekDouble> & outarray)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
             }
@@ -214,6 +214,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.24  2007/12/06 22:44:47  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.23  2007/11/08 16:55:14  pvos
 * Updates towards 2D helmholtz solver
 *

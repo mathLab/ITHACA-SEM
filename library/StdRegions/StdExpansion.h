@@ -423,6 +423,11 @@ namespace Nektar
                 return v_NumBndryCoeffs();
             }
 
+            int NumDGBndryCoeffs(void)  const
+            {
+                return v_NumDGBndryCoeffs();
+            }
+
             /** \brief This function returns the type of expansion basis on the
             *  \a i-th edge  
             *  
@@ -708,6 +713,7 @@ namespace Nektar
                 return v_GetLocMatrix(mtype,lambdaval,tau);
             }
             
+
             DNekScalMatSharedPtr GetLocMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 return v_GetLocMatrix(mkey);
@@ -719,18 +725,51 @@ namespace Nektar
                 return v_GetLocStaticCondMatrix(mkey);
             }
 
+            StdRegions::EdgeOrientation GetEorient(int edge)
+            {
+                return v_GetEorient(edge);
+            }
+
             void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                               const ConstArray<OneD,NekDouble> &inarray,
-                                              Array<OneD,NekDouble> &outarray,
-                                              bool MatrixTerms = false)
+                                              Array<OneD,NekDouble> &outarray)
             {
                 v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
             }
+            
 
-            virtual void AddBoundaryInt(ConstArray<OneD,NekDouble> &inarray,
-                                        Array<OneD,NekDouble> &outarray)
+            void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                           const ConstArray<OneD,NekDouble> &inarray,
+                                           Array<OneD,NekDouble> &outarray)
+                
             {
-                v_AddBoundaryInt(inarray,outarray);
+                v_AddUDGHelmholtzTraceTerms(tau,inarray,outarray);
+            }
+
+            void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                           const ConstArray<OneD,NekDouble> &inarray,
+                                           Array<OneD,boost::shared_ptr<LocalRegions::SegExp> > &EdgeExp,
+                                           Array<OneD,NekDouble> &outarray,
+                                           bool UseLocalOrient = true)
+                
+            {
+                v_AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp,
+                                            outarray,UseLocalOrient);
+            }
+
+            virtual void AddNormBoundaryInt(const int dir,
+                                            ConstArray<OneD,NekDouble> &inarray,
+                                            Array<OneD,NekDouble> &outarray)
+            {
+                v_AddNormBoundaryInt(dir,inarray,outarray);
+            }
+
+
+            virtual void AddNormTraceInt(const int dir,
+                                         ConstArray<OneD,NekDouble> &inarray,
+                                         Array<OneD,NekDouble> &outarray)
+            {
+                v_AddNormTraceInt(dir,inarray,outarray);
             }
             // virtual functions related to LocalRegions
 
@@ -866,15 +905,45 @@ namespace Nektar
 
             }
 
+            virtual StdRegions::EdgeOrientation v_GetEorient(int edge)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");                
+            }
+
+
             virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                                         const ConstArray<OneD,NekDouble> &inarray,
-                                                        Array<OneD,NekDouble> &outarray, bool MatrixTerms = false)
+                                                        Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
+
+            virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                     const ConstArray<OneD,NekDouble> &inarray,
+                                     Array<OneD,NekDouble> &outarray)
+            { 
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
+            virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                    const ConstArray<OneD,NekDouble> &inarray,
+                                    Array<OneD, boost::shared_ptr<LocalRegions::SegExp> > &edgeExp, 
+                                    Array<OneD,NekDouble> &outarray,
+                                    bool UseLocalOrient = true)
+            { 
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
             
-            virtual void v_AddBoundaryInt(ConstArray<OneD,NekDouble> &inarray,
-                                        Array<OneD,NekDouble> &outarray)
+            virtual void v_AddNormBoundaryInt(const int dir,
+                                              ConstArray<OneD,NekDouble> &inarray,
+                                              Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
+            virtual void v_AddNormTraceInt(const int dir,
+                                           ConstArray<OneD,NekDouble> &inarray,
+                                           Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
@@ -1082,6 +1151,7 @@ namespace Nektar
                 return m_stdStaticCondMatrixManager[mkey];
             }
 
+
         private:
 
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
@@ -1094,6 +1164,12 @@ namespace Nektar
             virtual int v_GetNfaces() const = 0;
 
             virtual int v_NumBndryCoeffs() const 
+            {
+                ASSERTL0(false, "This function is needs defining for this shape");
+                return 0;
+            }
+            
+            virtual int v_NumDGBndryCoeffs() const 
             {
                 ASSERTL0(false, "This function is needs defining for this shape");
                 return 0;
@@ -1242,7 +1318,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );        
             }
 
-
             virtual void v_WriteToFile(FILE *outfile)
             {
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
@@ -1277,6 +1352,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.74  2008/02/16 06:00:37  ehan
+* Added interpolation 3D.
+*
 * Revision 1.73  2008/01/23 09:09:46  sherwin
 * Updates for Hybrized DG
 *

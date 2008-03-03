@@ -1,6 +1,7 @@
 #include <Profile/IntWrapper.h>
 #include <boost/lexical_cast.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <Profile/VariableCostObject.h>
 #include <boost/timer.hpp>
 #include <boost/progress.hpp>
@@ -270,6 +271,25 @@ void VariableCostOperationAddition14(unsigned int numIterations, unsigned int ma
 	cout << "VariableCostOperationAddition14 Per Op: " << t.elapsed()/(double)numIterations << "\n";
 }
 
+void TensProdBwdTrans(const Nektar::ConstArray<Nektar::OneD, Nektar::NekDouble>& inarray, 
+            Nektar::Array<Nektar::OneD, Nektar::NekDouble> &outarray,
+            boost::shared_ptr<Nektar::NekMatrix<double> >& m)
+{
+    int nq = m->GetRows();
+    int m_ncoeffs = m->GetColumns();
+    
+    Blas::Dgemv('N',nq,m_ncoeffs,1.0,m->GetPtr().get(),
+               nq, &inarray[0], 1.0, 0.0, &outarray[0], 1.0);
+    
+//    Nektar::NekVector<double> v_in_0(m_ncoeffs, inarray);
+//    Nektar::NekVector<double> v_out_0(m_ncoeffs, outarray, Nektar::eWrapper);
+//    v_out_0 = (*m)*v_in_0;
+//    
+//    Nektar::NekVector<const double> v_in_1(m_ncoeffs, inarray, Nektar::eWrapper);
+//    Nektar::NekVector<double> v_out_1(m_ncoeffs, outarray, Nektar::eWrapper);
+//    v_out_1 = (*m)*v_in_1;
+}
+
 int main(int argc, char** argv)
 {
 	if( argc != 3 ) { cout << "Usage: Profile <numTests> <problemSize>\n"; return 1; }
@@ -277,6 +297,22 @@ int main(int argc, char** argv)
 	unsigned int numTests = boost::lexical_cast<unsigned int>(argv[1]);
 	unsigned int problemSize = boost::lexical_cast<unsigned int>(argv[2]);
 	VariableCostObject::size = problemSize;
+
+    boost::shared_ptr<Nektar::NekMatrix<double> > m(new Nektar::NekMatrix<double>(problemSize, problemSize));
+    Nektar::ConstArray<Nektar::OneD, Nektar::NekDouble> inarray(problemSize, 1.0);
+    Nektar::Array<Nektar::OneD, Nektar::NekDouble> outarray(problemSize, 1.0);
+    
+    unsigned int numIterations = numTests;
+    boost::timer t;
+    for(unsigned int i = 0; i < numIterations; ++i)
+    {
+        TensProdBwdTrans(inarray, outarray, m);
+    }
+    cout << "VariableCostOperationAddition14 Total Time: " << t.elapsed() << "\n";
+	cout << "VariableCostOperationAddition14 Per Op: " << t.elapsed()/(double)numIterations << "\n";
+
+
+    
 //VariableCostOperationAddition2(numTests, problemSize);
 //VariableCostOperationAddition3(numTests, problemSize);
 //VariableCostOperationAddition4(numTests, problemSize);
@@ -289,5 +325,5 @@ int main(int argc, char** argv)
 //VariableCostOperationAddition11(numTests, problemSize);
 //VariableCostOperationAddition12(numTests, problemSize);
 //VariableCostOperationAddition13(numTests, problemSize);
-VariableCostOperationAddition14(numTests, problemSize);
+//VariableCostOperationAddition14(numTests, problemSize);
 }

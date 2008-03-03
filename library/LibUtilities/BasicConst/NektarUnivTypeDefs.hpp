@@ -44,13 +44,31 @@ namespace Nektar
 {
     typedef double NekDouble;
 
-    enum Dimension
+//    enum Dimension
+//    {
+//        OneD = 1,
+//        TwoD = 2,
+//        ThreeD = 3
+//    };
+    
+    struct OneD 
     {
-        OneD = 1,
-        TwoD = 2,
-        ThreeD = 3
+        static const unsigned int Value = 1;
+    };
+    struct TwoD 
+    {
+        static const unsigned int Value = 2;
+    };
+    struct ThreeD 
+    {
+        static const unsigned int Value = 3;
     };
 
+    struct FourD
+    {
+        static const unsigned int Value = 4;
+    };
+    
     enum Direction
     {
         xDir = 0,
@@ -65,6 +83,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.13  2007/08/10 03:37:21  jfrazier
+Removed that cursed Mac formatting.
+
 Revision 1.12  2007/08/06 05:35:45  ehan
 Added enumerations for the 3 principal directions. These are to be used in GetD(Direction).
 

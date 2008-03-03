@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
-
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -75,6 +75,13 @@ namespace Nektar
             BOOST_CHECK_EQUAL(9.9, offset[0]);
             BOOST_CHECK_EQUAL(9.9, out[3]);
         }
+        
+        BOOST_AUTO_TEST_CASE(ItemsThatShouldNotCompile)
+        {
+            ConstArray<OneD, NekDouble> test(10, 0.0);
+            //NekVector<NekDouble> wrapper(test, eWrapper);
+        }
+        
     }
 }
 

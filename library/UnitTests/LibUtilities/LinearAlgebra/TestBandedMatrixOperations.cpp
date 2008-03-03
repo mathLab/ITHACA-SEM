@@ -63,8 +63,8 @@ namespace Nektar
             Blas::Dgbmv('T', 4, 4, 1, 1, 1.0, a, 3, x, 1, 0.0, y, 1);
 
             NekDouble expected_result_buf[] = { 5, 26, 65, 67 };
-            NekVector<NekDouble, 4> expected_result(expected_result_buf);
-            NekVector<NekDouble, 4> result(y);
+            NekVector<NekDouble, FourD> expected_result(expected_result_buf);
+            NekVector<NekDouble, FourD> result(y);
             BOOST_CHECK_EQUAL(expected_result, result);
         }
         
@@ -85,8 +85,8 @@ namespace Nektar
 
 
             NekDouble expected_result_buf[] = { 30, 70, 110, 150 };
-            NekVector<NekDouble, 4> expected_result(expected_result_buf);
-            NekVector<NekDouble, 4> result(y);
+            NekVector<NekDouble, FourD> expected_result(expected_result_buf);
+            NekVector<NekDouble, FourD> result(y);
             BOOST_CHECK_EQUAL(expected_result, result);
         }
 
@@ -107,8 +107,8 @@ namespace Nektar
             Blas::Dgbmv('T', 4, 4, 2, 1, 1.0, a, 4, x, 1, 0.0, y, 1);
 
             NekDouble expected_result_buf[] = { 38, 74, 65, 67 };
-            NekVector<NekDouble, 4> expected_result(expected_result_buf);
-            NekVector<NekDouble, 4> result(y);
+            NekVector<NekDouble, FourD> expected_result(expected_result_buf);
+            NekVector<NekDouble, FourD> result(y);
             BOOST_CHECK_EQUAL(expected_result, result);
         }
 
@@ -127,8 +127,8 @@ namespace Nektar
             Blas::Dgbmv('N', 3, 3, 2, 1, 1.0, a, 4, x, 1, 0.0, y, 1);
 
             NekDouble expected_result_buf[] = { 5, 26, 44 };
-            NekVector<NekDouble, 3> expected_result(expected_result_buf);
-            NekVector<NekDouble, 3> result(y);
+            NekVector<NekDouble, ThreeD> expected_result(expected_result_buf);
+            NekVector<NekDouble, ThreeD> result(y);
             BOOST_CHECK_EQUAL(expected_result, result);
         }
 

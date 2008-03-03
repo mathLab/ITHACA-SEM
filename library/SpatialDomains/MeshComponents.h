@@ -84,7 +84,7 @@ namespace Nektar
 
         // --------------------------------------------------------------------
         /// Vertex Component
-        class VertexComponent: public Geometry, public NekPoint <double, 3>
+        class VertexComponent: public Geometry, public NekPoint <double, ThreeD>
         {
             public:
                 //Temp debug constructor
@@ -179,6 +179,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.11  2007/08/11 23:38:48  sherwin
+// Update for full working version of Helmholtz1D
+//
 // Revision 1.10  2007/08/02 18:56:06  jfrazier
 // Added methods missing from declaration.
 //

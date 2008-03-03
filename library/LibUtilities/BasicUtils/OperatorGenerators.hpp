@@ -60,17 +60,6 @@
 namespace Nektar
 {
 
-    
-//    #define PP_ENUM_TWO_SETS_OF_BINARY_PARAMS(LhsTypeName, LhsVariableName, LhsNumber, RhsTypeName, RhsVariableName, RhsNumber) \
-//        BOOST_PP_ENUM_BINARY_PARAMS(LhsNumber, LhsTypeName, LhsVariableName) \
-//        BOOST_PP_COMMA_IF(BOOST_PP_AND(BOOST_PP_GREATER(LhsNumber,0), BOOST_PP_GREATER(RhsNumber,0))) \
-//        BOOST_PP_ENUM_BINARY_PARAMS(RhsNumber, RhsTypeName, RhsVariableName)
-//    
-//    #define PP_ENUM_TWO_SETS_OF_TYPES(LhsTypeName, LhsNumber, RhsTypeName, RhsNumber) \
-//        BOOST_PP_ENUM_PARAMS(LhsNumber, typename LhsTypeName) \
-//        BOOST_PP_COMMA_IF(BOOST_PP_AND(BOOST_PP_GREATER(LhsNumber,0), BOOST_PP_GREATER(RhsNumber,0))) \
-//        BOOST_PP_ENUM_PARAMS(RhsNumber, typename RhsTypeName)
-    
     #define TEMPLATE() template<
     #define CLOSE_TEMPLATE() > 
     

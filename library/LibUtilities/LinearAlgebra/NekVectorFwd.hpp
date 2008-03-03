@@ -37,15 +37,19 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP
 
 #include <boost/typeof/typeof.hpp>
+#include <LibUtilities/LinearAlgebra/Space.h>
+
 #include  BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
 
 namespace Nektar
 {
+    struct VariableSizedVector {};
+    
     // \param DataType The type of data held by each element of the vector.
     // \param dim The number of elements in the vector.  If set to 0, the vector
     //            will have a variable number of elements.
     // \param space The space of the vector.
-    template<typename DataType, unsigned int dim = 0, unsigned int space = 0>
+    template<typename DataType, typename dim = VariableSizedVector, typename space = DefaultSpace>
     class NekVector;
     
     BOOST_TYPEOF_REGISTER_TEMPLATE(NekVector, 3);

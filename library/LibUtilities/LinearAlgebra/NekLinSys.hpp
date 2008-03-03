@@ -66,7 +66,7 @@ namespace Nektar
     template<typename MatrixType, typename VectorType>
     struct LinearSystemSolver;
 
-    template<typename DataType, unsigned int vectorDim>
+    template<typename DataType, typename vectorDim>
     struct LinearSystemSolver<NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag>, NekVector<DataType, vectorDim> >
     {
         typedef NekVector<DataType, vectorDim> VectorType;
@@ -88,7 +88,7 @@ namespace Nektar
         }
     };
 
-    template<typename DataType, typename StorageType, typename Form, unsigned int vectorDim>
+    template<typename DataType, typename StorageType, typename Form, typename vectorDim>
     struct LinearSystemSolver<NekMatrix<DataType, StorageType, Form>, NekVector<DataType, vectorDim> >
     {
         typedef NekMatrix<DataType, StorageType, Form> MatrixType;

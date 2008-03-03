@@ -47,14 +47,14 @@ namespace Nektar
     ///         of the output doesn't match the size of the input then an error occurred.
     /// This algorithm is taken from "Parallel Scientific Computing in C++ and MPI",
     /// Karniadakis and Kirby, page 55.
-    template<typename DataType, unsigned int VectorDimension, unsigned int space>
+    template<typename DataType, unsigned int VectorDimension, typename space>
     std::vector<NekVector<DataType, VectorDimension, space> > 
     GramSchmidtOrthogonalization(const std::vector<NekVector<DataType, VectorDimension, space> >& x)
     {
         typedef NekVector<DataType, VectorDimension, space> VectorType;
         typedef NekMatrix<DataType> MatrixType;
         
-        unsigned int dim = x[0].GetDimension();
+        typename dim = x[0].GetDimension();
         std::vector<VectorType> q(x.size(), VectorType());
         
         // This matrix holds the r_ij values.  Using the matrix object is a convenience
@@ -99,6 +99,9 @@ namespace Nektar
 
 /**
     $Log: NekLinAlgAlgorithms.hpp,v $
+    Revision 1.2  2007/02/15 06:56:55  bnelson
+    *** empty log message ***
+
     Revision 1.1  2006/11/20 03:39:06  bnelson
     Initial Revision
 

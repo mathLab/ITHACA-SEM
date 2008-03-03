@@ -55,7 +55,7 @@ namespace Nektar
     // \param dim The number of elements in the vector.  If set to 0, the vector
     //            will have a variable number of elements.
     // \param space The space of the vector.
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     class NekVector
     {
         public:
@@ -98,7 +98,7 @@ namespace Nektar
             ~NekVector()
             {
 #ifdef _DEBUG
-                std::fill_n(m_impl, dim, DataType());
+                std::fill_n(m_impl, dim::Value, DataType());
 #endif //_DEBUG
             }
 
@@ -114,20 +114,20 @@ namespace Nektar
 
             NekVector<DataType, dim, space>& operator=(const NekVector<DataType, dim, space>& rhs)
             {
-                std::copy(rhs.m_impl, rhs.m_impl+dim, m_impl);
+                std::copy(rhs.m_impl, rhs.m_impl+dim::Value, m_impl);
                 return *this;
             }
 
             /// \brief Returns the number of dimensions for the point.
             unsigned int GetDimension() const
             {
-                return dim;
+                return dim::Value;
             }
 
             /// \brief Treating the vector as a column vector, how many rows it has.
             unsigned int GetRows() const
             {
-                return dim;
+                return dim::Value;
             }
 
             DataType* GetRawPtr()
@@ -182,73 +182,73 @@ namespace Nektar
 
             typename boost::call_traits<DataType>::const_reference x() const
             {
-                BOOST_STATIC_ASSERT(dim >= 1);
+                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 return m_impl[0];
             }
 
             typename boost::call_traits<DataType>::const_reference y() const
             {
-                BOOST_STATIC_ASSERT(dim >= 2);
+                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 return m_impl[1];
             }
 
             typename boost::call_traits<DataType>::const_reference z() const
             {
-                BOOST_STATIC_ASSERT(dim >= 3);
+                BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return m_impl[2];
             }
 
             typename boost::call_traits<DataType>::const_reference w() const
             {
-                BOOST_STATIC_ASSERT(dim >= 4);
+                BOOST_STATIC_ASSERT(dim::Value >= 4);
                 return m_impl[3];
             }
 
             typename boost::call_traits<DataType>::reference x() 
             {
-                BOOST_STATIC_ASSERT(dim >= 1);
+                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 return m_impl[0];
             }
 
             typename boost::call_traits<DataType>::reference y() 
             {
-                BOOST_STATIC_ASSERT(dim >= 2);
+                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 return m_impl[1];
             }
 
             typename boost::call_traits<DataType>::reference z() 
             {
-                BOOST_STATIC_ASSERT(dim >= 3);
+                BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return m_impl[2];
             }
 
             typename boost::call_traits<DataType>::reference w() 
             {
-                BOOST_STATIC_ASSERT(dim >= 4);
+                BOOST_STATIC_ASSERT(dim::Value >= 4);
                 return m_impl[3];
             }
 
             void SetX(typename boost::call_traits<DataType>::const_reference val)
             {
-                BOOST_STATIC_ASSERT(dim >= 1);
+                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 m_impl[0] = val;
             }
 
             void SetY(typename boost::call_traits<DataType>::const_reference val)
             {
-                BOOST_STATIC_ASSERT(dim >= 2);
+                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 m_impl[1] = val;
             }
 
             void SetZ(typename boost::call_traits<DataType>::const_reference val)
             {
-                BOOST_STATIC_ASSERT(dim >= 3);
+                BOOST_STATIC_ASSERT(dim::Value >= 3);
                 m_impl[2] = val;
             }
 
             void SetW(typename boost::call_traits<DataType>::const_reference val)
             {
-                BOOST_STATIC_ASSERT(dim >= 4);
+                BOOST_STATIC_ASSERT(dim::Value >= 4);
                 m_impl[3] = val;
             }
 
@@ -301,73 +301,73 @@ namespace Nektar
             DataType InfinityNorm() const { return Nektar::InfinityNorm(*this); }
             
         private:
-            DataType m_impl[dim];
+            DataType m_impl[dim::Value];
 
     };    
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>::NekVector() :
         m_impl()
     {
-        std::fill_n(m_impl, dim, DataType());
+        std::fill_n(m_impl, dim::Value, DataType());
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>::NekVector(typename boost::call_traits<DataType>::const_reference a) :
         m_impl()
     {
-        std::fill_n(m_impl, dim, a);
+        std::fill_n(m_impl, dim::Value, a);
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>::NekVector(const std::string& vectorValues) :
         m_impl()
     {
         std::vector<DataType> values = FromString<DataType>(vectorValues);
 
-        ASSERTL0(values.size() == dim, "Error converting string values to vector");
+        ASSERTL0(values.size() == dim::Value, "Error converting string values to vector");
 
         std::copy(values.begin(), values.end(), &m_impl[0]);
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>::NekVector(typename boost::call_traits<DataType>::const_reference x,
               typename boost::call_traits<DataType>::const_reference y,
               typename boost::call_traits<DataType>::const_reference z) :
         m_impl()
     {
-        BOOST_STATIC_ASSERT(dim == 3);
+        BOOST_STATIC_ASSERT(dim::Value == 3);
         m_impl[0] = x;
         m_impl[1] = y;
         m_impl[2] = z;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>::NekVector(typename boost::call_traits<DataType>::const_reference x,
               typename boost::call_traits<DataType>::const_reference y,
               typename boost::call_traits<DataType>::const_reference z,
               typename boost::call_traits<DataType>::const_reference w) :
         m_impl()
     {
-        BOOST_STATIC_ASSERT(dim == 4);
+        BOOST_STATIC_ASSERT(dim::Value == 4);
         m_impl[0] = x;
         m_impl[1] = y;
         m_impl[2] = z;
         m_impl[3] = w;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>::NekVector(const NekVector<DataType, dim, space>& rhs) :
         m_impl()
     {
-        std::copy(rhs.m_impl, rhs.m_impl+dim, m_impl);
+        std::copy(rhs.m_impl, rhs.m_impl+dim::Value, m_impl);
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>::NekVector(const DataType* const ptr) :
         m_impl()
     {
-        std::copy(ptr, ptr+dim, &m_impl[0]);
+        std::copy(ptr, ptr+dim::Value, &m_impl[0]);
     }
 
 }

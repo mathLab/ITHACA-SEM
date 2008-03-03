@@ -52,7 +52,7 @@ namespace Nektar
 {
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-     template<typename DataType, unsigned int dim, unsigned int space>
+     template<typename DataType, typename dim, typename space>
      class ExpressionTraits<NekVector<DataType, dim, space> >
      {
          public:
@@ -62,7 +62,7 @@ namespace Nektar
     
     // Temporary only - at least until we determine expression templates are the way to go.
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES       
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     class ConstantExpressionTraits<NekVector<DataType, dim, space> >
     {
         public:
@@ -70,7 +70,7 @@ namespace Nektar
             typedef NekVectorMetadata MetadataType;
     };
 
-    template<typename DataType, unsigned int dim, unsigned int space, 
+    template<typename DataType, typename dim, typename space, 
              template<typename, typename> class OpType>
     class BinaryExpressionMetadataTraits<NekVector<DataType, dim, space>,
                                          NekVector<DataType, dim, space>,
@@ -81,7 +81,7 @@ namespace Nektar
     };
     
     template<typename LhsDataType, typename LhsMatrixType, typename LhsStorageType,
-             typename DataType, unsigned int dim, unsigned int space>
+             typename DataType, typename dim, typename space>
     class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType, LhsStorageType>,
                                          NekVector<DataType, dim, space>,
                                          MultiplyOp>
@@ -91,10 +91,10 @@ namespace Nektar
     };
 #endif
         
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     void NekAdd(NekVector<DataType, dim, space>& result,
-           const NekVector<DataType, dim, space>& lhs,
-           const NekVector<DataType, dim, space>& rhs)
+           const NekVector<const DataType, dim, space>& lhs,
+           const NekVector<const DataType, dim, space>& rhs)
     {
         DataType* r_buf = result.GetRawPtr();
         const DataType* lhs_buf = lhs.GetRawPtr();
@@ -105,9 +105,9 @@ namespace Nektar
         }
     }
     
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     void NekAddEqual(NekVector<DataType, dim, space>& result,
-           const NekVector<DataType, dim, space>& rhs)
+           const NekVector<const DataType, dim, space>& rhs)
     {
         DataType* r_buf = result.GetRawPtr();
         const DataType* rhs_buf = rhs.GetRawPtr();
@@ -118,7 +118,7 @@ namespace Nektar
         }
     }
     
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space> NekAdd(const NekVector<DataType, dim, space>& lhs, 
                                            const NekVector<DataType, dim, space>& rhs)
     {
@@ -126,8 +126,46 @@ namespace Nektar
         NekAdd(result, lhs, rhs);
         return result;
     }
+    
+    template<typename ResultDataType, typename InputDataType, typename dim, typename space>
+    void NekSubtract(NekVector<ResultDataType, dim, space>& result,
+           const NekVector<InputDataType, dim, space>& lhs,
+           const NekVector<InputDataType, dim, space>& rhs)
+    {
+        ResultDataType* r_buf = result.GetRawPtr();
+        typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
+        typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
+        for(int i = 0; i < lhs.GetDimension(); ++i)
+        {
+            r_buf[i] = lhs_buf[i] - rhs_buf[i];
+        }
+    }
+    
+    template<typename ResultDataType, typename InputDataType, typename dim, typename space>
+    void NekSubtractEqual(NekVector<ResultDataType, dim, space>& result,
+           const NekVector<InputDataType, dim, space>& rhs)
+    {
+        ResultDataType* r_buf = result.GetRawPtr();
+        typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
+        for(int i = 0; i < rhs.GetDimension(); ++i)
+        {
+            //result[i] += rhs[i];
+            r_buf[i] -= rhs_buf[i];
+        }
+    }
+    
+    template<typename DataType, typename dim, typename space>
+    NekVector<typename boost::remove_const<DataType>::type, dim, space>
+    NekSubtract(const NekVector<DataType, dim, space>& lhs,
+                const NekVector<DataType, dim, space>& rhs)
+    {
+        NekVector<typename boost::remove_const<DataType>::type, dim, space> result(lhs.GetDimension());
+        NekSubtract(result, lhs, rhs);
+        return result;
+    }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>
     operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
     {
@@ -136,7 +174,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>
     operator-(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
     {
@@ -145,7 +183,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>
     operator*(const NekVector<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
     {
@@ -154,7 +192,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>
     operator*(typename boost::call_traits<DataType>::const_reference lhs, const NekVector<DataType, dim, space>& rhs)
     {
@@ -163,7 +201,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space>
     operator/(const NekVector<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
     {
@@ -173,31 +211,31 @@ namespace Nektar
     }
 
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     std::ostream& operator<<(std::ostream& os, const NekVector<DataType, dim, space>& rhs)
     {
         os << rhs.AsString();
         return os;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekVector<DataType, dim, space> createVectorFromPoints(const NekPoint<DataType, dim, space>& source,
                                                            const NekPoint<DataType, dim, space>& dest)
     {
         NekVector<DataType, dim, space> result;
-        for(unsigned int i = 0; i < dim; ++i)
+        for(unsigned int i = 0; i < dim::Value; ++i)
         {
             result[i] = dest[i]-source[i];
         }
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekPoint<DataType, dim, space> findPointAlongVector(const NekVector<DataType, dim, space>& lhs,
                                                         typename boost::call_traits<DataType>::const_reference t)
     {
         NekPoint<DataType, dim, space> result;
-        for(unsigned int i = 0; i < dim; ++i)
+        for(unsigned int i = 0; i < dim::Value; ++i)
         {
             result[i] = lhs[i]*t;
         }
@@ -205,7 +243,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int lhsDim, unsigned int rhsDim, unsigned int space>
+    template<typename DataType, typename lhsDim, typename rhsDim, typename space>
     bool operator==(const NekVector<DataType, lhsDim, space>& lhs,
                     const NekVector<DataType, rhsDim, space>& rhs)
     {
@@ -217,14 +255,14 @@ namespace Nektar
         return std::equal(lhs.begin(), lhs.end(), rhs.begin());
     }
 
-    template<typename DataType, unsigned int lhsDim, unsigned int rhsDim, unsigned int space>
+    template<typename DataType, typename lhsDim, typename rhsDim, typename space>
     bool operator!=(const NekVector<DataType, lhsDim, space>& lhs,
                     const NekVector<DataType, rhsDim, space>& rhs)
     {
         return !(lhs == rhs);
     }
 
-//     template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, unsigned int space, unsigned int dim>
+//     template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, typename space, unsigned int dim>
 //     NekVector<DataType, dim, space> operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs,
 //                                               const NekVector<DataType, dim, space>& rhs)
 //     {
@@ -241,7 +279,7 @@ namespace Nektar
 //     }
 
 //#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-//    template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, unsigned int space, unsigned int dim>
+//    template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, typename space, unsigned int dim>
 //    typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>, 
 //                                        expt::MultiplyOp,
 //                                        NekVector<DataType, dim, space> >::Type
@@ -251,7 +289,7 @@ namespace Nektar
 //        return expt::CreateBinaryExpression<expt::MultiplyOp>(lhs, rhs);
 //    }
 //
-//    template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, unsigned int space, unsigned int dim>
+//    template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, typename space, unsigned int dim>
 //    class MultiplicationTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, 
 //                               Nektar::NekVector<DataType, dim, space> >
 //    {
@@ -292,6 +330,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.27  2008/01/25 05:46:07  bnelson
+    Changed NekVector::GetPtr to NekVector::GetRawPtr and added a new NekVector::GetPtr that returns an Array.  This makes the calls consistent with NekMatrix.
+
     Revision 1.26  2008/01/20 06:13:11  bnelson
     Fixed visual c++ errors.
 

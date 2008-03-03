@@ -39,6 +39,7 @@
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Concepts.hpp>
+#include <LibUtilities/LinearAlgebra/Space.h>
 
 #include <boost/concept_check.hpp>
 #include <boost/lexical_cast.hpp>
@@ -55,7 +56,7 @@
 
 namespace Nektar
 {
-    template<typename data_type, unsigned int dim, unsigned int space = 0>
+    template<typename data_type, typename dim, typename space = DefaultSpace>
     class NekPoint
     {
         public:
@@ -67,7 +68,7 @@ namespace Nektar
                 // This may be suboptimal if DataType isn't numeric.
                 // If we use them then maybe we could look at an enable_if
                 // template to choose a better constructor.
-                for(unsigned int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < dim::Value; ++i)
                 {
                     // If you get a compile error pointing you here then
                     // the DataType being stored in the point doesn't have an
@@ -86,7 +87,7 @@ namespace Nektar
             NekPoint(typename boost::call_traits<DataType>::param_type x,
                         typename boost::call_traits<DataType>::param_type y)
             {
-                BOOST_STATIC_ASSERT(dim == 2);
+                BOOST_STATIC_ASSERT(dim::Value == 2);
                 m_data[0] = x;
                 m_data[1] = y;
             }
@@ -95,7 +96,7 @@ namespace Nektar
                         typename boost::call_traits<DataType>::param_type y,
                         typename boost::call_traits<DataType>::param_type z)
             {
-                BOOST_STATIC_ASSERT(dim == 3);
+                BOOST_STATIC_ASSERT(dim::Value == 3);
                 m_data[0] = x;
                 m_data[1] = y;
                 m_data[2] = z;
@@ -105,7 +106,7 @@ namespace Nektar
             {
                 boost::function_requires< Nektar::AssignableConcept<DataType> >();
 
-                for(unsigned int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < dim::Value; ++i)
                 {
                     m_data[i] = a;
                 }
@@ -122,7 +123,7 @@ namespace Nektar
 
             NekPoint(const NekPoint<DataType, dim, space>& rhs)
             {
-                for(unsigned int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < dim::Value; ++i)
                 {
                     m_data[i] = rhs.m_data[i];
                 }
@@ -143,7 +144,7 @@ namespace Nektar
 #endif
             NekPoint<DataType, dim, space>& operator=(const NekPoint<DataType, dim, space>& rhs)
             {
-                for(unsigned int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < dim::Value; ++i)
                 {
                     m_data[i] = rhs.m_data[i];
                 }
@@ -151,7 +152,7 @@ namespace Nektar
             }
 
             /// \brief Returns the number of dimensions for the point.
-            static unsigned int dimension() { return dim; }
+            static unsigned int dimension() { return dim::Value; }
 
             /// \brief Returns i^{th} element.
             /// \param i The element to return.
@@ -164,13 +165,13 @@ namespace Nektar
             /// This operator performs range checking.
             typename boost::call_traits<DataType>::reference operator()(unsigned int i)
             {
-                ASSERTL0( (i>=0) && (i<dim), "Invalid access to NekPoint data via parenthesis operator: index out of range");
+                ASSERTL0( (i>=0) && (i<dim::Value), "Invalid access to NekPoint data via parenthesis operator: index out of range");
                 return m_data[i];
             }
 
             typename boost::call_traits<DataType>::const_reference operator()(unsigned int i) const
             {
-                ASSERTL0( (i>=0) && (i<dim), "Invalid access to NekPoint data via parenthesis operator: index out of range");
+                ASSERTL0( (i>=0) && (i<dim::Value), "Invalid access to NekPoint data via parenthesis operator: index out of range");
                 return m_data[i];
             }
 
@@ -186,91 +187,91 @@ namespace Nektar
 
             typename boost::call_traits<DataType>::const_reference x() const
             {
-                BOOST_STATIC_ASSERT(dim >= 1);
+                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 return m_data[0];
             }
 
             typename boost::call_traits<DataType>::const_reference y() const
             {
-                BOOST_STATIC_ASSERT(dim >= 2);
+                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 return (*this)[1];
             }
 
             typename boost::call_traits<DataType>::const_reference z() const
             {
-                BOOST_STATIC_ASSERT(dim >= 3);
+                BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return (*this)[2];
             }
 
             typename boost::call_traits<DataType>::const_reference a() const
             {
-                BOOST_STATIC_ASSERT(dim >= 1);
+                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 return m_data[0];
             }
 
             typename boost::call_traits<DataType>::const_reference b() const
             {
-                BOOST_STATIC_ASSERT(dim >= 2);
+                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 return (*this)[1];
             }
 
             typename boost::call_traits<DataType>::const_reference c() const
             {
-                BOOST_STATIC_ASSERT(dim >= 3);
+                BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return (*this)[2];
             }
 
             typename boost::call_traits<DataType>::const_reference r() const
             {
-                BOOST_STATIC_ASSERT(dim >= 1);
+                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 return m_data[0];
             }
 
             typename boost::call_traits<DataType>::const_reference s() const
             {
-                BOOST_STATIC_ASSERT(dim >= 2);
+                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 return (*this)[1];
             }
 
             typename boost::call_traits<DataType>::const_reference t() const
             {
-                BOOST_STATIC_ASSERT(dim >= 3);
+                BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return (*this)[2];
             }
 
             void SetX(typename boost::call_traits<DataType>::const_reference val)
             {
-                BOOST_STATIC_ASSERT(dim >= 1);
+                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 m_data[0] = val;
             }
 
             void SetY(typename boost::call_traits<DataType>::const_reference val)
             {
-                BOOST_STATIC_ASSERT(dim >= 2);
+                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 m_data[1] = val;
             }
 
             void SetZ(typename boost::call_traits<DataType>::const_reference val)
             {
-                BOOST_STATIC_ASSERT(dim >= 2);
+                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 m_data[2] = val;
             }
 
             typename boost::call_traits<DataType>::reference x()
             {
-                BOOST_STATIC_ASSERT(dim >= 1);
+                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 return (*this)(0);
             }
 
             typename boost::call_traits<DataType>::reference y()
             {
-                BOOST_STATIC_ASSERT(dim >= 2);
+                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 return (*this)(1);
             }
 
             typename boost::call_traits<DataType>::reference z()
             {
-                BOOST_STATIC_ASSERT(dim >= 3);
+                BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return (*this)(2);
             }
 
@@ -281,7 +282,7 @@ namespace Nektar
 
             bool operator==(const NekPoint<DataType, dim, space>& rhs) const
             {
-                for(unsigned int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < dim::Value; ++i)
                 {
                     // If you get a compile error here then you have to
                     // add a != operator to the DataType class.
@@ -303,7 +304,7 @@ namespace Nektar
             // Unitary operators
             void negate()
             {
-                for(int i=0; i < dim; ++i)
+                for(int i=0; i < dim::Value; ++i)
                 {
                     (*this)[i] = -(*this)[i];
                 }
@@ -319,7 +320,7 @@ namespace Nektar
 
             NekPoint<DataType, dim, space>& operator+=(const NekPoint<DataType, dim, space>& rhs)
             {
-                for(unsigned int i=0; i < dim; ++i)
+                for(unsigned int i=0; i < dim::Value; ++i)
                 {
                     m_data[i] += rhs.m_data[i];
                 }
@@ -328,7 +329,7 @@ namespace Nektar
 
             NekPoint<DataType, dim, space>& operator+=(typename boost::call_traits<DataType>::param_type rhs)
             {
-                for(unsigned int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < dim::Value; ++i)
                 {
                     m_data[i] += rhs;
                 }
@@ -337,7 +338,7 @@ namespace Nektar
 
             NekPoint<DataType, dim, space>& operator-=(const NekPoint<DataType, dim, space>& rhs)
             {
-                for(unsigned int i=0; i < dim; ++i)
+                for(unsigned int i=0; i < dim::Value; ++i)
                 {
                     m_data[i] -= rhs.m_data[i];
                 }
@@ -347,7 +348,7 @@ namespace Nektar
 
             NekPoint<DataType, dim, space>& operator-=(typename boost::call_traits<DataType>::param_type rhs)
             {
-                for(unsigned int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < dim::Value; ++i)
                 {
                     m_data[i] -= rhs;
                 }
@@ -356,7 +357,7 @@ namespace Nektar
 
             NekPoint<DataType, dim, space>& operator*=(typename boost::call_traits<DataType>::param_type rhs)
             {
-                for(unsigned int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < dim::Value; ++i)
                 {
                     m_data[i] *= rhs;
                 }
@@ -365,7 +366,7 @@ namespace Nektar
 
             NekPoint<DataType, dim, space>& operator/=(typename boost::call_traits<DataType>::param_type rhs)
             {
-                for(unsigned int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < dim::Value; ++i)
                 {
                     m_data[i] /= rhs;
                 }
@@ -375,10 +376,10 @@ namespace Nektar
             std::string AsString() const
             {
                 std::string result = "(";
-                for(unsigned int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < dim::Value; ++i)
                 {
                     result += boost::lexical_cast<std::string>(m_data[i]);
-                    if( i < dim-1 )
+                    if( i < dim::Value-1 )
                     {
                         result += ", ";
                     }
@@ -388,17 +389,17 @@ namespace Nektar
             }
 
         private:
-            DataType m_data[dim];
+            DataType m_data[dim::Value];
     };
 
     // Operators for expression templates
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     void negate(NekPoint<DataType, dim, space>& rhs)
     {
         rhs.negate();
     }
     
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekPoint<DataType, dim, space>
     operator+(const NekPoint<DataType, dim, space>& lhs, const NekPoint<DataType, dim>& rhs)
     {
@@ -407,7 +408,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekPoint<DataType, dim, space>
     operator+(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs)
     {
@@ -416,7 +417,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekPoint<DataType, dim, space>
     operator+(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
     {
@@ -425,7 +426,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekPoint<DataType, dim, space>
     operator-(const NekPoint<DataType, dim, space>& lhs, const NekPoint<DataType, dim, space>& rhs)
     {
@@ -434,7 +435,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekPoint<DataType, dim, space>
     operator-(typename boost::call_traits<DataType>::const_reference lhs, const NekPoint<DataType, dim, space>& rhs)
     {
@@ -443,7 +444,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekPoint<DataType, dim, space>
     operator-(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
     {
@@ -452,7 +453,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space, typename ScalarType>
+    template<typename DataType, typename dim, typename space, typename ScalarType>
     NekPoint<DataType, dim, space>
     operator*(const ScalarType& lhs, const NekPoint<DataType, dim, space>& rhs)
     {
@@ -461,7 +462,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space, typename ScalarType>
+    template<typename DataType, typename dim, typename space, typename ScalarType>
     NekPoint<DataType, dim, space>
     operator*(const NekPoint<DataType, dim, space>& lhs, const ScalarType& rhs)
     {
@@ -470,7 +471,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     NekPoint<DataType, dim, space>
     operator/(const NekPoint<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::param_type rhs)
     {
@@ -479,12 +480,12 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     typename boost::call_traits<DataType>::value_type distanceBetween(const NekPoint<DataType, dim, space>& lhs,
                             const NekPoint<DataType, dim, space>& rhs)
     {
         DataType result = 0.0;
-        for(unsigned int i = 0; i < dim; ++i)
+        for(unsigned int i = 0; i < dim::Value; ++i)
         {
             DataType temp = lhs[i] - rhs[i];
             result += temp*temp;
@@ -492,7 +493,7 @@ namespace Nektar
         return sqrt(result);
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     bool fromString(const std::string& str, NekPoint<DataType, dim, space>& result)
     {
         try
@@ -507,7 +508,7 @@ namespace Nektar
                 ++i;
             }
 
-            return i == dim;
+            return i == dim::Value;
         }
         catch(boost::bad_lexical_cast&)
         {
@@ -515,7 +516,7 @@ namespace Nektar
         }
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     std::ostream& operator<<(std::ostream& os, const NekPoint<DataType, dim, space>& p)
     {
         os << p.AsString();
@@ -558,6 +559,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.16  2008/01/03 04:16:09  bnelson
+    Changed method name in the expression library from Apply to Evaluate.
+
     Revision 1.15  2007/08/16 02:09:56  bnelson
     Moved expression templates to the Nektar namespace.
 

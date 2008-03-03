@@ -67,8 +67,8 @@ namespace Nektar
     }
 
     /// \todo Do the Norms with Blas where applicable.
-    template<typename DataType, unsigned int dim, unsigned int space>
-    DataType L1Norm(const NekVector<DataType, dim, space>& v)
+    template<typename DataType, typename dim, typename space>
+    DataType L1Norm(const NekVector<const DataType, dim, space>& v)
     {
         typedef NekVector<DataType, dim, space> VectorType;
 
@@ -81,8 +81,8 @@ namespace Nektar
         return result;
     }
     
-    template<typename DataType, unsigned int dim, unsigned int space>
-    DataType L2Norm(const NekVector<DataType, dim, space>& v)
+    template<typename DataType, typename dim, typename space>
+    DataType L2Norm(const NekVector<const DataType, dim, space>& v)
     {
         typedef NekVector<DataType, dim, space> VectorType;
 
@@ -95,8 +95,8 @@ namespace Nektar
         return sqrt(result);
     }
     
-    template<typename DataType, unsigned int dim, unsigned int space>
-    DataType InfinityNorm(const NekVector<DataType, dim, space>& v) 
+    template<typename DataType, typename dim, typename space>
+    DataType InfinityNorm(const NekVector<const DataType, dim, space>& v) 
     {
         DataType result = NekVectorTypeTraits<DataType>::abs(v[0]);
         for(unsigned int i = 1; i < v.GetDimension(); ++i)
@@ -106,8 +106,8 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
-    NekVector<DataType, dim, space> Negate(const NekVector<DataType, dim, space>& v) 
+    template<typename DataType, typename dim, typename space>
+    NekVector<DataType, dim, space> Negate(const NekVector<const DataType, dim, space>& v) 
     {
         NekVector<DataType, dim, space> temp(v);
         for(unsigned int i=0; i < temp.GetDimension(); ++i)
@@ -117,8 +117,8 @@ namespace Nektar
         return temp;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
-    void PlusEqual(NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
+    template<typename DataType, typename dim, typename space>
+    void PlusEqual(NekVector<DataType, dim, space>& lhs, const NekVector<const DataType, dim, space>& rhs)
     {
         ASSERTL1(lhs.GetDimension() == rhs.GetDimension(), "Two vectors must have the same size in PlusEqual.")
         DataType* lhs_buf = lhs.GetRawPtr();
@@ -129,8 +129,8 @@ namespace Nektar
         }
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
-    void MinusEqual(NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
+    template<typename DataType, typename dim, typename space>
+    void MinusEqual(NekVector<DataType, dim, space>& lhs, const NekVector<const DataType, dim, space>& rhs)
     {
         ASSERTL1(lhs.GetDimension() == rhs.GetDimension(), "Two vectors must have the same size in MinusEqual.")
         
@@ -140,7 +140,7 @@ namespace Nektar
         }
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     void TimesEqual(NekVector<DataType, dim, space>& lhs, const DataType& rhs)
     {
         for(unsigned int i=0; i < lhs.GetDimension(); ++i)
@@ -149,7 +149,7 @@ namespace Nektar
         }
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     void DivideEqual(NekVector<DataType, dim, space>& lhs, const DataType& rhs)
     {
         for(unsigned int i=0; i < lhs.GetDimension(); ++i)
@@ -158,8 +158,8 @@ namespace Nektar
         }
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
-    DataType Magnitude(const NekVector<DataType, dim, space>& v) 
+    template<typename DataType, typename dim, typename space>
+    DataType Magnitude(const NekVector<const DataType, dim, space>& v) 
     {
         DataType result = DataType(0);
 
@@ -170,9 +170,9 @@ namespace Nektar
         return sqrt(result);
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
-    DataType Dot(const NekVector<DataType, dim, space>& lhs, 
-                 const NekVector<DataType, dim, space>& rhs) 
+    template<typename DataType, typename dim, typename space>
+    DataType Dot(const NekVector<const DataType, dim, space>& lhs, 
+                 const NekVector<const DataType, dim, space>& rhs) 
     {
         ASSERTL1( lhs.GetDimension() == rhs.GetDimension(), "Dot, dimension of the two operands must be identical.");
 
@@ -185,7 +185,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     void Normalize(NekVector<DataType, dim, space>& v)
     {
         DataType m = v.Magnitude();
@@ -195,11 +195,11 @@ namespace Nektar
         }
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
-    NekVector<DataType, dim, space> Cross(const NekVector<DataType, dim, space>& lhs,
-                                          const NekVector<DataType, dim, space>& rhs)
+    template<typename DataType, typename dim, typename space>
+    NekVector<DataType, dim, space> Cross(const NekVector<const DataType, dim, space>& lhs,
+                                          const NekVector<const DataType, dim, space>& rhs)
     {
-        BOOST_STATIC_ASSERT(dim==3 || dim == 0);
+        BOOST_STATIC_ASSERT(dim::Value==3 || dim::Value == 0);
         ASSERTL1(lhs.GetDimension() == 3 && rhs.GetDimension() == 3, "Cross is only valid for 3D vectors.");
 
         DataType first = lhs.y()*rhs.z() - lhs.z()*rhs.y();
@@ -210,7 +210,7 @@ namespace Nektar
         return result;
     }
 
-    template<typename DataType, unsigned int dim, unsigned int space>
+    template<typename DataType, typename dim, typename space>
     std::string AsString(const NekVector<DataType, dim, space>& v)
     {
         unsigned int d = v.GetRows();
@@ -218,7 +218,7 @@ namespace Nektar
         for(unsigned int i = 0; i < d; ++i)
         {
             result += boost::lexical_cast<std::string>(v[i]);
-            if( i < dim-1 )
+            if( i < v.GetDimension()-1 )
             {
                 result += ", ";
             }

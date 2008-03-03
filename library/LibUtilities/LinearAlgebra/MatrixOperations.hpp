@@ -204,10 +204,10 @@ namespace Nektar
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Matrix-Vector multiplication
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-    void NekMultiply(NekVector<DataType, 0, space>& result,
+    template<typename DataType, typename LhsDataType, typename MatrixType, typename dim, typename space>
+    void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
                     const NekMatrix<LhsDataType, FullMatrixTag, MatrixType>& lhs,
-                    const NekVector<DataType, dim, space>& rhs)
+                    const NekVector<const DataType, dim, space>& rhs)
     {
        ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
@@ -225,10 +225,10 @@ namespace Nektar
        }
     }
 
-    template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-    void NekMultiply(NekVector<DataType, 0, space>& result,
+    template<typename DataType, typename LhsDataType, typename MatrixType, typename dim, typename space>
+    void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
                     const NekMatrix<LhsDataType, BandedMatrixTag, MatrixType>& lhs,
-                    const NekVector<DataType, dim, space>& rhs)
+                    const NekVector<const DataType, dim, space>& rhs)
     {
         ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
@@ -242,7 +242,11 @@ namespace Nektar
         unsigned int packedRows = subDiagonals+superDiagonals+1;
 
         const DataType* rawData = lhs.GetRawPtr();
-
+        for(unsigned int i = 0; i < result.GetDimension(); ++i)
+        {
+            result[i] = DataType(0);
+        }
+        
         for(unsigned int i = 0; i < lhs.GetRows(); ++i)
         {          
             unsigned int start = i <= superDiagonals ? superDiagonals-i : 0;
@@ -261,10 +265,10 @@ namespace Nektar
         }
     }
 
-    template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-    void NekMultiply(NekVector<DataType, 0, space>& result,
+    template<typename DataType, typename LhsDataType, typename MatrixType, typename dim, typename space>
+    void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
                     const NekMatrix<LhsDataType, UpperTriangularMatrixTag, MatrixType>& lhs,
-                    const NekVector<DataType, dim, space>& rhs)
+                    const NekVector<const DataType, dim, space>& rhs)
     {
        ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
@@ -282,10 +286,10 @@ namespace Nektar
        }
     }
 
-    template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-    void NekMultiply(NekVector<DataType, 0, space>& result,
+    template<typename DataType, typename LhsDataType, typename MatrixType, typename dim, typename space>
+    void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
                     const NekMatrix<LhsDataType, LowerTriangularMatrixTag, MatrixType>& lhs,
-                    const NekVector<DataType, dim, space>& rhs)
+                    const NekVector<const DataType, dim, space>& rhs)
     {
        ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
@@ -303,14 +307,19 @@ namespace Nektar
        }
     }
 
-    template<typename DataType, typename LhsInnerMatrixType, unsigned int dim, unsigned int space>
-    void NekMultiply(NekVector<DataType, 0, space>& result,
+    template<typename DataType, typename LhsInnerMatrixType, typename dim, typename space>
+    void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
                      const NekMatrix<LhsInnerMatrixType, FullMatrixTag, BlockMatrixTag>& lhs,
-                     const NekVector<DataType, dim, space>& rhs)
+                     const NekVector<const DataType, dim, space>& rhs)
     {
         unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
         unsigned int numberOfBlockColumns = lhs.GetNumberOfBlockColumns();
 
+        for(unsigned int i = 0; i < result.GetDimension(); ++i)
+        {
+            result[i] = DataType(0);
+        }
+        
         unsigned int curResultRow = 0;
         for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
         {
@@ -321,7 +330,7 @@ namespace Nektar
                 curResultRow += lhs.GetNumberOfRowsInBlockRow(blockRow-1);
             }
 
-            NekVector<DataType, 0, space> resultWrapper(rowsInBlock, result.GetPtr() + curResultRow, eWrapper);
+            NekVector<DataType, VariableSizedVector, space> resultWrapper(rowsInBlock, result.GetPtr() + curResultRow, eWrapper);
 
             unsigned int curWrapperRow = 0;
             for(unsigned int blockColumn = 0; blockColumn < numberOfBlockColumns; ++blockColumn)
@@ -338,7 +347,7 @@ namespace Nektar
                 }
 
                 unsigned int columnsInBlock = lhs.GetNumberOfColumnsInBlockColumn(blockColumn);
-                NekVector<DataType, 0, space> rhsWrapper(columnsInBlock, rhs.GetPtr() + curWrapperRow, eWrapper);
+                NekVector<DataType, VariableSizedVector, space> rhsWrapper(columnsInBlock, rhs.GetPtr() + curWrapperRow, eWrapper);
                 
                 resultWrapper += (*block)*rhsWrapper;
             }
@@ -347,10 +356,10 @@ namespace Nektar
 
     #ifdef NEKTAR_USING_BLAS  
         /// \brief Floating point specialization when blas is in use.
-        template<unsigned int dim, unsigned int space>
-        void NekMultiply(NekVector<double, 0, space>& result,
+        template<typename dim, typename space>
+        void NekMultiply(NekVector<double, VariableSizedVector, space>& result,
                         const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
-                        const NekVector<double, dim, space>& rhs)
+                        const NekVector<const double, dim, space>& rhs)
         {
             ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
                boost::lexical_cast<std::string>(lhs.GetColumns()) + 
@@ -377,10 +386,10 @@ namespace Nektar
             Blas::Dgemv(lhs.GetTransposeFlag(), m, n, alpha, a, lda, x, incx, beta, y, incy);
         }
                
-        template<unsigned int dim, unsigned int space>
-        void NekMultiply(NekVector<double, 0, space>& result,
+        template<typename dim, typename space>
+        void NekMultiply(NekVector<double, VariableSizedVector, space>& result,
                         const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
-                        const NekVector<double, dim, space>& rhs)
+                        const NekVector<const double, dim, space>& rhs)
         {
             ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
                boost::lexical_cast<std::string>(lhs.GetColumns()) + 
@@ -401,10 +410,10 @@ namespace Nektar
             Blas::Dgemv(lhs.GetTransposeFlag(), m, n, alpha, a, lda, x, incx, beta, y, incy);
         }
 
-        template<unsigned int dim, unsigned int space>
-        void NekMultiply(NekVector<double, 0, space>& result,
+        template<typename dim, typename space>
+        void NekMultiply(NekVector<double, VariableSizedVector, space>& result,
                          const NekMatrix<double, UpperTriangularMatrixTag, StandardMatrixTag>& lhs,
-                         const NekVector<double, dim, space>& rhs)
+                         const NekVector<const double, dim, space>& rhs)
         {
             ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
                boost::lexical_cast<std::string>(lhs.GetColumns()) + 
@@ -420,10 +429,10 @@ namespace Nektar
             Blas::Dtpmv('U', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
         }
 
-        template<unsigned int dim, unsigned int space>
-        void NekMultiply(NekVector<double, 0, space>& result,
+        template<typename dim, typename space>
+        void NekMultiply(NekVector<double, VariableSizedVector, space>& result,
                          const NekMatrix<double, LowerTriangularMatrixTag, StandardMatrixTag>& lhs,
-                         const NekVector<double, dim, space>& rhs)
+                         const NekVector<const double, dim, space>& rhs)
         {
             ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
                boost::lexical_cast<std::string>(lhs.GetColumns()) + 
@@ -439,10 +448,10 @@ namespace Nektar
             Blas::Dtpmv('L', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
         }
 
-        template<typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-        void NekMultiply(NekVector<double, 0, space>& result,
+        template<typename LhsDataType, typename MatrixType, typename dim, typename space>
+        void NekMultiply(NekVector<double, VariableSizedVector, space>& result,
                         const NekMatrix<LhsDataType, BandedMatrixTag, MatrixType>& lhs,
-                        const NekVector<double, dim, space>& rhs)
+                        const NekVector<const double, dim, space>& rhs)
         {
             ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
                boost::lexical_cast<std::string>(lhs.GetColumns()) + 
@@ -469,8 +478,8 @@ namespace Nektar
         }
     #endif //NEKTAR_USING_BLAS
 
-    template<typename DataType, typename LhsDataType, typename MatrixType, unsigned int dim, unsigned int space>
-    void NekMultiply(NekVector<DataType, 0, space>& result,
+    template<typename DataType, typename LhsDataType, typename MatrixType, typename dim, typename space>
+    void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
                     const NekMatrix<LhsDataType, DiagonalMatrixTag, MatrixType>& lhs,
                     const NekVector<DataType, dim, space>& rhs)
     {
@@ -491,22 +500,22 @@ namespace Nektar
     ///
     /// Note that I can't make a compile time decision about the size of the result vector
     /// because the matrix dimensions are runtime only.
-    template<typename DataType, typename LhsDataType, typename StorageType, typename MatrixType, unsigned int dim, unsigned int space>
-    NekVector<DataType, 0, space> 
+    template<typename DataType, typename LhsDataType, typename StorageType, typename MatrixType, typename dim, typename space>
+    NekVector<typename boost::remove_const<DataType>::type, VariableSizedVector, space> 
     NekMultiply(const NekMatrix<LhsDataType, StorageType, MatrixType>& lhs,
                 const NekVector<DataType, dim, space>& rhs)
     {
-       NekVector<DataType, 0, space> result(lhs.GetRows(), DataType(0));
+       NekVector<typename boost::remove_const<DataType>::type, VariableSizedVector, space> result(lhs.GetRows(), DataType(0));
        NekMultiply(result, lhs, rhs);
        return result;
     }
 
-    template<typename DataType, typename LhsDataType, typename StorageType, typename MatrixType, unsigned int space>
-    NekVector<DataType, 0, space> 
+    template<typename DataType, typename LhsDataType, typename StorageType, typename MatrixType, typename space>
+    NekVector<typename boost::remove_const<DataType>::type, VariableSizedVector, space> 
     NekMultiply(const NekMatrix<LhsDataType, StorageType, MatrixType>& lhs,
-                const NekVector<DataType, 0, space>& rhs)
+                const NekVector<DataType, VariableSizedVector, space>& rhs)
     {
-       NekVector<DataType, 0, space> result(lhs.GetRows(), DataType(0));
+       NekVector<typename boost::remove_const<DataType>::type, VariableSizedVector, space> result(lhs.GetRows(), DataType(0));
        NekMultiply(result, lhs, rhs);
        return result;
     }
@@ -940,6 +949,7 @@ namespace Nektar
 //    }
     GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 3, NekDouble, 0);
     GENERATE_MULTIPLICATION_OPERATOR(NekDouble, 0, NekMatrix, 3);
+    GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 3, NekVector, 3);
     
     GENERATE_DIVISION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
     GENERATE_ADDITION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
@@ -947,14 +957,14 @@ namespace Nektar
     
     // TODO - Either update the GENERATE macros to allow non-type template parameters,
     // or put an if/else here for expression templates.
-    template<typename MatrixDataType, typename StorageType, typename MatrixType, 
-             typename VectorDataType, unsigned int dim, unsigned int space>
-    typename MultiplicationTraits<NekMatrix<MatrixDataType, StorageType, MatrixType>, NekVector<VectorDataType, dim, space> >::ResultType
-    operator*(const NekMatrix<MatrixDataType, StorageType, MatrixType>& lhs,
-              const NekVector<VectorDataType, dim, space>& rhs)
-    {
-        return NekMultiply(lhs, rhs);
-    }          
+//    template<typename MatrixDataType, typename StorageType, typename MatrixType, 
+//             typename VectorDataType, typename dim, typename space>
+//    typename MultiplicationTraits<NekMatrix<MatrixDataType, StorageType, MatrixType>, NekVector<VectorDataType, dim, space> >::ResultType
+//    operator*(const NekMatrix<MatrixDataType, StorageType, MatrixType>& lhs,
+//              const NekVector<VectorDataType, dim, space>& rhs)
+//    {
+//        return NekMultiply(lhs, rhs);
+//    }          
 }
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_OPERATIONS_HPP
 

@@ -187,8 +187,6 @@ namespace Nektar
                 if( (column <= row && (row - column) <= data.GetNumberOfSubDiagonals(totalRows)) ||
                     (column > row && (column - row) <= data.GetNumberOfSuperDiagonals(totalRows)) )
                 {
-                    unsigned int arrayColumns = totalColumns;
-
                     unsigned int elementRow = data.GetNumberOfSuperDiagonals(totalRows)+row-column;
                     unsigned int elementColumn = column;
 

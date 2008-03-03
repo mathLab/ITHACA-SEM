@@ -38,6 +38,7 @@
 
 #include <LibUtilities/BasicUtils/ArrayPolicies.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 
 #include <boost/multi_array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -217,10 +218,10 @@ namespace Nektar
     
     
     // Forward declaration for a ConstArray constructor.
-    template<Dimension Dim, typename DataType>
+    template<typename Dim, typename DataType>
     class Array;    
     
-    template<Dimension Dim, typename DataType>
+    template<typename Dim, typename DataType>
     class ConstArray;
     
     /// \brief A 1D immutable array.  See \ref Arrays for details.
@@ -496,10 +497,12 @@ namespace Nektar
         private:
             
     };
-
-    template<Dimension Dim, typename DataType>
-    class Array;
     
+    
+    enum AllowWrappingOfConstArrays
+    {
+        eVECTOR_WRAPPER
+    };
     
     /// \brief 1D Array
     ///
@@ -554,17 +557,17 @@ namespace Nektar
             {
             }
 
-            Array(const Array<TwoD, DataType>& rhs) :
+            Array(const Array<OneD, DataType>& rhs) :
                 BaseType(rhs)
             {
             }
             
-            Array(const ConstArray<TwoD, DataType>& rhs) :
+            Array(const ConstArray<OneD, DataType>& rhs) :
                 BaseType(rhs)
             {
             }
             
-            Array<TwoD, DataType>& operator=(const Array<TwoD, DataType>& rhs)
+            Array<OneD, DataType>& operator=(const Array<OneD, DataType>& rhs)
             {
                 BaseType::operator=(rhs);
                 return *this;
@@ -600,6 +603,14 @@ namespace Nektar
             using BaseType::data;
             element* data() { return this->m_data->data()+this->m_offset; }
             
+            template<typename T1, typename dim, typename space>
+            friend class NekVector;
+            
+        protected:
+            Array(const ConstArray<OneD, DataType>& rhs, AllowWrappingOfConstArrays a) :
+                BaseType(rhs)
+            {
+            }
         private:
             
     };

@@ -34,6 +34,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/NekVectorVariableSized.hpp
     ./LinearAlgebra/PointerWrapper.h
     ./LinearAlgebra/ScaledMatrix.hpp
+    ./LinearAlgebra/Space.h
     ./LinearAlgebra/StandardMatrix.hpp
     ./LinearAlgebra/SymmetricMatrixStoragePolicy.hpp
     ./LinearAlgebra/TriangularMatrixStoragePolicy.hpp

@@ -146,7 +146,6 @@ namespace Nektar
             case eWeakDeriv0:
             case eWeakDeriv1:
             case eWeakDeriv2:
-            case eBwdTrans:
             case eNBasisTrans:
                 returnval = StdExpansion::GenMatrix(mkey);
                 break;
@@ -158,6 +157,23 @@ namespace Nektar
                     DNekMatSharedPtr mmat = m_stdMatrixManager[masskey];
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*mmat); //Populate standard mass matrix.
                     returnval->Invert();
+                }
+                break;
+
+            case eBwdTrans:
+                {
+                    int nq = GetTotPoints();
+                    Array<OneD, NekDouble> tmp(nq);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
+                    DNekMat &Mat = *returnval; 
+                    
+                    
+                    for(int i=0; i<m_ncoeffs; ++i)
+                    {                        
+                        v_FillMode(i,tmp);                        
+                        Vmath::Vcopy(nq,&tmp[0],1,&(Mat.GetPtr())[0]+i*nq,1);
+                    }
                 }
                 break;
                             
@@ -656,12 +672,14 @@ namespace Nektar
             StdMatrixKey      bwdtransmatkey(eBwdTrans,DetShapeType(),*this);
             DNekMatSharedPtr  bwdtransmat = m_stdMatrixManager[bwdtransmatkey];
 
-            DNekVec v_in(m_ncoeffs,inarray);
-            DNekVec v_out(nq,outarray,eWrapper);
+            // scenario 1
+            //Blas::Dgemv('N',nq,m_ncoeffs,1.0,bwdtransmat->GetPtr().get(),
+            //            nq, &inarray[0], 1.0, 0.0, &outarray[0], 1.0);
 
+            //scenario 3
+            NekVector<const NekDouble> v_in(m_ncoeffs,inarray,eWrapper);
+            NekVector<NekDouble> v_out(nq,outarray,eWrapper);
             v_out = (*bwdtransmat) * v_in;
-            // This line below should be removed once the eWrapper method of NekVEctor works properly
-            Vmath::Vcopy(nq,&((v_out).GetPtr())[0],1,&outarray[0],1);
         }
 
 
@@ -835,6 +853,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.63  2008/02/29 19:15:19  sherwin
+* Update for UDG stuff
+*
 * Revision 1.62  2008/02/16 05:59:14  ehan
 * Added interpolation 3D.
 *

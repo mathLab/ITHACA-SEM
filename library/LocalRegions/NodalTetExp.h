@@ -36,12 +36,15 @@
 #ifndef NODALTETEXP_H
 #define NODALTETEXP_H
 
-#include <StdRegions/StdBasis.h>
-#include <StdRegions/NodalBasisManager.h>
-
 #include <LocalRegions/TetExp.h>
+#include <LocalRegions/LocalRegions.hpp>
 
-#include <StdRegions/StdRegions.hpp>
+#include <StdRegions/StdTetExp.h>
+#include <SpatialDomains/TetGeom.h>
+#include <SpatialDomains/GeomFactors.h>
+#include <LocalRegions/MatrixKey.h>
+
+
 
 namespace Nektar
 {
@@ -50,12 +53,28 @@ namespace Nektar
   
     class NodalTetExp: public TetExp
     {
-    public:
-      NodalTetExp(const StdRegions::Basis &Ba, const StdRegions::Basis &Bb, 
-          const StdRegions::Basis &Bc):
-    TetExp(Ba,Bb,Bc)
-      {
-      }
+//     public:
+//       NodalTetExp(const StdRegions::Basis &Ba, const StdRegions::Basis &Bb, 
+//           const StdRegions::Basis &Bc):
+//     TetExp(Ba,Bb,Bc)
+//       {
+//       }
+     	/** \brief Constructor using BasisKey class for quadrature
+        points and order definition */
+        NodalTetExp(const LibUtilities::BasisKey &Ba,
+                    const LibUtilities::BasisKey &Bb,
+	            const LibUtilities::BasisKey &Bc,
+                    const SpatialDomains::TetGeomSharedPtr &geom);
+
+        NodalTetExp(const LibUtilities::BasisKey &Ba,
+	            const LibUtilities::BasisKey &Bb,
+	            const LibUtilities::BasisKey &Bc);
+	    
+      /// Copy Constructor
+      NodalTetExp(const NodalTetExp &T);
+
+      /// Destructor
+      ~NodalTetExp();
     
     protected:
 
@@ -71,6 +90,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTetExp.h,v $
+ *    Revision 1.2  2007/07/20 00:45:50  bnelson
+ *    Replaced boost::shared_ptr with Nektar::ptr
+ *
  *    Revision 1.1  2006/05/04 18:58:45  kirby
  *    *** empty log message ***
  *

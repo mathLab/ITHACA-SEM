@@ -56,8 +56,7 @@ namespace Nektar
         }
 
         // copy constructor
-        VertexComponent::VertexComponent(const VertexComponent &T)
-            : NekPoint<double,3>(T)
+        VertexComponent::VertexComponent(const VertexComponent &T): NekPoint<double,ThreeD>(T)
         {
             m_vid = T.m_vid;
             m_coordim = T.m_coordim;
@@ -211,6 +210,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.cpp,v $
+// Revision 1.5  2007/08/02 12:03:27  sherwin
+// Fixed order of coordinate assignment in VertexComponent::GetCoords
+//
 // Revision 1.4  2006/10/15 06:18:57  sherwin
 // Moved NekPoint out of namespace LibUtilities
 //

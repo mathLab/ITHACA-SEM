@@ -132,7 +132,7 @@ namespace Nektar
     template<typename DataType, typename dim, typename space>
     void MinusEqual(NekVector<DataType, dim, space>& lhs, const NekVector<const DataType, dim, space>& rhs)
     {
-        ASSERTL1(lhs.GetDimension() == rhs.GetDimension(), "Two vectors must have the same size in MinusEqual.")
+        ASSERTL1(lhs.GetDimension() == rhs.GetDimension(), "Two vectors must have the same size in MinusEqual.");
         
         for(unsigned int i=0; i < lhs.GetDimension(); ++i)
         {

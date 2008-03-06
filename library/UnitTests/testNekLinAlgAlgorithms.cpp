@@ -54,11 +54,11 @@ namespace Nektar
             double buf_0[] = {1.0, 0.0, 2.0};
             double buf_1[] = {2.0, 3.0, 0.0};
             
-            std::vector<NekVector<double, 3> > x;
-            x.push_back(NekVector<double, 3>(buf_0));
-            x.push_back(NekVector<double, 3>(buf_1));
+            std::vector<NekVector<double, ThreeD> > x;
+            x.push_back(NekVector<double, ThreeD>(buf_0));
+            x.push_back(NekVector<double, ThreeD>(buf_1));
             
-            std::vector<NekVector<double, 3> > q = GramSchmidtOrthogonalization(x);
+            std::vector<NekVector<double, ThreeD> > q = GramSchmidtOrthogonalization(x);
             
             BOOST_CHECK_EQUAL(q.size(), 2);
             
@@ -76,6 +76,9 @@ namespace Nektar
 
 /**
     $Log: testNekLinAlgAlgorithms.cpp,v $
+    Revision 1.4  2007/10/03 03:01:01  bnelson
+    *** empty log message ***
+
     Revision 1.3  2007/09/12 03:59:41  bnelson
     *** empty log message ***
 

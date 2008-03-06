@@ -44,8 +44,9 @@
 #include <LocalRegions/SegExp.h>
 
 #include <SpatialDomains/GeomFactors.h>
-
 #include <LocalRegions/MatrixKey.h>
+#include <LibUtilities/BasicUtils/VmathArray.hpp> 
+#include <LibUtilities/BasicUtils/Vmath.hpp> 
 
 namespace Nektar
 {
@@ -151,18 +152,18 @@ namespace Nektar
                                 ConstArray<OneD,NekDouble> &inarray,
                                 Array<OneD,NekDouble> &outarray,
                                 bool InArrayIsTrace = false);
-        
+
         void AddEdgeBoundaryInt(const int edge, SegExpSharedPtr &EdgeExp,
                                 Array <OneD,NekDouble > &outarray);          
 
         void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                           const ConstArray<OneD,NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray);
-        
+
         void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                        const ConstArray<OneD,NekDouble> &inarray,
                                        Array<OneD,NekDouble> &outarray);
-        
+
         void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                        const ConstArray<OneD,NekDouble> &inarray,
                                        Array<OneD,SegExpSharedPtr> &EdgeExp,
@@ -200,7 +201,7 @@ namespace Nektar
                                     const ConstArray<OneD, NekDouble> &inarray, 
                                     Array<OneD, NekDouble> &outarray, 
                                     const int coll_check);
-        
+
     private:
         QuadExp();
 
@@ -208,7 +209,7 @@ namespace Nektar
         {
             return DetShapeType();
         }
-    
+
         virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
         {
             return m_metricinfo;
@@ -416,6 +417,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.23  2008/02/28 10:04:11  sherwin
+ *    Modes for UDG codes
+ *
  *    Revision 1.22  2008/01/25 16:47:04  sherwin
  *    Added UDG work
  *

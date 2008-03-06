@@ -2,7 +2,7 @@ SET(LOCAL_REGIONS_SOURCES
 HexExp.cpp
 MatrixKey.cpp
 #MetricRelatedInfo.cpp
-#NodalTetExp.cpp
+NodalTetExp.cpp
 NodalTriExp.cpp
 PointExp.cpp
 PrismExp.cpp

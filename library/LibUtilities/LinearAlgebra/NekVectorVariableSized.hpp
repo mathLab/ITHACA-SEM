@@ -471,7 +471,7 @@ namespace Nektar
             /// This operator performs range checking.
             typename boost::call_traits<DataType>::reference operator()(unsigned int i)
             {
-                ASSERTL1((i >= 0) && (i < GetDimension()), "Invalid access to m_data via parenthesis operator");
+                ASSERTL1((i >= 0) && (i < this->GetDimension()), "Invalid access to m_data via parenthesis operator");
                 return this->GetData()[i];
             }
 
@@ -483,37 +483,37 @@ namespace Nektar
 
             typename boost::call_traits<DataType>::reference x()
             {
-                ASSERTL1(GetDimension() >= 1, "Invalid use of NekVector::x");
+                ASSERTL1(this->GetDimension() >= 1, "Invalid use of NekVector::x");
                 return (*this)(0);
             }
 
             typename boost::call_traits<DataType>::reference y()
             {
-                ASSERTL1(GetDimension() >= 2, "Invalid use of NekVector::y");
+                ASSERTL1(this->GetDimension() >= 2, "Invalid use of NekVector::y");
                 return (*this)(1);
             }
 
             typename boost::call_traits<DataType>::reference z()
             {
-                ASSERTL1(GetDimension() >= 3, "Invalid use of NekVector::z");
+                ASSERTL1(this->GetDimension() >= 3, "Invalid use of NekVector::z");
                 return (*this)(2);
             }
 
             void SetX(typename boost::call_traits<DataType>::const_reference val)
             {
-                ASSERTL1(GetDimension() >= 1, "Invalid use of NekVector::SetX");
+                ASSERTL1(this->GetDimension() >= 1, "Invalid use of NekVector::SetX");
                 this->GetData()[0] = val;
             }
 
             void SetY(typename boost::call_traits<DataType>::const_reference val)
             {
-                ASSERTL1(GetDimension() >= 2, "Invalid use of NekVector::SetX");
+                ASSERTL1(this->GetDimension() >= 2, "Invalid use of NekVector::SetX");
                 this->GetData()[1] = val;
             }
 
             void SetZ(typename boost::call_traits<DataType>::const_reference val)
             {
-                ASSERTL1(GetDimension() >= 3, "Invalid use of NekVector::SetX");
+                ASSERTL1(this->GetDimension() >= 3, "Invalid use of NekVector::SetX");
                 this->GetData()[2] = val;
             }
 

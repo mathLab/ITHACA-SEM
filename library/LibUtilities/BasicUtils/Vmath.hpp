@@ -38,7 +38,7 @@
 
 #include <string>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
-#include <LibUtilities/BasicUtils/VmathArray.hpp> 
+
 
 namespace Vmath 
 {
@@ -51,14 +51,13 @@ namespace Vmath
         while( n-- )
         {
             *x = alpha;
-            x += incx;
+             x += incx;
         }
     }
-    
-    
+
     /// \brief Multiply vector z = x*y
     template<class T>  void Vmul( int n, const T *x, const int incx, const T *y,
-                  const int incy,  T*z, const int incz)
+                                  const int incy,  T*z, const int incz)
     {
         while( n-- )
         {
@@ -68,11 +67,11 @@ namespace Vmath
             z += incz;
         }
     }
-    
+
     /// \brief Scalar multiply  y = alpha*y
 
     template<class T>  void Smul( int n, const T alpha, const T *x, const int incx,
-                  T *y, const int incy)
+                                  T *y, const int incy)
     {
         while( n-- )
         {
@@ -81,7 +80,7 @@ namespace Vmath
             y += incy;
         }
     }
-    
+
     /// \brief Multiply vector z = x/y
     template<class T>  void Vdiv( int n, const T *x, const int incx, T *y,
                   const int incy,  T*z, const int incz)
@@ -106,7 +105,7 @@ namespace Vmath
             y += incy;
         }
     }
-    
+
     /// \brief Add vector z = x+y
     template<class T>  void Vadd( int n, const T *x, const int incx, const T *y,
                                   const int incy,  T *z, const int incz)
@@ -455,6 +454,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.11  2008/02/28 09:55:57  sherwin
+Added Array version of math routines
+
 Revision 1.10  2008/01/27 09:13:04  sherwin
 Added Svtvp routine
 

@@ -104,7 +104,35 @@ namespace Nektar
             result = m*v;
             
             BOOST_CHECK_EQUAL(expected_result, result);
+            BOOST_CHECK_EQUAL(vector_array[0], 66);
+            BOOST_CHECK_EQUAL(vector_array[1], 81);
+            BOOST_CHECK_EQUAL(vector_array[2], 96);
         }
+        
+        BOOST_AUTO_TEST_CASE(TestDoubleSquareFullVectorMultiplicationWithSharedArrayAliasingAndOverlap)
+        {
+            double m_buf[] = {1, 2, 3,
+                              4, 5, 6,
+                              7, 8, 9};
+            double v_buf[] = {4, 5, 6, 0};
+            
+            Array<OneD, double> vector_array(4, v_buf);
+            
+            NekMatrix<double> m(3, 3, m_buf);
+            NekVector<double> v(3, vector_array, eWrapper);
+            NekVector<double> result(3, vector_array+1, eWrapper);
+            
+            double expected_result_buf[] = {66, 81, 96};
+            NekVector<double> expected_result(3, expected_result_buf);
+            
+            result = m*v;
+            
+            BOOST_CHECK_EQUAL(expected_result, result);
+            BOOST_CHECK_EQUAL(vector_array[1], 66);
+            BOOST_CHECK_EQUAL(vector_array[2], 81);
+            BOOST_CHECK_EQUAL(vector_array[3], 96);
+        }
+
 
         BOOST_AUTO_TEST_CASE(TestIntSquareFullVectorMultiplication)
         {

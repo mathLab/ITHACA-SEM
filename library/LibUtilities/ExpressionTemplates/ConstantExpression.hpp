@@ -47,6 +47,7 @@
 #include <LibUtilities/ExpressionTemplates/NullOp.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
@@ -94,7 +95,11 @@ namespace Nektar
                                 >, bool>::type
             ContainsReference(const CheckType& result, DataType m_data)
             {
-                return result.GetPtr().data() == m_data.GetPtr().data();
+                if( result.GetWrapperType() == eWrapper &&
+                    m_data.GetWrapperType() == eWrapper )
+                {
+                    return result.GetPtr().Overlaps(m_data.GetPtr());
+                }
             }
             
             template<typename CheckType>
@@ -145,6 +150,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.17  2008/03/09 22:38:51  bnelson
+    Alias checks now look at the actual array held by vectors and matrices.
+
     Revision 1.16  2008/01/20 04:01:05  bnelson
     Expression template updates.
 

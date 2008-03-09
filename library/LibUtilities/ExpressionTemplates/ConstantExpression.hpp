@@ -48,6 +48,9 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
+#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+
 namespace Nektar
 {
     template<typename Type>
@@ -78,7 +81,34 @@ namespace Nektar
             }
             
             template<typename CheckType>
-            static typename boost::enable_if<boost::is_same<CheckType, Type>, bool>::type
+            static typename boost::enable_if
+                            <
+                                boost::mpl::and_
+                                <
+                                    boost::is_same<CheckType, Type>,
+                                    boost::mpl::or_
+                                    <
+                                        IsVector<typename boost::remove_cv<CheckType>::type>,
+                                        IsMatrix<typename boost::remove_cv<CheckType>::type>
+                                    >
+                                >, bool>::type
+            ContainsReference(const CheckType& result, DataType m_data)
+            {
+                return result.GetPtr().data() == m_data.GetPtr().data();
+            }
+            
+            template<typename CheckType>
+            static typename boost::enable_if
+                            <
+                                boost::mpl::and_
+                                <
+                                    boost::is_same<CheckType, Type>,
+                                    boost::mpl::and_
+                                    <
+                                        boost::mpl::not_<IsVector<typename boost::remove_cv<CheckType>::type> >,
+                                        boost::mpl::not_<IsMatrix<typename boost::remove_cv<CheckType>::type> >
+                                    >
+                                >, bool>::type
             ContainsReference(const CheckType& result, DataType m_data)
             {
                 return &result == &m_data;
@@ -115,6 +145,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.16  2008/01/20 04:01:05  bnelson
+    Expression template updates.
+
     Revision 1.15  2008/01/03 04:16:41  bnelson
     Changed method name in the expression library from Apply to Evaluate.
 

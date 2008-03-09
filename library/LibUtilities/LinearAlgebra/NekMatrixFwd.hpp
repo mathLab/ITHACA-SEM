@@ -43,6 +43,7 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/type_traits.hpp>
 
 #include <boost/typeof/typeof.hpp>
 #include  BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
@@ -72,12 +73,28 @@ namespace Nektar
     typedef boost::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
     
     BOOST_TYPEOF_REGISTER_TEMPLATE(NekMatrix, 3);
+    
+    template<typename T>
+    struct IsMatrix : public boost::false_type {};
+    
+    template<typename DataType, typename StorageType, typename MatrixType>
+    struct IsMatrix<NekMatrix<DataType, StorageType, MatrixType> > : public boost::true_type {};
+    
+    template<typename DataType>
+    struct IsMatrix<ConstMatrix<DataType> > : public boost::true_type {};
+    
+    template<typename DataType>
+    struct IsMatrix<Matrix<DataType> > : public boost::true_type {};
+    
 };
     
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_MATRIX_FWD_HPP
 
 /**
     $Log: NekMatrixFwd.hpp,v $
+    Revision 1.14  2007/08/16 02:08:12  bnelson
+    Removed typeof registration
+
     Revision 1.13  2007/07/25 23:47:45  bnelson
     *** empty log message ***
 

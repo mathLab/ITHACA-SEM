@@ -335,6 +335,18 @@ namespace Nektar
             size_type num_elements() const { return m_size; }
             unsigned int GetOffset() const { return m_offset; }
             
+            bool Overlaps(const ConstArray<OneD, DataType>& rhs) const
+            {
+                const element* start = get();
+                const element* end = start + m_size;
+                
+                const element* rhs_start = rhs.get();
+                const element* rhs_end = rhs_start + rhs.num_elements();
+                
+                return (rhs_start >= start && rhs_start <= end) ||
+                       (rhs_end >= start && rhs_end <= end);
+            }
+            
             template<typename T>
             friend bool operator==(const ConstArray<OneD, T>&, const ConstArray<OneD, T>&);
             

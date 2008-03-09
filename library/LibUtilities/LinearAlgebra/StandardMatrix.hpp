@@ -575,6 +575,7 @@ namespace Nektar
             }
 
        
+            PointerWrapper GetWrapperType() const { return m_wrapperType; }
 
         protected:
             

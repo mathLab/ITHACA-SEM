@@ -334,7 +334,9 @@ namespace Nektar
             DataType L2Norm() const { return Nektar::L2Norm(*this); }
             DataType InfinityNorm() const { return Nektar::InfinityNorm(*this); }
             
-                         
+               
+            PointerWrapper GetWrapperType() const { return m_wrapperType; }
+            
         protected:
             NekVector(const NekVectorMetadata& m) :
                 m_size(m.Rows),

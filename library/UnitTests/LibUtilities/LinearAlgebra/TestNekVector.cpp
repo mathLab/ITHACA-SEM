@@ -82,6 +82,22 @@ namespace Nektar
             //NekVector<NekDouble> wrapper(test, eWrapper);
         }
         
+        BOOST_AUTO_TEST_CASE(TestVectorSubtraction)
+        {
+            double lhs_buf[] = { 1.0, 2.0, 3.0, 4.0 };
+            double rhs_buf[] = {10.0, 11.0, 12.0, 13.0};
+            
+            NekVector<double> lhs(4, lhs_buf);
+            NekVector<double> rhs(4, rhs_buf);
+            
+            NekVector<double> result = lhs - rhs;
+            
+            double expected_result_buf[] = {1.0-10.0, 2.0-11.0, 3.0-12.0, 4.0-13.0};
+            NekVector<double> expected_result(4, expected_result_buf);
+            
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
+        
     }
 }
 

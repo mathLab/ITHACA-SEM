@@ -12,6 +12,7 @@ SET(Sources
     TestFullMatrixOperations.cpp
     TestLowerTriangularMatrixStoragePolicy.cpp
     TestNekVector.cpp
+    TestScaledBlockMatrixOperations.cpp
     TestSymmetricMatrixStoragePolicy.cpp
     TestUpperTriangularMatrixStoragePolicy.cpp
     TestStandardMatrix.cpp

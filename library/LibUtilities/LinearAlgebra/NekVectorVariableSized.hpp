@@ -423,10 +423,11 @@ namespace Nektar
                 /// TODO Make sure this works correctly with eWrapper.
                 BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, VariableSizedVector, space> > ));
 
-                this->SetSize(rhs.GetMetadata().Rows);
-                if( this->GetData().num_elements() != this->GetDimension() )
+                unsigned int newRows = rhs.GetMetadata().Rows;
+                this->SetSize(newRows);
+                if( this->GetData().num_elements() < newRows )
                 {
-                    this->SetData(Array<OneD, DataType>(this->GetDimension()));
+                    this->SetData(Array<OneD, DataType>(newRows));
                 }
                 this->SetWrapperType(eCopy);
 

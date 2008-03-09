@@ -41,9 +41,22 @@
 
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorTypeTraits.hpp>
+#include <LibUtilities/ExpressionTemplates/Expression.hpp>
 
 namespace Nektar
 {
+    #ifdef NEKTAR_USER_EXPRESSION_TEMPLATES
+    template<typename DataType, typename Dimension, typename Space>
+    struct CreateFromMetadata<NekVector<DataType, Dimension, Space> >
+    {
+        static NekVector<DataType, Dimension, Space> 
+        Apply(const NekVectorMetadata& d)
+        {
+            return NekVector<DataType, Dimension, Space>(d);
+        }
+    };
+    #endif    
+    
     template<typename DataType>
     std::vector<DataType> FromString(const std::string& str)
     {

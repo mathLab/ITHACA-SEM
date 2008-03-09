@@ -38,6 +38,7 @@
 
 #include <boost/typeof/typeof.hpp>
 #include <LibUtilities/LinearAlgebra/Space.h>
+#include <boost/type_traits.hpp>
 
 #include  BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
 
@@ -53,6 +54,13 @@ namespace Nektar
     class NekVector;
     
     BOOST_TYPEOF_REGISTER_TEMPLATE(NekVector, 3);
+    
+    template<typename T>
+    struct IsVector : public boost::false_type {};
+    
+    template<typename DataType, typename dim, typename space>
+    struct IsVector<NekVector<DataType, dim, space> > : public boost::true_type {};
+    
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP

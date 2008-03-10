@@ -128,7 +128,7 @@ namespace Nektar
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, const PolicySpecificDataHolderType& data)
             {
                 ASSERTL0(rows==columns, "Banded matrices must be square.");
-                return Array<OneD, DataType>(CalculateStorageSize(rows, columns, data));
+                return Array<OneD, DataType>(GetRequiredStorageSize(rows, columns, data));
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
@@ -136,14 +136,14 @@ namespace Nektar
                                                     const PolicySpecificDataHolderType& data)
             {
                 ASSERTL0(rows==columns, "Banded matrices must be square.");
-                return Array<OneD, DataType>(CalculateStorageSize(rows, columns, data), d);
+                return Array<OneD, DataType>(GetRequiredStorageSize(rows, columns, data), d);
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
                                                     const DataType* d, const PolicySpecificDataHolderType& data)
             {
                 ASSERTL0(rows==columns, "Banded matrices must be square.");
-                return Array<OneD, DataType>(CalculateStorageSize(rows, columns, data), d);
+                return Array<OneD, DataType>(GetRequiredStorageSize(rows, columns, data), d);
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
@@ -152,7 +152,7 @@ namespace Nektar
             {
                 ASSERTL0(rows==columns, "Banded matrices must be square.");
 
-                unsigned int storageSize = CalculateStorageSize(rows, columns, data);
+                unsigned int storageSize = GetRequiredStorageSize(rows, columns, data);
                 ASSERTL0(storageSize <= d.num_elements(), 
                     std::string("An attempt has been made to create a banded matrix of size (") +
                     boost::lexical_cast<std::string>(rows) + 
@@ -168,7 +168,7 @@ namespace Nektar
             ///
             /// This method assumes that the matrix will be used with LU factorizationa and 
             /// allocates additional storage as appropriate.
-            static unsigned int CalculateStorageSize(unsigned int totalRows, unsigned int totalColumns,
+            static unsigned int GetRequiredStorageSize(unsigned int totalRows, unsigned int totalColumns,
                                                      const PolicySpecificDataHolderType& data)
             {
                 return CalculateNumberOfRows(totalRows, data)*totalColumns;

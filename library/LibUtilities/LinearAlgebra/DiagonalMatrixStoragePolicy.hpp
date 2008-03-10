@@ -195,6 +195,13 @@ namespace Nektar
                     data[i] = 1.0/data[i];
                 }
             }
+            
+            static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns,
+                                                       const PolicySpecificDataHolderType& data)
+            {
+                ASSERTL0(rows==columns, "Diagonal matrices must be square.");
+                return rows;
+            }
     };
     
     template<typename DataType>

@@ -321,23 +321,26 @@ namespace Nektar
                 {
                     BaseType::operator=(rhs);
                     m_policySpecificData = rhs.m_policySpecificData;
+                    
+                    unsigned int requiredStorageSize = StoragePolicy::GetRequiredStorageSize(this->GetRows(), this->GetColumns(), GetPolicySpecificDataHolderType());
+
                     if( m_wrapperType == eCopy  )
                     {
                         // If the current vector is a matrix, then regardless of the rhs type 
                         // we just copy over the values, resizing if needed.
-                        if( m_data.num_elements() != rhs.m_data.num_elements() )
+                        if( m_data.num_elements() < requiredStorageSize )
                         {
-                            m_data = Array<OneD, DataType>(rhs.m_data.num_elements());
+                            m_data = Array<OneD, DataType>(requiredStorageSize);
                         }
                     }
                     else if( m_wrapperType == eWrapper )
                     {
                         // If the current matrix is wrapped, then just copy over the top,
                         // but the sizes of the two matrices must be the same.
-                        ASSERTL0(m_data.num_elements() == rhs.m_data.num_elements(), "Wrapped NekMatrices must have the same dimension in operator=");
+                        ASSERTL0(m_data.num_elements() >= requiredStorageSize, "Wrapped NekMatrices must have the same dimension in operator=");
                     }
     
-                    CopyArray(rhs.m_data, m_data);
+                    std::copy(rhs.m_data.data(), rhs.m_data.data() + requiredStorageSize, m_data.data());
                     m_transpose = rhs.m_transpose;
                 }
                 

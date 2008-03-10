@@ -98,6 +98,13 @@ namespace Nektar
                 Array<OneD, DataType> result(size, d);
                 return result;
             }
+            
+            static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns,
+                                                       const PolicySpecificDataHolderType& data)
+            {
+                ASSERTL0(rows==columns, "Triangular matrices must be square.");
+                return rows*(rows+1)/2;
+            }
     };
     
     template<typename DataType>

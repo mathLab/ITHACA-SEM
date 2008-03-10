@@ -96,6 +96,12 @@ namespace Nektar
                 return result;
             }
             
+            static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns,
+                                                       const PolicySpecificDataHolderType& data)
+            {
+                return rows*columns;
+            }
+            
             static unsigned int CalculateIndex(unsigned int totalRows, unsigned int totalColumns, unsigned int curRow, unsigned int curColumn, const char transpose)
             {
                 if( transpose == 'N' )

@@ -216,7 +216,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestCalculateStorageSizeAndCalculateNumberOfRows)
         {
             DataHolderType policyData(2, 1);
-            BOOST_CHECK_EQUAL(16, Policy::CalculateStorageSize(4, 4, policyData));
+            BOOST_CHECK_EQUAL(16, Policy::GetRequiredStorageSize(4, 4, policyData));
             BOOST_CHECK_EQUAL(4, Policy::CalculateNumberOfRows(4, policyData));
             BOOST_CHECK_EQUAL(4, Policy::CalculateNumberOfRows(3, policyData));
         }

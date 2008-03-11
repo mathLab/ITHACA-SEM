@@ -545,35 +545,75 @@ namespace Nektar
             // Need to iterate through vectors because there may be multiple
             // occurrences.
             ElementEdgeSharedPtr elementEdge;
-            TriGeomVector::iterator triIter;
+            //TriGeomVectorIter triIter;
 
             ElementEdgeVectorSharedPtr returnval = MemoryManager<ElementEdgeVector>::AllocateSharedPtr();
 
-            for(triIter = m_trigeoms.begin(); triIter != m_trigeoms.end(); ++triIter)
+            CompositeVectorIter compIter;
+            TriGeomSharedPtr triGeomShPtr;
+            QuadGeomSharedPtr quadGeomShPtr;
+
+            GeometryVectorIter geomIter;
+
+            for (compIter = m_Domain.begin(); compIter != m_Domain.end(); ++compIter)
             {
-                int edgeNum;
-                if ((edgeNum = (*triIter)->WhichEdge(edge)) > -1)
+                for (geomIter = (*compIter)->begin(); geomIter != (*compIter)->end(); ++geomIter)
                 {
-                    elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                    elementEdge->m_Element = *triIter;
-                    elementEdge->m_EdgeIndx = edgeNum;
-                    returnval->push_back(elementEdge);
-                }
+                    triGeomShPtr = boost::dynamic_pointer_cast<TriGeom>(*geomIter);
+                    quadGeomShPtr = boost::dynamic_pointer_cast<QuadGeom>(*geomIter);
+
+                    if (triGeomShPtr || quadGeomShPtr)
+                    {
+                        int edgeNum;                        
+                        if (triGeomShPtr)
+                        {
+                            if ((edgeNum = triGeomShPtr->WhichEdge(edge)) > -1)
+                            {
+                                elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+                                elementEdge->m_Element = triGeomShPtr;
+                                elementEdge->m_EdgeIndx = edgeNum;
+                                returnval->push_back(elementEdge);
+                            }
+                        }
+                        else if (quadGeomShPtr)
+                        {
+                            if ((edgeNum = quadGeomShPtr->WhichEdge(edge)) > -1)
+                            {
+                                elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+                                elementEdge->m_Element = quadGeomShPtr;
+                                elementEdge->m_EdgeIndx = edgeNum;
+                                returnval->push_back(elementEdge);
+                            }
+                        }
+                    }
+                }         
             }
 
-            QuadGeomVector::iterator quadIter;
+            //for(triIter = m_trigeoms.begin(); triIter != m_trigeoms.end(); ++triIter)
+            //{
+            //    int edgeNum;
+            //    if ((edgeNum = (*triIter)->WhichEdge(edge)) > -1)
+            //    {
+            //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+            //        elementEdge->m_Element = *triIter;
+            //        elementEdge->m_EdgeIndx = edgeNum;
+            //        returnval->push_back(elementEdge);
+            //    }
+            //}
 
-            for(quadIter = m_quadgeoms.begin(); quadIter != m_quadgeoms.end(); ++quadIter)
-            {
-                int edgeNum;
-                if ((edgeNum = (*quadIter)->WhichEdge(edge)) > -1)
-                {
-                    elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                    elementEdge->m_Element = *quadIter;
-                    elementEdge->m_EdgeIndx = edgeNum;
-                    returnval->push_back(elementEdge);
-                }
-            }
+            //QuadGeomVector::iterator quadIter;
+
+            //for(quadIter = m_quadgeoms.begin(); quadIter != m_quadgeoms.end(); ++quadIter)
+            //{
+            //    int edgeNum;
+            //    if ((edgeNum = (*quadIter)->WhichEdge(edge)) > -1)
+            //    {
+            //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+            //        elementEdge->m_Element = *quadIter;
+            //        elementEdge->m_EdgeIndx = edgeNum;
+            //        returnval->push_back(elementEdge);
+            //    }
+            //}
 
             return returnval;
         }
@@ -583,6 +623,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.25  2008/01/21 19:58:14  sherwin
+// Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
+//
 // Revision 1.24  2007/12/17 20:27:24  sherwin
 // Added normals to GeomFactors
 //

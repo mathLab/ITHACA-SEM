@@ -438,7 +438,7 @@ namespace Nektar
             }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
-            NekVector<DataType, VariableSizedVector, space>& operator=(const NekVector<DataType, VariableSizedVector, space>& rhs)
+            NekVector<DataType, VariableSizedVector, space>& operator=(const NekVector<const DataType, VariableSizedVector, space>& rhs)
             {
                 BaseType::operator=(rhs);
                 return *this;

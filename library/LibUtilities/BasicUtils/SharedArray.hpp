@@ -575,7 +575,7 @@ namespace Nektar
             }
             
             Array(const ConstArray<OneD, DataType>& rhs) :
-                BaseType(rhs)
+                BaseType(rhs.num_elements(), rhs.data())
             {
             }
             

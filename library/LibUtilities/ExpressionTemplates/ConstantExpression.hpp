@@ -100,6 +100,10 @@ namespace Nektar
                 {
                     return result.GetPtr().Overlaps(m_data.GetPtr());
                 }
+                else
+                {
+                    return &result == &m_data;
+                }
             }
             
             template<typename CheckType>
@@ -150,6 +154,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.18  2008/03/09 23:25:44  bnelson
+    Updated aliasing to check if two vectors/matrices overlap in their memory ranges.
+
     Revision 1.17  2008/03/09 22:38:51  bnelson
     Alias checks now look at the actual array held by vectors and matrices.
 

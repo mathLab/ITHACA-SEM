@@ -5,6 +5,7 @@ SET(PrecompiledHeaderSources
     TestNekMatrixMultiplication.cpp
     TestNekMatrixOperations.cpp
     TestUpperTriangularMatrix.cpp
+    TestSharedArray.cpp
 )
 
 SET(UnitTestSources ${PrecompiledHeaderSources} main.cpp)   

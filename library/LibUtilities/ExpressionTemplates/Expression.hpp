@@ -50,20 +50,29 @@
 
 #include <LibUtilities/ExpressionTemplates/Accumulator.hpp>
 #include <LibUtilities/ExpressionTemplates/NullOp.hpp>
+#include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
 
 #include <algorithm>
 
 namespace Nektar
 {
-        template<typename DataType>
-        struct CreateFromMetadata
+    // The goal here is to cause a compile error if the user 
+    // specified some metadata but didn't specialize CreateFromMetadata.
+    template<typename DataType>
+    struct CreateFromMetadata
+    {
+        template<typename T>
+        static DataType Apply(const DefaultExpressionMetadata<T>&)
         {
-            template<typename MetadataType>
-            static DataType Apply(const MetadataType&)
-            {
-                return DataType();
-            }
-        };
+            return DataType();
+        }
+
+        template<typename L, typename R>
+        static DataType Apply(const DefaultBinaryExpressionMetadata<L, R>&)
+        {
+            return DataType();
+        }
+    };
 
         /// \brief An expression is an arbitrary combination of operations acting on arbitrary amountsw of data to 
         /// produce a result.  The expressions stores the operations and data but does not evaluate it until requested.
@@ -132,6 +141,9 @@ namespace Nektar
 
                 ResultType Evaluate() const
                 {
+                    // If you get a compile error here, then it is likely
+                    // that you have created your own metadata for 
+                    // ResultType, but forgot to specialize CreateFromMetadata.
                     ResultType result = CreateFromMetadata<ResultType>::Apply(m_metadata);
                     Evaluate(result);
                     return result;
@@ -229,6 +241,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.22  2008/02/19 03:44:36  bnelson
+    Added the beginnings of a method to count the temporaries created by an expression.
+
     Revision 1.21  2008/01/22 03:15:21  bnelson
     Added CreateFromMetadata.
 

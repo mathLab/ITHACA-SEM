@@ -225,7 +225,13 @@ namespace Nektar
                 }
             }
 
-            
+            explicit NekVector(const NekVectorMetadata& m) :
+                m_size(m.Rows),
+                m_data(m.Rows),
+                m_wrapperType(eCopy)
+            {
+            }
+
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
             NekVector(const Expression<ExpressionPolicyType>& rhs) :
@@ -338,12 +344,6 @@ namespace Nektar
             PointerWrapper GetWrapperType() const { return m_wrapperType; }
             
         protected:
-            NekVector(const NekVectorMetadata& m) :
-                m_size(m.Rows),
-                m_data(m.Rows),
-                m_wrapperType(eCopy)
-            {
-            }
             
             inline Array<OneD, DataType>& GetData() { return m_data; }
             inline void SetSize(unsigned int s) { m_size = s; }
@@ -404,7 +404,12 @@ namespace Nektar
             
             NekVector(unsigned int size, const Array<OneD, DataType>& ptr, PointerWrapper h = eCopy) :
                 BaseType(size, ptr, h) {}
-                
+             
+            explicit NekVector(const NekVectorMetadata& m) :
+                BaseType(m)
+            {
+            }
+
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename ExpressionPolicyType>
             NekVector(const Expression<ExpressionPolicyType>& rhs) :
@@ -558,6 +563,17 @@ namespace Nektar
 
     };    
     
+    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+    template<typename DataType, typename Dimension, typename Space>
+    struct CreateFromMetadata<NekVector<DataType, Dimension, Space> >
+    {
+        static NekVector<DataType, Dimension, Space> 
+        Apply(const NekVectorMetadata& d)
+        {
+            return NekVector<DataType, Dimension, Space>((d));
+        }
+    };
+    #endif  
 }
 
 #endif // NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_VARIABLE_SIZED_HPP

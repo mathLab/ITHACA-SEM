@@ -40,7 +40,12 @@ namespace Nektar
     namespace MultiRegions
     {
 
-        ContExpList1D::ContExpList1D()
+        ContExpList1D::ContExpList1D():
+            ExpList1D(),
+            m_locToGloMap(),
+            m_contNcoeffs(0),
+            m_contCoeffs(),
+            m_globalMat()
         {
         }
 
@@ -50,25 +55,25 @@ namespace Nektar
 
         ContExpList1D::ContExpList1D(const ContExpList1D &In):
             ExpList1D(In),
-            m_contNcoeffs(In.m_contNcoeffs),
             m_locToGloMap(In.m_locToGloMap),
+            m_contNcoeffs(In.m_contNcoeffs),
+            m_contCoeffs(m_contNcoeffs,0.0),
             m_globalMat(In.m_globalMat)
-
         {
-            m_contCoeffs = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
         ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba,
                                      const SpatialDomains::MeshGraph1D &graph1D,
                                      const bool constructMap):
-	    ExpList1D(Ba,graph1D)
+	    ExpList1D(Ba,graph1D),
+            m_locToGloMap(),
+            m_contNcoeffs(),
+            m_contCoeffs(),
+            m_globalMat(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {   
             ASSERTL1((Ba.GetBasisType() == LibUtilities::eModified_A)
                      ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
                      "Expansion not of an boundary-interior type");
-
-            // setup Matrix Map
-            m_globalMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
             
 	    // setup mapping array 
             if(constructMap)
@@ -81,7 +86,11 @@ namespace Nektar
         
         ContExpList1D::ContExpList1D(SpatialDomains::MeshGraph1D &graph1D,
                                      const bool constructMap):
-	    ExpList1D(graph1D)
+	    ExpList1D(graph1D),
+            m_locToGloMap(),
+            m_contNcoeffs(),
+            m_contCoeffs(),
+            m_globalMat(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
             
@@ -91,10 +100,7 @@ namespace Nektar
                          ||((graph1D.GetBasisKey(expansions[i],0)).GetBasisType() == LibUtilities::eGLL_Lagrange),
                          "Expansion not of an boundary-interior type");
             }
-            
-            // setup Matrix Map
-            m_globalMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-            
+                        
 	    // setup mapping array 
             if(constructMap)
             {
@@ -120,7 +126,7 @@ namespace Nektar
                                             Array<OneD, NekDouble> &outarray)
 
         {
-            Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(m_ncoeffs);
+            Array<OneD,NekDouble> tmp(m_ncoeffs);
             ContToLocal(inarray,tmp);
             ExpList1D::GeneralMatrixOp(gkey,tmp,tmp);
             Assemble(tmp,outarray);
@@ -166,6 +172,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.29  2007/12/17 13:05:03  sherwin
+* Made files compatible with modifications in StdMatrixKey which now holds constants
+*
 * Revision 1.28  2007/12/06 22:52:29  pvos
 * 2D Helmholtz solver updates
 *

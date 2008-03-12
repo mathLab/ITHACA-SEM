@@ -95,10 +95,8 @@ namespace Nektar
             return m_geom;
         }
 
-
         void WriteToFile(FILE *outfile);
         void WriteToFile(std::ofstream &outfile, const int dumpVar);
-
 
         //----------------------------
         // Integration Methods
@@ -106,7 +104,6 @@ namespace Nektar
 
          /// \brief Integrate the physical point list \a inarray over region
         NekDouble Integral(const ConstArray<OneD, NekDouble> &inarray);
-
 
         /** \brief  Inner product of \a inarray over region with respect to the
         expansion basis (this)->_Base[0] and return in \a outarray */
@@ -182,10 +179,8 @@ namespace Nektar
 
         void GenMetricInfo();
 
-        DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
+        DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
         DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
-
-        DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
         DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
         SpatialDomains::QuadGeomSharedPtr m_geom;
@@ -342,18 +337,23 @@ namespace Nektar
             return StdExpansion::L2();
         }
 
-        virtual DNekScalMatSharedPtr v_GetLocMatrix(const MatrixKey &mkey)
+        virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            return CreateStdMatrix(mkey);
+        }
+
+        virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
         {
             return m_matrixManager[mkey];
         }
         
-        virtual DNekScalMatSharedPtr v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
+        virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
         {
             MatrixKey mkey(mtype,DetShapeType(),*this,lambdaval,tau);
             return m_matrixManager[mkey];
         }
 
-        virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+        virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
         {
             return m_staticCondMatrixManager[mkey];
         }
@@ -417,6 +417,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.24  2008/03/06 23:29:23  ehan
+ *    Included file <Vmath.hpp> and <VmathArray.hpp>.
+ *
  *    Revision 1.23  2008/02/28 10:04:11  sherwin
  *    Modes for UDG codes
  *

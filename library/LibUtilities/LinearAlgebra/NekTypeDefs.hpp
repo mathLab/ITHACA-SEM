@@ -54,6 +54,7 @@ namespace Nektar
 
     typedef NekMatrix<NekMatrix<NekDouble>,FullMatrixTag,ScaledMatrixTag> DNekScalMat; 
     typedef boost::shared_ptr<DNekScalMat>      DNekScalMatSharedPtr;
+    static DNekScalMatSharedPtr NullDNekScalMatSharedPtr;
 
     typedef LinearSystem<DNekScalMat>           DNekScalLinSys; 
     typedef boost::shared_ptr<DNekScalLinSys>   DNekScalLinSysSharedPtr;
@@ -65,12 +66,16 @@ namespace Nektar
     typedef NekMatrix<DNekScalMat, FullMatrixTag, BlockMatrixTag> DNekScalBlkMat;
 
     typedef boost::shared_ptr<DNekScalBlkMat>    DNekScalBlkMatSharedPtr;
+    static DNekScalBlkMatSharedPtr NullDNekScalBlkMatSharedPtr;
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP
 
 /**
     $Log: NekTypeDefs.hpp,v $
+    Revision 1.9  2007/10/03 11:37:50  sherwin
+    Updates relating to static condensation implementation
+
     Revision 1.8  2007/07/26 08:40:49  sherwin
     Update to use generalised i/o hooks in Helmholtz1D
 

@@ -50,11 +50,7 @@ namespace Nektar
             Ba.GetNumModes()*(Bb.GetNumModes()-Ba.GetNumModes()), 
             Ba,Bb)
         {    
-
-            if(Ba.GetNumModes() >  Bb.GetNumModes())
-            {
-                ASSERTL0(false, "order in 'a' direction is higher than order in 'b' direction");
-            }
+            ASSERTL0(Ba.GetNumModes() <=  Bb.GetNumModes(), "order in 'a' direction is higher than order in 'b' direction");
         }
 
         StdTriExp::StdTriExp(const StdTriExp &T):
@@ -71,12 +67,13 @@ namespace Nektar
         //////////////////////////////
         NekDouble StdTriExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
         {
-            ConstArray<OneD, NekDouble> w0,z1,w1;
-            int    i,nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, NekDouble> w1_tmp = Array<OneD, NekDouble>(nquad1);
+            int    i;
+            int nquad1 = m_base[1]->GetNumPoints();
+            Array<OneD, NekDouble> w1_tmp(nquad1);
 
-            w0 = ExpPointsProperties(0)->GetW();
-            ExpPointsProperties(1)->GetZW(z1,w1);
+            ConstArray<OneD, NekDouble> w0 = ExpPointsProperties(0)->GetW();
+            ConstArray<OneD, NekDouble> w1 = ExpPointsProperties(1)->GetW();
+            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
 
             switch(m_base[1]->GetPointsType())
             {
@@ -87,8 +84,10 @@ namespace Nektar
                 }
                 break;
             case LibUtilities::eGaussRadauMAlpha1Beta0: // (0,1) Jacobi Inner product 
-                Vmath::Smul(nquad1,0.5,w1.get(),1,w1_tmp.get(),1);      
+                Vmath::Smul(nquad1, 0.5, w1, 1, w1_tmp,1);      
                 break;
+            default:
+                ASSERTL0(false, "populate swith for this point type");
             }
 
             return StdExpansion2D::Integral(inarray,w0,w1_tmp);
@@ -173,22 +172,22 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
-            ConstArray<OneD, NekDouble> z1,w0,w1;
-            Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad0*nquad1);
-            Array<OneD, NekDouble> tmp1 = Array<OneD, NekDouble>(nquad0*nquad1);
 
-            w0 = ExpPointsProperties(0)->GetW();
-            ExpPointsProperties(1)->GetZW(z1,w1);
+            Array<OneD, NekDouble> tmp(nquad0*nquad1);
+            Array<OneD, NekDouble> tmp1(order0*nquad1);
+
+            ConstArray<OneD, NekDouble> w0 = ExpPointsProperties(0)->GetW();
+            ConstArray<OneD, NekDouble> w1 = ExpPointsProperties(1)->GetW();
+            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
 
             ASSERTL2((m_base[1]->GetBasisType() == LibUtilities::eOrtho_B)||
                 (m_base[1]->GetBasisType() == LibUtilities::eModified_B), 
                 "Basis[1] is not of general tensor type");
 
-            //             ASSERTL2((m_base[0]->GetAlpha() == 0.0)&&(m_base[1]->GetAlpha() > 1.0),
-            //                 "Basis[0] has illegal alpha weight");
-
-            //             ASSERTL2((m_base[1]->GetBeta() == 0.0)&&(m_base[1]->GetBeta() == 0.0),
-            //                 "Basis[1] has non-zero beta weight");
+            ASSERTL2((m_base[0]->GetAlpha() == 0.0)&&(m_base[1]->GetAlpha() > 1.0),
+                     "Basis[0] has illegal alpha weight");
+            ASSERTL2((m_base[1]->GetBeta() == 0.0)&&(m_base[1]->GetBeta() == 0.0),
+                     "Basis[1] has non-zero beta weight");
 
             // Note cannot use outarray as tmp space since dimensions are not always
             // guarenteed to be sufficient 
@@ -205,7 +204,7 @@ namespace Nektar
             case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
                 for(i = 0; i < nquad1; ++i)
                 {
-                    Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], &tmp[0]+i*nquad0,1);
+                   Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], &tmp[0]+i*nquad0,1);
                 }
                 break;
             case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
@@ -217,17 +216,20 @@ namespace Nektar
             }
 
             // Inner product with respect to 'a' direction 
-             Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
-                         //                Blas::Dgemm('N','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,//make column major matrix
-                base0.get(),nquad0,0.0,&tmp1[0],nquad1);
+            DNekMat in(nquad0,nquad1,tmp,eWrapper);
+            DNekMat B0(nquad0,order0,base0,eWrapper);
+            DNekMat out(nquad1,order0,tmp1,eWrapper);
+                    
+            out = Transpose(in)*B0;
 
             // Inner product with respect to 'b' direction 
             for(mode=i=0; i < order0; ++i)
             {
-                Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
-                            //                    Blas::Dgemv('N',nquad1,order1-i,1.0, base1.get()+mode*nquad1, // make column major matrix
-                    nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
-                    &outarray[0] + mode,1);
+                NekVector<const NekDouble> in2(nquad1,tmp1 + i*nquad1,eWrapper);
+                NekVector<NekDouble> out2(order1-i,outarray + mode,eWrapper);
+                DNekMat B1(nquad1,order1-i,base1 + mode*nquad1,eWrapper);
+
+                out2 = Transpose(B1)*in2;
                 mode += order1-i;
             }
 
@@ -266,7 +268,7 @@ namespace Nektar
             // deal with top vertex mode in modified basis
             if((mode == 1)&&(m_base[0]->GetBasisType() == LibUtilities::eModified_A))
             {
-                Vmath::Fill(nquad0*nquad1,1.0,&outarray[0],1);
+                Vmath::Fill(nquad0*nquad1 , 1.0, outarray, 1);
             }
             else
             {
@@ -296,40 +298,61 @@ namespace Nektar
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<OneD, NekDouble> z0,z1;
-            Array<OneD, NekDouble> d0;
-            Array<OneD, NekDouble> wsp1  = Array<OneD, NekDouble>(nquad0*nquad1);
-            NekDouble *gfac = wsp1.get();
+            Array<OneD, NekDouble> wsp(nquad0*nquad1);
 
-            z0 = ExpPointsProperties(0)->GetZ();
-            z1 = ExpPointsProperties(1)->GetZ();
+            ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
 
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
             {
-                gfac[i] = 2.0/(1-z1[i]);
+                wsp[i] = 2.0/(1-z1[i]);
             }
 
-            PhysTensorDeriv(inarray, out_d0, out_d1);
-            
-            for(i = 0; i < nquad1; ++i)  
+            if(out_d0.num_elements() > 0)
             {
-                Blas::Dscal(nquad0,gfac[i],&out_d0[0]+i*nquad0,1);
-            }
-
-            if(out_d1.num_elements() > 0)// if no d1 required do not need to calculate both deriv
-            {
-                // set up geometric factor: (1_z0)/(1-z1)
-                for(i = 0; i < nquad0; ++i)
+                PhysTensorDeriv(inarray, out_d0, out_d1);
+                
+                for(i = 0; i < nquad1; ++i)  
                 {
-                    gfac[i] = 0.5*(1+z0[i]);
+                    Blas::Dscal(nquad0,wsp[i],&out_d0[0]+i*nquad0,1);
                 }
 
+                if(out_d1.num_elements() > 0)// if no d1 required do not need to calculate both deriv
+                {
+                    // set up geometric factor: (1_z0)/(1-z1)
+                    for(i = 0; i < nquad0; ++i)
+                    {
+                        wsp[i] = 0.5*(1+z0[i]);
+                    }
+                    
+                    for(i = 0; i < nquad1; ++i) 
+                    {
+                        Vmath::Vvtvp(nquad0,&wsp[0],1,&out_d0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
+                                     &out_d1[0]+i*nquad0,1);
+                    }    
+                }
+            }
+            else if(out_d1.num_elements() > 0)
+            {
+                Array<OneD, NekDouble> diff0(nquad0*nquad1);
+                PhysTensorDeriv(inarray, diff0, out_d1);
+                
+                for(i = 0; i < nquad1; ++i)  
+                {
+                    Blas::Dscal(nquad0,wsp[i],&diff0[0]+i*nquad0,1);
+                }
+
+                for(i = 0; i < nquad0; ++i)
+                {
+                    wsp[i] = 0.5*(1+z0[i]);
+                }
+                
                 for(i = 0; i < nquad1; ++i) 
                 {
-                    Vmath::Vvtvp(nquad0,gfac,1,&out_d0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
-                        &out_d1[0]+i*nquad0,1);
-                }    
+                    Vmath::Vvtvp(nquad0,&wsp[0],1,&diff0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
+                                 &out_d1[0]+i*nquad0,1);
+                } 
             }
         }
 
@@ -348,7 +371,7 @@ namespace Nektar
             int           order1 = m_base[1]->GetNumModes();
             ConstArray<OneD, NekDouble> base0  = m_base[0]->GetBdata();
             ConstArray<OneD, NekDouble> base1  = m_base[1]->GetBdata();
-            Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(order0*nquad1);
+            Array<OneD, NekDouble> tmp(order0*nquad1);
 
 
             ASSERTL2((m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)||
@@ -357,9 +380,11 @@ namespace Nektar
 
             for(i = mode = 0; i < order0; ++i)
             {
-                Blas::Dgemv('N', nquad1,order1-i,1.0,base1.get()+mode*nquad1,
-                            //                    Blas::Dgemv('T', nquad1,order1-i,1.0,base1.get()+mode*nquad1,//make column major matrix
-                    nquad1,&inarray[0]+mode,1,0.0,&tmp[0]+i*nquad1,1);
+                NekVector<const NekDouble> in(order1-i,inarray+mode,eWrapper);
+                NekVector<NekDouble> out(nquad1,tmp+i*nquad1,eWrapper);
+                DNekMat B1(nquad1,order1-i,base1 + mode*nquad1,eWrapper);
+
+                out = B1*in;
                 mode += order1-i;
             }
 
@@ -370,9 +395,11 @@ namespace Nektar
                     &tmp[0]+nquad1,1);
             }
 
-            Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0.get(),nquad0,
-                        //                Blas::Dgemm('N','N', nquad0,nquad1,order0,1.0, base0.get(),nquad0,  //make column major matrix
-                &tmp[0], nquad1,0.0, &outarray[0], nquad0);
+            DNekMat in(nquad1,order0,tmp,eWrapper);
+            DNekMat out(nquad0,nquad1,outarray,eWrapper);
+            DNekMat B1(nquad0,order0,base0,eWrapper);
+
+            out = B1*Transpose(in);
         }
 
         void StdTriExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
@@ -383,18 +410,18 @@ namespace Nektar
 
             // get Mass matrix inverse
             StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
-            DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
+            DNekMatSharedPtr& matsys = GetStdMatrix(masskey);
 
             // copy inarray in case inarray == outarray
-            DNekVec in (m_ncoeffs,outarray);
-            DNekVec out(m_ncoeffs,outarray,eWrapper);
+            NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
+            NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
 
             out = (*matsys)*in;
         }
 
         NekDouble StdTriExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
         {
-            Array<OneD, NekDouble> coll = Array<OneD, NekDouble>(2);
+            Array<OneD, NekDouble> coll(2);
 
             // set up local coordinate system 
             if((fabs(coords[0]+1.0) < NekConstants::kEvaluateTol)
@@ -412,7 +439,7 @@ namespace Nektar
             return  StdExpansion2D::PhysEvaluate2D(coll); 
         }
 
-        const ConstArray<OneD, int> StdTriExp::GetBoundaryMap(void)
+        void StdTriExp::GetBoundaryMap(Array<OneD, unsigned int>& outarray)
         {
             const LibUtilities::BasisType Btype0 = GetBasisType(0);
             const LibUtilities::BasisType Btype1 = GetBasisType(1);
@@ -424,7 +451,10 @@ namespace Nektar
             int cnt;
             int nummodes0, nummodes1;
             int value;
-            Array<OneD, int> returnval(NumBndryCoeffs());
+            if(outarray.num_elements()!=NumBndryCoeffs())
+            {
+                outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
+            }
 
             nummodes0 = m_base[0]->GetNumModes();
             nummodes1 = m_base[1]->GetNumModes();
@@ -432,20 +462,18 @@ namespace Nektar
             value = 2*nummodes1-1;
             for(i = 0; i < value; i++)
             {
-                returnval[i]=i;
+                outarray[i]=i;
             }
             cnt = value;
 
             for(i = 0; i < nummodes0-2; i++)
             {
-                returnval[cnt++]=value;
+                outarray[cnt++]=value;
                 value += nummodes1-2-i;
             }
-
-            return returnval;
         }
 
-        const ConstArray<OneD, int> StdTriExp::GetInteriorMap(void)
+        void StdTriExp::GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
             const LibUtilities::BasisType Btype0 = GetBasisType(0);
             const LibUtilities::BasisType Btype1 = GetBasisType(1);
@@ -458,7 +486,10 @@ namespace Nektar
             int cnt=0;
             int nummodes0, nummodes1;
             int startvalue;
-            Array<OneD, int> returnval(GetNcoeffs()-NumBndryCoeffs());
+            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
+            {
+                outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
+            }
 
             nummodes0 = m_base[0]->GetNumModes();
             nummodes1 = m_base[1]->GetNumModes();
@@ -469,12 +500,10 @@ namespace Nektar
             {
                 for(j = 0; j < nummodes1-3-i; j++)
                 {
-                    returnval[cnt++]=startvalue+j;
+                    outarray[cnt++]=startvalue+j;
                 }
                 startvalue+=nummodes1-2-i;
             }
-
-            return returnval;
         }
 
         void  StdTriExp::MapTo(const int edge_ncoeffs, 
@@ -485,8 +514,9 @@ namespace Nektar
         {
 
             int i;
-            int *dir, order0,order1;
-            Array<OneD, int> wsp; 
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
+            Array<OneD, int> wsp(edge_ncoeffs); 
 
             ASSERTL2(eid>=0&&eid<=2,"eid must be between 0 and 2");
             ASSERTL2(Btype == LibUtilities::eModified_A,"Mapping only set up "
@@ -500,27 +530,21 @@ namespace Nektar
                 Map.SetMapMemory(edge_ncoeffs);
             }
 
-            order0 = m_base[0]->GetNumModes();
-            order1 = m_base[1]->GetNumModes();
-
-            wsp = Array<OneD, int>(edge_ncoeffs);
-            dir = wsp.get(); 
-
             if(eorient == eForwards)
             {
                 for(i = 0; i < edge_ncoeffs; ++i)
                 {
-                    dir[i] = i;
+                    wsp[i] = i;
                 }
             }
             else
             {
-                dir[1] = 0; 
-                dir[0] = 1;
+                wsp[1] = 0; 
+                wsp[0] = 1;
 
                 for(i = 2; i < edge_ncoeffs; ++i)
                 {
-                    dir[i] = i;
+                    wsp[i] = i;
                 }
             }
 
@@ -533,23 +557,23 @@ namespace Nektar
 
                     for(i = 0; i < edge_ncoeffs; cnt+=order1-i, ++i)
                     {
-                        Map[dir[i]] = cnt; 
+                        Map[wsp[i]] = cnt; 
                     }
                 }
                 break;
             case 1:
-                Map[dir[0]] = order1;
-                Map[dir[1]] = 1;
+                Map[wsp[0]] = order1;
+                Map[wsp[1]] = 1;
 
                 for(i = 2; i < edge_ncoeffs; ++i)
                 {
-                    Map[dir[i]] = order1+i-1; 
+                    Map[wsp[i]] = order1+i-1; 
                 }
                 break;
             case 2:
                 for(i = 0; i < edge_ncoeffs; ++i)
                 {
-                    Map[dir[i]] = i; 
+                    Map[wsp[i]] = i; 
                 }
                 break;
             }
@@ -572,10 +596,8 @@ namespace Nektar
             int  i,j;
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<OneD, NekDouble> z0,z1;
-
-            z0 = ExpPointsProperties(0)->GetZ();
-            z1 = ExpPointsProperties(1)->GetZ();
+            ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
 
             outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
             outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
@@ -598,20 +620,16 @@ namespace Nektar
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
             int  cnt = 0;
-            Array<OneD, NekDouble> wsp  = Array<OneD, NekDouble>(order0*order1);
-
-            NekDouble *mat = wsp.get(); 
+            Array<OneD, NekDouble> wsp(order0*order1,0.0);
 
             // put coeffs into matrix and reverse order so that p index is fastest
             // recall q is fastest for tri's
-
-            Vmath::Zero(order0*order1,mat,1);
 
             for(i = 0; i < order0; ++i)
             {
                 for(j = 0; j < order1-i; ++j,cnt++)
                 {
-                    mat[i+j*order1] = m_coeffs[cnt];
+                    wsp[i+j*order1] = m_coeffs[cnt];
                 }
             }
 
@@ -621,7 +639,7 @@ namespace Nektar
             {
                 for(i = 0; i < order0; ++i)
                 {
-                    outfile << mat[j*order0+i] <<" ";
+                    outfile << wsp[j*order0+i] <<" ";
                 }
                 outfile << std::endl; 
             }
@@ -653,6 +671,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.28  2008/01/23 09:09:46  sherwin
+* Updates for Hybrized DG
+*
 * Revision 1.27  2007/12/17 13:03:51  sherwin
 * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
 *

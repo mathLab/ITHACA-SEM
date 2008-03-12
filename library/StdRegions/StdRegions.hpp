@@ -40,6 +40,7 @@
 // Headers from LibUtilities needed in StdRegions
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
+#include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -232,6 +233,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.22  2008/01/23 09:09:25  sherwin
+* New matrix listing for DG stuff
+*
 * Revision 1.21  2007/11/20 16:29:48  sherwin
 * Added enum matrixtype definitions for UDG solver
 *

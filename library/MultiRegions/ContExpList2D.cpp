@@ -40,7 +40,12 @@ namespace Nektar
     namespace MultiRegions
     {
         
-        ContExpList2D::ContExpList2D()
+        ContExpList2D::ContExpList2D():
+            ExpList2D(),
+            m_locToGloMap(),
+            m_contNcoeffs(0),
+            m_contCoeffs(),
+            m_globalMat()
         {
         }
         
@@ -50,12 +55,11 @@ namespace Nektar
         
         ContExpList2D::ContExpList2D(const ContExpList2D &In):
             ExpList2D(In),
-            m_contNcoeffs(In.m_contNcoeffs),
             m_locToGloMap(In.m_locToGloMap),
-            m_globalMat(In.m_globalMat)
-            
+            m_contNcoeffs(In.m_contNcoeffs),
+            m_contCoeffs(m_contNcoeffs,0.0),
+            m_globalMat(In.m_globalMat)            
         {
-            m_contCoeffs = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
         ContExpList2D::ContExpList2D(const LibUtilities::BasisKey &TriBa, 
@@ -65,7 +69,11 @@ namespace Nektar
                                      const SpatialDomains::MeshGraph2D &graph2D,
                                      const LibUtilities::PointsType TriNb,
                                      const bool constructMap):
-            ExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D,TriNb)
+            ExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D,TriNb),
+            m_locToGloMap(),
+            m_contNcoeffs(),
+            m_contCoeffs(),
+            m_globalMat(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             
             ASSERTL1((TriBa.GetBasisType() == LibUtilities::eModified_A)&&
@@ -90,9 +98,6 @@ namespace Nektar
                          "Quad and Tri Expansions are not of the same type");
             }
             
-            // setup Matrix Map
-            m_globalMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-            
             // setup mapping array 
             if(constructMap)
             {
@@ -104,11 +109,12 @@ namespace Nektar
 
         ContExpList2D::ContExpList2D(SpatialDomains::MeshGraph2D &graph2D,
                                      const bool constructMap):
-            ExpList2D(graph2D)
-        {            
-            // setup Matrix Map
-            m_globalMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-            
+            ExpList2D(graph2D),
+            m_locToGloMap(),
+            m_contNcoeffs(),
+            m_contCoeffs(),
+            m_globalMat(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+        {                        
             // setup mapping array 
             if(constructMap)
             {
@@ -134,7 +140,7 @@ namespace Nektar
                                             Array<OneD, NekDouble> &outarray)
             
 	{
-            Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(m_ncoeffs);
+            Array<OneD,NekDouble> tmp(m_ncoeffs);
             ContToLocal(inarray,tmp);
 	    ExpList2D::GeneralMatrixOp(gkey,tmp,tmp);
 	    Assemble(tmp,outarray);
@@ -177,6 +183,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.10  2007/12/17 13:05:04  sherwin
+* Made files compatible with modifications in StdMatrixKey which now holds constants
+*
 * Revision 1.9  2007/12/06 22:52:29  pvos
 * 2D Helmholtz solver updates
 *

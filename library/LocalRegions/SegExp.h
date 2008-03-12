@@ -86,7 +86,7 @@ namespace Nektar
               Array<OneD,NekDouble> &coords);
 
 
-            const SpatialDomains::SegGeomSharedPtr GetGeom()
+            const SpatialDomains::SegGeomSharedPtr& GetGeom()
             {
                 return m_geom;
             }
@@ -164,11 +164,8 @@ namespace Nektar
             void GenMetricInfo();    
             
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
-            
-            DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
+            DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
-
-            DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
             SpatialDomains::SegGeomSharedPtr m_geom;
@@ -257,7 +254,7 @@ namespace Nektar
                      Array<OneD,NekDouble> &out_d0,
                      Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
                      Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray)
-        {
+            {
                 PhysDeriv(inarray, out_d0);
             }
 
@@ -268,8 +265,6 @@ namespace Nektar
                 PhysDeriv(inarray, out_d0);
             }
 
-
-
             /// Virtual call to SegExp::FwdTrans
             virtual void v_FwdTrans(const ConstArray<OneD,NekDouble>& inarray, 
                     Array<OneD,NekDouble> &outarray)
@@ -277,15 +272,14 @@ namespace Nektar
                 FwdTrans(inarray,outarray);
             }
 
-        /** \brief Virtual call to SegExp::FwdTrans */
-        virtual void v_FwdTrans(const StdExpansion1D &in)
-        {
-        FwdTrans(((SegExp &) in).GetPhys(), m_coeffs);
-        }
-      
-
+            /** \brief Virtual call to SegExp::FwdTrans */
+            virtual void v_FwdTrans(const StdExpansion1D &in)
+            {
+                FwdTrans(((SegExp &) in).GetPhys(), m_coeffs);
+            }
+            
             /// Virtual call to SegExp::Evaluate
-            virtual double v_PhysEvaluate(const ConstArray<OneD,NekDouble>& coords)
+            virtual NekDouble v_PhysEvaluate(const ConstArray<OneD,NekDouble>& coords)
             {
                 return PhysEvaluate(coords);
             }
@@ -305,9 +299,9 @@ namespace Nektar
 
             output: 
 
-            - returns the \f$ L_\infty \f$ error as a double. 
+            - returns the \f$ L_\infty \f$ error as a NekDouble. 
             */
-            virtual double v_Linf(const ConstArray<OneD,NekDouble>& sol)
+            virtual NekDouble v_Linf(const ConstArray<OneD,NekDouble>& sol)
             {
                 return Linf(sol);
             }
@@ -324,9 +318,9 @@ namespace Nektar
 
             output: 
 
-            - returns the \f$ L_\infty \f$  as a double. 
+            - returns the \f$ L_\infty \f$  as a NekDouble. 
             */
-            virtual double v_Linf()
+            virtual NekDouble v_Linf()
             {
                 return Linf();
             }
@@ -346,9 +340,9 @@ namespace Nektar
 
             output: 
 
-            - returns the \f$ L_2 \f$ error as a double. 
+            - returns the \f$ L_2 \f$ error as a NekDouble. 
             */
-            virtual double v_L2(const ConstArray<OneD,NekDouble>& sol)
+            virtual NekDouble v_L2(const ConstArray<OneD,NekDouble>& sol)
             {
                 return StdExpansion::L2(sol);
             }
@@ -365,26 +359,31 @@ namespace Nektar
 
             output: 
 
-            - returns the \f$ L_2 \f$  as a double. 
+            - returns the \f$ L_2 \f$  as a NekDouble. 
             */
-            virtual double v_L2()
+            virtual NekDouble v_L2()
             {
                 return StdExpansion::L2();
             }
 
-            virtual DNekScalMatSharedPtr v_GetLocMatrix(const MatrixKey &mkey)
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+            {
+                return CreateStdMatrix(mkey);
+            }
+
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
             {
                 return m_matrixManager[mkey];
             }
 
 
-            virtual DNekScalMatSharedPtr v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
             {
                 MatrixKey mkey(mtype,DetShapeType(),*this,lambdaval,tau);
                 return m_matrixManager[mkey];
             }
 
-            virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
             {
                 return m_staticCondMatrixManager[mkey];
             }
@@ -430,6 +429,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.28  2008/02/28 10:04:11  sherwin
+// Modes for UDG codes
+//
 // Revision 1.27  2008/01/21 19:59:32  sherwin
 // Updated to take SegGeoms instead of EdgeComponents
 //

@@ -126,10 +126,10 @@ namespace Nektar
 			     Array<OneD,NekDouble> &outarray);
 
 
-	DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
+	DNekMatSharedPtr& GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
         DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
 
-        DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
+        DNekBlkMatSharedPtr& GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
         DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
 	SpatialDomains::TetGeomSharedPtr m_geom;
@@ -258,12 +258,12 @@ namespace Nektar
             return StdExpansion::L2();
         }
 
-        virtual DNekScalMatSharedPtr v_GetLocMatrix(const MatrixKey &mkey)
+        virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
         {
             return m_matrixManager[mkey];
         }
 
-        virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+        virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
         {
             return m_staticCondMatrixManager[mkey];
         }
@@ -283,6 +283,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.8  2008/02/16 05:53:01  ehan
+ *    Added PhysDeriv and virtual functions.
+ *
  *    Revision 1.7  2008/02/05 00:41:37  ehan
  *    Added initial tetrahedral expansion.
  *

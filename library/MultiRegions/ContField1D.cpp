@@ -40,7 +40,10 @@ namespace Nektar
     namespace MultiRegions
     {
 
-        ContField1D::ContField1D(void)
+        ContField1D::ContField1D(void):
+            ContExpList1D(),
+            m_bndConstraint(),
+            m_bndTypes()
         {
         }
 
@@ -54,7 +57,9 @@ namespace Nektar
         ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc):
-            ContExpList1D(graph1D,false)
+            ContExpList1D(graph1D,false),
+            m_bndConstraint(),
+            m_bndTypes()
         {
             GenerateField1D(bcs,bcs.GetVariable(bc_loc));
             m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
@@ -68,7 +73,9 @@ namespace Nektar
         ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
             SpatialDomains::BoundaryConditions &bcs, 
             const std::string variable):
-            ContExpList1D(graph1D,false)
+            ContExpList1D(graph1D,false),
+            m_bndConstraint(),
+            m_bndTypes()
         {
             GenerateField1D(bcs,variable);
             m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
@@ -83,7 +90,9 @@ namespace Nektar
             const SpatialDomains::MeshGraph1D &graph1D,
             SpatialDomains::BoundaryConditions &bcs, 
             const int bc_loc):
-            ContExpList1D(Ba,graph1D,false)
+            ContExpList1D(Ba,graph1D,false),
+            m_bndConstraint(),
+            m_bndTypes()
         {
             GenerateField1D(bcs,bcs.GetVariable(bc_loc));
             m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
@@ -92,14 +101,16 @@ namespace Nektar
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
-
         }
 
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
             const SpatialDomains::MeshGraph1D &graph1D,
             SpatialDomains::BoundaryConditions &bcs, 
             const std::string variable):
-            ContExpList1D(Ba,graph1D,false)
+            ContExpList1D(Ba,graph1D,false),
+            m_bndConstraint(),
+            m_bndTypes()
+
         {
             GenerateField1D(bcs,variable);
             m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
@@ -232,7 +243,7 @@ namespace Nektar
 
             //assume m_contCoeffs contains initial estimate
             // Set BCs in m_contCoeffs
-            Blas::Dcopy(m_contNcoeffs,&m_contCoeffs[0],1,&init[0],1);
+            Blas::Dcopy(m_contNcoeffs, m_contCoeffs, 1, init, 1);
             for(i = 0; i < NumDirBcs; ++i)
             {
                 init[i] = m_bndConstraint[i]->GetValue();
@@ -244,11 +255,11 @@ namespace Nektar
             IProductWRTBase(Rhs);
             
             // apply scaling of forcing term; (typically used to negate helmholtz forcing);
-            Vmath::Smul(m_contNcoeffs, ScaleForcing,&m_contCoeffs[0],1,&m_contCoeffs[0],1);
+            Vmath::Smul(m_contNcoeffs, ScaleForcing, m_contCoeffs, 1, m_contCoeffs, 1);
 
             // Forcing function with Dirichlet conditions 
-            Vmath::Vsub(m_contNcoeffs,&m_contCoeffs[0],1,
-                &Dir_fce[0],1,&m_contCoeffs[0],1);
+            Vmath::Vsub(m_contNcoeffs, m_contCoeffs, 1,
+                Dir_fce, 1, m_contCoeffs, 1);
 
             // Forcing function with weak boundary conditions 
             for(i = 0; i < m_bndConstraint.num_elements()-NumDirBcs; ++i)
@@ -266,9 +277,9 @@ namespace Nektar
             }
 
             // Recover solution by addinig intial conditons
-            Vmath::Zero(NumDirBcs,&m_contCoeffs[0],1);
-            Vmath::Vadd(m_contNcoeffs,&init[0],1,&m_contCoeffs[0],1,
-                &m_contCoeffs[0],1);
+            Vmath::Zero(NumDirBcs, m_contCoeffs, 1);
+            Vmath::Vadd(m_contNcoeffs, init, 1, m_contCoeffs, 1,
+                m_contCoeffs, 1);
 
             m_transState = eContinuous;
             m_physState = false;

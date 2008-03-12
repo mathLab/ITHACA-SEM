@@ -175,9 +175,9 @@ namespace Nektar
 
             NekDouble PhysEvaluate(ConstArray<OneD, NekDouble>& coords);
 
-            const ConstArray<OneD, int> GetBoundaryMap(void);
+            void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
 
-            const ConstArray<OneD, int> GetInteriorMap(void);
+            void GetInteriorMap(Array<OneD, unsigned int>& outarray);
 
             void MapTo(const int edge_ncoeffs, 
                 const LibUtilities::BasisType Btype, 
@@ -314,6 +314,11 @@ namespace Nektar
                 return GenMatrix(mkey);
             }
 
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)
+            {
+                return GenMatrix(mkey);
+            }
+
             virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
                 Array<OneD, NekDouble> &out_d0,
                 Array<OneD, NekDouble> &out_d1,
@@ -396,14 +401,14 @@ namespace Nektar
                 return PhysEvaluate(Lcoords);
             }
 
-            virtual const ConstArray<OneD, int> v_GetBoundaryMap(void)
+            virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
             {
-                return GetBoundaryMap();
+                 GetBoundaryMap(outarray);
             }
 
-            virtual const ConstArray<OneD, int> v_GetInteriorMap(void)
+            virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
             {
-                return GetInteriorMap();
+                 GetInteriorMap(outarray);
             }
 
             virtual void v_MapTo(const int edge_ncoeffs, 
@@ -433,6 +438,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.24  2008/02/29 19:15:19  sherwin
+* Update for UDG stuff
+*
 * Revision 1.23  2007/12/17 13:03:51  sherwin
 * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
 *

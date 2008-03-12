@@ -109,9 +109,9 @@ namespace Nektar
                                  Array<OneD, NekDouble>           &outarray);
 	    
 	protected:
+	    LocalToGlobalMapSharedPtr m_locToGloMap;
       	    int                       m_contNcoeffs;
-	    Array<OneD, NekDouble>    m_contCoeffs;
-	    LocalToGlobalMapSharedPtr m_locToGloMap;	
+	    Array<OneD, NekDouble>    m_contCoeffs;	
             GlobalLinSysMapShPtr      m_globalMat;
             
         private:
@@ -130,6 +130,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.28  2007/12/17 13:05:04  sherwin
+* Made files compatible with modifications in StdMatrixKey which now holds constants
+*
 * Revision 1.27  2007/12/06 22:52:29  pvos
 * 2D Helmholtz solver updates
 *

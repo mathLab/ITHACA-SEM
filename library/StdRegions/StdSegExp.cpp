@@ -63,17 +63,15 @@ namespace Nektar
         NekDouble StdSegExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
         {
             NekDouble Int = 0.0;
-            ConstArray<OneD, NekDouble> z;
-            ConstArray<OneD, NekDouble> w0;
             int    nquad0 = m_base[0]->GetNumPoints();
-            Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nquad0);
-            
-            ExpPointsProperties(0)->GetZW(z,w0);
+            Array<OneD, NekDouble> tmp(nquad0);
+            ConstArray<OneD, NekDouble> z  = ExpPointsProperties(0)->GetZ();
+            ConstArray<OneD, NekDouble> w0 = ExpPointsProperties(0)->GetW();
             
             // multiply by integration constants 
-            Vmath::Vmul(nquad0,inarray.get(),1,w0.get(),1,tmp.get(),1);
+            Vmath::Vmul(nquad0, inarray, 1, w0, 1, tmp, 1);
             
-            Int = Vmath::Vsum(nquad0, tmp.get(),1);
+            Int = Vmath::Vsum(nquad0, tmp, 1);
             
             return Int;
         }
@@ -84,22 +82,22 @@ namespace Nektar
                                         int coll_check)
         {
             int    nquad = m_base[0]->GetNumPoints();
-            ConstArray<OneD, NekDouble> z;
-            ConstArray<OneD, NekDouble> w;
-            Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(nquad);
+            Array<OneD, NekDouble> tmp(nquad);
+            ConstArray<OneD, NekDouble> z =  ExpPointsProperties(0)->GetZ();
+            ConstArray<OneD, NekDouble> w =  ExpPointsProperties(0)->GetW();
             
-            ExpPointsProperties(0)->GetZW(z,w);
-            
-            Vmath::Vmul(nquad,inarray.get(),1,w.get(),1,tmp.get(),1);
+            Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
             
             if(coll_check&&m_base[0]->Collocation())
             {
-                Vmath::Vcopy(nquad,&tmp[0],1,&outarray[0],1);
+                Vmath::Vcopy(nquad, tmp, 1, outarray, 1);
             }
             else
             {
-                Blas::Dgemv('T',nquad,m_base[0]->GetNumModes(),1.0,base.get(),nquad,
-                            &tmp[0],1,0.0,outarray.get(),1);
+                NekVector<const NekDouble> in(nquad,tmp,eWrapper);
+                NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
+                DNekMat B(nquad,m_ncoeffs,base,eWrapper);
+                out = Transpose(B) * in;
             }    
         }
         
@@ -108,16 +106,7 @@ namespace Nektar
         {
             IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
         }
-        
-        void StdSegExp::IProductWRTDerivBase(const int dir, 
-                                             const ConstArray<OneD, NekDouble>& inarray, 
-                                             Array<OneD, NekDouble> & outarray)
-        {
-            ASSERTL1(dir >= 0 &&dir < 1,"input dir is out of range");
-            
-            IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
-        }
-        
+
         void StdSegExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
             int   nquad = m_base[0]->GetNumPoints();
@@ -172,14 +161,14 @@ namespace Nektar
             
             if(m_base[0]->Collocation())
             {
-                Vmath::Vcopy(nquad,&inarray[0],1,&outarray[0],1);
+                Vmath::Vcopy(nquad, inarray, 1, outarray, 1);
             }
             else
             {
-                const NekDouble *base  = m_base[0]->GetBdata().get();
-                
-                Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0,base,nquad,
-                            &inarray[0],1,0.0,&outarray[0],1);
+                NekVector<const NekDouble> in(m_ncoeffs,inarray,eWrapper);
+                NekVector<NekDouble> out(nquad,outarray,eWrapper);
+                DNekMat B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
+                out = B * in;
             }
         }
         
@@ -188,7 +177,7 @@ namespace Nektar
         {
             if(m_base[0]->Collocation())
             {
-                Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
+                Vmath::Vcopy(m_ncoeffs, inarray, 1, outarray, 1);
             }
             else
             {
@@ -196,11 +185,10 @@ namespace Nektar
                 
                 // get Mass matrix inverse
                 StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
-                DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
+                DNekMatSharedPtr& matsys = GetStdMatrix(masskey);
                 
-                // copy inarray in case inarray == outarray
-                DNekVec in (m_ncoeffs,outarray);
-                DNekVec out(m_ncoeffs,outarray,eWrapper);
+                NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
+                NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
                 
                 out = (*matsys)*in;
             }
@@ -211,34 +199,38 @@ namespace Nektar
             return StdExpansion1D::PhysEvaluate1D(Lcoord);
         }
 
-        const ConstArray<OneD, int> StdSegExp::GetBoundaryMap(void)
+        void StdSegExp::GetBoundaryMap(Array<OneD, unsigned int>& outarray)
         {
-            Array<OneD, int> returnval(2);
+            if(outarray.num_elements()!=NumBndryCoeffs())
+            {
+                outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
+            }
             const LibUtilities::BasisType Btype = GetBasisType(0);
             int nummodes = m_base[0]->GetNumModes();
 
-            returnval[0] = 0;
+            outarray[0] = 0;
 
             switch(Btype)
             {
             case LibUtilities::eGLL_Lagrange:
-                returnval[1]= nummodes-1;
+                outarray[1]= nummodes-1;
                 break;
             case LibUtilities::eModified_A:
-                returnval[1] = 1;
+                outarray[1] = 1;
                 break;
             default:
                 ASSERTL0(0,"Mapping array is not defined for this expansion");
                 break;
             }
-
-            return returnval;
         }
         
-        const ConstArray<OneD, int> StdSegExp::GetInteriorMap(void)
+        void StdSegExp::GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
             int i;
-            Array<OneD, int> returnval(GetNcoeffs()-2);
+            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
+            {
+                outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
+            }
             const LibUtilities::BasisType Btype = GetBasisType(0);
 
             switch(Btype)
@@ -246,21 +238,19 @@ namespace Nektar
             case LibUtilities::eGLL_Lagrange:
                 for(i = 0 ; i < GetNcoeffs()-2;i++)
                 {
-                    returnval[i] = i+1;
+                    outarray[i] = i+1;
                 }
                 break;
             case LibUtilities::eModified_A:
                 for(i = 0 ; i < GetNcoeffs()-2;i++)
                 {
-                    returnval[i] = i+2;
+                    outarray[i] = i+2;
                 }
                 break;
             default:
                 ASSERTL0(0,"Mapping array is not defined for this expansion");
                 break;
             }
-
-            return returnval;
         }
         
         
@@ -318,6 +308,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.43  2007/12/17 13:03:51  sherwin
+* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+*
 * Revision 1.42  2007/12/06 22:44:47  pvos
 * 2D Helmholtz solver updates
 *

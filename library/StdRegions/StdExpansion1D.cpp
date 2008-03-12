@@ -67,35 +67,32 @@ namespace Nektar
     void StdExpansion1D::PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray, 
                          Array<OneD, NekDouble>& outarray)
     {
-        int    nquad = m_base[0]->GetNumPoints();
-        DNekMatSharedPtr     D  = ExpPointsProperties(0)->GetD();
-            
-        // copy inarray in case inarray == outarray
-        DNekVec in (nquad,inarray);
-        DNekVec out(nquad,outarray,eWrapper);
-            
-        out = (*D)*in;
-
-            // this line should not be needed
-            //Vmath::Vcopy(nquad,&out[0],1,&outarray[0],1);
-
-            // cannot make version above work yet. 
-        //Blas::Dgemv('T',nquad,nquad,1.0,&((*D).GetPtr())[0],nquad,
-            //           &wsp[0],1,0.0,&outarray[0],1);
+        int nquad = GetTotPoints();
+        DNekMatSharedPtr D = ExpPointsProperties(0)->GetD();
+        NekVector<NekDouble> out(nquad,outarray,eWrapper);
+     
+        if(inarray==outarray)
+        {
+            NekVector<const NekDouble> in(nquad,inarray,eCopy);            
+            out = (*D)*in;
+        }
+        else
+        {
+            NekVector<const NekDouble> in(nquad,inarray,eWrapper);            
+            out = (*D)*in;
+        }
     }
     
     NekDouble StdExpansion1D::PhysEvaluate1D(const ConstArray<OneD, NekDouble>& Lcoord)
     {
-        int    nquad = m_base[0]->GetNumPoints();
+        int    nquad = GetTotPoints();
         NekDouble  val;
-        DNekMatSharedPtr I;
+        DNekMatSharedPtr I = ExpPointsProperties(0)->GetI(Lcoord);
         
         ASSERTL2(Lcoord[0] < -1,"Lcoord[0] < -1");
         ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1");
-        
-        I = ExpPointsProperties(0)->GetI(Lcoord);
 
-        val = Blas::Ddot(m_base[0]->GetNumPoints(), &((*I).GetPtr())[0], 1, &m_phys[0], 1);
+        val = Blas::Ddot(nquad, I->GetPtr(), 1, m_phys, 1);
         
         return val;    
     }
@@ -105,6 +102,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.21  2007/11/29 21:40:22  sherwin
+ * updates for MultiRegions and DG solver
+ *
  * Revision 1.20  2007/11/08 14:23:33  ehan
  * Removed white space
  *

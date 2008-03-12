@@ -126,10 +126,8 @@ namespace Nektar
 
         void GenMetricInfo();
 
-        DNekMatSharedPtr GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
+        DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
         DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
-
-        DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
         DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
         SpatialDomains::TriGeomSharedPtr m_geom;
@@ -283,19 +281,24 @@ namespace Nektar
         {
             return StdExpansion::L2();
         }
+
+        virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            return CreateStdMatrix(mkey);
+        }
         
-        virtual DNekScalMatSharedPtr v_GetLocMatrix(const MatrixKey &mkey)
+        virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
         {
             return m_matrixManager[mkey];
         }
 
-        virtual DNekScalMatSharedPtr v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
+        virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
         {
             MatrixKey mkey(mtype,DetShapeType(),*this,lambdaval,tau);
             return m_matrixManager[mkey];
         }
         
-        virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+        virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
         {
             return m_staticCondMatrixManager[mkey];
         }
@@ -314,6 +317,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.21  2008/02/28 10:04:11  sherwin
+ *    Modes for UDG codes
+ *
  *    Revision 1.20  2007/11/08 16:54:27  pvos
  *    Updates towards 2D helmholtz solver
  *

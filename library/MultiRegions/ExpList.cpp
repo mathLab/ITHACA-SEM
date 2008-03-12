@@ -39,29 +39,33 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-
-    ExpList::ExpList(void):
-        m_ncoeffs(0),
-        m_npoints(0),
-        m_transState(eNotSet),
-        m_physState(false)
-    {
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
-    }
-    
-
+        
+        ExpList::ExpList(void):
+            m_ncoeffs(0),
+            m_npoints(0),
+            m_coeffs(),
+            m_phys(),
+            m_transState(eNotSet),
+            m_physState(false),
+            m_exp(MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr())
+        {            
+        }
+        
+        
         ExpList::ExpList(const ExpList &in):
             m_ncoeffs(in.m_ncoeffs),
             m_npoints(in.m_npoints),
+            m_coeffs(m_ncoeffs),
+            m_phys(m_npoints),
             m_transState(eNotSet),
             m_physState(false),
             m_exp(in.m_exp)
         {
         }
-
-    ExpList::~ExpList()
-    {
-    }
+        
+        ExpList::~ExpList()
+        {
+        }
     
     
     /** \brief Integrate the physical point list \a inarray over region
@@ -115,12 +119,11 @@ namespace Nektar
         int    cnt  = 0;
         int    cnt1 = 0;
 
-        ConstArray<OneD,NekDouble> e_inarray;
         Array<OneD,NekDouble> e_outarray;
         
         for(i = 0; i < GetExpSize(); ++i)
         {
-                (*m_exp)[i]->IProductWRTBase(e_inarray = inarray+cnt,
+                (*m_exp)[i]->IProductWRTBase(inarray+cnt,
                                              e_outarray = outarray+cnt1);
                 cnt  += (*m_exp)[i]->GetTotPoints();
                 cnt1 += (*m_exp)[i]->GetNcoeffs();
@@ -155,9 +158,6 @@ namespace Nektar
             
             for(i= 0; i < GetExpSize(); ++i)
             {
-                Array<OneD, NekDouble> myout1((*m_exp)[i]->GetNcoeffs());
-                Array<OneD, NekDouble> myout2((*m_exp)[i]->GetNcoeffs());
-
                 e_out_d0 = out_d0 + cnt;
                 if(out_d1.num_elements())
                 {
@@ -169,7 +169,7 @@ namespace Nektar
                     e_out_d2 = out_d2 + cnt;
                 }
                 
-                (*m_exp)[i]->PhysDeriv(inarray,e_out_d0,e_out_d1,e_out_d2);
+                (*m_exp)[i]->PhysDeriv(inarray+cnt,e_out_d0,e_out_d1,e_out_d2);
                 cnt  += (*m_exp)[i]->GetTotPoints();
             }
         }
@@ -190,12 +190,12 @@ namespace Nektar
             int cnt  = 0;
             int cnt1 = 0;
             int i;
-            ConstArray<OneD,NekDouble> e_inarray;
+
             Array<OneD,NekDouble> e_outarray;
             
             for(i= 0; i < GetExpSize(); ++i)
             {
-                (*m_exp)[i]->FwdTrans(e_inarray  = inarray+cnt, 
+                (*m_exp)[i]->FwdTrans(inarray+cnt, 
                                       e_outarray = outarray+cnt1);
                 cnt  += (*m_exp)[i]->GetTotPoints();
                 cnt1 += (*m_exp)[i]->GetNcoeffs();
@@ -212,8 +212,8 @@ namespace Nektar
             IProductWRTBase(inarray,f);
 
             // Inverse mass matrix
-            DNekVec in (m_ncoeffs,f);
-            DNekVec out(m_ncoeffs,outarray,eWrapper);            
+            NekVector<const NekDouble> in(m_ncoeffs,f,eWrapper);
+            NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);            
             out = (*InvMass)*in;
 #endif
         }
@@ -222,7 +222,6 @@ namespace Nektar
         {
             int i;
             int n_exp = GetExpSize();
-            //Array<OneD,unsigned int> exp_size(n_exp);
             Array<OneD,unsigned int> exp_size(n_exp);
             DNekScalMatSharedPtr loc_mat;
             DNekScalBlkMatSharedPtr BlkMatrix;
@@ -233,19 +232,12 @@ namespace Nektar
                 exp_size[i] = (*m_exp)[i]->GetNcoeffs();
             }
 
-            unsigned int *exp_size_2 = new unsigned int[n_exp];
-            exp_size_2 = &exp_size[0];
-            BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size_2,exp_size_2);
-            
-            //BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,exp_size,exp_size);
-            //Cannot get this call to work with array of integers
+            BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(exp_size,exp_size);
             
             for(i = 0; i < n_exp; ++i)
             {
                 LocalRegions::MatrixKey mkey(mtype,(*m_exp)[i]->DetShapeType(),*((*m_exp)[i]),scalar,constant);
                 loc_mat = (*m_exp)[i]->GetLocMatrix(mkey);
-                
-                // cout << loc_mat->GetOwnedMatrix() << endl;
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
             
@@ -260,7 +252,6 @@ namespace Nektar
             int  i;
             int  cnt  = 0;
             int  cnt1 = 0;
-            ConstArray<OneD,NekDouble> e_inarray;
             Array<OneD,NekDouble>      e_outarray;
             
             for(i= 0; i < GetExpSize(); ++i)
@@ -268,7 +259,7 @@ namespace Nektar
 
                 StdRegions::StdMatrixKey mkey(gkey.GetLinSysType(),(*m_exp)[i]->DetShapeType(),
                                               *((*m_exp)[i]),gkey.GetFactor1());
-                (*m_exp)[i]->GeneralMatrixOp(mkey, e_inarray = inarray + cnt, 
+                (*m_exp)[i]->GeneralMatrixOp(mkey,inarray + cnt, 
                                              e_outarray = outarray+cnt);
                 cnt   += (*m_exp)[i]->GetNcoeffs();
             }        
@@ -361,8 +352,6 @@ namespace Nektar
             
             // Setup Block Matrix systems
             int n_exp = GetExpSize();
-            //Array<OneD,unsigned int> nbdry_size(n_exp);
-            //Array<OneD,unsigned int> nint_size(n_exp);
             Array<OneD,unsigned int> nbdry_size(n_exp);
             Array<OneD,unsigned int> nint_size(n_exp);
             DNekScalBlkMatSharedPtr BinvD;
@@ -375,20 +364,10 @@ namespace Nektar
                 nbdry_size[i] = (*m_exp)[i]->NumBndryCoeffs();
                 nint_size[i]  = (*m_exp)[i]->GetNcoeffs() - (*m_exp)[i]->NumBndryCoeffs();
             }
-
-            unsigned int *nbdry_size_2 = new unsigned int[n_exp];
-            unsigned int *nint_size_2  = new unsigned int[n_exp];
-            nbdry_size_2 = &nbdry_size[0];
-            nint_size_2  = &nint_size[0];
             
-            BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nbdry_size_2,nint_size_2);
-            invD  = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size_2,nint_size_2);
-            C     = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size_2,nbdry_size_2);
-
-            // needs to be formed as: 
-            //BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,bndry_size,nint_size);
-            //invDC = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size,nint_size]);
-            //invD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(n_exp,n_exp,nint_size,nint_bndry);
+            BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nbdry_size,nint_size);
+            invD  = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size,nint_size);
+            C     = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size,nbdry_size);
 
             DNekScalMatSharedPtr tmp_mat; 
 
@@ -534,12 +513,11 @@ namespace Nektar
             int  i;
             int  cnt  = 0;
             int  cnt1 = 0;
-            ConstArray<OneD,NekDouble> e_inarray;
             Array<OneD,NekDouble> e_outarray;
             
             for(i= 0; i < GetExpSize(); ++i)
             {
-                (*m_exp)[i]->BwdTrans(e_inarray = inarray + cnt, 
+                (*m_exp)[i]->BwdTrans(inarray + cnt, 
                                       e_outarray = outarray+cnt1);
                 cnt   += (*m_exp)[i]->GetNcoeffs();
                 cnt1  += (*m_exp)[i]->GetTotPoints();

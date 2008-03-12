@@ -40,19 +40,26 @@ namespace Nektar
     namespace MultiRegions
     {
 
-        ContField2D::ContField2D(void)
+        ContField2D::ContField2D(void):
+            ContExpList2D(),
+            m_bndConstraint(),
+            m_bndTypes()
         {
         }
 
         ContField2D::ContField2D(const ContField2D &In):
-        ContExpList2D(In)
+            ContExpList2D(In),
+            m_bndConstraint(In.m_bndConstraint),
+            m_bndTypes(In.m_bndTypes)
         {
         }
 
         ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
             SpatialDomains::BoundaryConditions &bcs, 
             const int bc_loc):
-            ContExpList2D(graph2D,false)  
+            ContExpList2D(graph2D,false)  ,
+            m_bndConstraint(),
+            m_bndTypes()
         {
             GenerateField2D(graph2D,bcs,bcs.GetVariable(bc_loc));
             m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
@@ -66,7 +73,9 @@ namespace Nektar
         ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
             SpatialDomains::BoundaryConditions &bcs, 
             const std::string variable):
-            ContExpList2D(graph2D,false)  
+            ContExpList2D(graph2D,false)  ,
+            m_bndConstraint(),
+            m_bndTypes()
         {
             GenerateField2D(graph2D,bcs,variable);
             m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
@@ -85,7 +94,9 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc,
                                  const LibUtilities::PointsType TriNb):
-            ContExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D,TriNb,false)  
+            ContExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D,TriNb,false)  ,
+            m_bndConstraint(),
+            m_bndTypes()
         {
             GenerateField2D(graph2D,bcs,bcs.GetVariable(bc_loc));
             m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
@@ -104,7 +115,9 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const std::string variable,
                                  const LibUtilities::PointsType TriNb):
-            ContExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D,TriNb,false)
+            ContExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D,TriNb,false),
+            m_bndConstraint(),
+            m_bndTypes()
         {
             GenerateField2D(graph2D,bcs,variable);
             m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
@@ -284,7 +297,7 @@ namespace Nektar
 
             //assume m_contCoeffs contains initial estimate
             // Set BCs in m_contCoeffs
-            Blas::Dcopy(m_contNcoeffs,&m_contCoeffs[0],1,&init[0],1);
+            Blas::Dcopy(m_contNcoeffs, m_contCoeffs, 1, init, 1);
             for(i = 0; i < m_bndConstraint.num_elements(); ++i)
             {
                 if(m_bndTypes[i] != SpatialDomains::eDirichlet)
@@ -303,11 +316,11 @@ namespace Nektar
             IProductWRTBase(Rhs);
             
             // apply scaling of forcing term; (typically used to negate helmholtz forcing);
-            Vmath::Smul(m_contNcoeffs,ScaleForcing,&m_contCoeffs[0],1,&m_contCoeffs[0],1);
+            Vmath::Smul(m_contNcoeffs, ScaleForcing, m_contCoeffs, 1, m_contCoeffs, 1);
 
             // Forcing function with Dirichlet conditions 
-            Vmath::Vsub(m_contNcoeffs,&m_contCoeffs[0],1,
-                &Dir_fce[0],1,&m_contCoeffs[0],1);
+            Vmath::Vsub(m_contNcoeffs, m_contCoeffs, 1,
+                Dir_fce, 1, m_contCoeffs, 1);
 
             // Forcing function with weak boundary conditions 
             for(i; i < m_bndConstraint.num_elements(); ++i)
@@ -329,9 +342,9 @@ namespace Nektar
             }
 
             // Recover solution by addinig intial conditons
-            Vmath::Zero(NumDirBcs,&m_contCoeffs[0],1);
-            Vmath::Vadd(m_contNcoeffs,&init[0],1,&m_contCoeffs[0],1,
-                &m_contCoeffs[0],1);
+            Vmath::Zero(NumDirBcs, m_contCoeffs, 1);
+            Vmath::Vadd(m_contNcoeffs, init, 1, m_contCoeffs, 1,
+                m_contCoeffs, 1);
 
             m_transState = eContinuous;
             m_physState = false;

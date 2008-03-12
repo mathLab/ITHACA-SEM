@@ -208,7 +208,7 @@ namespace Nektar
             *  \return returns the shared pointer to the basis in
             *  directin \a dir
             */
-            inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
+            inline const LibUtilities::BasisSharedPtr& GetBasis(int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than number of bases");
                 return(m_base[dir]);
@@ -236,7 +236,7 @@ namespace Nektar
             */
             inline void SetCoeffs(const ConstArray<OneD, NekDouble>& coeffs)
             {
-                Vmath::Vcopy(m_ncoeffs, &coeffs[0], 1, &m_coeffs[0], 1);
+                Vmath::Vcopy(m_ncoeffs, coeffs, 1, m_coeffs, 1);
             }
 
             /** \brief This function sets the i th coefficient  
@@ -284,7 +284,7 @@ namespace Nektar
             {
                 int nqtot = GetTotPoints();
 
-                Vmath::Vcopy(nqtot, &phys[0], 1, &m_phys[0], 1);
+                Vmath::Vcopy(nqtot, phys, 1, m_phys, 1);
             }
 
             /** \brief This function returns the type of basis used in the \a dir
@@ -707,20 +707,30 @@ namespace Nektar
             {
                 v_WriteToFile(outfile,dumpVar);
             }
+
+            inline DNekMatSharedPtr& GetStdMatrix(const StdMatrixKey &mkey) 
+            {
+                return m_stdMatrixManager[mkey];
+            }
+
+            inline DNekBlkMatSharedPtr& GetStdStaticCondMatrix(const StdMatrixKey &mkey) 
+            {
+                return m_stdStaticCondMatrixManager[mkey];
+            }
             
-            DNekScalMatSharedPtr GetLocMatrix(const MatrixType mtype, NekDouble lambdaval = NekUnsetDouble, NekDouble tau = NekUnsetDouble)
+            DNekScalMatSharedPtr& GetLocMatrix(const MatrixType mtype, NekDouble lambdaval = NekUnsetDouble, NekDouble tau = NekUnsetDouble)
             {
                 return v_GetLocMatrix(mtype,lambdaval,tau);
             }
             
 
-            DNekScalMatSharedPtr GetLocMatrix(const LocalRegions::MatrixKey &mkey)
+            DNekScalMatSharedPtr& GetLocMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 return v_GetLocMatrix(mkey);
             }
 
 
-            DNekScalBlkMatSharedPtr GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
+            DNekScalBlkMatSharedPtr& GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 return v_GetLocStaticCondMatrix(mkey);
             }
@@ -778,14 +788,14 @@ namespace Nektar
                 return v_GetCoordim(); 
             }
 
-            const ConstArray<OneD, int> GetBoundaryMap(void)
+            void GetBoundaryMap(Array<OneD, unsigned int> &outarray)
             {
-                return v_GetBoundaryMap();
+                return v_GetBoundaryMap(outarray);
             }
 
-            const ConstArray<OneD, int> GetInteriorMap(void)
+            void GetInteriorMap(Array<OneD, unsigned int> &outarray)
             {
-                return v_GetInteriorMap();
+                return v_GetInteriorMap(outarray);
             }
 
             // element boundary ordering 
@@ -822,6 +832,8 @@ namespace Nektar
             * 
             *  \return returns the mass matrix
             */
+
+            DNekMatSharedPtr StdExpansion::CreateBwdTransMatrix();
             DNekMatSharedPtr CreateGeneralMatrix(const StdMatrixKey &mkey);
 
             void GeneralMatrixOp(const StdMatrixKey &mkey, 
@@ -885,24 +897,26 @@ namespace Nektar
                 return v_GetMetricInfo();
             }
 
-            virtual DNekScalMatSharedPtr v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return boost::shared_ptr<DNekScalMat>();
+                return NullDNekScalMatSharedPtr;
+                //return boost::shared_ptr<DNekScalMat>();
             }
 
-            virtual DNekScalMatSharedPtr v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return boost::shared_ptr<DNekScalMat>();
+                return NullDNekScalMatSharedPtr;
+                //return boost::shared_ptr<DNekScalMat>();
             }
 
 
-            virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
+            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return boost::shared_ptr<DNekScalBlkMat>();
-
+                return NullDNekScalBlkMatSharedPtr;
+                //return boost::shared_ptr<DNekScalBlkMat>();
             }
 
             virtual StdRegions::EdgeOrientation v_GetEorient(int edge)
@@ -1105,14 +1119,13 @@ namespace Nektar
 
         protected:
 
-            int   m_numbases;   /**< Number of 1D basis defined in expansion */
-            Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
-
-            /** Total number of coefficients used in the expansion*/
-            int  m_ncoeffs;
-            Array<OneD, NekDouble> m_coeffs;   /**< Array containing expansion coefficients */
-            /** Array containing expansion evaluated at the quad points */
-            Array<OneD, NekDouble> m_phys;
+            int   m_numbases;                                 /**< Number of 1D basis defined in expansion */
+            Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */            
+            int  m_ncoeffs;                                   /**< Total number of coefficients used in the expansion */
+            Array<OneD, NekDouble> m_coeffs;                  /**< Array containing expansion coefficients */
+            Array<OneD, NekDouble> m_phys;                    /**< Array containing expansion evaluated at the quad points */
+            LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
+            LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
 
             bool StdMatManagerAlreadyCreated(const StdMatrixKey &mkey)
             {
@@ -1124,7 +1137,10 @@ namespace Nektar
                 return m_stdStaticCondMatrixManager.AlreadyCreated(mkey);
             }
          
-            DNekMatSharedPtr CreateStdMatrix(const StdMatrixKey &mkey);
+            DNekMatSharedPtr CreateStdMatrix(const StdMatrixKey &mkey)
+            {
+                return v_CreateStdMatrix(mkey);
+            }
 
             /** \brief Create the static condensation of a matrix when
                 using a boundary interior decomposition
@@ -1141,24 +1157,8 @@ namespace Nektar
             **/
             DNekBlkMatSharedPtr CreateStdStaticCondMatrix(const StdMatrixKey &mkey);
 
-            DNekMatSharedPtr GetStdMatrix(const StdMatrixKey &mkey) 
-            {
-                return m_stdMatrixManager[mkey];
-            }
-
-            DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdMatrixKey &mkey) 
-            {
-                return m_stdStaticCondMatrixManager[mkey];
-            }
-
-
         private:
-
-            LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
-            LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
-
             // Virtual functions
-
             virtual int v_GetNverts() const = 0;
             virtual int v_GetNedges() const = 0;
             virtual int v_GetNfaces() const = 0;
@@ -1205,7 +1205,7 @@ namespace Nektar
             virtual void   v_FwdTrans   (const ConstArray<OneD, NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray) = 0;
             virtual void   v_IProductWRTBase (const ConstArray<OneD, NekDouble>& inarray, 
-                          Array<OneD, NekDouble> &outarray) = 0;
+                          Array<OneD, NekDouble> &outarray) = 0;            
 
             virtual void   v_IProductWRTDerivBase (const int dir, 
                                                    const ConstArray<OneD,NekDouble>& inarray, 
@@ -1250,17 +1250,23 @@ namespace Nektar
 
             virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
             {
-                NEKERROR(ErrorUtil::efatal, "This function is has not "
+                NEKERROR(ErrorUtil::efatal, "This function has not "
                     "been defined for this shape");
             }
 
             virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey)  
             {
-                DNekMatSharedPtr returnval;
-
-                NEKERROR(ErrorUtil::efatal, "This function is has not "
+                NEKERROR(ErrorUtil::efatal, "This function has not "
                     "been defined for this element");
+                DNekMatSharedPtr returnval;
+                return returnval;
+            }
 
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function has not "
+                         "been defined for this element");
+                DNekMatSharedPtr returnval;
                 return returnval;
             }
             
@@ -1283,16 +1289,14 @@ namespace Nektar
                 return -1;
             }
 
-            virtual const ConstArray<OneD, int> v_GetBoundaryMap(void)
+            virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-                return ConstArray<OneD, int>();
             }
 
-            virtual const ConstArray<OneD, int> v_GetInteriorMap(void)
+            virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-                return ConstArray<OneD, int>();
             }
 
             // element boundary ordering 
@@ -1336,7 +1340,7 @@ namespace Nektar
             virtual boost::shared_ptr<SpatialDomains::GeomFactors> v_GetMetricInfo() const 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return boost::shared_ptr<SpatialDomains::GeomFactors>();
+                return  boost::shared_ptr<SpatialDomains::GeomFactors>();
 
             }
 
@@ -1352,6 +1356,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.75  2008/02/29 19:15:19  sherwin
+* Update for UDG stuff
+*
 * Revision 1.74  2008/02/16 06:00:37  ehan
 * Added interpolation 3D.
 *

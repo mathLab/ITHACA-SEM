@@ -82,7 +82,7 @@ namespace Nektar
       
       inline void SetPhys(ConstArray<OneD, NekDouble> &inarray)
       {
-          Vmath::Vcopy(m_npoints,&inarray[0],1,&m_phys[0],1);
+          Vmath::Vcopy(m_npoints, inarray, 1, m_phys, 1);
           m_physState = true;
       }
 
@@ -115,8 +115,7 @@ namespace Nektar
 
       inline int GetCoordim(int eid)
       {
-          ASSERTL2(eid <= (*m_exp).size(),"eid is larger than number of elements");
-          
+          ASSERTL2(eid <= (*m_exp).size(),"eid is larger than number of elements");          
           return (*m_exp)[eid]->GetCoordim();
       }
       
@@ -213,6 +212,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.30  2008/01/23 21:50:52  sherwin
+* Update from EdgeComponents to SegGeoms
+*
 * Revision 1.29  2007/12/17 13:05:04  sherwin
 * Made files compatible with modifications in StdMatrixKey which now holds constants
 *

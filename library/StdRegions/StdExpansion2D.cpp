@@ -75,29 +75,37 @@ namespace Nektar
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
-            DNekMatSharedPtr D0, D1;
-            Array<OneD, NekDouble> wsp = Array<OneD, NekDouble>(nquad0 * nquad1);
-
-            // copy inarray to wsp in case inarray is used as outarray 
-        Vmath::Vcopy(nquad0*nquad1, &inarray[0], 1, &wsp[0], 1);
-
-            D0 = ExpPointsProperties(0)->GetD();
-            D1 = ExpPointsProperties(1)->GetD();
 
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
-                //               Blas::Dgemm('T', 'T', nquad0, nquad1, nquad0, 1.0,
-                            Blas::Dgemm('N', 'N', nquad0, nquad1, nquad0, 1.0,//make colomn major 
-                            &(D0->GetPtr())[0], nquad0, &wsp[0], nquad0, 0.0,
-                            &outarray_d0[0], nquad0);
+                DNekMatSharedPtr D0 = ExpPointsProperties(0)->GetD();
+                DNekMat out(nquad0,nquad1,outarray_d0,eWrapper);
+                if(inarray==outarray_d0)
+                {
+                    DNekMat in(nquad0,nquad1,inarray,eCopy);  
+                    out = (*D0) * in;
+                }
+                else
+                {
+                    DNekMat in(nquad0,nquad1,inarray,eWrapper);  
+                    out = (*D0) * in;
+                }
             }
 
-            // calculate du/dx_1
-            if (outarray_d1.num_elements() > 0)
+            if (outarray_d1.num_elements() > 0) // calculate du/dx_1
             {
-                //               Blas:: Dgemm('T', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,
-                        Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,//make colomn major matrix                        
-                         &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
+                DNekMatSharedPtr D1 = ExpPointsProperties(1)->GetD();
+                DNekMat out(nquad0,nquad1,outarray_d1,eWrapper);
+                if(inarray==outarray_d1)
+                {
+                    DNekMat in(nquad0,nquad1,inarray,eCopy);  
+                    out = in * Transpose(*D1);
+                }
+                else
+                {
+                    DNekMat in(nquad0,nquad1,inarray,eWrapper);  
+                    out = in * Transpose(*D1);
+                }
             }
 
         }
@@ -108,9 +116,9 @@ namespace Nektar
             int i;
             int nq0 = m_base[0]->GetNumPoints();
             int nq1 = m_base[1]->GetNumPoints();
-            Array<OneD, NekDouble> wsp1 = Array<OneD, NekDouble>(nq1);
+            Array<OneD, NekDouble> wsp1(nq1);
 
-            DNekMatSharedPtr I;
+            DNekMatSharedPtr I = ExpPointsProperties(0)->GetI(coords);;
 
             ASSERTL2(coords[0] < -1, "coord[0] < -1");
             ASSERTL2(coords[0] > 1, "coord[0] >  1");
@@ -118,17 +126,15 @@ namespace Nektar
             ASSERTL2(coords[1] > 1, "coord[1] >  1");
 
             // interpolate first coordinate direction
-            I = ExpPointsProperties(0)->GetI(coords);
             for (i = 0; i < nq1;++i)
-        {
+            {
                 wsp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1, 
-                     &m_phys[i * nq0], 1);
-        }
+                                     &m_phys[i * nq0], 1);
+            }
 
             // interpolate in second coordinate direction
             I = ExpPointsProperties(1)->GetI(coords+1);
-
-            val = Blas::Ddot(nq1, &(I->GetPtr())[0], 1, &wsp1[0], 1);
+            val = Blas::Ddot(nq1, I->GetPtr(), 1, wsp1, 1);
 
             return val;
         }
@@ -145,7 +151,7 @@ namespace Nektar
             NekDouble Int = 0.0;
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nquad0 * nquad1);
+            Array<OneD, NekDouble> tmp(nquad0 * nquad1);
 
             // multiply by integration constants
             for (i = 0; i < nquad1; ++i)
@@ -159,7 +165,7 @@ namespace Nektar
                 Vmath::Vmul(nquad1, &tmp[0]+ i, nquad0, w1.get(), 1,
                             &tmp[0] + i, nquad0);
             }
-            Int = Vmath::Vsum(nquad0 * nquad1, &tmp[0], 1);
+            Int = Vmath::Vsum(nquad0 * nquad1, tmp, 1);
 
             return Int;
         }
@@ -170,6 +176,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.18  2007/11/08 16:55:14  pvos
+* Updates towards 2D helmholtz solver
+*
 * Revision 1.17  2007/10/15 20:37:14  ehan
 * Make changes of column major matrix
 *

@@ -150,11 +150,10 @@ namespace Nektar
                 ValueType &operator[](typename boost::call_traits<KeyType>::const_reference key)
                 {
                     typename ValueContainer::iterator found = m_values->find(key);
-                    static ValueType result;
 
                     if( found != m_values->end() )
                     {
-                        result = (*found).second;
+                        return (*found).second;
                     }
                     else
                     {
@@ -168,18 +167,18 @@ namespace Nektar
 
                         if( f )
                         {
-                            result = f(key);
-                            (*m_values)[key] = result;
+                            (*m_values)[key] = f(key);
+                            return (*m_values)[key];
                         }
                         else
                         {
                             std::string keyAsString = boost::lexical_cast<std::string>(key);
                             std::string message = std::string("No create func found for key ") + keyAsString;
                             NEKERROR(ErrorUtil::efatal, message.c_str());
+                            static ValueType result;
+                            return result;
                         }
                     }
-
-                    return result;
                 }
                 
             private:

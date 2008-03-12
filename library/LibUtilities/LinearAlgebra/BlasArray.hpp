@@ -51,6 +51,8 @@ namespace Blas
                    double *y, const int& incy);
         void   F77NAME(daxpy) (const int& n, const double& alpha, const double *x,
                    const int& incx, const double *y, const int& incy);
+        double F77NAME(ddot)  (const int& n, const double *x,  const int& incx,
+                   const double *y, const int& incy);
     }
 
 #ifdef NEKTAR_USING_BLAS
@@ -70,10 +72,20 @@ namespace Blas
         
         F77NAME(daxpy)(n,alpha,&x[0],incx,&y[0],incy);
     }
+
+    /// \brief BLAS level 1: output =   \f$ x^T  y \f$
+    static double Ddot (const int& n, const Nektar::ConstArray <Nektar::OneD,double> &x, const int& incx,
+              const Nektar::ConstArray <Nektar::OneD,double> &y, const int& incy)
+    {
+        return F77NAME(ddot)(n,&x[0],incx,&y[0],incy);
+    }
 #endif // NEKTAR_USING BLAS
 }
 #endif // NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BLASARRAY_HPP
 
 /***
 $Log: BlasArray.hpp,v $
+Revision 1.1  2008/02/28 09:57:08  sherwin
+Added array version of some routines
+
 **/

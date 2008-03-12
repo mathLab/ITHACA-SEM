@@ -116,9 +116,9 @@ namespace Nektar
                                  Array<OneD, NekDouble>          &outarray);
             
         protected:
+            LocalToGlobalMapSharedPtr m_locToGloMap;
       	    int                       m_contNcoeffs;
 	    Array<OneD, NekDouble>    m_contCoeffs;
-            LocalToGlobalMapSharedPtr m_locToGloMap;
             GlobalLinSysMapShPtr      m_globalMat;
                         
         private:
@@ -136,6 +136,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.h,v $
+* Revision 1.8  2008/01/20 16:31:11  bnelson
+* Fixed linux compile errors.
+*
 * Revision 1.7  2007/12/17 13:05:04  sherwin
 * Made files compatible with modifications in StdMatrixKey which now holds constants
 *

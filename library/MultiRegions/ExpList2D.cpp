@@ -40,7 +40,8 @@ namespace Nektar
     namespace MultiRegions
     {
         
-        ExpList2D::ExpList2D()
+        ExpList2D::ExpList2D():
+            ExpList()
         {
         }
         
@@ -51,8 +52,6 @@ namespace Nektar
         ExpList2D::ExpList2D(const ExpList2D &In):
             ExpList(In)
         {
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
         
         ExpList2D::ExpList2D(const LibUtilities::BasisKey &TriBa, 
@@ -60,7 +59,8 @@ namespace Nektar
                              const LibUtilities::BasisKey &QuadBa, 
                              const LibUtilities::BasisKey &QuadBb, 
                              const SpatialDomains::MeshGraph2D &graph2D,
-                             const LibUtilities::PointsType TriNb)
+                             const LibUtilities::PointsType TriNb):
+            ExpList()
         {
             int i,j;
             int nel;
@@ -70,13 +70,7 @@ namespace Nektar
             SpatialDomains::Composite comp;
 
             const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-            
-            m_ncoeffs = 0;
-            m_npoints = 0;
-            
-            m_transState = eNotSet; 
-            m_physState  = false;
-            
+                        
             for(i = 0; i < expansions.size(); ++i)
             {
                 SpatialDomains::TriGeomSharedPtr TriangleGeom;
@@ -119,7 +113,8 @@ namespace Nektar
 
 
 
-        ExpList2D::ExpList2D(SpatialDomains::MeshGraph2D &graph2D)
+        ExpList2D::ExpList2D(SpatialDomains::MeshGraph2D &graph2D):
+            ExpList()
         {
             int i,j;
             int nel;
@@ -128,13 +123,7 @@ namespace Nektar
             LocalRegions::QuadExpSharedPtr quad;
             SpatialDomains::Composite comp;
 
-            const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();            
-            
-            m_ncoeffs = 0;
-            m_npoints = 0;
-            
-            m_transState = eNotSet; 
-            m_physState  = false;
+            const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();    
             
             for(i = 0; i < expansions.size(); ++i)
             {
@@ -179,6 +168,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.15  2007/12/06 22:52:30  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.14  2007/07/20 02:04:12  bnelson
 * Replaced boost::shared_ptr with Nektar::ptr
 *

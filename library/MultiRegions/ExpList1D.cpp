@@ -40,7 +40,8 @@ namespace Nektar
     namespace MultiRegions
     {
     
-        ExpList1D::ExpList1D()
+        ExpList1D::ExpList1D():
+            ExpList()
         {
         }
         
@@ -51,30 +52,20 @@ namespace Nektar
         ExpList1D::ExpList1D(const ExpList1D &In):
             ExpList(In)
         {
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
         ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba,
-                             const SpatialDomains::MeshGraph1D &graph1D)
+                             const SpatialDomains::MeshGraph1D &graph1D):
+            ExpList()
         {
             int i,j;
-            int nel;
             LocalRegions::SegExpSharedPtr seg;
-            SpatialDomains::Composite comp;
-            
-            m_ncoeffs = 0;
-            m_npoints = 0;
-            
-            m_transState = eNotSet; 
-            m_physState  = false;
+            SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
             const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
             
             for(i = 0; i < expansions.size(); ++i)
-            {
-                SpatialDomains::SegGeomSharedPtr SegmentGeom;
-                
+            {                
                 if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(expansions[i]->m_GeomShPtr))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba,SegmentGeom);
@@ -93,24 +84,17 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);            
         }
 
-        ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D)
+        ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D):
+            ExpList()
         {
             int i;
-            int nel;
             LocalRegions::SegExpSharedPtr seg;
-            SpatialDomains::Composite comp;
-            
-            m_ncoeffs = 0;
-            m_npoints = 0;
-            
-            m_transState = eNotSet; 
-            m_physState  = false;
+            SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
             const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
             
             for(i = 0; i < expansions.size(); ++i)
             {
-                SpatialDomains::SegGeomSharedPtr SegmentGeom;
                 LibUtilities::BasisKey bkey = graph1D.GetBasisKey(expansions[i],0);
 
                 if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(expansions[i]->m_GeomShPtr))
@@ -132,59 +116,43 @@ namespace Nektar
             
         }
 
-        ExpList1D::ExpList1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph2D &graph2D)
+        ExpList1D::ExpList1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph2D &graph2D):
+            ExpList()
         {
             int i,j;
-            int nel;
-            int edgeid;
             SpatialDomains::Composite comp;
-            SpatialDomains::EdgeComponentSharedPtr edgeComp;
-            SpatialDomains::VertexComponentSharedPtr vert1;
-            SpatialDomains::VertexComponentSharedPtr vert2;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
-            
-            m_ncoeffs = 0;
-            m_npoints = 0;
-            
-            m_transState = eNotSet; 
-            m_physState  = false;
+            SpatialDomains::ElementEdgeVectorSharedPtr edgeElement;
             
             for(i = 0; i < domain.size(); ++i)
             {
                 comp = domain[i];
-                // This line should be removed
-                // are we sure that flag should be set to zero (for triangles for example?)
-                LibUtilities::BasisKey bkey = graph2D.GetBasisKey((graph2D.GetExpansions())[0],0);
                 
                 for(j = 0; j < comp->size(); ++j)
                 {                    
-                    if(edgeComp = boost::dynamic_pointer_cast<SpatialDomains::EdgeComponent>((*comp)[j]))
+                    if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*comp)[j]))
                     {
-//                                 edgeExp = graph2D.GetExpansion(edgeComp);
-//                                 // are we sure that flag should be set to zero (for triangles for example?)                        
-//                                 LibUtilities::BasisKey bkey = graph2D.GetBasisKey(edgeExp,0);
+                        edgeElement = graph2D.GetElementsFromEdge(SegmentGeom);
+                        ASSERTL1(edgeElement->size()==1,"This boundary edge is bounded by more than one element");
+                        // (are we sure that flag should be set to zero (for triangles or anisotropic expansions for example?))
+                        LibUtilities::BasisKey bkey = graph2D.GetBasisKey(graph2D.GetExpansion((*edgeElement)[0]->m_Element),0);
 
-                        edgeid = edgeComp->GetEid();
-                        vert1 = edgeComp->GetVertex(0);
-                        vert2 = edgeComp->GetVertex(1);
-                        SegmentGeom = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(edgeid,vert1,vert2);
                         seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
-                        (*m_exp).push_back(seg);   
+                        (*m_exp).push_back(seg);  
+
+                        m_ncoeffs += bkey.GetNumModes();
+                        m_npoints += bkey.GetNumPoints();
                     }
                     else
                     {
                         ASSERTL0(false,"dynamic cast to a EdgeComp failed");
                     }  
-                }
-                
-                m_ncoeffs += (comp->size())*bkey.GetNumModes();
-                m_npoints += (comp->size())*bkey.GetNumPoints();
+                }                
             } 
             
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
-            
+            m_phys   = Array<OneD, NekDouble>(m_npoints);            
         }
 
     } //end of namespace
@@ -192,6 +160,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.22  2007/12/06 22:52:30  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.21  2007/11/07 20:29:53  jfrazier
 * Modified to use new expansion list contained in meshgraph.
 *

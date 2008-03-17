@@ -308,6 +308,8 @@ namespace Nektar
             }  
 
         };
+        typedef boost::shared_ptr<StdHexExp> StdHexExpSharedPtr;
+
 
     } //end of namespace
 } //end of namespace
@@ -316,6 +318,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.14  2008/01/20 06:09:37  bnelson
+* Fixed visual c++ compile errors.
+*
 * Revision 1.13  2008/01/08 22:30:43  ehan
 * Clean up the codes.
 *

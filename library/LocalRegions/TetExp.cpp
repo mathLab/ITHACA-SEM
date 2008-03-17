@@ -578,48 +578,6 @@ namespace Nektar
             }
         }
 
-	DNekMatSharedPtr TetExp::GetStdMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            // Need to check if matrix exists in stdMatrixManager.
-            // If not then make a local expansion with standard metric info
-            // and generate matrix. Otherwise direct call is OK. 
-            if(!StdMatManagerAlreadyCreated(mkey))
-            {
-                LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-                LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-		LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-
-                TetExpSharedPtr tmp = MemoryManager<TetExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-
-                return tmp->StdTetExp::GetStdMatrix(mkey);
-            }
-            else
-            {
-                return StdTetExp::GetStdMatrix(mkey);
-            }
-        }
-
-	 DNekBlkMatSharedPtr TetExp::GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            // Need to check if matrix exists in stdMatrixManager.
-            // If not then make a local expansion with standard metric info
-            // and generate matrix. Otherwise direct call is OK. 
-            if(!StdMatManagerAlreadyCreated(mkey))
-            {
-                LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-                LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-	        LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-
-                TetExpSharedPtr tmp = MemoryManager<TetExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-
-                return tmp->StdTetExp::GetStdStaticCondMatrix(mkey);
-            }
-            else
-            {
-                return StdTetExp::GetStdStaticCondMatrix(mkey);
-            }
-        }
-
 	NekDouble TetExp::PhysEvaluate(const ConstArray<OneD,NekDouble> &coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
@@ -632,6 +590,15 @@ namespace Nektar
             return StdTetExp::PhysEvaluate(Lcoord);
         }
 
+      DNekMatSharedPtr TetExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+      {
+          LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
+          LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
+          LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+          StdRegions::StdTetExpSharedPtr tmp = MemoryManager<StdTetExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
+          
+          return tmp->GetStdMatrix(mkey); 
+      }
 
 	DNekScalMatSharedPtr TetExp::CreateMatrix(const MatrixKey &mkey)
         {
@@ -804,8 +771,10 @@ namespace Nektar
                     DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
                     DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
 
-                    const ConstArray<OneD,int> bmap = GetBoundaryMap();
-                    const ConstArray<OneD,int> imap = GetInteriorMap();
+                    Array<OneD,unsigned int> bmap(nbdry);
+                    Array<OneD,unsigned int> imap(nint);
+                    GetBoundaryMap(bmap);
+                    GetInteriorMap(imap); 
 
                     for(i = 0; i < nbdry; ++i)
                     {
@@ -861,6 +830,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.4  2008/02/16 05:52:49  ehan
+ *    Added PhysDeriv and virtual functions.
+ *
  *    Revision 1.3  2008/02/05 00:40:57  ehan
  *    Added initial tetrahedral expansion.
  *

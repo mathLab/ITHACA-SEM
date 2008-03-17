@@ -303,8 +303,8 @@ namespace Nektar
                 WriteCoeffsToFile(outfile);
             }
 
-        };
-    
+        };    
+        typedef boost::shared_ptr<StdTetExp> StdTetExpSharedPtr;
     } //end of namespace
 } //end of namespace
 
@@ -312,6 +312,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.11  2008/01/08 22:48:41  ehan
+ * Fixed the call signature of a shadowed virtual function: Added a const qualifier to the passed parameter StdMatrixKey in the virtual function v_GenMatrix().  This enables Nektar to generate the correct standard mass matrix at initialization time.
+ *
  * Revision 1.10  2007/12/17 13:03:51  sherwin
  * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
  *

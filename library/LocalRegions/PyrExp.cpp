@@ -575,48 +575,6 @@ namespace Nektar
             }
         }
 
-	DNekMatSharedPtr PyrExp::GetStdMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            // Need to check if matrix exists in stdMatrixManager.
-            // If not then make a local expansion with standard metric info
-            // and generate matrix. Otherwise direct call is OK. 
-            if(!StdMatManagerAlreadyCreated(mkey))
-            {
-                LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-                LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-		LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-
-                PyrExpSharedPtr tmp = MemoryManager<PyrExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-
-                return tmp->StdPyrExp::GetStdMatrix(mkey);
-            }
-            else
-            {
-                return StdPyrExp::GetStdMatrix(mkey);
-            }
-        }
-
-	 DNekBlkMatSharedPtr PyrExp::GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            // Need to check if matrix exists in stdMatrixManager.
-            // If not then make a local expansion with standard metric info
-            // and generate matrix. Otherwise direct call is OK. 
-            if(!StdMatManagerAlreadyCreated(mkey))
-            {
-                LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-                LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-	        LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-
-                PyrExpSharedPtr tmp = MemoryManager<PyrExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-
-                return tmp->StdPyrExp::GetStdStaticCondMatrix(mkey);
-            }
-            else
-            {
-                return StdPyrExp::GetStdStaticCondMatrix(mkey);
-            }
-        }
-
 	NekDouble PyrExp::PhysEvaluate(const ConstArray<OneD,NekDouble> &coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
@@ -628,6 +586,16 @@ namespace Nektar
 
             return StdPyrExp::PhysEvaluate(Lcoord);
         }
+
+      DNekMatSharedPtr PyrExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+      {
+          LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
+          LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
+          LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+          StdRegions::StdPyrExpSharedPtr tmp = MemoryManager<StdPyrExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
+          
+          return tmp->GetStdMatrix(mkey); 
+      }
 
 	DNekScalMatSharedPtr PyrExp::CreateMatrix(const MatrixKey &mkey)
         {
@@ -799,8 +767,10 @@ namespace Nektar
                     DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
                     DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
 
-                    const ConstArray<OneD,int> bmap = GetBoundaryMap();
-                    const ConstArray<OneD,int> imap = GetInteriorMap();
+                    Array<OneD,unsigned int> bmap(nbdry);
+                    Array<OneD,unsigned int> imap(nint);
+                    GetBoundaryMap(bmap);
+                    GetInteriorMap(imap); 
 
                     for(i = 0; i < nbdry; ++i)
                     {
@@ -853,6 +823,9 @@ namespace Nektar
 
 /** 
  *    $Log: PyrExp.cpp,v $
+ *    Revision 1.4  2008/02/16 05:51:22  ehan
+ *    Added PhysDeriv and virtual functions.
+ *
  *    Revision 1.3  2008/02/05 00:39:45  ehan
  *    Added initial pyramidic expansion.
  *

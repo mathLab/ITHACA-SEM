@@ -242,8 +242,8 @@ namespace Nektar
         } 
         
         
-    };
-    
+    };    
+        typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace
 } //end of namespace
 
@@ -251,6 +251,9 @@ namespace Nektar
 
 /**
  * $Log: StdPyrExp.h,v $
+ * Revision 1.9  2008/01/20 06:09:38  bnelson
+ * Fixed visual c++ compile errors.
+ *
  * Revision 1.8  2008/01/08 22:48:32  ehan
  * Fixed the call signature of a shadowed virtual function: Added a const qualifier to the passed parameter StdMatrixKey in the virtual function v_GenMatrix().  This enables Nektar to generate the correct standard mass matrix at initialization time.
  *

@@ -127,11 +127,8 @@ namespace Nektar
 			     const ConstArray<OneD,NekDouble> &inarray,
 			     Array<OneD,NekDouble> &outarray);
 
-
-	DNekMatSharedPtr& GetStdMatrix(const StdRegions::StdMatrixKey &mkey);
-        DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
-
-        DNekBlkMatSharedPtr& GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
+        DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
+        DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
         DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
 	SpatialDomains::PyrGeomSharedPtr m_geom;
@@ -249,10 +246,14 @@ namespace Nektar
             return StdExpansion::L2(sol);
         }
 
-
         virtual NekDouble v_L2()
         {
             return StdExpansion::L2();
+        }
+
+        virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            return CreateStdMatrix(mkey);
         }
 
         virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
@@ -282,6 +283,9 @@ namespace Nektar
 
 /**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.10  2008/03/12 15:24:29  pvos
+ *    Clean up of the code
+ *
  *    Revision 1.9  2008/02/16 05:51:36  ehan
  *    Added PhysDeriv and virtual functions.
  *

@@ -573,48 +573,7 @@ namespace Nektar
                 outfile << m_phys[i] << std::endl;
             }
         }
-
-	DNekMatSharedPtr PrismExp::GetStdMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            // Need to check if matrix exists in stdMatrixManager.
-            // If not then make a local expansion with standard metric info
-            // and generate matrix. Otherwise direct call is OK. 
-            if(!StdMatManagerAlreadyCreated(mkey))
-            {
-                LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-                LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-		LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-
-                PrismExpSharedPtr tmp = MemoryManager<PrismExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-
-                return tmp->StdPrismExp::GetStdMatrix(mkey);
-            }
-            else
-            {
-                return StdPrismExp::GetStdMatrix(mkey);
-            }
-        }
-
-	 DNekBlkMatSharedPtr PrismExp::GetStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            // Need to check if matrix exists in stdMatrixManager.
-            // If not then make a local expansion with standard metric info
-            // and generate matrix. Otherwise direct call is OK. 
-            if(!StdMatManagerAlreadyCreated(mkey))
-            {
-                LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-                LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-	        LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-
-                PrismExpSharedPtr tmp = MemoryManager<PrismExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-
-                return tmp->StdPrismExp::GetStdStaticCondMatrix(mkey);
-            }
-            else
-            {
-                return StdPrismExp::GetStdStaticCondMatrix(mkey);
-            }
-        }
+	
 
 	NekDouble PrismExp::PhysEvaluate(const ConstArray<OneD,NekDouble> &coord)
         {
@@ -627,6 +586,16 @@ namespace Nektar
 
             return StdPrismExp::PhysEvaluate(Lcoord);
         }
+
+      DNekMatSharedPtr PrismExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+      {
+          LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
+          LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
+          LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+          StdRegions::StdPrismExpSharedPtr tmp = MemoryManager<StdPrismExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
+          
+          return tmp->GetStdMatrix(mkey); 
+      }
 
 
 	DNekScalMatSharedPtr PrismExp::CreateMatrix(const MatrixKey &mkey)
@@ -801,8 +770,10 @@ namespace Nektar
                     DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
                     DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
 
-                    const ConstArray<OneD,int> bmap = GetBoundaryMap();
-                    const ConstArray<OneD,int> imap = GetInteriorMap();
+                    Array<OneD,unsigned int> bmap(nbdry);
+                    Array<OneD,unsigned int> imap(nint);
+                    GetBoundaryMap(bmap);
+                    GetInteriorMap(imap);
 
                     for(i = 0; i < nbdry; ++i)
                     {
@@ -857,6 +828,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.cpp,v $
+ *    Revision 1.4  2008/02/16 05:50:40  ehan
+ *    Added PhysDeriv and virtual functions.
+ *
  *    Revision 1.3  2008/02/05 00:38:18  ehan
  *    Added initial prismatic expansion.
  *

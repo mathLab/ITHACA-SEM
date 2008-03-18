@@ -103,7 +103,7 @@ namespace Nektar
                        Array<OneD, NekDouble> &out_d2);
 
       /// Return Shape of region, using  ShapeType enum list. i.e. Pyramid
-      StdRegions::ShapeType DetShapeType()
+      StdRegions::ShapeType DetShapeType() const
       {
     	return StdRegions::ePyramid;
       }
@@ -283,6 +283,9 @@ namespace Nektar
 
 /**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.11  2008/03/17 10:35:15  pvos
+ *    Clean up of the code
+ *
  *    Revision 1.10  2008/03/12 15:24:29  pvos
  *    Clean up of the code
  *

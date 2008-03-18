@@ -101,7 +101,7 @@ namespace Nektar
                        Array<OneD, NekDouble> &out_d2);
 
       /// Return Shape of region, using  ShapeType enum list. i.e. Prism
-      StdRegions::ShapeType DetShapeType() 
+      StdRegions::ShapeType DetShapeType() const
       { 
     	 return StdRegions::ePrism; 
       }
@@ -139,7 +139,7 @@ namespace Nektar
     private:
       PrismExp();
 
-	virtual StdRegions::ShapeType v_DetShapeType() const
+	virtual StdRegions::ShapeType v_DetShapeType() const 
 	{
 	return DetShapeType();
 	}
@@ -279,6 +279,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.h,v $
+ *    Revision 1.10  2008/03/17 10:35:15  pvos
+ *    Clean up of the code
+ *
  *    Revision 1.9  2008/03/12 15:24:29  pvos
  *    Clean up of the code
  *

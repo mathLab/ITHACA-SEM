@@ -131,27 +131,6 @@ namespace Nektar
         {
         }
 
-        DNekMatSharedPtr StdExpansion::CreateBwdTransMatrix()
-        {
-            DNekMatSharedPtr returnval;
-            int nq = GetTotPoints();
-            Array<OneD, NekDouble> tmp(nq);
-            
-            returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
-            DNekMat &Mat = *returnval; 
-            
-            Array<OneD,NekDouble> tmp2;
-            
-            for(int i=0; i<m_ncoeffs; ++i)
-            {                        
-                v_FillMode(i,tmp);                        
-                //Vmath::Vcopy(nq,&tmp[0],1,&(Mat.GetPtr())[0]+i*nq,1);
-                Vmath::Vcopy(nq,tmp,1,tmp2 = Mat.GetPtr() + i*nq,1);
-                //Vmath::Vcopy(nq,tmp,1,Mat.GetPtr(),i*nq,1);
-            }
-            return returnval;
-        } 
-
         NekDouble StdExpansion::Linf(const ConstArray<OneD, NekDouble>& sol)
         {
             NekDouble  val;
@@ -834,6 +813,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.65  2008/03/12 15:25:09  pvos
+* Clean up of the code
+*
 * Revision 1.63  2008/02/29 19:15:19  sherwin
 * Update for UDG stuff
 *

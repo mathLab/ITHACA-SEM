@@ -123,7 +123,8 @@ namespace Nektar
             SpatialDomains::Composite comp;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
-            SpatialDomains::ElementEdgeVectorSharedPtr edgeElement;
+            // SpatialDomains::ElementEdgeVectorSharedPtr edgeElement;
+            //SpatialDomains::ExpansionShPtr exp;
             
             for(i = 0; i < domain.size(); ++i)
             {
@@ -133,12 +134,27 @@ namespace Nektar
                 {                    
                     if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*comp)[j]))
                     {
-                        edgeElement = graph2D.GetElementsFromEdge(SegmentGeom);
-                        ASSERTL1(edgeElement->size()==1,"This boundary edge is bounded by more than one element");
-                        // (are we sure that flag should be set to zero (for triangles or anisotropic expansions for example?))
-                        LibUtilities::BasisKey bkey = graph2D.GetBasisKey(graph2D.GetExpansion((*edgeElement)[0]->m_Element),0);
+                        // edgeElement = graph2D.GetElementsFromEdge(SegmentGeom);
+//                         ASSERTL1(edgeElement->size()==1,"This boundary edge is bounded by more than one element");
+//                         exp = graph2D.GetExpansion((*edgeElement)[0]->m_Element);
+//                         // (are we sure that flag should be set to zero (for triangles or anisotropic expansions for example?))
+//                         LibUtilities::BasisKey bkey = graph2D.GetBasisKey(exp,0);
+
+                        LibUtilities::BasisKey bkey = graph2D.GetEdgeBasisKey(SegmentGeom);
+
+                        // Do a fix for nodal triangular expansions
+                      //   if((exp->m_ExpansionType == SpatialDomains::eNodal)&&(bkey.GetBasisType()!=LibUtilities::eGLL_Lagrange))
+//                         {
+//                             LibUtilities::BasisKey bkey2(LibUtilities::eGLL_Lagrange,bkey.GetNumModes(),bkey.GetPointsKey());
+//                             seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey2, SegmentGeom);
+//                         }
+//                         else
+//                         {
+//                             seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
+//                         }
 
                         seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
+
                         (*m_exp).push_back(seg);  
 
                         m_ncoeffs += bkey.GetNumModes();
@@ -160,6 +176,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.23  2008/03/12 15:25:45  pvos
+* Clean up of the code
+*
 * Revision 1.22  2007/12/06 22:52:30  pvos
 * 2D Helmholtz solver updates
 *

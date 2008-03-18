@@ -40,26 +40,22 @@
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdTriExp.h>
-
-#include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdTriExp.h>
 #include <StdRegions/LocalRegionsDeclarations.hpp>
 
 namespace Nektar
 {
     namespace StdRegions
     {
-
-        class StdNodalTriExp: public StdTriExp
-        {
-
-        public:
-
+    class StdNodalTriExp: public StdTriExp
+        {            
+        public:            
             //Constructors
+            StdNodalTriExp(void);
+            
             StdNodalTriExp(const LibUtilities::BasisKey &Ba, 
-               const LibUtilities::BasisKey &Bb,
-               const LibUtilities::PointsType Ntype);
-        
+                           const LibUtilities::BasisKey &Bb,
+                           const LibUtilities::PointsType Ntype);
+            
             //Copy Constructor
             StdNodalTriExp(const StdNodalTriExp &T);
 
@@ -76,80 +72,88 @@ namespace Nektar
             ///////////////////////////
 
             void NodalToModal();
-
-            void NodalToModal(Array<OneD, NekDouble> &in_out_array);
+            void NodalToModal(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray);
 
             void NodalToModalTranspose();
-            void NodalToModalTranspose(Array<OneD, NekDouble> &in_out_array);
+            void NodalToModalTranspose(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray);
 
             void ModalToNodal();
-            void ModalToNodal(Array<OneD, NekDouble> &in_out_array);
+            void ModalToNodal(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray);
 
             void GetNodalPoints(ConstArray<OneD, NekDouble> &x, 
-                ConstArray<OneD, NekDouble> &y)
-        {
-        LibUtilities::PointsManager()[*m_nodalPointsKey]->GetPoints(x,y);
+                                ConstArray<OneD, NekDouble> &y)
+            {
+                LibUtilities::PointsManager()[*m_nodalPointsKey]->GetPoints(x,y);
             }
-
+            
             //////////////////////////////
             /// Integration Methods
             //////////////////////////////
 
             void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
-                 Array<OneD, NekDouble> &outarray);
+                                 Array<OneD, NekDouble> &outarray);
 
-        /** \brief Fill outarray with nodal mode \a mode of expansion
-         *   and put in m_phys
-         */
+            void IProductWRTDerivBase(const int dir, 
+                                      const ConstArray<OneD, NekDouble>& inarray, 
+                                      Array<OneD, NekDouble> & outarray);
+            
+            /** \brief Fill outarray with nodal mode \a mode of expansion
+             *   and put in m_phys
+             */
             void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
-
-        void  MapTo(const int edge_ncoeffs,
-            const LibUtilities::BasisType Btype, 
-            const int eid, 
-            const EdgeOrientation eorient,
-            StdExpMap &Map);
-
-        void  MapTo_ModalFormat(const int edge_ncoeffs, 
-                    const LibUtilities::BasisType Btype, 
-                    const int eid, 
-                    const EdgeOrientation eorient,
-                    StdExpMap &Map);
-
+            
+            void  MapTo(const int edge_ncoeffs,
+                        const LibUtilities::BasisType Btype, 
+                        const int eid, 
+                        const EdgeOrientation eorient,
+                        StdExpMap &Map);
+            
+            void  MapTo_ModalFormat(const int edge_ncoeffs, 
+                                    const LibUtilities::BasisType Btype, 
+                                    const int eid, 
+                                    const EdgeOrientation eorient,
+                                    StdExpMap &Map);
+            
             //-----------------------------
             // Evaluations Methods
             //-----------------------------
+            
+            void BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
+            void FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
 
-        void BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
-              Array<OneD, NekDouble> &outarray);
-        void FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
-              Array<OneD, NekDouble> &outarray);
-        
-        protected:
+            void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
 
-        /** \brief Calculate the inner product of inarray with respect to
-         *  the basis B=base0[p]*base1[pq] and put into outarray
-         *
-         *  This function uses the StdTriExp routine and then 
-         *  calls ModalToNodal to transform to Nodal basis
-         */
-        void IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
-                 const ConstArray<OneD, NekDouble>& base1,
-                 const ConstArray<OneD, NekDouble>& inarray, 
-                 Array<OneD, NekDouble> &outarray);
-
+            void GetInteriorMap(Array<OneD, unsigned int>& outarray);
+            
+        protected:            
             boost::shared_ptr<LibUtilities::PointsKey> m_nodalPointsKey;
 
+            /** \brief Calculate the inner product of inarray with respect to
+             *  the basis B=base0[p]*base1[pq] and put into outarray
+             *
+             *  This function uses the StdTriExp routine and then 
+             *  calls ModalToNodal to transform to Nodal basis
+             */
+            void IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
+                                 const ConstArray<OneD, NekDouble>& base1,
+                                 const ConstArray<OneD, NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> &outarray);
+                        
             DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
-
+            
             DNekMatSharedPtr GenNBasisTransMatrix();
-        
+            
         private:
             
             virtual int v_NumBndryCoeffs() const
             {
                 return 3 + (GetBasisNumModes(0)-2) + 2*(GetBasisNumModes(1)-2);
             } 
-
 
             virtual ShapeType v_DetShapeType() const
             {
@@ -166,90 +170,101 @@ namespace Nektar
                 return GenMatrix(mkey);
             }
 
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)
+            {
+                return GenMatrix(mkey);
+            }
 
             //////////////////////////////
             /// Integration Methods
             //////////////////////////////
+            
+            virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray)
+            {
+                return Integral(inarray);
+            }
+            
+            virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
+                                           Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(inarray, outarray);
+            }
 
-        virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray)
-        {
-        return Integral(inarray);
-        }
-
-        virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
-                       Array<OneD, NekDouble> &outarray)
-        {
-        IProductWRTBase(inarray, outarray);
-        }
-
-        virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
-        {
-        FillMode(mode, outarray);
-        }
+            virtual void v_IProductWRTDerivBase (const int dir, 
+                                                 const ConstArray<OneD,NekDouble> &inarray, 
+                                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTDerivBase(dir,inarray,outarray);
+            }
+            
+            virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+            {
+                FillMode(mode, outarray);
+            }
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
-        virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
-                     Array<OneD, NekDouble> &out_d0,
-                     Array<OneD, NekDouble> &out_d1,
-                     Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
+            virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+                                     Array<OneD, NekDouble> &out_d0,
+                                     Array<OneD, NekDouble> &out_d1,
+                                     Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
             {
-        PhysDeriv(inarray, out_d0, out_d1);
-        }
-
+                PhysDeriv(inarray, out_d0, out_d1);
+            }
+            
             //-----------------------------
             // Evaluations Methods
             //-----------------------------
-
-        virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
-                    Array<OneD, NekDouble> &outarray)
+            
+            virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+                                    Array<OneD, NekDouble> &outarray)
             {
-        BwdTrans(inarray,outarray);
-        }
-
-        /** \brief Virtual call to StdTriExp::FwdTrans */
-        virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
-                    Array<OneD, NekDouble> &outarray)
+                BwdTrans(inarray,outarray);
+            }
+            
+            /** \brief Virtual call to StdTriExp::FwdTrans */
+            virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+                                    Array<OneD, NekDouble> &outarray)
             {
-        FwdTrans(inarray,outarray);
-        }
-
-        virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+                FwdTrans(inarray,outarray);
+            }
+            
+            virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
             {
-        return StdTriExp::PhysEvaluate(coords);
-        }
-        
-        
-        virtual void v_WriteToFile(std::ofstream &outfile)
-        {
-        WriteToFile(outfile);
-        }
-        
-        virtual void v_MapTo(const int edge_ncoeffs, 
-                 const LibUtilities::BasisType Btype, 
-                 const int eid, 
-                 const EdgeOrientation eorient,
-                 StdExpMap &Map)
-        {
-        MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
-        }
-
-        virtual void v_MapTo_ModalFormat(const int edge_ncoeffs, 
-                         const LibUtilities::BasisType Btype, 
-                         const int eid, 
-                         const EdgeOrientation eorient,
-                         StdExpMap &Map)
-        {
-        MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
-        }
-        
-
-        virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
-        {
-        WriteCoeffsToFile(outfile);
-        }
-        };
-
+                return StdTriExp::PhysEvaluate(coords);
+            }
+            
+            
+            virtual void v_WriteToFile(std::ofstream &outfile)
+            {
+                WriteToFile(outfile);
+            }
+            
+            virtual void v_MapTo(const int edge_ncoeffs, 
+                                 const LibUtilities::BasisType Btype, 
+                                 const int eid, 
+                                 const EdgeOrientation eorient,
+                                 StdExpMap &Map)
+            {
+                MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
+            }
+            
+            virtual void v_MapTo_ModalFormat(const int edge_ncoeffs, 
+                                             const LibUtilities::BasisType Btype, 
+                                             const int eid, 
+                                             const EdgeOrientation eorient,
+                                             StdExpMap &Map)
+            {
+                MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
+            }
+            
+            
+            virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
+            {
+                WriteCoeffsToFile(outfile);
+            }
+        };        
+        typedef boost::shared_ptr<StdNodalTriExp> StdNodalTriExpSharedPtr;
     } //end of namespace
 } //end of namespace
 
@@ -257,6 +272,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.16  2007/12/17 13:03:51  sherwin
+* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+*
 * Revision 1.15  2007/10/03 11:37:51  sherwin
 * Updates relating to static condensation implementation
 *

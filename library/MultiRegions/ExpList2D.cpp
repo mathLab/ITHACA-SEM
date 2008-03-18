@@ -120,6 +120,7 @@ namespace Nektar
             int nel;
             LocalRegions::TriExpSharedPtr tri;
             LocalRegions::NodalTriExpSharedPtr Ntri;
+            LibUtilities::PointsType TriNb;
             LocalRegions::QuadExpSharedPtr quad;
             SpatialDomains::Composite comp;
 
@@ -135,8 +136,17 @@ namespace Nektar
                     LibUtilities::BasisKey TriBa = graph2D.GetBasisKey(expansions[i],0);
                     LibUtilities::BasisKey TriBb = graph2D.GetBasisKey(expansions[i],1);
                     
-                    tri = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(TriBa,TriBb,TriangleGeom);
-                    (*m_exp).push_back(tri);
+                    if(expansions[i]->m_ExpansionType == SpatialDomains::eNodal)
+                    {
+                        TriNb = LibUtilities::eNodalTriFekete;
+                        Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(TriBa,TriBb,TriNb,TriangleGeom);
+                        (*m_exp).push_back(Ntri);
+                    }
+                    else
+                    {
+                        tri = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(TriBa,TriBb,TriangleGeom);
+                        (*m_exp).push_back(tri);
+                    }
                     
                     m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
                         + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
@@ -168,6 +178,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.16  2008/03/12 15:25:45  pvos
+* Clean up of the code
+*
 * Revision 1.15  2007/12/06 22:52:30  pvos
 * 2D Helmholtz solver updates
 *

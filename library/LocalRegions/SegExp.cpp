@@ -64,8 +64,8 @@ namespace Nektar
             StdRegions::StdSegExp(Ba),
             m_geom(),
             m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
+            m_matrixManager(std::string("SegExpMatrix")),
+            m_staticCondMatrixManager(std::string("SegExpStaticCondMatrix"))
         {
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
@@ -86,8 +86,8 @@ namespace Nektar
             StdRegions::StdSegExp(S),
             m_geom(S.m_geom),
             m_metricinfo(S.m_metricinfo),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
+            m_matrixManager(std::string("SegExpMatrix")),
+            m_staticCondMatrixManager(std::string("SegExpStaticCondMatrix"))
         {      
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
@@ -1114,6 +1114,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.36  2008/03/12 15:24:29  pvos
+// Clean up of the code
+//
 // Revision 1.35  2008/02/28 10:04:11  sherwin
 // Modes for UDG codes
 //

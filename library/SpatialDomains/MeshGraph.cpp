@@ -390,6 +390,50 @@ namespace Nektar
                 break;
             }
             break;
+        case eNodal:
+            {
+                SegGeomSharedPtr segment = boost::dynamic_pointer_cast<SegGeom>(in->m_GeomShPtr);
+                TriGeomSharedPtr triangle = boost::dynamic_pointer_cast<TriGeom>(in->m_GeomShPtr);
+                QuadGeomSharedPtr quadrilateral = boost::dynamic_pointer_cast<QuadGeom>(in->m_GeomShPtr);
+
+                if(segment || quadrilateral)
+                {
+                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,order,pkey);
+                }
+                else if(triangle)
+                {
+                    switch (flag)
+                    {
+                    case 0:
+                        {
+                            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                            return LibUtilities::BasisKey(LibUtilities::eOrtho_A,order,pkey);
+                        }
+                        break;
+                    case 1:
+                        {
+                            const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+                            return LibUtilities::BasisKey(LibUtilities::eOrtho_B,order,pkey);
+                        }
+                        break;
+                    case 2:
+                        {
+                            const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussRadauMAlpha2Beta0);
+                            return LibUtilities::BasisKey(LibUtilities::eOrtho_C,order,pkey);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"invalid value to flag");
+                        break;
+                    }
+                }
+                else
+                {
+                    NEKERROR(ErrorUtil::efatal,"Unrecognised Geometry");
+                }
+            }
+            break;
         case eOrthogonal:
             switch (flag)
             {
@@ -547,6 +591,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.15  2007/12/11 18:59:58  jfrazier
+// Updated meshgraph so that a generic read could be performed and the proper type read (based on dimension) will be returned.
+//
 // Revision 1.14  2007/12/04 03:29:56  jfrazier
 // Changed to stringstream.
 //

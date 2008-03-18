@@ -39,27 +39,29 @@ namespace Nektar
 {
     namespace StdRegions
     {
-
-        StdNodalTriExp::StdNodalTriExp(const LibUtilities::BasisKey &Ba, 
-            const LibUtilities::BasisKey &Bb, 
-            LibUtilities::PointsType Ntype):
-        StdTriExp(Ba,Bb)
+        StdNodalTriExp::StdNodalTriExp(void):
+            StdTriExp(),
+            m_nodalPointsKey()
         {
-
-            ASSERTL0(m_base[0]->GetNumModes() == m_base[1]->GetNumModes(),
-                "Nodal basis initiated with different orders in the a "
-                "and b directions");
-
-            int numModes = Ba.GetNumModes();
-            m_nodalPointsKey = MemoryManager<LibUtilities::PointsKey>::AllocateSharedPtr (numModes,Ntype);
-
         }
 
+        StdNodalTriExp::StdNodalTriExp(const LibUtilities::BasisKey &Ba, 
+                                       const LibUtilities::BasisKey &Bb, 
+                                       LibUtilities::PointsType Ntype):
+            StdTriExp(Ba,Bb),
+            m_nodalPointsKey()
+        {
+            ASSERTL0(m_base[0]->GetNumModes() == m_base[1]->GetNumModes(),
+                     "Nodal basis initiated with different orders in the a "
+                     "and b directions");   
+            int nummodes =  Ba.GetNumModes();
+            m_nodalPointsKey = MemoryManager<LibUtilities::PointsKey>::AllocateSharedPtr(nummodes,Ntype);
+        }
 
         StdNodalTriExp::StdNodalTriExp(const StdNodalTriExp &T):
-        StdTriExp(T)
+            StdTriExp(T),
+            m_nodalPointsKey(T.m_nodalPointsKey)
         {
-            m_nodalPointsKey = T.m_nodalPointsKey;
         }
 
         // Destructor
@@ -88,11 +90,10 @@ namespace Nektar
         {
             int             i,j;
             ConstArray<OneD, NekDouble>  r, s; 
-            Array<OneD, NekDouble> c = Array<OneD, NekDouble>(2);
+            Array<OneD, NekDouble> c(2);
             DNekMatSharedPtr Mat;
 
             Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
-
             GetNodalPoints(r,s);
 
             for(i = 0; i < m_ncoeffs; ++i)
@@ -106,9 +107,6 @@ namespace Nektar
                 {
                     c[0] = r[j];
                     c[1] = s[j];
-                    // define matrix in row major format to have rows
-                    // of all the different expansion bases defined at
-                    // the nodal point
                     (*Mat)(j,i) = StdTriExp::PhysEvaluate(c);
                 }
             }
@@ -117,53 +115,54 @@ namespace Nektar
 
         void StdNodalTriExp::NodalToModal()
         {
-            NodalToModal(m_coeffs); 
+            NodalToModal(m_coeffs,m_coeffs); 
         }
 
-        void StdNodalTriExp::NodalToModal(Array<OneD, NekDouble> &in_out_array)
+        void StdNodalTriExp::NodalToModal(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray)
         {
-            ASSERTL0(false,"This function needs fixing");
-            //StdMatrixKey   Nkey(eInvNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
-            //DNekMatSharedPtr  matsys = m_stdMatManager[Nkey];
+            StdMatrixKey   Nkey(eInvNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
+            DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
 
-            // solve inverse of system
-            //DNekVec   v(m_ncoeffs,in_out_array,eWrapper);
+            NekVector<const NekDouble> nodal(m_ncoeffs,inarray,eWrapper);
+            NekVector<NekDouble> modal(m_ncoeffs,outarray,eWrapper);
+            modal = (*inv_vdm) * nodal;
         }
 
 
         void StdNodalTriExp::NodalToModalTranspose()
         {
-            NodalToModalTranspose(m_coeffs); 
+            NodalToModalTranspose(m_coeffs,m_coeffs); 
         }
 
         // Operate with transpose of NodalToModal transformation
-        void StdNodalTriExp::NodalToModalTranspose(Array<OneD, NekDouble> &in_out_array)
-        {
-            StdMatrixKey Nkey(eInvNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
-            DNekMatSharedPtr  mat = GetStdMatrix(Nkey);
+        void StdNodalTriExp::NodalToModalTranspose(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray)
+        {            
+            StdMatrixKey   Nkey(eInvNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
+            DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
 
-            // solve inverse of system
-            DNekVec   v(m_ncoeffs,in_out_array,eWrapper);
-            v = (*mat)*v;
+            NekVector<const NekDouble> nodal(m_ncoeffs,inarray,eWrapper);
+            NekVector<NekDouble> modal(m_ncoeffs,outarray,eWrapper);
+            modal = Transpose(*inv_vdm) * nodal;
         }
 
 
         void StdNodalTriExp::ModalToNodal()
         {
-            ModalToNodal(m_coeffs);
+            ModalToNodal(m_coeffs,m_coeffs);
         }
 
-        void StdNodalTriExp::ModalToNodal(Array<OneD, NekDouble> &in_out_array)
+        void StdNodalTriExp::ModalToNodal(const ConstArray<OneD, NekDouble>& inarray, 
+                Array<OneD, NekDouble> &outarray)
         {
             StdMatrixKey      Nkey(eNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
-            DNekMatSharedPtr  mat = GetStdMatrix(Nkey);
+            DNekMatSharedPtr  vdm = GetStdMatrix(Nkey);
 
             // Multiply out matrix
-            DNekVec  v(m_ncoeffs,in_out_array,eWrapper);
-            v = (*mat)*v;
-
-            // this line should not be needed
-            Vmath::Vcopy(m_ncoeffs,&v[0],1,&in_out_array[0],1);
+            NekVector<const NekDouble> modal(m_ncoeffs,inarray,eWrapper);
+            NekVector<NekDouble> nodal(m_ncoeffs,outarray,eWrapper);
+            nodal = (*vdm)*modal;
         }
 
 
@@ -187,10 +186,69 @@ namespace Nektar
         {
             // Take inner product with respect to Orthgonal basis using
             // StdTri routine
-
             StdTriExp::IProductWRTBase(base0,base1,inarray,outarray);
+            NodalToModalTranspose(outarray,outarray);            
+        }
 
-            NodalToModalTranspose(outarray);
+        void StdNodalTriExp::IProductWRTDerivBase(const int dir, 
+                                                  const ConstArray<OneD, NekDouble>& inarray, 
+                                                  Array<OneD, NekDouble> & outarray)
+        {
+            int    i;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nqtot = nquad0*nquad1; 
+            
+            Array<OneD, NekDouble> gfac0(nqtot);
+            Array<OneD, NekDouble> tmp0(nqtot);
+            
+            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            
+            // set up geometric factor: 2/(1-z1)
+            for(i = 0; i < nquad1; ++i)
+            {
+                gfac0[i] = 2.0/(1-z1[i]);
+            }
+            
+            for(i = 0; i < nquad1; ++i)  
+            {
+                Vmath::Smul(nquad0,gfac0[i],&inarray[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
+            }
+            
+            switch(dir)
+            {
+            case 0:
+                {                    
+                    IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),
+                                    tmp0,outarray);
+                }
+                break;
+            case 1:
+                {
+                    Array<OneD, NekDouble> tmp3(m_ncoeffs);    
+                    ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+                    
+                    for(i = 0; i < nquad0; ++i)
+                    {
+                        gfac0[i] = 0.5*(1+z0[i]);
+                    }        
+                    
+                    for(i = 0; i < nquad1; ++i) 
+                    {
+                        Vmath::Vmul(nquad0,&gfac0[0],1,&tmp0[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
+                    }       
+                    
+                    IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp0,tmp3); 
+                    IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),inarray,outarray);  
+                    Vmath::Vadd(m_ncoeffs,&tmp3[0],1,&outarray[0],1,&outarray[0],1);      
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
+                }
+                break;
+            }             
         }
 
         void StdNodalTriExp::FillMode(const int mode, 
@@ -200,8 +258,7 @@ namespace Nektar
             ASSERTL2(mode >= m_ncoeffs, 
                 "calling argument mode is larger than total expansion order");
 
-            Vmath::Zero(m_ncoeffs,&outarray[0],1);
-
+            Vmath::Zero(m_ncoeffs, outarray, 1);
             outarray[mode] = 1.0;
             BwdTrans(outarray,outarray);
         }
@@ -216,11 +273,8 @@ namespace Nektar
         void StdNodalTriExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray)
         {
-            Array<OneD, NekDouble> tmp  = Array<OneD, NekDouble>(m_ncoeffs);
-
-            // save nodal values
-            Blas::Dcopy(m_ncoeffs,&inarray[0],1,&tmp[0],1);
-            NodalToModal(tmp);
+            Array<OneD, NekDouble> tmp(m_ncoeffs);
+            NodalToModal(inarray,tmp);
             StdTriExp::BwdTrans(tmp,outarray);
         }
 
@@ -228,19 +282,46 @@ namespace Nektar
             Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
-
+            
             // get Mass matrix inverse
             StdMatrixKey      masskey(eInvMass,DetShapeType(),*this, 
-                m_nodalPointsKey->GetPointsType());
+                                    m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
             // copy inarray in case inarray == outarray
-            DNekVec in (m_ncoeffs,outarray);
-            DNekVec out(m_ncoeffs,outarray,eWrapper);
-
+            NekVector<const NekDouble> in(m_ncoeffs,outarray,eWrapper);
+            NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
+            
             out = (*matsys)*in;
         }
 
+        void StdNodalTriExp::GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+        {
+            unsigned int i;
+            if(outarray.num_elements()!=NumBndryCoeffs())
+            {
+                outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
+            }
+            
+            for(i = 0; i < NumBndryCoeffs(); i++)
+            {
+                outarray[i] = i;
+            }
+        }
+
+        void StdNodalTriExp::GetInteriorMap(Array<OneD, unsigned int>& outarray)
+        {
+            unsigned int i;
+            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
+            {
+                outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
+            }
+
+            for(i = NumBndryCoeffs(); i < GetNcoeffs(); i++)
+            {
+                outarray[i-NumBndryCoeffs()] = i;
+            }
+        }
 
         void  StdNodalTriExp::MapTo(const int edge_ncoeffs, 
             const LibUtilities::BasisType Btype,
@@ -337,6 +418,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.19  2007/12/17 13:03:51  sherwin
+* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+*
 * Revision 1.18  2007/08/11 23:42:26  sherwin
 * A few changes
 *

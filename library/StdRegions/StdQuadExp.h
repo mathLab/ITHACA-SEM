@@ -191,6 +191,9 @@ namespace Nektar
                 const EdgeOrientation eorient, 
                 StdExpMap &Map);
 
+            void WriteToFile(std::ofstream &outfile);
+            void WriteCoeffsToFile(std::ofstream &outfile);
+
             const int GetEdgeNcoeffs(const int i) const
             {
                 ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
@@ -428,6 +431,16 @@ namespace Nektar
             {
                 MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
             }
+
+            virtual void v_WriteToFile(std::ofstream &outfile)
+            {
+                WriteToFile(outfile);
+            }
+
+            virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
+            {
+                WriteCoeffsToFile(outfile);
+            }
         };
     typedef boost::shared_ptr<StdQuadExp> StdQuadExpSharedPtr;
 
@@ -438,6 +451,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.25  2008/03/12 15:25:09  pvos
+* Clean up of the code
+*
 * Revision 1.24  2008/02/29 19:15:19  sherwin
 * Update for UDG stuff
 *

@@ -197,64 +197,99 @@ namespace Nektar
 
         void NodalTriFekete::NodalPointReorder2d()
         {
-            int istart,iend,isum=0;
-            const int numvert = 3;
-            const int numepoints = GetNumPoints()-2;
+            int i,j;
+            int cnt;
+            int istart,iend;
 
-            if (numepoints==0)
+            NekDouble evaluateTol  = 1e-12;
+
+            const int nVerts = 3;
+            const int nEdgeInteriorPoints = GetNumPoints()-2;
+            const int nBoundaryPoints = 3*nEdgeInteriorPoints + 3; 
+
+            if(nEdgeInteriorPoints==0)
             {
                 return;
             }
 
-            // bubble sort for first edge
-            istart = numvert + isum;
-            iend = istart + numepoints;
-            for(int i=istart; i<iend; ++i)
+            // group the points of edge 1 together;
+            istart = nVerts;
+            for(i = cnt = istart; i < nBoundaryPoints; i++)
             {
-                for(int j=istart; j<iend-1; ++j)
+                if( fabs(m_points[1][i] + 1.0) < evaluateTol)
                 {
-                    if(m_points[0][j+1] < m_points[0][j])
-                    {
-                        std::swap(m_points[0][j+1], m_points[0][j]);
-                        std::swap(m_points[1][j+1], m_points[1][j]);
-                    }
+                    std::swap(m_points[0][cnt], m_points[0][i]);
+                    std::swap(m_points[1][cnt], m_points[1][i]);
+                    cnt++;
                 }
             }
-            isum += numepoints;
 
-            // bubble sort for second edge
-            istart = numvert + isum;
-            iend = istart + numepoints;
-            for(int i=istart; i<iend; ++i)
+            // bubble sort edge 1
+            iend = istart + nEdgeInteriorPoints;
+            for(i = istart; i < iend; i++)
             {
-                for(int j=istart;j<iend-1; ++j)
+                for(j = istart+1; j < iend; j++)
                 {
-                    if(m_points[0][j+1] > m_points[0][j])
+                    if(m_points[0][j] < m_points[0][j-1])
                     {
-                        std::swap(m_points[0][j+1], m_points[0][j]);
-                        std::swap(m_points[1][j+1], m_points[1][j]);
-                    }
-                }
-            }
-            isum += numepoints;
-
-            // bubble sort for third edge
-            istart = numvert + isum;
-            iend = istart + numepoints;
-            for(int i=istart; i<iend; ++i)
-            {
-                for(int j=istart; j<iend-1; ++j)
-                {
-                    if(m_points[1][j+1] > m_points[1][j])
-                    {
-                        std::swap(m_points[0][j+1], m_points[0][j]);
-                        std::swap(m_points[1][j+1], m_points[1][j]);
+                        std::swap(m_points[0][j], m_points[0][j-1]);
+                        std::swap(m_points[1][j], m_points[1][j-1]);
                     }
                 }
             }
 
+            // group the points of edge 2 together;
+            istart = iend;
+            for(i = cnt = istart; i < nBoundaryPoints; i++)
+            {
+                if( fabs(m_points[1][i]+m_points[0][i]) < evaluateTol)
+                {
+                    std::swap(m_points[0][cnt], m_points[0][i]);
+                    std::swap(m_points[1][cnt], m_points[1][i]);
+                    cnt++;
+                }
+            }
+
+            // bubble sort edge 2
+            iend = istart + nEdgeInteriorPoints;
+            for(i = istart; i < iend; i++)
+            {
+                for(j = istart+1; j < iend; j++)
+                {
+                    if(m_points[1][j] < m_points[1][j-1])
+                    {
+                        std::swap(m_points[0][j], m_points[0][j-1]);
+                        std::swap(m_points[1][j], m_points[1][j-1]);
+                    }
+                }
+            }
+
+            // group the points of edge 3 together;
+            istart = iend;
+            for(i = cnt = istart; i < nBoundaryPoints; i++)
+            {
+                if( fabs(m_points[0][i]+1.0) < evaluateTol)
+                {
+                    std::swap(m_points[0][cnt], m_points[0][i]);
+                    std::swap(m_points[1][cnt], m_points[1][i]);
+                    cnt++;
+                }
+            }
+            // bubble sort edge 3
+            iend = istart + nEdgeInteriorPoints;
+            for(i = istart; i < iend; i++)
+            {
+                for(j = istart+1; j < iend; j++)
+                {
+                    if(m_points[1][j] < m_points[1][j-1])
+                    {
+                        std::swap(m_points[0][j], m_points[0][j-1]);
+                        std::swap(m_points[1][j], m_points[1][j-1]);
+                    }
+                }
+            }
             return;
-        }
+        }     
 
 
     } // end of namespace stdregion
@@ -262,6 +297,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriFekete.cpp,v $
+* Revision 1.22  2007/10/03 03:00:13  bnelson
+* Added precompiled headers.
+*
 * Revision 1.21  2007/08/06 05:41:25  ehan
 * Fixed derivative matrix
 *

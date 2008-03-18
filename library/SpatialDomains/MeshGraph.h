@@ -54,6 +54,7 @@ namespace Nektar
             eNoExpansionType,
             eModified,
             eOrthogonal,
+            eNodal,
             eExpansionTypeSize
         };
 
@@ -63,7 +64,8 @@ namespace Nektar
         {
             "NOTYPE",
             "MODIFIED",
-            "ORTHOGONAL"
+            "ORTHOGONAL",
+            "NODAL"
         };
 
         typedef boost::shared_ptr<InterfaceComponent> SharedInterfaceCompPtr;
@@ -196,6 +198,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.19  2007/12/11 21:51:52  jfrazier
+// Updated 2d components so elements could be retrieved from edges.
+//
 // Revision 1.18  2007/12/11 18:59:59  jfrazier
 // Updated meshgraph so that a generic read could be performed and the proper type read (based on dimension) will be returned.
 //

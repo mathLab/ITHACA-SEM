@@ -210,6 +210,9 @@ namespace Nektar
             /// \brief Return the elements (shared ptrs) that have this edge.
             ElementEdgeVectorSharedPtr GetElementsFromEdge(SegGeomSharedPtr edge);
 
+            /// \brief Return the BasisKey corresponding to an edge of an element
+            LibUtilities::BasisKey GetEdgeBasisKey(SegGeomSharedPtr edge);
+
         protected:
             void ReadEdges    (TiXmlDocument &doc);
             void ReadElements (TiXmlDocument &doc);
@@ -232,6 +235,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.18  2008/01/21 19:58:14  sherwin
+// Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
+//
 // Revision 1.17  2007/12/11 21:51:53  jfrazier
 // Updated 2d components so elements could be retrieved from edges.
 //

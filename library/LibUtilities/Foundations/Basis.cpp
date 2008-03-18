@@ -174,6 +174,10 @@ namespace Nektar
                                 }
                           }
                       }
+
+                     // define derivative basis 
+                     Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)/2,numPoints,1.0,D,numPoints,
+                                 m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
     
 //   ******************************* Old version of Ortho-B  *****************************************
 //                     const NekDouble *one_m_z_pow;//,fac;
@@ -229,13 +233,6 @@ namespace Nektar
 //                         }
 //                     }
 //                     
-//                     // define derivative basis 
-//                     Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)/2,numPoints,1.0,D,numPoints,
-//                         m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
-//                                             
-
-
-
                 }
                 break; 
 
@@ -520,6 +517,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.25  2007/12/28 23:28:37  ehan
+* Reimplemented Ortho-B
+*
 * Revision 1.24  2007/10/15 20:45:16  ehan
 * Reimplemented and tested Ortho_C
 *

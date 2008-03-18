@@ -174,7 +174,7 @@ namespace Nektar
             if(m_transState == eContinuous)
             {
                 ContToLocal();
-            }            
+            }         
             ExpList2D::BwdTrans(In);
         }
    
@@ -183,6 +183,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.11  2008/03/12 15:25:45  pvos
+* Clean up of the code
+*
 * Revision 1.10  2007/12/17 13:05:04  sherwin
 * Made files compatible with modifications in StdMatrixKey which now holds constants
 *

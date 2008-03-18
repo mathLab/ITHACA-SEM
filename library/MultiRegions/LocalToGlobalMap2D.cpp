@@ -392,6 +392,7 @@ namespace Nektar
             StdRegions::StdExpMap vmapEdge;
             LocalRegions::QuadExpSharedPtr locQuadExp;
             LocalRegions::TriExpSharedPtr locTriExp;
+            LocalRegions::NodalTriExpSharedPtr locNodalTriExp;
             LocalRegions::SegExpSharedPtr bndSegExp;
 
             MultiRegions::ExpList1DSharedPtr bndExpList;
@@ -496,6 +497,24 @@ namespace Nektar
                     }
                     m_totLocBndDofs += locTriExp->NumBndryCoeffs();
                 }
+                else if(locNodalTriExp = boost::dynamic_pointer_cast<LocalRegions::NodalTriExp>(locexp[i]))
+                {
+                    for(j = 0; j < locNodalTriExp->GetNverts(); ++j) // number verts = number edges for 2D geom
+                    {                    
+                        vid = (locNodalTriExp->GetGeom())->GetVid(j);
+                        if(renumbVerts[vid]==-1)
+                        {
+                            renumbVerts[vid] = vcnt++;
+                        }
+                        
+                        eid = (locNodalTriExp->GetGeom())->GetEid(j);
+                        if(renumbEdges[eid]==-1)
+                        {
+                            renumbEdges[eid] = ecnt++;
+                        }   
+                    }
+                    m_totLocBndDofs += locNodalTriExp->NumBndryCoeffs();
+                }
                 else
                 {
                     ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
@@ -543,6 +562,23 @@ namespace Nektar
                         }
                     }
                 }
+                else if(locNodalTriExp = boost::dynamic_pointer_cast<LocalRegions::NodalTriExp>(locexp[i]))
+                {
+                    for(j = 0; j < locNodalTriExp->GetNedges(); ++j)
+                    {                    
+                        //set up nedge coefficients for each edge     
+                        nedge_coeffs = locNodalTriExp->GetEdgeNcoeffs(j);
+                        eid = (locNodalTriExp->GetGeom())->GetEid(j);
+                        edge_offset[renumbEdges[eid]+1] = nedge_coeffs-2;
+                        
+//                         // need a sign vector if edge_nceoff >=4 
+//                         if((nedge_coeffs >= 4)&&(locNodalTriExp->GetEdgeBasisType(0) == 
+//                                                  LibUtilities::eModified_A))
+//                         {
+//                             m_sign_change = true;
+//                         }
+                    }
+                }
                 else
                 {
                     ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
@@ -555,6 +591,7 @@ namespace Nektar
                 m_sign = Array<OneD, NekDouble>(m_totLocDofs,1.0);
                 m_bndSign = Array<OneD, NekDouble>(m_totLocBndDofs,1.0);
             }
+
             edge_offset[0] = nDirVerts;
 
             if(ecnt>nDirEdges)
@@ -762,6 +799,107 @@ namespace Nektar
                         
                     }
                 }
+                else if(locNodalTriExp = boost::dynamic_pointer_cast<LocalRegions::NodalTriExp>(locexp[i]))
+                {
+                    for(j = 0; j < (nedge=locNodalTriExp->GetNedges()); ++j)
+                    {
+                        locNodalTriExp->MapTo_ModalFormat(nedge_coeffs = locNodalTriExp->GetEdgeNcoeffs(j),
+                                                     Btype = locNodalTriExp->GetEdgeBasisType(j), j,
+                                                     eorient = (locNodalTriExp->GetGeom())->GetEorient(j),
+                                                     vmap);
+                        
+                        // set edge ids before setting vertices 
+                        // so that can be reverse for nodal expansion when j>2
+                        eid = (locNodalTriExp->GetGeom())->GetEid(j);
+                        vid = renumbVerts[(locNodalTriExp->GetGeom())->GetVid(j)];
+
+                        bndCondEdge = false;
+                        if((bndID = bndCondEdgeID[eid])!=-1)
+                        {
+                            bndCondEdge = true;
+                            cnt2 = bndCond_offset[bndID];
+                            bndCondEdges[bndID]->MapTo(eorient,vmapEdge);
+
+                            m_locToContBndCondMap[cnt2+vmapEdge[0]] = 
+                                (vid < nDirVerts) ? (vid) : (nonDirOffset + vid);
+
+                            j2 = (j==2) ? 0 : (j+1);                     
+                            vid2 = renumbVerts[(locNodalTriExp->GetGeom())->GetVid(j2)];
+                            m_locToContBndCondMap[cnt2+vmapEdge[1]] = 
+                                (vid2 < nDirVerts) ? (vid2) : (nonDirOffset + vid2);
+                                
+                            int bndedgecnt = 0;
+                            for(k = 0; k < nedge_coeffs; ++k)
+                            {
+                                if(m_locToContBndCondMap[cnt2+k] == -1)
+                                {
+                                    m_locToContBndCondMap[cnt2+k] = edge_offset[renumbEdges[eid]]+bndedgecnt;  
+                                    bndedgecnt++;
+                                }
+                            }  
+                        }
+                        
+                        for(k = 2; k < nedge_coeffs; ++k)
+                        {
+                            m_locToContMap[cnt+vmap[k]] =  edge_offset[renumbEdges[eid]]+(k-2);
+                        }
+                        
+                        // vmap is set up according to cartesian
+                        // coordinates so have to change setting
+                        // depending on which edge we are considering
+                        if(j < 2)
+                        {
+                            if(eorient == StdRegions::eForwards)
+                            {
+                                m_locToContMap[cnt+vmap[0]] = 
+                                    (vid < nDirVerts) ? (vid) : (nonDirOffset + vid);
+                            }
+                            else
+                            {
+
+                                m_locToContMap[cnt+vmap[1]] = 
+                                    (vid < nDirVerts) ? (vid) : (nonDirOffset + vid);
+
+                                if(m_sign_change)
+                                {
+                                    for(k = 3; k < nedge_coeffs; k+=2)
+                                    {
+                                        m_sign[cnt+vmap[k]] = -1;
+                                    }
+                                }   
+                            }
+                        }
+                        else
+                        {
+                            if(eorient == StdRegions::eForwards)
+                            {
+                                m_locToContMap[cnt+vmap[1]] = 
+                                    (vid < nDirVerts) ? (vid) : (nonDirOffset + vid);
+                                
+                                if(m_sign_change)
+                                {
+                                    for(k = 3; k < nedge_coeffs; k+=2)
+                                    {
+                                        m_sign[cnt+vmap[k]] = -1;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                m_locToContMap[cnt+vmap[0]] = 
+                                    (vid < nDirVerts) ? (vid) : (nonDirOffset + vid);                          
+                            }
+//                             if(Btype == LibUtilities::eGLL_Lagrange)
+//                             {
+                                 for(k = 2; k < nedge_coeffs; ++k)
+                                 {
+                                     m_locToContMap[cnt+vmap[nedge_coeffs+1-k]] = edge_offset[renumbEdges[eid]]+(k-2);
+                                 }
+                                //                           }
+                        }
+                        
+                    }
+                }
                 else
                 {
                     ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
@@ -789,7 +927,7 @@ namespace Nektar
                     m_locToContBndMap[cnt++]=m_locToContMap[i];
                 }
             }
-            m_totGloDofs = gid;
+            m_totGloDofs = gid;           
         }    
         
         LocalToGlobalMap2D::~LocalToGlobalMap2D()
@@ -800,6 +938,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap2D.cpp,v $
+* Revision 1.9  2008/01/23 21:50:52  sherwin
+* Update from EdgeComponents to SegGeoms
+*
 * Revision 1.8  2007/12/06 22:52:30  pvos
 * 2D Helmholtz solver updates
 *

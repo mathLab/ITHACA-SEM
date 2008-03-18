@@ -69,8 +69,8 @@ namespace Nektar
             StdRegions::StdQuadExp(Ba,Bb),
             m_geom(),
             m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
+            m_matrixManager(std::string("QuadExpMatrix")),
+            m_staticCondMatrixManager(std::string("QuadExpStaticCondMatrix"))
         {            
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
@@ -93,8 +93,8 @@ namespace Nektar
             StdRegions::StdQuadExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
+            m_matrixManager(std::string("QuadExpMatrix")),
+            m_staticCondMatrixManager(std::string("QuadExpStaticCondMatrix"))
         {
         }
     
@@ -1756,6 +1756,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.29  2008/03/12 15:24:29  pvos
+ *    Clean up of the code
+ *
  *    Revision 1.28  2008/02/28 10:04:11  sherwin
  *    Modes for UDG codes
  *

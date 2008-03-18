@@ -121,9 +121,9 @@ namespace Nektar
             DNekMatSharedPtr I = ExpPointsProperties(0)->GetI(coords);;
 
             ASSERTL2(coords[0] < -1, "coord[0] < -1");
-            ASSERTL2(coords[0] > 1, "coord[0] >  1");
+            ASSERTL2(coords[0] >  1, "coord[0] >  1");
             ASSERTL2(coords[1] < -1, "coord[1] < -1");
-            ASSERTL2(coords[1] > 1, "coord[1] >  1");
+            ASSERTL2(coords[1] >  1, "coord[1] >  1");
 
             // interpolate first coordinate direction
             for (i = 0; i < nq1;++i)
@@ -176,6 +176,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.19  2008/03/12 15:25:09  pvos
+* Clean up of the code
+*
 * Revision 1.18  2007/11/08 16:55:14  pvos
 * Updates towards 2D helmholtz solver
 *

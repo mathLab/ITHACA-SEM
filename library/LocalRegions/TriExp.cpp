@@ -66,8 +66,8 @@ namespace Nektar
             StdRegions::StdTriExp(Ba,Bb),
             m_geom(),
             m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
+            m_matrixManager(std::string("TriExpMatrix")),
+            m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
         {
            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
@@ -90,8 +90,8 @@ namespace Nektar
             StdRegions::StdTriExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
+            m_matrixManager(std::string("TriExpMatrix")),
+            m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
         {
         }        
         
@@ -433,7 +433,7 @@ namespace Nektar
             //         }
             
             StdTriExp::PhysDeriv(inarray, diff0, diff1);
-            
+
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 if(out_d0.num_elements())
@@ -497,25 +497,18 @@ namespace Nektar
         void TriExp::FwdTrans(const ConstArray<OneD,NekDouble> & inarray, 
                               Array<OneD,NekDouble> &outarray)
         {
-            if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
-            {
-                Vmath::Vcopy(m_ncoeffs,&inarray[0],1,&m_coeffs[0],1);
-            }
-            else
-            {
-                IProductWRTBase(inarray,outarray);
-                
-                // get Mass matrix inverse
-                MatrixKey             masskey(StdRegions::eInvMass,
-                                              DetShapeType(),*this);
-                DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
-                
-                // copy inarray in case inarray == outarray
-                NekVector<const NekDouble> in (m_ncoeffs,outarray,eCopy);
-                NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
-                
-                out = (*matsys)*in;
-            }
+            IProductWRTBase(inarray,outarray);
+            
+            // get Mass matrix inverse
+            MatrixKey             masskey(StdRegions::eInvMass,
+                                          DetShapeType(),*this);
+            DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
+            
+            // copy inarray in case inarray == outarray
+            NekVector<const NekDouble> in (m_ncoeffs,outarray,eCopy);
+            NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
+            
+            out = (*matsys)*in;
         }
         
         void TriExp::GetCoords(Array<OneD,NekDouble> &coords_0,
@@ -950,6 +943,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.25  2008/03/12 15:24:29  pvos
+ *    Clean up of the code
+ *
  *    Revision 1.24  2007/12/17 13:04:30  sherwin
  *    Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
  *

@@ -309,7 +309,6 @@ namespace Nektar
                     init[m_locToGloMap->GetBndCondMap(bndcnt++)] = (m_bndConstraint[i]->GetCoeffs())[j];
                 }
             }
-
             GeneralMatrixOp(key, init, Dir_fce);
 
             // Set up forcing function

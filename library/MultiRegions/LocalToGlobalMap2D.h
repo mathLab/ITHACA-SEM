@@ -41,6 +41,7 @@
 #include <SpatialDomains/MeshGraph2D.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
+#include <LocalRegions/NodalTriExp.h>
 #include <LocalRegions/SegExp.h>
 
 namespace Nektar
@@ -224,6 +225,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap2D.h,v $
+/** Revision 1.9  2008/01/25 05:50:46  bnelson
+/** Changed NekVector::GetPtr to NekVector::GetRawPtr and added a new NekVector::GetPtr that returns an Array.  This makes the calls consistent with NekMatrix.
+/**
 /** Revision 1.8  2008/01/20 16:31:11  bnelson
 /** Fixed linux compile errors.
 /**

@@ -618,11 +618,50 @@ namespace Nektar
             return returnval;
         }
 
+        LibUtilities::BasisKey MeshGraph2D::GetEdgeBasisKey(SegGeomSharedPtr edge)
+        {
+            ElementEdgeVectorSharedPtr elements = GetElementsFromEdge(edge);
+            // Perhaps, a check should be done here to ensure that in case 
+            // elements->size!=1, all elements to which the edge belongs have the same type
+            // and order of expansion such that no confusion can arise.
+            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element);
+            
+            int nummodes = (int) expansion->m_NumModesEqn.Evaluate();
+            
+            switch(expansion->m_ExpansionType)
+            {
+            case eModified:
+                {
+                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
+                }
+                break;
+            case eNodal:
+                {
+                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
+                }
+                break;
+            case eOrthogonal:
+                {
+                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
+                }
+                break;       
+            default:
+                ASSERTL0(false,"expansion type unknonw");
+                break;
+            }            
+        }
+        
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.26  2008/03/11 17:02:24  jfrazier
+// Modified the GetElementsFromEdge to use the domain.
+//
 // Revision 1.25  2008/01/21 19:58:14  sherwin
 // Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
 //

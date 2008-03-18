@@ -618,6 +618,61 @@ namespace Nektar
             }
         }
 
+        void StdQuadExp::WriteToFile(std::ofstream &outfile)
+        {
+            int  i,j;
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+            ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+
+            outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
+            outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
+
+            for(j = 0; j < nquad1; ++j)
+            {
+                for(i = 0; i < nquad0; ++i)
+                {
+                    outfile << z0[i] <<  " " << 
+                        z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
+                }
+            }
+
+        }
+
+        //   I/O routine
+        void StdQuadExp::WriteCoeffsToFile(std::ofstream &outfile)
+        {
+            int  i,j;
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  cnt = 0;
+            Array<OneD, NekDouble> wsp(order0*order1,0.0);
+
+            // put coeffs into matrix and reverse order so that p index is fastest
+            // recall q is fastest for tri's
+
+            for(i = 0; i < order0; ++i)
+            {
+                for(j = 0; j < order1-i; ++j,cnt++)
+                {
+                    wsp[i+j*order1] = m_coeffs[cnt];
+                }
+            }
+
+            outfile <<"Coeffs = [" << " "; 
+
+            for(j = 0; j < order1; ++j)
+            {
+                for(i = 0; i < order0; ++i)
+                {
+                    outfile << wsp[j*order0+i] <<" ";
+                }
+                outfile << std::endl; 
+            }
+            outfile << "]" ; 
+        }
+
         void StdQuadExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
             Array<OneD, NekDouble> &coords_1)
         {
@@ -638,6 +693,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.28  2008/03/12 15:25:09  pvos
+* Clean up of the code
+*
 * Revision 1.27  2008/02/29 19:15:19  sherwin
 * Update for UDG stuff
 *

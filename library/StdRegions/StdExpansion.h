@@ -833,7 +833,6 @@ namespace Nektar
             *  \return returns the mass matrix
             */
 
-            DNekMatSharedPtr StdExpansion::CreateBwdTransMatrix();
             DNekMatSharedPtr CreateGeneralMatrix(const StdMatrixKey &mkey);
 
             void GeneralMatrixOp(const StdMatrixKey &mkey, 
@@ -1356,6 +1355,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.76  2008/03/12 15:25:09  pvos
+* Clean up of the code
+*
 * Revision 1.75  2008/02/29 19:15:19  sherwin
 * Update for UDG stuff
 *

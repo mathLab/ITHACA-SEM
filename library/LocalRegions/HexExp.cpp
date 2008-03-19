@@ -608,21 +608,52 @@ namespace Nektar
                 outfile << m_phys[i] << std::endl;
             }
         }
+        
 
-      DNekMatSharedPtr HexExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
-      {
-          LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-          LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-          LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-          StdRegions::StdHexExpSharedPtr tmp = MemoryManager<StdHexExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-          
-          return tmp->GetStdMatrix(mkey); 
-      }
-      
+        DNekMatSharedPtr HexExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            // Need to check if matrix exists in stdMatrixManager.
+            // If not then make a local expansion with standard metric info
+            // and generate matrix. Otherwise direct call is OK. 
+            if(!StdMatManagerAlreadyCreated(mkey))
+            {
+                LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
+                LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
+	        LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+                HexExpSharedPtr tmp = MemoryManager<HexExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
+                
+                return tmp->StdHexExp::GetStdMatrix(mkey);
+            }
+            else
+            {
+                return StdHexExp::GetStdMatrix(mkey);
+            }
+        }
+
+        DNekBlkMatSharedPtr HexExp::CreateStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            // Need to check if matrix exists in stdMatrixManager.
+            // If not then make a local expansion with standard metric info
+            // and generate matrix. Otherwise direct call is OK. 
+            if(!StdMatManagerAlreadyCreated(mkey))
+            {
+                LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
+                LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
+	        LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+                HexExpSharedPtr tmp = MemoryManager<HexExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
+                
+                return tmp->StdHexExp::GetStdStaticCondMatrix(mkey);                
+            }
+            else
+            {
+                return StdHexExp::GetStdStaticCondMatrix(mkey);
+            }
+        }
+
 	//TODO: implement
 
        DNekScalMatSharedPtr HexExp::CreateMatrix(const MatrixKey &mkey)
-        {
+       {
             DNekScalMatSharedPtr returnval;
 
             ASSERTL2(m_metricinfo->GetGtype == SpatialDomains::eNoGeomType,"Geometric information is not set up");
@@ -807,15 +838,15 @@ namespace Nektar
             return returnval;
         }
 
-//          QuadExpSharedPtr HexExp::GetEdgeExp(int edge)
-//         {
-//             QuadExpSharedPtr returnval; 
-//             int dir = (edge == 0|| edge == 2)? 0:1;
-// 
-//             returnval = MemoryManager<QuadExp>::AllocateSharedPtr(m_base[dir]->GetBasisKey(),m_geom->GetEdge(edge));
-// 
-//             return returnval; 
-//         }
+    //          QuadExpSharedPtr HexExp::GetEdgeExp(int edge)
+    //         {
+    //             QuadExpSharedPtr returnval; 
+    //             int dir = (edge == 0|| edge == 2)? 0:1;
+    // 
+    //             returnval = MemoryManager<QuadExp>::AllocateSharedPtr(m_base[dir]->GetBasisKey(),m_geom->GetEdge(edge));
+    // 
+    //             return returnval; 
+    //         }
 
 	//TODO: implement
         DNekScalBlkMatSharedPtr HexExp::CreateStaticCondMatrix(const MatrixKey &mkey)
@@ -880,11 +911,13 @@ namespace Nektar
                     DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
                     DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
 
-                    Array<OneD,unsigned int> bmap(nbdry);
-                    Array<OneD,unsigned int> imap(nint);
+                    Array<OneD, unsigned int> bmap;
                     GetBoundaryMap(bmap);
-                    GetInteriorMap(imap);  
                     
+                    Array<OneD,unsigned int> imap;
+                    GetInteriorMap(imap);
+                    
+
                     for(i = 0; i < nbdry; ++i)
                     {
                         for(j = 0; j < nbdry; ++j)

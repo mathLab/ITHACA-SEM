@@ -121,6 +121,7 @@ namespace Nektar
         DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
         DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
         DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
+        DNekBlkMatSharedPtr CreateStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
 
 	SpatialDomains::HexGeomSharedPtr m_geom;
         SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
@@ -263,6 +264,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.12  2008/03/17 10:36:00  pvos
+ *    Clean up of the code
+ *
  *    Revision 1.11  2008/03/12 15:24:29  pvos
  *    Clean up of the code
  *

@@ -108,6 +108,30 @@ namespace Nektar
             BOOST_CHECK_EQUAL(vector_array[1], 81);
             BOOST_CHECK_EQUAL(vector_array[2], 96);
         }
+
+        BOOST_AUTO_TEST_CASE(TestDoubleSquareFullVectorMultiplicationWithSharedArrayAliasingAndMatrixTranspose)
+        {
+            double m_buf[] = {1, 4, 7,
+                              2, 5, 8,
+                              3, 6, 9};
+            double v_buf[] = {4, 5, 6};
+            
+            Array<OneD, double> vector_array(3, v_buf);
+            
+            NekMatrix<double> m(3, 3, m_buf);
+            NekVector<double> v(3, vector_array, eWrapper);
+            NekVector<double> result(3, vector_array, eWrapper);
+            
+            double expected_result_buf[] = {66, 81, 96};
+            NekVector<double> expected_result(3, expected_result_buf);
+            
+            result = Transpose(m)*v;
+            
+            BOOST_CHECK_EQUAL(expected_result, result);
+            BOOST_CHECK_EQUAL(vector_array[0], 66);
+            BOOST_CHECK_EQUAL(vector_array[1], 81);
+            BOOST_CHECK_EQUAL(vector_array[2], 96);
+        }
         
         BOOST_AUTO_TEST_CASE(TestDoubleSquareFullVectorMultiplicationWithSharedArrayAliasingAndOverlap)
         {
@@ -171,6 +195,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, result);
         }
 
+
         BOOST_AUTO_TEST_CASE(TestScaledIntSquareFullVectorMultiplication)
         {
             int m_buf[] = {1, 2, 3,
@@ -231,5 +256,37 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, m1*m2*Transpose(m3));
         }
 
+        
+        BOOST_AUTO_TEST_CASE(TestThreeWrappedMatrixMultiplicationWithTranspose)
+        {
+            double buf1[] = {1.0, 2.0,
+                             3.0, 4.0};
+            double buf2[] = {5.0, 6.0,
+                             7.0, 8.0};
+            double buf3[] = {9.0, 11.0,
+                             10.0, 12.0};
+            double out_buf[] = {0.0, 0.0, 0.0, 0.0};
+
+            Array<OneD, double> array_buf1(4, buf1);
+            Array<OneD, double> array_buf2(4, buf2);
+            Array<OneD, double> array_buf3(4, buf3);
+            Array<OneD, double> array_out_buf(4, out_buf);
+
+            NekMatrix<double> m1(2, 2, array_buf1, eWrapper);
+            NekMatrix<double> m2(2, 2, array_buf2, eWrapper);
+            NekMatrix<double> m3(2, 2, array_buf3, eWrapper);
+            NekMatrix<double> result(2, 2, array_out_buf, eWrapper);
+
+            double expected_result_buf[] = {517, 766,
+                                            625, 926};
+            NekMatrix<double> expected_result(2, 2, expected_result_buf);
+
+            result = m1*m2*Transpose(m3);
+            BOOST_CHECK_EQUAL(expected_result, result);
+            BOOST_CHECK_EQUAL(array_out_buf[0], 517.0);
+            BOOST_CHECK_EQUAL(array_out_buf[1], 766.0);
+            BOOST_CHECK_EQUAL(array_out_buf[2], 625.0);
+            BOOST_CHECK_EQUAL(array_out_buf[3], 926.0);
+        }
     }
 }

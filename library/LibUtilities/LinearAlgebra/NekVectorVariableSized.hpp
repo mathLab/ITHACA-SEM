@@ -432,7 +432,7 @@ namespace Nektar
 
                 unsigned int newRows = rhs.GetMetadata().Rows;
                 this->SetSize(newRows);
-                if( GetWrapperType() == eCopy )
+                if( this->GetWrapperType() == eCopy )
                 {
                     if( this->GetData().num_elements() < newRows )
                     {

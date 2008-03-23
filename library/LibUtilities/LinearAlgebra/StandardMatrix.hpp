@@ -305,44 +305,21 @@ namespace Nektar
             
             // TODO - Copy constructors from other types of matrices.
             
-            ThisType& Assign(unsigned int newRows, unsigned int newColumns, Array<OneD, DataType>& data)
-            {
-                this->Resize(newRows, newColumns);
-                m_wrapperType = eWrapper;
-                m_policySpecificData = PolicySpecificDataHolderType();
-                m_transpose = 'N';
-                m_data = data;
-                return *this;
-            }
-             
             ThisType& operator=(const ThisType& rhs)
             {
-                if( this != &rhs )
+                if( this == &rhs )
                 {
-                    BaseType::operator=(rhs);
-                    m_policySpecificData = rhs.m_policySpecificData;
-                    
-                    unsigned int requiredStorageSize = StoragePolicy::GetRequiredStorageSize(this->GetRows(), this->GetColumns(), GetPolicySpecificDataHolderType());
-
-                    if( m_wrapperType == eCopy  )
-                    {
-                        // If the current vector is a matrix, then regardless of the rhs type 
-                        // we just copy over the values, resizing if needed.
-                        if( m_data.num_elements() < requiredStorageSize )
-                        {
-                            m_data = Array<OneD, DataType>(requiredStorageSize);
-                        }
-                    }
-                    else if( m_wrapperType == eWrapper )
-                    {
-                        // If the current matrix is wrapped, then just copy over the top,
-                        // but the sizes of the two matrices must be the same.
-                        ASSERTL0(m_data.num_elements() >= requiredStorageSize, "Wrapped NekMatrices must have the same dimension in operator=");
-                    }
-    
-                    std::copy(rhs.m_data.data(), rhs.m_data.data() + requiredStorageSize, m_data.data());
-                    m_transpose = rhs.m_transpose;
+                    return *this;
                 }
+
+                BaseType::operator=(rhs);
+                m_policySpecificData = rhs.m_policySpecificData;
+                
+                ResizeDataArrayIfNeeded(this->GetRows(), this->GetColumns(), m_policySpecificData);
+                
+                unsigned int requiredStorageSize = StoragePolicy::GetRequiredStorageSize(this->GetRows(), this->GetColumns(), m_policySpecificData);
+                std::copy(rhs.m_data.data(), rhs.m_data.data() + requiredStorageSize, m_data.data());
+                m_transpose = rhs.m_transpose;
                 
                 return *this;
             }
@@ -357,9 +334,9 @@ namespace Nektar
                         this->GetColumns() != rhs.GetMetadata().Columns )
                     {
                         Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
-                        m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
+                        ResizeDataArrayIfNeeded(this->GetRows(), this->GetColumns(), m_policySpecificData);
                     }
-                    m_wrapperType = eCopy;
+
                     m_transpose = 'N';
                     rhs.Evaluate(*this);
                     return *this;
@@ -567,7 +544,12 @@ namespace Nektar
 
             unsigned int GetLeadingDimension() const
             {
-                if( m_transpose == 'N' )
+                return GetLeadingDimension(m_transpose);
+            }
+
+            unsigned int GetLeadingDimension(char transpose) const
+            {
+                if( transpose == 'N' )
                 {
                     return this->GetRows();
                 }
@@ -584,6 +566,27 @@ namespace Nektar
             
             
         private:
+            void ResizeDataArrayIfNeeded(unsigned int newRows, unsigned int newColumns, PolicySpecificDataHolderType& policySpecificData)
+            {
+                unsigned int requiredStorageSize = StoragePolicy::GetRequiredStorageSize(newRows, newColumns, policySpecificData);
+
+                if( m_wrapperType == eCopy  )
+                {
+                    // If the current vector is a matrix, then regardless of the rhs type 
+                    // we just copy over the values, resizing if needed.
+                    if( m_data.num_elements() < requiredStorageSize )
+                    {
+                        m_data = StoragePolicy::Initialize(newRows, newColumns, policySpecificData);
+                    }
+                }
+                else if( m_wrapperType == eWrapper )
+                {
+                    // If the current matrix is wrapped, then just copy over the top,
+                    // but the sizes of the two matrices must be the same.
+                    ASSERTL0(m_data.num_elements() >= requiredStorageSize, "Wrapped NekMatrices must have the same dimension in operator=");
+                }
+            }
+
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const 
             {
                 return ThisType::operator()(row, column);

@@ -67,5 +67,18 @@ namespace Nektar
             BOOST_CHECK_EQUAL(const_array_1[2], 7.0);
             BOOST_CHECK_EQUAL(const_array_2[2], 3.0);
         }
+
+        void CheckAddresses(Array<TwoD, double>::reference d, double* expectedAddress)
+        {
+            BOOST_CHECK_EQUAL(d.num_elements(), 7);
+            BOOST_CHECK_EQUAL(d.origin(), expectedAddress);
+        }
+
+        BOOST_AUTO_TEST_CASE(TestSignature)
+        {
+            Array<TwoD, double> array_1(10, 7, 0.0);
+            CheckAddresses(array_1[0], array_1.data());
+            CheckAddresses(array_1[1], array_1.data()+7);
+        }
     }
 }

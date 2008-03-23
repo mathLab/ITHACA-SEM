@@ -190,5 +190,46 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, result);
         }
 
+        BOOST_AUTO_TEST_CASE(TestThreeMatrixMultiplication)
+        {
+            double buf1[] = {1.0, 2.0,
+                             3.0, 4.0};
+            double buf2[] = {5.0, 6.0,
+                             7.0, 8.0};
+            double buf3[] = {9.0, 10.0,
+                             11.0, 12.0};
+
+            NekMatrix<double> m1(2, 2, buf1);
+            NekMatrix<double> m2(2, 2, buf2);
+            NekMatrix<double> m3(2, 2, buf3);
+
+            double expected_result_buf[] = {517, 766,
+                                            625, 926};
+            NekMatrix<double> expected_result(2, 2, expected_result_buf);
+
+            BOOST_CHECK_EQUAL(expected_result, m1*m2*m3);
+
+        }
+
+        BOOST_AUTO_TEST_CASE(TestThreeMatrixMultiplicationWithTranspose)
+        {
+            double buf1[] = {1.0, 2.0,
+                             3.0, 4.0};
+            double buf2[] = {5.0, 6.0,
+                             7.0, 8.0};
+            double buf3[] = {9.0, 11.0,
+                             10.0, 12.0};
+
+            NekMatrix<double> m1(2, 2, buf1);
+            NekMatrix<double> m2(2, 2, buf2);
+            NekMatrix<double> m3(2, 2, buf3);
+
+            double expected_result_buf[] = {517, 766,
+                                            625, 926};
+            NekMatrix<double> expected_result(2, 2, expected_result_buf);
+
+            BOOST_CHECK_EQUAL(expected_result, m1*m2*Transpose(m3));
+        }
+
     }
 }

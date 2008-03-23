@@ -40,6 +40,7 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Concepts.hpp>
 #include <LibUtilities/LinearAlgebra/Space.h>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 #include <boost/concept_check.hpp>
 #include <boost/lexical_cast.hpp>
@@ -559,6 +560,11 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.17  2008/03/03 02:28:39  bnelson
+    Changed OneD, TwoD, and ThreeD to classes instead of enums to support type parameters in NekVector instead of unsigned int for the dimensions.
+
+    Added a new NekVector<const DataType> to allow wrapping of ConstArrays.
+
     Revision 1.16  2008/01/03 04:16:09  bnelson
     Changed method name in the expression library from Apply to Evaluate.
 

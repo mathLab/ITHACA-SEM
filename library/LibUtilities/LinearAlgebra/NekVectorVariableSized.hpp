@@ -432,11 +432,18 @@ namespace Nektar
 
                 unsigned int newRows = rhs.GetMetadata().Rows;
                 this->SetSize(newRows);
-                if( this->GetData().num_elements() < newRows )
+                if( GetWrapperType() == eCopy )
                 {
-                    this->SetData(Array<OneD, DataType>(newRows));
+                    if( this->GetData().num_elements() < newRows )
+                    {
+                        this->SetData(Array<OneD, DataType>(newRows));
+                    }
                 }
-                this->SetWrapperType(eCopy);
+                else
+                {
+                    ASSERTL0(this->GetData().num_elements() >= newRows, 
+                             "Attempting to store too many elements in a wrapped vector.");
+                }
 
                 rhs.Evaluate(*this);
                 return *this;            

@@ -77,7 +77,44 @@ namespace Nektar
         {
         return ePrism;
         }
-        
+
+        const int GetEdgeNcoeffs(const int i) const
+        {
+            ASSERTL2((i >= 0)&&(i <= 8),"edge id is out of range");
+
+            if((i == 0)||(i == 2))
+            {
+                return  GetBasisNumModes(0);
+            }
+            else if((i == 1)||(i == 3)||(i==8))
+            {
+                return  GetBasisNumModes(1);
+            }
+            else
+            {
+                return GetBasisNumModes(2);
+            }
+
+        }
+
+        const LibUtilities::BasisType GetEdgeBasisType(const int i) const
+        {
+            ASSERTL2((i >= 0)&&(i <= 8),"edge id is out of range");
+
+                if((i == 0)||(i == 2))
+            {
+                return  GetBasisType(0);
+            }
+            else if((i == 1)||(i == 3)||(i==8))
+            {
+                return  GetBasisType(1);
+            }
+            else
+            {
+                return GetBasisType(2);
+            }
+
+        }
 
         NekDouble Integral3D(const ConstArray<OneD, NekDouble>& inarray, 
                     const ConstArray<OneD, NekDouble>& wx,
@@ -220,7 +257,17 @@ namespace Nektar
             return PhysEvaluate(Lcoords);
         }
         
-            virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray) 
+        virtual int v_GetEdgeNcoeffs(const int i) const
+        {
+            return GetEdgeNcoeffs(i);
+        }
+
+        virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
+        {
+            return GetEdgeBasisType(i);
+        }
+        
+        virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray)
         {
                 std::cout << "Implement me" << std::endl;
                 return;
@@ -258,6 +305,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.10  2008/03/17 10:37:12  pvos
+ * Clean up of the code
+ *
  * Revision 1.9  2008/01/20 06:09:38  bnelson
  * Fixed visual c++ compile errors.
  *

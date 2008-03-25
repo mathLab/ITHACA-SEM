@@ -80,6 +80,44 @@ namespace Nektar
                 return eHexahedron;
             }
 
+            const int GetEdgeNcoeffs(const int i) const
+            {
+                ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
+
+                if((i == 0)||(i == 2)||(i == 8)||(i == 10))
+                {
+                    return  GetBasisNumModes(0);
+                }
+                else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
+                {
+                    return  GetBasisNumModes(1); 
+                }
+                else
+                {
+                    return GetBasisNumModes(2);
+                }
+
+            }
+
+            const LibUtilities::BasisType GetEdgeBasisType(const int i) const
+            {
+                ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
+
+                if((i == 0)||(i == 2)||(i==8)||(i==10))
+                {
+                    return  GetBasisType(0);
+                }
+                else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
+                {
+                    return  GetBasisType(1);
+                }
+                else
+                {
+                    return GetBasisType(2);
+                }
+
+            }
+
             /** \brief Fill outarray with mode \a mode of expansion
             *
             *    Note for hexahedral expansions _base[0] (i.e. p)  modes run 
@@ -280,6 +318,16 @@ namespace Nektar
             {
                 return PhysEvaluate(Lcoords);
             }
+
+            virtual int v_GetEdgeNcoeffs(const int i) const
+            {
+                return GetEdgeNcoeffs(i);
+            }
+            
+            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
+            {
+                return GetEdgeBasisType(i);
+            }
             
              virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray) 
             {
@@ -318,6 +366,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.15  2008/03/17 10:37:32  pvos
+* Clean up of the code
+*
 * Revision 1.14  2008/01/20 06:09:37  bnelson
 * Fixed visual c++ compile errors.
 *

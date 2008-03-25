@@ -75,6 +75,25 @@ namespace Nektar
             {
                 return eTetrahedron;
             }
+            
+            virtual bool v_IsBoundaryInteriorExpansion()
+            {
+                bool returnval = false;
+                
+                if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+                {
+                    if(m_base[1]->GetBasisType() == LibUtilities::eModified_B)
+                    {
+                       if(m_base[2]->GetBasisType() == LibUtilities::eModified_C)
+                        {
+                        returnval = true;
+                        }
+                    }
+                }
+                
+                return returnval;
+            }
+
 
           NekDouble Integral3D(const ConstArray<OneD, NekDouble>& inarray, const ConstArray<OneD, NekDouble>& w0,
                                const ConstArray<OneD, NekDouble>& w1, const ConstArray<OneD, NekDouble>&w2);
@@ -96,6 +115,15 @@ namespace Nektar
           void GetCoords(Array<OneD, NekDouble> &coords_0, 
                Array<OneD, NekDouble> &coords_1, Array<OneD, NekDouble> &coords_2);
 
+          void MapTo(const int edge_ncoeffs,
+                     const LibUtilities::BasisType Btype, const int eid,
+                     const EdgeOrientation eorient, StdExpMap &Map);
+          void MapTo_ModalFormat(const int edge_ncoeffs,
+                                 const LibUtilities::BasisType Btype,
+                                 const int eid,
+                                 const EdgeOrientation eorient,
+                                 StdExpMap &Map);
+
 
             //----------------------------------
             // Generate Matrix Routine
@@ -106,8 +134,42 @@ namespace Nektar
                 return StdExpansion::CreateGeneralMatrix(mkey);
             }
 
+            int GetEdgeNcoeffs(const int i) const
+            {
+                ASSERTL2((i >= 0) && (i <= 5), "edge id is out of range");
 
-        //    void SetInvInfo(StdMatContainer *mat, MatrixType Mform);
+                if (i == 0)
+                {
+                    return GetBasisNumModes(0);
+                }
+                else if((i==1)||(i==2))
+                {
+                    return GetBasisNumModes(1);
+                } else
+                {
+                    return GetBasisNumModes(2);
+                }
+
+            }
+
+            LibUtilities::BasisType GetEdgeBasisType(const int i) const
+            {
+                ASSERTL2((i >= 0) && (i <= 5), "edge id is out of range");
+
+                if (i == 0)
+                {
+                    return GetBasisType(0);
+                }
+                else if((i==1)||(i==2))
+                {
+                    return GetBasisType(1);
+                }
+                else
+                {
+                    return GetBasisType(2);
+                }
+
+            }
         
         protected:
 
@@ -116,8 +178,6 @@ namespace Nektar
               const ConstArray<OneD, NekDouble>& base2, 
               const ConstArray<OneD, NekDouble>& inarray, 
               Array<OneD, NekDouble> & outarray);
-
-          //  static StdMatrix s_elmtmats;
 
         private:
 
@@ -141,60 +201,22 @@ namespace Nektar
                 return DetShapeType();
             }
 
-//             virtual void v_SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-//             {
-//                 SetInvInfo(mat,Mform);
-//             }
-
 
             // BEGIN ///
 
             virtual int v_GetEdgeNcoeffs(const int i) const
             {
-                std::cout << "Implement me" << std::endl;
-                return -1;
-                //return GetEdgeNcoeffs(i);
+                return GetEdgeNcoeffs(i);
             }
-
 
             virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
             {
                 return GenMatrix(mkey);
             }
 
-
-            virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray) 
-            {
-                std::cout << "Implement me" << std::endl;
-                return;
-            } // TODO: Implement
-            
-            virtual void v_GenLapMatrix (Array<OneD, NekDouble> & outarray) 
-            {
-                std::cout << "Implement me" << std::endl;
-                return;
-            } // TODO: Implement
-            
-            virtual DNekMatSharedPtr v_GetMassMatrix() 
-            {
-                std::cout << "Implement me" << std::endl;
-                int foo = 0;
-                return DNekMatSharedPtr();
-            } // TODO: Implement
-            
-            virtual DNekMatSharedPtr v_GetLapMatrix() 
-            {
-                std::cout << "Implement me" << std::endl;
-                int foo = 0;
-                return DNekMatSharedPtr();
-            }  // TODO: Implement
-
-
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
-                std::cout << "Implement me" << std::endl;
-                return LibUtilities::eNoBasisType;
-                //return GetEdgeBasisType(i);
+                return GetEdgeBasisType(i);
             }
 
 
@@ -211,11 +233,6 @@ namespace Nektar
                 return Integral(inarray);
             }
             
-            virtual NekDouble v_Evaluate(const ConstArray<OneD, NekDouble> &coords) {
-                std::cout << "Implement me" << std::endl;
-                return -1; // TODO: Implement
-            }
-
             virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
             {
@@ -233,7 +250,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &out_dy,
                 Array<OneD, NekDouble> &out_dz )
             {
-                std::cout << "Implement me" << std::endl;
+
                 PhysDeriv( inarray, out_dx, out_dy, out_dz );
             }
 
@@ -243,7 +260,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &out_dy,
                 Array<OneD, NekDouble> &out_dz )
             {
-                std::cout << "Implement me" << std::endl;
+
                 PhysDeriv( inarray, out_dx, out_dy, out_dz );
             }
 
@@ -265,7 +282,6 @@ namespace Nektar
 
             virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
             {
-                std::cout << "Implement me" << std::endl;
                 return PhysEvaluate(coords);
             }
 
@@ -275,9 +291,7 @@ namespace Nektar
                 const EdgeOrientation eorient,
                 StdExpMap &Map)
             {
-                std::cout << "Implement me" << std::endl;
-                return;
-                //MapTo(edge_ncoeffs, Btype, eid, eorient, Map);
+                MapTo(edge_ncoeffs, Btype, eid, eorient, Map);
             }
 
             virtual void v_MapTo_ModalFormat(const int edge_ncoeffs,
@@ -286,25 +300,49 @@ namespace Nektar
                 const EdgeOrientation eorient, 
                 StdExpMap &Map)
             {
-                std::cout << "Implement me" << std::endl;
-                return;
-                //MapTo_ModalFormat(edge_ncoeffs, Btype, eid, eorient, Map);
+                MapTo_ModalFormat(edge_ncoeffs, Btype, eid, eorient, Map);
             }
 
             virtual void v_WriteToFile(std::ofstream &outfile)
-            {
-                std::cout << "Implement me" << std::endl;
+            {                
                 WriteToFile(outfile);
             }
 
             virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
-            {
-                std::cout << "Implement me" << std::endl;
+            {               
                 WriteCoeffsToFile(outfile);
             }
 
-        };    
+            virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray)
+            {
+                std::cout << "Implement me" << std::endl;
+                return;
+            } // TODO: Implement
+         
+            virtual void v_GenLapMatrix (Array<OneD, NekDouble> & outarray)
+            {
+                std::cout << "Implement me" << std::endl;
+                return;
+            } // TODO: Implement
+            
+            virtual DNekMatSharedPtr v_GetMassMatrix()
+            {
+                std::cout << "Implement me" << std::endl;
+                int foo = 0;
+                return DNekMatSharedPtr();
+            } // TODO: Implement
+            
+            virtual DNekMatSharedPtr v_GetLapMatrix()
+            {
+                std::cout << "Implement me" << std::endl;
+                int foo = 0;
+                return DNekMatSharedPtr();
+            }  // TODO: Implement
+
+        };
+        
         typedef boost::shared_ptr<StdTetExp> StdTetExpSharedPtr;
+        
     } //end of namespace
 } //end of namespace
 
@@ -312,6 +350,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.12  2008/03/17 10:37:58  pvos
+ * Clean up of the code
+ *
  * Revision 1.11  2008/01/08 22:48:41  ehan
  * Fixed the call signature of a shadowed virtual function: Added a const qualifier to the passed parameter StdMatrixKey in the virtual function v_GenMatrix().  This enables Nektar to generate the correct standard mass matrix at initialization time.
  *

@@ -803,6 +803,93 @@ namespace Nektar
             }
             outfile << "]" ; 
         }
+
+
+       void  StdTetExp::MapTo(const int edge_ncoeffs,
+                              const LibUtilities::BasisType Btype,
+                              const int eid,
+                              const EdgeOrientation eorient,
+                              StdExpMap &Map)
+        {
+
+            int i;
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
+            int order2 = m_base[2]->GetNumModes();
+            
+            Array<OneD, int> wsp(edge_ncoeffs); 
+
+            ASSERTL2(eid>=0&&eid<=5,"eid must be between 0 and 5");
+            ASSERTL2(Btype == LibUtilities::eModified_A,"Mapping only set up "
+                "for Modified_A edges");
+            ASSERTL2(Btype == m_base[0]->GetBasisType(),
+                "Expansion type of edge and StdQuadExp are different");
+
+            // make sure haved correct memory storage
+            if(edge_ncoeffs != Map.GetLen())
+            {
+                Map.SetMapMemory(edge_ncoeffs);
+            }
+
+            if(eorient == eForwards)
+            {
+                for(i = 0; i < edge_ncoeffs; ++i)
+                {
+                    wsp[i] = i;
+                }
+            }
+            else
+            {
+                wsp[1] = 0; 
+                wsp[0] = 1;
+
+                for(i = 2; i < edge_ncoeffs; ++i)
+                {
+                    wsp[i] = i;
+                }
+            }
+
+            // Set up Mapping details
+            switch (eid)
+            {
+            case 0:
+                {
+                    int cnt = 0;
+
+                    for(i = 0; i < edge_ncoeffs; cnt+=order1-i, ++i)
+                    {
+                        Map[wsp[i]] = cnt; 
+                    }
+                }
+                break;
+            case 1:
+                Map[wsp[0]] = order1;
+                Map[wsp[1]] = 1;
+
+                for(i = 2; i < edge_ncoeffs; ++i)
+                {
+                    Map[wsp[i]] = order1+i-1; 
+                }
+                break;
+            case 2:
+                for(i = 0; i < edge_ncoeffs; ++i)
+                {
+                    Map[wsp[i]] = i; 
+                }
+                break;
+            }
+        }
+
+        // currently same as MapTo 
+
+        void StdTetExp::MapTo_ModalFormat(const int edge_ncoeffs,
+                                          const LibUtilities::BasisType Btype,
+                                          const int eid,
+                                          const EdgeOrientation eorient,
+                                          StdExpMap &Map)
+        {        
+            MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
+        }
         
 
 
@@ -836,6 +923,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.7  2008/02/01 20:05:49  ehan
+ * Added doxygen comments.
+ *
  * Revision 1.6  2007/11/08 14:33:05  ehan
  * Fixed PhysDerivative and PhysTensorDerivative3D,  and improved L1 error up to 1e-15
  * Reimplimented WriteToFile and WriteCoeffsToFile function.

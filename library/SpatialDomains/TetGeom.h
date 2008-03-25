@@ -45,6 +45,7 @@
  #include <SpatialDomains/Geometry3D.h>
  #include <SpatialDomains/MeshComponents.h>
 
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -59,18 +60,64 @@ namespace Nektar
         {
         public:
 	    TetGeom ();
+        TetGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr faces[],
+                const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[]);
+                
 	    TetGeom(const VertexComponentSharedPtr verts[], const TriGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-	    TetGeom (const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
+	    TetGeom(const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
+        TetGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
 	    ~TetGeom();
 
             void AddElmtConnected(int gvo_id, int locid);
             int  NumElmtConnected() const;
             bool IsElmtConnected(int gvo_id, int locid) const;
+            void FillGeom();
+            void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
             inline int GetEid() const 
             {
                 return m_eid;
             }
+
+            inline int GetEid(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 5),"Edge id must be between 0 and 5");
+                return m_edges[i]->GetEid();
+            }
+            
+            inline StdRegions::EdgeOrientation GetEorient(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 5),"Edge id must be between 0 and 5");
+                return m_eorient[i];
+            }
+            
+            inline int GetVid(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 3),"Vertex id must be between 0 and 3");
+                return m_verts[i]->GetVid();
+            }
+            
+            /// \brief Return the edge number of the given edge, or -1, if
+            /// not an edge of this element.
+            int WhichEdge(SegGeomSharedPtr edge)
+            {
+                int returnval = -1;
+
+                SegGeomVector::iterator edgeIter;
+                int i;
+
+                for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
+                {
+                    if (*edgeIter == edge)
+                    {
+                        returnval = i;
+                        break;
+                    }
+                }
+
+                return returnval;
+            }
+
 
             inline int GetCoordDim() const 
             {
@@ -112,9 +159,14 @@ namespace Nektar
             std::list<CompToElmt> m_elmtmap;
 
             Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
+            void GenGeomFactors(void);
 
         private:
             bool m_owndata;
+            virtual void v_GenGeomFactors(void)
+            {
+                GenGeomFactors();
+            }
 
         };
 
@@ -125,6 +177,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.7  2008/02/27 22:31:29  ehan
+// Added inline function "SetOwnData()".
+//
 // Revision 1.6  2008/02/12 01:28:58  ehan
 // Included TriGeom.h to prevent undefined TriGeom error.
 //

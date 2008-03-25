@@ -33,18 +33,24 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+// #include "pchSpatialDomains.h"
+// 
+// #include <StdRegions/StdRegions.hpp>
+// #include <SpatialDomains/SpatialDomains.hpp>
+// 
+// #include <SpatialDomains/TriGeom.h>
+// #include <SpatialDomains/TetGeom.h>
+// 
+// #include <SpatialDomains/GeomFactors.h>
+// #include <SpatialDomains/Geometry3D.h>
+// #include <SpatialDomains/MeshComponents.h>
+// #include <SpatialDomains/TriFaceComponent.h>
+
 #include "pchSpatialDomains.h"
 
-#include <StdRegions/StdRegions.hpp>
-#include <SpatialDomains/SpatialDomains.hpp>
-
-#include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/TetGeom.h>
 
-#include <SpatialDomains/GeomFactors.h>
-#include <SpatialDomains/Geometry3D.h>
-#include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/TriFaceComponent.h>
 
 
 namespace Nektar
@@ -52,8 +58,62 @@ namespace Nektar
     namespace SpatialDomains
     {
 
+         TetGeom::TetGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr faces[],
+                          const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[])
+         {
+            /// Copy the vert shared pointers.
+            m_verts.insert(m_verts.begin(), verts, verts+TetGeom::kNverts);
+
+            /// Copy the edge shared pointers.
+            m_edges.insert(m_edges.begin(), edges, edges+TetGeom::kNedges);
+
+            /// Copy the face shared pointers
+            m_tfaces.insert(m_tfaces.begin(), faces, faces+TetGeom::kNfaces);
+
+            for (int i=0; i<kNedges; ++i)
+            {
+                m_eorient[i] = eorient[i];
+            }
+
+            //TODO: check FaceOrientation for Tetrahedron case
+            for (int j=0; j<kNfaces; ++j)
+            {
+               m_forient[j] = forient[j];
+            }
+
+            m_coordim = verts[0]->GetCoordim();
+            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
+        }
+
+        
         TetGeom::TetGeom (const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
         {
+        }
+
+        TetGeom::TetGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[])          
+        {
+            /// Copy the edge shared pointers.
+            m_edges.insert(m_edges.begin(), edges, edges+TetGeom::kNedges);
+
+            for(int j=0; j <kNedges; ++j)
+            {
+                if(eorient[j] == StdRegions::eForwards)
+                {
+                    m_verts.push_back(edges[j]->GetVertex(0));
+                }
+                else
+                {
+                    m_verts.push_back(edges[j]->GetVertex(1));
+                }
+            }
+
+            for (int j=0; j<kNedges; ++j)
+            {
+                m_eorient[j] = eorient[j];
+            }
+
+            m_coordim = edges[0]->GetVertex(0)->GetCoordim();
+            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
         }
 
         TetGeom::~TetGeom()
@@ -87,7 +147,6 @@ namespace Nektar
         /** given local collapsed coordinate Lcoord return the value of
         physical coordinate in direction i **/
 
-
         NekDouble TetGeom::GetCoord(const int i, 
                                           const ConstArray<OneD,NekDouble> &Lcoord)
         {
@@ -96,11 +155,169 @@ namespace Nektar
 
             return m_xmap[i]->PhysEvaluate(Lcoord);
         }
+
+          // Set up GeoFac for this geometry using Coord quadrature distribution
+
+        void TetGeom::GenGeomFactors(void)
+        {
+            GeomType Gtype = eRegular;
+            
+            FillGeom();
+
+            // check to see if expansions are linear
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                if((m_xmap[i]->GetBasisNumModes(0) != 2)||
+                   (m_xmap[i]->GetBasisNumModes(1) != 2)||
+                   (m_xmap[i]->GetBasisNumModes(2) != 2))
+                {
+                    Gtype = eDeformed;
+                }
+            }
+          //  m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
+        }
+
+       void TetGeom::FillGeom()
+       {
+         // check to see if geometry structure is already filled
+            if(m_state == ePtsFilled)
+            {
+                return;
+            }
+
+            int i,j; 
+            int order0 = m_xmap[0]->GetBasisNumModes(0);
+            int order1 = m_xmap[0]->GetBasisNumModes(1);
+            ConstArray<OneD,NekDouble> coef;
+            StdRegions::StdExpMap Map,MapV;
+
+            // set side 1 
+            m_xmap[0]->MapTo((*m_edges[0])[0]->GetNcoeffs(),
+                 (*m_edges[0])[0]->GetBasisType(0),
+                 0,m_eorient[0],Map);
+
+            for(i = 0; i < m_coordim; ++i)
+            {
+                coef  = (*m_edges[0])[i]->GetCoeffs();
+                for(j = 0; j < order0; ++j)
+                {
+                    m_xmap[i]->SetCoeff(Map[j],coef[j]);
+                }
+            }
+
+            // set Vertices into side 2 
+            (*m_edges[1])[0]->MapTo(m_eorient[1],MapV);
+
+            for(i = 0; i < m_coordim; ++i)
+            {
+                (*m_edges[1])[i]->SetCoeff(MapV[0],(*m_verts[1])[i]);
+                (*m_edges[1])[i]->SetCoeff(MapV[1],(*m_verts[2])[i]);
+            }
+
+            // set Vertices into side 3
+            (*m_edges[2])[0]->MapTo(m_eorient[2],MapV);
+
+            for(i = 0; i < m_coordim; ++i)
+            {
+                (*m_edges[2])[i]->SetCoeff(MapV[0],(*m_verts[0])[i]);
+                (*m_edges[2])[i]->SetCoeff(MapV[1],(*m_verts[2])[i]);
+            }
+
+            // set side 2
+            m_xmap[0]->MapTo((*m_edges[1])[0]->GetNcoeffs(),
+                 (*m_edges[1])[0]->GetBasisType(0),
+                 1,(m_eorient[1]),Map);
+        
+            for(i = 0; i < m_coordim; ++i)
+            {
+                coef  = (*m_edges[1])[i]->GetCoeffs();
+                for(j = 0; j < order1; ++j)
+                {
+                    m_xmap[i]->SetCoeff(Map[j],coef[j]);
+                }
+            }
+
+            // set side 3
+            m_xmap[0]->MapTo((*m_edges[2])[0]->GetNcoeffs(),
+                 (*m_edges[2])[0]->GetBasisType(0),
+                 2,(m_eorient[2]),Map);
+
+            for(i = 0; i < m_coordim; ++i)
+            {
+                coef  = (*m_edges[2])[i]->GetCoeffs();
+                for(j = 0; j < order0; ++j)
+                {
+                    m_xmap[i]->SetCoeff(Map[j],coef[j]);
+                }
+            }
+
+            for(i = 0; i < m_coordim; ++i)
+            {
+                m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
+                                    m_xmap[i]->UpdatePhys());
+            }
+
+            m_state = ePtsFilled;
+
+       }
+
+       void TetGeom::GetLocCoords(const ConstArray<OneD, NekDouble>& coords, Array<OneD, NekDouble>& Lcoords)
+       {
+         FillGeom();
+
+            // calculate local coordinate for coord 
+            if(GetGtype() == eRegular)
+            {   // Based on Spen's book, page 99
+
+                // Point inside tetrahedron
+                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
+
+                // Edges
+                VertexComponent er0, e10, e20, e30;
+                er0.Sub(r,*m_verts[0]);
+                e10.Sub(*m_verts[1],*m_verts[0]);
+                e20.Sub(*m_verts[2],*m_verts[0]);
+                e30.Sub(*m_verts[3],*m_verts[0]);
+
+
+                // Cross products (Normal times area)
+                VertexComponent cp1020, cp2030, cp3010;
+                cp1020.Mult(e10,e20);
+                cp2030.Mult(e20,e30);
+                cp3010.Mult(e30,e10);
+
+
+                // Barycentric coordinates (relative volume)
+                NekDouble V = e30.dot(cp1020);
+                NekDouble beta  = er0.dot(cp2030) / V;
+                NekDouble gamma = er0.dot(cp3010) / V;
+                NekDouble delta = er0.dot(cp1020) / V;
+
+                // Make tet bigger
+                Lcoords[0] = 2.0*beta  - 1.0;
+                Lcoords[1] = 2.0*gamma - 1.0;
+                Lcoords[2] = 2.0*delta - 1.0;
+                
+            }
+            else
+            {
+                NEKERROR(ErrorUtil::efatal,
+                    "inverse mapping must be set up to use this call");
+            }
+
+       }
+
+
+
+        
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.4  2008/02/08 23:05:52  jfrazier
+// More work on 3D components.
+//
 // Revision 1.3  2008/02/05 00:43:10  ehan
 // Included geometry3D and meshgraphics inorder to prevent compile error.
 //

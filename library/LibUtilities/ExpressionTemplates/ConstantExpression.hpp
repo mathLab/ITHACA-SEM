@@ -89,7 +89,7 @@ namespace Nektar
                                     boost::is_same<CheckType, Type>,
                                     boost::mpl::or_
                                     <
-                                        IsVector<typename boost::remove_cv<CheckType>::type>,
+                                        IsVariableSizedVector<typename boost::remove_cv<CheckType>::type>,
                                         IsMatrix<typename boost::remove_cv<CheckType>::type>
                                     >
                                 >, bool>::type
@@ -114,7 +114,7 @@ namespace Nektar
                                     boost::is_same<CheckType, Type>,
                                     boost::mpl::and_
                                     <
-                                        boost::mpl::not_<IsVector<typename boost::remove_cv<CheckType>::type> >,
+                                        boost::mpl::not_<IsVariableSizedVector<typename boost::remove_cv<CheckType>::type> >,
                                         boost::mpl::not_<IsMatrix<typename boost::remove_cv<CheckType>::type> >
                                     >
                                 >, bool>::type
@@ -154,6 +154,9 @@ namespace Nektar
 
 /**
     $Log: ConstantExpression.hpp,v $
+    Revision 1.19  2008/03/11 13:20:13  bnelson
+    Fixed an error checking for aliasing.
+
     Revision 1.18  2008/03/09 23:25:44  bnelson
     Updated aliasing to check if two vectors/matrices overlap in their memory ranges.
 

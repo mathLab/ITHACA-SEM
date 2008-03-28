@@ -61,6 +61,12 @@ namespace Nektar
     template<typename DataType, typename dim, typename space>
     struct IsVector<NekVector<DataType, dim, space> > : public boost::true_type {};
     
+    template<typename T>
+    struct IsVariableSizedVector : public boost::false_type {};
+    
+    template<typename DataType, typename space>
+    struct IsVariableSizedVector<NekVector<DataType, VariableSizedVector, space> > : public boost::true_type {};
+    
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_FWD_HPP

@@ -72,7 +72,7 @@ namespace Nektar
                  BOOST_CHECK_EQUAL(*e2, *e1);
              }
  
-             typedef NekPoint<unsigned int, 3> Point;
+             typedef NekPoint<unsigned int, ThreeD> Point;
              {
                  Point p(1,2,3);
                  Expression<ConstantExpressionPolicy<Point> > e1(p);

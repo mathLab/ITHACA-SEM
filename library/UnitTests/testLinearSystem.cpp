@@ -53,14 +53,14 @@
 //                double result_buf[] = { 20, 50, 10 };
 //
 //                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-//                NekVector<double, 3> b(result_buf);
+//                NekVector<double, ThreeD> b(result_buf);
 //
 //                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 //
-//                NekVector<double, 3> result = linsys.Solve(b);
+//                NekVector<double, ThreeD> result = linsys.Solve(b);
 //                
 //                double expected_result_buf[] = { 2, 10, 5 };
-//                NekVector<double, 3> expectedResult(expected_result_buf);
+//                NekVector<double, ThreeD> expectedResult(expected_result_buf);
 //
 //                BOOST_CHECK_EQUAL(result, expectedResult);
 //            }
@@ -71,14 +71,14 @@
 //                double result_buf[] = { 20, 50, 10 };
 //
 //                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-//                boost::shared_ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
+//                boost::shared_ptr<NekVector<double, ThreeD> > b(new NekVector<double, ThreeD>(result_buf));
 //
 //                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 //
-//                NekVector<double, 3> result = linsys.Solve(b);
+//                NekVector<double, ThreeD> result = linsys.Solve(b);
 //                
 //                double expected_result_buf[] = { 2, 10, 5 };
-//                NekVector<double, 3> expectedResult(expected_result_buf);
+//                NekVector<double, ThreeD> expectedResult(expected_result_buf);
 //
 //                BOOST_CHECK_EQUAL(result, expectedResult);
 //            }
@@ -89,15 +89,15 @@
 //                double result_buf[] = { 20, 50, 10 };
 //
 //                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-//                boost::shared_ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
-//                boost::shared_ptr<NekVector<double, 3> > result(new NekVector<double, 3>());
+//                boost::shared_ptr<NekVector<double, ThreeD> > b(new NekVector<double, ThreeD>(result_buf));
+//                boost::shared_ptr<NekVector<double, ThreeD> > result(new NekVector<double, ThreeD>());
 //
 //                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 //
 //                linsys.Solve(b,result);
 //                
 //                double expected_result_buf[] = { 2, 10, 5 };
-//                NekVector<double, 3> expectedResult(expected_result_buf);
+//                NekVector<double, ThreeD> expectedResult(expected_result_buf);
 //
 //                BOOST_CHECK_EQUAL(*result, expectedResult);
 //            }
@@ -108,15 +108,15 @@
 //                double result_buf[] = { 20, 50, 10 };
 //
 //                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-//                NekVector<double, 3> b(result_buf);
-//                NekVector<double, 3> result;
+//                NekVector<double, ThreeD> b(result_buf);
+//                NekVector<double, ThreeD> result;
 //
 //                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 //
 //                linsys.Solve(b,result);
 //                
 //                double expected_result_buf[] = { 2, 10, 5 };
-//                NekVector<double, 3> expectedResult(expected_result_buf);
+//                NekVector<double, ThreeD> expectedResult(expected_result_buf);
 //
 //                BOOST_CHECK_EQUAL(result, expectedResult);
 //            }
@@ -127,15 +127,15 @@
 //                double result_buf[] = { 20, 50, 10 };
 //
 //                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-//                boost::shared_ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
-//                NekVector<double, 3> result;
+//                boost::shared_ptr<NekVector<double, ThreeD> > b(new NekVector<double, ThreeD>(result_buf));
+//                NekVector<double, ThreeD> result;
 //
 //                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 //
 //                linsys.Solve(b,result);
 //                
 //                double expected_result_buf[] = { 2, 10, 5 };
-//                NekVector<double, 3> expectedResult(expected_result_buf);
+//                NekVector<double, ThreeD> expectedResult(expected_result_buf);
 //
 //                BOOST_CHECK_EQUAL(result, expectedResult);
 //            }
@@ -146,15 +146,15 @@
 //                double result_buf[] = { 20, 50, 10 };
 //
 //                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-//                NekVector<double, 3> b(result_buf);
-//                boost::shared_ptr<NekVector<double, 3> > result(new NekVector<double, 3>());
+//                NekVector<double, ThreeD> b(result_buf);
+//                boost::shared_ptr<NekVector<double, ThreeD> > result(new NekVector<double, ThreeD>());
 //
 //                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 //
 //                linsys.Solve(b,result);
 //                
 //                double expected_result_buf[] = { 2, 10, 5 };
-//                NekVector<double, 3> expectedResult(expected_result_buf);
+//                NekVector<double, ThreeD> expectedResult(expected_result_buf);
 //
 //                BOOST_CHECK_EQUAL(*result, expectedResult);
 //            }
@@ -236,14 +236,14 @@
 //            double result_buf[] = { 20, 50, 10 };
 //
 //            boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-//            boost::shared_ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
+//            boost::shared_ptr<NekVector<double, ThreeD> > b(new NekVector<double, ThreeD>(result_buf));
 //
 //            LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
 //
-//            NekVector<double, 3> result = linsys.Solve(b);
+//            NekVector<double, ThreeD> result = linsys.Solve(b);
 //            
 //            double expected_result_buf[] = { 2, 10, 5 };
-//            NekVector<double, 3> expectedResult(expected_result_buf);
+//            NekVector<double, ThreeD> expectedResult(expected_result_buf);
 //
 //            BOOST_CHECK_EQUAL(result, expectedResult);
 //        }
@@ -258,11 +258,11 @@
 //                double result_buf[] = { 20, 50, 10 };
 //    
 //                boost::shared_ptr<NekMatrix<double, FullMatrixTag> >  A(new NekMatrix<double, FullMatrixTag>(3,3,matrix_buf));
-//                boost::shared_ptr<NekVector<double, 3> > b(new NekVector<double, 3>(result_buf));
+//                boost::shared_ptr<NekVector<double, ThreeD> > b(new NekVector<double, ThreeD>(result_buf));
 //    
 //                LinearSystem<NekMatrix<double, FullMatrixTag> > linsys(A);
 //    
-//                NekVector<double, 3> result = linsys.Solve(b);
+//                NekVector<double, ThreeD> result = linsys.Solve(b);
 //                
 //                unsigned int expected_result_buf[] = { 2, 10, 5 };
 //                NekVector<unsigned int, 3> expectedResult(expected_result_buf);

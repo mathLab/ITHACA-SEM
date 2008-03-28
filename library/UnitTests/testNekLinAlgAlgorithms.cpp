@@ -54,11 +54,11 @@ namespace Nektar
             double buf_0[] = {1.0, 0.0, 2.0};
             double buf_1[] = {2.0, 3.0, 0.0};
             
-            std::vector<NekVector<double, ThreeD> > x;
-            x.push_back(NekVector<double, ThreeD>(buf_0));
-            x.push_back(NekVector<double, ThreeD>(buf_1));
+            std::vector<NekVector<double> > x;
+            x.push_back(NekVector<double>(3, buf_0));
+            x.push_back(NekVector<double>(3, buf_1));
             
-            std::vector<NekVector<double, ThreeD> > q = GramSchmidtOrthogonalization(x);
+            std::vector<NekVector<double> > q = GramSchmidtOrthogonalization(x);
             
             BOOST_CHECK_EQUAL(q.size(), 2);
             
@@ -76,6 +76,9 @@ namespace Nektar
 
 /**
     $Log: testNekLinAlgAlgorithms.cpp,v $
+    Revision 1.5  2008/03/06 04:48:23  ehan
+    Changed NekVector<NekDouble, 3> to NekVector<NekDouble, ThreeD> to match the changes of enum to struct typename dim.
+
     Revision 1.4  2007/10/03 03:01:01  bnelson
     *** empty log message ***
 

@@ -83,6 +83,10 @@ namespace Nektar
             return !(lhs == rhs);
         }
 
+        struct TenD 
+        {
+            static const unsigned int Value = 10;
+        };
 
         BOOST_AUTO_TEST_CASE(TestNekVectorConstruction)
         {
@@ -125,7 +129,7 @@ namespace Nektar
 
             {
                 // Now do the same tests with constant sized vectors.
-                NekVector<double, 10> p1(2.7);
+                NekVector<double, TenD> p1(2.7);
                 BOOST_CHECK(p1.GetDimension() == 10);
                 for(unsigned int i = 0; i < p1.GetDimension(); ++i)
                 {
@@ -133,11 +137,11 @@ namespace Nektar
                     BOOST_CHECK(p1[i] == 2.7);
                 }
 
-                NekVector<double, 1> p2;
+                NekVector<double, OneD> p2;
                 BOOST_CHECK(p2.GetDimension() == 1);
                 BOOST_CHECK(p2(0) == 0.0);
 
-                NekVector<double, 10> p3(p1);
+                NekVector<double, TenD> p3(p1);
                 BOOST_CHECK(p3.GetDimension() == 10);
                 for(unsigned int i = 0; i < p3.GetDimension(); ++i)
                 {
@@ -145,7 +149,7 @@ namespace Nektar
                     BOOST_CHECK(p3[i] == 2.7);
                 }
 
-                NekVector<double, 10> p4;
+                NekVector<double, TenD> p4;
                 p4 = p3;
                 BOOST_CHECK(p4.GetDimension() == 10);
                 for(unsigned int i = 0; i < p4.GetDimension(); ++i)
@@ -164,18 +168,18 @@ namespace Nektar
 
             // Now test it on an arbitrary type.
             {
-                NekVector<VectorTestClass, 3> v1;
+                NekVector<VectorTestClass, ThreeD> v1;
                 BOOST_CHECK(v1.x() == VectorTestClass(0));
                 BOOST_CHECK(v1.y() == VectorTestClass(0));
                 BOOST_CHECK(v1.z() == VectorTestClass(0));
 
-                NekVector<VectorTestClass, 10> p2(VectorTestClass(-2));
+                NekVector<VectorTestClass, TenD> p2(VectorTestClass(-2));
                 for(int i = 0; i < 10; ++i)
                 {
                     BOOST_CHECK(p2[i] == VectorTestClass(-2));
                 }
 
-                NekVector<VectorTestClass, 3> p3(v1);
+                NekVector<VectorTestClass, ThreeD> p3(v1);
                 BOOST_CHECK(v1==p3);
             }
         }
@@ -230,20 +234,20 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestNekVectorArithmetic)
         {
             {
-                NekVector<double, 3> v1(1.0);
+                NekVector<double, ThreeD> v1(1.0);
                 v1(0) = 1.0;
                 v1(1) = 2.0;
                 v1(2) = 3.0;
 
-                NekVector<double, 3> v2 = -v1;
+                NekVector<double, ThreeD> v2 = -v1;
                 BOOST_CHECK(v2(0) == -v1(0));
                 BOOST_CHECK(v2(1) == -v1(1));
                 BOOST_CHECK(v2(2) == -v1(2));
             }
 
             {
-                NekVector<double, 3> lhs;
-                NekVector<double, 3> rhs;
+                NekVector<double, ThreeD> lhs;
+                NekVector<double, ThreeD> rhs;
 
                 lhs(0) = 1.0;
                 lhs(1) = 2.0;
@@ -264,8 +268,8 @@ namespace Nektar
                 BOOST_CHECK(rhs(1) == 5.0);
                 BOOST_CHECK(rhs(2) == 6.0);
 
-                NekVector<double, 3> add_result = rhs+lhs;
-                NekVector<double, 3> sub_result = rhs-lhs;
+                NekVector<double, ThreeD> add_result = rhs+lhs;
+                NekVector<double, ThreeD> sub_result = rhs-lhs;
 
                 BOOST_CHECK(add_result(0) == 5.0);
                 BOOST_CHECK(add_result(1) == 7.0);
@@ -277,31 +281,31 @@ namespace Nektar
             }
 
             {
-                NekVector<double, 3> v1;
+                NekVector<double, ThreeD> v1;
                 v1(0) = 1.0;
                 v1(1) = 2.0;
                 v1(2) = 3.0;
 
-                NekVector<double, 3> v2(v1);
+                NekVector<double, ThreeD> v2(v1);
 
                 v1 *= 1.2;
                 BOOST_CHECK(v1(0) == 1.0*1.2);
                 BOOST_CHECK(v1(1) == 2.0*1.2);
                 BOOST_CHECK(v1(2) == 3.0*1.2);
 
-                NekVector<double, 3> v3 = v2*1.2;
-                NekVector<double, 3> v4 = 1.2*v2;
+                NekVector<double, ThreeD> v3 = v2*1.2;
+                NekVector<double, ThreeD> v4 = 1.2*v2;
                 BOOST_CHECK(v3 == v1);
                 BOOST_CHECK(v4 == v1);
             }
 
             {
-                NekVector<double, 3> v1;
+                NekVector<double, ThreeD> v1;
                 v1(0) = 2.0;
                 v1(1) = 6.0;
                 v1(2) = 9.0;
 
-                NekVector<double, 3> v2 = v1;
+                NekVector<double, ThreeD> v2 = v1;
                 Normalize(v2);
                 BOOST_CHECK(v1.Magnitude() == 11.0);
                 v1.Normalize();
@@ -312,7 +316,7 @@ namespace Nektar
             }
 
             {
-                NekVector<double, 3> v1;
+                NekVector<double, ThreeD> v1;
                 v1(0) = 1.0;
                 v1(1) = 10.0;
                 v1(2) = -3.4;
@@ -324,12 +328,12 @@ namespace Nektar
             }
 
             {
-                NekVector<double, 3> v1;
+                NekVector<double, ThreeD> v1;
                 v1(0) = 1.0;
                 v1(1) = 10.0;
                 v1(2) = -3.4;
 
-                NekVector<double, 3> v2;
+                NekVector<double, ThreeD> v2;
                 v2(0) = 8.9;
                 v2(1) = -4.5;
                 v2(2) = 9.12;
@@ -342,7 +346,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestNorms)
         {
             double vals[] = {1,-2,3};
-            NekVector<double, 3> v(vals);
+            NekVector<double, ThreeD> v(vals);
                 
             double epsilon = 1e-11;
             BOOST_CHECK_EQUAL(v.L1Norm(), 1.0 + 2.0 + 3.0);
@@ -368,7 +372,7 @@ namespace Nektar
                 double result_buf[] = {200.0, 470.0, 740.0};
                 NekVector<double> expected_result(3, result_buf);
                 BOOST_CHECK_EQUAL(result, expected_result);
-                BOOST_CHECK_EQUAL(3, result.GetDimension());
+                BOOST_CHECK_EQUAL(3u, result.GetDimension());
             }
             
             {
@@ -388,7 +392,7 @@ namespace Nektar
                 double result_buf[] = {400.0, 940.0, 1480.0};
                 NekVector<double> expected_result(3, result_buf);
                 BOOST_CHECK_EQUAL(result, expected_result);
-                BOOST_CHECK_EQUAL(3, result.GetDimension());
+                BOOST_CHECK_EQUAL(3u, result.GetDimension());
             }
             
             {
@@ -415,7 +419,7 @@ namespace Nektar
                 double result_buf[] = {80.0, 180.0, 280.0, 380.0, 480.0, 580.0};
                 NekVector<double> expected_result(6, result_buf);
                 BOOST_CHECK_EQUAL(result, expected_result);
-                BOOST_CHECK_EQUAL(6, result.GetDimension());
+                BOOST_CHECK_EQUAL(6u, result.GetDimension());
             }
 
             {
@@ -428,24 +432,32 @@ namespace Nektar
 
                 NekMatrix<double> m(3, 3, m_buf);
                 NekVector<double> v_variable(3, v_buf);
-                NekVector<double, 3> v_constant(v_buf);
+                NekVector<double, ThreeD> v_constant(v_buf);
                 NekVector<double> expected_result(3, expected_result_buf);
                 NekVector<double> expected_transpose_result(3, expected_transpose_result_buf);
 
-                BOOST_CHECK_EQUAL(m*v_variable, expected_result);
-                BOOST_CHECK_EQUAL(m*v_constant, expected_result);
+                NekVector<double> constantResult = m*v_constant;
+                NekVector<double> variableResult = m*v_variable;
+                BOOST_CHECK_EQUAL(variableResult, expected_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_result);
 
                 m.Transpose();
-                BOOST_CHECK_EQUAL(m*v_variable, expected_transpose_result);
-                BOOST_CHECK_EQUAL(m*v_constant, expected_transpose_result);
+                constantResult = m*v_constant;
+                variableResult = m*v_variable;
+                BOOST_CHECK_EQUAL(variableResult, expected_transpose_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_transpose_result);
                 
                 m.Transpose();
-                BOOST_CHECK_EQUAL(m*v_variable, expected_result);
-                BOOST_CHECK_EQUAL(m*v_constant, expected_result);
+                constantResult = m*v_constant;
+                variableResult = m*v_variable;
+                BOOST_CHECK_EQUAL(variableResult, expected_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_result);
 
                 NekMatrix<double> transposed = Transpose(m);
-                BOOST_CHECK_EQUAL(transposed*v_variable, expected_transpose_result);
-                BOOST_CHECK_EQUAL(transposed*v_constant, expected_transpose_result);
+                constantResult = transposed*v_constant;
+                variableResult = transposed*v_variable;
+                BOOST_CHECK_EQUAL(variableResult, expected_transpose_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_transpose_result);
             }
 
             {
@@ -459,26 +471,34 @@ namespace Nektar
 
                 NekMatrix<double> m(2, 3, m_buf);
                 NekVector<double> v_non_transposed_variable(3, v_non_transposed_buf);
-                NekVector<double, 3> v_non_transposed_constant(v_non_transposed_buf);
+                NekVector<double, ThreeD> v_non_transposed_constant(v_non_transposed_buf);
                 NekVector<double> v_transposed_variable(2, v_transposed_buf);
-                NekVector<double, 2> v_transposed_constant(v_transposed_buf);
+                NekVector<double, TwoD> v_transposed_constant(v_transposed_buf);
                 NekVector<double> expected_result(2, expected_result_buf);
                 NekVector<double> expected_transpose_result(3, expected_transpose_result_buf);
 
-                BOOST_CHECK_EQUAL(m*v_non_transposed_variable, expected_result);
-                BOOST_CHECK_EQUAL(m*v_non_transposed_constant, expected_result);
+                NekVector<double> variableResult = m*v_non_transposed_variable;
+                NekVector<double> constantResult = m*v_non_transposed_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_result);
 
                 m.Transpose();
-                BOOST_CHECK_EQUAL(m*v_transposed_variable, expected_transpose_result);
-                BOOST_CHECK_EQUAL(m*v_transposed_constant, expected_transpose_result);
+                variableResult = m*v_transposed_variable;
+                constantResult = m*v_transposed_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_transpose_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_transpose_result);
                 
                 m.Transpose();
-                BOOST_CHECK_EQUAL(m*v_non_transposed_variable, expected_result);
-                BOOST_CHECK_EQUAL(m*v_non_transposed_constant, expected_result);
+                variableResult = m*v_non_transposed_variable;
+                constantResult = m*v_non_transposed_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_result);
 
                 NekMatrix<double> transposed = Transpose(m);
-                BOOST_CHECK_EQUAL(transposed*v_transposed_variable, expected_transpose_result);
-                BOOST_CHECK_EQUAL(transposed*v_transposed_constant, expected_transpose_result);
+                variableResult = transposed*v_transposed_variable;
+                constantResult = transposed*v_transposed_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_transpose_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_transpose_result);
             }
 
 
@@ -498,7 +518,7 @@ namespace Nektar
                 unsigned int result_buf[] = {200, 470, 740};
                 NekVector<unsigned int> expected_result(3, result_buf);
                 BOOST_CHECK_EQUAL(result, expected_result);
-                BOOST_CHECK_EQUAL(3, result.GetDimension());
+                BOOST_CHECK_EQUAL(3u, result.GetDimension());
             }
             
             {
@@ -518,7 +538,7 @@ namespace Nektar
                 unsigned int result_buf[] = {400, 940, 1480};
                 NekVector<unsigned int> expected_result(3, result_buf);
                 BOOST_CHECK_EQUAL(result, expected_result);
-                BOOST_CHECK_EQUAL(3, result.GetDimension());
+                BOOST_CHECK_EQUAL(3u, result.GetDimension());
             }
             
             {
@@ -545,7 +565,7 @@ namespace Nektar
                 unsigned int result_buf[] = {80, 180, 280, 380, 480, 580};
                 NekVector<unsigned int> expected_result(6, result_buf);
                 BOOST_CHECK_EQUAL(result, expected_result);
-                BOOST_CHECK_EQUAL(6, result.GetDimension());
+                BOOST_CHECK_EQUAL(6u, result.GetDimension());
             }
 
             {
@@ -558,24 +578,32 @@ namespace Nektar
 
                 NekMatrix<unsigned int> m(3, 3, m_buf);
                 NekVector<unsigned int> v_variable(3, v_buf);
-                NekVector<unsigned int, 3> v_constant(v_buf);
+                NekVector<unsigned int, ThreeD> v_constant(v_buf);
                 NekVector<unsigned int> expected_result(3, expected_result_buf);
                 NekVector<unsigned int> expected_transpose_result(3, expected_transpose_result_buf);
 
-                BOOST_CHECK_EQUAL(m*v_variable, expected_result);
-                BOOST_CHECK_EQUAL(m*v_constant, expected_result);
+                NekVector<unsigned int> variableResult = m*v_variable;
+                NekVector<unsigned int> constantResult = m*v_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_result);
 
                 m.Transpose();
-                BOOST_CHECK_EQUAL(m*v_variable, expected_transpose_result);
-                BOOST_CHECK_EQUAL(m*v_constant, expected_transpose_result);
+                variableResult = m*v_variable;
+                constantResult = m*v_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_transpose_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_transpose_result);
                 
                 m.Transpose();
-                BOOST_CHECK_EQUAL(m*v_variable, expected_result);
-                BOOST_CHECK_EQUAL(m*v_constant, expected_result);
+                variableResult = m*v_variable;
+                constantResult = m*v_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_result);
 
                 NekMatrix<unsigned int> transposed = Transpose(m);
-                BOOST_CHECK_EQUAL(transposed*v_variable, expected_transpose_result);
-                BOOST_CHECK_EQUAL(transposed*v_constant, expected_transpose_result);
+                variableResult = transposed*v_variable;
+                constantResult = transposed*v_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_transpose_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_transpose_result);
             }
 
             {
@@ -589,26 +617,34 @@ namespace Nektar
 
                 NekMatrix<unsigned int> m(2, 3, m_buf);
                 NekVector<unsigned int> v_non_transposed_variable(3, v_non_transposed_buf);
-                NekVector<unsigned int, 3> v_non_transposed_constant(v_non_transposed_buf);
+                NekVector<unsigned int, ThreeD> v_non_transposed_constant(v_non_transposed_buf);
                 NekVector<unsigned int> v_transposed_variable(2, v_transposed_buf);
-                NekVector<unsigned int, 2> v_transposed_constant(v_transposed_buf);
+                NekVector<unsigned int, TwoD> v_transposed_constant(v_transposed_buf);
                 NekVector<unsigned int> expected_result(2, expected_result_buf);
                 NekVector<unsigned int> expected_transpose_result(3, expected_transpose_result_buf);
 
-                BOOST_CHECK_EQUAL(m*v_non_transposed_variable, expected_result);
-                BOOST_CHECK_EQUAL(m*v_non_transposed_constant, expected_result);
+                NekVector<unsigned int> variableResult = m*v_non_transposed_variable;
+                NekVector<unsigned int> constantResult = m*v_non_transposed_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_result);
 
                 m.Transpose();
-                BOOST_CHECK_EQUAL(m*v_transposed_variable, expected_transpose_result);
-                BOOST_CHECK_EQUAL(m*v_transposed_constant, expected_transpose_result);
+                variableResult = m*v_transposed_variable;
+                constantResult = m*v_transposed_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_transpose_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_transpose_result);
                 
                 m.Transpose();
-                BOOST_CHECK_EQUAL(m*v_non_transposed_variable, expected_result);
-                BOOST_CHECK_EQUAL(m*v_non_transposed_constant, expected_result);
+                variableResult = m*v_non_transposed_variable;
+                constantResult = m*v_non_transposed_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_result);
 
                 NekMatrix<unsigned int> transposed = Transpose(m);
-                BOOST_CHECK_EQUAL(transposed*v_transposed_variable, expected_transpose_result);
-                BOOST_CHECK_EQUAL(transposed*v_transposed_constant, expected_transpose_result);
+                variableResult = transposed*v_transposed_variable;
+                constantResult = transposed*v_transposed_constant;
+                BOOST_CHECK_EQUAL(variableResult, expected_transpose_result);
+                BOOST_CHECK_EQUAL(constantResult, expected_transpose_result);
             }
         }
 

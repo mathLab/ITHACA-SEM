@@ -244,8 +244,8 @@ namespace Nektar
     }
 
     template<typename DataType, typename lhsDim, typename rhsDim, typename space>
-    bool operator==(const NekVector<DataType, lhsDim, space>& lhs,
-                    const NekVector<DataType, rhsDim, space>& rhs)
+    bool operator==(const NekVector<const DataType, lhsDim, space>& lhs,
+                    const NekVector<const DataType, rhsDim, space>& rhs)
     {
         if( lhs.GetDimension() != rhs.GetDimension() )
         {
@@ -330,6 +330,11 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.28  2008/03/03 02:28:39  bnelson
+    Changed OneD, TwoD, and ThreeD to classes instead of enums to support type parameters in NekVector instead of unsigned int for the dimensions.
+
+    Added a new NekVector<const DataType> to allow wrapping of ConstArrays.
+
     Revision 1.27  2008/01/25 05:46:07  bnelson
     Changed NekVector::GetPtr to NekVector::GetRawPtr and added a new NekVector::GetPtr that returns an Array.  This makes the calls consistent with NekMatrix.
 

@@ -396,8 +396,15 @@ namespace Nektar
                std::string(" and a right side vector with row count ") + 
                boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
 
+            char transpose = lhs.GetTransposeFlag();
             int m = lhs.GetRows();
             int n = lhs.GetColumns();
+
+            if( transpose == 'T' )
+            {
+                std::swap(m, n);
+            }
+            
             double alpha = lhs.Scale();
             const double* a = lhs.GetOwnedMatrix()->GetRawPtr();
             int lda = m;
@@ -407,7 +414,7 @@ namespace Nektar
             double* y = result.GetRawPtr();
             int incy = 1;
             
-            Blas::Dgemv(lhs.GetTransposeFlag(), m, n, alpha, a, lda, x, incx, beta, y, incy);
+            Blas::Dgemv(transpose, m, n, alpha, a, lda, x, incx, beta, y, incy);
         }
 
         template<typename dim, typename space>

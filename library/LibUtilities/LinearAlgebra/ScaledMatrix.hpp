@@ -135,7 +135,7 @@ namespace Nektar
                 return m_matrix->GetStorageType();
             }
                         
-            typename NumberType Scale() const
+            NumberType Scale() const
             {
                 return m_scale*m_matrix->Scale();
             }

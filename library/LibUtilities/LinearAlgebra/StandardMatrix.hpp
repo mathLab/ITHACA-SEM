@@ -535,7 +535,7 @@ namespace Nektar
                     return false;
                 }
 
-                if( GetTransposeFlag() == rhs.GetTransposeFlag() )
+                if( this->GetTransposeFlag() == rhs.GetTransposeFlag() )
                 {
                     return std::equal(begin(), end(), rhs.begin());
                 }

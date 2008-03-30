@@ -232,6 +232,7 @@ namespace Nektar
                 NekMatrix<unsigned int> tm1 = Transpose(m1);
                 NekMatrix<unsigned int> tm2 = Transpose(m2);
                 BOOST_CHECK_EQUAL(expected_result, m1*m2);
+                NekMatrix<unsigned int> transposedResult = tm1*tm2;
                 BOOST_CHECK_EQUAL(expected_transposed_result, tm1*tm2);
             }
 

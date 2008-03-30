@@ -76,36 +76,84 @@ namespace Nektar
                 return v_GetStorageType();
             }
             
-            unsigned int GetRows() const { return m_size[0]; }
-            unsigned int GetColumns() const { return m_size[1]; }
+            unsigned int GetRows() const
+            {
+                return GetRows(GetTransposeFlag());
+            }
+
+            unsigned int GetRows(char transpose) const 
+            {
+                if( transpose == 'N' )
+                {
+                    return m_size[0]; 
+                }
+                else
+                {
+                    return m_size[1];
+                }
+            }
+            
+            unsigned int GetColumns() const
+            {
+                return GetColumns(GetTransposeFlag());
+            }
+
+            unsigned int GetColumns(char transpose) const 
+            { 
+                if( transpose == 'N' )
+                {
+                    return m_size[1]; 
+                }
+                else
+                {
+                    return m_size[0];
+                }
+            }
+
             const unsigned int* GetSize() const { return m_size; }
             
-        protected:
-            
-            
+            void Transpose() 
+            {
+                if( m_transpose == 'N' )
+                {
+                    m_transpose = 'T';
+                }
+                else
+                {
+                    m_transpose = 'N';
+                }
+            }
+
+            char GetTransposeFlag() const 
+            {
+                return v_GetTransposeFlag();
+            }       
             
         protected:
             
             // All constructors are private to enforce the abstract nature of ConstMatrix without
             // resorting to pure virtual functions.
             ConstMatrix(unsigned int rows, unsigned int columns) :
-                m_size()
+                m_size(),
+                m_transpose('N')
             {
                 m_size[0] = rows;
                 m_size[1] = columns;
             }
             
             ConstMatrix(const ThisType& rhs) :
-                m_size()
+                m_size(),
+                m_transpose(rhs.m_transpose)
             {
-                m_size[0] = rhs.GetRows();
-                m_size[1] = rhs.GetColumns();
+                m_size[0] = rhs.m_size[0];
+                m_size[1] = rhs.m_size[1];
             }
 
             ThisType& operator=(const ThisType& rhs)
             {
                 m_size[0] = rhs.m_size[0];
                 m_size[1] = rhs.m_size[1];
+                m_transpose = rhs.m_transpose;
                 return *this;
             }
             
@@ -117,18 +165,21 @@ namespace Nektar
                 m_size[1] = columns;
             }
 
-            void PerformRowColumnInterchange()
+            void SetTransposeFlag(char newValue)
             {
-                std::swap(m_size[0], m_size[1]);
+                m_transpose = newValue; 
             }
+
+            char GetRawTransposeFlag() const { return m_transpose; }
 
         private:
             
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const = 0;            
             virtual unsigned int v_GetStorageSize() const = 0;            
             virtual MatrixStorage v_GetStorageType() const = 0;
-            
+            virtual char v_GetTransposeFlag() const { return m_transpose; }
             unsigned int m_size[2];
+            char m_transpose;
     };
     
     template<typename DataType>

@@ -13,6 +13,7 @@ SET(Sources
     TestLowerTriangularMatrixStoragePolicy.cpp
     TestNekVector.cpp
     TestScaledBlockMatrixOperations.cpp
+    TestScaledMatrix.cpp
     TestSymmetricMatrixStoragePolicy.cpp
     TestUpperTriangularMatrixStoragePolicy.cpp
     TestStandardMatrix.cpp

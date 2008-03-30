@@ -376,7 +376,7 @@ namespace Nektar
 
             double alpha = 1.0;
             const double* a = lhs.GetRawPtr();
-            int lda = lhs.GetLeadingDimension();
+            int lda = m;
             const double* x = rhs.GetRawPtr();
             int incx = 1;
             double beta = 0.0;

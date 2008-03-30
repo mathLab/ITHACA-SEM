@@ -79,7 +79,8 @@ namespace Nektar
                             m_end(e),
                             m_curRow(std::numeric_limits<unsigned int>::max()),
                             m_curColumn(std::numeric_limits<unsigned int>::max()),
-                            m_matrix(NULL)
+                            m_matrix(NULL),
+                            m_transpose('N')
                         {
                             if( isEnd )
                             {
@@ -87,12 +88,13 @@ namespace Nektar
                             }
                         }
 
-                        iterator_impl(MatrixType* m, bool isEnd = false) :
+                        iterator_impl(MatrixType* m, char transpose, bool isEnd = false) :
                             m_data(NULL),
                             m_end(NULL),
                             m_curRow(0),
                             m_curColumn(0),
-                            m_matrix(m)
+                            m_matrix(m),
+                            m_transpose(transpose)
                         {
                             if( isEnd )
                             {
@@ -106,7 +108,8 @@ namespace Nektar
                             m_end(rhs.m_end),
                             m_curRow(rhs.m_curRow),
                             m_curColumn(rhs.m_curColumn),
-                            m_matrix(rhs.m_matrix)
+                            m_matrix(rhs.m_matrix),
+                            m_transpose(rhs.m_transpose)
                         {
                         }
 
@@ -117,6 +120,7 @@ namespace Nektar
                             m_curRow = rhs.m_curRow;
                             m_curColumn = rhs.m_curColumn;
                             m_matrix = rhs.m_matrix;
+                            m_transpose = rhs.m_transpose;
                             return *this;
                         }
 
@@ -129,7 +133,7 @@ namespace Nektar
                             }
                             else
                             {
-                                return (*m_matrix)(m_curRow, m_curColumn);
+                                return (*m_matrix)(m_curRow, m_curColumn, m_transpose);
                             }
                         }
 
@@ -142,7 +146,7 @@ namespace Nektar
                             }
                             else
                             {
-                                return (*m_matrix)(m_curRow, m_curColumn);
+                                return (*m_matrix)(m_curRow, m_curColumn, m_transpose);
                             }
                         }
 
@@ -156,7 +160,7 @@ namespace Nektar
                             else
                             {
                                 boost::tie(m_curRow, m_curColumn) = 
-                                    StoragePolicy::Advance(m_matrix->GetRows(), m_matrix->GetColumns(),
+                                    StoragePolicy::Advance(m_matrix->GetRows(m_transpose), m_matrix->GetColumns(m_transpose),
                                         m_curRow, m_curColumn, 
                                         m_matrix->GetPolicySpecificDataHolderType());
                             }
@@ -177,7 +181,8 @@ namespace Nektar
                                    m_end == rhs.m_end &&
                                    m_curRow == rhs.m_curRow &&
                                    m_curColumn == rhs.m_curColumn &&
-                                   m_matrix == rhs.m_matrix;
+                                   m_matrix == rhs.m_matrix &&
+                                   m_transpose == rhs.m_transpose;
                         }
 
                         bool operator!=(const iterator_impl<T, MatrixType>& rhs)
@@ -194,6 +199,7 @@ namespace Nektar
                         unsigned int m_curRow;
                         unsigned int m_curColumn;
                         MatrixType* m_matrix;
+                        char m_transpose;
             };
 
         public:
@@ -201,8 +207,7 @@ namespace Nektar
                 BaseType(0, 0),
                 m_data(StoragePolicy::Initialize()),
                 m_wrapperType(eCopy),
-                m_policySpecificData(),
-                m_transpose('N')
+                m_policySpecificData()
             {
             }
             
@@ -210,8 +215,7 @@ namespace Nektar
                 BaseType(rows, columns),
                 m_data(StoragePolicy::Initialize(rows, columns, policySpecificData)),
                 m_wrapperType(eCopy),
-                m_policySpecificData(policySpecificData),
-                m_transpose('N')
+                m_policySpecificData(policySpecificData)
             {
             }
 
@@ -220,8 +224,7 @@ namespace Nektar
                 BaseType(rows, columns),
                 m_data(StoragePolicy::Initialize(rows, columns, initValue, policySpecificData)),
                 m_wrapperType(eCopy),
-                m_policySpecificData(policySpecificData),
-                m_transpose('N')
+                m_policySpecificData(policySpecificData)
             {
             }
             
@@ -230,8 +233,7 @@ namespace Nektar
                 BaseType(rows, columns),
                 m_data(StoragePolicy::Initialize(rows, columns, data, policySpecificData)),
                 m_wrapperType(eCopy),
-                m_policySpecificData(policySpecificData),
-                m_transpose('N')
+                m_policySpecificData(policySpecificData)
             {
             }
             
@@ -240,8 +242,7 @@ namespace Nektar
                 BaseType(rows, columns),
                 m_data(StoragePolicy::Initialize(rows, columns, d, policySpecificData)),
                 m_wrapperType(eCopy),
-                m_policySpecificData(policySpecificData),
-                m_transpose('N')
+                m_policySpecificData(policySpecificData)
             {
             }
             
@@ -250,8 +251,7 @@ namespace Nektar
                 BaseType(rows, columns),
                 m_data(wrapperType == eCopy ? StoragePolicy::Initialize(rows, columns, d, policySpecificData) : d),
                 m_wrapperType(wrapperType),
-                m_policySpecificData(policySpecificData),
-                m_transpose('N')
+                m_policySpecificData(policySpecificData)
             {
             }
             
@@ -259,8 +259,7 @@ namespace Nektar
                 BaseType(rhs),
                 m_data(),
                 m_wrapperType(rhs.m_wrapperType),
-                m_policySpecificData(rhs.m_policySpecificData),
-                m_transpose(rhs.m_transpose)
+                m_policySpecificData(rhs.m_policySpecificData)
             {
                 if( m_wrapperType == eCopy )
                 {
@@ -278,8 +277,7 @@ namespace Nektar
                     BaseType(d.Rows, d.Columns),
                     m_data(),
                     m_wrapperType(eCopy),
-                    m_policySpecificData(),
-                    m_transpose('N')
+                    m_policySpecificData()
                 {
                     m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
                 }
@@ -289,8 +287,7 @@ namespace Nektar
                     BaseType(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns),
                     m_data(),
                     m_wrapperType(eCopy),
-                    m_policySpecificData(),
-                    m_transpose('N')
+                    m_policySpecificData()
                 {
                     BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StorageType, StandardMatrixTag> > ));
                     m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
@@ -319,7 +316,6 @@ namespace Nektar
                 
                 unsigned int requiredStorageSize = StoragePolicy::GetRequiredStorageSize(this->GetRows(), this->GetColumns(), m_policySpecificData);
                 std::copy(rhs.m_data.data(), rhs.m_data.data() + requiredStorageSize, m_data.data());
-                m_transpose = rhs.m_transpose;
                 
                 return *this;
             }
@@ -337,7 +333,7 @@ namespace Nektar
                         ResizeDataArrayIfNeeded(this->GetRows(), this->GetColumns(), m_policySpecificData);
                     }
 
-                    m_transpose = 'N';
+                    this->SetTransposeFlag('N');
                     rhs.Evaluate(*this);
                     return *this;
                 }
@@ -352,7 +348,7 @@ namespace Nektar
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
                     std::string(" columns"));
                     
-                return StoragePolicy::GetValue(this->GetRows(), this->GetColumns(), row, column, m_data, m_transpose, m_policySpecificData);    
+                return (*this)(row, column, this->GetTransposeFlag());
             }
             
             GetValueType operator()(unsigned int row, unsigned int column)
@@ -364,7 +360,17 @@ namespace Nektar
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
                     std::string(" columns"));
                     
-                return StoragePolicy::GetValue(this->GetRows(), this->GetColumns(), row, column, m_data, m_transpose, m_policySpecificData);    
+                return (*this)(row, column, this->GetTransposeFlag());
+            }
+
+            ConstGetValueType operator()(unsigned int row, unsigned int column, char transpose) const
+            {       
+                return StoragePolicy::GetValue(this->GetRows(transpose), this->GetColumns(transpose), row, column, m_data, transpose, m_policySpecificData);    
+            }
+            
+            GetValueType operator()(unsigned int row, unsigned int column, char transpose)
+            {       
+                return StoragePolicy::GetValue(this->GetRows(transpose), this->GetColumns(transpose), row, column, m_data, transpose, m_policySpecificData);    
             }
 
             void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
@@ -375,7 +381,12 @@ namespace Nektar
                 ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
                     std::string(" columns"));
-                StoragePolicy::SetValue(this->GetRows(), this->GetColumns(), row, column, m_data, d, m_transpose, m_policySpecificData);
+                SetValue(row, column, d, this->GetTransposeFlag());
+            }
+
+            void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d, char transpose)
+            {
+                StoragePolicy::SetValue(this->GetRows(transpose), this->GetColumns(transpose), row, column, m_data, d, transpose, m_policySpecificData);
             }
             
             typename boost::call_traits<DataType>::const_reference GetValue(unsigned int row, unsigned int column) const
@@ -386,8 +397,14 @@ namespace Nektar
                 ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
                     std::string(" columns"));
-                return StoragePolicy::GetValue(this->GetRows(), this->GetColumns(), row, column, m_data, m_transpose, m_policySpecificData);
+                return GetValue(row, column, this->GetTransposeFlag());
             }
+
+            typename boost::call_traits<DataType>::const_reference GetValue(unsigned int row, unsigned int column, char transpose) const
+            {
+                return StoragePolicy::GetValue(this->GetRows(transpose), this->GetColumns(transpose), row, column, m_data, transpose, m_policySpecificData);
+            }
+
             
             const PolicySpecificDataHolderType& GetPolicySpecificDataHolderType() const 
             {
@@ -431,51 +448,71 @@ namespace Nektar
             typedef iterator_impl<DataType, ThisType> iterator;
             typedef iterator_impl<const DataType, const ThisType> const_iterator;
             
-            iterator begin() 
+            iterator begin()
+            {
+                return begin(this->GetTransposeFlag());
+            }
+
+            iterator begin(char transpose) 
             { 
-                if( GetTransposeFlag() == 'N' )
+                if( transpose == 'N' )
                 {
                     return iterator(m_data.data(), m_data.data() + m_data.num_elements());
                 }
                 else
                 {
-                    return iterator(this);
+                    return iterator(this, transpose);
                 }
             }
 
             iterator end()
             {
-                if( GetTransposeFlag() == 'N' )
+                return end(this->GetTransposeFlag());
+            }
+
+            iterator end(char transpose)
+            {
+                if( transpose == 'N' )
                 {
                     return iterator(m_data.data(), m_data.data() + m_data.num_elements(), true);
                 }
                 else
                 {
-                    return iterator(this, true);
+                    return iterator(this, transpose, true);
                 }
             }
 
             const_iterator begin() const
+            {
+                return begin(this->GetTransposeFlag());
+            }
+
+            const_iterator begin(char transpose) const
             { 
-                if( GetTransposeFlag() == 'N' )
+                if( transpose == 'N' )
                 {
                     return const_iterator(m_data.data(), m_data.data() + m_data.num_elements());
                 }
                 else
                 {
-                    return const_iterator(this);
+                    return const_iterator(this, transpose);
                 }
             }
 
             const_iterator end() const
             {
-                if( GetTransposeFlag() == 'N' )
+                return end(this->GetTransposeFlag());
+            }
+
+            const_iterator end(char transpose) const
+            {
+                if( transpose == 'N' )
                 {
                     return const_iterator(m_data.data(), m_data.data() + m_data.num_elements(), true);
                 }
                 else
                 {
-                    return const_iterator(this, true);
+                    return const_iterator(this, transpose, true);
                 }
             }
             
@@ -521,45 +558,9 @@ namespace Nektar
             
             void Invert()
             {
-                StoragePolicy::Invert(this->GetRows(), this->GetColumns(), m_data, m_transpose, m_policySpecificData);
+                StoragePolicy::Invert(this->GetRows(), this->GetColumns(), m_data, this->GetTransposeFlag(), m_policySpecificData);
             }
-            
-            char GetTransposeFlag() const 
-            {
-                return m_transpose;
-            }
-
-            void Transpose() 
-            {
-                this->PerformRowColumnInterchange();
-                if( m_transpose == 'N' )
-                {
-                    m_transpose = 'T';
-                }
-                else
-                {
-                    m_transpose = 'N';
-                }
-            }
-
-            unsigned int GetLeadingDimension() const
-            {
-                return GetLeadingDimension(m_transpose);
-            }
-
-            unsigned int GetLeadingDimension(char transpose) const
-            {
-                if( transpose == 'N' )
-                {
-                    return this->GetRows();
-                }
-                else
-                {
-                    return this->GetColumns();
-                }
-            }
-
-       
+                   
             PointerWrapper GetWrapperType() const { return m_wrapperType; }
 
         protected:
@@ -610,7 +611,6 @@ namespace Nektar
             Array<OneD, DataType> m_data;
             PointerWrapper m_wrapperType;
             PolicySpecificDataHolderType m_policySpecificData;
-            char m_transpose;
     };
 
     template<typename DataType, typename StorageType>

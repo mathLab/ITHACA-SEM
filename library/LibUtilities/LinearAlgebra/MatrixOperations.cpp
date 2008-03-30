@@ -42,8 +42,24 @@ namespace Nektar
                             const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
                             const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
     {
-        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
-            1.0, lhs.GetRawPtr(), lhs.GetLeadingDimension(), rhs.GetRawPtr(), rhs.GetLeadingDimension(), 0.0,
+        unsigned int M = lhs.GetRows();
+        unsigned int N = rhs.GetColumns();
+        unsigned int K = lhs.GetColumns();
+
+        unsigned int LDA = M;
+        if( lhs.GetTransposeFlag() == 'T' )
+        {
+            LDA = K;
+        }
+
+        unsigned int LDB = K;
+        if( rhs.GetTransposeFlag() == 'T' )
+        {
+            LDB = N;
+        }
+
+        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
+            1.0, lhs.GetRawPtr(), LDA, rhs.GetRawPtr(), LDB, 0.0,
             result.GetRawPtr(), lhs.GetRows());
     }
     
@@ -51,9 +67,25 @@ namespace Nektar
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs)
     {
-        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
-            lhs.Scale()*rhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), lhs.GetLeadingDimension(), 
-            rhs.GetOwnedMatrix()->GetRawPtr(), rhs.GetLeadingDimension(), 0.0,
+        unsigned int M = lhs.GetRows();
+        unsigned int N = rhs.GetColumns();
+        unsigned int K = lhs.GetColumns();
+
+        unsigned int LDA = M;
+        if( lhs.GetTransposeFlag() == 'T' )
+        {
+            LDA = K;
+        }
+
+        unsigned int LDB = K;
+        if( rhs.GetTransposeFlag() == 'T' )
+        {
+            LDB = N;
+        }
+
+        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
+            lhs.Scale()*rhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), LDA,
+            rhs.GetOwnedMatrix()->GetRawPtr(), LDB, 0.0,
             result.GetRawPtr(), lhs.GetRows());
     }
     
@@ -61,9 +93,25 @@ namespace Nektar
                      const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs)
     {
-        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
-            rhs.Scale(), lhs.GetRawPtr(), lhs.GetLeadingDimension(), 
-            rhs.GetOwnedMatrix()->GetRawPtr(), rhs.GetLeadingDimension(), 0.0,
+        unsigned int M = lhs.GetRows();
+        unsigned int N = rhs.GetColumns();
+        unsigned int K = lhs.GetColumns();
+
+        unsigned int LDA = M;
+        if( lhs.GetTransposeFlag() == 'T' )
+        {
+            LDA = K;
+        }
+
+        unsigned int LDB = K;
+        if( rhs.GetTransposeFlag() == 'T' )
+        {
+            LDB = N;
+        }
+
+        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
+            rhs.Scale(), lhs.GetRawPtr(), LDA, 
+            rhs.GetOwnedMatrix()->GetRawPtr(), LDB, 0.0,
             result.GetRawPtr(), lhs.GetRows());
     }
 
@@ -71,18 +119,50 @@ namespace Nektar
                      const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
                      const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
     {
-        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), lhs.GetRows(), rhs.GetColumns(), lhs.GetColumns(),
-            lhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), lhs.GetLeadingDimension(), 
-            rhs.GetRawPtr(), rhs.GetLeadingDimension(), 0.0,
+        unsigned int M = lhs.GetRows();
+        unsigned int N = rhs.GetColumns();
+        unsigned int K = lhs.GetColumns();
+
+        unsigned int LDA = M;
+        if( lhs.GetTransposeFlag() == 'T' )
+        {
+            LDA = K;
+        }
+
+        unsigned int LDB = K;
+        if( rhs.GetTransposeFlag() == 'T' )
+        {
+            LDB = N;
+        }
+
+        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
+            lhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), LDA, 
+            rhs.GetRawPtr(), LDB, 0.0,
             result.GetRawPtr(), lhs.GetRows());
     }
     
     void NekMultiplyEqual(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
                           const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs)
     {
+        unsigned int M = result.GetRows();
+        unsigned int N = rhs.GetColumns();
+        unsigned int K = result.GetColumns();
+
+        unsigned int LDA = M;
+        if( result.GetTransposeFlag() == 'T' )
+        {
+            LDA = K;
+        }
+
+        unsigned int LDB = K;
+        if( rhs.GetTransposeFlag() == 'T' )
+        {
+            LDB = N;
+        }
+
         Array<OneD, double> buf(result.GetRows()*result.GetColumns());
-        Blas::Dgemm(result.GetTransposeFlag(), rhs.GetTransposeFlag(), result.GetRows(), rhs.GetColumns(), result.GetColumns(),
-            1.0, result.GetRawPtr(), result.GetLeadingDimension(), rhs.GetRawPtr(), rhs.GetLeadingDimension(), 0.0,
+        Blas::Dgemm(result.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
+            1.0, result.GetRawPtr(), LDA, rhs.GetRawPtr(), LDB, 0.0,
             buf.data(), result.GetRows());
         result = NekMatrix<double, FullMatrixTag, StandardMatrixTag>(result.GetRows(), result.GetColumns(), buf, eWrapper);
     }

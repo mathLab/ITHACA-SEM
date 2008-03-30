@@ -69,14 +69,17 @@ namespace Nektar
                     {
                     }
                     
-                    void operator++(int)
+                    const_iterator operator++(int)
                     {
+                        const_iterator out = *this;
                         m_iter++;
+                        return out;
                     }
                     
-                    void operator++()
+                    const_iterator& operator++()
                     {
                         ++m_iter;
+                        return *this;
                     }
                     
                     NumberType operator*()
@@ -104,18 +107,10 @@ namespace Nektar
         public:
             NekMatrix() :
                 BaseType(0,0),
-                m_matrix(),
+                m_matrix(new InnerType()),
                 m_scale(0)
             {
             }
-            
-//             NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
-//                       const NekMatrix<DataType, StorageType, InnerType>& m) :
-//                 BaseType(m.GetRows(), m.GetColumns()),
-//                 m_matrix(&m, DeleteNothing<NekMatrix<DataType, StorageType, InnerType> >()),
-//                 m_scale(scale)
-//             {
-//             }
             
             NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
                       boost::shared_ptr<const InnerType> m) :
@@ -127,7 +122,7 @@ namespace Nektar
             
             typename boost::call_traits<NumberType>::value_type operator()(unsigned int row, unsigned int col) const
             {
-                return m_scale*(*m_matrix)(row, col);
+                return m_scale*m_matrix->GetValue(row, col, this->GetTransposeFlag());
             }
             
             unsigned int GetStorageSize() const 
@@ -139,15 +134,10 @@ namespace Nektar
             {
                 return m_matrix->GetStorageType();
             }
-            
-            typename boost::call_traits<NumberType>::reference Scale()
+                        
+            typename NumberType Scale() const
             {
-                return m_scale;
-            }
-            
-            typename boost::call_traits<NumberType>::const_reference Scale() const
-            {
-                return m_scale;
+                return m_scale*m_matrix->Scale();
             }
             
             boost::shared_ptr<const InnerType> GetOwnedMatrix() const
@@ -155,19 +145,9 @@ namespace Nektar
                 return m_matrix; 
             }
             
-            const_iterator begin() const { return const_iterator(m_matrix->begin(), m_scale); }
-            const_iterator end() const { return const_iterator(m_matrix->end(), m_scale); }
+            const_iterator begin() const { return const_iterator(m_matrix->begin(this->GetTransposeFlag()), m_scale); }
+            const_iterator end() const { return const_iterator(m_matrix->end(this->GetTransposeFlag()), m_scale); }
             
-            const char GetTransposeFlag() const 
-            {
-                return m_matrix->GetTransposeFlag();
-            }
-
-            unsigned int GetLeadingDimension() const
-            {
-                return m_matrix->GetLeadingDimension();
-            }
-
         public:
         
         private:
@@ -187,10 +167,27 @@ namespace Nektar
                 return ThisType::GetStorageType();
             }
             
+            virtual char v_GetTransposeFlag() const
+            {
+                if( this->GetRawTransposeFlag() == 'N' )
+                {
+                    return m_matrix->GetTransposeFlag();
+                }
+                else
+                {
+                    if( m_matrix->GetTransposeFlag() == 'N' )
+                    {
+                        return 'T';
+                    }
+                    else
+                    {
+                        return 'N';
+                    }
+                }
+            }
 
             boost::shared_ptr<const InnerType> m_matrix;
             NumberType m_scale;
-            char m_transpose;
     };
     
 }

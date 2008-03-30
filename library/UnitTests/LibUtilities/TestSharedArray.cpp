@@ -74,7 +74,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(d.origin(), expectedAddress);
         }
 
-        BOOST_AUTO_TEST_CASE(TestSignature)
+        BOOST_AUTO_TEST_CASE(TestRowPointers)
         {
             Array<TwoD, double> array_1(10, 7, 0.0);
             CheckAddresses(array_1[0], array_1.data());

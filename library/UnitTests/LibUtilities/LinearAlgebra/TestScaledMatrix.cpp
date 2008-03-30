@@ -516,6 +516,102 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(expected_result, result4);
             }
         }
+
+        BOOST_AUTO_TEST_CASE(TestScaledNMatrixVectorMultiply)
+        {
+            {
+                double lhs_buf[] = {1.0, 3.0, 5.0, 7.0,
+                    2.0, 4.0, 6.0, 8.0};
+                double rhs_buf[] = {1.0, 2.0};
+
+                boost::shared_ptr<InnerMatrix> in1(new InnerMatrix(4, 2, lhs_buf));
+                NekVector<double> rhs(2, rhs_buf);
+                SMat m1(2.0, in1);
+
+                double expected_result_buf[] = {10, 22, 34, 46};
+                NekVector<double> expected_result(4, expected_result_buf);
+
+                NekVector<double> result1 = m1*rhs;
+                BOOST_CHECK_EQUAL(expected_result, result1);
+
+                in1->Transpose();
+                m1.Transpose();
+                NekVector<double> result2 = m1*rhs;
+                BOOST_CHECK_EQUAL(expected_result, result2);
+            }
+
+            {
+                unsigned int lhs_buf[] = {1, 3, 5, 7,
+                    2, 4, 6, 8};
+                unsigned int rhs_buf[] = {1, 2};
+
+                boost::shared_ptr<IntInnerMatrix> in1(new IntInnerMatrix(4, 2, lhs_buf));
+                NekVector<unsigned int> rhs(2, rhs_buf);
+                IntSMat m1(2, in1);
+
+                unsigned int expected_result_buf[] = {10, 22, 34, 46};
+                NekVector<unsigned int> expected_result(4, expected_result_buf);
+
+                NekVector<unsigned int> result1 = m1*rhs;
+                BOOST_CHECK_EQUAL(expected_result, result1);
+
+                in1->Transpose();
+                m1.Transpose();
+                NekVector<unsigned int> result2 = m1*rhs;
+                BOOST_CHECK_EQUAL(expected_result, result2);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestScaledTMatrixVectorMultiply)
+        {
+            {
+                double lhs_buf[] = {1.0, 2.0,
+                                    3.0, 4.0,
+                                    5.0, 6.0,
+                                    7.0, 8.0};
+                double rhs_buf[] = {1.0, 2.0};
+
+                boost::shared_ptr<InnerMatrix> in1(new InnerMatrix(2, 4, lhs_buf));
+                NekVector<double> rhs(2, rhs_buf);
+                SMat m1(2.0, in1);
+
+                double expected_result_buf[] = {10, 22, 34, 46};
+                NekVector<double> expected_result(4, expected_result_buf);
+
+                in1->Transpose();
+                NekVector<double> result1 = m1*rhs;
+                BOOST_CHECK_EQUAL(expected_result, result1);
+
+                in1->Transpose();
+                m1.Transpose();
+                NekVector<double> result2 = m1*rhs;
+                BOOST_CHECK_EQUAL(expected_result, result2);
+            }
+
+            {
+                unsigned int lhs_buf[] = {1, 2,
+                                    3, 4,
+                                    5, 6,
+                                    7, 8};
+                unsigned int rhs_buf[] = {1, 2};
+
+                boost::shared_ptr<IntInnerMatrix> in1(new IntInnerMatrix(2, 4, lhs_buf));
+                NekVector<unsigned int> rhs(2, rhs_buf);
+                IntSMat m1(2, in1);
+
+                unsigned int expected_result_buf[] = {10, 22, 34, 46};
+                NekVector<unsigned int> expected_result(4, expected_result_buf);
+
+                in1->Transpose();
+                NekVector<unsigned int> result1 = m1*rhs;
+                BOOST_CHECK_EQUAL(expected_result, result1);
+
+                in1->Transpose();
+                m1.Transpose();
+                NekVector<unsigned int> result2 = m1*rhs;
+                BOOST_CHECK_EQUAL(expected_result, result2);
+            }
+        }
     }
 }
 

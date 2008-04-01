@@ -516,6 +516,25 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(expected_result, result4);
             }
         }
+        
+        BOOST_AUTO_TEST_CASE(TestScaledGlobalTransposeMethod)
+        {
+            {
+                unsigned int lhs_buf[] = {1, 2, 3,
+                                          4, 5, 6};
+
+                boost::shared_ptr<IntInnerMatrix> in1(new IntInnerMatrix(3, 2, lhs_buf));
+                IntSMat m1(1, in1);
+                IntSMat transpose = Transpose(m1);
+                
+                BOOST_CHECK_EQUAL(m1(0,0), transpose(0,0));
+                BOOST_CHECK_EQUAL(m1(1,0), transpose(0,1));
+                BOOST_CHECK_EQUAL(m1(2,0), transpose(0,2));
+                BOOST_CHECK_EQUAL(m1(0,1), transpose(1,0));
+                BOOST_CHECK_EQUAL(m1(1,1), transpose(1,1));
+                BOOST_CHECK_EQUAL(m1(2,1), transpose(1,2));
+            }
+        }
 
         BOOST_AUTO_TEST_CASE(TestScaledNMatrixVectorMultiply)
         {

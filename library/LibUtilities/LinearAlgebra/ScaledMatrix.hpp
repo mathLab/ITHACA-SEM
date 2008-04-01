@@ -120,6 +120,13 @@ namespace Nektar
             {
             }
             
+            NekMatrix(const NekMatrix<InnerType, StorageType, ScaledMatrixTag>& rhs) :
+                BaseType(rhs),
+                m_matrix(rhs.m_matrix),
+                m_scale(rhs.m_scale)
+            {
+            }
+            
             typename boost::call_traits<NumberType>::value_type operator()(unsigned int row, unsigned int col) const
             {
                 return m_scale*m_matrix->GetValue(row, col, this->GetTransposeFlag());
@@ -190,6 +197,16 @@ namespace Nektar
             NumberType m_scale;
     };
     
+    template<typename DataType, typename StorageType>
+    NekMatrix<DataType, StorageType, ScaledMatrixTag>
+    Transpose(NekMatrix<DataType, StorageType, ScaledMatrixTag>& rhs)
+    {
+        NekMatrix<DataType, StorageType, ScaledMatrixTag> result(rhs);
+        result.Transpose();
+        return result;
+    }
+    
+
 }
 
 

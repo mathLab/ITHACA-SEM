@@ -622,6 +622,8 @@ namespace Nektar
         result.Transpose();
         return result;
     }
+    
+
 }
 
 

@@ -139,6 +139,7 @@ namespace Nektar
         };
 
     #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+    
 // #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 //     // All of the expression interfaces for NekMatrix should go here.
 //     namespace expt
@@ -428,6 +429,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.33  2008/01/20 20:09:20  bnelson
+    *** empty log message ***
+
     Revision 1.32  2008/01/20 03:59:36  bnelson
     Expression template updates.
 

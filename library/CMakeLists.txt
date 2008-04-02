@@ -19,6 +19,7 @@ SET(USE_ATLAS OFF CACHE BOOL "Use ATLAS for BLAS and Lapack support." )
 SET(USE_WIN32_LAPACK OFF CACHE BOOL "Use Win32 Lapack provided with the Third Party Distribution.")
 SET(USE_NEKTAR_MEMORY_POOLS ON CACHE BOOL "Use memory pools to accelerate memory allocation.")
 SET(USE_BLAS_LAPACK ON CACHE BOOL "Use Blas and lapack routines.")
+SET(USE_METIS OFF CACHE BOOL "Use Metis routines for partitioning and reordering graphs.")
 SET(USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
 SET(NEKTAR_FULL_DEBUG OFF CACHE BOOL "Enable Full Debugging.")
 SET(NEKTAR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Enable the use of precompiled headers.")
@@ -39,6 +40,10 @@ IF( USE_FRAMEWORK )
     INCLUDE (FindFramework)
 ENDIF( USE_FRAMEWORK )
 
+IF( USE_METIS )
+    FIND_PACKAGE(Metis REQUIRED)
+ENDIF( USE_METIS )
+
 IF( USE_ATLAS )
     INCLUDE( FindAtlas )
 ENDIF( USE_ATLAS )
@@ -48,7 +53,7 @@ IF( USE_ACML )
 ENDIF( USE_ACML )
 
 IF( USE_WIN32_LAPACK )
-	INCLUDE (FindWin32Lapack.cmake)
+    INCLUDE (FindWin32Lapack.cmake)
 ENDIF( USE_WIN32_LAPACK )
 
 
@@ -168,6 +173,10 @@ IF( USE_TINYXML_STL )
     ADD_DEFINITIONS( -DTIXML_USE_STL)
 ENDIF( USE_TINYXML_STL )
 
+IF( USE_METIS )    
+    ADD_DEFINITIONS(-DNEKTAR_USING_METIS)
+ENDIF( USE_METIS )
+
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
 	# Removes the warnings about unsafe methods such as strcpy, std::copy, memcmp, etc.
@@ -252,6 +261,10 @@ MACRO(SET_LAPACK_LINK_LIBRARIES name)
         IF( USE_WIN32_LAPACK )
 	        TARGET_LINK_LIBRARIES(${name} ${WIN32_LAPACK} ${WIN32_BLAS})	
         ENDIF( USE_WIN32_LAPACK )
+
+        IF( USE_METIS )    
+            TARGET_LINK_LIBRARIES(${name} optimized ${METIS_LIB} debug ${METIS_LIB} )
+            ENDIF( USE_METIS )
     ENDIF( USE_BLAS_LAPACK )
 ENDMACRO(SET_LAPACK_LINK_LIBRARIES name)
 

@@ -152,6 +152,10 @@ namespace Nektar
          return v_GetNodalPoints(x, y);
          }
 
+         const boost::shared_ptr<SpatialDomains::Geometry2D>& GetGeom()
+         {
+             return v_GetGeom();
+         }
     protected:
 
     private:
@@ -213,9 +217,17 @@ namespace Nektar
                                         Array<OneD, NekDouble> &outarray) = 0;
          
          virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
-            {
-            return PhysEvaluate2D(coords);
-            }
+         {
+             return PhysEvaluate2D(coords);
+         }
+         
+         virtual const boost::shared_ptr<SpatialDomains::Geometry2D>& v_GetGeom()
+         {
+             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                      "local expansions");
+             static boost::shared_ptr<SpatialDomains::Geometry2D> returnval;
+             return returnval;
+         }
         };
 
         typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
@@ -227,6 +239,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.18  2007/11/08 16:55:14  pvos
+* Updates towards 2D helmholtz solver
+*
 * Revision 1.17  2007/10/15 20:37:40  ehan
 * Make changes of column major matrix
 *

@@ -125,7 +125,46 @@ namespace Nektar
                 static const int kNverts = 2;
                 SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
 
-            private:
+            private: 
+                virtual void v_AddElmtConnected(int gvo_id, int locid)
+                {      
+                    AddElmtConnected(gvo_id, locid);
+                }
+                
+                virtual int v_NumElmtConnected() const
+                {
+                    return NumElmtConnected();
+                }
+                
+                virtual bool v_IsElmtConnected(int gvo_id, int locid) const
+                {
+                    return IsElmtConnected(gvo_id, locid);
+                }
+                
+                virtual int v_GetEid() const 
+                {
+                    return GetEid();
+                }
+                
+                virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
+                {  
+                    return GetBasis(i,j);
+                }
+                
+                virtual const StdRegions::StdExpansion1DSharedPtr &v_GetXmap(const int i)
+                {
+                    return GetXmap(i);
+                }
+                
+                virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
+                {
+                    return UpdatePhys(i);
+                }
+                
+                virtual VertexComponentSharedPtr v_GetVertex(const int i) const
+                {
+                    return GetVertex(i);
+                }
         };
 
         typedef boost::shared_ptr<EdgeComponent> EdgeComponentSharedPtr;
@@ -137,6 +176,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.17  2007/12/29 17:49:03  jfrazier
+// Removed redundant instance of the vertex array.  Move the one down from SegGeom.
+//
 // Revision 1.16  2007/07/22 23:04:23  bnelson
 // Backed out Nektar::ptr.
 //

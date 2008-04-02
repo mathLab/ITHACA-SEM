@@ -126,6 +126,46 @@ namespace Nektar
                 {
                     GenGeomFactors();
                 }
+
+                virtual void v_SetOwnData()
+                {
+                    SetOwnData();
+                }
+
+                virtual void v_FillGeom()
+                {
+                    FillGeom();
+                }            
+                
+                virtual void v_GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+                {
+                    v_GetLocCoords(coords,Lcoords);
+                }
+                
+                virtual int v_GetEid(int i) const
+                {
+                    return GetEid(i);
+                }
+                
+                virtual int v_GetVid(int i) const
+                {
+                    return GetVid(i);
+                }
+                
+                virtual const SegGeomSharedPtr v_GetEdge(int i) const
+                {
+                    return GetEdge(i);
+                }
+                
+                virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
+                {
+                    return GetEorient(i);
+                }
+                
+                virtual int v_WhichEdge(SegGeomSharedPtr edge)
+                {
+                    return WhichEdge(edge);
+                }
         };
     }; //end of namespace SpatialDomains
 }; //end of namespace Nektar
@@ -134,6 +174,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.15  2008/02/08 23:05:52  jfrazier
+// More work on 3D components.
+//
 // Revision 1.14  2008/02/03 05:05:16  jfrazier
 // Initial checkin of 3D components.
 //

@@ -129,6 +129,19 @@ namespace Nektar
             void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
 
             void GetInteriorMap(Array<OneD, unsigned int>& outarray);
+
+            int GetVertexMap(const int localVertexId)
+            {
+                ASSERTL0((localVertexId>=0)&&(localVertexId<=2),
+                         "Local Vertex ID must be between 0 and 2");                
+                return localVertexId;
+            }
+ 
+            void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                    Array<OneD, unsigned int> &maparray);
+
+            void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                     Array<OneD, unsigned int> &maparray);
             
         protected:            
             boost::shared_ptr<LibUtilities::PointsKey> m_nodalPointsKey;
@@ -239,6 +252,33 @@ namespace Nektar
             {
                 WriteToFile(outfile);
             }
+
+            virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+            {
+                GetBoundaryMap(outarray);
+            }
+
+            virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+            {
+                GetInteriorMap(outarray);
+            }
+
+            virtual int v_GetVertexMap(const int localVertexId)
+            {
+                return GetVertexMap(localVertexId);
+            }
+ 
+            virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                      Array<OneD, unsigned int> &maparray)
+            {
+                GetEdgeInteriorMap(eid,edgeOrient,maparray);
+            }
+
+            virtual void v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                               Array<OneD, unsigned int> &maparray)
+            {
+                GetEdgeToElementMap(eid,edgeOrient,maparray);
+            }
             
             virtual void v_MapTo(const int edge_ncoeffs, 
                                  const LibUtilities::BasisType Btype, 
@@ -272,6 +312,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.17  2008/03/18 14:15:45  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.16  2007/12/17 13:03:51  sherwin
 * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
 *

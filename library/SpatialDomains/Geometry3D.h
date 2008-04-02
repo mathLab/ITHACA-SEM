@@ -51,11 +51,109 @@ namespace Nektar
             Geometry3D(const int coordim);
             ~Geometry3D();
 
+            void AddElmtConnected(int gvo_id, int locid)
+            {
+                v_AddElmtConnected(gvo_id,locid);
+            }
+
+            int  NumElmtConnected() const
+            {
+                return v_NumElmtConnected();
+            }
+
+            bool IsElmtConnected(int gvo_id, int locid) const
+            {
+                return v_IsElmtConnected(gvo_id,locid);
+            }
+            
+            inline int GetEid() const
+            {
+                return v_GetEid();
+            }
+
+            inline int GetCoordDim() const 
+            {
+                return v_GetCoordDim();
+            }
+
+            inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
+            {
+                return v_GetBasis(i,j);
+            }
+
+            inline Array<OneD,NekDouble> &UpdatePhys(const int i)
+            {
+                return v_UpdatePhys(i);
+            }
+
+            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            {
+                return v_GetCoord(i,Lcoord);
+            }
+
         protected:
 
         private:
+            virtual void v_AddElmtConnected(int gvo_id, int locid)
+            {  
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");            
+            }
+            
+            virtual int v_NumElmtConnected() const
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return 0;
+            }
+            
+            virtual bool v_IsElmtConnected(int gvo_id, int locid) const
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return false;
+            }
+            
+            virtual int v_GetEid() const 
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return 0;
+            }
 
+            virtual int v_GetCoordDim() const 
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return 0;
+            }
+
+            virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                LibUtilities::BasisSharedPtr returnval;        
+                return returnval;    
+            }
+
+            virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return NullNekDouble1DArray;
+            }
+
+            virtual NekDouble v_GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return 0.0;
+            }
         };
+        // shorthand for boost pointer
+        typedef boost::shared_ptr<Geometry3D> Geometry3DSharedPtr;
+        typedef std::vector< Geometry3DSharedPtr > Geometry3DVector;
+        typedef std::vector< Geometry3DSharedPtr >::iterator Geometry3DVectorIter;
 
     }; //end of namespace
 }; //end of namespace
@@ -65,6 +163,9 @@ namespace Nektar
 
 //
 // $Log: Geometry3D.h,v $
+// Revision 1.2  2008/01/31 11:02:55  ehan
+// Added constructor and destructor.
+//
 // Revision 1.1  2006/05/04 18:59:00  kirby
 // *** empty log message ***
 //

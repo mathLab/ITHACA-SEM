@@ -790,14 +790,31 @@ namespace Nektar
 
             void GetBoundaryMap(Array<OneD, unsigned int> &outarray)
             {
-                return v_GetBoundaryMap(outarray);
+                v_GetBoundaryMap(outarray);
             }
 
             void GetInteriorMap(Array<OneD, unsigned int> &outarray)
             {
-                return v_GetInteriorMap(outarray);
+                v_GetInteriorMap(outarray);
+            }
+            
+            int GetVertexMap(const int localVertexId)
+            {
+                return v_GetVertexMap(localVertexId);
+            }
+ 
+            void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                    Array<OneD, unsigned int> &maparray)
+            {
+                v_GetEdgeInteriorMap(eid,edgeOrient,maparray);
             }
 
+            void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                     Array<OneD, unsigned int> &maparray)
+            {
+                v_GetEdgeToElementMap(eid,edgeOrient,maparray);
+            }
+            
             // element boundary ordering 
             // Segment mapping: Vertex to Seg
             void MapTo(EdgeOrientation dir, StdExpMap &Map)
@@ -1298,6 +1315,24 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
+            virtual int v_GetVertexMap(const int localVertexId)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+                return 0;
+            }
+ 
+            virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                      Array<OneD, unsigned int> &maparray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
+            virtual void v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                               Array<OneD, unsigned int> &maparray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
             // element boundary ordering 
             virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
             {
@@ -1355,6 +1390,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.77  2008/03/18 14:15:45  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.76  2008/03/12 15:25:09  pvos
 * Clean up of the code
 *

@@ -506,6 +506,142 @@ namespace Nektar
             }
         }
 
+        int StdTriExp::GetVertexMap(const int localVertexId)
+        {
+            ASSERTL0((GetEdgeBasisType(localVertexId)==LibUtilities::eModified_A)||
+                     (GetEdgeBasisType(localVertexId)==LibUtilities::eModified_B),
+                     "Mapping not defined for this type of basis");
+            
+            int localDOF;
+            switch(localVertexId)
+                {
+                case 0:
+                    { 
+                        localDOF = 0;    
+                    }
+                    break;
+                case 1:
+                    {   
+                        localDOF = m_base[1]->GetNumModes();                 
+                    }
+                    break;
+                case 2:
+                    { 
+                        localDOF = 1;    
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 2");
+                    break;
+                }
+
+            return localDOF;
+        }
+ 
+        void StdTriExp::GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                           Array<OneD, unsigned int> &maparray)
+        {
+            ASSERTL0((GetEdgeBasisType(eid)==LibUtilities::eModified_A)||
+                     (GetEdgeBasisType(eid)==LibUtilities::eModified_B),
+                     "Mapping not defined for this type of basis");
+            int i;
+            const int nummodes1 = m_base[1]->GetNumModes();
+            const int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
+
+            if(maparray.num_elements() != nEdgeIntCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
+            }
+
+            switch(eid)
+            {
+            case 0:
+                {         
+                    int cnt = 2*nummodes1 - 1;
+                    for(i = 0; i < nEdgeIntCoeffs; cnt+=nummodes1-2-i, ++i)
+                    {
+                        maparray[i] = cnt; 
+                    }          
+                }
+                break;
+            case 1:
+                {
+                    for(i = 0; i < nEdgeIntCoeffs; i++)
+                    {
+                        maparray[i] = nummodes1+1+i; 
+                    }                        
+                }
+                break;
+            case 2:
+                {
+                    for(i = 0; i < nEdgeIntCoeffs; i++)
+                    {
+                        maparray[i] = 2+i;
+                    }                        
+                }
+                break;
+            default:
+                ASSERTL0(false,"eid must be between 0 and 2");
+                break;
+            }  
+        }
+
+        void StdTriExp::GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                             Array<OneD, unsigned int> &maparray)
+        {           
+            ASSERTL0((GetEdgeBasisType(eid)==LibUtilities::eModified_A)||
+                     (GetEdgeBasisType(eid)==LibUtilities::eModified_B),
+                     "Mapping not defined for this type of basis");
+            int i;
+            const int nummodes1 = m_base[1]->GetNumModes();
+            const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
+
+            if(maparray.num_elements() != nEdgeCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
+            }
+
+            switch(eid)
+            {
+            case 0:
+                {         
+                    int cnt = 0;
+                    for(i = 0; i < nEdgeCoeffs; cnt+=nummodes1-i, ++i)
+                    {
+                        maparray[i] = cnt; 
+                    }          
+                }
+                break;
+            case 1:
+                {
+                    maparray[0] = nummodes1;
+                    maparray[1] = 1;
+                    for(i = 2; i < nEdgeCoeffs; i++)
+                    {
+                        maparray[i] = nummodes1-1+i; 
+                    }                        
+                }
+                break;
+            case 2:
+                {
+                    maparray[0] = 1;
+                    maparray[1] = 0;
+                    for(i = 2; i < nEdgeCoeffs; i++)
+                    {
+                        maparray[i] = i;
+                    }                        
+                }
+                break;
+            default:
+                ASSERTL0(false,"eid must be between 0 and 2");
+                break;
+            }  
+            if(edgeOrient==eBackwards)
+            {
+                swap( maparray[0] , maparray[1] );
+            }
+        }
+        
         void  StdTriExp::MapTo(const int edge_ncoeffs, 
             const LibUtilities::BasisType Btype,
             const int eid, 
@@ -671,6 +807,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.29  2008/03/12 15:25:09  pvos
+* Clean up of the code
+*
 * Revision 1.28  2008/01/23 09:09:46  sherwin
 * Updates for Hybrized DG
 *

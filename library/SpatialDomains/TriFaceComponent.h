@@ -90,6 +90,45 @@ namespace Nektar
 
             Array<OneD, StdRegions::StdExpansion2DSharedPtr> m_xmap;
         private:
+            virtual void v_AddElmtConnected(int gvo_id, int locid)
+            {
+                AddElmtConnected(gvo_id,locid);
+            }
+
+            virtual int  v_NumElmtConnected() const
+            {
+                return NumElmtConnected();
+            }
+
+            virtual bool v_IsElmtConnected(int gvo_id, int locid) const
+            {
+                return IsElmtConnected(gvo_id,locid);
+            }
+            
+            virtual int v_GetFid() const 
+            {
+                return GetFid();
+            }
+
+            virtual int v_GetCoordDim() const 
+            {
+                return GetCoordDim();
+            }
+
+            virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
+            {
+                return GetBasis(i,j);
+            }
+
+            virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
+            {
+                return UpdatePhys(i);
+            }
+
+            virtual NekDouble v_GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            {
+                return GetCoord(i,Lcoord);
+            }
         };
 
         typedef boost::shared_ptr<TriFaceComponent> TriFaceComponentSharedPtr;
@@ -101,6 +140,9 @@ namespace Nektar
 
 //
 // $Log: TriFaceComponent.h,v $
+// Revision 1.6  2008/02/03 05:05:16  jfrazier
+// Initial checkin of 3D components.
+//
 // Revision 1.5  2007/07/22 23:04:24  bnelson
 // Backed out Nektar::ptr.
 //

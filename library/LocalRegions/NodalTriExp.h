@@ -76,7 +76,7 @@ namespace Nektar
             void GetCoord(const ConstArray<OneD,NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
             
-            SpatialDomains::TriGeomSharedPtr GetGeom()
+            const SpatialDomains::Geometry2DSharedPtr& GetGeom()
             {
                 return m_geom;
             }
@@ -129,7 +129,7 @@ namespace Nektar
             DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
             
-            SpatialDomains::TriGeomSharedPtr m_geom;
+            SpatialDomains::Geometry2DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
@@ -157,6 +157,11 @@ namespace Nektar
             virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
             {
                 return m_metricinfo;
+            }
+
+            const SpatialDomains::Geometry2DSharedPtr& v_GetGeom()
+            {
+                return GetGeom();
             }
 
             virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
@@ -324,6 +329,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.14  2008/03/18 14:12:53  pvos
+ *    Update for nodal triangular helmholtz solver
+ *
  *    Revision 1.13  2007/07/28 05:09:32  sherwin
  *    Fixed version with updated MemoryManager
  *

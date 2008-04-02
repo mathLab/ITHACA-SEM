@@ -49,7 +49,7 @@ namespace Nektar
             m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
             m_matrixManager(std::string("SegExpMatrix")),
             m_staticCondMatrixManager(std::string("SegExpStaticCondMatrix"))
-        {            
+        {         
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
                 m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,  StdRegions::eNoShapeType,*this),   
@@ -1114,6 +1114,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.37  2008/03/18 14:12:53  pvos
+// Update for nodal triangular helmholtz solver
+//
 // Revision 1.36  2008/03/12 15:24:29  pvos
 // Clean up of the code
 //

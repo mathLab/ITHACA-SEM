@@ -632,13 +632,13 @@ namespace Nektar
             DNekMatSharedPtr& bwdtransmat = GetStdMatrix(bwdtransmatkey);
 
             // scenario 1
-            //Blas::Dgemv('N',nq,m_ncoeffs,1.0,bwdtransmat->GetPtr().get(),
-            //          nq, &inarray[0], 1.0, 0.0, &outarray[0], 1.0);
+            Blas::Dgemv('N',nq,m_ncoeffs,1.0,bwdtransmat->GetPtr().get(),
+                     nq, &inarray[0], 1.0, 0.0, &outarray[0], 1.0);
 
             //scenario 3
-            NekVector<const NekDouble> v_in(m_ncoeffs,inarray,eWrapper);
-            NekVector<NekDouble> v_out(nq,outarray,eWrapper);
-            v_out = (*bwdtransmat) * v_in;
+            //NekVector<const NekDouble> v_in(m_ncoeffs,inarray,eWrapper);
+            //NekVector<NekDouble> v_out(nq,outarray,eWrapper);
+            //v_out = (*bwdtransmat) * v_in;
         }
 
 
@@ -813,6 +813,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.66  2008/03/18 14:15:45  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.65  2008/03/12 15:25:09  pvos
 * Clean up of the code
 *

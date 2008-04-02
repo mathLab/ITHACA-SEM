@@ -44,6 +44,8 @@ namespace Nektar
         class Geometry;
         class EdgeComponent;
         class SegGeom;
+        class Geometry1D;
+        class Geometry2D;
         class GeomFactors;
         
     } // end of namespace
@@ -53,6 +55,9 @@ namespace Nektar
 
 /**
  * $Log: SpatialDomainsDeclarations.hpp,v $
+ * Revision 1.5  2007/07/13 09:02:25  sherwin
+ * Mods for Helmholtz solver
+ *
  * Revision 1.4  2007/03/25 15:48:22  sherwin
  * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
  *

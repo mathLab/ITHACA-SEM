@@ -179,6 +179,14 @@ namespace Nektar
 
             void GetInteriorMap(Array<OneD, unsigned int>& outarray);
 
+            int GetVertexMap(const int localVertexId);
+ 
+            void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                    Array<OneD, unsigned int> &maparray);
+
+            void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                     Array<OneD, unsigned int> &maparray);
+
             void MapTo(const int edge_ncoeffs, 
                 const LibUtilities::BasisType Btype, 
                 const int eid, 
@@ -414,6 +422,23 @@ namespace Nektar
                  GetInteriorMap(outarray);
             }
 
+            virtual int v_GetVertexMap(const int localVertexId)
+            {
+                return GetVertexMap(localVertexId);
+            }
+ 
+            virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                      Array<OneD, unsigned int> &maparray)
+            {
+                GetEdgeInteriorMap(eid,edgeOrient,maparray);
+            }
+
+            virtual void v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                               Array<OneD, unsigned int> &maparray)
+            {
+                GetEdgeToElementMap(eid,edgeOrient,maparray);
+            }
+
             virtual void v_MapTo(const int edge_ncoeffs, 
                 const LibUtilities::BasisType Btype, 
                 const int eid, 
@@ -451,6 +476,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.26  2008/03/18 14:15:45  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.25  2008/03/12 15:25:09  pvos
 * Clean up of the code
 *

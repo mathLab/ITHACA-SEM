@@ -189,6 +189,8 @@ namespace Nektar
 
             void GetInteriorMap(Array<OneD, unsigned int>& outarray);
 
+            int GetVertexMap(const int localVertexId);
+
             void MapTo(EdgeOrientation dir, StdExpMap& Map);
 
             void GetCoords(Array<OneD, NekDouble> &coords_1);
@@ -380,6 +382,11 @@ namespace Nektar
                 GetInteriorMap(outarray);
             }
 
+            virtual int v_GetVertexMap(const int localVertexId)
+            {
+                return GetVertexMap(localVertexId);
+            }
+
             virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
             {
                 MapTo(dir,Map);
@@ -395,6 +402,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.34  2008/03/12 15:25:09  pvos
+* Clean up of the code
+*
 * Revision 1.33  2008/02/29 19:15:19  sherwin
 * Update for UDG stuff
 *

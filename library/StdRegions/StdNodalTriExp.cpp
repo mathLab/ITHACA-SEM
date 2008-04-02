@@ -142,7 +142,7 @@ namespace Nektar
             StdMatrixKey   Nkey(eInvNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
 
-            NekVector<const NekDouble> nodal(m_ncoeffs,inarray,eWrapper);
+            NekVector<const NekDouble> nodal(m_ncoeffs,inarray,eCopy);
             NekVector<NekDouble> modal(m_ncoeffs,outarray,eWrapper);
             modal = Transpose(*inv_vdm) * nodal;
         }
@@ -187,7 +187,7 @@ namespace Nektar
             // Take inner product with respect to Orthgonal basis using
             // StdTri routine
             StdTriExp::IProductWRTBase(base0,base1,inarray,outarray);
-            NodalToModalTranspose(outarray,outarray);            
+            NodalToModalTranspose(outarray,outarray);     
         }
 
         void StdNodalTriExp::IProductWRTDerivBase(const int dir, 
@@ -322,6 +322,53 @@ namespace Nektar
                 outarray[i-NumBndryCoeffs()] = i;
             }
         }
+ 
+        void StdNodalTriExp::GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                           Array<OneD, unsigned int> &maparray)
+        {
+            ASSERTL0((eid>=0)&&(eid<=2),"Local Edge ID must be between 0 and 2"); 
+            const int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
+            
+            if(maparray.num_elements() != nEdgeIntCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
+            }
+            
+            for(int i = 0; i < nEdgeIntCoeffs; i++)
+            {
+                maparray[i] = eid*nEdgeIntCoeffs+3+i; 
+            }  
+
+            if(edgeOrient == eBackwards)
+            {
+                reverse( maparray.get() , maparray.get()+nEdgeIntCoeffs );
+            }
+                          
+        }
+
+        void StdNodalTriExp::GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                             Array<OneD, unsigned int> &maparray)
+        {
+            ASSERTL0((eid>=0)&&(eid<=2),"Local Edge ID must be between 0 and 2"); 
+            const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
+            
+            if(maparray.num_elements() != nEdgeCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
+            }
+            
+            maparray[0] = eid;
+            maparray[1] = (eid==2) ? 0 : eid+1;
+            for(int i = 2; i < nEdgeCoeffs; i++)
+            {
+                maparray[i] = eid*(nEdgeCoeffs-2)+1+i; 
+            }  
+
+            if(edgeOrient == eBackwards)
+            {
+                reverse( maparray.get() , maparray.get()+nEdgeCoeffs );
+            }
+        }
 
         void  StdNodalTriExp::MapTo(const int edge_ncoeffs, 
             const LibUtilities::BasisType Btype,
@@ -402,7 +449,7 @@ namespace Nektar
                 break;
             }
         }
-
+        
         void StdNodalTriExp::MapTo_ModalFormat(const int edge_ncoeffs, 
             const LibUtilities::BasisType Btype, 
             const int eid, 
@@ -418,6 +465,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.20  2008/03/18 14:15:45  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.19  2007/12/17 13:03:51  sherwin
 * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
 *

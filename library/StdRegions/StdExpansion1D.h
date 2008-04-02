@@ -135,6 +135,10 @@ namespace Nektar
                 v_BwdTrans (inarray, outarray);
             }
 
+            const boost::shared_ptr<SpatialDomains::Geometry1D>& GetGeom()
+            {
+                return v_GetGeom();
+            }
         protected:
 
         private:
@@ -203,6 +207,14 @@ namespace Nektar
                 return 0;
             }
 
+            virtual const boost::shared_ptr<SpatialDomains::Geometry1D>& v_GetGeom()
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                         "local expansions");
+                static boost::shared_ptr<SpatialDomains::Geometry1D> returnval;
+                return returnval;
+            }
+
         };
 
         typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
@@ -214,6 +226,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.25  2008/02/29 19:15:19  sherwin
+* Update for UDG stuff
+*
 * Revision 1.24  2007/12/06 22:44:47  pvos
 * 2D Helmholtz solver updates
 *

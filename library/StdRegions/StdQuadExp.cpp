@@ -151,7 +151,13 @@ namespace Nektar
                 DNekMat B0(nquad0,order0,base0,eWrapper);
                 DNekMat B1(nquad1,order1,base1,eWrapper);
                 DNekMat out(order0,order1,outarray,eWrapper);
-                out = Transpose(B0)*in*B1;
+                // out = Transpose(B0)*in*B1;
+
+                DNekMat tmp(nquad0,order1);
+                tmp = in*B1;
+                out = Transpose(B0)*tmp;
+
+
             }
             else
             {        
@@ -269,16 +275,28 @@ namespace Nektar
                 Vmath::Vcopy(nquad0*nquad1, inarray, 1, outarray, 1);
             }
             else if( !(m_base[0]->Collocation() || m_base[1]->Collocation()) )
-            {
+            { 
                 int           order0 = m_base[0]->GetNumModes();
                 int           order1 = m_base[1]->GetNumModes();
 
+                // scenario1
+//                 ConstArray<OneD, NekDouble> base0 = m_base[0]->GetBdata();
+//                 ConstArray<OneD, NekDouble> base1 = m_base[1]->GetBdata();
+//                 Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nquad0*std::max(order1,nquad1));
+//                 Blas::Dgemm('N','N', nquad0,order1,order0,1.0, base0.get(),
+//                             nquad0, &inarray[0], order0,0.0,&tmp[0], nquad0);
+//                 Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &tmp[0],
+//                             nquad0, base1.get(), nquad1, 0.0, &outarray[0], 
+//                             nquad0);
+                // scenario 3
                 DNekMat in(order0,order1,inarray,eWrapper);
                 DNekMat B0(nquad0,order0,m_base[0]->GetBdata(),eWrapper);
                 DNekMat B1(nquad1,order1,m_base[1]->GetBdata(),eWrapper);
                 DNekMat out(nquad0,nquad1,outarray,eWrapper);
-
-                out = B0*in*Transpose(B1);
+                //out = B0*in*Transpose(B1); //(currently not working with expression templates)
+                 DNekMat tmpM(nquad0,order1);
+                 tmpM =  B0*in;
+                 out = tmpM*Transpose(B1);
             }
             else
             {
@@ -451,6 +469,283 @@ namespace Nektar
             }
         }
 
+        int StdQuadExp::GetVertexMap(const int localVertexId)
+        {
+            int localDOF;
+            switch(localVertexId)
+                {
+                case 0:
+                    { 
+                        localDOF = 0;    
+                    }
+                    break;
+                case 1:
+                    {              
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = 1;
+                        }
+                    }
+                    break;
+                case 2:
+                    {   
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes()+1;
+                        }                    
+                    }
+                    break;
+                case 3:
+                    { 
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes();
+                        }
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 3");
+                    break;
+                }
+
+            return localDOF;
+        }
+ 
+        void StdQuadExp::GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                            Array<OneD, unsigned int> &maparray)
+        {
+            int i;
+            const int nummodes0 = m_base[0]->GetNumModes();
+            const int nummodes1 = m_base[1]->GetNumModes();
+            const int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
+            const LibUtilities::BasisType bType = GetEdgeBasisType(eid);
+
+            if(maparray.num_elements() != nEdgeIntCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
+            }
+
+            if(bType == LibUtilities::eModified_A)
+            {
+                switch(eid)
+                {
+                case 0:
+                    {
+                        for(i = 0; i < nEdgeIntCoeffs; i++)
+                        {
+                            maparray[i] = i+2;
+                        }
+                        
+                    }
+                    break;
+                case 1:
+                    {
+                        for(i = 0; i < nEdgeIntCoeffs; i++)
+                        {
+                            maparray[i] = (i+2)*nummodes0 + 1;
+                        }                        
+                    }
+                    break;
+                case 2:
+                    {
+                        for(i = 0; i < nEdgeIntCoeffs; i++)
+                        {
+                            maparray[i] = nummodes0+i+2;
+                        }                        
+                    }
+                    break;
+                case 3:
+                    {
+                        for(i = 0; i < nEdgeIntCoeffs; i++)
+                        {
+                            maparray[i] = (i+2)*nummodes0;
+                        }                         
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 3");
+                    break;
+                }  
+            }
+            else if(bType == LibUtilities::eGLL_Lagrange)
+            {
+                switch(eid)
+                {
+                case 0:
+                    {                  
+                        for(i = 0; i < nEdgeIntCoeffs; i++)
+                        {
+                            maparray[i] = i+1;
+                        }
+                    }
+                    break;
+                case 1:
+                    {
+                        for(i = 0; i < nEdgeIntCoeffs; i++)
+                        {
+                            maparray[i] = (i+2)*nummodes0 - 1;
+                        }                     
+                    }
+                    break;
+                case 2:
+                    {
+                        for(i = 0; i < nEdgeIntCoeffs; i++)
+                        {
+                            maparray[i] = nummodes0*nummodes1 - 2 - i;
+                        }                                               
+                    }
+                    break;
+                case 3:
+                    {   
+                        for(i = 0; i < nEdgeIntCoeffs; i++)
+                        {
+                            maparray[i] = nummodes0*(nummodes1-2-i);
+                        }
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 3");
+                    break;
+                } 
+                if(edgeOrient == eBackwards)
+                {
+                    reverse( maparray.get() , maparray.get()+nEdgeIntCoeffs );
+                }
+            } 
+            else
+            {
+                ASSERTL0(false,"Mapping not defined for this type of basis");
+            }
+
+        }
+
+        void StdQuadExp::GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                             Array<OneD, unsigned int> &maparray)
+        {
+            int i;
+            const int nummodes0 = m_base[0]->GetNumModes();
+            const int nummodes1 = m_base[1]->GetNumModes();
+            const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
+            const LibUtilities::BasisType bType = GetEdgeBasisType(eid);
+            
+            if(maparray.num_elements() != nEdgeCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
+            }
+
+            if(bType == LibUtilities::eModified_A)
+            {
+                switch(eid)
+                {
+                case 0:
+                    {
+                        for(i = 0; i < nEdgeCoeffs; i++)
+                        {
+                            maparray[i] = i;
+                        }
+                        
+                    }
+                    break;
+                case 1:
+                    {
+                        for(i = 0; i < nEdgeCoeffs; i++)
+                        {
+                            maparray[i] = i*nummodes0 + 1;
+                        }                        
+                    }
+                    break;
+                case 2:
+                    {
+                        maparray[0] = nummodes0+1;
+                        maparray[1] = nummodes0;
+                        for(i = 2; i < nEdgeCoeffs; i++)
+                        {
+                            maparray[i] = nummodes0+i;
+                        }                        
+                    }
+                    break;
+                case 3:
+                    {
+                        maparray[0] = nummodes0;
+                        maparray[1] = 0;
+                        for(i = 2; i < nEdgeCoeffs; i++)
+                        {
+                            maparray[i] = i*nummodes0;
+                        }                         
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 3");
+                    break;
+                }
+                if(edgeOrient==eBackwards)
+                {
+                    swap( maparray[0] , maparray[1] );
+                }
+            }
+            else if(bType == LibUtilities::eGLL_Lagrange)
+            {
+                switch(eid)
+                {
+                case 0:
+                    {                  
+                        for(i = 0; i < nEdgeCoeffs; i++)
+                        {
+                            maparray[i] = i;
+                        }
+                    }
+                    break;
+                case 1:
+                    {
+                        for(i = 0; i < nEdgeCoeffs; i++)
+                        {
+                            maparray[i] = (i+1)*nummodes0 - 1;
+                        }                     
+                    }
+                    break;
+                case 2:
+                    {
+                        for(i = 0; i < nEdgeCoeffs; i++)
+                        {
+                            maparray[i] = nummodes0*nummodes1 - 1 - i;
+                        }                                               
+                    }
+                    break;
+                case 3:
+                    {   
+                        for(i = 0; i < nEdgeCoeffs; i++)
+                        {
+                            maparray[i] = nummodes0*(nummodes1-1-i);
+                        }
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 3");
+                    break;
+                } 
+                if(edgeOrient == eBackwards)
+                {
+                    reverse( maparray.get() , maparray.get()+nEdgeCoeffs );
+                }
+            } 
+            else
+            {
+                ASSERTL0(false,"Mapping not defined for this type of basis");
+            }
+        }
+
         // For a specified edge 'eid' this function updates a class
         // StdExpMap which contains the mapping of the edge degrees of
         // freedom back into the elemental domain which is also
@@ -460,10 +755,10 @@ namespace Nektar
         // be first, nodal expansions the vertices will be the two
         // end points
         void StdQuadExp::MapTo(const int edge_ncoeffs, 
-            const LibUtilities::BasisType Btype, 
-            const int eid, 
-            const EdgeOrientation eorient,
-            StdExpMap &Map)
+                               const LibUtilities::BasisType Btype, 
+                               const int eid, 
+                               const EdgeOrientation eorient,
+                               StdExpMap &Map)
         {
 
             int i, start, skip;
@@ -605,7 +900,6 @@ namespace Nektar
             StdExpMap &Map)
         {
             MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
-
             if(Btype == LibUtilities::eGLL_Lagrange)
             {
                 int i;
@@ -693,6 +987,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.29  2008/03/18 14:15:45  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.28  2008/03/12 15:25:09  pvos
 * Clean up of the code
 *

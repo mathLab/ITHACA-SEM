@@ -123,12 +123,52 @@ namespace Nektar
 
                 void GenGeomFactors(void);
 
-            private:
+        private:
                 bool m_owndata;   ///< Boolean indicating whether object owns the data
 
                 virtual void v_GenGeomFactors(void)
                 {
                     GenGeomFactors();
+                }
+
+                virtual void v_SetOwnData()
+                {
+                    SetOwnData();
+                }
+
+                virtual void v_FillGeom()
+                {
+                    FillGeom();
+                }            
+                
+                virtual void v_GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+                {
+                    v_GetLocCoords(coords,Lcoords);
+                }
+                
+                virtual int v_GetEid(int i) const
+                {
+                    return GetEid(i);
+                }
+                
+                virtual int v_GetVid(int i) const
+                {
+                    return GetVid(i);
+                }
+                
+                virtual const SegGeomSharedPtr v_GetEdge(int i) const
+                {
+                    return GetEdge(i);
+                }
+                
+                virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
+                {
+                    return GetEorient(i);
+                }
+                
+                virtual int v_WhichEdge(SegGeomSharedPtr edge)
+                {
+                    return WhichEdge(edge);
                 }
         };
 
@@ -144,6 +184,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.15  2008/01/26 20:17:28  sherwin
+// EdgecComponent to SegGeom
+//
 // Revision 1.14  2008/01/21 19:58:14  sherwin
 // Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
 //

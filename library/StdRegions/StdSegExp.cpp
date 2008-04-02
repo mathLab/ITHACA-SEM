@@ -253,7 +253,21 @@ namespace Nektar
             }
         }
         
-        
+        int StdSegExp::GetVertexMap(const int localVertexId)
+        {
+            ASSERTL0((localVertexId==0)||(localVertexId==1),"local vertex id"
+                     "must be between 0 or 1");
+
+            int localDOF = localVertexId;
+
+            if( (m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange) &&
+                (localVertexId==1) )
+            {
+                localDOF = m_base[0]->GetNumModes()-1;
+            }
+            return localDOF;
+        }
+
         void StdSegExp::MapTo(EdgeOrientation dir, StdExpMap& Map)
         {
             
@@ -308,6 +322,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.44  2008/03/12 15:25:09  pvos
+* Clean up of the code
+*
 * Revision 1.43  2007/12/17 13:03:51  sherwin
 * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
 *

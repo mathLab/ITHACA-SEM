@@ -86,7 +86,7 @@ namespace Nektar
               Array<OneD,NekDouble> &coords);
 
 
-            const SpatialDomains::SegGeomSharedPtr& GetGeom()
+            const SpatialDomains::Geometry1DSharedPtr& GetGeom()
             {
                 return m_geom;
             }
@@ -168,7 +168,7 @@ namespace Nektar
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
-            SpatialDomains::SegGeomSharedPtr m_geom;
+            SpatialDomains::Geometry1DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
@@ -193,6 +193,11 @@ namespace Nektar
             virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
             {
                 return m_metricinfo;
+            }
+
+            const SpatialDomains::Geometry1DSharedPtr& v_GetGeom()
+            {
+                return GetGeom();
             }
 
             virtual void v_GetCoords(Array<OneD,NekDouble> &coords_0,
@@ -429,6 +434,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.29  2008/03/12 15:24:29  pvos
+// Clean up of the code
+//
 // Revision 1.28  2008/02/28 10:04:11  sherwin
 // Modes for UDG codes
 //

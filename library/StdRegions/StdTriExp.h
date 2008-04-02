@@ -158,6 +158,14 @@ namespace Nektar
 
             void GetInteriorMap(Array<OneD, unsigned int>& outarray);
 
+            int GetVertexMap(const int localVertexId);
+ 
+            void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                    Array<OneD, unsigned int> &maparray);
+
+            void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                     Array<OneD, unsigned int> &maparray);
+
             void MapTo(const int edge_ncoeffs,
                 const LibUtilities::BasisType Btype, const int eid,
                 const EdgeOrientation eorient, StdExpMap &Map);
@@ -441,6 +449,23 @@ namespace Nektar
                 GetInteriorMap(outarray);
             }
 
+            virtual int v_GetVertexMap(const int localVertexId)
+            {
+                return GetVertexMap(localVertexId);
+            }
+ 
+            virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                      Array<OneD, unsigned int> &maparray)
+            {
+                GetEdgeInteriorMap(eid,edgeOrient,maparray);
+            }
+
+            virtual void v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                               Array<OneD, unsigned int> &maparray)
+            {
+                GetEdgeToElementMap(eid,edgeOrient,maparray);
+            }
+            
             virtual void v_MapTo(const int edge_ncoeffs,
                 const LibUtilities::BasisType Btype, 
                 const int eid, 
@@ -477,6 +502,9 @@ namespace Nektar
 
 /**
 * $Log: StdTriExp.h,v $
+* Revision 1.24  2008/03/12 15:25:09  pvos
+* Clean up of the code
+*
 * Revision 1.23  2008/02/29 19:15:19  sherwin
 * Update for UDG stuff
 *

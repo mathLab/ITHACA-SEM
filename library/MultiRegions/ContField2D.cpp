@@ -143,6 +143,7 @@ namespace Nektar
             int npoints;
             SpatialDomains::BoundaryConditionShPtr locBCond;
             SpatialDomains::BoundaryRegionShPtr locBregion;
+            SpatialDomains::SegGeomSharedPtr segGeom;
             LocalRegions::SegExpSharedPtr collSeg;
             StdRegions::StdSegExpSharedPtr collStdSeg;
             
@@ -185,7 +186,8 @@ namespace Nektar
                         LibUtilities::BasisKey collBasisKey(locSegExp->GetBasisType(0),nummodes,collPointsKey);
                         
                         // Create a segment based on the new BasisKey in order to perfrom the projection
-                        collSeg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(collBasisKey, locSegExp->GetGeom());
+                        segGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(locSegExp->GetGeom());
+                        collSeg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(collBasisKey, segGeom);
                         collStdSeg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(collBasisKey);
                                 
                         // Calculate the coordinates of the N GLL quadrature points

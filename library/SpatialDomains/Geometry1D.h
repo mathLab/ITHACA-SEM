@@ -37,8 +37,8 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H
 
 #include <SpatialDomains/SpatialDomains.hpp>
-
 #include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/MeshComponents.h>
 
 namespace Nektar
 {
@@ -51,10 +51,192 @@ namespace Nektar
             Geometry1D(const int coordim);
             ~Geometry1D();
 
+            // Wrappers around virtual Functions (for the EdgeComponent class)
+            void AddElmtConnected(int gvo_id, int locid)
+            {
+                v_AddElmtConnected(gvo_id,locid);
+            }
+
+            int  NumElmtConnected() const
+            {
+                return v_NumElmtConnected();
+            }
+
+            bool IsElmtConnected(int gvo_id, int locid) const
+            {
+                return v_IsElmtConnected(gvo_id,locid);
+            }
+            
+            inline int GetEid() const
+            {
+                return v_GetEid();
+            }
+
+            inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
+            {
+                return v_GetBasis(i,j);
+            }
+
+            inline const StdRegions::StdExpansion1DSharedPtr &GetXmap(const int i)
+            {
+                return v_GetXmap(i);
+            }
+
+            inline Array<OneD,NekDouble> &UpdatePhys(const int i)
+            {
+                return v_UpdatePhys(i);
+            }
+
+            inline VertexComponentSharedPtr GetVertex(const int i) const
+            {
+                return v_GetVertex(i);
+            }
+
+            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            {
+                return v_GetCoord(i,Lcoord);
+            }
+
+            inline int GetVid(int i) const
+            {
+                return v_GetVid(i);
+            }
+
+            void FillGeom()
+            {
+                v_FillGeom();
+            }
+            
+            StdRegions::ShapeType DetShapeType() const
+            {
+                return v_DetShapeType();
+            }
+            
+            void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+            {
+                v_GetLocCoords(coords,Lcoords);
+            }            
+            
+            inline void SetOwnData()
+            {
+                v_SetOwnData();
+            }
+            
+            void WriteToFile(std::ofstream &outfile, const int dumpVar)
+            {
+                v_WriteToFile(outfile,dumpVar);
+            }
+            
         protected:
 
         private:
+            virtual void v_AddElmtConnected(int gvo_id, int locid)
+            {  
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");            
+            }
+            
+            virtual int v_NumElmtConnected() const
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return 0;
+            }
+            
+            virtual bool v_IsElmtConnected(int gvo_id, int locid) const
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return false;
+            }
+            
+            virtual int v_GetEid() const 
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return 0;
+            }
+
+            virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                LibUtilities::BasisSharedPtr returnval;        
+                return returnval;    
+            }
+
+            virtual const StdRegions::StdExpansion1DSharedPtr &v_GetXmap(const int i)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                static StdRegions::StdExpansion1DSharedPtr returnval;        
+                return returnval; 
+            }
+
+            virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return NullNekDouble1DArray;
+            }
+
+            virtual VertexComponentSharedPtr v_GetVertex(const int i) const
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                VertexComponentSharedPtr returnval;        
+                return returnval;
+            }
+
+            virtual NekDouble v_GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return 0.0;
+            }
+
+            virtual int v_GetVid(int i) const
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return 0;
+            }
+            
+            virtual void v_FillGeom()
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+            }
+            
+            virtual StdRegions::ShapeType v_DetShapeType() const
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return StdRegions::eNoShapeType;
+            }
+            
+            virtual void v_GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+            }            
+            
+            virtual  void v_SetOwnData()
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+            }
+            
+            virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+            }
         };
+        // shorthand for boost pointer
+        typedef boost::shared_ptr<Geometry1D> Geometry1DSharedPtr;
+        typedef std::vector< Geometry1DSharedPtr > Geometry1DVector;
+        typedef std::vector< Geometry1DSharedPtr >::iterator Geometry1DVectorIter;
 
     }; //end of namespace
 }; //end of namespace
@@ -63,6 +245,9 @@ namespace Nektar
 
 //
 // $Log: Geometry1D.h,v $
+// Revision 1.4  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.3  2007/03/20 09:17:40  kirby
 //
 // GeomFactors now added; metricinfo used instead of minfo; styles updated

@@ -50,7 +50,7 @@ namespace Nektar
             m_metricinfo(),
             m_matrixManager(std::string("QuadExpMatrix")),
             m_staticCondMatrixManager(std::string("QuadExpStaticCondMatrix"))
-        {            
+        {      
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
                 m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
@@ -1756,6 +1756,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.30  2008/03/18 14:12:53  pvos
+ *    Update for nodal triangular helmholtz solver
+ *
  *    Revision 1.29  2008/03/12 15:24:29  pvos
  *    Clean up of the code
  *

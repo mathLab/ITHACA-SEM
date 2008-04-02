@@ -138,7 +138,7 @@ namespace Nektar
                     
                     if(expansions[i]->m_ExpansionType == SpatialDomains::eNodal)
                     {
-                        TriNb = LibUtilities::eNodalTriFekete;
+                        TriNb = LibUtilities::eNodalTriElec;
                         Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(TriBa,TriBb,TriNb,TriangleGeom);
                         (*m_exp).push_back(Ntri);
                     }
@@ -178,6 +178,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.17  2008/03/18 14:14:13  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.16  2008/03/12 15:25:45  pvos
 * Clean up of the code
 *

@@ -168,6 +168,46 @@ namespace Nektar
                 GenGeomFactors();
             }
 
+            virtual void v_AddElmtConnected(int gvo_id, int locid)
+            {
+                AddElmtConnected(gvo_id,locid);
+            }
+
+            virtual int  v_NumElmtConnected() const
+            {
+                return NumElmtConnected();
+            }
+
+            virtual bool v_IsElmtConnected(int gvo_id, int locid) const
+            {
+                return IsElmtConnected(gvo_id,locid);
+            }
+            
+            virtual int v_GetEid() const 
+            {
+                return GetEid();
+            }
+
+            virtual int v_GetCoordDim() const 
+            {
+                return GetCoordDim();
+            }
+
+            virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
+            {
+                return GetBasis(i,j);
+            }
+
+            virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
+            {
+                return UpdatePhys(i);
+            }
+
+            virtual NekDouble v_GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            {
+                return GetCoord(i,Lcoord);
+            }
+
         };
 
     }; //end of namespace
@@ -177,6 +217,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.8  2008/03/25 08:43:16  ehan
+// Added constructor, GetLocCoords(), and FillGeom().
+//
 // Revision 1.7  2008/02/27 22:31:29  ehan
 // Added inline function "SetOwnData()".
 //

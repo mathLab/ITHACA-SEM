@@ -90,7 +90,7 @@ namespace Nektar
         void GetCoord(const ConstArray<OneD,NekDouble>& Lcoords, 
                       Array<OneD,NekDouble> &coords);
 
-        SpatialDomains::QuadGeomSharedPtr GetGeom()
+        const SpatialDomains::Geometry2DSharedPtr& GetGeom()
         {
             return m_geom;
         }
@@ -183,7 +183,7 @@ namespace Nektar
         DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
         DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
-        SpatialDomains::QuadGeomSharedPtr m_geom;
+        SpatialDomains::Geometry2DSharedPtr m_geom;
         SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
         LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
@@ -208,6 +208,11 @@ namespace Nektar
         virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
         {
             return m_metricinfo;
+        }
+
+        const SpatialDomains::Geometry2DSharedPtr& v_GetGeom()
+        {
+            return GetGeom();
         }
 
         virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
@@ -417,6 +422,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.25  2008/03/12 15:24:29  pvos
+ *    Clean up of the code
+ *
  *    Revision 1.24  2008/03/06 23:29:23  ehan
  *    Included file <Vmath.hpp> and <VmathArray.hpp>.
  *

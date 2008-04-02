@@ -227,7 +227,7 @@ namespace Nektar
                 }
             }
 
-            // bubble sort edge 1
+            // bubble sort edge 1 (counterclockwise numbering)
             iend = istart + nEdgeInteriorPoints;
             for(i = istart; i < iend; i++)
             {
@@ -253,7 +253,7 @@ namespace Nektar
                 }
             }
 
-            // bubble sort edge 2
+            // bubble sort edge 2 (counterclockwise numbering)
             iend = istart + nEdgeInteriorPoints;
             for(i = istart; i < iend; i++)
             {
@@ -278,13 +278,13 @@ namespace Nektar
                     cnt++;
                 }
             }
-            // bubble sort edge 3
+            // bubble sort edge 3 (counterclockwise numbering)
             iend = istart + nEdgeInteriorPoints;
             for(i = istart; i < iend; i++)
             {
                 for(j = istart+1; j < iend; j++)
                 {
-                    if(m_points[1][j] < m_points[1][j-1])
+                    if(m_points[1][j] > m_points[1][j-1])
                     {
                         std::swap(m_points[0][j], m_points[0][j-1]);
                         std::swap(m_points[1][j], m_points[1][j-1]);
@@ -299,6 +299,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriElec.cpp,v $
+* Revision 1.15  2008/03/18 14:11:50  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.14  2007/10/03 03:00:13  bnelson
 * Added precompiled headers.
 *

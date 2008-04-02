@@ -348,7 +348,7 @@ namespace Nektar
             /// This operator performs range checking.
             typename boost::call_traits<DataType>::reference operator()(unsigned int i)
             {
-                ASSERTL1((i >= 0) && (i < GetDimension()), "Invalid access to m_data via parenthesis operator");
+                ASSERTL1((i >= 0) && (i < this->GetDimension()), "Invalid access to m_data via parenthesis operator");
                 return this->GetImpl()[i];
             }
 

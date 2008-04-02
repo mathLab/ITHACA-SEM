@@ -109,6 +109,7 @@ SET(BasicUtils
     ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/SharedArray.hpp
     ./BasicUtils/Vmath.hpp
+    ./BasicUtils/Metis.hpp
 )
 
 SET(Memory

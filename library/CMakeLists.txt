@@ -21,6 +21,7 @@ SET(USE_NEKTAR_MEMORY_POOLS ON CACHE BOOL "Use memory pools to accelerate memory
 SET(USE_BLAS_LAPACK ON CACHE BOOL "Use Blas and lapack routines.")
 SET(USE_METIS OFF CACHE BOOL "Use Metis routines for partitioning and reordering graphs.")
 SET(USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
+SET(USE_DIRECT_BLAS_CALLS OFF CACHE BOOL "Use direct BLAS calls rather than NekMatrix calls in the StdRegions and LocalRegions sublibrary")
 SET(NEKTAR_FULL_DEBUG OFF CACHE BOOL "Enable Full Debugging.")
 SET(NEKTAR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Enable the use of precompiled headers.")
 SET(NEKTAR_BUILD_DEMOS OFF CACHE BOOL "Build Demo Projects")
@@ -176,6 +177,10 @@ ENDIF( USE_TINYXML_STL )
 IF( USE_METIS )    
     ADD_DEFINITIONS(-DNEKTAR_USING_METIS)
 ENDIF( USE_METIS )
+
+IF( USE_DIRECT_BLAS_CALLS )    
+    ADD_DEFINITIONS(-DNEKTAR_USING_DIRECT_BLAS_CALLS)
+ENDIF( USE_DIRECT_BLAS_CALLS )
 
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	

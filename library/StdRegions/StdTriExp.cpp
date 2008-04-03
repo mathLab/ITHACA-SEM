@@ -215,6 +215,23 @@ namespace Nektar
                 break;
             }
 
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+
+            // Inner product with respect to 'a' direction 
+            Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
+                        base0.get(),nquad0,0.0,&tmp1[0],nquad1);
+            
+            // Inner product with respect to 'b' direction 
+            for(mode=i=0; i < order0; ++i)
+            {
+                Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
+                            nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
+                            &outarray[0] + mode,1);
+                mode += order1-i;
+            }
+            
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+            
             // Inner product with respect to 'a' direction 
             DNekMat in(nquad0,nquad1,tmp,eWrapper);
             DNekMat B0(nquad0,order0,base0,eWrapper);
@@ -228,10 +245,12 @@ namespace Nektar
                 NekVector<const NekDouble> in2(nquad1,tmp1 + i*nquad1,eWrapper);
                 NekVector<NekDouble> out2(order1-i,outarray + mode,eWrapper);
                 DNekMat B1(nquad1,order1-i,base1 + mode*nquad1,eWrapper);
-
+                
                 out2 = Transpose(B1)*in2;
                 mode += order1-i;
             }
+
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
 
             // fix for modified basis by splitting top vertex mode
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
@@ -378,6 +397,27 @@ namespace Nektar
                 (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
                 "Basis[1] is not of general tensor type");
 
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+
+            for(i = mode = 0; i < order0; ++i)
+            {
+                Blas::Dgemv('N', nquad1,order1-i,1.0,base1.get()+mode*nquad1,
+                            nquad1,&inarray[0]+mode,1,0.0,&tmp[0]+i*nquad1,1);
+                mode += order1-i;
+            }
+
+            // fix for modified basis by splitting top vertex mode
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                Blas::Daxpy(nquad1,inarray[1],base1.get()+nquad1,1,
+                    &tmp[0]+nquad1,1);
+            }
+
+            Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0.get(),nquad0,
+                        &tmp[0], nquad1,0.0, &outarray[0], nquad0);
+
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+
             for(i = mode = 0; i < order0; ++i)
             {
                 NekVector<const NekDouble> in(order1-i,inarray+mode,eWrapper);
@@ -400,6 +440,9 @@ namespace Nektar
             DNekMat B1(nquad0,order0,base0,eWrapper);
 
             out = B1*Transpose(in);
+
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS   
+
         }
 
         void StdTriExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
@@ -807,6 +850,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.30  2008/04/02 22:18:10  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.29  2008/03/12 15:25:09  pvos
 * Clean up of the code
 *

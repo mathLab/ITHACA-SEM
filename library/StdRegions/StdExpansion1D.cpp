@@ -69,18 +69,29 @@ namespace Nektar
     {
         int nquad = GetTotPoints();
         DNekMatSharedPtr D = ExpPointsProperties(0)->GetD();
-        NekVector<NekDouble> out(nquad,outarray,eWrapper);
-     
-        if(inarray==outarray)
-        {
-            NekVector<const NekDouble> in(nquad,inarray,eCopy);            
-            out = (*D)*in;
+
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+        
+        if( inarray == outarray)
+        { 
+            Array<OneD, NekDouble> wsp(nquad);
+            CopyArray(inarray, wsp);
+            Blas::Dgemv('N',nquad,nquad,1.0,&(D->GetPtr())[0],nquad,
+                        &wsp[0],1,0.0,&outarray[0],1);
         }
         else
         {
-            NekVector<const NekDouble> in(nquad,inarray,eWrapper);            
-            out = (*D)*in;
+            Blas::Dgemv('N',nquad,nquad,1.0,&(D->GetPtr())[0],nquad,
+                        &inarray[0],1,0.0,&outarray[0],1);
         }
+
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+
+        NekVector<const NekDouble> in(nquad,inarray,eWrapper);  
+        NekVector<NekDouble> out(nquad,outarray,eWrapper);
+        out = (*D)*in;
+        
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS    
     }
     
     NekDouble StdExpansion1D::PhysEvaluate1D(const ConstArray<OneD, NekDouble>& Lcoord)
@@ -102,6 +113,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.22  2008/03/12 15:25:09  pvos
+ * Clean up of the code
+ *
  * Revision 1.21  2007/11/29 21:40:22  sherwin
  * updates for MultiRegions and DG solver
  *

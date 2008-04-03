@@ -147,20 +147,49 @@ namespace Nektar
             {
                 int    order0 = m_base[0]->GetNumModes();
                 int    order1 = m_base[1]->GetNumModes();
+                
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+
+                Array<OneD, NekDouble> tmp1(nquad0*order1);
+                Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),               
+                            nquad0,&tmp[0],nquad0,0.0,&tmp1[0],order0);
+                Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, &tmp1[0],                            
+                            order0, base1.get(), nquad1, 0.0,&outarray[0],order0);
+                
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+
                 DNekMat in(nquad0,nquad1,tmp,eWrapper);
                 DNekMat B0(nquad0,order0,base0,eWrapper);
                 DNekMat B1(nquad1,order1,base1,eWrapper);
                 DNekMat out(order0,order1,outarray,eWrapper);
-                // out = Transpose(B0)*in*B1;
+                // out = Transpose(B0)*in*B1; //currently not working with expression templates
+                DNekMat tmpMat(nquad0,order1);
+                tmpMat = in*B1;
+                out = Transpose(B0)*tmpMat;
 
-                DNekMat tmp(nquad0,order1);
-                tmp = in*B1;
-                out = Transpose(B0)*tmp;
-
-
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS   
+ 
             }
             else
-            {        
+            {    
+
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+
+                if(m_base[0]->Collocation())
+                {
+                    int order1 = m_base[1]->GetNumModes(); 
+                    Blas::Dgemm('N', 'N',nquad0, order1, nquad1, 1.0, &tmp[0],                            
+                                nquad0, base1.get(), nquad1, 0.0,&outarray[0],nquad0);
+                }
+                else
+                {
+                    int order0 = m_base[0]->GetNumModes();
+                    Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),               
+                                nquad0,&tmp[0],nquad0,0.0,&outarray[0],order0);
+                }
+
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+
                 if(m_base[0]->Collocation())
                 {
                     int order1 = m_base[1]->GetNumModes(); 
@@ -179,6 +208,8 @@ namespace Nektar
                     
                     out = Transpose(B0)*in;
                 }
+
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS    
             }
         }
 
@@ -279,27 +310,50 @@ namespace Nektar
                 int           order0 = m_base[0]->GetNumModes();
                 int           order1 = m_base[1]->GetNumModes();
 
-                // scenario1
-//                 ConstArray<OneD, NekDouble> base0 = m_base[0]->GetBdata();
-//                 ConstArray<OneD, NekDouble> base1 = m_base[1]->GetBdata();
-//                 Array<OneD, NekDouble> tmp = Array<OneD, NekDouble>(nquad0*std::max(order1,nquad1));
-//                 Blas::Dgemm('N','N', nquad0,order1,order0,1.0, base0.get(),
-//                             nquad0, &inarray[0], order0,0.0,&tmp[0], nquad0);
-//                 Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &tmp[0],
-//                             nquad0, base1.get(), nquad1, 0.0, &outarray[0], 
-//                             nquad0);
-                // scenario 3
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+
+                Array<OneD, NekDouble> tmp(nquad0*order1);
+                Blas::Dgemm('N','N', nquad0,order1,order0,1.0, (m_base[0]->GetBdata()).get(),
+                            nquad0, &inarray[0], order0,0.0,&tmp[0], nquad0);
+                Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &tmp[0],
+                            nquad0, (m_base[1]->GetBdata()).get(), nquad1, 0.0, &outarray[0], 
+                            nquad0);
+
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+
                 DNekMat in(order0,order1,inarray,eWrapper);
                 DNekMat B0(nquad0,order0,m_base[0]->GetBdata(),eWrapper);
                 DNekMat B1(nquad1,order1,m_base[1]->GetBdata(),eWrapper);
                 DNekMat out(nquad0,nquad1,outarray,eWrapper);
                 //out = B0*in*Transpose(B1); //(currently not working with expression templates)
-                 DNekMat tmpM(nquad0,order1);
-                 tmpM =  B0*in;
-                 out = tmpM*Transpose(B1);
+                DNekMat tmpM(nquad0,order1);
+                tmpM =  B0*in;
+                out = tmpM*Transpose(B1);
+
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS   
+
             }
             else
             {
+
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+
+                if(m_base[0]->Collocation())
+                {
+                    int order1 = m_base[1]->GetNumModes();
+                    Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &inarray[0],
+                                nquad0, (m_base[1]->GetBdata()).get(), nquad1, 0.0, &outarray[0], 
+                                nquad0);
+                }
+                else
+                {
+                    int order0 = m_base[0]->GetNumModes();
+                    Blas::Dgemm('N','N', nquad0,nquad1,order0,1.0, (m_base[0]->GetBdata()).get(),
+                            nquad0, &inarray[0], order0,0.0,&outarray[0], nquad0);
+                }
+
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+
                 if(m_base[0]->Collocation())
                 {
                     int order1 = m_base[1]->GetNumModes();
@@ -318,6 +372,8 @@ namespace Nektar
 
                     out = B0*in;
                 }
+
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
 
             }
         }
@@ -987,6 +1043,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.30  2008/04/02 22:18:10  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.29  2008/03/18 14:15:45  pvos
 * Update for nodal triangular helmholtz solver
 *

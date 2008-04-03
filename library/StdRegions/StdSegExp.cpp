@@ -94,10 +94,21 @@ namespace Nektar
             }
             else
             {
+
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+
+                Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
+                            &tmp[0],1,0.0,outarray.get(),1);
+
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+
                 NekVector<const NekDouble> in(nquad,tmp,eWrapper);
                 NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
                 DNekMat B(nquad,m_ncoeffs,base,eWrapper);
                 out = Transpose(B) * in;
+
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS  
+
             }    
         }
         
@@ -165,10 +176,21 @@ namespace Nektar
             }
             else
             {
+
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+
+                Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0, (m_base[0]->GetBdata()).get(),
+                            nquad,&inarray[0],1,0.0,&outarray[0],1);
+
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+
                 NekVector<const NekDouble> in(m_ncoeffs,inarray,eWrapper);
                 NekVector<NekDouble> out(nquad,outarray,eWrapper);
                 DNekMat B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
                 out = B * in;
+
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
+
             }
         }
         
@@ -322,6 +344,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.45  2008/04/02 22:18:10  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.44  2008/03/12 15:25:09  pvos
 * Clean up of the code
 *

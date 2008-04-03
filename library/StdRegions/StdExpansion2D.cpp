@@ -76,37 +76,63 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
 
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+            
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
                 DNekMatSharedPtr D0 = ExpPointsProperties(0)->GetD();
-                DNekMat out(nquad0,nquad1,outarray_d0,eWrapper);
-                if(inarray==outarray_d0)
+                if(inarray == outarray_d0)
                 {
-                    DNekMat in(nquad0,nquad1,inarray,eCopy);  
-                    out = (*D0) * in;
+                    Array<OneD, NekDouble> wsp(nquad0 * nquad1);
+                    CopyArray(inarray,wsp);
+                    Blas::Dgemm('N', 'N', nquad0, nquad1, nquad0, 1.0,
+                                &(D0->GetPtr())[0], nquad0, &wsp[0], nquad0, 0.0,
+                                &outarray_d0[0], nquad0);
                 }
                 else
                 {
-                    DNekMat in(nquad0,nquad1,inarray,eWrapper);  
-                    out = (*D0) * in;
+                    Blas::Dgemm('N', 'N', nquad0, nquad1, nquad0, 1.0,
+                                &(D0->GetPtr())[0], nquad0, &inarray[0], nquad0, 0.0,
+                                &outarray_d0[0], nquad0);
                 }
             }
 
             if (outarray_d1.num_elements() > 0) // calculate du/dx_1
             {
                 DNekMatSharedPtr D1 = ExpPointsProperties(1)->GetD();
-                DNekMat out(nquad0,nquad1,outarray_d1,eWrapper);
-                if(inarray==outarray_d1)
+                if(inarray == outarray_d1)
                 {
-                    DNekMat in(nquad0,nquad1,inarray,eCopy);  
-                    out = in * Transpose(*D1);
+                    Array<OneD, NekDouble> wsp(nquad0 * nquad1);
+                    CopyArray(inarray,wsp);
+                    Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,                    
+                                 &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
                 }
                 else
                 {
-                    DNekMat in(nquad0,nquad1,inarray,eWrapper);  
-                    out = in * Transpose(*D1);
+                    Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &inarray[0], nquad0,                    
+                                 &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
                 }
             }
+
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+
+            if (outarray_d0.num_elements() > 0) // calculate du/dx_0
+            {
+                DNekMatSharedPtr D0 = ExpPointsProperties(0)->GetD();
+                DNekMat out(nquad0,nquad1,outarray_d0,eWrapper);
+                DNekMat in(nquad0,nquad1,inarray,eWrapper);  
+                out = (*D0) * in;
+            }
+
+            if (outarray_d1.num_elements() > 0) // calculate du/dx_1
+            {
+                DNekMatSharedPtr D1 = ExpPointsProperties(1)->GetD();
+                DNekMat out(nquad0,nquad1,outarray_d1,eWrapper);
+                DNekMat in(nquad0,nquad1,inarray,eWrapper);  
+                out = in * Transpose(*D1);
+            }
+
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
 
         }
 
@@ -176,6 +202,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.20  2008/03/18 14:15:45  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.19  2008/03/12 15:25:09  pvos
 * Clean up of the code
 *

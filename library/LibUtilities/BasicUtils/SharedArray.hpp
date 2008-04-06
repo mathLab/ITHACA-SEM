@@ -80,7 +80,7 @@ namespace Nektar
     /// class Sample
     /// {
     ///     public:
-    ///         ConstArray<OneD, double>& getData() const { return m_data; }
+    ///         Array<OneD, const double>& getData() const { return m_data; }
     ///        
     ///     private:
     ///         Array<OneD, double> m_data;
@@ -122,10 +122,10 @@ namespace Nektar
     ///
     ///\code
     /// // Instead of this:
-    /// ConstArray<OneD, NekDouble> lessEfficient(points->GetZ());
+    /// Array<OneD, const NekDouble> lessEfficient(points->GetZ());
     ///
     /// // Do this
-    /// const ConstArray<OneD, NekDouble>& moreEfficient = points->GetZ();
+    /// const Array<OneD, const NekDouble>& moreEfficient = points->GetZ();
     ///\endcode
     ///
     /// If you know the size, don't create an empty array and then populate it on another line.
@@ -221,12 +221,9 @@ namespace Nektar
     template<typename Dim, typename DataType>
     class Array;    
     
-    template<typename Dim, typename DataType>
-    class ConstArray;
-    
     /// \brief A 1D immutable array.  See \ref Arrays for details.
     template<typename DataType>
-    class ConstArray<OneD, DataType>
+    class Array<OneD, const DataType>
     {
         public:
             typedef boost::multi_array_ref<DataType, 1> ArrayType;
@@ -243,7 +240,7 @@ namespace Nektar
             
         public:
             /// \brief Creates an empty, size 0 array.
-            ConstArray() :
+            Array() :
                 m_data(CreateStorage<DataType>(0)),
                 m_offset(0),
                 m_size(0)
@@ -256,7 +253,7 @@ namespace Nektar
             /// If DataType is a fundamental type (double, int, etc.), then the allocated array is 
             /// uninitialized.  If it is any other type, each element is initialized with DataType's default
             /// constructor.
-            explicit ConstArray(unsigned int dim1Size) :
+            explicit Array(unsigned int dim1Size) :
                 m_data(CreateStorage<DataType>(dim1Size)),
                 m_offset(0),
                 m_size(dim1Size)
@@ -271,7 +268,7 @@ namespace Nektar
             /// If DataType is a fundamental type (double, int, etc.), then the initial value 
             /// is copied directly into each element.  Otherwise, the DataType's copy constructor
             /// is used to initialize each element.
-            ConstArray(unsigned int dim1Size, const DataType& initValue) :
+            Array(unsigned int dim1Size, const DataType& initValue) :
                 m_data(CreateStorage<DataType>(dim1Size)),
                 m_offset(0),
                 m_size(dim1Size)
@@ -286,7 +283,7 @@ namespace Nektar
             /// If DataType is a fundamental type (double, int, etc.), then data is copied
             /// directly into the underlying storage.  Otherwise, the DataType's copy constructor
             /// is used to copy each element.
-            ConstArray(unsigned int dim1Size, const DataType* data) :
+            Array(unsigned int dim1Size, const DataType* data) :
                 m_data(CreateStorage<DataType>(dim1Size)),
                 m_offset(0),
                 m_size(dim1Size)
@@ -294,7 +291,7 @@ namespace Nektar
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size, data);
             }
             
-            ConstArray(unsigned int dim1Size, const ConstArray<OneD, DataType>& rhs) :
+            Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
                 m_data(rhs.m_data),
                 m_offset(rhs.m_offset),
                 m_size(dim1Size)
@@ -302,14 +299,14 @@ namespace Nektar
                 ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
             }
 
-            ConstArray(const ConstArray<OneD, DataType>& rhs) :
+            Array(const Array<OneD, const DataType>& rhs) :
                 m_data(rhs.m_data),
                 m_offset(rhs.m_offset),
                 m_size(rhs.m_size)
             {
             }
             
-            ConstArray<OneD, DataType>& operator=(const ConstArray<OneD, DataType>& rhs)
+            Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs)
             {
                 m_data = rhs.m_data;
                 m_offset = rhs.m_offset;
@@ -335,7 +332,7 @@ namespace Nektar
             size_type num_elements() const { return m_size; }
             unsigned int GetOffset() const { return m_offset; }
             
-            bool Overlaps(const ConstArray<OneD, DataType>& rhs) const
+            bool Overlaps(const Array<OneD, const DataType>& rhs) const
             {
                 const element* start = get();
                 const element* end = start + m_size;
@@ -347,14 +344,14 @@ namespace Nektar
                        (rhs_end >= start && rhs_end <= end);
             }
             
-            template<typename T>
-            friend bool operator==(const ConstArray<OneD, T>&, const ConstArray<OneD, T>&);
+            template<typename T1, typename T2>
+            friend bool operator==(const Array<OneD, T1>&, const Array<OneD, T2>&);
             
             template<typename T>
-            friend ConstArray<OneD, T> operator+(const ConstArray<OneD, T>& lhs, unsigned int offset);
+            friend Array<OneD, T> operator+(const Array<OneD, T>& lhs, unsigned int offset);
    
             template<typename T>
-            friend ConstArray<OneD, T> operator+(unsigned int offset, const ConstArray<OneD, T>& rhs);
+            friend Array<OneD, T> operator+(unsigned int offset, const Array<OneD, T>& rhs);
             
         protected:
             boost::shared_ptr<ArrayType> m_data;
@@ -362,9 +359,10 @@ namespace Nektar
             unsigned int m_size;
 
         private:
-            static ConstArray<OneD, DataType> CreateWithOffset(const ConstArray<OneD, DataType>& rhs, unsigned int offset)
+            template<typename T>
+            static Array<OneD, T> CreateWithOffset(const Array<OneD, T>& rhs, unsigned int offset)
             {
-                ConstArray<OneD, DataType> result(rhs);
+                Array<OneD, T> result(rhs);
                 result.m_offset += offset;
                 result.m_size = rhs.m_size - offset;
                 return result;
@@ -373,7 +371,7 @@ namespace Nektar
     };
     
     template<typename DataType>
-    class ConstArray<TwoD, DataType>
+    class Array<TwoD, const DataType>
     {
         public:
             typedef boost::multi_array_ref<DataType, 2> ArrayType;
@@ -390,43 +388,43 @@ namespace Nektar
             
 
         public:
-            ConstArray() :
+            Array() :
                 m_data(CreateStorage<DataType>(0, 0))
             {
             }
             
             /// \brief Constructs a 3 dimensional array.  The elements of the array are not initialized.
-            ConstArray(unsigned int dim1Size, unsigned int dim2Size) :
+            Array(unsigned int dim1Size, unsigned int dim2Size) :
                 m_data(CreateStorage<DataType>(dim1Size, dim2Size))
             {
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
             }
             
-            ConstArray(unsigned int dim1Size, unsigned int dim2Size, const DataType& initValue) :
+            Array(unsigned int dim1Size, unsigned int dim2Size, const DataType& initValue) :
                 m_data(CreateStorage<DataType>(dim1Size, dim2Size))
             {
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
             }
             
-            ConstArray(unsigned int dim1Size, unsigned int dim2Size, const DataType* data) :
+            Array(unsigned int dim1Size, unsigned int dim2Size, const DataType* data) :
                 m_data(CreateStorage<DataType>(dim1Size, dim2Size))
             {
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), data);
             }
             
-            ConstArray(const ConstArray<TwoD, DataType>& rhs) :
+            Array(const Array<TwoD, const DataType>& rhs) :
                 m_data(rhs.m_data)
             {
             }
             
-            ConstArray<TwoD, DataType>& operator=(const ConstArray<TwoD, DataType>& rhs)
+            Array<TwoD, const DataType>& operator=(const Array<TwoD, const DataType>& rhs)
             {
                 m_data = rhs.m_data;
                 return *this;
             }
             
             template<typename T>
-            friend bool operator==(const ConstArray<TwoD, T>&, const ConstArray<TwoD, T>&);
+            friend bool operator==(const Array<TwoD, T>&, const Array<TwoD, T>&);
             
             const_iterator begin() const { return m_data->begin(); }
             const_iterator end() const { return m_data->end(); }
@@ -448,7 +446,7 @@ namespace Nektar
     };
     
     template<typename DataType>
-    class ConstArray<ThreeD, DataType>
+    class Array<ThreeD, const DataType>
     {
         public:
             typedef boost::multi_array_ref<DataType, 3> ArrayType;
@@ -465,30 +463,30 @@ namespace Nektar
             
 
         public:
-            ConstArray() :
+            Array() :
                 m_data(CreateStorage<DataType>(0, 0, 0))
             {
             }
             
             /// \brief Constructs a 3 dimensional array.  The elements of the array are not initialized.
-            ConstArray(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size) :
+            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size) :
                 m_data(CreateStorage<DataType>(dim1Size, dim2Size, dim3Size))
             {
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
             }
             
-            ConstArray(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size, const DataType& initValue) :
+            Array(unsigned int dim1Size, unsigned int dim2Size, unsigned int dim3Size, const DataType& initValue) :
                 m_data(CreateStorage<DataType>(dim1Size, dim2Size, dim3Size))
             {
                 ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
             }
             
-            ConstArray(const ConstArray<ThreeD, DataType>& rhs) :
+            Array(const Array<ThreeD, const DataType>& rhs) :
                 m_data(rhs.m_data)
             {
             }
             
-            ConstArray<ThreeD, DataType>& operator=(const ConstArray<ThreeD, DataType>& rhs)
+            Array<ThreeD, const DataType>& operator=(const Array<ThreeD, const DataType>& rhs)
             {
                 m_data = rhs.m_data;
                 return *this;
@@ -528,10 +526,10 @@ namespace Nektar
     /// method names which match those in the base class, the base class names are hidden.
     /// Therefore, we have to explicitly bring them into scope to use them.
     template<typename DataType>
-    class Array<OneD, DataType> : public ConstArray<OneD, DataType>
+    class Array<OneD, DataType> : public Array<OneD, const DataType>
     {
         public:
-            typedef ConstArray<OneD, DataType> BaseType;
+            typedef Array<OneD, const DataType> BaseType;
             typedef typename BaseType::iterator iterator;
             typedef typename BaseType::reference reference;
             typedef typename BaseType::index index;
@@ -564,7 +562,7 @@ namespace Nektar
             {
             }
             
-            Array(unsigned int dim1Size, const ConstArray<OneD, DataType>& rhs) :
+            Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
                 BaseType(dim1Size, rhs.data())
             {
             }
@@ -574,7 +572,7 @@ namespace Nektar
             {
             }
             
-            Array(const ConstArray<OneD, DataType>& rhs) :
+            Array(const Array<OneD, const DataType>& rhs) :
                 BaseType(rhs.num_elements(), rhs.data())
             {
             }
@@ -619,7 +617,7 @@ namespace Nektar
             friend class NekVector;
             
         protected:
-            Array(const ConstArray<OneD, DataType>& rhs, AllowWrappingOfConstArrays a) :
+            Array(const Array<OneD, const DataType>& rhs, AllowWrappingOfConstArrays a) :
                 BaseType(rhs)
             {
             }
@@ -629,10 +627,10 @@ namespace Nektar
 
     /// \brief A 2D array.
     template<typename DataType>
-    class Array<TwoD, DataType> : public ConstArray<TwoD, DataType>
+    class Array<TwoD, DataType> : public Array<TwoD, const DataType>
     {
         public:
-            typedef ConstArray<TwoD, DataType> BaseType;
+            typedef Array<TwoD, const DataType> BaseType;
             typedef typename BaseType::iterator iterator;
             typedef typename BaseType::reference reference;
             typedef typename BaseType::index index;
@@ -692,10 +690,10 @@ namespace Nektar
             
     /// \brief A 3D array.
     template<typename DataType>
-    class Array<ThreeD, DataType> : public ConstArray<ThreeD, DataType>
+    class Array<ThreeD, DataType> : public Array<ThreeD, const DataType>
     {
         public:
-            typedef ConstArray<ThreeD, DataType> BaseType;
+            typedef Array<ThreeD, const DataType> BaseType;
             typedef typename BaseType::iterator iterator;
             typedef typename BaseType::reference reference;
             typedef typename BaseType::index index;
@@ -748,38 +746,38 @@ namespace Nektar
             
     };
     
-    template<typename DataType>
-    bool operator==(const ConstArray<OneD, DataType>& lhs, const ConstArray<OneD, DataType>& rhs) 
+    template<typename T1, typename T2>
+    bool operator==(const Array<OneD, T1>& lhs, const Array<OneD, T2>& rhs) 
     {
         return *lhs.m_data == *rhs.m_data;
     }
     
-    template<typename DataType>
-    bool operator!=(const ConstArray<OneD, DataType>& lhs, const ConstArray<OneD, DataType>& rhs) 
+    template<typename T1, typename T2>
+    bool operator!=(const Array<OneD, T1>& lhs, const Array<OneD, T2>& rhs) 
     {
         return !(lhs == rhs);
     }
 
     template<typename DataType>
-    ConstArray<OneD, DataType> operator+(const ConstArray<OneD, DataType>& lhs, unsigned int offset)
+    Array<OneD, DataType> operator+(const Array<OneD, DataType>& lhs, unsigned int offset)
     {
-        return ConstArray<OneD, DataType>::CreateWithOffset(lhs, offset);
+        return Array<OneD, const DataType>::CreateWithOffset(lhs, offset);
     }
 
     template<typename DataType>
-    ConstArray<OneD, DataType> operator+(unsigned int offset, const ConstArray<OneD, DataType>& rhs)
+    Array<OneD, DataType> operator+(unsigned int offset, const Array<OneD, DataType>& rhs)
     {
-        return ConstArray<OneD, DataType>::CreateWithOffset(rhs, offset);
+        return Array<OneD, const DataType>::CreateWithOffset(rhs, offset);
     }
     
-    template<typename DataType>
-    Array<OneD, DataType> operator+(const Array<OneD, DataType>& lhs, unsigned int offset)
-    {
-        return Array<OneD, DataType>::CreateWithOffset(lhs, offset);
-    }
+//    template<typename DataType>
+//    Array<OneD, DataType> operator+(const Array<OneD, DataType>& lhs, unsigned int offset)
+//    {
+//        return Array<OneD, DataType>::CreateWithOffset(lhs, offset);
+//    }
     
-    template<typename DataType>
-    void CopyArray(const ConstArray<OneD, DataType>& source, Array<OneD, DataType>& dest)
+    template<typename ConstDataType, typename DataType>
+    void CopyArray(const Array<OneD, ConstDataType>& source, Array<OneD, DataType>& dest)
     {
         if( dest.num_elements() != source.num_elements() )
         {
@@ -789,8 +787,8 @@ namespace Nektar
         std::copy(source.data(), source.data() + source.num_elements(), dest.data());
     }
 
-    template<typename DataType>
-    void CopyArrayN(const ConstArray<OneD, DataType>& source, Array<OneD, DataType>& dest, unsigned int n)
+    template<typename ConstDataType, typename DataType>
+    void CopyArrayN(const Array<OneD, ConstDataType>& source, Array<OneD, DataType>& dest, unsigned int n)
     {
         if( dest.num_elements() != n )
         {
@@ -803,13 +801,13 @@ namespace Nektar
     static Array<OneD, NekDouble> NullNekDouble1DArray;
 
     template<typename DataType>
-    bool operator==(const ConstArray<TwoD, DataType>& lhs, const ConstArray<TwoD, DataType>& rhs) 
+    bool operator==(const Array<TwoD, DataType>& lhs, const Array<TwoD, DataType>& rhs) 
     {
         return *lhs.m_data == *rhs.m_data;
     }
     
     template<typename DataType>
-    bool operator!=(const ConstArray<TwoD, DataType>& lhs, const ConstArray<TwoD, DataType>& rhs) 
+    bool operator!=(const Array<TwoD, DataType>& lhs, const Array<TwoD, DataType>& rhs) 
     {
         return !(lhs == rhs);
     }

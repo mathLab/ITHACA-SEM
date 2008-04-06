@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     boost::shared_ptr<Points<NekDouble> > points = PointsManager()[PointsKey(nPtsPerSide, pointsType)];
 
     NodalTriFekete *ntf = dynamic_cast<NodalTriFekete*>(points.get());
-    ConstArray<OneD, NekDouble> ax, ay;
+    Array<OneD, const NekDouble> ax, ay;
     ntf->GetPoints(ax,ay);
     NekVector<NekDouble> x = ToVector(ax), y = ToVector(ay);
 
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
     // /////////////////////////////////////////////
     //  Integral
     // 
-    const ConstArray<OneD,NekDouble> &weight = points->GetW();
+    const Array<OneD, const NekDouble> &weight = points->GetW();
     NekVector<NekDouble> integMVandermonde = GetIntegralOfMonomialVandermonde(degree);
     NekVector<NekDouble> numericIntegral = GetTranspose(matVnn) * ToVector(weight);
     NekVector<NekDouble> errorIntegral = numericIntegral - integMVandermonde;

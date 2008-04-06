@@ -68,7 +68,7 @@ int main(int argc, char *argv[]){
     boost::shared_ptr<Points<NekDouble> > points = PointsManager()[PointsKey(nPtsPerSide, pointsType)];
 
     NodalTetElec *nTete = dynamic_cast<NodalTetElec*>(points.get());
-    ConstArray<OneD, NekDouble> ax, ay, az;
+    Array<OneD, const NekDouble> ax, ay, az;
     nTete->GetPoints(ax,ay, az);
     NekVector<NekDouble> x = ToVector(ax), y = ToVector(ay), z = ToVector(az);
 
@@ -247,7 +247,7 @@ int main(int argc, char *argv[]){
 //      // /////////////////////////////////////////////
 //     // Test Integral
 //     // 
-//     const ConstArray<OneD,NekDouble> &weight = points->GetW();
+//     const Array<OneD, const NekDouble> &weight = points->GetW();
 //     NekVector<NekDouble> integMVandermonde = GetIntegralOfMonomialVandermonde(degree);
 //     NekVector<NekDouble> numericIntegral = GetTranspose(matVnn) * ToVector(weight);
 //     NekVector<NekDouble> errorIntegral = numericIntegral - integMVandermonde;

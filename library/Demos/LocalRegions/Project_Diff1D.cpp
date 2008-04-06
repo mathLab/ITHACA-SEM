@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 {
     int i,j;
     int order, nq;
-    ConstArray<OneD,NekDouble> z,w;
+    Array<OneD, const NekDouble> z,w;
     NekDouble L2_err;
     NekDouble x[2];
     LibUtilities::PointsType Qtype;

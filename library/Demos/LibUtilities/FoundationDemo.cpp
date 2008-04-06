@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 
     // Get the abscissas and their matching quadrature weights
    //    SharedArray<const NekDouble> z, w;
-    ConstArray<OneD, NekDouble> z, w;
+    Array<OneD, const NekDouble> z, w;
     points->GetZW(z,w);
 
     // Evaluate the example function at the z[i] points in the interval [-1,1].
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
     boost::shared_ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
    // const ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
     //SharedArray<const NekDouble> zNode = nodes->GetZ();
-    ConstArray<OneD, NekDouble> zNode = nodes->GetZ();
+    Array<OneD, const NekDouble> zNode = nodes->GetZ();
     
     // Get the interpolation matrix I
     // Note that I is 2N rows by N columns

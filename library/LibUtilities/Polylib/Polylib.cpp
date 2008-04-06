@@ -1004,7 +1004,7 @@ namespace Polylib {
     matrix are the zeros of the Jacobi polynomial.
     */
 
-    static void JacZeros(const int n, double *a, const double alpha, 
+    static inline void JacZeros(const int n, double *a, const double alpha, 
         const double beta){
             int i;
             double apb, apbi,a2b2;

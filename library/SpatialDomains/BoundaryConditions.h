@@ -82,8 +82,8 @@ namespace Nektar
         struct DirichletBoundaryCondition : public BoundaryConditionBase
         {
             DirichletBoundaryCondition(const std::string &eqn):
-                m_DirichletCondition(eqn),
-                BoundaryConditionBase(eDirichlet)
+                BoundaryConditionBase(eDirichlet),
+                m_DirichletCondition(eqn)
             {
             };
 
@@ -93,8 +93,8 @@ namespace Nektar
         struct NeumannBoundaryCondition : public BoundaryConditionBase
         {
             NeumannBoundaryCondition(const std::string &eqn):
-                m_NeumannCondition(eqn),
-                BoundaryConditionBase(eNeumann)
+                BoundaryConditionBase(eNeumann),
+                m_NeumannCondition(eqn)
             {
             };
 
@@ -104,8 +104,8 @@ namespace Nektar
         struct RobinBoundaryCondition : public BoundaryConditionBase
         {
             RobinBoundaryCondition(const std::string &a, const std::string &b):
-                m_a(a), m_b(b),
-                BoundaryConditionBase(eRobin)
+                BoundaryConditionBase(eRobin),
+                m_a(a), m_b(b)
             {
             }
 

@@ -163,10 +163,10 @@ namespace Nektar
                 {
                 
         
-                     int P = numModes - 1, Q = numModes - 1, R = numModes - 1;
+                     int P = numModes - 1, Q = numModes - 1;
                      NekDouble *mode = m_bdata.data();
             
-                     for( int p = 0, m = 0; p <= P; ++p ) {
+                     for( int p = 0; p <= P; ++p ) {
                        for( int q = 0; q <= Q - p; ++q,  mode += numPoints  ) {
                               Polylib::jacobfd(numPoints, z.data(), mode, NULL, q, 2*p + 1.0, 0.0);
                               for( int j = 0; j < numPoints; ++j ) {
@@ -245,7 +245,7 @@ namespace Nektar
                     int P = numModes - 1, Q = numModes - 1, R = numModes - 1;
                     NekDouble *mode = m_bdata.data();
 
-                    for( int p = 0, m = 0; p <= P; ++p ) {
+                    for( int p = 0; p <= P; ++p ) {
                         for( int q = 0; q <= Q - p; ++q ) {
                             for( int r = 0; r <= R - p - q; ++r, mode += numPoints ) {
                                 Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*p + 2*q + 1.0, 0.0);
@@ -455,6 +455,9 @@ namespace Nektar
             case eGaussLobattoLegendre:
                 returnval = (GetNumPoints() >= GetNumModes());
                 break;
+                
+            default:
+                break;
             }
 
             return returnval;
@@ -517,6 +520,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.27  2008/04/06 05:54:08  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.26  2008/03/18 14:11:46  pvos
 * Update for nodal triangular helmholtz solver
 *

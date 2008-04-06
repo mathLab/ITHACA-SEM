@@ -57,14 +57,15 @@ namespace Nektar
 
 
             BasisKey(const BasisType btype, const int nummodes, const PointsKey pkey):
-                m_basistype(btype), 
                 m_nummodes(nummodes),
+                m_basistype(btype), 
                 m_pointsKey(pkey)
             {
             }
 
-            BasisKey(const BasisKey &B): m_basistype(B.m_basistype),
+            BasisKey(const BasisKey &B): 
                 m_nummodes(B.m_nummodes),
+                m_basistype(B.m_basistype),
                 m_pointsKey(B.m_pointsKey)
             {
             }
@@ -81,7 +82,7 @@ namespace Nektar
 
             inline int GetTotNumModes() const
             {
-                int value;
+                int value = 0;
 
                 switch(m_basistype)
                 {

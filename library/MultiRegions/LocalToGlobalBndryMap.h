@@ -48,7 +48,7 @@ namespace Nektar
         {
         public:
             LocalToGlobalBndryMap();
-            ~LocalToGlobalBndryMap();
+            virtual ~LocalToGlobalBndryMap();
             
             inline NekDouble GetBndSign(int i) 
             {
@@ -120,53 +120,56 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalBndryMap.h,v $
-/** Revision 1.2  2007/12/06 22:52:30  pvos
-/** 2D Helmholtz solver updates
-/**
-/** Revision 1.1  2007/11/20 16:27:16  sherwin
-/** Zero Dirichlet version of UDG Helmholtz solver
-/**
-/** Revision 1.13  2007/10/04 13:57:01  pvos
-/** fixed some more errors
-/**
-/** Revision 1.12  2007/10/03 11:37:50  sherwin
-/** Updates relating to static condensation implementation
-/**
-/** Revision 1.11  2007/09/25 14:25:29  pvos
-/** Update for helmholtz1D with different expansion orders
-/**
-/** Revision 1.10  2007/07/22 23:04:21  bnelson
-/** Backed out Nektar::ptr.
-/**
-/** Revision 1.9  2007/07/20 02:04:13  bnelson
-/** Replaced boost::shared_ptr with Nektar::ptr
-/**
-/** Revision 1.8  2007/07/16 18:28:43  sherwin
-/** Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
-/**
-/** Revision 1.7  2007/06/08 12:58:27  sherwin
-/** Added ContField1D and remove previous structure using Fields
-/**
-/** Revision 1.6  2007/05/28 16:15:00  sherwin
-/** Updated files in MultiRegions to make 1D demos work
-/**
-/** Revision 1.5  2007/05/27 16:09:43  bnelson
-/** Update to new Array type.
-/**
-/** Revision 1.4  2007/04/26 15:00:16  sherwin
-/** SJS compiling working version using SHaredArrays
-/**
-/** Revision 1.3  2007/03/20 16:58:42  sherwin
-/** Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
-/**
-/** Revision 1.2  2007/03/14 21:24:08  sherwin
-/** Update for working version of MultiRegions up to ExpList1D
-/**
-/** Revision 1.1  2006/07/02 17:16:17  sherwin
-/**
-/** Modifications to make MultiRegions work for a connected domain in 2D (Tris)
-/**
-/** Revision 1.3  2006/06/05 00:14:33  bnelson
-/** Fixed a compiler error (couldn't find boost::shared_ptr<) and a couple of formatting updates for the standard.
-/** */
+ Revision 1.3  2008/01/25 05:49:38  bnelson
+ Fixed Visual Studio Compile Error.
+
+ Revision 1.2  2007/12/06 22:52:30  pvos
+ 2D Helmholtz solver updates
+
+ Revision 1.1  2007/11/20 16:27:16  sherwin
+ Zero Dirichlet version of UDG Helmholtz solver
+
+ Revision 1.13  2007/10/04 13:57:01  pvos
+ fixed some more errors
+
+ Revision 1.12  2007/10/03 11:37:50  sherwin
+ Updates relating to static condensation implementation
+
+ Revision 1.11  2007/09/25 14:25:29  pvos
+ Update for helmholtz1D with different expansion orders
+
+ Revision 1.10  2007/07/22 23:04:21  bnelson
+ Backed out Nektar::ptr.
+
+ Revision 1.9  2007/07/20 02:04:13  bnelson
+ Replaced boost::shared_ptr with Nektar::ptr
+
+ Revision 1.8  2007/07/16 18:28:43  sherwin
+ Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
+
+ Revision 1.7  2007/06/08 12:58:27  sherwin
+ Added ContField1D and remove previous structure using Fields
+
+ Revision 1.6  2007/05/28 16:15:00  sherwin
+ Updated files in MultiRegions to make 1D demos work
+
+ Revision 1.5  2007/05/27 16:09:43  bnelson
+ Update to new Array type.
+
+ Revision 1.4  2007/04/26 15:00:16  sherwin
+ SJS compiling working version using SHaredArrays
+
+ Revision 1.3  2007/03/20 16:58:42  sherwin
+ Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+
+ Revision 1.2  2007/03/14 21:24:08  sherwin
+ Update for working version of MultiRegions up to ExpList1D
+
+ Revision 1.1  2006/07/02 17:16:17  sherwin
+
+Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+
+ Revision 1.3  2006/06/05 00:14:33  bnelson
+ Fixed a compiler error (couldn't find boost::shared_ptr<) and a couple of formatting updates for the standard.
+ */
 

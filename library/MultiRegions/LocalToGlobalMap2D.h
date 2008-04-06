@@ -225,39 +225,42 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap2D.h,v $
-/** Revision 1.10  2008/03/18 14:14:13  pvos
-/** Update for nodal triangular helmholtz solver
-/**
-/** Revision 1.9  2008/01/25 05:50:46  bnelson
-/** Changed NekVector::GetPtr to NekVector::GetRawPtr and added a new NekVector::GetPtr that returns an Array.  This makes the calls consistent with NekMatrix.
-/**
-/** Revision 1.8  2008/01/20 16:31:11  bnelson
-/** Fixed linux compile errors.
-/**
-/** Revision 1.7  2007/12/06 22:52:30  pvos
-/** 2D Helmholtz solver updates
-/**
-/** Revision 1.6  2007/10/03 11:37:51  sherwin
-/** Updates relating to static condensation implementation
-/**
-/** Revision 1.5  2007/07/22 23:04:22  bnelson
-/** Backed out Nektar::ptr.
-/**
-/** Revision 1.4  2007/07/20 02:04:13  bnelson
-/** Replaced boost::shared_ptr with Nektar::ptr
-/**
-/** Revision 1.3  2007/06/07 15:54:19  pvos
-/** Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
-/** Also made corrections to various ASSERTL2 calls
-/**
-/** Revision 1.2  2007/06/05 16:36:55  pvos
-/** Updated Explist2D ContExpList2D and corresponding demo-codes
-/**
-/** Revision 1.1  2006/07/02 17:16:17  sherwin
-/**
-/** Modifications to make MultiRegions work for a connected domain in 2D (Tris)
-/**
-/** Revision 1.3  2006/06/05 00:14:33  bnelson
-/** Fixed a compiler error (couldn't find boost::shared_ptr<) and a couple of formatting updates for the standard.
-/** */
+ Revision 1.11  2008/04/06 06:00:07  bnelson
+ Changed ConstArray to Array<const>
+
+ Revision 1.10  2008/03/18 14:14:13  pvos
+ Update for nodal triangular helmholtz solver
+
+ Revision 1.9  2008/01/25 05:50:46  bnelson
+ Changed NekVector::GetPtr to NekVector::GetRawPtr and added a new NekVector::GetPtr that returns an Array.  This makes the calls consistent with NekMatrix.
+
+ Revision 1.8  2008/01/20 16:31:11  bnelson
+ Fixed linux compile errors.
+
+ Revision 1.7  2007/12/06 22:52:30  pvos
+ 2D Helmholtz solver updates
+
+ Revision 1.6  2007/10/03 11:37:51  sherwin
+ Updates relating to static condensation implementation
+
+ Revision 1.5  2007/07/22 23:04:22  bnelson
+ Backed out Nektar::ptr.
+
+ Revision 1.4  2007/07/20 02:04:13  bnelson
+ Replaced boost::shared_ptr with Nektar::ptr
+
+ Revision 1.3  2007/06/07 15:54:19  pvos
+ Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
+ Also made corrections to various ASSERTL2 calls
+
+ Revision 1.2  2007/06/05 16:36:55  pvos
+ Updated Explist2D ContExpList2D and corresponding demo-codes
+
+ Revision 1.1  2006/07/02 17:16:17  sherwin
+
+ Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+
+ Revision 1.3  2006/06/05 00:14:33  bnelson
+ Fixed a compiler error (couldn't find boost::shared_ptr<) and a couple of formatting updates for the standard.
+ */
 

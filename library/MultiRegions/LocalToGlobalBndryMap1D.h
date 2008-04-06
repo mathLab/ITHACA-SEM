@@ -107,63 +107,67 @@ namespace Nektar
 #endif //LOC2GLOMAP1D_H
 
 
-/** $Log: LocalToGlobalBndryMap1D.h,v $
-/** Revision 1.3  2008/01/25 05:50:46  bnelson
-/** Changed NekVector::GetPtr to NekVector::GetRawPtr and added a new NekVector::GetPtr that returns an Array.  This makes the calls consistent with NekMatrix.
-/**
-/** Revision 1.2  2007/12/06 22:52:30  pvos
-/** 2D Helmholtz solver updates
-/**
-/** Revision 1.1  2007/11/20 16:27:16  sherwin
-/** Zero Dirichlet version of UDG Helmholtz solver
-/**
-/** Revision 1.15  2007/10/04 11:01:32  pvos
-/** fixed some errors
-/**
-/** Revision 1.14  2007/10/03 11:37:51  sherwin
-/** Updates relating to static condensation implementation
-/**
-/** Revision 1.13  2007/09/25 14:25:30  pvos
-/** Update for helmholtz1D with different expansion orders
-/**
-/** Revision 1.12  2007/08/13 14:36:36  pvos
-/** Neumann BC update
-/**
-/** Revision 1.11  2007/08/13 11:09:42  pvos
-/** Implementation of Neumann BC
-/**
-/** Revision 1.10  2007/07/26 08:40:50  sherwin
-/** Update to use generalised i/o hooks in Helmholtz1D
-/**
-/** Revision 1.9  2007/07/22 23:04:21  bnelson
-/** Backed out Nektar::ptr.
-/**
-/** Revision 1.8  2007/07/20 02:04:13  bnelson
-/** Replaced boost::shared_ptr with Nektar::ptr
-/**
-/** Revision 1.7  2007/07/10 08:54:30  pvos
-/** Updated ContField1D constructor
-/**
-/** Revision 1.6  2007/07/06 18:39:34  pvos
-/** ContField1D constructor updates
-/**
-/** Revision 1.5  2007/05/28 16:15:00  sherwin
-/** Updated files in MultiRegions to make 1D demos work
-/**
-/** Revision 1.4  2007/05/27 16:09:43  bnelson
-/** Update to new Array type.
-/**
-/** Revision 1.3  2007/04/26 15:00:16  sherwin
-/** SJS compiling working version using SHaredArrays
-/**
-/** Revision 1.2  2007/03/20 16:58:42  sherwin
-/** Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
-/**
-/** Revision 1.1  2006/07/02 17:16:17  sherwin
-/**
-/** Modifications to make MultiRegions work for a connected domain in 2D (Tris)
-/**
-/** Revision 1.3  2006/06/05 00:14:33  bnelson
-/** Fixed a compiler error (couldn't find boost::shared_ptr<) and a couple of formatting updates for the standard.
-/** */
+/** 
+    $Log: LocalToGlobalBndryMap1D.h,v $
+ Revision 1.4  2008/04/06 06:00:07  bnelson
+ Changed ConstArray to Array<const>
+
+ Revision 1.3  2008/01/25 05:50:46  bnelson
+ Changed NekVector::GetPtr to NekVector::GetRawPtr and added a new NekVector::GetPtr that returns an Array.  This makes the calls consistent with NekMatrix.
+
+ Revision 1.2  2007/12/06 22:52:30  pvos
+ 2D Helmholtz solver updates
+
+ Revision 1.1  2007/11/20 16:27:16  sherwin
+ Zero Dirichlet version of UDG Helmholtz solver
+
+ Revision 1.15  2007/10/04 11:01:32  pvos
+ fixed some errors
+
+ Revision 1.14  2007/10/03 11:37:51  sherwin
+ Updates relating to static condensation implementation
+
+ Revision 1.13  2007/09/25 14:25:30  pvos
+ Update for helmholtz1D with different expansion orders
+
+ Revision 1.12  2007/08/13 14:36:36  pvos
+ Neumann BC update
+
+ Revision 1.11  2007/08/13 11:09:42  pvos
+ Implementation of Neumann BC
+
+ Revision 1.10  2007/07/26 08:40:50  sherwin
+ Update to use generalised i/o hooks in Helmholtz1D
+
+ Revision 1.9  2007/07/22 23:04:21  bnelson
+ Backed out Nektar::ptr.
+
+ Revision 1.8  2007/07/20 02:04:13  bnelson
+ Replaced boost::shared_ptr with Nektar::ptr
+
+ Revision 1.7  2007/07/10 08:54:30  pvos
+ Updated ContField1D constructor
+
+ Revision 1.6  2007/07/06 18:39:34  pvos
+ ContField1D constructor updates
+
+ Revision 1.5  2007/05/28 16:15:00  sherwin
+ Updated files in MultiRegions to make 1D demos work
+
+ Revision 1.4  2007/05/27 16:09:43  bnelson
+ Update to new Array type.
+
+ Revision 1.3  2007/04/26 15:00:16  sherwin
+ SJS compiling working version using SHaredArrays
+
+ Revision 1.2  2007/03/20 16:58:42  sherwin
+ Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+
+ Revision 1.1  2006/07/02 17:16:17  sherwin
+
+ Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+
+ Revision 1.3  2006/06/05 00:14:33  bnelson
+ Fixed a compiler error (couldn't find boost::shared_ptr<) and a couple of formatting updates for the standard.
+ */
 

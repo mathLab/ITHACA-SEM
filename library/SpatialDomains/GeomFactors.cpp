@@ -539,6 +539,9 @@ namespace Nektar
                         
                     }
                     break;
+                    
+                default:
+                    break;
                 }
             }
         }
@@ -764,6 +767,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.17  2008/04/06 06:00:37  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.16  2007/12/17 20:27:19  sherwin
 // Added normals to GeomFactors
 //

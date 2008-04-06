@@ -114,7 +114,7 @@ namespace Nektar
         {
             ParameterTestClass obj;
             
-            Array<OneD, NekDouble> zero(5, 0.0);
+            Array<OneD, NekDouble> zero(5, 0.0); 
             Array<OneD, NekDouble> temp(zero);
             Array<OneD, const NekDouble> const_zero(5, 0.0);
             Array<OneD, const NekDouble> const_temp(const_zero);

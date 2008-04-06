@@ -1051,7 +1051,7 @@ namespace Nektar
         Points<NekDouble>::MatrixSharedPtrType GetTetYDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
             const NekVector<NekDouble>& z, const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi, const NekVector<NekDouble>& zi)
         {
-            int nNodes = GetSize(y);
+            // int nNodes = GetSize(y);
             
             NekMatrix<NekDouble> matS  = GetTetVandermonde(x, y, z); // Square 'short' matrix
 

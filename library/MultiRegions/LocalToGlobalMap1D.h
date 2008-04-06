@@ -151,8 +151,11 @@ namespace Nektar
 
 #endif //LOC2GLOMAP1D_H
 
+/**
+ $Log: LocalToGlobalMap1D.h,v $
+ Revision 1.21  2008/04/06 20:21:02  bnelson
+ Fixed gcc compiler warnings.
 
-/* $Log: LocalToGlobalMap1D.h,v $
  
  Revision 1.20  2008/04/06 20:20:10  bnelson
  Fixed gcc compiler warnings.

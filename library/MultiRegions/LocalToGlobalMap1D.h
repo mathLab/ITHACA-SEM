@@ -152,7 +152,11 @@ namespace Nektar
 #endif //LOC2GLOMAP1D_H
 
 
-/** $Log: LocalToGlobalMap1D.h,v $
+/* $Log: LocalToGlobalMap1D.h,v $
+ 
+ Revision 1.20  2008/04/06 20:20:10  bnelson
+ Fixed gcc compiler warnings.
+
  Revision 1.19  2008/04/06 06:00:07  bnelson
  Changed ConstArray to Array<const>
 

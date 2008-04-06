@@ -423,14 +423,14 @@ namespace Vmath
     
     // \brief copy one double vector to another - This is just a wrapper
     // around Blas
-    static void Vcopy(int n, const double *x, int incx, double *y,
+    static inline void Vcopy(int n, const double *x, int incx, double *y,
               int const incy)
     {
         Blas::Dcopy(n,x,incx,y,incy);
     }
     
     // \brief copy one int vector to another
-    static void Vcopy(int n, const int *x, const int incx, int *y,
+    static inline void Vcopy(int n, const int *x, const int incx, int *y,
               int const incy)
     {
         if( incx ==1 && incy == 1)
@@ -454,6 +454,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.12  2008/03/06 04:39:55  ehan
+Removed the include file <VmathArray.hpp>.
+
 Revision 1.11  2008/02/28 09:55:57  sherwin
 Added Array version of math routines
 

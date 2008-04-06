@@ -85,7 +85,7 @@ namespace Nektar
             *  \return returns \f$\int^1_{-1} u(\xi_1)d \xi_1 \f$ where \f$inarray[i]
             *  = u(\xi_{1i}) \f$
             */
-            NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray);
+            NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
 
 
             /** \brief Inner product of \a inarray over region with respect to the
@@ -98,11 +98,11 @@ namespace Nektar
             *  each basis over region will be stored in the array \a outarray as
             *  output of the function
             */
-            void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> & outarray);
 
             void IProductWRTDerivBase(const int dir, 
-                                      const ConstArray<OneD, NekDouble>& inarray, 
+                                      const Array<OneD, const NekDouble>& inarray, 
                                       Array<OneD, NekDouble> & outarray)
             {
                 ASSERTL1(dir >= 0 &&dir < 1,"input dir is out of range");            
@@ -130,7 +130,7 @@ namespace Nektar
             *  \param  outarray the resulting array of the derivative \f$
             *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
             */
-            void PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+            void PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &out_d0,
                 Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                 Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
@@ -158,7 +158,7 @@ namespace Nektar
             *  \param outarray: the resulting array of the values of the function at 
             *  the physical quadrature points will be stored in the array \a outarray
             */
-            void BwdTrans(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> & outarray);
+            void BwdTrans(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> & outarray);
 
             /** \brief Forward transform from physical quadrature space stored in 
             *  \a inarray and evaluate the expansion coefficients and store in 
@@ -178,12 +178,12 @@ namespace Nektar
             *
             *  \param outarray: the coeffficients of the expansion 
             */ 
-            void FwdTrans(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
+            void FwdTrans(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
 
             /** \brief Single Point Evaluation: \f$ u(x) = \sum_p \phi_p(x) \hat{u}_p 
             *  = \sum_p h_p(x) u(x_p)\f$
             */
-            NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& Lcoords);
+            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& Lcoords);
 
             void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
 
@@ -217,8 +217,8 @@ namespace Nektar
             *  each basis over region will be stored in the array \a outarray as
             *  output of the function
             */
-            void IProductWRTBase(const ConstArray<OneD, NekDouble>& base, 
-                const ConstArray<OneD, NekDouble>& inarray,
+            void IProductWRTBase(const Array<OneD, const NekDouble>& base, 
+                const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray, 
                 int coll_check);
 
@@ -265,7 +265,7 @@ namespace Nektar
             /** \brief Virtual call to integrate the physical point list \a inarray 
             *  over region (see StdSegExp::Integral)
             */
-            virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray )
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray )
             {
                 return Integral(inarray);
             } 
@@ -278,14 +278,14 @@ namespace Nektar
             }
 
             /** \brief Virtual call to StdSegExp::IProduct_WRT_B */
-            virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTBase(inarray,outarray);
             } 
 
             virtual void v_IProductWRTDerivBase (const int dir, 
-                                                 const ConstArray<OneD,NekDouble> &inarray, 
+                                                 const Array<OneD, const NekDouble> &inarray, 
                                                  Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTDerivBase(dir,inarray,outarray);
@@ -308,7 +308,7 @@ namespace Nektar
 
             /** \brief Virtual call to StdSegExp::Deriv */
 
-            virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+            virtual void v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &out_d0,
                 Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                 Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
@@ -317,7 +317,7 @@ namespace Nektar
             }
 
             virtual void v_PhysDeriv(const int dir, 
-                const ConstArray<OneD, NekDouble>& inarray,
+                const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
             {
                 PhysDeriv(inarray, outarray);                
@@ -325,14 +325,14 @@ namespace Nektar
 
 
             /** \brief Virtual call to StdSegExp::Deriv */
-            virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+            virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray)
             {
                 PhysDeriv(inarray, outarray);
             }
 
             virtual void   v_StdPhysDeriv (const int dir, 
-                                           const ConstArray<OneD, NekDouble>& inarray, 
+                                           const Array<OneD, const NekDouble>& inarray, 
                                            Array<OneD, NekDouble> &outarray)
             {
                 PhysDeriv(inarray, outarray);                
@@ -340,7 +340,7 @@ namespace Nektar
 
 
             /** \brief Virtual call to StdSegExp::BwdTrans */
-            virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray)
             {
                 BwdTrans(inarray, outarray);
@@ -354,7 +354,7 @@ namespace Nektar
 
 
             /** \brief Virtual call to StdSegExp::FwdTrans */
-            virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray)
             {
                 FwdTrans(inarray, outarray);
@@ -367,7 +367,7 @@ namespace Nektar
             }
 
             /** \brief Virtual call to StdSegExp::Evaluate */
-            virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& Lcoords)
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& Lcoords)
             {
                 return PhysEvaluate(Lcoords);
             }
@@ -402,6 +402,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.35  2008/04/02 22:18:10  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.34  2008/03/12 15:25:09  pvos
 * Clean up of the code
 *

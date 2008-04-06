@@ -65,15 +65,15 @@ namespace Nektar
         //////////////////////////////
         // Integration Methods
         //////////////////////////////
-        NekDouble StdTriExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
+        NekDouble StdTriExp::Integral(const Array<OneD, const NekDouble>& inarray)
         {
             int    i;
             int nquad1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> w1_tmp(nquad1);
 
-            ConstArray<OneD, NekDouble> w0 = ExpPointsProperties(0)->GetW();
-            ConstArray<OneD, NekDouble> w1 = ExpPointsProperties(1)->GetW();
-            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> w0 = ExpPointsProperties(0)->GetW();
+            Array<OneD, const NekDouble> w1 = ExpPointsProperties(1)->GetW();
+            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
 
             switch(m_base[1]->GetPointsType())
             {
@@ -94,7 +94,7 @@ namespace Nektar
         }
 
 
-        void StdTriExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdTriExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
             Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),inarray,
@@ -102,7 +102,7 @@ namespace Nektar
         }
 
         void StdTriExp::IProductWRTDerivBase(const int dir, 
-                                             const ConstArray<OneD, NekDouble>& inarray, 
+                                             const Array<OneD, const NekDouble>& inarray, 
                                              Array<OneD, NekDouble> & outarray)
         {
             int    i;
@@ -113,7 +113,7 @@ namespace Nektar
             Array<OneD, NekDouble> gfac0(nqtot);
             Array<OneD, NekDouble> tmp0(nqtot);
 
-            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
             
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -137,7 +137,7 @@ namespace Nektar
             case 1:
                 {
                     Array<OneD, NekDouble> tmp3(m_ncoeffs);    
-                    ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+                    Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
 
                     for(i = 0; i < nquad0; ++i)
                     {
@@ -162,9 +162,9 @@ namespace Nektar
             }             
         }
 
-        void StdTriExp:: IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
-            const ConstArray<OneD, NekDouble>& base1, 
-            const ConstArray<OneD, NekDouble>& inarray, 
+        void StdTriExp:: IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+            const Array<OneD, const NekDouble>& base1, 
+            const Array<OneD, const NekDouble>& inarray, 
             Array<OneD, NekDouble> & outarray)
         {
             int    i,mode;
@@ -176,9 +176,9 @@ namespace Nektar
             Array<OneD, NekDouble> tmp(nquad0*nquad1);
             Array<OneD, NekDouble> tmp1(order0*nquad1);
 
-            ConstArray<OneD, NekDouble> w0 = ExpPointsProperties(0)->GetW();
-            ConstArray<OneD, NekDouble> w1 = ExpPointsProperties(1)->GetW();
-            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> w0 = ExpPointsProperties(0)->GetW();
+            Array<OneD, const NekDouble> w1 = ExpPointsProperties(1)->GetW();
+            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
 
             ASSERTL2((m_base[1]->GetBasisType() == LibUtilities::eOrtho_B)||
                 (m_base[1]->GetBasisType() == LibUtilities::eModified_B), 
@@ -267,8 +267,8 @@ namespace Nektar
             int   nquad1 = m_base[1]->GetNumPoints();
             int   order0 = m_base[0]->GetNumModes();
             int   order1 = m_base[1]->GetNumModes();
-            ConstArray<OneD, NekDouble> base0 = m_base[0]->GetBdata();
-            ConstArray<OneD, NekDouble> base1 = m_base[1]->GetBdata();
+            Array<OneD, const NekDouble> base0 = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> base1 = m_base[1]->GetBdata();
             int   mode0;
 
             ASSERTL2(mode >= m_ncoeffs, 
@@ -309,7 +309,7 @@ namespace Nektar
         // Differentiation Methods
         //-----------------------------
 
-        void StdTriExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdTriExp::PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
             Array<OneD, NekDouble> &out_d0, 
             Array<OneD, NekDouble> &out_d1,
             Array<OneD, NekDouble> &out_d2)
@@ -319,8 +319,8 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> wsp(nquad0*nquad1);
 
-            ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
 
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -380,7 +380,7 @@ namespace Nektar
         // Evaluation Methods
         ///////////////////////////////
 
-        void StdTriExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdTriExp::BwdTrans(const Array<OneD, const NekDouble>& inarray, 
             Array<OneD, NekDouble> &outarray)
         {
             int           i,mode;
@@ -388,8 +388,8 @@ namespace Nektar
             int           nquad1 = m_base[1]->GetNumPoints();
             int           order0 = m_base[0]->GetNumModes();
             int           order1 = m_base[1]->GetNumModes();
-            ConstArray<OneD, NekDouble> base0  = m_base[0]->GetBdata();
-            ConstArray<OneD, NekDouble> base1  = m_base[1]->GetBdata();
+            Array<OneD, const NekDouble> base0  = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> base1  = m_base[1]->GetBdata();
             Array<OneD, NekDouble> tmp(order0*nquad1);
 
 
@@ -445,7 +445,7 @@ namespace Nektar
 
         }
 
-        void StdTriExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdTriExp::FwdTrans(const Array<OneD, const NekDouble>& inarray, 
             Array<OneD, NekDouble> &outarray)
         {
 
@@ -462,7 +462,7 @@ namespace Nektar
             out = (*matsys)*in;
         }
 
-        NekDouble StdTriExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+        NekDouble StdTriExp::PhysEvaluate(const Array<OneD, const NekDouble>& coords)
         {
             Array<OneD, NekDouble> coll(2);
 
@@ -775,8 +775,8 @@ namespace Nektar
             int  i,j;
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
 
             outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
             outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
@@ -828,8 +828,8 @@ namespace Nektar
         void StdTriExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
             Array<OneD, NekDouble> &coords_1)
         {
-            ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
             int nq0 = GetNumPoints(0);
             int nq1 = GetNumPoints(1);
             int i,j;
@@ -850,6 +850,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.31  2008/04/03 16:12:11  pvos
+* updates for NEKTAR_USING_DIRECT_BLAS_CALLS
+*
 * Revision 1.30  2008/04/02 22:18:10  pvos
 * Update for 2D local to global mapping
 *

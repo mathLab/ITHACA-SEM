@@ -76,7 +76,7 @@ namespace Nektar
                 m_locToGloMap->ContToLocal(m_contCoeffs,m_coeffs);
             }
 
-            inline void ContToLocal(const ConstArray<OneD,NekDouble> &inarray,
+            inline void ContToLocal(const Array<OneD, const NekDouble> &inarray,
                 Array<OneD,NekDouble> &outarray)
             {
                 m_locToGloMap->ContToLocal(inarray,outarray);
@@ -92,7 +92,7 @@ namespace Nektar
                 m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
             }
 
-            inline void Assemble(const ConstArray<OneD,NekDouble> &inarray,
+            inline void Assemble(const Array<OneD, const NekDouble> &inarray,
                 Array<OneD,NekDouble> &outarray)
             {
                 m_locToGloMap->Assemble(inarray,outarray);
@@ -105,7 +105,7 @@ namespace Nektar
             void BwdTrans(const ExpList &In);
 
             void GeneralMatrixOp(const GlobalLinSysKey            &gkey,
-                                 const ConstArray<OneD,NekDouble> &inarray,
+                                 const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD, NekDouble>           &outarray);
 	    
 	protected:
@@ -130,6 +130,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.29  2008/03/12 15:25:45  pvos
+* Clean up of the code
+*
 * Revision 1.28  2007/12/17 13:05:04  sherwin
 * Made files compatible with modifications in StdMatrixKey which now holds constants
 *

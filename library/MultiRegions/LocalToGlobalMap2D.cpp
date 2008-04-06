@@ -591,8 +591,8 @@ namespace Nektar
         LocalToGlobalMap2D::LocalToGlobalMap2D(const int loclen, 
                                                const StdRegions::StdExpansionVector &locExpVector, 
                                                const SpatialDomains::MeshGraph2D &graph2D,
-                                               const ConstArray<OneD,MultiRegions::ExpList1DSharedPtr> &bndCondExp,
-                                               const ConstArray<OneD,SpatialDomains::BoundaryConditionType> &bndCondTypes)
+                                               const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp,
+                                               const Array<OneD, const SpatialDomains::BoundaryConditionType> &bndCondTypes)
         {
             int i,j,k;
             int cnt = 0;
@@ -1020,6 +1020,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap2D.cpp,v $
+* Revision 1.11  2008/04/02 22:19:54  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.10  2008/03/18 14:14:13  pvos
 * Update for nodal triangular helmholtz solver
 *

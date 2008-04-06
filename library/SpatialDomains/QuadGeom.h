@@ -66,7 +66,7 @@ namespace Nektar
 
                 void FillGeom();
 
-                void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+                void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
                 inline int GetEid(int i) const
                 {
@@ -141,7 +141,7 @@ namespace Nektar
                     FillGeom();
                 }            
                 
-                virtual void v_GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+                virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
                 {
                     v_GetLocCoords(coords,Lcoords);
                 }
@@ -184,6 +184,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.16  2008/04/02 22:19:04  pvos
+// Update for 2D local to global mapping
+//
 // Revision 1.15  2008/01/26 20:17:28  sherwin
 // EdgecComponent to SegGeom
 //

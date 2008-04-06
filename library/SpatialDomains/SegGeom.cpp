@@ -121,7 +121,7 @@ namespace Nektar
             }
         }
 
-        void SegGeom::GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        void SegGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
         {
             int i;
             
@@ -130,7 +130,7 @@ namespace Nektar
             // calculate local coordinate for coord
             if(GetGtype() == eRegular)
             {
-                ConstArray<OneD,NekDouble> pts;
+                Array<OneD, const NekDouble> pts;
                 NekDouble len = 0.0;
                 NekDouble xi  = 0.0;
                 int nq;
@@ -201,6 +201,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.19  2008/01/21 19:58:14  sherwin
+// Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
+//
 // Revision 1.18  2007/07/27 21:08:30  jfrazier
 // Removed use of temporary in call to memory manager allocate.
 //

@@ -218,8 +218,8 @@ namespace Nektar
 
           // ////////////////////////////////////////
         //        CalculateInterpMatrix()
-        void NodalTetElec::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia,
-                                                 const ConstArray<OneD, NekDouble>& zia, Array<OneD, NekDouble>& interp)
+        void NodalTetElec::CalculateInterpMatrix(const Array<OneD, const NekDouble>& xia, const Array<OneD, const NekDouble>& yia,
+                                                 const Array<OneD, const NekDouble>& zia, Array<OneD, NekDouble>& interp)
                                                    
         {
              NekVector<NekDouble>  x( m_points[0] );
@@ -274,6 +274,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTetElec.cpp,v $
+* Revision 1.12  2007/10/03 03:00:13  bnelson
+* Added precompiled headers.
+*
 * Revision 1.11  2007/08/15 01:43:48  ehan
 * Added calculating weights, interpolation, and derivation for Tetrahedron.
 *

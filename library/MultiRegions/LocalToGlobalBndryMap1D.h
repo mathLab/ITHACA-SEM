@@ -54,8 +54,8 @@ namespace Nektar
             
             LocalToGlobalBndryMap1D(const StdRegions::StdExpansionVector &locexp, 
                                     const SpatialDomains::MeshGraph1D &graph1D,
-                                    const ConstArray<OneD,LocalRegions::PointExpSharedPtr> &bndCondExp,
-                                    const ConstArray<OneD,SpatialDomains::BoundaryConditionType> &bndCondTypes);
+                                    const Array<OneD,const LocalRegions::PointExpSharedPtr> &bndCondExp,
+                                    const Array<OneD,const SpatialDomains::BoundaryConditionType> &bndCondTypes);
             
             virtual ~LocalToGlobalBndryMap1D();
             
@@ -108,6 +108,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalBndryMap1D.h,v $
+/** Revision 1.3  2008/01/25 05:50:46  bnelson
+/** Changed NekVector::GetPtr to NekVector::GetRawPtr and added a new NekVector::GetPtr that returns an Array.  This makes the calls consistent with NekMatrix.
+/**
 /** Revision 1.2  2007/12/06 22:52:30  pvos
 /** 2D Helmholtz solver updates
 /**

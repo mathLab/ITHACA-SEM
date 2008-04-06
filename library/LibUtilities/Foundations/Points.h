@@ -130,6 +130,9 @@ namespace Nektar
                 case eNodalTetElec:
                     dimpoints = 3;
                     break;
+                    
+                default:
+                    break;
                 }
 
                 return dimpoints;
@@ -149,6 +152,9 @@ namespace Nektar
 
                 case eNodalTetElec:
                     totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
+                    break;
+                    
+                default:
                     break;
                 }
 
@@ -213,38 +219,38 @@ namespace Nektar
                 return m_pointsKey.GetPointsType();
             }
 
-            inline const ConstArray<OneD, DataType>& GetZ() const
+            inline const Array<OneD, const DataType>& GetZ() const
             {
                 return m_points[0];
             }
 
-            inline const ConstArray<OneD, DataType>& GetW() const 
+            inline const Array<OneD, const DataType>& GetW() const 
             {
                 return m_weights; 
             } 
 
-            inline void GetZW(ConstArray<OneD, DataType> &z,
-                ConstArray<OneD, DataType> &w) const 
+            inline void GetZW(Array<OneD, const DataType> &z,
+                Array<OneD, const DataType> &w) const 
             {
                 z = m_points[0];
                 w = m_weights;
             }
 
-            inline void GetPoints(ConstArray<OneD, DataType> &x) const
+            inline void GetPoints(Array<OneD, const DataType> &x) const
             {
                 x = m_points[0];
             }
 
-            inline void GetPoints(ConstArray<OneD, DataType> &x,
-                                  ConstArray<OneD, DataType> &y) const
+            inline void GetPoints(Array<OneD, const DataType> &x,
+                                  Array<OneD, const DataType> &y) const
             {
                 x = m_points[0];
                 y = m_points[1];
             }
 
-            inline void GetPoints(ConstArray<OneD, DataType> &x,
-                                  ConstArray<OneD, DataType> &y,
-                                  ConstArray<OneD, DataType> &z) const
+            inline void GetPoints(Array<OneD, const DataType> &x,
+                                  Array<OneD, const DataType> &y,
+                                  Array<OneD, const DataType> &z) const
             {
                 x = m_points[0];
                 y = m_points[1];
@@ -263,29 +269,29 @@ namespace Nektar
                 return returnval;
             }
 			
-   		    virtual const MatrixSharedPtrType GetI(const ConstArray<OneD, DataType>& x)
+   		    virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x)
             {
                 ASSERTL0(false, "Method not implemented");
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 			
-            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const ConstArray<OneD, DataType>& x)
+            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const Array<OneD, const DataType>& x)
             {
                 ASSERTL0(false, "Method not implemented");
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 			
-            virtual const MatrixSharedPtrType GetI(const ConstArray<OneD, DataType>& x, const ConstArray<OneD, DataType>& y)
+            virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x, const Array<OneD, const DataType>& y)
             {
                 ASSERTL0(false, "Method not implemented");
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
-            virtual const MatrixSharedPtrType GetI(const ConstArray<OneD, DataType>& x, const ConstArray<OneD, DataType>& y,
-                                                   const ConstArray<OneD, DataType>& z)
+            virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x, const Array<OneD, const DataType>& y,
+                                                   const Array<OneD, const DataType>& z)
             {
                 ASSERTL0(false, "Method not implemented");
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());

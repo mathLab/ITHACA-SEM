@@ -96,7 +96,7 @@ namespace Nektar
             *  \return returns a pointer to the coefficient array 
             *  \f$ \mathbf{\hat{u}}\f$ 
             */
-            inline const ConstArray<OneD, NekDouble>& GetCoeffs(void) const
+            inline const Array<OneD, const NekDouble>& GetCoeffs(void) const
             {
                 return m_coeffs;
             }
@@ -145,7 +145,7 @@ namespace Nektar
             *
             *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
             */
-            inline const ConstArray<OneD, NekDouble>& GetPhys(void) const
+            inline const Array<OneD, const NekDouble>& GetPhys(void) const
             {
                 return m_phys;
             }
@@ -197,7 +197,7 @@ namespace Nektar
             *  
             *  \return returns the shared pointer to the bases  
             */
-            inline const ConstArray<OneD, LibUtilities::BasisSharedPtr>& GetBase() const
+            inline const Array<OneD, const LibUtilities::BasisSharedPtr>& GetBase() const
             {
                 return(m_base);
             }
@@ -234,9 +234,9 @@ namespace Nektar
             *  \param coeffs the array of values to which #m_coeffs should 
             *  be set
             */
-            inline void SetCoeffs(const ConstArray<OneD, NekDouble>& coeffs)
+            inline void SetCoeffs(const Array<OneD, const NekDouble>& coeffs)
             {
-                Vmath::Vcopy(m_ncoeffs, coeffs, 1, m_coeffs, 1);
+                Vmath::Vcopy(m_ncoeffs, coeffs.get(), 1, m_coeffs.get(), 1);
             }
 
             /** \brief This function sets the i th coefficient  
@@ -280,11 +280,11 @@ namespace Nektar
             *
             *  \param phys the array of values to which #m_phys should be set
             */
-            inline void SetPhys(const ConstArray<OneD, NekDouble>& phys)
+            inline void SetPhys(const Array<OneD, const NekDouble>& phys)
             {
                 int nqtot = GetTotPoints();
 
-                Vmath::Vcopy(nqtot, phys, 1, m_phys, 1);
+                Vmath::Vcopy(nqtot, phys.get(), 1, m_phys.get(), 1);
             }
 
             /** \brief This function returns the type of basis used in the \a dir
@@ -354,7 +354,7 @@ namespace Nektar
             *  \return returns a pointer to the array containing
             *  the quadrature points in \a dir direction 
             */
-            inline const ConstArray<OneD, NekDouble>& GetPoints(const int dir) const
+            inline const Array<OneD, const NekDouble>& GetPoints(const int dir) const
             {
                 return ExpPointsProperties(dir)->GetZ();
             }
@@ -512,7 +512,7 @@ namespace Nektar
             *  at the quadrature points (output of the function)
             */
 
-            void  BwdTrans (const ConstArray<OneD, NekDouble>& inarray, 
+            void  BwdTrans (const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray)
             {
                 v_BwdTrans (inarray, outarray);
@@ -548,7 +548,7 @@ namespace Nektar
             *
             *  \param outarray array of the function coefficieints 
             */
-            void  FwdTrans (const ConstArray<OneD, NekDouble>& inarray, 
+            void  FwdTrans (const Array<OneD, const NekDouble>& inarray, 
                             Array<OneD, NekDouble> &outarray)
             {
                 v_FwdTrans(inarray,outarray);
@@ -572,7 +572,7 @@ namespace Nektar
             *  \a inarray[m]=\f$u(\mathbf{\xi}_m)\f$)
             *  \return returns the value of the calculated integral
             */
-            NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray )
+            NekDouble Integral(const Array<OneD, const NekDouble>& inarray )
             {
                 return v_Integral(inarray);
             }
@@ -611,14 +611,14 @@ namespace Nektar
             *  (output of the function) 
             */
 
-            void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                  Array<OneD, NekDouble> &outarray)
             {
                 v_IProductWRTBase(inarray, outarray);
             }
 
             void   IProductWRTDerivBase(const int dir, 
-                                         const ConstArray<OneD,NekDouble>& inarray, 
+                                         const Array<OneD, const NekDouble>& inarray, 
                                          Array<OneD, NekDouble> &outarray)
             {
                 v_IProductWRTDerivBase(dir,inarray, outarray);
@@ -651,7 +651,7 @@ namespace Nektar
             *  coordinate system
             *  \param coords the physical coordinates (output of the function)
             */
-            void GetCoord(const ConstArray<OneD, NekDouble>& Lcoord, 
+            void GetCoord(const Array<OneD, const NekDouble>& Lcoord, 
               Array<OneD, NekDouble> &coord)
             {
                 v_GetCoord(Lcoord, coord);
@@ -741,7 +741,7 @@ namespace Nektar
             }
 
             void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                              const ConstArray<OneD,NekDouble> &inarray,
+                                              const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD,NekDouble> &outarray)
             {
                 v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
@@ -749,7 +749,7 @@ namespace Nektar
             
 
             void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                           const ConstArray<OneD,NekDouble> &inarray,
+                                           const Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,NekDouble> &outarray)
                 
             {
@@ -757,7 +757,7 @@ namespace Nektar
             }
 
             void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                           const ConstArray<OneD,NekDouble> &inarray,
+                                           const Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,boost::shared_ptr<LocalRegions::SegExp> > &EdgeExp,
                                            Array<OneD,NekDouble> &outarray,
                                            bool UseLocalOrient = true)
@@ -768,7 +768,7 @@ namespace Nektar
             }
 
             virtual void AddNormBoundaryInt(const int dir,
-                                            ConstArray<OneD,NekDouble> &inarray,
+                                            Array<OneD, const NekDouble> &inarray,
                                             Array<OneD,NekDouble> &outarray)
             {
                 v_AddNormBoundaryInt(dir,inarray,outarray);
@@ -776,7 +776,7 @@ namespace Nektar
 
 
             virtual void AddNormTraceInt(const int dir,
-                                         ConstArray<OneD,NekDouble> &inarray,
+                                         Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,NekDouble> &outarray)
             {
                 v_AddNormTraceInt(dir,inarray,outarray);
@@ -853,33 +853,33 @@ namespace Nektar
             DNekMatSharedPtr CreateGeneralMatrix(const StdMatrixKey &mkey);
 
             void GeneralMatrixOp(const StdMatrixKey &mkey, 
-                                 const ConstArray<OneD,NekDouble> &inarray,
+                                 const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,NekDouble> &outarray);
 
             
-            void MassMatrixOp(const ConstArray<OneD,NekDouble> &inarray, 
+            void MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
                               Array<OneD,NekDouble> &outarray);
         
-            void LaplacianMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+            void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray);
 
             void LaplacianMatrixOp(const int k1, const int k2, 
-                                   const ConstArray<OneD,NekDouble> &inarray,
+                                   const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray);
 
             void WeakDerivMatrixOp(const int i,
-                                   const ConstArray<OneD,NekDouble> &inarray,
+                                   const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray);
 
 
-            void BwdTransMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+            void BwdTransMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray);
 
-            void HelmholtzMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+            void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const double lambda);
 
-            void TensProdBwdTrans(const ConstArray<OneD, NekDouble>&inarray, 
+            void TensProdBwdTrans(const Array<OneD, const NekDouble>&inarray, 
                                   Array<OneD, NekDouble> &outarray);
 
             void TensProdBwdTrans(const StdExpansion &in)
@@ -893,7 +893,7 @@ namespace Nektar
                 return v_GenMatrix(mkey);
             }
 
-            void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
+            void PhysDeriv (const Array<OneD, const NekDouble>& inarray,
                             Array<OneD, NekDouble> &out_d0,
                             Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                             Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
@@ -902,7 +902,7 @@ namespace Nektar
             }
 
             virtual void PhysDeriv(const int dir, 
-                                   const ConstArray<OneD, NekDouble>& inarray,
+                                   const Array<OneD, const NekDouble>& inarray,
                                    Array<OneD, NekDouble> &outarray)
             {
                 v_PhysDeriv (dir, inarray, outarray);
@@ -937,26 +937,27 @@ namespace Nektar
 
             virtual StdRegions::EdgeOrientation v_GetEorient(int edge)
             {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");                
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");  
+                return eForwards;              
             }
 
 
             virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                                        const ConstArray<OneD,NekDouble> &inarray,
+                                                        const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
             virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                     const ConstArray<OneD,NekDouble> &inarray,
+                                     const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,NekDouble> &outarray)
             { 
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
             virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                    const ConstArray<OneD,NekDouble> &inarray,
+                                    const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD, boost::shared_ptr<LocalRegions::SegExp> > &edgeExp, 
                                     Array<OneD,NekDouble> &outarray,
                                     bool UseLocalOrient = true)
@@ -965,14 +966,14 @@ namespace Nektar
             }
             
             virtual void v_AddNormBoundaryInt(const int dir,
-                                              ConstArray<OneD,NekDouble> &inarray,
+                                              Array<OneD, const NekDouble> &inarray,
                                               Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
             virtual void v_AddNormTraceInt(const int dir,
-                                           ConstArray<OneD,NekDouble> &inarray,
+                                           Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
@@ -997,7 +998,7 @@ namespace Nektar
             *   at the quadrature points of \a tbasis0 (output of the function)
             */
             void Interp1D(const LibUtilities::BasisKey &fbasis0,
-              const ConstArray<OneD, NekDouble>& from,
+              const Array<OneD, const NekDouble>& from,
               const LibUtilities::BasisKey &tbasis0,
               Array<OneD, NekDouble> &to);
 
@@ -1029,7 +1030,7 @@ namespace Nektar
             */
             void Interp2D(const LibUtilities::BasisKey &fbasis0, 
                           const LibUtilities::BasisKey &fbasis1,
-                          const ConstArray<OneD, NekDouble>& from,
+                          const Array<OneD, const NekDouble>& from,
                           const LibUtilities::BasisKey &tbasis0,
                           const LibUtilities::BasisKey &tbasis1, 
                           Array<OneD, NekDouble> &to);
@@ -1066,7 +1067,7 @@ namespace Nektar
            void Interp3D(const LibUtilities::BasisKey &fbasis0,
                          const LibUtilities::BasisKey &fbasis1,
                          const LibUtilities::BasisKey &fbasis2,
-                         const ConstArray<OneD, NekDouble>& from,
+                         const Array<OneD, const NekDouble>& from,
                          const LibUtilities::BasisKey &tbasis0,
                          const LibUtilities::BasisKey &tbasis1,
                          const LibUtilities::BasisKey &tbasis2,
@@ -1093,7 +1094,7 @@ namespace Nektar
             *  points
             *  \return returns the \f$ L_\infty \f$ error as a NekDouble. 
             */
-            NekDouble Linf(const ConstArray<OneD, NekDouble>& sol);
+            NekDouble Linf(const Array<OneD, const NekDouble>& sol);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty \f$ norm of
             *  the function defined at the physical points \a (this)->m_phys. 
@@ -1117,7 +1118,7 @@ namespace Nektar
             *  points
             *  \return returns the \f$ L_2 \f$ error as a double. 
             */
-            NekDouble L2(const ConstArray<OneD, NekDouble>& sol);
+            NekDouble L2(const Array<OneD, const NekDouble>& sol);
 
             /** \brief Function to evaluate the discrete \f$ L_2\f$ norm of the
             *  function defined at the physical points \a (this)->m_phys.
@@ -1216,21 +1217,21 @@ namespace Nektar
             }
 
 
-            virtual void   v_BwdTrans   (const ConstArray<OneD, NekDouble>& inarray, 
+            virtual void   v_BwdTrans   (const Array<OneD, const NekDouble>& inarray, 
                      Array<OneD, NekDouble> &outarray) = 0;
-            virtual void   v_FwdTrans   (const ConstArray<OneD, NekDouble>& inarray, 
+            virtual void   v_FwdTrans   (const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray) = 0;
-            virtual void   v_IProductWRTBase (const ConstArray<OneD, NekDouble>& inarray, 
+            virtual void   v_IProductWRTBase (const Array<OneD, const NekDouble>& inarray, 
                           Array<OneD, NekDouble> &outarray) = 0;            
 
             virtual void   v_IProductWRTDerivBase (const int dir, 
-                                                   const ConstArray<OneD,NekDouble>& inarray, 
+                                                   const Array<OneD, const NekDouble>& inarray, 
                                                    Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This method has not been defined");
             }
 
-            virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray )
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray )
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                     "local expansions");
@@ -1238,7 +1239,7 @@ namespace Nektar
             }
 
 
-            virtual void   v_PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
+            virtual void   v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD, NekDouble> &out_d1,
                                         Array<OneD, NekDouble> &out_d2,
                                         Array<OneD, NekDouble> &out_d3)
@@ -1248,7 +1249,7 @@ namespace Nektar
             }
 
             virtual void v_PhysDeriv(const int dir, 
-                const ConstArray<OneD, NekDouble>& inarray,
+                const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &out_d0)
 
             {
@@ -1257,7 +1258,7 @@ namespace Nektar
             }
 
             virtual void   v_StdPhysDeriv (const int dir, 
-                                           const ConstArray<OneD, NekDouble>& inarray, 
+                                           const Array<OneD, const NekDouble>& inarray, 
                                            Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is valid in StdExpansion ");
@@ -1293,7 +1294,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
 
-            virtual void v_GetCoord(const ConstArray<OneD, NekDouble>& Lcoord, 
+            virtual void v_GetCoord(const Array<OneD, const NekDouble>& Lcoord, 
                 Array<OneD, NekDouble> &coord)
             {
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
@@ -1390,6 +1391,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.78  2008/04/02 22:18:10  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.77  2008/03/18 14:15:45  pvos
 * Update for nodal triangular helmholtz solver
 *

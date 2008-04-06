@@ -108,7 +108,7 @@ namespace Nektar
                     return m_xmap[0]; //should never be reached
                 }
 
-                NekDouble GetCoord(const int i, const ConstArray<OneD, NekDouble> &Lcoord);
+                NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
                         
                 /// \brief Get the orientation of edge1.
                 ///
@@ -176,6 +176,9 @@ namespace Nektar
 
 //
 // $Log: EdgeComponent.h,v $
+// Revision 1.18  2008/04/02 22:19:03  pvos
+// Update for 2D local to global mapping
+//
 // Revision 1.17  2007/12/29 17:49:03  jfrazier
 // Removed redundant instance of the vertex array.  Move the one down from SegGeom.
 //

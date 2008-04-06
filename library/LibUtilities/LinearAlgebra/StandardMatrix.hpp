@@ -237,7 +237,7 @@ namespace Nektar
             {
             }
             
-            NekMatrix(unsigned int rows, unsigned int columns, const ConstArray<OneD, DataType>& d,
+            NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, const DataType>& d,
                       const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
                 BaseType(rows, columns),
                 m_data(StoragePolicy::Initialize(rows, columns, d, policySpecificData)),
@@ -416,7 +416,7 @@ namespace Nektar
                 return m_data;
             }
             
-            const ConstArray<OneD, DataType>& GetPtr() const
+            const Array<OneD, const DataType>& GetPtr() const
             {
                 return m_data;
             }

@@ -107,10 +107,10 @@ namespace Nektar
         //////////////////////////////
         namespace 
         {
-            void TripleTensorProduct(   const ConstArray<OneD, NekDouble>& fx, 
-                                        const ConstArray<OneD, NekDouble>& gy, 
-                                        const ConstArray<OneD, NekDouble>& hz, 
-                                        const ConstArray<OneD, NekDouble>& inarray, 
+            void TripleTensorProduct(   const Array<OneD, const NekDouble>& fx, 
+                                        const Array<OneD, const NekDouble>& gy, 
+                                        const Array<OneD, const NekDouble>& hz, 
+                                        const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> & outarray )
             {
                 // Using matrix operation, not sum-factorization.
@@ -174,10 +174,10 @@ namespace Nektar
             // y-dimension is the column
             // z-dimension is the stack, it is the index that changes the slowest
             NekDouble TripleInnerProduct( 
-                                        const ConstArray<OneD, NekDouble>& fxyz, 
-                                        const ConstArray<OneD, NekDouble>& wx, 
-                                        const ConstArray<OneD, NekDouble>& wy, 
-                                        const ConstArray<OneD, NekDouble>& wz
+                                        const Array<OneD, const NekDouble>& fxyz, 
+                                        const Array<OneD, const NekDouble>& wx, 
+                                        const Array<OneD, const NekDouble>& wy, 
+                                        const Array<OneD, const NekDouble>& wz
                                         )
             {
                 int Qx = wx.num_elements();
@@ -219,10 +219,10 @@ namespace Nektar
         }
 
 
-        NekDouble StdTetExp::Integral3D(const ConstArray<OneD, NekDouble>& inarray, 
-                                        const ConstArray<OneD, NekDouble>& wx,
-                                        const ConstArray<OneD, NekDouble>& wy, 
-                                        const ConstArray<OneD, NekDouble>& wz)
+        NekDouble StdTetExp::Integral3D(const Array<OneD, const NekDouble>& inarray, 
+                                        const Array<OneD, const NekDouble>& wx,
+                                        const Array<OneD, const NekDouble>& wy, 
+                                        const Array<OneD, const NekDouble>& wz)
         {
             return TripleInnerProduct( inarray, wx, wy, wz );
 
@@ -243,7 +243,7 @@ namespace Nektar
 		       and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature point.
 
         */
-        NekDouble StdTetExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
+        NekDouble StdTetExp::Integral(const Array<OneD, const NekDouble>& inarray)
         {
             // Using implementation from page 145 of Spencer Sherwin's book
             int Qy = m_base[1]->GetNumPoints();
@@ -251,7 +251,7 @@ namespace Nektar
 
             // Get the point distributions:
             // x is assumed to be Gauss-Lobatto-Legendre (includes -1 and +1)
-            ConstArray<OneD, NekDouble> y,z,wx,wy,wz;
+            Array<OneD, const NekDouble> y,z,wx,wy,wz;
             wx = ExpPointsProperties(0)->GetW();
             ExpPointsProperties(1)->GetZW(y,wy);
             ExpPointsProperties(2)->GetZW(z,wz);
@@ -315,7 +315,7 @@ namespace Nektar
 		- \a outarray: array of inner product with respect to each basis over region
 
         */
-        void StdTetExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
+        void StdTetExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
         }
@@ -343,10 +343,10 @@ namespace Nektar
 	    \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$ 
 
         **/
-        void StdTetExp::IProductWRTBase(    const ConstArray<OneD, NekDouble>& bx, 
-                                            const ConstArray<OneD, NekDouble>& by, 
-                                            const ConstArray<OneD, NekDouble>& bz, 
-                                            const ConstArray<OneD, NekDouble>& inarray, 
+        void StdTetExp::IProductWRTBase(    const Array<OneD, const NekDouble>& bx, 
+                                            const Array<OneD, const NekDouble>& by, 
+                                            const Array<OneD, const NekDouble>& bz, 
+                                            const Array<OneD, const NekDouble>& inarray, 
                                             Array<OneD, NekDouble> & outarray )
         {
             int     Qx = m_base[0]->GetNumPoints();
@@ -450,9 +450,9 @@ namespace Nektar
                 }
             }
 
-            const ConstArray<OneD, NekDouble>& bx = m_base[0]->GetBdata();
-            const ConstArray<OneD, NekDouble>& by = m_base[1]->GetBdata();
-            const ConstArray<OneD, NekDouble>& bz = m_base[2]->GetBdata();
+            const Array<OneD, const NekDouble>& bx = m_base[0]->GetBdata();
+            const Array<OneD, const NekDouble>& by = m_base[1]->GetBdata();
+            const Array<OneD, const NekDouble>& bz = m_base[2]->GetBdata();
 
             int p = mode_p, q = mode_q, r = mode_r;
 
@@ -498,7 +498,7 @@ namespace Nektar
 
         **/
     // PhysDerivative implementation based on Spen's book page 152.    
-    void StdTetExp::PhysDeriv(const ConstArray<OneD, NekDouble>& u_physical, 
+    void StdTetExp::PhysDeriv(const Array<OneD, const NekDouble>& u_physical, 
             Array<OneD, NekDouble> &out_dxi1, 
             Array<OneD, NekDouble> &out_dxi2,
             Array<OneD, NekDouble> &out_dxi3 )
@@ -512,7 +512,7 @@ namespace Nektar
             Array<OneD, NekDouble> out_dEta1(Qx*Qy*Qz,0.0), out_dEta2(Qx*Qy*Qz,0.0), out_dEta3(Qx*Qy*Qz,0.0);
             PhysTensorDeriv(u_physical, out_dEta1, out_dEta2, out_dEta3);
 
-            ConstArray<OneD, NekDouble> eta_x, eta_y, eta_z;
+            Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
             eta_x = ExpPointsProperties(0)->GetZ();
             eta_y = ExpPointsProperties(1)->GetZ();
             eta_z = ExpPointsProperties(2)->GetZ();
@@ -558,7 +558,7 @@ namespace Nektar
 	    \f$
         **/
         void StdTetExp::BwdTrans(
-            const ConstArray<OneD, NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray, 
             Array<OneD, NekDouble> &outarray)
         {
 
@@ -578,9 +578,9 @@ namespace Nektar
             int     Q = m_base[1]->GetNumModes() - 1;
             int     R = m_base[2]->GetNumModes() - 1;
 
-            ConstArray<OneD, NekDouble> xBasis  = m_base[0]->GetBdata();
-            ConstArray<OneD, NekDouble> yBasis  = m_base[1]->GetBdata();
-            ConstArray<OneD, NekDouble> zBasis  = m_base[2]->GetBdata();
+            Array<OneD, const NekDouble> xBasis  = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> yBasis  = m_base[1]->GetBdata();
+            Array<OneD, const NekDouble> zBasis  = m_base[2]->GetBdata();
 
 
             // Build an index map from the rectangle to the triangle
@@ -655,7 +655,7 @@ namespace Nektar
             - (this)->_coeffs: updated array of expansion coefficients. 
             
         */    
-        void StdTetExp::FwdTrans( const ConstArray<OneD, NekDouble>& inarray,  Array<OneD, NekDouble> &outarray)
+        void StdTetExp::FwdTrans( const Array<OneD, const NekDouble>& inarray,  Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
 
@@ -672,7 +672,7 @@ namespace Nektar
 
 
 
-        NekDouble StdTetExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& xi)
+        NekDouble StdTetExp::PhysEvaluate(const Array<OneD, const NekDouble>& xi)
         {
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
@@ -709,9 +709,9 @@ namespace Nektar
 
         void StdTetExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
         {
-            ConstArray<OneD, NekDouble> eta_x = ExpPointsProperties(0)->GetZ();
-            ConstArray<OneD, NekDouble> eta_y = ExpPointsProperties(1)->GetZ();
-            ConstArray<OneD, NekDouble> eta_z = ExpPointsProperties(2)->GetZ();
+            Array<OneD, const NekDouble> eta_x = ExpPointsProperties(0)->GetZ();
+            Array<OneD, const NekDouble> eta_y = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> eta_z = ExpPointsProperties(2)->GetZ();
             int Qx = GetNumPoints(0);
             int Qy = GetNumPoints(1);
             int Qz = GetNumPoints(2);
@@ -737,7 +737,7 @@ namespace Nektar
             int  Qy = m_base[1]->GetNumPoints();
             int  Qz = m_base[2]->GetNumPoints();
             
-            ConstArray<OneD, NekDouble> eta_x, eta_y, eta_z;
+            Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
             eta_x = ExpPointsProperties(0)->GetZ();
             eta_y = ExpPointsProperties(1)->GetZ();
             eta_z = ExpPointsProperties(2)->GetZ();
@@ -923,6 +923,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.8  2008/03/25 08:41:00  ehan
+ * Added MapTo() function.
+ *
  * Revision 1.7  2008/02/01 20:05:49  ehan
  * Added doxygen comments.
  *

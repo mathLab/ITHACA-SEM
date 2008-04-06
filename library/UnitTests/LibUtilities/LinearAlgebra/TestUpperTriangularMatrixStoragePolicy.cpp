@@ -191,7 +191,7 @@ namespace Nektar
                                5.0, 6.0, 9.0};
             Array<OneD, NekDouble> array_buf(6, buf);
             Array<OneD, NekDouble> data = Policy::Initialize(3, 3, array_buf, policyData);
-            ConstArray<OneD, NekDouble>& cdata = data;
+            Array<OneD, const NekDouble>& cdata = data;
             BOOST_CHECK_EQUAL(data.num_elements(), 6);
 
             {

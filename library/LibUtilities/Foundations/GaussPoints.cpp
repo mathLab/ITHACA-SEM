@@ -182,7 +182,7 @@ namespace Nektar
             std::copy(dmtemp,dmtemp+totpoints*totpoints,m_derivmatrix[0]->begin());
         }
 
-        void GaussPoints::CalculateInterpMatrix(unsigned int npts, const ConstArray<OneD, NekDouble>& xpoints, Array<OneD, NekDouble>& interp)
+        void GaussPoints::CalculateInterpMatrix(unsigned int npts, const Array<OneD, const NekDouble>& xpoints, Array<OneD, NekDouble>& interp)
         {
             switch(m_pointsKey.GetPointsType())
             {
@@ -251,7 +251,7 @@ namespace Nektar
         boost::shared_ptr< NekMatrix<NekDouble> > GaussPoints::CreateMatrix(const PointsKey &pkey)
         {
             int numpoints = pkey.GetNumPoints();
-            ConstArray<OneD, NekDouble> xpoints;
+            Array<OneD, const NekDouble> xpoints;
 
             PointsManager()[pkey]->GetPoints(xpoints);
 
@@ -266,7 +266,7 @@ namespace Nektar
             return m_InterpManager[pkey];
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const ConstArray<OneD, NekDouble>& x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const Array<OneD, const NekDouble>& x)
         {
             int numpoints = 1;
 
@@ -274,7 +274,7 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x)
         {
             Array<OneD, NekDouble> interp(GetNumPoints()*numpoints);
 
@@ -291,6 +291,9 @@ namespace Nektar
 
 /**
 * $Log: GaussPoints.cpp,v $
+* Revision 1.24  2007/10/03 03:00:13  bnelson
+* Added precompiled headers.
+*
 * Revision 1.23  2007/08/06 05:42:28  ehan
 * Fixed m_derivativematrix so that compatible with 3-dimension
 *

@@ -89,12 +89,12 @@ namespace Nektar
              *  \end{array} \f$
              */
 
-        void PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray,
+        void PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray_d0,
                                 Array<OneD, NekDouble> &outarray_d1);
 
                 // Change names from Deriv to PhysDeriv
-        void PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
+        void PhysDeriv (const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                 Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray,
                 Array<OneD, NekDouble> &out_d3 = NullNekDouble1DArray)
@@ -102,7 +102,7 @@ namespace Nektar
             v_PhysDeriv (inarray, out_d1, out_d2, out_d3);
         }
 
-        void StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+        void StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray_d1,
                             Array<OneD, NekDouble> &outarray_d2)
         {
@@ -131,7 +131,7 @@ namespace Nektar
          *  \param coords the coordinates of the single point
          *  \return returns the value of the expansion at the single point
          */
-         NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+         NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords)
              {
                  return v_PhysEvaluate(coords);
              }
@@ -140,14 +140,14 @@ namespace Nektar
          *  to be in local collapsed coordinate format. The function is
          *  assumed to be in physical space 
          */
-         NekDouble PhysEvaluate2D(const ConstArray<OneD, NekDouble>& coords);
+         NekDouble PhysEvaluate2D(const Array<OneD, const NekDouble>& coords);
 
-         NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray, 
-                const ConstArray<OneD, NekDouble>& w0, 
-                const ConstArray<OneD, NekDouble>& w1);
+         NekDouble Integral(const Array<OneD, const NekDouble>& inarray, 
+                const Array<OneD, const NekDouble>& w0, 
+                const Array<OneD, const NekDouble>& w1);
 
-         int GetNodalPoints(const ConstArray<OneD, NekDouble> &x, 
-                const ConstArray<OneD, NekDouble> &y)
+         int GetNodalPoints(const Array<OneD, const NekDouble> &x, 
+                const Array<OneD, const NekDouble> &y)
          {
          return v_GetNodalPoints(x, y);
          }
@@ -172,8 +172,8 @@ namespace Nektar
          }
 
          virtual ShapeType v_DetShapeType() const = 0;
-         virtual int v_GetNodalPoints(const ConstArray<OneD, NekDouble> &x,
-                      const ConstArray<OneD, NekDouble> &y)
+         virtual int v_GetNodalPoints(const Array<OneD, const NekDouble> &x,
+                      const Array<OneD, const NekDouble> &y)
              {
          ASSERTL0(false, "This function is only valid for nodal "
               "expansions");
@@ -192,34 +192,34 @@ namespace Nektar
          return 2;
          }
 
-         virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+         virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray, 
                      Array<OneD, NekDouble> &outarray) = 0;
-         virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+         virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray, 
                      Array<OneD, NekDouble> &outarray) = 0;
 
-         virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray ) = 0;
+         virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray ) = 0;
 
-         virtual void   v_PhysDeriv (const ConstArray<OneD, NekDouble>& inarray,
+         virtual void   v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
                      Array<OneD, NekDouble> &out_d0,
                      Array<OneD, NekDouble> &out_d1,
                      Array<OneD, NekDouble> &out_d2) = 0;
 
          virtual void   v_PhysDeriv(const int dir, 
-                                    const ConstArray<OneD, NekDouble>& inarray,
+                                    const Array<OneD, const NekDouble>& inarray,
                                     Array<OneD, NekDouble> &out_d0) = 0;
          
-         virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+         virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
                      Array<OneD, NekDouble> &outarray_d1, 
                      Array<OneD, NekDouble> &outarray_d2) = 0;
 
          virtual void   v_StdPhysDeriv (const int dir, 
-                                        const ConstArray<OneD, NekDouble>& inarray, 
+                                        const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> &outarray) = 0;
          
-         virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
-         {
-             return PhysEvaluate2D(coords);
-         }
+         virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
+            {
+            return PhysEvaluate2D(coords);
+            }
          
          virtual const boost::shared_ptr<SpatialDomains::Geometry2D>& v_GetGeom()
          {
@@ -239,6 +239,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.h,v $
+* Revision 1.19  2008/04/02 22:18:10  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.18  2007/11/08 16:55:14  pvos
 * Updates towards 2D helmholtz solver
 *

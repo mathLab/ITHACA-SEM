@@ -1,87 +1,74 @@
-/////////////////////////////////////////////////////////////////////////////////
-////
-//// File: testLinearSystem.cpp
-////
-//// For more information, please see: http://www.nektar.info
-////
-//// The MIT License
-////
-//// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//// Department of Aeronautics, Imperial College London (UK), and Scientific
-//// Computing and Imaging Institute, University of Utah (USA).
-////
-//// License for the specific language governing rights and limitations under
-//// Permission is hereby granted, free of charge, to any person obtaining a
-//// copy of this software and associated documentation files (the "Software"),
-//// to deal in the Software without restriction, including without limitation
-//// the rights to use, copy, modify, merge, publish, distribute, sublicense,
-//// and/or sell copies of the Software, and to permit persons to whom the
-//// Software is furnished to do so, subject to the following conditions:
-////
-//// The above copyright notice and this permission notice shall be included
-//// in all copies or substantial portions of the Software.
-////
-//// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-//// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-//// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-//// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-//// DEALINGS IN THE SOFTWARE.
-////
-//// Description: Test code for NekVector
-////
-/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
-//#include <UnitTests/testLinearSystem.h>
-//#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
+// File: testLinearSystem.cpp
 //
-//#include <boost/test/auto_unit_test.hpp>
-//#include <boost/test/test_case_template.hpp>
-//#include <boost/test/floating_point_comparison.hpp>
-//#include <boost/test/unit_test.hpp>
+// For more information, please see: http://www.nektar.info
 //
-//namespace Nektar
-//{
-//    namespace LinearSystemUnitTests
-//    {
-//        void testMixedInputParameterTypes()
-//        {
-//            {
-//                double matrix_buf[] = { 10, 5, 2 };
+// The MIT License
 //
-//                double result_buf[] = { 20, 50, 10 };
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
 //
-//                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-//                NekVector<double, ThreeD> b(result_buf);
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
 //
-//                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
 //
-//                NekVector<double, ThreeD> result = linsys.Solve(b);
-//                
-//                double expected_result_buf[] = { 2, 10, 5 };
-//                NekVector<double, ThreeD> expectedResult(expected_result_buf);
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 //
-//                BOOST_CHECK_EQUAL(result, expectedResult);
-//            }
+// Description: Test code for NekVector
 //
-//            {
-//                double matrix_buf[] = { 10, 5, 2 };
-//
-//                double result_buf[] = { 20, 50, 10 };
-//
-//                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-//                boost::shared_ptr<NekVector<double, ThreeD> > b(new NekVector<double, ThreeD>(result_buf));
-//
-//                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
-//
-//                NekVector<double, ThreeD> result = linsys.Solve(b);
-//                
-//                double expected_result_buf[] = { 2, 10, 5 };
-//                NekVector<double, ThreeD> expectedResult(expected_result_buf);
-//
-//                BOOST_CHECK_EQUAL(result, expectedResult);
-//            }
+///////////////////////////////////////////////////////////////////////////////
+
+#include <UnitTests/testLinearSystem.h>
+#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_case_template.hpp>
+#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/unit_test.hpp>
+
+namespace Nektar
+{
+    namespace LinearSystemUnitTests
+    {
+        BOOST_AUTO_TEST_CASE(TestMixedInputParameterTypes)
+        {
+            {
+                double matrix_buf[] = { 10, 5, 2 };
+
+                double b_buf[] = { 20, 50, 10 };
+
+                boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+                NekVector<double, ThreeD> b1(b_buf);
+                boost::shared_ptr<NekVector<double, ThreeD> > b2(new NekVector<double, ThreeD>(b_buf));
+                
+                LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
+
+                NekVector<double, ThreeD> result1 = linsys.Solve(b1);
+                NekVector<double, ThreeD> result2 = linsys.Solve(b2);
+                
+                double expected_result_buf[] = { 2, 10, 5 };
+                NekVector<double, ThreeD> expectedResult(expected_result_buf);
+
+                BOOST_CHECK_EQUAL(result1, expectedResult);
+                BOOST_CHECK_EQUAL(result2, expectedResult);
+            }
+        }
+
 //
 //            {
 //                double matrix_buf[] = { 10, 5, 2 };
@@ -228,26 +215,32 @@
 //                BOOST_CHECK_EQUAL(*result, expectedResult);
 //            }
 //        }
-//
-//        void testDiagonalSystem()
-//        {
-//            double matrix_buf[] = { 10, 5, 2 };
-//
-//            double result_buf[] = { 20, 50, 10 };
-//
-//            boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
-//            boost::shared_ptr<NekVector<double, ThreeD> > b(new NekVector<double, ThreeD>(result_buf));
-//
-//            LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
-//
-//            NekVector<double, ThreeD> result = linsys.Solve(b);
-//            
-//            double expected_result_buf[] = { 2, 10, 5 };
-//            NekVector<double, ThreeD> expectedResult(expected_result_buf);
-//
-//            BOOST_CHECK_EQUAL(result, expectedResult);
-//        }
-//        
+
+        BOOST_AUTO_TEST_CASE(TestDiagonalSystem)
+        {
+            double matrix_buf[] = { 10, 5, 2 };
+
+            double result_buf[] = { 20, 50, 10 };
+
+            boost::shared_ptr<NekMatrix<double, DiagonalMatrixTag> >  A(new NekMatrix<double, DiagonalMatrixTag>(3,3,matrix_buf));
+            boost::shared_ptr<NekVector<double, ThreeD> > b(new NekVector<double, ThreeD>(result_buf));
+
+            LinearSystem<NekMatrix<double, DiagonalMatrixTag> > linsys(A);
+
+            NekVector<double, ThreeD> result = linsys.Solve(b);
+            
+            double expected_result_buf[] = { 2, 10, 5 };
+            NekVector<double, ThreeD> expectedResult(expected_result_buf);
+
+            BOOST_CHECK_EQUAL(result, expectedResult);
+            boost::shared_ptr<NekVector<const double, ThreeD> > b1 = b;
+            NekVector<double, ThreeD> result1 = linsys.Solve(b1);
+            BOOST_CHECK_EQUAL(result1, expectedResult);
+            
+            NekVector<double, ThreeD> result2 = linsys.SolveTranspose(b);
+            BOOST_CHECK_EQUAL(expectedResult, result2);
+        }
+        
 //        void testFullSystem()
 //        {
 //            {
@@ -405,5 +398,5 @@
 //                    
 //            }
 //        }
-//    }
-//}
+    }
+}

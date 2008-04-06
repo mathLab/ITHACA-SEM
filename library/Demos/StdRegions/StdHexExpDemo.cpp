@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
     // polynomial space given by the Hexahedral basis function
     // The result of output should converge to the interpolation solution 
     
-    // ConstArray<OneD, NekDouble> const& u_phys = she->GetPhys();
+    // Array<OneD, const NekDouble> const& u_phys = she->GetPhys();
     // Array<OneD, NekDouble> hex_solution( Qx * Qy * Qz, 0.0 );
     // for(int n = 0; n < Qx * Qy * Qz; ++n) {
     //   hex_solution[n]  = Hex_sol( x[n], y[n], z[n], P, Q, R, bType_x, bType_y, bType_z );   

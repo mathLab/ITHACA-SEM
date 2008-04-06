@@ -136,7 +136,7 @@ namespace Nektar
         }
 
 	void ContExpList2D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
-                                            const ConstArray<OneD, NekDouble> &inarray,
+                                            const Array<OneD, const NekDouble> &inarray,
                                             Array<OneD, NekDouble> &outarray)
             
 	{
@@ -183,6 +183,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.12  2008/03/18 14:14:13  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.11  2008/03/12 15:25:45  pvos
 * Clean up of the code
 *

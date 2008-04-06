@@ -87,7 +87,7 @@ namespace Nektar
                 return m_xmap[i]->UpdatePhys();
             }
 
-            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord);
+            NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
             static const int kNverts  = 5;
             static const int kNedges  = 5;
@@ -149,7 +149,7 @@ namespace Nektar
                 return UpdatePhys(i);
             }
 
-            virtual NekDouble v_GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
             {
                 return GetCoord(i,Lcoord);
             }
@@ -161,6 +161,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.h,v $
+// Revision 1.5  2008/04/02 22:19:04  pvos
+// Update for 2D local to global mapping
+//
 // Revision 1.4  2008/02/08 23:05:52  jfrazier
 // More work on 3D components.
 //

@@ -76,7 +76,7 @@ namespace Nektar
         /** given local collapsed coordinate Lcoord return the value of
         physical coordinate in direction i **/
         NekDouble PrismGeom::GetCoord(const int i, 
-                                          const ConstArray<OneD,NekDouble> &Lcoord)
+                                          const Array<OneD, const NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
                 "Goemetry is not in physical space");
@@ -88,6 +88,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.cpp,v $
+// Revision 1.2  2008/02/08 23:05:52  jfrazier
+// More work on 3D components.
+//
 // Revision 1.1  2006/05/04 18:59:02  kirby
 // *** empty log message ***
 //

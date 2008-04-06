@@ -87,7 +87,7 @@ namespace Nektar
         void GetCoords(Array<OneD,NekDouble> &coords_1,
                        Array<OneD,NekDouble> &coords_2, 
                        Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
-        void GetCoord(const ConstArray<OneD,NekDouble>& Lcoords, 
+        void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                       Array<OneD,NekDouble> &coords);
 
         const SpatialDomains::Geometry2DSharedPtr& GetGeom()
@@ -103,22 +103,22 @@ namespace Nektar
         //----------------------------
 
          /// \brief Integrate the physical point list \a inarray over region
-        NekDouble Integral(const ConstArray<OneD, NekDouble> &inarray);
+        NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
 
         /** \brief  Inner product of \a inarray over region with respect to the
         expansion basis (this)->_Base[0] and return in \a outarray */
-        void IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
+        void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
                              Array<OneD, NekDouble> &outarray);
 
         void IProductWRTDerivBase(const int dir,
-                                  const ConstArray<OneD, NekDouble>& inarray,
+                                  const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> & outarray);
         
         //-----------------------------
         // Differentiation Methods
         //-----------------------------
 
-        void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+        void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                        Array<OneD, NekDouble> &out_d0,
                        Array<OneD, NekDouble> &out_d1,
                        Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);      
@@ -130,23 +130,23 @@ namespace Nektar
         /** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
             store in \a (this)->_coeffs  */
-        void FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
+        void FwdTrans(const Array<OneD, const NekDouble> &inarray, 
                       Array<OneD, NekDouble> &outarray);
         
-        NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble> &coord);        
+        NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);        
         
         SegExpSharedPtr GetEdgeExp(int edge);
-        void GetEdgePhysVals(const int edge, const ConstArray<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+        void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
     
         void AddNormTraceInt(const int dir,
-                             ConstArray<OneD,NekDouble> &inarray,
+                             Array<OneD, const NekDouble> &inarray,
                              Array<OneD,NekDouble> &outarray)
         {
             AddNormBoundaryInt(dir,inarray,outarray,true);
         }
 
         void AddNormBoundaryInt(const int dir,
-                                ConstArray<OneD,NekDouble> &inarray,
+                                Array<OneD, const NekDouble> &inarray,
                                 Array<OneD,NekDouble> &outarray,
                                 bool InArrayIsTrace = false);
 
@@ -154,15 +154,15 @@ namespace Nektar
                                 Array <OneD,NekDouble > &outarray);          
 
         void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                          const ConstArray<OneD,NekDouble> &inarray,
+                                          const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray);
 
         void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                       const ConstArray<OneD,NekDouble> &inarray,
+                                       const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,NekDouble> &outarray);
 
         void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                       const ConstArray<OneD,NekDouble> &inarray,
+                                       const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,SegExpSharedPtr> &EdgeExp,
                                        Array<OneD,NekDouble> &outarray,
                                        bool UseLocalOrient = true);
@@ -191,9 +191,9 @@ namespace Nektar
 
         /** \brief  Inner product of \a inarray over region with respect to
         the expansion basis \a base and return in \a outarray */
-        inline void IProductWRTBase(const ConstArray<OneD, NekDouble> &base0, 
-                                    const ConstArray<OneD, NekDouble> &base1, 
-                                    const ConstArray<OneD, NekDouble> &inarray, 
+        inline void IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
+                                    const Array<OneD, const NekDouble> &base1, 
+                                    const Array<OneD, const NekDouble> &inarray, 
                                     Array<OneD, NekDouble> &outarray, 
                                     const int coll_check);
 
@@ -222,7 +222,7 @@ namespace Nektar
              GetCoords(coords_0, coords_1, coords_2);
          }
 
-        virtual void v_GetCoord(const ConstArray<OneD, NekDouble> &lcoord, 
+        virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, 
                                 Array<OneD, NekDouble> &coord)
         {
             GetCoord(lcoord, coord);
@@ -246,20 +246,20 @@ namespace Nektar
 
         /** \brief Virtual call to integrate the physical point list \a inarray
         over region (see SegExp::Integral) */
-        virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble> &inarray )
+        virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
         {
             return Integral(inarray);
         }
 
         /** \brief Virtual call to QuadExp::IProduct_WRT_B */
-        virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray,
+        virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
         }
 
         virtual void v_IProductWRTDerivBase (const int dir,
-                                             const ConstArray<OneD,NekDouble> &inarray,
+                                             const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD, NekDouble> &outarray)
         {
             IProductWRTDerivBase(dir,inarray,outarray);
@@ -267,14 +267,14 @@ namespace Nektar
 
 
         /// Virtual call to SegExp::PhysDeriv
-        virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+        virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                                     Array<OneD, NekDouble> &out_d0,
                                     Array<OneD, NekDouble> &out_d1)
         {
             StdQuadExp::PhysDeriv(inarray, out_d0, out_d1);
         }
         
-        virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+        virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                                  Array<OneD, NekDouble> &out_d0,
                                  Array<OneD, NekDouble> &out_d1,
                                  Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
@@ -283,7 +283,7 @@ namespace Nektar
         }
 
         virtual void v_PhysDeriv(const int dir, 
-                                 const ConstArray<OneD, NekDouble>& inarray,
+                                 const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
         {
             Array<OneD,NekDouble> tmp;
@@ -308,19 +308,19 @@ namespace Nektar
         }
     
         /// Virtual call to SegExp::FwdTrans
-       virtual void v_FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
+       virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                 Array<OneD, NekDouble> &outarray)
         {
             FwdTrans(inarray,outarray);
         }
     
         /// Virtual call to QuadExp::Evaluate
-        virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble> &coords)
+        virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
         {
             return PhysEvaluate(coords);
         }
     
-        virtual NekDouble v_Linf(const ConstArray<OneD, NekDouble> &sol)
+        virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
         {
             return Linf(sol);
         }
@@ -331,7 +331,7 @@ namespace Nektar
             return Linf();
         }
     
-        virtual NekDouble v_L2(const ConstArray<OneD, NekDouble> &sol)
+        virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
         {
             return StdExpansion::L2(sol);
         }
@@ -371,35 +371,35 @@ namespace Nektar
 
         
         virtual void v_AddNormTraceInt(const int dir,
-                                       ConstArray<OneD,NekDouble> &inarray,
+                                       Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,NekDouble> &outarray)
         {
             AddNormBoundaryInt(dir,inarray,outarray,true);
         }
 
         virtual void v_AddNormBoundaryInt(const int dir,
-                                        ConstArray<OneD,NekDouble> &inarray,
+                                        Array<OneD, const NekDouble> &inarray,
                                         Array<OneD,NekDouble> &outarray)
         {
             AddNormBoundaryInt(dir,inarray,outarray,false);
         }
 
         virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                                    const ConstArray<OneD,NekDouble> &inarray,
+                                                    const Array<OneD, const NekDouble> &inarray,
                                                     Array<OneD,NekDouble> &outarray)
         {
             AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
         }
 
         virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                 const ConstArray<OneD,NekDouble> &inarray,
+                                                 const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray)
          {
              AddUDGHelmholtzTraceTerms(tau,inarray,outarray);
          }
 
         virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                 const ConstArray<OneD,NekDouble> &inarray,
+                                                 const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,SegExpSharedPtr> &EdgeExp, 
                                                  Array <OneD,NekDouble > &outarray,
                                                  bool UseLocalOrient = true)
@@ -422,6 +422,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.26  2008/04/02 22:19:26  pvos
+ *    Update for 2D local to global mapping
+ *
  *    Revision 1.25  2008/03/12 15:24:29  pvos
  *    Clean up of the code
  *

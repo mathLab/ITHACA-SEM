@@ -84,7 +84,7 @@ namespace Nektar
                     return StdRegions::eSegment;
                 }
 
-                void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+                void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
 
                 inline void SetOwnData()
@@ -121,7 +121,7 @@ namespace Nektar
                     return DetShapeType();
                 }
                 
-                virtual void v_GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+                virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
                 {
                     GetLocCoords(coords,Lcoords);
                 }            
@@ -149,6 +149,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.15  2008/04/02 22:19:04  pvos
+// Update for 2D local to global mapping
+//
 // Revision 1.14  2008/02/03 05:05:16  jfrazier
 // Initial checkin of 3D components.
 //

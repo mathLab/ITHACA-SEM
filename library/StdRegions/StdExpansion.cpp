@@ -131,7 +131,7 @@ namespace Nektar
         {
         }
 
-        NekDouble StdExpansion::Linf(const ConstArray<OneD, NekDouble>& sol)
+        NekDouble StdExpansion::Linf(const Array<OneD, const NekDouble>& sol)
         {
             NekDouble  val;
             int     ntot = GetTotPoints();
@@ -217,7 +217,7 @@ namespace Nektar
             return Vmath::Vamax(GetTotPoints(), m_phys, 1);    
         }
 
-        NekDouble StdExpansion::L2(const ConstArray<OneD, NekDouble>& sol)
+        NekDouble StdExpansion::L2(const Array<OneD, const NekDouble>& sol)
         {
             NekDouble  val;
             int     ntot = GetTotPoints();
@@ -340,7 +340,7 @@ namespace Nektar
                     int i,j,k,dir;
                     int nbndry = NumDGBndryCoeffs();
                     int nquad  = GetNumPoints(0);
-                    const ConstArray<OneD,NekDouble> &Basis  = m_base[0]->GetBdata();
+                    const Array<OneD, const NekDouble> &Basis  = m_base[0]->GetBdata();
                     Array<OneD,NekDouble> lambda(nbndry);
                     DNekVec Lambda(nbndry,lambda,eWrapper);                    
 
@@ -483,7 +483,7 @@ namespace Nektar
         }
 
         void StdExpansion::GeneralMatrixOp(const StdMatrixKey &mkey, 
-                                           const ConstArray<OneD,NekDouble> &inarray,
+                                           const Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,NekDouble> &outarray)
         {
             switch(mkey.GetMatrixType())
@@ -527,7 +527,7 @@ namespace Nektar
             }
         }
             
-        void StdExpansion::MassMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+        void StdExpansion::MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                         Array<OneD,NekDouble> &outarray)
         {
             Array<OneD, NekDouble> tmp(GetTotPoints());
@@ -536,7 +536,7 @@ namespace Nektar
             v_IProductWRTBase(tmp, outarray);
         }
 
-        void StdExpansion::LaplacianMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+        void StdExpansion::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray)
         {
 
@@ -577,7 +577,7 @@ namespace Nektar
 
 
         void StdExpansion::LaplacianMatrixOp(const int k1, const int k2, 
-                                             const ConstArray<OneD,NekDouble> &inarray,
+                                             const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray)
         {
                 
@@ -594,7 +594,7 @@ namespace Nektar
 
 
         void StdExpansion::WeakDerivMatrixOp(const int k1,
-                                             const ConstArray<OneD,NekDouble> &inarray,
+                                             const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray)
         {
             ASSERTL1(k1 >= 0 && k1 < ShapeTypeDimMap[v_DetShapeType()],"invalid first  argument");
@@ -606,14 +606,14 @@ namespace Nektar
         }
 
 
-        void StdExpansion::BwdTransMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+        void StdExpansion::BwdTransMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray)
         {
             v_BwdTrans(inarray,outarray);
         }
 
 
-        void StdExpansion::HelmholtzMatrixOp(const ConstArray<OneD,NekDouble> &inarray,
+        void StdExpansion::HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
                                              const double lambda)
         {
@@ -624,7 +624,7 @@ namespace Nektar
             Blas::Daxpy(m_ncoeffs, lambda, tmp, 1, outarray, 1);
         }
 
-        void StdExpansion::TensProdBwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdExpansion::TensProdBwdTrans(const Array<OneD, const NekDouble>& inarray, 
             Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
@@ -646,7 +646,7 @@ namespace Nektar
 	 void StdExpansion::Interp3D(const LibUtilities::BasisKey &fbasis0, 
 				     const LibUtilities::BasisKey &fbasis1, 
 				     const LibUtilities::BasisKey &fbasis2, 
-				     const ConstArray<OneD, NekDouble>& from,  
+				     const Array<OneD, const NekDouble>& from,  
 				     const LibUtilities::BasisKey &tbasis0,
 				     const LibUtilities::BasisKey &tbasis1,
 	                             const LibUtilities::BasisKey &tbasis2,
@@ -718,7 +718,7 @@ namespace Nektar
         // 2D Interpolation
         void StdExpansion::Interp2D(const LibUtilities::BasisKey &fbasis0, 
             const LibUtilities::BasisKey &fbasis1, 
-            const ConstArray<OneD, NekDouble>& from,  
+            const Array<OneD, const NekDouble>& from,  
             const LibUtilities::BasisKey &tbasis0,
             const LibUtilities::BasisKey &tbasis1,
             Array<OneD, NekDouble> &to)
@@ -768,7 +768,7 @@ namespace Nektar
 
         // 1D Interpolation
         void StdExpansion::Interp1D(const LibUtilities::BasisKey &fbasis0, 
-            const ConstArray<OneD, NekDouble>& from,  
+            const Array<OneD, const NekDouble>& from,  
             const LibUtilities::BasisKey &tbasis0, 
             Array<OneD, NekDouble> &to)
         {
@@ -813,6 +813,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.67  2008/04/02 22:18:10  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.66  2008/03/18 14:15:45  pvos
 * Update for nodal triangular helmholtz solver
 *

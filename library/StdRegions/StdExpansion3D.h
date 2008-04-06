@@ -82,13 +82,13 @@ namespace Nektar
          *  \f$\eta_3\f$ direction will be stored in outarray_d3 as output 
          *  of the function
          */
-            void PhysTensorDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+            void PhysTensorDeriv(const Array<OneD, const NekDouble> &inarray, 
                  Array<OneD, NekDouble> &outarray_d1,
                  Array<OneD, NekDouble> &outarray_d2, 
                  Array<OneD, NekDouble> &outarray_d3);
 
 
-            NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords)
              {
                  return v_PhysEvaluate(coords);
              }
@@ -97,9 +97,9 @@ namespace Nektar
          *  to be in local collapsed coordinate format. The function is
          *  assumed to be in physical space
          */
-            NekDouble PhysEvaluate3D(const ConstArray<OneD, NekDouble> &coords);
+            NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble> &coords);
 
-            void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+            void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                Array<OneD, NekDouble> &outarray_d0, 
                Array<OneD, NekDouble> &outarray_d1, 
                Array<OneD, NekDouble> &outarray_d2)
@@ -107,7 +107,7 @@ namespace Nektar
                 v_PhysDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
             }
 
-            void StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
+            void StdPhysDeriv(const Array<OneD, const NekDouble> &inarray,
               Array<OneD, NekDouble> &outarray_d0,
               Array<OneD, NekDouble> &outarray_d1,  
               Array<OneD, NekDouble> &outarray_d2)
@@ -132,7 +132,7 @@ namespace Nektar
             virtual DNekMatSharedPtr v_GetMassMatrix()        = 0;
             virtual DNekMatSharedPtr v_GetLapMatrix()         = 0;
 
-            virtual int v_get_nodalpoints(ConstArray<OneD, NekDouble> &x, ConstArray<OneD, NekDouble> &y)
+            virtual int v_get_nodalpoints(Array<OneD, const NekDouble> &x, Array<OneD, const NekDouble> &y)
             {
                 ASSERTL0(false, "This function is only valid for nodal expansions");
                 return 0;
@@ -143,24 +143,24 @@ namespace Nektar
                 ASSERTL0(false, "This function is only valid for nodal expansions");
             }
 
-            virtual void   v_BwdTrans (const ConstArray<OneD, NekDouble> &inarray, 
+            virtual void   v_BwdTrans (const Array<OneD, const NekDouble> &inarray, 
                        Array<OneD, NekDouble> &outarray)      = 0;
-            virtual void   v_FwdTrans (const ConstArray<OneD, NekDouble> &inarray,
+            virtual void   v_FwdTrans (const Array<OneD, const NekDouble> &inarray,
                        Array<OneD, NekDouble> &outarray)      = 0;
 
-            virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble> &inarray ) = 0;
-//             virtual NekDouble v_Evaluate(const ConstArray<OneD, NekDouble> &coords) = 0;
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray ) = 0;
+//             virtual NekDouble v_Evaluate(const Array<OneD, const NekDouble> &coords) = 0;
 
-            virtual void   v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+            virtual void   v_PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                        Array<OneD, NekDouble> &outarray_d0,
                        Array<OneD, NekDouble> &outarray_d1, 
                        Array<OneD, NekDouble> &outarray_d2) = 0;
-            virtual void   v_StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+            virtual void   v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                       Array<OneD, NekDouble> &outarray_d0,
                       Array<OneD, NekDouble> &outarray_d1,
                       Array<OneD, NekDouble> &outarray_d2) = 0;
 
-            virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
             {
                 return PhysEvaluate3D(coords);
             }
@@ -177,6 +177,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.13  2008/02/12 02:46:33  jfrazier
+* Moved typedef to the top of the file.
+*
 * Revision 1.12  2008/02/12 01:30:07  ehan
 * Added typedef StdExpansion3DSharedPtr.
 *

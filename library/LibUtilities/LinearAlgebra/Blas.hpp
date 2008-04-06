@@ -94,14 +94,14 @@ namespace Blas
 
 #ifdef NEKTAR_USING_BLAS
     /// \brief BLAS level 1: Copy \a x to \a y
-    static void Dcopy (const int& n, const double *x, const int& incx,
+    static inline void Dcopy (const int& n, const double *x, const int& incx,
              double *y, const int& incy)
     {
         F77NAME(dcopy)(n,x,incx,y,incy);
     }
 
     /// \brief  BLAS level 1: y = alpha \a x plus \a y
-    static void Daxpy (const int& n, const double& alpha, const double *x,
+    static inline void Daxpy (const int& n, const double& alpha, const double *x,
              const int& incx,  const double *y, const int& incy)
     {
         F77NAME(daxpy)(n,alpha,x,incx,y,incy);
@@ -109,21 +109,21 @@ namespace Blas
 
 
     /// \brief BLAS level 1: Swap \a x with  \a y
-    static void Dswap (const int& n,double *x, const int& incx,
+    static inline void Dswap (const int& n,double *x, const int& incx,
              double *y, const int& incy)
     {
         F77NAME(dswap)(n,x,incx,y,incy);
     }
 
     /// \brief  BLAS level 1: x = alpha \a x
-    static void Dscal (const int& n, const double& alpha, double *x,
+    static inline void Dscal (const int& n, const double& alpha, double *x,
              const int& incx)
     {
         F77NAME(dscal)(n,alpha,x,incx);
     }
 
     /// \brief BLAS level 1: Plane rotation by c = cos(theta), s = sin(theta)
-    static void Drot (const int& n,  double *x,  const int& incx,
+    static inline void Drot (const int& n,  double *x,  const int& incx,
             double *y, const int& incy, const double& c,
             const double& s)
     {
@@ -131,7 +131,7 @@ namespace Blas
     }
 
     /// \brief BLAS level 1: output =   \f$ x^T  y \f$
-    static double Ddot (const int& n, const double *x, const int& incx,
+    static inline double Ddot (const int& n, const double *x, const int& incx,
               const double *y, const int& incy)
     {
         return F77NAME(ddot)(n,x,incx,y,incy);
@@ -139,13 +139,13 @@ namespace Blas
 
     // \brief  BLAS level 1: output = \f$ ||x||_2 \f$
 
-    static double Dnrm2 (const int& n, const double *x, const int& incx)
+    static inline double Dnrm2 (const int& n, const double *x, const int& incx)
     {
         return F77NAME(dnrm2)(n,x,incx);
     }
 
     /// \brief  BLAS level 1: output = \f$ ||x||_1 \f$
-    static double Dasum (const int& n, const double *x, const int& incx)
+    static inline double Dasum (const int& n, const double *x, const int& incx)
     {
         return F77NAME(dasum)(n,x,incx);
     }
@@ -153,13 +153,13 @@ namespace Blas
     /// \brief BLAS level 1: output = 1st value where \f$ |x[i]| = max |x|_1 \f$
     /// Note it is modified to return a value between (0,n-1) as per
     /// the standard C convention
-    static int Idamax (const int& n, const double *x,  const int& incx)
+    static inline int Idamax (const int& n, const double *x,  const int& incx)
     {
         return F77NAME(idamax)(n,x,incx) -1;
     }
 
     /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A[m x n]
-    static void Dgemv (const char& trans,   const int& m,    const int& n,
+    static inline void Dgemv (const char& trans,   const int& m,    const int& n,
              const double& alpha, const double* a, const int& lda,
              const double* x,     const int& incx, const double& beta,
              double* y,     const int& incy)
@@ -167,7 +167,7 @@ namespace Blas
         F77NAME(dgemv) (trans,m,n,alpha,a,lda,x,incx,beta,y,incy);
     }
 
-    static void Dgbmv (const char& trans,  const int& m,
+    static inline void Dgbmv (const char& trans,  const int& m,
                  const int& n, const int& kl, const int& ku,
                  const double& alpha,
                  const double* a,    const int& lda,
@@ -178,7 +178,7 @@ namespace Blas
     }
 
 
-    static void Dtpmv(const char& uplo, const char& trans, const char& diag,
+    static inline void Dtpmv(const char& uplo, const char& trans, const char& diag,
                  const int& n, const double* ap, double* x, const int& incx)
     {
         F77NAME(dtpmv) (uplo, trans, diag, n, ap, x, incx);
@@ -186,7 +186,7 @@ namespace Blas
 
     /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A
     /// is symmetric packed
-    static void Dspmv (const char& trans,  const int& n,    const double& alpha,
+    static inline void Dspmv (const char& trans,  const int& n,    const double& alpha,
              const double* a,    const double* x, const int& incx,
              const double& beta,       double* y, const int& incy)
     {
@@ -196,7 +196,7 @@ namespace Blas
 
     /// \brief BLAS level 3: Matrix-matrix multiply C = A x B where A[m x n],
     ///   B[n x k], C[m x k]
-    static void Dgemm (const char& transa,  const char& transb, const int& m,
+    static inline void Dgemm (const char& transa,  const char& transb, const int& m,
           const int& n,        const int& k,       const double& alpha,
           const double* a,     const int& lda,     const double* b,
           const int& ldb,      const double& beta,       double* c,
@@ -207,7 +207,7 @@ namespace Blas
 
     // \brief Wrapper to mutliply two (row major) matrices together C =
     // a*A*B + b*C
-    static void Cdgemm(const int M, const int N, const int K, const double a,
+    static inline void Cdgemm(const int M, const int N, const int K, const double a,
           const double *A, const int ldA, const double * B, const int ldB,
           const double b, double *C, const int ldC)
     {
@@ -219,6 +219,9 @@ namespace Blas
 
 /***
 $Log: Blas.hpp,v $
+Revision 1.5  2008/02/28 09:57:08  sherwin
+Added array version of some routines
+
 Revision 1.4  2007/09/02 23:33:04  bnelson
 *** empty log message ***
 

@@ -76,7 +76,7 @@ namespace Nektar
 		       Array<OneD,NekDouble> &coords_1,
           	       Array<OneD,NekDouble> &coords_2);
 
-	void GetCoord(const ConstArray<OneD,NekDouble> &Lcoords, 
+	void GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
                       Array<OneD,NekDouble> &coords);
 
 	 //----------------------------
@@ -84,18 +84,18 @@ namespace Nektar
         //----------------------------
 
         /// \brief Integrate the physical point list \a inarray over region
-       NekDouble Integral(const ConstArray<OneD,NekDouble> &inarray);    
+       NekDouble Integral(const Array<OneD, const NekDouble> &inarray);    
 
-       void IProductWRTBase(const ConstArray<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
-       void FwdTrans(const ConstArray<OneD,NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
+       void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+       void FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
 
-       NekDouble PhysEvaluate(const ConstArray<OneD,NekDouble> &coord);
+       NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
 
       //-----------------------------
       // Differentiation Methods
       //-----------------------------
 
-        void PhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+        void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                        Array<OneD, NekDouble> &out_d0,
                        Array<OneD, NekDouble> &out_d1,
                        Array<OneD, NekDouble> &out_d2);
@@ -119,10 +119,10 @@ namespace Nektar
     //SpatialDomains::PrismGeom *m_geom;
  	void GenMetricInfo();
 
-	void IProductWRTBase(const ConstArray<OneD,NekDouble> &base0, 
-			     const ConstArray<OneD,NekDouble> &base1, 
-			     const ConstArray<OneD,NekDouble> &base2, 
-			     const ConstArray<OneD,NekDouble> &inarray,
+	void IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
+			     const Array<OneD, const NekDouble> &base1, 
+			     const Array<OneD, const NekDouble> &base2, 
+			     const Array<OneD, const NekDouble> &inarray,
 			     Array<OneD,NekDouble> &outarray);
 
         DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
@@ -156,7 +156,7 @@ namespace Nektar
              GetCoords(coords_0, coords_1, coords_2);
          }
 
-        virtual void v_GetCoord(const ConstArray<OneD, NekDouble> &lcoord, 
+        virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, 
                                 Array<OneD, NekDouble> &coord)
         {
             GetCoord(lcoord, coord);
@@ -168,7 +168,7 @@ namespace Nektar
         }
 
                     /// Virtual call to SegExp::PhysDeriv
-        virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+        virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                                     Array<OneD, NekDouble> &out_d0,
                                     Array<OneD, NekDouble> &out_d1,
                                     Array<OneD, NekDouble> &out_d2)
@@ -176,7 +176,7 @@ namespace Nektar
             StdPrismExp::PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
-        virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
+        virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD, NekDouble> &out_d0,
                                  Array<OneD, NekDouble> &out_d1,
                                  Array<OneD, NekDouble> &out_d2)
@@ -196,39 +196,39 @@ namespace Nektar
 
         /** \brief Virtual call to integrate the physical point list \a inarray
         over region (see SegExp::Integral) */
-        virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble> &inarray )
+        virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
         {
             return Integral(inarray);
         }
 
         /** \brief Virtual call to TriExp::IProduct_WRT_B */
-        virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray,
+        virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
         }
 
         virtual void v_IProductWRTDerivBase (const int dir,
-                                             const ConstArray<OneD,NekDouble> &inarray,
+                                             const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD, NekDouble> &outarray)
         {
             IProductWRTDerivBase(dir,inarray,outarray);
         }
 
         /// Virtual call to SegExp::FwdTrans
-        virtual void v_FwdTrans(const ConstArray<OneD, NekDouble> &inarray,
+        virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD, NekDouble> &outarray)
         {
             FwdTrans(inarray, outarray);
         }
         
         /// Virtual call to PrismExp::Evaluate
-        virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble> &coords)
+        virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
         {
             return PhysEvaluate(coords);
         }
 
-        virtual NekDouble v_Linf(const ConstArray<OneD, NekDouble> &sol)
+        virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
         {
             return Linf(sol);
         }
@@ -238,7 +238,7 @@ namespace Nektar
             return Linf();
         }
 
-        virtual NekDouble v_L2(const ConstArray<OneD, NekDouble> &sol)
+        virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
         {
             return StdExpansion::L2(sol);
         }
@@ -279,6 +279,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.h,v $
+ *    Revision 1.11  2008/03/18 16:18:05  pvos
+ *    Fixed some compiler complaints
+ *
  *    Revision 1.10  2008/03/17 10:35:15  pvos
  *    Clean up of the code
  *

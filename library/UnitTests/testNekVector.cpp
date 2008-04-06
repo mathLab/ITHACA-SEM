@@ -673,7 +673,7 @@ namespace Nektar
 
             {
                 double buf[] = {1.0, 2.0, 3.0, 4.0};
-                ConstArray<OneD, double> a(4, buf);
+                Array<OneD, const double> a(4, buf);
                 NekVector<double> b(3, a);
 
                 BOOST_CHECK_EQUAL(b.GetRows(), 3);

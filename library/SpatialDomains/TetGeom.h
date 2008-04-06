@@ -72,7 +72,7 @@ namespace Nektar
             int  NumElmtConnected() const;
             bool IsElmtConnected(int gvo_id, int locid) const;
             void FillGeom();
-            void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+            void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
             inline int GetEid() const 
             {
@@ -139,7 +139,7 @@ namespace Nektar
                 return m_xmap[i]->UpdatePhys();
             }
 
-            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord);
+            NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
             static const int kNverts = 4;
             static const int kNedges = 6;
@@ -203,7 +203,7 @@ namespace Nektar
                 return UpdatePhys(i);
             }
 
-            virtual NekDouble v_GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
             {
                 return GetCoord(i,Lcoord);
             }
@@ -217,6 +217,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.9  2008/04/02 22:19:04  pvos
+// Update for 2D local to global mapping
+//
 // Revision 1.8  2008/03/25 08:43:16  ehan
 // Added constructor, GetLocCoords(), and FillGeom().
 //

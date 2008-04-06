@@ -64,7 +64,7 @@ namespace Nektar
     // Differentiation Methods
     //-----------------------------
     
-    void StdExpansion1D::PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+    void StdExpansion1D::PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray, 
                          Array<OneD, NekDouble>& outarray)
     {
         int nquad = GetTotPoints();
@@ -94,7 +94,7 @@ namespace Nektar
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS    
     }
     
-    NekDouble StdExpansion1D::PhysEvaluate1D(const ConstArray<OneD, NekDouble>& Lcoord)
+    NekDouble StdExpansion1D::PhysEvaluate1D(const Array<OneD, const NekDouble>& Lcoord)
     {
         int    nquad = GetTotPoints();
         NekDouble  val;
@@ -113,6 +113,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.23  2008/04/03 16:12:11  pvos
+ * updates for NEKTAR_USING_DIRECT_BLAS_CALLS
+ *
  * Revision 1.22  2008/03/12 15:25:09  pvos
  * Clean up of the code
  *

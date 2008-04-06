@@ -65,7 +65,7 @@ namespace Nektar
         **/
 
         GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
-            const ConstArray<OneD,StdRegions::StdExpansion1DSharedPtr>  &Coords):
+            const Array<OneD, const StdRegions::StdExpansion1DSharedPtr>  &Coords):
             m_gtype(gtype), m_coordim(coordim)
         {
             int        i,nquad;
@@ -209,7 +209,7 @@ namespace Nektar
 
         **/
         GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
-                                 const ConstArray<OneD,StdRegions::StdExpansion2DSharedPtr> &Coords)
+                                 const Array<OneD, const StdRegions::StdExpansion2DSharedPtr> &Coords)
         {
             int i,j,nquad0,nquad1,nqtot;
             LibUtilities::PointsType  ptype0, ptype1;
@@ -764,6 +764,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.16  2007/12/17 20:27:19  sherwin
+// Added normals to GeomFactors
+//
 // Revision 1.15  2007/12/06 22:47:15  pvos
 // 2D Helmholtz solver updates
 //

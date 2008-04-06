@@ -102,7 +102,7 @@ namespace Nektar
         }
 
         double QuadFaceComponent::GetCoord(const int i, 
-                                           const ConstArray<OneD,NekDouble> &Lcoord)
+                                           const Array<OneD, const NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
                 "Goemetry is not in physical space");
@@ -114,6 +114,9 @@ namespace Nektar
 
 //
 // $Log: QuadFaceComponent.cpp,v $
+// Revision 1.3  2007/06/06 15:15:21  pvos
+// Some minor updates for 2D routines
+//
 // Revision 1.2  2007/05/28 21:48:42  sherwin
 // Update for 2D functionality
 //

@@ -147,7 +147,7 @@ namespace Nektar
             }
             
             static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const ConstArray<OneD, DataType>& d,
+                                                    const Array<OneD, const DataType>& d,
                                                     const PolicySpecificDataHolderType& data)
             {
                 ASSERTL0(rows==columns, "Banded matrices must be square.");
@@ -200,7 +200,7 @@ namespace Nektar
 
             static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                              unsigned int curRow, unsigned int curColumn,
-                                                                             const ConstArray<OneD, DataType>& data,
+                                                                             const Array<OneD, const DataType>& data,
                                                                              const char transpose,
                                                                              const PolicySpecificDataHolderType& dataHolder)
             {

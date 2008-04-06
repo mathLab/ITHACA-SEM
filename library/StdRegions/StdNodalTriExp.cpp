@@ -89,7 +89,7 @@ namespace Nektar
         DNekMatSharedPtr StdNodalTriExp::GenNBasisTransMatrix()
         {
             int             i,j;
-            ConstArray<OneD, NekDouble>  r, s; 
+            Array<OneD, const NekDouble>  r, s; 
             Array<OneD, NekDouble> c(2);
             DNekMatSharedPtr Mat;
 
@@ -118,7 +118,7 @@ namespace Nektar
             NodalToModal(m_coeffs,m_coeffs); 
         }
 
-        void StdNodalTriExp::NodalToModal(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdNodalTriExp::NodalToModal(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray)
         {
             StdMatrixKey   Nkey(eInvNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
@@ -136,7 +136,7 @@ namespace Nektar
         }
 
         // Operate with transpose of NodalToModal transformation
-        void StdNodalTriExp::NodalToModalTranspose(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdNodalTriExp::NodalToModalTranspose(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray)
         {            
             StdMatrixKey   Nkey(eInvNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
@@ -153,7 +153,7 @@ namespace Nektar
             ModalToNodal(m_coeffs,m_coeffs);
         }
 
-        void StdNodalTriExp::ModalToNodal(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdNodalTriExp::ModalToNodal(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray)
         {
             StdMatrixKey      Nkey(eNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
@@ -171,7 +171,7 @@ namespace Nektar
         //////////////////////////////
 
 
-        void StdNodalTriExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
+        void StdNodalTriExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
             Array<OneD,  NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),
@@ -179,9 +179,9 @@ namespace Nektar
                 outarray);
         }
 
-        void StdNodalTriExp:: IProductWRTBase(const ConstArray<OneD, NekDouble>& base0,
-            const ConstArray<OneD, NekDouble>& base1,
-            const ConstArray<OneD, NekDouble>& inarray,
+        void StdNodalTriExp:: IProductWRTBase(const Array<OneD, const NekDouble>& base0,
+            const Array<OneD, const NekDouble>& base1,
+            const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray)
         {
             // Take inner product with respect to Orthgonal basis using
@@ -191,7 +191,7 @@ namespace Nektar
         }
 
         void StdNodalTriExp::IProductWRTDerivBase(const int dir, 
-                                                  const ConstArray<OneD, NekDouble>& inarray, 
+                                                  const Array<OneD, const NekDouble>& inarray, 
                                                   Array<OneD, NekDouble> & outarray)
         {
             int    i;
@@ -202,7 +202,7 @@ namespace Nektar
             Array<OneD, NekDouble> gfac0(nqtot);
             Array<OneD, NekDouble> tmp0(nqtot);
             
-            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
             
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -226,7 +226,7 @@ namespace Nektar
             case 1:
                 {
                     Array<OneD, NekDouble> tmp3(m_ncoeffs);    
-                    ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+                    Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
                     
                     for(i = 0; i < nquad0; ++i)
                     {
@@ -270,7 +270,7 @@ namespace Nektar
         // Currently convert nodal values into tranformed values and
         // backward transform
 
-        void StdNodalTriExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+        void StdNodalTriExp::BwdTrans(const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray)
         {
             Array<OneD, NekDouble> tmp(m_ncoeffs);
@@ -278,7 +278,7 @@ namespace Nektar
             StdTriExp::BwdTrans(tmp,outarray);
         }
 
-        void StdNodalTriExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+        void StdNodalTriExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
@@ -465,6 +465,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.21  2008/04/02 22:18:10  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.20  2008/03/18 14:15:45  pvos
 * Update for nodal triangular helmholtz solver
 *

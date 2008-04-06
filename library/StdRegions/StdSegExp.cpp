@@ -60,13 +60,13 @@ namespace Nektar
         // Integration Methods
         //----------------------------
         
-        NekDouble StdSegExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
+        NekDouble StdSegExp::Integral(const Array<OneD, const NekDouble>& inarray)
         {
             NekDouble Int = 0.0;
             int    nquad0 = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad0);
-            ConstArray<OneD, NekDouble> z  = ExpPointsProperties(0)->GetZ();
-            ConstArray<OneD, NekDouble> w0 = ExpPointsProperties(0)->GetW();
+            Array<OneD, const NekDouble> z  = ExpPointsProperties(0)->GetZ();
+            Array<OneD, const NekDouble> w0 = ExpPointsProperties(0)->GetW();
             
             // multiply by integration constants 
             Vmath::Vmul(nquad0, inarray, 1, w0, 1, tmp, 1);
@@ -76,15 +76,15 @@ namespace Nektar
             return Int;
         }
         
-        void StdSegExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& base, 
-                                        const ConstArray<OneD, NekDouble>& inarray, 
+        void StdSegExp::IProductWRTBase(const Array<OneD, const NekDouble>& base, 
+                                        const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> &outarray, 
                                         int coll_check)
         {
             int    nquad = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad);
-            ConstArray<OneD, NekDouble> z =  ExpPointsProperties(0)->GetZ();
-            ConstArray<OneD, NekDouble> w =  ExpPointsProperties(0)->GetW();
+            Array<OneD, const NekDouble> z =  ExpPointsProperties(0)->GetZ();
+            Array<OneD, const NekDouble> w =  ExpPointsProperties(0)->GetW();
             
             Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
             
@@ -112,7 +112,7 @@ namespace Nektar
             }    
         }
         
-        void StdSegExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdSegExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
@@ -153,7 +153,7 @@ namespace Nektar
         // Differentiation Methods
         //-----------------------------
         
-        void StdSegExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdSegExp::PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
                                   Array<OneD, NekDouble> &out_d0,
                                   Array<OneD, NekDouble> &out_d1,
                                   Array<OneD, NekDouble> &out_d2)
@@ -165,7 +165,7 @@ namespace Nektar
         // Evaluation Methods
         //----------------------------
         
-        void StdSegExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdSegExp::BwdTrans(const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray)
         {
             int  nquad = m_base[0]->GetNumPoints();
@@ -194,7 +194,7 @@ namespace Nektar
             }
         }
         
-        void StdSegExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdSegExp::FwdTrans(const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray)
         {
             if(m_base[0]->Collocation())
@@ -216,7 +216,7 @@ namespace Nektar
             }
         }
         
-        NekDouble StdSegExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& Lcoord)
+        NekDouble StdSegExp::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord)
         {
             return StdExpansion1D::PhysEvaluate1D(Lcoord);
         }
@@ -344,6 +344,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.46  2008/04/03 16:12:11  pvos
+* updates for NEKTAR_USING_DIRECT_BLAS_CALLS
+*
 * Revision 1.45  2008/04/02 22:18:10  pvos
 * Update for 2D local to global mapping
 *

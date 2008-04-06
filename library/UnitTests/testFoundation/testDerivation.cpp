@@ -154,7 +154,7 @@
 //    cout<<"End of Derivation Test PolyEvenlySpaced()" << endl << endl;
 //}
 //
-//long double derivativeLegrangePoly(const ConstArray<OneD,NekDouble> &x, int N, int i, int j) {
+//long double derivativeLegrangePoly(const Array<OneD, const NekDouble> &x, int N, int i, int j) {
 //    long double derivative = 0.0;
 //    if( i == j ) {
 //        long double sum = 0.0;
@@ -177,7 +177,7 @@
 //}
 //
 //// IDFT of the derivative of the Fourier transform of an arbitrary function
-//long double derivativeMatrixFourier(const ConstArray<OneD,NekDouble> &x, int N, int i, int j) {
+//long double derivativeMatrixFourier(const Array<OneD, const NekDouble> &x, int N, int i, int j) {
 //    long double derivative = 0.0;
 //    if( i != j ) {
 //        int k = i - j;
@@ -212,7 +212,7 @@
 //        const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //        const Points<NekDouble>::MatrixSharedPtrType Dptr = points->GetD();
 //        const NekMatrix<NekDouble> & D = *Dptr;
-//        const ConstArray<OneD,NekDouble> &z = points->GetZ();
+//        const Array<OneD, const NekDouble> &z = points->GetZ();
 //
 //               
 //        int numPoints = points->GetNumPoints();
@@ -297,7 +297,7 @@
 //        const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //        const Points<double>::MatrixSharedPtrType Dptr = points->GetD();
 //        const NekMatrix<double> & D = *Dptr;
-//        const ConstArray<OneD,NekDouble> &z = points->GetZ();
+//        const Array<OneD, const NekDouble> &z = points->GetZ();
 //         
 //        int numPoints = points->GetNumPoints();
 //        epsilon = eps*numPoints;

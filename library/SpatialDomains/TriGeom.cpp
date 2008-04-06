@@ -140,7 +140,7 @@ namespace Nektar
             int i,j; 
             int order0 = m_xmap[0]->GetBasisNumModes(0);
             int order1 = m_xmap[0]->GetBasisNumModes(1);
-            ConstArray<OneD,NekDouble> coef;
+            Array<OneD, const NekDouble> coef;
             StdRegions::StdExpMap Map,MapV;
 
             // set side 1 
@@ -213,7 +213,7 @@ namespace Nektar
 
         }
 
-        void TriGeom::GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        void TriGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
         {
             FillGeom();
 
@@ -261,6 +261,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.12  2008/01/21 19:58:14  sherwin
+// Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
+//
 // Revision 1.11  2007/07/20 02:15:09  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

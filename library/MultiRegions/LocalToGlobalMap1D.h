@@ -56,25 +56,25 @@ namespace Nektar
             LocalToGlobalMap1D(const int loclen, 
                                const StdRegions::StdExpansionVector &locexp, 
                                const SpatialDomains::MeshGraph1D &graph1D,
-                               const ConstArray<OneD,LocalRegions::PointExpSharedPtr> &bndCondExp,
-                               const ConstArray<OneD,SpatialDomains::BoundaryConditionType> &bndCondTypes);
+                               const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
+                               const Array<OneD, const SpatialDomains::BoundaryConditionType> &bndCondTypes);
             
             virtual ~LocalToGlobalMap1D();
             
-            inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
+            inline void LocalToCont(const Array<OneD, const NekDouble> &loc, 
                                     Array<OneD, NekDouble> &cont)
             {
                 Vmath::Scatr(m_totLocDofs, &loc[0],&m_locToContMap[0],&cont[0]);
             }                
             
             
-            inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
+            inline void ContToLocal(const Array<OneD, const NekDouble> &cont, 
                                     Array<OneD, NekDouble> &loc)
             {
                 Vmath::Gathr(m_totLocDofs,&cont[0],&m_locToContMap[0], &loc[0]);
             }
             
-            inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
+            inline void Assemble(const Array<OneD, const NekDouble> &loc, 
                                  Array<OneD, NekDouble> &cont)
             {
                 Vmath::Zero(m_totGloDofs,&cont[0],1);                
@@ -106,20 +106,20 @@ namespace Nektar
         protected:
             
         private:
-            virtual void v_LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
+            virtual void v_LocalToCont(const Array<OneD, const NekDouble> &loc, 
                                        Array<OneD, NekDouble> &cont)
             {
                 LocalToCont(loc,cont);
             }                
             
             
-            virtual void v_ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
+            virtual void v_ContToLocal(const Array<OneD, const NekDouble> &cont, 
                                        Array<OneD, NekDouble> &loc)
             {
                 ContToLocal(cont,loc);
             }
             
-            virtual void v_Assemble(const ConstArray<OneD, NekDouble> &loc, 
+            virtual void v_Assemble(const Array<OneD, const NekDouble> &loc, 
                                     Array<OneD, NekDouble> &cont)
             {
                 Assemble(loc,cont);
@@ -153,6 +153,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap1D.h,v $
+/** Revision 1.18  2008/01/25 05:50:46  bnelson
+/** Changed NekVector::GetPtr to NekVector::GetRawPtr and added a new NekVector::GetPtr that returns an Array.  This makes the calls consistent with NekMatrix.
+/**
 /** Revision 1.17  2007/12/06 22:52:30  pvos
 /** 2D Helmholtz solver updates
 /**

@@ -262,6 +262,21 @@ namespace Nektar
         return !(lhs == rhs);
     }
 
+    template<typename T>
+    struct RemoveVectorConst;
+    
+    template<typename DataType, typename Dim, typename Space>
+    struct RemoveVectorConst<NekVector<DataType, Dim, Space> >
+    {
+        typedef NekVector<DataType, Dim, Space> type;
+    };
+    
+    template<typename DataType, typename Dim, typename Space>
+    struct RemoveVectorConst<NekVector<const DataType, Dim, Space> >
+    {
+        typedef NekVector<DataType, Dim, Space> type;
+    };
+        
 //     template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, typename space, unsigned int dim>
 //     NekVector<DataType, dim, space> operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs,
 //                                               const NekVector<DataType, dim, space>& rhs)
@@ -330,6 +345,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.29  2008/03/28 01:42:32  bnelson
+    Updated constant sized vectors so they inherit from NekVector<const DataType> like the variable sized vectors.
+
     Revision 1.28  2008/03/03 02:28:39  bnelson
     Changed OneD, TwoD, and ThreeD to classes instead of enums to support type parameters in NekVector instead of unsigned int for the dimensions.
 

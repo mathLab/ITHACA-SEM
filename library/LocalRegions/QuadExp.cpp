@@ -125,8 +125,8 @@ namespace Nektar
                 LibUtilities::BasisSharedPtr CBasis0;
                 LibUtilities::BasisSharedPtr CBasis1;
      
-                ConstArray<OneD,NekDouble> ojac = Xgfac->GetJac();   
-                ConstArray<TwoD,NekDouble> ogmat = Xgfac->GetGmat();
+                Array<OneD, const NekDouble> ojac = Xgfac->GetJac();   
+                Array<TwoD, const NekDouble> ogmat = Xgfac->GetGmat();
                 Array<OneD,NekDouble> njac(nq);
                 Array<OneD,NekDouble> ngmat(2*coordim*nq);
                 
@@ -173,7 +173,7 @@ namespace Nektar
 
                     // interpolate normals
                     Array<TwoD,NekDouble> newnorm(4,coordim*max(nq0,nq1));    
-                    ConstArray<TwoD,NekDouble> normals = Xgfac->GetNormals();
+                    Array<TwoD, const NekDouble> normals = Xgfac->GetNormals();
                     
                     for(i = 0; i < coordim; ++i)
                     {
@@ -233,11 +233,11 @@ namespace Nektar
             u(\xi_{1i},\xi_{2j}) \f$ and \f$ J[i,j] \f$ is the
             Jacobian evaluated at the quadrature point.
         */
-        NekDouble QuadExp::Integral(const ConstArray<OneD,NekDouble> &inarray)
+        NekDouble QuadExp::Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<OneD,NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             NekDouble ival;
             Array<OneD,NekDouble> tmp(nquad0*nquad1);
             
@@ -279,15 +279,15 @@ namespace Nektar
             \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
             {\bf B_0 F}  \f$
         **/
-        void QuadExp::IProductWRTBase(const ConstArray<OneD,NekDouble> &base0, 
-                                      const ConstArray<OneD,NekDouble> &base1, 
-                                      const ConstArray<OneD,NekDouble> &inarray,
+        void QuadExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
+                                      const Array<OneD, const NekDouble> &base1, 
+                                      const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray, 
                                       const int coll_check)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<OneD,NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,NekDouble> tmp(nquad0*nquad1);
             
             // multiply inarray with Jacobian
@@ -305,13 +305,13 @@ namespace Nektar
         }
 
         void QuadExp::IProductWRTDerivBase(const int dir, 
-                                              const ConstArray<OneD, NekDouble>& inarray, 
+                                              const Array<OneD, const NekDouble>& inarray, 
                                               Array<OneD, NekDouble> & outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1; 
-            ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
 
             Array<OneD, NekDouble> tmp1(nqtot);
             Array<OneD, NekDouble> tmp2(nqtot);
@@ -391,7 +391,7 @@ namespace Nektar
             basis over region
             
         */    
-        void QuadExp::IProductWRTBase(const ConstArray<OneD,NekDouble> &inarray, 
+        void QuadExp::IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
                                       Array<OneD,NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
@@ -411,14 +411,14 @@ namespace Nektar
             defined under StdExpansion.
             
         **/
-        void QuadExp::PhysDeriv(const ConstArray<OneD,NekDouble> & inarray,
+        void QuadExp::PhysDeriv(const Array<OneD, const NekDouble> & inarray,
                                 Array<OneD,NekDouble> &out_d0,
                                 Array<OneD,NekDouble> &out_d1,
                                 Array<OneD,NekDouble> &out_d2)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
             Array<OneD,NekDouble> diff0(nquad0*nquad1);
             Array<OneD,NekDouble> diff1(nquad0*nquad1);
             
@@ -482,7 +482,7 @@ namespace Nektar
             - (this)->_coeffs: updated array of expansion coefficients. 
             
         */    
-        void QuadExp::FwdTrans(const ConstArray<OneD,NekDouble> & inarray, 
+        void QuadExp::FwdTrans(const Array<OneD, const NekDouble> & inarray, 
                                Array<OneD,NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
@@ -585,7 +585,7 @@ namespace Nektar
         
         // get the coordinates "coords" at the local coordinates "Lcoords"
         
-        void QuadExp::GetCoord(const ConstArray<OneD,NekDouble> &Lcoords, 
+        void QuadExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
                                Array<OneD,NekDouble> &coords)
         {
             int  i;
@@ -695,7 +695,7 @@ namespace Nektar
             return tmp->GetStdMatrix(mkey); 
         }
         
-        NekDouble QuadExp::PhysEvaluate(const ConstArray<OneD,NekDouble> &coord)
+        NekDouble QuadExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
             
@@ -763,7 +763,7 @@ namespace Nektar
                     else
                     {
                         NekDouble jac = (m_metricinfo->GetJac())[0];
-                        ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
+                        Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
                         int dir;
 
                         switch(mkey.GetMatrixType())
@@ -821,7 +821,7 @@ namespace Nektar
                         DNekMat &lap11 = *GetStdMatrix(*lap11key.GetStdMatKey());
 
                         NekDouble jac = (m_metricinfo->GetJac())[0];
-                        ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
+                        Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
 
                         int rows = lap00.GetRows();
                         int cols = lap00.GetColumns();
@@ -905,7 +905,7 @@ namespace Nektar
         }
 
 
-        void QuadExp::GetEdgePhysVals(const int edge, const ConstArray<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+        void QuadExp::GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
@@ -934,7 +934,7 @@ namespace Nektar
         }
 
         void QuadExp::AddNormBoundaryInt(const int dir,
-                                         ConstArray<OneD,NekDouble> &inarray,
+                                         Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,NekDouble> &outarray,
                                          bool InArrayIsTrace) 
        {
@@ -942,7 +942,7 @@ namespace Nektar
             int i,e,cnt;
             int order_e,nquad_e;
             SpatialDomains::GeomType Gtype = m_metricinfo->GetGtype();
-            ConstArray<TwoD,NekDouble> normals = m_metricinfo->GetNormals();
+            Array<TwoD, const NekDouble> normals = m_metricinfo->GetNormals();
             
             StdRegions::StdExpMap vmap;
 
@@ -1026,7 +1026,7 @@ namespace Nektar
         // Boundary terms associated with elemental Helmholtz matrix
         // operations from the trace space
         void QuadExp::AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                const ConstArray<OneD,NekDouble> &inarray,
+                                                const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD,NekDouble> &outarray)
         {
 
@@ -1045,7 +1045,7 @@ namespace Nektar
                                                 
 
         void QuadExp::AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                const ConstArray<OneD,NekDouble> &inarray,
+                                                const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD,SegExpSharedPtr> &EdgeExp,
                                                 Array<OneD,NekDouble> &outarray,
                                                 bool UseLocalOrient)
@@ -1056,7 +1056,7 @@ namespace Nektar
 
             int e,cnt;
             int order_e;
-            ConstArray<OneD,NekDouble> tmp;
+            Array<OneD, const NekDouble> tmp;
 
             cnt = 0;
             for(e = 0; e < 4; ++e)
@@ -1073,7 +1073,7 @@ namespace Nektar
 
         // Boundary terms associated with elemental Helmholtz matrix operations
         void QuadExp::AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                                   const ConstArray<OneD,NekDouble> &inarray,
+                                                   const Array<OneD, const NekDouble> &inarray,
                                                    Array<OneD,NekDouble> &outarray)
         {
             int i,e;
@@ -1084,7 +1084,7 @@ namespace Nektar
 
             Array<OneD,NekDouble> inval(max(nquad0,nquad1));
             SpatialDomains::GeomType Gtype = m_metricinfo->GetGtype();
-            ConstArray<TwoD,NekDouble> normals = m_metricinfo->GetNormals();
+            Array<TwoD, const NekDouble> normals = m_metricinfo->GetNormals();
 
             StdRegions::StdExpMap vmap;
 
@@ -1199,9 +1199,9 @@ namespace Nektar
             SpatialDomains::GeomType Gtype = m_metricinfo->GetGtype();
             int coordim = m_geom->GetCoordim();
 
-            ConstArray<TwoD,NekDouble> normals = m_metricinfo->GetNormals();
-            ConstArray<TwoD,NekDouble> gmat    = m_metricinfo->GetGmat();
-            ConstArray<OneD,NekDouble> jac     = m_metricinfo->GetJac();
+            Array<TwoD, const NekDouble> normals = m_metricinfo->GetNormals();
+            Array<TwoD, const NekDouble> gmat    = m_metricinfo->GetGmat();
+            Array<OneD, const NekDouble> jac     = m_metricinfo->GetJac();
 
             MatrixKey    imasskey(StdRegions::eInvMass, DetShapeType(),*this);
             DNekScalMat  &invMass = *m_matrixManager[imasskey];
@@ -1323,7 +1323,7 @@ namespace Nektar
                 EdgeExp->IProductWRTBase(inval,EdgeExp->UpdateCoeffs());
                 
                 // add data to out array
-                ConstArray<OneD,NekDouble> Dbase = m_base[1]->GetDbdata();
+                Array<OneD, const NekDouble> Dbase = m_base[1]->GetDbdata();
                 st = (edge == 0)? 0: nquad0-1;
                 
                 for(i = 0; i < order0; ++i)
@@ -1414,7 +1414,7 @@ namespace Nektar
                 EdgeExp->IProductWRTBase(inval,EdgeExp->UpdateCoeffs());
                 
                 // add data to out array
-                ConstArray<OneD,NekDouble> Dbase = m_base[0]->GetDbdata();
+                Array<OneD, const NekDouble> Dbase = m_base[0]->GetDbdata();
                 st = (edge == 1)? nquad0-1:0;
                 
                 for(i = 0; i < order0; ++i)
@@ -1499,7 +1499,7 @@ namespace Nektar
                     int nquad1 = GetNumPoints(1);
                     Array<OneD,NekDouble> work(max(nquad0,nquad1));
                     SpatialDomains::GeomType Gtype = m_metricinfo->GetGtype();
-                    ConstArray<TwoD,NekDouble> normals = m_metricinfo->GetNormals();
+                    Array<TwoD, const NekDouble> normals = m_metricinfo->GetNormals();
                     int coordim = m_geom->GetCoordim();
                     Array<OneD,SegExpSharedPtr>        EdgeExp(4);
 
@@ -1756,6 +1756,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.31  2008/04/02 22:19:26  pvos
+ *    Update for 2D local to global mapping
+ *
  *    Revision 1.30  2008/03/18 14:12:53  pvos
  *    Update for nodal triangular helmholtz solver
  *

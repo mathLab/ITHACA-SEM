@@ -56,7 +56,7 @@ namespace Blas
     }
 
 #ifdef NEKTAR_USING_BLAS
-    static void Dcopy (const int& n, const Nektar::ConstArray <Nektar::OneD,double> &x, const int& incx,  Nektar::Array<Nektar::OneD,double> &y, const int& incy)
+    static inline void Dcopy (const int& n, const Nektar::Array <Nektar::OneD, const double> &x, const int& incx,  Nektar::Array<Nektar::OneD,double> &y, const int& incy)
     {
         ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
         ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
@@ -65,7 +65,7 @@ namespace Blas
     }
 
     /// \brief  BLAS level 1: y = alpha \a x plus \a y
-    static void Daxpy (const int& n, const double& alpha, const Nektar::ConstArray <Nektar::OneD,double> &x, const int& incx,  Nektar::Array<Nektar::OneD,double> &y, const int& incy)
+    static inline void Daxpy (const int& n, const double& alpha, const Nektar::Array <Nektar::OneD,const double> &x, const int& incx,  Nektar::Array<Nektar::OneD,double> &y, const int& incy)
     {
         ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
         ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
@@ -74,8 +74,8 @@ namespace Blas
     }
 
     /// \brief BLAS level 1: output =   \f$ x^T  y \f$
-    static double Ddot (const int& n, const Nektar::ConstArray <Nektar::OneD,double> &x, const int& incx,
-              const Nektar::ConstArray <Nektar::OneD,double> &y, const int& incy)
+    static inline double Ddot (const int& n, const Nektar::Array <Nektar::OneD,const double> &x, const int& incx,
+              const Nektar::Array <Nektar::OneD,const double> &y, const int& incy)
     {
         return F77NAME(ddot)(n,&x[0],incx,&y[0],incy);
     }
@@ -85,6 +85,9 @@ namespace Blas
 
 /***
 $Log: BlasArray.hpp,v $
+Revision 1.2  2008/03/12 15:22:45  pvos
+Clean up of the code
+
 Revision 1.1  2008/02/28 09:57:08  sherwin
 Added array version of some routines
 

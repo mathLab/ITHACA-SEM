@@ -81,7 +81,7 @@ namespace Nektar
                 return m_xmap[i]->UpdatePhys();
             }
 
-            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord);
+            NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
         protected:
             int m_fid;
@@ -125,7 +125,7 @@ namespace Nektar
                 return UpdatePhys(i);
             }
 
-            virtual NekDouble v_GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
             {
                 return GetCoord(i,Lcoord);
             }
@@ -140,6 +140,9 @@ namespace Nektar
 
 //
 // $Log: TriFaceComponent.h,v $
+// Revision 1.7  2008/04/02 22:19:04  pvos
+// Update for 2D local to global mapping
+//
 // Revision 1.6  2008/02/03 05:05:16  jfrazier
 // Initial checkin of 3D components.
 //

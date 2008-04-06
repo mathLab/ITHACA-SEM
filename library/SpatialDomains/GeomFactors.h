@@ -69,13 +69,13 @@ namespace Nektar
             two or three dimensional coordinate description
             **/
             GeomFactors(const GeomType gtype, const int coordim,
-                const ConstArray<OneD, StdRegions::StdExpansion1DSharedPtr> &Coords);
+                const Array<OneD, const StdRegions::StdExpansion1DSharedPtr> &Coords);
 
             /**  \brief Two dimensional geometric factors based on two
             or three dimensional coordinate description
             **/
             GeomFactors(const GeomType gtype, const int coordim,
-                        const ConstArray<OneD,StdRegions::StdExpansion2DSharedPtr> &Coords);
+                        const Array<OneD, const StdRegions::StdExpansion2DSharedPtr> &Coords);
 
 #ifdef HIGH_D_FUNCTIONS
             /**  \brief Three dimensional geometric factors and Jacobian
@@ -91,28 +91,28 @@ namespace Nektar
                 return m_gtype;
             }
 
-            inline const ConstArray<TwoD,NekDouble> &GetGmat() const
+            inline const Array<TwoD, const NekDouble> &GetGmat() const
             {
                 return m_gmat;
             }
 
-            inline const ConstArray<OneD,NekDouble> &GetJac() const 
+            inline const Array<OneD, const NekDouble> &GetJac() const 
             {
                 return m_jac;
             }
 
-            inline const ConstArray<TwoD,NekDouble> &GetNormals() const
+            inline const Array<TwoD, const NekDouble> &GetNormals() const
             {
                 return m_normals;
             }
 
             
-            inline void  ResetNormals(const ConstArray<TwoD,NekDouble> &newnorm)
+            inline void  ResetNormals(const Array<TwoD, const NekDouble> &newnorm)
             {
                 m_normals = Array<TwoD,NekDouble>(newnorm.GetRows(),newnorm.GetColumns(),newnorm.data());
             }
 
-            inline void ResetGmat(const ConstArray<OneD,NekDouble> &ndata, 
+            inline void ResetGmat(const Array<OneD, const NekDouble> &ndata, 
                                   const int nq, const int expdim, 
                                   const int coordim)
             {
@@ -120,12 +120,12 @@ namespace Nektar
             }
 
 
-            inline void ResetGmat(const ConstArray<TwoD,NekDouble> &ndata)
+            inline void ResetGmat(const Array<TwoD, const NekDouble> &ndata)
             {
                 m_gmat = Array<TwoD,NekDouble>(ndata.GetRows(),ndata.GetColumns(),ndata.data());
             }
 
-            inline void ResetJac(int nq, const ConstArray<OneD,NekDouble> &ndata)
+            inline void ResetJac(int nq, const Array<OneD, const NekDouble> &ndata)
             {
                 m_jac = Array<OneD, NekDouble>(nq, ndata.data());
             }
@@ -146,6 +146,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.15  2007/12/17 20:27:23  sherwin
+// Added normals to GeomFactors
+//
 // Revision 1.14  2007/12/03 21:30:43  sherwin
 // Added normal details
 //

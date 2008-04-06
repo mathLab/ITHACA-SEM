@@ -55,7 +55,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestUninitializedDataConstructionWithDefaultDataHolder)
         {
             Array<OneD, NekDouble> result = Policy::Initialize(10, 10, DataHolderType());
-            BOOST_CHECK_EQUAL(result.num_elements(), 190);
+            BOOST_CHECK_EQUAL(result.num_elements(), 190u);
 
             BOOST_CHECK_THROW(Policy::Initialize(10, 9, DataHolderType()), ErrorUtil::NekError);
             BOOST_CHECK_THROW(Policy::Initialize(9, 10, DataHolderType()), ErrorUtil::NekError);
@@ -65,31 +65,31 @@ namespace Nektar
         {
             DataHolderType d1(1,0);
             Array<OneD, NekDouble> result1 = Policy::Initialize(10, 10, d1);
-            BOOST_CHECK_EQUAL(result1.num_elements(), 20);
+            BOOST_CHECK_EQUAL(result1.num_elements(), 20u);
 
             DataHolderType d2(0,1);
             Array<OneD, NekDouble> result2 = Policy::Initialize(10, 10, d2);
-            BOOST_CHECK_EQUAL(result2.num_elements(), 20);
+            BOOST_CHECK_EQUAL(result2.num_elements(), 20u);
 
             DataHolderType d3(1,1);
             Array<OneD, NekDouble> result3 = Policy::Initialize(10, 10, d3);
-            BOOST_CHECK_EQUAL(result3.num_elements(), 30);
+            BOOST_CHECK_EQUAL(result3.num_elements(), 30u);
 
             DataHolderType d4(3,1);
             Array<OneD, NekDouble> result4 = Policy::Initialize(10, 10, d4);
-            BOOST_CHECK_EQUAL(result4.num_elements(), 50);
+            BOOST_CHECK_EQUAL(result4.num_elements(), 50u);
 
             DataHolderType d5(5,1);
             Array<OneD, NekDouble> result5 = Policy::Initialize(10, 10, d5);
-            BOOST_CHECK_EQUAL(result5.num_elements(), 70);
+            BOOST_CHECK_EQUAL(result5.num_elements(), 70u);
 
             DataHolderType d6(5,6);
             Array<OneD, NekDouble> result6 = Policy::Initialize(10, 10, d6);
-            BOOST_CHECK_EQUAL(result6.num_elements(), 120);
+            BOOST_CHECK_EQUAL(result6.num_elements(), 120u);
 
             DataHolderType d7(8,6);
             Array<OneD, NekDouble> result7 = Policy::Initialize(10, 10, d7);
-            BOOST_CHECK_EQUAL(result7.num_elements(), 150);
+            BOOST_CHECK_EQUAL(result7.num_elements(), 150u);
         }
 
         BOOST_AUTO_TEST_CASE(TestSingleValuePopulationInitialize)
@@ -216,9 +216,9 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestCalculateStorageSizeAndCalculateNumberOfRows)
         {
             DataHolderType policyData(2, 1);
-            BOOST_CHECK_EQUAL(16, Policy::GetRequiredStorageSize(4, 4, policyData));
-            BOOST_CHECK_EQUAL(4, Policy::CalculateNumberOfRows(4, policyData));
-            BOOST_CHECK_EQUAL(4, Policy::CalculateNumberOfRows(3, policyData));
+            BOOST_CHECK_EQUAL(16u, Policy::GetRequiredStorageSize(4, 4, policyData));
+            BOOST_CHECK_EQUAL(4u, Policy::CalculateNumberOfRows(4, policyData));
+            BOOST_CHECK_EQUAL(4u, Policy::CalculateNumberOfRows(3, policyData));
         }
 
         BOOST_AUTO_TEST_CASE(TestDiagonalOnlyCalculateIndex)

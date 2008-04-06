@@ -132,8 +132,8 @@ namespace Nektar
                 int Cnq1 = CBasis1->GetNumPoints();
 		int Cnq2 = CBasis2->GetNumPoints();
 
-                ConstArray<OneD,NekDouble> ojac = Xgfac->GetJac();
-                ConstArray<TwoD,NekDouble> ogmat = Xgfac->GetGmat();
+                Array<OneD, const NekDouble> ojac = Xgfac->GetJac();
+                Array<TwoD, const NekDouble> ogmat = Xgfac->GetGmat();
                 Array<OneD,NekDouble> njac(nq);
                 Array<OneD,NekDouble> ndata(3*coordim*nq);//TODO: check ndata
 
@@ -178,7 +178,7 @@ namespace Nektar
 
                     // interpolate normals
                     Array<TwoD,NekDouble> newnorm = Array<TwoD,NekDouble>(4,coordim*max(nq0,nq1));//TODO: check this computation
-                    ConstArray<TwoD,NekDouble> normals = Xgfac->GetNormals();
+                    Array<TwoD, const NekDouble> normals = Xgfac->GetNormals();
 
                     for(i = 0; i < coordim; ++i)
                     {
@@ -218,12 +218,12 @@ namespace Nektar
         // Integration Methods
         //----------------------------
 
-	NekDouble PrismExp::Integral(const ConstArray<OneD,NekDouble> &inarray)
+	NekDouble PrismExp::Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
 	    int    nquad2 = m_base[2]->GetNumPoints();
-            ConstArray<OneD,NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             NekDouble retrunVal;
             Array<OneD,NekDouble> tmp   = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
 
@@ -243,16 +243,16 @@ namespace Nektar
             return retrunVal; 
         }
 
-	void PrismExp::IProductWRTBase(const ConstArray<OneD,NekDouble> &base0, 
-                                       const ConstArray<OneD,NekDouble> &base1, 
-				       const ConstArray<OneD,NekDouble> &base2, 
-                                       const ConstArray<OneD,NekDouble> &inarray,
+	void PrismExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
+                                       const Array<OneD, const NekDouble> &base1, 
+				       const Array<OneD, const NekDouble> &base2, 
+                                       const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,NekDouble> &outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
 	    int    nquad2 = m_base[2]->GetNumPoints();
-            ConstArray<OneD,NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
 
             // multiply inarray with Jacobian
@@ -268,14 +268,14 @@ namespace Nektar
             StdPrismExp::IProductWRTBase(base0,base1,base2,tmp,outarray);
         }
 
-	 void PrismExp::IProductWRTBase(const ConstArray<OneD,NekDouble> &inarray,
+	 void PrismExp::IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
         }
 
 
-	void PrismExp::FwdTrans(const ConstArray<OneD,NekDouble> & inarray,Array<OneD,NekDouble> &outarray)
+	void PrismExp::FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
             {
@@ -305,7 +305,7 @@ namespace Nektar
         /** 
             \brief Calculate the deritive of the physical points 
         **/
-        void PrismExp::PhysDeriv(const ConstArray<OneD,NekDouble> & inarray,
+        void PrismExp::PhysDeriv(const Array<OneD, const NekDouble> & inarray,
                                  Array<OneD,NekDouble> &out_d0,
                                  Array<OneD,NekDouble> &out_d1,
                                  Array<OneD,NekDouble> &out_d2)
@@ -313,7 +313,7 @@ namespace Nektar
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();
-            ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
             Array<OneD,NekDouble> Diff0 = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
             Array<OneD,NekDouble> Diff1 = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
             Array<OneD,NekDouble> Diff2 = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
@@ -461,7 +461,7 @@ namespace Nektar
         }  
 
 	// get the coordinates "coords" at the local coordinates "Lcoords"
-        void PrismExp::GetCoord(const ConstArray<OneD,NekDouble> &Lcoords, 
+        void PrismExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
                               Array<OneD,NekDouble> &coords)
         {
             int  i;
@@ -575,7 +575,7 @@ namespace Nektar
         }
 	
 
-	NekDouble PrismExp::PhysEvaluate(const ConstArray<OneD,NekDouble> &coord)
+	NekDouble PrismExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
 
@@ -665,7 +665,7 @@ namespace Nektar
                         DNekMatSharedPtr lap11 = GetStdMatrix(*lap11key.GetStdMatKey());
 
                         NekDouble jac = (m_metricinfo->GetJac())[0];
-                        ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
+                        Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
 
                         int rows = lap00->GetRows();
                         int cols = lap00->GetColumns();
@@ -828,6 +828,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.cpp,v $
+ *    Revision 1.5  2008/03/17 10:35:03  pvos
+ *    Clean up of the code
+ *
  *    Revision 1.4  2008/02/16 05:50:40  ehan
  *    Added PhysDeriv and virtual functions.
  *

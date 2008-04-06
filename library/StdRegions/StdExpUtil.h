@@ -53,11 +53,11 @@ namespace Nektar
         NekVector<NekDouble> GetE(int rows, int n);
         NekMatrix<NekDouble> Invert(const NekMatrix<NekDouble> & matA);
         NekMatrix<NekDouble> GetTranspose(const NekMatrix<NekDouble> & matA);
-        int GetSize(const ConstArray<OneD, NekDouble> & x);
+        int GetSize(const Array<OneD, const NekDouble> & x);
         int GetSize(const NekVector<NekDouble> & x);
         int GetDegree(int nBasisFunctions);
         NekDouble MakeRound(NekDouble);
-        NekVector<NekDouble> ToVector( const ConstArray<OneD, NekDouble> & x );
+        NekVector<NekDouble> ToVector( const Array<OneD, const NekDouble> & x );
         Array<OneD, NekDouble> ToArray( const NekVector<NekDouble> & x );
         NekVector<NekDouble> Hadamard( const NekVector<NekDouble> & x, const NekVector<NekDouble> & y );
         NekVector<NekDouble> VectorPower( const NekVector<NekDouble> & x, NekDouble p );

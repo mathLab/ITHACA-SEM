@@ -128,8 +128,8 @@ namespace Nektar
                 int Cnq0 = CBasis0->GetNumPoints();
                 int Cnq1 = CBasis1->GetNumPoints();
      
-                ConstArray<OneD,NekDouble> ojac = Xgfac->GetJac();   
-                ConstArray<TwoD,NekDouble> ogmat = Xgfac->GetGmat();
+                Array<OneD, const NekDouble> ojac = Xgfac->GetJac();   
+                Array<TwoD, const NekDouble> ogmat = Xgfac->GetGmat();
                 Array<OneD,NekDouble> njac(nq);
                 Array<OneD,NekDouble> ngmat(2*coordim*nq);
                 
@@ -171,7 +171,7 @@ namespace Nektar
                     
                     // interpolate normals
                     Array<TwoD,NekDouble> newnorm = Array<TwoD,NekDouble>(4,coordim*max(nq0,nq1));    
-                    ConstArray<TwoD,NekDouble> normals = Xgfac->GetNormals();
+                    Array<TwoD, const NekDouble> normals = Xgfac->GetNormals();
                     
                     for(i = 0; i < coordim; ++i)
                     {
@@ -230,11 +230,11 @@ namespace Nektar
         */
         
         
-        NekDouble NodalTriExp::Integral(const ConstArray<OneD, NekDouble> &inarray)
+        NekDouble NodalTriExp::Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<OneD,NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             NekDouble ival;
             Array<OneD,NekDouble> tmp(nquad0*nquad1);
             
@@ -254,14 +254,14 @@ namespace Nektar
         }
         
         
-        void NodalTriExp::IProductWRTBase(const ConstArray<OneD, NekDouble> &base0, 
-                                          const ConstArray<OneD, NekDouble> &base1, 
-                                          const ConstArray<OneD, NekDouble> &inarray, 
+        void NodalTriExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
+                                          const Array<OneD, const NekDouble> &base1, 
+                                          const Array<OneD, const NekDouble> &inarray, 
                                           Array<OneD, NekDouble> &outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<OneD,NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,NekDouble> tmp(nquad0*nquad1);
             
             // multiply inarray with Jacobian
@@ -276,7 +276,7 @@ namespace Nektar
             StdNodalTriExp::IProductWRTBase(base0,base1,tmp,outarray);
         }
         
-        void NodalTriExp::IProductWRTBase(const ConstArray<OneD,NekDouble> &inarray, 
+        void NodalTriExp::IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
                                           Array<OneD,NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
@@ -284,14 +284,14 @@ namespace Nektar
         }
 
         void NodalTriExp::IProductWRTDerivBase(const int dir, 
-                                              const ConstArray<OneD, NekDouble>& inarray, 
+                                              const Array<OneD, const NekDouble>& inarray, 
                                               Array<OneD, NekDouble> & outarray)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1; 
-            ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
             
             Array<OneD, NekDouble> tmp0(nqtot);
             Array<OneD, NekDouble> tmp1(nqtot);
@@ -301,8 +301,8 @@ namespace Nektar
             Array<OneD, NekDouble> gfac0(nqtot);
             Array<OneD, NekDouble> gfac1(nqtot);
             
-            ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
             
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -377,14 +377,14 @@ namespace Nektar
         /** 
             \brief Calculate the deritive of the physical points 
         **/
-        void NodalTriExp::PhysDeriv(const ConstArray<OneD,NekDouble> & inarray,
+        void NodalTriExp::PhysDeriv(const Array<OneD, const NekDouble> & inarray,
                                     Array<OneD,NekDouble> &out_d0,
                                     Array<OneD,NekDouble> &out_d1,
                                     Array<OneD,NekDouble> &out_d2)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
             Array<OneD,NekDouble> diff0(nquad0*nquad1);
             Array<OneD,NekDouble> diff1(nquad0*nquad1);
             
@@ -448,7 +448,7 @@ namespace Nektar
             - (this)->_coeffs: updated array of expansion coefficients. 
             
         */ 
-        void NodalTriExp::FwdTrans(const ConstArray<OneD,NekDouble> & inarray, 
+        void NodalTriExp::FwdTrans(const Array<OneD, const NekDouble> & inarray, 
                                    Array<OneD,NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray); 
@@ -548,7 +548,7 @@ namespace Nektar
         }
         
         // get the coordinates "coords" at the local coordinates "Lcoords"
-        void NodalTriExp::GetCoord(const ConstArray<OneD,NekDouble> &Lcoords, 
+        void NodalTriExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
                                    Array<OneD,NekDouble> &coords)
         {
             int  i;
@@ -661,7 +661,7 @@ namespace Nektar
             return tmp->GetStdMatrix(mkey);  
         }
 
-        NekDouble NodalTriExp::PhysEvaluate(const ConstArray<OneD,NekDouble> &coord)
+        NekDouble NodalTriExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
             
@@ -738,7 +738,7 @@ namespace Nektar
                         DNekMatSharedPtr& lap11 = GetStdMatrix(*lap11key.GetStdMatKey());
                         
                         NekDouble jac = (m_metricinfo->GetJac())[0];
-                        ConstArray<TwoD,NekDouble> gmat = m_metricinfo->GetGmat();
+                        Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
                         
                         int rows = lap00->GetRows();
                         int cols = lap00->GetColumns();
@@ -899,6 +899,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.18  2008/03/18 14:12:53  pvos
+ *    Update for nodal triangular helmholtz solver
+ *
  *    Revision 1.17  2007/12/17 13:04:30  sherwin
  *    Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
  *

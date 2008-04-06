@@ -122,8 +122,8 @@ namespace Nektar
             NekDouble scal;
             Array<OneD, NekDouble> modeSharedArray;
             NekDouble *mode;
-            ConstArray<OneD, NekDouble> z;
-            ConstArray<OneD, NekDouble> w;
+            Array<OneD, const NekDouble> z;
+            Array<OneD, const NekDouble> w;
             const NekDouble *D;
 
             boost::shared_ptr< Points<NekDouble> > pointsptr = PointsManager()[GetPointsKey()];
@@ -369,7 +369,7 @@ namespace Nektar
                 {
                     mode = m_bdata.data();
                     boost::shared_ptr< Points<NekDouble> > pointsptr = PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)];
-                    const ConstArray<OneD, NekDouble>& zp(pointsptr->GetZ());
+                    const Array<OneD, const NekDouble>& zp(pointsptr->GetZ());
 
                     for (p=0; p<numModes; ++p,mode += numPoints)
                     {
@@ -517,6 +517,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.26  2008/03/18 14:11:46  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.25  2007/12/28 23:28:37  ehan
 * Reimplemented Ortho-B
 *

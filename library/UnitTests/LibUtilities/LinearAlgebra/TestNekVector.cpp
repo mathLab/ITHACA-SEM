@@ -78,7 +78,7 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(ItemsThatShouldNotCompile)
         {
-            ConstArray<OneD, NekDouble> test(10, 0.0);
+            Array<OneD, const NekDouble> test(10, 0.0);
             //NekVector<NekDouble> wrapper(test, eWrapper);
         }
         

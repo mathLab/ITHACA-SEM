@@ -72,19 +72,19 @@ namespace Nektar
             ///////////////////////////
 
             void NodalToModal();
-            void NodalToModal(const ConstArray<OneD, NekDouble>& inarray, 
+            void NodalToModal(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray);
 
             void NodalToModalTranspose();
-            void NodalToModalTranspose(const ConstArray<OneD, NekDouble>& inarray, 
+            void NodalToModalTranspose(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray);
 
             void ModalToNodal();
-            void ModalToNodal(const ConstArray<OneD, NekDouble>& inarray, 
+            void ModalToNodal(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray);
 
-            void GetNodalPoints(ConstArray<OneD, NekDouble> &x, 
-                                ConstArray<OneD, NekDouble> &y)
+            void GetNodalPoints(Array<OneD, const NekDouble> &x, 
+                                Array<OneD, const NekDouble> &y)
             {
                 LibUtilities::PointsManager()[*m_nodalPointsKey]->GetPoints(x,y);
             }
@@ -93,11 +93,11 @@ namespace Nektar
             /// Integration Methods
             //////////////////////////////
 
-            void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray);
 
             void IProductWRTDerivBase(const int dir, 
-                                      const ConstArray<OneD, NekDouble>& inarray, 
+                                      const Array<OneD, const NekDouble>& inarray, 
                                       Array<OneD, NekDouble> & outarray);
             
             /** \brief Fill outarray with nodal mode \a mode of expansion
@@ -121,9 +121,9 @@ namespace Nektar
             // Evaluations Methods
             //-----------------------------
             
-            void BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+            void BwdTrans(const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
-            void FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+            void FwdTrans(const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
             void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
@@ -152,9 +152,9 @@ namespace Nektar
              *  This function uses the StdTriExp routine and then 
              *  calls ModalToNodal to transform to Nodal basis
              */
-            void IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
-                                 const ConstArray<OneD, NekDouble>& base1,
-                                 const ConstArray<OneD, NekDouble>& inarray, 
+            void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                 const Array<OneD, const NekDouble>& base1,
+                                 const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray);
                         
             DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
@@ -192,19 +192,19 @@ namespace Nektar
             /// Integration Methods
             //////////////////////////////
             
-            virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray)
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray)
             {
                 return Integral(inarray);
             }
             
-            virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTBase(inarray, outarray);
             }
 
             virtual void v_IProductWRTDerivBase (const int dir, 
-                                                 const ConstArray<OneD,NekDouble> &inarray, 
+                                                 const Array<OneD, const NekDouble> &inarray, 
                                                  Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTDerivBase(dir,inarray,outarray);
@@ -217,7 +217,7 @@ namespace Nektar
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
-            virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+            virtual void v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &out_d0,
                                      Array<OneD, NekDouble> &out_d1,
                                      Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
@@ -229,20 +229,20 @@ namespace Nektar
             // Evaluations Methods
             //-----------------------------
             
-            virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray,
                                     Array<OneD, NekDouble> &outarray)
             {
                 BwdTrans(inarray,outarray);
             }
             
             /** \brief Virtual call to StdTriExp::FwdTrans */
-            virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                                     Array<OneD, NekDouble> &outarray)
             {
                 FwdTrans(inarray,outarray);
             }
             
-            virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
             {
                 return StdTriExp::PhysEvaluate(coords);
             }
@@ -312,6 +312,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.18  2008/04/02 22:18:10  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.17  2008/03/18 14:15:45  pvos
 * Update for nodal triangular helmholtz solver
 *

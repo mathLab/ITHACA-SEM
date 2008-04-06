@@ -61,7 +61,7 @@ namespace Nektar
             using BaseType::Initialize;
             static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
                                                                                    unsigned int curRow, unsigned int curColumn,
-                                                                                   const ConstArray<OneD, DataType>& data,
+                                                                                   const Array<OneD, const DataType>& data,
                                                                                    const char tranpose,
                                                                                    const PolicySpecificDataHolderType&)
             {

@@ -88,7 +88,7 @@ namespace Nektar
                 return v_UpdatePhys(i);
             }
 
-            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            NekDouble GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
             {
                 return v_GetCoord(i,Lcoord);
             }
@@ -104,7 +104,7 @@ namespace Nektar
                 v_FillGeom();
             }            
              
-            void GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+            void GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
             {
                 v_GetLocCoords(coords,Lcoords);
             }
@@ -186,7 +186,7 @@ namespace Nektar
                 return NullNekDouble1DArray;
             }
 
-            virtual NekDouble v_GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
             {
                 NEKERROR(ErrorUtil::efatal,
                          "This function is only valid for shape type geometries");
@@ -205,7 +205,7 @@ namespace Nektar
                          "This function is only valid for shape type geometries");
             }            
              
-            virtual void v_GetLocCoords(const ConstArray<OneD,NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+            virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
             {
                 NEKERROR(ErrorUtil::efatal,
                          "This function is only valid for shape type geometries");
@@ -259,6 +259,9 @@ namespace Nektar
 
 //
 // $Log: Geometry2D.h,v $
+// Revision 1.3  2008/04/02 22:19:03  pvos
+// Update for 2D local to global mapping
+//
 // Revision 1.2  2007/06/06 15:15:21  pvos
 // Some minor updates for 2D routines
 //

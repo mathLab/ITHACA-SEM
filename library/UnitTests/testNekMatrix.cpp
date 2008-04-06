@@ -122,15 +122,15 @@ namespace Nektar
                 boost::shared_ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double>(3,4));
                 boost::shared_ptr<Nektar::NekMatrix<double> > b(new Nektar::NekMatrix<double>(5,6));
                 
-                BOOST_CHECK_EQUAL(a->GetRows(), 3);
-                BOOST_CHECK_EQUAL(a->GetColumns(), 4);
-                BOOST_CHECK_EQUAL(a->GetSize()[0], 3);
-                BOOST_CHECK_EQUAL(a->GetSize()[1], 4);
+                BOOST_CHECK_EQUAL(a->GetRows(), 3u);
+                BOOST_CHECK_EQUAL(a->GetColumns(), 4u);
+                BOOST_CHECK_EQUAL(a->GetSize()[0], 3u);
+                BOOST_CHECK_EQUAL(a->GetSize()[1], 4u);
                 
-                BOOST_CHECK_EQUAL(b->GetRows(), 5);
-                BOOST_CHECK_EQUAL(b->GetColumns(), 6);
-                BOOST_CHECK_EQUAL(b->GetSize()[0], 5);
-                BOOST_CHECK_EQUAL(b->GetSize()[1], 6);
+                BOOST_CHECK_EQUAL(b->GetRows(), 5u);
+                BOOST_CHECK_EQUAL(b->GetColumns(), 6u);
+                BOOST_CHECK_EQUAL(b->GetSize()[0], 5u);
+                BOOST_CHECK_EQUAL(b->GetSize()[1], 6u);
                 
                 BOOST_CHECK_EQUAL(a->GetStorageType(), eFULL);
                 BOOST_CHECK_EQUAL(b->GetStorageType(), eFULL);
@@ -751,6 +751,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.30  2007/10/03 03:01:01  bnelson
+    *** empty log message ***
+
     Revision 1.29  2007/09/12 03:59:41  bnelson
     *** empty log message ***
 

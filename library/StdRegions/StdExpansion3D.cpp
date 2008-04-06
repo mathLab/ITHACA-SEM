@@ -69,7 +69,7 @@ namespace Nektar
     
     namespace {    
         // Physical tenser terivative based on Spen's book page 151.
-        void EasyDerivatives(const ConstArray<OneD, NekDouble> &inarray, 
+        void EasyDerivatives(const Array<OneD, const NekDouble> &inarray, 
                          Array<OneD, NekDouble> &outarray_dx, 
                          Array<OneD, NekDouble> &outarray_dy, 
                          Array<OneD, NekDouble> &outarray_dz, 
@@ -142,7 +142,7 @@ namespace Nektar
         
                    
         // This is not working
-        void AlternativeMethodForComputingTheDerivatives(const ConstArray<OneD, NekDouble> &inarray, 
+        void AlternativeMethodForComputingTheDerivatives(const Array<OneD, const NekDouble> &inarray, 
                          Array<OneD, NekDouble> &outarray_dx, 
                          Array<OneD, NekDouble> &outarray_dy, 
                          Array<OneD, NekDouble> &outarray_dz, 
@@ -195,7 +195,7 @@ namespace Nektar
 
    
    
-    void StdExpansion3D::PhysTensorDeriv(const ConstArray<OneD, NekDouble> &inarray, 
+    void StdExpansion3D::PhysTensorDeriv(const Array<OneD, const NekDouble> &inarray, 
                          Array<OneD, NekDouble> &outarray_dx, 
                          Array<OneD, NekDouble> &outarray_dy, 
                          Array<OneD, NekDouble> &outarray_dz)
@@ -215,7 +215,7 @@ namespace Nektar
     }
     
     
-    NekDouble StdExpansion3D::PhysEvaluate3D(const ConstArray<OneD, NekDouble> &coords)
+    NekDouble StdExpansion3D::PhysEvaluate3D(const Array<OneD, const NekDouble> &coords)
     {
         NekDouble  value;
 
@@ -272,6 +272,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.14  2007/11/08 14:27:07  ehan
+ * Fixed PhysTensorDerivative3D matrix and improved L1 error up to 1e-15.
+ *
  * Revision 1.13  2007/10/29 20:30:44  ehan
  * Fixed floating point approximation up to 1-e15 for PhysEvaluate.
  *

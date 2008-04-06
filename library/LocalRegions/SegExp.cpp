@@ -118,8 +118,8 @@ namespace Nektar
                 int coordim = m_geom->GetCoordim();
                 int  nq = m_base[0]->GetNumPoints();
                 Array<OneD,NekDouble> ndata(coordim*nq); 
-                ConstArray<OneD,NekDouble> odata = Xgfac->GetJac();
-                ConstArray<TwoD,NekDouble> gmat  = Xgfac->GetGmat();;
+                Array<OneD, const NekDouble> odata = Xgfac->GetJac();
+                Array<TwoD, const NekDouble> gmat  = Xgfac->GetGmat();;
 
                 // assume all directiosn of geombasis are same
                 LibUtilities::BasisSharedPtr CBasis0 = m_geom->GetBasis(0,0); 
@@ -185,11 +185,11 @@ namespace Nektar
         = u(\xi_{1i}) \f$
         */
 
-        NekDouble SegExp::Integral(const ConstArray<OneD,NekDouble>&  inarray)
+        NekDouble SegExp::Integral(const Array<OneD, const NekDouble>&  inarray)
         {
 
             int    nquad0 = m_base[0]->GetNumPoints();
-            ConstArray<OneD,NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             NekDouble  ival;
             Array<OneD,NekDouble> tmp(nquad0);
 
@@ -239,13 +239,13 @@ namespace Nektar
         **/
 
 
-        void SegExp::IProductWRTBase(const ConstArray<OneD,NekDouble>& base, 
-                                     const ConstArray<OneD,NekDouble>& inarray,
+        void SegExp::IProductWRTBase(const Array<OneD, const NekDouble>& base, 
+                                     const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD,NekDouble> &outarray, 
                                      const int coll_check)
         {
             int        nquad0 = m_base[0]->GetNumPoints();
-            ConstArray<OneD,NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,NekDouble> tmp(nquad0);
 
 
@@ -279,7 +279,7 @@ namespace Nektar
         */
 
 
-        void SegExp::IProductWRTBase(const ConstArray<OneD,NekDouble>&  inarray, 
+        void SegExp::IProductWRTBase(const Array<OneD, const NekDouble>&  inarray, 
             Array<OneD,NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
@@ -312,13 +312,13 @@ namespace Nektar
         */
 
 
-        void SegExp::PhysDeriv(const ConstArray<OneD,NekDouble>& inarray,
+        void SegExp::PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                                Array<OneD,NekDouble> &out_d0,
                                Array<OneD,NekDouble> &out_d1,
                                Array<OneD,NekDouble> &out_d2)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
-            ConstArray<TwoD,NekDouble>  gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
             Array<OneD,NekDouble> diff(nquad0);
 
             StdExpansion1D::PhysTensorDeriv(inarray,diff);
@@ -393,7 +393,7 @@ namespace Nektar
 
 
         // need to sort out family of matrices 
-        void SegExp::FwdTrans(const ConstArray<OneD,NekDouble>& inarray, 
+        void SegExp::FwdTrans(const Array<OneD, const NekDouble>& inarray, 
                               Array<OneD,NekDouble> &outarray)
         {
             if(m_base[0]->Collocation())
@@ -482,7 +482,7 @@ namespace Nektar
         }
 
 
-        void SegExp::GetCoord(const ConstArray<OneD,NekDouble>& Lcoords, 
+        void SegExp::GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                               Array<OneD,NekDouble> &coords)
         {
             int  i;
@@ -594,7 +594,7 @@ namespace Nektar
             return tmp->GetStdMatrix(mkey); 
         }
 
-        NekDouble SegExp::PhysEvaluate(const ConstArray<OneD,NekDouble>& coord)
+        NekDouble SegExp::PhysEvaluate(const Array<OneD, const NekDouble>& coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(1);
 
@@ -778,7 +778,7 @@ namespace Nektar
                     int nquad  = GetNumPoints(0);
                     int i,j,k;
                     Array<OneD,NekDouble> b(nbndry);
-                    const ConstArray<OneD,NekDouble> &Basis = m_base[0]->GetBdata();
+                    const Array<OneD, const NekDouble> &Basis = m_base[0]->GetBdata();
                     NekDouble lambdaval = mkey.GetConstant(0);
                     NekDouble tau       = mkey.GetConstant(1);
 
@@ -887,14 +887,14 @@ namespace Nektar
         }
 
         void SegExp::AddNormBoundaryInt(const int dir, 
-                                        ConstArray<OneD,NekDouble> &inarray,
+                                        Array<OneD, const NekDouble> &inarray,
                                         Array<OneD,NekDouble> &outarray) 
        {
 
             int k;
             int nbndry = NumBndryCoeffs();
             int nquad  = GetNumPoints(0);
-            const ConstArray<OneD,NekDouble> &Basis  = m_base[0]->GetBdata();
+            const Array<OneD, const NekDouble> &Basis  = m_base[0]->GetBdata();
             StdRegions::StdExpMap vmap;
 
             MapTo(StdRegions::eForwards,vmap);
@@ -909,7 +909,7 @@ namespace Nektar
         }
 
         void SegExp::AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                    const ConstArray<OneD,NekDouble> &inarray,
+                                    const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD,NekDouble> &outarray,
                                     bool MatrixTerms)
         {
@@ -921,12 +921,12 @@ namespace Nektar
             
             ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
 
-            const ConstArray<OneD,NekDouble> &Dbasis = m_base[0]->GetDbdata();
-            const ConstArray<OneD,NekDouble> &Basis  = m_base[0]->GetBdata();
+            const Array<OneD, const NekDouble> &Dbasis = m_base[0]->GetDbdata();
+            const Array<OneD, const NekDouble> &Basis  = m_base[0]->GetBdata();
             
             MatrixKey    masskey(StdRegions::eInvMass, DetShapeType(),*this);
             DNekScalMat  &invMass = *m_matrixManager[masskey];
-            ConstArray<TwoD,NekDouble>  gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
             NekDouble rx0,rx1;
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
@@ -1114,6 +1114,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.38  2008/04/02 22:19:26  pvos
+// Update for 2D local to global mapping
+//
 // Revision 1.37  2008/03/18 14:12:53  pvos
 // Update for nodal triangular helmholtz solver
 //

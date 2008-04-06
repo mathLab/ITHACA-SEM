@@ -126,7 +126,7 @@ namespace Nektar
         boost::shared_ptr< NekMatrix<NekDouble> > FourierPoints::CreateMatrix(const PointsKey &pkey)
         {
             int numpoints = pkey.GetNumPoints();
-            ConstArray<OneD, NekDouble> xpoints;
+            Array<OneD, const NekDouble> xpoints;
 
             PointsManager()[pkey]->GetPoints(xpoints);
 
@@ -141,7 +141,7 @@ namespace Nektar
             return m_InterpManager[pkey];
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(const ConstArray<OneD, NekDouble>& x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(const Array<OneD, const NekDouble>& x)
         {
             int numpoints = 1;
 
@@ -149,7 +149,7 @@ namespace Nektar
             return GetI(numpoints, x);
         }
 
-        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x)
+        const boost::shared_ptr<NekMatrix<NekDouble> > FourierPoints::GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x)
         {
             Array<OneD, NekDouble> interp(GetNumPoints()*numpoints);
 
@@ -162,7 +162,7 @@ namespace Nektar
             return returnval;
         }
 
-        void FourierPoints::CalculateInterpMatrix(unsigned int npts, const ConstArray<OneD, NekDouble>& xpoints, Array<OneD, NekDouble>& interp)
+        void FourierPoints::CalculateInterpMatrix(unsigned int npts, const Array<OneD, const NekDouble>& xpoints, Array<OneD, NekDouble>& interp)
         {
             const NekDouble h = 2.0/m_pointsKey.GetNumPoints();
             for(unsigned int i=0;i<npts;++i)

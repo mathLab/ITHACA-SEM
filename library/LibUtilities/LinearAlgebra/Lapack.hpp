@@ -97,7 +97,7 @@ namespace Lapack
 
     /// \brief factor a real packed-symmetric matrix using Bunch-Kaufman
     /// pivoting.
-    static void Dsptrf (const char& uplo, const int& n,
+    static inline void Dsptrf (const char& uplo, const int& n,
               double* ap, int *ipiv, int& info)
     {
         F77NAME(dsptrf) (uplo,n,ap,ipiv,info);
@@ -105,7 +105,7 @@ namespace Lapack
 
     /// \brief Solve a real symmetric matrix problem using Bunch-Kaufman
     /// pivoting.
-    static void Dsptrs (const char& uplo, const int& n, const int& nrhs,
+    static inline void Dsptrs (const char& uplo, const int& n, const int& nrhs,
               const double* ap, const int  *ipiv, double* b,
               const int& ldb, int& info)
     {
@@ -113,7 +113,7 @@ namespace Lapack
     }
 
     /// \brief Cholesky factor a real Positive Definite packed-symmetric matrix.
-    static void Dpptrf (const char& uplo, const int& n,
+    static inline void Dpptrf (const char& uplo, const int& n,
               double *ap, int& info)
     {
         F77NAME(dpptrf) (uplo,n,ap,info);
@@ -121,7 +121,7 @@ namespace Lapack
 
     /// \brief Solve a real Positive defiinte symmetric matrix problem
     /// using Cholesky factorization.
-    static void Dpptrs (const char& uplo, const int& n, const int& nrhs,
+    static inline void Dpptrs (const char& uplo, const int& n, const int& nrhs,
               const double *ap, double *b, const int& ldb,
               int& info)
     {
@@ -130,7 +130,7 @@ namespace Lapack
 
     /// \brief Cholesky factorize a real positive-definite
     /// banded-symmetric matrix
-    static void Dpbtrf (const char& uplo, const int& n, const int& kd,
+    static inline void Dpbtrf (const char& uplo, const int& n, const int& kd,
              double *ab, const int& ldab, int& info)
     {
         F77NAME(dpbtrf) (uplo,n,kd,ab,ldab,info);
@@ -139,7 +139,7 @@ namespace Lapack
 
     /// \brief Solve a real, Positive definite banded symmetric matrix
     /// problem using Cholesky factorization.
-    static void Dpbtrs (const char& uplo, const int& n,
+    static inline void Dpbtrs (const char& uplo, const int& n,
               const int& kd, const int& nrhs,
               const double *ab, const int& ldab,
               double *b, const int& ldb, int& info)
@@ -148,7 +148,7 @@ namespace Lapack
     }
 
     /// \brief General banded matrix LU factorisation
-    static void Dgbtrf (const int& m, const int& n, const int& kl,
+    static inline void Dgbtrf (const int& m, const int& n, const int& kl,
               const int& ku, double* a, const int& lda,
               int* ipiv, int& info)
     {
@@ -156,7 +156,7 @@ namespace Lapack
     }
 
     /// \brief Solve general banded matrix using LU factorisation
-    static void Dgbtrs (const char& trans, const int& n, const int& kl,
+    static inline void Dgbtrs (const char& trans, const int& n, const int& kl,
               const int &ku, const int& nrhs,   const double* a,
               const int& lda, int* ipiv, double* b,
               const int& ldb, int& info)
@@ -165,14 +165,14 @@ namespace Lapack
     }
 
     /// \brief General matrix LU factorisation
-    static void Dgetrf (const int& m, const int& n, double *a,
+    static inline void Dgetrf (const int& m, const int& n, double *a,
               const int& lda, int *ipiv, int& info)
     {
         F77NAME(dgetrf) (m,n,a,lda,ipiv,info);
     }
 
     /// \brief General matrix LU backsolve
-    static void Dgetrs (const char& trans, const int& n, const int& nrhs,
+    static inline void Dgetrs (const char& trans, const int& n, const int& nrhs,
               const double* a, const int& lda, int* ipiv,
               double* b, const int& ldb, int& info)
     {
@@ -180,20 +180,20 @@ namespace Lapack
     }
 
     /// \brief Generate matrix inverse
-    static void Dgetri (const int& n, double *a, const int& lda,
+    static inline void Dgetri (const int& n, double *a, const int& lda,
            const int *ipiv, double *wk,  const int& lwk, int& info)
     {
         F77NAME(dgetri) (n, a, lda, ipiv, wk, lwk,info);
     }
 
     /// \brief Find eigenvalues of symmetric tridiagonal matrix
-    static void Dsterf(const int& n, double *d, double *e, int& info)
+    static inline void Dsterf(const int& n, double *d, double *e, int& info)
     {
         F77NAME(dsterf)(n,d,e,info);
     }
 
     /// \brief Solve general real matrix eigenproblem.
-    static void Dgeev (const char& uplo, const char& lrev, const int& n,
+    static inline void Dgeev (const char& uplo, const char& lrev, const int& n,
              double* a, const int& lda, double* wr, double* wi,
              double* rev,  const int& ldr,
              double* lev,  const int& ldv,
@@ -204,7 +204,7 @@ namespace Lapack
     }
 
     /// \brief Solve packed-symmetric real matrix eigenproblem.
-    static void Dspev (const char& jobz, const char& uplo, const int& n,
+    static inline void Dspev (const char& jobz, const char& uplo, const int& n,
              double* ap, double* w, double* z, const int& ldz,
              double* work, int& info)
     {
@@ -212,7 +212,7 @@ namespace Lapack
     }
 
     /// \brief Solve packed-banded real matrix eigenproblem.
-    static void Dsbev (const char& jobz, const char& uplo, const int& kl,
+    static inline void Dsbev (const char& jobz, const char& uplo, const int& kl,
              const int& ku,  double* ap, const int& lda,
              double* w, double* z, const int& ldz,
              double* work, int& info)
@@ -226,6 +226,9 @@ namespace Lapack
 
 /***
 $Log: Lapack.hpp,v $
+Revision 1.2  2007/04/10 14:00:45  sherwin
+Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+
 Revision 1.1  2007/04/03 03:59:24  bnelson
 Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
 

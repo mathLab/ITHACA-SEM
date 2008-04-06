@@ -122,7 +122,7 @@ namespace Nektar
         }
         
         void ContExpList1D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
-                                            const ConstArray<OneD, NekDouble> &inarray,
+                                            const Array<OneD, const NekDouble> &inarray,
                                             Array<OneD, NekDouble> &outarray)
 
         {
@@ -172,6 +172,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.30  2008/03/12 15:25:45  pvos
+* Clean up of the code
+*
 * Revision 1.29  2007/12/17 13:05:03  sherwin
 * Made files compatible with modifications in StdMatrixKey which now holds constants
 *

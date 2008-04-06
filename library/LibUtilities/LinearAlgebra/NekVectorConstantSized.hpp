@@ -357,6 +357,8 @@ namespace Nektar
                 return this->GetImpl()[i];
             }
 
+            using BaseType::operator();
+            using BaseType::operator[];
             
             typename boost::call_traits<DataType>::reference x() 
             {

@@ -88,7 +88,7 @@ namespace Nektar
             return PhysIntegral(m_phys);
         }
         
-    NekDouble ExpList::PhysIntegral(const ConstArray<OneD, NekDouble> &inarray)
+    NekDouble ExpList::PhysIntegral(const Array<OneD, const NekDouble> &inarray)
     {
         int       i;
         int       cnt = 0;
@@ -112,7 +112,7 @@ namespace Nektar
             m_physState = false;
     }
 
-    void ExpList::IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
+    void ExpList::IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
                       Array<OneD, NekDouble> &outarray)
     {
         int    i;
@@ -145,7 +145,7 @@ namespace Nektar
         }
 
     
-        void ExpList::PhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
+        void ExpList::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD, NekDouble> &out_d0, 
                                 Array<OneD, NekDouble> &out_d1, 
                                 Array<OneD, NekDouble> &out_d2)
@@ -183,7 +183,7 @@ namespace Nektar
             m_transState = eLocal;
         }
         
-        void ExpList::FwdTrans(const ConstArray<OneD, NekDouble> &inarray, 
+        void ExpList::FwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                Array<OneD, NekDouble> &outarray)
         {
 #if 0  // elemental matrix inverse
@@ -246,7 +246,7 @@ namespace Nektar
         
         
         void ExpList::GeneralMatrixOp(const GlobalLinSysKey &gkey,
-                                      const ConstArray<OneD,NekDouble> &inarray,                     
+                                      const Array<OneD, const NekDouble> &inarray,                     
                                       Array<OneD, NekDouble>    &outarray)
         {
             int  i;
@@ -507,7 +507,7 @@ namespace Nektar
             m_physState = true;
         }
         
-        void ExpList::BwdTrans(const ConstArray<OneD, NekDouble> &inarray,
+        void ExpList::BwdTrans(const Array<OneD, const NekDouble> &inarray,
                                Array<OneD, NekDouble> &outarray)
         {
             int  i;
@@ -579,7 +579,7 @@ namespace Nektar
             int i,cnt = 0;
             std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
             StdRegions::StdExpansionVectorIter def;
-            ConstArray<OneD, NekDouble> phys = m_phys;
+            Array<OneD, const NekDouble> phys = m_phys;
             
             if(m_physState == false)
             {
@@ -607,8 +607,8 @@ namespace Nektar
             StdRegions::StdExpansionVectorIter def;
             NekDouble err = 0.0;
             int       i,cnt = 0;
-            ConstArray<OneD, NekDouble> soln = Sol.GetPhys();
-            ConstArray<OneD, NekDouble> phys = m_phys;
+            Array<OneD, const NekDouble> soln = Sol.GetPhys();
+            Array<OneD, const NekDouble> phys = m_phys;
             
             if(m_physState == false)
             {
@@ -633,8 +633,8 @@ namespace Nektar
             
             NekDouble err = 0.0,errl2;
             int    i,cnt = 0;
-            ConstArray<OneD, NekDouble> soln = Sol.GetPhys();
-            ConstArray<OneD, NekDouble> phys = m_phys;
+            Array<OneD, const NekDouble> soln = Sol.GetPhys();
+            Array<OneD, const NekDouble> phys = m_phys;
             
             if(m_physState == false)
             {

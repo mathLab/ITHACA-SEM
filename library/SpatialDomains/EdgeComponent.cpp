@@ -124,7 +124,7 @@ namespace Nektar
         physical coordinate in direction i **/
 
         NekDouble EdgeComponent::GetCoord(const int i, 
-                                 const ConstArray<OneD, NekDouble> &Lcoord) 
+                                 const Array<OneD, const NekDouble> &Lcoord) 
         {
 
             ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
@@ -201,6 +201,9 @@ namespace Nektar
 
 /** 
 *    $Log: EdgeComponent.cpp,v $
+*    Revision 1.22  2007/12/29 17:48:58  jfrazier
+*    Removed redundant instance of the vertex array.  Move the one down from SegGeom.
+*
 *    Revision 1.21  2007/12/04 03:27:14  jfrazier
 *    Changed to stringstream.
 *

@@ -120,7 +120,7 @@
 //   // cout<<"End of Interpolation Test FourierEvenlySpaced()"<< endl << endl;
 //}
 //
-//long double LagrangeInterpolation(int j, long double x, const ConstArray<OneD, NekDouble> &z, int N) {
+//long double LagrangeInterpolation(int j, long double x, const Array<OneD, const NekDouble> &z, int N) {
 //    long double product = 1.0;
 //    for(int i=0; i<N; ++i) {
 //        if(i != j) {
@@ -138,7 +138,7 @@
 //
 //
 ////long double fourierInterpolationFunction(int j, long double x, SharedArray<const NekDouble> z, int N){
-//long double fourierInterpolationFunction(int j, long double x, const ConstArray<OneD, NekDouble> &z, int N){
+//long double fourierInterpolationFunction(int j, long double x, const Array<OneD, const NekDouble> &z, int N){
 //    long double t = (long double)M_PI*(x - z[j])/2;
 //    if( fabs(t) < 1e-12 ) {
 //        return 1.0;
@@ -153,12 +153,12 @@
 ////     for(int nPts = 4; nPts<=10; nPts += 2) {
 ////        const boost::shared_ptr<Points<NekDouble> > points = PointsManager()[PointsKey(nPts, type)];
 //// 
-////        const ConstArray<OneD,NekDouble> &z = points->GetZ();
+////        const Array<OneD, const NekDouble> &z = points->GetZ();
 ////           
 ////        // Get the interpolation matrix I
 ////        int nNodes = nPts * 2;
 ////        const boost::shared_ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, type)];
-////        const ConstArray<OneD, NekDouble> &zNodePtr = nodes->GetZ();
+////        const Array<OneD, const NekDouble> &zNodePtr = nodes->GetZ();
 //// 
 ////        const boost::shared_ptr<NekMatrix<NekDouble> > Iptr = points->GetI(nNodes, zNodePtr);
 ////        const NekMatrix<NekDouble> & I = *Iptr;
@@ -246,13 +246,13 @@
 ////     const long double eps = epsilon;
 ////      for(int nPts = 8; nPts<=15; ++nPts) {
 ////        const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
-////        const ConstArray<OneD, NekDouble> & z = points->GetZ();
+////        const Array<OneD, const NekDouble> & z = points->GetZ();
 ////        
 ////        
 ////        // Get the interpolation matrix I
 ////        int nNodes = nPts * 2;
 ////        const boost::shared_ptr<Points<double> > nodes = PointsManager()[PointsKey(nNodes, type)];
-////         const ConstArray<OneD, NekDouble> & zNodePtr = nodes->GetZ() ;
+////         const Array<OneD, const NekDouble> & zNodePtr = nodes->GetZ() ;
 //// 
 ////        const Points<NekDouble>::MatrixSharedPtrType Iptr = points->GetI(nNodes, zNodePtr);
 ////        const NekMatrix<NekDouble> & I = *Iptr;

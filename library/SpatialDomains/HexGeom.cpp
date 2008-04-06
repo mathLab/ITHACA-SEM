@@ -76,7 +76,7 @@ namespace Nektar
 
 
         NekDouble HexGeom::GetCoord(const int i, 
-            const ConstArray<OneD,NekDouble> &Lcoord)
+            const Array<OneD, const NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
                 "Goemetry is not in physical space");
@@ -90,6 +90,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.3  2008/02/08 23:05:28  jfrazier
+// More work on 3D components.
+//
 // Revision 1.2  2007/07/20 02:15:08  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

@@ -160,7 +160,7 @@ namespace Nektar
             Policy::PolicySpecificDataHolderType policyData;
             NekDouble buf[] = {1.0, 2.0, 3.0};
             Array<OneD, NekDouble> data = Policy::Initialize(3, 3, buf, policyData);
-            ConstArray<OneD, NekDouble>& cdata = data;
+            Array<OneD, const NekDouble>& cdata = data;
             BOOST_CHECK_EQUAL(data.num_elements(), 3);
             {
                 BOOST_CHECK_EQUAL(1.0, Policy::GetValue(3, 3, 0, 0, data, 'N', policyData));

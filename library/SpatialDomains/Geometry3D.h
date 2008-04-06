@@ -86,7 +86,7 @@ namespace Nektar
                 return v_UpdatePhys(i);
             }
 
-            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            NekDouble GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
             {
                 return v_GetCoord(i,Lcoord);
             }
@@ -143,7 +143,7 @@ namespace Nektar
                 return NullNekDouble1DArray;
             }
 
-            virtual NekDouble v_GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
             {
                 NEKERROR(ErrorUtil::efatal,
                          "This function is only valid for shape type geometries");
@@ -163,6 +163,9 @@ namespace Nektar
 
 //
 // $Log: Geometry3D.h,v $
+// Revision 1.3  2008/04/02 22:19:03  pvos
+// Update for 2D local to global mapping
+//
 // Revision 1.2  2008/01/31 11:02:55  ehan
 // Added constructor and destructor.
 //

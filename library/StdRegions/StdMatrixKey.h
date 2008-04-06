@@ -68,13 +68,13 @@ namespace Nektar
             
             StdMatrixKey(const MatrixType matrixType, 
                          const ShapeType shapeType,
-                         const ConstArray<OneD,LibUtilities::BasisSharedPtr> &base,
+                         const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
                          const int ncoeffs,
                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
             
             StdMatrixKey(const MatrixType matrixType, 
                          const ShapeType shapeType,
-                         const ConstArray<OneD,LibUtilities::BasisSharedPtr> &base,
+                         const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
                          const int ncoeffs,
                          const NekDouble const0,
                          LibUtilities::PointsType nodalType);
@@ -82,7 +82,7 @@ namespace Nektar
 
             StdMatrixKey(const MatrixType matrixType, 
                          const ShapeType shapeType,
-                         const ConstArray<OneD,LibUtilities::BasisSharedPtr> &base,
+                         const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
                          const int ncoeffs,
                          const NekDouble const0,
                          const NekDouble const1,
@@ -136,7 +136,7 @@ namespace Nektar
                 return m_constant[i];
             }
 
-            inline const ConstArray<OneD, LibUtilities::BasisSharedPtr>& GetBase() const
+            inline const Array<OneD, const LibUtilities::BasisSharedPtr>& GetBase() const
             {
                 return m_base;
             }
@@ -149,7 +149,7 @@ namespace Nektar
 
         protected:
             ShapeType m_shapeType;
-            ConstArray<OneD, LibUtilities::BasisSharedPtr> m_base;
+            Array<OneD, const LibUtilities::BasisSharedPtr> m_base;
 
             unsigned int m_ncoeffs;
             MatrixType   m_matrixType;
@@ -174,6 +174,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.18  2007/12/17 13:03:51  sherwin
+* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+*
 * Revision 1.17  2007/08/11 23:42:26  sherwin
 * A few changes
 *

@@ -363,7 +363,7 @@ namespace Nektar
 //             NekMatrix<double> lhs(4, 4, lhs_buf);
 //             NekMatrix<double> rhs(4, 4, rhs_buf);
 //             NekMatrix<double> middle(4, 4, middle_buf);
-
+//
 //             Expression<BinaryExpressionPolicy<
 //                        ConstantExpressionPolicy<NekMatrix<double> >,
 //                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, 
@@ -410,10 +410,7 @@ namespace Nektar
             NekMatrix<double> m3(2, 2, buf3);
             NekMatrix<double> m4(2, 2, buf4);
             
-            double expected_result_buf[] = {buf1[0] - buf2[0] * buf3[0] + buf4[0],
-                buf1[1] - buf2[1] * buf3[1] + buf4[1],
-                buf1[2] - buf2[2] * buf3[2] + buf4[2],
-                buf1[3] - buf2[3] * buf3[3] + buf4[3]};
+            double expected_result_buf[] = {-112, -142, -132, -168};
             NekMatrix<double> expected_result(2, 2, expected_result_buf);
             NekMatrix<double> result = m1-m2*m3+m4;
             BOOST_CHECK_EQUAL(expected_result, result);

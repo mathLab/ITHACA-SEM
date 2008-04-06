@@ -80,9 +80,9 @@ namespace Nektar
           return m_transState; 
       }
       
-      inline void SetPhys(ConstArray<OneD, NekDouble> &inarray)
+      inline void SetPhys(Array<OneD, const NekDouble> &inarray)
       {
-          Vmath::Vcopy(m_npoints, inarray, 1, m_phys, 1);
+          Vmath::Vcopy(m_npoints, inarray.get(), 1, m_phys.get(), 1);
           m_physState = true;
       }
 
@@ -120,12 +120,12 @@ namespace Nektar
       }
       
 
-      inline const ConstArray<OneD, NekDouble> &GetCoeffs() const 
+      inline const Array<OneD, const NekDouble> &GetCoeffs() const 
       {
           return m_coeffs;
       }
 
-      inline const ConstArray<OneD, NekDouble> &GetPhys()  const
+      inline const Array<OneD, const NekDouble> &GetPhys()  const
       {
           return m_phys;
       }
@@ -169,24 +169,24 @@ namespace Nektar
      
       boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
 
-      NekDouble PhysIntegral(const ConstArray<OneD, NekDouble> &inarray);
-      void   IProductWRTBase(const ConstArray<OneD, NekDouble> &inarray, 
+      NekDouble PhysIntegral(const Array<OneD, const NekDouble> &inarray);
+      void   IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
                  Array<OneD, NekDouble> &outarray);
       
-      void   PhysDeriv(const ConstArray<OneD, NekDouble> &inarray,
+      void   PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                Array<OneD, NekDouble> &out_d0, 
                Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
 
-      void   FwdTrans (const ConstArray<OneD, NekDouble> &inarray,
+      void   FwdTrans (const Array<OneD, const NekDouble> &inarray,
                Array<OneD, NekDouble> &outarray);
 
-      void   BwdTrans (const ConstArray<OneD, NekDouble> &inarray, 
+      void   BwdTrans (const Array<OneD, const NekDouble> &inarray, 
                Array<OneD, NekDouble> &outarray); 
       
       // Routines for continous matrix solution 
       void   GeneralMatrixOp(const GlobalLinSysKey &mkey,
-                             const ConstArray<OneD,NekDouble> &inarray,
+                             const Array<OneD, const NekDouble> &inarray,
                              Array<OneD, NekDouble>          &outarray);
 
       boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, const boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
@@ -212,6 +212,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.31  2008/03/12 15:25:45  pvos
+* Clean up of the code
+*
 * Revision 1.30  2008/01/23 21:50:52  sherwin
 * Update from EdgeComponents to SegGeoms
 *

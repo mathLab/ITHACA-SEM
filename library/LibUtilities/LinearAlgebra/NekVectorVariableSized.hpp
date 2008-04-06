@@ -142,7 +142,7 @@ namespace Nektar
                 }
             }
             
-//            explicit NekVector(const ConstArray<OneD, DataType>& ptr) :
+//            explicit NekVector(const Array<OneD, const DataType>& ptr) :
 //                m_size(ptr.num_elements()),
 //                m_data(m_size),
 //                m_wrapperType(eCopy)
@@ -150,7 +150,7 @@ namespace Nektar
 //                CopyArray(ptr, m_data);
 //            }
 
-//            NekVector(unsigned int size, const ConstArray<OneD, DataType>& ptr) :
+//            NekVector(unsigned int size, const Array<OneD, const DataType>& ptr) :
 //                m_size(size),
 //                m_data(size),
 //                m_wrapperType(eCopy)
@@ -197,7 +197,7 @@ namespace Nektar
                 }
             }
             
-            explicit NekVector(const ConstArray<OneD, DataType>& ptr, PointerWrapper h = eCopy) :
+            explicit NekVector(const Array<OneD, const DataType>& ptr, PointerWrapper h = eCopy) :
                 m_size(ptr.num_elements()),
                 m_data(ptr, eVECTOR_WRAPPER),
                 m_wrapperType(h)
@@ -209,7 +209,7 @@ namespace Nektar
                 }
             }
 
-            NekVector(unsigned int size, const ConstArray<OneD, DataType>& ptr, PointerWrapper h = eCopy) :
+            NekVector(unsigned int size, const Array<OneD, const DataType>& ptr, PointerWrapper h = eCopy) :
                 m_size(size),
                 m_data(ptr, eVECTOR_WRAPPER),
                 m_wrapperType(h)
@@ -287,7 +287,7 @@ namespace Nektar
                 return m_data.get();
             }
      
-            const ConstArray<OneD, DataType>& GetPtr() const { return m_data; }
+            const Array<OneD, const DataType>& GetPtr() const { return m_data; }
      
             typedef const DataType* const_iterator;
             const_iterator begin() const { return GetRawPtr(); }
@@ -389,11 +389,11 @@ namespace Nektar
             NekVector(const NekVector<DataType, VariableSizedVector, space>& rhs) :
                 BaseType(rhs) {}
                 
-            explicit NekVector(const ConstArray<OneD, DataType>& ptr) :
+            explicit NekVector(const Array<OneD, const DataType>& ptr) :
                 BaseType(ptr) {}
                 
 
-            NekVector(unsigned int size, const ConstArray<OneD, DataType>& ptr) :
+            NekVector(unsigned int size, const Array<OneD, const DataType>& ptr) :
                 BaseType(size, ptr) {}
                             
             NekVector(unsigned int size, const DataType* const ptr) :
@@ -566,7 +566,7 @@ namespace Nektar
             
         private:
             // Prevents accidental use of wrapped mode around ConstArrays.
-            NekVector(const ConstArray<OneD, DataType>& ptr, PointerWrapper h);
+            NekVector(const Array<OneD, const DataType>& ptr, PointerWrapper h);
 
     };    
     

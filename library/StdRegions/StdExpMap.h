@@ -66,7 +66,7 @@ namespace Nektar
         return m_len;
         }
         
-        inline const ConstArray<OneD, int>& GetMap() const
+        inline const Array<OneD, const int>& GetMap() const
         {
                 return m_map;
         }
@@ -109,6 +109,9 @@ namespace Nektar
 
 /**
  * $Log: StdExpMap.h,v $
+ * Revision 1.9  2007/07/20 02:16:52  bnelson
+ * Replaced boost::shared_ptr with Nektar::ptr
+ *
  * Revision 1.8  2007/05/15 05:18:23  bnelson
  * Updated to use the new Array object.
  *

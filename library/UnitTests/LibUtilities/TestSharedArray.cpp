@@ -49,8 +49,8 @@ namespace Nektar
     {
         BOOST_AUTO_TEST_CASE(TestArrayConstructionFromConstantArray)
         {
-            ConstArray<OneD, double> const_array_1(10, 7.0);
-            ConstArray<OneD, double> const_array_2(10, 3.0);
+            Array<OneD, const double> const_array_1(10, 7.0);
+            Array<OneD, const double> const_array_2(10, 3.0);
 
             Array<OneD, double> array_1(const_array_1);
             Array<OneD, double> array_2(5, const_array_2);

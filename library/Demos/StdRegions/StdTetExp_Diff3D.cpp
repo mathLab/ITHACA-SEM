@@ -239,7 +239,7 @@ int main(int argc, char *argv[]) {
    
     // Testing the physical evaluate(u_phys): projection on to the polynomial space given by the Tetrahedral basis function
     // The result of output should converge to the interpolation solution 
-//     ConstArray<OneD, NekDouble> const& u_phys = ste->GetPhys();
+//     Array<OneD, const NekDouble> const& u_phys = ste->GetPhys();
 //     Array<OneD, NekDouble> higherDegreeSolution( Qx * Qy * Qz, 0.0 );
 //     for(int n = 0; n < Qx * Qy * Qz; ++n) {
 //         higherDegreeSolution[n]  = Tet_sol( x[n], y[n], z[n], P, Q, R ); 

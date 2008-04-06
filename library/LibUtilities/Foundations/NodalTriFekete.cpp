@@ -154,7 +154,7 @@ namespace Nektar
            
         // ////////////////////////////////////////
         //        CalculateInterpMatrix()
-        void NodalTriFekete::CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia,
+        void NodalTriFekete::CalculateInterpMatrix(const Array<OneD, const NekDouble>& xia, const Array<OneD, const NekDouble>& yia,
                                                    Array<OneD, NekDouble>& interp)
         {
              NekVector<NekDouble>  x( m_points[0] );
@@ -297,6 +297,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriFekete.cpp,v $
+* Revision 1.24  2008/04/02 21:12:35  pvos
+* Update of the 2D local to global map
+*
 * Revision 1.23  2008/03/18 14:11:50  pvos
 * Update for nodal triangular helmholtz solver
 *

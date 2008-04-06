@@ -56,10 +56,10 @@ namespace Nektar
                 BlockMatrixType m1(3, 2, 2, 2);
                 boost::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(2, 3, 2, 2));
                 
-                BOOST_CHECK_EQUAL(m1.GetRows(), 6);
-                BOOST_CHECK_EQUAL(m1.GetColumns(), 4);
-                BOOST_CHECK_EQUAL(m2->GetRows(), 4);
-                BOOST_CHECK_EQUAL(m2->GetColumns(), 6);               
+                BOOST_CHECK_EQUAL(m1.GetRows(), 6u);
+                BOOST_CHECK_EQUAL(m1.GetColumns(), 4u);
+                BOOST_CHECK_EQUAL(m2->GetRows(), 4u);
+                BOOST_CHECK_EQUAL(m2->GetColumns(), 6u);               
             }
             
             // Bad Input

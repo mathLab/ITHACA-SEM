@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
     
      // Testing the physical evaluate(u_phys): projection on to the polynomial space given by the prismatic basis function
     // The result of output should converge to the interpolation solution 
-    ConstArray<OneD, NekDouble> const& u_phys = sPyrE->GetPhys();
+    Array<OneD, const NekDouble> const& u_phys = sPyrE->GetPhys();
     Array<OneD, NekDouble> pyramid_solution( Qx * Qy * Qz, 0.0 );
     cout << setprecision(4);
     for(int n = 0; n < Qx * Qy * Qz; ++n) {

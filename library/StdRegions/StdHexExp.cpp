@@ -70,10 +70,10 @@ namespace Nektar
 
         namespace 
         {
-            void TripleTensorProduct(   const ConstArray<OneD, NekDouble>& fx, 
-                                        const ConstArray<OneD, NekDouble>& gy, 
-                                        const ConstArray<OneD, NekDouble>& hz, 
-                                        const ConstArray<OneD, NekDouble>& inarray, 
+            void TripleTensorProduct(   const Array<OneD, const NekDouble>& fx, 
+                                        const Array<OneD, const NekDouble>& gy, 
+                                        const Array<OneD, const NekDouble>& hz, 
+                                        const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> & outarray )
             {
             
@@ -137,10 +137,10 @@ namespace Nektar
             // y-dimension is the column
             // z-dimension is the stack, it is the index that changes the slowest
             NekDouble TripleInnerProduct( 
-                                        const ConstArray<OneD, NekDouble>& fxyz, 
-                                        const ConstArray<OneD, NekDouble>& wx, 
-                                        const ConstArray<OneD, NekDouble>& wy, 
-                                        const ConstArray<OneD, NekDouble>& wz
+                                        const Array<OneD, const NekDouble>& fxyz, 
+                                        const Array<OneD, const NekDouble>& wx, 
+                                        const Array<OneD, const NekDouble>& wy, 
+                                        const Array<OneD, const NekDouble>& wz
                                         )
             {
                 int Qx = wx.num_elements();
@@ -181,10 +181,10 @@ namespace Nektar
             }
         }
         
-        NekDouble StdHexExp::Integral3D(const ConstArray<OneD, NekDouble>& inarray, 
-                                        const ConstArray<OneD, NekDouble>& wx,
-                                        const ConstArray<OneD, NekDouble>& wy, 
-                                        const ConstArray<OneD, NekDouble>& wz)
+        NekDouble StdHexExp::Integral3D(const Array<OneD, const NekDouble>& inarray, 
+                                        const Array<OneD, const NekDouble>& wx,
+                                        const Array<OneD, const NekDouble>& wy, 
+                                        const Array<OneD, const NekDouble>& wz)
         {
             return TripleInnerProduct( inarray, wx, wy, wz );
 
@@ -204,9 +204,9 @@ namespace Nektar
 	          and \f$ J[i,j,k] \f$ is the  Jacobian evaluated at the quadrature point.
 
         */
-        NekDouble StdHexExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
+        NekDouble StdHexExp::Integral(const Array<OneD, const NekDouble>& inarray)
         {
-            ConstArray<OneD, NekDouble> w0, w1, w2;
+            Array<OneD, const NekDouble> w0, w1, w2;
 
             w0 = ExpPointsProperties(0)->GetW();
             w1 = ExpPointsProperties(1)->GetW();
@@ -230,7 +230,7 @@ namespace Nektar
 		- \a outarray: array of inner product with respect to each basis over region
 
         */
-        void StdHexExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
+        void StdHexExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
         }
@@ -259,10 +259,10 @@ namespace Nektar
 		\f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{q} (\xi_{3k})  = {\bf B_1 G} \f$
 
         **/
-        void StdHexExp::IProductWRTBase(    const ConstArray<OneD, NekDouble>& bx, 
-                                            const ConstArray<OneD, NekDouble>& by, 
-                                            const ConstArray<OneD, NekDouble>& bz, 
-                                            const ConstArray<OneD, NekDouble>& inarray, 
+        void StdHexExp::IProductWRTBase(    const Array<OneD, const NekDouble>& bx, 
+                                            const Array<OneD, const NekDouble>& by, 
+                                            const Array<OneD, const NekDouble>& bz, 
+                                            const Array<OneD, const NekDouble>& inarray, 
                                             Array<OneD, NekDouble> & outarray )
         {
             int     Qx = m_base[0]->GetNumPoints();
@@ -343,7 +343,7 @@ namespace Nektar
 
             
         **/
-        void StdHexExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+        void StdHexExp::PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                                    Array<OneD, NekDouble> &out_d0,
                                    Array<OneD, NekDouble> &out_d1,
                                    Array<OneD, NekDouble> &out_d2)
@@ -374,7 +374,7 @@ namespace Nektar
 		 u(\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x} \psi_{p}^a (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).
 	       \f$		
         **/
-       void StdHexExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+       void StdHexExp::BwdTrans(const Array<OneD, const NekDouble>& inarray, 
                                 Array<OneD, NekDouble> &outarray)
         {
 
@@ -394,9 +394,9 @@ namespace Nektar
             int     Q = m_base[1]->GetNumModes() - 1;
             int     R = m_base[2]->GetNumModes() - 1;
 
-            ConstArray<OneD, NekDouble> xBasis  = m_base[0]->GetBdata();
-            ConstArray<OneD, NekDouble> yBasis  = m_base[1]->GetBdata();
-            ConstArray<OneD, NekDouble> zBasis  = m_base[2]->GetBdata();
+            Array<OneD, const NekDouble> xBasis  = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> yBasis  = m_base[1]->GetBdata();
+            Array<OneD, const NekDouble> zBasis  = m_base[2]->GetBdata();
 
 
             // Build an index map from the rectangle to the triangle -- This is not necessary for hexahedron
@@ -472,7 +472,7 @@ namespace Nektar
             - (this)->_coeffs: updated array of expansion coefficients. 
             
         */    
-        void StdHexExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+        void StdHexExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
@@ -497,16 +497,16 @@ namespace Nektar
         }
 
         /// Single Point Evaluation
-        NekDouble StdHexExp::PhysEvaluate(ConstArray<OneD, NekDouble>& coords)
+        NekDouble StdHexExp::PhysEvaluate(Array<OneD, const NekDouble>& coords)
         {
              return  StdExpansion3D::PhysEvaluate3D(coords);  
         }
         
        void StdHexExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
         {
-            ConstArray<OneD, NekDouble> eta_x = ExpPointsProperties(0)->GetZ();
-            ConstArray<OneD, NekDouble> eta_y = ExpPointsProperties(1)->GetZ();
-            ConstArray<OneD, NekDouble> eta_z = ExpPointsProperties(2)->GetZ();
+            Array<OneD, const NekDouble> eta_x = ExpPointsProperties(0)->GetZ();
+            Array<OneD, const NekDouble> eta_y = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> eta_z = ExpPointsProperties(2)->GetZ();
             int Qx = GetNumPoints(0);
             int Qy = GetNumPoints(1);
             int Qz = GetNumPoints(2);
@@ -532,9 +532,9 @@ namespace Nektar
             int   nquad1 = m_base[1]->GetNumPoints();
             int   nquad2 = m_base[2]->GetNumPoints();
             
-             ConstArray<OneD, NekDouble> base0  = m_base[0]->GetBdata();
-             ConstArray<OneD, NekDouble> base1  = m_base[1]->GetBdata();
-             ConstArray<OneD, NekDouble> base2  = m_base[2]->GetBdata();
+             Array<OneD, const NekDouble> base0  = m_base[0]->GetBdata();
+             Array<OneD, const NekDouble> base1  = m_base[1]->GetBdata();
+             Array<OneD, const NekDouble> base2  = m_base[2]->GetBdata();
             
             int   btmp0 = m_base[0]->GetNumModes();
             int   btmp1 = m_base[1]->GetNumModes();
@@ -640,6 +640,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.13  2008/02/01 20:04:18  ehan
+* Added doxygen comments
+*
 * Revision 1.12  2008/01/08 22:30:31  ehan
 * Clean up the codes.
 *

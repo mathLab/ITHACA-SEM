@@ -109,7 +109,7 @@ namespace Nektar
             return matX;
         }
     
-        int GetSize(const ConstArray<OneD, NekDouble> & x)
+        int GetSize(const Array<OneD, const NekDouble> & x)
         {
             return x.num_elements();
         }
@@ -119,7 +119,7 @@ namespace Nektar
             return x.GetRows();
         }
                 
-        NekVector<NekDouble> ToVector( const ConstArray<OneD, NekDouble> & x )
+        NekVector<NekDouble> ToVector( const Array<OneD, const NekDouble> & x )
         {
             return NekVector<NekDouble>( GetSize(x), x.data() );
         }

@@ -69,7 +69,7 @@ namespace Nektar
         //----------------------------
         // Differentiation Methods
         //----------------------------
-        void StdExpansion2D::PhysTensorDeriv(const ConstArray<OneD, NekDouble>& inarray,
+        void StdExpansion2D::PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
                          Array<OneD, NekDouble> &outarray_d0, 
                          Array<OneD, NekDouble> &outarray_d1)
         {
@@ -136,7 +136,7 @@ namespace Nektar
 
         }
 
-        NekDouble StdExpansion2D::PhysEvaluate2D(const ConstArray<OneD, NekDouble>& coords)
+        NekDouble StdExpansion2D::PhysEvaluate2D(const Array<OneD, const NekDouble>& coords)
         {
             NekDouble val;
             int i;
@@ -169,9 +169,9 @@ namespace Nektar
         /// Integration Methods
         //////////////////////////////
 
-        NekDouble StdExpansion2D::Integral(const ConstArray<OneD, NekDouble>& inarray, 
-                       const ConstArray<OneD, NekDouble>& w0,
-                       const ConstArray<OneD, NekDouble>& w1)
+        NekDouble StdExpansion2D::Integral(const Array<OneD, const NekDouble>& inarray, 
+                       const Array<OneD, const NekDouble>& w0,
+                       const Array<OneD, const NekDouble>& w1)
         {
             int i;
             NekDouble Int = 0.0;
@@ -202,6 +202,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.21  2008/04/03 16:12:11  pvos
+* updates for NEKTAR_USING_DIRECT_BLAS_CALLS
+*
 * Revision 1.20  2008/03/18 14:15:45  pvos
 * Update for nodal triangular helmholtz solver
 *

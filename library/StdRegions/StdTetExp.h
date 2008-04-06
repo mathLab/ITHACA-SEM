@@ -95,21 +95,21 @@ namespace Nektar
             }
 
 
-          NekDouble Integral3D(const ConstArray<OneD, NekDouble>& inarray, const ConstArray<OneD, NekDouble>& w0,
-                               const ConstArray<OneD, NekDouble>& w1, const ConstArray<OneD, NekDouble>&w2);
-          NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray);
-          void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
+          NekDouble Integral3D(const Array<OneD, const NekDouble>& inarray, const Array<OneD, const NekDouble>& w0,
+                               const Array<OneD, const NekDouble>& w1, const Array<OneD, const NekDouble>&w2);
+          NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
+          void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
           void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
-          void PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+          void PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                Array<OneD, NekDouble> &out_d0, 
                Array<OneD, NekDouble> &out_d1,
                Array<OneD, NekDouble> &out_d2);
-          void BwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+          void BwdTrans(const Array<OneD, const NekDouble>& inarray, 
                Array<OneD, NekDouble> &outarray);
-          void FwdTrans(const ConstArray<OneD, NekDouble>& inarray, 
+          void FwdTrans(const Array<OneD, const NekDouble>& inarray, 
                Array<OneD, NekDouble> &outarray);
-          NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& coords);
-          NekDouble PhysEvaluate3D(const ConstArray<OneD, NekDouble>& coords);
+          NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
+          NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords);
           void WriteToFile(std::ofstream &outfile);
           void WriteCoeffsToFile(std::ofstream &outfile);
           void GetCoords(Array<OneD, NekDouble> &coords_0, 
@@ -173,10 +173,10 @@ namespace Nektar
         
         protected:
 
-         void IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
-              const ConstArray<OneD, NekDouble>& base1, 
-              const ConstArray<OneD, NekDouble>& base2, 
-              const ConstArray<OneD, NekDouble>& inarray, 
+         void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+              const Array<OneD, const NekDouble>& base1, 
+              const Array<OneD, const NekDouble>& base2, 
+              const Array<OneD, const NekDouble>& inarray, 
               Array<OneD, NekDouble> & outarray);
 
         private:
@@ -228,12 +228,12 @@ namespace Nektar
                 GetCoords(coords_x, coords_y, coords_z);
             }
 
-            virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray )
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray )
             {
                 return Integral(inarray);
             }
             
-            virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTBase(inarray, outarray);
@@ -245,7 +245,7 @@ namespace Nektar
             }
 
             virtual void v_PhysDeriv(
-                const ConstArray<OneD, NekDouble>& inarray,
+                const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &out_dx,
                 Array<OneD, NekDouble> &out_dy,
                 Array<OneD, NekDouble> &out_dz )
@@ -255,7 +255,7 @@ namespace Nektar
             }
 
             virtual void v_StdPhysDeriv(
-                const ConstArray<OneD, NekDouble>& inarray,
+                const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &out_dx, 
                 Array<OneD, NekDouble> &out_dy,
                 Array<OneD, NekDouble> &out_dz )
@@ -266,7 +266,7 @@ namespace Nektar
 
             /** \brief Virtual call to StdTetExp::BwdTrans */
             virtual void v_BwdTrans(
-                const ConstArray<OneD, NekDouble>& inarray,
+                const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray )
             {
                 BwdTrans(inarray,outarray);
@@ -274,13 +274,13 @@ namespace Nektar
 
             /** \brief Virtual call to StdTetExp::FwdTrans */
             virtual void v_FwdTrans(
-                const ConstArray<OneD, NekDouble>& inarray,
+                const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray )
             {
                 FwdTrans(inarray,outarray);
             }
 
-            virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
             {
                 return PhysEvaluate(coords);
             }
@@ -350,6 +350,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.13  2008/03/25 08:40:20  ehan
+ * Added GetEdgeNcoeffs() and GetEdgeBasisType().
+ *
  * Revision 1.12  2008/03/17 10:37:58  pvos
  * Clean up of the code
  *

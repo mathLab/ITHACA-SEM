@@ -107,7 +107,7 @@ namespace Nektar
 
 
         NekDouble TriFaceComponent::GetCoord(const int i, 
-                                          const ConstArray<OneD,NekDouble> &Lcoord)
+                                          const Array<OneD, const NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
                 "Goemetry is not in physical space");
@@ -119,6 +119,9 @@ namespace Nektar
 
 //
 // $Log: TriFaceComponent.cpp,v $
+// Revision 1.7  2008/02/08 23:05:52  jfrazier
+// More work on 3D components.
+//
 // Revision 1.6  2007/07/20 02:15:09  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

@@ -148,7 +148,7 @@ namespace Nektar
         physical coordinate in direction i **/
 
         NekDouble TetGeom::GetCoord(const int i, 
-                                          const ConstArray<OneD,NekDouble> &Lcoord)
+                                          const Array<OneD, const NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
                 "Goemetry is not in physical space");
@@ -188,7 +188,7 @@ namespace Nektar
             int i,j; 
             int order0 = m_xmap[0]->GetBasisNumModes(0);
             int order1 = m_xmap[0]->GetBasisNumModes(1);
-            ConstArray<OneD,NekDouble> coef;
+            Array<OneD, const NekDouble> coef;
             StdRegions::StdExpMap Map,MapV;
 
             // set side 1 
@@ -261,7 +261,7 @@ namespace Nektar
 
        }
 
-       void TetGeom::GetLocCoords(const ConstArray<OneD, NekDouble>& coords, Array<OneD, NekDouble>& Lcoords)
+       void TetGeom::GetLocCoords(const Array<OneD, const NekDouble>& coords, Array<OneD, NekDouble>& Lcoords)
        {
          FillGeom();
 
@@ -315,6 +315,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.5  2008/03/25 08:42:16  ehan
+// Added constructor, GetLocCoords(), and FillGeom().
+//
 // Revision 1.4  2008/02/08 23:05:52  jfrazier
 // More work on 3D components.
 //

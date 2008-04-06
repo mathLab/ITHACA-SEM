@@ -184,7 +184,7 @@ namespace Nektar
             }
             
             NekMatrix(unsigned int numberOfBlockRows, unsigned int numberOfBlockColumns,
-                      const ConstArray<OneD, unsigned int>& rowsPerBlock, const ConstArray<OneD, unsigned int>& columnsPerBlock) :
+                      const Array<OneD, const unsigned int>& rowsPerBlock, const Array<OneD, const unsigned int>& columnsPerBlock) :
                 BaseType(std::accumulate(rowsPerBlock.data(), rowsPerBlock.data() + numberOfBlockRows, 0),
                          std::accumulate(columnsPerBlock.data(), columnsPerBlock.data() + numberOfBlockColumns, 0)),
                 m_data(numberOfBlockRows, numberOfBlockColumns, boost::shared_ptr<InnerType>()),
@@ -197,8 +197,8 @@ namespace Nektar
                 Initialize(rowsPerBlock.data(), columnsPerBlock.data());
             }
 
-            NekMatrix(const ConstArray<OneD, unsigned int>& rowsPerBlock,
-                      const ConstArray<OneD, unsigned int>& columnsPerBlock) :
+            NekMatrix(const Array<OneD, const unsigned int>& rowsPerBlock,
+                      const Array<OneD, const unsigned int>& columnsPerBlock) :
                 BaseType(std::accumulate(rowsPerBlock.begin(), rowsPerBlock.end(), 0),
                          std::accumulate(columnsPerBlock.begin(), columnsPerBlock.end(), 0)),
                 m_data(rowsPerBlock.num_elements(), columnsPerBlock.num_elements(), boost::shared_ptr<InnerType>()),

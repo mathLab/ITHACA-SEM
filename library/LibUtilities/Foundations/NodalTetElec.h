@@ -64,21 +64,21 @@ namespace Nektar
               const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
             {
                 ASSERTL0(pkey.GetPointsDim()==3, "NodalTetElec Points can only interp to other 3d point distributions");
-                ConstArray<OneD, NekDouble> x, y, z;
+                Array<OneD, const NekDouble> x, y, z;
                 PointsManager()[pkey]->GetPoints(x, y, z);
                 return GetI(x, y, z);
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x, const ConstArray<OneD, NekDouble>& y,
-                                                                const ConstArray<OneD, NekDouble>& z)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x, const Array<OneD, const NekDouble>& y,
+                                                                const Array<OneD, const NekDouble>& z)
            {
                 
                 int numpoints = x.num_elements();
                 return GetI(numpoints, x, y, z);            
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& xi,
-                                                                const ConstArray<OneD, NekDouble>& yi, const ConstArray<OneD, NekDouble>& zi){
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& xi,
+                                                                const Array<OneD, const NekDouble>& yi, const Array<OneD, const NekDouble>& zi){
                     
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
                 CalculateInterpMatrix(xi, yi, zi, interp);
@@ -104,8 +104,8 @@ namespace Nektar
             void CalculateWeights();
             void CalculateDerivMatrix();
             void NodalPointReorder3d();
-            void CalculateInterpMatrix(const ConstArray<OneD, NekDouble>& xia, const ConstArray<OneD, NekDouble>& yia,
-                                       const ConstArray<OneD, NekDouble>& zia, Array<OneD, NekDouble>& interp);
+            void CalculateInterpMatrix(const Array<OneD, const NekDouble>& xia, const Array<OneD, const NekDouble>& yia,
+                                       const Array<OneD, const NekDouble>& zia, Array<OneD, NekDouble>& interp);
         };
    } // end of namespace
 } // end of namespace 

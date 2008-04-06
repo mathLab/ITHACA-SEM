@@ -87,7 +87,7 @@ namespace Nektar
                 return m_xmap[i]->UpdatePhys();
             }
 
-            NekDouble GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord);
+            NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
             static const int kNverts = 8;
             static const int kNedges = 12;
@@ -145,7 +145,7 @@ namespace Nektar
                 return UpdatePhys(i);
             }
 
-            virtual NekDouble v_GetCoord(const int i, const ConstArray<OneD,NekDouble> &Lcoord)
+            virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
             {
                 return GetCoord(i,Lcoord);
             }
@@ -159,6 +159,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.8  2008/04/02 22:19:03  pvos
+// Update for 2D local to global mapping
+//
 // Revision 1.7  2008/02/12 01:26:00  ehan
 // Included stdExpansion3D to prevent undefined error  of "StdExpansion3DSharedPtr".
 //

@@ -63,7 +63,7 @@ namespace Nektar
 	}
 
 
-        void GlobalLinSys::Solve(const ConstArray<OneD,NekDouble> &in, 
+        void GlobalLinSys::Solve(const Array<OneD, const NekDouble> &in, 
                                  Array<OneD,NekDouble>  &out,
                                  LocalToGlobalBndryMap  &locToGloMap)
         {

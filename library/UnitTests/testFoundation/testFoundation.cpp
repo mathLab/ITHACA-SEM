@@ -80,8 +80,8 @@
 //                    
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //    
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;
@@ -112,8 +112,8 @@
 //                    long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;
@@ -139,8 +139,8 @@
 //                    long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;
@@ -167,8 +167,8 @@
 //                    long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;
@@ -195,8 +195,8 @@
 //                    long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;
@@ -223,8 +223,8 @@
 //                    long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //                
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;
@@ -251,8 +251,8 @@
 //                    long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2)*(nPts + 2);
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;
@@ -279,8 +279,8 @@
 //                    long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2)*(nPts + 2);
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //                
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;
@@ -307,8 +307,8 @@
 //                    long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 4);
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //                     
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;
@@ -334,8 +334,8 @@
 //                    long double epsilon = numeric_limits<double>::epsilon()/2.0 * (2*(nPts + 2));
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;
@@ -362,8 +362,8 @@
 //                    long double epsilon = numeric_limits<double>::epsilon()/2.0 * (nPts + 2);
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;
@@ -410,8 +410,8 @@
 //                    long double epsilon = nPts* numeric_limits<double>::epsilon();
 //                    const boost::shared_ptr<Points<double> > points = PointsManager()[PointsKey(nPts, type)];
 //
-//                    const ConstArray<OneD,NekDouble> &z = points->GetZ();
-//                    const ConstArray<OneD,NekDouble> &w = points->GetW();
+//                    const Array<OneD, const NekDouble> &z = points->GetZ();
+//                    const Array<OneD, const NekDouble> &w = points->GetW();
 //                
 //                    int numPoints = points->GetNumPoints();
 //                    long double numericIntegral = 0.0;

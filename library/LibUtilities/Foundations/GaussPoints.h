@@ -63,8 +63,8 @@ namespace Nektar
             boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
 
             const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x);
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x);
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x);
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x);
 
             GaussPoints(const PointsKey &pkey):PointsBaseType(pkey)
             {
@@ -108,7 +108,7 @@ namespace Nektar
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
-            void CalculateInterpMatrix(unsigned int npts, const ConstArray<OneD, NekDouble>& xpoints, Array<OneD, NekDouble>& interp);
+            void CalculateInterpMatrix(unsigned int npts, const Array<OneD, const NekDouble>& xpoints, Array<OneD, NekDouble>& interp);
         }; // class GaussPoints
     } // end of namespace
 } // end of namespace 

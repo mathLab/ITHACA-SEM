@@ -67,12 +67,12 @@ namespace Nektar
                     return m_geomfactors->GetGtype();
                 }
 
-                inline const ConstArray<OneD,NekDouble> &GetJac()
+                inline const Array<OneD, const NekDouble> &GetJac()
                 {
                     return m_geomfactors->GetJac();
                 }
 
-                inline const ConstArray<TwoD, NekDouble>& GetGmat()
+                inline const Array<TwoD, const NekDouble>& GetGmat()
                 {
                     return m_geomfactors->GetGmat();
                 }
@@ -121,6 +121,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.17  2007/12/11 21:51:52  jfrazier
+// Updated 2d components so elements could be retrieved from edges.
+//
 // Revision 1.16  2007/11/07 20:31:03  jfrazier
 // Added new expansion list to replace the expansion composite list.
 //

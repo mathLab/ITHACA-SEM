@@ -197,7 +197,7 @@ namespace Nektar
             static boost::shared_ptr<Basis> Create(const BasisKey &bkey);
 
             // default destructor()
-            ~Basis()
+            virtual ~Basis()
             {
             };
 
@@ -258,14 +258,14 @@ namespace Nektar
             }
 
             /** \brief return basis definition array m_bdata */
-            inline const ConstArray<OneD, NekDouble>& GetBdata() const 
+            inline const Array<OneD, const NekDouble>& GetBdata() const 
             {
                 return m_bdata;
             }
 
             /** \brief return basis definition array m_dbdata */
 
-            inline const ConstArray<OneD, NekDouble>& GetDbdata() const
+            inline const Array<OneD, const NekDouble>& GetDbdata() const
             {
                 return m_dbdata;
             }

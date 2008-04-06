@@ -92,10 +92,10 @@ namespace Nektar
 
         namespace 
         {
-            void TripleTensorProduct(   const ConstArray<OneD, NekDouble>& fx, 
-                                        const ConstArray<OneD, NekDouble>& gy, 
-                                        const ConstArray<OneD, NekDouble>& hz, 
-                                        const ConstArray<OneD, NekDouble>& inarray, 
+            void TripleTensorProduct(   const Array<OneD, const NekDouble>& fx, 
+                                        const Array<OneD, const NekDouble>& gy, 
+                                        const Array<OneD, const NekDouble>& hz, 
+                                        const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> & outarray )
             {
             
@@ -159,10 +159,10 @@ namespace Nektar
             // y-dimension is the column
             // z-dimension is the stack, it is the index that changes the slowest
             NekDouble TripleInnerProduct( 
-                                        const ConstArray<OneD, NekDouble>& fxyz, 
-                                        const ConstArray<OneD, NekDouble>& wx, 
-                                        const ConstArray<OneD, NekDouble>& wy, 
-                                        const ConstArray<OneD, NekDouble>& wz
+                                        const Array<OneD, const NekDouble>& fxyz, 
+                                        const Array<OneD, const NekDouble>& wx, 
+                                        const Array<OneD, const NekDouble>& wy, 
+                                        const Array<OneD, const NekDouble>& wz
                                         )
             {
                 int Qx = wx.num_elements();
@@ -203,10 +203,10 @@ namespace Nektar
             }
         }
   
-        NekDouble StdPrismExp::Integral3D(const ConstArray<OneD, NekDouble>& inarray, 
-                                        const ConstArray<OneD, NekDouble>& wx,
-                                        const ConstArray<OneD, NekDouble>& wy, 
-                                        const ConstArray<OneD, NekDouble>& wz)
+        NekDouble StdPrismExp::Integral3D(const Array<OneD, const NekDouble>& inarray, 
+                                        const Array<OneD, const NekDouble>& wx,
+                                        const Array<OneD, const NekDouble>& wy, 
+                                        const Array<OneD, const NekDouble>& wz)
         {
             return TripleInnerProduct( inarray, wx, wy, wz );
 
@@ -227,7 +227,7 @@ namespace Nektar
 		and \f$ J[i,j,k] \f$ is the  Jacobian evaluated at the quadrature point.
 
         */
-        NekDouble StdPrismExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
+        NekDouble StdPrismExp::Integral(const Array<OneD, const NekDouble>& inarray)
         {
             // Using implementation from page 146 of Spencer Sherwin's book
             int Qy = m_base[1]->GetNumPoints();
@@ -236,7 +236,7 @@ namespace Nektar
             // Get the point distributions:
             // x is assumed to be Gauss-Lobatto-Legendre (includes -1 and +1)
             // y is assumed to be Gauss-Lobatto-Legendre (includes -1 and +1)
-            ConstArray<OneD, NekDouble> z,wx,wy,wz;
+            Array<OneD, const NekDouble> z,wx,wy,wz;
             wx = ExpPointsProperties(0)->GetW();
             wy = ExpPointsProperties(1)->GetW();
             ExpPointsProperties(2)->GetZW(z,wz);
@@ -285,7 +285,7 @@ namespace Nektar
 		- \a outarray: array of inner product with respect to each basis over region
 
         */
-        void StdPrismExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
+        void StdPrismExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
         }
@@ -315,10 +315,10 @@ namespace Nektar
 
         **/
         // Interior prism implementation based on Spen's book page 119. and 608.  
-        void StdPrismExp::IProductWRTBase(  const ConstArray<OneD, NekDouble>& bx, 
-                                            const ConstArray<OneD, NekDouble>& by, 
-                                            const ConstArray<OneD, NekDouble>& bz, 
-                                            const ConstArray<OneD, NekDouble>& inarray, 
+        void StdPrismExp::IProductWRTBase(  const Array<OneD, const NekDouble>& bx, 
+                                            const Array<OneD, const NekDouble>& by, 
+                                            const Array<OneD, const NekDouble>& bz, 
+                                            const Array<OneD, const NekDouble>& inarray, 
                                             Array<OneD, NekDouble> & outarray )
         {
             int     Qx = m_base[0]->GetNumPoints();
@@ -404,7 +404,7 @@ namespace Nektar
 
         **/
       // PhysDerivative implementation based on Spen's book page 152.    
-      void StdPrismExp::PhysDeriv(const ConstArray<OneD, NekDouble>& u_physical, 
+      void StdPrismExp::PhysDeriv(const Array<OneD, const NekDouble>& u_physical, 
             Array<OneD, NekDouble> &out_dxi1, 
             Array<OneD, NekDouble> &out_dxi2,
             Array<OneD, NekDouble> &out_dxi3 )
@@ -419,7 +419,7 @@ namespace Nektar
             PhysTensorDeriv(u_physical, out_dEta1, out_dEta2, out_dEta3);
 
 
-            ConstArray<OneD, NekDouble> eta_x, eta_y, eta_z;
+            Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
             eta_x = ExpPointsProperties(0)->GetZ();
             eta_y = ExpPointsProperties(1)->GetZ();
             eta_z = ExpPointsProperties(2)->GetZ();
@@ -493,9 +493,9 @@ namespace Nektar
                 }
             }
 
-            const ConstArray<OneD, NekDouble>& bx = m_base[0]->GetBdata();
-            const ConstArray<OneD, NekDouble>& by = m_base[1]->GetBdata();
-            const ConstArray<OneD, NekDouble>& bz = m_base[2]->GetBdata();
+            const Array<OneD, const NekDouble>& bx = m_base[0]->GetBdata();
+            const Array<OneD, const NekDouble>& by = m_base[1]->GetBdata();
+            const Array<OneD, const NekDouble>& bz = m_base[2]->GetBdata();
 
             int p = mode_p, q = mode_q, r = mode_r;
             
@@ -544,7 +544,7 @@ namespace Nektar
 	     \f$	
         **/
         void StdPrismExp::BwdTrans(
-            const ConstArray<OneD, NekDouble>& inarray, 
+            const Array<OneD, const NekDouble>& inarray, 
             Array<OneD, NekDouble> &outarray)
         {
 
@@ -564,9 +564,9 @@ namespace Nektar
             int     Q = m_base[1]->GetNumModes() - 1;
             int     R = m_base[2]->GetNumModes() - 1;
 
-            ConstArray<OneD, NekDouble> xBasis  = m_base[0]->GetBdata();
-            ConstArray<OneD, NekDouble> yBasis  = m_base[1]->GetBdata();
-            ConstArray<OneD, NekDouble> zBasis  = m_base[2]->GetBdata();
+            Array<OneD, const NekDouble> xBasis  = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> yBasis  = m_base[1]->GetBdata();
+            Array<OneD, const NekDouble> zBasis  = m_base[2]->GetBdata();
 
             
              // Create an index map from the hexahedron to the prsim.
@@ -642,7 +642,7 @@ namespace Nektar
             - (this)->_coeffs: updated array of expansion coefficients. 
             
         */    
-        void StdPrismExp::FwdTrans( const ConstArray<OneD, NekDouble>& inarray,  Array<OneD, NekDouble> &outarray)
+        void StdPrismExp::FwdTrans( const Array<OneD, const NekDouble>& inarray,  Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
 
@@ -664,7 +664,7 @@ namespace Nektar
 
 
 
-        NekDouble StdPrismExp::PhysEvaluate(const ConstArray<OneD, NekDouble>& xi)
+        NekDouble StdPrismExp::PhysEvaluate(const Array<OneD, const NekDouble>& xi)
         {
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
@@ -695,9 +695,9 @@ namespace Nektar
  
         void StdPrismExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
         {
-            ConstArray<OneD, NekDouble> eta_x = ExpPointsProperties(0)->GetZ();
-            ConstArray<OneD, NekDouble> eta_y = ExpPointsProperties(1)->GetZ();
-            ConstArray<OneD, NekDouble> eta_z = ExpPointsProperties(2)->GetZ();
+            Array<OneD, const NekDouble> eta_x = ExpPointsProperties(0)->GetZ();
+            Array<OneD, const NekDouble> eta_y = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> eta_z = ExpPointsProperties(2)->GetZ();
             int Qx = GetNumPoints(0);
             int Qy = GetNumPoints(1);
             int Qz = GetNumPoints(2);
@@ -747,6 +747,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.5  2008/02/01 20:05:20  ehan
+ * Added doxygen comments.
+ *
  * Revision 1.4  2008/01/03 12:32:21  ehan
  * Fixed StdMatrix to StdMatrixKey.
  *

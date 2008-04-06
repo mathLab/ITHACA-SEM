@@ -67,19 +67,19 @@ namespace Nektar
                 return v_GetSign(i);
             }
             
-            inline void LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
+            inline void LocalToCont(const Array<OneD, const NekDouble> &loc, 
                                     Array<OneD, NekDouble> &cont)
             {
                 v_LocalToCont(loc,cont);
             }                            
             
-            inline void ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
+            inline void ContToLocal(const Array<OneD, const NekDouble> &cont, 
                                     Array<OneD, NekDouble> &loc)
             {
                 v_ContToLocal(cont,loc);
             }
             
-            inline void Assemble(const ConstArray<OneD, NekDouble> &loc, 
+            inline void Assemble(const Array<OneD, const NekDouble> &loc, 
                                  Array<OneD, NekDouble> &cont)
             {
                 v_Assemble(loc,cont);
@@ -101,20 +101,20 @@ namespace Nektar
             Array<OneD,int> m_locToContMap;       //< integer map
             
         private:
-            virtual void v_LocalToCont(const ConstArray<OneD, NekDouble> &loc, 
+            virtual void v_LocalToCont(const Array<OneD, const NekDouble> &loc, 
                                        Array<OneD, NekDouble> &cont)
             {
                 ASSERTL0(false,"LocalToCont needs defining");
             }                
             
             
-            virtual void v_ContToLocal(const ConstArray<OneD, NekDouble> &cont, 
+            virtual void v_ContToLocal(const Array<OneD, const NekDouble> &cont, 
                                        Array<OneD, NekDouble> &loc)
             {
                 ASSERTL0(false,"ContToLocal needs defining");
             }
             
-            virtual void v_Assemble(const ConstArray<OneD, NekDouble> &loc, 
+            virtual void v_Assemble(const Array<OneD, const NekDouble> &loc, 
                                     Array<OneD, NekDouble> &cont)
             {
                 ASSERTL0(false,"Assemble needs defining");
@@ -137,6 +137,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.16  2008/01/25 05:50:13  bnelson
+/** Fixed Visual Studio Compile Error.
+/**
 /** Revision 1.15  2007/12/06 22:52:30  pvos
 /** 2D Helmholtz solver updates
 /**

@@ -101,13 +101,13 @@ namespace Nektar
             *  0.5 which is due to the factor \f$ (1-\xi_2)/2 \f$ in the 
             *  integral weight
             */
-            NekDouble Integral(const ConstArray<OneD, NekDouble>& inarray);
+            NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
 
-            void IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray);
 
             void IProductWRTDerivBase(const int dir, 
-                                      const ConstArray<OneD, NekDouble>& inarray, 
+                                      const Array<OneD, const NekDouble>& inarray, 
                                       Array<OneD, NekDouble> & outarray);
 
             /** \brief Fill outarray with mode \a mode of expansion
@@ -133,7 +133,7 @@ namespace Nektar
             *  \right |_{\eta_2}  + \left . \frac{\partial u}{\partial d\eta_2}
             *  \right |_{\eta_1}  \f$
             */
-            void PhysDeriv(const ConstArray<OneD, NekDouble>& inarray, 
+            void PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &out_d0,
                 Array<OneD, NekDouble> &out_d1,
                 Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
@@ -146,13 +146,13 @@ namespace Nektar
             *
             *  \b Note: That 'q' (base[1]) runs fastest in this element 
             */
-            void BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+            void BwdTrans(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray);
-            void FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+            void FwdTrans(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray);
 
             /** \brief Single Point Evaluation */
-            NekDouble PhysEvaluate(const ConstArray<OneD, NekDouble>& coords);
+            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
             void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
 
@@ -252,9 +252,9 @@ namespace Nektar
             *  In the triangular space the i (i.e. \f$\eta_1\f$ direction)
             *  ordering still runs fastest by convention.
             */
-            void IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
-                const ConstArray<OneD, NekDouble>& base1,
-                const ConstArray<OneD, NekDouble>& inarray, 
+            void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray);
 
             //----------------------------------
@@ -332,19 +332,19 @@ namespace Nektar
                 GetCoords(coords_0,coords_1);
             }
 
-            virtual NekDouble v_Integral(const ConstArray<OneD, NekDouble>& inarray )
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray )
             {
                 return Integral(inarray);
             }
 
-            virtual void v_IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray,
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTBase(inarray, outarray);
             }
 
             virtual void v_IProductWRTDerivBase (const int dir, 
-                                                 const ConstArray<OneD,NekDouble> &inarray, 
+                                                 const Array<OneD, const NekDouble> &inarray, 
                                                  Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTDerivBase(dir,inarray,outarray);
@@ -355,7 +355,7 @@ namespace Nektar
                 FillMode(mode, outarray);
             }
 
-            virtual void v_PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+            virtual void v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &out_d0,
                 Array<OneD, NekDouble> &out_d1,
                 Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
@@ -364,7 +364,7 @@ namespace Nektar
             }
 
             virtual void v_PhysDeriv(const int dir, 
-                const ConstArray<OneD, NekDouble>& inarray,
+                const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
             {
                 Array<OneD,NekDouble> tmp;
@@ -388,7 +388,7 @@ namespace Nektar
                 }             
             }
 
-            virtual void v_StdPhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+            virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &out_d0, 
                 Array<OneD, NekDouble> &out_d1)
             {
@@ -396,7 +396,7 @@ namespace Nektar
             }
 
             virtual void   v_StdPhysDeriv (const int dir, 
-                                           const ConstArray<OneD, NekDouble>& inarray, 
+                                           const Array<OneD, const NekDouble>& inarray, 
                                            Array<OneD, NekDouble> &outarray)
             {
                 Array<OneD,NekDouble> tmp;
@@ -421,20 +421,20 @@ namespace Nektar
             }
 
             /** \brief Virtual call to StdTriExp::BwdTrans */
-            virtual void v_BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
             {
                 BwdTrans(inarray,outarray);
             }
 
             /** \brief Virtual call to StdTriExp::FwdTrans */
-            virtual void v_FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
             {
                 FwdTrans(inarray,outarray);
             }
 
-            virtual NekDouble v_PhysEvaluate(const ConstArray<OneD, NekDouble>& coords)
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
             {
                 return PhysEvaluate(coords);
             }
@@ -502,6 +502,9 @@ namespace Nektar
 
 /**
 * $Log: StdTriExp.h,v $
+* Revision 1.25  2008/04/02 22:18:10  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.24  2008/03/12 15:25:09  pvos
 * Clean up of the code
 *

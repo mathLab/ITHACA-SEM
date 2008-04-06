@@ -64,16 +64,16 @@ namespace Nektar
         // Integration Methods
         //////////////////////////////
 
-        NekDouble StdQuadExp::Integral(const ConstArray<OneD, NekDouble>& inarray)
+        NekDouble StdQuadExp::Integral(const Array<OneD, const NekDouble>& inarray)
         {
-            ConstArray<OneD, NekDouble> w0 = ExpPointsProperties(0)->GetW();
-            ConstArray<OneD, NekDouble> w1 = ExpPointsProperties(1)->GetW();
+            Array<OneD, const NekDouble> w0 = ExpPointsProperties(0)->GetW();
+            Array<OneD, const NekDouble> w1 = ExpPointsProperties(1)->GetW();
             
             return StdExpansion2D::Integral(inarray,w0,w1);
         }
 
 
-        void StdQuadExp::IProductWRTBase(const ConstArray<OneD, NekDouble>& inarray, 
+        void StdQuadExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
             Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
@@ -81,7 +81,7 @@ namespace Nektar
         }
 
         void StdQuadExp::IProductWRTDerivBase(const int dir, 
-                                             const ConstArray<OneD, NekDouble>& inarray, 
+                                             const Array<OneD, const NekDouble>& inarray, 
                                              Array<OneD, NekDouble> & outarray)
         {
             switch(dir)
@@ -107,9 +107,9 @@ namespace Nektar
         }
         
 
-        void StdQuadExp:: IProductWRTBase(const ConstArray<OneD, NekDouble>& base0, 
-            const ConstArray<OneD, NekDouble>& base1,
-            const ConstArray<OneD, NekDouble>& inarray, 
+        void StdQuadExp:: IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+            const Array<OneD, const NekDouble>& base1,
+            const Array<OneD, const NekDouble>& inarray, 
             Array<OneD, NekDouble> &outarray,
             int coll_check)
         {
@@ -118,8 +118,8 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad0*nquad1);
 
-            ConstArray<OneD, NekDouble> w0 = ExpPointsProperties(0)->GetW();
-            ConstArray<OneD, NekDouble> w1 = ExpPointsProperties(1)->GetW();
+            Array<OneD, const NekDouble> w0 = ExpPointsProperties(0)->GetW();
+            Array<OneD, const NekDouble> w1 = ExpPointsProperties(1)->GetW();
 
             ASSERTL2((m_base[0]->GetAlpha() == 0.0)&&(m_base[1]->GetAlpha() == 0.0),
                      "Basis has non-zero alpha weight");
@@ -218,8 +218,8 @@ namespace Nektar
             int    i;
             int   nquad0 = m_base[0]->GetNumPoints();
             int   nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<OneD, NekDouble> base0  = m_base[0]->GetBdata();
-            ConstArray<OneD, NekDouble> base1  = m_base[1]->GetBdata();
+            Array<OneD, const NekDouble> base0  = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> base1  = m_base[1]->GetBdata();
             int   btmp0 = m_base[0]->GetNumModes();
             int   mode0 = mode%btmp0;
             int   mode1 = mode/btmp0;
@@ -283,7 +283,7 @@ namespace Nektar
         /// Differentiation Methods
         ///////////////////////////////
 
-        void StdQuadExp::PhysDeriv(const ConstArray<OneD, NekDouble>& inarray,
+        void StdQuadExp::PhysDeriv(const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &out_d0,
             Array<OneD, NekDouble> &out_d1,
             Array<OneD, NekDouble> &out_d2)
@@ -295,7 +295,7 @@ namespace Nektar
         // Evaluation Methods
         //-----------------------------
 
-        void StdQuadExp::BwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+        void StdQuadExp::BwdTrans(const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray)
         {
             int           nquad0 = m_base[0]->GetNumPoints();
@@ -378,7 +378,7 @@ namespace Nektar
             }
         }
 
-        void StdQuadExp::FwdTrans(const ConstArray<OneD, NekDouble>& inarray,
+        void StdQuadExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
@@ -402,7 +402,7 @@ namespace Nektar
         }
 
         /// Single Point Evaluation
-        NekDouble StdQuadExp::PhysEvaluate(ConstArray<OneD, NekDouble>& coords)
+        NekDouble StdQuadExp::PhysEvaluate(Array<OneD, const NekDouble>& coords)
         {
             return  StdExpansion2D::PhysEvaluate2D(coords); 
         }
@@ -973,8 +973,8 @@ namespace Nektar
             int  i,j;
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
-            ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
 
             outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
             outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
@@ -1026,8 +1026,8 @@ namespace Nektar
         void StdQuadExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
             Array<OneD, NekDouble> &coords_1)
         {
-            ConstArray<OneD, NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-            ConstArray<OneD, NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
             int nq0 = GetNumPoints(0);
             int nq1 = GetNumPoints(1);
             int i;
@@ -1043,6 +1043,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.31  2008/04/03 16:12:11  pvos
+* updates for NEKTAR_USING_DIRECT_BLAS_CALLS
+*
 * Revision 1.30  2008/04/02 22:18:10  pvos
 * Update for 2D local to global mapping
 *

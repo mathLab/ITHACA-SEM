@@ -96,7 +96,7 @@ namespace Nektar
                 return m_stdMatKey->GetNcoeffs();
             }
 
-            const ConstArray<OneD, LibUtilities::BasisSharedPtr> &GetBase()
+            const Array<OneD, const LibUtilities::BasisSharedPtr> &GetBase()
             {
                 return m_stdMatKey->GetBase();
             }
@@ -145,6 +145,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.14  2007/12/17 13:04:29  sherwin
+* Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
+*
 * Revision 1.13  2007/11/20 16:28:45  sherwin
 * Added terms for UDG Helmholtz solver
 *

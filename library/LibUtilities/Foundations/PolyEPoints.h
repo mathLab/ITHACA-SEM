@@ -59,8 +59,8 @@ namespace Nektar
             static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
 
             const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const ConstArray<OneD, NekDouble>& x);
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const ConstArray<OneD, NekDouble>& x);
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x);
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x);
 
             PolyEPoints(const PointsKey &key):PointsBaseType(key)
             {
@@ -80,11 +80,11 @@ namespace Nektar
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();
-            void CalculateInterpMatrix(unsigned int npts, const ConstArray<OneD, NekDouble>& xpoints, Array<OneD, NekDouble>&  interp);
+            void CalculateInterpMatrix(unsigned int npts, const Array<OneD, const NekDouble>& xpoints, Array<OneD, NekDouble>&  interp);
 
-            NekDouble LagrangeInterpolant(NekDouble x, int npts, const ConstArray<OneD, NekDouble>& xpts, const ConstArray<OneD, NekDouble>& funcvals);
-            NekDouble LagrangePoly(NekDouble x, int pt, int npts, const ConstArray<OneD, NekDouble>& xpts);     
-            NekDouble LagrangePolyDeriv(NekDouble x, int pt, int npts, const ConstArray<OneD, NekDouble>& xpts);
+            NekDouble LagrangeInterpolant(NekDouble x, int npts, const Array<OneD, const NekDouble>& xpts, const Array<OneD, const NekDouble>& funcvals);
+            NekDouble LagrangePoly(NekDouble x, int pt, int npts, const Array<OneD, const NekDouble>& xpts);     
+            NekDouble LagrangePolyDeriv(NekDouble x, int pt, int npts, const Array<OneD, const NekDouble>& xpts);
 
         }; // class PolyEPoints
     } // end of namespace

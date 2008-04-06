@@ -42,8 +42,8 @@ namespace Nektar
 
         LocalToGlobalBndryMap1D::LocalToGlobalBndryMap1D(const StdRegions::StdExpansionVector &locexp, 
                                                          const SpatialDomains::MeshGraph1D &graph1D,
-                                                         const ConstArray<OneD,LocalRegions::PointExpSharedPtr> &bndCondExp,
-                                                         const ConstArray<OneD,SpatialDomains::BoundaryConditionType> &bndCondTypes)
+                                                         const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
+                                                         const Array<OneD, const SpatialDomains::BoundaryConditionType> &bndCondTypes)
         {
             int i,j;
             int vid = 0;
@@ -120,6 +120,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalBndryMap1D.cpp,v $
+* Revision 1.2  2007/12/06 22:52:30  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.1  2007/11/20 16:27:16  sherwin
 * Zero Dirichlet version of UDG Helmholtz solver
 *

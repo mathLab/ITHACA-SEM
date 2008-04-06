@@ -278,8 +278,90 @@ namespace Nektar
                 {
                     return RawAllocate<60>();
                 }
+                else if( NumberOfElements < 100 )
+                {
+                    return RawAllocate<100>();
+                }
+                else if( NumberOfElements < 150 )
+                {
+                    return RawAllocate<150>();
+                }
+                else if( NumberOfElements < 200 )
+                {
+                    return RawAllocate<200>();
+                }
+                else if( NumberOfElements < 300 )
+                {
+                    return RawAllocate<300>();
+                }
+                else if( NumberOfElements < 400 )
+                {
+                    return RawAllocate<400>();
+                }
+                else if( NumberOfElements < 500 )
+                {
+                    return RawAllocate<500>();
+                }
+                else if( NumberOfElements < 600 )
+                {
+                    return RawAllocate<600>();
+                }
+                else if( NumberOfElements < 700 )
+                {
+                    return RawAllocate<700>();
+                }
+                else if( NumberOfElements < 800 )
+                {
+                    return RawAllocate<800>();
+                }
+                else if( NumberOfElements < 900 )
+                {
+                    return RawAllocate<900>();
+                }
+                else if( NumberOfElements < 1000 )
+                {
+                    return RawAllocate<1000>();
+                }
+                else if( NumberOfElements < 2000 )
+                {
+                    return RawAllocate<2000>();
+                }
+                else if( NumberOfElements < 3000 )
+                {
+                    return RawAllocate<3000>();
+                }
+                else if( NumberOfElements < 4000 )
+                {
+                    return RawAllocate<4000>();
+                }
+                else if( NumberOfElements < 5000 )
+                {
+                    return RawAllocate<5000>();
+                }
+                else if( NumberOfElements < 10000 )
+                {
+                    return RawAllocate<10000>();
+                }
+                else if( NumberOfElements < 20000 )
+                {
+                    return RawAllocate<20000>();
+                }
+                else if( NumberOfElements < 30000 )
+                {
+                    return RawAllocate<30000>();
+                }
+                else if( NumberOfElements < 40000 )
+                {
+                    return RawAllocate<40000>();
+                }
+                else if( NumberOfElements < 50000 )
+                {
+                    return RawAllocate<50000>();
+                }
                 else
                 {
+                    std::cout << "Allocation is not as efficient as it could be because the memory manager is not handling arrays of size " <<
+                        NumberOfElements << std::endl;
                     return static_cast<DataType*>(::operator new(NumberOfElements * sizeof(DataType)));
                 }
             }
@@ -328,8 +410,90 @@ namespace Nektar
                 {
                     RawDeallocate<60>(array);
                 }
+                else if( NumberOfElements < 100 )
+                {
+                    RawDeallocate<100>(array);
+                }
+                else if( NumberOfElements < 150 )
+                {
+                    RawDeallocate<150>(array);
+                }
+                else if( NumberOfElements < 200 )
+                {
+                    RawDeallocate<200>(array);
+                }
+                else if( NumberOfElements < 300 )
+                {
+                    RawDeallocate<300>(array);
+                }
+                else if( NumberOfElements < 400 )
+                {
+                     RawDeallocate<400>(array);
+                }
+                else if( NumberOfElements < 500 )
+                {
+                     RawDeallocate<500>(array);
+                }
+                else if( NumberOfElements < 600 )
+                {
+                     RawDeallocate<600>(array);
+                }
+                else if( NumberOfElements < 700 )
+                {
+                     RawDeallocate<700>(array);
+                }
+                else if( NumberOfElements < 800 )
+                {
+                     RawDeallocate<800>(array);
+                }
+                else if( NumberOfElements < 900 )
+                {
+                     RawDeallocate<900>(array);
+                }
+                else if( NumberOfElements < 1000 )
+                {
+                     RawDeallocate<1000>(array);
+                }
+                else if( NumberOfElements < 2000 )
+                {
+                     RawDeallocate<2000>(array);
+                }
+                else if( NumberOfElements < 3000 )
+                {
+                     RawDeallocate<3000>(array);
+                }
+                else if( NumberOfElements < 4000 )
+                {
+                     RawDeallocate<4000>(array);
+                }
+                else if( NumberOfElements < 5000 )
+                {
+                     RawDeallocate<5000>(array);
+                }
+                else if( NumberOfElements < 10000 )
+                {
+                     RawDeallocate<10000>(array);
+                }
+                else if( NumberOfElements < 20000 )
+                {
+                     RawDeallocate<20000>(array);
+                }
+                else if( NumberOfElements < 30000 )
+                {
+                     RawDeallocate<30000>(array);
+                }
+                else if( NumberOfElements < 40000 )
+                {
+                     RawDeallocate<40000>(array);
+                }
+                else if( NumberOfElements < 50000 )
+                {
+                     RawDeallocate<50000>(array);
+                }
                 else
                 {
+                    std::cout << "Allocation is not as efficient as it could be because the memory manager is not handling arrays of size " <<
+                        NumberOfElements << std::endl;
                     ::operator delete(array);
                 }
             }
@@ -347,6 +511,8 @@ namespace Nektar
             typedef const DataType& const_reference;
             
             MemoryManager() {}
+            template<typename T>
+            MemoryManager(const MemoryManager<T>& rhs) {}
             ~MemoryManager() {}
             
             pointer address(reference r) const { return &r; }
@@ -407,6 +573,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.16  2008/01/02 18:17:22  bnelson
+    Removed commented code.
+
     Revision 1.15  2007/08/25 04:21:49  bnelson
     *** empty log message ***
 

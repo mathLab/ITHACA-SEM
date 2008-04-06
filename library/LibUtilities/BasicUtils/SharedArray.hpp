@@ -221,29 +221,177 @@ namespace Nektar
     template<typename Dim, typename DataType>
     class Array;    
     
-    /// \brief A 1D immutable array.  See \ref Arrays for details.
+//    /// \brief A 1D immutable array.  See \ref Arrays for details.
+//    template<typename DataType>
+//    class Array<OneD, const DataType>
+//    {
+//        public:
+//            typedef boost::multi_array_ref<DataType, 1> ArrayType;
+//            typedef typename ArrayType::const_reference const_reference;
+//            typedef typename ArrayType::reference reference;
+//            
+//            typedef typename ArrayType::index index;
+//            typedef typename ArrayType::const_iterator const_iterator;
+//            typedef typename ArrayType::iterator iterator;
+//            
+//            typedef typename ArrayType::element element;
+//            typedef typename ArrayType::size_type size_type;
+//            
+//            
+//        public:
+//            /// \brief Creates an empty, size 0 array.
+//            Array() :
+//                m_data(CreateStorage<DataType>(0)),
+//                m_offset(0),
+//                m_size(0)
+//            {
+//            }
+//            
+//            /// \brief Constructs an empty 1 dimensional array.
+//            /// \param dim1Size The array's size.
+//            ///
+//            /// If DataType is a fundamental type (double, int, etc.), then the allocated array is 
+//            /// uninitialized.  If it is any other type, each element is initialized with DataType's default
+//            /// constructor.
+//            explicit Array(unsigned int dim1Size) :
+//                m_data(CreateStorage<DataType>(dim1Size)),
+//                m_offset(0),
+//                m_size(dim1Size)
+//            {
+//                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size);
+//            }
+//            
+//            /// \brief Creates a 1D array with each element initialized to an initial value.
+//            /// \param dim1Size The array's size.
+//            /// \param initValue Each element's initial value.
+//            ///
+//            /// If DataType is a fundamental type (double, int, etc.), then the initial value 
+//            /// is copied directly into each element.  Otherwise, the DataType's copy constructor
+//            /// is used to initialize each element.
+//            Array(unsigned int dim1Size, const DataType& initValue) :
+//                m_data(CreateStorage<DataType>(dim1Size)),
+//                m_offset(0),
+//                m_size(dim1Size)
+//            {
+//                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size, initValue);
+//            }
+//            
+//            /// \brief Creates a 1D array with a copy the given raw array.
+//            /// \param dim1Size the array's size.
+//            /// \param data The data to copy.  
+//            ///
+//            /// If DataType is a fundamental type (double, int, etc.), then data is copied
+//            /// directly into the underlying storage.  Otherwise, the DataType's copy constructor
+//            /// is used to copy each element.
+//            Array(unsigned int dim1Size, const DataType* data) :
+//                m_data(CreateStorage<DataType>(dim1Size)),
+//                m_offset(0),
+//                m_size(dim1Size)
+//            {
+//                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size, data);
+//            }
+//            
+//            Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
+//                m_data(rhs.m_data),
+//                m_offset(rhs.m_offset),
+//                m_size(dim1Size)
+//            {
+//                ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
+//            }
+//
+//            Array(const Array<OneD, const DataType>& rhs) :
+//                m_data(rhs.m_data),
+//                m_offset(rhs.m_offset),
+//                m_size(rhs.m_size)
+//            {
+//            }
+//            
+//            Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs)
+//            {
+//                m_data = rhs.m_data;
+//                m_offset = rhs.m_offset;
+//                m_size = rhs.m_size;
+//                return *this;
+//            }
+//            
+//            const_iterator begin() const { return m_data->begin() + m_offset; }
+//            const_iterator end() const { return m_data->begin() + m_offset + m_size; }
+//            
+//            const_reference operator[](index i) const 
+//            {
+//                ASSERTL1(static_cast<size_type>(i) < m_size, (std::string("Element ") +
+//                    boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
+//                    boost::lexical_cast<std::string>(m_size)));
+//                return (*m_data)[i+m_offset]; 
+//            }
+//            
+//            const element* get() const { return m_data->data()+m_offset; }
+//            const element* data() const { return m_data->data()+m_offset; }
+//            size_type num_dimensions() const { return m_data->num_dimensions(); }
+//            //const size_type* shape() const { return m_data->shape(); }
+//            size_type num_elements() const { return m_size; }
+//            unsigned int GetOffset() const { return m_offset; }
+//            
+//            bool Overlaps(const Array<OneD, const DataType>& rhs) const
+//            {
+//                const element* start = get();
+//                const element* end = start + m_size;
+//                
+//                const element* rhs_start = rhs.get();
+//                const element* rhs_end = rhs_start + rhs.num_elements();
+//                
+//                return (rhs_start >= start && rhs_start <= end) ||
+//                       (rhs_end >= start && rhs_end <= end);
+//            }
+//            
+//            template<typename T1, typename T2>
+//            friend bool operator==(const Array<OneD, T1>&, const Array<OneD, T2>&);
+//            
+//            template<typename T>
+//            friend Array<OneD, T> operator+(const Array<OneD, T>& lhs, unsigned int offset);
+//   
+//            template<typename T>
+//            friend Array<OneD, T> operator+(unsigned int offset, const Array<OneD, T>& rhs);
+//            
+//        protected:
+//            boost::shared_ptr<ArrayType> m_data;
+//            unsigned int m_offset;
+//            unsigned int m_size;
+//
+//        private:
+//            template<typename T>
+//            static Array<OneD, T> CreateWithOffset(const Array<OneD, T>& rhs, unsigned int offset)
+//            {
+//                Array<OneD, T> result(rhs);
+//                result.m_offset += offset;
+//                result.m_size = rhs.m_size - offset;
+//                return result;
+//            }
+//            
+//    };
+    
     template<typename DataType>
     class Array<OneD, const DataType>
     {
         public:
-            typedef boost::multi_array_ref<DataType, 1> ArrayType;
-            typedef typename ArrayType::const_reference const_reference;
-            typedef typename ArrayType::reference reference;
+            typedef boost::shared_ptr<DataType> ArrayType;
+            typedef const DataType& const_reference;
+            typedef DataType& reference;
             
-            typedef typename ArrayType::index index;
-            typedef typename ArrayType::const_iterator const_iterator;
-            typedef typename ArrayType::iterator iterator;
+            //typedef typename ArrayType::index index;
+            typedef const DataType* const_iterator;
+            typedef DataType* iterator;
             
-            typedef typename ArrayType::element element;
-            typedef typename ArrayType::size_type size_type;
+            typedef DataType element;
+            typedef unsigned int size_type;
             
             
         public:
             /// \brief Creates an empty, size 0 array.
             Array() :
-                m_data(CreateStorage<DataType>(0)),
-                m_offset(0),
-                m_size(0)
+                m_size(0),
+                m_data(CreateStorage(m_size)),
+                m_offset(0)
             {
             }
             
@@ -254,11 +402,11 @@ namespace Nektar
             /// uninitialized.  If it is any other type, each element is initialized with DataType's default
             /// constructor.
             explicit Array(unsigned int dim1Size) :
-                m_data(CreateStorage<DataType>(dim1Size)),
-                m_offset(0),
-                m_size(dim1Size)
+                m_size(dim1Size),
+                m_data(CreateStorage(dim1Size)),
+                m_offset(0)
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data.get(), m_size);
             }
             
             /// \brief Creates a 1D array with each element initialized to an initial value.
@@ -269,11 +417,11 @@ namespace Nektar
             /// is copied directly into each element.  Otherwise, the DataType's copy constructor
             /// is used to initialize each element.
             Array(unsigned int dim1Size, const DataType& initValue) :
-                m_data(CreateStorage<DataType>(dim1Size)),
-                m_offset(0),
-                m_size(dim1Size)
+                m_size(dim1Size),
+                m_data(CreateStorage(dim1Size)),
+                m_offset(0)
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size, initValue);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data.get(), m_size, initValue);
             }
             
             /// \brief Creates a 1D array with a copy the given raw array.
@@ -284,25 +432,25 @@ namespace Nektar
             /// directly into the underlying storage.  Otherwise, the DataType's copy constructor
             /// is used to copy each element.
             Array(unsigned int dim1Size, const DataType* data) :
-                m_data(CreateStorage<DataType>(dim1Size)),
-                m_offset(0),
-                m_size(dim1Size)
+                m_size(dim1Size),
+                m_data(CreateStorage(dim1Size)),
+                m_offset(0)
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size, data);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data.get(), m_size, data);
             }
             
             Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
+                m_size(dim1Size),
                 m_data(rhs.m_data),
-                m_offset(rhs.m_offset),
-                m_size(dim1Size)
+                m_offset(rhs.m_offset)
             {
                 ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
             }
 
             Array(const Array<OneD, const DataType>& rhs) :
+                 m_size(rhs.m_size),
                 m_data(rhs.m_data),
-                m_offset(rhs.m_offset),
-                m_size(rhs.m_size)
+                m_offset(rhs.m_offset)
             {
             }
             
@@ -314,20 +462,20 @@ namespace Nektar
                 return *this;
             }
             
-            const_iterator begin() const { return m_data->begin() + m_offset; }
-            const_iterator end() const { return m_data->begin() + m_offset + m_size; }
+            const_iterator begin() const { return m_data.get() + m_offset; }
+            const_iterator end() const { return m_data.get() + m_offset + m_size; }
             
-            const_reference operator[](index i) const 
+            const_reference operator[](unsigned int i) const 
             {
                 ASSERTL1(static_cast<size_type>(i) < m_size, (std::string("Element ") +
                     boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
                     boost::lexical_cast<std::string>(m_size)));
-                return (*m_data)[i+m_offset]; 
+                return *(m_data.get() + i + m_offset);
             }
             
-            const element* get() const { return m_data->data()+m_offset; }
-            const element* data() const { return m_data->data()+m_offset; }
-            size_type num_dimensions() const { return m_data->num_dimensions(); }
+            const element* get() const { return m_data.get()+m_offset; }
+            const element* data() const { return m_data.get()+m_offset; }
+            size_type num_dimensions() const { return 1; }
             //const size_type* shape() const { return m_data->shape(); }
             size_type num_elements() const { return m_size; }
             unsigned int GetOffset() const { return m_offset; }
@@ -354,11 +502,34 @@ namespace Nektar
             friend Array<OneD, T> operator+(unsigned int offset, const Array<OneD, T>& rhs);
             
         protected:
-            boost::shared_ptr<ArrayType> m_data;
-            unsigned int m_offset;
             unsigned int m_size;
+            boost::shared_ptr<DataType> m_data;
+            unsigned int m_offset;
+            
 
         private:
+            struct DestroyArray
+            {
+                DestroyArray(unsigned int elements) :
+                    m_elements(elements) {}
+                    
+                void operator()(DataType* p)
+                {
+                    ArrayDestructionPolicy<DataType>::Destroy(p, m_elements);
+                    MemoryManager<DataType>::RawDeallocate(p, m_elements);
+                }
+                unsigned int m_elements;
+            };
+            
+            boost::shared_ptr<DataType> 
+            CreateStorage(unsigned int size)
+            {
+                DataType* storage = MemoryManager<DataType>::RawAllocate(size);
+                return boost::shared_ptr<DataType>(storage,
+                        //boost::bind(DeleteStorage<DataType>, storage, size) );
+                        DestroyArray(size), MemoryManager<DataType>() );
+            }
+            
             template<typename T>
             static Array<OneD, T> CreateWithOffset(const Array<OneD, T>& rhs, unsigned int offset)
             {
@@ -369,6 +540,7 @@ namespace Nektar
             }
             
     };
+
     
     template<typename DataType>
     class Array<TwoD, const DataType>
@@ -532,7 +704,6 @@ namespace Nektar
             typedef Array<OneD, const DataType> BaseType;
             typedef typename BaseType::iterator iterator;
             typedef typename BaseType::reference reference;
-            typedef typename BaseType::index index;
             typedef typename BaseType::size_type size_type;
             typedef typename BaseType::element element;
             
@@ -592,26 +763,26 @@ namespace Nektar
             }
             
             using BaseType::begin;
-            iterator begin() { return this->m_data->begin()+this->m_offset; }
+            iterator begin() { return this->m_data.get()+this->m_offset; }
             
             using BaseType::end;
-            iterator end() { return this->m_data->begin() + this->m_offset + this->m_size; }
+            iterator end() { return this->m_data.get() + this->m_offset + this->m_size; }
             
             using BaseType::operator[];
-            reference operator[](index i)
+            reference operator[](unsigned int i)
             {
                 ASSERTL1(static_cast<size_type>(i) < this->num_elements(), (std::string("Element ") +
                     boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
                     boost::lexical_cast<std::string>(this->num_elements())));
-                return (*this->m_data)[i+this->m_offset]; 
+                return (get())[i];
             }
                 
             
             using BaseType::get;
-            element* get() { return this->m_data->data()+this->m_offset; }
+            element* get() { return this->m_data.get()+this->m_offset; }
             
             using BaseType::data;
-            element* data() { return this->m_data->data()+this->m_offset; }
+            element* data() { return this->m_data.get()+this->m_offset; }
             
             template<typename T1, typename dim, typename space>
             friend class NekVector;
@@ -749,7 +920,20 @@ namespace Nektar
     template<typename T1, typename T2>
     bool operator==(const Array<OneD, T1>& lhs, const Array<OneD, T2>& rhs) 
     {
-        return *lhs.m_data == *rhs.m_data;
+        if( lhs.num_elements() != rhs.num_elements() )
+        {
+            return false;
+        }
+        
+        for(unsigned int i = 0; i < lhs.num_elements(); ++i)
+        {
+            if( lhs[i] != rhs[i] )
+            {
+                return false;
+            }
+        }
+        
+        return true;
     }
     
     template<typename T1, typename T2>

@@ -75,6 +75,8 @@ namespace Nektar
             return result;
         }
         
+        GENERATE_ADDITION_OPERATOR(Foo, 0, Bar, 0);
+        
         void NekAdd(Foo& result, const Bar& lhs, const Bar& rhs)
         {
             result.Value = lhs.Value + rhs.Value;
@@ -87,6 +89,7 @@ namespace Nektar
             return result;
         }
         
+        GENERATE_ADDITION_OPERATOR(Bar, 0, Bar, 0);
         
         class ConstantBinarySpecialization0_Parameter
         {
@@ -190,37 +193,37 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestLhsBinaryRhsConstantSpecialization1)
         {
-//             double lhs_buf[] = {1, 2, 3, 4,
-//                                 5, 6, 7, 8,
-//                                 9, 10, 11, 12,
-//                                 13, 14, 15, 16};
-//             double middle_buf[] = {2, 4, 6, 8,
-//                                 10, 12, 14, 16,
-//                                 18, 20, 22, 24,
-//                                 26, 28, 30, 32};
-// 
-//             double rhs_buf[] = { 3, 6, 9, 12,
-//                                  15, 18, 21, 24,
-//                                  27, 30, 33, 36,
-//                                  39, 42, 45, 48};
-// 
-//             NekMatrix<double> lhs(4, 4, lhs_buf);
-//             NekMatrix<double> rhs(4, 4, rhs_buf);
-//             NekMatrix<double> middle(4, 4, middle_buf);
-// 
-//             Expression<BinaryExpressionPolicy<
-//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, 
-//                                               ConstantExpressionPolicy<NekMatrix<double> >, AddOp>,
-//                                               ConstantExpressionPolicy<NekMatrix<double> >,
-//                                               AddOp> > expr = (lhs + middle) + rhs;
-//             NekMatrix<double> result(expr);
-// 
-//             double expected_result_buf[] = {6, 12, 18, 24,
-//                                             30, 36, 42, 48,
-//                                             54, 60, 66, 72,
-//                                             78, 84, 90, 96};
-//             NekMatrix<double> expected_result(4, 4, expected_result_buf);
-//             BOOST_CHECK_EQUAL(expected_result, result);
+             double lhs_buf[] = {1, 2, 3, 4,
+                                 5, 6, 7, 8,
+                                 9, 10, 11, 12,
+                                 13, 14, 15, 16};
+             double middle_buf[] = {2, 4, 6, 8,
+                                 10, 12, 14, 16,
+                                 18, 20, 22, 24,
+                                 26, 28, 30, 32};
+ 
+             double rhs_buf[] = { 3, 6, 9, 12,
+                                  15, 18, 21, 24,
+                                  27, 30, 33, 36,
+                                  39, 42, 45, 48};
+ 
+             NekMatrix<double> lhs(4, 4, lhs_buf);
+             NekMatrix<double> rhs(4, 4, rhs_buf);
+             NekMatrix<double> middle(4, 4, middle_buf);
+ 
+             Expression<BinaryExpressionPolicy<
+                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, AddOp,
+                                               ConstantExpressionPolicy<NekMatrix<double> > >, AddOp,
+                                               ConstantExpressionPolicy<NekMatrix<double> >
+                                               > > expr = (lhs + middle) + rhs;
+             NekMatrix<double> result(expr);
+ 
+             double expected_result_buf[] = {6, 12, 18, 24,
+                                             30, 36, 42, 48,
+                                             54, 60, 66, 72,
+                                             78, 84, 90, 96};
+             NekMatrix<double> expected_result(4, 4, expected_result_buf);
+             BOOST_CHECK_EQUAL(expected_result, result);
         }
         
         
@@ -232,7 +235,7 @@ namespace Nektar
 //             
 //             Foo result;
 //             
-//             ((lhs + middle) + rhs).Apply(result);
+//             ((lhs + middle) + rhs).Evaluate(result);
 //             
 //             BOOST_CHECK_EQUAL(result.Value, 6);
         }
@@ -241,142 +244,142 @@ namespace Nektar
         // operator.
         BOOST_AUTO_TEST_CASE(TestAddingThreeMatrices_LhsIsBinary_TopOperationIsCommutative)
         {
-//             double lhs_buf[] = {1, 2, 3, 4,
-//                                 5, 6, 7, 8,
-//                                 9, 10, 11, 12,
-//                                 13, 14, 15, 16};
-//             double middle_buf[] = {2, 4, 6, 8,
-//                                 10, 12, 14, 16,
-//                                 18, 20, 22, 24,
-//                                 26, 28, 30, 32};
-// 
-//             double rhs_buf[] = { 3, 6, 9, 12,
-//                                  15, 18, 21, 24,
-//                                  27, 30, 33, 36,
-//                                  39, 42, 45, 48};
-// 
-//             NekMatrix<double> lhs(4, 4, lhs_buf);
-//             NekMatrix<double> rhs(4, 4, rhs_buf);
-//             NekMatrix<double> middle(4, 4, middle_buf);
-// 
-//             Expression<BinaryExpressionPolicy<
-//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, 
-//                                               ConstantExpressionPolicy<NekMatrix<double> >, AddOp>,
-//                                               ConstantExpressionPolicy<NekMatrix<double> >,
-//                                               AddOp> > expr = (lhs + middle) + rhs;
-//             NekMatrix<double> result(expr);
-// 
-//             double expected_result_buf[] = {6, 12, 18, 24,
-//                                             30, 36, 42, 48,
-//                                             54, 60, 66, 72,
-//                                             78, 84, 90, 96};
-//             NekMatrix<double> expected_result(4, 4, expected_result_buf);
-//             BOOST_CHECK_EQUAL(expected_result, result);
+             double lhs_buf[] = {1, 2, 3, 4,
+                                 5, 6, 7, 8,
+                                 9, 10, 11, 12,
+                                 13, 14, 15, 16};
+             double middle_buf[] = {2, 4, 6, 8,
+                                 10, 12, 14, 16,
+                                 18, 20, 22, 24,
+                                 26, 28, 30, 32};
+ 
+             double rhs_buf[] = { 3, 6, 9, 12,
+                                  15, 18, 21, 24,
+                                  27, 30, 33, 36,
+                                  39, 42, 45, 48};
+ 
+             NekMatrix<double> lhs(4, 4, lhs_buf);
+             NekMatrix<double> rhs(4, 4, rhs_buf);
+             NekMatrix<double> middle(4, 4, middle_buf);
+ 
+             Expression<BinaryExpressionPolicy<
+                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, AddOp,
+                                               ConstantExpressionPolicy<NekMatrix<double> > >, AddOp,
+                                               ConstantExpressionPolicy<NekMatrix<double> >
+                                               > > expr = (lhs + middle) + rhs;
+             NekMatrix<double> result(expr);
+ 
+             double expected_result_buf[] = {6, 12, 18, 24,
+                                             30, 36, 42, 48,
+                                             54, 60, 66, 72,
+                                             78, 84, 90, 96};
+             NekMatrix<double> expected_result(4, 4, expected_result_buf);
+             BOOST_CHECK_EQUAL(expected_result, result);
         }
 
         BOOST_AUTO_TEST_CASE(TestAddingThreeMatrices_RhsIsBinary_TopOperationIsCommutative)
         {
-//             double lhs_buf[] = {1, 2, 3, 4,
-//                                 5, 6, 7, 8,
-//                                 9, 10, 11, 12,
-//                                 13, 14, 15, 16};
-//             double middle_buf[] = {2, 4, 6, 8,
-//                                 10, 12, 14, 16,
-//                                 18, 20, 22, 24,
-//                                 26, 28, 30, 32};
-// 
-//             double rhs_buf[] = { 3, 6, 9, 12,
-//                                  15, 18, 21, 24,
-//                                  27, 30, 33, 36,
-//                                  39, 42, 45, 48};
-// 
-//             NekMatrix<double> lhs(4, 4, lhs_buf);
-//             NekMatrix<double> rhs(4, 4, rhs_buf);
-//             NekMatrix<double> middle(4, 4, middle_buf);
-// 
-//             Expression<BinaryExpressionPolicy<
-//                        ConstantExpressionPolicy<NekMatrix<double> >,
-//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, 
-//                                               ConstantExpressionPolicy<NekMatrix<double> >, AddOp>,
-//                                               AddOp> > expr = lhs + (middle + rhs);
-//             NekMatrix<double> result(expr);
-// 
-//             double expected_result_buf[] = {6, 12, 18, 24,
-//                                             30, 36, 42, 48,
-//                                             54, 60, 66, 72,
-//                                             78, 84, 90, 96};
-//             NekMatrix<double> expected_result(4, 4, expected_result_buf);
-//             BOOST_CHECK_EQUAL(expected_result, result);
+             double lhs_buf[] = {1, 2, 3, 4,
+                                 5, 6, 7, 8,
+                                 9, 10, 11, 12,
+                                 13, 14, 15, 16};
+             double middle_buf[] = {2, 4, 6, 8,
+                                 10, 12, 14, 16,
+                                 18, 20, 22, 24,
+                                 26, 28, 30, 32};
+ 
+             double rhs_buf[] = { 3, 6, 9, 12,
+                                  15, 18, 21, 24,
+                                  27, 30, 33, 36,
+                                  39, 42, 45, 48};
+ 
+             NekMatrix<double> lhs(4, 4, lhs_buf);
+             NekMatrix<double> rhs(4, 4, rhs_buf);
+             NekMatrix<double> middle(4, 4, middle_buf);
+ 
+             Expression<BinaryExpressionPolicy<
+                        ConstantExpressionPolicy<NekMatrix<double> >, AddOp,
+                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, AddOp, 
+                                               ConstantExpressionPolicy<NekMatrix<double> > >
+                                               > > expr = lhs + (middle + rhs);
+             NekMatrix<double> result(expr);
+ 
+             double expected_result_buf[] = {6, 12, 18, 24,
+                                             30, 36, 42, 48,
+                                             54, 60, 66, 72,
+                                             78, 84, 90, 96};
+             NekMatrix<double> expected_result(4, 4, expected_result_buf);
+             BOOST_CHECK_EQUAL(expected_result, result);
         }
 
         BOOST_AUTO_TEST_CASE(TestAddingThreeMatrices_LhsIsBinary_TopOperationIsNotCommutative)
         {
-//             double lhs_buf[] = {1, 2, 3, 4,
-//                                 5, 6, 7, 8,
-//                                 9, 10, 11, 12,
-//                                 13, 14, 15, 16};
-//             double middle_buf[] = {2, 4, 6, 8,
-//                                 10, 12, 14, 16,
-//                                 18, 20, 22, 24,
-//                                 26, 28, 30, 32};
-// 
-//             double rhs_buf[] = { 3, 6, 9, 12,
-//                                  15, 18, 21, 24,
-//                                  27, 30, 33, 36,
-//                                  39, 42, 45, 48};
-// 
-//             NekMatrix<double> lhs(4, 4, lhs_buf);
-//             NekMatrix<double> rhs(4, 4, rhs_buf);
-//             NekMatrix<double> middle(4, 4, middle_buf);
-// 
-//             Expression<BinaryExpressionPolicy<
-//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, 
-//                                               ConstantExpressionPolicy<NekMatrix<double> >, AddOp>,
-//                                               ConstantExpressionPolicy<NekMatrix<double> >,
-//                                               SubtractOp> > expr = (lhs + middle) - rhs;
-//             NekMatrix<double> result(expr);
-// 
-//             double expected_result_buf[] = {0, 0, 0, 0,
-//                                             0, 0, 0, 0,
-//                                             0, 0, 0, 0,
-//                                             0, 0, 0, 0};
-//             NekMatrix<double> expected_result(4, 4, expected_result_buf);
-//             BOOST_CHECK_EQUAL(expected_result, result);
+             double lhs_buf[] = {1, 2, 3, 4,
+                                 5, 6, 7, 8,
+                                 9, 10, 11, 12,
+                                 13, 14, 15, 16};
+             double middle_buf[] = {2, 4, 6, 8,
+                                 10, 12, 14, 16,
+                                 18, 20, 22, 24,
+                                 26, 28, 30, 32};
+ 
+             double rhs_buf[] = { 3, 6, 9, 12,
+                                  15, 18, 21, 24,
+                                  27, 30, 33, 36,
+                                  39, 42, 45, 48};
+ 
+             NekMatrix<double> lhs(4, 4, lhs_buf);
+             NekMatrix<double> rhs(4, 4, rhs_buf);
+             NekMatrix<double> middle(4, 4, middle_buf);
+ 
+             Expression<BinaryExpressionPolicy<
+                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, AddOp,
+                                               ConstantExpressionPolicy<NekMatrix<double> > >, SubtractOp,
+                                               ConstantExpressionPolicy<NekMatrix<double> >
+                                               > > expr = (lhs + middle) - rhs;
+             NekMatrix<double> result(expr);
+ 
+             double expected_result_buf[] = {0, 0, 0, 0,
+                                             0, 0, 0, 0,
+                                             0, 0, 0, 0,
+                                             0, 0, 0, 0};
+             NekMatrix<double> expected_result(4, 4, expected_result_buf);
+             BOOST_CHECK_EQUAL(expected_result, result);
         }
 
         BOOST_AUTO_TEST_CASE(TestAddingThreeMatrices_RhsIsBinary_TopOperationIsNotCommutative)
         {
-//             double lhs_buf[] = {1, 2, 3, 4,
-//                                 5, 6, 7, 8,
-//                                 9, 10, 11, 12,
-//                                 13, 14, 15, 16};
-//             double middle_buf[] = {2, 4, 6, 8,
-//                                 10, 12, 14, 16,
-//                                 18, 20, 22, 24,
-//                                 26, 28, 30, 32};
-// 
-//             double rhs_buf[] = { 3, 6, 9, 12,
-//                                  15, 18, 21, 24,
-//                                  27, 30, 33, 36,
-//                                  39, 42, 45, 48};
-// 
-//             NekMatrix<double> lhs(4, 4, lhs_buf);
-//             NekMatrix<double> rhs(4, 4, rhs_buf);
-//             NekMatrix<double> middle(4, 4, middle_buf);
-//
-//             Expression<BinaryExpressionPolicy<
-//                        ConstantExpressionPolicy<NekMatrix<double> >,
-//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, 
-//                                               ConstantExpressionPolicy<NekMatrix<double> >, AddOp>,
-//                                               SubtractOp> > expr = lhs - (middle + rhs);
-//             NekMatrix<double> result(lhs - (middle+rhs));
-// 
-//             double expected_result_buf[] = {-4, -8, -12, -16,
-//                                             -20, -24, -28, -32,
-//                                             -36, -40, -44, -48,
-//                                             -52, -56, -60, -64};
-//             NekMatrix<double> expected_result(4, 4, expected_result_buf);
-//             BOOST_CHECK_EQUAL(expected_result, result);
+             double lhs_buf[] = {1, 2, 3, 4,
+                                 5, 6, 7, 8,
+                                 9, 10, 11, 12,
+                                 13, 14, 15, 16};
+             double middle_buf[] = {2, 4, 6, 8,
+                                 10, 12, 14, 16,
+                                 18, 20, 22, 24,
+                                 26, 28, 30, 32};
+ 
+             double rhs_buf[] = { 3, 6, 9, 12,
+                                  15, 18, 21, 24,
+                                  27, 30, 33, 36,
+                                  39, 42, 45, 48};
+ 
+             NekMatrix<double> lhs(4, 4, lhs_buf);
+             NekMatrix<double> rhs(4, 4, rhs_buf);
+             NekMatrix<double> middle(4, 4, middle_buf);
+
+             Expression<BinaryExpressionPolicy<
+                        ConstantExpressionPolicy<NekMatrix<double> >, SubtractOp,
+                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, AddOp,
+                                               ConstantExpressionPolicy<NekMatrix<double> > >
+                                               > > expr = lhs - (middle + rhs);
+             NekMatrix<double> result(lhs - (middle+rhs));
+ 
+             double expected_result_buf[] = {-4, -8, -12, -16,
+                                             -20, -24, -28, -32,
+                                             -36, -40, -44, -48,
+                                             -52, -56, -60, -64};
+             NekMatrix<double> expected_result(4, 4, expected_result_buf);
+             BOOST_CHECK_EQUAL(expected_result, result);
         }
         
         BOOST_AUTO_TEST_CASE(Test3ParameterExpressionWithoutParens)

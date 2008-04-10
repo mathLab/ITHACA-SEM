@@ -1,1 +1,1 @@
-SUBDIRS(LibUtilities StdRegions SpatialDomains LocalRegions MultiRegions )
+SUBDIRS(LibUtilities StdRegions LocalRegions MultiRegions )

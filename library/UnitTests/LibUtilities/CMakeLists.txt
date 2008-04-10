@@ -1,9 +1,11 @@
 
 SET(PrecompiledHeaderSources
-	TestLowerTriangularMatrix.cpp
+    TestConsistentObjectAccess.cpp
+    TestLowerTriangularMatrix.cpp
     TestMatrixStoragePolicies.cpp
     TestNekMatrixMultiplication.cpp
     TestNekMatrixOperations.cpp
+    TestRawType.cpp
     TestUpperTriangularMatrix.cpp
     TestSharedArray.cpp
 )

@@ -45,7 +45,6 @@ namespace Nektar
         void testFullSystem();
         void testSolvingBlockDiagonalMatrices();
         void testMixedInputParameterTypes();
-        void TestFullSystemWithWrappedVectors();
     }
 }
 
@@ -53,6 +52,9 @@ namespace Nektar
 
 /**
     $Log: testLinearSystem.h,v $
+    Revision 1.5  2007/07/10 01:22:39  bnelson
+    Unit tests for full linear system with both x and b as input parameters.
+
     Revision 1.4  2007/02/13 02:47:23  bnelson
     *** empty log message ***
 

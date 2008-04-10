@@ -37,223 +37,56 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_CONSISTENT_ACCESS_OBJECT_HPP
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_CONSISTENT_ACCESS_OBJECT_HPP
 
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-
 #include <boost/shared_ptr.hpp>
 #include <boost/call_traits.hpp>
+#include <boost/type_traits.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #include <iostream>
 
 namespace Nektar
-{
+{    
     template<typename DataType>
-    class ConsistentObjectAccess
-    {            
-        public:
-            ConsistentObjectAccess() :
-                m_obj()
-            {
-            }
-            
-                template<typename ParamType1, typename ParamType2, typename ParamType3>
-                ConsistentObjectAccess(const ParamType1& p1,
-                                    const ParamType2& p2,
-                                    const ParamType3& p3) :
-                    m_obj(p1, p2, p3)
-                {
-                }
-            
-            explicit ConsistentObjectAccess(typename boost::call_traits<DataType>::const_reference rhs) :
-                m_obj(rhs)
-            {
-            }
-            
-            ConsistentObjectAccess(const ConsistentObjectAccess<DataType>& rhs) :
-                m_obj(rhs.m_obj)
-            {
-            }
-            
-            ConsistentObjectAccess<DataType>& operator=(const ConsistentObjectAccess<DataType>& rhs)
-            {
-                m_obj = rhs.m_obj;
-                return *this;
-            }
-            
-            ConsistentObjectAccess<DataType>& operator=(typename boost::call_traits<DataType>::const_reference rhs) 
-            {
-                m_obj = rhs;
-                return *this;
-            }
-    
-            ~ConsistentObjectAccess() 
-            {
-            }
-    
-            const DataType* operator->() const 
-            {
-                return &m_obj;
-            }
-    
-            DataType* operator->() 
-            {
-                return &m_obj;
-            }
-            
-            DataType& operator*()
-            {
-                return m_obj;
-            }
-    
-            const DataType& operator*() const
-            {
-                return m_obj;
-            }
-    
-            ConsistentObjectAccess<DataType> operator+=(const ConsistentObjectAccess<DataType>& rhs)
-            {
-                m_obj += rhs.m_obj;
-                return *this;
-            }
-    
-            ConsistentObjectAccess<DataType> operator*=(const ConsistentObjectAccess<DataType>& rhs)
-            {
-                m_obj *= rhs.m_obj;
-                return *this;
-            }
-            
-            
-        private:
-            DataType m_obj;
+    struct ConsistentObjectAccess
+    {     
+        static DataType& reference(DataType& o) { return o; }
+        static const DataType& const_reference(const DataType& o) { return o; }
+        static DataType* pointer(DataType& o) { return &o; }
+        static const DataType* const_pointer(const DataType& o) { return &o; }
+        
+        static bool ReferencesObject(const DataType& o) { return true; }
     };
     
     template<typename DataType>
-    class ConsistentObjectAccess<boost::shared_ptr<DataType> >
-    {            
-        public:
-            ConsistentObjectAccess() :
-                m_obj(new DataType())
-            {
-            }
-            
-            template<typename ParamType1, typename ParamType2, typename ParamType3>
-            ConsistentObjectAccess(typename boost::call_traits<ParamType1>::const_reference p1,
-                                    typename boost::call_traits<ParamType2>::const_reference p2,
-                                    typename boost::call_traits<ParamType3>::const_reference p3) :
-                m_obj(new DataType(p1, p2, p3))
-            {
-            }
-            
-            explicit ConsistentObjectAccess(boost::shared_ptr<DataType> rhs) :
-                m_obj(rhs)
-            {
-            }
-                
-            ConsistentObjectAccess(const ConsistentObjectAccess<DataType>& rhs) :
-                m_obj(new DataType(*rhs.m_obj.get()))
-            {
-            }
-            
-            ConsistentObjectAccess<DataType>& operator=(const ConsistentObjectAccess<DataType>& rhs)
-            {
-                m_obj = boost::shared_ptr<DataType>(new DataType(*rhs.m_obj.get()));
-                return *this;
-            }
-    
-            ConsistentObjectAccess<DataType>& operator=(boost::shared_ptr<DataType> rhs)
-            {
-                m_obj = rhs;
-                return *this;
-            }
-    
-            ~ConsistentObjectAccess() 
-            {
-            }
+    struct ConsistentObjectAccess<DataType*> 
+    {
+        static const DataType& const_reference(DataType* o) { ASSERTL1(o != 0, "Can't dereference null pointer."); return *o; }
+        static const DataType* const_pointer(DataType* o) { return o; }
+        static bool ReferencesObject(DataType* o) { return o != 0; }
 
-            boost::shared_ptr<DataType> operator->() 
-            {
-                return m_obj;
-            }
+        static DataType& reference(DataType* o) { ASSERTL1(o != 0, "Can't dereference null pointer."); return *o; }
+        static DataType* pointer(DataType* o) { return o; }
+    };    
     
-            boost::shared_ptr<const DataType> operator->() const 
-            {
-                return m_obj;
-            }
-    
-            DataType& operator*()
-            {
-                return *m_obj;
-            }
-    
-            const DataType& operator*() const
-            {
-                return *m_obj;
-            }
-            
-            ConsistentObjectAccess<DataType> operator+=(const ConsistentObjectAccess<DataType>& rhs)
-            {
-                *(m_obj) += *(rhs.m_obj);
-                return *this;
-            }
-    
-            ConsistentObjectAccess<DataType> operator*=(const ConsistentObjectAccess<DataType>& rhs)
-            {
-                *(m_obj) *= *(rhs.m_obj);
-                return *this;
-            }
-            
-        private:
-            boost::shared_ptr<DataType> m_obj;
+
+    template<typename DataType>
+    struct ConsistentObjectAccess<boost::shared_ptr<DataType> >
+    {
+        static const DataType& const_reference(const boost::shared_ptr<DataType>& o) { ASSERTL1(o, "Can't dereference null pointer."); return *o; }
+        static const DataType* const_pointer(const boost::shared_ptr<DataType>& o) { return o.get(); }
+        static DataType& reference(const boost::shared_ptr<DataType>& o) { ASSERTL1(o, "Can't dereference null pointer."); return *o; }
+        static DataType* pointer(const boost::shared_ptr<DataType>& o) { return o.get(); }
+        static bool ReferencesObject(const boost::shared_ptr<DataType>& o) { return o; }
     };
-    
-    template<typename DataType>
-    bool operator==(const ConsistentObjectAccess<DataType>& lhs, const ConsistentObjectAccess<DataType>& rhs)
-    {
-        return *lhs == *rhs;
-    }
-            
-    template<typename DataType>
-    bool operator==(const ConsistentObjectAccess<DataType>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
-    {
-        return *lhs == rhs;
-    }
-    
-    template<typename DataType>
-    bool operator==(typename boost::call_traits<DataType>::const_reference lhs, const ConsistentObjectAccess<DataType>& rhs)
-    {
-        return lhs == *rhs;
-    }
-    
-    template<typename DataType>
-    bool operator!=(const ConsistentObjectAccess<DataType>& lhs, const ConsistentObjectAccess<DataType>& rhs)
-    {
-        return !(lhs == rhs);
-    }
-            
-    template<typename DataType>
-    bool operator!=(const ConsistentObjectAccess<DataType>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
-    {
-        return !(lhs == rhs);
-    }
-    
-    template<typename DataType>
-    bool operator!=(typename boost::call_traits<DataType>::const_reference lhs, const ConsistentObjectAccess<DataType>& rhs)
-    {
-        return !(lhs == rhs);
-    }
-    
-    template<typename DataType>
-    std::ostream& operator<<(std::ostream& os, const ConsistentObjectAccess<DataType>& rhs)
-    {
-        os << *rhs;
-        return os;
-    }
-
-};
+}
     
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_CONSISTENT_ACCESS_OBJECT_HPP
 
 /**
     $Log: ConsistentObjectAccess.hpp,v $
+    Revision 1.4  2007/07/22 23:03:25  bnelson
+    Backed out Nektar::ptr.
+
     Revision 1.3  2007/07/20 00:39:36  bnelson
     Replaced boost::shared_ptr with Nektar::ptr
 

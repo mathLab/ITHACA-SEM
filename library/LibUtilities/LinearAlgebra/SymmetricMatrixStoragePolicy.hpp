@@ -43,6 +43,7 @@
 
 namespace Nektar
 {
+    /// Symmetric matrices use upper triangular packed storage.
     template<typename DataType>
     class MatrixStoragePolicy<DataType, SymmetricMatrixTag> : private TriangularMatrixStoragePolicy<DataType>
     {

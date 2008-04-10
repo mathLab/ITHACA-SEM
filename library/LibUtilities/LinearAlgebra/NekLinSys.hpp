@@ -42,6 +42,8 @@
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/Memory/DeleteNothing.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixType.h>
+#include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
+#include <LibUtilities/BasicUtils/RawType.hpp>
 
 #include <boost/shared_ptr.hpp> 
 #include <boost/utility/enable_if.hpp>
@@ -58,10 +60,10 @@
 namespace Nektar
 {
     template<typename DataType>
-    class IsSharedPointer : public boost::false_type {};
+    struct IsSharedPointer : public boost::false_type {};
 
     template<typename DataType>
-    class IsSharedPointer<boost::shared_ptr<DataType> > : public boost::true_type {};
+    struct IsSharedPointer<boost::shared_ptr<DataType> > : public boost::true_type {};
 
     template<typename MatrixType>
     struct LinearSystemSolver;
@@ -89,17 +91,17 @@ namespace Nektar
         }
     };
 
-    template<typename DataType, typename StorageType, typename Form>
-    struct LinearSystemSolver<NekMatrix<DataType, StorageType, Form> >
+    template<typename DataType>
+    struct LinearSystemSolver<NekMatrix<DataType, FullMatrixTag, StandardMatrixTag> >
     {
-        typedef NekMatrix<DataType, StorageType, Form> MatrixType;
+        typedef NekMatrix<DataType, FullMatrixTag, StandardMatrixTag> MatrixType;
 
         template<typename BVectorType, typename XVectorType>
         static void Solve(const MatrixType& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x)
         {
             x = b;
             int info = 0;
-            Lapack::Dgetrs('T',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetRawPtr(),A.GetRows(),info);
+            Lapack::Dgetrs('N',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetRawPtr(),A.GetRows(),info);
             if( info < 0 )
             {
                 std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrs";
@@ -112,7 +114,7 @@ namespace Nektar
         {
             x = b;
             int info = 0;
-            Lapack::Dgetrs('N',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetRawPtr(),A.GetRows(),info);
+            Lapack::Dgetrs('T',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetRawPtr(),A.GetRows(),info);
 
             if( info < 0 )
             {
@@ -122,6 +124,31 @@ namespace Nektar
         }
     };
 
+    template<typename DataType>
+    struct LinearSystemSolver<NekMatrix<DataType, SymmetricMatrixTag, StandardMatrixTag> >
+    {
+        typedef NekMatrix<DataType, SymmetricMatrixTag, StandardMatrixTag> MatrixType;
+
+        template<typename BVectorType, typename XVectorType>
+        static void Solve(const MatrixType& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x)
+        {
+            x = b;
+            int info = 0;
+            Lapack::Dsptrs('U', A.GetRows(), 1, A.GetRawPtr(), ipivot.get(), x.GetRawPtr(), x.GetRows(), info);
+            if( info < 0 )
+            {
+                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptrs";
+                ASSERTL0(false, message.c_str());
+            }
+        }
+
+        template<typename BVectorType, typename XVectorType>
+        static void SolveTranspose(const MatrixType& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x)
+        {
+            return Solve(A, ipivot, b, x);
+        }
+    };
+    
     template<typename MatrixType>
     class LinearSystem;
 
@@ -134,13 +161,25 @@ namespace Nektar
 
         public:
             explicit LinearSystem(const boost::shared_ptr<MatrixType> &theA) :
-            A(*theA) 
+                A(*theA) 
             {
+                // At some point we should fix this.  We should upate the copy of 
+                // A to be transposd for this to work.
+                ASSERTL0(theA->GetTransposeFlag() == 'N', "LinearSystem requires a non-transposed matrix.");
+                FactorMatrix(A);
+            }
+            
+            explicit LinearSystem(const MatrixType& theA) :
+                A(theA)
+            {
+                // At some point we should fix this.  We should upate the copy of 
+                // A to be transposd for this to work.
+                ASSERTL0(theA.GetTransposeFlag() == 'N', "LinearSystem requires a non-transposed matrix.");
                 FactorMatrix(A);
             }
 
             LinearSystem(const ThisType& rhs) :
-            A(rhs.A),
+                A(rhs.A),
                 m_ipivot(rhs.m_ipivot)
             {
             }
@@ -155,103 +194,41 @@ namespace Nektar
             ~LinearSystem() {}
 
             // In the following calls to Solve, VectorType must be a NekVector.
-            // Anything else won't compile.
+            // Anything else won't compile.        
             template<typename VectorType>
-            typename RemoveVectorConst<VectorType>::type Solve(const boost::shared_ptr<VectorType>& b)
+            typename RemoveVectorConst<typename RawType<VectorType>::type>::type Solve(const VectorType& b)
             {
-                typename RemoveVectorConst<VectorType>::type x(b->GetRows());
-                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot,*b, x);
+                typename RemoveVectorConst<typename RawType<VectorType>::type>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
+                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot, ConsistentObjectAccess<VectorType>::const_reference(b), x);
                 return x;
-            }
+            }    
 
-            template<typename VectorType>
-            void Solve(const boost::shared_ptr<VectorType>& b,
-                boost::shared_ptr<VectorType>& x) const
+            template<typename BType, typename XType>
+            void Solve(const BType& b, XType& x) const
             {
-                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot,*b, *x);
+                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot,
+                    ConsistentObjectAccess<BType>::const_reference(b), 
+                    ConsistentObjectAccess<XType>::reference(x));
             }
-
-            template<typename VectorType>
-            typename RemoveVectorConst<VectorType>::type Solve(const VectorType& b,
-                typename boost::disable_if<IsSharedPointer<VectorType> >::type* = 0)
-            {
-                typename RemoveVectorConst<VectorType>::type x(b.GetRows());
-                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot,b, x);
-                return x;
-            }
-
-            template<typename VectorType>
-            void Solve(const VectorType& b,
-                VectorType& x,
-                typename boost::disable_if<IsSharedPointer<VectorType> >::type* = 0) const
-            {
-                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot, b, x);
-            }
-
-            template<typename VectorType>
-            void Solve(const boost::shared_ptr<VectorType>& b,
-                VectorType& x) const
-            {
-                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot,*b, x);
-            }
-
-
-            template<typename VectorType>
-            void Solve(const VectorType& b,
-                boost::shared_ptr<VectorType>& x) const
-            {
-                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot,b, *x);
-            }
-
 
             // Transpose variant of solve
             template<typename VectorType>
-            typename RemoveVectorConst<VectorType>::type SolveTranspose(const boost::shared_ptr<VectorType>& b)
+            typename RemoveVectorConst<typename RawType<VectorType>::type>::type SolveTranspose(const VectorType& b)
             {
-                typename RemoveVectorConst<VectorType>::type x(b->GetRows());
-                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot,*b, x);
+                typename RemoveVectorConst<typename RawType<VectorType>::type>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
+                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot, ConsistentObjectAccess<VectorType>::const_reference(b), x);
                 return x;
-            }
+            }    
 
-
-            template<typename VectorType>
-            void SolveTranspose(const boost::shared_ptr<VectorType>& b,
-                boost::shared_ptr<VectorType>& x) const
+            template<typename BType, typename XType>
+            void SolveTranspose(const BType& b, XType& x) const
             {
-                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot,*b, *x);
+                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot,
+                    ConsistentObjectAccess<BType>::const_reference(b), 
+                    ConsistentObjectAccess<XType>::reference(x));
             }
-
-            template<typename VectorType>
-            typename RemoveVectorConst<VectorType>::type SolveTranspose(const VectorType& b,
-                typename boost::disable_if<IsSharedPointer<VectorType> >::type* = 0)
-            {
-                typename RemoveVectorConst<VectorType>::type x(b.GetRows());
-                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot,b, x);
-                return x;
-            }
-
-            template<typename VectorType>
-            void SolveTranspose(const VectorType& b,
-                VectorType& x,
-                typename boost::disable_if<IsSharedPointer<VectorType> >::type* = 0) const
-            {
-                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot,b, x);
-            }
-
-            template<typename VectorType>
-            void SolveTranspose(const boost::shared_ptr<VectorType>& b,
-                VectorType& x) const
-            {
-                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot,*b, x);
-            }
-
-            template<typename VectorType>
-            void SolveTranspose(const VectorType& b,
-                const boost::shared_ptr<VectorType>& x) const
-            {
-                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot, b, x);
-            }
-
+            
+            
 
             unsigned int GetRows() const { return A.GetRows(); }
             unsigned int GetColumns() const { return A.GetColumns(); }
@@ -288,6 +265,28 @@ namespace Nektar
                 }            
             }
 
+            void FactorMatrix(NekMatrix<DataType, SymmetricMatrixTag, StandardMatrixTag>& theA)
+            {
+                int info = 0;
+                
+                Lapack::Dsptrf('U', theA.GetRows(), theA.GetRawPtr(), m_ipivot.get(), info);
+                
+                if( info < 0 )
+                {
+                    std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptrf";
+                    ASSERTL0(false, message.c_str());
+                }
+                else if( info > 0 )
+                {
+                    std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dsptrf";
+                    ASSERTL0(false, message.c_str());
+                }    
+            }
+            
+            void FactorMatrix(NekMatrix<DataType, BandedMatrixTag, StandardMatrixTag>& theA)
+            {
+            }
+            
             void swap(ThisType& rhs)
             {
                 std::swap(A, rhs.A);

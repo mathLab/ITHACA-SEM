@@ -107,6 +107,7 @@ SET(BasicUtils
     ./BasicUtils/mojo.hpp
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/OperatorGenerators.hpp
+    ./BasicUtils/RawType.hpp
     ./BasicUtils/SharedArray.hpp
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/Metis.hpp

@@ -268,6 +268,8 @@ namespace Nektar
             void FactorMatrix(NekMatrix<DataType, SymmetricMatrixTag, StandardMatrixTag>& theA)
             {
                 int info = 0;
+                int pivotSize = theA.GetRows();
+                m_ipivot = Array<OneD, int>(pivotSize);
                 
                 Lapack::Dsptrf('U', theA.GetRows(), theA.GetRawPtr(), m_ipivot.get(), info);
                 

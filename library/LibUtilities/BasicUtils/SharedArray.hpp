@@ -39,12 +39,14 @@
 #include <LibUtilities/BasicUtils/ArrayPolicies.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
+#include <LibUtilities/BasicUtils/NekPtr.hpp>
 
 #include <boost/multi_array.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
+    
     
     /// \page Arrays
     ///
@@ -374,7 +376,8 @@ namespace Nektar
     class Array<OneD, const DataType>
     {
         public:
-            typedef boost::shared_ptr<DataType> ArrayType;
+            //typedef boost::shared_ptr<DataType> ArrayType;
+            typedef NekPtr<DataType> ArrayType;
             typedef const DataType& const_reference;
             typedef DataType& reference;
             
@@ -503,7 +506,8 @@ namespace Nektar
             
         protected:
             unsigned int m_size;
-            boost::shared_ptr<DataType> m_data;
+            //boost::shared_ptr<DataType> m_data;
+            NekPtr<DataType> m_data;
             unsigned int m_offset;
             
 
@@ -521,13 +525,15 @@ namespace Nektar
                 unsigned int m_elements;
             };
             
-            boost::shared_ptr<DataType> 
+            //boost::shared_ptr<DataType> 
+            NekPtr<DataType>
             CreateStorage(unsigned int size)
             {
                 DataType* storage = MemoryManager<DataType>::RawAllocate(size);
-                return boost::shared_ptr<DataType>(storage,
+                return NekPtr<DataType>(storage, size);
+                //return boost::shared_ptr<DataType>(storage,
                         //boost::bind(DeleteStorage<DataType>, storage, size) );
-                        DestroyArray(size), MemoryManager<DataType>() );
+                //        DestroyArray(size), MemoryManager<DataType>() );
             }
             
             template<typename T>

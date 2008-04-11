@@ -93,10 +93,12 @@ namespace Nektar
             BOOST_CHECK(ConsistentObjectAccess<const double*>::ReferencesObject(d2));
             BOOST_CHECK(!ConsistentObjectAccess<const double*>::ReferencesObject(static_cast<const double*>(0)));
             
-            BOOST_CHECK_THROW(ConsistentObjectAccess<double*>::const_reference(static_cast<double*>(0)), ErrorUtil::NekError);
-            BOOST_CHECK_THROW(ConsistentObjectAccess<const double*>::const_reference(static_cast<const double*>(0)), ErrorUtil::NekError);
-            BOOST_CHECK_THROW(ConsistentObjectAccess<double*>::reference(static_cast<double*>(0)), ErrorUtil::NekError);
-            BOOST_CHECK_THROW(ConsistentObjectAccess<const double*>::reference(static_cast<const double*>(0)), ErrorUtil::NekError);
+            #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+                BOOST_CHECK_THROW(ConsistentObjectAccess<double*>::const_reference(static_cast<double*>(0)), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(ConsistentObjectAccess<const double*>::const_reference(static_cast<const double*>(0)), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(ConsistentObjectAccess<double*>::reference(static_cast<double*>(0)), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(ConsistentObjectAccess<const double*>::reference(static_cast<const double*>(0)), ErrorUtil::NekError);
+            #endif
             
         }
         
@@ -126,10 +128,12 @@ namespace Nektar
             BOOST_CHECK(ConsistentObjectAccess<boost::shared_ptr<const double> >::ReferencesObject(sd2));
             BOOST_CHECK(!ConsistentObjectAccess<boost::shared_ptr<const double> >::ReferencesObject(boost::shared_ptr<const double>()));
             
-            BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<double> >::const_reference(boost::shared_ptr<double>()), ErrorUtil::NekError);
-            BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<const double> >::const_reference(boost::shared_ptr<const double>()), ErrorUtil::NekError);
-            BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<double> >::reference(boost::shared_ptr<double>()), ErrorUtil::NekError);
-            BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<const double> >::reference(boost::shared_ptr<const double>()), ErrorUtil::NekError);
+            #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+                BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<double> >::const_reference(boost::shared_ptr<double>()), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<const double> >::const_reference(boost::shared_ptr<const double>()), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<double> >::reference(boost::shared_ptr<double>()), ErrorUtil::NekError);
+                BOOST_CHECK_THROW(ConsistentObjectAccess<boost::shared_ptr<const double> >::reference(boost::shared_ptr<const double>()), ErrorUtil::NekError);
+            #endif
             
         }
 

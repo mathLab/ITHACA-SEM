@@ -106,6 +106,7 @@ SET(BasicUtils
     ./BasicUtils/ErrorUtil.cpp
     ./BasicUtils/mojo.hpp
     ./BasicUtils/NekManager.hpp
+    ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/RawType.hpp
     ./BasicUtils/SharedArray.hpp

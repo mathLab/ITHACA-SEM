@@ -393,7 +393,8 @@ namespace Nektar
             /// \brief Creates an empty, size 0 array.
             Array() :
                 m_size(0),
-                m_data(CreateStorage(m_size)),
+                //m_data(CreateStorage(m_size)),
+                m_data(),
                 m_offset(0)
             {
             }

@@ -56,7 +56,7 @@ namespace Nektar
             Array<OneD, CountedObject<double> > result = Policy::Initialize();
             BOOST_CHECK_EQUAL(result.num_elements(), 0);
             BOOST_CHECK_EQUAL(result.GetOffset(), 0);
-            BOOST_CHECK(result.data() != 0);
+            BOOST_CHECK(result.data() == 0);
         }
 
         BOOST_AUTO_TEST_CASE(Test2ParameterInitialize)

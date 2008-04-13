@@ -45,6 +45,13 @@ namespace Nektar
     class NekPtr
     {
         public:
+            NekPtr() :
+                m_data(0),
+                m_count(0),
+                m_size(0)
+            {
+            }
+            
             explicit NekPtr(T* d) :
                 m_data(d),
                 m_count(MemoryManager<unsigned int>::RawAllocate(1)),
@@ -66,7 +73,10 @@ namespace Nektar
                 m_count(rhs.m_count),
                 m_size(rhs.m_size)
             {
-                *m_count += 1;
+                if( m_count != 0 )
+                {
+                    *m_count += 1;
+                }
             }
             
             NekPtr<T>& operator=(const NekPtr<T>& rhs)
@@ -78,6 +88,11 @@ namespace Nektar
              
             ~NekPtr()
             {
+                if( m_count == 0 )
+                {
+                    return;
+                }
+                
                 *m_count -= 1;
                 if( *m_count <= 0 )
                 {

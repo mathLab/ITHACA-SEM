@@ -94,13 +94,11 @@ namespace Nektar
                 }
                 
                 *m_count -= 1;
-                if( *m_count <= 0 )
+                if( *m_count == 0 )
                 {
                     ArrayDestructionPolicy<T>::Destroy(m_data, m_size);
                     MemoryManager<T>::RawDeallocate(m_data, m_size);
                     MemoryManager<unsigned int>::RawDeallocate(m_count, 1);
-                    m_data = 0;
-                    m_count = 0;
                 }
             }
             
@@ -117,7 +115,7 @@ namespace Nektar
             
             T* m_data;
             unsigned int* m_count;
-            unsigned int m_size;
+            int m_size;
     };
 
 }

@@ -47,15 +47,14 @@
 
 namespace Nektar
 {
-     
     template<typename DataType, typename StorageType>
-    class NekMatrix<DataType, StorageType, StandardMatrixTag> : public Matrix<DataType>
+    class NekMatrix<const DataType, StorageType, StandardMatrixTag> : public Matrix<DataType>
     {
         public:
             typedef Matrix<DataType> BaseType;
-            typedef NekMatrix<DataType, StorageType, StandardMatrixTag> ThisType;
+            typedef NekMatrix<const DataType, StorageType, StandardMatrixTag> ThisType;
             typedef MatrixStoragePolicy<DataType, StorageType> StoragePolicy;
-            typedef DataType NumberType;
+            typedef const DataType NumberType;
             typedef typename StoragePolicy::PolicySpecificDataHolderType PolicySpecificDataHolderType;
 
             typedef typename StoragePolicy::GetValueReturnType GetValueType;
@@ -160,7 +159,7 @@ namespace Nektar
                             else
                             {
                                 boost::tie(m_curRow, m_curColumn) = 
-                                    StoragePolicy::Advance(m_matrix->GetRows(m_transpose), m_matrix->GetColumns(m_transpose),
+                                    StoragePolicy::Advance(m_matrix->GetRowsForTranspose(m_transpose), m_matrix->GetColumnsForTranspose(m_transpose),
                                         m_curRow, m_curColumn, 
                                         m_matrix->GetPolicySpecificDataHolderType());
                             }
@@ -246,13 +245,21 @@ namespace Nektar
             {
             }
             
-            NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, DataType>& d, PointerWrapper wrapperType = eCopy,
+            NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, const DataType>& d, PointerWrapper wrapperType = eCopy,
                       const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
                 BaseType(rows, columns),
-                m_data(wrapperType == eCopy ? StoragePolicy::Initialize(rows, columns, d, policySpecificData) : d),
+                m_data(),
                 m_wrapperType(wrapperType),
                 m_policySpecificData(policySpecificData)
             {
+                if( wrapperType == eWrapper )
+                {
+                     m_data = Array<OneD, DataType>(d, eVECTOR_WRAPPER);
+                }
+                else
+                {
+                    m_data = StoragePolicy::Initialize(rows, columns, d, policySpecificData);
+                }
             }
             
             NekMatrix(const ThisType& rhs) :
@@ -261,14 +268,14 @@ namespace Nektar
                 m_wrapperType(rhs.m_wrapperType),
                 m_policySpecificData(rhs.m_policySpecificData)
             {
-                if( m_wrapperType == eCopy )
+                if( m_wrapperType == eWrapper )
                 {
-                    m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
-                    CopyArray(rhs.m_data, m_data);
+                    m_data = rhs.m_data;
                 }
                 else
                 {
-                    m_data = rhs.m_data;
+                    m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
+                    CopyArray(rhs.m_data, m_data);
                 }
             }
             
@@ -289,7 +296,7 @@ namespace Nektar
                     m_wrapperType(eCopy),
                     m_policySpecificData()
                 {
-                    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StorageType, StandardMatrixTag> > ));
+                    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StorageType, StandardMatrixTag> > ));
                     m_data = StoragePolicy::Initialize(this->GetRows(), this->GetColumns(), m_policySpecificData);
                     rhs.Evaluate(*this);
                 }
@@ -324,7 +331,7 @@ namespace Nektar
                 template<typename ExpressionPolicyType>
                 ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
                 {
-                    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StorageType, StandardMatrixTag> > ));
+                    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StorageType, StandardMatrixTag> > ));
                     m_policySpecificData = PolicySpecificDataHolderType();
                     if( this->GetRows() != rhs.GetMetadata().Rows ||
                         this->GetColumns() != rhs.GetMetadata().Columns )
@@ -350,44 +357,12 @@ namespace Nektar
                     
                 return (*this)(row, column, this->GetTransposeFlag());
             }
-            
-            GetValueType operator()(unsigned int row, unsigned int column)
-            {
-                ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
-                    std::string(" rows"));
-                ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
-                    std::string(" columns"));
-                    
-                return (*this)(row, column, this->GetTransposeFlag());
-            }
 
             ConstGetValueType operator()(unsigned int row, unsigned int column, char transpose) const
             {       
-                return StoragePolicy::GetValue(this->GetRows(transpose), this->GetColumns(transpose), row, column, m_data, transpose, m_policySpecificData);    
+                return StoragePolicy::GetValue(this->GetRowsForTranspose(transpose), this->GetColumnsForTranspose(transpose), row, column, m_data, transpose, m_policySpecificData);    
             }
             
-            GetValueType operator()(unsigned int row, unsigned int column, char transpose)
-            {       
-                return StoragePolicy::GetValue(this->GetRows(transpose), this->GetColumns(transpose), row, column, m_data, transpose, m_policySpecificData);    
-            }
-
-            void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
-            {
-                ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
-                    std::string(" rows"));
-                ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
-                    std::string(" columns"));
-                SetValue(row, column, d, this->GetTransposeFlag());
-            }
-
-            void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d, char transpose)
-            {
-                StoragePolicy::SetValue(this->GetRows(transpose), this->GetColumns(transpose), row, column, m_data, d, transpose, m_policySpecificData);
-            }
             
             typename boost::call_traits<DataType>::const_reference GetValue(unsigned int row, unsigned int column) const
             {
@@ -402,18 +377,13 @@ namespace Nektar
 
             typename boost::call_traits<DataType>::const_reference GetValue(unsigned int row, unsigned int column, char transpose) const
             {
-                return StoragePolicy::GetValue(this->GetRows(transpose), this->GetColumns(transpose), row, column, m_data, transpose, m_policySpecificData);
+                return StoragePolicy::GetValue(this->GetRowsForTranspose(transpose), this->GetColumnsForTranspose(transpose), row, column, m_data, transpose, m_policySpecificData);
             }
 
             
             const PolicySpecificDataHolderType& GetPolicySpecificDataHolderType() const 
             {
                 return m_policySpecificData;
-            }
-
-            Array<OneD, DataType>& GetPtr()
-            {
-                return m_data;
             }
             
             const Array<OneD, const DataType>& GetPtr() const
@@ -426,11 +396,6 @@ namespace Nektar
                 return DataType(1);
             }
 
-            DataType* GetRawPtr()
-            {
-                return m_data.data();
-            }
-            
             const DataType* GetRawPtr() const
             {
                 return m_data.data();
@@ -444,44 +409,9 @@ namespace Nektar
             //const_iterator begin() const { return m_data.data(); }
             //const_iterator end() const { return m_data.data() + m_data.num_elements(); }
 
-
-            typedef iterator_impl<DataType, ThisType> iterator;
             typedef iterator_impl<const DataType, const ThisType> const_iterator;
             
-            iterator begin()
-            {
-                return begin(this->GetTransposeFlag());
-            }
-
-            iterator begin(char transpose) 
-            { 
-                if( transpose == 'N' )
-                {
-                    return iterator(m_data.data(), m_data.data() + m_data.num_elements());
-                }
-                else
-                {
-                    return iterator(this, transpose);
-                }
-            }
-
-            iterator end()
-            {
-                return end(this->GetTransposeFlag());
-            }
-
-            iterator end(char transpose)
-            {
-                if( transpose == 'N' )
-                {
-                    return iterator(m_data.data(), m_data.data() + m_data.num_elements(), true);
-                }
-                else
-                {
-                    return iterator(this, transpose, true);
-                }
-            }
-
+            
             const_iterator begin() const
             {
                 return begin(this->GetTransposeFlag());
@@ -555,19 +485,37 @@ namespace Nektar
 
                 return true;
             }
-            
-            void Invert()
-            {
-                StoragePolicy::Invert(this->GetRows(), this->GetColumns(), m_data, this->GetTransposeFlag(), m_policySpecificData);
-            }
                    
             PointerWrapper GetWrapperType() const { return m_wrapperType; }
 
+            // The following methods purposefully hide the method with the same name in the base class.
+            // We don't need to call the virtual function if we have an actual pointer to the 
+            // derived class.
+            unsigned int GetRows() const
+            {
+                return BaseType::GetRowsForTranspose(this->GetRawTransposeFlag());
+            }
+            
+            unsigned int GetColumns() const
+            {
+                return BaseType::GetColumnsForTranspose(this->GetRawTransposeFlag());
+            }
+            
+            char GetTransposeFlag() const 
+            {
+                return this->GetRawTransposeFlag();
+            }  
+            
+            
         protected:
+            Array<OneD, DataType>& GetData() { return m_data; }
             
+            PolicySpecificDataHolderType& GetPolicySpecificDataHolderTypeByReference()  
+            {
+                return m_policySpecificData;
+            }
             
-        private:
-            void ResizeDataArrayIfNeeded(unsigned int newRows, unsigned int newColumns, PolicySpecificDataHolderType& policySpecificData)
+            void ResizeDataArrayIfNeeded(unsigned int newRows, unsigned int newColumns, const PolicySpecificDataHolderType& policySpecificData)
             {
                 unsigned int requiredStorageSize = StoragePolicy::GetRequiredStorageSize(newRows, newColumns, policySpecificData);
 
@@ -588,6 +536,8 @@ namespace Nektar
                 }
             }
 
+        private:
+            
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const 
             {
                 return ThisType::operator()(row, column);
@@ -603,14 +553,234 @@ namespace Nektar
                 return ThisType::GetStorageType();
             }
             
+            // We need to rethink class structure a little.  This shouldn't be necessary.
             virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
             {
-                return ThisType::SetValue(row, column, d);
             }
             
             Array<OneD, DataType> m_data;
             PointerWrapper m_wrapperType;
             PolicySpecificDataHolderType m_policySpecificData;
+    };
+
+     
+    template<typename DataType, typename StorageType>
+    class NekMatrix<DataType, StorageType, StandardMatrixTag> : public NekMatrix<const DataType, StorageType, StandardMatrixTag>
+    {
+        public:
+            typedef NekMatrix<const DataType, StorageType, StandardMatrixTag> BaseType;
+            typedef NekMatrix<DataType, StorageType, StandardMatrixTag> ThisType;
+            typedef typename BaseType::StoragePolicy StoragePolicy;
+            typedef DataType NumberType;
+            typedef typename StoragePolicy::PolicySpecificDataHolderType PolicySpecificDataHolderType;
+
+            typedef typename StoragePolicy::GetValueReturnType GetValueType;
+            typedef typename boost::call_traits<DataType>::const_reference ConstGetValueType;
+            
+        public:
+            NekMatrix() :
+                BaseType()
+            {
+            }
+            
+            NekMatrix(unsigned int rows, unsigned int columns, const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
+                BaseType(rows, columns, policySpecificData)
+            {
+            }
+
+            NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference initValue,
+                      const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
+                BaseType(rows, columns, initValue, policySpecificData)
+            {
+            }
+            
+            NekMatrix(unsigned int rows, unsigned int columns, const DataType* data,
+                      const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
+                BaseType(rows, columns, data, policySpecificData)
+            {
+            }
+            
+            NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, const DataType>& d,
+                      const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
+                BaseType(rows, columns, d, policySpecificData)
+            {
+            }
+            
+            NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, DataType>& d, PointerWrapper wrapperType = eCopy,
+                      const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
+                BaseType(rows, columns, d, wrapperType, policySpecificData)
+            {
+
+            }
+            
+            NekMatrix(const ThisType& rhs) :
+                BaseType(rhs)
+            {
+            }
+            
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+                explicit NekMatrix(const NekMatrixMetadata& d) :
+                    BaseType(d)
+                {
+                }
+
+                template<typename ExpressionPolicyType>
+                NekMatrix(const Expression<ExpressionPolicyType>& rhs) :
+                    BaseType(rhs.GetMetadata())
+                {
+                    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StorageType, StandardMatrixTag> > ));
+                    rhs.Evaluate(*this);
+                }
+            #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+
+            
+            // TODO - Copy constructors from other types of matrices.
+            
+            ThisType& operator=(const ThisType& rhs)
+            {
+                if( this == &rhs )
+                {
+                    return *this;
+                }
+
+                BaseType::operator=(rhs);
+                return *this;
+            }
+            
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+                template<typename ExpressionPolicyType>
+                ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
+                {
+                    BOOST_MPL_ASSERT(( 
+                        boost::mpl::or_
+                        <
+                            boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StorageType, StandardMatrixTag> >,
+                            boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StorageType, StandardMatrixTag> >
+                        > ));
+                    
+                    this->GetPolicySpecificDataHolderTypeByReference() = PolicySpecificDataHolderType();
+                    if( this->GetRows() != rhs.GetMetadata().Rows ||
+                        this->GetColumns() != rhs.GetMetadata().Columns )
+                    {
+                        Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
+                        this->ResizeDataArrayIfNeeded(this->GetRows(), this->GetColumns(), this->GetPolicySpecificDataHolderType());
+                    }
+
+                    this->SetTransposeFlag('N');
+                    rhs.Evaluate(*this);
+                    return *this;
+                }
+            #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+            
+            
+            using BaseType::operator();
+            GetValueType operator()(unsigned int row, unsigned int column)
+            {
+                ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
+                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+                    std::string(" rows"));
+                ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
+                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+                    std::string(" columns"));
+                    
+                return (*this)(row, column, this->GetTransposeFlag());
+            }
+            
+            GetValueType operator()(unsigned int row, unsigned int column, char transpose)
+            {       
+                return StoragePolicy::GetValue(this->GetRowsForTranspose(transpose), this->GetColumnsForTranspose(transpose), row, column, this->GetData(), transpose, this->GetPolicySpecificDataHolderType());    
+            }
+
+            void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
+            {
+                ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
+                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
+                    std::string(" rows"));
+                ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
+                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
+                    std::string(" columns"));
+                SetValue(row, column, d, this->GetTransposeFlag());
+            }
+
+            void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d, char transpose)
+            {
+                StoragePolicy::SetValue(this->GetRowsForTranspose(transpose), this->GetColumnsForTranspose(transpose), row, column, this->GetData(), d, transpose, this->GetPolicySpecificDataHolderType());
+            }
+
+            using BaseType::GetPtr;
+            Array<OneD, DataType>& GetPtr()
+            {
+                return this->GetData();
+            }
+
+            using BaseType::GetRawPtr;
+            DataType* GetRawPtr()
+            {
+                return this->GetData().data();
+            }
+
+            
+            //typedef DataType* iterator;
+            //typedef const DataType* const_iterator;
+            //iterator begin() { return m_data.data(); }
+            //iterator end() { return m_data.data() + m_data.num_elements(); }
+            
+            //const_iterator begin() const { return m_data.data(); }
+            //const_iterator end() const { return m_data.data() + m_data.num_elements(); }
+
+
+            typedef typename BaseType::template iterator_impl<DataType, ThisType> iterator;
+            
+            using BaseType::begin;
+            using BaseType::end;
+            iterator begin()
+            {
+                return begin(this->GetTransposeFlag());
+            }
+
+            iterator begin(char transpose) 
+            { 
+                if( transpose == 'N' )
+                {
+                    return iterator(this->GetData().data(), this->GetData().data() + this->GetData().num_elements());
+                }
+                else
+                {
+                    return iterator(this, transpose);
+                }
+            }
+
+            iterator end()
+            {
+                return end(this->GetTransposeFlag());
+            }
+
+            iterator end(char transpose)
+            {
+                if( transpose == 'N' )
+                {
+                    return iterator(this->GetData().data(), this->GetData().data() + this->GetData().num_elements(), true);
+                }
+                else
+                {
+                    return iterator(this, transpose, true);
+                }
+            }
+
+            void Invert()
+            {
+                StoragePolicy::Invert(this->GetRows(), this->GetColumns(), this->GetData(), this->GetTransposeFlag(), this->GetPolicySpecificDataHolderType());
+            }
+                
+            
+        protected:
+            
+            
+        private:
+            virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
+            {
+                return ThisType::SetValue(row, column, d);
+            }
     };
 
     template<typename DataType, typename StorageType>

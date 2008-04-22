@@ -219,10 +219,11 @@ namespace Nektar
 
                 DNekVec ElmtFce(e_ncoeffs, e_f ,eWrapper);
                 DNekScalMat &LamToU = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
-#if 0
+#if 1
                 Floc = Transpose(LamToU)*ElmtFce;
 #else
-                DNekMat TLamToU = *LamToU.GetOwnedMatrix();
+                //DNekMat TLamToU = *LamToU.GetOwnedMatrix();
+                NekMatrix<const double> TLamToU = *LamToU.GetOwnedMatrix();
                 TLamToU.Transpose();
                 Floc = LamToU.Scale()*TLamToU*ElmtFce;
 #endif           

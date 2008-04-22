@@ -78,10 +78,10 @@ namespace Nektar
             
             unsigned int GetRows() const
             {
-                return GetRows(GetTransposeFlag());
+                return GetRowsForTranspose(GetTransposeFlag());
             }
 
-            unsigned int GetRows(char transpose) const 
+            unsigned int GetRowsForTranspose(char transpose) const 
             {
                 if( transpose == 'N' )
                 {
@@ -95,10 +95,10 @@ namespace Nektar
             
             unsigned int GetColumns() const
             {
-                return GetColumns(GetTransposeFlag());
+                return GetColumnsForTranspose(GetTransposeFlag());
             }
 
-            unsigned int GetColumns(char transpose) const 
+            unsigned int GetColumnsForTranspose(char transpose) const 
             { 
                 if( transpose == 'N' )
                 {

@@ -169,6 +169,7 @@ namespace Nektar
 
             Nektar::NekMatrix<double> m(4, 3, data);
             
+            unsigned int r = m.GetRows();
             BOOST_CHECK_EQUAL( m(0,0), 1.0 );
             BOOST_CHECK_EQUAL( m(0,1), 2.0 );
             BOOST_CHECK_EQUAL( m(0,2), 3.0 );
@@ -751,6 +752,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.31  2008/04/06 06:04:54  bnelson
+    Changed ConstArray to Array<const>
+
     Revision 1.30  2007/10/03 03:01:01  bnelson
     *** empty log message ***
 

@@ -158,9 +158,9 @@ namespace Nektar
                 
 #else //NEKTAR_USING_DIRECT_BLAS_CALLS
 
-                DNekMat in(nquad0,nquad1,tmp,eWrapper);
-                DNekMat B0(nquad0,order0,base0,eWrapper);
-                DNekMat B1(nquad1,order1,base1,eWrapper);
+                NekMatrix<const double> in(nquad0,nquad1,tmp,eWrapper);
+                NekMatrix<const double> B0(nquad0,order0,base0,eWrapper);
+                NekMatrix<const double> B1(nquad1,order1,base1,eWrapper);
                 DNekMat out(order0,order1,outarray,eWrapper);
                 // out = Transpose(B0)*in*B1; //currently not working with expression templates
                 DNekMat tmpMat(nquad0,order1);
@@ -193,8 +193,8 @@ namespace Nektar
                 if(m_base[0]->Collocation())
                 {
                     int order1 = m_base[1]->GetNumModes(); 
-                    DNekMat in(nquad0,nquad1,tmp,eWrapper);
-                    DNekMat B1(nquad1,order1,base1,eWrapper);
+                    NekMatrix<const double> in(nquad0,nquad1,tmp,eWrapper);
+                    NekMatrix<const double> B1(nquad1,order1,base1,eWrapper);
                     DNekMat out(nquad0,order1,outarray,eWrapper);
                     
                     out = in*B1;
@@ -202,8 +202,8 @@ namespace Nektar
                 else
                 {
                     int order0 = m_base[0]->GetNumModes();
-                    DNekMat in(nquad0,nquad1,tmp,eWrapper);
-                    DNekMat B0(nquad0,order0,base0,eWrapper);
+                    NekMatrix<const double> in(nquad0,nquad1,tmp,eWrapper);
+                    NekMatrix<const double> B0(nquad0,order0,base0,eWrapper);
                     DNekMat out(order0,nquad1,outarray,eWrapper);
                     
                     out = Transpose(B0)*in;
@@ -321,9 +321,9 @@ namespace Nektar
 
 #else //NEKTAR_USING_DIRECT_BLAS_CALLS
 
-                DNekMat in(order0,order1,inarray,eWrapper);
-                DNekMat B0(nquad0,order0,m_base[0]->GetBdata(),eWrapper);
-                DNekMat B1(nquad1,order1,m_base[1]->GetBdata(),eWrapper);
+                NekMatrix<const double> in(order0,order1,inarray,eWrapper);
+                NekMatrix<const double> B0(nquad0,order0,m_base[0]->GetBdata(),eWrapper);
+                NekMatrix<const double> B1(nquad1,order1,m_base[1]->GetBdata(),eWrapper);
                 DNekMat out(nquad0,nquad1,outarray,eWrapper);
                 //out = B0*in*Transpose(B1); //(currently not working with expression templates)
                 DNekMat tmpM(nquad0,order1);
@@ -357,8 +357,8 @@ namespace Nektar
                 if(m_base[0]->Collocation())
                 {
                     int order1 = m_base[1]->GetNumModes();
-                    DNekMat in(nquad0,order1,inarray,eWrapper);
-                    DNekMat B1(nquad1,order1,m_base[1]->GetBdata(),eWrapper);
+                    NekMatrix<const double> in(nquad0,order1,inarray,eWrapper);
+                    NekMatrix<const double> B1(nquad1,order1,m_base[1]->GetBdata(),eWrapper);
                     DNekMat out(nquad0,nquad1,outarray,eWrapper);
 
                     out = in*Transpose(B1);
@@ -366,8 +366,8 @@ namespace Nektar
                 else
                 {
                     int order0 = m_base[0]->GetNumModes();
-                    DNekMat in(order0,nquad1,inarray,eWrapper);
-                    DNekMat B0(nquad0,order0,m_base[0]->GetBdata(),eWrapper);
+                    NekMatrix<const double> in(order0,nquad1,inarray,eWrapper);
+                    NekMatrix<const double> B0(nquad0,order0,m_base[0]->GetBdata(),eWrapper);
                     DNekMat out(nquad0,nquad1,outarray,eWrapper);
 
                     out = B0*in;
@@ -1043,6 +1043,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.32  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.31  2008/04/03 16:12:11  pvos
 * updates for NEKTAR_USING_DIRECT_BLAS_CALLS
 *

@@ -44,6 +44,8 @@
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
+#include <LibUtilities/BasicUtils/RawType.hpp>
+#include <boost/utility/enable_if.hpp>
 
 #include <string>
 
@@ -102,9 +104,23 @@ namespace Nektar
              typename LhsStorageType, typename RhsStorageType>
     void NekMultiply(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
                      const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>& lhs,
-                     const NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>& rhs)
+                     const NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>& rhs
+                     #ifdef NEKTAR_USING_BLAS
+                     // This is necessary to force double matrices to use the blas specific versions below.
+                     // Without this check, NekMatrix<double> would not use the versions below because
+                     // this is a better match than NekMatrix<const double>
+                     , typename boost::disable_if
+                     <
+                        boost::mpl::and_
+                        <
+                            boost::is_same<double, typename RawType<typename NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>::NumberType>::type>,
+                            boost::is_same<double, typename RawType<typename NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>::NumberType>::type>
+                        >
+                     >::type* p = 0
+                     #endif //NEKTAR_USING_BLAS
+                     )
     {
-        ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+        ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + 
             std::string(" and a right side matrix with row count ") + 
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
@@ -125,32 +141,6 @@ namespace Nektar
         }
     }
         
-//    // Temporary only for testing.
-//    template<typename DataType>
-//    void NekMultiplyEqual(NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& result,
-//                          const NekMatrix<DataType, FullMatrixTag, StandardMatrixTag>& rhs)
-//    {
-//        Array<OneD, DataType> cache(result.GetColumns(), DataType(0));
-//        for(unsigned int i = 0; i < result.GetRows(); ++i)
-//        {
-//            for(unsigned int j = 0; j < result.GetColumns(); ++j)
-//            {
-//                DataType t = DataType(0);
-//
-//                // Set the result(i,j) element.
-//                for(unsigned int k = 0; k < result.GetColumns(); ++k)
-//                {
-//                    t += result(i,k)*rhs(k,j);
-//                }
-//                cache[j] = t;
-//            }
-//            
-//            for(unsigned int j = 0; j < result.GetColumns(); ++j)
-//            {
-//                result(i,j) = cache[j];
-//            }
-//        }
-//    }
         
     template<typename LhsDataType, typename MatrixType>
     void NekMultiplyEqual(NekMatrix<LhsDataType, MatrixType, StandardMatrixTag>& lhs,
@@ -167,34 +157,36 @@ namespace Nektar
     ///
     /// The signature of this function should match the unspecialized NekMultiply.
     void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
-                     const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
-                     const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs);
+                     const NekMatrix<const double, FullMatrixTag, StandardMatrixTag>& lhs,
+                     const NekMatrix<const double, FullMatrixTag, StandardMatrixTag>& rhs);
 
     void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs);
+                     const NekMatrix<NekMatrix<const double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
+                     const NekMatrix<NekMatrix<const double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs);
 
     void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
-                     const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs);
+                     const NekMatrix<const double, FullMatrixTag, StandardMatrixTag>& lhs,
+                     const NekMatrix<NekMatrix<const double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs);
 
     void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
-                     const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
-                     const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs);
+                     const NekMatrix<NekMatrix<const double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
+                     const NekMatrix<const double, FullMatrixTag, StandardMatrixTag>& rhs);
                      
     void NekMultiplyEqual(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
-                          const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& rhs);
+                          const NekMatrix<const double, FullMatrixTag, StandardMatrixTag>& rhs);
+                          
+                          
                      
     #endif //NEKTAR_USING_BLAS
 
 	template<typename LhsDataType, typename RhsDataType,
              typename LhsMatrixType, typename RhsMatrixType,
              typename LhsStorageType, typename RhsStorageType>
-    NekMatrix<typename NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>::NumberType, FullMatrixTag, StandardMatrixTag> 
+    NekMatrix<typename boost::remove_const<typename NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>::NumberType>::type, FullMatrixTag, StandardMatrixTag> 
     NekMultiply(const NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>& lhs,
                 const NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>& rhs)
     {
-        typedef typename NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>::NumberType NumberType;
+        typedef typename boost::remove_const<typename NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>::NumberType>::type NumberType;
         NekMatrix<NumberType, FullMatrixTag, StandardMatrixTag> result(lhs.GetRows(), rhs.GetColumns());
         NekMultiply(result, lhs, rhs);
         return result;
@@ -207,9 +199,25 @@ namespace Nektar
     template<typename DataType, typename LhsDataType, typename MatrixType, typename dim, typename space>
     void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
                     const NekMatrix<LhsDataType, FullMatrixTag, MatrixType>& lhs,
-                    const NekVector<const DataType, dim, space>& rhs)
+                    const NekVector<const DataType, dim, space>& rhs
+                    #ifdef NEKTAR_USING_BLAS
+                     , typename boost::disable_if
+                     <
+                        boost::is_same<double, typename RawType<typename NekMatrix<LhsDataType, FullMatrixTag, MatrixType>::NumberType>::type>
+                     >::type* p = 0
+                     #endif //NEKTAR_USING_BLAS
+                     )
     {
-       ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+        typedef NekMatrix<LhsDataType, FullMatrixTag, MatrixType> LhsType;
+        typedef NekVector<const DataType, dim, space> RhsType;
+        
+//        BOOST_MPL_ASSERT(( boost::mpl::or_
+//                           <
+//                                boost::is_same<double, typename RawType<typename LhsType::NumberType>::type>,
+//                                boost::is_same<BlockMatrixTag, MatrixType> 
+//                           > ));
+                           
+       ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
            std::string(" and a right side vector with row count ") + 
            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
@@ -228,9 +236,16 @@ namespace Nektar
     template<typename DataType, typename LhsDataType, typename MatrixType, typename dim, typename space>
     void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
                     const NekMatrix<LhsDataType, BandedMatrixTag, MatrixType>& lhs,
-                    const NekVector<const DataType, dim, space>& rhs)
+                    const NekVector<const DataType, dim, space>& rhs
+                    #ifdef NEKTAR_USING_BLAS
+                     , typename boost::disable_if
+                     <
+                        boost::is_same<double, typename RawType<typename NekMatrix<LhsDataType, BandedMatrixTag, MatrixType>::NumberType>::type>
+                     >::type* p = 0
+                     #endif //NEKTAR_USING_BLAS
+                     )
     {
-        ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+        ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
            std::string(" and a right side vector with row count ") + 
            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
@@ -268,9 +283,16 @@ namespace Nektar
     template<typename DataType, typename LhsDataType, typename MatrixType, typename dim, typename space>
     void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
                     const NekMatrix<LhsDataType, UpperTriangularMatrixTag, MatrixType>& lhs,
-                    const NekVector<const DataType, dim, space>& rhs)
+                    const NekVector<const DataType, dim, space>& rhs
+                    #ifdef NEKTAR_USING_BLAS
+                     , typename boost::disable_if
+                     <
+                        boost::is_same<double, typename RawType<typename NekMatrix<LhsDataType, UpperTriangularMatrixTag, MatrixType>::NumberType>::type>
+                     >::type* p = 0
+                     #endif //NEKTAR_USING_BLAS
+                    )
     {
-       ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+       ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
            std::string(" and a right side vector with row count ") + 
            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
@@ -289,9 +311,16 @@ namespace Nektar
     template<typename DataType, typename LhsDataType, typename MatrixType, typename dim, typename space>
     void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
                     const NekMatrix<LhsDataType, LowerTriangularMatrixTag, MatrixType>& lhs,
-                    const NekVector<const DataType, dim, space>& rhs)
+                    const NekVector<const DataType, dim, space>& rhs
+                    #ifdef NEKTAR_USING_BLAS
+                     , typename boost::disable_if
+                     <
+                        boost::is_same<double, typename RawType<typename NekMatrix<LhsDataType, LowerTriangularMatrixTag, MatrixType>::NumberType>::type>
+                     >::type* p = 0
+                     #endif //NEKTAR_USING_BLAS
+                     )
     {
-       ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+       ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
            std::string(" and a right side vector with row count ") + 
            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
@@ -347,7 +376,7 @@ namespace Nektar
                 }
 
                 unsigned int columnsInBlock = lhs.GetNumberOfColumnsInBlockColumn(blockColumn);
-                NekVector<DataType, VariableSizedVector, space> rhsWrapper(columnsInBlock, rhs.GetPtr() + curWrapperRow, eWrapper);
+                NekVector<const DataType, VariableSizedVector, space> rhsWrapper(columnsInBlock, rhs.GetPtr() + curWrapperRow, eWrapper);
                 
                 resultWrapper += (*block)*rhsWrapper;
             }
@@ -358,10 +387,10 @@ namespace Nektar
         /// \brief Floating point specialization when blas is in use.
         template<typename dim, typename space>
         void NekMultiply(NekVector<double, VariableSizedVector, space>& result,
-                        const NekMatrix<double, FullMatrixTag, StandardMatrixTag>& lhs,
+                        const NekMatrix<const double, FullMatrixTag, StandardMatrixTag>& lhs,
                         const NekVector<const double, dim, space>& rhs)
         {
-            ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+            ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
                boost::lexical_cast<std::string>(lhs.GetColumns()) + 
                std::string(" and a right side vector with row count ") + 
                boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
@@ -369,7 +398,8 @@ namespace Nektar
             int m = lhs.GetRows();
             int n = lhs.GetColumns();
 
-            if( lhs.GetTransposeFlag() == 'T' )
+            char t = lhs.GetTransposeFlag();
+            if( t == 'T' )
             {
                 std::swap(m, n);
             }
@@ -383,15 +413,15 @@ namespace Nektar
             double* y = result.GetRawPtr();
             int incy = 1;
             
-            Blas::Dgemv(lhs.GetTransposeFlag(), m, n, alpha, a, lda, x, incx, beta, y, incy);
+            Blas::Dgemv(t, m, n, alpha, a, lda, x, incx, beta, y, incy);
         }
                
         template<typename dim, typename space>
         void NekMultiply(NekVector<double, VariableSizedVector, space>& result,
-                        const NekMatrix<NekMatrix<double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
+                        const NekMatrix<NekMatrix<const double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
                         const NekVector<const double, dim, space>& rhs)
         {
-            ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+            ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
                boost::lexical_cast<std::string>(lhs.GetColumns()) + 
                std::string(" and a right side vector with row count ") + 
                boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
@@ -419,10 +449,10 @@ namespace Nektar
 
         template<typename dim, typename space>
         void NekMultiply(NekVector<double, VariableSizedVector, space>& result,
-                         const NekMatrix<double, UpperTriangularMatrixTag, StandardMatrixTag>& lhs,
+                         const NekMatrix<const double, UpperTriangularMatrixTag, StandardMatrixTag>& lhs,
                          const NekVector<const double, dim, space>& rhs)
         {
-            ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+            ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
                boost::lexical_cast<std::string>(lhs.GetColumns()) + 
                std::string(" and a right side vector with row count ") + 
                boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
@@ -438,10 +468,10 @@ namespace Nektar
 
         template<typename dim, typename space>
         void NekMultiply(NekVector<double, VariableSizedVector, space>& result,
-                         const NekMatrix<double, LowerTriangularMatrixTag, StandardMatrixTag>& lhs,
+                         const NekMatrix<const double, LowerTriangularMatrixTag, StandardMatrixTag>& lhs,
                          const NekVector<const double, dim, space>& rhs)
         {
-            ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+            ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
                boost::lexical_cast<std::string>(lhs.GetColumns()) + 
                std::string(" and a right side vector with row count ") + 
                boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
@@ -460,7 +490,7 @@ namespace Nektar
                         const NekMatrix<LhsDataType, BandedMatrixTag, MatrixType>& lhs,
                         const NekVector<const double, dim, space>& rhs)
         {
-            ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+            ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
                boost::lexical_cast<std::string>(lhs.GetColumns()) + 
                std::string(" and a right side vector with row count ") + 
                boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
@@ -490,7 +520,7 @@ namespace Nektar
                     const NekMatrix<LhsDataType, DiagonalMatrixTag, MatrixType>& lhs,
                     const NekVector<DataType, dim, space>& rhs)
     {
-       ASSERTL0(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+       ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
            std::string(" and a right side vector with row count ") + 
            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
@@ -632,10 +662,10 @@ namespace Nektar
                         const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
                         const NekMatrix<RhsDataType, DiagonalMatrixTag, RhsMatrixType>& rhs)
     {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+        ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+        ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
         
@@ -662,10 +692,10 @@ namespace Nektar
                         const NekMatrix<LhsDataType, DiagonalMatrixTag, LhsMatrixType>& lhs,
                         const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
     {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+        ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+        ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
 
@@ -692,10 +722,10 @@ namespace Nektar
                 const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
                 const NekMatrix<RhsDataType, UpperTriangularMatrixTag, RhsMatrixType>& rhs)
     {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+        ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+        ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
 
@@ -727,10 +757,10 @@ namespace Nektar
                 const NekMatrix<LhsDataType, UpperTriangularMatrixTag, LhsMatrixType>& lhs,
                 const NekMatrix<RhsDataType, UpperTriangularMatrixTag, RhsMatrixType>& rhs)
     {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+        ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+        ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
 
@@ -755,10 +785,10 @@ namespace Nektar
                 const NekMatrix<LhsDataType, LowerTriangularMatrixTag, LhsMatrixType>& lhs,
                 const NekMatrix<RhsDataType, LowerTriangularMatrixTag, RhsMatrixType>& rhs)
     {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+        ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+        ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
             
@@ -798,10 +828,10 @@ namespace Nektar
                 const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
                 const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
     {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+        ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+        ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
 
@@ -847,10 +877,10 @@ namespace Nektar
                         const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
                         const NekMatrix<RhsDataType, DiagonalMatrixTag, RhsMatrixType>& rhs)
     {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+        ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+        ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
         
@@ -877,10 +907,10 @@ namespace Nektar
                         const NekMatrix<LhsDataType, DiagonalMatrixTag, LhsMatrixType>& lhs,
                         const NekMatrix<RhsDataType, FullMatrixTag, RhsMatrixType>& rhs)
     {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+        ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+        ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
         
@@ -907,10 +937,10 @@ namespace Nektar
                         const NekMatrix<LhsDataType, FullMatrixTag, LhsMatrixType>& lhs,
                         const NekMatrix<RhsDataType, UpperTriangularMatrixTag, RhsMatrixType>& rhs)
     {
-        ASSERTL0(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+        ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
-        ASSERTL0(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+        ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
             boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
             boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
 

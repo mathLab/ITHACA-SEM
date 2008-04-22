@@ -175,7 +175,9 @@ namespace Nektar
 
             Array<OneD, NekDouble> tmp(nquad0*nquad1);
             Array<OneD, NekDouble> tmp1(order0*nquad1);
-
+//            NekDouble* tmp = MemoryManager<NekDouble>::RawAllocate(nquad0*nquad1);
+//            NekDouble* tmp1 = MemoryManager<NekDouble>::RawAllocate(order0*nquad1);
+            
             Array<OneD, const NekDouble> w0 = ExpPointsProperties(0)->GetW();
             Array<OneD, const NekDouble> w1 = ExpPointsProperties(1)->GetW();
             Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
@@ -215,49 +217,60 @@ namespace Nektar
                 break;
             }
 
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-
-            // Inner product with respect to 'a' direction 
-            Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
-                        base0.get(),nquad0,0.0,&tmp1[0],nquad1);
+            #ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+            bool useBlas = true;
+            #else
+            bool useBlas = false;
+            #endif
             
-            // Inner product with respect to 'b' direction 
-            for(mode=i=0; i < order0; ++i)
+            if( useBlas )
             {
-                Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
-                            nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
-                            &outarray[0] + mode,1);
-                mode += order1-i;
-            }
-            
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-            
-            // Inner product with respect to 'a' direction 
-            DNekMat in(nquad0,nquad1,tmp,eWrapper);
-            DNekMat B0(nquad0,order0,base0,eWrapper);
-            DNekMat out(nquad1,order0,tmp1,eWrapper);
-                    
-            out = Transpose(in)*B0;
-
-            // Inner product with respect to 'b' direction 
-            for(mode=i=0; i < order0; ++i)
-            {
-                NekVector<const NekDouble> in2(nquad1,tmp1 + i*nquad1,eWrapper);
-                NekVector<NekDouble> out2(order1-i,outarray + mode,eWrapper);
-                DNekMat B1(nquad1,order1-i,base1 + mode*nquad1,eWrapper);
+                // Inner product with respect to 'a' direction 
+                Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
+                            base0.get(),nquad0,0.0,&tmp1[0],nquad1);
                 
-                out2 = Transpose(B1)*in2;
-                mode += order1-i;
+                // Inner product with respect to 'b' direction 
+                for(mode=i=0; i < order0; ++i)
+                {
+                    Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
+                                nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
+                                &outarray[0] + mode,1);
+                    mode += order1-i;
+                }
             }
+            else
+            {
+                
+                // Inner product with respect to 'a' direction 
+                DNekMat in(nquad0,nquad1,tmp,eWrapper);
+                //DNekMat B0(nquad0,order0,base0,eWrapper);
+                NekMatrix<const NekDouble> B0(nquad0, order0, base0, eWrapper);
+                DNekMat out(nquad1,order0,tmp1,eWrapper);
+                        
+                out = Transpose(in)*B0;
 
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
-
+                // Inner product with respect to 'b' direction 
+                for(mode=i=0; i < order0; ++i)
+                {
+                    NekVector<const NekDouble> in2(nquad1,tmp1 + i*nquad1,eWrapper);
+                    NekVector<NekDouble> out2(order1-i,outarray + mode,eWrapper);
+                    //DNekMat B1(nquad1,order1-i,base1 + mode*nquad1,eWrapper);
+                    NekMatrix<const NekDouble> B1(nquad1, order1-i, base1 + mode*nquad1, eWrapper);
+                    
+                    out2 = Transpose(B1)*in2;
+                    mode += order1-i;
+                }
+            }
+            
             // fix for modified basis by splitting top vertex mode
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 outarray[1] += Blas::Ddot(nquad1,base1.get()+nquad1,1,
                     &tmp1[0]+nquad1,1);
             }
+            
+//            MemoryManager<NekDouble>::RawDeallocate(tmp1, order0*nquad1);
+//            MemoryManager<NekDouble>::RawDeallocate(tmp, nquad0*nquad1);
         }
 
         void StdTriExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
@@ -388,8 +401,8 @@ namespace Nektar
             int           nquad1 = m_base[1]->GetNumPoints();
             int           order0 = m_base[0]->GetNumModes();
             int           order1 = m_base[1]->GetNumModes();
-            Array<OneD, const NekDouble> base0  = m_base[0]->GetBdata();
-            Array<OneD, const NekDouble> base1  = m_base[1]->GetBdata();
+            const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+            const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
             Array<OneD, NekDouble> tmp(order0*nquad1);
 
 
@@ -422,7 +435,7 @@ namespace Nektar
             {
                 NekVector<const NekDouble> in(order1-i,inarray+mode,eWrapper);
                 NekVector<NekDouble> out(nquad1,tmp+i*nquad1,eWrapper);
-                DNekMat B1(nquad1,order1-i,base1 + mode*nquad1,eWrapper);
+                NekMatrix<const double> B1(nquad1,order1-i,base1 + mode*nquad1,eWrapper);
 
                 out = B1*in;
                 mode += order1-i;
@@ -435,9 +448,9 @@ namespace Nektar
                     &tmp[0]+nquad1,1);
             }
 
-            DNekMat in(nquad1,order0,tmp,eWrapper);
+            NekMatrix<const double> in(nquad1,order0,tmp,eWrapper);
             DNekMat out(nquad0,nquad1,outarray,eWrapper);
-            DNekMat B1(nquad0,order0,base0,eWrapper);
+            NekMatrix<const double> B1(nquad0,order0,base0,eWrapper);
 
             out = B1*Transpose(in);
 
@@ -850,6 +863,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.32  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.31  2008/04/03 16:12:11  pvos
 * updates for NEKTAR_USING_DIRECT_BLAS_CALLS
 *

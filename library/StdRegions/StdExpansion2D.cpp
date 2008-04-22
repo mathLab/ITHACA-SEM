@@ -120,7 +120,8 @@ namespace Nektar
             {
                 DNekMatSharedPtr D0 = ExpPointsProperties(0)->GetD();
                 DNekMat out(nquad0,nquad1,outarray_d0,eWrapper);
-                DNekMat in(nquad0,nquad1,inarray,eWrapper);  
+                //DNekMat in(nquad0,nquad1,inarray,eWrapper);  
+                NekMatrix<const double> in(nquad0, nquad1, inarray, eWrapper);
                 out = (*D0) * in;
             }
 
@@ -128,7 +129,8 @@ namespace Nektar
             {
                 DNekMatSharedPtr D1 = ExpPointsProperties(1)->GetD();
                 DNekMat out(nquad0,nquad1,outarray_d1,eWrapper);
-                DNekMat in(nquad0,nquad1,inarray,eWrapper);  
+                //DNekMat in(nquad0,nquad1,inarray,eWrapper);  
+                NekMatrix<const double> in(nquad0, nquad1, inarray, eWrapper);
                 out = in * Transpose(*D1);
             }
 
@@ -202,6 +204,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.22  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.21  2008/04/03 16:12:11  pvos
 * updates for NEKTAR_USING_DIRECT_BLAS_CALLS
 *

@@ -45,13 +45,13 @@
 namespace Nektar
 {
     template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
-    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag> : public ConstMatrix<DataType>
+    class NekMatrix<NekMatrix<const DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag> : public ConstMatrix<DataType>
     {
         public:
             typedef ConstMatrix<DataType> BaseType;
-            typedef NekMatrix<DataType, InnerStorageType, InnerMatrixType> InnerType;
+            typedef NekMatrix<const DataType, InnerStorageType, InnerMatrixType> InnerType;
             typedef NekMatrix<InnerType, StorageType, ScaledMatrixTag> ThisType;
-            typedef typename InnerType::NumberType NumberType;
+            typedef typename boost::remove_const<typename InnerType::NumberType>::type NumberType;
             
             typedef NumberType GetValueType;
             typedef NumberType ConstGetValueType;
@@ -120,7 +120,7 @@ namespace Nektar
             {
             }
             
-            NekMatrix(const NekMatrix<InnerType, StorageType, ScaledMatrixTag>& rhs) :
+            NekMatrix(const NekMatrix<const InnerType, StorageType, ScaledMatrixTag>& rhs) :
                 BaseType(rhs),
                 m_matrix(rhs.m_matrix),
                 m_scale(rhs.m_scale)
@@ -195,6 +195,36 @@ namespace Nektar
 
             boost::shared_ptr<const InnerType> m_matrix;
             NumberType m_scale;
+    };
+
+    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
+    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag> : public NekMatrix<NekMatrix<const DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag>
+    {
+        public:
+            typedef NekMatrix<NekMatrix<const DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag> BaseType;
+            typedef NekMatrix<DataType, InnerStorageType, InnerMatrixType> InnerType;
+            typedef NekMatrix<InnerType, StorageType, ScaledMatrixTag> ThisType;
+            typedef typename InnerType::NumberType NumberType;
+            
+            typedef NumberType GetValueType;
+            typedef NumberType ConstGetValueType;
+            
+        public:
+            NekMatrix() :
+                BaseType()
+            {
+            }
+            
+            NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
+                      boost::shared_ptr<const InnerType> m) :
+                BaseType(scale, m)
+            {
+            }
+            
+            NekMatrix(const NekMatrix<InnerType, StorageType, ScaledMatrixTag>& rhs) :
+                BaseType(rhs)
+            {
+            }
     };
     
     template<typename DataType, typename StorageType>

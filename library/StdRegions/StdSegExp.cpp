@@ -104,7 +104,7 @@ namespace Nektar
 
                 NekVector<const NekDouble> in(nquad,tmp,eWrapper);
                 NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
-                DNekMat B(nquad,m_ncoeffs,base,eWrapper);
+                NekMatrix<const double> B(nquad,m_ncoeffs,base,eWrapper);
                 out = Transpose(B) * in;
 
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS  
@@ -186,7 +186,7 @@ namespace Nektar
 
                 NekVector<const NekDouble> in(m_ncoeffs,inarray,eWrapper);
                 NekVector<NekDouble> out(nquad,outarray,eWrapper);
-                DNekMat B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
+                NekMatrix<const double> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
                 out = B * in;
 
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
@@ -344,6 +344,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.47  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.46  2008/04/03 16:12:11  pvos
 * updates for NEKTAR_USING_DIRECT_BLAS_CALLS
 *

@@ -39,6 +39,7 @@
 #include <LibUtilities/BasicUtils/ArrayPolicies.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <LibUtilities/BasicUtils/NekPtr.hpp>
 
 #include <boost/multi_array.hpp>
@@ -793,6 +794,9 @@ namespace Nektar
             
             template<typename T1, typename dim, typename space>
             friend class NekVector;
+            
+            template<typename T1, typename T2, typename T3>
+            friend class NekMatrix;
             
         protected:
             Array(const Array<OneD, const DataType>& rhs, AllowWrappingOfConstArrays a) :

@@ -44,6 +44,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixType.h>
 #include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
 #include <LibUtilities/BasicUtils/RawType.hpp>
+#include <iostream>
 
 #include <boost/shared_ptr.hpp> 
 #include <boost/utility/enable_if.hpp>
@@ -72,22 +73,21 @@ namespace Nektar
     struct LinearSystemSolver<NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag> >
     {
         typedef NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag> MatrixType;
-
+        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
+        
         template<typename BVectorType, typename XVectorType>
-        static void Solve(const MatrixType& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x)
+        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
         {
-            ASSERTL0(A.GetColumns() == b.GetRows(), "ERROR: NekLinSys::Solve matrix columns must equal vector rows");
-
-            for(unsigned int i = 0; i < A.GetColumns(); ++i)
+            for(unsigned int i = 0; i < A.num_elements(); ++i)
             {
-                x[i] = b[i]*A(i,i);
+                x[i] = b[i]*A[i];
             }
         }
 
         template<typename BVectorType, typename XVectorType>
-        static void SolveTranspose(const MatrixType& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x)
+        static void SolveTranspose(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
         {
-            Solve(A,ipivot,b,x);
+            Solve(A,ipivot,b,x,n,policyData);
         }
     };
 
@@ -95,13 +95,14 @@ namespace Nektar
     struct LinearSystemSolver<NekMatrix<DataType, FullMatrixTag, StandardMatrixTag> >
     {
         typedef NekMatrix<DataType, FullMatrixTag, StandardMatrixTag> MatrixType;
-
+        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
+        
         template<typename BVectorType, typename XVectorType>
-        static void Solve(const MatrixType& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x)
+        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
         {
             x = b;
             int info = 0;
-            Lapack::Dgetrs('N',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetRawPtr(),A.GetRows(),info);
+            Lapack::Dgetrs('N',n,1,A.get(),n,(int *)ipivot.get(),x.GetRawPtr(),n,info);
             if( info < 0 )
             {
                 std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrs";
@@ -110,11 +111,11 @@ namespace Nektar
         }
 
         template<typename BVectorType, typename XVectorType>
-        static void SolveTranspose(const MatrixType& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x)
+        static void SolveTranspose(const Array<OneD, double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
         {
             x = b;
             int info = 0;
-            Lapack::Dgetrs('T',A.GetRows(),1,A.GetPtr().get(),A.GetRows(),(int *)ipivot.get(),x.GetRawPtr(),A.GetRows(),info);
+            Lapack::Dgetrs('T',n,1,A.get(),n,(int *)ipivot.get(),x.GetRawPtr(), n,info);
 
             if( info < 0 )
             {
@@ -128,13 +129,14 @@ namespace Nektar
     struct LinearSystemSolver<NekMatrix<DataType, SymmetricMatrixTag, StandardMatrixTag> >
     {
         typedef NekMatrix<DataType, SymmetricMatrixTag, StandardMatrixTag> MatrixType;
-
+        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
+        
         template<typename BVectorType, typename XVectorType>
-        static void Solve(const MatrixType& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x)
+        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
         {
             x = b;
             int info = 0;
-            Lapack::Dsptrs('U', A.GetRows(), 1, A.GetRawPtr(), ipivot.get(), x.GetRawPtr(), x.GetRows(), info);
+            Lapack::Dsptrs('U', n, 1, A.get(), ipivot.get(), x.GetRawPtr(), x.GetRows(), info);
             if( info < 0 )
             {
                 std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptrs";
@@ -143,44 +145,89 @@ namespace Nektar
         }
 
         template<typename BVectorType, typename XVectorType>
-        static void SolveTranspose(const MatrixType& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x)
+        static void SolveTranspose(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
         {
-            return Solve(A, ipivot, b, x);
+            return Solve(A, ipivot, b, x, n, policyData);
         }
     };
+    
+    template<typename DataType>
+    struct LinearSystemSolver<NekMatrix<DataType, BandedMatrixTag, StandardMatrixTag> >
+    {
+        typedef NekMatrix<DataType, BandedMatrixTag, StandardMatrixTag> MatrixType;
+        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
+
+        template<typename BVectorType, typename XVectorType>
+        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
+        {
+            PerformSolve(A, ipivot, b, x, 'N', n, policyData);
+        }
+
+        template<typename BVectorType, typename XVectorType>
+        static void SolveTranspose(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
+        {
+            PerformSolve(A, ipivot, b, x, 'T', n, policyData);
+        }
+        
+        template<typename BVectorType, typename XVectorType>
+        static void PerformSolve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, char trans, unsigned int n, const PolicySpecificDataType& policyData)
+        {
+//            int KL = policyData.GetNumberOfSubDiagonals(n);
+//            int KU = policyData.GetNumberOfSuperDiagonals(n);
+//            int info = 0;
+//            
+//            Lapack::Dgbtrs(trans, n, KL, KU, 1, A.get(), 2*KL+KU+1, ipivot.get(), x.GetRawPtr(), N, info);
+//            
+//            if( info < 0 )
+//            {
+//                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrs";
+//                ASSERTL0(false, message.c_str());
+//            }
+        }
+    };
+
     
     template<typename MatrixType>
     class LinearSystem;
 
-    template<typename DataType, typename StorageType, typename Type>
-    class LinearSystem<NekMatrix<DataType, StorageType, Type> >
+    template<typename StorageType, typename Type>
+    class LinearSystem<NekMatrix<double, StorageType, Type> >
     {
         public:
-            typedef NekMatrix<DataType, StorageType, Type> MatrixType;
+            typedef NekMatrix<double, StorageType, Type> MatrixType;
             typedef LinearSystem<MatrixType> ThisType;
-
+            typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
+            
         public:
             explicit LinearSystem(const boost::shared_ptr<MatrixType> &theA) :
-                A(*theA) 
+                n(theA->GetRows()),
+                A(),
+                m_ipivot(),
+                m_policySpecificData(theA->GetPolicySpecificDataHolderType())
             {
                 // At some point we should fix this.  We should upate the copy of 
                 // A to be transposd for this to work.
                 ASSERTL0(theA->GetTransposeFlag() == 'N', "LinearSystem requires a non-transposed matrix.");
-                FactorMatrix(A);
+                FactorMatrix(*theA);
             }
             
             explicit LinearSystem(const MatrixType& theA) :
-                A(theA)
+                n(theA.GetRows()),
+                A(),
+                m_ipivot(),
+                m_policySpecificData(theA.GetPolicySpecificDataHolderType())
             {
                 // At some point we should fix this.  We should upate the copy of 
                 // A to be transposd for this to work.
                 ASSERTL0(theA.GetTransposeFlag() == 'N', "LinearSystem requires a non-transposed matrix.");
-                FactorMatrix(A);
+                FactorMatrix(theA);
             }
 
             LinearSystem(const ThisType& rhs) :
+                n(rhs.n),
                 A(rhs.A),
-                m_ipivot(rhs.m_ipivot)
+                m_ipivot(rhs.m_ipivot),
+                m_policySpecificData(rhs.m_policySpecificData)
             {
             }
 
@@ -199,7 +246,7 @@ namespace Nektar
             typename RemoveVectorConst<typename RawType<VectorType>::type>::type Solve(const VectorType& b)
             {
                 typename RemoveVectorConst<typename RawType<VectorType>::type>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
-                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot, ConsistentObjectAccess<VectorType>::const_reference(b), x);
+                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot, ConsistentObjectAccess<VectorType>::const_reference(b), x, n, m_policySpecificData);
                 return x;
             }    
 
@@ -208,7 +255,7 @@ namespace Nektar
             {
                 LinearSystemSolver<MatrixType>::Solve(A, m_ipivot,
                     ConsistentObjectAccess<BType>::const_reference(b), 
-                    ConsistentObjectAccess<XType>::reference(x));
+                    ConsistentObjectAccess<XType>::reference(x), n, m_policySpecificData);
             }
 
             // Transpose variant of solve
@@ -216,7 +263,7 @@ namespace Nektar
             typename RemoveVectorConst<typename RawType<VectorType>::type>::type SolveTranspose(const VectorType& b)
             {
                 typename RemoveVectorConst<typename RawType<VectorType>::type>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
-                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot, ConsistentObjectAccess<VectorType>::const_reference(b), x);
+                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot, ConsistentObjectAccess<VectorType>::const_reference(b), x, n, m_policySpecificData);
                 return x;
             }    
 
@@ -225,33 +272,38 @@ namespace Nektar
             {
                 LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot,
                     ConsistentObjectAccess<BType>::const_reference(b), 
-                    ConsistentObjectAccess<XType>::reference(x));
+                    ConsistentObjectAccess<XType>::reference(x), n, m_policySpecificData);
             }
             
             
 
-            unsigned int GetRows() const { return A.GetRows(); }
-            unsigned int GetColumns() const { return A.GetColumns(); }
+            unsigned int GetRows() const { return n; }
+            unsigned int GetColumns() const { return n; }
             
         private:
-            void FactorMatrix(NekMatrix<DataType,DiagonalMatrixTag, StandardMatrixTag> &theA)
+            void FactorMatrix(const NekMatrix<double, DiagonalMatrixTag, StandardMatrixTag> &theA)
             {
-                for(unsigned int i = 0; i < A.GetColumns(); ++i)
+                A = Array<OneD, double>(n);
+                for(unsigned int i = 0; i < theA.GetColumns(); ++i)
                 {
-                    theA.SetValue(i, i, 1.0/theA(i,i));
+                    A[i] = 1.0/theA(i,i);
                 }
 
             }
 
-            void FactorMatrix(NekMatrix<DataType,FullMatrixTag,StandardMatrixTag> &theA)
+            void FactorMatrix(const NekMatrix<double,FullMatrixTag,StandardMatrixTag> &theA)
             {
                 int m = theA.GetRows();
                 int n = theA.GetColumns();
+                
+                A = Array<OneD, double>(m*n);
+                CopyArray(theA.GetPtr(), A);
+                
                 int pivotSize = std::max(1, std::min(m, n));
                 int info = 0;
                 m_ipivot = Array<OneD, int>(pivotSize);
 
-                Lapack::Dgetrf(m, n, theA.GetPtr().get(), m, m_ipivot.get(), info);
+                Lapack::Dgetrf(m, n, A.get(), m, m_ipivot.get(), info);
 
                 if( info < 0 )
                 {
@@ -265,13 +317,16 @@ namespace Nektar
                 }            
             }
 
-            void FactorMatrix(NekMatrix<DataType, SymmetricMatrixTag, StandardMatrixTag>& theA)
+            void FactorMatrix(const NekMatrix<double, SymmetricMatrixTag, StandardMatrixTag>& theA)
             {
+                A = Array<OneD, double>(theA.GetPtr().num_elements());
+                CopyArray(theA.GetPtr(), A);
+                
                 int info = 0;
                 int pivotSize = theA.GetRows();
                 m_ipivot = Array<OneD, int>(pivotSize);
                 
-                Lapack::Dsptrf('U', theA.GetRows(), theA.GetRawPtr(), m_ipivot.get(), info);
+                Lapack::Dsptrf('U', theA.GetRows(), A.get(), m_ipivot.get(), info);
                 
                 if( info < 0 )
                 {
@@ -284,19 +339,60 @@ namespace Nektar
                     ASSERTL0(false, message.c_str());
                 }    
             }
-            
-            void FactorMatrix(NekMatrix<DataType, BandedMatrixTag, StandardMatrixTag>& theA)
+
+            void FactorMatrix(const NekMatrix<double, BandedMatrixTag, StandardMatrixTag>& theA)
             {
+                int M = theA.GetRows();
+                int N = theA.GetColumns();
+                int KL = m_policySpecificData.GetNumberOfSubDiagonals(M);
+                int KU = m_policySpecificData.GetNumberOfSuperDiagonals(M);
+                
+                // The array we pass in to dgbtrf must have enough space for KL
+                // subdiagonals and KL+KU superdiagonals (see lapack users guide,
+                // in the section discussing band storage.
+                PolicySpecificDataType t(KL, KL+KU);
+                unsigned int requiredStorageSize = MatrixStoragePolicy<double, BandedMatrixTag>::GetRequiredStorageSize(
+                    M, N, t);
+                
+                unsigned int rawRows = KL+KU+1;
+                A = Array<OneD, double>(requiredStorageSize);
+                for(unsigned int i = 0; i < theA.GetColumns(); ++i)
+                {
+                    std::copy(theA.GetRawPtr() + i*rawRows, theA.GetRawPtr() + (i+1)*rawRows,
+                        A.get() + (i+1)*KL + i*rawRows);
+                }
+                                
+                int info = 0;
+                int pivotSize = theA.GetRows();
+                m_ipivot = Array<OneD, int>(pivotSize);
+                
+                Lapack::Dgbtrf(M, N, KL, KU, A.get(), 2*KL+KU+1, m_ipivot.get(), info);
+              
+                if( info < 0 )
+                {
+                    std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrf";
+                    ASSERTL0(false, message.c_str());
+                }
+                else if( info > 0 )
+                {
+                    std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgbtrf";
+                    ASSERTL0(false, message.c_str());
+                }    
             }
+
             
             void swap(ThisType& rhs)
             {
+                std::swap(n, rhs.n);
                 std::swap(A, rhs.A);
                 std::swap(m_ipivot,rhs.m_ipivot);
+                std::swap(m_policySpecificData, rhs.m_policySpecificData);
             }
 
-            MatrixType A;
-            Array<OneD, int> m_ipivot;        
+            unsigned int n;
+            Array<OneD, double> A;
+            Array<OneD, int> m_ipivot;  
+            PolicySpecificDataType m_policySpecificData;      
         };
 }
 

@@ -35,6 +35,7 @@
 
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <UnitTests/LibUtilities/LinearAlgebra/TestCombinationRunner.h>
+#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -673,6 +674,43 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(expected_result, result);
             }
         }
+        
+        BOOST_AUTO_TEST_CASE(TestBandedMatrixLinearSystemSolves)
+        {
+                typedef NekMatrix<double, BandedMatrixTag> MatrixType;
+
+                // This is the matrix
+                // [  1  6 10   0  0 ]
+                // [ 13  2  7  11  0 ]
+                // [  7 14  3   8 12 ]
+                // [ 20  5 15   4  9 ]
+                // [ 30 21  4  16  5 ]
+                
+                double buf[] = {0, 0, 1, 13, 7, 20, 30,
+                                   0, 6, 2, 14, 5, 21, 0,
+                                   10, 7, 3, 15, 4, 0, 0,
+                                   11, 8, 4, 16, 0, 0, 0,
+                                   12, 9, 5, 0, 0, 0, 0};
+                              
+    
+                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(4, 2));
+
+                double b_buf[] =  { 43, 82, 136, 136, 173 };
+                NekVector<double> b(5, b_buf);
+                
+                LinearSystem<MatrixType> l(m);
+                NekVector<double> result = l.Solve(b);
+                
+                double expected_result_buf[] = {1, 2, 3, 4, 5};
+                NekVector<double> expected_result(5, expected_result_buf);
+
+                BOOST_CHECK_CLOSE(expected_result[0], result[0], .00001);
+                BOOST_CHECK_CLOSE(expected_result[1], result[1], .00001);
+                BOOST_CHECK_CLOSE(expected_result[2], result[2], .00001);
+                BOOST_CHECK_CLOSE(expected_result[3], result[3], .00001);
+                BOOST_CHECK_CLOSE(expected_result[4], result[4], .00001);
+            }
+
     }
 
     namespace BandedMatrixMatrixMultiplicationTests

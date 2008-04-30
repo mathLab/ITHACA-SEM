@@ -64,7 +64,7 @@ namespace Lapack
                   int* ipiv, int& info);
         void F77NAME(dgbtrs) (const char& trans, const int& n, const int& kl,
                   const int &ku, const int& nrhs,   const double* a,
-                  const int& lda, int* ipiv, double* b,
+                  const int& lda, const int* ipiv, double* b,
                   const int& ldb, int& info);
         void F77NAME(dgetrf) (const int& m, const int& n, double* a,
                   const int& lda, int* ipiv, int& info);
@@ -158,7 +158,7 @@ namespace Lapack
     /// \brief Solve general banded matrix using LU factorisation
     static inline void Dgbtrs (const char& trans, const int& n, const int& kl,
               const int &ku, const int& nrhs,   const double* a,
-              const int& lda, int* ipiv, double* b,
+              const int& lda, const int* ipiv, double* b,
               const int& ldb, int& info)
     {
         F77NAME(dgbtrs)(trans,n,kl,ku,nrhs,a,lda,ipiv,b,ldb,info);
@@ -226,6 +226,9 @@ namespace Lapack
 
 /***
 $Log: Lapack.hpp,v $
+Revision 1.3  2008/04/06 05:55:11  bnelson
+Changed ConstArray to Array<const>
+
 Revision 1.2  2007/04/10 14:00:45  sherwin
 Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 

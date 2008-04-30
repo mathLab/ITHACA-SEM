@@ -58,8 +58,8 @@ namespace Blas
 #ifdef NEKTAR_USING_BLAS
     static inline void Dcopy (const int& n, const Nektar::Array <Nektar::OneD, const double> &x, const int& incx,  Nektar::Array<Nektar::OneD,double> &y, const int& incy)
     {
-        ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-        ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
+        ASSERTL1(static_cast<unsigned int>(n*incx) <= x.num_elements(),"Array out of bounds");
+        ASSERTL1(static_cast<unsigned int>(n*incy) <= y.num_elements(),"Array out of bounds");
         
         F77NAME(dcopy)(n,&x[0],incx,&y[0],incy);
     }
@@ -85,6 +85,9 @@ namespace Blas
 
 /***
 $Log: BlasArray.hpp,v $
+Revision 1.3  2008/04/06 05:55:11  bnelson
+Changed ConstArray to Array<const>
+
 Revision 1.2  2008/03/12 15:22:45  pvos
 Clean up of the code
 

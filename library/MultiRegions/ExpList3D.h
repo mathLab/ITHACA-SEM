@@ -44,18 +44,37 @@
 #include <LocalRegions/PrismExp.h>
 #include <LocalRegions/PyrExp.h>
 #include <LocalRegions/TetExp.h>
+#include <SpatialDomains/MeshGraph3D.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
 
-    class ExpList3D: 
-        public ExpList
+    class ExpList3D:  public ExpList
     {
     public:
         ExpList3D();
+        
+        ExpList3D(const ExpList3D &In);
+        
+        ExpList3D(const LibUtilities::BasisKey &Ba,
+                  const LibUtilities::BasisKey &Bb,
+                  const LibUtilities::BasisKey &Bc,
+                  const SpatialDomains::MeshGraph3D &graph3D,
+                  const LibUtilities::PointsType
+                  TetNb = LibUtilities::SIZE_PointsType);
+
+         ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
+        
         ~ExpList3D();
+
+        void   PhysDeriv  (ExpList &S0,
+                           ExpList &S1,
+                           ExpList &S2)
+        {
+            ExpList::PhysDeriv(S0,S1,S2);
+        }
         
     protected:
         

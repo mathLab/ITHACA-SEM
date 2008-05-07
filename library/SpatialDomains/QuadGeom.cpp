@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  QuadGeom.cpp
+//  File: QuadGeom.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -166,89 +166,30 @@ namespace Nektar
         */
 
         void QuadGeom::FillGeom()
-        {
-            
+        {            
             // check to see if geometry structure is already filled
             if(m_state != ePtsFilled)
             {
-                int i,j; 
-                int order0 = m_xmap[0]->GetBasisNumModes(0);
-                int order1 = m_xmap[0]->GetBasisNumModes(1);
-                Array<OneD, const NekDouble> coef;
-                StdRegions::StdExpMap Map,MapV;
+                int i,j,k;
+                int nEdgeCoeffs = m_xmap[0]->GetEdgeNcoeffs(0);
 
-                // set side 0 
-        m_xmap[0]->MapTo((*m_edges[0])[0]->GetNcoeffs(),
-                 (*m_edges[0])[0]->GetBasisType(0),
-                 0,m_eorient[0],Map);
+                Array<OneD, unsigned int> mapArray (nEdgeCoeffs);
+                Array<OneD, int>          signArray(nEdgeCoeffs);
 
-                for(i = 0; i < m_coordim; ++i)
+                for(i = 0; i < kNedges; i++)
                 {
-                    coef  = (*m_edges[0])[i]->GetCoeffs();
-                    for(j = 0; j < order0; ++j)
+                    m_edges[i]->FillGeom();
+                    m_xmap[0]->GetEdgeToElementMap(i,m_eorient[i],mapArray,signArray);
+
+                    nEdgeCoeffs = m_xmap[0]->GetEdgeNcoeffs(i);
+
+                    for(j = 0 ; j < m_coordim; j++)
                     {
-                        m_xmap[i]->SetCoeff(Map[j],coef[j]);
-                    }
-                }
-
-                // set side 2
-        m_xmap[0]->MapTo((*m_edges[2])[0]->GetNcoeffs(),
-                 (*m_edges[2])[0]->GetBasisType(0),
-                 2,m_eorient[2],Map);
-
-
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    coef  = (*m_edges[2])[i]->GetCoeffs();
-                    for(j = 0; j < order0; ++j)
-                    {
-                        m_xmap[i]->SetCoeff(Map[j],coef[j]);
-                    }
-                }
-
-                // set Vertices into side 1
-                (*m_edges[1])[0]->MapTo(m_eorient[1],MapV);
-
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    (*m_edges[1])[i]->SetCoeff(MapV[0],(*m_verts[1])[i]);
-                    (*m_edges[1])[i]->SetCoeff(MapV[1],(*m_verts[2])[i]);
-                }
-
-                // set Vertices into side 3
-                (*m_edges[3])[0]->MapTo(m_eorient[3],MapV);
-
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    (*m_edges[3])[i]->SetCoeff(MapV[0],(*m_verts[0])[i]);
-                    (*m_edges[3])[i]->SetCoeff(MapV[1],(*m_verts[3])[i]);
-                }
-
-                // set side 1
-        m_xmap[0]->MapTo((*m_edges[1])[0]->GetNcoeffs(),
-                 (*m_edges[1])[0]->GetBasisType(0),
-                 1,m_eorient[1],Map);
-
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    coef  = (*m_edges[1])[i]->GetCoeffs();
-                    for(j = 0; j < order1; ++j)
-                    {
-                        m_xmap[i]->SetCoeff(Map[j],coef[j]);
-                    }
-                }
-                
-                // set side 3
-        m_xmap[0]->MapTo((*m_edges[3])[0]->GetNcoeffs(),
-                 (*m_edges[3])[0]->GetBasisType(0),
-                 3,m_eorient[3],Map);
-
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    coef  = (*m_edges[3])[i]->GetCoeffs();
-                    for(j = 0; j < order1; ++j)
-                    {
-                        m_xmap[i]->SetCoeff(Map[j],coef[j]);
+                        for(k = 0; k < nEdgeCoeffs; k++)
+                        {
+                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = signArray[k]*
+                                ((*m_edges[i])[j]->GetCoeffs())[k];
+                        }
                     }
                 }
                 
@@ -312,6 +253,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.13  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.12  2008/01/21 19:58:14  sherwin
 // Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
 //

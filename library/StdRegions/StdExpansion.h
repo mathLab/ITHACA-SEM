@@ -53,14 +53,6 @@ namespace Nektar
 
         class StdSegExp;
 
-        /// This is a macro which is used to encapsulating the points
-        /// properties at which a given expansion basis is evaluated.
-        /// The i index refers to the ith basis definition of a given expansion.
-        ///
-        /// This should/could be a typdef expression when such a thing
-        /// comes into the convention.
-#define ExpPointsProperties(i) LibUtilities::PointsManager()[m_base[i]->GetPointsKey()] 
-
         /** \brief The base class for all shapes
         *   
         *  This is the lowest level basic class for all shapes and so
@@ -264,7 +256,7 @@ namespace Nektar
 
                 for(i=0; i<m_numbases; ++i)
                 {
-                    nqtot *= ExpPointsProperties(i)->GetNumPoints();
+                    nqtot *= m_base[i]->GetNumPoints();
                 }
 
                 return  nqtot;
@@ -344,7 +336,7 @@ namespace Nektar
             inline int GetNumPoints(const int dir) const 
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
-                return(ExpPointsProperties(dir)->GetNumPoints());
+                return(m_base[dir]->GetNumPoints());
             }
 
             /** \brief This function returns a pointer to the array containing
@@ -356,7 +348,7 @@ namespace Nektar
             */
             inline const Array<OneD, const NekDouble>& GetPoints(const int dir) const
             {
-                return ExpPointsProperties(dir)->GetZ();
+                return m_base[dir]->GetZ();
             }
 
 
@@ -810,9 +802,10 @@ namespace Nektar
             }
 
             void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
-                                     Array<OneD, unsigned int> &maparray)
+                                     Array<OneD, unsigned int> &maparray,
+                                     Array<OneD, int> &signarray)
             {
-                v_GetEdgeToElementMap(eid,edgeOrient,maparray);
+                v_GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
             }
             
             // element boundary ordering 
@@ -820,6 +813,7 @@ namespace Nektar
             void MapTo(EdgeOrientation dir, StdExpMap &Map)
             {
                 v_MapTo(dir,Map);
+                NEKERROR(ErrorUtil::ewarning, "MapTo (1D) is deprecated... Try to avoid using it (alternatively: use GetEdgeToElementMap() )");
             }
 
             // EdgeTo2D mapping 
@@ -828,6 +822,7 @@ namespace Nektar
                 const int eid, const EdgeOrientation eorient, 
                 StdExpMap &Map)
             {
+                NEKERROR(ErrorUtil::ewarning, "MapTo is deprecated... Try to avoid using it (alternatively: use GetEdgeToElementMap() )");
                 v_MapTo(edge_ncoeff,Btype,eid,eorient,Map);
             }
 
@@ -838,6 +833,7 @@ namespace Nektar
                 const EdgeOrientation eorient, 
                 StdExpMap &Map)
             {
+                NEKERROR(ErrorUtil::ewarning, "MapTo is deprecated... Try to avoid using it (alternatively: use GetEdgeToElementMap() )");
                 v_MapTo_ModalFormat(edge_ncoeff,Btype,eid,eorient,Map);
             }
 
@@ -1329,7 +1325,8 @@ namespace Nektar
             }
 
             virtual void v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
-                                               Array<OneD, unsigned int> &maparray)
+                                               Array<OneD, unsigned int> &maparray,
+                                               Array<OneD, int> &signarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
@@ -1391,6 +1388,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.79  2008/04/06 06:04:14  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.78  2008/04/02 22:18:10  pvos
 * Update for 2D local to global mapping
 *

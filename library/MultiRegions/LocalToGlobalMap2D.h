@@ -44,10 +44,19 @@
 #include <LocalRegions/NodalTriExp.h>
 #include <LocalRegions/SegExp.h>
 
+#include <boost/config.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/cuthill_mckee_ordering.hpp>
+#include <boost/graph/properties.hpp>
+#include <boost/graph/bandwidth.hpp>
+
 namespace Nektar
 {
     namespace MultiRegions
     {
+
+        const static Array<OneD, MultiRegions::ExpList1DSharedPtr> NullExpList1DSharedPtrArray;
+        const static Array<OneD, SpatialDomains::BoundaryConditionType> NullBoundaryConditionTypeArray;
         
     class LocalToGlobalMap2D: 
         public LocalToGlobalMap
@@ -57,13 +66,8 @@ namespace Nektar
 
             LocalToGlobalMap2D(const int loclen, 
                                const StdRegions::StdExpansionVector &locexp, 
-                               const SpatialDomains::MeshGraph2D &graph2D);
-
-            LocalToGlobalMap2D(const int loclen, 
-                                                   const StdRegions::StdExpansionVector &locexp, 
-                                                   const SpatialDomains::MeshGraph2D &graph2D,
-                                                   const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp,
-                                                   const Array<OneD, const SpatialDomains::BoundaryConditionType> &bndCondTypes);
+                               const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp = NullExpList1DSharedPtrArray,
+                               const Array<OneD, const SpatialDomains::BoundaryConditionType> &bndCondTypes = NullBoundaryConditionTypeArray);
             
             virtual ~LocalToGlobalMap2D();
             
@@ -225,6 +229,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap2D.h,v $
+/** Revision 1.12  2008/04/06 22:31:17  bnelson
+/** Fixed gcc compiler warnings.
+/**
  Revision 1.11  2008/04/06 06:00:07  bnelson
  Changed ConstArray to Array<const>
 

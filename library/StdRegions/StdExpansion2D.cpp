@@ -80,7 +80,7 @@ namespace Nektar
             
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
-                DNekMatSharedPtr D0 = ExpPointsProperties(0)->GetD();
+                DNekMatSharedPtr D0 = m_base[0]->GetD();
                 if(inarray == outarray_d0)
                 {
                     Array<OneD, NekDouble> wsp(nquad0 * nquad1);
@@ -99,7 +99,7 @@ namespace Nektar
 
             if (outarray_d1.num_elements() > 0) // calculate du/dx_1
             {
-                DNekMatSharedPtr D1 = ExpPointsProperties(1)->GetD();
+                DNekMatSharedPtr D1 = m_base[1]->GetD();
                 if(inarray == outarray_d1)
                 {
                     Array<OneD, NekDouble> wsp(nquad0 * nquad1);
@@ -118,7 +118,7 @@ namespace Nektar
 
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
-                DNekMatSharedPtr D0 = ExpPointsProperties(0)->GetD();
+                DNekMatSharedPtr D0 = m_base[0]->GetD();
                 DNekMat out(nquad0,nquad1,outarray_d0,eWrapper);
                 //DNekMat in(nquad0,nquad1,inarray,eWrapper);  
                 NekMatrix<const double> in(nquad0, nquad1, inarray, eWrapper);
@@ -127,7 +127,7 @@ namespace Nektar
 
             if (outarray_d1.num_elements() > 0) // calculate du/dx_1
             {
-                DNekMatSharedPtr D1 = ExpPointsProperties(1)->GetD();
+                DNekMatSharedPtr D1 = m_base[1]->GetD();
                 DNekMat out(nquad0,nquad1,outarray_d1,eWrapper);
                 //DNekMat in(nquad0,nquad1,inarray,eWrapper);  
                 NekMatrix<const double> in(nquad0, nquad1, inarray, eWrapper);
@@ -146,7 +146,7 @@ namespace Nektar
             int nq1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> wsp1(nq1);
 
-            DNekMatSharedPtr I = ExpPointsProperties(0)->GetI(coords);;
+            DNekMatSharedPtr I = m_base[0]->GetI(coords);;
 
             ASSERTL2(coords[0] < -1, "coord[0] < -1");
             ASSERTL2(coords[0] >  1, "coord[0] >  1");
@@ -161,7 +161,7 @@ namespace Nektar
             }
 
             // interpolate in second coordinate direction
-            I = ExpPointsProperties(1)->GetI(coords+1);
+            I = m_base[1]->GetI(coords+1);
             val = Blas::Ddot(nq1, I->GetPtr(), 1, wsp1, 1);
 
             return val;
@@ -204,6 +204,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.23  2008/04/22 05:22:15  bnelson
+* Speed enhancements.
+*
 * Revision 1.22  2008/04/06 06:04:15  bnelson
 * Changed ConstArray to Array<const>
 *

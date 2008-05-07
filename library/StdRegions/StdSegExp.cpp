@@ -65,8 +65,8 @@ namespace Nektar
             NekDouble Int = 0.0;
             int    nquad0 = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad0);
-            Array<OneD, const NekDouble> z  = ExpPointsProperties(0)->GetZ();
-            Array<OneD, const NekDouble> w0 = ExpPointsProperties(0)->GetW();
+            Array<OneD, const NekDouble> z  = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
             
             // multiply by integration constants 
             Vmath::Vmul(nquad0, inarray, 1, w0, 1, tmp, 1);
@@ -83,8 +83,8 @@ namespace Nektar
         {
             int    nquad = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad);
-            Array<OneD, const NekDouble> z =  ExpPointsProperties(0)->GetZ();
-            Array<OneD, const NekDouble> w =  ExpPointsProperties(0)->GetW();
+            Array<OneD, const NekDouble> z =  m_base[0]->GetZ();
+            Array<OneD, const NekDouble> w =  m_base[0]->GetW();
             
             Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
             
@@ -335,7 +335,7 @@ namespace Nektar
         
         void StdSegExp::GetCoords(Array<OneD, NekDouble> &coords)
         {
-            Blas::Dcopy(GetNumPoints(0),ExpPointsProperties(0)->GetZ().get(),
+            Blas::Dcopy(GetNumPoints(0),(m_base[0]->GetZ()).get(),
                         1,&coords[0],1);
         }
 
@@ -344,6 +344,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.48  2008/04/22 05:22:15  bnelson
+* Speed enhancements.
+*
 * Revision 1.47  2008/04/06 06:04:15  bnelson
 * Changed ConstArray to Array<const>
 *

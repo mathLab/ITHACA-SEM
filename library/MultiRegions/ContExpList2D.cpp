@@ -101,7 +101,7 @@ namespace Nektar
             // setup mapping array 
             if(constructMap)
             {
-                m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph2D);
+                m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp);
                 m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
@@ -118,7 +118,7 @@ namespace Nektar
             // setup mapping array 
             if(constructMap)
             {
-                m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph2D);
+                m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp);
                 m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
@@ -183,6 +183,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.13  2008/04/06 06:00:06  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.12  2008/03/18 14:14:13  pvos
 * Update for nodal triangular helmholtz solver
 *

@@ -202,7 +202,7 @@ namespace Nektar
             Array<OneD, NekDouble> gfac0(nqtot);
             Array<OneD, NekDouble> tmp0(nqtot);
             
-            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
             
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -226,7 +226,7 @@ namespace Nektar
             case 1:
                 {
                     Array<OneD, NekDouble> tmp3(m_ncoeffs);    
-                    Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+                    Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
                     
                     for(i = 0; i < nquad0; ++i)
                     {
@@ -347,7 +347,8 @@ namespace Nektar
         }
 
         void StdNodalTriExp::GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
-                                             Array<OneD, unsigned int> &maparray)
+                                             Array<OneD, unsigned int> &maparray,
+                                             Array<OneD, int> &signarray)
         {
             ASSERTL0((eid>=0)&&(eid<=2),"Local Edge ID must be between 0 and 2"); 
             const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
@@ -355,6 +356,15 @@ namespace Nektar
             if(maparray.num_elements() != nEdgeCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
+            }
+
+            if(signarray.num_elements() != nEdgeCoeffs)
+            {
+                signarray = Array<OneD, int>(nEdgeCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nEdgeCoeffs, 1 );
             }
             
             maparray[0] = eid;
@@ -465,6 +475,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.22  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.21  2008/04/02 22:18:10  pvos
 * Update for 2D local to global mapping
 *

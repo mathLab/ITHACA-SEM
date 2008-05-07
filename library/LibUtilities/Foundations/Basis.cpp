@@ -93,10 +93,17 @@ namespace Nektar
             return os;
         }
 
+        Basis::Basis(const BasisKey &bkey): 
+            m_basisKey(bkey),
+            m_points(PointsManager()[bkey.GetPointsKey()]),
+            m_bdata(bkey.GetTotNumModes()*bkey.GetTotNumPoints()),
+            m_dbdata(bkey.GetTotNumModes()*bkey.GetTotNumPoints())
+        {
+        }
+        
         boost::shared_ptr<Basis> Basis::Create(const BasisKey &bkey)
         {
             boost::shared_ptr<Basis> returnval(new Basis(bkey));
-
             returnval->Initialize();
 
             return returnval;
@@ -106,11 +113,6 @@ namespace Nektar
         {
             ASSERTL0(GetNumModes()>0, "Cannot call Basis initialisation with zero or negative order");
             ASSERTL0(GetTotNumPoints()>0, "Cannot call Basis initialisation with zero or negative numbers of points");
-
-            // Allocate Memory
-            int size = GetTotNumModes()*GetTotNumPoints();
-            m_bdata  = Array<OneD, NekDouble>(size);
-            m_dbdata = Array<OneD, NekDouble>(size);
 
             GenBasis();
         };
@@ -126,10 +128,9 @@ namespace Nektar
             Array<OneD, const NekDouble> w;
             const NekDouble *D;
 
-            boost::shared_ptr< Points<NekDouble> > pointsptr = PointsManager()[GetPointsKey()];
-            pointsptr->GetZW(z,w);
+            m_points->GetZW(z,w);
 
-            D = &(pointsptr->GetD()->GetPtr())[0];
+            D = &(m_points->GetD()->GetPtr())[0];
 
             int numModes = GetNumModes();
             int numPoints = GetNumPoints();
@@ -368,8 +369,8 @@ namespace Nektar
             case eGLL_Lagrange: 
                 {
                     mode = m_bdata.data();
-                    boost::shared_ptr< Points<NekDouble> > pointsptr = PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)];
-                    const Array<OneD, const NekDouble>& zp(pointsptr->GetZ());
+                    boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)];
+                    const Array<OneD, const NekDouble>& zp(m_points->GetZ());
 
                     for (p=0; p<numModes; ++p,mode += numPoints)
                     {
@@ -520,6 +521,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.28  2008/04/06 22:28:25  bnelson
+* Fixed gcc compiler warnings.
+*
 * Revision 1.27  2008/04/06 05:54:08  bnelson
 * Changed ConstArray to Array<const>
 *

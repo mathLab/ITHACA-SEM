@@ -68,7 +68,7 @@ namespace Nektar
                          Array<OneD, NekDouble>& outarray)
     {
         int nquad = GetTotPoints();
-        DNekMatSharedPtr D = ExpPointsProperties(0)->GetD();
+        DNekMatSharedPtr D = m_base[0]->GetD();
 
 #ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
         
@@ -98,7 +98,7 @@ namespace Nektar
     {
         int    nquad = GetTotPoints();
         NekDouble  val;
-        DNekMatSharedPtr I = ExpPointsProperties(0)->GetI(Lcoord);
+        DNekMatSharedPtr I = m_base[0]->GetI(Lcoord);
         
         ASSERTL2(Lcoord[0] < -1,"Lcoord[0] < -1");
         ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1");
@@ -113,6 +113,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.24  2008/04/06 06:04:14  bnelson
+ * Changed ConstArray to Array<const>
+ *
  * Revision 1.23  2008/04/03 16:12:11  pvos
  * updates for NEKTAR_USING_DIRECT_BLAS_CALLS
  *

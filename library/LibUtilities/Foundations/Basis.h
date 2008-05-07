@@ -240,8 +240,34 @@ namespace Nektar
             inline PointsType GetPointsType() const
             {
                 return m_basisKey.GetPointsType();
-            }    
+            }  
 
+            inline const Array<OneD, const NekDouble>& GetZ() const
+            {
+                return m_points->GetZ();
+            }
+            
+            inline const Array<OneD, const NekDouble>& GetW() const 
+            {
+                return m_points->GetW(); 
+            } 
+            
+            inline void GetZW(Array<OneD, const NekDouble> &z,
+                              Array<OneD, const NekDouble> &w) const 
+            {
+                m_points->GetZW(z,w); 
+            }
+
+            inline const  boost::shared_ptr<NekMatrix<NekDouble> > GetD(Direction dir = xDir) const
+            {
+                return m_points->GetD(dir);
+            }
+
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x)
+            {
+                return m_points->GetI(x);
+            }
+            
             /** \brief determine if basis definition has exact integration for
             *  inner product
             */
@@ -279,15 +305,14 @@ namespace Nektar
             virtual void Initialize();
 
         protected:
-            BasisKey    m_basisKey;
+            BasisKey        m_basisKey;
+            PointsSharedPtr m_points;
             Array<OneD, NekDouble> m_bdata; /**< Basis definition */
             Array<OneD, NekDouble> m_dbdata; /**< Derivative Basis definition */
 
         private:
 
-            Basis(const BasisKey &bkey): m_basisKey(bkey)
-            {
-            }
+            Basis(const BasisKey &bkey);
 
             Basis():m_basisKey(NullBasisKey)
             {

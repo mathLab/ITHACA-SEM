@@ -71,9 +71,9 @@ namespace Nektar
             int nquad1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> w1_tmp(nquad1);
 
-            Array<OneD, const NekDouble> w0 = ExpPointsProperties(0)->GetW();
-            Array<OneD, const NekDouble> w1 = ExpPointsProperties(1)->GetW();
-            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
+            Array<OneD, const NekDouble> w1 = m_base[1]->GetW();
+            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
 
             switch(m_base[1]->GetPointsType())
             {
@@ -113,7 +113,7 @@ namespace Nektar
             Array<OneD, NekDouble> gfac0(nqtot);
             Array<OneD, NekDouble> tmp0(nqtot);
 
-            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
             
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -137,7 +137,7 @@ namespace Nektar
             case 1:
                 {
                     Array<OneD, NekDouble> tmp3(m_ncoeffs);    
-                    Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
+                    Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
 
                     for(i = 0; i < nquad0; ++i)
                     {
@@ -178,9 +178,9 @@ namespace Nektar
 //            NekDouble* tmp = MemoryManager<NekDouble>::RawAllocate(nquad0*nquad1);
 //            NekDouble* tmp1 = MemoryManager<NekDouble>::RawAllocate(order0*nquad1);
             
-            Array<OneD, const NekDouble> w0 = ExpPointsProperties(0)->GetW();
-            Array<OneD, const NekDouble> w1 = ExpPointsProperties(1)->GetW();
-            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
+            Array<OneD, const NekDouble> w1 = m_base[1]->GetW();
+            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
 
             ASSERTL2((m_base[1]->GetBasisType() == LibUtilities::eOrtho_B)||
                 (m_base[1]->GetBasisType() == LibUtilities::eModified_B), 
@@ -332,8 +332,8 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> wsp(nquad0*nquad1);
 
-            Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
 
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -643,7 +643,8 @@ namespace Nektar
         }
 
         void StdTriExp::GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
-                                             Array<OneD, unsigned int> &maparray)
+                                            Array<OneD, unsigned int> &maparray,
+                                            Array<OneD, int> &signarray)
         {           
             ASSERTL0((GetEdgeBasisType(eid)==LibUtilities::eModified_A)||
                      (GetEdgeBasisType(eid)==LibUtilities::eModified_B),
@@ -657,6 +658,15 @@ namespace Nektar
                 maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
             }
 
+            if(signarray.num_elements() != nEdgeCoeffs)
+            {
+                signarray = Array<OneD, int>(nEdgeCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nEdgeCoeffs, 1 );
+            }
+            
             switch(eid)
             {
             case 0:
@@ -665,7 +675,20 @@ namespace Nektar
                     for(i = 0; i < nEdgeCoeffs; cnt+=nummodes1-i, ++i)
                     {
                         maparray[i] = cnt; 
-                    }          
+                    }  
+
+                    if(edgeOrient==eBackwards)
+                    {
+                        swap( maparray[0] , maparray[1] );
+                        
+                        if(nEdgeCoeffs >= 4)
+                        {
+                            for(i = 3; i < nEdgeCoeffs; i+=2)
+                            {
+                                signarray[i] = -1;
+                            }
+                        }  
+                    }        
                 }
                 break;
             case 1:
@@ -675,27 +698,47 @@ namespace Nektar
                     for(i = 2; i < nEdgeCoeffs; i++)
                     {
                         maparray[i] = nummodes1-1+i; 
-                    }                        
+                    } 
+
+                    if(edgeOrient==eBackwards)
+                    {
+                        swap( maparray[0] , maparray[1] );
+                        
+                        if(nEdgeCoeffs >= 4)
+                        {
+                            for(i = 3; i < nEdgeCoeffs; i+=2)
+                            {
+                                signarray[i] = -1;
+                            }
+                        }  
+                    }                         
                 }
                 break;
             case 2:
                 {
-                    maparray[0] = 1;
-                    maparray[1] = 0;
-                    for(i = 2; i < nEdgeCoeffs; i++)
+                    for(i = 0; i < nEdgeCoeffs; i++)
                     {
                         maparray[i] = i;
-                    }                        
+                    }   
+
+                    if(edgeOrient==eForwards)
+                    {
+                        swap( maparray[0] , maparray[1] );
+                        
+                        if(nEdgeCoeffs >= 4)
+                        {
+                            for(i = 3; i < nEdgeCoeffs; i+=2)
+                            {
+                                signarray[i] = -1;
+                            }
+                        }  
+                    }                      
                 }
                 break;
             default:
                 ASSERTL0(false,"eid must be between 0 and 2");
                 break;
             }  
-            if(edgeOrient==eBackwards)
-            {
-                swap( maparray[0] , maparray[1] );
-            }
         }
         
         void  StdTriExp::MapTo(const int edge_ncoeffs, 
@@ -788,8 +831,8 @@ namespace Nektar
             int  i,j;
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
 
             outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
             outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
@@ -841,8 +884,8 @@ namespace Nektar
         void StdTriExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
             Array<OneD, NekDouble> &coords_1)
         {
-            Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
             int nq0 = GetNumPoints(0);
             int nq1 = GetNumPoints(1);
             int i,j;
@@ -863,6 +906,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.33  2008/04/22 05:22:15  bnelson
+* Speed enhancements.
+*
 * Revision 1.32  2008/04/06 06:04:15  bnelson
 * Changed ConstArray to Array<const>
 *

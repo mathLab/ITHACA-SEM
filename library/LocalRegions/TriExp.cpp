@@ -316,8 +316,8 @@ namespace Nektar
             Array<OneD, NekDouble> gfac0(nqtot);
             Array<OneD, NekDouble> gfac1(nqtot);
 
-            Array<OneD, const NekDouble> z0 = ExpPointsProperties(0)->GetZ();
-            Array<OneD, const NekDouble> z1 = ExpPointsProperties(1)->GetZ();
+            Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
 
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -943,6 +943,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.28  2008/04/06 05:59:05  bnelson
+ *    Changed ConstArray to Array<const>
+ *
  *    Revision 1.27  2008/04/02 22:19:26  pvos
  *    Update for 2D local to global mapping
  *

@@ -75,6 +75,11 @@ namespace Nektar
                 v_AssembleBnd(loc,cont,offset);
             }
             
+            inline int GetTotLocBndDofs()
+            {
+                return m_totLocBndDofs;
+            }
+
             inline int GetTotGloBndDofs()
             {
                 return m_totGloBndDofs;
@@ -120,6 +125,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalBndryMap.h,v $
+/** Revision 1.4  2008/04/06 22:31:17  bnelson
+/** Fixed gcc compiler warnings.
+/**
  Revision 1.3  2008/01/25 05:49:38  bnelson
  Fixed Visual Studio Compile Error.
 

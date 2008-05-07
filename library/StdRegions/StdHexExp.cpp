@@ -208,9 +208,9 @@ namespace Nektar
         {
             Array<OneD, const NekDouble> w0, w1, w2;
 
-            w0 = ExpPointsProperties(0)->GetW();
-            w1 = ExpPointsProperties(1)->GetW();
-            w2 = ExpPointsProperties(2)->GetW();
+            w0 = m_base[0]->GetW();
+            w1 = m_base[1]->GetW();
+            w2 = m_base[2]->GetW();
 
             return Integral3D(inarray, w0, w1, w2);
         }
@@ -504,9 +504,9 @@ namespace Nektar
         
        void StdHexExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
         {
-            Array<OneD, const NekDouble> eta_x = ExpPointsProperties(0)->GetZ();
-            Array<OneD, const NekDouble> eta_y = ExpPointsProperties(1)->GetZ();
-            Array<OneD, const NekDouble> eta_z = ExpPointsProperties(2)->GetZ();
+            Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
+            Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
             int Qx = GetNumPoints(0);
             int Qy = GetNumPoints(1);
             int Qz = GetNumPoints(2);
@@ -640,6 +640,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.14  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.13  2008/02/01 20:04:18  ehan
 * Added doxygen comments
 *

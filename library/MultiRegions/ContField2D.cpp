@@ -63,7 +63,7 @@ namespace Nektar
         {
             GenerateField2D(graph2D,bcs,bcs.GetVariable(bc_loc));
             m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
-                                                                                 graph2D,m_bndConstraint,
+                                                                                 m_bndConstraint,
                                                                                  m_bndTypes);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
@@ -79,7 +79,7 @@ namespace Nektar
         {
             GenerateField2D(graph2D,bcs,variable);
             m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
-                                                                                 graph2D,m_bndConstraint,
+                                                                                 m_bndConstraint,
                                                                                  m_bndTypes);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
@@ -100,7 +100,7 @@ namespace Nektar
         {
             GenerateField2D(graph2D,bcs,bcs.GetVariable(bc_loc));
             m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
-                                                                                 graph2D,m_bndConstraint,
+                                                                                 m_bndConstraint,
                                                                                  m_bndTypes);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
@@ -121,7 +121,7 @@ namespace Nektar
         {
             GenerateField2D(graph2D,bcs,variable);
             m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
-                                                                                 graph2D,m_bndConstraint,
+                                                                                 m_bndConstraint,
                                                                                  m_bndTypes);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();

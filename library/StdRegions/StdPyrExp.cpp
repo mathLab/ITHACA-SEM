@@ -240,9 +240,9 @@ namespace Nektar
             // x is assumed to be Gauss-Lobatto-Legendre (includes -1 and +1)
             // y is assumed to be Gauss-Lobatto-Legendre (includes -1 and +1)
             Array<OneD, const NekDouble> z, wx, wy, wz;
-            wx = ExpPointsProperties(0)->GetW();
-            wy = ExpPointsProperties(1)->GetW();
-            ExpPointsProperties(2)->GetZW(z,wz);
+            wx = m_base[0]->GetW();
+            wy = m_base[1]->GetW();
+            m_base[2]->GetZW(z,wz);
 
             Array<OneD, NekDouble> wz_hat = Array<OneD, NekDouble>(Qz, 0.0);
 
@@ -414,9 +414,9 @@ namespace Nektar
 
 
             Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-            eta_x = ExpPointsProperties(0)->GetZ();
-            eta_y = ExpPointsProperties(1)->GetZ();
-            eta_z = ExpPointsProperties(2)->GetZ();
+            eta_x = m_base[0]->GetZ();
+            eta_y = m_base[1]->GetZ();
+            eta_z = m_base[2]->GetZ();
 
             
             for(int k=0, n=0; k<Qz; ++k)
@@ -658,9 +658,9 @@ namespace Nektar
         
         void StdPyrExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
         {
-            Array<OneD, const NekDouble> eta_x = ExpPointsProperties(0)->GetZ();
-            Array<OneD, const NekDouble> eta_y = ExpPointsProperties(1)->GetZ();
-            Array<OneD, const NekDouble> eta_z = ExpPointsProperties(2)->GetZ();
+            Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
+            Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
             int Qx = GetNumPoints(0);
             int Qy = GetNumPoints(1);
             int Qz = GetNumPoints(2);
@@ -702,6 +702,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPyrExp.cpp,v $
+ * Revision 1.5  2008/04/06 06:04:15  bnelson
+ * Changed ConstArray to Array<const>
+ *
  * Revision 1.4  2008/02/01 20:05:35  ehan
  * Added doxygen comments
  *

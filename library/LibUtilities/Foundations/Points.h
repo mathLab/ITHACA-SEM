@@ -336,9 +336,17 @@ namespace Nektar
 
         private:
             // These should never be called
-            Points(const Points &pts);
-            Points();
+            Points(const Points &pts)
+            {
+                NEKERROR(ErrorUtil::efatal,"Copy Constructor for Points should not be called");
+            }
+            Points()
+            {
+                NEKERROR(ErrorUtil::efatal,"Default Constructor for Points should not be called");
+            }
         };
+
+        typedef boost::shared_ptr<Points<NekDouble> > PointsSharedPtr;
 
     }; // end of namespace
 } // end of namespace 

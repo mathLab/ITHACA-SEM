@@ -204,9 +204,11 @@ namespace Nektar
         int    Qy = m_base[1]->GetNumPoints();
         int    Qz = m_base[2]->GetNumPoints();
         DNekMatSharedPtr D[3];
-        D[0] = ExpPointsProperties(0)->GetD();
-        D[1] = ExpPointsProperties(1)->GetD();
-        D[2] = ExpPointsProperties(2)->GetD();
+        D[0] = m_base[0]->GetD();
+        D[1] = m_base[1]->GetD();
+        D[2] = m_base[2]->GetD();
+
+
     
         EasyDerivatives(inarray, outarray_dx, outarray_dy, outarray_dz, Qx, Qy, Qz, D); 
         
@@ -238,7 +240,7 @@ namespace Nektar
         double *interpolatingNodes = 0;
                 
          // Interpolate first coordinate direction
-        I = ExpPointsProperties(0)->GetI(coords);
+        I = m_base[0]->GetI(coords);
         interpolatingNodes = &I->GetPtr()[0];
         
         
@@ -248,7 +250,7 @@ namespace Nektar
         }
 
         // Interpolate in second coordinate direction 
-        I = ExpPointsProperties(1)->GetI(coords+1);
+        I = m_base[1]->GetI(coords+1);
         interpolatingNodes = &I->GetPtr()[0];
         
         for(int j =0; j < Qz; ++j)
@@ -257,7 +259,7 @@ namespace Nektar
         }
 
         // Interpolate in third coordinate direction 
-        I = ExpPointsProperties(2)->GetI(coords+2);
+        I = m_base[2]->GetI(coords+2);
         interpolatingNodes = &I->GetPtr()[0];       
         
         value = Blas::Ddot(Qz, interpolatingNodes, 1, &sumFactorization_r[0], 1);            
@@ -272,6 +274,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.15  2008/04/06 06:04:15  bnelson
+ * Changed ConstArray to Array<const>
+ *
  * Revision 1.14  2007/11/08 14:27:07  ehan
  * Fixed PhysTensorDerivative3D matrix and improved L1 error up to 1e-15.
  *

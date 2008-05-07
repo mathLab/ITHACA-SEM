@@ -252,9 +252,9 @@ namespace Nektar
             // Get the point distributions:
             // x is assumed to be Gauss-Lobatto-Legendre (includes -1 and +1)
             Array<OneD, const NekDouble> y,z,wx,wy,wz;
-            wx = ExpPointsProperties(0)->GetW();
-            ExpPointsProperties(1)->GetZW(y,wy);
-            ExpPointsProperties(2)->GetZW(z,wz);
+            wx = m_base[0]->GetW();
+            m_base[1]->GetZW(y,wy);
+            m_base[2]->GetZW(z,wz);
 
             Array<OneD, NekDouble> wy_hat = Array<OneD, NekDouble>(Qy, 0.0);
             Array<OneD, NekDouble> wz_hat = Array<OneD, NekDouble>(Qz, 0.0);
@@ -513,9 +513,9 @@ namespace Nektar
             PhysTensorDeriv(u_physical, out_dEta1, out_dEta2, out_dEta3);
 
             Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-            eta_x = ExpPointsProperties(0)->GetZ();
-            eta_y = ExpPointsProperties(1)->GetZ();
-            eta_z = ExpPointsProperties(2)->GetZ();
+            eta_x = m_base[0]->GetZ();
+            eta_y = m_base[1]->GetZ();
+            eta_z = m_base[2]->GetZ();
 
 
             for(int k=0, n=0; k<Qz; ++k)
@@ -709,9 +709,9 @@ namespace Nektar
 
         void StdTetExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
         {
-            Array<OneD, const NekDouble> eta_x = ExpPointsProperties(0)->GetZ();
-            Array<OneD, const NekDouble> eta_y = ExpPointsProperties(1)->GetZ();
-            Array<OneD, const NekDouble> eta_z = ExpPointsProperties(2)->GetZ();
+            Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
+            Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
             int Qx = GetNumPoints(0);
             int Qy = GetNumPoints(1);
             int Qz = GetNumPoints(2);
@@ -738,9 +738,9 @@ namespace Nektar
             int  Qz = m_base[2]->GetNumPoints();
             
             Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-            eta_x = ExpPointsProperties(0)->GetZ();
-            eta_y = ExpPointsProperties(1)->GetZ();
-            eta_z = ExpPointsProperties(2)->GetZ();
+            eta_x = m_base[0]->GetZ();
+            eta_y = m_base[1]->GetZ();
+            eta_z = m_base[2]->GetZ();
 
             outfile << "Variables = z1,  z2,  z3,  Coeffs \n" << std::endl;      
             outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
@@ -923,6 +923,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.9  2008/04/06 06:04:15  bnelson
+ * Changed ConstArray to Array<const>
+ *
  * Revision 1.8  2008/03/25 08:41:00  ehan
  * Added MapTo() function.
  *

@@ -185,7 +185,8 @@ namespace Nektar
                                     Array<OneD, unsigned int> &maparray);
 
             void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
-                                     Array<OneD, unsigned int> &maparray);
+                                     Array<OneD, unsigned int> &maparray,
+                                     Array<OneD, int> &signarray);
 
             void MapTo(const int edge_ncoeffs, 
                 const LibUtilities::BasisType Btype, 
@@ -434,9 +435,10 @@ namespace Nektar
             }
 
             virtual void v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
-                                               Array<OneD, unsigned int> &maparray)
+                                               Array<OneD, unsigned int> &maparray,
+                                               Array<OneD, int> &signarray)
             {
-                GetEdgeToElementMap(eid,edgeOrient,maparray);
+                GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
             }
 
             virtual void v_MapTo(const int edge_ncoeffs, 
@@ -476,6 +478,9 @@ namespace Nektar
 
 /**
 * $Log: StdQuadExp.h,v $
+* Revision 1.28  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.27  2008/04/02 22:18:10  pvos
 * Update for 2D local to global mapping
 *

@@ -143,7 +143,7 @@ namespace Nektar
                 
                 virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
                 {
-                    v_GetLocCoords(coords,Lcoords);
+                    GetLocCoords(coords,Lcoords);
                 }
                 
                 virtual int v_GetEid(int i) const
@@ -184,6 +184,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.17  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.16  2008/04/02 22:19:04  pvos
 // Update for 2D local to global mapping
 //

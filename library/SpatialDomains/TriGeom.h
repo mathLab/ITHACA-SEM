@@ -83,6 +83,12 @@ namespace Nektar
                     return m_verts[i]->GetVid();
                 }
 
+                inline const SegGeomSharedPtr GetEdge(int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
+                    return m_edges[i];
+                }
+
                 inline StdRegions::EdgeOrientation GetEorient(const int i) const
                 {
                     ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
@@ -139,7 +145,7 @@ namespace Nektar
                 
                 virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
                 {
-                    v_GetLocCoords(coords,Lcoords);
+                    GetLocCoords(coords,Lcoords);
                 }
                 
                 virtual int v_GetEid(int i) const
@@ -174,6 +180,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.17  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.16  2008/04/02 22:19:04  pvos
 // Update for 2D local to global mapping
 //

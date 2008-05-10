@@ -43,7 +43,8 @@ namespace Nektar
     
     StdExpMap::StdExpMap():
         m_len(0),
-        m_map()
+        m_map(),
+        m_sign()
     {
     }
     
@@ -51,7 +52,8 @@ namespace Nektar
     {
         m_len = len;
         ASSERTL2(len > 0,"called with zero length");
-        m_map = Array<OneD, int>(m_len);
+        m_map  = Array<OneD, int>(m_len);
+        m_sign = Array<OneD, int>(m_len);
     }
     
     
@@ -63,8 +65,9 @@ namespace Nektar
     {        
         if(m_len != len)
         {
-        m_len = len;
-        m_map = Array<OneD, int>(m_len);
+            m_len  = len;
+            m_map  = Array<OneD, int>(m_len);
+            m_sign = Array<OneD, int>(m_len);
         }
     }
     
@@ -73,6 +76,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpMap.cpp,v $
+ * Revision 1.7  2007/07/20 02:16:52  bnelson
+ * Replaced boost::shared_ptr with Nektar::ptr
+ *
  * Revision 1.6  2007/05/15 05:18:23  bnelson
  * Updated to use the new Array object.
  *

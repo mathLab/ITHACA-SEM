@@ -150,28 +150,28 @@ namespace Nektar
                                 Array<OneD,NekDouble> &outarray,
                                 bool InArrayIsTrace = false);
 
+        void AddUDGHelmholtzBoundaryTerms(const NekDouble tau,
+                                          const Array<OneD,const NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray);
+            
         void AddEdgeBoundaryInt(const int edge, SegExpSharedPtr &EdgeExp,
                                 Array <OneD,NekDouble > &outarray);          
 
-        void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                          const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,NekDouble> &outarray);
 
         void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                        const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,NekDouble> &outarray);
+                                       Array<OneD,NekDouble> &outarray,
+                                       bool InputDataIsCartesianOrient = true);
 
         void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                        const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,SegExpSharedPtr> &EdgeExp,
-                                       Array<OneD,NekDouble> &outarray,
-                                       bool UseLocalOrient = true);
+                                       Array<OneD,NekDouble> &outarray);
 
         void AddUDGHelmholtzEdgeTerms(const NekDouble tau, 
                                       const int edge,
                                       SegExpSharedPtr &EdgeExp, 
-                                      Array <OneD,NekDouble > &outarray,
-                                      bool UseLocalOrient = true);
+                                      Array <OneD,NekDouble > &outarray);
 
         DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
@@ -210,7 +210,7 @@ namespace Nektar
             return m_metricinfo;
         }
 
-        const SpatialDomains::Geometry2DSharedPtr& v_GetGeom()
+        virtual const SpatialDomains::Geometry2DSharedPtr& v_GetGeom()
         {
             return GetGeom();
         }
@@ -342,6 +342,11 @@ namespace Nektar
             return StdExpansion::L2();
         }
 
+        virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            return GenMatrix(mkey);
+        }
+        
         virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             return CreateStdMatrix(mkey);
@@ -369,6 +374,12 @@ namespace Nektar
             return m_geom->GetEorient(edge);
         }
 
+
+        virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge)
+        {
+            return m_geom->GetCartesianEorient(edge);
+        }
+
         
         virtual void v_AddNormTraceInt(const int dir,
                                        Array<OneD, const NekDouble> &inarray,
@@ -383,8 +394,8 @@ namespace Nektar
         {
             AddNormBoundaryInt(dir,inarray,outarray,false);
         }
-
-        virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
+        
+        virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau,
                                                     const Array<OneD, const NekDouble> &inarray,
                                                     Array<OneD,NekDouble> &outarray)
         {
@@ -401,10 +412,9 @@ namespace Nektar
         virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                                  const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,SegExpSharedPtr> &EdgeExp, 
-                                                 Array <OneD,NekDouble > &outarray,
-                                                 bool UseLocalOrient = true)
+                                                 Array <OneD,NekDouble > &outarray)
          {
-             AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray,UseLocalOrient);
+             AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
          }
 
     };
@@ -422,6 +432,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.27  2008/04/06 05:59:05  bnelson
+ *    Changed ConstArray to Array<const>
+ *
  *    Revision 1.26  2008/04/02 22:19:26  pvos
  *    Update for 2D local to global mapping
  *

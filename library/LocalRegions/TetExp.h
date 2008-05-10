@@ -103,7 +103,7 @@ namespace Nektar
 	/// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
 	StdRegions::ShapeType DetShapeType() const 
 	{ 
-	return StdRegions::eTetrahedron; 
+            return StdRegions::eTetrahedron; 
 	}
 
         SpatialDomains::TetGeomSharedPtr GetGeom()
@@ -285,6 +285,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.12  2008/04/06 05:59:05  bnelson
+ *    Changed ConstArray to Array<const>
+ *
  *    Revision 1.11  2008/03/18 16:18:13  pvos
  *    Fixed some compiler complaints
  *

@@ -53,6 +53,17 @@ ADD_NEKTAR_EXECUTABLE(UDGHelmholtz1D UDGHelmholtz1DSource)
     )
     SET_LAPACK_LINK_LIBRARIES(UDGHelmholtz1D)
 
+SET(UDGHelmholtz2DSource  UDGHelmholtz2D.cpp)
+ADD_NEKTAR_EXECUTABLE(UDGHelmholtz2D UDGHelmholtz2DSource)
+    TARGET_LINK_LIBRARIES(UDGHelmholtz2D
+    optimized MultiRegions debug MultiRegions-g    
+    optimized LocalRegions debug LocalRegions-g    
+    optimized SpatialDomains debug SpatialDomains-g    
+    optimized StdRegions debug StdRegions-g    
+    optimized tinyxml debug tinyxml
+    )
+    SET_LAPACK_LINK_LIBRARIES(UDGHelmholtz2D)
+
 #SET(ProjectLoc2DSource  ProjectLoc2D.cpp)
 #ADD_NEKTAR_EXECUTABLE(ProjectLoc2D ProjectLoc2DSource)
 #    TARGET_LINK_LIBRARIES(ProjectLoc2D

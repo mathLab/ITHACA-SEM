@@ -23,6 +23,8 @@ ADD_NEKTAR_EXECUTABLE(LocProject_Diff1D LocProject_Diff1DSource)
     optimized SpatialDomains debug SpatialDomains-g    
     optimized StdRegions debug StdRegions-g    
     )
+
+
 SET_LAPACK_LINK_LIBRARIES(LocProject_Diff1D)
 
 IF( USE_FRAMEWORK )

@@ -85,8 +85,7 @@ namespace Nektar
             int m_fid;
             bool m_ownverts;
             std::list<CompToElmt> m_elmtmap;
-
-            Array<OneD, StdRegions::StdExpansion2DSharedPtr> m_xmap;
+        private:
 
         private:
             virtual void v_AddElmtConnected(int gvo_id, int locid)
@@ -139,6 +138,9 @@ namespace Nektar
 
 //
 // $Log: QuadFaceComponent.h,v $
+// Revision 1.8  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.7  2008/04/02 22:19:04  pvos
 // Update for 2D local to global mapping
 //

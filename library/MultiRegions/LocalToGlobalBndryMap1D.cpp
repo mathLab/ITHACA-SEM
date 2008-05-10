@@ -46,9 +46,9 @@ namespace Nektar
                                                          const Array<OneD, const SpatialDomains::BoundaryConditionType> &bndCondTypes)
         {
             int i,j;
-            int vid = 0;
-            int gid = 0;
-            int cnt = 0;
+            int vid  = 0;
+            int gid  = 0;
+            int cnt  = 0;
             int nbnd = bndCondExp.num_elements();
             
             // set up Local to Continuous mapping 
@@ -58,27 +58,27 @@ namespace Nektar
             m_totLocBndDofs   = 2*locexp.size();
             m_locToContBndMap = Array<OneD, int>(m_totLocBndDofs,-1);
             m_locToContBndCondMap = Array<OneD, int>(nbnd);   
-
+            
             // re-order the vertices (as domain does not necessarily contains the entire meshgraph)
-             Array<OneD, int> renumbVerts(graph1D.GetNvertices(),-1);
-
+            Array<OneD, int> renumbVerts(graph1D.GetNvertices(),-1);
+            
             // This array is used to indicate whether an vertex is part of the boundary of the domain.
             Array<OneD, int> bndCondVertID(graph1D.GetNvertices(),-1);
-
+            
             // Order the Dirichlet vertices first.
             m_numDirichletDofs = 0;
             for(i = 0; i < nbnd; i++)
             {
                 vid = ((bndCondExp[i])->GetVertex())->GetVid();
                 bndCondVertID[vid] = i;
-
+                
                 if(bndCondTypes[i]==SpatialDomains::eDirichlet)
                 {
                     m_numDirichletDofs++;
                     if(renumbVerts[vid]==-1)
                     {
                         renumbVerts[vid] = gid++;
-                    }                    
+                    } 
                 }
             }
             
@@ -120,6 +120,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalBndryMap1D.cpp,v $
+* Revision 1.3  2008/04/06 06:00:07  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.2  2007/12/06 22:52:30  pvos
 * 2D Helmholtz solver updates
 *

@@ -86,6 +86,11 @@ namespace Nektar
               Array<OneD,NekDouble> &coords);
 
 
+            const  SpatialDomains::GeomFactorsSharedPtr GetMetricInfo() const
+            {
+                return m_metricinfo;
+            }
+
             const SpatialDomains::Geometry1DSharedPtr& GetGeom()
             {
                 return m_geom;
@@ -126,6 +131,11 @@ namespace Nektar
             // Evaluations Methods
             //---------------------------
 
+            void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir);
+
+            void ReverseCoeffsAndSign(const Array<OneD,NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray);
+        
             /** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
             store in \a (this)->_coeffs  */
@@ -192,10 +202,10 @@ namespace Nektar
 
             virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
             {
-                return m_metricinfo;
+                return GetMetricInfo();
             }
 
-            const SpatialDomains::Geometry1DSharedPtr& v_GetGeom()
+            virtual const  SpatialDomains::Geometry1DSharedPtr& v_GetGeom()
             {
                 return GetGeom();
             }
@@ -434,6 +444,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.31  2008/04/06 05:59:05  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.30  2008/04/02 22:19:26  pvos
 // Update for 2D local to global mapping
 //

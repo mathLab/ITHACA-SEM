@@ -156,7 +156,7 @@ namespace Nektar
             return m_metricinfo;
         }
 
-        const SpatialDomains::Geometry2DSharedPtr& v_GetGeom()
+        virtual const SpatialDomains::Geometry2DSharedPtr& v_GetGeom()
         {
             return GetGeom();
         }
@@ -322,6 +322,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.24  2008/04/06 05:59:05  bnelson
+ *    Changed ConstArray to Array<const>
+ *
  *    Revision 1.23  2008/04/02 22:19:26  pvos
  *    Update for 2D local to global mapping
  *

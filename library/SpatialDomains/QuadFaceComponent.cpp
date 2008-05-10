@@ -46,12 +46,12 @@ namespace Nektar
         }
 
         QuadFaceComponent::QuadFaceComponent(const int coordim):
-            Geometry2D(coordim),
-            m_xmap(coordim)
+            Geometry2D(coordim)
         {
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
                 LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
+            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -114,6 +114,9 @@ namespace Nektar
 
 //
 // $Log: QuadFaceComponent.cpp,v $
+// Revision 1.4  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.3  2007/06/06 15:15:21  pvos
 // Some minor updates for 2D routines
 //

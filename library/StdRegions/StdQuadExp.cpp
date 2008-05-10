@@ -871,12 +871,14 @@ namespace Nektar
             }
 
             Array<OneD, int> wsp(edge_ncoeffs);
+            Array<OneD, int> sgn = Map.UpdateSign();
 
             if(eorient == eForwards)
             {
                 for(i = 0; i < edge_ncoeffs; ++i)
                 {
                     wsp[i] = i;
+                    sgn[i] = 1;
                 }
             }
             else
@@ -886,14 +888,20 @@ namespace Nektar
                     for(i = 0; i < edge_ncoeffs; ++i)
                     {
                         wsp[i] = edge_ncoeffs-i-1;
+                        sgn[i] = 1;
                     }
                 }
                 else{
                     wsp[1] = 0; 
                     wsp[0] = 1;
+                    sgn[0] = sgn[1] = 1;
+                    
+                    int neg = 1;
                     for(i = 2; i < edge_ncoeffs; ++i)
                     {
                         wsp[i] = i;
+                        sgn[i] =  neg;
+                        neg    = -neg;
                     }
                 }
             }
@@ -1084,6 +1092,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.34  2008/05/07 16:04:57  pvos
+* Mapping + Manager updates
+*
 * Revision 1.33  2008/04/22 05:22:15  bnelson
 * Speed enhancements.
 *

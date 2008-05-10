@@ -83,9 +83,9 @@ namespace Nektar
                     return m_verts[i]->GetVid();
                 }
 
-                inline const SegGeomSharedPtr GetEdge(int i) const
+                inline const SegGeomSharedPtr GetEdge(const int i) const
                 {
-                    ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
+                    ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 3");
                     return m_edges[i];
                 }
 
@@ -180,6 +180,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.18  2008/05/09 20:33:39  ehan
+// Fixed infinity loop of recursive function.
+//
 // Revision 1.17  2008/04/06 06:00:38  bnelson
 // Changed ConstArray to Array<const>
 //

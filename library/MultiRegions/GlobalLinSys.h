@@ -68,6 +68,9 @@ namespace Nektar
                 return m_linSys;
             }
 
+            void Solve(const Array<OneD,const NekDouble> &in, 
+                       Array<OneD,NekDouble> &out);
+
             void Solve(const Array<OneD, const NekDouble> &in, 
                        Array<OneD,NekDouble> &out,
                        LocalToGlobalBndryMap &locToGloMap);

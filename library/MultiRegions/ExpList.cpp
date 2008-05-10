@@ -39,18 +39,17 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        
         ExpList::ExpList(void):
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
             m_phys(),
             m_transState(eNotSet),
-            m_physState(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr())
+            m_physState(false)
+            //            m_exp(MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr())
         {            
+            m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
         }
-        
         
         ExpList::ExpList(const ExpList &in):
             m_ncoeffs(in.m_ncoeffs),
@@ -59,8 +58,62 @@ namespace Nektar
             m_phys(m_npoints),
             m_transState(eNotSet),
             m_physState(false),
-            m_exp(in.m_exp)
+            m_exp(in.m_exp),
+            m_exp_offset(in.m_exp_offset)
         {
+        }
+
+        void ExpList::PutCoeffsInToElmtExp(void)
+        {
+            int i, order_e;
+            int cnt = 0;
+
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                order_e = (*m_exp)[i]->GetNcoeffs();
+                Vmath::Vcopy(order_e,&m_coeffs[cnt], 1, 
+                             &((*m_exp)[i]->UpdateCoeffs())[0],1);
+                cnt += order_e;
+            }
+        }
+
+        void ExpList::PutCoeffsInToElmtExp(int eid)
+        {
+            int order_e;
+            int cnt = 0;
+
+            order_e = (*m_exp)[eid]->GetNcoeffs();
+            cnt = m_exp_offset[eid];
+            Vmath::Vcopy(order_e,&m_coeffs[cnt], 1, 
+                         &((*m_exp)[eid]->UpdateCoeffs())[0],1);
+        }
+
+
+        void ExpList::PutElmtExpInToCoeffs(void)
+        {
+            int i, order_e;
+            int cnt = 0;
+
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                order_e = (*m_exp)[i]->GetNcoeffs();
+                Vmath::Vcopy(order_e, &((*m_exp)[i]->UpdateCoeffs())[0],1,
+                             &m_coeffs[cnt],1);
+                cnt += order_e;
+            }
+        }
+
+
+        void ExpList::PutElmtExpInToCoeffs(int eid)
+        {
+            int order_e;
+            int cnt = 0;
+
+            order_e = (*m_exp)[eid]->GetNcoeffs();
+            cnt = m_exp_offset[eid];
+            
+            Vmath::Vcopy(order_e, &((*m_exp)[eid]->UpdateCoeffs())[0],1,
+                             &m_coeffs[cnt],1);
         }
         
         ExpList::~ExpList()
@@ -486,7 +539,7 @@ namespace Nektar
                         }		
                     }
                 }
-                cnt += (*m_exp)[n]->NumBndryCoeffs(); 		    
+                cnt += (*m_exp)[n]->NumDGBndryCoeffs(); 		    
             }
             
             // Believe that we need a call of the type:

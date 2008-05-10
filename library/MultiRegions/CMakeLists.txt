@@ -6,7 +6,7 @@ ContField1D.cpp
 ContField2D.cpp
 ContField3D.cpp
 DisContField1D.cpp
-#DisContField2D.cpp
+DisContField2D.cpp
 ExpList1D.cpp
 ExpList2D.cpp
 ExpList3D.cpp
@@ -14,8 +14,8 @@ ExpList.cpp
 GlobalLinSys.cpp
 GlobalLinSysKey.cpp
 LocalToGlobalBndryMap.cpp
-LocalToGlobalMap.cpp
 LocalToGlobalBndryMap1D.cpp
+LocalToGlobalMap.cpp
 LocalToGlobalMap1D.cpp
 LocalToGlobalMap2D.cpp
 #LocalToGlobalMap3D.cpp
@@ -29,13 +29,15 @@ ContField1D.h
 ContField2D.h
 ContField3D.h
 DisContField1D.h
-#DisContField2D.h
+DisContField2D.h
 ExpList1D.h
 ExpList2D.h
 ExpList3D.h
 ExpList.h
 GlobalLinSys.h
 GlobalLinSysKey.h
+LocalToGlobalBndryMap.h
+LocalToGlobalBndryMap1D.h
 LocalToGlobalMap1D.h
 LocalToGlobalMap2D.h
 LocalToGlobalMap3D.h

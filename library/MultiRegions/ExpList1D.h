@@ -42,9 +42,10 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/QuadExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/MeshGraph2D.h>
-//#include <MultiRegions/ContField2D.h>
 
 namespace Nektar
 {
@@ -65,9 +66,11 @@ namespace Nektar
                 const SpatialDomains::MeshGraph1D &graph1D);
 
             ExpList1D(SpatialDomains::MeshGraph1D &graph1D);
-
-             ExpList1D(const SpatialDomains::CompositeVector &domain, 
-                       SpatialDomains::MeshGraph2D &graph2D); 
+            
+            ExpList1D(const SpatialDomains::CompositeVector &domain, 
+                      SpatialDomains::MeshGraph2D &graph2D); 
+            
+            ExpList1D(const Array<OneD,const boost::shared_ptr<ExpList1D> > &bndConstraint,  const Array<OneD,const SpatialDomains::BoundaryConditionType>  &bndTypes, const StdRegions::StdExpansionVector &locexp, SpatialDomains::MeshGraph2D &graph2D);
 
             ~ExpList1D();
 
@@ -96,6 +99,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.h,v $
+* Revision 1.18  2007/12/06 22:52:30  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.17  2007/09/25 14:25:29  pvos
 * Update for helmholtz1D with different expansion orders
 *

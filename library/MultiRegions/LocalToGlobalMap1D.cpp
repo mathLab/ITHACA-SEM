@@ -131,7 +131,7 @@ namespace Nektar
             m_locToContBndCondMap = Array<OneD, int>(nbnd);   
 
             // re-order the vertices (as domain does not necessarily contains the entire meshgraph)
-             Array<OneD, int> renumbVerts(graph1D.GetNvertices(),-1);
+            Array<OneD, int> renumbVerts(graph1D.GetNvertices(),-1);
 
             // This array is used to indicate whether an vertex is part of the boundary of the domain.
             Array<OneD, int> bndCondVertID(graph1D.GetNvertices(),-1);
@@ -202,6 +202,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.23  2008/04/06 06:00:07  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.22  2007/12/06 22:52:30  pvos
 * 2D Helmholtz solver updates
 *

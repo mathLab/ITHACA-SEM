@@ -113,6 +113,7 @@ namespace Nektar
                     NEKERROR(ErrorUtil::efatal,
                         "This function is only valid for shape type geometries");
                 }
+                
         };
     }; //end of namespace
 }; // end of namespace
@@ -121,6 +122,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.18  2008/04/06 06:00:37  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.17  2007/12/11 21:51:52  jfrazier
 // Updated 2d components so elements could be retrieved from edges.
 //

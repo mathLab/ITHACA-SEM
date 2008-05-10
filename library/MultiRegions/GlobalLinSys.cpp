@@ -63,6 +63,14 @@ namespace Nektar
 	}
 
 
+        void GlobalLinSys::Solve(const Array<OneD,const NekDouble> &in, 
+                                 Array<OneD,NekDouble>  &out)
+        {
+            DNekVec Vin(in.num_elements(),in);
+            DNekVec Vout(out.num_elements(),out,eWrapper);
+            m_linSys->Solve(Vin,Vout);
+        }
+
         void GlobalLinSys::Solve(const Array<OneD, const NekDouble> &in, 
                                  Array<OneD,NekDouble>  &out,
                                  LocalToGlobalBndryMap  &locToGloMap)
@@ -71,9 +79,7 @@ namespace Nektar
             {
             case eDirectFullMatrix:
                 {
-                    DNekVec Vin(in.num_elements(),in);
-                    DNekVec Vout(out.num_elements(),out,eWrapper);
-                    m_linSys->Solve(Vin,Vout);
+                    Solve(in,out); 
                 }
                 break;
             case eDirectStaticCond:

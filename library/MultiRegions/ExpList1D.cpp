@@ -63,6 +63,7 @@ namespace Nektar
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
             const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
+            m_exp_offset =  Array<OneD, int> (expansions.size());
             
             for(i = 0; i < expansions.size(); ++i)
             {                
@@ -76,6 +77,7 @@ namespace Nektar
                     ASSERTL0(false,"dynamic cast to a SegGeom failed");
                 }  
             
+                m_exp_offset[i] = m_ncoeffs;
                 m_ncoeffs += Ba.GetNumModes();
                 m_npoints += Ba.GetNumPoints();
             } 
@@ -92,6 +94,7 @@ namespace Nektar
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
             const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
+            m_exp_offset = Array<OneD,int>(expansions.size());
             
             for(i = 0; i < expansions.size(); ++i)
             {
@@ -107,6 +110,7 @@ namespace Nektar
                     ASSERTL0(false,"dynamic cast to a SegGeom failed");
                 }  
 
+                m_exp_offset[i] =  m_ncoeffs;
                 m_ncoeffs += bkey.GetNumModes();
                 m_npoints += bkey.GetNumPoints();
             }
@@ -115,17 +119,27 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
             
         }
+    
 
         ExpList1D::ExpList1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph2D &graph2D):
             ExpList()
         {
-            int i,j;
+            int i,j, nel,cnt;
             SpatialDomains::Composite comp;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
             // SpatialDomains::ElementEdgeVectorSharedPtr edgeElement;
             //SpatialDomains::ExpansionShPtr exp;
             
+            nel = 0;
+            for(i = 0; i < domain.size(); ++i)
+            {
+                nel += (domain[i])->size();
+            }
+
+            m_exp_offset = Array<OneD,int>(nel,0);
+
+            cnt = 0;
             for(i = 0; i < domain.size(); ++i)
             {
                 comp = domain[i];
@@ -157,18 +171,135 @@ namespace Nektar
 
                         (*m_exp).push_back(seg);  
 
+                        m_exp_offset[cnt] =  m_ncoeffs; cnt++;
                         m_ncoeffs += bkey.GetNumModes();
                         m_npoints += bkey.GetNumPoints();
                     }
                     else
                     {
-                        ASSERTL0(false,"dynamic cast to a EdgeComp failed");
+                        ASSERTL0(false,"dynamic cast to a SegGeom failed");
                     }  
-                }                
+                }
+                
             } 
             
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);            
+        }
+
+
+        ExpList1D::ExpList1D(const Array<OneD,const MultiRegions::ExpList1DSharedPtr>      &bndConstraint,  const Array<OneD, const SpatialDomains::BoundaryConditionType>  &bndTypes, const StdRegions::StdExpansionVector &locexp, SpatialDomains::MeshGraph2D &graph2D)
+        {
+            int i,j,cnt,id;
+
+            Array<OneD, int> EdgeDone(graph2D.GetNseggeoms(),0);
+            LocalRegions::SegExpSharedPtr  locSegExp, Seg;
+            LocalRegions::QuadExpSharedPtr locQuadExp;
+            LocalRegions::TriExpSharedPtr  locTriExp;
+            SpatialDomains::SegGeomSharedPtr  SegGeom;
+            
+            // count up global number of edges
+            cnt = 0;
+            for(i = 0; i < locexp.size(); ++i)
+            {
+                cnt += locexp[i]->GetNedges();
+            }
+
+            m_exp_offset = Array<OneD,int>(cnt);
+                
+            // First loop over boundary conditions to renumber
+            // Dirichlet boundaries
+            cnt = 0;
+            for(i = 0; i < bndTypes.num_elements(); ++i)
+            {
+                if(bndTypes[i] == SpatialDomains::eDirichlet)
+                {
+                    for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
+                    {
+                        if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>((bndConstraint[i]->GetExp(j))))
+                        {
+
+                            LibUtilities::BasisKey bkey  = locSegExp->GetBasis(0)->GetBasisKey();
+                            SegGeom = locSegExp->GetGeom();
+                            Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
+                            EdgeDone[SegGeom->GetEid()] = 1;
+                            
+                            (*m_exp).push_back(Seg);   
+                            
+                            m_exp_offset[cnt] = m_ncoeffs; cnt++;
+                            m_ncoeffs += bkey.GetNumModes();
+                            m_npoints += bkey.GetNumPoints();
+                        }
+                        else
+                        {
+                            ASSERTL0(false,"dynamic cast to a SegExp failed");
+                        }  
+                    }
+                }
+            }
+
+            // loop over all other edges and fill out other connectivities
+            for(i = 0; i < locexp.size(); ++i)
+            {
+                if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(locexp[i]))
+                {
+                    for(j = 0; j < locQuadExp->GetNedges(); ++j)
+                    {   
+                        SegGeom = (locQuadExp->GetGeom())->GetEdge(j);
+
+                        id = SegGeom->GetEid();
+                        
+                        if(!EdgeDone[id])
+                        {
+                            
+                            LibUtilities::BasisKey bkey    = (locQuadExp->GetBasis(j%2))->GetBasisKey();
+                            
+                            Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
+                            
+                            (*m_exp).push_back(Seg);
+
+                            m_exp_offset[cnt] = m_ncoeffs; cnt++;
+                            m_ncoeffs += bkey.GetNumModes();
+                            m_npoints += bkey.GetNumPoints();
+
+                            EdgeDone[id] = 1;
+                        }
+                    }
+                }
+                else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(locexp[i]))
+                {
+                    for(j = 0; j < locTriExp->GetNedges(); ++j)
+                    {    
+                        SegGeom = (locTriExp->GetGeom())->GetEdge(j);
+
+                        id = SegGeom->GetEid();
+                        
+                        if(!EdgeDone[id])
+                        {
+                            
+                            LibUtilities::BasisKey   bkey    = (locTriExp->GetBasis(j?1:0))->GetBasisKey();
+                            
+                            Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
+                            
+                            (*m_exp).push_back(Seg);
+
+                            m_exp_offset[cnt] = m_ncoeffs; cnt++;
+                            m_ncoeffs += bkey.GetNumModes();
+                            m_npoints += bkey.GetNumPoints();
+                            
+                            EdgeDone[id] = 1;
+                        }                        
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
+                }
+            }
+            
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
+            
         }
 
     } //end of namespace
@@ -176,6 +307,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.24  2008/03/18 14:14:13  pvos
+* Update for nodal triangular helmholtz solver
+*
 * Revision 1.23  2008/03/12 15:25:45  pvos
 * Clean up of the code
 *

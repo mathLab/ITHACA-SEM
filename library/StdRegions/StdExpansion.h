@@ -732,6 +732,12 @@ namespace Nektar
                 return v_GetEorient(edge);
             }
 
+
+            StdRegions::EdgeOrientation GetCartesianEorient(int edge)
+            {
+                return v_GetCartesianEorient(edge);
+            }
+
             void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                               const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD,NekDouble> &outarray)
@@ -751,12 +757,9 @@ namespace Nektar
             void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,boost::shared_ptr<LocalRegions::SegExp> > &EdgeExp,
-                                           Array<OneD,NekDouble> &outarray,
-                                           bool UseLocalOrient = true)
-                
+                                           Array<OneD,NekDouble> &outarray)                
             {
-                v_AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp,
-                                            outarray,UseLocalOrient);
+                v_AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp, outarray);
             }
 
             virtual void AddNormBoundaryInt(const int dir,
@@ -938,6 +941,13 @@ namespace Nektar
             }
 
 
+            virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");  
+                return eForwards;              
+            }
+
+
             virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                                         const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,NekDouble> &outarray)
@@ -955,8 +965,7 @@ namespace Nektar
             virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                     const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD, boost::shared_ptr<LocalRegions::SegExp> > &edgeExp, 
-                                    Array<OneD,NekDouble> &outarray,
-                                    bool UseLocalOrient = true)
+                                    Array<OneD,NekDouble> &outarray)
             { 
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
@@ -1388,6 +1397,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.80  2008/05/07 16:04:57  pvos
+* Mapping + Manager updates
+*
 * Revision 1.79  2008/04/06 06:04:14  bnelson
 * Changed ConstArray to Array<const>
 *

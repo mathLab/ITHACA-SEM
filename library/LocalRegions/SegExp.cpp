@@ -370,6 +370,57 @@ namespace Nektar
         //----------------------------
 
 
+        void SegExp::SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
+        {
+
+            if(dir == StdRegions::eBackwards)
+            {
+                Array<OneD,NekDouble> outarray(m_ncoeffs);
+                ReverseCoeffsAndSign(m_coeffs,outarray);
+                Vmath::Vcopy(m_ncoeffs,outarray,1,m_coeffs,1);
+            }
+        }
+
+        // Reverse the coefficients in a boundary interior expansion
+        // this routine is of use when we need the segment
+        // coefficients corresponding to a expansion in the reverse
+        // coordinate direction
+        void SegExp::ReverseCoeffsAndSign(const Array<OneD,NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray)
+        {
+
+            int m;
+            NekDouble sgn = 1;
+
+            ASSERTL1(&inarray[0] != &outarray[0],"inarray and outarray can not be the same");
+            switch(GetBasisType(0))
+            {
+            case LibUtilities::eModified_A:
+                
+                //Swap vertices
+                outarray[0] = inarray[1]; 
+                outarray[1] = inarray[0];
+                
+                // negate odd modes
+                for(m = 2; m < m_ncoeffs; ++m)
+                {
+                    outarray[m] = sgn*inarray[m];
+                    sgn = -sgn;
+                }
+                break;
+            case LibUtilities::eGLL_Lagrange:
+
+                for(m = 0; m < m_ncoeffs; ++m)
+                {
+                    outarray[m_ncoeffs-1-m] = inarray[m];
+                }
+                
+            default:
+                ASSERTL0(false,"This basis is not allowed in this method");
+                break;
+            }
+        }
+
         /** \brief Forward transform from physical quadrature space
         stored in \a inarray and evaluate the expansion coefficients and
         store in \a outarray
@@ -1114,6 +1165,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.39  2008/04/06 05:59:05  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.38  2008/04/02 22:19:26  pvos
 // Update for 2D local to global mapping
 //

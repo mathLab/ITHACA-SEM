@@ -35,7 +35,8 @@ int main(int argc, char *argv[]){
     MeshGraph1D graph1D;
     BoundaryConditions bcs(&graph1D);
 
-    graph1D.Read(meshfile);
+    graph1D.ReadGeometry(meshfile);
+    graph1D.ReadExpansions(meshfile);
     bcs.Read(bcfile);
 
     BoundaryRegionCollection &boundaryRegions = bcs.GetBoundaryRegions();

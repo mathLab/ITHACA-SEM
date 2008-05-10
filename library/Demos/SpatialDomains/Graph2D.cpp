@@ -19,7 +19,10 @@ int main(int argc, char *argv[]){
     //  exit(1);
     //}
 
-    //string in(argv[argc-1]);
+#if 1
+    string in(argv[argc-1]);
+    string bcfile(argv[argc-1]);
+#else
     // If we all have the same relative structure, these should work for everyone.
 #if 0 
     string in("../../../library/Demos/SpatialDomains/meshdef2D.xml");
@@ -28,11 +31,13 @@ int main(int argc, char *argv[]){
     string in("C:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/meshdef2D.xml");
     string bcfile("c:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/BC1.xml");
 #endif
+#endif
 
     MeshGraph2D graph2D;
     BoundaryConditions bcs(&graph2D);
 
-    graph2D.Read(in);
+    graph2D.ReadGeometry(in);
+    graph2D.ReadExpansions(in);
     bcs.Read(bcfile);
 
     try
@@ -65,8 +70,7 @@ int main(int argc, char *argv[]){
 
         Equation eqn1 = bcs.GetFunctionAsEquation("F3");
 
-        ConstExpansionElementShPtr exp = bcs.GetExpansionElement(0);
-        val = exp->m_NumModesEqn.Evaluate(1.22);
+        const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
     }
     catch(std::string err)
     {

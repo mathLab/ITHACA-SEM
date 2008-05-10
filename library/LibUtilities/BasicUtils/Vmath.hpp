@@ -39,7 +39,6 @@
 #include <string>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 
-
 namespace Vmath 
 {
     
@@ -420,7 +419,8 @@ namespace Vmath
     }
     
     /********** Memory routines  ***********************/
-    
+
+#if 0     
     // \brief copy one double vector to another - This is just a wrapper
     // around Blas
     static inline void Vcopy(int n, const double *x, int incx, double *y,
@@ -428,7 +428,7 @@ namespace Vmath
     {
         Blas::Dcopy(n,x,incx,y,incy);
     }
-    
+#else
     // \brief copy one int vector to another
     static inline void Vcopy(int n, const int *x, const int incx, int *y,
               int const incy)
@@ -447,13 +447,36 @@ namespace Vmath
             }
         }
     }
-    
+
+    // \brief copy one double vector to another
+    static inline void Vcopy(int n, const double *x, const int incx, double *y,
+              int const incy)
+    {
+        if( incx ==1 && incy == 1)
+        {
+            memcpy(y,x,n*sizeof(double));
+        }
+        else
+        {
+            while( n-- )
+            {
+                *y = *x;
+                x += incx;
+                y += incy;
+            }
+        }
+    }
+#endif
+
     
 }
 #endif //VECTORMATH_HPP
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.13  2008/04/06 05:47:03  bnelson
+Fixed gcc compiler warnings.
+
 Revision 1.12  2008/03/06 04:39:55  ehan
 Removed the include file <VmathArray.hpp>.
 

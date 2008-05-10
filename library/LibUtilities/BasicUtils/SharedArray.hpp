@@ -121,7 +121,7 @@ namespace Nektar
     /// of it and change that.  So the const can be ignored as needed.  Mostly useful for cases 
     /// where you want to be able to change the array, and you need to accept temporaries.
     ///
-    ///\section Efficiency Efficiency Considerations
+    ///\section Efficiency Considerations
     ///
     ///\code
     /// // Instead of this:

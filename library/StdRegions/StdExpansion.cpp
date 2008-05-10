@@ -120,10 +120,8 @@ namespace Nektar
             // Register Creators for  Managers
             for(int i = 0; i < SIZE_MatrixType; ++i)
             {
-                m_stdMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoShapeType,*this),
-                                   boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-                m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoShapeType,*this),  
-                                   boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1));
+                m_stdMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoShapeType,*this), boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
+                m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoShapeType,*this), boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1));
             }
         }
         
@@ -303,11 +301,6 @@ namespace Nektar
                     returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nbndry); 
                     DNekMat &Umat = *returnval;
 
-
-                    // get mapping for boundary dof
-                    Array<OneD,unsigned int> bmap(NumBndryCoeffs());
-                    GetBoundaryMap(bmap);
-
                     // Helmholtz matrix
                     DNekScalMat  &invHmat = *GetLocMatrix(eInvUnifiedDGHelmholtz,
                                                           lambdaval, tau);
@@ -355,10 +348,6 @@ namespace Nektar
                     returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nbndry); 
                     DNekMat &Qmat = *returnval;
                     
-                    // get mapping for boundary dof
-                    Array<OneD,unsigned int> bmap(NumBndryCoeffs());
-                    GetBoundaryMap(bmap);
-                    
                     // Helmholtz matrix
                     DNekScalMat &invHmat = *GetLocMatrix(eInvUnifiedDGHelmholtz, lambdaval,tau);
 
@@ -398,7 +387,6 @@ namespace Nektar
 
                         F = (*Dmat)*Ulam; 
                         
-
                         v_AddNormTraceInt(dir,lambda,f); // add \tilde{G}\lambda
 
                         Vmath::Neg(m_ncoeffs,&ulam[0],1);
@@ -446,6 +434,7 @@ namespace Nektar
                 }
                 break;                            
             case eMass: 
+            case eHelmholtz:
             case eLaplacian:
             case eLaplacian00:
             case eLaplacian01:
@@ -813,6 +802,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.68  2008/04/06 06:04:14  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.67  2008/04/02 22:18:10  pvos
 * Update for 2D local to global mapping
 *

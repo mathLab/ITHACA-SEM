@@ -60,36 +60,44 @@ namespace Nektar
             ExpList(const ExpList &in);
             virtual ~ExpList();
             
+            void PutCoeffsInToElmtExp(void);
+            void PutElmtExpInToCoeffs(void);
+
+
+            void PutCoeffsInToElmtExp(int eid);
+            void PutElmtExpInToCoeffs(int eid);
+
+      
             inline int GetNcoeffs(void) const
-      {
-          return m_ncoeffs;
-      }
+            {
+                return m_ncoeffs;
+            }
       
-      inline int GetPointsTot(void) const
-      {
-          return m_npoints;
-      }
+            inline int GetPointsTot(void) const
+            {
+                return m_npoints;
+            }
       
-      inline void SetTransState(const TransState transState)
-      {
-          m_transState = transState;
-      }
+            inline void SetTransState(const TransState transState)
+            {
+                m_transState = transState;
+            }
 
-      inline TransState GetTransState(void) const 
-      {
-          return m_transState; 
-      }
+            inline TransState GetTransState(void) const 
+            {
+                return m_transState; 
+            }
       
-      inline void SetPhys(Array<OneD, const NekDouble> &inarray)
-      {
-          Vmath::Vcopy(m_npoints, inarray.get(), 1, m_phys.get(), 1);
-          m_physState = true;
-      }
+            inline void SetPhys(const Array<OneD, const NekDouble> &inarray)
+            {
+                Vmath::Vcopy(m_npoints,&inarray[0],1,&m_phys[0],1);
+                m_physState = true;
+            }
 
-      inline void SetPhysState(const bool physState)
-      {
-          m_physState = physState;
-      }
+            inline void SetPhysState(const bool physState)
+            {
+                m_physState = physState;
+            }
 
       inline bool GetPhysState(void) const
       {
@@ -120,9 +128,30 @@ namespace Nektar
       }
       
 
+      inline void SetCoeff(int i, NekDouble val) 
+      {
+          m_coeffs[i] = val;
+      }
+
+      inline void SetCoeffs(int i, NekDouble val) 
+      {
+          m_coeffs[i] = val;
+      }
+
+
       inline const Array<OneD, const NekDouble> &GetCoeffs() const 
       {
           return m_coeffs;
+      }
+
+      inline NekDouble GetCoeff(int i) 
+      {
+          return m_coeffs[i];
+      }
+
+      inline NekDouble GetCoeffs(int i) 
+      {
+          return m_coeffs[i];
       }
 
       inline const Array<OneD, const NekDouble> &GetPhys()  const
@@ -137,13 +166,18 @@ namespace Nektar
 
       inline int GetExpSize(void)
       {
-      return (*m_exp).size();
+          return (*m_exp).size();
       }
       
 
       inline StdRegions::StdExpansionSharedPtr& GetExp(int n)
       {
-      return (*m_exp)[n];
+          return (*m_exp)[n];
+      }
+
+      inline int GetExp_Offset(int n)
+      {
+          return m_exp_offset[n];
       }
 
       inline Array<OneD, NekDouble> &UpdateCoeffs()
@@ -164,10 +198,12 @@ namespace Nektar
       Array<OneD, NekDouble> m_coeffs;
       Array<OneD, NekDouble> m_phys;
 
+      
       TransState m_transState;
       bool       m_physState;
      
       boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
+      Array<OneD, int>  m_exp_offset;  // offset of elemental data into m_coeffs
 
       NekDouble PhysIntegral(const Array<OneD, const NekDouble> &inarray);
       void   IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
@@ -212,6 +248,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.32  2008/04/06 06:00:07  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.31  2008/03/12 15:25:45  pvos
 * Clean up of the code
 *

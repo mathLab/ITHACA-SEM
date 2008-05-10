@@ -48,7 +48,7 @@ using namespace Nektar;
         template<class T>  void Fill( int n, const T alpha,  Array<OneD, T> &x, const int incx )
         {
             
-            ASSERTL1(n*incx <= x.num_elements(),"Out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Out of bounds");
             
             Fill(n,alpha,&x[0],incx);
         }
@@ -57,19 +57,28 @@ using namespace Nektar;
         /// \brief Multiply vector z = x*y
         template<class T>  void Vmul( int n, const Array<OneD, const T> &x, const int incx, const Array<OneD, const T> &y, const int incy,  Array<OneD,T> &z, const int incz)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incz <= z.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
             
             Vmul(n,&x[0],incx,&y[0],incy,&z[0],incz);
+        }
+
+        template<class T>  void Vmul( int n, const Array<TwoD,NekDouble>::const_reference  &x, const int incx, const Array<OneD,const T> &y, const int incy,  Array<OneD,T> &z, const int incz)
+        {
+            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
+            
+            Vmul(n,x.origin(),incx,&y[0],incy,&z[0],incz);
         }
 
         /// \brief Scalar multiply  y = alpha*y
         
         template<class T>  void Smul( int n, const T alpha, const Array<OneD,const T> &x,  const int incx,  Array<OneD,T>  &y, const int incy)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
             
             Smul(n,alpha, &x[0],incx,&y[0],incy);
         }
@@ -77,9 +86,9 @@ using namespace Nektar;
         /// \brief Multiply vector z = x/y
         template<class T>  void Vdiv( int n, const Array<OneD,const T> &x, const int incx, Array<OneD,T> &y, const int incy,  Array<OneD,T> &z, const int incz)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incz <= z.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
             
             Vdiv(n,&x[0],incx,&y[0],incy,&z[0],incz);
             
@@ -88,8 +97,8 @@ using namespace Nektar;
         /// \brief Scalar multiply  y = alpha/y
         template<class T>  void Sdiv( int n, const T alpha, Array<OneD,T> &x, const int incx,  Array<OneD,T> &y, const int incy)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
             
             Sdiv(n,alpha,&x[0],incx,&y[0],incy);
         }
@@ -98,9 +107,9 @@ using namespace Nektar;
         template<class T>  void Vadd( int n, const Array<OneD,const T> &x, const int incx, const Array<OneD,const T> &y,  const int incy,  Array<OneD,T> &z, const int incz)
         {
 
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incz <= z.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
          
             Vadd(n,&x[0],incx,&y[0],incy,&z[0],incz);
         }
@@ -109,8 +118,8 @@ using namespace Nektar;
         template<class T>  void Sadd( int n, const T alpha, const Array<OneD,const T> &x,const int incx, Array<OneD,T> &y, const int incy)
         {
 
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
 
             Sadd(n,alpha,&x[0],incx,&y[0],incy);
         }
@@ -118,9 +127,9 @@ using namespace Nektar;
         /// \brief Subtract vector z = x-y
         template<class T>  void Vsub( int n, const Array<OneD,const T> &x, const int incx, const Array<OneD,const T> &y, const int incy,  Array<OneD,T> &z, const int incz)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incz <= z.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
 
             Vsub(n,&x[0],incx,&y[0],incy,&z[0],incz);
 
@@ -129,7 +138,7 @@ using namespace Nektar;
         /// \brief Zero vector
         template<class T>  void Zero(int n, Array<OneD,T> &x, const int incx)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
 
             Zero(n,&x[0],incx);
 
@@ -138,7 +147,7 @@ using namespace Nektar;
         /// \brief Negate x = -x
         template<class T>  void Neg( int n, Array<OneD,T> &x, const int incx)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
 
             Neg(n,&x[0],incx);
             
@@ -148,8 +157,8 @@ using namespace Nektar;
         /// \brief sqrt y = sqrt(x)
         template<class T> void Vsqrt(int n, const Array<OneD,const T> &x, const int incx, Array<OneD,T> &y, const int incy)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
 
             Vsqrt(n,&x[0],incx,&y[0],incy);
         }
@@ -157,8 +166,8 @@ using namespace Nektar;
         /// \brief vabs: y = |x|
         template<class T> void Vabs(int n, const Array<OneD,const T> &x, const int incx, Array<OneD,T> &y, const int incy)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
 
             Vabs(n,&x[0],incx,&y[0],incy);
         }
@@ -168,20 +177,30 @@ using namespace Nektar;
         /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
         template<class T> void Vvtvp(int n, const Array<OneD,T> &w, const int incw, const Array<OneD,T> &x, const int incx, const Array<OneD,T> &y, const int incy, Array<OneD,T> &z, const int incz)
         {
-            ASSERTL1(n*incw <= w.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incz <= z.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incw <= w.num_elements()+w.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
 
             Vvtvp(n,&w[0],incw,&x[0],incx,&y[0],incy,&z[0],incz);
         }
 
-        /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
-        template<class T> void Svtvp(int n, const T alpha, const Array<OneD,T> &x,  const int incx, const Array<OneD,T> &y, const int incy, Array<OneD,T> &z, const int incz)
+        template<class T> void Vvtvp(int n, const Array<TwoD,NekDouble>::const_reference &w, const int incw, const Array<OneD, const T> &x, const int incx, const Array<OneD,const T> &y, const int incy, Array<OneD,T> &z, const int incz)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incz <= z.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incw <= w.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
+
+            Vvtvp(n,w.origin(),incw,&x[0],incx,&y[0],incy,&z[0],incz);
+        }
+
+        /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
+        template<class T> void Svtvp(int n, const T alpha, const Array<OneD,const T> &x,  const int incx, const Array<OneD, const T> &y, const int incy, Array<OneD,T> &z, const int incz)
+        {
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
             
             Svtvp(n,alpha,&x[0],incx,&y[0],incy,&z[0],incz);
             
@@ -190,10 +209,10 @@ using namespace Nektar;
         /// \brief vvtvm (vector times vector plus vector): z = w*x - y
         template<class T> void Vvtvm(int n, const Array<OneD,T> &w, const int incw, Array<OneD,T> &x, const int incx, const Array<OneD,T> &y, const int incy,  Array<OneD,T> &z, const int incz)
         {
-            ASSERTL1(n*incw <= w.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incz <= z.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incw <= w.num_elements()+w.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
 
             Vvtvm(n,&w[0],incw,&x[0],incx,&y[0],incy,&z[0],incz);
             
@@ -206,9 +225,9 @@ using namespace Nektar;
         template<class T>  void Gathr(int n, const Array<OneD,T> &x, const Array<OneD,int> &y,  Array<OneD,T> &z)
         {
             
-            ASSERTL1(n <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n <= y.num_elements(),"Array out of bounds");
-            ASSERTL1(n <= z.num_elements(),"Array out of bounds");
+            ASSERTL1(n <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n <= z.num_elements()+z.GetOffset(),"Array out of bounds");
 
             Gathr(n,&x[0],&y[0],&z[0]);
 
@@ -217,9 +236,9 @@ using namespace Nektar;
         /// \brief Scatter vector z[y[i]] = x[i]
         template<class T>  void Scatr(int n, const Array<OneD,T> &x, const Array<OneD,int> &y,  Array<OneD,T> &z)
         {
-            ASSERTL1(n <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n <= y.num_elements(),"Array out of bounds");
-            ASSERTL1(n <= z.num_elements(),"Array out of bounds");
+            ASSERTL1(n <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n <= z.num_elements()+z.GetOffset(),"Array out of bounds");
 
             Scatr(n,&x[0],&y[0],&z[0]);
         }
@@ -228,9 +247,9 @@ using namespace Nektar;
         /// \brief Assemble z[y[i]] += x[i]; z should be zero'd first
         template<class T>  void Assmb(int n, const Array<OneD,T> &x, const Array<OneD,int> &y, Array<OneD,T> &z)
         {
-            ASSERTL1(n <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n <= y.num_elements(),"Array out of bounds");
-            ASSERTL1(n <= z.num_elements(),"Array out of bounds");
+            ASSERTL1(n <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n <= z.num_elements()+z.GetOffset(),"Array out of bounds");
 
             Assmb(n,&x[0],&y[0],&z[0]);
         }
@@ -241,7 +260,7 @@ using namespace Nektar;
         /// \brief Subtract return sum(x)
         template<class T>  T Vsum( int n, const Array<OneD, const T> &x, const int incx)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
 
             return Vsum(n,&x[0],incx);
         }
@@ -250,7 +269,7 @@ using namespace Nektar;
         /// \brief Return the index of the maximum element in x
         template<class T>  int Imax( int n, const Array<OneD, const T> &x, const int incx)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
     
             return Imax(n,&x[0],incx);
         }
@@ -259,7 +278,7 @@ using namespace Nektar;
         /// conflict with max
         template<class T>  T Vmax( int n, const Array<OneD, const T> &x, const int incx)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
     
             return Vmax(n,&x[0],incx);
         }
@@ -267,7 +286,7 @@ using namespace Nektar;
         /// \brief Return the index of the maximum absolute element in x
         template<class T>  int Iamax( int n, const Array<OneD, const T> &x, const int incx)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
     
             return Iamax(n,&x[0],incx);
 
@@ -277,7 +296,7 @@ using namespace Nektar;
         /// called vamax to avoid conflict with max
         template<class T>  T Vamax( int n, const Array<OneD, const T> &x, const int incx)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
     
             return Vamax(n,&x[0],incx);            
         }
@@ -286,7 +305,7 @@ using namespace Nektar;
         /// \brief Return the index of the minimum element in x
         template<class T>  int Imin( int n, const Array<OneD, const T> &x, const int incx)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
             
             return Imin(n,&x[0],incx);
         }
@@ -296,7 +315,7 @@ using namespace Nektar;
         /// conflict with min
         template<class T>  T Vmin( int n, const Array<OneD, const T> &x, const int incx)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
             
             return Vmin(n,&x[0],incx);
         }
@@ -305,8 +324,8 @@ using namespace Nektar;
         
         template<class T> void Vcopy(int n, const Array<OneD, const T> &x, int incx, Array<OneD,T> &y, int const incy)
         {
-            ASSERTL1(n*incx <= x.num_elements(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements(),"Array out of bounds");
+            ASSERTL1(std::abs(n*incx) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(std::abs(n*incy) <= y.num_elements()+y.GetOffset(),"Array out of bounds");
 
             Vcopy(n,&x[0],incx,&y[0],incy);
         }
@@ -316,6 +335,9 @@ using namespace Nektar;
 
 /***
 $Log: VmathArray.hpp,v $
+Revision 1.2  2008/04/06 05:47:20  bnelson
+Changed ConstArray to Array<const>
+
 Revision 1.1  2008/02/28 09:55:57  sherwin
 Added Array version of math routines
 

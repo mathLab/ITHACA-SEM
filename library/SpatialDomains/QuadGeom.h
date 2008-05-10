@@ -80,7 +80,7 @@ namespace Nektar
                     return m_verts[i]->GetVid();
                 }
                 
-                inline const SegGeomSharedPtr GetEdge(int i) const
+                inline const SegGeomSharedPtr GetEdge(const int i) const
                 {
                     ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
                     return m_edges[i];
@@ -90,6 +90,26 @@ namespace Nektar
                 {
                     ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
                     return m_eorient[i];
+                }
+
+                inline StdRegions::EdgeOrientation GetCartesianEorient(const int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                    if(i < 2)
+                    {
+                        return m_eorient[i];
+                    }
+                    else
+                    {
+                        if(m_eorient[i] == StdRegions::eForwards)
+                        {
+                            return StdRegions::eBackwards;
+                        }
+                        else
+                        {
+                            return StdRegions::eForwards; 
+                        }
+                    }
                 }
 
                 /// \brief Return the edge number of the given edge, or -1, if 
@@ -165,6 +185,11 @@ namespace Nektar
                 {
                     return GetEorient(i);
                 }
+
+                virtual StdRegions::EdgeOrientation v_GetCartesianEorient(const int i) const
+                {
+                    return GetCartesianEorient(i);
+                }
                 
                 virtual int v_WhichEdge(SegGeomSharedPtr edge)
                 {
@@ -184,6 +209,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.18  2008/05/09 20:33:16  ehan
+// Fixed infinity loop of recursive function.
+//
 // Revision 1.17  2008/04/06 06:00:38  bnelson
 // Changed ConstArray to Array<const>
 //

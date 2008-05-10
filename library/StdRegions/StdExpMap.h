@@ -56,42 +56,46 @@ namespace Nektar
 
         void SetMap(const int id, const int val)
         {
-        ASSERTL1(id < m_len,"id is larger than length of map");
-
-        m_map[id] = val;
+            ASSERTL1(id < m_len,"id is larger than length of map");
+            
+            m_map[id] = val;
         }
         
         inline int GetLen()
         {
-        return m_len;
+            return m_len;
         }
         
         inline const Array<OneD, const int>& GetMap() const
         {
-                return m_map;
+            return m_map;
+        }
+
+        inline const Array<OneD, const int>& GetSign() const
+        {
+            return m_sign;
+        }
+
+
+        inline const Array<OneD, int>& UpdateSign() 
+        {
+            return m_sign;
+        }
+        
+        inline NekDouble GetSign(const int i) 
+        {
+        
+            return (NekDouble) m_sign[i];
         }
         
         int operator[](const int i) const
         {
-        
-            if((i>=0) && (i<m_len))
-            {
-                return m_map[i];
-            }
-            ASSERTL0(false, "Invalid Index used in [] operator");
-        
-            return m_map[0]; //should never be reached
+            return m_map[i];
         }
         
         int& operator[](const int i)
         {
-            if((i>=0) && (i<m_len))
-            {
-                return m_map[i];
-            }
-            
-            ASSERTL0(false, "Invalid Index used in [] operator");
-            return m_map[0]; //should never be reached
+            return m_map[i];
         }
         
     protected:
@@ -100,6 +104,7 @@ namespace Nektar
         
         int m_len;
         Array<OneD, int> m_map;
+        Array<OneD, int> m_sign;
     };
     
     } // end of namespace
@@ -109,6 +114,9 @@ namespace Nektar
 
 /**
  * $Log: StdExpMap.h,v $
+ * Revision 1.10  2008/04/06 06:04:14  bnelson
+ * Changed ConstArray to Array<const>
+ *
  * Revision 1.9  2007/07/20 02:16:52  bnelson
  * Replaced boost::shared_ptr with Nektar::ptr
  *

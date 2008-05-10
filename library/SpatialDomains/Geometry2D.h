@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMETRY2D_H
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY2D_H
 
+#include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 
 #include <SpatialDomains/Geometry.h>
@@ -51,6 +52,12 @@ namespace Nektar
             Geometry2D();
             Geometry2D(const int coordim);
             ~Geometry2D();
+
+
+            StdRegions::StdExpansion2DSharedPtr GetXmap(const int i)
+            {
+                return m_xmap[i];
+            }
 
             // Wrappers around virtual Functions (for the FaceComponent classes)
             void AddElmtConnected(int gvo_id, int locid)
@@ -129,6 +136,11 @@ namespace Nektar
                 return v_GetEorient(i);
             }
 
+            inline StdRegions::EdgeOrientation GetCartesianEorient(const int i) const
+            {
+                return v_GetCartesianEorient(i);
+            }
+
             int WhichEdge(SegGeomSharedPtr edge)
             {
                 return v_WhichEdge(edge);
@@ -136,7 +148,10 @@ namespace Nektar
 
         protected:
 
+            Array<OneD, StdRegions::StdExpansion2DSharedPtr> m_xmap;
+
         private:
+
             virtual void v_AddElmtConnected(int gvo_id, int locid)
             {  
                 NEKERROR(ErrorUtil::efatal,
@@ -240,6 +255,13 @@ namespace Nektar
                 return StdRegions::eForwards;
             }
 
+            virtual StdRegions::EdgeOrientation v_GetCartesianEorient(const int i) const
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return StdRegions::eForwards;
+            }
+
             virtual int v_WhichEdge(SegGeomSharedPtr edge)
             {
                 NEKERROR(ErrorUtil::efatal,
@@ -252,6 +274,8 @@ namespace Nektar
         typedef std::vector< Geometry2DSharedPtr > Geometry2DVector;
         typedef std::vector< Geometry2DSharedPtr >::iterator Geometry2DVectorIter;
 
+        typedef boost::shared_ptr<Geometry2D> Geometry2DSharedPtr;
+
     }; //end of namespace
 }; //end of namespace
 
@@ -259,6 +283,9 @@ namespace Nektar
 
 //
 // $Log: Geometry2D.h,v $
+// Revision 1.4  2008/04/06 06:00:37  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.3  2008/04/02 22:19:03  pvos
 // Update for 2D local to global mapping
 //

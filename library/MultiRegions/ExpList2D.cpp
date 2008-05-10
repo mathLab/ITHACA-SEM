@@ -70,7 +70,14 @@ namespace Nektar
             SpatialDomains::Composite comp;
 
             const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-                        
+            m_ncoeffs = 0;
+            m_npoints = 0;
+            
+            m_transState = eNotSet; 
+            m_physState  = false;
+            
+            m_exp_offset = Array<OneD,int>(expansions.size());
+
             for(i = 0; i < expansions.size(); ++i)
             {
                 SpatialDomains::TriGeomSharedPtr TriangleGeom;
@@ -89,6 +96,7 @@ namespace Nektar
                         (*m_exp).push_back(tri);
                     }
                     
+                    m_exp_offset[i] = m_ncoeffs;
                     m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
                         + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
@@ -97,6 +105,8 @@ namespace Nektar
                 {
                     quad = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(QuadBa,QuadBb,QuadrilateralGeom);
                     (*m_exp).push_back(quad);
+
+                    m_exp_offset[i] = m_ncoeffs;
                     m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
                     m_npoints += QuadBa.GetNumPoints()*QuadBb.GetNumPoints();
                 }
@@ -126,6 +136,8 @@ namespace Nektar
 
             const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();    
             
+            m_exp_offset = Array<OneD,int>(expansions.size());
+
             for(i = 0; i < expansions.size(); ++i)
             {
                 SpatialDomains::TriGeomSharedPtr TriangleGeom;
@@ -148,6 +160,7 @@ namespace Nektar
                         (*m_exp).push_back(tri);
                     }
                     
+                    m_exp_offset[i] = m_ncoeffs;
                     m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
                         + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
@@ -160,6 +173,7 @@ namespace Nektar
                     quad = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(QuadBa,QuadBb,QuadrilateralGeom);
                     (*m_exp).push_back(quad);
                     
+                    m_exp_offset[i] = m_ncoeffs;
                     m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
                     m_npoints += QuadBa.GetNumPoints()*QuadBb.GetNumPoints();
                 }
@@ -178,6 +192,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.18  2008/04/02 22:19:54  pvos
+* Update for 2D local to global mapping
+*
 * Revision 1.17  2008/03/18 14:14:13  pvos
 * Update for nodal triangular helmholtz solver
 *

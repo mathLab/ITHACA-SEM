@@ -101,7 +101,8 @@ namespace Nektar
                 case eFourier:      
                 case eGLL_Lagrange: 
                 case eLegendre:    
-                case eChebyshev:  
+                case eChebyshev:
+                case eMonomial:
                     value = m_nummodes;
                     break;
 

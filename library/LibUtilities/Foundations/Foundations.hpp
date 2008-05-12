@@ -53,6 +53,7 @@ namespace Nektar
             eGLL_Lagrange, //!< Lagrange for SEM basis \f$ h_p(z_i) \f$
             eLegendre,     //!< Legendre Polynomials \f$ L_p(z_i) = P^{0,0}_p(z_i)\f$. Same as Ortho_A
             eChebyshev,    //!< Chebyshev Polynomials \f$ T_p(z_i) = P^{-1/2,-1/2}_p(z_i)\f$
+            eMonomial,     //!< Monomial polynomials 
             SIZE_BasisType //!< Length of enum list
         };
 
@@ -68,7 +69,8 @@ namespace Nektar
             "Fourier",
             "GLL_Lagrange",
             "Legendre",
-            "Chebyshev"
+            "Chebyshev",
+            "Monomial"
         };
 
         enum PointsType

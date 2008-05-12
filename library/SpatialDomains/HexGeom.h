@@ -66,10 +66,34 @@ namespace Nektar
             void AddElmtConnected(int gvo_id, int locid);
             int  NumElmtConnected() const;
             bool IsElmtConnected(int gvo_id, int locid) const;
+            void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+
+            inline void SetOwnData()
+            {
+               m_owndata = true;
+            }
 
             inline int GetEid() const 
             {
                 return m_eid;
+            }
+
+            inline int GetVid(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 7),"Verted id must be between 0 and 7");
+                return m_verts[i]->GetVid();
+            }
+
+            inline const SegGeomSharedPtr GetEdge(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
+                return m_edges[i];
+            }
+
+            inline StdRegions::EdgeOrientation GetEorient(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
+                return m_eorient[i];
             }
 
             inline int GetCoordDim() const 
@@ -89,6 +113,29 @@ namespace Nektar
 
             NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
+            
+            /// \brief Return the edge number of the given edge, or -1, if
+            /// not an edge of this element.
+            int WhichEdge(SegGeomSharedPtr edge)
+            {
+                int returnval = -1;
+
+                SegGeomVector::iterator edgeIter;
+                int i;
+
+                for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
+                {
+                    if (*edgeIter == edge)
+                    {
+                        returnval = i;
+                        break;
+                    }
+                }
+
+                return returnval;
+            }
+
+
             static const int kNverts = 8;
             static const int kNedges = 12;
             static const int kNqfaces = 6;
@@ -98,7 +145,7 @@ namespace Nektar
        protected:
 
             VertexComponentVector           m_verts;
-            EdgeComponentVector             m_edges;
+            SegGeomVector                   m_edges;
             QuadFaceComponentVector         m_qfaces;
             StdRegions::EdgeOrientation     m_eorient[kNedges];
             StdRegions::FaceOrientation     m_forient[kNfaces];
@@ -110,6 +157,24 @@ namespace Nektar
             Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
         
         private:
+
+            bool m_owndata;
+
+            virtual void v_GenGeomFactors(void)
+            {
+                GenGeomFactors( );
+            }
+
+            virtual void v_SetOwnData()
+            {
+                SetOwnData();
+            }
+
+            virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+            {
+                GetLocCoords(coords,Lcoords);
+            }
+            
             virtual void v_AddElmtConnected(int gvo_id, int locid)
             {
                 AddElmtConnected(gvo_id,locid);
@@ -128,6 +193,21 @@ namespace Nektar
             virtual int v_GetEid() const 
             {
                 return GetEid();
+            }
+
+            virtual int v_GetVid(int i) const
+            {
+                return GetVid(i);
+            }
+
+            virtual const SegGeomSharedPtr v_GetEdge(int i) const
+            {
+                return GetEdge(i);
+            }
+
+            virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
+            {
+               return GetEorient(i);
             }
 
             virtual int v_GetCoordDim() const 
@@ -150,6 +230,11 @@ namespace Nektar
                 return GetCoord(i,Lcoord);
             }
 
+            virtual int v_WhichEdge(SegGeomSharedPtr edge)
+            {
+                return WhichEdge(edge);
+            }
+
         };
 
     }; //end of namespace
@@ -159,6 +244,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.9  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.8  2008/04/02 22:19:03  pvos
 // Update for 2D local to global mapping
 //

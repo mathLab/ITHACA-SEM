@@ -74,6 +74,24 @@ namespace Nektar
             void FillGeom();
             void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
+            inline int GetFid(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                return m_tfaces[i]->GetFid();
+            }
+
+            inline StdRegions::FaceOrientation GetFaceorient(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                return m_forient[i];
+            }
+
+            inline const TriGeomSharedPtr GetFace(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                return m_tfaces[i];
+            }
+            
             inline int GetEid() const 
             {
                 return m_eid;
@@ -91,10 +109,38 @@ namespace Nektar
                 return m_eorient[i];
             }
             
+            inline const SegGeomSharedPtr GetEdge(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 5),"Edge id must be between 0 and 5");
+                return m_edges[i];
+            }
+            
             inline int GetVid(const int i) const
             {
                 ASSERTL2((i >=0) && (i <= 3),"Vertex id must be between 0 and 3");
                 return m_verts[i]->GetVid();
+            }
+
+
+            /// \brief Return the face number of the given face, or -1, if
+            /// not an face of this element.
+            int WhichFace(TriGeomSharedPtr face)
+            {
+                int returnval = -1;
+
+                TriGeomVector::iterator faceIter;
+                int i;
+
+                for (i=0,faceIter = m_tfaces.begin(); faceIter != m_tfaces.end(); ++faceIter,++i)
+                {
+                    if (*faceIter == face)
+                    {
+                        returnval = i;
+                        break;
+                    }
+                }
+
+                return returnval;
             }
             
             /// \brief Return the edge number of the given edge, or -1, if
@@ -167,7 +213,22 @@ namespace Nektar
             {
                 GenGeomFactors();
             }
+            
+            virtual void v_SetOwnData()
+            {
+                SetOwnData();   
+            }
 
+            virtual void v_FillGeom()
+            {
+                FillGeom();
+            }
+
+            virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+            {
+                GetLocCoords(coords,Lcoords);
+            }
+                       
             virtual void v_AddElmtConnected(int gvo_id, int locid)
             {
                 AddElmtConnected(gvo_id,locid);
@@ -182,10 +243,35 @@ namespace Nektar
             {
                 return IsElmtConnected(gvo_id,locid);
             }
-            
-            virtual int v_GetEid() const 
+
+            virtual int v_GetFid(int i) const
             {
-                return GetEid();
+               return GetFid(i);
+            }
+
+            virtual const TriGeomSharedPtr v_GetFace(int i) const
+            {
+               return GetFace(i);
+            }
+            
+            virtual int v_GetEid(int i) const 
+            {
+                return GetEid(i);
+            }
+
+            virtual const SegGeomSharedPtr v_GetEdge(int i) const
+            {
+                return GetEdge(i);
+            }
+
+            virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
+            {
+                return GetEorient(i);
+            }
+
+            virtual int v_GetVid(int i) const
+            {
+                return GetVid(i);
             }
 
             virtual int v_GetCoordDim() const 
@@ -208,6 +294,16 @@ namespace Nektar
                 return GetCoord(i,Lcoord);
             }
 
+            virtual int v_WhichEdge(SegGeomSharedPtr edge)
+            {
+                return WhichEdge(edge);
+            }
+
+            virtual int v_WhichFace(TriGeomSharedPtr face)
+            {
+                return WhichFace(face);
+            }
+
         };
 
     }; //end of namespace
@@ -217,6 +313,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.10  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.9  2008/04/02 22:19:04  pvos
 // Update for 2D local to global mapping
 //

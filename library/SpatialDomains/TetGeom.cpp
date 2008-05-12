@@ -259,7 +259,7 @@ namespace Nektar
 
             m_state = ePtsFilled;
 
-       }
+       }  
 
        void TetGeom::GetLocCoords(const Array<OneD, const NekDouble>& coords, Array<OneD, NekDouble>& Lcoords)
        {
@@ -315,6 +315,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.6  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.5  2008/03/25 08:42:16  ehan
 // Added constructor, GetLocCoords(), and FillGeom().
 //

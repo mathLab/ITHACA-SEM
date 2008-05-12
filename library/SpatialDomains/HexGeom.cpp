@@ -84,12 +84,20 @@ namespace Nektar
             return m_xmap[i]->PhysEvaluate(Lcoord);
         }
 
+         void HexGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+         {
+         
+         }
+
 
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.4  2008/04/06 06:00:37  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.3  2008/02/08 23:05:28  jfrazier
 // More work on 3D components.
 //

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ContField2D.cpp
+// File ContField3D.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Field definition for 2D domain with boundary conditions
+// Description: Field definition for 3D domain with boundary conditions
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +73,7 @@ namespace Nektar
             m_bndConstraint(),
             m_bndTypes()
         {
-            GenerateField3D(graph3D,bcs,variable);
+            GenerateField3D(graph3D, bcs, variable);
 
                //TODO implement "LocalToGlobalMap3D"
             // m_locToGloMap = MemoryManager<LocalToGlobalMap3D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph3D, m_bndConstraint, m_bndTypes);
@@ -93,7 +93,7 @@ namespace Nektar
             m_bndConstraint(),
             m_bndTypes()
         {
-            GenerateField3D(graph3D,bcs,bcs.GetVariable(bc_loc));
+            GenerateField3D(graph3D, bcs, bcs.GetVariable(bc_loc));
 
              //TODO implement "LocalToGlobalMap3D"
             // m_locToGloMap = MemoryManager<LocalToGlobalMap3D>::AllocateSharedPtr(m_ncoeffs,*m_exp, graph3D,m_bndConstraint, m_bndTypes);
@@ -113,7 +113,7 @@ namespace Nektar
             m_bndConstraint(),
             m_bndTypes()
         {
-            GenerateField3D(graph3D,bcs,variable);
+            GenerateField3D(graph3D, bcs, variable);
 
              //TODO implement "LocalToGlobalMap3D"             
             // m_locToGloMap = MemoryManager<LocalToGlobalMap3D>::AllocateSharedPtr(m_ncoeffs,*m_exp, graph3D,m_bndConstraint,m_bndTypes);
@@ -123,12 +123,162 @@ namespace Nektar
         }
 
 
+        ContField3D::~ContField3D()
+        {
+        }
 
-    ContField3D::~ContField3D()
-    {
-    }
 
-     void ContField3D::FwdTrans(const ExpList &In)
+//         void ContField3D::GenerateField3D(SpatialDomains::MeshGraph3D &graph3D,
+//                                            SpatialDomains::BoundaryConditions &bcs,
+//                                            const std::string variable)
+//         {
+//             int mycnt = 0;
+// 
+//             int i,j,m;
+//             int cnt = 0;
+//             int coeffcnt = 0;
+//             int nbnd;
+//             int nummodes;
+//             int npoints;
+//             SpatialDomains::BoundaryConditionShPtr locBCond;
+//             SpatialDomains::BoundaryRegionShPtr locBregion;
+//             SpatialDomains::SegGeomSharedPtr segGeom;         
+//             LocalRegions::SegExpSharedPtr collSeg;
+//             StdRegions::StdSegExpSharedPtr collStdSeg;
+// 
+//             SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+//             SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
+// 
+//             MultiRegions::ExpList2DSharedPtr locExpList;
+//             //LocalRegions::SegExpSharedPtr locSegExp;
+//             LocalRegions::QuadExpSharedPtr locQuadExp;
+//             LocalRegions::TriExpSharedPtr locTriExp;
+// 
+//             nbnd = bregions.size();
+// 
+//             m_bndConstraint = Array<OneD,MultiRegions::ExpList2DSharedPtr>(nbnd);
+//             m_bndTypes = Array<OneD,SpatialDomains::BoundaryConditionType>(nbnd);
+// 
+//             // list Dirichlet boundaries first
+//             for( i = 0; i < nbnd; ++i)
+//             {
+//                 locBCond = (*(bconditions[i]))[variable];
+//                 if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+//                 {
+//                     locBregion = bregions[i];
+// 
+//                     //TODO: check this
+//                     locExpList = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*locBregion, graph3D);
+// 
+//                     coeffcnt=0;
+//                     for(j = 0; j < locExpList->GetExpSize(); j++)
+//                     {
+//                         locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(locExpList->GetExp(j));
+//                         locTriExp  = boost::dynamic_pointer_cast<LocalRegions::TriExp>(locExpList->GetExp(j));
+//                         
+//                         StdRegions::StdExpansion2DSharedPtr locExp =
+//                             boost::static_pointer_cast<StdRegions::StdExpansion2D>(locExpList->GetExp(j));
+// 
+//                         nummodes = locExp->GetNcoeffs();
+// 
+//                         // Create a new BasisKey for projecting the dirichlet boundary conditions onto the boundary.
+//                         // If the original BasisKey has N modes, the new BasisKey employs N GLL quadrature points such
+//                         // that the FwdTrans using this new basis is in fact a collocation projection trough this
+//                         // GLL-points. As a result, the expansion will be C0 continuous on the boundary.
+// 
+//                         // The PointsKey used for the (collocation) projection
+//                         LibUtilities::PointsKey collPointsKey_0(nummodes,LibUtilities::eGaussLobattoLegendre);
+//                         LibUtilities::PointsKey collPointsKey_1(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+//                         // The BasisKey used for the (collocation) projection
+//                         LibUtilities::BasisKey collBasisKey_0(locExp->GetBasisType(0),nummodes,collPointsKey_0);
+//                         LibUtilities::BasisKey collBasisKey_1(locExp->GetBasisType(1),nummodes,collPointsKey_1);
+// 
+//                         // Create a segment based on the new BasisKey in order to perfrom the projection
+//                         //segGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(locSegExp->GetGeom());
+//                         //collSeg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(collBasisKey, segGeom);
+//                         //collStdSeg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(collBasisKey);
+// 
+//                         // Create a segment based on the new BasisKey in order to perfrom the projection
+//                         SpatialDomains::Geometry2DSharedPtr geom = boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>(locExp->GetGeom());
+//                         StdRegions::StdQuadExpSharedPtr collStd2D = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(collBasisKey_0, collBasisKey_1);
+//                         LocalRegions::QuadExpSharedPtr coll2D = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(collBasisKey_0, collBasisKey_1, geom);
+// 
+//                         // Calculate the coordinates of the N GLL quadrature points
+//                         Array<OneD,NekDouble> x0(nummodes, 0.0);
+//                         Array<OneD,NekDouble> x1(nummodes, 0.0);
+//                         Array<OneD,NekDouble> x2(nummodes, 0.0);
+//                         coll2D->GetCoords(x0,x1,x2);
+// 
+//                         // Evaluate the Dirichlet boundary condition at the N GLL quadrature points
+//                         for(m = 0; m < nummodes; ++m)
+//                         {
+//                             (coll2D->UpdatePhys())[m] = boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(locBCond)->
+//                              m_DirichletCondition.Evaluate(x0[m],x1[m],x2[m]);
+//                         }
+//                         // Perform a FwdTrans() to calculate the expansion coefficients.
+//                         // As both the original as the new expansion (used for the projection) are of the same order,
+//                         // the coefficients will be identical and hence, can directly be stored at the right place
+//                         Array<OneD,NekDouble> outarray;
+//                         collStd2D->FwdTrans(coll2D->GetPhys(),outarray = (locExpList->UpdateCoeffs()) + coeffcnt);
+// 
+//                         coeffcnt += nummodes;
+//                     }
+// 
+//                     m_bndConstraint[cnt] = locExpList;
+//                     m_bndTypes[cnt++] = SpatialDomains::eDirichlet;
+//                 } // end if Dirichlet
+//             }
+//             // list other boundaries
+//             for(i = 0; i < nbnd; ++i)
+//             {
+//                 locBCond = (*(bconditions[i]))[variable];
+// 
+//                 if(locBCond->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+//                 {
+//                     locBregion = bregions[i];
+// 
+//                     //TODO: check this
+//                     locExpList = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*locBregion,graph3D);
+// 
+//                     npoints = locExpList->GetPointsTot();
+//                     Array<OneD,NekDouble> x0(npoints,0.0);
+//                     Array<OneD,NekDouble> x1(npoints,0.0);
+//                     Array<OneD,NekDouble> x2(npoints,0.0);
+//                     locExpList->GetCoords(x0,x1,x2);
+// 
+//                     if(locBCond->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+//                     {
+//                         for(m = 0; m < npoints; m++)
+//                         {
+//                             (locExpList->UpdatePhys())[m] = boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(locBCond)->
+//                                 m_NeumannCondition.Evaluate(x0[m],x1[m],x2[m]);
+//                         }
+//                         locExpList->IProductWRTBase(*locExpList);
+//                         m_bndConstraint[cnt] = locExpList;
+//                         m_bndTypes[cnt++] = SpatialDomains::eNeumann;
+//                     }
+//                     else if(locBCond->GetBoundaryConditionType() == SpatialDomains::eRobin)
+//                     {
+//                         boost::shared_ptr<SpatialDomains::RobinBoundaryCondition> robinBC =
+//                             boost::static_pointer_cast<SpatialDomains::RobinBoundaryCondition>(locBCond);
+//                         for(m = 0; m < npoints; m++)
+//                         {
+//                             (locExpList->UpdatePhys())[m] = -robinBC->m_a.Evaluate(x0[m],x1[m],x2[m])/
+//                                 robinBC->m_b.Evaluate(x0[m],x1[m],x2[m]);
+//                         }
+//                         locExpList->IProductWRTBase(*locExpList);
+//                         m_bndConstraint[cnt] = locExpList;
+//                         m_bndTypes[cnt++] = SpatialDomains::eRobin;
+//                     }
+//                     else
+//                     {
+//                         ASSERTL0(false,"This type of BC not implemented yet");
+//                     }
+//                 }
+//             }
+//         }
+
+        void ContField3D::FwdTrans(const ExpList &In)
         {
             GlobalLinSysKey key(StdRegions::eMass);
             GlobalSolve(key,In);
@@ -147,6 +297,7 @@ namespace Nektar
             GlobalSolve(key,In,-1.0);
         }
 
+       // TODO: check
        void ContField3D::GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs, NekDouble ScaleForcing)
         {
             int i,j;

@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ContExpList3D.h>
 #include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/GlobalLinSys.h>
 
 #include <SpatialDomains/MeshGraph3D.h>

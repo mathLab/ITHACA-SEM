@@ -82,6 +82,7 @@ namespace Nektar
             const bool GLL_Lagrange_Inited = BasisManager().RegisterCreator(BasisKey(eGLL_Lagrange, 0, NullPointsKey), Basis::Create);
             const bool Legendre_Inited = BasisManager().RegisterCreator(BasisKey(eLegendre, 0, NullPointsKey), Basis::Create);
             const bool Chebyshev_Inited = BasisManager().RegisterCreator(BasisKey(eChebyshev, 0, NullPointsKey), Basis::Create);
+            const bool Monomial_Inited = BasisManager().RegisterCreator(BasisKey(eMonomial, 0, NullPointsKey), Basis::Create);
         };
 
         PointsManagerT &PointsManager(void)
@@ -100,6 +101,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.15  2007/10/03 03:00:13  bnelson
+Added precompiled headers.
+
 Revision 1.14  2007/07/20 00:28:26  bnelson
 Replaced boost::shared_ptr with Nektar::ptr
 

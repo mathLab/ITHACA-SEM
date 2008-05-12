@@ -144,26 +144,20 @@ namespace Nektar
                 for (p=0; p<numModes; ++p, mode += numPoints)
                 {
                     Polylib::jacobfd(numPoints, z.data(), mode, NULL, p, 0.0, 0.0);
-
-                    // normalise 
+                    // normalise
                     scal = sqrt(0.5*(2.0*p+1.0));
                     for(i = 0; i < numPoints; ++i)
                     {
                         mode[i] *= scal;
                     }
                 }
-
                 // define derivative basis
-                Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
-                    numPoints,m_bdata.data(),numPoints,0.0,
-                    m_dbdata.data(),numPoints);
+                Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
+                            m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
                 break;
 
-
             case eOrtho_B:
-                {
-                
-        
+                {                       
                      int P = numModes - 1, Q = numModes - 1;
                      NekDouble *mode = m_bdata.data();
             
@@ -178,7 +172,7 @@ namespace Nektar
 
                      // define derivative basis 
                      Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)/2,numPoints,1.0,D,numPoints,
-                                 m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
+                                  m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
     
 //   ******************************* Old version of Ortho-B  *****************************************
 //                     const NekDouble *one_m_z_pow;//,fac;
@@ -435,6 +429,24 @@ namespace Nektar
                     numPoints);
                 break;
 
+             case eMonomial:
+             {
+                 int P = numModes - 1;
+                 NekDouble *mode = m_bdata.data();
+
+                   for( int p = 0; p <= P; ++p, mode += numPoints ) {
+                            Polylib::jacobfd(numPoints, z.data(), mode, NULL, p, 0.0, 0.0);
+                            for( int j = 0; j < numPoints; ++j ) {
+                                 mode[j] *= pow(z[j], p);
+                        }
+                    }
+
+                    // define derivative basis
+                    Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
+                                m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
+               }            
+            break;
+
             default:
                 ASSERTL0(false, "Basis Type not known or "
                     "not implemented at this time.");
@@ -521,6 +533,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.29  2008/05/07 16:04:24  pvos
+* Mapping + Manager updates
+*
 * Revision 1.28  2008/04/06 22:28:25  bnelson
 * Fixed gcc compiler warnings.
 *

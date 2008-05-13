@@ -196,7 +196,7 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr  locSegExp, Seg;
             LocalRegions::QuadExpSharedPtr locQuadExp;
             LocalRegions::TriExpSharedPtr  locTriExp;
-            SpatialDomains::SegGeomSharedPtr  SegGeom;
+            SpatialDomains::Geometry1DSharedPtr  SegGeom;
             
             // count up global number of edges
             cnt = 0;
@@ -307,6 +307,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.25  2008/05/10 18:27:33  sherwin
+* Modifications necessary for QuadExp Unified DG Solver
+*
 * Revision 1.24  2008/03/18 14:14:13  pvos
 * Update for nodal triangular helmholtz solver
 *

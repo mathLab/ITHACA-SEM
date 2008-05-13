@@ -430,22 +430,21 @@ namespace Nektar
                 break;
 
              case eMonomial:
-             {
+                {
                  int P = numModes - 1;
                  NekDouble *mode = m_bdata.data();
 
-                   for( int p = 0; p <= P; ++p, mode += numPoints ) {
-                            Polylib::jacobfd(numPoints, z.data(), mode, NULL, p, 0.0, 0.0);
-                            for( int j = 0; j < numPoints; ++j ) {
-                                 mode[j] *= pow(z[j], p);
+                    for( int p = 0; p <= P; ++p, mode += numPoints ) {
+                        for( int i = 0; i < numPoints; ++i ) {
+                            mode[i] = pow(z[i], p);
                         }
                     }
 
                     // define derivative basis
                     Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
                                 m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
-               }            
-            break;
+                }            
+                break;
 
             default:
                 ASSERTL0(false, "Basis Type not known or "
@@ -533,6 +532,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.30  2008/05/12 23:45:46  ehan
+* Added monomial basis
+*
 * Revision 1.29  2008/05/07 16:04:24  pvos
 * Mapping + Manager updates
 *

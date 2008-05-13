@@ -11,13 +11,13 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-  int i,j;
+  int i,j; 
   int order, nq;
   LibUtilities::PointsType Qtype;
   LibUtilities::BasisType  btype;
   StdRegions::StdExpansion1D  *E;
   Array<OneD,NekDouble> sol;
-  
+   
   if(argc != 4)
   {
     fprintf(stderr,"Usage: Project1D Type order nq \n");
@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\t Lagrange   = 8\n");
     fprintf(stderr,"\t Legendre   = 9\n"); 
     fprintf(stderr,"\t Chebyshev  = 10\n");
+    fprintf(stderr,"\t Monomial   = 11\n");
  
     fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
 
@@ -83,11 +84,11 @@ int main(int argc, char *argv[])
   {
       for(i = 0; i < nq; ++i)
       {
-      sol[i] = 0.0;
-      for(j = 0; j < order; ++j)
-      {
-          sol[i] += pow(z[i],j);
-      }
+         sol[i] = 0.0;
+         for(j = 0; j < order; ++j)
+         {
+             sol[i] += pow(z[i],j);
+         }
       }
   }
   else
@@ -121,13 +122,13 @@ int main(int argc, char *argv[])
   cout << "L infinity error: " << E->Linf(sol) << endl;
   cout << "L 2 error:        " << E->L2  (sol) << endl;
   //--------------------------------------------
-
+ 
   //-------------------------------------------
   // Evaulate solution at mid point and print error
   if(btype != LibUtilities::eFourier)
   {
       sol[0] = 1;
-  }
+  } 
   else
   {
       sol[0] =  order/2;
@@ -137,6 +138,10 @@ int main(int argc, char *argv[])
   x[0] = 0;
   NekDouble nsol = E->PhysEvaluate(x);
   cout << "error at x = 0: " << nsol - sol[0] << endl;
+
+  cout << "nsol = " << nsol << endl;
+  cout << "sol[0] = " << sol[0] << endl;
+  
   //-------------------------------------------
 
   return 0;    

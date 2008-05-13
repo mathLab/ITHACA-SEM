@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
   // Backward Transform Solution to get projected values
   E->BwdTrans(*E);
   //-------------------------------------------  
-
+ 
   //--------------------------------------------
   // Calculate L_inf error 
   cout << "L infinity error: " << E->Linf(sol) << endl;
@@ -139,9 +139,6 @@ int main(int argc, char *argv[])
   NekDouble nsol = E->PhysEvaluate(x);
   cout << "error at x = 0: " << nsol - sol[0] << endl;
 
-  cout << "nsol = " << nsol << endl;
-  cout << "sol[0] = " << sol[0] << endl;
-  
   //-------------------------------------------
 
   return 0;    

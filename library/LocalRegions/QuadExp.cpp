@@ -324,7 +324,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         Vmath::Vmul(nqtot,gmat[0],1,inarray,1,tmp1,1);
-                        Vmath::Vmul(nqtot,gmat[0],1,inarray,1,tmp2,1);
+                        Vmath::Vmul(nqtot,gmat[1],1,inarray,1,tmp2,1);
                     }
                     else
                     {
@@ -1918,6 +1918,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.33  2008/05/10 18:27:32  sherwin
+ *    Modifications necessary for QuadExp Unified DG Solver
+ *
  *    Revision 1.32  2008/04/06 05:59:05  bnelson
  *    Changed ConstArray to Array<const>
  *

@@ -43,7 +43,7 @@ namespace Nektar
 
         // constructor
         SegExp::SegExp(const LibUtilities::BasisKey &Ba, 
-                       const SpatialDomains::SegGeomSharedPtr &geom):
+                       const SpatialDomains::Geometry1DSharedPtr &geom):
             StdRegions::StdSegExp(Ba),
             m_geom(geom),
             m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
@@ -1165,6 +1165,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.40  2008/05/10 18:27:33  sherwin
+// Modifications necessary for QuadExp Unified DG Solver
+//
 // Revision 1.39  2008/04/06 05:59:05  bnelson
 // Changed ConstArray to Array<const>
 //

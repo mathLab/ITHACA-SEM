@@ -196,7 +196,6 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr  locSegExp, Seg;
             LocalRegions::QuadExpSharedPtr locQuadExp;
             LocalRegions::TriExpSharedPtr  locTriExp;
-            SpatialDomains::Geometry1DSharedPtr  SegGeom;
             
             // count up global number of edges
             cnt = 0;
@@ -220,7 +219,8 @@ namespace Nektar
                         {
 
                             LibUtilities::BasisKey bkey  = locSegExp->GetBasis(0)->GetBasisKey();
-                            SegGeom = locSegExp->GetGeom();
+                            const SpatialDomains::Geometry1DSharedPtr& SegGeom = 
+                                locSegExp->GetGeom();
                             Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
                             EdgeDone[SegGeom->GetEid()] = 1;
                             
@@ -245,7 +245,7 @@ namespace Nektar
                 {
                     for(j = 0; j < locQuadExp->GetNedges(); ++j)
                     {   
-                        SegGeom = (locQuadExp->GetGeom())->GetEdge(j);
+                        const SpatialDomains::SegGeomSharedPtr& SegGeom = (locQuadExp->GetGeom())->GetEdge(j);
 
                         id = SegGeom->GetEid();
                         
@@ -270,7 +270,7 @@ namespace Nektar
                 {
                     for(j = 0; j < locTriExp->GetNedges(); ++j)
                     {    
-                        SegGeom = (locTriExp->GetGeom())->GetEdge(j);
+                        const SpatialDomains::SegGeomSharedPtr&  SegGeom = (locTriExp->GetGeom())->GetEdge(j);
 
                         id = SegGeom->GetEid();
                         
@@ -307,6 +307,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.26  2008/05/13 22:06:58  sherwin
+* Changed SegGeom to Geometry1D
+*
 * Revision 1.25  2008/05/10 18:27:33  sherwin
 * Modifications necessary for QuadExp Unified DG Solver
 *

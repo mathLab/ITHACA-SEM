@@ -60,7 +60,7 @@ namespace Nektar
             /// \brief Constructor using BasisKey class for quadrature
             /// points and order definition 
             SegExp(const LibUtilities::BasisKey &Ba, 
-                   const SpatialDomains::SegGeomSharedPtr &geom);
+                   const SpatialDomains::Geometry1DSharedPtr &geom);
 
 
             /// \brief Constructor using BasisKey class for quadrature
@@ -91,7 +91,7 @@ namespace Nektar
                 return m_metricinfo;
             }
 
-            const SpatialDomains::Geometry1DSharedPtr& GetGeom()
+            const SpatialDomains::Geometry1DSharedPtr& GetGeom() const
             {
                 return m_geom;
             }
@@ -444,6 +444,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.32  2008/05/10 18:27:33  sherwin
+// Modifications necessary for QuadExp Unified DG Solver
+//
 // Revision 1.31  2008/04/06 05:59:05  bnelson
 // Changed ConstArray to Array<const>
 //

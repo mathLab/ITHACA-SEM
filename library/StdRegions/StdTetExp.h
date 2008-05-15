@@ -66,7 +66,7 @@ namespace Nektar
             StdTetExp(const StdTetExp &T);
 
             /** \brief Destructor */
-            ~StdTetExp();
+            ~StdTetExp(); 
 
             /** \brief Return Shape of region, using  ShapeType enum list. 
              *  i.e. Tetrahedron
@@ -86,7 +86,7 @@ namespace Nektar
                     {
                        if(m_base[2]->GetBasisType() == LibUtilities::eModified_C)
                         {
-                        returnval = true;
+                          returnval = true;
                         }
                     }
                 }
@@ -101,20 +101,28 @@ namespace Nektar
           void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
           void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
           void PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-               Array<OneD, NekDouble> &out_d0, 
-               Array<OneD, NekDouble> &out_d1,
-               Array<OneD, NekDouble> &out_d2);
+                         Array<OneD, NekDouble> &out_d0,
+                         Array<OneD, NekDouble> &out_d1,
+                         Array<OneD, NekDouble> &out_d2);
+                         
+          /** \brief Backward tranform for triangular elements
+          *
+          *  \b Note: That 'r' (base[2]) runs fastest in this element
+          */
           void BwdTrans(const Array<OneD, const NekDouble>& inarray, 
-               Array<OneD, NekDouble> &outarray);
+                        Array<OneD, NekDouble> &outarray);
           void FwdTrans(const Array<OneD, const NekDouble>& inarray, 
-               Array<OneD, NekDouble> &outarray);
+                        Array<OneD, NekDouble> &outarray);
+                        
+          /** \brief Single Point Evaluation */
           NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
           NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords);
+          
           void WriteToFile(std::ofstream &outfile);
           void WriteCoeffsToFile(std::ofstream &outfile);
           void GetCoords(Array<OneD, NekDouble> &coords_0, 
-               Array<OneD, NekDouble> &coords_1, Array<OneD, NekDouble> &coords_2);
-
+                         Array<OneD, NekDouble> &coords_1, Array<OneD, NekDouble> &coords_2);
+                         
           void MapTo(const int edge_ncoeffs,
                      const LibUtilities::BasisType Btype, const int eid,
                      const EdgeOrientation eorient, StdExpMap &Map);
@@ -173,10 +181,10 @@ namespace Nektar
         protected:
 
          void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
-              const Array<OneD, const NekDouble>& base1, 
-              const Array<OneD, const NekDouble>& base2, 
-              const Array<OneD, const NekDouble>& inarray, 
-              Array<OneD, NekDouble> & outarray);
+                              const Array<OneD, const NekDouble>& base1,
+                              const Array<OneD, const NekDouble>& base2,
+                              const Array<OneD, const NekDouble>& inarray,
+                              Array<OneD, NekDouble> & outarray);
 
         private:
 
@@ -223,11 +231,9 @@ namespace Nektar
                 return GetEdgeBasisType(i);
             }
 
-
-            virtual void v_GetCoords(
-                Array<OneD, NekDouble> &coords_x,
-                Array<OneD, NekDouble> &coords_y,
-                Array<OneD, NekDouble> &coords_z)
+            virtual void v_GetCoords( Array<OneD, NekDouble> &coords_x,
+                                      Array<OneD, NekDouble> &coords_y,
+                                      Array<OneD, NekDouble> &coords_z)
             {
                 GetCoords(coords_x, coords_y, coords_z);
             }
@@ -248,38 +254,34 @@ namespace Nektar
                 FillMode(mode, outarray);
             }
 
-            virtual void v_PhysDeriv(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &out_dx,
-                Array<OneD, NekDouble> &out_dy,
-                Array<OneD, NekDouble> &out_dz )
+            virtual void v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD, NekDouble> &out_dx,
+                                     Array<OneD, NekDouble> &out_dy,
+                                     Array<OneD, NekDouble> &out_dz )
             {
 
                 PhysDeriv( inarray, out_dx, out_dy, out_dz );
             }
 
-            virtual void v_StdPhysDeriv(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &out_dx, 
-                Array<OneD, NekDouble> &out_dy,
-                Array<OneD, NekDouble> &out_dz )
+            virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
+                                        Array<OneD, NekDouble> &out_dx,
+                                        Array<OneD, NekDouble> &out_dy,
+                                        Array<OneD, NekDouble> &out_dz )
             {
 
                 PhysDeriv( inarray, out_dx, out_dy, out_dz );
             }
 
             /** \brief Virtual call to StdTetExp::BwdTrans */
-            virtual void v_BwdTrans(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray )
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray,
+                                    Array<OneD, NekDouble> &outarray )
             {
                 BwdTrans(inarray,outarray);
             }
 
             /** \brief Virtual call to StdTetExp::FwdTrans */
-            virtual void v_FwdTrans(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray )
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
+                                    Array<OneD, NekDouble> &outarray )
             {
                 FwdTrans(inarray,outarray);
             }
@@ -290,19 +292,19 @@ namespace Nektar
             }
 
             virtual void v_MapTo(const int edge_ncoeffs,
-                const LibUtilities::BasisType Btype, 
-                const int eid, 
-                const EdgeOrientation eorient,
-                StdExpMap &Map)
+                                 const LibUtilities::BasisType Btype,
+                                 const int eid,
+                                 const EdgeOrientation eorient,
+                                 StdExpMap &Map)
             {
                 MapTo(edge_ncoeffs, Btype, eid, eorient, Map);
             }
 
             virtual void v_MapTo_ModalFormat(const int edge_ncoeffs,
-                const LibUtilities::BasisType Btype,
-                const int eid,
-                const EdgeOrientation eorient, 
-                StdExpMap &Map)
+                                             const LibUtilities::BasisType Btype,
+                                             const int eid,
+                                             const EdgeOrientation eorient,
+                                             StdExpMap &Map)
             {
                 MapTo_ModalFormat(edge_ncoeffs, Btype, eid, eorient, Map);
             }
@@ -317,32 +319,6 @@ namespace Nektar
                 WriteCoeffsToFile(outfile);
             }
 
-            virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray)
-            {
-                std::cout << "Implement me" << std::endl;
-                return;
-            } // TODO: Implement
-         
-            virtual void v_GenLapMatrix (Array<OneD, NekDouble> & outarray)
-            {
-                std::cout << "Implement me" << std::endl;
-                return;
-            } // TODO: Implement
-            
-            virtual DNekMatSharedPtr v_GetMassMatrix()
-            {
-                std::cout << "Implement me" << std::endl;
-                int foo = 0;
-                return DNekMatSharedPtr();
-            } // TODO: Implement
-            
-            virtual DNekMatSharedPtr v_GetLapMatrix()
-            {
-                std::cout << "Implement me" << std::endl;
-                int foo = 0;
-                return DNekMatSharedPtr();
-            }  // TODO: Implement
-
         };
         
         typedef boost::shared_ptr<StdTetExp> StdTetExpSharedPtr;
@@ -354,6 +330,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.15  2008/05/15 04:15:52  ehan
+ * Added virtual function v_CreatStdMatrix()
+ *
  * Revision 1.14  2008/04/06 06:04:15  bnelson
  * Changed ConstArray to Array<const>
  *

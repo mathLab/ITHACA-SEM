@@ -730,7 +730,6 @@ namespace Nektar
         }
 
 
-        //TODO: This function need to test
         void StdTetExp::WriteToFile(std::ofstream &outfile)
         {
             int  Qx = m_base[0]->GetNumPoints();
@@ -760,7 +759,6 @@ namespace Nektar
         }
 
 
-        //TODO: This function need to test
         //   I/O routine        
         void StdTetExp::WriteCoeffsToFile(std::ofstream &outfile)
         {
@@ -825,6 +823,8 @@ namespace Nektar
             ASSERTL2(Btype == m_base[0]->GetBasisType(),
                 "Expansion type of edge and StdQuadExp are different");
 
+
+            // Currently same as triangle MapTo()
             // make sure haved correct memory storage
             if(edge_ncoeffs != Map.GetLen())
             {
@@ -892,37 +892,14 @@ namespace Nektar
         }
         
 
-
-
-
-//            StdMatrix StdTetExp::s_elmtmats;
-//     
-//         void StdTetExp::SetInvInfo(StdMatContainer *mat, MatrixType Mform)
-//         {
-//             mat->SetLda(m_ncoeffs);
-//             mat->SetMatForm(eSymmetric_Positive);
-//             
-//             if(GeoFacType() == eRegular)
-//             {
-//                 switch(Mform)
-//                 {
-//                 case eMassMatrix: // definitions need adding 
-//                     mat->SetMatForm(eSymmetric);
-//                     break;
-//                 case eLapMatrix:
-//                     mat->SetMatForm(eSymmetric);
-//                     break;
-//                 default:
-//                     ASSERTL0(false, "MatrixType not known");
-//                     break;
-//                 }
-//             }
-//         }
       }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.10  2008/05/07 16:04:57  pvos
+ * Mapping + Manager updates
+ *
  * Revision 1.9  2008/04/06 06:04:15  bnelson
  * Changed ConstArray to Array<const>
  *

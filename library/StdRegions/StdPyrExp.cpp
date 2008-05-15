@@ -683,25 +683,86 @@ namespace Nektar
                 }
             }
         }
-        
-        
-        void StdPyrExp::GenLapMatrix(double * outarray)
+
+        void StdPyrExp::WriteToFile(std::ofstream &outfile)
         {
-            ASSERTL0(false, "Not implemented");
+            int  Qx = m_base[0]->GetNumPoints();
+            int  Qy = m_base[1]->GetNumPoints();
+            int  Qz = m_base[2]->GetNumPoints();
+            
+            Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
+            eta_x = m_base[0]->GetZ();
+            eta_y = m_base[1]->GetZ();
+            eta_z = m_base[2]->GetZ();
+
+            outfile << "Variables = z1,  z2,  z3,  Coeffs \n" << std::endl;      
+            outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
+
+            for(int k = 0; k < Qz; ++k) 
+            {
+                for(int j = 0; j < Qy; ++j)
+                {
+                    for(int i = 0; i < Qx; ++i)
+                    {
+                        //outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
+                        outfile <<  (eta_x[i] + 1.0) * (1.0 - eta_y[j]) * (1.0 - eta_z[k]) / 4  -  1.0 <<  " " << eta_z[k] << " " << m_phys[i + Qx*(j + Qy*k)] << std::endl;
+                    }
+                }
+            }
+
         }
 
+        //   I/O routine        
+        void StdPyrExp::WriteCoeffsToFile(std::ofstream &outfile)
+        {
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  order2 = m_base[2]->GetNumModes();
 
+            Array<OneD, NekDouble> wsp  = Array<OneD, NekDouble>(order0*order1*order2, 0.0);
 
+            NekDouble *mat = wsp.get(); 
 
+            // put coeffs into matrix and reverse order so that r index is fastest for Prism 
+            Vmath::Zero(order0*order1*order2, mat, 1);
 
-//     StdMatrix StdPyrExp::s_elmtmats;
-    
-    
+            for(int i = 0, cnt=0; i < order0; ++i)
+            {
+                for(int j = 0; j < order1-i; ++j)
+                {
+                    for(int k = 0; k < order2-i-j; ++k, cnt++)
+                    {
+//                         mat[i+j*order1] = m_coeffs[cnt];
+                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
+                    }
+                }
+            }
+
+            outfile <<"Coeffs = [" << " "; 
+
+            for(int k = 0; k < order2; ++k)
+            {            
+                for(int j = 0; j < order1; ++j)
+                {
+                    for(int i = 0; i < order0; ++i)
+                    {
+//                         outfile << mat[j*order0+i] <<" ";
+                           outfile << mat[i + order0*(j + order1*k)] <<" ";
+                    }
+                    outfile << std::endl; 
+                }
+            }
+            outfile << "]" ; 
+        }
+               
   }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdPyrExp.cpp,v $
+ * Revision 1.6  2008/05/07 16:04:57  pvos
+ * Mapping + Manager updates
+ *
  * Revision 1.5  2008/04/06 06:04:15  bnelson
  * Changed ConstArray to Array<const>
  *

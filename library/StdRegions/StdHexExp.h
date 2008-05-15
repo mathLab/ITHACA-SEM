@@ -245,7 +245,12 @@ namespace Nektar
             {
                 return GenMatrix(mkey);
             }
-           
+
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)
+            {
+                return GenMatrix(mkey);
+            }
+                                  
             virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
             {
                 return FillMode(mode, outarray);
@@ -366,6 +371,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.17  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.16  2008/03/25 08:39:45  ehan
 * Added GetEdgeNcoeffs() and GetEdgeBasisType().
 *

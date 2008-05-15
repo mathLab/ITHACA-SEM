@@ -183,6 +183,11 @@ namespace Nektar
         {
             return GenMatrix(mkey);
         }
+
+        virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)
+        {
+            return GenMatrix(mkey);
+        }
         
         virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
@@ -305,6 +310,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.12  2008/04/06 06:04:15  bnelson
+ * Changed ConstArray to Array<const>
+ *
  * Revision 1.11  2008/03/25 08:39:55  ehan
  * Added GetEdgeNcoeffs() and GetEdgeBasisType().
  *

@@ -168,7 +168,6 @@ namespace Nektar
                 {
                     return GetBasisType(2);
                 }
-
             }
         
         protected:
@@ -213,6 +212,11 @@ namespace Nektar
             {
                 return GenMatrix(mkey);
             }
+
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)
+            {
+                return GenMatrix(mkey);
+            }            
 
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
@@ -350,6 +354,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.14  2008/04/06 06:04:15  bnelson
+ * Changed ConstArray to Array<const>
+ *
  * Revision 1.13  2008/03/25 08:40:20  ehan
  * Added GetEdgeNcoeffs() and GetEdgeBasisType().
  *

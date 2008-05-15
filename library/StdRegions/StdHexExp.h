@@ -144,13 +144,6 @@ namespace Nektar
                                  const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> & outarray );
 
-            //----------------------------------
-            // Local Matrix Routines
-            //----------------------------------
-            DNekMatSharedPtr GenMatrixHex(const StdMatrixKey &mkey);
-             void GenLapMatrix(double * outarray);
-
-
             //----------------------------
             // Differentiation Methods
             //----------------------------
@@ -187,12 +180,12 @@ namespace Nektar
             void FwdTrans(const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
             NekDouble PhysEvaluate(Array<OneD, const NekDouble>& coords);
-
+            void WriteToFile(std::ofstream &outfile);
+            void WriteCoeffsToFile(std::ofstream &outfile);
 
             //----------------------------------
             // Local Matrix Routines
             //----------------------------------
-
             DNekMatSharedPtr GenMassMatrix();
 
             DNekMatSharedPtr GenLaplacianMatrix();
@@ -250,71 +243,75 @@ namespace Nektar
             {
                 return GenMatrix(mkey);
             }
-                                  
-            virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+
+            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
-                return FillMode(mode, outarray);
+                return GetEdgeBasisType(i);
             }
 
+            virtual void v_GetCoords(Array<OneD, NekDouble> &coords_x,
+                                     Array<OneD, NekDouble> &coords_y,
+                                     Array<OneD, NekDouble> &coords_z)
+            {
+                GetCoords(coords_x, coords_y, coords_z);
+            }
+                                              
             virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray )
             {
                 return Integral(inarray);
             }
-            
-            virtual void v_GetCoords(
-                Array<OneD, NekDouble> &coords_x,
-                Array<OneD, NekDouble> &coords_y,
-                Array<OneD, NekDouble> &coords_z)
-            {
-                GetCoords(coords_x, coords_y, coords_z);
-            }
-            
+                        
             virtual void v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTBase(inarray, outarray);
             }
 
-            /** \brief Virtual call to GenMassMatrix */
+            virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+            {
+                return FillMode(mode, outarray);
+            }
 
-            virtual void v_PhysDeriv( Array<OneD, NekDouble> &out_d0,
-                                   Array<OneD, NekDouble> &out_d1,
-                                   Array<OneD, NekDouble> &out_d2)
+            virtual void v_PhysDeriv(Array<OneD, NekDouble> &out_d0,
+                                     Array<OneD, NekDouble> &out_d1,
+                                     Array<OneD, NekDouble> &out_d2)
             {
                     PhysDeriv(out_d0, out_d1, out_d2);
             }
-            virtual void v_StdPhysDeriv( Array<OneD, NekDouble> &out_d0,
-                                   Array<OneD, NekDouble> &out_d1,
-                                   Array<OneD, NekDouble> &out_d2)
+            
+            virtual void v_StdPhysDeriv(Array<OneD, NekDouble> &out_d0,
+                                        Array<OneD, NekDouble> &out_d1,
+                                        Array<OneD, NekDouble> &out_d2)
             {
                                    
                     PhysDeriv(out_d0, out_d1, out_d2);                
             }
 
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                                   Array<OneD, NekDouble> &out_d0,
-                                   Array<OneD, NekDouble> &out_d1,
-                                   Array<OneD, NekDouble> &out_d2)
+                                     Array<OneD, NekDouble> &out_d0,
+                                     Array<OneD, NekDouble> &out_d1,
+                                     Array<OneD, NekDouble> &out_d2)
             {
                     PhysDeriv(inarray, out_d0, out_d1, out_d2);
-            }                                  
+            }
+            
             virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                                   Array<OneD, NekDouble> &out_d0,
-                                   Array<OneD, NekDouble> &out_d1,
-                                   Array<OneD, NekDouble> &out_d2)
+                                        Array<OneD, NekDouble> &out_d0,
+                                        Array<OneD, NekDouble> &out_d1,
+                                        Array<OneD, NekDouble> &out_d2)
             {
                     PhysDeriv(inarray, out_d0, out_d1, out_d2);
             }
 
             
             virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray, 
-                Array<OneD, NekDouble> &outarray)
+                                    Array<OneD, NekDouble> &outarray)
             {
                 BwdTrans(inarray, outarray);
             }
 
             virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray, 
-                Array<OneD, NekDouble> &outarray)
+                                    Array<OneD, NekDouble> &outarray)
             {
                 FwdTrans(inarray, outarray);
             }
@@ -329,36 +326,15 @@ namespace Nektar
                 return GetEdgeNcoeffs(i);
             }
             
-            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
+            virtual void v_WriteToFile(std::ofstream &outfile)
             {
-                return GetEdgeBasisType(i);
+                WriteToFile(outfile);
             }
-            
-             virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray) 
+
+            virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
             {
-                 std::cout << "Implement me" << std::endl;
-                 return;
-            } 
-            
-            virtual void v_GenLapMatrix (Array<OneD, NekDouble> & outarray)
-            {
-                std::cout << "Implement me" << std::endl;
-                return;
+                WriteCoeffsToFile(outfile);
             }
-            
-            virtual DNekMatSharedPtr v_GetMassMatrix() 
-            {
-                std::cout << "Implement me" << std::endl;
-                int foo = 0;
-                return DNekMatSharedPtr();
-            } 
-            
-            virtual DNekMatSharedPtr v_GetLapMatrix()
-            {
-                std::cout << "Implement me" << std::endl;
-                int foo = 0;
-                return DNekMatSharedPtr();
-            }  
 
         };
         typedef boost::shared_ptr<StdHexExp> StdHexExpSharedPtr;
@@ -371,6 +347,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.18  2008/05/15 04:14:37  ehan
+* Added virtual function v_CreatStdMatrix()
+*
 * Revision 1.17  2008/04/06 06:04:15  bnelson
 * Changed ConstArray to Array<const>
 *

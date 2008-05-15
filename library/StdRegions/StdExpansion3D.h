@@ -83,9 +83,9 @@ namespace Nektar
          *  of the function
          */
             void PhysTensorDeriv(const Array<OneD, const NekDouble> &inarray, 
-                 Array<OneD, NekDouble> &outarray_d1,
-                 Array<OneD, NekDouble> &outarray_d2, 
-                 Array<OneD, NekDouble> &outarray_d3);
+                                 Array<OneD, NekDouble> &outarray_d1,
+                                 Array<OneD, NekDouble> &outarray_d2,
+                                 Array<OneD, NekDouble> &outarray_d3);
 
 
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords)
@@ -100,17 +100,17 @@ namespace Nektar
             NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble> &coords);
 
             void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-               Array<OneD, NekDouble> &outarray_d0, 
-               Array<OneD, NekDouble> &outarray_d1, 
-               Array<OneD, NekDouble> &outarray_d2)
+                           Array<OneD, NekDouble> &outarray_d0,
+                           Array<OneD, NekDouble> &outarray_d1,
+                           Array<OneD, NekDouble> &outarray_d2)
             {
                 v_PhysDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
             }
 
             void StdPhysDeriv(const Array<OneD, const NekDouble> &inarray,
-              Array<OneD, NekDouble> &outarray_d0,
-              Array<OneD, NekDouble> &outarray_d1,  
-              Array<OneD, NekDouble> &outarray_d2)
+                              Array<OneD, NekDouble> &outarray_d0,
+                              Array<OneD, NekDouble> &outarray_d1,
+                              Array<OneD, NekDouble> &outarray_d2)
             {
                 v_StdPhysDeriv(inarray, outarray_d0, outarray_d1, outarray_d2);
             }
@@ -124,13 +124,7 @@ namespace Nektar
             virtual int v_GetNverts() const = 0;
             virtual int v_GetNedges() const = 0;
             virtual int v_GetNfaces() const = 0;
-
-            virtual void v_GenMassMatrix(Array<OneD, NekDouble> & outarray)   = 0;
-            virtual void v_GenLapMatrix (Array<OneD, NekDouble> & outarray)   = 0;
             virtual ShapeType v_DetShapeType() const = 0;
-
-            virtual DNekMatSharedPtr v_GetMassMatrix()        = 0;
-            virtual DNekMatSharedPtr v_GetLapMatrix()         = 0;
 
             virtual int v_get_nodalpoints(Array<OneD, const NekDouble> &x, Array<OneD, const NekDouble> &y)
             {
@@ -177,6 +171,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.14  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.13  2008/02/12 02:46:33  jfrazier
 * Moved typedef to the top of the file.
 *

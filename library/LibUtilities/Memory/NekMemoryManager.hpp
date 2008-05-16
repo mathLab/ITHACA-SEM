@@ -137,7 +137,7 @@ namespace Nektar
                 #ifdef NEKTAR_MEMORY_POOL_ENABLED
                     data->~DataType();
                     //ThreadSpecificPool<sizeof(DataType)>::Deallocate(data);
-                    MemPool<sizeof(DataType)>::Type::Instance().Deallocate(data);
+                    MemPool::Type::Instance().Deallocate(data, sizeof(DataType));
                 #else //NEKTAR_MEMORY_POOL_ENABLED
                     delete data;
                 #endif //NEKTAR_MEMORY_POOL_ENABLED
@@ -149,7 +149,7 @@ namespace Nektar
                 static DataType* Allocate() 
                 { 
                     //DataType* result = static_cast<DataType*>(ThreadSpecificPool<sizeof(DataType)>::Allocate()); 
-                    DataType* result = static_cast<DataType*>(MemPool<sizeof(DataType)>::Type::Instance().Allocate());
+                    DataType* result = static_cast<DataType*>(MemPool::Type::Instance().Allocate(sizeof(DataType)));
                     
                     if( result ) 
                     { 
@@ -160,7 +160,7 @@ namespace Nektar
                         catch(...) 
                         { 
                             //ThreadSpecificPool<sizeof(DataType)>::Deallocate(result); 
-                            MemPool<sizeof(DataType)>::Type::Instance().Deallocate(result);
+                            MemPool::Type::Instance().Deallocate(result, sizeof(DataType));
                             throw; 
                         } 
                     } 
@@ -172,7 +172,7 @@ namespace Nektar
                 template<BOOST_PP_ENUM_PARAMS(i, typename Arg)> \
                 static DataType* methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, Arg, & arg)) \
                 { \
-                    DataType* result = static_cast<DataType*>(MemPool<sizeof(DataType)>::Type::Instance().Allocate()); \
+                    DataType* result = static_cast<DataType*>(MemPool::Type::Instance().Allocate(sizeof(DataType))); \
                     \
                     if( result ) \
                     { \
@@ -182,7 +182,7 @@ namespace Nektar
                         } \
                         catch(...) \
                         { \
-                            MemPool<sizeof(DataType)>::Type::Instance().Deallocate(result); \
+                            MemPool::Type::Instance().Deallocate(result, sizeof(DataType)); \
                             throw; \
                         } \
                     } \
@@ -208,8 +208,6 @@ namespace Nektar
             static boost::shared_ptr<DataType> AllocateSharedPtr()
             {
                 return AllocateSharedPtrD(DefaultCustomDeallocator());
-                //DataType* data = Allocate(); 
-                //return boost::shared_ptr<DataType>(data, &MemoryManager::DeallocateSharedPtr); 
             }
             
             #define ALLOCATE_SHARED_PTR_METHOD_GENERATOR(z, i, methodName) \
@@ -230,277 +228,34 @@ namespace Nektar
             BOOST_PP_REPEAT_FROM_TO(0, NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS, ALLOCATE_SHARED_PTR_METHOD_WITH_DEALLOCATOR_GENERATOR, AllocateSharedPtrD);
             BOOST_PP_REPEAT_FROM_TO(1, NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS, ALLOCATE_SHARED_PTR_METHOD_GENERATOR, AllocateSharedPtr);
 
-
-
-
-            /// \brief Allocates a chunk of raw, uninitialized memory, capable of holding NumberOfElements objects.
-            template<unsigned int NumberOfElements>
-            static DataType* RawAllocate()
-            {
-                BOOST_STATIC_ASSERT(NumberOfElements > 0);
-                
-                #ifdef NEKTAR_MEMORY_POOL_ENABLED
-                    return static_cast<DataType*>(MemPool<sizeof(DataType)*NumberOfElements>::Type::Instance().Allocate());
-                #else //NEKTAR_MEMORY_POOL_ENABLED
-                    return static_cast<DataType*>(::operator new(NumberOfElements * sizeof(DataType)));
-                #endif //NEKTAR_MEMORY_POOL_ENABLED
-            }
             
             /// \brief Allocates a chunk of raw, uninitialized memory, capable of holding NumberOfElements objects.
             static DataType* RawAllocate(unsigned int NumberOfElements)
             {
-                // Even if 0 elements are requested, we should allocate some memory.
-                if( NumberOfElements <= 1 )
-                {
-                    return RawAllocate<1>();
-                }
-                else if( NumberOfElements < 10 )
-                {
-                    return RawAllocate<10>();
-                }
-                else if( NumberOfElements < 20 )
-                {
-                    return RawAllocate<20>();
-                }
-                else if( NumberOfElements < 30 )
-                {
-                    return RawAllocate<30>();
-                }
-                else if( NumberOfElements < 40 )
-                {
-                    return RawAllocate<40>();
-                }
-                else if( NumberOfElements < 50 )
-                {
-                    return RawAllocate<50>();
-                }
-                else if( NumberOfElements < 60 )
-                {
-                    return RawAllocate<60>();
-                }
-                else if( NumberOfElements < 100 )
-                {
-                    return RawAllocate<100>();
-                }
-                else if( NumberOfElements < 150 )
-                {
-                    return RawAllocate<150>();
-                }
-                else if( NumberOfElements < 200 )
-                {
-                    return RawAllocate<200>();
-                }
-                else if( NumberOfElements < 300 )
-                {
-                    return RawAllocate<300>();
-                }
-                else if( NumberOfElements < 400 )
-                {
-                    return RawAllocate<400>();
-                }
-                else if( NumberOfElements < 500 )
-                {
-                    return RawAllocate<500>();
-                }
-                else if( NumberOfElements < 600 )
-                {
-                    return RawAllocate<600>();
-                }
-                else if( NumberOfElements < 700 )
-                {
-                    return RawAllocate<700>();
-                }
-                else if( NumberOfElements < 800 )
-                {
-                    return RawAllocate<800>();
-                }
-                else if( NumberOfElements < 900 )
-                {
-                    return RawAllocate<900>();
-                }
-                else if( NumberOfElements < 1000 )
-                {
-                    return RawAllocate<1000>();
-                }
-                else if( NumberOfElements < 2000 )
-                {
-                    return RawAllocate<2000>();
-                }
-                else if( NumberOfElements < 3000 )
-                {
-                    return RawAllocate<3000>();
-                }
-                else if( NumberOfElements < 4000 )
-                {
-                    return RawAllocate<4000>();
-                }
-                else if( NumberOfElements < 5000 )
-                {
-                    return RawAllocate<5000>();
-                }
-                else if( NumberOfElements < 10000 )
-                {
-                    return RawAllocate<10000>();
-                }
-                else if( NumberOfElements < 20000 )
-                {
-                    return RawAllocate<20000>();
-                }
-                else if( NumberOfElements < 30000 )
-                {
-                    return RawAllocate<30000>();
-                }
-                else if( NumberOfElements < 40000 )
-                {
-                    return RawAllocate<40000>();
-                }
-                else if( NumberOfElements < 50000 )
-                {
-                    return RawAllocate<50000>();
-                }
-                else
-                {
-                    std::cout << "Allocation is not as efficient as it could be because the memory manager is not handling arrays of size " <<
-                        NumberOfElements << std::endl;
+                #ifdef NEKTAR_MEMORY_POOL_ENABLED
+                    return static_cast<DataType*>(MemPool::Type::Instance().Allocate(sizeof(DataType)*NumberOfElements));
+                #else //NEKTAR_MEMORY_POOL_ENABLED
                     return static_cast<DataType*>(::operator new(NumberOfElements * sizeof(DataType)));
-                }
+                #endif //NEKTAR_MEMORY_POOL_ENABLED                
             }
             
-            /// \brief Deallocates arrays of fundamental data types.
-            template<unsigned int NumberOfElements>
-            static void RawDeallocate(DataType* data)
-            {
-                BOOST_STATIC_ASSERT(NumberOfElements > 0);
-                
-                #ifdef NEKTAR_MEMORY_POOL_ENABLED
-                    MemPool<sizeof(DataType)*NumberOfElements>::Type::Instance().Deallocate(data);
-                #else //NEKTAR_MEMORY_POOL_ENABLED
-                    ::operator delete(data);
-                #endif //NEKTAR_MEMORY_POOL_ENABLED
-            }
-                    
 
             static void RawDeallocate(DataType* array, unsigned int NumberOfElements)
             {
-                if( NumberOfElements <= 1 )
-                {
-                    RawDeallocate<1>(array);
-                }
-                else if( NumberOfElements < 10 )
-                {
-                    RawDeallocate<10>(array);
-                }
-                else if( NumberOfElements < 20 )
-                {
-                    RawDeallocate<20>(array);
-                }
-                else if( NumberOfElements < 30 )
-                {
-                    RawDeallocate<30>(array);
-                }
-                else if( NumberOfElements < 40 )
-                {
-                    RawDeallocate<40>(array);
-                }
-                else if( NumberOfElements < 50 )
-                {
-                    RawDeallocate<50>(array);
-                }
-                else if( NumberOfElements < 60 )
-                {
-                    RawDeallocate<60>(array);
-                }
-                else if( NumberOfElements < 100 )
-                {
-                    RawDeallocate<100>(array);
-                }
-                else if( NumberOfElements < 150 )
-                {
-                    RawDeallocate<150>(array);
-                }
-                else if( NumberOfElements < 200 )
-                {
-                    RawDeallocate<200>(array);
-                }
-                else if( NumberOfElements < 300 )
-                {
-                    RawDeallocate<300>(array);
-                }
-                else if( NumberOfElements < 400 )
-                {
-                     RawDeallocate<400>(array);
-                }
-                else if( NumberOfElements < 500 )
-                {
-                     RawDeallocate<500>(array);
-                }
-                else if( NumberOfElements < 600 )
-                {
-                     RawDeallocate<600>(array);
-                }
-                else if( NumberOfElements < 700 )
-                {
-                     RawDeallocate<700>(array);
-                }
-                else if( NumberOfElements < 800 )
-                {
-                     RawDeallocate<800>(array);
-                }
-                else if( NumberOfElements < 900 )
-                {
-                     RawDeallocate<900>(array);
-                }
-                else if( NumberOfElements < 1000 )
-                {
-                     RawDeallocate<1000>(array);
-                }
-                else if( NumberOfElements < 2000 )
-                {
-                     RawDeallocate<2000>(array);
-                }
-                else if( NumberOfElements < 3000 )
-                {
-                     RawDeallocate<3000>(array);
-                }
-                else if( NumberOfElements < 4000 )
-                {
-                     RawDeallocate<4000>(array);
-                }
-                else if( NumberOfElements < 5000 )
-                {
-                     RawDeallocate<5000>(array);
-                }
-                else if( NumberOfElements < 10000 )
-                {
-                     RawDeallocate<10000>(array);
-                }
-                else if( NumberOfElements < 20000 )
-                {
-                     RawDeallocate<20000>(array);
-                }
-                else if( NumberOfElements < 30000 )
-                {
-                     RawDeallocate<30000>(array);
-                }
-                else if( NumberOfElements < 40000 )
-                {
-                     RawDeallocate<40000>(array);
-                }
-                else if( NumberOfElements < 50000 )
-                {
-                     RawDeallocate<50000>(array);
-                }
-                else
-                {
-                    std::cout << "Allocation is not as efficient as it could be because the memory manager is not handling arrays of size " <<
-                        NumberOfElements << std::endl;
+                #ifdef NEKTAR_MEMORY_POOL_ENABLED
+                    MemPool::Type::Instance().Deallocate(array, sizeof(DataType)*NumberOfElements);
+                #else //NEKTAR_MEMORY_POOL_ENABLED
                     ::operator delete(array);
-                }
+                #endif //NEKTAR_MEMORY_POOL_ENABLED
+                
             }
             
             /////////////////////////////////////////////////////////////////
             /// @[ Allocator Interface
             /// \todo I don't think this is the correct syntax for doxygen sections.
+            /// The allocator interface allows a MemoryManager object to be used
+            /// in any object that allows an allocator parameter, such as the STL 
+            /// containers.  
             /////////////////////////////////////////////////////////////////
             typedef DataType value_type;
             typedef size_t size_type;
@@ -573,6 +328,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.17  2008/04/06 22:29:13  bnelson
+    Reimplmented shared arrays for speed improvements.
+
     Revision 1.16  2008/01/02 18:17:22  bnelson
     Removed commented code.
 

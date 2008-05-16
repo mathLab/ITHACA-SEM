@@ -41,6 +41,8 @@
 #include <boost/thread/tss.hpp>
 #include <boost/pool/pool.hpp>
 #include <loki/Singleton.h>
+#include <map>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
 {
@@ -68,11 +70,10 @@ namespace Nektar
         /// t->~TestClass();
         /// pool.deallocate(t);
         /// \endcode
-        template<unsigned int ByteSize>
         class ThreadSpecificPool
         {
             public:
-                ThreadSpecificPool() :
+                ThreadSpecificPool(unsigned int ByteSize) :
                     m_pool()
                 {
                     // We can do the new in the constructor list because the thread specific 
@@ -109,15 +110,87 @@ namespace Nektar
         };
     }
 
-   
-    template<unsigned int ByteSize>
     class MemPool
     {
         public:
-            typedef Loki::SingletonHolder<Nektar::detail::ThreadSpecificPool<ByteSize> ,
+            typedef Loki::SingletonHolder<MemPool ,
                 Loki::CreateUsingNew,
                 Loki::PhoenixSingleton > Type;
+            typedef std::map<unsigned int, boost::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
+            
+        public:
+            MemPool() :
+                m_fourBytePool(4),
+                m_pools(),
+                m_upperBound(1024)
+            {
+                typedef PoolMapType::value_type PairType;
+                m_pools.insert(PairType(8, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(8))));
+                m_pools.insert(PairType(16, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(16))));
+                m_pools.insert(PairType(32, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(32))));
+                m_pools.insert(PairType(64, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(64))));
+                m_pools.insert(PairType(128, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(128))));
+                m_pools.insert(PairType(256, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(256))));
+                m_pools.insert(PairType(512, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(512))));
+                m_pools.insert(PairType(1024, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(1024))));
+            }
+            
+            ~MemPool()
+            {
+            }
+            
+            /// \brief Allocate a block of memory of size ByteSize.
+            /// \throw std::bad_alloc if memory is exhausted.
+            void* Allocate(unsigned int bytes)
+            {
+                if( bytes <= 4 )
+                {
+                    return m_fourBytePool.Allocate();
+                }
+                else if( bytes > m_upperBound )
+                {
+                    return ::operator new(bytes);
+                }
+                else
+                {
+                    PoolMapType::iterator iter = m_pools.lower_bound(bytes);
+                    ASSERTL1(iter != m_pools.end(), "The memory manager is mishandling a memory request for " +
+                        boost::lexical_cast<std::string>(bytes) + " bytes of memory.");
+                    
+                    return (*iter).second->Allocate();
+                }
+            }
+
+            /// \brief Deallocate memory claimed by an earlier call to allocate.
+            ///
+            /// \attention It is an error to deallocate memory not allocated
+            /// from this pool.  Doing this will result in undefined behavior.
+            void Deallocate(void* p, unsigned int bytes)
+            {
+                if( bytes <= 4 )
+                {
+                    m_fourBytePool.Deallocate(p);
+                }
+                else if( bytes > m_upperBound )
+                {
+                    ::operator delete(p);
+                }
+                else
+                {
+                    PoolMapType::iterator iter = m_pools.lower_bound(bytes);
+                    ASSERTL1(iter != m_pools.end(), "The memory manager is mishandling a memory request for " +
+                        boost::lexical_cast<std::string>(bytes) + " bytes of memory.");
+                    
+                    (*iter).second->Deallocate(p);
+                }
+            }
+            
+        private:
+            detail::ThreadSpecificPool m_fourBytePool;
+            std::map<unsigned int, boost::shared_ptr<detail::ThreadSpecificPool> > m_pools;
+            unsigned int m_upperBound;
     };
+
 }
 
 
@@ -126,6 +199,9 @@ namespace Nektar
 
 /**
     $Log: ThreadSpecificPool.hpp,v $
+    Revision 1.3  2007/05/14 23:49:55  bnelson
+    Updated pool using Singletons to correctly allocate static Arrays.
+
     Revision 1.2  2007/04/06 04:36:22  bnelson
     Updated for const-correctness.
 

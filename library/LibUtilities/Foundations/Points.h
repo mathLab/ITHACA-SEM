@@ -327,7 +327,7 @@ namespace Nektar
                 int totNumPoints = GetTotNumPoints();
                 for(unsigned int i = 0; i < m_pointsKey.GetPointsDim(); ++i)
                 {
-                    m_derivmatrix[i].reset(MemoryManager<NekMatrix<DataType> >::Allocate(totNumPoints,totNumPoints));
+                    m_derivmatrix[i] = MemoryManager<NekMatrix<DataType> >::AllocateSharedPtr(totNumPoints,totNumPoints);
                 }
             }
             Points(const PointsKey &key):m_pointsKey(key)

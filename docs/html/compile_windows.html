@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><!-- InstanceBegin template="/Templates/Main.dwt" codeOutsideHTMLIsLocked="false" -->
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" href="images/favicon.ico" >
+    <!-- InstanceBeginEditable name="doctitle" -->
+<title>Nektar++ - Windows Compile Instructions</title>
+<!-- InstanceEndEditable -->
+    <style type="text/css">
+    <!--
+    body {
+      font: 100% Verdana, Arial, Helvetica, sans-serif;
+      background: #FFFFFF;
+      margin: 0;
+	  padding: 0;
+	  text-align: center;
+	  color: #000000;
+    }
+    .twoColHybLt #container {
+	  width: 1250px;
+      background: #FFFFFF;
+      margin: 0 auto;
+      text-align: left;
+    }
+    .twoColHybLt #sidebar1 {
+      float: left;
+      width: 215px;
+      background: #EBEBEB;
+      border: 1px solid #000000;
+      padding-top: 15px;
+      padding-right: 0;
+      padding-bottom: 15px;
+      padding-left: 0;
+    }
+    .twoColHybLt #sidebar1 h3, .twoColHybLt #sidebar1 p {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+    .twoColHybLt #mainContent {
+      margin: 0 20px 0 230px;
+    }
+    .fltrt {
+      float: right;
+      margin-left: 8px;
+    }
+    .fltlft {
+      float: left;
+      margin-right: 8px;
+    }
+    .clearfloat {
+      clear:both;
+      height:0;
+      font-size: 1px;
+      line-height: 0px;
+    }
+    img {
+      border:0;
+    }
+    -->
+    </style>
+    <!-- InstanceBeginEditable name="CSS_Style" -->
+<style type="text/css">
+<!--
+#menu_CompileWindows {
+	font-weight: bold;
+}
+-->
+</style>
+<!-- InstanceEndEditable -->
+    <!--[if IE]>
+    <style type="text/css"> 
+      .twoColHybLt #sidebar1 { padding-top: 30px; margin-top: 20px; }
+      .twoColHybLt #mainContent { zoom: 1; padding-top: 15px; }
+    </style>
+    <![endif]-->
+    <!-- InstanceParam name="LibraryMenu" type="boolean" value="false" -->
+    <!-- InstanceParam name="CompileMenu" type="boolean" value="true" -->
+  </head>
+  <body class="twoColHybLt">
+    <div id="container">
+      <div id="sidebar1">
+        <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" width="155" height="38" /></a></h3>
+        <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
+        <p>
+          <a href="compile.html" id="menu_Compile">Compile Instructions</a>
+    	  
+          <br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_linux.html" id="menu_CompileLinux">Linux</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_windows.html" id="menu_CompileWindows">Windows</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_osx.html" id="menu_CompileOSX">OS X</a><br/>
+          
+        </p>
+        <p>
+          <a href="library.html" id="menu_Library">Library Overview</a>
+    	  
+        </p>
+        <p><a href="team.html" id="menu_Team">Team Members</a></p>
+        <p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>
+        <p><a href="solvers.html" id="menu_Solvers">Solvers</a></p>
+        <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
+        <p><a href="demos.html" id="menu_Demos">Demos</a></p>
+        <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
+        <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
+        <p style="font-size:9px;">$Date$</p>
+      </div>
+      <div id="mainContent">
+        <!-- InstanceBeginEditable name="Title" -->
+    <h1>Compile Instructions</h1>
+	<h2>Windows - Visual Studio 2005</h2>
+    <!-- InstanceEndEditable -->
+        <hr/>
+        <!-- InstanceBeginEditable name="BodyText" -->
+    <h3 align="left">Setting up CMake</h3>
+    <p align="left">CMake is an open-source, cross-platform make file generator system. It can be used to generate Visual Studio solutions, as well as make files for other compilers such as GCC. We will use it to create a Visual Studio solution for the Nektar project.</p>
+    <ol>
+      <li>Go to the <a href="http://www.cmake.org/HTML/index.html">CMake Website</a> and download the Win32 Installer.</li>
+      <li>Run the installer and click the <em>Next</em>, and then <em>I Agree</em>.</li>
+      <li>Select the option to &quot;Add CMake to the system PATH&quot;</li>
+    </ol>
+    <h3 align="left">Organizing the ThirdParty Source Files</h3>
+    <p align="left">You will be given a Nektar++ directory and a ThirdParty directory (includes needed libraries from output sources). These need to be organized into the correct directory heirarchy for CMake to find all of the required files. I will indicate a directory by following its name with a backslash.</p>
+    <ol>
+      <li>Put the ThirdParty directory in <em>Nektar++\</em>. (This will mean <em>library\</em> and <em>ThirdParty\</em> are both sub-directories of the original <em>Nektar++\</em>.)</li>
+      <li>In <em>ThirdParty\</em>, extract the tinyxml_2_4_3.zip archive. This will create <em>tinyxml\</em>. </li>
+      <li>Extract the loki-0.1.3.tar.bz2 archive. This will create <em>loki-0.1.3\</em>.
+        <ol>
+            <li>Open the <em>Visual Studio 2005 Command Prompt</em>. This is located in the <em>Microsoft Visual Studio 2005\Visual Studio Tools</em> folder in your &quot;Start -&gt; Programs&quot; menu.</li>
+          <li>Change to the <em>loki-0.1.3\</em> directory in the <em>Visual Studio 2005 Command Prompt</em>. (Use the commands &quot;cd&quot; to change the directory and &quot;&lt;drive_letter&gt;:&quot; to switch to a different drive.)</li>
+          <li>Once in <em>loki-0.1.3\</em>, type the command &quot;make.msvc.bat&quot; (without the quotes) and press enter. This will compile loki and created the necessary library file for Nektar++.</li>
+        </ol>
+      </li>
+      <li>The next step is to extract and compile the correct libraries for <em>Boost</em>. In order for CMake to find the libraries, they need to be in the include directory of a installation of Visual Studio at the default &quot;Program Files&quot; path. If you have the correct include and library files in this path, CMake will be able to find them. If you do not have this setup, below I will give steps to compile and place the <em>Boost</em> installation. If CMake cannot find a <em>Boost</em> installation, you can come back to this section later.
+        <ol>
+            <li>In <em>ThirdParty\</em>, extract the boost_1_34_1.tar.bz2 archive. This will create <em>boost_1_34_1\</em>.</li>
+          <li>Rename <em>boost_1_34_1\</em> to <em>include\</em>.</li>
+          <li>Again with the <em>Visual Studio 2005 Command Prompt</em>, change to the <em>ThirdParty\include\tools\jam\</em> directory.</li>
+          <li>Type &quot;build_dist.bat&quot; (without the quotes) and press enter. If you don't have <em>zip.exe</em> in your path, the build will say that it failed at the end. You can ignore this message, it still created the required <em>bjam.exe</em> file, and you don't need anything zipped.</li>
+          <li>Copy the <em>ThirdParty\include\tools\jam\src\bin.ntx86\bjam.exe</em> file to <em>ThirdParty\include\</em>. This is the file that will allow us to compile the <em>Boost</em> libraries.</li>
+          <li>Again with the <em>Visual Studio 2005 Command Prompt</em>, change to the <em>ThirdParty\include\</em> directory.</li>
+          <li>Type the following &quot;bjam --toolset=msvc-8.0 --stagedir=. --with-filesystem --with-thread --with-test stage&quot; (without the quotes) and press enter. This will compile the three <em>Boost</em> libraries needed and place them in the correct directory.</li>
+        </ol>
+      </li>
+      <li>Extract the blaslapack-dll.zip archive. This will create blas_win32.* and lapack_win32.* files in <em>ThirdParty\</em>.</li>
+    </ol>
+    <h3>Generating the Visual Studio Solution Files with CMake</h3>
+    <p>Now that all of the required libraries are setup in the correct paths, we can use CMake to generate the solution files that Visual Studio requires.</p>
+    <ol>
+      <li>Still in the <em>Visual Studio 2005 Command Prompt</em>, you need to launch CMake. Launching it from the VS command prompt will allow it to see the correct path to the compiler. Type &quot;CMakeSetup.exe&quot; at the command prompt (without the quotes) and press enter.
+        <ol>
+            <li>If it cannot find the file, you must give it the full path. (I have not had much luck getting the installer to add CMake to the PATH, even though that is what I specified in the installation.) If you installed it in the default path, try entering &quot;C:\Program Files\CMake 2.4\bin\CMakeSetup.exe&quot; (this time with the quotes).</li>
+        </ol>
+      </li>
+      <li>Fill in the &quot;Where is the source code:&quot; field at the top of CMake. This is the path to the <em>Nektar++\library\</em> directory. For example, mine is <em>D:\Nektar++\library</em>.</li>
+      <li>Fill in the &quot;Where to build the binaries:&quot; field at the top of CMake. This is the path that the Visual Studio solution files will be written to. For example, mine is <em>D:\Nektar++\project</em>.</li>
+      <li>Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. In our case, select <em>Visual Studio 8 2005</em>. It will ask to create the &quot;Build directory&quot; if it does not exist. Answer <em>OK</em>. CMake will now search for the paths to the ThirdParty files that were setup in the previous section. It should find all of the library and include paths automatically.</li>
+      <li> You must now change some of the CMake settings:
+        <ul>
+            <li><strong>BOOST_*</strong>
+                <ul>
+                  <li>If you did not compile <em>Boost</em> in the section above since you already had it, make sure CMake found the library files correctly.</li>
+                </ul>
+            </li>
+          <li><strong>EXECUTABLE_OUTPUT_PATH</strong>
+                <ul>
+                  <li>This is the path where Visual Studio will put the *.exe executable files after they are compiled. This can be any directory you please.</li>
+                </ul>
+          </li>
+          <li><strong>LIBRARY_OUTPUT_PATH</strong>
+                <ul>
+                  <li>This is the path where Visual Studio will put the *.lib library files after they are generated. This can once again be any directory you wish.</li>
+                </ul>
+          </li>
+          <li><strong>NEKTAR_BUILD_DEMOS</strong>
+                <ul>
+                  <li>Setting this to <em>ON</em> will add the Nektar++ demos to the Visual Studio solution. These demos will allow you to see how to utilize the software. It is recommended that this be set to <em><strong>ON</strong></em>.</li>
+                </ul>
+          </li>
+          <li><strong>NEKTAR_ENABLE_EXCEPTIONS</strong>
+                <ul>
+                  <li>Currently, this is expected to be <em>ON</em> in order to run the unit tests. If it is <em>OFF</em>, some of the unit tests will fail.</li>
+                </ul>
+          </li>
+          <li><strong>USE_WIN32_LAPACK</strong>
+                <ul>
+                  <li>Set this to <em><strong>ON</strong></em>. This will setup the Visual Studio solution to use the lapack libraries from <em>ThirdParty\</em>.</li>
+                </ul>
+          </li>
+        </ul>
+      </li>
+      <li>Press the &quot;Configure&quot; button again. This time, the only new RED options should be the win32 lapack directories from <em>ThirdParty\</em>. It should have been able to find the paths for these correctly.</li>
+      <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;OK&quot; button, and the Visual Studio solution will be created.</li>
+    </ol>
+    <h3>Compiling the Solution in  Visual Studio</h3>
+    <p>Now that CMake generated the appropriate solution files, it can be opened in Visual Studio and compiled.</p>
+    <ol>
+      <li>From the &quot;Build&quot; menu, select &quot;Configuration Manager...&quot;. For full optimizations, select &quot;Release&quot; from the &quot;Active solution configuration:&quot; menu.</li>
+      <li>To build the solution, select &quot;Build Solution&quot; from the &quot;Build&quot; menu.</li>
+      <li>Take a break as it compiles. It could take a while.</li>
+      <li>At the time of this writing, failed building of the <em>Profile</em> and <em>ExpressionTemplateUnitTests</em> projects are to be expected.</li>
+      <li>The executable files will be located in the path you specified in the CMake utility.</li>
+      <li>In order to run the executable files, you need to put the appropriate library files (*.dll) in the same directory.
+        <ol>
+            <li>Copy the file from <em>Nektar++\ThirdParty\include\lib\boost_thread-vc80-mt-1_34_1.dll</em> (or where you have <em>Boost</em> installed) into your executable output directory.</li>
+          <li>Do the same with <em>Nektar++\ThirdParty\lapack_win32.dll</em>.</li>
+          <li>Do the same with <em>Nektar++\ThirdParty\blas_win32.dll.</em></li>
+        </ol>
+      </li>
+    </ol>
+    <!-- InstanceEndEditable -->
+        <p><br class="clearfloat" /></p>
+      </div>
+    </div>
+  </body>
+<!-- InstanceEnd --></html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Nektar++ - Getting Started</title></head>
+
+<body>
+<div align="center">
+  <h1>Nektar++</h1>
+  <h2>Getting Started</h2>
+</div>
+<p><ol>
+  <li>Download the Nektar++ tarball from &lt;insert link here&gt;, and the ThirdParty tarball from &lt;insert link here&gt;.</li>
+  <li>Extract the Nektar++ archive with your favorite extractor program on Windows, or with the command <em>tar -xzvf &lt;filename&gt;</em> on Unix.</li>
+  <li>To generate the full documentation, Doxygen is required for comment extraction from the source code. The Doxygen HTML files are not included in the tarball because the size prohibits it.
+    <ul>
+      <li><strong>Doxygen</strong><br />
+      If you do not have Doxygen installed, you may obtain it from <a href="http://www.stack.nl/~dimitri/doxygen/">http://www.stack.nl/~dimitri/doxygen/</a>. The web site also offers a manual for installation on both Windows and Unix.</li>
+      <li><strong>Graphviz Dot<br />
+      </strong>The <em>dot</em> program in the Graphviz package is also recommended. Having <em>dot</em> allows for the creation of graph diagrams at the top of the HTML pages. You may obtain it from <a href="http://www.graphviz.org/Download..php">http://www.graphviz.org/Download..php</a>. Once installed, make sure the Graphviz's bin directory is in your path, so Doxygen can see the programs.</li>
+      <li><strong>LaTeX<br />
+      </strong><em>LaTeX</em> is also a recommended program that may be installed with your Unix distribution's package manager. The LaTeX web site is at <a href="http://www.latex-project.org/">http://www.latex-project.org/</a>. A common Windows TeX package is called MiKTeX and can be downloaded from <a href="http://miktex.org/">http://miktex.org/</a>. After installation, make sure it is in your path so Doxygen can use it. Doxygen uses LaTeX to generate PNG images for the website.</li>
+    </ul>
+  </li>
+  <li>Doxygen instructions<br />
+    <ul>
+      <li>Windows
+        <ul>
+          <li>From the icon group that the Doxygen installation created, run the <em>Doxywizard</em> program.</li>
+          <li>Press the &quot;Load&quot; button and choose the <em>Nektar++/docs/html/doxygen/doxygen</em> file.</li>
+          <li>Press the &quot;Start&quot; button and wait until the HTML generation completes.</li>
+        </ul>
+      </li>
+      <li>Unix
+        <ul>
+          <li>Navigate to the <em>Nektar++/docs/html/doxygen/</em> from the terminal.</li>
+          <li>Execute the command <em>doxygen ./doxygen</em> to start documentation generation, and wait until it completes.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Open <em>Nektar++/docs/html/index.html</em> with your web browser to view the full Nektar++ documentation. The web site includes useful instructions on compiling Nektar++, and an overview of the libraries that exist and their function.</li>
+  </ol>
+</p>
+</body>
+</html>

@@ -172,17 +172,18 @@ namespace Nektar
         template<typename BVectorType, typename XVectorType>
         static void PerformSolve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, char trans, unsigned int n, const PolicySpecificDataType& policyData)
         {
-//            int KL = policyData.GetNumberOfSubDiagonals(n);
-//            int KU = policyData.GetNumberOfSuperDiagonals(n);
-//            int info = 0;
-//            
-//            Lapack::Dgbtrs(trans, n, KL, KU, 1, A.get(), 2*KL+KU+1, ipivot.get(), x.GetRawPtr(), N, info);
-//            
-//            if( info < 0 )
-//            {
-//                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrs";
-//                ASSERTL0(false, message.c_str());
-//            }
+            x = b;
+            int KL = policyData.GetNumberOfSubDiagonals(n);
+            int KU = policyData.GetNumberOfSuperDiagonals(n);
+            int info = 0;
+            
+            Lapack::Dgbtrs(trans, n, KL, KU, 1, A.get(), 2*KL+KU+1, ipivot.get(), x.GetRawPtr(), n, info);
+            
+            if( info < 0 )
+            {
+                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrs";
+                ASSERTL0(false, message.c_str());
+            }
         }
     };
 
@@ -356,12 +357,17 @@ namespace Nektar
                 
                 unsigned int rawRows = KL+KU+1;
                 A = Array<OneD, double>(requiredStorageSize);
+
+                // Put the extra elements up front.
                 for(unsigned int i = 0; i < theA.GetColumns(); ++i)
                 {
                     std::copy(theA.GetRawPtr() + i*rawRows, theA.GetRawPtr() + (i+1)*rawRows,
                         A.get() + (i+1)*KL + i*rawRows);
                 }
-                                
+                       
+                // Put the extra elements at the end.
+                //std::copy(theA.GetRawPtr(), theA.GetRawPtr() + theA.GetPtr().num_elements(), A.get());
+
                 int info = 0;
                 int pivotSize = theA.GetRows();
                 m_ipivot = Array<OneD, int>(pivotSize);

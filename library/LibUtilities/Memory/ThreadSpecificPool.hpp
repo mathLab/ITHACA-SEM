@@ -74,7 +74,8 @@ namespace Nektar
         {
             public:
                 ThreadSpecificPool(unsigned int ByteSize) :
-                    m_pool()
+                    m_pool(),
+                    m_blockSize(ByteSize)
                 {
                     // We can do the new in the constructor list because the thread specific 
                     // pointer doesn't have a supporting constructor.
@@ -92,7 +93,13 @@ namespace Nektar
                 /// \throw std::bad_alloc if memory is exhausted.
                 void* Allocate()
                 {
-                    return m_pool->malloc();
+                    void* result = m_pool->malloc();
+
+#if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+                    memset(result, 0, m_blockSize);
+#endif //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+
+                    return result;
                 }
 
                 /// \brief Deallocate memory claimed by an earlier call to allocate.
@@ -101,12 +108,23 @@ namespace Nektar
                 /// from this pool.  Doing this will result in undefined behavior.
                 void Deallocate(const void* p)
                 {
+#if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+                    // The idea here is to fill the returned memory with some known
+                    // pattern, then detect that pattern on the allocate.  If the 
+                    // pattern is no longer there then some memory corruption has 
+                    // occurred.  However, I'm not sure how to distinguish between first
+                    // time allocations and repeat allocations.
+
+                    //memset(p, '+', m_pool->get_requested_size());
+#endif //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+
                     m_pool->free(const_cast<void*>(p));
                 }
 
 
             private:
                 boost::thread_specific_ptr<boost::pool<> > m_pool;
+                unsigned int m_blockSize;
         };
     }
 
@@ -199,6 +217,9 @@ namespace Nektar
 
 /**
     $Log: ThreadSpecificPool.hpp,v $
+    Revision 1.4  2008/05/16 05:43:22  bnelson
+    Updated the memory manager so it is faster choosing the allocator to use, doesn't use the pools for anything larger than 1024 bytes, and doesn't issue a warning for large allocations.
+
     Revision 1.3  2007/05/14 23:49:55  bnelson
     Updated pool using Singletons to correctly allocate static Arrays.
 

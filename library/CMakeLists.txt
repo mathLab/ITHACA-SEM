@@ -3,6 +3,11 @@ PROJECT(Nektar++)
 
 INCLUDE(CMakeExportBuildSettings)
 
+# Use the CMake 2.4 policy for CMake 2.6
+if(COMMAND cmake_policy)
+  cmake_policy(SET CMP0003 OLD)
+endif(COMMAND cmake_policy)
+
 # Find the modules included with Nektar
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE FILEPATH "" FORCE)

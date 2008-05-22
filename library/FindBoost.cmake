@@ -1,4 +1,4 @@
-SET(BOOST_INCLUDE_SEARCH_PATH /usr/local/include /usr/include /sw/include ${CMAKE_SOURCE_DIR}/../ThirdParty/include )
+SET(BOOST_INCLUDE_SEARCH_PATH ${CMAKE_SOURCE_DIR}/../ThirdParty/include /usr/local/include /usr/include /sw/include )
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
     SET(BOOST_INCLUDE_SEARCH_PATH ${BOOST_INCLUDE_SEARCH_PATH}

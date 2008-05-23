@@ -53,6 +53,7 @@ SET(FoundationHeaders
     ./Foundations/Points.h
     ./Foundations/PolyEPoints.h
     ./Foundations/NodalUtil.h
+    ./Foundations/NodalTriEvenlySpaced.h
 )
 
 SET(InterpreterHeaders
@@ -133,6 +134,7 @@ SET(FoundationSources
 	./Foundations/Points.cpp
 	./Foundations/PolyEPoints.cpp
 	./Foundations/NodalUtil.cpp
+    ./Foundations/NodalTriEvenlySpaced.cpp   
 )
 
 SET(InterpreterSources

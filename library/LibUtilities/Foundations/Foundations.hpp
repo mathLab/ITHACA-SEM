@@ -76,22 +76,23 @@ namespace Nektar
         enum PointsType
         {
             eNoPointsType,
-            eGaussGaussLegendre,     //!< 1D Gauss-Gauss-Legendre quadrature points
-            eGaussRadauMLegendre,    //!< 1D Gauss-Radau-Legendre quadrature points, pinned at x=-1
-            eGaussRadauPLegendre,    //!< 1D Gauss-Radau-Legendre quadrature points, pinned at x=1
-            eGaussLobattoLegendre,   //!< 1D Gauss-Lobatto-Legendre quadrature points
-            eGaussGaussChebyshev,    //!< 1D Gauss-Gauss-Chebyshev quadrature points
-            eGaussRadauMChebyshev,   //!< 1D Gauss-Radau-Chebyshev quadrature points, pinned at x=-1
-            eGaussRadauPChebyshev,   //!< 1D Gauss-Radau-Chebyshev quadrature points, pinned at x=1
-            eGaussLobattoChebyshev,  //!< 1D Gauss-Lobatto-Legendre quadrature points
-            eGaussRadauMAlpha0Beta1, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    1 \f$
-            eGaussRadauMAlpha0Beta2, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    2 \f$
-            eGaussRadauMAlpha1Beta0, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    1, \beta =    0 \f$
-            eGaussRadauMAlpha2Beta0, //!< Gauss Radau pinned at x=-1, \f$ \alpha =    2, \beta =    0 \f$
+            eGaussGaussLegendre,     //!<  1D Gauss-Gauss-Legendre quadrature points
+            eGaussRadauMLegendre,    //!<  1D Gauss-Radau-Legendre quadrature points, pinned at x=-1
+            eGaussRadauPLegendre,    //!<  1D Gauss-Radau-Legendre quadrature points, pinned at x=1
+            eGaussLobattoLegendre,   //!<  1D Gauss-Lobatto-Legendre quadrature points
+            eGaussGaussChebyshev,    //!<  1D Gauss-Gauss-Chebyshev quadrature points
+            eGaussRadauMChebyshev,   //!<  1D Gauss-Radau-Chebyshev quadrature points, pinned at x=-1
+            eGaussRadauPChebyshev,   //!<  1D Gauss-Radau-Chebyshev quadrature points, pinned at x=1
+            eGaussLobattoChebyshev,  //!<  1D Gauss-Lobatto-Legendre quadrature points
+            eGaussRadauMAlpha0Beta1, //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    1 \f$
+            eGaussRadauMAlpha0Beta2, //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    2 \f$
+            eGaussRadauMAlpha1Beta0, //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    1, \beta =    0 \f$
+            eGaussRadauMAlpha2Beta0, //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    2, \beta =    0 \f$
             ePolyEvenlySpaced,       //!< 1D Evenly-spaced points using Lagrange polynomial
             eFourierEvenlySpaced,    //!< 1D Evenly-spaced points using Fourier Fit
             eNodalTriElec,           //!< 2D Nodal Electrostatic Points on a Triangle
             eNodalTriFekete,         //!< 2D Nodal Fekete Points on a Triangle
+            eNodalTriEvenlySpaced,   //!< 2D Evenly-spaced points on a Triangle
             eNodalTetElec,           //!< 3D Nodal Electrostatic Points on a Tetrahedron
             SIZE_PointsType          //!< Length of enum list
         };
@@ -115,6 +116,7 @@ namespace Nektar
             "FourierEvenlySpaced",
             "NodalTriElec",
             "NodalTriFekete",
+            "NodalTriEvenlySpaced",
             "NodalTetElec",
         };
     } // end of namespace

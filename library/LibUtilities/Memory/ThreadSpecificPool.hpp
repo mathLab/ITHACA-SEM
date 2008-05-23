@@ -133,7 +133,7 @@ namespace Nektar
         public:
             typedef Loki::SingletonHolder<MemPool ,
                 Loki::CreateUsingNew,
-                Loki::PhoenixSingleton > Type;
+                Loki::NoDestroy > Type;
             typedef std::map<unsigned int, boost::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
             
         public:
@@ -142,6 +142,11 @@ namespace Nektar
                 m_pools(),
                 m_upperBound(1024)
             {
+                // The m_pools data member stores a collection of thread specific pools of varying size.  All memory requests
+                // up to and including the largest pool size will be allocated from a pool (note that this means you may receive
+                // more memory than you asked for).  For example, if there is a pool for 8 bytes and the next largest pool is 32 
+                // bytes, then a request for 10 bytes will return a 32 byte chunk of memory from the 32 byte pool.
+                
                 typedef PoolMapType::value_type PairType;
                 m_pools.insert(PairType(8, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(8))));
                 m_pools.insert(PairType(16, boost::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(16))));
@@ -159,6 +164,14 @@ namespace Nektar
             
             /// \brief Allocate a block of memory of size ByteSize.
             /// \throw std::bad_alloc if memory is exhausted.
+            /// \param bytes The number of bytes to allocate.
+            ///
+            /// If the bytes parameter specifies a size that is handled by memory pools then the memory 
+            /// is allocated from the pool.  Otherwise the memory is allocated with a call to new.
+            ///
+            /// Important: All memory allocated from this method must be returned to the pool
+            /// via the Deallocate method.  Deleting pointers allocated from the memory pool with the 
+            /// delete operator will result in undefined behavior.
             void* Allocate(unsigned int bytes)
             {
                 if( bytes <= 4 )
@@ -217,6 +230,9 @@ namespace Nektar
 
 /**
     $Log: ThreadSpecificPool.hpp,v $
+    Revision 1.5  2008/05/21 01:38:27  bnelson
+    Added a debug feature to clear memory being allocated.
+
     Revision 1.4  2008/05/16 05:43:22  bnelson
     Updated the memory manager so it is faster choosing the allocator to use, doesn't use the pools for anything larger than 1024 bytes, and doesn't issue a warning for large allocations.
 

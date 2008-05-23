@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
         for(int i=0; i<SIZE_PointsType; ++i)
         {
             cerr << setw(30) << PointsTypeMap[i] << " =" << i << endl;
+            
         }
 
         cerr << "Note type = 1 ~ 14 are for one dimensional basis, and 15 and 16 are for two dimensional basis " << endl;
@@ -37,7 +38,7 @@ int main(int argc, char *argv[])
         cerr << "\n\t Tests 2D NodalTriFekete on 3 points per side" << endl;
 
         return 1; // Aborts main() function
-    }
+    } 
 
     // Read in the type for the points from the caller
     PointsType pointsType = (PointsType) atoi(argv[1]);
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
     {
         cout << "Uniform grid on a Triangle points" << endl;
     }
-
+    cout << "Fekete!!!" << endl;
 
     int degree = nPtsPerSide-1;
 
@@ -113,7 +114,7 @@ int main(int argc, char *argv[])
          }
       }
    }
-
+ 
     cout << "\n\n\n***********************   NodalTriFekete Interpolation Demo ***********************" << endl;
     cout << "\n Result of NumericInterpolation = \n" << MatrixToString(matVmnTilde) << endl;
     cout << "\n Result of I matrix = \n" << MatrixToString(interpMat) << endl;

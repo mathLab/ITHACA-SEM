@@ -101,7 +101,7 @@
         <p><a href="demos.html" id="menu_Demos">Demos</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p style="font-size:9px;">$Date: 2008/05/19 23:50:47 $</p>
+        <p style="font-size:9px;">$Date: 2008/05/22 22:44:23 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -199,12 +199,20 @@
       <li>Take a break as it compiles. It could take a while.</li>
       <li>At the time of this writing, failed building of the <em>Profile</em> and <em>ExpressionTemplateUnitTests</em> projects are to be expected.</li>
       <li>The executable files will be located in the path you specified in the CMake utility.</li>
-      <li>In order to run the executable files, you need to put the appropriate library files (*.dll) in the same directory.
-        <ol>
-            <li>Copy the file from <em>Nektar++\ThirdParty\include\lib\boost_thread-vc80-mt-1_34_1.dll</em> (or where you have <em>Boost</em> installed) into your executable output directory.</li>
-          <li>Do the same with <em>Nektar++\ThirdParty\lapack_win32.dll</em>.</li>
-          <li>Do the same with <em>Nektar++\ThirdParty\blas_win32.dll.</em></li>
-        </ol>
+      <li>In order to run the executable files, they need to find the appropriate library files (*.dll).
+        <ul>
+            <li>Copy the following files into your Release executable output directory. (Or the ones with &quot;-gd&quot; in the name if you are using debug mode.)
+              <ul>
+                <li><em>N</em><em>ektar++\ThirdParty\include\lib\boost_thread-vc80-mt-1_34_1.dll</em></li>
+                <li><em>N</em><em>ektar++\ThirdParty\include\lib\boost_filesystem-vc80-mt-1_34_1.dll</em></li>
+                <li><em>N</em><em>ektar++\ThirdParty\include\lib\boost_iostreams-vc80-mt-1_34_1.dll</em></li>
+                <li><em>N</em><em>ektar++\ThirdParty\include\lib\boost_zlib-vc80-mt-1_34_1.dll</em></li>
+                <li><em>Nektar++\ThirdParty\lapack_win32.dll</em></li>
+                <li><em>Nektar++\ThirdParty\blas_win32.dll</em></li>
+              </ul>
+            </li>
+            <li><strong>ALTERNATIVELY</strong>, put the <em>N</em><em>ektar++\ThirdParty\include\lib\</em> and <em>Nektar++\ThirdParty\</em> directories in your PATH.</li>
+        </ul>
       </li>
     </ol>
     <!-- InstanceEndEditable -->

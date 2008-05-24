@@ -112,9 +112,9 @@
       <li>At the terminal, type &quot;gcc -v&quot; (without the quotes).
         If the last line says the version number is 4.1 or newer, skip to the next section; otherwise you may continue to read. </li>
       <li>You may either ask your system administrator to perform this upgrade for you (recommended), or install GCC in to your local account. If you choose the first option, wait for the new installation and then continue to the next section.</li>
-      <li>First, go to <a href="http://gcc.gnu.org/mirrors.html">http://gcc.gnu.org/mirrors.html</a> and select a mirror. Download a 4.x GCC release from the mirror you select (you probably want to select the newest version). At the time of this writing, 4.3.0 is the newest version. (GCC 4.2 or newer is definitely recommended.)</li>
-      <li>Go to <a href="http://gcc.gnu.org/install/">http://gcc.gnu.org/install/</a> and follow the instructions to install GCC. It is too complicated and error prone to cover everything here. Install at least the C and Fortran (for BLAS) compiles. Once &quot;gcc -v&quot; outputs a version later than 4.1, you can continue to the next section.
-        <ul>
+      <li>First, go to <a href="http://gcc.gnu.org/mirrors.html" target="_blank">http://gcc.gnu.org/mirrors.html</a> and select a mirror. Download a 4.x GCC release from the mirror you select (you probably want to select the newest version). At the time of this writing, 4.3.0 is the newest version. (GCC 4.2 or newer is definitely recommended.)</li>
+      <li>Go to <a href="http://gcc.gnu.org/install/" target="_blank">http://gcc.gnu.org/install/</a> and follow the instructions to install GCC. It is too complicated and error prone to cover everything here. Install at least the C and Fortran (for BLAS) compiles. Once &quot;gcc -v&quot; outputs a version later than 4.1, you can continue to the next section.
+      <ul>
             <li>The general setup instructions are as follows. However, there might be dependencies that need to be installed.
               <ol>
                   <li>tar -xvjf &lt;filename&gt;.tar.bz2</li>
@@ -132,8 +132,8 @@
     <h3 align="left">Setting up CMake</h3>
     <p align="left">CMake is an open-source, cross-platform make file generator system. It can be used to generate the correct GCC Makefiles.</p>
     <ol>
-      <li>Go to the <a href="http://www.cmake.org/HTML/index.html">CMake Website</a> and download the *.tar.gz file appropriate for your operating system. There is a source distribution and a binary distribution. You can use the binary distribution if it is available for your system, otherwise you will need to use the source distribution.
-        <ul>
+      <li>Go to the <a href="http://www.cmake.org/HTML/index.html" target="_blank">CMake Website</a> and download the *.tar.gz file appropriate for your operating system. There is a source distribution and a binary distribution. You can use the binary distribution if it is available for your system, otherwise you will need to use the source distribution.
+      <ul>
             <li>Binary Distribution
               <ul>
                   <li>Extract it anywhere you please, just remember its location so you can execute it later (or better yet, put the <em>bin/</em> directory in your PATH). To extract, type &quot;tar -xzvf filename&quot; (without the quotes and replacing filename with the file you downloaded).</li>
@@ -191,21 +191,21 @@
       <li>Automatically Tuned Linear Algebra Software (ATLAS)
         <ul>
             <li>This  is an open-source version of BLAS that can be tuned to the specific system it is installed on. Performance isn't as great as the implementations (below) for a specific hardware platform, but there is a large improvement over the generic Netlib libraries.</li>
-          <li>URL: <a href="http://math-atlas.sourceforge.net/">http://math-atlas.sourceforge.net/</a></li>
+          <li>URL: <a href="http://math-atlas.sourceforge.net/" target="_blank">http://math-atlas.sourceforge.net/</a></li>
         </ul>
       </li>
       <li>AMD Core Math Library (ACML)
         <ul>
             <li>This is a BLAS implementation that allows for optimal use of AMD Opteron processors.</li>
           <li>For GCC, we were only successful in linking against the GFORTRAN version of ACML.</li>
-          <li>URL: <a href="http://developer.amd.com/tools/acml/Pages/default.aspx">http://developer.amd.com/tools/acml/Pages/default.aspx</a></li>
+          <li>URL: <a href="http://developer.amd.com/tools/acml/Pages/default.aspx" target="_blank">http://developer.amd.com/tools/acml/Pages/default.aspx</a></li>
         </ul>
       </li>
       <li>Intel Math Kernel Library
         (MKL)
         <ul>
             <li>This BLAS implementation that provides optimized support for Pentium and Itanium CPUs.</li>
-          <li>URL: <a href="http://www.intel.com/cd/software/products/asmo-na/eng/307757.htm">http://www.intel.com/cd/software/products/asmo-na/eng/307757.htm</a></li>
+          <li>URL: <a href="http://www.intel.com/cd/software/products/asmo-na/eng/307757.htm" target="_blank">http://www.intel.com/cd/software/products/asmo-na/eng/307757.htm</a></li>
         </ul>
       </li>
     </ul>

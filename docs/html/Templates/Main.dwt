@@ -17,27 +17,31 @@
 	  color: #000000;
     }
     .twoColHybLt #container {
+	  max-width: 99%;
 	  width: 1250px;
       background: #FFFFFF;
       margin: 0 auto;
       text-align: left;
     }
     .twoColHybLt #sidebar1 {
-      float: left;
-      width: 215px;
-      background: #EBEBEB;
-      border: 1px solid #000000;
-      padding-top: 15px;
-      padding-right: 0;
-      padding-bottom: 15px;
-      padding-left: 0;
+	float: left;
+	width: 13.7em;
+	background: #EBEBEB;
+	border: 1px solid #000000;
+	padding-top: 15px;
+	padding-right: 0;
+	padding-bottom: 15px;
+	padding-left: 0;
     }
     .twoColHybLt #sidebar1 h3, .twoColHybLt #sidebar1 p {
       margin-left: 10px;
       margin-right: 10px;
     }
     .twoColHybLt #mainContent {
-      margin: 0 20px 0 230px;
+	margin-top: 0;
+	margin-right: 20px;
+	margin-bottom: 0;
+	margin-left: 14.5em;
     }
     .fltrt {
       float: right;
@@ -108,7 +112,7 @@
         <p><a href="demos.html" id="menu_Demos">Demos</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p style="font-size:9px;">$Date$</p>
+        <p style="font-size:9px;">$Date: 2008/05/24 15:20:29 $</p>
       </div>
       <div id="mainContent">
         <!-- TemplateBeginEditable name="Title" -->

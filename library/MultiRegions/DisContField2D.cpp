@@ -289,8 +289,10 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr  locSegExp;
             LocalRegions::QuadExpSharedPtr locQuadExp;
             LocalRegions::TriExpSharedPtr  locTriExp;
-            SpatialDomains::SegGeomSharedPtr SegGeom;
+            //SpatialDomains::SegGeomSharedPtr SegGeom;
 
+            SpatialDomains::Geometry1DSharedPtr SegGeom;
+            
             Array<OneD,int> MeshEdgeNo(graph2D.GetNseggeoms(),-1);
 
             m_elmtTraceMap  = Array<OneD, Array<OneD,int > > (ntrace_exp);

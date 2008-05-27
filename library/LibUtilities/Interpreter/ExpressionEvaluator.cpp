@@ -166,22 +166,6 @@ namespace Nektar
         //             MathExpression definitions for Spirit Parser
         // --------------------------------------------------------------------- 
 
-        // This is a helper type for the parser. It stores the parsed number in the AST
-        // node, so it doesn't have to be reparsed later when the value is needed for
-        // evaluation.
-        struct StoreParsedDoubleInAST 
-        { 
-            double &x;
-
-            StoreParsedDoubleInAST(double & a) : x(a) { }
-
-            template <class Node,class I> 
-            void operator () (Node &node, I, I) const 
-            { 
-                node.value.value(x); 
-            } 
-        };
-
         // This function specifies the grammar of the MathExpression parser.
         template <typename ScannerT>
         ExpressionEvaluator::MathExpression::definition<ScannerT>::definition(MathExpression const& self)
@@ -234,7 +218,8 @@ namespace Nektar
             ] ] >> op;
 
             number		=	leaf_node_d[ lexeme_d[
-                access_node_d[real_p[assign_a(ParsedDouble)]][StoreParsedDoubleInAST(ParsedDouble)]
+                //access_node_d[real_p[assign_a(ParsedDouble)]][StoreParsedDoubleInAST(ParsedDouble)]
+				real_p
             ] ] >> op;
 
             constant	=	leaf_node_d[ lexeme_d[
@@ -305,64 +290,69 @@ namespace Nektar
         // note that if you have previously set a function to use a certain "vlist", and then
         // you call DefineFunction again with the same function string but a different vlist string,
         // it will use the old vlist string from the first declaration.
-        void ExpressionEvaluator::DefineFunction(string const& vlist, string const& function)
-        {
-            string functionStr(function.c_str());
-            string vlistStr(vlist.c_str());
+		void ExpressionEvaluator::DefineFunction(string const& vlist, string const& function)
+		{
+			// The function is already set, so don't do anything.
+			if (ParsedData != NULL
+					&& function == ParsedData->FunctionString
+					&& vlist == ParsedData->VariableListString)
+				return;
 
-            // Find the previous parsing, or create a new one if it doesn't exist.
-            map<string, ParsedAST*>::iterator it = ParsedMap->find(functionStr);
-            if (it == ParsedMap->end())
-            {
-                ParsedData = new ParsedAST;
-            }
-            else
-            {
-                ParsedData = it->second;
-                ParsedData->ASTMode = Node::SAVE_PARAMETERS;
-                return;
-            }
+			// Find the previous parsing.
+			map<string, ParsedAST*>::iterator it = ParsedMap->find(function);
+			if (it != ParsedMap->end())
+			{
+				ParsedData = it->second;
+				ParsedData->ASTMode = Node::SAVE_PARAMETERS;
+				return;
+			}
 
-            // Parse the vlist input and separate the variables into ordered entries
-            // in a vector<string> object. These need to be ordered because this is
-            // the order the variables will get assigned to in the Map when Evaluate(...)
-            // is called.
-            vector<string> VariableVector;
-            parse((char*) vlistStr.c_str(), ( *space_p >>
-                *(
-                +(+graph_p)[push_back_a(VariableVector)]
-            >> +space_p
-                )
-                )
-                );
-            ParsedData->NumberVariables = VariableVector.size();
-            vector<double*> mapAddresses;
-            for (vector<string>::iterator it = VariableVector.begin(); it != VariableVector.end(); it++)
-            {
-                (*ParsedData->VariableMap)[*it] = 0;
-                mapAddresses.push_back(&(*ParsedData->VariableMap)[*it]);
-            }
-            ParsedData->NextMapVar = new NextMapVariable(mapAddresses);
+			// Create a new parsing if a previous one doesn't exist.
+			string functionStr(function.c_str());
+			string vlistStr(vlist.c_str());
+			ParsedData = new ParsedAST(functionStr, vlistStr);
 
-            // Do the actual parsing with spirit and alert the user if there was an error with an exception.
-            MathExpression myGrammar(constants_p, VariableVector);
-            const char* last = functionStr.c_str(); while (*last != '\0') last++;
-            tree_parse_info<const char*, node_val_data_factory<double> > parseInfo = ast_parse<node_val_data_factory<double> >((const char*) functionStr.c_str(), (const char*) last, myGrammar, space_p);
-            if (parseInfo.full == false)
-            {
-                delete ParsedData;
-                throw string("Unable to fully parse function. Stopped just before: ") + string(parseInfo.stop).substr(0, 15);
-                return;
-            }
+			// Parse the vlist input and separate the variables into ordered entries
+			// in a vector<string> object. These need to be ordered because this is
+			// the order the variables will get assigned to in the Map when Evaluate(...)
+			// is called.
+			vector<string> VariableVector;
+			parse((char*) vlistStr.c_str(), ( *space_p >>
+						   *(
+								+(+graph_p)[push_back_a(VariableVector)]
+									>> +space_p
+							 )
+						 )
+				 );
+			ParsedData->NumberVariables = VariableVector.size();
+			vector<double*> mapAddresses;
+			for (vector<string>::iterator it = VariableVector.begin(); it != VariableVector.end(); it++)
+			{
+				(*ParsedData->VariableMap)[*it] = 0;
+				mapAddresses.push_back(&(*ParsedData->VariableMap)[*it]);
+			}
+			ParsedData->NextMapVar = new NextMapVariable(mapAddresses);
 
-            // This creates a simplified AST that only holds the information required to
-            // parse the expression. It also performs any simplifications possible without
-            // having the final variable and parameter values.
-            ParsedData->AST = CreateAST(parseInfo.trees.begin());
+			// Do the actual parsing with spirit and alert the user if there was an error with an exception.
+			MathExpression myGrammar(constants_p, VariableVector);
+			//const char* last = functionStr.c_str(); while (*last != '\0') last++;
+			//tree_parse_info<const char*, node_val_data_factory<double> > parseInfo = ast_parse<node_val_data_factory<double> >((const char*) functionStr.c_str(), (const char*) last, myGrammar, space_p);
+			tree_parse_info<string::const_iterator, node_val_data_factory<double> > parseInfo = ast_parse<node_val_data_factory<double>, string::const_iterator, MathExpression, space_parser>(functionStr.begin(), functionStr.end(), myGrammar, space_p);
+			if (parseInfo.full == false)
+			{
+				delete ParsedData;
+				throw string("Unable to fully parse function. Stopped just before: ") + string(parseInfo.stop, parseInfo.stop + 15);
+				return;
+			}
 
-            // Store the AST so this function can be Evaluated again very quickly.
-            (*ParsedMap)[functionStr] = ParsedData;
-        }
+			// This creates a simplified AST that only holds the information required to
+			// parse the expression. It also performs any simplifications possible without
+			// having the final variable and parameter values.
+			ParsedData->AST = CreateAST(parseInfo.trees.begin());
+
+			// Store the AST so this function can be Evaluated again very quickly.
+			(*ParsedMap)[functionStr] = ParsedData;
+		}
 
         // Constants are evaluated and inserted into the function at the time it is parsed
         // when calling the DefineFunction(...) function. After parsing, if a constant is
@@ -591,323 +581,320 @@ namespace Nektar
         // the calculation doesn't need to be done for every evaluation. It also performs the
         // checks to make sure everything is in the correct range so these don't need to be
         // performed at evaluation either.
-        ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(tree_match<const char*, node_val_data_factory<double> >::tree_iterator const& i)
-        {
-            const parser_id parserID = i->value.id();
-            if (parserID == MathExpression::constantID)
-            {
-                string constantName(i->value.begin(), i->value.end());
+		ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(tree_match<string::const_iterator, node_val_data_factory<double> >::tree_iterator const &i)
+		{
+			string valueStr(i->value.begin(), i->value.end());
+			valueStr.erase(std::remove_if(valueStr.begin(), valueStr.end(), isspace), valueStr.end());	// trim
+			const parser_id parserID = i->value.id();
+			if (parserID == MathExpression::constantID)
+			{
+				if (i->children.size() != 0)
+				{
+					throw "Illegal children under constant node: " + valueStr;
+					return NULL;
+				}
 
-                if (i->children.size() != 0)
-                {
-                    throw "Illegal children under constant node: " + constantName;
-                    return NULL;
-                }
+				double* value = find(*constants_p, valueStr.c_str() );
+				if (value == NULL)
+				{
+					throw "Cannot find the value for the specified constant: " + valueStr;
+					return NULL;
+				}
 
-                double* value = find(*constants_p, constantName.c_str() );
-                if (value == NULL)
-                {
-                    throw "Cannot find the value for the specified constant: " + constantName;
-                    return NULL;
-                }
+				Node* n = new Node;
+				n->DataType = Node::CONSTANT;
+				n->DoubleValue = *value;
+				return n;
+			}
+			else if (parserID == MathExpression::numberID)
+			{
+				if (i->children.size() != 0)
+				{
+					throw "Illegal children under number node: " + valueStr;
+					return NULL;
+				}
 
-                Node* n = new Node;
-                n->DataType = Node::CONSTANT;
-                n->DoubleValue = *value;
-                return n;
-            }
-            else if (parserID == MathExpression::numberID)
-            {
-                if (i->children.size() != 0)
-                {
-                    throw "Illegal children under number node: " + string(i->value.begin(), i->value.end());
-                    return NULL;
-                }
+				Node* n = new Node;
+				n->DataType = Node::DOUBLE;
+				//n->DoubleValue = i->value.value();
+				n->DoubleValue = atof(valueStr.c_str());
+				return n;
+			}
+			else if (parserID == MathExpression::variableID)
+			{
+				if (i->children.size() != 0)
+				{
+					throw "Illegal children under variable node: " + valueStr;
+					return NULL;
+				}
 
-                Node* n = new Node;
-                n->DataType = Node::DOUBLE;
-                n->DoubleValue = i->value.value();
-                return n;
-            }
-            else if (parserID == MathExpression::variableID)
-            {
-                if (i->children.size() != 0)
-                {
-                    throw "Illegal children under variable node: " + string(i->value.begin(), i->value.end());
-                    return NULL;
-                }
+				map<string, double>::iterator it;
+				if (ParsedData->VariableMap == NULL ||
+						(it = ParsedData->VariableMap->find(valueStr)) == ParsedData->VariableMap->end())
+				{
+					throw "Unknown variable parsed: " + valueStr;
+					return NULL;
+				}
 
-                string* varname = new string(i->value.begin(), i->value.end());
-                map<string, double>::iterator it;
-                if (ParsedData->VariableMap == NULL ||
-                    (it = ParsedData->VariableMap->find(*varname)) == ParsedData->VariableMap->end())
-                {
-                    delete varname;
-                    throw "Unknown variable parsed: " + string(i->value.begin(), i->value.end());
-                    return NULL;
-                }
+				Node* n = new Node;
+				n->DataType = Node::VARIABLE;
+				n->StringValue = new string(valueStr);
+				n->PointerToVariable = &it->second;
+				return n;
+			}
+			else if (parserID == MathExpression::parameterID)
+			{
+				if (i->children.size() != 0)
+				{
+					throw "Illegal children under parameter node: " + valueStr;
+					return NULL;
+				}
 
-                Node* n = new Node;
-                n->DataType = Node::VARIABLE;
-                n->StringValue = varname;
-                n->PointerToVariable = &it->second;
-                return n;
-            }
-            else if (parserID == MathExpression::parameterID)
-            {
-                if (i->children.size() != 0)
-                {
-                    throw "Illegal children under parameter node: " + string(i->value.begin(), i->value.end());
-                    return NULL;
-                }
+				Node* n = new Node;
+				n->DataType = Node::PARAMETER;
+				n->StringValue = new string(valueStr);
+				return n;
+			}
+			else if (parserID == MathExpression::functionID)
+			{
+				func* funcptr = find(functions_p, valueStr.c_str());
+				if (funcptr == NULL)
+				{
+					throw "Invalid function specified: " + valueStr;
+					return NULL;
+				}
+				if (funcptr->size != i->children.size())
+				{
+					throw "Illegal number or arguments for math function: " + valueStr;
+					return NULL;
+				}
 
-                Node* n = new Node;
-                n->DataType = Node::PARAMETER;
-                n->StringValue = new string(i->value.begin(), i->value.end());
-                return n;
-            }
-            else if (parserID == MathExpression::functionID)
-            {
-                string fname(i->value.begin(), i->value.end());
-                func* funcptr = find(functions_p, fname.c_str());
-                if (funcptr == NULL)
-                {
-                    throw "Invalid function specified: " + fname;
-                    return NULL;
-                }
-                if (funcptr->size != i->children.size())
-                {
-                    throw "Illegal number or arguments for math function: " + fname;
-                    return NULL;
-                }
+				bool allDoubles = true;
+				vector<Node*>* arguments = new vector<Node*>;
+				for (tree_match<string::const_iterator, node_val_data_factory<double> >::tree_iterator it = i->children.begin(); it != i->children.end(); it++)
+				{
+					Node* node = CreateAST(it);
+					if (node->DataType != Node::DOUBLE)
+						allDoubles = false;
+					arguments->push_back(node);
+				}
 
-                bool allDoubles = true;
-                vector<Node*>* arguments = new vector<Node*>;
-                for (tree_match<char const*, node_val_data_factory<double> >::tree_iterator it = i->children.begin(); it != i->children.end(); it++)
-                {
-                    Node* node = CreateAST(it);
-                    if (node->DataType != Node::DOUBLE)
-                        allDoubles = false;
-                    arguments->push_back(node);
-                }
+				// If allDoubles == true, we can evaluate the expression since there are no unknowns.
+				if (allDoubles == true)
+				{
+					Node* node = new Node;
+					node->DataType = Node::DOUBLE;
+					errno = 0;
 
-                // If allDoubles == true, we can evaluate the expression since there are no unknowns.
-                if (allDoubles == true)
-                {
-                    Node* node = new Node;
-                    node->DataType = Node::DOUBLE;
-                    errno = 0;
+					switch (i->children.size())
+					{
+					case 1:
+						node->DoubleValue = (*funcptr->func1)( (*arguments)[0]->DoubleValue );
+						break;
+					case 2:
+						node->DoubleValue = (*funcptr->func2)( (*arguments)[0]->DoubleValue, (*arguments)[1]->DoubleValue );
+						break;
+					case 3:
+						node->DoubleValue = (*funcptr->func3)( (*arguments)[0]->DoubleValue, (*arguments)[1]->DoubleValue, (*arguments)[2]->DoubleValue );
+						break;
+					case 4:
+						node->DoubleValue = (*funcptr->func4)( (*arguments)[0]->DoubleValue, (*arguments)[1]->DoubleValue, (*arguments)[2]->DoubleValue, (*arguments)[3]->DoubleValue );
+						break;
+					}
 
-                    switch (i->children.size())
-                    {
-                    case 1:
-                        node->DoubleValue = (*funcptr->func1)( (*arguments)[0]->DoubleValue );
-                        break;
-                    case 2:
-                        node->DoubleValue = (*funcptr->func2)( (*arguments)[0]->DoubleValue, (*arguments)[1]->DoubleValue );
-                        break;
-                    case 3:
-                        node->DoubleValue = (*funcptr->func3)( (*arguments)[0]->DoubleValue, (*arguments)[1]->DoubleValue, (*arguments)[2]->DoubleValue );
-                        break;
-                    case 4:
-                        node->DoubleValue = (*funcptr->func4)( (*arguments)[0]->DoubleValue, (*arguments)[1]->DoubleValue, (*arguments)[2]->DoubleValue, (*arguments)[3]->DoubleValue );
-                        break;
-                    }
+					// Delete the arguments vector.
+					for (vector<Node*>::iterator it = arguments->begin(); it != arguments->end(); it++)
+						delete *it;
+					delete arguments;
 
-                    // Delete the arguments vector.
-                    for (vector<Node*>::iterator it = arguments->begin(); it != arguments->end(); it++)
-                        delete *it;
-                    delete arguments;
+					CheckMathOperationForErrors(valueStr);
 
-                    CheckMathOperationForErrors(fname);
+					return node;
+				}
+				else
+				{
+					Node* node = new Node;
+					node->DataType = Node::FUNCTION;
+					node->StringValue = new string(valueStr);
+					switch (i->children.size())
+					{
+					case 1:
+						node->Function1 = funcptr->func1;
+						break;
+					case 2:
+						node->Function2 = funcptr->func2;
+						break;
+					case 3:
+						node->Function3 = funcptr->func3;
+						break;
+					case 4:
+						node->Function4 = funcptr->func4;
+						break;
+					}
+					node->children = arguments;
 
-                    return node;
-                }
-                else
-                {
-                    Node* node = new Node;
-                    node->DataType = Node::FUNCTION;
-                    node->StringValue = new string(fname);
-                    switch (i->children.size())
-                    {
-                    case 1:
-                        node->Function1 = funcptr->func1;
-                        break;
-                    case 2:
-                        node->Function2 = funcptr->func2;
-                        break;
-                    case 3:
-                        node->Function3 = funcptr->func3;
-                        break;
-                    case 4:
-                        node->Function4 = funcptr->func4;
-                        break;
-                    }
-                    node->children = arguments;
+					return node;
+				}
+			}
+			else if (parserID == MathExpression::factorID)
+			{
+				if (*valueStr.begin() != '-')
+				{
+					throw "Illegal factor - it can only be '-' and it was: " + valueStr;
+					return NULL;
+				}
+				if (i->children.size() != 1)
+				{
+					throw "Illegal number of children under factor node: " + valueStr;
+					return NULL;
+				}
 
-                    return node;
-                }
-            }
-            else if (parserID == MathExpression::factorID)
-            {
-                if (*i->value.begin() != '-')
-                {
-                    throw "Illegal factor - it can only be '-' and it was: " + string(i->value.begin(), i->value.end());
-                    return NULL;
-                }
-                if (i->children.size() != 1)
-                {
-                    throw "Illegal number of children under factor node: " + string(i->value.begin(), i->value.end());
-                    return NULL;
-                }
+				Node* value = CreateAST(i->children.begin());
+				if (value->DataType == Node::DOUBLE)
+				{
+					value->DoubleValue = -1 * value->DoubleValue;
+					return value;
+				}
+				else
+				{
+					Node* zero = new Node;
+					zero->DataType = Node::DOUBLE;
+					zero->DoubleValue = 0.;
 
-                Node* value = CreateAST(i->children.begin());
-                if (value->DataType == Node::DOUBLE)
-                {
-                    value->DoubleValue = -1 * value->DoubleValue;
-                    return value;
-                }
-                else
-                {
-                    Node* zero = new Node;
-                    zero->DataType = Node::DOUBLE;
-                    zero->DoubleValue = 0.;
+					Node* subtraction = new Node;
+					subtraction->DataType = Node::SUBTRACTION;
+					subtraction->children = new vector<Node*>;
+					subtraction->children->push_back(zero);
+					subtraction->children->push_back(value);
 
-                    Node* subtraction = new Node;
-                    subtraction->DataType = Node::SUBTRACTION;
-                    subtraction->children = new vector<Node*>;
-                    subtraction->children->push_back(zero);
-                    subtraction->children->push_back(value);
+					return subtraction;
+				}
+			}
+			else if (parserID == MathExpression::operatorID)
+			{
+				if (i->children.size() != 2)
+				{
+					throw "Too many arguments for mathematical operator: " + valueStr;
+					return NULL;
+				}
 
-                    return subtraction;
-                }
-            }
-            else if (parserID == MathExpression::operatorID)
-            {
-                if (i->children.size() != 2)
-                {
-                    throw "Too many arguments for mathematical operator: " + string(i->value.begin(), i->value.end());
-                    return NULL;
-                }
+				Node* left = CreateAST(i->children.begin()+0);
+				Node* right = CreateAST(i->children.begin()+1);
 
-                Node* left = CreateAST(i->children.begin()+0);
-                Node* right = CreateAST(i->children.begin()+1);
+				// If they are both of double type, we can simplify to a number.
+				if (left->DataType == Node::DOUBLE && right->DataType == Node::DOUBLE)
+				{
+					Node* node = new Node;
+					node->DataType = Node::DOUBLE;
+					switch(*valueStr.begin())
+					{
+					case '+':
+						node->DoubleValue = left->DoubleValue + right->DoubleValue;
+						break;
+					case '-':
+						node->DoubleValue = left->DoubleValue - right->DoubleValue;
+						break;
+					case '*':
+						node->DoubleValue = left->DoubleValue * right->DoubleValue;
+						break;
+					case '/':
+						node->DoubleValue = left->DoubleValue / right->DoubleValue;
+						break;
+					case '^':
+						node->DoubleValue = pow(left->DoubleValue, right->DoubleValue);
+						break;
+					case '<':
+						if (*(valueStr.end()-1) == '=')
+							node->DoubleValue = left->DoubleValue <= right->DoubleValue;
+						else
+							node->DoubleValue = left->DoubleValue < right->DoubleValue;
+						break;
+					case '>':
+						if (*(valueStr.end()-1) == '=')
+							node->DoubleValue = left->DoubleValue >= right->DoubleValue;
+						else
+							node->DoubleValue = left->DoubleValue > right->DoubleValue;
+						break;
+					case '=':
+						node->DoubleValue = left->DoubleValue == right->DoubleValue;
+						break;
+					case '&':
+						node->DoubleValue = left->DoubleValue && right->DoubleValue;
+						break;
+					case '|':
+						node->DoubleValue = left->DoubleValue || right->DoubleValue;
+						break;
 
-                // If they are both of double type, we can simplify to a number.
-                if (left->DataType == Node::DOUBLE && right->DataType == Node::DOUBLE)
-                {
-                    Node* node = new Node;
-                    node->DataType = Node::DOUBLE;
-                    switch(*i->value.begin())
-                    {
-                    case '+':
-                        node->DoubleValue = left->DoubleValue + right->DoubleValue;
-                        break;
-                    case '-':
-                        node->DoubleValue = left->DoubleValue - right->DoubleValue;
-                        break;
-                    case '*':
-                        node->DoubleValue = left->DoubleValue * right->DoubleValue;
-                        break;
-                    case '/':
-                        node->DoubleValue = left->DoubleValue / right->DoubleValue;
-                        break;
-                    case '^':
-                        node->DoubleValue = pow(left->DoubleValue, right->DoubleValue);
-                        break;
-                    case '<':
-                        if (*(i->value.end()-1) == '=')
-                            node->DoubleValue = left->DoubleValue <= right->DoubleValue;
-                        else
-                            node->DoubleValue = left->DoubleValue < right->DoubleValue;
-                        break;
-                    case '>':
-                        if (*(i->value.end()-1) == '=')
-                            node->DoubleValue = left->DoubleValue >= right->DoubleValue;
-                        else
-                            node->DoubleValue = left->DoubleValue > right->DoubleValue;
-                        break;
-                    case '=':
-                        node->DoubleValue = left->DoubleValue == right->DoubleValue;
-                        break;
-                    case '&':
-                        node->DoubleValue = left->DoubleValue && right->DoubleValue;
-                        break;
-                    case '|':
-                        node->DoubleValue = left->DoubleValue || right->DoubleValue;
-                        break;
+					default:
+						delete left;
+						delete right;
+						delete node;
+						throw "Invalid operator encountered: " + valueStr;
+						return NULL;
+					}
 
-                    default:
-                        delete left;
-                        delete right;
-                        delete node;
-                        throw "Invalid operator encountered: " + string(i->value.begin(), i->value.end());
-                        return NULL;
-                    }
+					delete left, right;
+					return node;
+				}
+				else
+				{
+					Node* node = new Node;
+					switch(*valueStr.begin())
+					{
+					case '+':
+						node->DataType = Node::ADDITION;
+						break;
+					case '-':
+						node->DataType = Node::SUBTRACTION;
+						break;
+					case '*':
+						node->DataType = Node::MULTIPLICATION;
+						break;
+					case '/':
+						node->DataType = Node::DIVISION;
+						break;
+					case '^':
+						node->DataType = Node::EXPONENTIATION;
+						break;
+					case '<':
+						if (*(valueStr.end()-1) == '=')
+							node->DataType = Node::LTEQ;
+						else
+							node->DataType = Node::LT;
+						break;
+					case '>':
+						if (*(valueStr.end()-1) == '=')
+							node->DataType = Node::GTEQ;
+						else
+							node->DataType = Node::GT;
+						break;
+					case '=':
+						node->DataType = Node::EQUAL;
+						break;
+					case '&':
+						node->DataType = Node::LOGICAL_AND;
+						break;
+					case '|':
+						node->DataType = Node::LOGICAL_OR;
+						break;
+					default:
+						delete left;
+						delete right;
+						delete node;
+						throw "Invalid operator encountered: " + valueStr;
+						return NULL;
+					}
 
-                    delete left;
-                    delete right;
-                    return node;
-                }
-                else
-                {
-                    Node* node = new Node;
-                    switch(*i->value.begin())
-                    {
-                    case '+':
-                        node->DataType = Node::ADDITION;
-                        break;
-                    case '-':
-                        node->DataType = Node::SUBTRACTION;
-                        break;
-                    case '*':
-                        node->DataType = Node::MULTIPLICATION;
-                        break;
-                    case '/':
-                        node->DataType = Node::DIVISION;
-                        break;
-                    case '^':
-                        node->DataType = Node::EXPONENTIATION;
-                        break;
-                    case '<':
-                        if (*(i->value.end()-1) == '=')
-                            node->DataType = Node::LTEQ;
-                        else
-                            node->DataType = Node::LT;
-                        break;
-                    case '>':
-                        if (*(i->value.end()-1) == '=')
-                            node->DataType = Node::GTEQ;
-                        else
-                            node->DataType = Node::GT;
-                        break;
-                    case '=':
-                        node->DataType = Node::EQUAL;
-                        break;
-                    case '&':
-                        node->DataType = Node::LOGICAL_AND;
-                        break;
-                    case '|':
-                        node->DataType = Node::LOGICAL_OR;
-                        break;
-                    default:
-                        delete left;
-                        delete right;
-                        delete node;
-                        throw "Invalid operator encountered: " + string(i->value.begin(), i->value.end());
-                        return NULL;
-                    }
+					node->children = new vector<Node*>;
+					node->children->push_back(left);
+					node->children->push_back(right);
+					return node;
+				}
+			}
 
-                    node->children = new vector<Node*>;
-                    node->children->push_back(left);
-                    node->children->push_back(right);
-                    return node;
-                }
-            }
-
-            throw "Illegal expression encountered: " + string(i->value.begin(), i->value.end());
-            return NULL;
-        }
+			throw "Illegal expression encountered: " + valueStr;
+			return NULL;
+		}
 
 
         // This function evaluates the AST created from CreateAST(...) and returns

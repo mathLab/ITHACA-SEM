@@ -173,9 +173,7 @@ namespace Nektar
         
         void NodalTriEvenlySpaced::NodalPointReorder2d()
         {
-
             unsigned int npts = GetNumPoints();
-
             using std::vector;
             vector<int> vertex;
             vector<int> iEdge_1; // interior edge points on the bottom triangle edge
@@ -183,9 +181,6 @@ namespace Nektar
             vector<int> iEdge_3; // interior edge points on the left triangle edge
             vector<int> interiorPoints;
             vector<int> map;
-
-
-
 
                // Build the lattice triangle left to right - bottom to top
             for(int i=0, index=0; i<npts; ++i){ // y-direction
@@ -218,6 +213,8 @@ namespace Nektar
                 }
             }
 
+            // Mapping the vertex, edges, and interior points using the permutation matrix,
+            // so the points are ordered anticlockwise.
             for(int k=0; k<vertex.size(); ++k){
 
                 map.push_back(vertex[k]);
@@ -237,6 +234,7 @@ namespace Nektar
 
                 map.push_back(iEdge_3[k]);
             }
+            
             for(int k=0; k<interiorPoints.size(); ++k){
 
                 map.push_back(interiorPoints[k]);
@@ -257,7 +255,6 @@ namespace Nektar
             }
 
         }
-
 
     } // end of namespace 
 } // end of namespace 

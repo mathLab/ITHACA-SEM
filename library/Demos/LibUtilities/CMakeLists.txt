@@ -20,10 +20,14 @@ SET(NodalTriElecSources
 SET(NodalTriEvenlySpacedSources
     NodalTriEvenlySpacedDemo.cpp)
 
+SET(NodalTetEvenlySpacedSources
+    NodalTetEvenlySpacedDemo.cpp)
+
 SET(NodalTetElecSources
 	NodalTetElecDemo.cpp)
-   			
+   
 
+   		
 ADD_NEKTAR_EXECUTABLE(Graph GraphSources )
 #ADD_NEKTAR_EXECUTABLE(MemoryManager MemoryManagerSources )
 ADD_NEKTAR_EXECUTABLE(Matrix VecMatSources)
@@ -39,6 +43,9 @@ SET_LAPACK_LINK_LIBRARIES(NodalTriElecDemo)
 
 ADD_NEKTAR_EXECUTABLE(NodalTriEvenlySpacedDemo NodalTriEvenlySpacedSources)
 SET_LAPACK_LINK_LIBRARIES(NodalTriEvenlySpacedDemo)
+
+ADD_NEKTAR_EXECUTABLE(NodalTetEvenlySpacedDemo NodalTetEvenlySpacedSources)
+SET_LAPACK_LINK_LIBRARIES(NodalTetEvenlySpacedDemo)
 
 ADD_NEKTAR_EXECUTABLE(NodalTetElecDemo NodalTetElecSources)
 SET_LAPACK_LINK_LIBRARIES(NodalTetElecDemo)

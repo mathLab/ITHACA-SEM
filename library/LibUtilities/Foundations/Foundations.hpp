@@ -93,6 +93,7 @@ namespace Nektar
             eNodalTriElec,           //!< 2D Nodal Electrostatic Points on a Triangle
             eNodalTriFekete,         //!< 2D Nodal Fekete Points on a Triangle
             eNodalTriEvenlySpaced,   //!< 2D Evenly-spaced points on a Triangle
+            eNodalTetEvenlySpaced,   //!< 3D Evenly-spaced points on a Tetrahedron
             eNodalTetElec,           //!< 3D Nodal Electrostatic Points on a Tetrahedron
             SIZE_PointsType          //!< Length of enum list
         };
@@ -117,6 +118,7 @@ namespace Nektar
             "NodalTriElec",
             "NodalTriFekete",
             "NodalTriEvenlySpaced",
+            "NodalTetEvenlySpaced",
             "NodalTetElec",
         };
     } // end of namespace

@@ -46,6 +46,7 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/NodalTriEvenlySpaced.h>
+#include <LibUtilities/Foundations/NodalTetEvenlySpaced.h>
 
 namespace Nektar
 {
@@ -73,6 +74,7 @@ namespace Nektar
             const bool NodalTriInited1 =  PointsManager().RegisterCreator(PointsKey(0, eNodalTriFekete), NodalTriFekete::Create);
             const bool nodalTetElecInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTetElec), NodalTetElec::Create);
             const bool NodalTriEveInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTriEvenlySpaced), NodalTriEvenlySpaced::Create);
+            const bool NodalTetEveInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTetEvenlySpaced), NodalTetEvenlySpaced::Create);
 
             const bool Ortho_A_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_A, 0, NullPointsKey), Basis::Create);
             const bool Ortho_B_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_B, 0, NullPointsKey), Basis::Create);
@@ -103,6 +105,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.17  2008/05/23 20:02:13  ehan
+Added NodalTriEvenlySpaced points.
+
 Revision 1.16  2008/05/12 23:47:24  ehan
 Added monomial basis
 

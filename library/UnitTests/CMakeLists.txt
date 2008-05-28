@@ -57,7 +57,7 @@ TARGET_LINK_LIBRARIES(UnitTests
     optimized StdRegions debug StdRegions-g
     optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
 )
-MESSAGE(${Boost_THREAD_LIBRARY})
+
 SET_LAPACK_LINK_LIBRARIES(UnitTests)
 
 IF( ${CMAKE_COMPILER_IS_GNUCXX} )

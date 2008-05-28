@@ -44,13 +44,15 @@ namespace Nektar
     {
         Geometry::Geometry():
             m_coordim(0), 
-            m_state(eNotFilled)      
+            m_state(eNotFilled),
+            m_GeomShapeType(eNoShapeType)
         {
         }
 
         Geometry::Geometry(const int coordim):
             m_coordim(coordim),
-            m_state(eNotFilled)      
+            m_state(eNotFilled),
+            m_GeomShapeType(eNoShapeType)
         {
         }
 
@@ -92,6 +94,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.cpp,v $
+// Revision 1.9  2007/07/26 19:38:47  jfrazier
+// Added general equation evaluation.
+//
 // Revision 1.8  2007/07/26 18:02:42  jfrazier
 // Manage the storage of geofactors.
 //

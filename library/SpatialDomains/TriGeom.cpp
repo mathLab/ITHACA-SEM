@@ -43,6 +43,7 @@ namespace Nektar
     {
         TriGeom::TriGeom()
         {
+            m_GeomShapeType = eTriangle;
         }
 
         TriGeom::TriGeom(const VertexComponentSharedPtr verts[], 
@@ -50,6 +51,8 @@ namespace Nektar
              const StdRegions::EdgeOrientation eorient[]):
         TriFaceComponent(verts[0]->GetCoordim())
         {
+            m_GeomShapeType = eTriangle;
+
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+TriGeom::kNverts);
 
@@ -70,6 +73,8 @@ namespace Nektar
                          const StdRegions::EdgeOrientation eorient[]) :
             TriFaceComponent(edges[0]->GetCoordim())
         {
+            m_GeomShapeType = eTriangle;
+
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
 
@@ -215,6 +220,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.14  2008/05/07 16:05:37  pvos
+// Mapping + Manager updates
+//
 // Revision 1.13  2008/04/06 06:00:38  bnelson
 // Changed ConstArray to Array<const>
 //

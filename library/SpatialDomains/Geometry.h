@@ -48,6 +48,19 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        // Types of geometry types.
+        enum GeomShapeType {
+            eNoShapeType,
+            eSegment=1,
+            eTriangle,
+            eQuad,
+            eTet,
+            eHex,
+            ePrism,
+            ePyramid,
+        };
+
+
         class Geometry; // Forward declaration for typedef.
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
         typedef std::vector< GeometrySharedPtr > GeometryVector;
@@ -98,6 +111,8 @@ namespace Nektar
                     return v_GenGeomFactors();
                 }
 
+                GeomType GetGeomType(void) {return m_GeomType;};
+
             protected:
 
                 static GeomFactorsSharedPtr ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
@@ -107,7 +122,11 @@ namespace Nektar
                 GeomState            m_state;       // enum identifier to determine if quad points are filled
                 static GeomFactorsVector m_RegGeomFactorsManager;
 
+                GeomShapeType m_GeomShapeType;
+
             private:
+                GeomType m_GeomType;
+
                 virtual void v_GenGeomFactors(void)
                 {
                     NEKERROR(ErrorUtil::efatal,
@@ -122,6 +141,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.19  2008/05/10 18:27:33  sherwin
+// Modifications necessary for QuadExp Unified DG Solver
+//
 // Revision 1.18  2008/04/06 06:00:37  bnelson
 // Changed ConstArray to Array<const>
 //

@@ -44,6 +44,7 @@ namespace Nektar
 
         PyrGeom::PyrGeom(const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
         {
+            m_GeomShapeType = ePyramid;
         }
 
         PyrGeom::~PyrGeom()
@@ -91,6 +92,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.cpp,v $
+// Revision 1.3  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.2  2008/02/08 23:05:52  jfrazier
 // More work on 3D components.
 //

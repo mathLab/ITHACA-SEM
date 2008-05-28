@@ -49,12 +49,15 @@ namespace Nektar
         SegGeom::SegGeom():
             m_owndata(false)
         {
+            m_GeomShapeType = eSegment;
         }
 
         SegGeom::SegGeom(const int id, const VertexComponentSharedPtr vert1, 
                          const VertexComponentSharedPtr  vert2):
             EdgeComponent(id,vert1->GetCoordim())
         {
+            m_GeomShapeType = eSegment;
+
             m_owndata = false;
             m_verts[0] = vert1; 
             m_verts[1] = vert2;
@@ -64,6 +67,8 @@ namespace Nektar
         
         SegGeom::SegGeom(const SegGeom &in)
         {
+            // From Geometry class
+            m_GeomShapeType = in.m_GeomShapeType;
             
             // info from EdgeComponent class
             m_eid     = in.m_eid;
@@ -201,6 +206,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.20  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.19  2008/01/21 19:58:14  sherwin
 // Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
 //

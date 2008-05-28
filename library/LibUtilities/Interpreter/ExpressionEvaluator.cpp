@@ -574,6 +574,11 @@ namespace Nektar
             return rtn;
         }
 
+        // Gcc 4.0.1 on the mac did not compile when isspace was passed as the third 
+        // parameter to std::remove_if below (it takes an int as a parameter 
+        // instead of a char).  This wrapper method gets around this problem.
+        int ConvertIsSpaceForGcc(char c) { return isspace(c); }
+        
         // This function walks the AST that is created with the spirit parser and creates a
         // simplified AST that only holds the information required to parse the expression.
         // It also performs any simplifications possible without having the final variable
@@ -584,7 +589,7 @@ namespace Nektar
 		ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(tree_match<string::const_iterator, node_val_data_factory<double> >::tree_iterator const &i)
 		{
 			string valueStr(i->value.begin(), i->value.end());
-			valueStr.erase(std::remove_if(valueStr.begin(), valueStr.end(), isspace), valueStr.end());	// trim
+			valueStr.erase(std::remove_if(valueStr.begin(), valueStr.end(), ConvertIsSpaceForGcc), valueStr.end());	// trim
 			const parser_id parserID = i->value.id();
 			if (parserID == MathExpression::constantID)
 			{

@@ -34,7 +34,7 @@ ADD_NEKTAR_EXECUTABLE(${TARGET_NAME} Sources Headers)
 
 TARGET_LINK_LIBRARIES(${TARGET_NAME}
     optimized LibUtilities debug LibUtilities-g
-    optimized ${BOOST_THREAD_LIB} debug ${BOOST_THREAD_DEBUG_LIB}
+    optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
 )
 
 SET_LAPACK_LINK_LIBRARIES(${TARGET_NAME})

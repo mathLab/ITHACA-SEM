@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.4.2)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(Nektar++)
 
 INCLUDE(CMakeExportBuildSettings)
@@ -34,9 +34,24 @@ SET(NEKTAR_ENABLE_EXCEPTIONS OFF CACHE BOOL "Enable exceptions from assertions."
 
 SET(USE_EXPRESSION_TEMPLATES ON CACHE BOOL "")
 
+#SET(BOOST_INCLUDE_SEARCH_PATH ${CMAKE_SOURCE_DIR}/../ThirdParty/include /usr/local/include /usr/include /sw/include )
+
+#IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
+#    SET(BOOST_INCLUDE_SEARCH_PATH ${BOOST_INCLUDE_SEARCH_PATH}
+#    "C:\\Program Files\\Microsoft Visual Studio .NET 2003\\Vc7\\include"
+#    c:\\Boost\\include )
+
+SET(Boost_USE_STATIC_LIBS ON)
+SET(Boost_USE_MULTITHREAD ON)
+SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)
+SET(Boost_ADDITIONAL_VERSIONS "1.35.0")
+
 INCLUDE (FindBoost)
 INCLUDE (FindLoki)
 INCLUDE (FindTinyXml)
+
+
+FIND_PACKAGE( Boost 1.35.0 REQUIRED COMPONENTS thread )
 
 IF( USE_MKL )
     INCLUDE (FindMKL)
@@ -63,7 +78,7 @@ IF( USE_WIN32_LAPACK )
 ENDIF( USE_WIN32_LAPACK )
 
 
-INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${BOOST_INCLUDE_DIR} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
+INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIR} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
 
 SET(NEKTAR_VERSION 0.1.1)
 SET(NEKTAR_BIN_DIR bin)
@@ -245,7 +260,7 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
 
     TARGET_LINK_LIBRARIES(${name}
         optimized LibUtilities debug LibUtilities-g
-        optimized ${BOOST_THREAD_LIB} debug ${BOOST_THREAD_DEBUG_LIB}
+        optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
         optimized tinyxml debug tinyxml
 	)
         

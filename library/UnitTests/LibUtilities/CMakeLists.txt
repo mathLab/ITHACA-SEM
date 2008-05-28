@@ -32,7 +32,7 @@ ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
 TARGET_LINK_LIBRARIES(LibUtilitiesUnitTests
     optimized LibUtilities debug LibUtilities-g
     optimized StdRegions debug StdRegions-g
-    optimized ${BOOST_THREAD_LIB} debug ${BOOST_THREAD_DEBUG_LIB}
+    optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
 )
 
 SET_LAPACK_LINK_LIBRARIES(LibUtilitiesUnitTests)

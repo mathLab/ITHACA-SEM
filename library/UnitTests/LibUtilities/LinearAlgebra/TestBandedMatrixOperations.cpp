@@ -677,7 +677,26 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestBandedMatrixLinearSystemSolves)
         {
-                typedef NekMatrix<double, BandedMatrixTag> MatrixType;
+            typedef NekMatrix<double, BandedMatrixTag> MatrixType;
+
+            {
+                double buf[] = {0, 0, -.23, -6.98,
+                                0, 2.54, 2.46, 2.56,
+                                -3.66, -2.73, 2.46, -4.78,
+                                -2.13, 4.07, -3.82, 0};
+                              
+    
+                MatrixType m(4,4, buf, MatrixType::PolicySpecificDataHolderType(1, 2));                
+                LinearSystem<MatrixType> l(m);
+
+                double b_buf[] =  { 4.42, 27.13, -6.14, 10.5 };
+                NekVector<double> b(4, b_buf);
+
+                NekVector<double> result = l.Solve(b);
+            }
+
+            {
+                
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -699,7 +718,8 @@ namespace Nektar
                 NekVector<double> b(5, b_buf);
                 
                 LinearSystem<MatrixType> l(m);
-                NekVector<double> result = l.Solve(b);
+                NekVector<double> result(5, 0.0);
+                result = l.Solve(b);
                 
                 double expected_result_buf[] = {1, 2, 3, 4, 5};
                 NekVector<double> expected_result(5, expected_result_buf);
@@ -710,6 +730,7 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(expected_result[3], result[3], .00001);
                 BOOST_CHECK_CLOSE(expected_result[4], result[4], .00001);
             }
+        }
 
     }
 

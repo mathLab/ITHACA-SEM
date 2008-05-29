@@ -172,13 +172,54 @@ namespace Nektar
                                     
             typedef BinaryExpressionEvaluator<LhsPolicy, RhsPolicy, R, AddOp, AddOp> EvalType;
             
+            BOOST_MPL_ASSERT(( boost::mpl::not_<boost::is_same<R, LhsPolicy::ResultType> >));
+            BOOST_MPL_ASSERT(( boost::is_same<R, RhsPolicy::ResultType> ));
+            BOOST_MPL_ASSERT(( AssociativeTraits<ConstantExpressionPolicy<R>, AddOp, RhsPolicy>::IsAssociative ));
+            BOOST_MPL_ASSERT(( boost::mpl::and_
+                                            <
+                                                IsBinaryExpressionPolicy<LhsPolicy>,
+                                                IsBinaryExpressionPolicy<RhsPolicy>
+                                            > ));
+            BOOST_MPL_ASSERT(( boost::mpl::not_<boost::is_same<BinaryNullOp<int, int>, AddOp<int, int> > > ));
             BOOST_STATIC_ASSERT( EvalType::ClassNum == 201 );
-            
+            //
+            BOOST_MPL_ASSERT(( boost::mpl::and_
+                                        <
+                                            boost::mpl::and_
+                                            <
+                                                IsBinaryExpressionPolicy<LhsPolicy>,
+                                                IsBinaryExpressionPolicy<RhsPolicy>
+                                            >,
+                                            boost::mpl::not_<boost::is_same<BinaryNullOp<int, int>, AddOp<int, int> > >,
+                                            boost::mpl::or_
+                                            <
+                                                boost::mpl::and_
+                                                <
+                                                    boost::mpl::not_<boost::is_same<R, LhsPolicy::ResultType> >,
+                                                    boost::is_same<R, RhsPolicy::ResultType>,
+                                                    AssociativeTraits<ConstantExpressionPolicy<R>, AddOp, RhsPolicy>::IsAssociative
+                                                >,
+                                                boost::mpl::and_
+                                                <
+                                                     boost::is_same<R, RhsPolicy::ResultType>,
+                                                     boost::mpl::not_<AssociativeTraits<ConstantExpressionPolicy<R>, AddOp, LhsPolicy>::IsAssociative>,
+                                                     AssociativeTraits<ConstantExpressionPolicy<R>, AddOp, RhsPolicy>::IsAssociative
+                                                >
+                                            >
+                                        > ));
+
             R result;
             Accumulator<R> accum(result);
-            EvalType::Eval(lhsExp, rhsExp, accum);
-            
-            BOOST_CHECK_EQUAL(result.value, 7+19-3+7);
+            //EvalType::Eval(lhsExp, rhsExp, accum);
+            //
+            //BOOST_CHECK_EQUAL(result.value, 7+19-3+7);
+
+
+
+
+
+
+
 //            // R = R + (R + (B+C))
 //            R obj1(8);
 //            R obj2(-3);

@@ -140,7 +140,7 @@ int main(int argc, char** argv)
     unsigned int maxOpCount = 15;
     for(unsigned int opCount = 2; opCount < maxOpCount; ++opCount)
     {
-        GenerateMatrixTest(outFile, "MatrixAddtion", opCount, "+", "Nektar::NekMatrix<double>", boost::bind(InitializeMatrix, _1, _2));
+        GenerateMatrixTest(outFile, "MatrixAddition", opCount, "+", "Nektar::NekMatrix<double>", boost::bind(InitializeMatrix, _1, _2));
         //GenerateMatrixTest(outFile, "MatrixMultiplication", opCount, "*", "Nektar::NekMatrix<double>", boost::bind(InitializeMatrix, _1, _2));
         //GenerateMatrixTest(outFile, "IntWrapperAddition", opCount, "+", "IntWrapper", boost::bind(InitializeIntWrapper, _1, _2));
         //GenerateMatrixTest(outFile, "VariableCostOperationAddition", opCount, "+", "VariableCostObject", boost::bind(InitializeVariableCostObject, _1, _2));
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
         outFile << "MatrixAddition" << opCount << "(numTests, problemSize);\n";
         //outFile << "MatrixMultiplication" << opCount << "(numTests, problemSize);\n";
         //outFile << "IntWrapperAddition" << opCount << "(numTests, problemSize);\n";
-        outFile << "VariableCostOperationAddition" << opCount << "(numTests, problemSize);\n";
+        //outFile << "VariableCostOperationAddition" << opCount << "(numTests, problemSize);\n";
     }
     outFile << "}\n";
     

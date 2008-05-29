@@ -137,5 +137,12 @@ namespace Nektar
             BOOST_CHECK_EQUAL(CountedObject<int>::numberDestroyed, 4u);
         }
 
+
+        BOOST_AUTO_TEST_CASE(ReproduceMemoryErrors)
+        {
+            boost::shared_ptr<int> m = MemoryManager<int>::AllocateSharedPtr();
+            boost::shared_ptr<int> m1 = MemoryManager<int>::AllocateSharedPtr();
+            m1 = MemoryManager<int>::AllocateSharedPtr();
+        }
     }
 }

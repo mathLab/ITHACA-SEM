@@ -34,36 +34,36 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace ErrorUtil
 {
-    #ifdef ENABLE_NEKTAR_EXCEPTIONS
-        void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
+    void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
+    {
+        std::string baseMsg = std::string("Level ") + 
+            boost::lexical_cast<std::string>(level) +  
+            std::string(" assertion violation\n") + 
+            boost::lexical_cast<std::string>(routine) + 
+            std::string("[") +  
+            boost::lexical_cast<std::string>(lineNumber) + 
+            std::string("]:")  
+            + msg;
+            
+        switch(type)
         {
-            std::string errorMessage = std::string(routine) + "[" +
-                    boost::lexical_cast<std::string>(lineNumber) + "]:" +
-                    std::string(msg);
-            //std::cerr << errorMessage << std::endl;
-            throw NekError(errorMessage);
+            case efatal:
+                std::cerr << "Fatal: " << baseMsg << std::endl;
+                throw NekError(baseMsg);
+                break;
+                
+            case ewarning:
+                std::cerr << "Warning: " << baseMsg << std::endl;
+                break;
+                
+            default:
+                std::cerr << "Unknown warning type: " << baseMsg << std::endl;
         }
-    #else // ENABLE_NEKTAR_EXCEPTION
-
-        void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
-        {
-            switch(type)
-            {
-                case efatal:
-                    std::cerr << "Fatal: Level " << level << " assertion violation\n" << routine << "[" << lineNumber << "]:" << msg << std::endl;
-                    exit(1);
-                    break;
-                case ewarning:
-                    std::cerr << "Warning: Level " << level << " assertion violation\n" << routine << ": " << msg << std::endl;
-                    break;
-                default:
-                    std::cerr << "Unknown warning type" << std::endl;
-            }
-        }
-    #endif // ENABLE_NEKTAR_EXCEPTION
+    }
 
     void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level)
     {

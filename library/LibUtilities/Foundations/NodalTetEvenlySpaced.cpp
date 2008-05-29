@@ -59,60 +59,62 @@ namespace Nektar
     {
         namespace
         {
-            bool isVertex(int i, int j, int k, int npts){
-                return (i==0 && j==0 && k==0) || (i==(npts-1) && j==0 && k==0) || (i==0 && j==(npts-1) && k==0);
+            bool isVertex(int x, int y, int z, int npts){
+                return (x==0 && y==0 && z==0) || (x==(npts-1) && y==0 && z==0) || (x==0 && y==(npts-1) && z==0) || (x==0 && y==0 && z==(npts-1));
             }
 
-            bool isEdge_01(int i, int j, int k, int npts){  // edge 0
-                return i==0 || j==0;
+            bool isEdge_01(int x, int y, int z, int npts){  // edge 0
+                return y==0 && z==0;
             }
 
-            bool isEdge_12(int i, int j, int k, int npts){  // edge 1
-                return i + k == npts -1; 
+            bool isEdge_12(int x, int y, int z, int npts){  // edge 1
+                return z==0 && x + y == npts -1;
             }
 
-            bool isEdge_20(int i, int j, int k, int npts){  // edge 2
-                return j==0 || k==0;
+            bool isEdge_20(int x, int y, int z, int npts){  // edge 2
+                return x==0 && z==0;
             }
 
-            bool isEdge_03(int i, int j, int k, int npts){  // edge 3
-                return i==0 || k==0;
+            bool isEdge_03(int x, int y, int z, int npts){  // edge 3
+                return x==0 && y==0;
             }
 
-            bool isEdge_13(int i, int j, int k, int npts){  // edge 4
-                return j + k == npts -1;
+            bool isEdge_13(int x, int y, int z, int npts){  // edge 4
+                return y==0 && x + z == npts -1;
             }
 
-            bool isEdge_23(int i, int j, int k, int npts){  // edge 5
-                return i + j == npts -1;
+            bool isEdge_23(int x, int y, int z, int npts){  // edge 5
+                return x==0 && y + z == npts -1;
             }
 
-            bool isEdge(int i, int j, int k, int npts){
-                return i==0 || j==0 || k==0 || i+j==npts-1 || i+k==npts-1 || j+k==npts-1;
+            bool isEdge(int x, int y, int z, int npts){
+               return isEdge_01(x,y,z,npts)||isEdge_12(x,y,z,npts)||isEdge_20(x,y,z,npts)
+                      ||isEdge_03(x,y,z,npts)||isEdge_13(x,y,z,npts)||isEdge_23(x,y,z,npts);
             }
 
-            bool isFace_012(int i, int j, int k, int npts){  // bottom face (face 0)
-                return !(i==0 || k==0 || i+k==npts-1);
+            bool isFace_012(int x, int y, int z, int npts){  // bottom face (face 0)
+                return z==0;
             }
 
-            bool isFace_013(int i, int j, int k, int npts){  // face 1
-                return !(j==0 || k==0 || j+k==npts-1);
+            bool isFace_013(int x, int y, int z, int npts){  // face 1
+                return y==0;
             }
 
-            bool isFace_123(int i, int j, int k, int npts){  // face 2
-                return !(i+j==npts-1 || i+k==npts-1 || j+k==npts-1);
+            bool isFace_123(int x, int y, int z, int npts){  // face 2
+                return x+y+z==npts-1;
             }
 
-            bool isFace_203(int i, int j, int k, int npts){  // face 3
-                return !(i==0 || j==0 || i+j==npts-1);
+            bool isFace_203(int x, int y, int z, int npts){  // face 3
+                return x==0;
             }
 
-            bool isFace(int i, int j, int k, int npts){
-                return isFace_012(i,j,k,npts) || isFace_013(i,j,k,npts) || isFace_123(i,j,k,npts) || isFace_203(i,j,k,npts);
+            bool isFace(int x, int y, int z, int npts){
+                return isFace_012(x, y, z, npts) || isFace_013(x, y, z, npts)
+                       || isFace_123(x, y, z, npts) || isFace_203(x, y, z, npts);
             }
 
-            bool isInteriorVolume(int i, int j, int k, int npts){
-                return !isFace(i, j, k, npts);
+            bool isInteriorVolume(int x, int y, int z, int npts){
+                return !isFace(x, y, z, npts);
             }
 
         }
@@ -126,16 +128,16 @@ namespace Nektar
             // Populate m_points
             unsigned int npts = GetNumPoints();
             NekDouble delta = 2.0/(npts - 1.0);
-            for(int i=0, index=0; i<npts; ++i){
-                for(int j=0; j<npts-i; ++j){
-                    for(int k=0; k<npts-i-j; ++k, ++index){
-                        NekDouble x = -1.0 + k*delta;
-                        NekDouble y = -1.0 + j*delta;
-                        NekDouble z = -1.0 + i*delta;
+            for(int z=0, index=0; z<npts; ++z){
+                for(int y=0; y<npts-z; ++y){
+                    for(int x=0; x<npts-z-y; ++x, ++index){
+                        NekDouble xi = -1.0 + x*delta;
+                        NekDouble yi = -1.0 + y*delta;
+                        NekDouble zi = -1.0 + z*delta;
 
-                        m_points[0][index] = x;
-                        m_points[1][index] = y;
-                        m_points[2][index] = z;                        
+                        m_points[0][index] = xi;
+                        m_points[1][index] = yi;
+                        m_points[2][index] = zi;                        
                     }
                 }                
             }
@@ -146,6 +148,7 @@ namespace Nektar
         void NodalTetEvenlySpaced::NodalPointReorder3d()
         {
             unsigned int npts = GetNumPoints();
+            cout << "npts = " << npts << endl;
             using std::vector;
             vector<int> vertex;
             vector<int> iEdge_01;  // interior edge 0
@@ -162,69 +165,69 @@ namespace Nektar
             vector<int> map;
 
             // Build the lattice tetrahedron left to right - bottom to top
-            for(int i=0, index=0; i<npts; ++i){  // z-direction
-                for(int j=0; j<npts-i; ++j){   // y-direction
-                    for(int k=0; k<npts-i-j; ++k, ++index){  // x-direction
-                        if( isVertex(i,j,k,npts) ){ // vertex
+            for(int z=0, index=0; z<npts; ++z){
+                for(int y=0; y<npts-z; ++y){
+                    for(int x=0; x<npts-z-y; ++x, ++index){
+
+                        if( isVertex(x,y,z,npts) ){ // vertex
                         
                             vertex.push_back(index);
                             
-                        } else if( isEdge(i,j,k,npts) ){ // interior edge
+                        } else if( isEdge(x,y,z,npts) ){ // interior edge
                         
-                            if( isEdge_01(i,j,k,npts) ){  // interior edge 0
+                            if( isEdge_01(x,y,z,npts) ){  // interior edge 0
                             
                                 iEdge_01.push_back(index);
                                 
-                            } else if( isEdge_12(i,j,k,npts) ){  // interior edge 1
+                            } else if( isEdge_12(x,y,z,npts) ){  // interior edge 1
 
                                 iEdge_12.push_back(index);
                                 
-                            } else if( isEdge_20(i,j,k,npts) ){  // interior edge 2
+                            } else if( isEdge_20(x,y,z,npts) ){  // interior edge 2
 
-                                iEdge_20.push_back(index);
+                                iEdge_20.insert(iEdge_20.begin(), index);
                                 
-                            } else if( isEdge_03(i,j,k,npts) ){ // interior edge 3
+                            } else if( isEdge_03(x,y,z,npts) ){ // interior edge 3
 
-                                iEdge_03.push_back(index);
+                                    iEdge_03.push_back(index);
                                 
-                            } else if( isEdge_13(i,j,k,npts) ){ // interior edge 4
+                            } else if( isEdge_13(x,y,z,npts) ){ // interior edge 4
 
                                 iEdge_13.push_back(index);
                                 
-                            } else if( isEdge_23(i,j,k,npts) ){ // interior edge 5
+                            } else if( isEdge_23(x,y,z,npts) ){ // interior edge 5
 
-                                iEdge_23.push_back(index);
+                                  iEdge_23.push_back(index);
                                 
                             }
                             
-                        } else if( isFace(i,j,k,npts) ) {  // interior face
+                        } else if( isFace(x,y,z,npts) ) {  // interior face
 
-                            if( isFace_012(i,j,k,npts) ){  // interior face 0
+                            if( isFace_012(x,y,z,npts) ){  // interior face 0
 
                                 iFace_012.push_back(index);
                             
-                            } else if( isFace_013(i,j,k,npts) ){  // interior face 1
+                            } else if( isFace_013(x,y,z,npts) ){  // interior face 1
 
                                 iFace_013.push_back(index);
                             
-                            } else if( isFace_123(i,j,k,npts) ){ // interior face 2
+                            } else if( isFace_123(x,y,z,npts) ){ // interior face 2
 
                                 iFace_123.push_back(index);
 
-                            } else if( isFace_203(i,j,k,npts) ){  // interior face 3
+                            } else if( isFace_203(x,y,z,npts) ){  // interior face 3
 
                                 iFace_203.push_back(index);
 
                             }
                         } else {  // interior volume points
 
-                            interiorVolumePoints.push_back(index);
-                            
+                            interiorVolumePoints.push_back(index);                            
                         }
                     }
                 }
             }
-
+           
             // Mapping the vertex, edges, faces, interior volume points using the permutation matrix,
             // so the points are ordered anticlockwise.
             for(int n=0; n<vertex.size(); ++n){
@@ -297,13 +300,17 @@ namespace Nektar
                 points[0][index] = m_points[0][index];
                 points[1][index] = m_points[1][index];
                 points[2][index] = m_points[2][index];
+
             }
 
+            cout << endl;
+            
             for(int index=0; index<map.size(); ++index){
 
                 m_points[0][index] = points[0][map[index]];
                 m_points[1][index] = points[1][map[index]];
                 m_points[2][index] = points[2][map[index]];
+
             }
                                    
         }

@@ -61,7 +61,7 @@ namespace Nektar
             static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
 
 
-              const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
             {
                 ASSERTL0(pkey.GetPointsDim()==3, "NodalTetElec Points can only interp to other 3d point distributions");
                 Array<OneD, const NekDouble> x, y, z;
@@ -69,7 +69,7 @@ namespace Nektar
                 return GetI(x, y, z);
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x, const Array<OneD, const NekDouble>& y,
+           const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x, const Array<OneD, const NekDouble>& y,
                                                                 const Array<OneD, const NekDouble>& z)
            {
                 
@@ -97,7 +97,7 @@ namespace Nektar
         private:
             NodalTetElec():PointsBaseType(NullPointsKey)
             {
-                cout << "&&&&&&&&& Nodal Tet Elec constructor called *****************" << endl;
+              
             }
 
             void CalculatePoints();

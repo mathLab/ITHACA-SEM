@@ -32,7 +32,7 @@
 // Description: SegExp routines
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LocalRegions/LocalRegions.h>
 #include <LocalRegions/LocalRegions.hpp>
 #include <LocalRegions/SegExp.h>
 
@@ -1165,6 +1165,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.41  2008/05/14 18:06:50  sherwin
+// mods to fix Seggeom to Geometry1D casting
+//
 // Revision 1.40  2008/05/10 18:27:33  sherwin
 // Modifications necessary for QuadExp Unified DG Solver
 //

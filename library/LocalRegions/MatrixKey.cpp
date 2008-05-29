@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
+#include <LocalRegions/LocalRegions.h>
 #include <LocalRegions/MatrixKey.h>
 
 namespace Nektar
@@ -151,6 +151,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.14  2007/12/17 13:04:29  sherwin
+* Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
+*
 * Revision 1.13  2007/11/20 16:28:45  sherwin
 * Added terms for UDG Helmholtz solver
 *

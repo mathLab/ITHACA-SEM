@@ -32,7 +32,7 @@
 // Description: Definition of a Point expansion 
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LocalRegions/LocalRegions.h>
 #include <LocalRegions/PointExp.h>
 
 namespace Nektar

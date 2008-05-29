@@ -32,6 +32,7 @@
 // Description: NodalTriExp routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+#include <LocalRegions/LocalRegions.h>
 #include <LocalRegions/LocalRegions.hpp>
 #include <stdio.h>
 
@@ -899,6 +900,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.20  2008/05/07 16:05:21  pvos
+ *    Mapping + Manager updates
+ *
  *    Revision 1.19  2008/04/06 05:59:04  bnelson
  *    Changed ConstArray to Array<const>
  *

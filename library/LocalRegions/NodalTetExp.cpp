@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LocalRegions/NodalTetExp.cpp,v $
+// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/NodalTetExp.cpp,v $
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -32,7 +32,7 @@
 // Description: NodalTetExp routines
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LocalRegions/LocalRegions.h>
 #include <LocalRegions/NodalTetExp.h>
 
 namespace Nektar
@@ -46,6 +46,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTetExp.cpp,v $
+ *    Revision 1.1  2006/05/04 18:58:45  kirby
+ *    *** empty log message ***
+ *
  *    Revision 1.3  2006/03/12 07:43:32  sherwin
  *
  *    First revision to meet coding standard. Needs to be compiled

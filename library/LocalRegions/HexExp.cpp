@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LocalRegions/LocalRegions.h>
 #include <LocalRegions/HexExp.h>
 
 namespace Nektar
@@ -971,6 +972,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.8  2008/04/06 05:59:04  bnelson
+ *    Changed ConstArray to Array<const>
+ *
  *    Revision 1.7  2008/03/19 06:52:46  ehan
  *    Fixed recent changes of call by reference for the matrix shared pointer. Also fixed name of old functions from Get* to Create*.
  *

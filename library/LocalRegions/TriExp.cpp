@@ -31,7 +31,7 @@
 // Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LocalRegions/LocalRegions.h>
 #include <LocalRegions/LocalRegions.hpp>
 #include <stdio.h>
 #include <LocalRegions/TriExp.h>
@@ -943,6 +943,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.29  2008/05/07 16:05:21  pvos
+ *    Mapping + Manager updates
+ *
  *    Revision 1.28  2008/04/06 05:59:05  bnelson
  *    Changed ConstArray to Array<const>
  *

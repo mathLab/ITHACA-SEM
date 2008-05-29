@@ -32,7 +32,7 @@
 // Description:  PyrExp routines
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LocalRegions/LocalRegions.h>
 #include <LocalRegions/PyrExp.h>
 
 namespace Nektar 
@@ -823,6 +823,9 @@ namespace Nektar
 
 /** 
  *    $Log: PyrExp.cpp,v $
+ *    Revision 1.6  2008/04/06 05:59:05  bnelson
+ *    Changed ConstArray to Array<const>
+ *
  *    Revision 1.5  2008/03/17 10:35:03  pvos
  *    Clean up of the code
  *

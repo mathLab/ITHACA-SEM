@@ -32,7 +32,7 @@
 // Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LocalRegions/LocalRegions.h>
 #include <LocalRegions/LocalRegions.hpp>
 #include <stdio.h>
 #include <LocalRegions/QuadExp.h>
@@ -1918,6 +1918,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.34  2008/05/14 09:02:35  pvos
+ *    fixed bug
+ *
  *    Revision 1.33  2008/05/10 18:27:32  sherwin
  *    Modifications necessary for QuadExp Unified DG Solver
  *

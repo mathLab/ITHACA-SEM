@@ -60,6 +60,18 @@ namespace Nektar
             ePyramid,
         };
 
+        const char* const GeomShapeTypeMap[] = 
+        {
+            "NoShapeType",
+            "Segment",
+            "Triangle",
+            "Quad",
+            "Tet",
+            "Hex",
+            "Prism",
+            "Pyramid"
+        };
+
 
         class Geometry; // Forward declaration for typedef.
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
@@ -141,6 +153,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.20  2008/05/28 21:52:27  jfrazier
+// Added GeomShapeType initialization for the different shapes.
+//
 // Revision 1.19  2008/05/10 18:27:33  sherwin
 // Modifications necessary for QuadExp Unified DG Solver
 //

@@ -43,7 +43,7 @@ namespace Nektar
     {
         HexGeom::HexGeom(const QuadGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
         {
-            m_GeomShapeType = eHex;
+            m_GeomShapeType = eHexahedron;
         }
 
         HexGeom::~HexGeom()
@@ -96,6 +96,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.6  2008/05/28 21:52:27  jfrazier
+// Added GeomShapeType initialization for the different shapes.
+//
 // Revision 1.5  2008/05/12 17:28:26  ehan
 // Added virtual functions
 //

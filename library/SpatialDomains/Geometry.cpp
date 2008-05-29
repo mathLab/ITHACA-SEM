@@ -45,14 +45,16 @@ namespace Nektar
         Geometry::Geometry():
             m_coordim(0), 
             m_state(eNotFilled),
-            m_GeomShapeType(eNoShapeType)
+            m_GeomShapeType(eNoShapeType),
+			m_GlobalID(-1)
         {
         }
 
         Geometry::Geometry(const int coordim):
             m_coordim(coordim),
             m_state(eNotFilled),
-            m_GeomShapeType(eNoShapeType)
+            m_GeomShapeType(eNoShapeType),
+			m_GlobalID(-1)
         {
         }
 
@@ -94,6 +96,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.cpp,v $
+// Revision 1.10  2008/05/28 21:52:27  jfrazier
+// Added GeomShapeType initialization for the different shapes.
+//
 // Revision 1.9  2007/07/26 19:38:47  jfrazier
 // Added general equation evaluation.
 //

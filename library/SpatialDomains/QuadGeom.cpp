@@ -52,7 +52,7 @@ namespace Nektar
         
         QuadGeom::QuadGeom()
         {
-            m_GeomShapeType = eQuad;
+            m_GeomShapeType = eQuadrilateral;
         }
 
         QuadGeom::QuadGeom(const VertexComponentSharedPtr verts[], 
@@ -60,7 +60,7 @@ namespace Nektar
                const StdRegions::EdgeOrientation eorient[]):
             QuadFaceComponent(verts[0]->GetCoordim())
         {
-            m_GeomShapeType = eQuad;
+            m_GeomShapeType = eQuadrilateral;
 
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+QuadGeom::kNverts);
@@ -85,7 +85,7 @@ namespace Nektar
         {
             int j;
             
-             m_GeomShapeType = eQuad;
+             m_GeomShapeType = eQuadrilateral;
 
              /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
@@ -258,6 +258,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.15  2008/05/28 21:52:27  jfrazier
+// Added GeomShapeType initialization for the different shapes.
+//
 // Revision 1.14  2008/05/07 16:05:37  pvos
 // Mapping + Manager updates
 //

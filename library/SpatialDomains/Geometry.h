@@ -49,29 +49,31 @@ namespace Nektar
     namespace SpatialDomains
     {
         // Types of geometry types.
-        enum GeomShapeType {
+        enum GeomShapeType
+        {
             eNoShapeType,
-            eSegment=1,
+            eSegment,
             eTriangle,
-            eQuad,
-            eTet,
-            eHex,
-            ePrism,
+            eQuadrilateral,
+            eTetrahedron,
             ePyramid,
+            ePrism,
+            eHexahedron,
+            SIZE_ShapeType
         };
+    
 
         const char* const GeomShapeTypeMap[] = 
         {
             "NoShapeType",
             "Segment",
             "Triangle",
-            "Quad",
-            "Tet",
-            "Hex",
+            "Quadrilateral",
+            "Tetrahedron",
+            "Pyramid",
             "Prism",
-            "Pyramid"
+            "Hexahedron"
         };
-
 
         class Geometry; // Forward declaration for typedef.
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
@@ -117,13 +119,26 @@ namespace Nektar
                     return ValidateRegGeomFactor(m_geomfactors);
                 }
 
+				inline GeomShapeType GetGeomShapeType(void)
+				{
+					return m_GeomShapeType;
+				}
+
+				inline int GetGlobalID(void)
+				{
+					return m_GlobalID;
+				}
+
+				void SetGlobalID(int globalid)
+				{
+					m_GlobalID = globalid;
+				}
+
                 // Wrappers around virtual Functions
                 void GenGeomFactors(void)
                 {
                     return v_GenGeomFactors();
                 }
-
-                GeomType GetGeomType(void) {return m_GeomType;};
 
             protected:
 
@@ -135,6 +150,7 @@ namespace Nektar
                 static GeomFactorsVector m_RegGeomFactorsManager;
 
                 GeomShapeType m_GeomShapeType;
+				int           m_GlobalID;
 
             private:
                 GeomType m_GeomType;
@@ -153,6 +169,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.21  2008/05/29 16:39:57  jfrazier
+// Added shapetype map to convert to text representation.
+//
 // Revision 1.20  2008/05/28 21:52:27  jfrazier
 // Added GeomShapeType initialization for the different shapes.
 //

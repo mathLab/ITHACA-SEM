@@ -135,6 +135,7 @@ namespace Nektar
                     VertexComponentSharedPtr v1 = GetVertex(vertex1);
                     VertexComponentSharedPtr v2 = GetVertex(vertex2);
                     SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, v1,v2);
+					seg->SetGlobalID(indx);
                     m_seggeoms.push_back(seg);                        
                 }
                 catch(...)
@@ -328,15 +329,14 @@ namespace Nektar
             return;
         }
 
-        void MeshGraph1D::Write(std::string &outfilename)
-        {
-        }
-
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: MeshGraph1D.cpp,v $
+// Revision 1.17  2007/12/04 03:01:18  jfrazier
+// Changed to stringstream.
+//
 // Revision 1.16  2007/09/20 22:25:06  jfrazier
 // Added expansion information to meshgraph class.
 //

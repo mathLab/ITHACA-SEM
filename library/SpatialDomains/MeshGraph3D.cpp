@@ -252,6 +252,7 @@ namespace Nektar
                         };
 
                         TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(faces, faceorient));
+						tetgeom->SetGlobalID(indx);
 
                         m_tetgeoms.push_back(tetgeom);
                     }
@@ -291,6 +292,7 @@ namespace Nektar
                         };
 
                         QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
+						quadgeom->SetGlobalID(indx);
 
                         m_quadgeoms.push_back(quadgeom);
 
@@ -330,6 +332,7 @@ namespace Nektar
                         };
 
                         QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
+						quadgeom->SetGlobalID(indx);
 
                         m_quadgeoms.push_back(quadgeom);
 
@@ -369,6 +372,7 @@ namespace Nektar
                         };
 
                         QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
+						quadgeom->SetGlobalID(indx);
 
                         m_quadgeoms.push_back(quadgeom);
 
@@ -495,10 +499,6 @@ namespace Nektar
 
             return returnval;
         };
-
-        void MeshGraph3D::Write(std::string &outfilename)
-        {
-        }
 
         // Take the string that is the composite reference and find the
         // pointer to the Geometry object corresponding to it.
@@ -741,6 +741,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.cpp,v $
+// Revision 1.3  2008/02/08 23:05:52  jfrazier
+// More work on 3D components.
+//
 // Revision 1.2  2008/02/03 05:05:16  jfrazier
 // Initial checkin of 3D components.
 //

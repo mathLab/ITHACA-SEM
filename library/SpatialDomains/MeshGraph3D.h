@@ -68,7 +68,6 @@ namespace Nektar
 
             void ReadGeometry(std::string &infilename);
             void ReadGeometry(TiXmlDocument &doc);
-            void Write(std::string &outfilename);
 
             SegGeomSharedPtr GetSegGeom(int eID);
             TriGeomSharedPtr GetTriGeom(int tID);
@@ -234,6 +233,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.h,v $
+// Revision 1.4  2008/02/03 05:05:16  jfrazier
+// Initial checkin of 3D components.
+//
 // Revision 1.3  2007/07/20 02:15:09  bnelson
 // Replaced boost::shared_ptr with Nektar::ptr
 //

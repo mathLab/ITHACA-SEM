@@ -237,6 +237,7 @@ namespace Nektar
                         };
 
                         TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(edges, edgeorient));
+						trigeom->SetGlobalID(indx);
 
                         m_trigeoms.push_back(trigeom);
                     }
@@ -275,6 +276,7 @@ namespace Nektar
                         };
 
                         QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
+						quadgeom->SetGlobalID(indx);
 
                         m_quadgeoms.push_back(quadgeom);
 
@@ -389,10 +391,6 @@ namespace Nektar
 
             return returnval;
         };
-
-        void MeshGraph2D::Write(std::string &outfilename)
-        {
-        }
 
 #ifdef OLD
         // generate geometric factors based on MeshGraph information. 
@@ -660,6 +658,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.28  2008/05/28 21:42:18  jfrazier
+// Minor comment spelling change.
+//
 // Revision 1.27  2008/03/18 14:14:49  pvos
 // Update for nodal triangular helmholtz solver
 //

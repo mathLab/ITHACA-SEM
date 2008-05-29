@@ -58,8 +58,6 @@ namespace Nektar
             void ReadComposites(TiXmlDocument &doc);
             void ResolveGeomRef(const std::string &prevToken, const std::string &token);
 
-            void Write(std::string &outfilename);
-
             inline const int GetCoordim(void)
             {
                 return GetSpaceDimension();
@@ -91,6 +89,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.h,v $
+// Revision 1.8  2007/09/20 22:25:06  jfrazier
+// Added expansion information to meshgraph class.
+//
 // Revision 1.7  2007/06/07 23:55:24  jfrazier
 // Intermediate revisions to add parsing for boundary conditions file.
 //

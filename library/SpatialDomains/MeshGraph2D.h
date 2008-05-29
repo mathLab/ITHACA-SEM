@@ -61,7 +61,6 @@ namespace Nektar
 
             void ReadGeometry(std::string &infilename);
             void ReadGeometry(TiXmlDocument &doc);
-            void Write(std::string &outfilename);
 
             SegGeomSharedPtr GetSegGeom(int eID);
 
@@ -235,6 +234,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.19  2008/03/18 14:14:49  pvos
+// Update for nodal triangular helmholtz solver
+//
 // Revision 1.18  2008/01/21 19:58:14  sherwin
 // Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
 //

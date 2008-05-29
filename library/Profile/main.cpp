@@ -392,7 +392,7 @@ int main(int argc, char** argv)
 //    VariableCostOperationAddition11(numTests, problemSize);
 //    VariableCostOperationAddition12(numTests, problemSize);
 //    VariableCostOperationAddition13(numTests, problemSize);
-    VariableCostOperationAddition14(numTests, problemSize);
+//    VariableCostOperationAddition14(numTests, problemSize);
 
 //    unsigned int numTrials = boost::lexical_cast<unsigned int>(argv[1]);
 //    
@@ -481,10 +481,10 @@ int main(int argc, char** argv)
 //    std::cout << exeTime/rawTime << std::endl;
 //    std::cout << result << std::endl;
 
-	unsigned int numTests = boost::lexical_cast<unsigned int>(argv[1]);
-	unsigned int problemSize = boost::lexical_cast<unsigned int>(argv[2]);
-	VariableCostObject::size = problemSize;
-MatrixAddition2(numTests, problemSize);
+//	unsigned int numTests = boost::lexical_cast<unsigned int>(argv[1]);
+//	unsigned int problemSize = boost::lexical_cast<unsigned int>(argv[2]);
+//	VariableCostObject::size = problemSize;
+//MatrixAddition2(numTests, problemSize);
 //MatrixAddition3(numTests, problemSize);
 //MatrixAddition4(numTests, problemSize);
 //MatrixAddition5(numTests, problemSize);

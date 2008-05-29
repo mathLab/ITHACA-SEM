@@ -46,12 +46,6 @@ ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS -DNEKTAR_UNIT_TESTS)
 
 ADD_NEKTAR_EXECUTABLE(UnitTests UnitTestSources UnitTestHeaders)
 
-IF( ${CMAKE_COMPILER_IS_GNUCXX} )
-        IF( USE_GCOV )
-		TARGET_LINK_LIBRARIES(UnitTests gcov)
-	ENDIF( USE_GCOV )
-ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
-
 TARGET_LINK_LIBRARIES(UnitTests
     optimized LibUtilities debug LibUtilities-g
     optimized StdRegions debug StdRegions-g
@@ -59,11 +53,5 @@ TARGET_LINK_LIBRARIES(UnitTests
 )
 
 SET_LAPACK_LINK_LIBRARIES(UnitTests)
-
-IF( ${CMAKE_COMPILER_IS_GNUCXX} )
-        IF( USE_GCOV )
-        TARGET_LINK_LIBRARIES(UnitTests gcov)
-    ENDIF( USE_GCOV )
-ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
 
 SUBDIRS(LibUtilities)

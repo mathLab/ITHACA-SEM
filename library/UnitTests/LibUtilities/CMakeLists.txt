@@ -22,13 +22,6 @@ ADD_NEKTAR_EXECUTABLE(LibUtilitiesUnitTests UnitTestSources UnitTestHeaders)
 SET(PrecompiledHeaderName LibUtilitiesUnitTestsPrecompiledHeader.h)
 SETUP_PRECOMPILED_HEADERS(PrecompiledHeaderSources PrecompiledHeaderName)
 
-
-IF( ${CMAKE_COMPILER_IS_GNUCXX} )
-        IF( USE_GCOV )
-		TARGET_LINK_LIBRARIES(LibUtilitiesUnitTests gcov)
-	ENDIF( USE_GCOV )
-ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
-
 TARGET_LINK_LIBRARIES(LibUtilitiesUnitTests
     optimized LibUtilities debug LibUtilities-g
     optimized StdRegions debug StdRegions-g

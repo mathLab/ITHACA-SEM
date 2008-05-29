@@ -197,13 +197,6 @@ ADD_NEKTAR_LIBRARY(LibUtilities STATIC ${LibUtilitySources} ${LibUtilityHeaders}
 SET(PrecompiledHeaderName LibUtilities/LibUtilities.h)
 SETUP_PRECOMPILED_HEADERS(LibUtilitySources PrecompiledHeaderName)
 
-IF( USE_ATLAS AND ATLAS_FOUND )
-        TARGET_LINK_LIBRARIES(LibUtilities
-            ${ATLAS_LAPACK}
-            ${ATLAS_CBLAS}
-            ${ATLAS} )
-ENDIF( USE_ATLAS AND ATLAS_FOUND )
-
 # This doesn't preserve the BasicUtils, Memory, etc. Find a way to fix this.
 INSTALL(FILES ${BasicConstHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicConst)
 INSTALL(FILES ${LinearAlgebraHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/LinearAlgebra)

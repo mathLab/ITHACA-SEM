@@ -136,7 +136,25 @@ namespace Nektar
                 return int(m_vertset.size());
             }
 
-            void Write(std::string &outfilename);
+			struct FieldDefinitions
+			{
+				FieldDefinitions(GeometryVector &elements,
+								 std::vector<LibUtilities::BasisType> &basis,
+								 std::vector<unsigned int> &numModes,
+								 std::vector<unsigned int> &numFields) : 
+					m_Elements(elements),
+					m_Basis(basis),
+					m_NumModes(numModes),
+					m_Fields(numFields)
+				{};
+				GeometryVector m_Elements;
+				std::vector<LibUtilities::BasisType> m_Basis;
+				std::vector<unsigned int> m_NumModes;
+				std::vector<unsigned int> m_Fields;
+			};
+
+			void Write(std::string &outfilename, FieldDefinitions &fielddefs, std::vector<double> &fielddata);
+			void Import(std::string &infilename, std::vector<FieldDefinitions> &fielddefs, std::vector<std::vector<double> > &fielddata);
 
             GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
             Composite GetComposite(int whichComposite) const
@@ -198,6 +216,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.20  2008/03/18 14:14:49  pvos
+// Update for nodal triangular helmholtz solver
+//
 // Revision 1.19  2007/12/11 21:51:52  jfrazier
 // Updated 2d components so elements could be retrieved from edges.
 //

@@ -52,6 +52,14 @@
 #include <SpatialDomains/MeshGraph2D.h>
 //#include <SpatialDomains/MeshGraph3D.h>
 
+// These are required for the Write(...) and Import(...) functions.
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zlib.hpp> 
+#include <boost/iostreams/filtering_stream.hpp>
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -579,9 +587,318 @@ namespace Nektar
         }
     }
 
-    void MeshGraph::Write(std::string &outfilename)
+	void MeshGraph::Write(std::string &outfilename, FieldDefinitions &fielddefs, std::vector<double> &fielddata)
     {
+		// Calculate serialization size.
+		unsigned int size = fielddefs.m_Fields.size() * fielddefs.m_NumModes.size() * fielddefs.m_Elements.size();
+		ASSERTL0(fielddefs.m_Elements.size() > 0, "Fielddefs vector must contain at least one element.");
+		ASSERTL0(fielddata.size() == size, "Invalid size of fielddata vector.");
+		ASSERTL0(fielddata.size() > 0, "Fielddata vector must contain at least one value.");
+
+		// Calculate the attributes.
+		GeomShapeType shapeType = fielddefs.m_Elements[0]->GetGeomShapeType();
+		std::string typeString = GeomShapeTypeMap[shapeType];
+		std::string idString;
+		{
+			std::stringstream idStringStream;
+			bool first = true;
+			for (std::vector<Geometry>::size_type i = 0; i < fielddefs.m_Elements.size(); i++)
+			{
+				ASSERTL0(fielddefs.m_Elements[i]->GetGeomShapeType() == shapeType,
+					"All elements must be the same shape.");
+				if (!first) idStringStream << ",";
+				idStringStream << fielddefs.m_Elements[i]->GetGlobalID();
+				first = false;
+			}
+			idString = idStringStream.str();
+		}
+		std::string basisString;
+		{
+			std::stringstream basisStringStream;
+			bool first = true;
+			for (std::vector<LibUtilities::BasisType>::size_type i = 0; i < fielddefs.m_Basis.size(); i++)
+			{
+				if (!first) basisStringStream << ",";
+				basisStringStream << LibUtilities::BasisTypeMap[fielddefs.m_Basis[i]];
+				first = false;
+			}
+			basisString = basisStringStream.str();
+		}
+		std::string numModesString;
+		{
+			std::stringstream numModesStringStream;
+			bool first = true;
+			for (std::vector<int>::size_type i = 0; i < fielddefs.m_NumModes.size(); i++)
+			{
+				if (!first) numModesStringStream << ",";
+				numModesStringStream << fielddefs.m_NumModes[i];
+				first = false;
+			}
+			numModesString = numModesStringStream.str();
+		}
+		std::string fieldsString;
+		{
+			std::stringstream fieldsStringStream;
+			bool first = true;
+			for (std::vector<int>::size_type i = 0; i < fielddefs.m_Fields.size(); i++)
+			{
+				if (!first) fieldsStringStream << ",";
+				fieldsStringStream << fielddefs.m_Fields[i];
+				first = false;
+			}
+			fieldsString = fieldsStringStream.str();
+		}
+
+		std::string compressedDataString;
+		{
+			// Serialize the fielddata vector to the stringstream.
+			std::stringstream archiveStringStream(std::string((char*)&fielddata[0], sizeof(fielddata[0])/sizeof(char)*fielddata.size()));
+
+			// Compress the serialized data.
+			std::stringstream compressedData;
+			{
+				boost::iostreams::filtering_streambuf<boost::iostreams::input> out; 
+				out.push(boost::iostreams::zlib_compressor());
+				out.push(archiveStringStream);
+				boost::iostreams::copy(out, compressedData);
+			}
+
+			// If the string length is not divisible by 3, pad it. There is a bug
+			// in transform_width that will make it reference past the end and crash.
+			switch (compressedData.str().length() % 3)
+			{
+			case 1:
+				compressedData << '\0';
+			case 2:
+				compressedData << '\0';
+				break;
+			}
+			compressedDataString = compressedData.str();
+		}
+
+		// Convert from binary to base64.
+		typedef boost::archive::iterators::base64_from_binary<
+					boost::archive::iterators::transform_width<
+						std::string::const_iterator, 6, 8> > base64_t;
+		std::string base64string(base64_t(compressedDataString.begin()), base64_t(compressedDataString.end()));
+
+		// Create the XML output.
+		std::ofstream xmlFile(outfilename.c_str(), std::ios::out | std::ios::trunc);
+		ASSERTL0(xmlFile, std::string("Unable to save file: ").append(outfilename));
+		xmlFile << "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" << std::endl;
+		xmlFile << "<nektar>" << std::endl;
+		xmlFile << "    <element ";
+		xmlFile << "id=\"" << idString << "\" ";
+		xmlFile << "type=\"" << typeString << "\" ";
+		xmlFile << "basis=\"" << basisString << "\" ";
+		xmlFile << "numModes=\"" << numModesString << "\" ";
+		xmlFile << "fields=\"" << fieldsString << "\">";
+		xmlFile << base64string << "</element>" << std::endl;
+		xmlFile << "</nektar>" << std::endl;
+		xmlFile.flush();
+		xmlFile.close();
     }
+
+	void MeshGraph::Import(std::string &infilename, std::vector<FieldDefinitions> &fielddefs, std::vector<std::vector<double> > &fielddata)
+	{
+		ASSERTL1(fielddefs.size() == 0, "Expected an empty fielddefs vector.");
+		ASSERTL1(fielddata.size() == 0, "Expected an empty fielddata vector.");
+
+		TiXmlDocument doc(infilename);
+		bool loadOkay = doc.LoadFile();
+
+		std::stringstream errstr;
+		errstr << "Unable to load file: " << infilename << std::endl;
+		errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+		errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+		ASSERTL0(loadOkay, errstr.str().c_str());
+
+		TiXmlHandle docHandle(&doc);
+		TiXmlElement* master = NULL;    // Master tag within which all data is contained.
+
+		master = doc.FirstChildElement("nektar");
+		ASSERTL0(master, "Unable to find nektar tag in file.");
+
+		// Loop through all nektar tags, finding all of the element tags.
+		while (master)
+		{
+			TiXmlElement* element = master->FirstChildElement("element");
+			ASSERTL0(element, "Unable to find element tag within nektar tag.");
+
+			while (element)
+			{
+				// Extract the attributes.
+				std::string idString;
+				std::string typeString;
+				std::string basisString;
+				std::string numModesString;
+				std::string fieldsString;
+				TiXmlAttribute *attr = element->FirstAttribute();
+				while (attr)
+				{
+					std::string attrName(attr->Name());
+					if (attrName == "id")
+						idString.insert(0, attr->Value());
+					else if (attrName == "type")
+						typeString.insert(0, attr->Value());
+					else if (attrName == "basis")
+						basisString.insert(0, attr->Value());
+					else if (attrName == "numModes")
+						numModesString.insert(0, attr->Value());
+					else if (attrName == "fields")
+						fieldsString.insert(0, attr->Value());
+					else
+					{
+						std::string errstr("Unknown attribute: ");
+						errstr += attrName;
+						ASSERTL1(false, errstr.c_str());
+					}
+
+					// Get the next attribute.
+					attr = attr->Next();
+				}
+
+				// Extract the body, which the "data".
+				TiXmlNode* elementChild = element->FirstChild();
+				ASSERTL0(elementChild, "Unable to extract the data from the element tag.");
+				std::string elementStr;
+				while(elementChild)
+				{
+					if (elementChild->Type() == TiXmlNode::TEXT)
+					{
+						elementStr += elementChild->ToText()->ValueStr();
+					}
+					elementChild = elementChild->NextSibling();
+				}
+
+				// Convert from base64 to binary.
+				typedef boost::archive::iterators::transform_width<
+					boost::archive::iterators::binary_from_base64<
+						std::string::const_iterator>, 8, 6 > binary_t;
+				std::stringstream elementCompressedData(std::string(binary_t(elementStr.begin()), binary_t(elementStr.end())));
+
+				// Decompress the binary data.
+				std::stringstream elementDecompressedData;
+				boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+				in.push(boost::iostreams::zlib_decompressor());
+				in.push(elementCompressedData);
+				try
+				{
+					boost::iostreams::copy(in, elementDecompressedData);
+				}
+				catch (boost::iostreams::zlib_error e)
+				{
+					if (e.error() == boost::iostreams::zlib::stream_end)
+					{
+						ASSERTL0(false, "Stream end zlib error");
+					}
+					else if (e.error() == boost::iostreams::zlib::stream_error)
+					{
+						ASSERTL0(false, "Stream zlib error");
+					}
+					else if (e.error() == boost::iostreams::zlib::version_error)
+					{
+						ASSERTL0(false, "Version zlib error");
+					}
+					else if (e.error() == boost::iostreams::zlib::data_error)
+					{
+						ASSERTL0(false, "Data zlib error");
+					}
+					else if (e.error() == boost::iostreams::zlib::mem_error)
+					{
+						ASSERTL0(false, "Memory zlib error");
+					}
+					else if (e.error() == boost::iostreams::zlib::buf_error)
+					{
+						ASSERTL0(false, "Buffer zlib error");
+					}
+					else
+					{
+						ASSERTL0(false, "Unknown zlib error");
+					}
+				}
+
+				// Deserialize the array.
+				double* readFieldData = (double*) elementDecompressedData.str().c_str();
+				std::vector<double> elementFieldData(readFieldData, readFieldData + elementDecompressedData.str().length() * sizeof(*elementDecompressedData.str().c_str()) / sizeof(double));
+				fielddata.push_back(elementFieldData);
+
+				// Reconstruct the fielddefs.
+				std::vector<unsigned int> elementIds;
+				bool valid = ParseUtils::GenerateSeqVector(idString.c_str(), elementIds);
+				ASSERTL0(valid, "Unable to correctly parse the element ids.");
+
+				StdRegions::ShapeType elementType;
+				valid = false;
+				for (unsigned int i = 0; i < StdRegions::SIZE_ShapeType; i++)
+				{
+					if (StdRegions::ShapeTypeMap[i] == typeString)
+					{
+						elementType = (StdRegions::ShapeType) i;
+						valid = true;
+						break;
+					}
+				}
+				ASSERTL0(valid, "Unable to correctly parse the element type.");
+
+				std::vector<std::string> basisStrings;
+				std::vector<LibUtilities::BasisType> basis;
+				valid = ParseUtils::GenerateOrderedStringVector(basisString.c_str(), basisStrings);
+				ASSERTL0(valid, "Unable to correctly parse the basis types.");
+				for (std::vector<std::string>::size_type i = 0; i < basisStrings.size(); i++)
+				{
+					valid = false;
+					for (unsigned int j = 0; j < LibUtilities::SIZE_BasisType; j++)
+					{
+						if (LibUtilities::BasisTypeMap[j] == basisStrings[i])
+						{
+							basis.push_back((LibUtilities::BasisType) j);
+							valid = true;
+							break;
+						}
+					}
+					ASSERTL0(valid, std::string("Unable to correctly parse the basis type: ").append(basisStrings[i]).c_str());
+				}
+
+				std::vector<unsigned int> numModes;
+				valid = ParseUtils::GenerateOrderedVector(numModesString.c_str(), numModes);
+				ASSERTL0(valid, "Unable to correctly parse the number of modes.");
+
+				std::vector<unsigned int> numFields;
+				valid = ParseUtils::GenerateOrderedVector(fieldsString.c_str(), numFields);
+				ASSERTL0(valid, "Unable to correctly parse the number of fields.");
+
+				// Now the elements vector must be reconstructed from the element IDs.
+				GeometryVector elements;
+				CompositeVector domain = GetDomain();
+				for (std::vector<unsigned int>::size_type elementIdIndex = 0; elementIdIndex < elementIds.size(); elementIdIndex++)
+				{
+					valid = false;
+					for (CompositeVector::size_type compositeIndex = 0; compositeIndex < domain.size(); compositeIndex++)
+					{
+						for (GeometryVector::size_type geometryIndex = 0; geometryIndex < domain[compositeIndex]->size(); geometryIndex++)
+						{
+							GeometrySharedPtr geom = (*domain[compositeIndex])[geometryIndex];
+							if (geom->GetGeomShapeType() == elementType &&
+								geom->GetGlobalID() == elementIds[elementIdIndex])
+							{
+								valid = true;
+								elements.push_back(geom);
+							}
+						}
+						if (valid) break;
+					}
+					ASSERTL0(valid, "Unable to find element in the domain.");
+				}
+
+				fielddefs.push_back(FieldDefinitions(elements, basis, numModes, numFields));
+
+				element = element->NextSiblingElement("element");
+			}
+			
+			master = master->NextSiblingElement("nektar");
+		}
+	}
 
     MeshGraph::~MeshGraph()
     {
@@ -591,6 +908,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.16  2008/03/18 14:14:49  pvos
+// Update for nodal triangular helmholtz solver
+//
 // Revision 1.15  2007/12/11 18:59:58  jfrazier
 // Updated meshgraph so that a generic read could be performed and the proper type read (based on dimension) will be returned.
 //

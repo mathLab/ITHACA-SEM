@@ -118,7 +118,7 @@ namespace Nektar
           NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
           NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords);
           
-          void WriteToFile(std::ofstream &outfile);
+          void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
           void WriteCoeffsToFile(std::ofstream &outfile);
           void GetCoords(Array<OneD, NekDouble> &coords_0, 
                          Array<OneD, NekDouble> &coords_1, Array<OneD, NekDouble> &coords_2);
@@ -309,9 +309,9 @@ namespace Nektar
                 MapTo_ModalFormat(edge_ncoeffs, Btype, eid, eorient, Map);
             }
 
-            virtual void v_WriteToFile(std::ofstream &outfile)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {                
-                WriteToFile(outfile);
+                WriteToFile(outfile,format,dumpVar);
             }
 
             virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
@@ -330,6 +330,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.16  2008/05/15 22:42:29  ehan
+ * Added WriteToFile() function and its virtual function
+ *
  * Revision 1.15  2008/05/15 04:15:52  ehan
  * Added virtual function v_CreatStdMatrix()
  *

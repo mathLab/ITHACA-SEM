@@ -100,6 +100,11 @@ namespace Nektar
                 m_locToGloMap->Assemble(inarray, outarray);
             }
 
+            inline const LocalToGlobalMapSharedPtr& GetLocalToGlobalMap() const
+            {
+                return  m_locToGloMap;
+            }
+
             void IProductWRTBase(const ExpList &In);
         
             void FwdTrans(const ExpList &In);

@@ -96,8 +96,7 @@ namespace Nektar
                 return m_geom;
             }
 
-            void WriteToFile(FILE *outfile);
-            void WriteToFile(std::ofstream &outfile, const int dumpVar);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
 
             //----------------------------
@@ -141,6 +140,9 @@ namespace Nektar
             store in \a (this)->_coeffs  */
             void FwdTrans(const Array<OneD, const NekDouble>& inarray, 
               Array<OneD,NekDouble> &outarray);
+
+            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                         Array<OneD, NekDouble> &outarray);
 
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coord);
             
@@ -228,14 +230,9 @@ namespace Nektar
                 return m_geom->GetCoordim();
             }
 
-            virtual void v_WriteToFile(FILE *outfile)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
-                WriteToFile(outfile);
-            }
-
-            virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
-            {
-                WriteToFile(outfile,dumpVar);
+                WriteToFile(outfile,format,dumpVar);
             }
 
             virtual SpatialDomains::GeomType v_MetricInfoType()
@@ -285,6 +282,12 @@ namespace Nektar
                     Array<OneD,NekDouble> &outarray)
             {
                 FwdTrans(inarray,outarray);
+            }
+
+            virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                                   Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans_BndConstrained(inarray, outarray); 
             }
 
             /** \brief Virtual call to SegExp::FwdTrans */
@@ -444,6 +447,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.33  2008/05/14 18:06:50  sherwin
+// mods to fix Seggeom to Geometry1D casting
+//
 // Revision 1.32  2008/05/10 18:27:33  sherwin
 // Modifications necessary for QuadExp Unified DG Solver
 //

@@ -107,6 +107,7 @@ namespace Nektar
       NekDouble PhysIntegral (void);
       void   IProductWRTBase (const ExpList &Sin);
       void   FwdTrans        (const ExpList &Sin);
+      void   FwdTrans_BndConstrained(const ExpList &Sin);
       void   BwdTrans        (const ExpList &Sin); 
       void   PhysDeriv       (ExpList &S0, ExpList &S1, ExpList &S2); 
       
@@ -117,7 +118,7 @@ namespace Nektar
                Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
                Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 
-      void   WriteToFile(std::ofstream &out);
+      void   WriteToFile(std::ofstream &out, OutputFormat format = eTecplot);
     
       DNekScalBlkMatSharedPtr  SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar = 0.0, NekDouble constant = 0.0);
 
@@ -217,6 +218,9 @@ namespace Nektar
       void   FwdTrans (const Array<OneD, const NekDouble> &inarray,
                Array<OneD, NekDouble> &outarray);
 
+      void   FwdTrans_BndConstrained (const Array<OneD, const NekDouble> &inarray,
+               Array<OneD, NekDouble> &outarray);
+
       void   BwdTrans (const Array<OneD, const NekDouble> &inarray, 
                Array<OneD, NekDouble> &outarray); 
       
@@ -248,6 +252,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.33  2008/05/10 18:27:33  sherwin
+* Modifications necessary for QuadExp Unified DG Solver
+*
 * Revision 1.32  2008/04/06 06:00:07  bnelson
 * Changed ConstArray to Array<const>
 *

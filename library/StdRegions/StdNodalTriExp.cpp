@@ -96,6 +96,11 @@ namespace Nektar
             Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
             GetNodalPoints(r,s);
 
+            //Store the values of m_phys in a temporary array
+            int nqtot = GetTotPoints();
+            Array<OneD,NekDouble> tmp_phys(nqtot);
+            Vmath::Vcopy(nqtot,m_phys,1,tmp_phys,1);
+
             for(i = 0; i < m_ncoeffs; ++i)
             {
                 // fill physical space with mode i
@@ -110,6 +115,8 @@ namespace Nektar
                     (*Mat)(j,i) = StdTriExp::PhysEvaluate(c);
                 }
             }
+            // Restore the original values of m_phys
+            Vmath::Vcopy(nqtot,tmp_phys,1,m_phys,1);
             return Mat;
         }
 
@@ -469,12 +476,192 @@ namespace Nektar
             MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
         }
 
+        void StdNodalTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        { 
+            if(format==eTecplot)
+            {
+                int i,j;
+                int nquad0 = m_base[0]->GetNumPoints();
+                int nquad1 = m_base[1]->GetNumPoints();
+                Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
+                Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
+                                                
+                if(dumpVar)
+                {
+                    outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;     
+                }
+                
+                outfile << "Zone, I=" << nquad0 << ", J=" << 
+                    nquad1 <<", F=Point" << std::endl;
+
+                for(j = 0; j < nquad1; ++j)
+                {
+                    for(i = 0; i < nquad0; ++i)
+                    {
+                        outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << 
+                            z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
+                    }
+                }
+            }
+            else if(format==eGmsh)
+            {   
+                if(dumpVar)
+                {
+                    outfile<<"View.MaxRecursionLevel = 8;"<<endl;
+                    outfile<<"View.TargetError = 0.00;"<<endl;
+                    outfile<<"View \" \" {"<<endl;
+                }
+
+                outfile<<"ST("<<endl;                
+                // write the coordinates of the vertices of the triangle
+                outfile<<"-1.0, -1.0, 0.0,"<<endl;
+                outfile<<" 1.0, -1.0, 0.0,"<<endl;
+                outfile<<"-1.0,  1.0, 0.0" <<endl;
+                outfile<<")"<<endl;
+
+                // calculate the coefficients (monomial format)
+                int i,j,k;
+
+                Array<OneD,NekDouble> xi1(GetNcoeffs());
+                Array<OneD,NekDouble> xi2(GetNcoeffs());
+                GetNodalPoints(xi1,xi2);
+                
+                Array<OneD,NekDouble> x(GetNcoeffs());
+                Array<OneD,NekDouble> y(GetNcoeffs());
+                
+                for(i=0;i<GetNcoeffs();i++)
+                {
+                    x[i] = 0.5*(1.0+xi1[i]);
+                    y[i] = 0.5*(1.0+xi2[i]);
+                }
+
+                int cnt  = 0;
+                int cnt2 = 0;
+                int maxnummodes = max(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                int nDumpCoeffs = maxnummodes*maxnummodes;
+                Array<TwoD, int> dumpExponentMap(nDumpCoeffs,3,0);
+                Array<OneD, int> indexMap(GetNcoeffs(),0);
+                Array<TwoD, int> exponentMap(GetNcoeffs(),3,0);
+                for(i = 0; i < maxnummodes; i++)
+                {
+                    for(j = 0; j < maxnummodes; j++)
+                    {
+                        if(j<maxnummodes-i)
+                        {
+                            exponentMap[cnt][0] = j;
+                            exponentMap[cnt][1] = i;
+                            indexMap[cnt++]  = cnt2;
+                        }
+
+                        dumpExponentMap[cnt2][0]   = j;
+                        dumpExponentMap[cnt2++][1] = i;
+                    }            
+                }
+
+                NekMatrix<NekDouble> vdm(GetNcoeffs(),GetNcoeffs());
+                for(i = 0 ; i < GetNcoeffs(); i++)
+                {
+                    for(j = 0 ; j < GetNcoeffs(); j++)
+                    {
+                        vdm(i,j) = pow(x[i],exponentMap[j][0])*pow(y[i],exponentMap[j][1]);
+                    }
+                } 
+
+                vdm.Invert();  
+
+                NekVector<const NekDouble> in(GetNcoeffs(),m_coeffs,eWrapper);
+                NekVector<NekDouble> out(GetNcoeffs());
+                out = vdm*in;
+
+                Array<OneD,NekDouble> dumpOut(nDumpCoeffs,0.0);
+                for(i = 0 ; i < GetNcoeffs(); i++)
+                {
+                    dumpOut[ indexMap[i]  ] = out[i];
+                }
+
+                //write the coefficients
+                outfile<<"{";
+                for(i = 0; i < nDumpCoeffs; i++)
+                {
+                    outfile<<dumpOut[i];
+                    if(i < nDumpCoeffs - 1)
+                    {
+                        outfile<<", ";
+                    }
+                }
+                outfile<<"};"<<endl;
+              
+                if(dumpVar)
+                {   
+                    outfile<<"INTERPOLATION_SCHEME"<<endl;
+                    outfile<<"{"<<endl;
+                    for(i=0; i < nDumpCoeffs; i++)
+                    {
+                        outfile<<"{";
+                        for(j = 0; j < nDumpCoeffs; j++)
+                        {
+                            if(i==j)
+                            {
+                                outfile<<"1.00";
+                            }
+                            else
+                            {
+                                outfile<<"0.00";
+                            }
+                            if(j < nDumpCoeffs - 1)
+                            {
+                                outfile<<", ";
+                            }
+                        }
+                        if(i < nDumpCoeffs - 1)
+                        {
+                            outfile<<"},"<<endl;
+                        }
+                        else
+                        {
+                            outfile<<"}"<<endl<<"}"<<endl;
+                        }
+                    }
+                    
+                    outfile<<"{"<<endl;
+                    for(i=0; i < nDumpCoeffs; i++)
+                    {
+                        outfile<<"{";
+                        for(j = 0; j < 3; j++)
+                        {
+                            outfile<<dumpExponentMap[i][j];
+                            if(j < 2)
+                            {
+                                outfile<<", ";
+                            }
+                        }
+                        if(i < nDumpCoeffs  - 1)
+                        {
+                            outfile<<"},"<<endl;
+                        }
+                        else
+                        {
+                            outfile<<"}"<<endl<<"};"<<endl;
+                        }
+                    }
+                    outfile<<"};"<<endl;
+                }    
+            }
+            else
+            {
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
+            }
+        }      
+
 
     } // end of namespace
 } // end of namespace
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.23  2008/05/07 16:04:57  pvos
+* Mapping + Manager updates
+*
 * Revision 1.22  2008/04/06 06:04:15  bnelson
 * Changed ConstArray to Array<const>
 *

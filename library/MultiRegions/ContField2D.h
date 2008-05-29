@@ -95,11 +95,20 @@ namespace Nektar
             void FwdTrans (const ExpList &In);
             void HelmSolve(const ExpList &In, NekDouble lambda);
 
+            void EvaluateBoundaryConditions(const NekDouble time = 0.0);
+
+            inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>& 
+                GetBndCondExp()
+            {
+                return m_bndConstraint;
+            }
+
         protected:
 
         private:
-            Array<OneD,MultiRegions::ExpList1DSharedPtr>           m_bndConstraint;
-            Array<OneD,SpatialDomains::BoundaryConditionType>      m_bndTypes;
+            Array<OneD,MultiRegions::ExpList1DSharedPtr>       m_bndConstraint;
+            Array<OneD,SpatialDomains::BoundaryConditionType>  m_bndTypes;
+            Array<OneD,SpatialDomains::Equation>               m_bndCondEquations;
 
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
@@ -109,6 +118,10 @@ namespace Nektar
             void GenerateField2D(SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const std::string variable);
+
+            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
+                                                    SpatialDomains::BoundaryConditions &bcs, 
+                                                    const std::string variable);
         };
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
 

@@ -116,6 +116,8 @@ namespace Nektar
                                     const int eid, 
                                     const EdgeOrientation eorient,
                                     StdExpMap &Map);
+
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
             
             //-----------------------------
             // Evaluations Methods
@@ -249,9 +251,9 @@ namespace Nektar
             }
             
             
-            virtual void v_WriteToFile(std::ofstream &outfile)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
-                WriteToFile(outfile);
+                WriteToFile(outfile,format,dumpVar);
             }
 
             virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
@@ -314,6 +316,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.20  2008/05/07 16:04:57  pvos
+* Mapping + Manager updates
+*
 * Revision 1.19  2008/04/06 06:04:15  bnelson
 * Changed ConstArray to Array<const>
 *

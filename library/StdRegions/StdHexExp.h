@@ -180,9 +180,9 @@ namespace Nektar
             void FwdTrans(const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
             NekDouble PhysEvaluate(Array<OneD, const NekDouble>& coords);
-            void WriteToFile(std::ofstream &outfile);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
             void WriteCoeffsToFile(std::ofstream &outfile);
-
+            
             //----------------------------------
             // Local Matrix Routines
             //----------------------------------
@@ -326,9 +326,9 @@ namespace Nektar
                 return GetEdgeNcoeffs(i);
             }
             
-            virtual void v_WriteToFile(std::ofstream &outfile)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)            
             {
-                WriteToFile(outfile);
+                WriteToFile(outfile,format,dumpVar);
             }
 
             virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
@@ -347,6 +347,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.19  2008/05/15 22:40:05  ehan
+* Clean up the codes
+*
 * Revision 1.18  2008/05/15 04:14:37  ehan
 * Added virtual function v_CreatStdMatrix()
 *

@@ -180,6 +180,9 @@ namespace Nektar
             */ 
             void FwdTrans(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
 
+            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                         Array<OneD, NekDouble> &outarray);
+
             /** \brief Single Point Evaluation: \f$ u(x) = \sum_p \phi_p(x) \hat{u}_p 
             *  = \sum_p h_p(x) u(x_p)\f$
             */
@@ -194,6 +197,8 @@ namespace Nektar
             void MapTo(EdgeOrientation dir, StdExpMap& Map);
 
             void GetCoords(Array<OneD, NekDouble> &coords_1);
+
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
         protected:
 
@@ -360,6 +365,12 @@ namespace Nektar
                 FwdTrans(inarray, outarray);
             }
 
+            virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                                   Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans_BndConstrained(inarray, outarray); 
+            }
+
             /** \brief Virtual call to StdSegExp::FwdTrans */
             virtual void v_FwdTrans(const StdExpansion1D &in)
             {
@@ -391,6 +402,11 @@ namespace Nektar
             {
                 MapTo(dir,Map);
             }
+
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            {
+                WriteToFile(outfile,format,dumpVar);
+            }
         };
 
         typedef boost::shared_ptr<StdSegExp> StdSegExpSharedPtr;
@@ -402,6 +418,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.36  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.35  2008/04/02 22:18:10  pvos
 * Update for 2D local to global mapping
 *

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Equation.h,v $
+//  File:  Equation.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -46,7 +46,11 @@ namespace Nektar
     {
         class Equation
         {
-        public:
+        public: 
+
+            Equation()
+            {
+            }
 
             Equation(const Equation &eqn):
               m_eqn(eqn.m_eqn)

@@ -96,8 +96,7 @@ namespace Nektar
                      Array<OneD,NekDouble> &coords_3);
       void GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords);
 
-      void WriteToFile(FILE *outfile);
-      void WriteToFile(std::ofstream &outfile, const int dumpVar);
+      void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
         //-----------------------------
         // Differentiation Methods
@@ -161,15 +160,9 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
-
-        virtual void v_WriteToFile(FILE *outfile)
+        virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
         {
-            WriteToFile(outfile);
-        }
-
-        virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            WriteToFile(outfile,dumpVar);
+            WriteToFile(outfile,format,dumpVar);
         }
 
                /** \brief Virtual call to integrate the physical point list \a inarray
@@ -264,6 +257,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.14  2008/04/06 05:59:04  bnelson
+ *    Changed ConstArray to Array<const>
+ *
  *    Revision 1.13  2008/03/19 06:53:08  ehan
  *    Fixed recent changes of call by reference for the matrix shared pointer. Also fixed name of old functions from Get* to Create*.
  *

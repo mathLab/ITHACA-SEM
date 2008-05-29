@@ -81,8 +81,7 @@ namespace Nektar
                 return m_geom;
             }
 
-            void WriteToFile(FILE *outfile);
-            void WriteToFile(std::ofstream &outfile, const int dumpVar);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
             
             //----------------------------
             // Integration Methods
@@ -188,15 +187,9 @@ namespace Nektar
                 return StdNodalTriExp::GetNodalPoints(x,y);
             }
             
-            virtual void v_WriteToFile(FILE *outfile)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
-                WriteToFile(outfile);
-            }
-            
-            virtual void v_WriteToFile(std::ofstream &outfile, 
-                                       const int dumpVar)
-            {
-                WriteToFile(outfile,dumpVar);
+                WriteToFile(outfile,format,dumpVar);
             }
             
             /** \brief Virtual call to integrate the physical point list \a inarray
@@ -329,6 +322,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.16  2008/04/06 05:59:05  bnelson
+ *    Changed ConstArray to Array<const>
+ *
  *    Revision 1.15  2008/04/02 22:19:26  pvos
  *    Update for 2D local to global mapping
  *

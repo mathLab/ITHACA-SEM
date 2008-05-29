@@ -98,6 +98,11 @@ namespace Nektar
                 m_locToGloMap->Assemble(inarray,outarray);
             }
 
+            inline const LocalToGlobalMapSharedPtr& GetLocalToGlobalMap() const
+            {
+                return  m_locToGloMap;
+            }
+
             void IProductWRTBase(const ExpList &In);
 
             void FwdTrans(const ExpList &In);
@@ -130,6 +135,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.30  2008/04/06 06:00:06  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.29  2008/03/12 15:25:45  pvos
 * Clean up of the code
 *

@@ -177,7 +177,7 @@ namespace Nektar
                 const EdgeOrientation eorient,
                 StdExpMap &Map);
 
-            void WriteToFile(std::ofstream &outfile);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
             void WriteCoeffsToFile(std::ofstream &outfile);
 
             int GetEdgeNcoeffs(const int i) const
@@ -486,9 +486,9 @@ namespace Nektar
                 MapTo_ModalFormat(edge_ncoeffs, Btype, eid, eorient, Map);
             }
 
-            virtual void v_WriteToFile(std::ofstream &outfile)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
-                WriteToFile(outfile);
+                WriteToFile(outfile,format,dumpVar);
             }
 
             virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
@@ -504,6 +504,9 @@ namespace Nektar
 
 /**
 * $Log: StdTriExp.h,v $
+* Revision 1.27  2008/05/07 16:04:57  pvos
+* Mapping + Manager updates
+*
 * Revision 1.26  2008/04/06 06:04:15  bnelson
 * Changed ConstArray to Array<const>
 *

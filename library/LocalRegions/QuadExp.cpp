@@ -498,7 +498,7 @@ namespace Nektar
                 DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
                 
                 // copy inarray in case inarray == outarray
-                NekVector<const NekDouble> in(m_ncoeffs,outarray,eWrapper);
+                NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
                 NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
                 
                 out = (*matsys)*in;
@@ -605,91 +605,216 @@ namespace Nektar
                 coords[i] = m_geom->GetCoord(i,Lcoords);
             }
         }
-        
-        void QuadExp::WriteToFile(FILE *outfile)
+               
+        void QuadExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
-            int i,j;
-            Array<OneD,NekDouble> coords[3];
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-            
-            ASSERTL0(m_geom,"_geom not defined");
-            
-            int  coordim   = m_geom->GetCoordDim();
-            
-            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
-            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
-            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
-        
-            std::fprintf(outfile,"Variables = x");
-            if(coordim == 2)
+            if(format==eTecplot)
             {
-                GetCoords(coords[0],coords[1]);
-                fprintf(outfile,", y");
-            }
-            else if (coordim == 3)
-            {
-                GetCoords(coords[0],coords[1],coords[2]);
-                fprintf(outfile,", y, z");
-            }
-            
-            fprintf(outfile,", v\n");
-            
-            fprintf(outfile,"Zone, I=%d, J=%d, F=Point\n",nquad0,nquad1);
-            for(i = 0; i < nquad0*nquad1; ++i)
-            {
-                for(j = 0; j < coordim; ++j)
-                {
-                    fprintf(outfile,"%lf ",coords[j][i]);
-                }
-                fprintf(outfile,"%lf \n",m_phys[i]);
-            }
-        }
-        
-        
-        void QuadExp::WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            int i,j;
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD,NekDouble> coords[3];
-            
-            ASSERTL0(m_geom,"m_geom not defined");
-            
-            int     coordim  = m_geom->GetCoordim();
-
-            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
-            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
-            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
-        
-            GetCoords(coords[0],coords[1],coords[2]);
-            
-            if(dumpVar)
-            {
-                outfile << "Variables = x";
+                int i,j;
+                int nquad0 = m_base[0]->GetNumPoints();
+                int nquad1 = m_base[1]->GetNumPoints();
+                Array<OneD,NekDouble> coords[3];
                 
-                if(coordim == 2)
+                ASSERTL0(m_geom,"m_geom not defined");
+                
+                int     coordim  = m_geom->GetCoordim();
+                
+                coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
+                coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
+                coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
+                
+                GetCoords(coords[0],coords[1],coords[2]);
+                
+                if(dumpVar)
                 {
-                    outfile << ", y";
+                    outfile << "Variables = x";
+                    
+                    if(coordim == 2)
+                    {
+                        outfile << ", y";
+                    }
+                    else if (coordim == 3)
+                    {
+                        outfile << ", y, z";
+                    }
+                    outfile << ", v\n" << std::endl;
                 }
-                else if (coordim == 3)
+                
+                outfile << "Zone, I=" << nquad0 << ", J=" << 
+                    nquad1 <<", F=Point" << std::endl;
+                
+                for(i = 0; i < nquad0*nquad1; ++i)
                 {
-                    outfile << ", y, z";
+                    for(j = 0; j < coordim; ++j)
+                    {
+                        outfile << coords[j][i] << " ";
+                    }
+                    outfile << m_phys[i] << std::endl;
                 }
-                outfile << ", v\n" << std::endl;
-            }
-            
-            outfile << "Zone, I=" << nquad0 << ", J=" << 
-                nquad1 <<", F=Point" << std::endl;
-            
-            for(i = 0; i < nquad0*nquad1; ++i)
-            {
-                for(j = 0; j < coordim; ++j)
-                {
-                    outfile << coords[j][i] << " ";
-                }
-                outfile << m_phys[i] << std::endl;
-            }
+            }  
+          else if(format==eGmsh)
+          {             
+              if(dumpVar)
+              {
+                  outfile<<"View.MaxRecursionLevel = 8;"<<endl;
+                  outfile<<"View.TargetError = 0.00;"<<endl;
+                  outfile<<"View \" \" {"<<endl;
+              }
+              outfile<<"SQ("<<endl;                
+              // write the coordinates of the vertices of the quadrilateral
+              Array<OneD,NekDouble> coordVert1(2);
+              Array<OneD,NekDouble> coordVert2(2);
+              Array<OneD,NekDouble> coordVert3(2);
+              Array<OneD,NekDouble> coordVert4(2);
+              coordVert1[0]=-1.0;
+              coordVert1[1]=-1.0;
+              coordVert2[0]=1.0;
+              coordVert2[1]=-1.0;
+              coordVert3[0]=1.0;
+              coordVert3[1]=1.0;
+              coordVert4[0]=-1.0;
+              coordVert4[1]=1.0;
+              outfile<<m_geom->GetCoord(0,coordVert1)<<", ";
+              outfile<<m_geom->GetCoord(1,coordVert1)<<", 0.0,"<<endl;
+              outfile<<m_geom->GetCoord(0,coordVert2)<<", ";
+              outfile<<m_geom->GetCoord(1,coordVert2)<<", 0.0,"<<endl;
+              outfile<<m_geom->GetCoord(0,coordVert3)<<", ";
+              outfile<<m_geom->GetCoord(1,coordVert3)<<", 0.0,"<<endl;
+              outfile<<m_geom->GetCoord(0,coordVert4)<<", ";
+              outfile<<m_geom->GetCoord(1,coordVert4)<<", 0.0"<<endl;
+              outfile<<")"<<endl;
+
+              // calculate the coefficients (monomial format)
+              int i,j,k;
+
+              int nModes0 = m_base[0]->GetNumModes();
+              int nModes1 = m_base[1]->GetNumModes();
+
+              const LibUtilities::PointsKey Pkey1Gmsh(nModes0,LibUtilities::eGaussLobattoLegendre);
+              const LibUtilities::PointsKey Pkey2Gmsh(nModes1,LibUtilities::eGaussLobattoLegendre);
+              const LibUtilities::BasisKey  Bkey1Gmsh(m_base[0]->GetBasisType(),nModes0,Pkey1Gmsh);
+              const LibUtilities::BasisKey  Bkey2Gmsh(m_base[1]->GetBasisType(),nModes1,Pkey2Gmsh);
+
+              StdRegions::StdQuadExpSharedPtr EGmsh;
+                EGmsh = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh);
+
+              int nMonomialPolynomials = EGmsh->GetNcoeffs();
+              
+              Array<OneD,NekDouble> xi1(nMonomialPolynomials);
+              Array<OneD,NekDouble> xi2(nMonomialPolynomials);
+              
+              Array<OneD,NekDouble> x(nMonomialPolynomials);
+              Array<OneD,NekDouble> y(nMonomialPolynomials);
+
+              EGmsh->GetCoords(xi1,xi2);
+              
+              for(i=0;i<nMonomialPolynomials;i++)
+              {
+                  x[i] = xi1[i];//0.5*(1.0+xi1[i]);
+                  y[i] = xi2[i];//0.5*(1.0+xi2[i]);
+              }
+
+              int cnt  = 0;
+              Array<TwoD, int> exponentMap(nMonomialPolynomials,3,0);
+              for(i = 0; i < nModes1; i++)
+              {
+                  for(j = 0; j < nModes0; j++)
+                  {
+                      exponentMap[cnt][0] = j;
+                      exponentMap[cnt++][1] = i;
+                  }         
+              }
+              
+              NekMatrix<NekDouble> vdm(nMonomialPolynomials,nMonomialPolynomials);
+              for(i = 0 ; i < nMonomialPolynomials; i++)
+              {
+                  for(j = 0 ; j < nMonomialPolynomials; j++)
+                  {
+                      vdm(i,j) = pow(x[i],exponentMap[j][0])*pow(y[i],exponentMap[j][1]);
+                  }
+              }
+
+              vdm.Invert();
+
+              Array<OneD,NekDouble> rhs(nMonomialPolynomials);
+              EGmsh->BwdTrans(m_coeffs,rhs);
+
+              NekVector<const NekDouble> in(nMonomialPolynomials,rhs,eWrapper);
+              NekVector<NekDouble> out(nMonomialPolynomials);
+              out = vdm*in;
+
+              //write the coefficients
+              outfile<<"{";
+              for(i = 0; i < nMonomialPolynomials; i++)
+              {
+                  outfile<<out[i];
+                  if(i < nMonomialPolynomials - 1)
+                  {
+                      outfile<<", ";
+                  }
+              }
+              outfile<<"};"<<endl;
+              
+              if(dumpVar)
+              {   
+                  outfile<<"INTERPOLATION_SCHEME"<<endl;
+                  outfile<<"{"<<endl;
+                  for(i=0; i < nMonomialPolynomials; i++)
+                  {
+                      outfile<<"{";
+                      for(j = 0; j < nMonomialPolynomials; j++)
+                      {
+                          if(i==j)
+                          {
+                              outfile<<"1.00";
+                          }
+                          else
+                          {
+                              outfile<<"0.00";
+                          }
+                          if(j < nMonomialPolynomials - 1)
+                          {
+                              outfile<<", ";
+                          }
+                      }
+                      if(i < nMonomialPolynomials - 1)
+                      {
+                          outfile<<"},"<<endl;
+                      }
+                      else
+                      {
+                          outfile<<"}"<<endl<<"}"<<endl;
+                      }
+                  }
+                    
+                  outfile<<"{"<<endl;
+                  for(i=0; i < nMonomialPolynomials; i++)
+                  {
+                      outfile<<"{";
+                      for(j = 0; j < 3; j++)
+                      {
+                          outfile<<exponentMap[i][j];
+                          if(j < 2)
+                          {
+                              outfile<<", ";
+                          }
+                      }
+                      if(i < nMonomialPolynomials - 1)
+                      {
+                          outfile<<"},"<<endl;
+                      }
+                      else
+                      {
+                          outfile<<"}"<<endl<<"};"<<endl;
+                      }
+                  }
+                  outfile<<"};"<<endl;
+              }                    
+          } 
+          else
+          {
+              ASSERTL0(false, "Output routine not implemented for requested type of output");
+          }
         }
         
         DNekMatSharedPtr QuadExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
@@ -1918,6 +2043,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.35  2008/05/29 01:02:13  bnelson
+ *    Added precompiled header support.
+ *
  *    Revision 1.34  2008/05/14 09:02:35  pvos
  *    fixed bug
  *

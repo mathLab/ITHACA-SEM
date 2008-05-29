@@ -111,8 +111,7 @@ namespace Nektar
             return m_geom;
         }
 
-        void WriteToFile(FILE *outfile);
-	void WriteToFile(std::ofstream &outfile, const int dumpVar);
+	void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
 
     protected:
@@ -191,14 +190,9 @@ namespace Nektar
             PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
-        virtual void v_WriteToFile(FILE *outfile)
+        virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
         {
-            WriteToFile(outfile);
-        }
-
-        virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            WriteToFile(outfile,dumpVar);
+            WriteToFile(outfile,format,dumpVar);
         }
 
         /** \brief Virtual call to integrate the physical point list \a inarray
@@ -285,6 +279,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.13  2008/05/10 18:27:33  sherwin
+ *    Modifications necessary for QuadExp Unified DG Solver
+ *
  *    Revision 1.12  2008/04/06 05:59:05  bnelson
  *    Changed ConstArray to Array<const>
  *

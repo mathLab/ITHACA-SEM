@@ -544,6 +544,12 @@ namespace Nektar
                             Array<OneD, NekDouble> &outarray)
             {
                 v_FwdTrans(inarray,outarray);
+            } 
+
+            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                        Array<OneD, NekDouble> &outarray)
+            {
+                v_FwdTrans_BndConstrained(inarray,outarray);
             }
 
 
@@ -661,43 +667,9 @@ namespace Nektar
             *  
             *  \param outfile the file to which the solution is written
             */
-            void WriteToFile(FILE *outfile)
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
-                v_WriteToFile(outfile);
-            }
-
-            /** \brief this function writes the solution to the file \a outfile
-            *
-            *  This function is a wrapper around the virtual function 
-            *  \a v_WriteToFile()
-            *
-            *  The expansion evaluated at the quadrature points (stored as 
-            *  #m_phys), together with 
-            *  the coordinates of the quadrature points, are written to the 
-            *  file \a outfile
-            *  
-            *  \param outfile the file to which the solution is written
-            */
-            void WriteToFile(std::ofstream &outfile)
-            {
-                v_WriteToFile(outfile);
-            }
-
-            /** \brief this function writes the solution to the file \a outfile
-            *
-            *  This function is a wrapper around the virtual function 
-            *  \a v_WriteToFile()
-            *
-            *  The expansion evaluated at the quadrature points (stored as 
-            *  #m_phys), together with 
-            *  the coordinates of the quadrature points, are written to the 
-            *  file \a outfile
-            *  
-            *  \param outfile the file to which the solution is written
-            */
-            void WriteToFile(std::ofstream &outfile, const int dumpVar)
-            {
-                v_WriteToFile(outfile,dumpVar);
+                v_WriteToFile(outfile,format,dumpVar);
             }
 
             inline DNekMatSharedPtr& GetStdMatrix(const StdMatrixKey &mkey) 
@@ -1236,6 +1208,12 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This method has not been defined");
             }
 
+            virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This method has not been defined");                
+            }
+
             virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray )
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
@@ -1363,17 +1341,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );        
             }
 
-            virtual void v_WriteToFile(FILE *outfile)
-            {
-                NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
-            }
-
-            virtual void v_WriteToFile(std::ofstream &outfile)
-            {
-                NEKERROR(ErrorUtil::efatal, "WriteToFile:Write method");
-            }
-
-            virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
             }
@@ -1397,6 +1365,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.81  2008/05/10 18:27:33  sherwin
+* Modifications necessary for QuadExp Unified DG Solver
+*
 * Revision 1.80  2008/05/07 16:04:57  pvos
 * Mapping + Manager updates
 *

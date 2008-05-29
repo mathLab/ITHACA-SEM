@@ -215,6 +215,57 @@ namespace Nektar
                 out = (*matsys)*in;
             }
         }
+
+        void StdSegExp::FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                                Array<OneD, NekDouble> &outarray)
+        {
+            if(m_base[0]->Collocation())
+            {
+                Vmath::Vcopy(m_ncoeffs, inarray, 1, outarray, 1);
+            }
+            else
+            {
+                int nInteriorDofs = m_ncoeffs-2;
+                int offset;
+                
+                switch(m_base[0]->GetBasisType())
+                {
+                case LibUtilities::eGLL_Lagrange:
+                    {
+                        offset = 1;
+                    }
+                    break;
+                case LibUtilities::eModified_A:
+                    {
+                        offset = 2;
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"This type of FwdTrans is not defined for this expansion type");
+                }    
+
+                fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
+
+                outarray[GetVertexMap(0)] = inarray[0];
+                outarray[GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
+
+                Array<OneD, NekDouble> tmp0(m_ncoeffs); //ideally, we would like to have tmp0 to be replaced by outarray (currently MassMatrixOp does not allow aliasing)
+                Array<OneD, NekDouble> tmp1(m_ncoeffs);
+
+                MassMatrixOp(outarray,tmp0);
+                IProductWRTBase(inarray,tmp1);
+
+                Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
+                
+                // get Mass matrix inverse (only of interior DOF)
+                StdMatrixKey      masskey(eMass,DetShapeType(),*this);
+                DNekMatSharedPtr  matsys = (m_stdStaticCondMatrixManager[masskey])->GetBlock(1,1);
+                
+                Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,1.0, &(matsys->GetPtr())[0],
+                            nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);                
+
+            }
+        }
         
         NekDouble StdSegExp::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord)
         {
@@ -339,11 +390,62 @@ namespace Nektar
                         1,&coords[0],1);
         }
 
+        void StdSegExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        {
+            if(format==eTecplot)
+            {
+                int i,j;
+                int     nquad = m_base[0]->GetNumPoints();
+                Array<OneD, const NekDouble> z = m_base[0]->GetZ();
+                
+                if(dumpVar)
+                {
+                    outfile << "Variables = z, Coeffs \n" << std::endl;   
+                }
+                
+                outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
+                
+                for(i = 0; i < nquad; ++i)
+                {
+                    outfile << z[i] << " " << m_phys[i] << std::endl;
+                }
+            }
+            else if(format==eGmsh)
+            {
+                int i,j;
+                int     nquad = m_base[0]->GetNumPoints();
+                Array<OneD, const NekDouble> z = m_base[0]->GetZ();
+
+                if(dumpVar)
+                {
+                    outfile<<"View.Type = 2;"<<endl;
+                    outfile<<"View \" \" {"<<endl;
+                }
+ 
+                for(i = 0; i < nquad; ++i)
+                {
+                    outfile << "SP(" << z[i] <<",  0.0, 0.0){" << m_phys[i] << "};" << endl;
+                }
+
+                if(dumpVar)
+                { 
+                    outfile << "};" << endl;
+                }
+            }
+            else
+            {
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
+            }
+        }
+
     }//end namespace
 }//end namespace
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.49  2008/05/07 16:04:57  pvos
+* Mapping + Manager updates
+*
 * Revision 1.48  2008/04/22 05:22:15  bnelson
 * Speed enhancements.
 *

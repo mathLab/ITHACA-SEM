@@ -467,6 +467,56 @@ namespace Nektar
             }
         }
 
+        void SegExp::FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                             Array<OneD, NekDouble> &outarray)
+        {
+            if(m_base[0]->Collocation())
+            {
+                Vmath::Vcopy(m_ncoeffs, inarray, 1, outarray, 1);
+            }
+            else
+            {
+                int nInteriorDofs = m_ncoeffs-2;
+                int offset;
+
+                switch(m_base[0]->GetBasisType())
+                {
+                case LibUtilities::eGLL_Lagrange:
+                    {
+                        offset = 1;
+                    }
+                    break;
+                case LibUtilities::eModified_A:
+                    {
+                        offset = 2;
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"This type of FwdTrans is not defined for this expansion type");
+                }    
+
+                fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
+
+                outarray[GetVertexMap(0)] = inarray[0];
+                outarray[GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
+
+                Array<OneD, NekDouble> tmp0(m_ncoeffs); //ideally, we would like to have tmp0 to be replaced by outarray (currently MassMatrixOp does not allow aliasing)
+                Array<OneD, NekDouble> tmp1(m_ncoeffs);
+
+                MassMatrixOp(outarray,tmp0);
+                IProductWRTBase(inarray,tmp1);
+
+                Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
+                
+                // get Mass matrix inverse (only of interior DOF)
+                MatrixKey             masskey(StdRegions::eMass, DetShapeType(),*this);
+                DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
+                
+                Blas::Dgemv('N',nInteriorDofs,nInteriorDofs, matsys->Scale(), &((matsys->GetOwnedMatrix())->GetPtr())[0],
+                            nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);       
+            }
+        }
+
         void SegExp::GetCoords(Array<OneD, NekDouble> &coords_0,
             Array<OneD, NekDouble> &coords_1,
             Array<OneD, NekDouble> &coords_2)
@@ -548,92 +598,86 @@ namespace Nektar
             }     
         }
 
-
-        void SegExp::WriteToFile(FILE *outfile)
+        void SegExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
-            int i,j;
-            Array<OneD,NekDouble> coords[3];
-            int  nquad = m_base[0]->GetNumPoints();
-
-            ASSERTL0(m_geom,"_geom not defined");
-
-            int  coordim  = m_geom->GetCoordim();
-
-            coords[0] = Array<OneD,NekDouble>(nquad);
-            coords[1] = Array<OneD,NekDouble>(nquad);
-            coords[2] = Array<OneD,NekDouble>(nquad);
-
-            std::fprintf(outfile,"Variables = x");
-            if(coordim == 2)
+            if(format==eTecplot)
             {
-                GetCoords(coords[0],coords[1]);
-                fprintf(outfile,", y");
+                int i,j;
+                int     nquad = m_base[0]->GetNumPoints();
+                
+                Array<OneD,NekDouble> coords[3];
+                
+                ASSERTL0(m_geom,"m_geom not defined");
+                
+                int     coordim  = m_geom->GetCoordim();
+                
+                coords[0] = Array<OneD,NekDouble>(nquad);
+                coords[1] = Array<OneD,NekDouble>(nquad);
+                coords[2] = Array<OneD,NekDouble>(nquad);
+                
+                GetCoords(coords[0],coords[1],coords[2]);
+                
+                if(dumpVar)
+                {
+                    outfile << "Variables = x";
+                    
+                    if(coordim == 2)
+                    {
+                        
+                        outfile << ", y";
+                    }
+                    else if (coordim == 3)
+                    {
+                        outfile << ", y, z";
+                    }
+                    outfile << ", v\n" << std::endl;
+                }
+                
+                outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
+                
+                for(i = 0; i < nquad; ++i)
+                {
+                    for(j = 0; j < coordim; ++j)
+                    {
+                        outfile << coords[j][i] << " ";
+                    }
+                    outfile << m_phys[i] << std::endl;
+                }
             }
-            else if (coordim == 3)
-            {
-                GetCoords(coords[0],coords[1], coords[2]);
-                fprintf(outfile,", y, z");
+            else if(format==eGmsh)
+            {  
+                int i,j;
+                int     nquad = m_base[0]->GetNumPoints();
+                
+                Array<OneD,NekDouble> coords[3];
+                
+                ASSERTL0(m_geom,"m_geom not defined");             
+                coords[0] = Array<OneD,NekDouble>(nquad,0.0);
+                coords[1] = Array<OneD,NekDouble>(nquad,0.0);
+                coords[2] = Array<OneD,NekDouble>(nquad,0.0);
+                
+                GetCoords(coords[0],coords[1],coords[2]);
+
+                if(dumpVar)
+                {
+                    outfile<<"View.Type = 2;"<<endl;
+                    outfile<<"View \" \" {"<<endl;
+                }
+ 
+                for(i = 0; i < nquad; ++i)
+                {
+                    outfile << "SP(" << coords[0][i] << ", " << coords[1][i] << ", " << coords[2][i] << ")";
+                    outfile << "{" << m_phys[i] << "};" << endl;
+                }
+
+                if(dumpVar)
+                { 
+                    outfile << "};" << endl;
+                }
             }
             else
             {
-                GetCoords(coords[0]);
-            }
-            fprintf(outfile,", v\n");
-
-            fprintf(outfile,"Zone, I=%d, F=Point\n",nquad);
-
-            for(i = 0; i < nquad; ++i)
-            {
-                for(j = 0; j < coordim; ++j)
-                {
-                    fprintf(outfile,"%lf ",coords[j][i]);
-                }
-                fprintf(outfile,"%lf \n",m_phys[i]);
-            }
-        }
-
-        void SegExp::WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            int i,j;
-            int     nquad = m_base[0]->GetNumPoints();
-
-            Array<OneD,NekDouble> coords[3];
-
-            ASSERTL0(m_geom,"m_geom not defined");
-
-            int     coordim  = m_geom->GetCoordim();
-
-            coords[0] = Array<OneD,NekDouble>(nquad);
-            coords[1] = Array<OneD,NekDouble>(nquad);
-            coords[2] = Array<OneD,NekDouble>(nquad);
-
-            GetCoords(coords[0],coords[1],coords[2]);
-
-            if(dumpVar)
-            {
-                outfile << "Variables = x";
-
-                if(coordim == 2)
-                {
-
-                    outfile << ", y";
-                }
-                else if (coordim == 3)
-                {
-                    outfile << ", y, z";
-                }
-                outfile << ", v\n" << std::endl;
-            }
-
-            outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
-
-            for(i = 0; i < nquad; ++i)
-            {
-                for(j = 0; j < coordim; ++j)
-                {
-                    outfile << coords[j][i] << " ";
-                }
-                outfile << m_phys[i] << std::endl;
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
 
@@ -1165,6 +1209,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.42  2008/05/29 01:02:13  bnelson
+// Added precompiled header support.
+//
 // Revision 1.41  2008/05/14 18:06:50  sherwin
 // mods to fix Seggeom to Geometry1D casting
 //

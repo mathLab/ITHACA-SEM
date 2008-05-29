@@ -35,6 +35,7 @@
 #include <LocalRegions/LocalRegions.hpp>
 #include <stdio.h>
 #include <LocalRegions/TriExp.h>
+#include <StdRegions/StdNodalTriExp.h>
 
 namespace Nektar
 {
@@ -607,91 +608,227 @@ namespace Nektar
             {
                 coords[i] = m_geom->GetCoord(i,Lcoords);
             }
-        }
+        }        
         
         
-        void TriExp::WriteToFile(FILE *outfile)
+        void TriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
-            int i,j;
-            Array<OneD,NekDouble> coords[3];
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-            
-            ASSERTL0(m_geom,"_geom not defined");
-            
-            int  coordim   = m_geom->GetCoordDim();
-            
-            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
-            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
-            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
-            
-            std::fprintf(outfile,"Variables = x");
-            if(coordim == 2)
+            if(format==eTecplot)
             {
-                GetCoords(coords[0],coords[1]);
-                fprintf(outfile,", y");
-            }
-            else if (coordim == 3)
-            {
-                GetCoords(coords[0],coords[1],coords[2]);
-                fprintf(outfile,", y, z");
-            }
-            
-            fprintf(outfile,", v\n");
-            
-            fprintf(outfile,"Zone, I=%d, J=%d, F=Point\n",nquad0,nquad1);
-            for(i = 0; i < nquad0*nquad1; ++i)
-            {
-                for(j = 0; j < coordim; ++j)
-                {
-                    fprintf(outfile,"%lf ",coords[j][i]);
-                }
-                fprintf(outfile,"%lf \n",m_phys[i]);
-            }
-        }
-        
-        void TriExp::WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            int i,j;
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD,NekDouble> coords[3];
-            
-            ASSERTL0(m_geom,"m_geom not defined");
-            
-            int     coordim  = m_geom->GetCoordim();
-            
-            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
-            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
-            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
-            
-            GetCoords(coords[0],coords[1],coords[2]);
-            
-            if(dumpVar)
-            {
-                outfile << "Variables = x";
+                int i,j;
+                int nquad0 = m_base[0]->GetNumPoints();
+                int nquad1 = m_base[1]->GetNumPoints();
+                Array<OneD,NekDouble> coords[3];
                 
-                if(coordim == 2)
+                ASSERTL0(m_geom,"m_geom not defined");
+                
+                int     coordim  = m_geom->GetCoordim();
+                
+                coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
+                coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
+                coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
+                
+                GetCoords(coords[0],coords[1],coords[2]);
+                
+                if(dumpVar)
                 {
-                    outfile << ", y";
+                    outfile << "Variables = x";
+                    
+                    if(coordim == 2)
+                    {
+                        outfile << ", y";
+                    }
+                    else if (coordim == 3)
+                    {
+                        outfile << ", y, z";
+                    }
+                    outfile << ", v\n" << std::endl;
                 }
-                else if (coordim == 3)
+                
+                outfile << "Zone, I=" << nquad0 << ", J=" << 
+                    nquad1 <<", F=Point" << std::endl;
+                
+                for(i = 0; i < nquad0*nquad1; ++i)
                 {
-                    outfile << ", y, z";
+                    for(j = 0; j < coordim; ++j)
+                    {
+                        outfile << coords[j][i] << " ";
+                    }
+                    outfile << m_phys[i] << std::endl;
                 }
-                outfile << ", v\n" << std::endl;
             }
-            
-            outfile << "Zone, I=" << nquad0 << ", J=" << 
-                nquad1 <<", F=Point" << std::endl;
-            
-            for(i = 0; i < nquad0*nquad1; ++i)
-            {
-                for(j = 0; j < coordim; ++j)
+            else if(format==eGmsh)
+            {   
+                if(dumpVar)
                 {
-                    outfile << coords[j][i] << " ";
+                    outfile<<"View.MaxRecursionLevel = 8;"<<endl;
+                    outfile<<"View.TargetError = 0.00;"<<endl;
+                    outfile<<"View \" \" {"<<endl;
                 }
-                outfile << m_phys[i] << std::endl;
+
+                outfile<<"ST("<<endl;                
+                // write the coordinates of the vertices of the triangle
+                Array<OneD,NekDouble> coordVert1(2);
+                Array<OneD,NekDouble> coordVert2(2);
+                Array<OneD,NekDouble> coordVert3(2);
+                coordVert1[0]=-1.0;
+                coordVert1[1]=-1.0;
+                coordVert2[0]=1.0;
+                coordVert2[1]=-1.0;
+                coordVert3[0]=-1.0;
+                coordVert3[1]=1.0;
+                outfile<<m_geom->GetCoord(0,coordVert1)<<", ";
+                outfile<<m_geom->GetCoord(1,coordVert1)<<", 0.0,"<<endl;
+                outfile<<m_geom->GetCoord(0,coordVert2)<<", ";
+                outfile<<m_geom->GetCoord(1,coordVert2)<<", 0.0,"<<endl;
+                outfile<<m_geom->GetCoord(0,coordVert3)<<", ";
+                outfile<<m_geom->GetCoord(1,coordVert3)<<", 0.0"<<endl;
+                outfile<<")"<<endl;
+
+                // calculate the coefficients (monomial format)
+                int i,j,k;
+                int maxnummodes = max(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                   
+                const LibUtilities::PointsKey Pkey1Gmsh(maxnummodes,LibUtilities::eGaussGaussLegendre);
+                const LibUtilities::PointsKey Pkey2Gmsh(maxnummodes,LibUtilities::eGaussGaussLegendre);
+                const LibUtilities::BasisKey  Bkey1Gmsh(m_base[0]->GetBasisType(),maxnummodes,Pkey1Gmsh);
+                const LibUtilities::BasisKey  Bkey2Gmsh(m_base[1]->GetBasisType(),maxnummodes,Pkey2Gmsh);
+                LibUtilities::PointsType ptype = LibUtilities::eNodalTriElec;
+
+                StdRegions::StdNodalTriExpSharedPtr EGmsh;
+                EGmsh = MemoryManager<StdRegions::StdNodalTriExp>::
+                    AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh,ptype);
+
+                Array<OneD,NekDouble> xi1(EGmsh->GetNcoeffs());
+                Array<OneD,NekDouble> xi2(EGmsh->GetNcoeffs());
+                EGmsh->GetNodalPoints(xi1,xi2);
+                
+                Array<OneD,NekDouble> x(EGmsh->GetNcoeffs());
+                Array<OneD,NekDouble> y(EGmsh->GetNcoeffs());
+                
+                for(i=0;i<EGmsh->GetNcoeffs();i++)
+                {
+                    x[i] = 0.5*(1.0+xi1[i]);
+                    y[i] = 0.5*(1.0+xi2[i]);
+                }
+
+                int cnt  = 0;
+                int cnt2 = 0;
+                int nDumpCoeffs = maxnummodes*maxnummodes;
+                Array<TwoD, int> dumpExponentMap(nDumpCoeffs,3,0);
+                Array<OneD, int> indexMap(EGmsh->GetNcoeffs(),0);
+                Array<TwoD, int> exponentMap(EGmsh->GetNcoeffs(),3,0);
+                for(i = 0; i < maxnummodes; i++)
+                {
+                    for(j = 0; j < maxnummodes; j++)
+                    {
+                        if(j<maxnummodes-i)
+                        {
+                            exponentMap[cnt][0] = j;
+                            exponentMap[cnt][1] = i;
+                            indexMap[cnt++]  = cnt2;
+                        }
+
+                        dumpExponentMap[cnt2][0]   = j;
+                        dumpExponentMap[cnt2++][1] = i;
+                    }            
+                }
+
+                NekMatrix<NekDouble> vdm(EGmsh->GetNcoeffs(),EGmsh->GetNcoeffs());
+                for(i = 0 ; i < EGmsh->GetNcoeffs(); i++)
+                {
+                    for(j = 0 ; j < EGmsh->GetNcoeffs(); j++)
+                    {
+                        vdm(i,j) = pow(x[i],exponentMap[j][0])*pow(y[i],exponentMap[j][1]);
+                    }
+                } 
+
+                vdm.Invert();  
+
+                Array<OneD, NekDouble> tmp2(EGmsh->GetNcoeffs());
+                EGmsh->ModalToNodal(m_coeffs,tmp2);       
+
+                NekVector<const NekDouble> in(EGmsh->GetNcoeffs(),tmp2,eWrapper);
+                NekVector<NekDouble> out(EGmsh->GetNcoeffs());
+                out = vdm*in;
+
+                Array<OneD,NekDouble> dumpOut(nDumpCoeffs,0.0);
+                for(i = 0 ; i < EGmsh->GetNcoeffs(); i++)
+                {
+                    dumpOut[ indexMap[i]  ] = out[i];
+                }
+
+                //write the coefficients
+                outfile<<"{";
+                for(i = 0; i < nDumpCoeffs; i++)
+                {
+                    outfile<<dumpOut[i];
+                    if(i < nDumpCoeffs - 1)
+                    {
+                        outfile<<", ";
+                    }
+                }
+                outfile<<"};"<<endl;
+              
+                if(dumpVar)
+                {   
+                    outfile<<"INTERPOLATION_SCHEME"<<endl;
+                    outfile<<"{"<<endl;
+                    for(i=0; i < nDumpCoeffs; i++)
+                    {
+                        outfile<<"{";
+                        for(j = 0; j < nDumpCoeffs; j++)
+                        {
+                            if(i==j)
+                            {
+                                outfile<<"1.00";
+                            }
+                            else
+                            {
+                                outfile<<"0.00";
+                            }
+                            if(j < nDumpCoeffs - 1)
+                            {
+                                outfile<<", ";
+                            }
+                        }
+                        if(i < nDumpCoeffs - 1)
+                        {
+                            outfile<<"},"<<endl;
+                        }
+                        else
+                        {
+                            outfile<<"}"<<endl<<"}"<<endl;
+                        }
+                    }
+                    
+                    outfile<<"{"<<endl;
+                    for(i=0; i < nDumpCoeffs; i++)
+                    {
+                        outfile<<"{";
+                        for(j = 0; j < 3; j++)
+                        {
+                            outfile<<dumpExponentMap[i][j];
+                            if(j < 2)
+                            {
+                                outfile<<", ";
+                            }
+                        }
+                        if(i < nDumpCoeffs  - 1)
+                        {
+                            outfile<<"},"<<endl;
+                        }
+                        else
+                        {
+                            outfile<<"}"<<endl<<"};"<<endl;
+                        }
+                    }
+                    outfile<<"};"<<endl;
+                }                 
+            }
+            else
+            {
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
 
@@ -943,6 +1080,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.30  2008/05/29 01:02:13  bnelson
+ *    Added precompiled header support.
+ *
  *    Revision 1.29  2008/05/07 16:05:21  pvos
  *    Mapping + Manager updates
  *

@@ -513,104 +513,64 @@ namespace Nektar
                 coords[i] = m_geom->GetCoord(i,Lcoords);
             }
         }
-
-         void HexExp::WriteToFile(FILE *outfile)
+       
+        void HexExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
-            int i, j, k;
-            Array<OneD,NekDouble> coords[3];
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-            int  nquad2 = m_base[2]->GetNumPoints();
-
-            ASSERTL0(m_geom,"_geom not defined");
-
-            int  coordim   = m_geom->GetCoordDim();
-
-            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-        
-            std::fprintf(outfile,"Variables = x");
-            if(coordim == 2)
+            if(format==eTecplot)
             {
-              //  GetCoords(coords[0],coords[1]);
-                fprintf(outfile,", y");
-            }
-            else if (coordim == 3)
-            {
-                GetCoords(coords[0],coords[1],coords[2]);
-                fprintf(outfile,", y, z");
-            }
-
-            fprintf(outfile,", v\n");
-
-            fprintf(outfile,"Zone, I=%d, J=%d, K=%d,F=Point\n", nquad0, nquad1, nquad2);
-
-            for(i = 0; i < nquad0*nquad1*nquad2; ++i)
-            {
-                for(j = 0; j < coordim; ++j)
-                {
-		   for(k=0; k < coordim; ++k)
-                   {
-                     fprintf(outfile,"%lf ",coords[k][j]);
-		   }
-		   fprintf(outfile,"%lf \n",m_phys[j]);
-                }
-                fprintf(outfile,"%lf \n",m_phys[i]);
-            }
-        }
-        
-        
-        void HexExp::WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            int i, j, k;
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
-            Array<OneD,NekDouble> coords[3];
-            
-            ASSERTL0(m_geom,"m_geom not defined");
-            
-            int     coordim  = m_geom->GetCoordim();
-
-            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-        
-            GetCoords(coords[0],coords[1],coords[2]);
-            
-            if(dumpVar)
-            {
-                outfile << "Variables = x";
+                int i, j, k;
+                int nquad0 = m_base[0]->GetNumPoints();
+                int nquad1 = m_base[1]->GetNumPoints();
+                int nquad2 = m_base[2]->GetNumPoints();
+                Array<OneD,NekDouble> coords[3];
                 
-                if(coordim == 2)
+                ASSERTL0(m_geom,"m_geom not defined");
+                
+                int     coordim  = m_geom->GetCoordim();
+                
+                coords[0] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
+                coords[1] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
+                coords[2] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
+                
+                GetCoords(coords[0],coords[1],coords[2]);
+                
+                if(dumpVar)
                 {
-                    outfile << ", y";
+                    outfile << "Variables = x";
+                    
+                    if(coordim == 2)
+                    {
+                        outfile << ", y";
+                    }
+                    else if (coordim == 3)
+                    {
+                        outfile << ", y, z";
+                    }
+                    outfile << ", v\n" << std::endl;
                 }
-                else if (coordim == 3)
+                
+                outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 << ", K=" << nquad2 << ", F=Point" << std::endl;
+                
+                for(i = 0; i < nquad0*nquad1*nquad2; ++i)
                 {
-                    outfile << ", y, z";
+                    for(j = 0; j < coordim; ++j)
+                    {
+                        for(k=0; k < coordim; ++k)
+                        {
+                            outfile << coords[k][j] << " ";
+                        }
+                        outfile << m_phys[j] << std::endl;
+                    }
+                    outfile << m_phys[i] << std::endl;
                 }
-                outfile << ", v\n" << std::endl;
             }
-            
-               outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 << ", K=" << nquad2 << ", F=Point" << std::endl;
-
-            for(i = 0; i < nquad0*nquad1*nquad2; ++i)
+            else
             {
-                for(j = 0; j < coordim; ++j)
-                {
-		  for(k=0; k < coordim; ++k)
-		  {
-                     outfile << coords[k][j] << " ";
-                  }
-		    outfile << m_phys[j] << std::endl;
-                }
-                outfile << m_phys[i] << std::endl;
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
-        
-
+      
+      
         DNekMatSharedPtr HexExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             // Need to check if matrix exists in stdMatrixManager.
@@ -972,6 +932,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.9  2008/05/29 01:02:13  bnelson
+ *    Added precompiled header support.
+ *
  *    Revision 1.8  2008/04/06 05:59:04  bnelson
  *    Changed ConstArray to Array<const>
  *

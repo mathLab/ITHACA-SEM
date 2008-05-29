@@ -148,7 +148,7 @@ namespace Nektar
          
          void GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z);
          void FillMode(const int mode, Array<OneD, NekDouble> &outarray);        
-         void WriteToFile(std::ofstream &outfile);
+         void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
          void WriteCoeffsToFile(std::ofstream &outfile);
                        
          DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
@@ -274,9 +274,9 @@ namespace Nektar
             return PhysEvaluate(Lcoords);
         }
 
-        virtual void v_WriteToFile(std::ofstream &outfile)
+        virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
         {
-            WriteToFile(outfile);
+            WriteToFile(outfile,format,dumpVar);
         }
 
         virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
@@ -294,6 +294,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.14  2008/05/15 22:41:37  ehan
+ * Added WriteToFile() function and its virtual function
+ *
  * Revision 1.13  2008/05/15 04:14:48  ehan
  * Added virtual function v_CreatStdMatrix()
  *

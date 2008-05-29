@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdTriExp.h>
+#include <StdRegions/StdNodalTriExp.h>
 
 namespace Nektar
 {
@@ -826,26 +827,192 @@ namespace Nektar
         }
 
 
-        void StdTriExp::WriteToFile(std::ofstream &outfile)
+        void StdTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
-            int  i,j;
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
-            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
-
-            outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
-            outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
-
-            for(j = 0; j < nquad1; ++j)
+            if(format==eTecplot)
             {
-                for(i = 0; i < nquad0; ++i)
+                int  i,j;
+                int  nquad0 = m_base[0]->GetNumPoints();
+                int  nquad1 = m_base[1]->GetNumPoints();
+                Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
+                Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
+                
+                if(dumpVar)
+                { 
+                    outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
+                }
+                outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
+                
+                for(j = 0; j < nquad1; ++j)
                 {
-                    outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << 
-                        z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
+                    for(i = 0; i < nquad0; ++i)
+                    {
+                        outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << 
+                            z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
+                    }
                 }
             }
+            else if(format==eGmsh)
+            {   
+                if(dumpVar)
+                {
+                    outfile<<"View.MaxRecursionLevel = 8;"<<endl;
+                    outfile<<"View.TargetError = 0.00;"<<endl;
+                    outfile<<"View \" \" {"<<endl;
+                }
+                
+                outfile<<"ST("<<endl;                
+                // write the coordinates of the vertices of the triangle
+                outfile<<"-1.0, -1.0, 0.0,"<<endl;
+                outfile<<" 1.0, -1.0, 0.0,"<<endl;
+                outfile<<"-1.0,  1.0, 0.0" <<endl;
+                outfile<<")"<<endl;
 
+                // calculate the coefficients (monomial format)
+                int i,j,k;
+                int maxnummodes = max(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                   
+                const LibUtilities::PointsKey Pkey1Gmsh(maxnummodes,LibUtilities::eGaussGaussLegendre);
+                const LibUtilities::PointsKey Pkey2Gmsh(maxnummodes,LibUtilities::eGaussGaussLegendre);
+                const LibUtilities::BasisKey  Bkey1Gmsh(m_base[0]->GetBasisType(),maxnummodes,Pkey1Gmsh);
+                const LibUtilities::BasisKey  Bkey2Gmsh(m_base[1]->GetBasisType(),maxnummodes,Pkey2Gmsh);
+                LibUtilities::PointsType ptype = LibUtilities::eNodalTriElec;
+
+                StdRegions::StdNodalTriExpSharedPtr EGmsh;
+                EGmsh = MemoryManager<StdRegions::StdNodalTriExp>::
+                    AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh,ptype);
+
+                Array<OneD,NekDouble> xi1(EGmsh->GetNcoeffs());
+                Array<OneD,NekDouble> xi2(EGmsh->GetNcoeffs());
+                EGmsh->GetNodalPoints(xi1,xi2);
+                
+                Array<OneD,NekDouble> x(EGmsh->GetNcoeffs());
+                Array<OneD,NekDouble> y(EGmsh->GetNcoeffs());
+                
+                for(i=0;i<EGmsh->GetNcoeffs();i++)
+                {
+                    x[i] = 0.5*(1.0+xi1[i]);
+                    y[i] = 0.5*(1.0+xi2[i]);
+                }
+
+                int cnt  = 0;
+                int cnt2 = 0;
+                int nDumpCoeffs = maxnummodes*maxnummodes;
+                Array<TwoD, int> dumpExponentMap(nDumpCoeffs,3,0);
+                Array<OneD, int> indexMap(EGmsh->GetNcoeffs(),0);
+                Array<TwoD, int> exponentMap(EGmsh->GetNcoeffs(),3,0);
+                for(i = 0; i < maxnummodes; i++)
+                {
+                    for(j = 0; j < maxnummodes; j++)
+                    {
+                        if(j<maxnummodes-i)
+                        {
+                            exponentMap[cnt][0] = j;
+                            exponentMap[cnt][1] = i;
+                            indexMap[cnt++]  = cnt2;
+                        }
+
+                        dumpExponentMap[cnt2][0]   = j;
+                        dumpExponentMap[cnt2++][1] = i;
+                    }            
+                }
+
+                NekMatrix<NekDouble> vdm(EGmsh->GetNcoeffs(),EGmsh->GetNcoeffs());
+                for(i = 0 ; i < EGmsh->GetNcoeffs(); i++)
+                {
+                    for(j = 0 ; j < EGmsh->GetNcoeffs(); j++)
+                    {
+                        vdm(i,j) = pow(x[i],exponentMap[j][0])*pow(y[i],exponentMap[j][1]);
+                    }
+                } 
+
+                vdm.Invert();  
+
+                Array<OneD, NekDouble> tmp2(EGmsh->GetNcoeffs());
+                EGmsh->ModalToNodal(m_coeffs,tmp2);       
+
+                NekVector<const NekDouble> in(EGmsh->GetNcoeffs(),tmp2,eWrapper);
+                NekVector<NekDouble> out(EGmsh->GetNcoeffs());
+                out = vdm*in;
+
+                Array<OneD,NekDouble> dumpOut(nDumpCoeffs,0.0);
+                for(i = 0 ; i < EGmsh->GetNcoeffs(); i++)
+                {
+                    dumpOut[ indexMap[i]  ] = out[i];
+                }
+
+                //write the coefficients
+                outfile<<"{";
+                for(i = 0; i < nDumpCoeffs; i++)
+                {
+                    outfile<<dumpOut[i];
+                    if(i < nDumpCoeffs - 1)
+                    {
+                        outfile<<", ";
+                    }
+                }
+                outfile<<"};"<<endl;
+              
+                if(dumpVar)
+                {   
+                    outfile<<"INTERPOLATION_SCHEME"<<endl;
+                    outfile<<"{"<<endl;
+                    for(i=0; i < nDumpCoeffs; i++)
+                    {
+                        outfile<<"{";
+                        for(j = 0; j < nDumpCoeffs; j++)
+                        {
+                            if(i==j)
+                            {
+                                outfile<<"1.00";
+                            }
+                            else
+                            {
+                                outfile<<"0.00";
+                            }
+                            if(j < nDumpCoeffs - 1)
+                            {
+                                outfile<<", ";
+                            }
+                        }
+                        if(i < nDumpCoeffs - 1)
+                        {
+                            outfile<<"},"<<endl;
+                        }
+                        else
+                        {
+                            outfile<<"}"<<endl<<"}"<<endl;
+                        }
+                    }
+                    
+                    outfile<<"{"<<endl;
+                    for(i=0; i < nDumpCoeffs; i++)
+                    {
+                        outfile<<"{";
+                        for(j = 0; j < 3; j++)
+                        {
+                            outfile<<dumpExponentMap[i][j];
+                            if(j < 2)
+                            {
+                                outfile<<", ";
+                            }
+                        }
+                        if(i < nDumpCoeffs  - 1)
+                        {
+                            outfile<<"},"<<endl;
+                        }
+                        else
+                        {
+                            outfile<<"}"<<endl<<"};"<<endl;
+                        }
+                    }
+                    outfile<<"};"<<endl;
+                }                 
+            }
+            else
+            {
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
+            }
         }
 
         //   I/O routine
@@ -906,6 +1073,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.34  2008/05/07 16:04:57  pvos
+* Mapping + Manager updates
+*
 * Revision 1.33  2008/04/22 05:22:15  bnelson
 * Speed enhancements.
 *

@@ -480,98 +480,59 @@ namespace Nektar
             }
         }
 
-	  void PyrExp::WriteToFile(FILE *outfile)
+        void PyrExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
-            int i,j,k;
-            Array<OneD,NekDouble> coords[3];
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-	    int  nquad2 = m_base[2]->GetNumPoints();
-
-            ASSERTL0(m_geom,"_geom not defined");
-
-          int  coordim   = m_geom->GetCoordDim();
-
-            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-
-            std::fprintf(outfile,"Variables = x");
-            if(coordim == 2)
+            if(format==eTecplot)
             {
-               //GetCoords(coords[0], coords[1]); //TODO: check GetCoords()
-               fprintf(outfile,", y");
-            }
-            else if (coordim == 3)
-            {
+                int i,j,k;
+                int nquad0 = m_base[0]->GetNumPoints();
+                int nquad1 = m_base[1]->GetNumPoints();
+                int nquad2 = m_base[2]->GetNumPoints();
+                Array<OneD,NekDouble> coords[3];
+                
+                ASSERTL0(m_geom,"m_geom not defined");
+                
+                int     coordim  = m_geom->GetCoordim();
+                
+                coords[0] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
+                coords[1] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
+                coords[2] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
+                
                 GetCoords(coords[0],coords[1],coords[2]);
-                fprintf(outfile,", y, z");
+                
+                if(dumpVar)
+                { 
+                    outfile << "Variables = x";
+                    
+                    if(coordim == 2)
+                    {
+                        outfile << ", y";
+                    }
+                    else if (coordim == 3)
+                    {
+                        outfile << ", y, z";
+                    }
+                    outfile << ", v\n" << std::endl;
+                }
+                
+                outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 << ", K=" << nquad2 << ", F=Point" << std::endl;
+                
+                for(i = 0; i < nquad0*nquad1*nquad2; ++i)
+                {
+                    for(j = 0; j < coordim; ++j)
+                    {
+                        for(k=0; k < coordim; ++k)
+                        {
+                            outfile << coords[k][j] << " ";
+                        }
+                        outfile << m_phys[j] << std::endl;
+                    }
+                    outfile << m_phys[i] << std::endl;
+                }
             }
-
-            fprintf(outfile,", v\n");
-
-            fprintf(outfile,"Zone, I=%d, J=%d, K=%d,F=Point\n", nquad0, nquad1, nquad2);
-
-            for(i = 0; i < nquad0*nquad1*nquad2; ++i)
+            else
             {
-                for(j = 0; j < coordim; ++j)
-                {
-		   for(k=0; k < coordim; ++k)
-                   {
-                     fprintf(outfile,"%lf ",coords[k][j]);
-		   }
-		   fprintf(outfile,"%lf \n",m_phys[j]);
-                }
-                fprintf(outfile,"%lf \n",m_phys[i]);
-            }
-        }
-
-	void PyrExp::WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            int i,j,k;
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-	    int nquad2 = m_base[2]->GetNumPoints();
-            Array<OneD,NekDouble> coords[3];
-
-            ASSERTL0(m_geom,"m_geom not defined");
-
-            int     coordim  = m_geom->GetCoordim();
-
-            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-
-            GetCoords(coords[0],coords[1],coords[2]);
-
-            if(dumpVar)
-            { 
-                outfile << "Variables = x";
-
-                if(coordim == 2)
-                {
-                    outfile << ", y";
-                }
-                else if (coordim == 3)
-                {
-                    outfile << ", y, z";
-                }
-                outfile << ", v\n" << std::endl;
-            }
-
-            outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 << ", K=" << nquad2 << ", F=Point" << std::endl;
-
-            for(i = 0; i < nquad0*nquad1*nquad2; ++i)
-            {
-                for(j = 0; j < coordim; ++j)
-                {
-		  for(k=0; k < coordim; ++k)
-		  {
-                     outfile << coords[k][j] << " ";
-                  }
-		    outfile << m_phys[j] << std::endl;
-                }
-                outfile << m_phys[i] << std::endl;
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
 
@@ -823,6 +784,9 @@ namespace Nektar
 
 /** 
  *    $Log: PyrExp.cpp,v $
+ *    Revision 1.7  2008/05/29 01:02:13  bnelson
+ *    Added precompiled header support.
+ *
  *    Revision 1.6  2008/04/06 05:59:05  bnelson
  *    Changed ConstArray to Array<const>
  *

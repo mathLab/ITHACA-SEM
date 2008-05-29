@@ -235,6 +235,15 @@ namespace Nektar
             FwdTrans(Sin.GetPhys(),m_coeffs);
             m_transState = eLocal;
         }
+
+        void ExpList::FwdTrans_BndConstrained(const ExpList &Sin)
+        {
+            ASSERTL2(Sin.GetPhysState() == true,
+                     "Sin physical space is not true ");
+            
+            FwdTrans_BndConstrained(Sin.GetPhys(),m_coeffs);
+            m_transState = eLocal;
+        }
         
         void ExpList::FwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                Array<OneD, NekDouble> &outarray)
@@ -269,6 +278,24 @@ namespace Nektar
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);            
             out = (*InvMass)*in;
 #endif
+        }
+
+        void ExpList::FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                             Array<OneD, NekDouble> &outarray)
+        {
+            int cnt  = 0;
+            int cnt1 = 0;
+            int i;
+            
+            Array<OneD,NekDouble> e_outarray;
+            
+            for(i= 0; i < GetExpSize(); ++i)
+            {
+                (*m_exp)[i]->FwdTrans_BndConstrained(inarray+cnt, 
+                                      e_outarray = outarray+cnt1);
+                cnt  += (*m_exp)[i]->GetTotPoints();
+                cnt1 += (*m_exp)[i]->GetNcoeffs();
+            }
         }
         
         DNekScalBlkMatSharedPtr  ExpList::SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar, NekDouble constant)
@@ -627,27 +654,160 @@ namespace Nektar
             }
         }
     
-        void ExpList::WriteToFile(std::ofstream &out)
-        {
-            int i,cnt = 0;
-            std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-            StdRegions::StdExpansionVectorIter def;
-            Array<OneD, const NekDouble> phys = m_phys;
-            
-            if(m_physState == false)
+        void ExpList::WriteToFile(std::ofstream &out, OutputFormat format)
+        {  
+            if(format==eTecplot)
             {
-                BwdTrans(*this);
+                int i,cnt = 0;
+                std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
+                StdRegions::StdExpansionVectorIter def;
+                Array<OneD, const NekDouble> phys = m_phys;
+                
+                if(m_physState == false)
+                {
+                    BwdTrans(*this);
+                }
+                
+                (*m_exp)[0]->SetPhys(phys);
+                (*m_exp)[0]->WriteToFile(out,eTecplot,1);
+                cnt  += (*m_exp)[0]->GetTotPoints();
+                
+                for(i= 1; i < GetExpSize(); ++i)
+                {
+                    (*m_exp)[i]->SetPhys(phys+cnt);
+                    (*m_exp)[i]->WriteToFile(out,eTecplot,false); 
+                    cnt  += (*m_exp)[i]->GetTotPoints();
+                }
             }
-            
-            (*m_exp)[0]->SetPhys(phys);
-            (*m_exp)[0]->WriteToFile(out,1);
-            cnt  += (*m_exp)[0]->GetTotPoints();
-            
-            for(i= 1; i < GetExpSize(); ++i)
+            else if(format==eGmsh)
+            {   
+               
+                out<<"View.MaxRecursionLevel = 8;"<<endl;
+                out<<"View.TargetError = 0.00;"<<endl;
+                 
+                int i,j,k;
+                int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
+                StdRegions::ShapeType locShape = (*m_exp)[0]->DetShapeType();
+
+                int nDumpCoeffs =  nElementalCoeffs*nElementalCoeffs;
+                Array<TwoD, int> exponentMap(nDumpCoeffs,3,0);
+                int cnt = 0;
+                for(i = 0; i < nElementalCoeffs; i++)
+                {
+                    for(j = 0; j < nElementalCoeffs; j++)
+                    {
+                        exponentMap[cnt][0] = j;
+                        exponentMap[cnt++][1] = i;
+                    }         
+                }
+
+                PutCoeffsInToElmtExp();
+                bool dumpNewView = true;
+                bool closeView = false;
+                for(i= 0; i < GetExpSize(); ++i)
+                {                 
+                    if(nElementalCoeffs != (*m_exp)[i]->GetBasisNumModes(0))
+                    {
+                        ASSERTL0(false,"Not all elements have the same number of expansions, this will"
+                                 "probably lead to a corrupt Gmsh-output file")
+                    }
+
+                    if(i>0)
+                    {
+                        if ( ((*m_exp)[i]->DetShapeType())!=((*m_exp)[i-1]->DetShapeType()) )
+                        {
+                            dumpNewView = true;
+                        }
+                        else
+                        {
+                            dumpNewView = false;
+                        }
+                    }
+                    if(i<GetExpSize()-1)
+                    {
+                        if ( ((*m_exp)[i]->DetShapeType())!=((*m_exp)[i+1]->DetShapeType()) )
+                        {
+                            closeView = true;
+                        }
+                        else
+                        {
+                            closeView = false;
+                        }
+                    }
+                    else
+                    {
+                            closeView = true;
+                    }
+
+                    if(dumpNewView)
+                    {
+                        out<<"View \" \" {"<<endl;
+                    }
+
+                    (*m_exp)[i]->WriteToFile(out,eGmsh,false); 
+
+                    if(closeView)
+                    {
+                        out<<"INTERPOLATION_SCHEME"<<endl;
+                        out<<"{"<<endl;
+                        for(k=0; k < nDumpCoeffs; k++)
+                        {
+                            out<<"{";
+                            for(j = 0; j < nDumpCoeffs; j++)
+                            {
+                                if(k==j)
+                                {
+                                    out<<"1.00";
+                                }
+                                else
+                                {
+                                    out<<"0.00";
+                                }
+                                if(j < nDumpCoeffs - 1)
+                                {
+                                    out<<", ";
+                                }
+                            }
+                            if(k < nDumpCoeffs - 1)
+                            {
+                                out<<"},"<<endl;
+                            }
+                            else
+                            {
+                                out<<"}"<<endl<<"}"<<endl;
+                            }
+                        }
+                        
+                        out<<"{"<<endl;
+                        for(k=0; k < nDumpCoeffs; k++)
+                        {
+                            out<<"{";
+                            for(j = 0; j < 3; j++)
+                            {
+                                out<<exponentMap[k][j];
+                                if(j < 2)
+                                {
+                                    out<<", ";
+                                }
+                            }
+                            if(k < nDumpCoeffs - 1)
+                            {
+                                out<<"},"<<endl;
+                            }
+                            else
+                            {
+                                out<<"}"<<endl<<"};"<<endl;
+                            }
+                        }
+                        out<<"};"<<endl;
+                    }                 
+                }       
+                out<<"Combine ElementsFromAllViews;"<<endl;
+                out<<"View.Name = \"\";"<<endl;
+            }                    
+            else
             {
-                (*m_exp)[i]->SetPhys(phys+cnt);
-                (*m_exp)[i]->WriteToFile(out,0); 
-                cnt  += (*m_exp)[i]->GetTotPoints();
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
     

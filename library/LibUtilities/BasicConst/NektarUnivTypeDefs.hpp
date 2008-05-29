@@ -76,6 +76,13 @@ namespace Nektar
         zDir = 2
     };
 
+    enum OutputFormat
+    {
+        eTecplot,
+        eGmsh
+    };
+        
+
 
 } //end of namespace 
 
@@ -83,6 +90,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.14  2008/03/03 02:25:46  bnelson
+Changed OneD, TwoD, and ThreeD to classes instead of enums to support type parameters in NekVector instead of unsigned int for the dimensions.
+
 Revision 1.13  2007/08/10 03:37:21  jfrazier
 Removed that cursed Mac formatting.
 

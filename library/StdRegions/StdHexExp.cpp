@@ -572,30 +572,40 @@ namespace Nektar
             }
         }
 
-        void StdHexExp::WriteToFile(std::ofstream &outfile)
+        void StdHexExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
-            int  Qx = m_base[0]->GetNumPoints();
-            int  Qy = m_base[1]->GetNumPoints();
-            int  Qz = m_base[2]->GetNumPoints();
-            
-            Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-            eta_x = m_base[0]->GetZ();
-            eta_y = m_base[1]->GetZ();
-            eta_z = m_base[2]->GetZ();
-
-            outfile << "Variables = z1,  z2,  z3,  Coeffs \n" << std::endl;      
-            outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
-
-            for(int k = 0; k < Qz; ++k) 
+            if(format==eTecplot)
             {
-                for(int j = 0; j < Qy; ++j)
+                int  Qx = m_base[0]->GetNumPoints();
+                int  Qy = m_base[1]->GetNumPoints();
+                int  Qz = m_base[2]->GetNumPoints();
+                
+                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
+                eta_x = m_base[0]->GetZ();
+                eta_y = m_base[1]->GetZ();
+                eta_z = m_base[2]->GetZ();
+                
+                if(dumpVar)
                 {
-                    for(int i = 0; i < Qx; ++i)
+                    outfile << "Variables = z1,  z2,  z3,  Coeffs \n" << std::endl;   
+                }   
+                outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
+                
+                for(int k = 0; k < Qz; ++k) 
+                {
+                    for(int j = 0; j < Qy; ++j)
                     {
-                        //outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
-                        outfile <<  (eta_x[i] + 1.0) * (1.0 - eta_y[j]) * (1.0 - eta_z[k]) / 4  -  1.0 <<  " " << eta_z[k] << " " << m_phys[i + Qx*(j + Qy*k)] << std::endl;
+                        for(int i = 0; i < Qx; ++i)
+                        {
+                            //outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
+                            outfile <<  (eta_x[i] + 1.0) * (1.0 - eta_y[j]) * (1.0 - eta_z[k]) / 4  -  1.0 <<  " " << eta_z[k] << " " << m_phys[i + Qx*(j + Qy*k)] << std::endl;
+                        }
                     }
                 }
+            }
+            else
+            {
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
 
         }
@@ -706,6 +716,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.16  2008/05/15 22:39:54  ehan
+* Clean up the codes
+*
 * Revision 1.15  2008/05/07 16:04:57  pvos
 * Mapping + Manager updates
 *

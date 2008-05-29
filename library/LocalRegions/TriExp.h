@@ -82,8 +82,7 @@ namespace Nektar
             return m_geom;
         }
 
-        void WriteToFile(FILE *outfile);
-        void WriteToFile(std::ofstream &outfile, const int dumpVar);
+        void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
         //----------------------------
         // Integration Methods
@@ -179,15 +178,10 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
-
-        virtual void v_WriteToFile(FILE *outfile)
-        {
-            WriteToFile(outfile);
-        }
         
-        virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
+        virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
         {
-            WriteToFile(outfile,dumpVar);
+            WriteToFile(outfile,format,dumpVar);
         }
 
         /** \brief Virtual call to integrate the physical point list \a inarray
@@ -322,6 +316,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.25  2008/05/10 18:27:33  sherwin
+ *    Modifications necessary for QuadExp Unified DG Solver
+ *
  *    Revision 1.24  2008/04/06 05:59:05  bnelson
  *    Changed ConstArray to Array<const>
  *

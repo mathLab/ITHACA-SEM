@@ -81,6 +81,38 @@ namespace Nektar
                 space_p).full;
         }
 
+        static bool GenerateOrderedVector(const char *const str, vector<unsigned int> &vec)
+        {
+            // Functors used to parse the sequence.
+            fctor1 functor1(&vec);
+
+            return parse(str,
+                //  Begin grammar
+                (
+                uint_p[functor1] >> *(',' >> uint_p[functor1])
+                )
+                ,
+                //  End grammar
+
+                space_p).full;
+        }
+
+		static bool GenerateOrderedStringVector(const char *const str, vector<std::string> &vec)
+        {
+            // Functors used to parse the sequence.
+            fctor3 functor3(&vec);
+
+            return parse(str,
+                //  Begin grammar
+                (
+                (+(print_p - ','))[functor3] >> *(',' >> (+(print_p - ','))[functor3])
+                )
+                ,
+                //  End grammar
+
+                space_p).full;
+        }
+
     private:
 
         struct SymbolFunctor
@@ -163,6 +195,22 @@ namespace Nektar
 
         private:
             vector<unsigned int> *m_vector;
+        };
+
+        struct fctor3
+        {
+			fctor3(vector<std::string> *vec):
+            m_vector(vec)
+            {
+            }
+
+            void operator()(char const* first, char const* last) const
+            {
+				m_vector->push_back(std::string(first, last));
+            }
+
+        private:
+			vector<std::string> *m_vector;
         };
     };
 }

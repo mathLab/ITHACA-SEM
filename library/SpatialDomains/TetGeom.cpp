@@ -61,7 +61,7 @@ namespace Nektar
          TetGeom::TetGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr faces[],
                           const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[])
          {
-            m_GeomShapeType = eTet;
+			m_GeomShapeType = eTetrahedron;
  
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+TetGeom::kNverts);
@@ -90,12 +90,12 @@ namespace Nektar
         
         TetGeom::TetGeom (const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
         {
-            m_GeomShapeType = eTet;
+            m_GeomShapeType = eTetrahedron;
         }
 
         TetGeom::TetGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[])          
         {
-            m_GeomShapeType = eTet;
+            m_GeomShapeType = eTetrahedron;
 
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TetGeom::kNedges);
@@ -320,6 +320,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.8  2008/05/28 21:52:27  jfrazier
+// Added GeomShapeType initialization for the different shapes.
+//
 // Revision 1.7  2008/05/12 17:30:18  ehan
 // Added virtual functions
 //

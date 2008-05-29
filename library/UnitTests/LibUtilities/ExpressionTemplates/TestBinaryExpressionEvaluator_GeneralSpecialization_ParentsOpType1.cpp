@@ -151,6 +151,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestNoOpChange)
         {
+#ifndef _WIN32
             // Need an expression with non-constant leaves.
             // Rhs has the same type as the result
             // Lhs does not
@@ -210,6 +211,7 @@ namespace Nektar
 
             R result;
             Accumulator<R> accum(result);
+#endif
             //EvalType::Eval(lhsExp, rhsExp, accum);
             //
             //BOOST_CHECK_EQUAL(result.value, 7+19-3+7);

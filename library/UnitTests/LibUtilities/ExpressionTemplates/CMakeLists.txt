@@ -22,9 +22,12 @@ SET(Sources main.cpp TestTwoParameters.cpp TestThreeParameters.cpp
     TestBinaryConstantSpecialization2.cpp
     TestBinaryExpressionEvaluatorWithConstantConstantParameters.cpp
     TestBinaryExpressionEvaluatorWithBinaryConstantParameters.cpp
-    TestAliasing.cpp )
+    TestAliasing.cpp 
+    ../../util.cpp
+)
 
 SET(Headers
+	../../util.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS -DNEKTAR_UNIT_TESTS)

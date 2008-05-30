@@ -37,7 +37,7 @@
 
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <UnitTests/CountedObject.h>
-
+#include <UnitTests/util.h>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -54,6 +54,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestUninitializedDataConstructionWithDefaultDataHolder)
         {
+            UnitTests::RedirectCerrIfNeeded();
             Array<OneD, NekDouble> result = Policy::Initialize(10, 10, DataHolderType());
             BOOST_CHECK_EQUAL(result.num_elements(), 190u);
 
@@ -63,6 +64,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestUninitializedDataConstructionWithUserDefinedNumberOfDiagonals)
         {
+            UnitTests::RedirectCerrIfNeeded();
             DataHolderType d1(1,0);
             Array<OneD, NekDouble> result1 = Policy::Initialize(10, 10, d1);
             BOOST_CHECK_EQUAL(result1.num_elements(), 20u);
@@ -94,6 +96,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSingleValuePopulationInitialize)
         {
+            UnitTests::RedirectCerrIfNeeded();
             typedef MatrixStoragePolicy<CountedObject<NekDouble>, BandedMatrixTag> Policy;
             Policy::PolicySpecificDataHolderType policyData(2, 1);
             {
@@ -117,6 +120,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestCArrayInitialization)
         {
+            UnitTests::RedirectCerrIfNeeded();
             DataHolderType policyData(2, 1);
             NekDouble buf[] = {0, 1, 3, 6,
                                2, 4, 7, 0,
@@ -153,6 +157,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestArrayInitialization)
         {
+            UnitTests::RedirectCerrIfNeeded();
             DataHolderType policyData(2, 1);
             {
                 NekDouble buf[] = {0, 1, 3, 6,
@@ -215,6 +220,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestCalculateStorageSizeAndCalculateNumberOfRows)
         {
+            UnitTests::RedirectCerrIfNeeded();
             DataHolderType policyData(2, 1);
             BOOST_CHECK_EQUAL(16u, Policy::GetRequiredStorageSize(4, 4, policyData));
             BOOST_CHECK_EQUAL(4u, Policy::CalculateNumberOfRows(4, policyData));
@@ -223,6 +229,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestDiagonalOnlyCalculateIndex)
         {
+            UnitTests::RedirectCerrIfNeeded();
             DataHolderType policyData(0, 0);
             BOOST_CHECK_EQUAL(0, *Policy::CalculateIndex(3, 3, 0, 0, policyData));
             BOOST_CHECK_EQUAL(1, *Policy::CalculateIndex(3, 3, 1, 1, policyData));
@@ -239,6 +246,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSubDiagonalsOnlyCalculateIndex)
         {
+            UnitTests::RedirectCerrIfNeeded();
             DataHolderType oneSubData(1, 0);
             BOOST_CHECK_EQUAL(0, *Policy::CalculateIndex(3, 3, 0, 0, oneSubData));
             BOOST_CHECK_EQUAL(2, *Policy::CalculateIndex(3, 3, 1, 1, oneSubData));
@@ -254,6 +262,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSuperDiagonalsOnlyCalculateIndex)
         {
+            UnitTests::RedirectCerrIfNeeded();
             DataHolderType oneSubData(0, 2);
             BOOST_CHECK_EQUAL(2, *Policy::CalculateIndex(3, 3, 0, 0, oneSubData));
             BOOST_CHECK_EQUAL(5, *Policy::CalculateIndex(3, 3, 1, 1, oneSubData));
@@ -269,6 +278,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSupAndSuperDiagonalsCalculateIndex)
         {
+            UnitTests::RedirectCerrIfNeeded();
             DataHolderType oneSubData(1, 2);
 
             BOOST_CHECK_EQUAL(2, *Policy::CalculateIndex(4, 4, 0, 0, oneSubData));
@@ -295,6 +305,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestGetValue)
         {
+            UnitTests::RedirectCerrIfNeeded();
             typedef MatrixStoragePolicy<CountedObject<NekDouble>, BandedMatrixTag> Policy;
             Policy::PolicySpecificDataHolderType policyData(1, 2);
 
@@ -336,6 +347,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSetValue)
         {
+            UnitTests::RedirectCerrIfNeeded();
             DataHolderType oneSubData(1, 2);
 
             // [ 1 2 3 0 ]

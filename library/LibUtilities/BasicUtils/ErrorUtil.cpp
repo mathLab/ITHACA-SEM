@@ -35,11 +35,30 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/optional.hpp>
+#include <iostream>
 
 namespace ErrorUtil
 {
+    boost::optional<std::ostream&> outStream;
+
+    void SetErrorStream(std::ostream& o)
+    {
+        outStream = o;
+    }
+
+    bool HasCustomErrorStream()
+    {
+        return outStream;
+    }
+
     void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
     {
+        // The user of outStream is primarily for the unit tests.
+        // The unit tests often generate errors on purpose to make sure
+        // invalid usage is flagged appropriately.  Printing the error 
+        // messages to cerr made the unit test output hard to parse.
+
         std::string baseMsg = std::string("Level ") + 
             boost::lexical_cast<std::string>(level) +  
             std::string(" assertion violation\n") + 
@@ -52,12 +71,26 @@ namespace ErrorUtil
         switch(type)
         {
             case efatal:
-                std::cerr << "Fatal: " << baseMsg << std::endl;
+                if( outStream )
+                {
+                    (*outStream) << "Fatal: " << baseMsg << std::endl;
+                }
+                else
+                {
+                    std::cerr << "Fatal: " << baseMsg << std::endl;
+                }
                 throw NekError(baseMsg);
                 break;
                 
             case ewarning:
-                std::cerr << "Warning: " << baseMsg << std::endl;
+                if( outStream )
+                {
+                    (*outStream) << "Warning: " << baseMsg << std::endl;
+                }
+                else
+                {
+                    std::cerr << "Warning: " << baseMsg << std::endl;
+                }
                 break;
                 
             default:

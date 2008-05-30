@@ -41,6 +41,8 @@
 
 namespace ErrorUtil
 {
+    void SetErrorStream(std::ostream& o);
+    bool HasCustomErrorStream();
 
     enum ErrType
     {
@@ -112,6 +114,9 @@ namespace ErrorUtil
 
 /***
 $Log: ErrorUtil.hpp,v $
+Revision 1.9  2008/01/20 04:02:49  bnelson
+Fixed compiler warnings.
+
 Revision 1.8  2007/07/10 22:22:19  jfrazier
 Added an additional indicator of the error severity (fatal or warning).
 

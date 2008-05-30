@@ -36,6 +36,8 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <UnitTests/CountedObject.h>
+#include <UnitTests/util.h>
+
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -665,6 +667,7 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(Test1DAccessOperator)
         {
+            UnitTests::RedirectCerrIfNeeded();
             // Normal access.
             double a[] = {1.0, 2.0, 3.0, 4.0, 5.0};
             double b[] = {10.0, 20.0, 30.0, 40.0 };

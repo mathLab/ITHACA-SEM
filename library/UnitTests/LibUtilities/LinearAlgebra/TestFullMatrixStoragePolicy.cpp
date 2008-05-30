@@ -37,7 +37,7 @@
 
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <UnitTests/CountedObject.h>
-
+#include <UnitTests/util.h>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -129,6 +129,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestArrayInitialization)
         {
+            UnitTests::RedirectCerrIfNeeded();
             Policy::PolicySpecificDataHolderType policyData;
             CountedObject<double> buf[] = {CountedObject<double>(1), CountedObject<double>(2), CountedObject<double>(3),
                                            CountedObject<double>(4), CountedObject<double>(5), CountedObject<double>(6),
@@ -171,6 +172,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestCalculateIndex)
         {
+            UnitTests::RedirectCerrIfNeeded();
             BOOST_CHECK_EQUAL(0, Policy::CalculateIndex(5, 5, 0, 0, 'N'));
             BOOST_CHECK_EQUAL(1, Policy::CalculateIndex(5, 5, 1, 0, 'N'));
             BOOST_CHECK_EQUAL(2, Policy::CalculateIndex(5, 5, 2, 0, 'N'));
@@ -191,6 +193,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestGetValue)
         {
+            UnitTests::RedirectCerrIfNeeded();
             typedef MatrixStoragePolicy<double, FullMatrixTag> Policy;
             Policy::PolicySpecificDataHolderType policyData;
             NekDouble buf[] = {1.0, 2.0, 3.0, 4.0,
@@ -276,6 +279,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestSetValue)
         {
+            UnitTests::RedirectCerrIfNeeded();
             typedef MatrixStoragePolicy<double, FullMatrixTag> Policy;
             Policy::PolicySpecificDataHolderType policyData;
             NekDouble buf[] = {1.0, 2.0, 3.0, 4.0,
@@ -348,6 +352,7 @@ namespace Nektar
                     
         BOOST_AUTO_TEST_CASE(TestAdvance)
         {
+            UnitTests::RedirectCerrIfNeeded();
             typedef MatrixStoragePolicy<double, FullMatrixTag> Policy;
             Policy::PolicySpecificDataHolderType policyData;
 
@@ -417,6 +422,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestOneByOneMatrixInversion)
         {
+            UnitTests::RedirectCerrIfNeeded();
             typedef MatrixStoragePolicy<double, FullMatrixTag> Policy;
             Policy::PolicySpecificDataHolderType policyData;
 
@@ -431,6 +437,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestTwoByTwoMatrixInversion)
         {
+            UnitTests::RedirectCerrIfNeeded();
             typedef MatrixStoragePolicy<double, FullMatrixTag> Policy;
             Policy::PolicySpecificDataHolderType policyData;
 

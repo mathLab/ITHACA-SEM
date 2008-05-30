@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <UnitTests/testNekPoint.h>
+#include <UnitTests/util.h>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -183,6 +184,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(testNekPointDataAccess)
         {
+            UnitTests::RedirectCerrIfNeeded();
             using namespace Nektar;
 
             NekPoint<int, ThreeD> p(1,2,3);

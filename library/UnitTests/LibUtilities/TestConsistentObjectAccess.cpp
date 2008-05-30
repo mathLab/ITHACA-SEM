@@ -36,7 +36,7 @@
 #include "LibUtilitiesUnitTestsPrecompiledHeader.h"
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
-
+#include <UnitTests/util.h>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -72,6 +72,7 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestPointerTypes)
         {
+            UnitTests::RedirectCerrIfNeeded();
             double* d1 = new double(1.0);
             const double* d2 = new double(2.0);
             

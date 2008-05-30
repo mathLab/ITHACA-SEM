@@ -20,6 +20,7 @@ SET(UnitTestSources
     testFoundation/testFoundation.cpp
     testFoundation/testInterpolation.cpp
     testFoundation/testDerivation.cpp
+    util.cpp
 )
 
 SET(UnitTestHeaders
@@ -40,6 +41,7 @@ SET(UnitTestHeaders
     testFoundation/testFoundation.h
     testFoundation/testInterpolation.h
     testFoundation/testDerivation.h
+    util.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS -DNEKTAR_UNIT_TESTS)

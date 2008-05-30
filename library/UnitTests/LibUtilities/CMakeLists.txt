@@ -8,12 +8,14 @@ SET(PrecompiledHeaderSources
     TestRawType.cpp
     TestUpperTriangularMatrix.cpp
     TestSharedArray.cpp
+    ../util.cpp
 )
 
 SET(UnitTestSources ${PrecompiledHeaderSources} main.cpp)   
 
 SET(UnitTestHeaders
 	LibUtilitiesUnitTestsPrecompiledHeader.h
+	../util.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)

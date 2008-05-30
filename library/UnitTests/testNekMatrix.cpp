@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <UnitTests/testNekMatrix.h>
+#include <UnitTests/util.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -163,6 +164,7 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestFullNekMatrixGetValue)
         {
+            UnitTests::RedirectCerrIfNeeded();
             double data[] = {1.0, 89.0, 0.0, 45.12,
                              2.0, -12.3, 892.2532, 76.12,
                              3.0, -56.7, 211.22, 45.23};
@@ -243,6 +245,7 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestDiagonalMatrixGetValue)
         {
+            UnitTests::RedirectCerrIfNeeded();
             double data[] = {8.9, 3.4, 5.7};
             Nektar::NekMatrix<double, DiagonalMatrixTag> m1(3, 3, data);
             boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
@@ -337,6 +340,7 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestDiagonalNekMatrixSetValue)
         {
+            UnitTests::RedirectCerrIfNeeded();
             double data[] = {8.9, 3.4, 5.7};
             Nektar::NekMatrix<double, DiagonalMatrixTag> m1(3, 3, data);
             boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
@@ -752,6 +756,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.32  2008/04/22 05:22:47  bnelson
+    Speed enhancements.
+
     Revision 1.31  2008/04/06 06:04:54  bnelson
     Changed ConstArray to Array<const>
 

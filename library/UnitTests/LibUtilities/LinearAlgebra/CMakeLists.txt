@@ -15,12 +15,15 @@ SET(Sources
     TestScaledBlockMatrixOperations.cpp
     TestScaledMatrix.cpp
     TestSymmetricMatrixStoragePolicy.cpp
+    TestTriangularMatrixOperations.cpp
     TestUpperTriangularMatrixStoragePolicy.cpp
     TestStandardMatrix.cpp
+    ../../util.cpp
 )
 
 SET(Headers
     TestCombinationRunner.h
+    ../../util.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)

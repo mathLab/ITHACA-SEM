@@ -69,13 +69,16 @@ namespace Nektar
             
             BOOST_CHECK_CLOSE(q[1][0], .45811, epsilon);
             BOOST_CHECK_CLOSE(q[1][1], .85890, epsilon);
-            BOOST_CHECK_CLOSE(q[1][2], .22890, epsilon);
+            BOOST_CHECK_CLOSE(q[1][2], -.22890, epsilon);
         }
     }
 }
 
 /**
     $Log: testNekLinAlgAlgorithms.cpp,v $
+    Revision 1.6  2008/03/28 01:45:56  bnelson
+    Updated constant sized vectors so they inherit from NekVector<const DataType> like the variable sized vectors.
+
     Revision 1.5  2008/03/06 04:48:23  ehan
     Changed NekVector<NekDouble, 3> to NekVector<NekDouble, ThreeD> to match the changes of enum to struct typename dim.
 

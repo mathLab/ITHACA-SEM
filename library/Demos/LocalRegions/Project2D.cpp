@@ -294,9 +294,9 @@ int main(int argc, char *argv[])
 
   //--------------------------------------------
   // Write solution 
-  FILE *outfile = fopen("ProjectFile2D.dat","w");
-  E->WriteToFile(outfile);
-  fclose(outfile);
+  ofstream outfile("ProjectFile2D.dat");
+  E->WriteToFile(outfile,eTecplot);
+  outfile.close();
   //-------------------------------------------
 
   //--------------------------------------------

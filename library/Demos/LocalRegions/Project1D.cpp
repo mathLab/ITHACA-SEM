@@ -122,9 +122,9 @@ int main(int argc, char *argv[])
 
     //--------------------------------------------
     // Write solution 
-    FILE *outfile = fopen("ProjectFile1D.dat","w");
-    E->WriteToFile(outfile);
-    fclose(outfile);
+    ofstream outfile("ProjectFile1D.dat");
+    E->WriteToFile(outfile,eTecplot);
+    outfile.close();
     //-------------------------------------------
 
     //--------------------------------------------

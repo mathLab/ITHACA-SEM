@@ -7,6 +7,7 @@ SET(BasicConstHeaders
 SET(LinearAlgebraHeaders
     ./LinearAlgebra/BandedMatrixStoragePolicy.hpp
     ./LinearAlgebra/Blas.hpp
+    ./LinearAlgebra/BlasArray.hpp
     ./LinearAlgebra/BlockMatrix.hpp
     ./LinearAlgebra/DiagonalMatrixStoragePolicy.hpp
     ./LinearAlgebra/FullMatrixStoragePolicy.hpp

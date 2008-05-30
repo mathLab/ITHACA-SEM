@@ -20,10 +20,16 @@ ELSE(APPLE)
 	SET(FrameworkDefault OFF)
 ENDIF(APPLE)
 
+IF( WIN32 )
+	SET(Win32LapackDefault ON)
+ELSE(WIN32)
+	SET(Win32LapackDefault OFF)
+ENDIF(WIN32)
+
 SET(NEKTAR_USE_FRAMEWORK ${FrameworkDefault} CACHE BOOL "Use the Mac Framework system for BLAS and Lapack support." )
 SET(NEKTAR_USE_ACML OFF CACHE BOOL "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." )
 SET(NEKTAR_USE_ATLAS OFF CACHE BOOL "Use ATLAS for BLAS and Lapack support." )
-SET(NEKTAR_USE_WIN32_LAPACK OFF CACHE BOOL "Use Win32 Lapack provided with the Third Party Distribution.")
+SET(NEKTAR_USE_WIN32_LAPACK ${Win32LapackDefault} CACHE BOOL "Use Win32 Lapack provided with the Third Party Distribution.")
 SET(NEKTAR_USE_MEMORY_POOLS ON CACHE BOOL "Use memory pools to accelerate memory allocation.")
 SET(NEKTAR_USE_BLAS_LAPACK ON CACHE BOOL "Use Blas and lapack routines.")
 SET(NEKTAR_USE_METIS OFF CACHE BOOL "Use Metis routines for partitioning and reordering graphs.")
@@ -51,7 +57,7 @@ INCLUDE (FindLoki)
 INCLUDE (FindTinyXml)
 
 
-FIND_PACKAGE( Boost 1.35.0 REQUIRED COMPONENTS thread )
+FIND_PACKAGE( Boost 1.35.0 REQUIRED COMPONENTS thread iostreams zlib )
 
 IF( NEKTAR_USE_MKL )
     INCLUDE (FindMKL)
@@ -250,6 +256,8 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
     TARGET_LINK_LIBRARIES(${name}
         optimized LibUtilities debug LibUtilities-g
         optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
+        optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
+        optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}
         optimized tinyxml debug tinyxml
 	)
         

@@ -49,18 +49,18 @@ namespace Nektar
         {
         public:
             MatrixKey( StdRegions::MatrixType matrixType, 
-                       StdRegions::ShapeType shapeType, 
+                       StdRegions::ExpansionType expansionType, 
                        StdRegions::StdExpansion &stdExpansion,
                        LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             MatrixKey( StdRegions::MatrixType matrixType, 
-                       StdRegions::ShapeType shapeType, 
+                       StdRegions::ExpansionType expansionType, 
                        StdRegions::StdExpansion &stdExpansion,
                        double scalefactor,
                        LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             MatrixKey( StdRegions::MatrixType matrixType, 
-                       StdRegions::ShapeType shapeType, 
+                       StdRegions::ExpansionType expansionType, 
                        StdRegions::StdExpansion &stdExpansion,
                        double scalefactor,
                        double constant,
@@ -86,9 +86,9 @@ namespace Nektar
                 return m_stdMatKey->GetMatrixType(); 
             }
 
-            StdRegions::ShapeType GetShapeType() const
+            StdRegions::ExpansionType GetExpansionType() const
             {
-                return m_stdMatKey->GetShapeType();
+                return m_stdMatKey->GetExpansionType();
             }
 
             int GetNcoeffs() const
@@ -145,6 +145,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.15  2008/04/06 05:59:04  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.14  2007/12/17 13:04:29  sherwin
 * Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
 *

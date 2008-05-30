@@ -124,7 +124,7 @@ namespace Nektar
             virtual int v_GetNverts() const = 0;
             virtual int v_GetNedges() const = 0;
             virtual int v_GetNfaces() const = 0;
-            virtual ShapeType v_DetShapeType() const = 0;
+            virtual ExpansionType v_DetExpansionType() const = 0;
 
             virtual int v_get_nodalpoints(Array<OneD, const NekDouble> &x, Array<OneD, const NekDouble> &y)
             {
@@ -171,6 +171,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.15  2008/05/15 22:39:34  ehan
+* Clean up the codes
+*
 * Revision 1.14  2008/04/06 06:04:15  bnelson
 * Changed ConstArray to Array<const>
 *

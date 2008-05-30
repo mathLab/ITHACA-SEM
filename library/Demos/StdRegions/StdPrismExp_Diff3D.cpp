@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    StdRegions::ShapeType regionShape = ePrism;    
+    StdRegions::ExpansionType regionShape = ePrism;    
     
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);

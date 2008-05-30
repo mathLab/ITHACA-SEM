@@ -73,7 +73,7 @@ namespace Nektar
         /** \brief Return Shape of region, using  ShapeType enum list.
          *  i.e. Prism 
          */
-        ShapeType DetShapeType() const
+        ExpansionType DetExpansionType() const
         {
            return ePrism;
         }
@@ -178,9 +178,9 @@ namespace Nektar
             return 5;
         }
 
-        virtual ShapeType v_DetShapeType() const
+        virtual ExpansionType v_DetExpansionType() const
         {
-            return DetShapeType();
+            return DetExpansionType();
         }
 
         virtual int v_GetEdgeNcoeffs(const int i) const
@@ -294,6 +294,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.15  2008/05/29 21:36:25  pvos
+ * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+ *
  * Revision 1.14  2008/05/15 22:41:37  ehan
  * Added WriteToFile() function and its virtual function
  *

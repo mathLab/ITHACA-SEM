@@ -390,7 +390,7 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
 
                 // get Mass matrix inverse
-                StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
+                StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
                 DNekMatSharedPtr& matsys = GetStdMatrix(masskey);
 
                 // copy inarray in case inarray == outarray
@@ -1244,6 +1244,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.36  2008/05/29 21:36:25  pvos
+* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+*
 * Revision 1.35  2008/05/10 18:27:33  sherwin
 * Modifications necessary for QuadExp Unified DG Solver
 *

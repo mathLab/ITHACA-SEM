@@ -49,31 +49,31 @@ namespace Nektar
         {
         public:
             StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ShapeType shapeType, 
+                          const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ShapeType shapeType, 
+                          const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const NekDouble const0,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ShapeType shapeType, 
+                          const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const NekDouble const0,
                           const NekDouble const1,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
             
             StdMatrixKey(const MatrixType matrixType, 
-                         const ShapeType shapeType,
+                         const ExpansionType expansionType,
                          const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
                          const int ncoeffs,
                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
             
             StdMatrixKey(const MatrixType matrixType, 
-                         const ShapeType shapeType,
+                         const ExpansionType expansionType,
                          const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
                          const int ncoeffs,
                          const NekDouble const0,
@@ -81,7 +81,7 @@ namespace Nektar
 
 
             StdMatrixKey(const MatrixType matrixType, 
-                         const ShapeType shapeType,
+                         const ExpansionType expansionType,
                          const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
                          const int ncoeffs,
                          const NekDouble const0,
@@ -110,9 +110,9 @@ namespace Nektar
                 return m_matrixType;
             }
 
-            ShapeType GetShapeType() const
+            ExpansionType GetExpansionType() const
             {
-                return m_shapeType;
+                return m_expansionType;
             }
 
             LibUtilities::PointsType GetNodalPointsType() const
@@ -148,7 +148,7 @@ namespace Nektar
             }
 
         protected:
-            ShapeType m_shapeType;
+            ExpansionType m_expansionType;
             Array<OneD, const LibUtilities::BasisSharedPtr> m_base;
 
             unsigned int m_ncoeffs;
@@ -174,6 +174,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.19  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.18  2007/12/17 13:03:51  sherwin
 * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
 *

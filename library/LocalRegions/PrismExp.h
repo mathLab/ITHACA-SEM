@@ -101,7 +101,7 @@ namespace Nektar
                        Array<OneD, NekDouble> &out_d2);
 
       /// Return Shape of region, using  ShapeType enum list. i.e. Prism
-      StdRegions::ShapeType DetShapeType() const
+      StdRegions::ExpansionType DetExpansionType() const
       { 
     	 return StdRegions::ePrism; 
       }
@@ -138,9 +138,9 @@ namespace Nektar
     private:
       PrismExp();
 
-	virtual StdRegions::ShapeType v_DetShapeType() const 
+	virtual StdRegions::ExpansionType v_DetExpansionType() const 
 	{
-	return DetShapeType();
+	return DetExpansionType();
 	}
 
         virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
@@ -273,6 +273,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.h,v $
+ *    Revision 1.13  2008/05/29 21:33:37  pvos
+ *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+ *
  *    Revision 1.12  2008/04/06 05:59:05  bnelson
  *    Changed ConstArray to Array<const>
  *

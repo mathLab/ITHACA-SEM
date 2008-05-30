@@ -514,7 +514,7 @@ namespace Nektar
             for(n = 0; n < (*m_exp).size(); ++n)
             {
                 // Matrix to Bnd Sys
-                LocalRegions::MatrixKey Umatkey(linsystype, (*m_exp)[n]->DetShapeType(),*((*m_exp)[n]), factor1,factor2);
+                LocalRegions::MatrixKey Umatkey(linsystype, (*m_exp)[n]->DetExpansionType(),*((*m_exp)[n]), factor1,factor2);
                 DNekScalMat &BndSys = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
                 
                 loc_lda = BndSys.GetColumns();
@@ -614,7 +614,7 @@ namespace Nektar
                 nbndry = (*m_exp)[n]->NumDGBndryCoeffs(); 		    
 
                 LocalRegions::MatrixKey Umatkey(StdRegions::eUnifiedDGLamToU, 
-                   (*m_exp)[n]->DetShapeType(),*((*m_exp)[n]), lambda, tau);
+                   (*m_exp)[n]->DetExpansionType(),*((*m_exp)[n]), lambda, tau);
 
                 e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
                 e_f       = f+cnt;
@@ -671,7 +671,7 @@ namespace Nektar
                 {
                     // Get BndSys Matrix
 
-                    LocalRegions::MatrixKey Bmatkey(StdRegions::eUnifiedDGHelmBndSys,  (*m_exp)[e]->DetShapeType(),*((*m_exp)[e]), lambda, tau);
+                    LocalRegions::MatrixKey Bmatkey(StdRegions::eUnifiedDGHelmBndSys,  (*m_exp)[e]->DetExpansionType(),*((*m_exp)[e]), lambda, tau);
 
                     DNekScalMat &BndSys = *((*m_exp)[e]->GetLocMatrix(Bmatkey));               
                     DNekVec vin (nbndry);

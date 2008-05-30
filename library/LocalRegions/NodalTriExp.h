@@ -143,9 +143,9 @@ namespace Nektar
             
         private:           
         
-            virtual StdRegions::ShapeType v_DetShapeType() const
+            virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
-                return DetShapeType();
+                return DetExpansionType();
             }
             
             virtual DNekMatSharedPtr v_GenNBasisTransMatrix()
@@ -300,7 +300,7 @@ namespace Nektar
             
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
             {
-                MatrixKey mkey(mtype,DetShapeType(),*this,lambdaval,tau);
+                MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
                 return m_matrixManager[mkey];
             }
             
@@ -322,6 +322,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.17  2008/05/29 21:33:37  pvos
+ *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+ *
  *    Revision 1.16  2008/04/06 05:59:05  bnelson
  *    Changed ConstArray to Array<const>
  *

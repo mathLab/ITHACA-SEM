@@ -316,7 +316,7 @@ namespace Nektar
             
             for(i = 0; i < n_exp; ++i)
             {
-                LocalRegions::MatrixKey mkey(mtype,(*m_exp)[i]->DetShapeType(),*((*m_exp)[i]),scalar,constant);
+                LocalRegions::MatrixKey mkey(mtype,(*m_exp)[i]->DetExpansionType(),*((*m_exp)[i]),scalar,constant);
                 loc_mat = (*m_exp)[i]->GetLocMatrix(mkey);
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
@@ -337,7 +337,7 @@ namespace Nektar
             for(i= 0; i < GetExpSize(); ++i)
             {
 
-                StdRegions::StdMatrixKey mkey(gkey.GetLinSysType(),(*m_exp)[i]->DetShapeType(),
+                StdRegions::StdMatrixKey mkey(gkey.GetLinSysType(),(*m_exp)[i]->DetExpansionType(),
                                               *((*m_exp)[i]),gkey.GetFactor1());
                 (*m_exp)[i]->GeneralMatrixOp(mkey,inarray + cnt, 
                                              e_outarray = outarray+cnt);
@@ -367,7 +367,7 @@ namespace Nektar
             for(n = cnt = 0; n < (*m_exp).size(); ++n)
             {
                 LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
-                                          (*m_exp)[n]->DetShapeType(),
+                                          (*m_exp)[n]->DetExpansionType(),
                                           *(*m_exp)[n],mkey.GetFactor1());
                 
                 loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
@@ -455,7 +455,7 @@ namespace Nektar
             for(n = cnt = 0; n < (*m_exp).size(); ++n)
             {
                 LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
-                                          (*m_exp)[n]->DetShapeType(),
+                                          (*m_exp)[n]->DetExpansionType(),
                                           *(*m_exp)[n],mkey.GetFactor1());
 
                 loc_mat = (*m_exp)[n]->GetLocStaticCondMatrix(matkey);
@@ -545,7 +545,7 @@ namespace Nektar
             for(n = cnt = 0; n < (*m_exp).size(); ++n)
             {
                 // Matrix to Bnd Sys
-                LocalRegions::MatrixKey Umatkey(linsystype, (*m_exp)[n]->DetShapeType(),*((*m_exp)[n]), factor1,factor2);
+                LocalRegions::MatrixKey Umatkey(linsystype, (*m_exp)[n]->DetExpansionType(),*((*m_exp)[n]), factor1,factor2);
                 DNekScalMat &BndSys = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
                 
                 loc_lda = BndSys.GetColumns();
@@ -687,7 +687,7 @@ namespace Nektar
                  
                 int i,j,k;
                 int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
-                StdRegions::ShapeType locShape = (*m_exp)[0]->DetShapeType();
+                StdRegions::ExpansionType locShape = (*m_exp)[0]->DetExpansionType();
 
                 int nDumpCoeffs =  nElementalCoeffs*nElementalCoeffs;
                 Array<TwoD, int> exponentMap(nDumpCoeffs,3,0);
@@ -714,7 +714,7 @@ namespace Nektar
 
                     if(i>0)
                     {
-                        if ( ((*m_exp)[i]->DetShapeType())!=((*m_exp)[i-1]->DetShapeType()) )
+                        if ( ((*m_exp)[i]->DetExpansionType())!=((*m_exp)[i-1]->DetExpansionType()) )
                         {
                             dumpNewView = true;
                         }
@@ -725,7 +725,7 @@ namespace Nektar
                     }
                     if(i<GetExpSize()-1)
                     {
-                        if ( ((*m_exp)[i]->DetShapeType())!=((*m_exp)[i+1]->DetShapeType()) )
+                        if ( ((*m_exp)[i]->DetExpansionType())!=((*m_exp)[i+1]->DetExpansionType()) )
                         {
                             closeView = true;
                         }

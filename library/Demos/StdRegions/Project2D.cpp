@@ -27,7 +27,7 @@ int main(int argc, char *argv[]){
   LibUtilities::PointsType    Qtype1,Qtype2;
   LibUtilities::BasisType     btype1,btype2;
   LibUtilities::PointsType     NodalType;
-  StdRegions::ShapeType       regionshape;
+  StdRegions::ExpansionType    regionshape;
   StdRegions::StdExpansion2D *E;
   Array<OneD, NekDouble> sol;
   
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]){
     exit(1);
   }
   
-  regionshape = (StdRegions::ShapeType) atoi(argv[1]);
+  regionshape = (StdRegions::ExpansionType) atoi(argv[1]);
   
   // Check to see if 2D region 
   if((regionshape != StdRegions::eTriangle)&&(regionshape != StdRegions::eQuadrilateral))

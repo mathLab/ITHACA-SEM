@@ -48,16 +48,16 @@ namespace Nektar
         class StdLinSysKey: public StdMatrixKey
         {  
         public:
-            StdLinSysKey( MatrixType matrixType, ShapeType shapeType, 
+            StdLinSysKey( MatrixType matrixType, ExpansionType expansionType, 
               StdExpansion &stdExpansion):
-        StdMatrixKey(matrixType,shapeType,stdExpansion)
+        StdMatrixKey(matrixType,expansionType,stdExpansion)
          {
          };
 ;
 
-            StdLinSysKey( MatrixType matrixType, ShapeType shapeType, 
+            StdLinSysKey( MatrixType matrixType, ExpansionType expansionType, 
               StdExpansion &stdExpansion, LibUtilities::PointsType Ntype):
-        StdMatrixKey(matrixType,shapeType,stdExpansion,Ntype)
+        StdMatrixKey(matrixType,expansionType,stdExpansion,Ntype)
          {
          };
 ;
@@ -77,6 +77,9 @@ namespace Nektar
 
 /**
 * $Log: StdLinSysKey.hpp,v $
+* Revision 1.3  2007/07/20 02:16:54  bnelson
+* Replaced boost::shared_ptr with Nektar::ptr
+*
 * Revision 1.2  2007/04/10 14:00:45  sherwin
 * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
 *

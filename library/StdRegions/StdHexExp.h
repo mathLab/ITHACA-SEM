@@ -75,7 +75,7 @@ namespace Nektar
             *  i.e. Hexahedron
             */
       
-            ShapeType DetShapeType() const
+            ExpansionType DetExpansionType() const
             {
                 return eHexahedron;
             }
@@ -229,9 +229,9 @@ namespace Nektar
                 return 6;
             }
 
-            virtual ShapeType v_DetShapeType() const
+            virtual ExpansionType v_DetExpansionType() const
             {
-                return DetShapeType();
+                return DetExpansionType();
             };
             
             virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
@@ -347,6 +347,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.20  2008/05/29 21:36:25  pvos
+* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+*
 * Revision 1.19  2008/05/15 22:40:05  ehan
 * Clean up the codes
 *

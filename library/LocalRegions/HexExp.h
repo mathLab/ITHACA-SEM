@@ -73,7 +73,7 @@ namespace Nektar
       /// Destructor
       ~HexExp();
 
-      StdRegions::ShapeType DetShapeType() const
+      StdRegions::ExpansionType DetExpansionType() const
       { 
     	 return StdRegions::eHexahedron; 
       }
@@ -133,9 +133,9 @@ namespace Nektar
       /// Return Shape of region, using  ShapeType enum list. i.e. Hexahedron
        HexExp();
 
-        virtual StdRegions::ShapeType v_DetShapeType() const
+        virtual StdRegions::ExpansionType v_DetExpansionType() const
         {
-            return DetShapeType();
+            return DetExpansionType();
         }
     
         virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
@@ -257,6 +257,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.15  2008/05/29 21:33:37  pvos
+ *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+ *
  *    Revision 1.14  2008/04/06 05:59:04  bnelson
  *    Changed ConstArray to Array<const>
  *

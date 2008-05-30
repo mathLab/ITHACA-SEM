@@ -73,7 +73,7 @@ namespace Nektar
         /** \brief Return Shape of region, using  ShapeType enum list. 
          *  i.e. Pyramid
          */
-        ShapeType DetShapeType() const
+        ExpansionType DetExpansionType() const
         {
         return ePyramid;
         };
@@ -176,9 +176,9 @@ namespace Nektar
             return 5;
         }
 
-        virtual ShapeType v_DetShapeType() const
+        virtual ExpansionType v_DetExpansionType() const
         {
-        return DetShapeType();
+        return DetExpansionType();
         }
         
         virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
@@ -291,6 +291,9 @@ namespace Nektar
 
 /**
  * $Log: StdPyrExp.h,v $
+ * Revision 1.15  2008/05/29 21:36:25  pvos
+ * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+ *
  * Revision 1.14  2008/05/15 22:41:58  ehan
  * Added virtual function v_CreatStdMatrix()
  *

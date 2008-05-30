@@ -68,7 +68,7 @@ namespace Nektar
             /** \brief Return Shape of region, using  ShapeType enum list.
             *  i.e. Segment
             */
-            ShapeType DetShapeType() const
+            ExpansionType DetExpansionType() const
             {
                 return eSegment;
             };
@@ -244,9 +244,9 @@ namespace Nektar
                 return 2;
             } 
 
-            virtual ShapeType v_DetShapeType() const
+            virtual ExpansionType v_DetExpansionType() const
             {
-                return DetShapeType();
+                return DetExpansionType();
             }
 
 
@@ -418,6 +418,9 @@ namespace Nektar
 
 /**
 * $Log: StdSegExp.h,v $
+* Revision 1.37  2008/05/29 21:36:25  pvos
+* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+*
 * Revision 1.36  2008/04/06 06:04:15  bnelson
 * Changed ConstArray to Array<const>
 *

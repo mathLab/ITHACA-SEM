@@ -135,9 +135,9 @@ namespace Nektar
         };
 
         /** enum list of StdExpansion regions */
-        enum ShapeType
+        enum ExpansionType
         {
-            eNoShapeType,
+            eNoExpansionType,
             eSegment,
             eTriangle,
             eQuadrilateral,
@@ -145,13 +145,13 @@ namespace Nektar
             ePyramid,
             ePrism,
             eHexahedron,
-            SIZE_ShapeType
+            SIZE_ExpansionType
         };
     
 
-        const char* const ShapeTypeMap[] = 
+        const char* const ExpansionTypeMap[] = 
         {
-            "NoShapeType",
+            "NoExpansionType",
             "Segment",
             "Triangle",
             "Quadrilateral",
@@ -165,7 +165,7 @@ namespace Nektar
 
 
         // Hold the dimension of each of the types of shapes.
-        const unsigned int ShapeTypeDimMap[SIZE_ShapeType] =
+        const unsigned int ExpansionTypeDimMap[SIZE_ExpansionType] =
         {
             0,  // Unknown
             1,  // eSegment
@@ -233,6 +233,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.23  2008/03/12 15:25:09  pvos
+* Clean up of the code
+*
 * Revision 1.22  2008/01/23 09:09:25  sherwin
 * New matrix listing for DG stuff
 *

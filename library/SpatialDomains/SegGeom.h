@@ -79,7 +79,7 @@ namespace Nektar
 
                 void    FillGeom ();
 
-                StdRegions::ShapeType DetShapeType() const
+                StdRegions::ExpansionType DetExpansionType() const
                 {
                     return StdRegions::eSegment;
                 }
@@ -116,9 +116,9 @@ namespace Nektar
                     FillGeom();
                 }
                 
-                virtual StdRegions::ShapeType v_DetShapeType() const
+                virtual StdRegions::ExpansionType v_DetExpansionType() const
                 {
-                    return DetShapeType();
+                    return DetExpansionType();
                 }
                 
                 virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
@@ -149,6 +149,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.16  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.15  2008/04/02 22:19:04  pvos
 // Update for 2D local to global mapping
 //

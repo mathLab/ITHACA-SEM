@@ -41,34 +41,34 @@ namespace Nektar
     namespace LocalRegions
     {
         MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
-                             StdRegions::ShapeType shapeType,
+                             StdRegions::ExpansionType expansionType,
                              StdRegions::StdExpansion &stdExpansion,
                              LibUtilities::PointsType nodalType)
         {
-            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion,nodalType);
+            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,expansionType,stdExpansion,nodalType);
             m_metricinfo  = stdExpansion.GetMetricInfo(); 
         }
 
         MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
-                             StdRegions::ShapeType shapeType,
+                             StdRegions::ExpansionType expansionType,
                              StdRegions::StdExpansion &stdExpansion,
                              NekDouble    scalefactor,
                              LibUtilities::PointsType nodalType)
         {
-            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion,scalefactor,nodalType);
+            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,expansionType,stdExpansion,scalefactor,nodalType);
 
             m_scalefactor = scalefactor;
             m_metricinfo  = stdExpansion.GetMetricInfo(); 
         }
 
         MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
-                             StdRegions::ShapeType shapeType,
+                             StdRegions::ExpansionType expansionType,
                              StdRegions::StdExpansion &stdExpansion,
                              NekDouble    scalefactor,
                              NekDouble    constant, 
                              LibUtilities::PointsType nodalType)
         {
-            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,shapeType,stdExpansion,scalefactor,constant,nodalType);
+            m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,expansionType,stdExpansion,scalefactor,constant,nodalType);
 
             m_scalefactor = scalefactor;
             m_metricinfo  = stdExpansion.GetMetricInfo(); 
@@ -114,7 +114,7 @@ namespace Nektar
                 return false;
             }
 
-            for(unsigned int i = 0; i < StdRegions::ShapeTypeDimMap[lhs.GetShapeType()]; ++i)
+            for(unsigned int i = 0; i < StdRegions::ExpansionTypeDimMap[lhs.GetExpansionType()]; ++i)
             {
                 if(lhs.GetBasis(i).get() < rhs.GetBasis(i).get())
                 {
@@ -151,6 +151,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.15  2008/05/29 01:02:13  bnelson
+* Added precompiled header support.
+*
 * Revision 1.14  2007/12/17 13:04:29  sherwin
 * Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
 *

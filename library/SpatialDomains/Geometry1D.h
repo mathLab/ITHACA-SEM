@@ -107,9 +107,9 @@ namespace Nektar
                 v_FillGeom();
             }
             
-            StdRegions::ShapeType DetShapeType() const
+            StdRegions::ExpansionType DetExpansionType() const
             {
-                return v_DetShapeType();
+                return v_DetExpansionType();
             }
             
             void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
@@ -133,34 +133,34 @@ namespace Nektar
             virtual void v_AddElmtConnected(int gvo_id, int locid)
             {  
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");            
+                         "This function is only valid for expansion type geometries");            
             }
             
             virtual int v_NumElmtConnected() const
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
                 return 0;
             }
             
             virtual bool v_IsElmtConnected(int gvo_id, int locid) const
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
                 return false;
             }
             
             virtual int v_GetEid() const 
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
                 return 0;
             }
 
             virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
                 LibUtilities::BasisSharedPtr returnval;        
                 return returnval;    
             }
@@ -168,7 +168,7 @@ namespace Nektar
             virtual const StdRegions::StdExpansion1DSharedPtr &v_GetXmap(const int i)
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
                 static StdRegions::StdExpansion1DSharedPtr returnval;        
                 return returnval; 
             }
@@ -176,14 +176,14 @@ namespace Nektar
             virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
                 return NullNekDouble1DArray;
             }
 
             virtual VertexComponentSharedPtr v_GetVertex(const int i) const
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
                 VertexComponentSharedPtr returnval;        
                 return returnval;
             }
@@ -191,46 +191,46 @@ namespace Nektar
             virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
                 return 0.0;
             }
 
             virtual int v_GetVid(int i) const
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
                 return 0;
             }
             
             virtual void v_FillGeom()
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
             }
             
-            virtual StdRegions::ShapeType v_DetShapeType() const
+            virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
-                return StdRegions::eNoShapeType;
+                         "This function is only valid for expansion type geometries");
+                return StdRegions::eNoExpansionType;
             }
             
             virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
             }            
             
             virtual  void v_SetOwnData()
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
             }
             
             virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
             {
                 NEKERROR(ErrorUtil::efatal,
-                         "This function is only valid for shape type geometries");
+                         "This function is only valid for expansion type geometries");
             }
         };
         // shorthand for boost pointer
@@ -245,6 +245,9 @@ namespace Nektar
 
 //
 // $Log: Geometry1D.h,v $
+// Revision 1.6  2008/04/06 06:00:37  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.5  2008/04/02 22:19:03  pvos
 // Update for 2D local to global mapping
 //

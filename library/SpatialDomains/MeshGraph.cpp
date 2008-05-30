@@ -828,13 +828,13 @@ namespace Nektar
 				bool valid = ParseUtils::GenerateSeqVector(idString.c_str(), elementIds);
 				ASSERTL0(valid, "Unable to correctly parse the element ids.");
 
-				StdRegions::ShapeType elementType;
+				GeomShapeType elementType;
 				valid = false;
-				for (unsigned int i = 0; i < StdRegions::SIZE_ShapeType; i++)
+				for (unsigned int i = 0; i < SIZE_GeomShapeType; i++)
 				{
-					if (StdRegions::ShapeTypeMap[i] == typeString)
+					if (GeomShapeTypeMap[i] == typeString)
 					{
-						elementType = (StdRegions::ShapeType) i;
+						elementType = (GeomShapeType) i;
 						valid = true;
 						break;
 					}
@@ -908,6 +908,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.17  2008/05/29 21:19:23  delisi
+// Added the Write(...) and Import(...) functions which write and read XML files for output.
+//
 // Revision 1.16  2008/03/18 14:14:49  pvos
 // Update for nodal triangular helmholtz solver
 //

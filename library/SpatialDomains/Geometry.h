@@ -51,7 +51,7 @@ namespace Nektar
         // Types of geometry types.
         enum GeomShapeType
         {
-            eNoShapeType,
+            eNoGeomShapeType,
             eSegment,
             eTriangle,
             eQuadrilateral,
@@ -59,7 +59,7 @@ namespace Nektar
             ePyramid,
             ePrism,
             eHexahedron,
-            SIZE_ShapeType
+            SIZE_GeomShapeType
         };
     
 
@@ -169,6 +169,10 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.22  2008/05/29 18:59:36  delisi
+// Added a getter for the GeomShapeType.
+// Added the m_GlobalID field with a getter and setter.
+//
 // Revision 1.21  2008/05/29 16:39:57  jfrazier
 // Added shapetype map to convert to text representation.
 //

@@ -462,9 +462,9 @@ namespace Nektar
             *  
             *  \return returns the shape of the expansion domain
             */        
-            ShapeType DetShapeType() const
+            ExpansionType DetExpansionType() const
             {
-                return v_DetShapeType();
+                return v_DetExpansionType();
             }
 
 
@@ -1181,10 +1181,10 @@ namespace Nektar
                 return LibUtilities::eNoBasisType;
             }
 
-            virtual ShapeType v_DetShapeType() const
+            virtual ExpansionType v_DetExpansionType() const
             {
                 ASSERTL0(false, "This expansion does not have a shape type defined");
-                return eNoShapeType;
+                return eNoExpansionType;
             }
 
             virtual bool  v_IsBoundaryInteriorExpansion() 
@@ -1365,6 +1365,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.82  2008/05/29 21:36:25  pvos
+* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+*
 * Revision 1.81  2008/05/10 18:27:33  sherwin
 * Modifications necessary for QuadExp Unified DG Solver
 *

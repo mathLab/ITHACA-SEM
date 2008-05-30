@@ -54,10 +54,10 @@ namespace Nektar
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
                 m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoShapeType,*this),
+                                                          StdRegions::eNoExpansionType,*this),
                                                 boost::bind(&HexExp::CreateMatrix, this, _1));
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoShapeType,*this),
+                                                                    StdRegions::eNoExpansionType,*this),
                                                           boost::bind(&HexExp::CreateStaticCondMatrix, this, _1));
             }
             
@@ -75,10 +75,10 @@ namespace Nektar
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
                 m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoShapeType,*this),
+                                                          StdRegions::eNoExpansionType,*this),
                                                 boost::bind(&HexExp::CreateMatrix, this, _1));
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoShapeType,*this),
+                                                                    StdRegions::eNoExpansionType,*this),
                                                           boost::bind(&HexExp::CreateStaticCondMatrix, this, _1));
             }
 
@@ -372,7 +372,7 @@ namespace Nektar
                 
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass,
-                                              DetShapeType(),*this);
+                                              DetExpansionType(),*this);
                 DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
                 
                 // copy inarray in case inarray == outarray
@@ -642,7 +642,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetShapeType(),
+                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),
                                                          *this);
                         DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
@@ -688,9 +688,9 @@ namespace Nektar
                         }                            
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
-                                           mkey.GetShapeType(), *this);  
+                                           mkey.GetExpansionType(), *this);  
                         MatrixKey deriv1key(StdRegions::eWeakDeriv1,
-                                            mkey.GetShapeType(), *this);
+                                            mkey.GetExpansionType(), *this);
 
                         DNekMat &deriv0 = *GetStdMatrix(*deriv0key.GetStdMatKey());
                         DNekMat &deriv1 = *GetStdMatrix(*deriv1key.GetStdMatKey());
@@ -718,11 +718,11 @@ namespace Nektar
                     {
                         ASSERTL1(m_geom->GetCoordDim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
-                                           mkey.GetShapeType(), *this);  
+                                           mkey.GetExpansionType(), *this);  
                         MatrixKey lap01key(StdRegions::eLaplacian01,
-                                           mkey.GetShapeType(), *this);
+                                           mkey.GetExpansionType(), *this);
                         MatrixKey lap11key(StdRegions::eLaplacian11,
-                                           mkey.GetShapeType(), *this);  
+                                           mkey.GetExpansionType(), *this);  
 
                         DNekMat &lap00 = *GetStdMatrix(*lap00key.GetStdMatKey());
                         DNekMat &lap01 = *GetStdMatrix(*lap01key.GetStdMatKey());
@@ -748,10 +748,10 @@ namespace Nektar
                 {
                     NekDouble factor = mkey.GetScaleFactor();
                     MatrixKey masskey(StdRegions::eMass,
-                                      mkey.GetShapeType(), *this);    
+                                      mkey.GetExpansionType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetShapeType(), *this);
+                                     mkey.GetExpansionType(), *this);
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();
@@ -782,7 +782,7 @@ namespace Nektar
                     NekDouble one = 1.0;
 
                     StdRegions::StdMatrixKey hkey(StdRegions::eUnifiedDGHelmholtz,
-                                                  DetShapeType(),*this,
+                                                  DetExpansionType(),*this,
                                                   mkey.GetConstant(0),
                                                   mkey.GetConstant(1));
                     DNekMatSharedPtr mat = GenMatrix(hkey);
@@ -932,6 +932,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.10  2008/05/29 21:33:37  pvos
+ *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+ *
  *    Revision 1.9  2008/05/29 01:02:13  bnelson
  *    Added precompiled header support.
  *

@@ -72,7 +72,7 @@ namespace Nektar
             /** \brief Return Shape of region, using  ShapeType enum list.
             *  i.e. Triangle
             */
-            ShapeType DetShapeType() const
+            ExpansionType DetExpansionType() const
             {
                 return eTriangle;
             }
@@ -321,9 +321,9 @@ namespace Nektar
                 return GetEdgeBasisType(i);
             }
 
-            virtual ShapeType v_DetShapeType() const
+            virtual ExpansionType v_DetExpansionType() const
             {
-                return DetShapeType();
+                return DetExpansionType();
             };
 
             virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
@@ -504,6 +504,9 @@ namespace Nektar
 
 /**
 * $Log: StdTriExp.h,v $
+* Revision 1.28  2008/05/29 21:36:25  pvos
+* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+*
 * Revision 1.27  2008/05/07 16:04:57  pvos
 * Mapping + Manager updates
 *

@@ -71,7 +71,7 @@ namespace Nektar
             /** \brief Return Shape of region, using  ShapeType enum list. 
              *  i.e. Tetrahedron
              */
-            ShapeType DetShapeType() const
+            ExpansionType DetExpansionType() const
             {
                 return eTetrahedron;
             }
@@ -203,9 +203,9 @@ namespace Nektar
                 return 4;
             }
 
-            virtual ShapeType v_DetShapeType() const
+            virtual ExpansionType v_DetExpansionType() const
             {
-                return DetShapeType();
+                return DetExpansionType();
             }
 
 
@@ -330,6 +330,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.17  2008/05/29 21:36:25  pvos
+ * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+ *
  * Revision 1.16  2008/05/15 22:42:29  ehan
  * Added WriteToFile() function and its virtual function
  *

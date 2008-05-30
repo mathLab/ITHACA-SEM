@@ -164,7 +164,7 @@ namespace Nektar
                 return 0;
             }
 
-            virtual ShapeType v_DetShapeType() const = 0;
+            virtual ExpansionType v_DetExpansionType() const = 0;
 
             virtual int v_get_nodalpoints(const Array<OneD, const NekDouble>& x, 
                 Array<OneD, Array<OneD, const NekDouble> >& y)
@@ -226,6 +226,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.27  2008/04/06 06:04:15  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.26  2008/04/02 22:18:10  pvos
 * Update for 2D local to global mapping
 *

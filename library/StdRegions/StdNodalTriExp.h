@@ -62,7 +62,7 @@ namespace Nektar
             //Destructor
             ~StdNodalTriExp();
 
-            ShapeType DetShapeType() const
+            ExpansionType DetExpansionType() const
             {
                 return eTriangle;
             }
@@ -171,9 +171,9 @@ namespace Nektar
                 return 3 + (GetBasisNumModes(0)-2) + 2*(GetBasisNumModes(1)-2);
             } 
 
-            virtual ShapeType v_DetShapeType() const
+            virtual ExpansionType v_DetExpansionType() const
             {
-                return DetShapeType();
+                return DetExpansionType();
             }
 
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
@@ -316,6 +316,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.21  2008/05/29 21:36:25  pvos
+* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+*
 * Revision 1.20  2008/05/07 16:04:57  pvos
 * Mapping + Manager updates
 *

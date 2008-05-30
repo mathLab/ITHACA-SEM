@@ -43,13 +43,13 @@ namespace Nektar
     {
 
         /** define list of number of vertices corresponding to each ShapeType */
-        const int g_shapenverts[SIZE_ShapeType] = {0,2,3,4,4,5,6,8};
+        const int g_shapenverts[SIZE_ExpansionType] = {0,2,3,4,4,5,6,8};
 
         /** define list of number of edges corresponding to each ShapeType */
-        const int g_shapenedges[SIZE_ShapeType] = {0,1,3,4,6,8,9,12};
+        const int g_shapenedges[SIZE_ExpansionType] = {0,1,3,4,6,8,9,12};
 
         /** define list of number of faces corresponding to each ShapeType */
-        const int g_shapenfaces[SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
+        const int g_shapenfaces[SIZE_ExpansionType] = {0,0,0,0,4,5,5,6};
 
         StdExpansion::StdExpansion(void): 
             m_numbases(0),
@@ -95,9 +95,9 @@ namespace Nektar
             // Register Creators for  Managers
             for(int i = 0; i < SIZE_MatrixType; ++i)
             {
-                m_stdMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoShapeType,*this),
+                m_stdMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this),
                                    boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-                m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoShapeType,*this),  
+                m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this),  
                                    boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1));
             }
 
@@ -120,8 +120,8 @@ namespace Nektar
             // Register Creators for  Managers
             for(int i = 0; i < SIZE_MatrixType; ++i)
             {
-                m_stdMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoShapeType,*this), boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-                m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoShapeType,*this), boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1));
+                m_stdMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this), boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
+                m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this), boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1));
             }
         }
         
@@ -259,7 +259,7 @@ namespace Nektar
                     NekDouble tau = mkey.GetConstant(1);
 
                     // Get basic Galerkin Helmholtz matrix 
-                    StdRegions::StdMatrixKey hkey(eHelmholtz,DetShapeType(),
+                    StdRegions::StdMatrixKey hkey(eHelmholtz,DetExpansionType(),
                                                   *this,mkey.GetConstant(0));
                     returnval  = GenMatrix(hkey);
                     DNekMat &Mat = *returnval;
@@ -402,7 +402,7 @@ namespace Nektar
                 break;            
             case eInvMass:
                 {
-                    StdMatrixKey masskey(eMass,mkey.GetShapeType(),mkey.GetBase(),
+                    StdMatrixKey masskey(eMass,mkey.GetExpansionType(),mkey.GetBase(),
                                          mkey.GetNcoeffs(),mkey.GetNodalPointsType());
                     DNekMatSharedPtr& mmat = GetStdMatrix(masskey);
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*mmat); //Populate standard mass matrix.
@@ -411,7 +411,7 @@ namespace Nektar
                 break;
             case eInvNBasisTrans:
                 {
-                    StdMatrixKey tmpkey(eNBasisTrans,mkey.GetShapeType(),mkey.GetBase(),
+                    StdMatrixKey tmpkey(eNBasisTrans,mkey.GetExpansionType(),mkey.GetBase(),
                         mkey.GetNcoeffs(),mkey.GetNodalPointsType());
                     DNekMatSharedPtr& tmpmat = GetStdMatrix(tmpkey);
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*tmpmat); //Populate standard mass matrix.
@@ -529,7 +529,7 @@ namespace Nektar
                                              Array<OneD,NekDouble> &outarray)
         {
 
-            switch(ShapeTypeDimMap[v_DetShapeType()])
+            switch(ExpansionTypeDimMap[v_DetExpansionType()])
             {
             case 1:
                 LaplacianMatrixOp(0,0,inarray,outarray);
@@ -570,8 +570,8 @@ namespace Nektar
                                              Array<OneD,NekDouble> &outarray)
         {
                 
-            ASSERTL1(k1 >= 0 && k1 < ShapeTypeDimMap[v_DetShapeType()],"invalid first  argument");
-            ASSERTL1(k2 >= 0 && k2 < ShapeTypeDimMap[v_DetShapeType()],"invalid second argument");
+            ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
+            ASSERTL1(k2 >= 0 && k2 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid second argument");
                                   
             Array<OneD, NekDouble> tmp(GetTotPoints());
             Array<OneD, NekDouble> dtmp(GetTotPoints());
@@ -586,7 +586,7 @@ namespace Nektar
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray)
         {
-            ASSERTL1(k1 >= 0 && k1 < ShapeTypeDimMap[v_DetShapeType()],"invalid first  argument");
+            ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
                                   
             Array<OneD, NekDouble> tmp(GetTotPoints());
             v_BwdTrans(inarray,tmp);
@@ -617,7 +617,7 @@ namespace Nektar
             Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
-            StdMatrixKey      bwdtransmatkey(eBwdTrans,DetShapeType(),*this);
+            StdMatrixKey      bwdtransmatkey(eBwdTrans,DetExpansionType(),*this);
             DNekMatSharedPtr& bwdtransmat = GetStdMatrix(bwdtransmatkey);
 
             // scenario 1
@@ -802,6 +802,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.69  2008/05/10 18:27:33  sherwin
+* Modifications necessary for QuadExp Unified DG Solver
+*
 * Revision 1.68  2008/04/06 06:04:14  bnelson
 * Changed ConstArray to Array<const>
 *

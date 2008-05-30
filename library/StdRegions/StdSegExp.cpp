@@ -206,7 +206,7 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
                 
                 // get Mass matrix inverse
-                StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
+                StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
                 DNekMatSharedPtr& matsys = GetStdMatrix(masskey);
                 
                 NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
@@ -258,7 +258,7 @@ namespace Nektar
                 Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
                 
                 // get Mass matrix inverse (only of interior DOF)
-                StdMatrixKey      masskey(eMass,DetShapeType(),*this);
+                StdMatrixKey      masskey(eMass,DetExpansionType(),*this);
                 DNekMatSharedPtr  matsys = (m_stdStaticCondMatrixManager[masskey])->GetBlock(1,1);
                 
                 Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,1.0, &(matsys->GetPtr())[0],
@@ -443,6 +443,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.50  2008/05/29 21:36:25  pvos
+* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+*
 * Revision 1.49  2008/05/07 16:04:57  pvos
 * Mapping + Manager updates
 *

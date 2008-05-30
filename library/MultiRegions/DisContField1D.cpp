@@ -212,7 +212,7 @@ namespace Nektar
             for(cnt = cnt1 = n = 0; n < nexp; ++n)
             {
                 LocalRegions::MatrixKey Umatkey(StdRegions::eUnifiedDGLamToU, 
-                   (*m_exp)[n]->DetShapeType(),*((*m_exp)[n]), lambda, tau);
+                   (*m_exp)[n]->DetExpansionType(),*((*m_exp)[n]), lambda, tau);
 
                 e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
                 e_f       = f+cnt;
@@ -235,7 +235,7 @@ namespace Nektar
                     if(loc < NumDirBCs)
                     {
                         (*m_exp)[n]->MapTo(StdRegions::eForwards,vmap);
-                        LocalRegions::MatrixKey Qmatkey(StdRegions::eUnifiedDGLamToQ0, (*m_exp)[n]->DetShapeType(),*((*m_exp)[n]), lambda, tau);
+                        LocalRegions::MatrixKey Qmatkey(StdRegions::eUnifiedDGLamToQ0, (*m_exp)[n]->DetExpansionType(),*((*m_exp)[n]), lambda, tau);
                         DNekScalMat &LamToQ = *((*m_exp)[n]->GetLocMatrix(Qmatkey)); 
 
                         bval =  m_bndConstraint[i]->GetValue();

@@ -647,7 +647,7 @@ namespace Nektar
             IProductWRTBase(inarray,outarray);
 
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
+            StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
             
          
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
@@ -813,6 +813,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.9  2008/05/29 21:36:25  pvos
+ * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+ *
  * Revision 1.8  2008/05/15 22:41:27  ehan
  * Added WriteToFile() function and its virtual function
  *

@@ -92,10 +92,10 @@ namespace Nektar
                 return int(m_seggeoms.size());
             }
 
-            inline const int GetVidFromElmt(StdRegions::ShapeType shape, 
+            inline const int GetVidFromElmt(StdRegions::ExpansionType expansion, 
                 const int vert, const int elmt) const 
             {
-                if(shape == StdRegions::eTriangle)
+                if(expansion == StdRegions::eTriangle)
                 {
                     ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
                         "eid is out of range");
@@ -111,10 +111,10 @@ namespace Nektar
                 }
             }
 
-            inline const int GetEidFromElmt(StdRegions::ShapeType shape, 
+            inline const int GetEidFromElmt(StdRegions::ExpansionType expansion, 
                 const int edge, const int elmt) const
             {
-                if(shape == StdRegions::eTriangle)
+                if(expansion == StdRegions::eTriangle)
                 {
                     ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
                         "eid is out of range");
@@ -130,9 +130,9 @@ namespace Nektar
                 }
             }
 
-            inline const StdRegions::EdgeOrientation GetEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt) const 
+            inline const StdRegions::EdgeOrientation GetEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const 
             {
-                if(shape == StdRegions::eTriangle)
+                if(expansion == StdRegions::eTriangle)
                 {
                     ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
                         "eid is out of range");
@@ -149,11 +149,11 @@ namespace Nektar
             }
 
 
-            inline const StdRegions::EdgeOrientation GetCartesianEorientFromElmt(StdRegions::ShapeType shape,const int edge, const int elmt) const
+            inline const StdRegions::EdgeOrientation GetCartesianEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
             {
                 StdRegions::EdgeOrientation returnval;
 
-                if(shape == StdRegions::eTriangle)
+                if(expansion == StdRegions::eTriangle)
                 {
                     ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
                         "eid is out of range");
@@ -234,6 +234,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.20  2008/05/29 19:07:39  delisi
+// Removed the Write(..) methods, so it is only in the base MeshGraph class. Also, added a line to set the global ID of the geometry object for every element read in.
+//
 // Revision 1.19  2008/03/18 14:14:49  pvos
 // Update for nodal triangular helmholtz solver
 //

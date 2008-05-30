@@ -74,7 +74,7 @@ namespace Nektar
             ~SegExp();
 
             /// Return Shape of region, using  ShapeType enum list. i.e. Segment  
-            StdRegions::ShapeType DetShapeType() const
+            StdRegions::ExpansionType DetExpansionType() const
             { 
                 return StdRegions::eSegment;
             }    
@@ -197,9 +197,9 @@ namespace Nektar
 
             SegExp();
 
-            virtual StdRegions::ShapeType v_DetShapeType() const
+            virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
-                return DetShapeType();
+                return DetExpansionType();
             }
 
             virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
@@ -397,7 +397,7 @@ namespace Nektar
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
             {
-                MatrixKey mkey(mtype,DetShapeType(),*this,lambdaval,tau);
+                MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
                 return m_matrixManager[mkey];
             }
 
@@ -447,6 +447,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.34  2008/05/29 21:33:37  pvos
+// Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+//
 // Revision 1.33  2008/05/14 18:06:50  sherwin
 // mods to fix Seggeom to Geometry1D casting
 //

@@ -128,7 +128,7 @@ namespace Nektar
         void StdNodalTriExp::NodalToModal(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray)
         {
-            StdMatrixKey   Nkey(eInvNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
+            StdMatrixKey   Nkey(eInvNBasisTrans,DetExpansionType(),*this,m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
 
             NekVector<const NekDouble> nodal(m_ncoeffs,inarray,eWrapper);
@@ -146,7 +146,7 @@ namespace Nektar
         void StdNodalTriExp::NodalToModalTranspose(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray)
         {            
-            StdMatrixKey   Nkey(eInvNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
+            StdMatrixKey   Nkey(eInvNBasisTrans,DetExpansionType(),*this,m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
 
             NekVector<const NekDouble> nodal(m_ncoeffs,inarray,eCopy);
@@ -163,7 +163,7 @@ namespace Nektar
         void StdNodalTriExp::ModalToNodal(const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> &outarray)
         {
-            StdMatrixKey      Nkey(eNBasisTrans,DetShapeType(),*this,m_nodalPointsKey->GetPointsType());
+            StdMatrixKey      Nkey(eNBasisTrans,DetExpansionType(),*this,m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  vdm = GetStdMatrix(Nkey);
 
             // Multiply out matrix
@@ -291,7 +291,7 @@ namespace Nektar
             IProductWRTBase(inarray,outarray);
             
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass,DetShapeType(),*this, 
+            StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this, 
                                     m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
@@ -659,6 +659,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.24  2008/05/29 21:36:25  pvos
+* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+*
 * Revision 1.23  2008/05/07 16:04:57  pvos
 * Mapping + Manager updates
 *

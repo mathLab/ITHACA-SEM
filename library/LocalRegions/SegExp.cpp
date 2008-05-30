@@ -52,9 +52,9 @@ namespace Nektar
         {         
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,  StdRegions::eNoShapeType,*this),   
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,  StdRegions::eNoExpansionType,*this),   
                                                 boost::bind(&SegExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoShapeType,*this),   
+                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoExpansionType,*this),   
                                                           boost::bind(&SegExp::CreateStaticCondMatrix, this, _1));
             }
             GenMetricInfo();
@@ -69,9 +69,9 @@ namespace Nektar
         {
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoShapeType,*this),  
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this),  
                                                 boost::bind(&SegExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoShapeType,*this),  
+                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this),  
                                                           boost::bind(&SegExp::CreateStaticCondMatrix, this, _1));
             }
 
@@ -91,9 +91,9 @@ namespace Nektar
         {      
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoShapeType,*this),  
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this),  
                                                 boost::bind(&SegExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoShapeType,*this),  
+                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this),  
                                                           boost::bind(&SegExp::CreateStaticCondMatrix, this, _1));
             }       
         }
@@ -456,7 +456,7 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
 
                 // get Mass matrix inverse
-                MatrixKey             masskey(StdRegions::eInvMass, DetShapeType(),*this);
+                MatrixKey             masskey(StdRegions::eInvMass, DetExpansionType(),*this);
                 DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
                 
                 // copy inarray in case inarray == outarray
@@ -509,7 +509,7 @@ namespace Nektar
                 Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
                 
                 // get Mass matrix inverse (only of interior DOF)
-                MatrixKey             masskey(StdRegions::eMass, DetShapeType(),*this);
+                MatrixKey             masskey(StdRegions::eMass, DetExpansionType(),*this);
                 DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
                 
                 Blas::Dgemv('N',nInteriorDofs,nInteriorDofs, matsys->Scale(), &((matsys->GetOwnedMatrix())->GetPtr())[0],
@@ -727,7 +727,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetShapeType(),
+                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),
                                                          *this);
                         DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
@@ -798,10 +798,10 @@ namespace Nektar
                 {
                     NekDouble factor = mkey.GetScaleFactor();
                     MatrixKey masskey(StdRegions::eMass,
-                                      mkey.GetShapeType(), *this);    
+                                      mkey.GetExpansionType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetShapeType(), *this);
+                                     mkey.GetExpansionType(), *this);
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();
@@ -831,7 +831,7 @@ namespace Nektar
                     NekDouble one = 1.0;
 
                     StdRegions::StdMatrixKey hkey(StdRegions::eUnifiedDGHelmholtz,
-                                                  DetShapeType(),*this,
+                                                  DetExpansionType(),*this,
                                                   mkey.GetConstant(0),
                                                   mkey.GetConstant(1));
                     DNekMatSharedPtr mat = GenMatrix(hkey);
@@ -886,12 +886,12 @@ namespace Nektar
                     DNekMat &BndMat = *returnval;
                     
                     // Matrix to map Lambda to U
-                    LocalRegions::MatrixKey Umatkey(StdRegions::eUnifiedDGLamToU, DetShapeType(),*this, lambdaval,tau);
+                    LocalRegions::MatrixKey Umatkey(StdRegions::eUnifiedDGLamToU, DetExpansionType(),*this, lambdaval,tau);
                     DNekScalMat &LamToU = *GetLocMatrix(Umatkey); 
                 
                     // Matrix to map Lambda to Q
                     LocalRegions::MatrixKey Qmatkey(StdRegions::eUnifiedDGLamToQ0,
-                                            DetShapeType(),*this, lambdaval,tau);
+                                            DetExpansionType(),*this, lambdaval,tau);
                     DNekScalMat &LamToQ = *GetLocMatrix(Qmatkey); 
                     
 
@@ -1019,7 +1019,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Dbasis = m_base[0]->GetDbdata();
             const Array<OneD, const NekDouble> &Basis  = m_base[0]->GetBdata();
             
-            MatrixKey    masskey(StdRegions::eInvMass, DetShapeType(),*this);
+            MatrixKey    masskey(StdRegions::eInvMass, DetExpansionType(),*this);
             DNekScalMat  &invMass = *m_matrixManager[masskey];
             Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
             NekDouble rx0,rx1;
@@ -1209,6 +1209,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.cpp,v $
+// Revision 1.43  2008/05/29 21:33:37  pvos
+// Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+//
 // Revision 1.42  2008/05/29 01:02:13  bnelson
 // Added precompiled header support.
 //

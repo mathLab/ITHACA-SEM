@@ -65,7 +65,7 @@ namespace Nektar
     /// Destructor
     ~StdNodalTetExp();
 
-    ShapeType DetShapeType()
+    ExpansionType DetExpansionType()
     {
       return eTetrahedron;
     }
@@ -106,9 +106,9 @@ namespace Nektar
                 const double *inarray, double *outarray);
 
   private:
-    virtual ShapeType V_DetShapeType() const
+    virtual ExpansionType V_DetExpansionType() const
     {
-        return DetShapeType();
+        return DetExpansionType();
     }
 
     virtual double V_Integral(const double *inarray )
@@ -188,6 +188,9 @@ namespace Nektar
 
 /**
  * $Log: StdNodalTetExp.h,v $
+ * Revision 1.3  2007/07/20 02:16:54  bnelson
+ * Replaced boost::shared_ptr with Nektar::ptr
+ *
  * Revision 1.2  2006/06/13 18:05:02  sherwin
  * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
  *

@@ -292,7 +292,7 @@ namespace Nektar
 
 
                 // Set up normals
-                switch(Coords[0]->DetShapeType())
+                switch(Coords[0]->DetExpansionType())
                 {
                 case StdRegions::eTriangle:
                     {
@@ -423,7 +423,7 @@ namespace Nektar
 
                 // Set up normals
                 int nquad_m = max(nquad0,nquad1);                
-                switch(Coords[0]->DetShapeType())
+                switch(Coords[0]->DetExpansionType())
                 {
                 case StdRegions::eTriangle:
                     {
@@ -767,6 +767,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.18  2008/04/06 22:32:53  bnelson
+// Fixed gcc compiler warnings.
+//
 // Revision 1.17  2008/04/06 06:00:37  bnelson
 // Changed ConstArray to Array<const>
 //

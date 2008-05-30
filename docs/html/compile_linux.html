@@ -108,7 +108,7 @@
         <p><a href="demos.html" id="menu_Demos">Demos</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p style="font-size:9px;">$Date: 2008/05/25 15:49:50 $</p>
+        <p style="font-size:9px;">$Date: 2008/05/25 16:42:40 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -140,7 +140,7 @@
         </ul>
       </li>
     </ol>
-    <h3 align="left">Setting up CMake</h3>
+    <h3 align="left">Setting up CMake (2.6+ required)</h3>
     <p align="left">CMake is an open-source, cross-platform make file generator system. It can be used to generate the correct GCC Makefiles.</p>
     <ol>
       <li>Go to the <a href="http://www.cmake.org/HTML/index.html" target="_blank">CMake Website</a> and download the *.tar.gz file appropriate for your operating system. There is a source distribution and a binary distribution. You can use the binary distribution if it is available for your system, otherwise you will need to use the source distribution.
@@ -182,17 +182,15 @@
           </li>
         </ol>
       </li>
-      <li>The next step is to extract and compile the correct libraries for <em>Boost</em>. In order for CMake to find the libraries, they need to be in <em>/usr/include</em>, <em>/usr/local/include</em>, or in <em>ThirdParty/</em> as described below.  If you have the correct include and library files in this path, CMake will be able to find them. If you do not have this setup, below I will give steps to compile and place the <em>Boost</em> installation. If CMake cannot find a <em>Boost</em> installation, you can come back to this section later.
-        <strong>Note:</strong> Nektar++ requires Boost's zlib library, so if you don't continue with this step, make sure your installation has this library compiled.
-        <ol>
-            <li>In <em>ThirdParty/</em>, extract the boost_1_34_1.tar.bz2 archive with &quot;tar -xjvf boost_1_34_1.tar.bz2&quot; (no quotes). This will create <em>boost_1_34_1/</em>.</li>
-          <li>Change to the <em>boost_1_34_1/</em> directory, and type &quot;./configure --prefix=../include --with-toolset=gcc --with-libraries=filesystem,thread,test,iostreams&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
+      <li>The next step is to extract and compile the correct libraries for <em>Boost</em>.
+      <ol>
+            <li>In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_35_0/</em>.</li>
+          <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;./configure --prefix=../boost --with-toolset=gcc --with-libraries=filesystem,thread,test,iostreams&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
             <ol>
                   <li>The &quot;--with-libraries&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish.</li>
             </ol>
           </li>
-          <li>Next, still in the <em>boost_1_34_1/</em> directory, type &quot;make install&quot; (without the quotes) to begin compilation.</li>
-          <li>After boost has compiled, change to the newly created <em>include/</em> directory in the <em>ThirdParty/</em> directory. Execute the command &quot;mv include/boost-1_34_1/boost/ .&quot; (without the quotes). This will move the boost include files to where CMake is expecting them.</li>
+          <li>Next, still in the <em>boost_1_35_0/</em> directory, type &quot;make install&quot; (without the quotes) to begin compilation.</li>
         </ol>
       </li>
     </ol>
@@ -223,7 +221,7 @@
     <h3>Generating the GCC Makefiles with CMake</h3>
     <p>Now that all of the required libraries are setup in the correct paths, we can use CMake to generate the Makefiles that GCC requires.</p>
     <ol>
-      <li>From the terminal, change to a directory where you want the project Makefiles to be created. (This could be the <em>Nektar++/library/</em> directory.)</li>
+      <li>From the terminal, change to a directory where you want the project Makefiles to be created. (This could be the <em>Nektar++/library/</em> directory, but it isn't recommended.)</li>
       <li>CMake can generate both GCC Makefiles, or KDevelop project files.
         <ul>
             <li>GCC Makefiles
@@ -248,14 +246,7 @@
           </li>
         </ul>
       </li>
-      <li>For most of the questions, you will be able to select the default value by just pressing enter. Most of the configuration will be locating the files you setup earlier in <em>ThirdParty/</em>, but it should find these files automatically. If you have a different setup, you may need to enter the paths manually if they couldn't be found. Below I will list some of the options that you need to pay attention to.
-        <ul>
-            <li><strong>BOOST_*</strong>
-                <ul>
-                  <li>These are the paths to the boost include and library files. If you did not setup Boost as described above, since it was already installed, then you will manually need to fill in the paths if they were not found for you.</li>
-                </ul>
-            </li>
-          <li><strong>CMAKE_BUILD_TYPE</strong>
+      <li>For most of the questions, you will be able to select the default value by just pressing enter. Most of the configuration will be locating the files you setup earlier in <em>ThirdParty/</em>, but it should find these files automatically. If you have a different setup, you may need to enter the paths manually if they couldn't be found. Below I will list some of the options that you need to pay attention to.<ul><li><strong>CMAKE_BUILD_TYPE</strong>
                 <ul>
                   <li>This option sets the appropriate GCC flags for the different build types: Debug, Release, etc. For this tutorial, I'll choose Release, in order to get full optimizations.</li>
                 </ul>
@@ -267,17 +258,7 @@
           </li>
           <li><strong>LIBRARY_OUTPUT_PATH</strong>
                 <ul>
-                  <li>This is the path GCC will put the generated *.a library files.</li>
-                </ul>
-          </li>
-          <li><strong>NEKTAR_BUILD_DEMOS</strong>
-                <ul>
-                  <li>Setting this to <em>ON</em> will build the Nektar++ demos. These demos will allow you to see how to utilize the software. It is recommended that this be set to <em><strong>ON</strong></em>.</li>
-                </ul>
-          </li>
-          <li><strong>NEKTAR_ENABLE_EXCEPTIONS</strong>
-                <ul>
-                  <li>Currently, this is expected to be <em>ON</em> in order to run the unit tests. If it is <em>OFF</em>, some of the unit tests will fail.</li>
+                  <li>This is the path GCC will put the generated *.a library files</li>
                 </ul>
           </li>
           <li><strong>USE_ACML / USE_ATLAS / USE_MKL</strong>

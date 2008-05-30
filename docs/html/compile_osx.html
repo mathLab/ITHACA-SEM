@@ -108,7 +108,7 @@
         <p><a href="demos.html" id="menu_Demos">Demos</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p style="font-size:9px;">$Date: 2008/05/25 15:49:50 $</p>
+        <p style="font-size:9px;">$Date: 2008/05/25 16:42:40 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -149,18 +149,15 @@
                 </li>
             </ol>
           </li>
-          <li>The next step is to extract and compile the correct libraries for <em>Boost</em>. In order for CMake to find the libraries, they need to be in <em>/usr/include</em>, <em>/usr/local/include</em>, or in <em>ThirdParty/</em> as described below.  If you have the correct include and library files in this path, CMake will be able to find them. If you do not have this setup, below I will give steps to compile and place the <em>Boost</em> installation. If CMake cannot find a <em>Boost</em> installation, you can come back to this section later.
-            <strong>Note:</strong> Nektar++ requires Boost's zlib library, so if you don't continue with this step, make sure your installation has this library compiled.
-
+          <li>The next step is to extract and compile the correct libraries for <em>Boost</em>.
             <ol>
-                <li>In <em>ThirdParty/</em>, extract the boost_1_34_1.tar.bz2 archive with &quot;tar -xjvf boost_1_34_1.tar.bz2&quot; (no quotes). This will create <em>boost_1_34_1/</em>.</li>
-              <li>Change to the <em>boost_1_34_1/</em> directory, and type &quot;./configure --prefix=../include --with-toolset=gcc --with-libraries=filesystem,thread,test,iostreams&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
+                <li>In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_35_0/</em>.</li>
+              <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;./configure --prefix=../boost --with-libraries=filesystem,thread,test,iostreams&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
                 <ol>
                       <li>The &quot;--with-libraries&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish.</li>
                 </ol>
               </li>
-              <li>Next, still in the <em>boost_1_34_1/</em> directory, type &quot;make install&quot; (without the quotes) to begin compilation.</li>
-              <li>After boost has compiled, change to the newly created <em>include/</em> directory in the <em>ThirdParty/</em> directory. Execute the command &quot;mv include/boost-1_34_1/boost/ .&quot; (without the quotes). This will move the boost include files to where CMake is expecting them</li>
+              <li>Next, still in the <em>boost_1_35_0/</em> directory, type &quot;make install&quot; (without the quotes) to begin compilation.</li>
             </ol>
           </li>
         </ol>

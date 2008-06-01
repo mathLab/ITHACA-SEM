@@ -48,6 +48,12 @@ namespace Lapack
                   const int& nrhs, const double* ap,
                   const int  *ipiv, double* b,
                   const int& ldb, int& info);
+        void F77NAME(dtrtrs) (const char& uplo, const char& trans, const char& diag,
+                              const int& n, const int& nrhs, const double* a,
+                              const int& lda, double* b, const int& ldb, int& info);
+        void F77NAME(dtptrs) (const char& uplo, const char& trans, const char& diag,
+                              const int& n, const int& nrhs, const double* a,
+                              double* b, const int& ldb, int& info);
         void F77NAME(dpptrf) (const char& uplo, const int& n,
                   double* ap, int& info);
         void F77NAME(dpptrs) (const char& uplo, const int& n,
@@ -219,6 +225,21 @@ namespace Lapack
     {
         F77NAME(dsbev) (jobz, uplo, kl, ku, ap, lda, w, z, ldz, work, info);
     }
+
+    static inline void Dtrtrs(const char& uplo, const char& trans, const char& diag,
+                              const int& n, const int& nrhs, const double* a,
+                              const int& lda, double* b, const int& ldb, int& info)
+    {
+        F77NAME(dtrtrs) (uplo, trans, diag, n, nrhs, a, lda, b, ldb, info);
+    }
+
+    static inline void Dtptrs(const char& uplo, const char& trans, const char& diag,
+                              const int& n, const int& nrhs, const double* a,
+                              double* b, const int& ldb, int& info)
+    {
+        F77NAME(dtptrs) (uplo, trans, diag, n, nrhs, a, b, ldb, info);
+    }
+
     
 #endif //NEKTAR_USING_LAPACK
 }
@@ -226,6 +247,9 @@ namespace Lapack
 
 /***
 $Log: Lapack.hpp,v $
+Revision 1.4  2008/04/30 02:57:15  bnelson
+Fixed gcc compiler warning.
+
 Revision 1.3  2008/04/06 05:55:11  bnelson
 Changed ConstArray to Array<const>
 

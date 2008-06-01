@@ -187,7 +187,82 @@ namespace Nektar
         }
     };
 
-    
+    template<typename DataType>
+    struct LinearSystemSolver<NekMatrix<DataType, LowerTriangularMatrixTag, StandardMatrixTag> >
+    {
+        typedef NekMatrix<DataType, LowerTriangularMatrixTag, StandardMatrixTag> MatrixType;
+        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
+
+        template<typename BVectorType, typename XVectorType>
+        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
+        {
+            PerformSolve(A, ipivot, b, x, 'N', n, policyData);
+        }
+
+        template<typename BVectorType, typename XVectorType>
+        static void SolveTranspose(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
+        {
+            PerformSolve(A, ipivot, b, x, 'T', n, policyData);
+        }
+
+        template<typename BVectorType, typename XVectorType>
+        static void PerformSolve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, char trans, unsigned int n, const PolicySpecificDataType& policyData)
+        {
+            x = b;
+            int info = 0;
+            Lapack::Dtptrs('L', trans, 'N', n, 1, A.get(), x.GetRawPtr(), n, info);
+
+            if( info < 0 )
+            {
+                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
+                ASSERTL0(false, message.c_str());
+            }
+            else if( info > 0 )
+            {
+                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
+                ASSERTL0(false, message.c_str());
+            }
+        }
+    };
+
+    template<typename DataType>
+    struct LinearSystemSolver<NekMatrix<DataType, UpperTriangularMatrixTag, StandardMatrixTag> >
+    {
+        typedef NekMatrix<DataType, UpperTriangularMatrixTag, StandardMatrixTag> MatrixType;
+        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
+
+        template<typename BVectorType, typename XVectorType>
+        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
+        {
+            PerformSolve(A, ipivot, b, x, 'N', n, policyData);
+        }
+
+        template<typename BVectorType, typename XVectorType>
+        static void SolveTranspose(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
+        {
+            PerformSolve(A, ipivot, b, x, 'T', n, policyData);
+        }
+
+        template<typename BVectorType, typename XVectorType>
+        static void PerformSolve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, char trans, unsigned int n, const PolicySpecificDataType& policyData)
+        {
+            x = b;
+            int info = 0;
+            Lapack::Dtptrs('U', trans, 'N', n, 1, A.get(), x.GetRawPtr(), n, info);
+
+            if( info < 0 )
+            {
+                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
+                ASSERTL0(false, message.c_str());
+            }
+            else if( info > 0 )
+            {
+                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
+                ASSERTL0(false, message.c_str());
+            }
+        }
+    };
+
     template<typename MatrixType>
     class LinearSystem;
 
@@ -290,6 +365,21 @@ namespace Nektar
                     A[i] = 1.0/theA(i,i);
                 }
 
+            }
+
+            template<typename TriangularType>
+            void FactorMatrix(const NekMatrix<double, TriangularType, StandardMatrixTag>& theA,
+                              typename boost::enable_if
+                                <
+                                    boost::mpl::or_
+                                    <
+                                        boost::is_same<TriangularType, UpperTriangularMatrixTag>,
+                                        boost::is_same<TriangularType, LowerTriangularMatrixTag>
+                                    >
+                                >::type* p = 0)
+            {
+                A = Array<OneD, double>(theA.GetPtr().num_elements());
+                CopyArray(theA.GetPtr(), A);
             }
 
             void FactorMatrix(const NekMatrix<double,FullMatrixTag,StandardMatrixTag> &theA)

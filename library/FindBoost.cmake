@@ -105,7 +105,6 @@ OPTION(Boost_USE_MULTITHREADED "Use the multithreaded versions of the boost libr
 
 SET( _boost_TEST_VERSIONS ${Boost_ADDITIONAL_VERSIONS} "1.36.1" "1.36.0" "1.35.1" "1.35.0" "1.35" "1.34.1" "1.34.0" "1.34" "1.33.1" "1.33.0" "1.33" )
 
-
 ############################################
 #
 # Check the existence of the libraries.
@@ -376,12 +375,16 @@ ELSE (_boost_IN_CACHE)
             ARGS --version
             OUTPUT_VARIABLE _boost_COMPILER_VERSION
         )
-        STRING(REGEX REPLACE ".* ([0-9])\\.([0-9])\\.[0-9] .*" "\\1\\2"
+        STRING(REGEX REPLACE ".* ([0-9])\\.([0-9])\\.[0-9].*" "\\1\\2"
                _boost_COMPILER_VERSION ${_boost_COMPILER_VERSION})
         SET (_boost_COMPILER "-gcc${_boost_COMPILER_VERSION}")
       ENDIF (NOT CMAKE_COMPILER_IS_GNUCC)
     ENDIF (APPLE)
   ENDIF(UNIX)
+
+  IF(_boost_COMPILER STREQUAL "-gcc")
+     MESSAGE("Here")
+  ENDIF(_boost_COMPILER STREQUAL "-gcc")
 
   SET (_boost_MULTITHREADED "-mt")
 

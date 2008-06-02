@@ -16,9 +16,7 @@ SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE FILEPATH "" FORCE)
 SET(NEKTAR_USE_MKL OFF CACHE BOOL "Use the Intel Math Kernel Library (MKL) for BLAS and Lapack support." )
 
 IF( APPLE )
-	SET(FrameworkDefault ON)
-ELSE(APPLE)
-	SET(FrameworkDefault OFF)
+    SET(NEKTAR_USE_FRAMEWORK ON CACHE BOOL "Use the Mac Framework system for BLAS and Lapack support." )
 ENDIF(APPLE)
 
 # Turn on NEKTAR_USE_WIN32_LAPACK if we are in Windows and the libraries exist.
@@ -34,7 +32,6 @@ ELSE(WIN32)
 	SET(Win32LapackDefault OFF)
 ENDIF(WIN32)
 
-SET(NEKTAR_USE_FRAMEWORK ${FrameworkDefault} CACHE BOOL "Use the Mac Framework system for BLAS and Lapack support." )
 SET(NEKTAR_USE_ACML OFF CACHE BOOL "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." )
 SET(NEKTAR_USE_ATLAS OFF CACHE BOOL "Use ATLAS for BLAS and Lapack support." )
 SET(NEKTAR_USE_WIN32_LAPACK ${Win32LapackDefault} CACHE BOOL "Use Win32 Lapack provided with the Third Party Distribution.")
@@ -275,7 +272,26 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
         optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}
         optimized tinyxml debug tinyxml
 	)
-        
+
+    IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
+        # The boost thread library needs pthread on linux.
+	GET_TARGET_PROPERTY(THE_COMPILE_FLAGS ${name} COMPILE_FLAGS)
+	GET_TARGET_PROPERTY(THE_LINK_FLAGS ${name} LINK_FLAGS)
+
+	# It is possible these flags have not been set yet.
+	IF(NOT THE_COMPILE_FLAGS)
+		SET(THE_COMPILE_FLAGS "")
+	ENDIF(NOT THE_COMPILE_FLAGS)
+
+	IF(NOT THE_LINK_FLAGS )
+	       SET(THE_LINK_FLAGS "")
+	ENDIF(NOT THE_LINK_FLAGS)
+
+        SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -pthread")
+        SET_TARGET_PROPERTIES(${name} PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} -pthread")
+	
+    ENDIF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
+
     INSTALL(TARGETS ${name} RUNTIME DESTINATION ${NEKTAR_BIN_DIR} OPTIONAL
 	 ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL
 		LIBRARY DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL)

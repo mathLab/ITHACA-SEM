@@ -1207,8 +1207,10 @@ namespace Nektar
     } // end of namespace    
  }//end of namespace
 
-//
 // $Log: SegExp.cpp,v $
+// Revision 1.44  2008/05/30 00:33:48  delisi
+// Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+//
 // Revision 1.43  2008/05/29 21:33:37  pvos
 // Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 //
@@ -1350,5 +1352,4 @@ namespace Nektar
 // Revision 1.36  2006/03/12 21:59:48  sherwin
 //
 // compiling version of LocalRegions
-//
 //

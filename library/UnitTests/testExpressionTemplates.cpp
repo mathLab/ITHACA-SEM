@@ -287,8 +287,9 @@ namespace Nektar
                      }
                  }
              }
-        }  
-        #endif NEKTAR_USE_EXPRESSION_TEMPLATES      
+        }
+        
+        #endif NEKTAR_USE_EXPRESSION_TEMPLATES
      }
 }
 

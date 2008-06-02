@@ -791,6 +791,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.9  2008/05/30 00:33:48  delisi
+ *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+ *
  *    Revision 1.8  2008/05/29 21:33:37  pvos
  *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
  *
@@ -820,6 +823,3 @@ namespace Nektar
  *    First revision to meet coding standard. Needs to be compiled
  *
  **/
-
-
-

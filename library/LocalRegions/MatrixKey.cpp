@@ -151,6 +151,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.16  2008/05/30 00:33:48  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.15  2008/05/29 01:02:13  bnelson
 * Added precompiled header support.
 *
@@ -197,4 +200,3 @@ namespace Nektar
 * Keys for matrix managers
 *
 ***/
-

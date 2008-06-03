@@ -4,8 +4,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <link rel="shortcut icon" href="images/favicon.ico" >
     <!-- InstanceBeginEditable name="doctitle" -->
-<title>Nektar++ - Downloads</title>
-<!-- InstanceEndEditable -->
+    <title>Nektar++ - Downloads</title>
+    <!-- InstanceEndEditable -->
     <style type="text/css">
     <!--
     body {
@@ -66,14 +66,14 @@
     -->
     </style>
     <!-- InstanceBeginEditable name="CSS_Style" -->
-<style type="text/css">
-<!--
-#menu_Downloads {
-	font-weight: bold;
-}
--->
-</style>
-<!-- InstanceEndEditable -->
+    <style type="text/css">
+    <!--
+    #menu_Downloads {
+      font-weight: bold;
+    }
+    -->
+    </style>
+    <!-- InstanceEndEditable -->
     <!--[if IE]>
     <style type="text/css"> 
       .twoColHybLt #sidebar1 { padding-top: 30px; margin-top: 20px; }
@@ -82,7 +82,7 @@
     <![endif]-->
     <!-- InstanceParam name="LibraryMenu" type="boolean" value="false" -->
     <!-- InstanceParam name="CompileMenu" type="boolean" value="false" -->
-</head>
+  </head>
   <body class="twoColHybLt">
     <div id="container">
       <div id="sidebar1">
@@ -107,35 +107,40 @@
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
-    <h1>Downloads</h1>
-	<!-- InstanceEndEditable -->
+        <h1>Downloads</h1>
+    	<!-- InstanceEndEditable -->
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
-    <p><a href="getting_started.html" target="_blank">Getting Started Tutorial</a></p>
-    <p><br/><br/><strong>Nektar++ Download</strong></p>
-    <p>We would like to gather information about who is using Nektar++ for funding agencies. We will not give out or sell any of your information. <em>All fields are optional.</em></p>
-    <form id="form" method="get" action="http://www.nektar.info/downloads.php">
-      <table>
-        <tr>
-          <td style="text-align: right; width: 9em;"><label for="Name">Name</label></td>
-          <td><input type="text" size="40" name="Name" id="Name" /></td>
-        </tr>
-        <tr>
-          <td style="text-align: right;"><label for="Email">E-mail Address</label></td>
-          <td><input type="text" size="40" name="Email" id="Email" /></td>
-        </tr>
-        <tr>
-          <td style="text-align: right;"><label for="Affiliation">Affiliation</label></td>
-          <td><input type="text" size="40" name="Affiliation" id="Affiliation" /></td>
-        </tr>
-        <tr>
-          <td style="text-align: center;" colspan="2"><input type="submit" name="Download" value="Download" /></td>
-        </tr>
-      </table>
-    </form>
+	    <p><a href="file.tar.gz">Nektar++ Unix/Windows Code</a></p>
+    	<p><a href="file.tar.gz">Required Third Party Libraries</a></p>
+	    <p><a href="getting_started.html" target="_blank">Getting Started Tutorial</a></p>
         <!-- InstanceEndEditable -->
         <p><br class="clearfloat" /></p>
       </div>
     </div>
   </body>
 <!-- InstanceEnd --></html>
+<!--
+<?php
+// Load connection constants.
+require('common.php');
+
+// Connect to MySQL.
+$link = mysql_connect($hostname, $username, $password);
+if (!$link) exit(1);
+
+// Select the correct database.
+$db_selected = mysql_select_db($database, $link);
+if (!$db_selected) exit(1);
+
+// Add the person to the database.
+$query = sprintf("INSERT INTO `$table` (`Name`, `Email`, `Affiliation`) VALUES ('%s', '%s', '%s')",
+                 mysql_real_escape_string($_GET["Name"], $link),
+                 mysql_real_escape_string($_GET["Email"], $link),
+                 mysql_real_escape_string($_GET["Affiliation"], $link));
+mysql_query($query, $link);
+
+// Close the connection to MySQL.
+mysql_close($link);
+?>
+-->

@@ -35,8 +35,4 @@ SET(PrecompiledHeaderName LocalRegions/LocalRegions.h)
 ADD_NEKTAR_LIBRARY(LocalRegions STATIC ${LOCAL_REGIONS_SOURCES} ${LOCAL_REGIONS_HEADERS})
 SETUP_PRECOMPILED_HEADERS(LOCAL_REGIONS_SOURCES PrecompiledHeaderName)
 
-
-
-
-
-                                
+INSTALL(FILES ${LOCAL_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/LocalRegions)

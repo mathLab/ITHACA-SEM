@@ -210,6 +210,7 @@ ELSE (_boost_IN_CACHE)
     # BOOST_LIB_DIAGNOSTIC will cause the auto-linking code to emit a #pragma message each time
     # a library is selected for linking.
     SET(Boost_LIB_DIAGNOSTIC_DEFINITIONS "-DBOOST_LIB_DIAGNOSTIC" CACHE STRING "Boost diagnostic define")
+    MARK_AS_ADVANCED(Boost_LIB_DIAGNOSTIC_DEFINITIONS)
   ENDIF(WIN32)
 
 

@@ -314,7 +314,8 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/Nektar++Config.cmake.in
 INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake 
               ${CMAKE_SOURCE_DIR}/FindBoost.cmake
               ${CMAKE_SOURCE_DIR}/FindLoki.cmake
-	      ${CMAKE_SOURCE_DIR}/NektarCommon.cmake
+              ${CMAKE_SOURCE_DIR}/FindTinyXml.cmake
+              ${CMAKE_SOURCE_DIR}/NektarCommon.cmake
               DESTINATION ${CMAKE_INSTALL_PREFIX}) 
 
 INSTALL(EXPORT Nektar++Libraries DESTINATION lib)

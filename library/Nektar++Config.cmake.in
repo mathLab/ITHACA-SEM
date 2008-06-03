@@ -6,12 +6,13 @@ SET(Boost_ADDITIONAL_VERSIONS "@Boost_ADDITIONAL_VERSIONS@")
 
 FIND_PACKAGE( Boost 1.35.0 REQUIRED COMPONENTS thread )
 INCLUDE(${NEKTAR++_ROOT_DIR}/FindLoki.cmake)
+INCLUDE(${NEKTAR++_ROOT_DIR}/FindTinyXml.cmake)
 INCLUDE(${NEKTAR++_ROOT_DIR}/NektarCommon.cmake)
 INCLUDE(${NEKTAR++_ROOT_DIR}/lib/Nektar++Libraries.cmake)
 INCLUDE(${NEKTAR++_ROOT_DIR}/lib/Nektar++Libraries-debug.cmake)
 INCLUDE(${NEKTAR++_ROOT_DIR}/lib/Nektar++Libraries-release.cmake)
 
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR} ${LOKI_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
 
 #INCLUDE(${NEKTAR++_ROOT_DIR}/FindBoost.cmake)
 #INCLUDE(${NEKTAR++_ROOT_DIR}/FindLoki.cmake)

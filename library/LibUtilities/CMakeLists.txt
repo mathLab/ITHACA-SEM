@@ -45,6 +45,7 @@ SET(LinearAlgebraHeaders
 SET(FoundationHeaders
     ./Foundations/Graph.h
     ./Foundations/Basis.h
+    ./Foundations/Foundations.hpp
     ./Foundations/FourierPoints.h
     ./Foundations/GaussPoints.h
     ./Foundations/ManagerAccess.h
@@ -114,6 +115,7 @@ SET(BasicUtils
     ./BasicUtils/RawType.hpp
     ./BasicUtils/SharedArray.hpp
     ./BasicUtils/Vmath.hpp
+    ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
 )
 

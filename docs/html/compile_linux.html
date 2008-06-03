@@ -108,7 +108,7 @@
         <p><a href="demos.html" id="menu_Demos">Demos</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p style="font-size:9px;">$Date: 2008/05/25 16:42:40 $</p>
+        <p style="font-size:9px;">$Date: 2008/05/30 01:37:42 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -172,7 +172,7 @@
       </li>
       <li>Extract the zlib-1.2.3.tar.bz2 archive with &quot;tar -xjvf zlib-1.2.3.tar.bz2&quot; (no quotes). This will create <em>zlib-1.2.3/</em>.
         <ol>
-          <li>You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell Boost (step 5) to use zlib and not bzip2.
+          <li>You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell Boost (step 5) to use zlib and not bzip2. Be sure not to restart your shell after you set the environment variables and before you compile boost in step 6.
             <ul>
               <li>Bash or KSH Shells<br />
               Type &quot;export ZLIB_SOURCE=../../../../zlib-1.2.3&quot; and &quot;export NO_BZIP2=0&quot; (no quotes).</li>
@@ -182,10 +182,16 @@
           </li>
         </ol>
       </li>
+      <li>The next step is to compile bjam, which will allow for the building and installation of Boost.
+        <ol>
+          <li>In <em>ThirdParty/</em>, extract the boost-jam-3.1.16.tgz archive with &quot;tar -xzvf boost-jam-3.1.16.tgz&quot; (no quotes). This will create <em>boost-jam-3.1.16/</em>.</li>
+          <li>Change to the <em>boost-jam-3.1.16/</em> directory and type &quot;./build.sh&quot; (no quotes), to build the bjam executable.</li>
+        </ol>
+      </li>
       <li>The next step is to extract and compile the correct libraries for <em>Boost</em>.
-      <ol>
+        <ol>
             <li>In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_35_0/</em>.</li>
-          <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;./configure --prefix=../boost --with-toolset=gcc --with-libraries=filesystem,thread,test,iostreams&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
+          <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;../boost-jam-3.1.16/bin.linuxx86/bjam --prefix=../boost --build-type=complete --with-thread --with-iostreams --with-test --toolset=gcc install&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
             <ol>
                   <li>The &quot;--with-libraries&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish.</li>
             </ol>
@@ -206,7 +212,8 @@
       <li>AMD Core Math Library (ACML)
         <ul>
             <li>This is a BLAS implementation that allows for optimal use of AMD Opteron processors.</li>
-          <li>For GCC, we were only successful in linking against the GFORTRAN version of ACML.</li>
+          <li>For GCC, you must use the GFORTRAN version of ACML since the other versions are for different Linux compilers.</li>
+          <li>If you are using ACML 4.0 and GCC 4.2 or higher, then you must use the OpenMP version (it doesn't matter if you use shared or static libraries). This problem has been resolved in ACML 4.1.0.</li>
           <li>URL: <a href="http://developer.amd.com/tools/acml/Pages/default.aspx" target="_blank">http://developer.amd.com/tools/acml/Pages/default.aspx</a></li>
         </ul>
       </li>

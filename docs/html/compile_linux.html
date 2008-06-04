@@ -108,7 +108,7 @@
         <p><a href="demos.html" id="menu_Demos">Demos</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p style="font-size:9px;">$Date: 2008/05/30 01:37:42 $</p>
+        <p style="font-size:9px;">$Date: 2008/06/03 23:26:31 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -140,26 +140,6 @@
         </ul>
       </li>
     </ol>
-    <h3 align="left">Setting up CMake (2.6+ required)</h3>
-    <p align="left">CMake is an open-source, cross-platform make file generator system. It can be used to generate the correct GCC Makefiles.</p>
-    <ol>
-      <li>Go to the <a href="http://www.cmake.org/HTML/index.html" target="_blank">CMake Website</a> and download the *.tar.gz file appropriate for your operating system. There is a source distribution and a binary distribution. You can use the binary distribution if it is available for your system, otherwise you will need to use the source distribution.
-      <ul>
-            <li>Binary Distribution
-              <ul>
-                  <li>Extract it anywhere you please, just remember its location so you can execute it later (or better yet, put the <em>bin/</em> directory in your PATH). To extract, type &quot;tar -xzvf filename&quot; (without the quotes and replacing filename with the file you downloaded).</li>
-              </ul>
-            </li>
-          <li>Source Distribution
-            <ul>
-                  <li>Use &quot;tar -xzvf filename&quot; to extract the source file (replace filename with the name of the file you downloaded).</li>
-              <li>Change to the extracted directory and type &quot;./configure&quot; (without the quotes). After configuration is complete, type &quot;make&quot; (again, without the quotes).</li>
-              <li>Remember the location of the directory, since you will need the cmake program later (or better yet, put the <em>bin/</em> directory in your PATH).</li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-    </ol>
     <h3 align="left">Organizing the ThirdParty Source Files</h3>
     <p align="left">You will be given a <em>Nektar++</em> directory and a <em>ThirdParty</em> directory (includes needed libraries from other sources). These need to be organized into the correct directory hierarchy   for CMake to find all of the required files. I will indicate a directory by following its name with a forward slash.</p>
     <ol>
@@ -170,9 +150,15 @@
             <li>Change to the <em>loki-0.1.3/</em> directory, and type &quot;make&quot; (without the quotes). This will create the required library file.</li>
         </ol>
       </li>
-      <li>Extract the zlib-1.2.3.tar.bz2 archive with &quot;tar -xjvf zlib-1.2.3.tar.bz2&quot; (no quotes). This will create <em>zlib-1.2.3/</em>.
+      <li>CMake is an open-source, cross-platform make file generator system. It can be used to generate the correct GCC Makefiles. We must now build the CMake executable.
         <ol>
-          <li>You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell Boost (step 5) to use zlib and not bzip2. Be sure not to restart your shell after you set the environment variables and before you compile boost in step 6.
+          <li>In <em>ThirdParty/</em>, extract the CMake.tar.bz2 archive with &quot;tar -xjvf CMake.tar.bz2&quot; (no quotes).</li>
+          <li>Change to the <em>CMake/</em> directory, and type &quot;./configure&quot; (without the quotes). After configuration is complete, type &quot;make&quot; (again, without the quotes).</li>
+        </ol>
+      </li>
+      <li>In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive with &quot;tar -xjvf zlib-1.2.3.tar.bz2&quot; (no quotes). This will create <em>zlib-1.2.3/</em>.
+        <ol>
+          <li>You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell Boost (step 5) to use zlib and not bzip2. Be sure not to restart your shell after you set the environment variables and before you compile boost in step 7.
             <ul>
               <li>Bash or KSH Shells<br />
               Type &quot;export ZLIB_SOURCE=../../../../zlib-1.2.3&quot; and &quot;export NO_BZIP2=0&quot; (no quotes).</li>
@@ -233,7 +219,7 @@
         <ul>
             <li>GCC Makefiles
               <ul>
-                  <li>Type in &quot;&lt;path_to_cmake_binary&gt; -i &lt;path_to_<em>Nektar++/library/</em>_directory&gt;&quot; (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+                  <li>Type in &quot;&lt;path_to_cmake_directory&gt;/bin/cmake -i &lt;path_to_<em>Nektar++/library/</em>_directory&gt;&quot; (without the quotes). Fill in the &lt;...&gt;'s appropriately.
                     <ul>
                         <li>The &quot;-i&quot; indicates that you want to use the wizard mode.</li>
                     </ul>
@@ -243,7 +229,7 @@
             </li>
           <li>KDevelop Project Files
             <ul>
-                  <li>Type in &quot;&lt;path_to_cmake_binary&gt; -i -G KDevelop3 &lt;path_to_<em>Nektar++/library/</em>_directory&gt;&quot; (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+                  <li>Type in &quot;&lt;path_to_cmake_directory&gt;/bin/cmake -i -G KDevelop3 &lt;path_to_<em>Nektar++/library/</em>_directory&gt;&quot; (without the quotes). Fill in the &lt;...&gt;'s appropriately.
                     <ul>
                       <li>The &quot;-i&quot; indicates that you want to use the wizard mode.</li>
                     </ul>

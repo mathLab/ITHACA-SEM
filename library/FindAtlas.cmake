@@ -8,7 +8,7 @@ FIND_PATH(ATLAS_INCLUDE_DIR cblas.h  /usr/include /usr/local/include /usr/local/
 #FIND_LIBRARY( BOOST_FILESYSTEM_LIB NAMES boost_filesystem
 #	      PATHS /usr/lib /usr/local/lib C:\\Boost\\lib )
 
-SET(ATLAS_LIB_SEARCH_DIRS /usr/lib/atlas/sse2 /usr/lib/sse2 /usr/local/lib/atlas)
+SET(ATLAS_LIB_SEARCH_DIRS /usr/lib/sse2 /usr/lib/atlas/sse2 /usr/local/lib/atlas)
 
 FIND_LIBRARY( ATLAS NAMES atlas PATHS ${ATLAS_LIB_SEARCH_DIRS})
 FIND_LIBRARY( ATLAS_CBLAS NAMES cblas PATHS ${ATLAS_LIB_SEARCH_DIRS})

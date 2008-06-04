@@ -45,7 +45,7 @@ ADD_NEKTAR_LIBRARY(StdRegions STATIC ${STD_REGIONS_SOURCES} ${STD_REGIONS_HEADER
 INSTALL(FILES ${STD_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/StdRegions)
 
 
-TARGET_LINK_LIBRARIES(StdRegions
-        optimized LibUtilities debug LibUtilities-g
-)
+#TARGET_LINK_LIBRARIES(StdRegions
+#        optimized LibUtilities debug LibUtilities-g
+#)
 

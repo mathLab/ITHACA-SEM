@@ -108,7 +108,7 @@
         <p><a href="demos.html" id="menu_Demos">Demos</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p style="font-size:9px;">$Date: 2008/05/30 01:37:42 $</p>
+        <p style="font-size:9px;">$Date: 2008/05/30 02:51:57 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -137,9 +137,15 @@
                 <li>Change to the <em>loki-0.1.3/</em> directory, and type &quot;make&quot; (without the quotes). This will create the required library file.</li>
             </ol>
           </li>
-          <li>Extract the zlib-1.2.3.tar.bz2 archive with &quot;tar -xjvf zlib-1.2.3.tar.bz2&quot; (no quotes). This will create <em>zlib-1.2.3/</em>.
+          <li>CMake is an open-source, cross-platform make file generator system. It can be used to generate the correct GCC Makefiles. We must now build the CMake executable.
             <ol>
-                <li>You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell Boost (step 5) to use zlib and not bzip2.
+              <li>In <em>ThirdParty/</em>, extract the CMake.tar.bz2 archive with &quot;tar -xjvf CMake.tar.bz2&quot; (no quotes).</li>
+              <li>Change to the <em>CMake/</em> directory, and type &quot;./configure&quot; (without the quotes). After configuration is complete, type &quot;make&quot; (again, without the quotes).</li>
+            </ol>
+          </li>
+          <li>In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive with &quot;tar -xjvf zlib-1.2.3.tar.bz2&quot; (no quotes). This will create <em>zlib-1.2.3/</em>.
+            <ol>
+                <li>You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell Boost (step 6) to use zlib and not bzip2.
                   <ul>
                       <li>Bash or KSH Shells<br />
                         Type &quot;export ZLIB_SOURCE=../../../../zlib-1.2.3&quot; and &quot;export NO_BZIP2=0&quot; (no quotes).</li>
@@ -154,7 +160,7 @@
                 <li>In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_35_0/</em>.</li>
               <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;../bjam-osx-intel --prefix=../boost --build-type=complete  --with-thread --with-iostreams --with-test --toolset=darwin install&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
 <ol>
-                      <li>The &quot;--with-libraries&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish.</li>
+                      <li>The &quot;--with-*&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish.</li>
                 </ol>
               </li>
               <li>Next, still in the <em>boost_1_35_0/</em> directory, type &quot;make install&quot; (without the quotes) to begin compilation.</li>
@@ -169,7 +175,7 @@
             <ul>
                 <li>GCC Makefiles
                   <ul>
-                      <li>Type in &quot;&lt;path_to_cmake_binary&gt; -i &lt;path_to_<em>Nektar++/library/</em>_directory&gt;&quot; (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+                      <li>Type in &quot;&lt;path_to_cmake_directory&gt;/bin/cmake -i &lt;path_to_<em>Nektar++/library/</em>_directory&gt;&quot; (without the quotes). Fill in the &lt;...&gt;'s appropriately.
                         <ul>
                             <li>The &quot;-i&quot; indicates that you want to use the wizard mode.</li>
                         </ul>
@@ -179,7 +185,7 @@
                 </li>
               <li>Xcode Project Files
                 <ul>
-                      <li>Type in &quot;&lt;path_to_cmake_binary&gt; -i -G Xcode &lt;path_to_<em>Nektar++/library/</em>_directory&gt;&quot; (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+                      <li>Type in &quot;&lt;path_to_cmake_directory&gt;/bin/cmake -i -G Xcode &lt;path_to_<em>Nektar++/library/</em>_directory&gt;&quot; (without the quotes). Fill in the &lt;...&gt;'s appropriately.
                         <ul>
                           <li>The &quot;-i&quot; indicates that you want to use the wizard mode.</li>
                         </ul>
@@ -189,43 +195,21 @@
               </li>
             </ul>
           </li>
-          <li>For most of the questions, you will be able to select the default value by just pressing enter. Most of the configuration will be locating the files you setup earlier in <em>ThirdParty/</em>, but it should find these files automatically. If you have a different setup, you may need to enter the paths manually if they couldn't be found. Below I will list some of the options that you need to pay attention to.
-            <ul>
-                <li><strong>BOOST_*</strong>
-                    <ul>
-                      <li>These are the paths to the boost include and library files. If you did not setup Boost as described above, since it was already installed, then you will manually need to fill in the paths if they were not found for you.</li>
-                    </ul>
-                </li>
-              <li><strong>CMAKE_BUILD_TYPE</strong>
-                    <ul>
-                      <li>This option sets the appropriate GCC flags for the different build types: Debug, Release, etc. For this tutorial, I'll choose Release, in order to get full optimizations.</li>
-                    </ul>
-              </li>
-              <li><strong>EXECUTABLE_OUTPUT_PATH</strong>
-                    <ul>
-                      <li>This is the path GCC will put the generated executable files - it can be anywhere you which.</li>
-                    </ul>
-              </li>
-              <li><strong>LIBRARY_OUTPUT_PATH</strong>
-                    <ul>
-                      <li>This is the path GCC will put the generated *.a library files.</li>
-                    </ul>
-              </li>
-              <li><strong>NEKTAR_BUILD_DEMOS</strong>
-                    <ul>
-                      <li>Setting this to <em>ON</em> will build the Nektar++ demos. These demos will allow you to see how to utilize the Nektar++ libraries.</li>
-                    </ul>
-              </li>
-              <li><strong>NEKTAR_ENABLE_EXCEPTIONS</strong>
-                    <ul>
-                      <li>Currently, this is expected to be <em>ON</em> in order to run the unit tests. If it is <em>OFF</em>, some of the unit tests will fail.</li>
-                    </ul>
-              </li>
-              <li><strong>USE_FRAMEWORK</strong>
+          <li>For most of the questions, you will be able to select the default value by just pressing enter. Most of the configuration will be locating the files you setup earlier in <em>ThirdParty/</em>, but it should find these files automatically. If you have a different setup, you may need to enter the paths manually if they couldn't be found. Below I will list some of the options that you need to pay attention to.<ul><li><strong>CMAKE_BUILD_TYPE</strong>
                 <ul>
-                      <li>Set this to <em>ON</em>. This will use Apple's Accelerate Framework for BLAS and Lapack support.</li>
-                    </ul>
+                  <li>This option sets the appropriate GCC flags for the different build types: Debug, Release, etc. For this tutorial, I'll choose Release, in order to get full optimizations.</li>
+                </ul>
               </li>
+            <li><strong>EXECUTABLE_OUTPUT_PATH</strong>
+                  <ul>
+                    <li>This is the path GCC will put the generated executable files - it can be anywhere you which.</li>
+                  </ul>
+            </li>
+            <li><strong>LIBRARY_OUTPUT_PATH</strong>
+                  <ul>
+                    <li>This is the path GCC will put the generated *.a library files.</li>
+                  </ul>
+            </li>
             </ul>
           </li>
         </ol>

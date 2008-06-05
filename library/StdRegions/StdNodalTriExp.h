@@ -90,7 +90,7 @@ namespace Nektar
             }
             
             //////////////////////////////
-            /// Integration Methods
+            // Integration Methods
             //////////////////////////////
 
             void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
@@ -192,7 +192,7 @@ namespace Nektar
             }
 
             //////////////////////////////
-            /// Integration Methods
+            // Integration Methods
             //////////////////////////////
             
             virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray)
@@ -316,6 +316,9 @@ namespace Nektar
 
 /**
 * $Log: StdNodalTriExp.h,v $
+* Revision 1.22  2008/05/30 00:33:49  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.21  2008/05/29 21:36:25  pvos
 * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 *

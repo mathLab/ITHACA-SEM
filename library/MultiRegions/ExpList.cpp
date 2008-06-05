@@ -120,19 +120,6 @@ namespace Nektar
         {
         }
     
-    
-    /** \brief Integrate the physical point list \a inarray over region
-        and return the value
-        
-        Inputs:\n
-        
-        - \a inarray: definition of function to be returned at quadrature point 
-        of expansion. 
-        
-        Outputs:\n
-        
-        - returns \f$ \sum_{i=1}^{n_{el}} \int_{\Omega_i} u(\xi_1)d \xi_1 \f$ 
-    */
         NekDouble ExpList::PhysIntegral(void)
         {
             ASSERTL2(m_physState == true,

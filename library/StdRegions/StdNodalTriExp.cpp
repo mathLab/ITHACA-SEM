@@ -174,7 +174,7 @@ namespace Nektar
 
 
         //////////////////////////////
-        /// Integration Methods
+        // Integration Methods
         //////////////////////////////
 
 
@@ -659,6 +659,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.25  2008/05/30 00:33:49  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.24  2008/05/29 21:36:25  pvos
 * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 *

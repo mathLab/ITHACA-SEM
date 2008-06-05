@@ -168,7 +168,7 @@ namespace Nektar
         }
 
         //////////////////////////////
-        /// Integration Methods
+        // Integration Methods
         //////////////////////////////
 
         NekDouble StdExpansion2D::Integral(const Array<OneD, const NekDouble>& inarray, 
@@ -204,6 +204,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.24  2008/05/07 16:04:57  pvos
+* Mapping + Manager updates
+*
 * Revision 1.23  2008/04/22 05:22:15  bnelson
 * Speed enhancements.
 *

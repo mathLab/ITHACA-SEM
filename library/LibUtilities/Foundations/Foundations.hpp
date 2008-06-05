@@ -37,9 +37,15 @@
 #define FOUNDATIONS_H
 
 namespace Nektar
-{
+{    
+    /** \brief The namespace associated with the the LibUtilities library 
+     * (\ref pageLibUtilities "LibUtilities introduction")
+     */
     namespace LibUtilities
-    {
+    {     
+        /** \page pageLibUtilities The LibUtilities library
+         *
+         */
         enum BasisType
         {
             eNoBasisType,

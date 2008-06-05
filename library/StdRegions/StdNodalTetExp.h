@@ -71,7 +71,7 @@ namespace Nektar
     }
 
     //////////////////////////////
-    /// Integration Methods
+    // Integration Methods
     //////////////////////////////
 
     double Integral(const double *inarray);
@@ -188,6 +188,9 @@ namespace Nektar
 
 /**
  * $Log: StdNodalTetExp.h,v $
+ * Revision 1.4  2008/05/30 00:33:49  delisi
+ * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+ *
  * Revision 1.3  2007/07/20 02:16:54  bnelson
  * Replaced boost::shared_ptr with Nektar::ptr
  *

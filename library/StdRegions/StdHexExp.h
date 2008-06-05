@@ -127,7 +127,7 @@ namespace Nektar
             void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
 
             //////////////////////////////
-            /// Integration Methods
+            // Integration Methods
             //////////////////////////////
 
             NekDouble Integral3D(const Array<OneD, const NekDouble>& inarray, 
@@ -347,6 +347,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.21  2008/05/30 00:33:49  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.20  2008/05/29 21:36:25  pvos
 * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 *

@@ -40,16 +40,16 @@
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 
-// Definition of main page for doxygen for Local Region Library
-/**
-*\mainpage Local Regions Library
-*/
-
 namespace Nektar
-{
+{    
+    /** \brief The namespace associated with the the LocalRegions library 
+     * (\ref pageLocalRegions "LocalRegions introduction")
+     */
     namespace LocalRegions
     {
-
+        /** \page pageLocalRegions The LocalRegions library
+         *
+         */
         enum GeomState
         {
             eNotFilled,
@@ -95,6 +95,9 @@ namespace Nektar
 
 /** 
 *    $Log: LocalRegions.hpp,v $
+*    Revision 1.3  2007/04/08 03:33:30  jfrazier
+*    Minor reformatting and fixing SharedArray usage.
+*
 *    Revision 1.2  2006/05/06 20:36:16  sherwin
 *    Modifications to get LocalRegions/Project1D working
 *

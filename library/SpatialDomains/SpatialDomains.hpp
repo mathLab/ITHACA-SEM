@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/SpatialDomains.hpp,v $
+//  File:  SpatialDomains.hpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -43,9 +43,15 @@
 #include <LibUtilities/Foundations/Graph.h>
 
 namespace Nektar
-{
+{    
+    /** \brief The namespace associated with the the SpatialDomains library 
+     * (\ref pageSpatialDomains "SpatialDomains introduction")
+     */
     namespace SpatialDomains
-    {
+    {     
+        /** \page pageSpatialDomains The SpatialDomains library
+         * 
+         */
         const double kGeomRightAngleTol = 1e-14;
 
         enum GeomType
@@ -77,6 +83,9 @@ namespace Nektar
 
 //
 // $Log: SpatialDomains.hpp,v $
+// Revision 1.4  2007/03/14 21:24:08  sherwin
+// Update for working version of MultiRegions up to ExpList1D
+//
 // Revision 1.3  2006/06/01 15:03:59  kirby
 // *** empty log message ***
 //

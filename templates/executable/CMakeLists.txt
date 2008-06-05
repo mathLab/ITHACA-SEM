@@ -28,17 +28,23 @@ SET(SourceFileNames
 SET(HeaderFileNames
 )
 
-INCLUDE_DIRECTORIES(${NEKTAR++_INCLUDE_DIRS})
-LINK_DIRECTORIES(${NEKTAR++_LIBRARY_DIRS})
-ADD_DEFINITIONS(${NEKTAR++_DEFINITIONS})
+IF( NEKTAR++_FOUND )
+    INCLUDE_DIRECTORIES(${NEKTAR++_INCLUDE_DIRS})
+    LINK_DIRECTORIES(${NEKTAR++_LIBRARY_DIRS})
+    ADD_DEFINITIONS(${NEKTAR++_DEFINITIONS})
+ENDIF( NEKTAR++_FOUND )
 
 ADD_EXECUTABLE(${ProjectName} ${SourceFileNames} ${HeaderFileNames})
 
-# TODO - If your executable needs to link to any other libraries, 
-# add them here.
-TARGET_LINK_LIBRARIES(${ProjectName}
+IF( NEKTAR++_FOUND )
+
+    # TODO - If your executable needs to link to any other libraries,  
+    # add them here.
+    TARGET_LINK_LIBRARIES(${ProjectName}
 	${NEKTAR++_LIBRARIES}
 	optimized ${Boost_THREAD_LIBRARY_RELEASE} 
 	debug ${Boost_THREAD_LIBRARY_DEBUG})
 
-SET_LAPACK_LINK_LIBRARIES(${ProjectName})
+    SET_LAPACK_LINK_LIBRARIES(${ProjectName})
+ENDIF( NEKTAR++_FOUND )
+

@@ -87,6 +87,7 @@
     <div id="container">
       <div id="sidebar1">
         <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" width="155" height="38" /></a></h3>
+        <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
         <p>
           <a href="compile.html" id="menu_Compile">Compile Instructions</a>
@@ -108,7 +109,7 @@
         <p><a href="demos.html" id="menu_Demos">Demos</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p style="font-size:9px;">$Date: 2008/05/30 02:51:57 $</p>
+        <p style="font-size:9px;">$Date: 2008/05/25 16:42:40 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -119,14 +120,6 @@
         <!-- InstanceBeginEditable name="BodyText" -->
         <h3 align="left">Setting up GCC</h3>
         <p align="left">In order to compile Nektar++, you must GCC installed. The GCC compiler comes with Apple's XCode package. You can download this from <a href="http://connect.apple.com/" target="_blank">http://connect.apple.com/</a> (you are required to have an Apple Developer Connection account).</p>
-        <h3 align="left">Setting up CMake</h3>
-        <p align="left">CMake is an open-source, cross-platform make file generator system. It can be used to generate the correct GCC Makefiles.</p>
-        <ol>
-          <li>Go to the <a href="http://www.cmake.org/HTML/index.html" target="_blank">CMake Website</a> and download the *.tar.gz file under the Source section.</li>
-          <li>Use &quot;tar -xzvf filename&quot; to extract the source file (replace filename with the name of the file you downloaded).</li>
-          <li>Change to the extracted directory and type &quot;./configure&quot; (without the quotes). After configuration is complete, type &quot;make&quot; (again, without the quotes).</li>
-          <li>Remember the location of the directory, since you will need the cmake program later (or better yet, put the <em>bin/</em> directory in your PATH).</li>
-        </ol>
         <h3 align="left">Organizing the ThirdParty Source Files</h3>
         <p align="left">You will be given a <em>Nektar++</em> directory and a <em>ThirdParty</em> directory (includes needed libraries from other sources). These need to be organized into the correct directory hierarchy   for CMake to find all of the required files. I will indicate a directory by following its name with a forward slash.</p>
         <ol>
@@ -160,10 +153,9 @@
                 <li>In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_35_0/</em>.</li>
               <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;../bjam-osx-intel --prefix=../boost --build-type=complete  --with-thread --with-iostreams --with-test --toolset=darwin install&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
 <ol>
-                      <li>The &quot;--with-*&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish.</li>
+                      <li>The &quot;--with-*&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish</li>
                 </ol>
               </li>
-              <li>Next, still in the <em>boost_1_35_0/</em> directory, type &quot;make install&quot; (without the quotes) to begin compilation.</li>
             </ol>
           </li>
         </ol>

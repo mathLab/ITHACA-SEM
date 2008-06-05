@@ -87,6 +87,7 @@
     <div id="container">
       <div id="sidebar1">
         <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" width="155" height="38" /></a></h3>
+        <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
         <p>
           <a href="compile.html" id="menu_Compile">Compile Instructions</a>

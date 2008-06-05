@@ -121,10 +121,11 @@ namespace Nektar
             Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
             Array<OneD, const NekDouble> w1 = m_base[1]->GetW();
 
-            ASSERTL2((m_base[0]->GetAlpha() == 0.0)&&(m_base[1]->GetAlpha() == 0.0),
-                     "Basis has non-zero alpha weight");
-            ASSERTL2((m_base[0]->GetBeta() == 0.0)&&(m_base[1]->GetBeta() == 0.0),
-                     "Basis has non-zero beta weight");
+//              Does Not Compile
+//             ASSERTL2((m_base[0]->GetAlpha() == 0.0)&&(m_base[1]->GetAlpha() == 0.0),
+//                      "Basis has non-zero alpha weight");
+//             ASSERTL2((m_base[0]->GetBeta() == 0.0)&&(m_base[1]->GetBeta() == 0.0),
+//                      "Basis has non-zero beta weight");
 
             // multiply by integration constants 
             for(i = 0; i < nquad1; ++i)
@@ -1244,6 +1245,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.37  2008/05/30 00:33:49  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.36  2008/05/29 21:36:25  pvos
 * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 *

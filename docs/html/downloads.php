@@ -86,9 +86,7 @@
     <div id="container">
       <div id="sidebar1">
         <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" width="155" height="38" /></a></h3>
-        <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
-        <p><a href="license.html" id="menu_License">License</a></p>
         <p>
           <a href="compile.html" id="menu_Compile">Compile Instructions</a>
     	  
@@ -104,7 +102,9 @@
         <p><a href="demos.html" id="menu_Demos">Demos</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p style="font-size:9px;">$Date: 2008/06/05 16:19:52 $</p>
+        <p><a href="license.html" id="menu_License">License</a></p>
+        <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
+        <p style="font-size:9px;">$Date: 2008/06/05 21:03:43 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->

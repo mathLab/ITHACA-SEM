@@ -911,7 +911,7 @@ namespace Nektar
         {
             DNekScalBlkMatSharedPtr returnval;
 
-            ASSERTL2(m_metricinfo->GetGtype == SpatialDomains::eNoGeomType,"Geometric information is not set up");
+            ASSERTL2(m_metricinfo->GetGtype() == SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
             // set up block matrix system
             int nbdry = NumBndryCoeffs();
@@ -1024,6 +1024,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.23  2008/05/30 00:33:48  delisi
+ *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+ *
  *    Revision 1.22  2008/05/29 21:33:37  pvos
  *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
  *

@@ -675,7 +675,7 @@ namespace Nektar
         {
             DNekScalBlkMatSharedPtr returnval;
 
-            ASSERTL2(m_metricinfo->GetGtype == SpatialDomains::eNoGeomType,"Geometric information is not set up");
+            ASSERTL2(m_metricinfo->GetGtype() == SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
             // set up block matrix system
             int nbdry = NumBndryCoeffs();
@@ -791,6 +791,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.10  2008/06/02 23:35:26  ehan
+ *    Fixed warning : no new line at end of file
+ *
  *    Revision 1.9  2008/05/30 00:33:48  delisi
  *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

@@ -109,7 +109,7 @@
         <p><a href="demos.html" id="menu_Demos">Demos</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p style="font-size:9px;">$Date: 2008/05/25 16:42:40 $</p>
+        <p style="font-size:9px;">$Date: 2008/06/05 16:19:52 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -138,7 +138,7 @@
           </li>
           <li>In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive with &quot;tar -xjvf zlib-1.2.3.tar.bz2&quot; (no quotes). This will create <em>zlib-1.2.3/</em>.
             <ol>
-                <li>You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell Boost (step 6) to use zlib and not bzip2.
+                <li>You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell Boost (step 7) to use zlib and not bzip2.
                   <ul>
                       <li>Bash or KSH Shells<br />
                         Type &quot;export ZLIB_SOURCE=../../../../zlib-1.2.3&quot; and &quot;export NO_BZIP2=0&quot; (no quotes).</li>
@@ -148,11 +148,17 @@
                 </li>
             </ol>
           </li>
+          <li>The next step is to compile bjam, which will allow for the building and installation of Boost.
+            <ol>
+              <li>In <em>ThirdParty/</em>, extract the boost-jam-3.1.16.tgz archive with &quot;tar -xzvf boost-jam-3.1.16.tgz&quot; (no quotes). This will create <em>boost-jam-3.1.16/</em>.</li>
+              <li>Change to the <em>boost-jam-3.1.16/</em> directory and type &quot;./build.sh&quot; (no quotes), to build the bjam executable</li>
+            </ol>
+          </li>
           <li>The next step is to extract and compile the correct libraries for <em>Boost</em>.
             <ol>
                 <li>In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_35_0/</em>.</li>
-              <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;../bjam-osx-intel --prefix=../boost --build-type=complete  --with-thread --with-iostreams --with-test --toolset=darwin install&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
-<ol>
+              <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;../boost-jam-3.1.16/bin.*/bjam --prefix=../boost --build-type=complete  --with-thread --with-iostreams --with-test --toolset=darwin install&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
+                <ol>
                       <li>The &quot;--with-*&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish</li>
                 </ol>
               </li>

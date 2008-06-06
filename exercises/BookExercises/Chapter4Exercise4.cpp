@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <cstdlib>
-#include <sys/time.h>
 
 #include <MultiRegions/ContExpList2D.h>
 

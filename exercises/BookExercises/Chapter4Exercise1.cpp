@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <cstdlib>
-#include <sys/time.h>
 
 #include <StdRegions/StdQuadExp.h>
 #include <LocalRegions/QuadExp.h>

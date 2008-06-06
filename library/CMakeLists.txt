@@ -14,19 +14,6 @@ SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE FILEPATH "" FORCE)
 
 INCLUDE(NektarCommon)
 
-# Turn on NEKTAR_USE_WIN32_LAPACK if we are in Windows and the libraries exist.
-IF( WIN32 )
-	FIND_LIBRARY( WIN32_BLAS NAMES blas_win32 PATHS ${CMAKE_SOURCE_DIR}/../ThirdParty )
-	FIND_LIBRARY( WIN32_LAPACK NAMES lapack_win32 PATHS ${CMAKE_SOURCE_DIR}/../ThirdParty )
-	IF( WIN32_BLAS AND WIN32_LAPACK )
-		SET(Win32LapackDefault ON)
-    ELSE(WIN32_BLAS AND WIN32_LAPACK)
-		SET(Win32LapackDefault OFF)
-    ENDIF(WIN32_BLAS AND WIN32_LAPACK)
-ELSE(WIN32)
-	SET(Win32LapackDefault OFF)
-ENDIF(WIN32)
-
 SET(NEKTAR_USE_METIS OFF CACHE BOOL "Use Metis routines for partitioning and reordering graphs.")
 SET(NEKTAR_USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
 SET(NEKTAR_USE_DIRECT_BLAS_CALLS OFF CACHE BOOL "Use direct BLAS calls rather than NekMatrix calls in the StdRegions and LocalRegions sublibrary")

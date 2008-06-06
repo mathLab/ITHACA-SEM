@@ -359,6 +359,11 @@ namespace Nektar
                 curResultRow += lhs.GetNumberOfRowsInBlockRow(blockRow-1);
             }
 
+            if( rowsInBlock == 0 )
+            {
+                continue;
+            }
+
             NekVector<DataType, VariableSizedVector, space> resultWrapper(rowsInBlock, result.GetPtr() + curResultRow, eWrapper);
 
             unsigned int curWrapperRow = 0;
@@ -376,6 +381,11 @@ namespace Nektar
                 }
 
                 unsigned int columnsInBlock = lhs.GetNumberOfColumnsInBlockColumn(blockColumn);
+                if( columnsInBlock == 0 )
+                {
+                    continue;
+                }
+
                 NekVector<const DataType, VariableSizedVector, space> rhsWrapper(columnsInBlock, rhs.GetPtr() + curWrapperRow, eWrapper);
                 
                 resultWrapper += (*block)*rhsWrapper;

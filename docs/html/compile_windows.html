@@ -115,12 +115,12 @@
         <p><a href="license.html" id="menu_License">License</a></p>
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/05 21:31:53 $</p>
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/06 16:22:04 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
     <h1>Compile Instructions</h1>
-	<h2>Windows - Visual Studio 2005</h2>
+	<h2>Windows - Visual Studio 2005/2008</h2>
     <!-- InstanceEndEditable -->
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
@@ -138,37 +138,42 @@
       <li>In <em>ThirdParty\</em>, extract the tinyxml_2_4_3.zip archive. This will create <em>tinyxml\</em>. </li>
       <li>Extract the loki-0.1.3.tar.bz2 archive. This will create <em>loki-0.1.3\</em>.
         <ol>
-            <li>Open the <em>Visual Studio 2005 Command Prompt</em>. This is located in the <em>Microsoft Visual Studio 2005\Visual Studio Tools</em> folder in your &quot;Start -&gt; Programs&quot; menu.</li>
-          <li>Change to the <em>loki-0.1.3\</em> directory in the <em>Visual Studio 2005 Command Prompt</em>. (Use the commands &quot;cd&quot; to change the directory and &quot;&lt;drive_letter&gt;:&quot; to switch to a different drive.)</li>
+            <li>Open the <em>Visual Studio  200* Command Prompt</em>. This is located in the <em>Microsoft Visual Studio 200*\Visual Studio Tools</em> folder in your &quot;Start -&gt; Programs&quot; menu.
+              <ul>
+                <li>Replace <em>*</em> with <em>5</em> or <em>8</em>, depending upon the version you are using.</li>
+              </ul>
+            </li>
+          <li>Change to the <em>loki-0.1.3\</em> directory in the <em>Visual Studio Command Prompt</em>. (Use the commands &quot;cd&quot; to change the directory and &quot;&lt;drive_letter&gt;:&quot; to switch to a different drive.)</li>
           <li>Once in <em>loki-0.1.3\</em>, type the command &quot;make.msvc.bat&quot; (without the quotes) and press enter. This will compile loki and created the necessary library file for Nektar++.</li>
         </ol>
       </li>
+      <li>Extract the blaslapack-dll.zip archive. This will create blas_win32.* and lapack_win32.* files in <em>ThirdParty\</em>.</li>
       <li>Extract the zlib-1.2.3.tar.bz2 archive. This will create <em>zlib-1.2.3\</em>.</li>
       <li>The next step is to extract and compile the correct libraries for <em>Boost</em>.
         <ol>
           <li>In <em>ThirdParty\</em>, extract the boost_1_35_0.tar.bz2 archive. This will create <em>boost_1_35_0\</em>.</li>
-          <li>With the <em>Visual Studio 2005 Command Prompt</em>, change to the <em>ThirdParty\boost_1_35_0\</em> directory.</li>
-          <li>Type the following &quot;..\bjam-windows.exe --prefix=..\boost -s ZLIB_SOURCE=..\..\..\..\zlib-1.2.3 --build-type=complete --with-thread --with-iostreams --with-test --toolset=msvc-8.0 install&quot; (without the outer quotes) and press enter. This will compile the correct <em>Boost</em> libraries.
+          <li>With the <em>Visual Studio Command Prompt</em>, change to the <em>ThirdParty\boost_1_35_0\</em> directory.</li>
+          <li>Type the following &quot;..\bjam-windows.exe --prefix=..\boost -s ZLIB_SOURCE=..\..\..\..\zlib-1.2.3 --build-type=complete --with-thread --with-iostreams --with-test --toolset=msvc-*.0 install&quot; (without the outer quotes) and press enter. This will compile the correct <em>Boost</em> libraries.
             <ul>
+              <li><strong>PLEASE READ:</strong> Replace the <em>*</em> in the line above with <em>8</em> if you are using Visual Studio 2005, or with <em>9</em> if you are using Visual Studio 2008.</li>
               <li>I've seen some reports that Boost might not be able to find the zlib-1.2.3 directory specified by the relative path in the command line above. If this happens, you can replace the relative path with the absolute path of the zlib-1.2.3 directory (surround it in quotes).</li>
             </ul>
           </li>
           <li>Next, the <em>Boost include files</em> need to be moved to the correct location so CMake can find them. Type the following, still in the <em>boost_1_35_0/</em> directory: &quot;move ..\boost\include\boost-1_35\boost ..\boost&quot; (without the quotes).</li>
         </ol>
       </li>
-      <li>Extract the blaslapack-dll.zip archive. This will create blas_win32.* and lapack_win32.* files in <em>ThirdParty\</em>.</li>
-    </ol>
+      </ol>
     <h3>Generating the Visual Studio Solution Files with CMake</h3>
     <p>Now that all of the required libraries are setup in the correct paths, we can use CMake to generate the solution files that Visual Studio requires.</p>
     <ol>
-      <li>Still in the <em>Visual Studio 2005 Command Prompt</em>, you need to launch CMake. Launching it from the VS command prompt will allow it to see the correct path to the compiler. Type &quot;CMakeSetup.exe&quot; at the command prompt (without the quotes) and press enter.
+      <li>Still in the <em>Visual Studio Command Prompt</em>, you need to launch CMake. Launching it from the VS command prompt will allow it to see the correct path to the compiler. Type &quot;CMakeSetup.exe&quot; at the command prompt (without the quotes) and press enter.
         <ol>
             <li>If it cannot find the file, you must give it the full path. (I have not had much luck getting the installer to add CMake to the PATH, even though that is what I specified in the installation.) If you installed it in the default path, try entering &quot;C:\Program Files\CMake 2.6\bin\CMakeSetup.exe&quot; (this time with the quotes).</li>
         </ol>
       </li>
       <li>Fill in the &quot;Where is the source code:&quot; field at the top of CMake. This is the path to the <em>Nektar++\library\</em> directory. For example, mine is <em>D:\Nektar++\library</em>.</li>
       <li>Fill in the &quot;Where to build the binaries:&quot; field at the top of CMake. This is the path that the Visual Studio solution files will be written to. For example, mine is <em>D:\Nektar++\project</em>.</li>
-      <li>Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. In our case, select <em>Visual Studio 8 2005</em>. It will ask to create the &quot;Build directory&quot; if it does not exist. Answer <em>OK</em>. CMake will now search for the paths to the ThirdParty files that were setup in the previous section. It should find all of the library and include paths automatically.</li>
+      <li>Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 8 2005</em> or <em>Visual Studio 9 2008</em> (depending upon the version you are using). It will ask to create the &quot;Build directory&quot; if it does not exist. Answer <em>OK</em>. CMake will now search for the paths to the ThirdParty files that were setup in the previous section. It should find all of the library and include paths automatically.</li>
       <li> You must now change some of the CMake settings:<ul><li><strong>EXECUTABLE_OUTPUT_PATH</strong>
                 <ul>
                   <li>This is the path where Visual Studio will put the *.exe executable files after they are compiled. This can be any directory you please.</li>
@@ -194,11 +199,15 @@
         <ul>
             <li>Put the <em>Nektar++\ThirdParty\boost\lib\</em> and <em>Nektar++\ThirdParty\</em> directories in your PATH.</li>
             <li><em>Alternatively</em>, copy the following files into your Release executable output directory. (Or the ones with &quot;-gd&quot; in the name if you are using debug mode.)
+              Replace the <em>*</em> with <em>8</em> for <em>Visual Studio 2005</em> or with <em>9</em> for <em>Visual Studio 2008</em>.
+
+
+
               <ul>
-                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_thread-vc80-mt-1_35_0.dll</em></li>
-                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_filesystem-vc80-mt-1_35_0.dll</em></li>
-                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_iostreams-vc80-mt-1_35_0.dll</em></li>
-                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_zlib-vc80-mt-1_35_0.dll</em></li>
+                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_thread-vc*0-mt-1_35_0.dll</em></li>
+                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_filesystem-vc*0-mt-1_35_0.dll</em></li>
+                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_iostreams-vc*0-mt-1_35_0.dll</em></li>
+                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_zlib-vc*0-mt-1_35_0.dll</em></li>
                 <li><em>Nektar++\ThirdParty\lapack_win32.dll</em></li>
                 <li><em>Nektar++\ThirdParty\blas_win32.dll</em></li>
               </ul>

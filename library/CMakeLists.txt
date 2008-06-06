@@ -21,11 +21,11 @@ SET(NEKTAR_FULL_DEBUG OFF CACHE BOOL "Enable Full Debugging.")
 SET(NEKTAR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Enable the use of precompiled headers.")
 SET(NEKTAR_BUILD_DEMOS ON CACHE BOOL "Build Demo Projects")
 
-IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )
 	SET(ExpressionTemplateDefault OFF)
-ELSE( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+ELSE( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )
 	SET(ExpressionTemplateDefault ON)
-ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )
 
 SET(NEKTAR_USE_EXPRESSION_TEMPLATES ${ExpressionTemplateDefault} CACHE BOOL "")
 
@@ -70,12 +70,12 @@ MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
 
-    IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
+    IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )
         # Disable the warnings about duplicate copy/assignment methods (4521, 4522)
         # Disable the warning that arrays are default intialized (4351)	
         # /Za is necessary to prevent temporaries being bound to reference parameters.
         SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "/wd4521 /wd4522 /wd4351 /wd4018")
-    ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+    ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )	
 
     IF ( NEKTAR_FULL_DEBUG )
         SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG -DNEKTAR_FULLDEBUG")
@@ -95,7 +95,7 @@ ENDMACRO(SET_COMMON_PROPERTIES name)
 
 MACRO(SETUP_PRECOMPILED_HEADERS sourceFiles precompiledHeader)
     IF( NEKTAR_USE_PRECOMPILED_HEADERS )
-        IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+        IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )	
             # /Yu"stdafx.h" 
             #MESSAGE(${${precompiledHeader}})
 	    #MESSAGE(${${sourceFiles}})
@@ -104,7 +104,7 @@ MACRO(SETUP_PRECOMPILED_HEADERS sourceFiles precompiledHeader)
             #MESSAGE(${OUTVAR})
             SET_SOURCE_FILES_PROPERTIES(${OUTVAR} PROPERTIES COMPILE_FLAGS "/Yc\"${${precompiledHeader}}\"")
             
-        ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+        ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )	
     ENDIF( NEKTAR_USE_PRECOMPILED_HEADERS )
 ENDMACRO(SETUP_PRECOMPILED_HEADERS sourceFiles precompiledHeader)
 
@@ -153,20 +153,15 @@ IF( NEKTAR_USE_DIRECT_BLAS_CALLS )
 ENDIF( NEKTAR_USE_DIRECT_BLAS_CALLS )
 
 
-IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )	
 	# Removes the warnings about unsafe methods such as strcpy, std::copy, memcmp, etc.
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
-	
-ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )
+ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )
 
-IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
+IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )	
 	# Needed for M_PI to be visible in visual studio.
 	ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" )
-
-IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
-	ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" )	
+ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 7 .NET 2003" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )	
 
 MACRO(ADD_NEKTAR_EXECUTABLE name sources)
     IF( ${ARGC} LESS 3 )

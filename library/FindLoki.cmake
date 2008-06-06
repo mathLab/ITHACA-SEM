@@ -1,5 +1,8 @@
 
+# Use LOKI_ADDITIONAL_INCLUDE_DIRS to add additional search directories.
+
 FIND_PATH(LOKI_INCLUDE_DIR loki/Typelist.h 
+	${LOKI_ADDITIONAL_INCLUDE_DIRS}
 	/usr/include 
 	/usr/local/include 
 	${CMAKE_SOURCE_DIR}/../ThirdParty/loki/include/ 

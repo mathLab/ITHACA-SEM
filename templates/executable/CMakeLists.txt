@@ -32,11 +32,8 @@ IF( NEKTAR++_FOUND )
     INCLUDE_DIRECTORIES(${NEKTAR++_INCLUDE_DIRS})
     LINK_DIRECTORIES(${NEKTAR++_LIBRARY_DIRS})
     ADD_DEFINITIONS(${NEKTAR++_DEFINITIONS})
-ENDIF( NEKTAR++_FOUND )
 
-ADD_EXECUTABLE(${ProjectName} ${SourceFileNames} ${HeaderFileNames})
-
-IF( NEKTAR++_FOUND )
+    ADD_NEKTAR_EXECUTABLE(${ProjectName} SourceFileNames HeaderFileNames)
 
     # TODO - If your executable needs to link to any other libraries,  
     # add them here.

@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
 
 
     // Show the weights
-    cout << "\nquatdrature weights =      " << setprecision(3);
+    cout << "\nquadrature weights =      " << setprecision(3);
     for(int i = 0; i < nPts; ++i)
     {
         cout << setw(7) << w[i] << " ";

@@ -249,21 +249,23 @@ namespace Nektar
                 outarray[GetVertexMap(0)] = inarray[0];
                 outarray[GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
 
-                Array<OneD, NekDouble> tmp0(m_ncoeffs); //ideally, we would like to have tmp0 to be replaced by outarray (currently MassMatrixOp does not allow aliasing)
-                Array<OneD, NekDouble> tmp1(m_ncoeffs);
-
-                MassMatrixOp(outarray,tmp0);
-                IProductWRTBase(inarray,tmp1);
-
-                Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
-                
-                // get Mass matrix inverse (only of interior DOF)
-                StdMatrixKey      masskey(eMass,DetExpansionType(),*this);
-                DNekMatSharedPtr  matsys = (m_stdStaticCondMatrixManager[masskey])->GetBlock(1,1);
-                
-                Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,1.0, &(matsys->GetPtr())[0],
-                            nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);                
-
+                if(m_ncoeffs>2)
+                {
+                    Array<OneD, NekDouble> tmp0(m_ncoeffs); //ideally, we would like to have tmp0 to be replaced by outarray (currently MassMatrixOp does not allow aliasing)
+                    Array<OneD, NekDouble> tmp1(m_ncoeffs);
+                    
+                    MassMatrixOp(outarray,tmp0);
+                    IProductWRTBase(inarray,tmp1);
+                    
+                    Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
+                    
+                    // get Mass matrix inverse (only of interior DOF)
+                    StdMatrixKey      masskey(eMass,DetExpansionType(),*this);
+                    DNekMatSharedPtr  matsys = (m_stdStaticCondMatrixManager[masskey])->GetBlock(1,1);
+                    
+                    Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,1.0, &(matsys->GetPtr())[0],
+                                nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);                
+                }
             }
         }
         
@@ -443,6 +445,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.51  2008/05/30 00:33:49  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.50  2008/05/29 21:36:25  pvos
 * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 *

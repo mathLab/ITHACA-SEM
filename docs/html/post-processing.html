@@ -105,7 +105,7 @@
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
         <p><a href="license.html" id="menu_License">License</a></p>
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
-        <p style="font-size:9px;">$Date: 2008/06/05 21:03:43 $</p>
+        <p style="font-size:9px;">$Date: 2008/06/05 21:31:54 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -113,7 +113,30 @@
     	<!-- InstanceEndEditable -->
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
-        <p>To Be Added</p>
+        <p>Currently, routines are being developed to store the solution of simulations in a specific Nektar++ output format. 
+	  However, in the current distribution of the code, the corresponding Write routines to dump the field-data into a file are not yet 
+	  incorporated in the sub-libraries used to solve problems.
+	</p>
+	<p> As an alternative, the StdRegions, LocalRegions and MultiRegions library are equipped with WriteToFile routines which can
+	  dump the solution in two different formats:
+          <ul>
+            <li>
+              <b>Gmsh format</b><BR>
+                <a href="http://www.geuz.org/gmsh/">Gmsh</a> is an automatic three-dimensional finite element mesh generator with built-in pre- 
+                and post-processing facilities. Its design goal is to provide a simple meshing tool for academic problems with parametric input 
+                and advanced visualization capabilities.<BR>
+                As it has the capability of visualising high-order data, it is particularly useful
+                in combination with the spectral/hp element method and Nektar++.<BR>
+                Gmsh is distributed freely under the terms of the GNU General Public License and pre-compiled binaries for Windows, Linux  
+                and Mac OS X are available from its website.
+            </li>
+            <li>
+              <b>Tecplot format</b><BR>
+                <a href="http://www.tecplot.com/">Tecplot</a> is a Computational Fluid Dynamics (CFD) and numerical simulation software package 
+                frequently used in post-processing simulation results. However as opposed to Gmsh, it is not distributed freely.
+            </li>
+          </ul>
+	</p>
         <!-- InstanceEndEditable -->
         <p><br class="clearfloat" /></p>
       </div>

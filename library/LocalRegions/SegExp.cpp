@@ -500,20 +500,23 @@ namespace Nektar
                 outarray[GetVertexMap(0)] = inarray[0];
                 outarray[GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
 
-                Array<OneD, NekDouble> tmp0(m_ncoeffs); //ideally, we would like to have tmp0 to be replaced by outarray (currently MassMatrixOp does not allow aliasing)
-                Array<OneD, NekDouble> tmp1(m_ncoeffs);
-
-                MassMatrixOp(outarray,tmp0);
-                IProductWRTBase(inarray,tmp1);
-
-                Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
-                
-                // get Mass matrix inverse (only of interior DOF)
-                MatrixKey             masskey(StdRegions::eMass, DetExpansionType(),*this);
-                DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
-                
-                Blas::Dgemv('N',nInteriorDofs,nInteriorDofs, matsys->Scale(), &((matsys->GetOwnedMatrix())->GetPtr())[0],
-                            nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);       
+                if(m_ncoeffs>2)
+                {
+                    Array<OneD, NekDouble> tmp0(m_ncoeffs); //ideally, we would like to have tmp0 to be replaced by outarray (currently MassMatrixOp does not allow aliasing)
+                    Array<OneD, NekDouble> tmp1(m_ncoeffs);
+                    
+                    MassMatrixOp(outarray,tmp0);
+                    IProductWRTBase(inarray,tmp1);
+                    
+                    Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
+                    
+                    // get Mass matrix inverse (only of interior DOF)
+                    MatrixKey             masskey(StdRegions::eMass, DetExpansionType(),*this);
+                    DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
+                    
+                    Blas::Dgemv('N',nInteriorDofs,nInteriorDofs, matsys->Scale(), &((matsys->GetOwnedMatrix())->GetPtr())[0],
+                                nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);       
+                }
             }
         }
 
@@ -1208,6 +1211,9 @@ namespace Nektar
  }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.46  2008/06/05 20:18:38  ehan
+// Fixed undefined function GetGtype() in the ASSERTL2().
+//
 // Revision 1.45  2008/06/02 23:35:18  ehan
 // Fixed warning : no new line at end of file
 //

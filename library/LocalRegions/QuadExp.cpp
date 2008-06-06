@@ -190,9 +190,6 @@ namespace Nektar
                     }
                     
                     m_metricinfo->ResetNormals(newnorm);
-
-                    //                    NEKERROR(ErrorUtil::ewarning,
-                    //"Need to check/debug routine for deformed elements");
                 }
                 else // Same data can be used 
                 {                   
@@ -205,9 +202,6 @@ namespace Nektar
                     m_metricinfo->ResetGmat(ngmat,nq,2,coordim);                 
 
                     m_metricinfo->ResetNormals(Xgfac->GetNormals());
-
-                    NEKERROR(ErrorUtil::ewarning,
-                             "Need to check/debug routine for deformed elements");
                 }
                 
             }
@@ -2043,6 +2037,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.38  2008/06/05 20:18:21  ehan
+ *    Fixed undefined function GetGtype() in the ASSERTL2().
+ *
  *    Revision 1.37  2008/05/30 00:33:48  delisi
  *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

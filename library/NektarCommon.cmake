@@ -21,7 +21,7 @@ ENDIF(APPLE)
 SET(NEKTAR_USE_ACML OFF CACHE BOOL "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." )
 SET(NEKTAR_USE_ATLAS OFF CACHE BOOL "Use ATLAS for BLAS and Lapack support." )
 SET(NEKTAR_USE_WIN32_LAPACK ${Win32LapackDefault} CACHE BOOL "Use Win32 Lapack provided with the Third Party Distribution.")
-SET(NEKTAR_USE_MEMORY_POOLS ON CACHE BOOL "Use memory pools to accelerate memory allocation.")
+SET(NEKTAR_USE_MEMORY_POOLS OFF CACHE BOOL "Use memory pools to accelerate memory allocation.")
 SET(NEKTAR_USE_BLAS_LAPACK ON CACHE BOOL "Use Blas and lapack routines.")
 MARK_AS_ADVANCED(NEKTAR_USE_BLAS_LAPACK)
 

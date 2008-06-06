@@ -38,11 +38,5 @@ MACRO(ADD_EXERCISE_EXECUTABLE name source)
     ENDIF( NEKTAR++_FOUND )
 ENDMACRO(ADD_EXERCISE_EXECUTABLE name source)
 
-
-SET(Tutorial1Source Tutorial1.cpp)
-SET(Tutorial2Source Tutorial2.cpp)
-SET(Tutorial3Source Tutorial3.cpp)
-ADD_EXERCISE_EXECUTABLE(Tutorial1 ${Tutorial1Source})
-ADD_EXERCISE_EXECUTABLE(Tutorial2 ${Tutorial2Source})
-ADD_EXERCISE_EXECUTABLE(Tutorial3 ${Tutorial3Source})
+SUBDIRS(TutorialExercises BookExercises )
 

@@ -864,9 +864,9 @@ int main(int argc, char *argv[])
             double x2_D = 1.0;
 
             // Calculate the exact solution
-            double exactResult = (1-cos(1))*(1-cos(1)) + 
-                0.25*cos(1)*(5*cos(2)-cos(4)-4*cos(1)) + 
-                0.25*sin(1)*(2+sin(2)-sin(4));
+            double exactResult = (1-cos(1.))*(1-cos(1.)) + 
+                0.25*cos(1.)*(5*cos(2.)-cos(4.)-4*cos(1.)) + 
+                0.25*sin(1.)*(2+sin(2.)-sin(4.));
 
             for(int Q = 2; Q < 9; Q++)
             {
@@ -943,8 +943,8 @@ int main(int argc, char *argv[])
             double x2_C = 1.0;
 
             // Calculate the exact solution
-            double exactResult =  0.25*cos(1)*(5*cos(2)-cos(4)-4*cos(1)) + 
-                0.25*sin(1)*(2+sin(2)-sin(4));
+            double exactResult =  0.25*cos(1.)*(5*cos(2.)-cos(4.)-4*cos(1.)) + 
+                0.25*sin(1.)*(2+sin(2.)-sin(4.));
 
             for(int Q = 2; Q < 9; Q++)
             {
@@ -1033,9 +1033,9 @@ int main(int argc, char *argv[])
             double x2_D = 1.0;
         
             // Calculate the exact solution
-            double exactResult = (1-cos(1))*(1-cos(1)) + 
-                0.25*cos(1)*(5*cos(2)-cos(4)-4*cos(1)) + 
-                0.25*sin(1)*(2+sin(2)-sin(4));
+            double exactResult = (1-cos(1.))*(1-cos(1.)) + 
+                0.25*cos(1.)*(5*cos(2.)-cos(4.)-4*cos(1.)) + 
+                0.25*sin(1.)*(2+sin(2.)-sin(4.));
         
             for(int Q = 2; Q < 9; Q++)
             {
@@ -1115,8 +1115,8 @@ int main(int argc, char *argv[])
             double x2_C = 1.0;
 
             // Calculate the exact solution
-            double exactResult =  0.25*cos(1)*(5*cos(2)-cos(4)-4*cos(1)) + 
-                0.25*sin(1)*(2+sin(2)-sin(4));
+            double exactResult =  0.25*cos(1.)*(5*cos(2.)-cos(4.)-4*cos(1.)) + 
+                0.25*sin(1.)*(2+sin(2.)-sin(4.));
 
             for(int Q = 2; Q < 9; Q++)
             {
@@ -1241,9 +1241,9 @@ int main(int argc, char *argv[])
             quadGeom->SetOwnData();
 
             // Calculate the exact solution
-            double exactResult = (1-cos(1))*(1-cos(1)) + 
-                0.25*cos(1)*(5*cos(2)-cos(4)-4*cos(1)) + 
-                0.25*sin(1)*(2+sin(2)-sin(4));
+            double exactResult = (1-cos(1.))*(1-cos(1.)) + 
+                0.25*cos(1.)*(5*cos(2.)-cos(4.)-4*cos(1.)) + 
+                0.25*sin(1.)*(2+sin(2.)-sin(4.));
 
             for(int Q = 2; Q < 9; Q++)
             {
@@ -1335,8 +1335,8 @@ int main(int argc, char *argv[])
             triGeom->SetOwnData();
 
             // Calculate the exact solution
-            double exactResult =  0.25*cos(1)*(5*cos(2)-cos(4)-4*cos(1)) + 
-                0.25*sin(1)*(2+sin(2)-sin(4));
+            double exactResult =  0.25*cos(1.)*(5*cos(2.)-cos(4.)-4*cos(1.)) + 
+                0.25*sin(1.)*(2+sin(2.)-sin(4.));
 
             for(int Q = 2; Q < 9; Q++)
             {

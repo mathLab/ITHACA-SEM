@@ -220,8 +220,8 @@ namespace Nektar
             
             Outputs:\n
             
-            - returns \f$\int^1_{-1}\int^1_{-1} u(\xi_1, \xi_2) J[i,j] d
-            \xi_1 d \xi_2 \f$ where \f$inarray[i,j] = u(\xi_{1i},\xi_{2j})
+            - returns \f$\int^1_{-1}\int^1_{-1} u(\eta_1, \eta_2) J[i,j] d
+            \eta_1 d \eta_2 \f$ where \f$inarray[i,j] = u(\eta_{1i},\eta_{2j})
             \f$ and \f$ J[i,j] \f$ is the Jacobian evaluated at the
             quadrature point.
         */
@@ -490,7 +490,7 @@ namespace Nektar
             
             Outputs:\n
             
-            - (this)->_coeffs: updated array of expansion coefficients. 
+            - \a (this)->m_coeffs: updated array of expansion coefficients. 
             
         */ 
         
@@ -528,8 +528,7 @@ namespace Nektar
             switch(m_geom->GetCoordim())
             {
             case 3:
-                ASSERTL0(coords_2.num_elements() != 0, 
-                         "output coords_2 is not defined");
+                ASSERTL0(coords_2.num_elements() != 0,"output coords_2 is not defined");
                 
                 CBasis0 = m_geom->GetBasis(2,0); 
                 CBasis1 = m_geom->GetBasis(2,1);
@@ -927,8 +926,8 @@ namespace Nektar
                         DNekMatSharedPtr lap = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
                         
                         (*lap) = (gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0]) * (*lap00) + 
-                            (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
-                            (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
+                                 (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
+                                 (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
                         
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,lap);
                     }
@@ -1080,6 +1079,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.34  2008/06/05 20:19:01  ehan
+ *    Fixed undefined function GetGtype() in the ASSERTL2().
+ *
  *    Revision 1.33  2008/06/02 23:35:34  ehan
  *    Fixed warning : no new line at end of file
  *

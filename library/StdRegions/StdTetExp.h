@@ -100,12 +100,18 @@ namespace Nektar
           NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
           void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
           void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
+
+
+            ///////////////////////////////////
+            // Differentiation Methods
+            //////////////////////////////////
+
           void PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                          Array<OneD, NekDouble> &out_d0,
                          Array<OneD, NekDouble> &out_d1,
                          Array<OneD, NekDouble> &out_d2);
                          
-          /** \brief Backward tranform for triangular elements
+          /** \brief Backward tranform for tetrahedral elements
           *
           *  \b Note: That 'r' (base[2]) runs fastest in this element
           */
@@ -179,6 +185,7 @@ namespace Nektar
             }
         
         protected:
+        
 
          void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
                               const Array<OneD, const NekDouble>& base1,
@@ -330,6 +337,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.18  2008/05/30 00:33:49  delisi
+ * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+ *
  * Revision 1.17  2008/05/29 21:36:25  pvos
  * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
  *

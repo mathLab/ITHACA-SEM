@@ -81,13 +81,50 @@ namespace Nektar
          *  \param outarray_d3 the resulting array of derivative in the 
          *  \f$\eta_3\f$ direction will be stored in outarray_d3 as output 
          *  of the function
+         *         
+         *  Recall that:
+         *  \f$
+         *  \hspace{1cm} \begin{array}{llll}
+         *  \mbox{Shape}    & \mbox{Cartesian coordinate range} &
+         *  \mbox{Collapsed coord.}      &
+         *  \mbox{Collapsed coordinate definition}\\
+         *  \mbox{Hexahedral}  & -1 \leq \xi_1,\xi_2, \xi_3 \leq  1
+         *  & -1 \leq \eta_1,\eta_2, \eta_3 \leq 1
+         *  & \eta_1 = \xi_1, \eta_2 = \xi_2, \eta_3 = \xi_3 \\
+         *  \mbox{Tetrahedral}  & -1 \leq \xi_1,\xi_2,\xi_3; \xi_1+\xi_2 +\xi_3 \leq  -1
+         *  & -1 \leq \eta_1,\eta_2, \eta_3 \leq 1
+         *  & \eta_1 = \frac{2(1+\xi_1)}{-\xi_2 -\xi_3}-1, \eta_2 = \frac{2(1+\xi_2)}{1 - \xi_3}-1, \eta_3 = \xi_3 \\
+         *  \end{array} \f$
          */
+
             void PhysTensorDeriv(const Array<OneD, const NekDouble> &inarray, 
                                  Array<OneD, NekDouble> &outarray_d1,
                                  Array<OneD, NekDouble> &outarray_d2,
                                  Array<OneD, NekDouble> &outarray_d3);
 
 
+         /** \brief This function evaluates the expansion at a single
+         *  (arbitrary) point of the domain
+         *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_PhysEvaluate()
+         *
+         *  Based on the value of the expansion at the quadrature points,
+         *  this function calculates the value of the expansion at an 
+         *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
+         *  given by the pointer \a coords). This operation, equivalent to
+         *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
+         *  is evaluated using Lagrangian interpolants through the quadrature
+         *  points:
+         *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
+         *
+             *  This function requires that the physical value array 
+             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys) 
+             *  is set.
+         * 
+         *  \param coords the coordinates of the single point
+         *  \return returns the value of the expansion at the single point
+         */
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords)
              {
                  return v_PhysEvaluate(coords);
@@ -171,6 +208,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion3D.h,v $
+* Revision 1.16  2008/05/30 00:33:49  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.15  2008/05/15 22:39:34  ehan
 * Clean up the codes
 *

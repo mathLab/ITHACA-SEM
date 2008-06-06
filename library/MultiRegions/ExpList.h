@@ -192,14 +192,14 @@ namespace Nektar
              *
              * The operation is evaluated locally for every element by the function 
              * StdRegions#StdExpansion#IProductWRTBase.
-             * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the 
-             * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the 
-             * variable #m_phys of the ExpList object \a Sin. 
+             * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
+             * quadrature points \f$\boldsymbol{x}_i \f$ should be contained in the
+             * variable #m_phys of the #ExpList object \a Sin.
              * The result is stored in the array #m_coeffs.
              *
              * \param Sin An ExpList, containing the discrete evaluation of 
              * \f$f(\boldsymbol{x})\f$ at the quadrature points in its array 
-             * #m\_phys.
+             * #m_phys.
              */
             void   IProductWRTBase (const ExpList &Sin);
 
@@ -903,6 +903,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.35  2008/06/05 15:06:58  pvos
+* Added documentation
+*
 * Revision 1.34  2008/05/29 21:35:03  pvos
 * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 *

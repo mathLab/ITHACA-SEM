@@ -212,19 +212,20 @@ namespace Nektar
 
         }
         
-	/** \brief Integrate the physical point list \a inarray over prismatic region and return the value
-            
-	Inputs:\n
-	
-	- \a inarray: definition of function to be returned at quadrature point of expansion. 
+        
+      /** \brief Integrate the physical point list \a inarray over prismatic region and return the value
 
-	Outputs:\n
+      Inputs:\n
 
-	- returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\bar \eta_1, \xi_2, \xi_3) J[i,j,k] d \bar \eta_1 d \xi_2 d \xi_3 \f$ \n
-		\f$ = \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1} u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0})w_{i}^{0,0} w_{j}^{0,0} \hat w_{k}^{1,0}    \f$ \n
-		where \f$ inarray[i,j, k] = u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0}) \f$, \n 
-		\f$\hat w_{i}^{1,0} = \frac {w_{j}^{1,0}} {2} \f$ \n
-		and \f$ J[i,j,k] \f$ is the  Jacobian evaluated at the quadrature point.
+      - \a inarray: definition of function to be returned at quadrature point of expansion.
+
+      Outputs:\n
+
+      - returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\bar \eta_1, \xi_2, \xi_3) J[i,j,k] d \bar \eta_1 d \xi_2 d \xi_3 \f$ \n
+        \f$ = \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1} u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0})w_{i}^{0,0} w_{j}^{0,0} \hat w_{k}^{1,0}    \f$ \n
+        where \f$ inarray[i,j, k] = u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0}) \f$, \n
+        \f$\hat w_{i}^{1,0} = \frac {w_{j}^{1,0}} {2} \f$ \n
+        and \f$ J[i,j,k] \f$ is the  Jacobian evaluated at the quadrature point.
 
         */
         NekDouble StdPrismExp::Integral(const Array<OneD, const NekDouble>& inarray)
@@ -391,7 +392,7 @@ namespace Nektar
         }
 
 
-	/** 
+	    /** 
             \brief Calculate the derivative of the physical points 
 		
 	    The derivative is evaluated at the nodal physical points.
@@ -813,6 +814,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.11  2008/06/05 15:06:06  pvos
+ * Added documentation
+ *
  * Revision 1.10  2008/05/30 00:33:49  delisi
  * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

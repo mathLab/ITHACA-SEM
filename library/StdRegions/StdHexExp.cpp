@@ -334,14 +334,12 @@ namespace Nektar
             PhysTensorDeriv(this->m_phys, out_d0, out_d1, out_d2);
         }
 
-	 /** 
-            \brief Calculate the derivative of the physical points 
-            
-            For Hexahedral region can use the PhysTensorDeriv function
-            defined under StdExpansion.
-	    Following tenserproduct:
+	   /** 
+        \brief Calculate the derivative of the physical points
 
-            
+        For Hexahedral region can use the PhysTensorDeriv function
+        defined under StdExpansion.
+        Following tenserproduct:
         **/
         void StdHexExp::PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                                    Array<OneD, NekDouble> &out_d0,
@@ -357,8 +355,8 @@ namespace Nektar
         /// Evaluation Methods
         //-----------------------------
 
-	/** 
-            \brief Backward transformation is evaluated at the quadrature points 
+	    /** 
+        \brief Backward transformation is evaluated at the quadrature points
 		
 	    \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{m(pqr)} \hat u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
 	    
@@ -459,7 +457,7 @@ namespace Nektar
         }
 
 
- 	/** \brief Forward transform from physical quadrature space
+ 	    /** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
             store in \a (this)->m_coeffs  
             
@@ -469,7 +467,7 @@ namespace Nektar
             
             Outputs:\n
             
-            - (this)->_coeffs: updated array of expansion coefficients. 
+            - \a (this)->m_coeffs: updated array of expansion coefficients. 
             
         */    
         void StdHexExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,
@@ -716,6 +714,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.19  2008/06/05 15:06:06  pvos
+* Added documentation
+*
 * Revision 1.18  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

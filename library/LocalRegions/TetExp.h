@@ -58,7 +58,7 @@ namespace Nektar
         points and order definition */
         TetExp(const LibUtilities::BasisKey &Ba,
                const LibUtilities::BasisKey &Bb,
-	       const LibUtilities::BasisKey &Bc,
+	           const LibUtilities::BasisKey &Bc,
                const SpatialDomains::TetGeomSharedPtr &geom);
 
         TetExp(const LibUtilities::BasisKey &Ba,
@@ -86,6 +86,10 @@ namespace Nektar
        NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
 
        void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+
+       /** \brief Forward transform from physical quadrature space
+       stored in \a inarray and evaluate the expansion coefficients and
+       store in \a (this)->_coeffs  */
        void FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
 
        NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
@@ -100,60 +104,55 @@ namespace Nektar
                        Array<OneD, NekDouble> &out_d2);
 
 
-	/// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
-	StdRegions::ExpansionType DetExpansionType() const 
-	{ 
-            return StdRegions::eTetrahedron; 
-	}
+        /// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
+        StdRegions::ExpansionType DetExpansionType() const
+        {
+                return StdRegions::eTetrahedron;
+        }
 
         SpatialDomains::TetGeomSharedPtr GetGeom()
         {
             return m_geom;
         }
 
-	void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+        void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
 
     protected:
 
         void GenMetricInfo();
 
-	void IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-			     const Array<OneD, const NekDouble> &base1, 
-			     const Array<OneD, const NekDouble> &base2, 
-			     const Array<OneD, const NekDouble> &inarray,
-			     Array<OneD,NekDouble> &outarray);
+        /** \brief  Inner product of \a inarray over region with respect to
+        the expansion basis \a base and return in \a outarray */
+        void IProductWRTBase(const Array<OneD, const NekDouble> &base0,
+                        const Array<OneD, const NekDouble> &base1,
+                        const Array<OneD, const NekDouble> &base2,
+                        const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD,NekDouble> &outarray);
 
         DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
         DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
         DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
-	SpatialDomains::TetGeomSharedPtr m_geom;
+	    SpatialDomains::TetGeomSharedPtr m_geom;
         SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
-	LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+	    LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
         LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
 
     private:
       TetExp();
 	
-      virtual StdRegions::ExpansionType v_DetExpansionType() const
-      {
-	 return DetExpansionType();
-      }
+        virtual StdRegions::ExpansionType v_DetExpansionType() const
+        {
+        return DetExpansionType();
+        }
 
-      virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
-      {
-         return m_metricinfo;
-      }
-
-//          virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
-//                                  Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
-//                                  Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray)
-//          {
-//              GetCoords(coords_0, coords_1, coords_2);
-//          }
+        virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
+        {
+            return m_metricinfo;
+        }
 
         virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
                                  Array<OneD, NekDouble> &coords_1,
@@ -173,7 +172,7 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
-                 /// Virtual call to SegExp::PhysDeriv
+         /// Virtual call to SegExp::PhysDeriv
         virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                                     Array<OneD, NekDouble> &out_d0,
                                     Array<OneD, NekDouble> &out_d1,
@@ -279,6 +278,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.15  2008/05/30 00:33:48  delisi
+ *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+ *
  *    Revision 1.14  2008/05/29 21:33:37  pvos
  *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
  *

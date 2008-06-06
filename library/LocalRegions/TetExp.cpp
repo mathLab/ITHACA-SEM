@@ -40,74 +40,75 @@ namespace Nektar
   namespace LocalRegions 
   {
 
-            TetExp::TetExp(const LibUtilities::BasisKey &Ba,
-                           const LibUtilities::BasisKey &Bb,
-                           const LibUtilities::BasisKey &Bc,
-                           const SpatialDomains::TetGeomSharedPtr &geom
-                          ):
-            StdRegions::StdTetExp(Ba,Bb,Bc),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
+        TetExp::TetExp( const LibUtilities::BasisKey &Ba,
+                        const LibUtilities::BasisKey &Bb,
+                        const LibUtilities::BasisKey &Bc,
+                        const SpatialDomains::TetGeomSharedPtr &geom
+                        ):
+        StdRegions::StdTetExp(Ba,Bb,Bc),
+        m_geom(geom),
+        m_metricinfo(),
+        m_matrixManager(std::string("TetExpMatrix")),
+        m_staticCondMatrixManager(std::string("TetExpStaticCondMatrix"))
         {
-            m_geom = geom;
-
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
                 m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
+                                                           StdRegions::eNoExpansionType,*this),
                                                 boost::bind(&TetExp::CreateMatrix, this, _1));
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&TetExp::CreateStaticCondMatrix, this, _1));
+                                                                     StdRegions::eNoExpansionType,*this),
+                                                boost::bind(&TetExp::CreateStaticCondMatrix, this, _1));
             }
 
             GenMetricInfo();
         }
 
-	TetExp::TetExp(const LibUtilities::BasisKey &Ba,
+        TetExp::TetExp(const LibUtilities::BasisKey &Ba,
                        const LibUtilities::BasisKey &Bb,
- 	               const LibUtilities::BasisKey &Bc
-	              ):
+                       const LibUtilities::BasisKey &Bc
+                       ):
             StdRegions::StdTetExp(Ba,Bb,Bc),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
-        {
-
-           for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
+            m_geom(),
+            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
+            m_matrixManager(std::string("TetExpMatrix")),
+            m_staticCondMatrixManager(std::string("TetExpStaticCondMatrix"))
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&TetExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&TetExp::CreateStaticCondMatrix, this, _1));
+                for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
+                {
+                    m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
+                                                                StdRegions::eNoExpansionType,*this),
+                                                    boost::bind(&TetExp::CreateMatrix, this, _1));
+                    m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
+                                                                         StdRegions::eNoExpansionType,*this),
+                                                              boost::bind(&TetExp::CreateStaticCondMatrix, this, _1));
+                }
+
+                // Set up unit geometric factors.
+                int coordim = 3;
+                Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim*coordim*coordim,0.0);
+                ndata[0] = ndata[4] = 1.0; //TODO must check
+                m_metricinfo->ResetGmat(ndata, 1, 3, coordim);//TODO must check
+                m_metricinfo->ResetJac(1, ndata); //TODO must check
+
             }
 
-            // Set up unit geometric factors. 
-            m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr(); 
-            int coordim = 3;
-            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim*coordim*coordim,0.0); 
-            ndata[0] = ndata[4] = 1.0; //TODO must check
-            m_metricinfo->ResetGmat(ndata, 1, 3, coordim);//TODO must check 
-            m_metricinfo->ResetJac(1, ndata); //TODO must check
-        }
 
-	TetExp::TetExp(const TetExp &T):
+        TetExp::TetExp(const TetExp &T):
             StdRegions::StdTetExp(T),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
+            m_geom(T.m_geom),
+            m_metricinfo(T.m_metricinfo),
+            m_matrixManager(std::string("TetExpMatrix")),
+            m_staticCondMatrixManager(std::string("TetExpStaticCondMatrix"))
         {
-            m_geom       = T.m_geom;
-            m_metricinfo = T.m_metricinfo;
-        }
-
+        } 
 
         TetExp::~TetExp()
         {
         }
 
-	//TODO: check following computations and function
-	void TetExp::GenMetricInfo()
+	   //TODO: check following computations and function
+	    void TetExp::GenMetricInfo()
         {
             SpatialDomains::GeomFactorsSharedPtr Xgfac;
 
@@ -126,13 +127,13 @@ namespace Nektar
 
                 LibUtilities::BasisSharedPtr CBasis0;
                 LibUtilities::BasisSharedPtr CBasis1;
-	        LibUtilities::BasisSharedPtr CBasis2;
+	            LibUtilities::BasisSharedPtr CBasis2;
                 CBasis0 = m_geom->GetBasis(0,0); // assumes all goembasis are same
                 CBasis1 = m_geom->GetBasis(0,1);
-	        CBasis2 = m_geom->GetBasis(0,2);
+	            CBasis2 = m_geom->GetBasis(0,2);
                 int Cnq0 = CBasis0->GetNumPoints();
                 int Cnq1 = CBasis1->GetNumPoints();
-		int Cnq2 = CBasis2->GetNumPoints();
+	       	    int Cnq2 = CBasis2->GetNumPoints();
 
                 Array<OneD, const NekDouble> ojac = Xgfac->GetJac();
                 Array<TwoD, const NekDouble> ogmat = Xgfac->GetGmat();
@@ -221,11 +222,25 @@ namespace Nektar
         // Integration Methods
         //----------------------------
 
-	NekDouble TetExp::Integral(const Array<OneD, const NekDouble> &inarray)
+        /** \brief Integrate the physical point list \a inarray over region
+        and return the value
+
+        Inputs:\n
+
+        - \a inarray: definition of function to be returned at quadrature point
+        of expansion.
+
+        Outputs:\n
+
+        - returns \f$\int^1_{-1}\int^1_{-1} \int^1_{-1} u(\eta_1, \eta_2, \eta_3) J[i,j,k] d
+        \eta_1 d \eta_2 d \eta_3 \f$ where \f$inarray[i,j,k] = u(\eta_{1i},\eta_{2j},\eta_{3k})
+        \f$ and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature point.
+       */
+	    NekDouble TetExp::Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-	    int    nquad2 = m_base[2]->GetNumPoints();
+	        int    nquad2 = m_base[2]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             NekDouble retrunVal;
             Array<OneD,NekDouble> tmp   = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
@@ -246,15 +261,37 @@ namespace Nektar
             return retrunVal; 
         }
 
-	 void TetExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-                                      const Array<OneD, const NekDouble> &base1, 
-				      const Array<OneD, const NekDouble> &base2, 
-                                      const Array<OneD, const NekDouble> &inarray,
+
+        /** 
+        \brief Calculate the inner product of inarray with respect to
+        the basis B=base0*base1*base2 and put into outarray:
+
+        \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
+            \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
+            \psi_{p}^{a} (\eta_{1i}) \psi_{pq}^{b} (\eta_{2j}) \psi_{pqr}^{c} (\eta_{3k})
+            w_i w_j w_k u(\eta_{1,i} \eta_{2,j} \eta_{3,k})
+            J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\eta_{1,i})
+            \sum_{j=0}^{nq_1} \psi_{pq}^b(\eta_{2,j}) \sum_{k=0}^{nq_2} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
+            J_{i,j,k} \end{array} \f$ \n
+
+        where
+        \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\eta_1) \psi_{pq}^b (\eta_2) \psi_{pqr}^c (\eta_3) \f$
+
+        which can be implemented as \n
+        \f$f_{pqr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
+        J_{i,j,k} = {\bf B_3 U}   \f$ \n
+        \f$ g_{pq} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{pq}^b (\xi_{2j}) f_{pqr} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
+        \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$ 
+        **/
+	    void TetExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
+                                     const Array<OneD, const NekDouble> &base1,
+			       	                 const Array<OneD, const NekDouble> &base2, 
+                                     const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,NekDouble> &outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-	    int    nquad2 = m_base[2]->GetNumPoints();
+	        int    nquad2 = m_base[2]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
 
@@ -271,8 +308,23 @@ namespace Nektar
             StdTetExp::IProductWRTBase(base0,base1,base2,tmp,outarray);
         }
 
-	 void TetExp::IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,NekDouble> &outarray)
+
+        /** \brief  Inner product of \a inarray over region with respect to the 
+        expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
+    
+        Wrapper call to StdTetExp::IProductWRTBase
+    
+        Input:\n
+    
+        - \a inarray: array of function evaluated at the physical collocation points
+    
+        Output:\n
+    
+        - \a outarray: array of inner product with respect to each basis over region
+
+        */
+	    void TetExp::IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD,NekDouble> &outarray)
         {
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),
                             inarray,outarray);
@@ -348,7 +400,21 @@ namespace Nektar
             }
         }
 
-	void TetExp::FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray)
+
+        /** \brief Forward transform from physical quadrature space
+            stored in \a inarray and evaluate the expansion coefficients and
+            store in \a (this)->m_coeffs  
+            
+            Inputs:\n
+            
+            - \a inarray: array of physical quadrature points to be transformed
+            
+            Outputs:\n
+            
+            - \a (this)->m_coeffs: updated array of expansion coefficients.             
+        */
+        
+   	    void TetExp::FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
             {
@@ -372,101 +438,100 @@ namespace Nektar
         }
 
 	
-	//TODO: implement
-	void TetExp::GetCoords(Array<OneD,NekDouble> &coords_0,
+        //TODO: implement
+        void TetExp::GetCoords(Array<OneD,NekDouble> &coords_0,
                                Array<OneD,NekDouble> &coords_1,
                                Array<OneD,NekDouble> &coords_2)
         {
-            LibUtilities::BasisSharedPtr CBasis0;
-            LibUtilities::BasisSharedPtr CBasis1;
-	    LibUtilities::BasisSharedPtr CBasis2;
-            Array<OneD,NekDouble>  x;
+                LibUtilities::BasisSharedPtr CBasis0;
+                LibUtilities::BasisSharedPtr CBasis1;
+                LibUtilities::BasisSharedPtr CBasis2;
+                Array<OneD,NekDouble>  x;
 
-            ASSERTL0(m_geom, "m_geom not define");
+                ASSERTL0(m_geom, "m_geom not define");
 
-            // get physical points defined in Geom
-//            m_geom->FillGeom(); //TODO: implement FillGeom()
+                // get physical points defined in Geom
+    //            m_geom->FillGeom(); //TODO: implement FillGeom()
 
-            switch(m_geom->GetCoordim())
-            {
-            case 3:
-                ASSERTL0(coords_2.num_elements() != 0, "output coords_2 is not defined");
-
-		    //TODO: check GetBasis()
-                CBasis0 = m_geom->GetBasis(2,0);
-                CBasis1 = m_geom->GetBasis(2,1);
-                CBasis2 = m_geom->GetBasis(2,2);
-
-
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                   (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
+                switch(m_geom->GetCoordim())
                 {
-                   x = m_geom->UpdatePhys(2); //TODO: check UpdatedPhys
-                   Blas::Dcopy(m_base[0]->GetNumPoints()*
-                               m_base[1]->GetNumPoints()*
-                               m_base[2]->GetNumPoints(),
-                               &x[0],1,&coords_2[0],1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                     Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(2))[0],
-                              m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(), &coords_2[0]);
-                }
-            case 2:
-                ASSERTL0(coords_1.num_elements(), "output coords_1 is not defined");
+                case 3:
+                    ASSERTL0(coords_2.num_elements() != 0, "output coords_2 is not defined");
 
-                CBasis0 = m_geom->GetBasis(1,0);
-                CBasis1 = m_geom->GetBasis(1,1);
-                CBasis2 = m_geom->GetBasis(1,2);
+                //TODO: check GetBasis()
+                    CBasis0 = m_geom->GetBasis(2,0);
+                    CBasis1 = m_geom->GetBasis(2,1);
+                    CBasis2 = m_geom->GetBasis(2,2);
 
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                   (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-                {
-                    x = m_geom->UpdatePhys(1);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                m_base[1]->GetNumPoints()*
-                                m_base[2]->GetNumPoints(),
-                                &x[0],1,&coords_1[0],1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-		    Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(1))[0],
+
+                    if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
+                       (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
+                       (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
+                    {
+                        x = m_geom->UpdatePhys(2); //TODO: check UpdatedPhys
+                        Blas::Dcopy(m_base[0]->GetNumPoints()*
+                                    m_base[1]->GetNumPoints()*
+                                    m_base[2]->GetNumPoints(),
+                                    x,1,coords_2,1);
+                    }
+                    else // Interpolate to Expansion point distribution
+                    {
+                        Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(2))[0],
+                                 m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(), &coords_2[0]);
+                    }
+                case 2:
+                    ASSERTL0(coords_1.num_elements(), "output coords_1 is not defined");
+
+                    CBasis0 = m_geom->GetBasis(1,0);
+                    CBasis1 = m_geom->GetBasis(1,1);
+                    CBasis2 = m_geom->GetBasis(1,2);
+
+                    if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
+                       (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
+                       (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
+                    {
+                        x = m_geom->UpdatePhys(1);
+                        Blas::Dcopy(m_base[0]->GetNumPoints()*
+                                    m_base[1]->GetNumPoints()*
+                                    m_base[2]->GetNumPoints(),
+                                    x, 1, coords_1, 1);
+                    }
+                    else // Interpolate to Expansion point distribution
+                    {
+                    Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(1))[0],
                              m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(),&coords_1[0]);
-                }
-            case 1:
-                ASSERTL0(coords_0.num_elements(),"output coords_0 is not defined");
+                    }
+                case 1:
+                    ASSERTL0(coords_0.num_elements(),"output coords_0 is not defined");
 
-                CBasis0 = m_geom->GetBasis(0,0); 
-                CBasis1 = m_geom->GetBasis(0,1);
-                CBasis2 = m_geom->GetBasis(0,2);
+                    CBasis0 = m_geom->GetBasis(0,0); 
+                    CBasis1 = m_geom->GetBasis(0,1);
+                    CBasis2 = m_geom->GetBasis(0,2);
 
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                   (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-                {
-                    x = m_geom->UpdatePhys(0);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                m_base[1]->GetNumPoints()*
-                                m_base[2]->GetNumPoints(),
-                                &x[0],1,&coords_0[0],1);
+                    if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
+                       (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
+                       (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
+                    {
+                        x = m_geom->UpdatePhys(0);
+                        Blas::Dcopy(m_base[0]->GetNumPoints()*
+                                    m_base[1]->GetNumPoints()*
+                                    m_base[2]->GetNumPoints(),
+                                    x, 1, coords_0, 1);
+                    }
+                    else // Interpolate to Expansion point distribution
+                    {
+                        Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(0))[0],
+                                 m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(),&coords_0[0]);
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"Number of dimensions are greater than 3");
+                    break;
                 }
-                else // Interpolate to Expansion point distribution
-                {
-                    Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(0))[0],
-                             m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(),&coords_0[0]);
-                }
-                break;
-            default:
-                ASSERTL0(false,"Number of dimensions are greater than 3");
-                break;
-            }
-        }  
-  
-	// get the coordinates "coords" at the local coordinates "Lcoords"
-        void TetExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords,
-                              Array<OneD,NekDouble> &coords)
+            }  
+
+	    // get the coordinates "coords" at the local coordinates "Lcoords"
+        void TetExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
         {
             int  i;
 
@@ -542,26 +607,25 @@ namespace Nektar
         NekDouble TetExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
-
+            
             ASSERTL0(m_geom,"m_geom not defined");
-	
-            //TODO: check GetLocCoords()
-           // m_geom->GetLocCoords(coord, Lcoord);
-
+            m_geom->GetLocCoords(coord,Lcoord);
+            
             return StdTetExp::PhysEvaluate(Lcoord);
         }
 
-      DNekMatSharedPtr TetExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
-      {
-          LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-          LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-          LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-          StdRegions::StdTetExpSharedPtr tmp = MemoryManager<StdTetExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-          
-          return tmp->GetStdMatrix(mkey); 
-      }
+        DNekMatSharedPtr TetExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
+            LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
+            LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+            StdRegions::StdTetExpSharedPtr tmp = MemoryManager<StdTetExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
 
-	DNekScalMatSharedPtr TetExp::CreateMatrix(const MatrixKey &mkey)
+            return tmp->GetStdMatrix(mkey);
+        }
+
+
+	    DNekScalMatSharedPtr TetExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
 
@@ -613,7 +677,7 @@ namespace Nektar
                     }
                     else
                     {
-                      // TODO: make sure 3D Laplacian is set up for Hex in three-dimensional in Standard Region.
+                      // TODO: make sure 3D Laplacian is set up for StdHexExp.
                       // ASSERTL1(m_geom->GetCoordDim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
                         ASSERTL1(m_geom->GetCoordDim() == 3,"Standard Region Laplacian is only set up for Hex in three-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
@@ -671,7 +735,7 @@ namespace Nektar
         }
 
 
-	DNekScalBlkMatSharedPtr TetExp::CreateStaticCondMatrix(const MatrixKey &mkey)
+	    DNekScalBlkMatSharedPtr TetExp::CreateStaticCondMatrix(const MatrixKey &mkey)
         {
             DNekScalBlkMatSharedPtr returnval;
 
@@ -791,6 +855,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.11  2008/06/05 20:18:47  ehan
+ *    Fixed undefined function GetGtype() in the ASSERTL2().
+ *
  *    Revision 1.10  2008/06/02 23:35:26  ehan
  *    Fixed warning : no new line at end of file
  *

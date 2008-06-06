@@ -320,7 +320,7 @@ namespace Nektar
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
         }
 
-	 /** 
+	    /** 
             \brief Calculate the inner product of inarray with respect to
             the basis B=base0*base1*base2 and put into outarray:
               
@@ -540,8 +540,8 @@ namespace Nektar
         /// Evaluation Methods
         ///////////////////////////////
 
-	/** 
-            \brief Backward transformation is evaluated at the quadrature points 
+	    /** 
+        \brief Backward transformation is evaluated at the quadrature points
 		
 	    \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{m(pqr)} \hat u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
 	    
@@ -906,6 +906,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.14  2008/06/05 15:06:06  pvos
+ * Added documentation
+ *
  * Revision 1.13  2008/05/30 00:33:49  delisi
  * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

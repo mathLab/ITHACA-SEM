@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/LocalRegions.h>
+#include <LocalRegions/LocalRegions.hpp>
+#include <stdio.h>
 #include <LocalRegions/HexExp.h>
 
 namespace Nektar
@@ -42,34 +44,36 @@ namespace Nektar
   {
 
 	HexExp::HexExp(const LibUtilities::BasisKey &Ba, 
-                       const LibUtilities::BasisKey &Bb, 
-		       const LibUtilities::BasisKey &Bc, 
-                       const SpatialDomains::HexGeomSharedPtr &geom):
+                   const LibUtilities::BasisKey &Bb,
+                   const LibUtilities::BasisKey &Bc,
+                   const SpatialDomains::HexGeomSharedPtr &geom):
             StdRegions::StdHexExp(Ba,Bb,Bc),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
+            m_geom(geom),
+            m_metricinfo(),
+            m_matrixManager(std::string("HexExpMatrix")),
+            m_staticCondMatrixManager(std::string("HexExpStaticCondMatrix"))
         {
-            m_geom = geom;
-            
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
                 m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
+                                                           StdRegions::eNoExpansionType,*this),
                                                 boost::bind(&HexExp::CreateMatrix, this, _1));
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
+                                                                     StdRegions::eNoExpansionType,*this),
                                                           boost::bind(&HexExp::CreateStaticCondMatrix, this, _1));
             }
             
             GenMetricInfo();
         }
 
-	HexExp::HexExp(const LibUtilities::BasisKey &Ba,
-                       const LibUtilities::BasisKey &Bb, 
-		       const LibUtilities::BasisKey &Bc ):
+	    HexExp::HexExp(const LibUtilities::BasisKey &Ba,
+                       const LibUtilities::BasisKey &Bb,
+                       const LibUtilities::BasisKey &Bc ):
             StdRegions::StdHexExp(Ba,Bb,Bc),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
+            m_geom(),
+            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
+            m_matrixManager(std::string("HexExpMatrix")),
+            m_staticCondMatrixManager(std::string("HexExpStaticCondMatrix"))
         {
 
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
@@ -79,34 +83,34 @@ namespace Nektar
                                                 boost::bind(&HexExp::CreateMatrix, this, _1));
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
                                                                     StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&HexExp::CreateStaticCondMatrix, this, _1));
+                                                boost::bind(&HexExp::CreateStaticCondMatrix, this, _1));
             }
 
             // Set up unit geometric factors. 
-            m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr(); 
             int coordim = 3;
             Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim*coordim*coordim,0.0); 
             ndata[0] = ndata[4] = 1.0; //TODO must check
             m_metricinfo->ResetGmat(ndata,1,3,coordim); //TODO must check
             m_metricinfo->ResetJac(1,ndata); //TODO must check
-        }
 
- 	HexExp::HexExp(const HexExp &T):
+        }
+        
+        HexExp::HexExp(const HexExp &T):
             StdRegions::StdHexExp(T),
-            m_matrixManager(std::string("StdExp")),
-            m_staticCondMatrixManager(std::string("StdExpStdCondMat"))
+            m_geom(T.m_geom),
+            m_metricinfo(T.m_metricinfo),
+            m_matrixManager(std::string("HexExpMatrix")),
+            m_staticCondMatrixManager(std::string("HexExpStaticCondMatrix"))
         {
-            m_geom       = T.m_geom;
-            m_metricinfo = T.m_metricinfo;
         }
 
-	// by default the StdHexExp destructor will be called      
-	HexExp::~HexExp()
-	{
-	}
+        // by default the StdHexExp destructor will be called
+        HexExp::~HexExp()
+        {
+        }
 
-	//TODO: implement
-	void HexExp::GenMetricInfo()
+   	    //TODO: implement
+	    void HexExp::GenMetricInfo()
         {
             SpatialDomains::GeomFactorsSharedPtr Xgfac;
             
@@ -222,7 +226,22 @@ namespace Nektar
         }
 
 
- 	NekDouble HexExp::Integral(const Array<OneD, const NekDouble> &inarray)
+
+        /** \brief Integrate the physical point list \a inarray over region
+        and return the value
+
+        Inputs:\n
+
+        - \a inarray: definition of function to be returned at quadrature point
+        of expansion.
+
+        Outputs:\n
+
+        - returns \f$\int^1_{-1}\int^1_{-1} \int^1_{-1} u(\eta_1, \eta_2, \eta_3) J[i,j,k] d
+        \eta_1 d \eta_2 d \eta_3 \f$ where \f$inarray[i,j,k] = u(\eta_{1i},\eta_{2j},\eta_{3k})
+        \f$ and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature point.
+       */
+ 	    NekDouble HexExp::Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -253,15 +272,39 @@ namespace Nektar
             IProductWRTBase(m_base[0]->GetBdata(), m_base[1]->GetBdata(), m_base[2]->GetBdata(), inarray,outarray);
         }
 
+
+     /** 
+        \brief Calculate the inner product of inarray with respect to
+        the basis B=base0*base1*base2 and put into outarray:
+        
+        \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
+        \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
+        \psi_{p}^{a} (\xi_{1i}) \psi_{q}^{a} (\xi_{2j}) \psi_{r}^{a} (\xi_{3k})
+        w_i w_j w_k u(\xi_{1,i} \xi_{2,j} \xi_{3,k})         
+        J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\xi_{1,i})
+        \sum_{j=0}^{nq_1} \psi_{q}^a(\xi_{2,j}) \sum_{k=0}^{nq_2} \psi_{r}^a u(\xi_{1i},\xi_{2j},\xi_{3k})
+        J_{i,j,k} \end{array} \f$ \n
+        
+        where
+        
+        \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a ( \xi_1) \psi_{q}^a (\xi_2) \psi_{r}^a (\xi_3) \f$ \n
+        
+        which can be implemented as \n
+        \f$f_{r} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{r}^a u(\xi_{1i},\xi_{2j},\xi_{3k})
+        J_{i,j,k} = {\bf B_3 U}   \f$ \n
+        \f$ g_{q} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{q}^a (\xi_{2j}) f_{r} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
+        \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{q} (\xi_{3k})  = {\bf B_1 G} \f$
+
+        **/
         void HexExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
                                      const Array<OneD, const NekDouble> &base1,
-				     const Array<OneD, const NekDouble> &base2,  
+				                     const Array<OneD, const NekDouble> &base2,  
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,NekDouble> &outarray )
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-	    int    nquad2 = m_base[2]->GetNumPoints();
+	        int    nquad2 = m_base[2]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
 
@@ -302,12 +345,7 @@ namespace Nektar
             Array<OneD,NekDouble> Diff0 = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
             Array<OneD,NekDouble> Diff1 = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
             Array<OneD,NekDouble> Diff2 = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            
-            //         if(m_geom)
-            //         {
-            //         ASSERTL2(n <= m_geom->GetCoordDim(),
-            //              "value of n is larger than the number of coordinates");
-            //         }
+
             
             StdHexExp::PhysDeriv(inarray, Diff0, Diff1, Diff2);
             
@@ -360,7 +398,21 @@ namespace Nektar
             }
         }
 
-	void HexExp::FwdTrans(const Array<OneD, const NekDouble> & inarray, Array<OneD,NekDouble> &outarray)
+
+         /** \brief Forward transform from physical quadrature space
+            stored in \a inarray and evaluate the expansion coefficients and
+            store in \a (this)->m_coeffs  
+            
+            Inputs:\n
+            
+            - \a inarray: array of physical quadrature points to be transformed
+            
+            Outputs:\n
+            
+            - \a (this)->m_coeffs: updated array of expansion coefficients. 
+            
+        */   
+	    void HexExp::FwdTrans(const Array<OneD, const NekDouble> & inarray, Array<OneD,NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
             {
@@ -383,9 +435,9 @@ namespace Nektar
             }
         }
 
-          void HexExp::GetCoords(Array<OneD,NekDouble> &coords_0,
-                                Array<OneD,NekDouble> &coords_1,
-                                Array<OneD,NekDouble> &coords_2)
+        void HexExp::GetCoords(Array<OneD,NekDouble> &coords_0,
+                               Array<OneD,NekDouble> &coords_1,
+                               Array<OneD,NekDouble> &coords_2)
         {
             LibUtilities::BasisSharedPtr CBasis0;
             LibUtilities::BasisSharedPtr CBasis1;
@@ -473,30 +525,19 @@ namespace Nektar
             }
         }
 
-// 	NekDouble HexExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
-//         {
-//             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
-//             
-//         ASSERTL0(m_geom,"m_geom not defined");
-//       //  m_geom->GetLocCoords(coord,Lcoord);
-//         
-//         return StdHexExp::PhysEvaluate(Lcoord);
-//         }
-
                 
         NekDouble HexExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
 
-        ASSERTL0(m_geom,"m_geom not defined");
-       // m_geom->GetLocCoords(coord,Lcoord);
+            ASSERTL0(m_geom,"m_geom not defined");
+            // m_geom->GetLocCoords(coord,Lcoord);  //TODO implement GetLocCoords() in HexGeom.cpp
         
-        return StdHexExp::PhysEvaluate(Lcoord);
+           return StdHexExp::PhysEvaluate(Lcoord);
         }
 
 
-	// get the coordinates "coords" at the local coordinates "Lcoords"
-	//TODO: implement FillGeom 
+	    // get the coordinates "coords" at the local coordinates "Lcoords"
         void HexExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
         {
             int  i;
@@ -506,7 +547,7 @@ namespace Nektar
                      Lcoords[2] <= -1.0 && Lcoords[2] >= 1.0,
                      "Local coordinates are not in region [-1,1]");
 
-            //   m_geom->FillGeom();
+            //   m_geom->FillGeom();    //TODO: implement FillGeom 
 
             for(i = 0; i < m_geom->GetCoordDim(); ++i)
             {
@@ -580,7 +621,7 @@ namespace Nektar
             {
                 LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
                 LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-	        LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+	            LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
                 HexExpSharedPtr tmp = MemoryManager<HexExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
                 
                 return tmp->StdHexExp::GetStdMatrix(mkey);
@@ -600,7 +641,7 @@ namespace Nektar
             {
                 LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
                 LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-	        LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+	            LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
                 HexExpSharedPtr tmp = MemoryManager<HexExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
                 
                 return tmp->StdHexExp::GetStdStaticCondMatrix(mkey);                
@@ -612,7 +653,6 @@ namespace Nektar
         }
 
 	//TODO: implement
-
        DNekScalMatSharedPtr HexExp::CreateMatrix(const MatrixKey &mkey)
        {
             DNekScalMatSharedPtr returnval;
@@ -799,15 +839,6 @@ namespace Nektar
             return returnval;
         }
 
-    //          QuadExpSharedPtr HexExp::GetEdgeExp(int edge)
-    //         {
-    //             QuadExpSharedPtr returnval; 
-    //             int dir = (edge == 0|| edge == 2)? 0:1;
-    // 
-    //             returnval = MemoryManager<QuadExp>::AllocateSharedPtr(m_base[dir]->GetBasisKey(),m_geom->GetEdge(edge));
-    // 
-    //             return returnval; 
-    //         }
 
 	//TODO: implement
         DNekScalBlkMatSharedPtr HexExp::CreateStaticCondMatrix(const MatrixKey &mkey)
@@ -932,6 +963,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.12  2008/06/05 20:17:11  ehan
+ *    Fixed undefined function GetGtype() in the ASSERTL2().
+ *
  *    Revision 1.11  2008/05/30 00:33:48  delisi
  *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

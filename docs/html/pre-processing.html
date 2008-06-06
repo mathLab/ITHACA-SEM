@@ -8,6 +8,9 @@
     <!-- InstanceEndEditable -->
     <style type="text/css">
     <!--
+	html {
+	  min-height: 101%; // force a scrollbar to always appear
+	}
     body {
       font: 100% Verdana, Arial, Helvetica, sans-serif;
       background: #FFFFFF;
@@ -17,7 +20,8 @@
 	  color: #000000;
     }
     .twoColHybLt #container {
-	  max-width: 90em;
+	  //max-width: 90em;
+	  max-width: 60em;
 	  width: 99%;
       background: #FFFFFF;
       margin: 0 auto;
@@ -97,15 +101,16 @@
     	  
         </p>
         <p><a href="team.html" id="menu_Team">Team Members</a></p>
-        <p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>
-        <p><a href="solvers.html" id="menu_Solvers">Solvers</a></p>
+<!--        <p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>-->
+<!--        <p><a href="solvers.html" id="menu_Solvers">Solvers</a></p>-->
         <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
-        <p><a href="demos.html" id="menu_Demos">Demos</a></p>
+<!--        <p><a href="demos.html" id="menu_Demos">Demos</a></p>-->
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
         <p><a href="license.html" id="menu_License">License</a></p>
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
-        <p style="font-size:9px;">$Date: 2008/06/05 21:03:43 $</p>
+        <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/05 21:31:53 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->

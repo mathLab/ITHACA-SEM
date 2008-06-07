@@ -98,11 +98,6 @@ namespace Nektar
                      Array<OneD,NekDouble> &coords_2, 
                      Array<OneD,NekDouble> &coords_3);
       void GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords);
-
-      const SpatialDomains::Geometry3DSharedPtr& GetGeom()
-      {
-        return m_geom;
-      }
       
       void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
@@ -267,6 +262,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.17  2008/06/06 23:24:03  ehan
+ *    Added doxygen documentation
+ *
  *    Revision 1.16  2008/05/30 00:33:48  delisi
  *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

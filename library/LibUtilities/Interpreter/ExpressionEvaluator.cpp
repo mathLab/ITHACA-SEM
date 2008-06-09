@@ -29,8 +29,8 @@ namespace Nektar
         //                       Math Function Declarations
         // ---------------------------------------------------------------------
 
-        // This function is called each time a math function is parsed and executed. It checks
-        // the errno to see if there was an error that occured in the math.h function.
+        /** This function is called each time a math function is parsed and executed. It checks
+			the errno to see if there was an error that occured in the math.h function. **/
         static void CheckMathOperationForErrors(string const& functionName)
         {
             if (errno == EDOM)
@@ -41,15 +41,15 @@ namespace Nektar
             errno = 0;
         }
 
-        // Bessel function of the first kind. This is used since the math.h function
-        // requires the first argument to be an integer.
+        /** Bessel function of the first kind. This is used since the math.h function
+			requires the first argument to be an integer. **/
         static double Jn (double i, double x)
         {
             return NEKTAR_MATH_NAME(jn) ((int) i, x);
         }
 
-        // Bessel function of the second kind. This is used since the math.h function
-        // requires the first argument to be an integer.
+        /** Bessel function of the second kind. This is used since the math.h function
+			requires the first argument to be an integer. **/
         static double Yn (double i, double x)
         {
             return NEKTAR_MATH_NAME(yn) ((int) i, x);
@@ -59,10 +59,11 @@ namespace Nektar
         //        Definition of the Customized Function Parser for Spirit
         // ---------------------------------------------------------------------
 
-        // This is a helper function that stores a pointer to the math.h functions. A
-        // pointer to a function that returns a double cannot be used because it results
-        // in multiple overloaded function definitions matching. Therefore, I explicitly
-        // specify the arguments and just a union to store the correct version.
+        /** This is a helper function that stores a pointer to the math.h functions. A
+			pointer to a function that returns a double cannot be used because it results
+			in multiple overloaded function definitions matching. Therefore, I explicitly
+			specify the arguments and just a union to store the correct version. **/
+
         typedef double (*PFD)();
         typedef double (*PFD1)(double);
         typedef double (*PFD2)(double, double);
@@ -85,10 +86,9 @@ namespace Nektar
             size_t size;
         };
 
-        // This struct creates a parser that matches the function definitions from
-        // math.h. All of the functions accept one of more doubles as arguments and
-        // returns a double.
-
+        /** This struct creates a parser that matches the function definitions from
+			math.h. All of the functions accept one of more doubles as arguments and
+			returns a double. **/
         static struct functions : symbols<func>
         {
             functions()
@@ -166,7 +166,7 @@ namespace Nektar
         //             MathExpression definitions for Spirit Parser
         // --------------------------------------------------------------------- 
 
-        // This function specifies the grammar of the MathExpression parser.
+        /** This function specifies the grammar of the MathExpression parser. **/
         template <typename ScannerT>
         ExpressionEvaluator::MathExpression::definition<ScannerT>::definition(MathExpression const& self)
         {
@@ -233,8 +233,7 @@ namespace Nektar
         //      ExpressionEvaluator Definitions that Wraps the Parser Class
         // ---------------------------------------------------------------------
 
-        // Initializes the evaluator to a state where it is ready to accept input with
-        // the DefineFunction(...) function.
+        // \brief Initializes the evaluator. Call DefineFunction(...) next.
         ExpressionEvaluator::ExpressionEvaluator(void)
         {
             ParsedMap = new map<string, ParsedAST*>;
@@ -265,7 +264,7 @@ namespace Nektar
                 ;
         }
 
-        // Destroys the evaluator object and deletes all of the saves ASTs.
+        /** \brief Destroys the evaluator object and deletes all of the saves ASTs. **/
         ExpressionEvaluator::~ExpressionEvaluator(void)
         {
             if (ParsedMap != NULL)
@@ -280,16 +279,8 @@ namespace Nektar
         }
 
 
-        // This function allows one to define a function to evaluate. The first argument (vlist)
-        // is a list of variables (separated by spaces) that the second argument (function)
-        // depends on. For example, if function = "x + y", then vlist should most likely be
-        // "x y", unless you are defining x or y as parameters with SetParameters(...).
-        //
-        // If the function definition is changed, all of the current values such as parsed AST and
-        // parameters are saved if you call DefineFunction with the same "function" string. Also
-        // note that if you have previously set a function to use a certain "vlist", and then
-        // you call DefineFunction again with the same function string but a different vlist string,
-        // it will use the old vlist string from the first declaration.
+		/** \brief Initializes evaluator with list of non-constant/parameter variables and the
+			function to evaluate. **/
 		void ExpressionEvaluator::DefineFunction(string const& vlist, string const& function)
 		{
 			// The function is already set, so don't do anything.
@@ -354,16 +345,8 @@ namespace Nektar
 			(*ParsedMap)[functionStr] = ParsedData;
 		}
 
-        // Constants are evaluated and inserted into the function at the time it is parsed
-        // when calling the DefineFunction(...) function. After parsing, if a constant is
-        // changed, it will not be reflected in the function when Evaluate is called. This
-        // also means that if a function with an unknown constant is added, and then the
-        // constant is added, the function will not see the added constant and through an
-        // exception. This function will add all of the constants in the map argument to
-        // the global internal constants. If a constant was already loaded previously, it will
-        // throw an exception stating which constants in the map had this issue. It will add
-        // all of the constants it can and output the constants it couldn't add in the string
-        // exception.
+
+		/** \brief Adds constants that can be used in all functions defined in the future. **/
         void ExpressionEvaluator::AddConstants(map<string, double> const& constants)
         {
             vector<string> AlreadyAdded;
@@ -390,10 +373,7 @@ namespace Nektar
             }
         }
 
-        // This function behaves in the same way as AddConstants(...), but it only adds one
-        // constant at a time. If the constant existed previously, an exception will be thrown
-        // stating the fact. If it did not exist previously, it will be added to the global
-        // constants and will be used the next time DefineFunction(...) is called.
+		/** \brief Adds a constant that can be used in all functions defined in the future. **/
         void ExpressionEvaluator::AddConstant(string const& name, double value)
         {
             if (find(*constants_p, name.c_str()))
@@ -402,8 +382,7 @@ namespace Nektar
                 constants_p->add(name.c_str(), value);
         }
 
-        // If a constant with the specified name exists, it returns the double value that the
-        // constant stores. If the constant doesn't exist, it throws an exception.
+        /** \brief Returns the constant's value. **/
         double ExpressionEvaluator::GetConstant(string const& name)
         {
             double* value = find(*constants_p, name.c_str());
@@ -416,11 +395,8 @@ namespace Nektar
             return *value;
         }
 
-        // Parameters are like constants, but they are inserted into the function at the time
-        // Evaluate(...) is called instead of when the function is parsed. This function can
-        // be called at any time, and it will take effect in the next call to Evaluate(...).
-        // This function will delete all of the parameters, and replace all of them with only
-        // the ones in the map argument.
+        /** \brief Sets parameters, which will change all previously defined
+			functions, and functions defined in the future. **/
         void ExpressionEvaluator::SetParameters(map<string, double> const& params)
         {
             if (ParsedData != NULL)
@@ -435,10 +411,8 @@ namespace Nektar
                 (*ParametersMap)[it->first] = it->second;
         }
 
-        // This function behaves in the same way as SetParameters(...), but it only adds one
-        // parameter and it does not delete the others. If the parameter existed previously,
-        // it will be overridden and replaced with the new value. If it did not exist previously,
-        // it will be added to the current parameters.
+        /** \brief Sets s parameter, which will change all previously defined
+			functions, and functions defined in the future. **/
         void ExpressionEvaluator::SetParameter(string const& name, double value)
         {
             if (ParsedData != NULL)
@@ -450,8 +424,8 @@ namespace Nektar
             (*ParametersMap)[name] = value;
         }
 
-        // If a parameter with the specified name exists, it returns the double value that the
-        // parameter stores. If the parameter doesn't exist, it throws an exception.
+
+		/** \brief Returns the value of a parameter. **/
         double ExpressionEvaluator::GetParameter(string const& name)
         {
             map<string, double>::iterator it;
@@ -464,13 +438,8 @@ namespace Nektar
             return it->second;
         }
 
-        // This function evaluates the function defined from DefineFunction(...).
-        // The arguments to the function are the values that were defined in the
-        // first argument of DefineFunction(...) in the same order as they were
-        // listed. It results the result of the evaluation as a double. If a function
-        // is not currently defined, behavior may be unpredictable since I do not
-        // know how many arguments were passed in, so it will probably not be cleaned
-        // up correctly.
+
+		/** \brief Evaluates a function and returns the result. **/
         double ExpressionEvaluator::Evaluate(double start, ...)
         {
             va_list ap;
@@ -505,14 +474,8 @@ namespace Nektar
             }
         }
 
-        // This function evaluates the function defined from DefineFunction(...). It accepts
-        // a "vector<double> const*" argument for each of the variables given in the first
-        // argument (vlist) of the DefineFunction(...) function. The vectors for each variable
-        // must be in the same order as they appear in the vlist argument. This function will
-        // calculate the function from DefineFunction(...) with values from each of the vectors
-        // and then store the result in another vector. If the vectors aren't the same length,
-        // an exception will be thrown.
-        // For example: vlist = "x y", Function: "x+y", arg1={1,2}, arg2={5,10}, out={6,12}
+
+		/** \brief Evaluates a function with different values, and returns the result in a vector. **/
         vector<double> ExpressionEvaluator::Evaluate(vector<double> const* start, ...)
         {
             va_list ap;
@@ -574,18 +537,12 @@ namespace Nektar
             return rtn;
         }
 
-        // Gcc 4.0.1 on the mac did not compile when isspace was passed as the third 
-        // parameter to std::remove_if below (it takes an int as a parameter 
-        // instead of a char).  This wrapper method gets around this problem.
-        int ConvertIsSpaceForGcc(char c) { return isspace(c); }
+        /** Gcc 4.0.1 on the mac did not compile when isspace was passed as the third 
+			parameter to std::remove_if below (it takes an int as a parameter 
+			instead of a char).  This wrapper method gets around this problem. **/
+        static int ConvertIsSpaceForGcc(char c) { return isspace(c); }
         
-        // This function walks the AST that is created with the spirit parser and creates a
-        // simplified AST that only holds the information required to parse the expression.
-        // It also performs any simplifications possible without having the final variable
-        // and parameter values. For example, it will simplifiy sin(5)*10+y to 9.04...+y so
-        // the calculation doesn't need to be done for every evaluation. It also performs the
-        // checks to make sure everything is in the correct range so these don't need to be
-        // performed at evaluation either.
+        /** \brief Creates a simplified AST from the Spirit parse. **/
 		ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(tree_match<string::const_iterator, node_val_data_factory<double> >::tree_iterator const &i)
 		{
 			string valueStr(i->value.begin(), i->value.end());
@@ -902,15 +859,7 @@ namespace Nektar
 		}
 
 
-        // This function evaluates the AST created from CreateAST(...) and returns
-        // the result as a double. It will throw an exception if it encounters a
-        // parameter that isn't defined. If the "mode" argument is DEFAULT, it will
-        // look up the parameters from the ParametersMap. If "mode" is SAVE_PARAMETERS,
-        // it will get the current value from the map and then save it in the DoubleValue
-        // field. This can then be used with the USE_SAVED_PARAMETERS mode which will use
-        // the DoubleValue field for the parameter instead of the map. This can be used to
-        // speed up the vector Evaluate(...) function some since the parameters don't
-        // change there.
+		/** \brief Evaluates the AST, returning a double result. **/
         double ExpressionEvaluator::EvaluateExpression(Node* const n, Node::AST_Mode mode)
         {
             switch (n->DataType)

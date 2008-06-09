@@ -41,93 +41,93 @@ namespace Nektar
         class ExpressionEvaluator
         {
         public:
-	        // Initializes the evaluator to a state where it is ready to accept input with
-	        // the DefineFunction(...) function.
+			/** Initializes the evaluator to a state where it is ready to accept input
+			    from the #DefineFunction function. **/
 	        ExpressionEvaluator(void);
 
-	         // Destroys the evaluator object and deletes all of the saves ASTs.
+	        /** Destroys the evaluator object and deletes all of the saves ASTs. **/
 	        ~ExpressionEvaluator(void);
 
-	        // This function allows one to define a function to evaluate. The first argument (vlist)
-	        // is a list of variables (separated by spaces) that the second argument (function)
-	        // depends on. For example, if function = "x + y", then vlist should most likely be
-	        // "x y", unless you are defining x or y as parameters with SetParameters(...).
-	        //
-	        // If the function definition is changed, all of the current values such as parsed AST and
-	        // parameters are saved if you call DefineFunction with the same "function" string. Also
-	        // note that if you have previously set a function to use a certain "vlist", and then
-	        // you call DefineFunction again with the same function string but a different vlist string,
-	        // it will use the old vlist string from the first declaration.
+	        /** This function allows one to define a function to evaluate. The first argument (vlist)
+	            is a list of variables (separated by spaces) that the second argument (function)
+	            depends on. For example, if function = "x + y", then vlist should most likely be
+			    "x y", unless you are defining x or y as parameters with #SetParameters.
+	        
+	            If the function definition is changed, all of the current values such as parsed AST and
+	            parameters are saved if you call DefineFunction with the same "function" string. Also
+	            note that if you have previously set a function to use a certain "vlist", and then
+	            you call DefineFunction again with the same function string but a different vlist string,
+	            it will use the old vlist string from the first declaration. **/
 	        void DefineFunction(std::string const& vlist, std::string const& function);
 
-	        // Constants are evaluated and inserted into the function at the time it is parsed
-	        // when calling the DefineFunction(...) function. After parsing, if a constant is
-	        // changed, it will not be reflected in the function when Evaluate is called. This
-	        // also means that if a function with an unknown constant is added, and then the
-	        // constant is added, the function will not see the added constant and through an
-	        // exception. This function will add all of the constants in the map argument to
-	        // the global internal constants. If a constant was already loaded previously, it will
-	        // throw an exception stating which constants in the map had this issue. It will add
-	        // all of the constants it can and output the constants it couldn't add in the string
-	        // exception.
+	        /** Constants are evaluated and inserted into the function at the time it is parsed
+			    when calling the #DefineFunction function. After parsing, if a constant is
+	            changed, it will not be reflected in the function when Evaluate is called. This
+				also means that if a function with an unknown constant is added, and then the
+				constant is added, the function will not see the added constant and through an
+				exception. This function will add all of the constants in the map argument to
+				the global internal constants. If a constant was already loaded previously, it will
+				throw an exception stating which constants in the map had this issue. It will add
+				all of the constants it can and output the constants it couldn't add in the string
+				exception. **/
 	        void AddConstants(std::map<std::string, double> const& constants);
 
-	        // This function behaves in the same way as AddConstants(...), but it only adds one
-	        // constant at a time. If the constant existed previously, an exception will be thrown
-	        // stating the fact. If it did not exist previously, it will be added to the global
-	        // constants and will be used the next time DefineFunction(...) is called.
+			/** This function behaves in the same way as #AddConstants, but it only adds one
+				constant at a time. If the constant existed previously, an exception will be thrown
+				stating the fact. If it did not exist previously, it will be added to the global
+				constants and will be used the next time #DefineFunction is called. **/
 	        void AddConstant(std::string const& name, double value);
 
-	        // If a constant with the specified name exists, it returns the double value that the
-	        // constant stores. If the constant doesn't exist, it throws an exception.
+	        /** If a constant with the specified name exists, it returns the double value that the
+	            constant stores. If the constant doesn't exist, it throws an exception. **/
 	        double GetConstant(std::string const& name);
 
-	        // Parameters are like constants, but they are inserted into the function at the time
-	        // Evaluate(...) is called instead of when the function is parsed. This function can
-	        // be called at any time, and it will take effect in the next call to Evaluate(...).
-	        // This function will delete all of the parameters, and replace all of them with only
-	        // the ones in the map argument.
+	        /** Parameters are like constants, but they are inserted into the function at the time
+				#Evaluate is called instead of when the function is parsed. This function can
+				be called at any time, and it will take effect in the next call to #Evaluate.
+				This function will delete all of the parameters, and replace all of them with only
+				the ones in the map argument. **/
 	        void SetParameters(std::map<std::string, double> const& params);
 
-	        // This function behaves in the same way as SetParameters(...), but it only adds one
-	        // parameter and it does not delete the others. If the parameter existed previously,
-	        // it will be overridden and replaced with the new value. If it did not exist previously,
-	        // it will be added to the current parameters.
+			/** This function behaves in the same way as #SetParameters, but it only adds one
+				parameter and it does not delete the others. If the parameter existed previously,
+				it will be overridden and replaced with the new value. If it did not exist previously,
+				it will be added to the current parameters. **/
 	        void SetParameter(std::string const& name, double value);
 
-	        // If a parameter with the specified name exists, it returns the double value that the
-	        // parameter stores. If the parameter doesn't exist, it throws an exception.
+	        /** If a parameter with the specified name exists, it returns the double value that the
+				parameter stores. If the parameter doesn't exist, it throws an exception. **/
 	        double GetParameter(std::string const& name);
 
-	        // This function evaluates the function defined from DefineFunction(...).
-	        // The arguments to the function are the values that were defined in the
-	        // first argument of DefineFunction(...) in the same order as they were
-	        // listed. It results the result of the evaluation as a double. If a function
-	        // is not currently defined, behavior may be unpredictable since I do not
-	        // know how many arguments were passed in, so it will probably not be cleaned
-	        // up correctly.
+			/** This function evaluates the function defined from #DefineFunction.
+				The arguments to the function are the values that were defined in the
+				first argument of #DefineFunction in the same order as they were
+				listed. It results the result of the evaluation as a double. If a function
+				is not currently defined, behavior may be unpredictable since I do not
+				know how many arguments were passed in, so it will probably not be cleaned
+				up correctly. **/
 	        double Evaluate(double start = 0, ...);
 
-	        // This function evaluates the function defined from DefineFunction(...). It accepts
-	        // a "vector<double> const*" argument for each of the variables given in the first
-	        // argument (vlist) of the DefineFunction(...) function. The vectors for each variable
-	        // must be in the same order as they appear in the vlist argument. This function will
-	        // calculate the function from DefineFunction(...) with values from each of the vectors
-	        // and then store the result in another vector. If the vectors aren't the same length,
-	        // an exception will be thrown.
-	        // For example: vlist = "x y", Function: "x+y", arg1={1,2}, arg2={5,10}, out={6,12}
+			/** This function evaluates the function defined from #DefineFunction. It accepts
+				a "vector<double> const*" argument for each of the variables given in the first
+				argument (vlist) of the #DefineFunction function. The vectors for each variable
+				must be in the same order as they appear in the vlist argument. This function will
+				calculate the function from #DefineFunction with values from each of the vectors
+				and then store the result in another vector. If the vectors aren't the same length,
+				an exception will be thrown.
+				For example: vlist = "x y", Function: "x+y", arg1={1,2}, arg2={5,10}, out={6,12} **/
 	        std::vector<double> Evaluate(std::vector<double> const* start, ...);
 
         private:
 
-	        // This is the class that is used as the grammar parser for the spirit engine.
+	        /** This is the class that is used as the grammar parser for the spirit engine. **/
 	        class MathExpression : public boost::spirit::grammar<MathExpression>
 	        {
 	        private:
 		        const boost::spirit::symbols<double>* constants_p;
 
-		        // Variables is a customized parser that will match the variables that the function
-		        // depends on (the first argument of DefineFunction(...)).
+		        /** Variables is a customized parser that will match the variables that the function
+					depends on (the first argument of #DefineFunction). **/
 		        struct variables : boost::spirit::symbols<double*>
 		        {
 			        variables(std::vector<std::string> const& vars)
@@ -138,8 +138,8 @@ namespace Nektar
 		        } variables_p;
 
 	        public:
-		        // These constants are used to determine what parser was used to parse what value,
-		        // which allows for type identification when analyzing the parsed AST.
+		        /** These constants are used to determine what parser was used to parse what value,
+					which allows for type identification when analyzing the parsed AST. **/
 		        static const int constantID		= 1;
 		        static const int numberID		= 2;
 		        static const int variableID		= 3;
@@ -154,10 +154,10 @@ namespace Nektar
 		        template <typename ScannerT>
 		        struct definition
 		        {
-			        // This function specifies the grammar of the MathExpression parser.
+			        /** This function specifies the grammar of the MathExpression parser. **/
 			        definition(MathExpression const& self);
 
-			        // This holds the double value that is parsed by spirit so it can be stored in the AST.
+			        /** This holds the double value that is parsed by spirit so it can be stored in the AST. **/
 			        double ParsedDouble;
 
 			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<constantID> >		constant;
@@ -182,9 +182,9 @@ namespace Nektar
 		        };
 	        };
 
-	        // This structure stores the data that was parsed in a tree. It uses
-	        // TermType a lot to determine what kind of node it is so the appropriate
-	        // action can be performed.
+	        /** This structure stores the data that was parsed in a tree. It uses
+				TermType a lot to determine what kind of node it is so the appropriate
+				action can be performed. **/
 	        struct Node
 	        {
 		        enum TermType { DOUBLE, VARIABLE, PARAMETER, CONSTANT, FUNCTION,
@@ -227,12 +227,12 @@ namespace Nektar
 		        }
 	        };
 
-	        // This class stores pointers to the value for each map variable for the
-	        // variables defined in DefineFunction(...). Therefore, instead of having
-	        // to always search the map for the variable name, you just call GetNext()
-	        // since it is always in the same order (the order in which you specified
-	        // the variables in DefineFunction(...). This makes evaluating the
-	        // function MUCH faster.
+	        /** This class stores pointers to the value for each map variable for the
+				variables defined in #DefineFunction. Therefore, instead of having
+				to always search the map for the variable name, you just call GetNext()
+				since it is always in the same order (the order in which you specified
+				the variables in #DefineFunction. This makes evaluating the
+				function MUCH faster. **/
 	        class NextMapVariable
 	        {
 	        private:
@@ -246,47 +246,47 @@ namespace Nektar
 		        void ResetIndex() { index = 0; }
 	        };
         	
-	        // This structure holds all of the data needed to evaluate an expression.
-	        // Therefore, if another function is defined, this structure can be saved
-	        // and reverted to later to parse data from a previous function definition.
+	        /** This structure holds all of the data needed to evaluate an expression.
+				Therefore, if another function is defined, this structure can be saved
+				and reverted to later to parse data from a previous function definition. **/
 	        struct ParsedAST
 	        {
-		        // This is a map that looks like <var_name, var_value>. It is set when
-		        // Evaluate(...) is called and used when evaluating the expression in
-		        // eval_expression(...).
+		        /** This is a map that looks like <var_name, var_value>. It is set when
+					#Evaluate is called and used when evaluating the expression in
+					#eval_expression. **/
 		        std::map<std::string, double>* VariableMap;
 
-		        // This is a vector that holds the names of the variables specified in
-		        // the first parameter of DefineFunction(...) (vlist) in the order in
-		        // which they appear. It is used to fill in the VariableMap appropriately
-		        // so the variables are in the correct order.
+		        /** This is a vector that holds the names of the variables specified in
+					the first parameter of #DefineFunction (vlist) in the order in
+					which they appear. It is used to fill in the VariableMap appropriately
+					so the variables are in the correct order. **/
 		        std::vector<std::string>* VariableVector;
 
-		        // This is an object that stores the pointer to the VariableMap value.
-		        // Therefore, instead of having to always search the map for the variable
-		        // name, you just call NextMapVar->GetNext() since it is always in the
-		        // same order (the order in which you specified the variables in
-		        // DefineFunction(...). This makes evaluating the function MUCH faster.
+		        /** This is an object that stores the pointer to the VariableMap value.
+					Therefore, instead of having to always search the map for the variable
+					name, you just call NextMapVar->GetNext() since it is always in the
+					same order (the order in which you specified the variables in
+					#DefineFunction. This makes evaluating the function MUCH faster. **/
 		        NextMapVariable* NextMapVar;
 
-		        // This is the number of variables that were specified in the vlist parameter
-		        // of DefineFunction(...). This is the same number as VariableVector->size().
+		        /** This is the number of variables that were specified in the vlist parameter
+					of #DefineFunction. This is the same number as VariableVector->size(). **/
 		        std::string::size_type NumberVariables;
 
-		        // This stores the simplified AST that is created with CreateAST(...) in the
-		        // DefineFunction(...) function.
+				/** This stores the simplified AST that is created with #CreateAST in the
+					#DefineFunction function. **/
 		        Node* AST;
 
-		        // This is the mode that will be used when evaluating the AST as it pertains to
-		        // the lookup of defined parameters. There are three options: DEFAULT,
-		        // SAVE_PARAMETERS, and USE_SAVED_PARAMETERS. These determine if the parameter
-		        // lookups should be cached in the node, so if the parameters don't change they
-		        // don't need to be looked up in the map each time.
+		        /** This is the mode that will be used when evaluating the AST as it pertains to
+					the lookup of defined parameters. There are three options: DEFAULT,
+					SAVE_PARAMETERS, and USE_SAVED_PARAMETERS. These determine if the parameter
+					lookups should be cached in the node, so if the parameters don't change they
+					don't need to be looked up in the map each time. **/
 		        Node::AST_Mode ASTMode;
 
-				// This holds the string that was used for the function definition and variables
-				// list. They are used to compare against the current state in DefineFunction(...)
-				// to determine if a change is needed.
+				/** This holds the string that was used for the function definition and variables
+					list. They are used to compare against the current state in #DefineFunction
+					to determine if a change is needed. **/
 				std::string FunctionString;
 				std::string VariableListString;
 
@@ -310,44 +310,44 @@ namespace Nektar
 		        }
 	        };
 
-	        // This is the currently active ParsedAST that is being used. It can be
-	        // changed with defining a new function in DefineFunction(...).
+	        /** This is the currently active ParsedAST that is being used. It can be
+				changed with defining a new function in #DefineFunction. **/
 	        ParsedAST* ParsedData;
 
-	        // This is a map of <string, ParsedAST*>. The string key is the second argument
-	        // of DefineFunction(...) that is used to find the ParsedAST* again. The found
-	        // AST is set to be default be storing it in ParsedData.
+	        /** This is a map of <string, ParsedAST*>. The string key is the second argument
+				of #DefineFunction that is used to find the ParsedAST* again. The found
+				AST is set to be default be storing it in ParsedData. **/
 	        std::map<std::string, ParsedAST*>* ParsedMap;
 
-	        // This is a map that looks like <parameter_name, parameter_value>. It is set in
-	        // the SetParameters(...) function and used for parameter lookup during function
-	        // evaluation. Therefore, using this instead of constants (which are evaluated
-	        // with DefineFunction(...)) is slower.
+	        /** This is a map that looks like <parameter_name, parameter_value>. It is set in
+				the #SetParameters function and used for parameter lookup during function
+				evaluation. Therefore, using this instead of constants (which are evaluated
+				with #DefineFunction) is slower. **/
 	        std::map<std::string, double>* ParametersMap;
 
-	        // This is a parser for spirit that parses the CONSTANT values. The default
-	        // constants are those that are in math.h without the M_ prefix and they are
-	        // initialized in the ExpressionEvaluator constructor.
+	        /** This is a parser for spirit that parses the CONSTANT values. The default
+				constants are those that are in math.h without the M_ prefix and they are
+				initialized in the ExpressionEvaluator constructor. **/
 	        boost::spirit::symbols<double>* constants_p;
 
-	        // This function evaluates the AST created from CreateAST(...) and returns
-	        // the result as a double. It will throw an exception if it encounters a
-	        // parameter that isn't defined. If the "mode" argument is DEFAULT, it will
-	        // look up the parameters from the ParametersMap. If "mode" is SAVE_PARAMETERS,
-	        // it will get the current value from the map and then save it in the DoubleValue
-	        // field. This can then be used with the USE_SAVED_PARAMETERS mode which will use
-	        // the DoubleValue field for the parameter instead of the map. This can be used to
-	        // speed up the vector Evaluate(...) function some since the parameters don't
-	        // change there.
+			/** This function evaluates the AST created from #CreateAST and returns
+				the result as a double. It will throw an exception if it encounters a
+				parameter that isn't defined. If the "mode" argument is DEFAULT, it will
+				look up the parameters from the ParametersMap. If "mode" is SAVE_PARAMETERS,
+				it will get the current value from the map and then save it in the DoubleValue
+				field. This can then be used with the USE_SAVED_PARAMETERS mode which will use
+				the DoubleValue field for the parameter instead of the map. This can be used to
+				speed up the vector #Evaluate function some since the parameters don't
+				change there. **/
 	        double EvaluateExpression(Node* const n, Node::AST_Mode mode);
 
-	        // This function walks the AST that is created with the spirit parser and creates a
-	        // simplified AST that only holds the information required to parse the expression.
-	        // It also performs any simplifications possible without having the final variable
-	        // and parameter values. For example, it will simplifiy sin(5)*10+y to 9.04...+y so
-	        // the calculation doesn't need to be done for every evaluation. It also performs the
-	        // checks to make sure everything is in the correct range so these don't need to be
-	        // performed at evaluation either.
+	        /** This function walks the AST that is created with the spirit parser and creates a
+				simplified AST that only holds the information required to parse the expression.
+				It also performs any simplifications possible without having the final variable
+				and parameter values. For example, it will simplifiy sin(5)*10+y to 9.04...+y so
+				the calculation doesn't need to be done for every evaluation. It also performs the
+				checks to make sure everything is in the correct range so these don't need to be
+				performed at evaluation either. **/
 	        Node* CreateAST(boost::spirit::tree_match<std::string::const_iterator,
 				            boost::spirit::node_val_data_factory<double> >::tree_iterator const &i);
 

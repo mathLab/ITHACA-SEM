@@ -189,8 +189,8 @@ namespace Nektar
             {
                 std::string elementType(element->ValueStr());
 
-                //E - tet, P - pyramid, R - prism, H - hex
-                ASSERTL0(elementType == "E" || elementType == "P" || elementType == "R" || elementType == "H",
+                //A - tet, P - pyramid, R - prism, H - hex
+                ASSERTL0(elementType == "A" || elementType == "P" || elementType == "R" || elementType == "H",
                     (std::string("Unknown 3D element type: ") + elementType).c_str());
 
                 /// These should be ordered.
@@ -741,6 +741,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.cpp,v $
+// Revision 1.4  2008/05/29 19:07:39  delisi
+// Removed the Write(..) methods, so it is only in the base MeshGraph class. Also, added a line to set the global ID of the geometry object for every element read in.
+//
 // Revision 1.3  2008/02/08 23:05:52  jfrazier
 // More work on 3D components.
 //

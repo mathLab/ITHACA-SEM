@@ -253,7 +253,7 @@ namespace Nektar
 	        {
 		        /** This is a map that looks like <var_name, var_value>. It is set when
 					#Evaluate is called and used when evaluating the expression in
-					#eval_expression. **/
+					eval_expression. **/
 		        std::map<std::string, double>* VariableMap;
 
 		        /** This is a vector that holds the names of the variables specified in

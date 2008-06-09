@@ -281,7 +281,7 @@ namespace Nektar
 
 		/** \brief Initializes evaluator with list of non-constant/parameter variables and the
 			function to evaluate. **/
-		void ExpressionEvaluator::DefineFunction(string const& vlist, string const& function)
+		void ExpressionEvaluator::DefineFunction(std::string const& vlist, std::string const& function)
 		{
 			// The function is already set, so don't do anything.
 			if (ParsedData != NULL
@@ -347,7 +347,7 @@ namespace Nektar
 
 
 		/** \brief Adds constants that can be used in all functions defined in the future. **/
-        void ExpressionEvaluator::AddConstants(map<string, double> const& constants)
+		void ExpressionEvaluator::AddConstants(std::map<std::string, double> const& constants)
         {
             vector<string> AlreadyAdded;
             for (map<string, double>::const_iterator it = constants.begin(); it != constants.end(); it++)
@@ -374,7 +374,7 @@ namespace Nektar
         }
 
 		/** \brief Adds a constant that can be used in all functions defined in the future. **/
-        void ExpressionEvaluator::AddConstant(string const& name, double value)
+		void ExpressionEvaluator::AddConstant(std::string const& name, double value)
         {
             if (find(*constants_p, name.c_str()))
                 throw "Cannot add specified constant because it is already added: " + name;
@@ -383,7 +383,7 @@ namespace Nektar
         }
 
         /** \brief Returns the constant's value. **/
-        double ExpressionEvaluator::GetConstant(string const& name)
+		double ExpressionEvaluator::GetConstant(std::string const& name)
         {
             double* value = find(*constants_p, name.c_str());
             if (value == NULL)
@@ -397,7 +397,7 @@ namespace Nektar
 
         /** \brief Sets parameters, which will change all previously defined
 			functions, and functions defined in the future. **/
-        void ExpressionEvaluator::SetParameters(map<string, double> const& params)
+		void ExpressionEvaluator::SetParameters(std::map<std::string, double> const& params)
         {
             if (ParsedData != NULL)
                 ParsedData->ASTMode = Node::SAVE_PARAMETERS;
@@ -413,7 +413,7 @@ namespace Nektar
 
         /** \brief Sets s parameter, which will change all previously defined
 			functions, and functions defined in the future. **/
-        void ExpressionEvaluator::SetParameter(string const& name, double value)
+		void ExpressionEvaluator::SetParameter(std::string const& name, double value)
         {
             if (ParsedData != NULL)
                 ParsedData->ASTMode = Node::SAVE_PARAMETERS;
@@ -426,7 +426,7 @@ namespace Nektar
 
 
 		/** \brief Returns the value of a parameter. **/
-        double ExpressionEvaluator::GetParameter(string const& name)
+		double ExpressionEvaluator::GetParameter(std::string const& name)
         {
             map<string, double>::iterator it;
             if (ParametersMap == NULL || (it = ParametersMap->find(name)) == ParametersMap->end())
@@ -543,7 +543,7 @@ namespace Nektar
         static int ConvertIsSpaceForGcc(char c) { return isspace(c); }
         
         /** \brief Creates a simplified AST from the Spirit parse. **/
-		ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(tree_match<string::const_iterator, node_val_data_factory<double> >::tree_iterator const &i)
+		ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(boost::spirit::tree_match<std::string::const_iterator, boost::spirit::node_val_data_factory<double> >::tree_iterator const &i)
 		{
 			string valueStr(i->value.begin(), i->value.end());
 			valueStr.erase(std::remove_if(valueStr.begin(), valueStr.end(), ConvertIsSpaceForGcc), valueStr.end());	// trim

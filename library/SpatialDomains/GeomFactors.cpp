@@ -545,8 +545,6 @@ namespace Nektar
                 }
             }
         }
-#ifdef HIGH_D_FUNCTIONS
-
 
         /**
         \brief Three dimensional geometric factors and Jacobian
@@ -584,13 +582,13 @@ namespace Nektar
 
         **/
 
-        GeomFactors::GeomFactors(const GeomType gtype, 
-            const StdRegions::StdExpansion3D **Coords)  
+            GeomFactors(const GeomType gtype, const int coordim,
+                        const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords);
         {
 
             int        i,nquad0,nquad1,nquad2,nqtot;
             StdRegions::PointsType  ptype0, ptype1, ptype2;
-            double      *d1[3], *d2[3], *d3[3],*tmp;
+            double      *tmp;
 
             m_gtype = gtype;
             m_gmat  = new double*[9];
@@ -603,6 +601,16 @@ namespace Nektar
             ptype2 = Coords[0]->GetPointsType (2);
 
             nqtot = nquad0*nquad1*nquad2;
+
+            Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
+                                           Array<OneD, NekDouble>(nqtot), 
+                                           Array<OneD, NekDouble>(nqtot)};
+            Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
+                                           Array<OneD, NekDouble>(nqtot), 
+                                           Array<OneD, NekDouble>(nqtot)};
+            Array<OneD,NekDouble> d3[3] = {Array<OneD, NekDouble>(nqtot),
+                                           Array<OneD, NekDouble>(nqtot), 
+                                           Array<OneD, NekDouble>(nqtot)};
 
             d1[0] = new double [3*nqtot];
             d1[1] = d1[0] + nqtot;
@@ -632,14 +640,14 @@ namespace Nektar
                 ASSERTL2(Coords[i]->GetPointsType(2)  == ptype2,
                     "Points type are different for coordinate 1 ");
 
-                ((StdRegions::StdExpansion3D **) Coords)[i]->StdPhysDeriv(d1[i],d2[i],d3[i]);
+                Coords[i]->StdPhysDeriv(d1[i],d2[i],d3[i]);
             }
 
-            if((m_gtype == eRegular)||
-               (m_gtype == eMovingRegular))
+            if((m_gtype == eRegular)|| (m_gtype == eMovingRegular))
             {
-                m_jac      = new double [1];
-                m_gmat[0]  = new double [9];
+                m_jac  = Array<OneD, NekDouble>(1,0.0);
+                m_gmat = Array<TwoD, NekDouble>(3*coordim,1,0.0);
+                m_normals = Array<TwoD,NekDouble>(coordim,1,0.0);
 
                 for(i = 1; i < 9; ++i)
                 {
@@ -674,8 +682,8 @@ namespace Nektar
             }
             else
             {
-                m_jac     = new double [nqtot];
-                m_gmat[0] = new double [9*nqtot];
+                m_jac  = Array<OneD, NekDouble>(1,0.0);
+                m_gmat = Array<TwoD, NekDouble>(3*coordim,1,0.0);
 
                 for(i = 1; i < 9; ++i)
                 {
@@ -741,16 +749,8 @@ namespace Nektar
                 Vmath::Vmul (nqtot,d1[1],1,d2[0],1,m_gmat[8],1);
                 Vmath::Vvtvm(nqtot,d1[0],1,d2[1],1,m_gmat[8],1,m_gmat[8],1);
                 Vmath::Vdiv(nqtot,m_gmat[8],1,m_jac,1,m_gmat[8],1);
-
-                delete[] tmp;
             }
-
-            delete [] d1[0];
-            delete [] d2[0];
-            delete [] d3[0];
         }
-
-#endif
 
         GeomFactors::~GeomFactors(){
         }
@@ -767,6 +767,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.19  2008/05/30 00:33:48  delisi
+// Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+//
 // Revision 1.18  2008/04/06 22:32:53  bnelson
 // Fixed gcc compiler warnings.
 //

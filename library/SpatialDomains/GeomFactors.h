@@ -40,9 +40,7 @@
 
 #include <StdRegions/StdExpansion1D.h>
 #include <StdRegions/StdExpansion2D.h>
-#ifdef HIGH_D_FUNCTIONS
 #include <StdRegions/StdExpansion3D.h>
-#endif
 
 namespace Nektar
 {
@@ -77,12 +75,12 @@ namespace Nektar
             GeomFactors(const GeomType gtype, const int coordim,
                         const Array<OneD, const StdRegions::StdExpansion2DSharedPtr> &Coords);
 
-#ifdef HIGH_D_FUNCTIONS
-            /**  \brief Three dimensional geometric factors and Jacobian
+            /**  \brief Three dimensional geometric factors based on two
+            or three dimensional coordinate description
             **/
-            GeomFactors(const GeomType gtype, 
-                const StdRegions::StdExpansion3D **Coords);
-#endif
+
+            GeomFactors(const GeomType gtype, const int coordim,
+                        const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords);
 
             ~GeomFactors();
 
@@ -146,6 +144,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.16  2008/04/06 06:00:37  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.15  2007/12/17 20:27:23  sherwin
 // Added normals to GeomFactors
 //

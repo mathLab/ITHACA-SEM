@@ -37,7 +37,6 @@
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH2D_H
 
 #include <SpatialDomains/MeshGraph.h>
-#include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>
 
@@ -223,7 +222,6 @@ namespace Nektar
 #endif
 
         private:
-            SegGeomVector  m_seggeoms;
             TriGeomVector  m_trigeoms;
             QuadGeomVector m_quadgeoms;
         };
@@ -234,6 +232,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.21  2008/05/30 00:33:48  delisi
+// Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+//
 // Revision 1.20  2008/05/29 19:07:39  delisi
 // Removed the Write(..) methods, so it is only in the base MeshGraph class. Also, added a line to set the global ID of the geometry object for every element read in.
 //

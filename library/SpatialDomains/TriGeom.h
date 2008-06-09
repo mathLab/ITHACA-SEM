@@ -37,12 +37,8 @@
 #define NEKTAR_SPATIALDOMAINS_TRIGEOM_H
 
 #include <StdRegions/StdRegions.hpp>
-#include <SpatialDomains/SpatialDomains.hpp>
 
 #include <SpatialDomains/GeomFactors.h>
-#include <SpatialDomains/Geometry2D.h>
-#include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/TriFaceComponent.h>
 
 namespace Nektar
@@ -180,6 +176,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.19  2008/05/10 18:27:33  sherwin
+// Modifications necessary for QuadExp Unified DG Solver
+//
 // Revision 1.18  2008/05/09 20:33:39  ehan
 // Fixed infinity loop of recursive function.
 //

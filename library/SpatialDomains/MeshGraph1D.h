@@ -78,9 +78,7 @@ namespace Nektar
 
         protected:
 
-
         private:
-            SegGeomVector m_seggeoms;
         };
     }; //end of namespace
 }; //end of namespace
@@ -89,6 +87,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.h,v $
+// Revision 1.9  2008/05/29 19:07:39  delisi
+// Removed the Write(..) methods, so it is only in the base MeshGraph class. Also, added a line to set the global ID of the geometry object for every element read in.
+//
 // Revision 1.8  2007/09/20 22:25:06  jfrazier
 // Added expansion information to meshgraph class.
 //

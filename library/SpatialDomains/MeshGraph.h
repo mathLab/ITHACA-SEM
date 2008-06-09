@@ -42,6 +42,7 @@
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/InterfaceComponent.h>
 #include <SpatialDomains/Equation.h>
+#include <SpatialDomains/SegGeom.h>
 
 class TiXmlDocument;
 
@@ -202,6 +203,8 @@ namespace Nektar
             VertexVector  m_vertset;
             InterfaceCompList m_icomps;
 
+            SegGeomVector m_seggeoms;
+
             int m_MeshDimension;
             int m_SpaceDimension;
 
@@ -216,6 +219,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.21  2008/05/29 21:19:23  delisi
+// Added the Write(...) and Import(...) functions which write and read XML files for output.
+//
 // Revision 1.20  2008/03/18 14:14:49  pvos
 // Update for nodal triangular helmholtz solver
 //

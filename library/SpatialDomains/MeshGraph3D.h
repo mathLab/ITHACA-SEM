@@ -37,7 +37,6 @@
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH3D_H
 
 #include <SpatialDomains/MeshGraph.h>
-#include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>
 #include <SpatialDomains/TetGeom.h>
@@ -218,7 +217,6 @@ namespace Nektar
             void ResolveGeomRef(const std::string &prevToken, const std::string &token);
 
         private:
-            SegGeomVector           m_seggeoms;
             TriGeomVector           m_trigeoms;
             QuadGeomVector          m_quadgeoms;
             TetGeomVector           m_tetgeoms;
@@ -233,6 +231,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.h,v $
+// Revision 1.6  2008/05/30 00:33:48  delisi
+// Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+//
 // Revision 1.5  2008/05/29 19:07:39  delisi
 // Removed the Write(..) methods, so it is only in the base MeshGraph class. Also, added a line to set the global ID of the geometry object for every element read in.
 //

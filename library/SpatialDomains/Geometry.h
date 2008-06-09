@@ -65,7 +65,7 @@ namespace Nektar
 
         const char* const GeomShapeTypeMap[] = 
         {
-            "NoShapeType",
+            "NoGeomShapeType",
             "Segment",
             "Triangle",
             "Quadrilateral",
@@ -169,6 +169,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.23  2008/05/30 00:33:48  delisi
+// Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+//
 // Revision 1.22  2008/05/29 18:59:36  delisi
 // Added a getter for the GeomShapeType.
 // Added the m_GlobalID field with a getter and setter.

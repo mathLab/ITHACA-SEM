@@ -13,5 +13,11 @@ ADD_EXERCISE_EXECUTABLE(Tutorial2Exercise1 ${Tutorial2Exercise1Source})
 SET(Tutorial2Exercise2Source Tutorial2Exercise2.cpp)
 ADD_EXERCISE_EXECUTABLE(Tutorial2Exercise2 ${Tutorial2Exercise2Source})
 
+SET(Tutorial2Exercise3Source Tutorial2Exercise3.cpp)
+ADD_EXERCISE_EXECUTABLE(Tutorial2Exercise3 ${Tutorial2Exercise3Source})
+
 SET(Tutorial3Exercise1Source Tutorial3Exercise1.cpp)
 ADD_EXERCISE_EXECUTABLE(Tutorial3Exercise1 ${Tutorial3Exercise1Source})
+
+SET(Tutorial3Exercise2Source Tutorial3Exercise2.cpp)
+ADD_EXERCISE_EXECUTABLE(Tutorial3Exercise2 ${Tutorial3Exercise2Source})

@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     cout << "Assignment (a): Integrate the function f(xi) = xi^12 on the standard" << endl;
     cout << "segment xi=[-1,1] using Gaussian quadrature" << endl;
 
+
     // Specify the number of quadrature points
     int nQuadPoints = 4;
         
@@ -58,15 +59,13 @@ int main(int argc, char *argv[])
 
 
     // Display the output
-    cout << "Q = " << nQuadPoints << ": Error = "<< fabs(result-2.0/13.0) << endl;
+    NekDouble exactResult = 2.0/13.0;
+    cout << "Q = " << nQuadPoints << ": Error = "<< fabs(result-exactResult) << endl;
 
 
-    // Modify the implementation such that the integral is evaluated for the following range
-    // of quadrature orders: Q = 3,...,Q_max
+    // Now evaluate the integral for a quadrature order of Q = Q_max
     // where Q_max is the number of quadrature points required for an exact evaluation of 
     // the integral (calculate this value analytically).
-    // Display the error for every value of Q and notice the following two things:
-    // - the error converges exponentially (the error drops an order of magnitude with increasing Q)
-    // - if Q = Q_max, the error is zero (up to machine accuracy)
+    // Check that the error should then be zero (up to numerical precision).
 }
 

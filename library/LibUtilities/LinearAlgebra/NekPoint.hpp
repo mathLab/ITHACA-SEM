@@ -402,7 +402,7 @@ namespace Nektar
     
     template<typename DataType, typename dim, typename space>
     NekPoint<DataType, dim, space>
-    operator+(const NekPoint<DataType, dim, space>& lhs, const NekPoint<DataType, dim>& rhs)
+    operator+(const NekPoint<DataType, dim, space>& lhs, const NekPoint<DataType, dim, space>& rhs)
     {
         NekPoint<DataType, dim, space> result(lhs);
         result += rhs;
@@ -524,15 +524,23 @@ namespace Nektar
         return os;
     }
 
-//   template<typename DataType, int dim>
-//   NekPoint<DataType,dim> operator+(const NekPoint<DataType,dim>& P, const NekVector<DataType>& V){
-//     ASSERTL0(P.dimension() == V.size(),"NekPoint::operator", "Point and Vector dimensions do not match");
-    //
-//     NekPoint<DataType,dim> temp(P);
-//     for(int i=0;i<P.dimension();++i)
-//      temp(i) = temp(i) + V(i);
-//     return temp;
-//   }
+    //template<typename DataType, typename dim, typename space>
+    //NekPoint<DataType, dim, space> operator+(const NekPoint<DataType, dim, space>& lhs, const NekPoint<DataType, dim, space>& rhs)
+    //{
+    //    NekPoint<DataType, dim, space> result(lhs);
+    //    result += rhs;
+    //    return result;
+    //}
+
+    //template<typename DataType, typename dim, typename space>
+    //NekPoint<DataType,dim,space> operator+(const NekPoint<DataType,dim,space>& P, const NekVector<DataType>& V){
+    //ASSERTL0(P.dimension() == V.size(),"NekPoint::operator", "Point and Vector dimensions do not match");
+
+    //NekPoint<DataType,dim> temp(P);
+    //for(int i=0;i<P.dimension();++i)
+    //temp(i) = temp(i) + V(i);
+    //return temp;
+    //}
 //
 //   template<typename DataType, int dim>
 //   NekPoint<DataType,dim> operator+(const NekVector<DataType>& V, const NekPoint<DataType,dim>& P){
@@ -560,6 +568,9 @@ namespace Nektar
 
 /**
     $Log: NekPoint.hpp,v $
+    Revision 1.18  2008/03/23 16:33:01  bnelson
+    *** empty log message ***
+
     Revision 1.17  2008/03/03 02:28:39  bnelson
     Changed OneD, TwoD, and ThreeD to classes instead of enums to support type parameters in NekVector instead of unsigned int for the dimensions.
 

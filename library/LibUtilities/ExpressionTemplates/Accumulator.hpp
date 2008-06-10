@@ -41,6 +41,7 @@
 namespace Nektar
 {
 
+    /// \internal
     /// \brief Wraps the data passed through the expression.
     ///
     /// Instead of using the result type of an expression as the acumulator,
@@ -96,6 +97,9 @@ namespace Nektar
 
 /**
     $Log: Accumulator.hpp,v $
+    Revision 1.9  2007/12/19 05:09:20  bnelson
+    First pass at detecting aliasing.  Still need to test performance implications.
+
     Revision 1.8  2007/10/13 03:33:05  bnelson
     *** empty log message ***
 

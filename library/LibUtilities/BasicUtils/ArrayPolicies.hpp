@@ -47,7 +47,8 @@ namespace Nektar
 {
     template<typename ObjectType, typename enabled = void>
     class ArrayInitializationPolicy;
-            
+    
+    /// \internal
     /// \brief Does nothing.
     template<typename ObjectType>
     class ArrayInitializationPolicy<ObjectType, 
@@ -69,6 +70,7 @@ namespace Nektar
             }
     };
     
+    /// \internal
     /// \brief Default initializes all elements.
     ///
     /// \internal 

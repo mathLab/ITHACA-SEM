@@ -49,41 +49,39 @@ namespace Nektar
 {
     
     
-    /// \page Arrays
+    /// \page arrays Nektar++ Arrays
     ///
-    /// An Array object is a thin wrapper around native arrays.  Arrays provide 
+    /// An Array is a thin wrapper around native arrays.  Arrays provide 
     /// all the functionality of native arrays, with the additional benefits of 
-    /// automatic use of the Nektar memory pool, automatic memory allocation and 
-    /// deallocation, and easy creation and use of multi-dimensional arrays.
+    /// automatic use of the Nektar++ memory pool, automatic memory allocation and 
+    /// deallocation, bounds checking in debug mode, and easier to use multi-dimensional 
+    /// arrays.
     ///
-    /// The two Array classes are ConstArray and Array.  Each takes two template parameters.
-    /// The first is a Dimension enumeration and indicates the array's dimensionality.
-    /// The second is the type of data held in the array.
+    /// Arrays are templated to allow compile-time customization of its dimensionality
+    /// and data type.
     ///
-    /// A ConstArray provides constant access to an array.  A ConstArray can, through 
-    /// its assignment operator and copy constructor, access many different arrays, but 
-    /// it is impossible to modify the data.
+    /// \param Dim Must be a type with a static unsigned integer called Value that specifies the 
+    ///        array's dimensionality.  For example
+    /// \code
+    /// struct TenD
+    /// {
+    ///     static unsigned int Value = 10;
+    /// };
+    /// \endcode
+    /// 
+    /// \param DataType The type of data to store in the array.
     ///
-    /// NumDimensions
-    ///
-    /// DataType - Requirements of DataType.
-    ///
-    /// ConstArray is a thin wrapper around boost::multi_array.  It supports
-    /// much of the multi_array interface (with a notable exception of views)
-    /// including the arbitrary data type and dimension.
-    ///
-    /// ConstArray sets itself apart from multi_array by not allowing any 
-    /// modification of the underlying data.  For modifiable arrays, \see Array.
-    ///
-    /// ConstArray is most often used as the return value of a method when 
-    /// the user needs access to an array of data but should not be allowed 
-    /// to modify it.
+    /// It is often useful to create a class member Array that is shared with 
+    /// users of the object without letting the users modify the array.  To allow this behavior,
+    /// Array<Dim, DataType> inherits from Array<Dim, const DataType>.  The following example
+    /// shows what is possible using this approach:
     ///
     ///\code
     /// class Sample
     /// {
     ///     public:
     ///         Array<OneD, const double>& getData() const { return m_data; }
+    ///         void getData(Array<OneD, const double>& out) const { out = m_data; }
     ///        
     ///     private:
     ///         Array<OneD, double> m_data;
@@ -93,35 +91,15 @@ namespace Nektar
     /// In this example, each instance of Sample contains an array.  The getData method 
     /// gives the user access to the array values, but does not allow modification of those
     /// values.
-    ///\section Usage Test
-    /// 
-    /// For those with a strong C background, the easiest way to look at an array is to 
-    /// transform "Array<OneD, DataType>" to "DataType*".  Therfore, in any code where you 
-    /// would have specified "DataType*" you will want to use "Array<OneD, DataType>", and 
-    /// where you would have used 
     ///
-    /// <TABLE>
-    /// <TR>
-    ///     <TH>Native C Parameter Type</TH>
-    ///     <TH>Array Parameter Type</TH>
-    ///     <TH>Description</TH>
-    /// </TR>
-    /// <TR>
-    ///     <TD>DataType*</TD>
-    ///     <TD>Array&lt;OneD, DataType&gt; </TD>
-    ///     <TD></TD>
-    /// </TR>
-    /// <TR>
-    ///     <TD>DataType*</TD>
-    ///     <TD>Array&lt;OneD, DataType&gt; </TD>
-    ///     <TD></TD>
-    /// </TR>
-    /// </TABLE>
-    /// const Array<>& is kind of weird.  You can't change it directly, but you can create a copy
-    /// of it and change that.  So the const can be ignored as needed.  Mostly useful for cases 
-    /// where you want to be able to change the array, and you need to accept temporaries.
+    ///\section efficiency Efficiency Considerations
+    /// Tracking memory so it is deallocated only when no more Arrays reference it does 
+    /// introduce overhead when copying and assigning Arrays.  In most cases this loss 
+    /// of efficiency is not noticeable.  There are some cases, however, where it can cause 
+    /// a significant performance penalty (such as in tight inner loops).  If needed, Arrays
+    /// allow access to the C-style array through the Array::data member function.
     ///
-    ///\section Efficiency Considerations
+    /// Because of this, it is sometimes advisable to return Arrays by reference:
     ///
     ///\code
     /// // Instead of this:
@@ -131,248 +109,13 @@ namespace Nektar
     /// const Array<OneD, const NekDouble>& moreEfficient = points->GetZ();
     ///\endcode
     ///
-    /// If you know the size, don't create an empty array and then populate it on another line.
-    ///
-    ///\section ArrayCreation Array Creation
-    ///
-    /// Each array comes with three types of constructors.
-    ///
-    ///\li Empty Array Constructor.  This constructor takes one parameter for each dimension, then creates 
-    /// an empty array of the appropriate size.  If the array data type is a fundamental C++ type
-    /// (such as double, int, char, etc.) then the array will be uninitialized.  If the array is any 
-    /// other type each element will be initialized with the data type's default constructor.  
-    ///
-    ///\code
-    /// class Double 
-    /// {
-    ///     public:
-    ///         Double() : m_value(0.0) {}
-    ///     private:
-    ///         double m_value;
-    /// };
-    ///
-    /// class Integer
-    /// {
-    ///     public: 
-    ///         Integer(int i) : m_value(i) {}
-    ///     private:
-    ///         int m_value;
-    /// };
-    ///
-    /// void ExampleFunction() 
-    /// {
-    ///     // Creates a 10 element uninitialized array.
-    ///     Array<OneD, NekDouble> a(10);
-    ///
-    ///     // Creates a 10 element array initialized with the Double default constructor.
-    ///     // For each element i in the array, b[i].m_value == 0.0
-    ///     // The default constructor is called 10 times.
-    ///     Array<OneD, Double> b(10);
-    ///
-    ///     // Creates a 10x20 array with a total of 200 elements using Double's default constructor.
-    ///     Array<TwoD, Double> c(10, 20);
-    ///
-    ///     // This is an error.  Class Integer doesn't have a default constructor.
-    ///     Array<OneD, Integer> c(15);
-    /// }
-    ///\endcode
-    ///
-    ///\li Initial Value Constructor.  This constructor takes the apprpriate number of size parameters 
-    /// for the array's dimension, then an additional parameter which specifies the initial value for 
-    /// each element.  If the array's data type is a fundamental type (such as double, int, etc.), then
-    /// the initial value is copied directly into the array.  Otherwise, each element is created using the 
-    /// data type's copy constructor.
-    ///
-    ///\code
-    /// class Double 
-    /// {
-    ///     public:
-    ///         Double(double v) : m_value(v) {}
-    ///         Double(const Double& rhs) : m_value(rhs.m_value) {}
-    ///     private:
-    ///         double m_value;
-    /// };
-    ///
-    /// class Integer
-    /// {
-    ///     public: 
-    ///         Integer(int i) : m_value(i) {}
-    ///     private:
-    ///         Integer(const Integer& rhs);
-    ///         int m_value;
-    /// };
-    ///
-    /// void ExampleInitialValueConstructors() 
-    /// {
-    ///     // Copies the value 8.9 into each a's 10 elements.
-    ///     Array<OneD, NekDouble> a(10, 8.9);
-    ///
-    ///     // Copies d into each of b's 10 elements.
-    ///     Double d(1.7);
-    ///     Array<OneD, Double> b(10, d);
-    ///
-    ///     // Does not compile since Integer does not have a public copy constructor.
-    ///     Integer i(2);
-    ///     Array<OneD, Integer> c(10, i);
-    /// }
-    ///\endcode
-    ///
-    
-    
+  
     
     // Forward declaration for a ConstArray constructor.
     template<typename Dim, typename DataType>
     class Array;    
     
-//    /// \brief A 1D immutable array.  See \ref Arrays for details.
-//    template<typename DataType>
-//    class Array<OneD, const DataType>
-//    {
-//        public:
-//            typedef boost::multi_array_ref<DataType, 1> ArrayType;
-//            typedef typename ArrayType::const_reference const_reference;
-//            typedef typename ArrayType::reference reference;
-//            
-//            typedef typename ArrayType::index index;
-//            typedef typename ArrayType::const_iterator const_iterator;
-//            typedef typename ArrayType::iterator iterator;
-//            
-//            typedef typename ArrayType::element element;
-//            typedef typename ArrayType::size_type size_type;
-//            
-//            
-//        public:
-//            /// \brief Creates an empty, size 0 array.
-//            Array() :
-//                m_data(CreateStorage<DataType>(0)),
-//                m_offset(0),
-//                m_size(0)
-//            {
-//            }
-//            
-//            /// \brief Constructs an empty 1 dimensional array.
-//            /// \param dim1Size The array's size.
-//            ///
-//            /// If DataType is a fundamental type (double, int, etc.), then the allocated array is 
-//            /// uninitialized.  If it is any other type, each element is initialized with DataType's default
-//            /// constructor.
-//            explicit Array(unsigned int dim1Size) :
-//                m_data(CreateStorage<DataType>(dim1Size)),
-//                m_offset(0),
-//                m_size(dim1Size)
-//            {
-//                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size);
-//            }
-//            
-//            /// \brief Creates a 1D array with each element initialized to an initial value.
-//            /// \param dim1Size The array's size.
-//            /// \param initValue Each element's initial value.
-//            ///
-//            /// If DataType is a fundamental type (double, int, etc.), then the initial value 
-//            /// is copied directly into each element.  Otherwise, the DataType's copy constructor
-//            /// is used to initialize each element.
-//            Array(unsigned int dim1Size, const DataType& initValue) :
-//                m_data(CreateStorage<DataType>(dim1Size)),
-//                m_offset(0),
-//                m_size(dim1Size)
-//            {
-//                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size, initValue);
-//            }
-//            
-//            /// \brief Creates a 1D array with a copy the given raw array.
-//            /// \param dim1Size the array's size.
-//            /// \param data The data to copy.  
-//            ///
-//            /// If DataType is a fundamental type (double, int, etc.), then data is copied
-//            /// directly into the underlying storage.  Otherwise, the DataType's copy constructor
-//            /// is used to copy each element.
-//            Array(unsigned int dim1Size, const DataType* data) :
-//                m_data(CreateStorage<DataType>(dim1Size)),
-//                m_offset(0),
-//                m_size(dim1Size)
-//            {
-//                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_size, data);
-//            }
-//            
-//            Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
-//                m_data(rhs.m_data),
-//                m_offset(rhs.m_offset),
-//                m_size(dim1Size)
-//            {
-//                ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
-//            }
-//
-//            Array(const Array<OneD, const DataType>& rhs) :
-//                m_data(rhs.m_data),
-//                m_offset(rhs.m_offset),
-//                m_size(rhs.m_size)
-//            {
-//            }
-//            
-//            Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs)
-//            {
-//                m_data = rhs.m_data;
-//                m_offset = rhs.m_offset;
-//                m_size = rhs.m_size;
-//                return *this;
-//            }
-//            
-//            const_iterator begin() const { return m_data->begin() + m_offset; }
-//            const_iterator end() const { return m_data->begin() + m_offset + m_size; }
-//            
-//            const_reference operator[](index i) const 
-//            {
-//                ASSERTL1(static_cast<size_type>(i) < m_size, (std::string("Element ") +
-//                    boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
-//                    boost::lexical_cast<std::string>(m_size)));
-//                return (*m_data)[i+m_offset]; 
-//            }
-//            
-//            const element* get() const { return m_data->data()+m_offset; }
-//            const element* data() const { return m_data->data()+m_offset; }
-//            size_type num_dimensions() const { return m_data->num_dimensions(); }
-//            //const size_type* shape() const { return m_data->shape(); }
-//            size_type num_elements() const { return m_size; }
-//            unsigned int GetOffset() const { return m_offset; }
-//            
-//            bool Overlaps(const Array<OneD, const DataType>& rhs) const
-//            {
-//                const element* start = get();
-//                const element* end = start + m_size;
-//                
-//                const element* rhs_start = rhs.get();
-//                const element* rhs_end = rhs_start + rhs.num_elements();
-//                
-//                return (rhs_start >= start && rhs_start <= end) ||
-//                       (rhs_end >= start && rhs_end <= end);
-//            }
-//            
-//            template<typename T1, typename T2>
-//            friend bool operator==(const Array<OneD, T1>&, const Array<OneD, T2>&);
-//            
-//            template<typename T>
-//            friend Array<OneD, T> operator+(const Array<OneD, T>& lhs, unsigned int offset);
-//   
-//            template<typename T>
-//            friend Array<OneD, T> operator+(unsigned int offset, const Array<OneD, T>& rhs);
-//            
-//        protected:
-//            boost::shared_ptr<ArrayType> m_data;
-//            unsigned int m_offset;
-//            unsigned int m_size;
-//
-//        private:
-//            template<typename T>
-//            static Array<OneD, T> CreateWithOffset(const Array<OneD, T>& rhs, unsigned int offset)
-//            {
-//                Array<OneD, T> result(rhs);
-//                result.m_offset += offset;
-//                result.m_size = rhs.m_size - offset;
-//                return result;
-//            }
-//            
-//    };
-    
+    /// \brief 1D Array of constant elements with garbage collection and bounds checking.
     template<typename DataType>
     class Array<OneD, const DataType>
     {
@@ -391,7 +134,7 @@ namespace Nektar
             
             
         public:
-            /// \brief Creates an empty, size 0 array.
+            /// \brief Creates an empty array.
             Array() :
                 m_size(0),
                 //m_data(CreateStorage(m_size)),
@@ -400,8 +143,7 @@ namespace Nektar
             {
             }
             
-            /// \brief Constructs an empty 1 dimensional array.
-            /// \param dim1Size The array's size.
+            /// \brief Creates an array of size dim1Size.
             ///
             /// If DataType is a fundamental type (double, int, etc.), then the allocated array is 
             /// uninitialized.  If it is any other type, each element is initialized with DataType's default
@@ -429,7 +171,7 @@ namespace Nektar
                 ArrayInitializationPolicy<DataType>::Initialize(m_data.get(), m_size, initValue);
             }
             
-            /// \brief Creates a 1D array with a copy the given raw array.
+            /// \brief Creates a 1D array a copies data into it.
             /// \param dim1Size the array's size.
             /// \param data The data to copy.  
             ///
@@ -444,6 +186,13 @@ namespace Nektar
                 ArrayInitializationPolicy<DataType>::Initialize(m_data.get(), m_size, data);
             }
             
+            /// \brief Creates a 1D array that references rhs.
+            /// \param dim1Size The size of the array.  This is useful when you want this array 
+            ///                 to reference a subset of the elements in rhs.
+            ///
+            /// This constructor creates an array that references rhs.  Any changes to rhs will
+            /// be reflected in this array.  The memory for the array will only be deallocated 
+            /// when both rhs and this array have gone out of scope.
             Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
                 m_size(dim1Size),
                 m_data(rhs.m_data),
@@ -452,13 +201,15 @@ namespace Nektar
                 ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
             }
 
+            /// \brief Creates a reference to rhs.
             Array(const Array<OneD, const DataType>& rhs) :
-                 m_size(rhs.m_size),
+                m_size(rhs.m_size),
                 m_data(rhs.m_data),
                 m_offset(rhs.m_offset)
             {
             }
             
+            /// \brief Creates a reference to rhs.
             Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs)
             {
                 m_data = rhs.m_data;
@@ -478,13 +229,22 @@ namespace Nektar
                 return *(m_data.get() + i + m_offset);
             }
             
+            /// \brief Returns a c-style pointer to the underlying array.
             const element* get() const { return m_data.get()+m_offset; }
+
+            /// \brief Returns a c-style pointer to the underlying array.
             const element* data() const { return m_data.get()+m_offset; }
+            
+            /// \brief Returns 1.
             size_type num_dimensions() const { return 1; }
-            //const size_type* shape() const { return m_data->shape(); }
+
+            /// \brief Returns the array's size.
             size_type num_elements() const { return m_size; }
+
+            /// \brief Returns the array's offset.
             unsigned int GetOffset() const { return m_offset; }
             
+            /// \brief Returns true is this array and rhs overlap.
             bool Overlaps(const Array<OneD, const DataType>& rhs) const
             {
                 const element* start = get();
@@ -500,6 +260,14 @@ namespace Nektar
             template<typename T1, typename T2>
             friend bool operator==(const Array<OneD, T1>&, const Array<OneD, T2>&);
             
+            /// \brief Creates an array with a specified offset.
+            ///
+            /// The return value will reference the same array as lhs, but with an offset.
+            /// For example, in the following:
+            /// \code
+            /// Array<OneD, const double> result = anArray + 10;
+            /// \endcode
+            /// result[0] == anArray[10];
             template<typename T>
             friend Array<OneD, T> operator+(const Array<OneD, T>& lhs, unsigned int offset);
    
@@ -550,6 +318,7 @@ namespace Nektar
     };
 
     
+    /// \brief 2D array with garbage collection and bounds checking.
     template<typename DataType>
     class Array<TwoD, const DataType>
     {
@@ -625,6 +394,7 @@ namespace Nektar
             
     };
     
+    /// \brief 3D array with garbage collection and bounds checking.
     template<typename DataType>
     class Array<ThreeD, const DataType>
     {
@@ -696,7 +466,7 @@ namespace Nektar
     
     /// \brief 1D Array
     ///
-    /// \ref Arrayp
+    /// \ref arrays
     ///
     /// Misc notes.
     ///

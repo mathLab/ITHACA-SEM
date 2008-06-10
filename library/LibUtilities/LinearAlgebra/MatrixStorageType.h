@@ -52,12 +52,25 @@ namespace Nektar
         eLOWER_TRIANGULAR_BANDED
     };
       
+
+    /// \brief Tag for matrices using full storage.
     class FullMatrixTag {};
+
+    /// \brief Tag for matrices which only store data on the diagonal.
     class DiagonalMatrixTag {};
+
+    /// \brief Tag for matrices which store data in the upper triangular portion.
     class UpperTriangularMatrixTag {};
+
+    /// \brief Tag for matrices which store data in the lower triangular portion.
     class LowerTriangularMatrixTag {};
+
+    /// \brief Tag for matrices which are symmetric.
     class SymmetricMatrixTag {};
+
+    /// \brief Tag for matrices which are banded.
     class BandedMatrixTag {};
+
     class SymmetricBandedMatrixTag{};
     class UpperTriangularBandedMatrixTag {};
     class LowerTriangularBandedMatrixTag {};

@@ -57,6 +57,7 @@ namespace Nektar
             typedef NumberType ConstGetValueType;
             
         public:
+            /// \internal
             /// \brief Iterator through elements of the matrix.
             /// Not quite a real iterator in the C++ sense.
             class const_iterator

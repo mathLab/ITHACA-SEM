@@ -43,14 +43,7 @@
 namespace Nektar
 {
     typedef double NekDouble;
-
-//    enum Dimension
-//    {
-//        OneD = 1,
-//        TwoD = 2,
-//        ThreeD = 3
-//    };
-    
+  
     struct OneD 
     {
         static const unsigned int Value = 1;
@@ -90,6 +83,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.15  2008/05/29 21:32:11  pvos
+Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+
 Revision 1.14  2008/03/03 02:25:46  bnelson
 Changed OneD, TwoD, and ThreeD to classes instead of enums to support type parameters in NekVector instead of unsigned int for the dimensions.
 

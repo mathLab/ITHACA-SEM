@@ -77,13 +77,27 @@ namespace Nektar
     /// \brief General purpose memory allocation routines with the ability
     ///        to allocate from thread specific memory pools.
     ///
-    /// Allows the allocation of pointers, shared pointers, arrays, and
-    /// shared arrays.  Each of these options can also be allocated with
-    /// the default C++ new/delete or with thread specific memory pools.
-    /// These memory pools alow multiple threads to use
-    /// the same manager object without blocking while waiting for memory
-    /// allocation from the system.
+    /// If compiled with NEKTAR_MEMORY_POOL_ENABLED, the MemoryManager 
+    /// allocates from thread specific memory pools for small objects.
+    /// Large objects are managed with the system supplied new/delete.
+    /// These memory pools provide faster allocation and deallocation 
+    /// of small objects (particularly useful for shared pointers which 
+    /// allocate many 4 byte objects).
     ///
+    ///\warning All memory allocated from the memory manager must be returned
+    /// to the memory manager.  Calling delete on memory allocated from the manager
+    /// will likely cause undefined behavior.  A particularly subtle violation of 
+    /// this rule occurs when giving memory allocated from the manager to 
+    /// a shared pointer.
+    ///\code
+    /// boost::shared_ptr<Obj> f(MemoryManager<Obj>::Allocate());
+    ///\endcode
+    /// Shared pointers call delete when they go out of scope, so this line of 
+    /// code will cause problems.  Instead, you should call the AllocateSharedPtr
+    /// method:
+    ///\code
+    ///boost::shared_ptr<Obj> f = MemoryManager<Obj>::AllocateSharedPtr();
+    ///\endcode
     template<typename DataType>
     class MemoryManager
     {
@@ -120,12 +134,12 @@ namespace Nektar
         public:
 
            
-            /// \brief Deallocate a pointer allocated MemoryManager::Allocate.
+            /// \brief Deallocate a pointer allocated by MemoryManager::Allocate.
             /// \note Results are undefined if called with a pointer to something that 
             ///       was not allocated with the memory manager.
             ///
             /// Use this method to deallocate a pointer you have allocated from the 
-            /// MemoryManager.
+            /// MemoryManager using the Allocate method.
             ///
             /// Example:
             /// \code
@@ -136,7 +150,6 @@ namespace Nektar
             {
                 #ifdef NEKTAR_MEMORY_POOL_ENABLED
                     data->~DataType();
-                    //ThreadSpecificPool<sizeof(DataType)>::Deallocate(data);
                     MemPool::Type::Instance().Deallocate(data, sizeof(DataType));
                 #else //NEKTAR_MEMORY_POOL_ENABLED
                     delete data;
@@ -146,9 +159,14 @@ namespace Nektar
             }
                 
             #ifdef NEKTAR_MEMORY_POOL_ENABLED
+                /// \brief Allocates a single object from the memory pool.
+                /// \throws unknown If the object throws an exception during construction, this 
+                ///                 method will catch it, release the memory back to the pool, then 
+                ///                 rethrow it.
+                ///
+                /// The allocated object must be returned to the memory pool via Deallocate.
                 static DataType* Allocate() 
                 { 
-                    //DataType* result = static_cast<DataType*>(ThreadSpecificPool<sizeof(DataType)>::Allocate()); 
                     DataType* result = static_cast<DataType*>(MemPool::Type::Instance().Allocate(sizeof(DataType)));
                     
                     if( result ) 
@@ -159,7 +177,6 @@ namespace Nektar
                         } 
                         catch(...) 
                         { 
-                            //ThreadSpecificPool<sizeof(DataType)>::Deallocate(result); 
                             MemPool::Type::Instance().Deallocate(result, sizeof(DataType));
                             throw; 
                         } 
@@ -168,7 +185,6 @@ namespace Nektar
                     return result; 
                 }
                 #define ALLOCATE_METHOD_GENERATOR(z, i, methodName) \
-                /* \brief test1 */ \
                 template<BOOST_PP_ENUM_PARAMS(i, typename Arg)> \
                 static DataType* methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, Arg, & arg)) \
                 { \
@@ -190,6 +206,11 @@ namespace Nektar
                     return result; \
                 }
             #else //NEKTAR_MEMORY_POOL_ENABLED
+                /// \brief Allocates a single object from the memory pool.
+                /// \throws unknown Any exception thrown by DataType's default constructor will 
+                ///                 propogate through this method.
+                ///
+                /// The allocated object must be returned to the memory pool via Deallocate.
                 static DataType* Allocate()
                 {
                     return new DataType();
@@ -205,6 +226,11 @@ namespace Nektar
 
             BOOST_PP_REPEAT_FROM_TO(1, NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS, ALLOCATE_METHOD_GENERATOR, Allocate);
 
+            /// \brief Allocate a shared pointer from the memory pool.
+            ///
+            /// The shared pointer does not need to be returned to the memory pool.
+            /// When the reference count to this object reaches 0, the shared pointer 
+            /// will automatically return the memory.
             static boost::shared_ptr<DataType> AllocateSharedPtr()
             {
                 return AllocateSharedPtrD(DefaultCustomDeallocator());
@@ -230,6 +256,12 @@ namespace Nektar
 
             
             /// \brief Allocates a chunk of raw, uninitialized memory, capable of holding NumberOfElements objects.
+            /// \param NumberOfElements The number of elements the array should be capable of holding.
+            ///
+            /// This method is not meant to be called by client code.  Use Array instead.
+            /// Any memory allocated from this method must be returned to the memory pool 
+            /// via RawDeallocate.  Failure to do so will result in memory leaks and undefined 
+            /// behavior.
             static DataType* RawAllocate(unsigned int NumberOfElements)
             {
                 #ifdef NEKTAR_MEMORY_POOL_ENABLED
@@ -240,6 +272,12 @@ namespace Nektar
             }
             
 
+            /// \brief Deallocates memory allocated from RawAllocate.
+            /// \param array A pointer to the memory returned from RawAllocate.
+            /// \param NumberOfElements The number of object held in the array.
+            ///
+            /// This method is not meant to be called by client code.  Use Array instead.
+            /// Only memory allocated via RawAllocate should be returned to the pool here.
             static void RawDeallocate(DataType* array, unsigned int NumberOfElements)
             {
                 #ifdef NEKTAR_MEMORY_POOL_ENABLED
@@ -251,10 +289,9 @@ namespace Nektar
             }
             
             /////////////////////////////////////////////////////////////////
-            /// @[ Allocator Interface
-            /// \todo I don't think this is the correct syntax for doxygen sections.
+            ///\name Allocator Interface
             /// The allocator interface allows a MemoryManager object to be used
-            /// in any object that allows an allocator parameter, such as the STL 
+            /// in any object that allows an allocator parameter, such as STL 
             /// containers.  
             /////////////////////////////////////////////////////////////////
             typedef DataType value_type;
@@ -304,6 +341,9 @@ namespace Nektar
                 typedef MemoryManager<U> other; 
             };
             
+            /////////////////////////////////////////////////////////////////
+            ///@}
+            /////////////////////////////////////////////////////////////////
             
         private:
 
@@ -328,6 +368,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.18  2008/05/16 05:43:19  bnelson
+    Updated the memory manager so it is faster choosing the allocator to use, doesn't use the pools for anything larger than 1024 bytes, and doesn't issue a warning for large allocations.
+
     Revision 1.17  2008/04/06 22:29:13  bnelson
     Reimplmented shared arrays for speed improvements.
 

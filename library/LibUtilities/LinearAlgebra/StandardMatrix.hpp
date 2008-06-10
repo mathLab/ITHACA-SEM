@@ -47,6 +47,14 @@
 
 namespace Nektar
 {
+    /// \brief Standard Matrix
+    /// \param DataType The type stored in each element.
+    /// \param StorageType The matrix storage type.  Valid values are DiagonalMatrixTag,
+    ///                    FullMatrixTag, BandedMatrixTag, UpperTriangularMatrixTag,
+    ///                    LowerTriangularMatrixTag, and SymmetricMatrixTag.
+    ///
+    /// Matrices are stored in column major order to make it easier to interoperate with 
+    /// Blas and Lapack.
     template<typename DataType, typename StorageType>
     class NekMatrix<const DataType, StorageType, StandardMatrixTag> : public Matrix<DataType>
     {
@@ -202,6 +210,7 @@ namespace Nektar
             };
 
         public:
+            /// \brief Creates an empty matrix.
             NekMatrix() :
                 BaseType(0, 0),
                 m_data(StoragePolicy::Initialize()),
@@ -210,6 +219,12 @@ namespace Nektar
             {
             }
             
+            /// \brief Creates a rows by columns matrix.
+            /// \brief rows The number of rows in the matrix.
+            /// \brief columns The number of columns in the matrix.
+            /// \brief policySpecificData Data the is specific to the storage type assigned to this matrix.
+            ///                           Check MatrixStoragePolicy<StorageType> to see if the StoragePolicy
+            ///                           for this matrix has policy specific data.
             NekMatrix(unsigned int rows, unsigned int columns, const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
                 BaseType(rows, columns),
                 m_data(StoragePolicy::Initialize(rows, columns, policySpecificData)),
@@ -218,6 +233,13 @@ namespace Nektar
             {
             }
 
+            /// \brief Creates a rows by columns matrix.
+            /// \brief rows The number of rows in the matrix.
+            /// \brief columns The number of columns in the matrix.
+            /// \brief initValue The value used to initialize each element.
+            /// \brief policySpecificData Data the is specific to the storage type assigned to this matrix.
+            ///                           Check MatrixStoragePolicy<StorageType> to see if the StoragePolicy
+            ///                           for this matrix has policy specific data.
             NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference initValue,
                       const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
                 BaseType(rows, columns),
@@ -227,6 +249,13 @@ namespace Nektar
             {
             }
             
+            /// \brief Creates a rows by columns matrix.
+            /// \brief rows The number of rows in the matrix.
+            /// \brief columns The number of columns in the matrix.
+            /// \brief data An array of data use to initialize the matrix.
+            /// \brief policySpecificData Data the is specific to the storage type assigned to this matrix.
+            ///                           Check MatrixStoragePolicy<StorageType> to see if the StoragePolicy
+            ///                           for this matrix has policy specific data.
             NekMatrix(unsigned int rows, unsigned int columns, const DataType* data,
                       const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
                 BaseType(rows, columns),
@@ -236,6 +265,13 @@ namespace Nektar
             {
             }
             
+            /// \brief Creates a rows by columns matrix.
+            /// \brief rows The number of rows in the matrix.
+            /// \brief columns The number of columns in the matrix.
+            /// \brief d An array of data used to initialize the matrix.  Values from d are copied into the matrix.
+            /// \brief policySpecificData Data the is specific to the storage type assigned to this matrix.
+            ///                           Check MatrixStoragePolicy<StorageType> to see if the StoragePolicy
+            ///                           for this matrix has policy specific data.
             NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, const DataType>& d,
                       const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
                 BaseType(rows, columns),
@@ -245,6 +281,15 @@ namespace Nektar
             {
             }
             
+            /// \brief Creates a rows by columns matrix.
+            /// \brief rows The number of rows in the matrix.
+            /// \brief columns The number of columns in the matrix.
+            /// \brief d An array of data used to initialize the matrix.  If wrapperType is eCopy, then
+            ///          each element is copied from d to the matrix.  If wrapperType is eWrapper, then 
+            ///          the matrix uses d directly as its matrix data and no copies are made.
+            /// \brief policySpecificData Data the is specific to the storage type assigned to this matrix.
+            ///                           Check MatrixStoragePolicy<StorageType> to see if the StoragePolicy
+            ///                           for this matrix has policy specific data.
             NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, const DataType>& d, PointerWrapper wrapperType = eCopy,
                       const PolicySpecificDataHolderType& policySpecificData = PolicySpecificDataHolderType()) :
                 BaseType(rows, columns),
@@ -346,6 +391,7 @@ namespace Nektar
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
             
+            /// \brief Returns the element value at the given row and column.
             ConstGetValueType operator()(unsigned int row, unsigned int column) const
             {
                 ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
@@ -358,12 +404,18 @@ namespace Nektar
                 return (*this)(row, column, this->GetTransposeFlag());
             }
 
+            /// \brief Returns the element value at the given row and column.  
+            /// \brief row The element's row.
+            /// \brief column The element's column.
+            /// \brief transpose If transpose = 'N', then the return value is element [row, column].
+            ///                  If transpose = 'T', then the return value is element [column, row].
             ConstGetValueType operator()(unsigned int row, unsigned int column, char transpose) const
             {       
                 return StoragePolicy::GetValue(this->GetRowsForTranspose(transpose), this->GetColumnsForTranspose(transpose), row, column, m_data, transpose, m_policySpecificData);    
             }
             
             
+            /// \brief Returns the element value at the given row and column.
             typename boost::call_traits<DataType>::const_reference GetValue(unsigned int row, unsigned int column) const
             {
                 ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
@@ -375,6 +427,11 @@ namespace Nektar
                 return GetValue(row, column, this->GetTransposeFlag());
             }
 
+            /// \brief Returns the element value at the given row and column.  
+            /// \brief row The element's row.
+            /// \brief column The element's column.
+            /// \brief transpose If transpose = 'N', then the return value is element [row, column].
+            ///                  If transpose = 'T', then the return value is element [column, row].
             typename boost::call_traits<DataType>::const_reference GetValue(unsigned int row, unsigned int column, char transpose) const
             {
                 return StoragePolicy::GetValue(this->GetRowsForTranspose(transpose), this->GetColumnsForTranspose(transpose), row, column, m_data, transpose, m_policySpecificData);
@@ -391,6 +448,9 @@ namespace Nektar
                 return m_data;
             }
             
+            /// \brief Returns the scaling used by this matrix.
+            ///
+            /// Since this matrix is not a scaled matrix, this method always returns 1.
             DataType Scale() const
             {
                 return DataType(1);
@@ -452,6 +512,10 @@ namespace Nektar
                 return m_data.num_elements();
             }
             
+            /// \brief Returns true if the this matrix and rhs are equivalent.
+            ///
+            /// Two matrices are equivalent if they have the same size and each element
+            /// is the same.
             bool operator==(const NekMatrix<DataType, StorageType, StandardMatrixTag>& rhs) const
             {
                 if( GetStorageSize() != rhs.GetStorageSize() )

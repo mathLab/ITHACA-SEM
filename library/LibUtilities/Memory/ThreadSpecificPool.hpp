@@ -48,6 +48,7 @@ namespace Nektar
 {
     namespace detail
     {
+        /// \internal
         /// \brief A memory pool which exists on a thread by thread basis.
         /// \param ByteSize The number of bytes in each chunk allocated by the pool.
         ///
@@ -230,6 +231,9 @@ namespace Nektar
 
 /**
     $Log: ThreadSpecificPool.hpp,v $
+    Revision 1.6  2008/05/23 03:39:57  bnelson
+    Fixed the shutdown crash.
+
     Revision 1.5  2008/05/21 01:38:27  bnelson
     Added a debug feature to clear memory being allocated.
 

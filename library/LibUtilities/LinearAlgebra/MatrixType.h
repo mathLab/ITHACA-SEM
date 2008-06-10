@@ -38,9 +38,13 @@
 
 namespace Nektar
 {
-    
+    /// \brief Tag for standard matrices.
     class StandardMatrixTag;
+
+    /// \brief Tag for block matrices.
     class BlockMatrixTag;
+
+    /// \brief Tag for scaled matrices.
     class ScaledMatrixTag;
 }
 

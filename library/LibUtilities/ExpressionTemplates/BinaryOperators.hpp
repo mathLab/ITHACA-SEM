@@ -50,6 +50,7 @@
 
 namespace Nektar
 {
+    /// \internal
     /// \brief An expression to negate an object of ParameterType.
     /// Parameter type is the actual object, not the expression that may lead to it.
     template<typename LhsType, typename RhsType>

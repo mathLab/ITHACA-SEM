@@ -38,6 +38,7 @@
 
 namespace Nektar
 {
+    /// \internal
     /// \brief Defines the abstract UnaryExpressionTraits class. 
     ///
     /// UnaryExpressionTraits are used when using unary expressions with 
@@ -61,6 +62,9 @@ namespace Nektar
 
 /**
     $Log: UnaryExpressionTraits.hpp,v $
+    Revision 1.4  2007/01/30 23:37:17  bnelson
+    *** empty log message ***
+
     Revision 1.3  2007/01/16 17:37:56  bnelson
     Wrapped everything with #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 

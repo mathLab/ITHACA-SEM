@@ -46,7 +46,7 @@
 
 namespace Nektar
 {
-
+    /// \internal
     /// \brief An expression to negate an object of ParameterType.
     /// Parameter type is the actual object, not the expression that may lead to it.
     template<typename ParameterType>
@@ -79,6 +79,9 @@ namespace Nektar
 
 /**
     $Log: NegateOp.hpp,v $
+    Revision 1.11  2007/08/16 02:14:21  bnelson
+    Moved expression templates to the Nektar namespace.
+
     Revision 1.10  2007/01/30 23:37:16  bnelson
     *** empty log message ***
 

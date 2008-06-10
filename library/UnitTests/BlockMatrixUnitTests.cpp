@@ -452,13 +452,14 @@ namespace Nektar
             boost::shared_ptr<NekMatrix<NekDouble> > sub5(new NekMatrix<NekDouble>(2, 2, vals5));
             boost::shared_ptr<NekMatrix<NekDouble> > sub6(new NekMatrix<NekDouble>(2, 2, vals6));
             
-            m1.SetBlock(0,0, boost::shared_ptr<NekMatrix<NekDouble> >(new NekMatrix<NekDouble>(0, 0)));
-            m1.SetBlock(0,1, boost::shared_ptr<NekMatrix<NekDouble> >(new NekMatrix<NekDouble>(0, 0)));
-            m1.SetBlock(0,2, boost::shared_ptr<NekMatrix<NekDouble> >(new NekMatrix<NekDouble>(0, 0)));
-            m1.SetBlock(1,0, boost::shared_ptr<NekMatrix<NekDouble> >(new NekMatrix<NekDouble>(0, 0)));
+            boost::shared_ptr<NekMatrix<NekDouble> > empty(new NekMatrix<NekDouble>(0, 0));
+            m1.SetBlock(0,0, empty);
+            m1.SetBlock(0,1, empty);
+            m1.SetBlock(0,2, empty);
+            m1.SetBlock(1,0, empty);
             m1.SetBlock(1,1, sub1);
             m1.SetBlock(1,2, sub2);
-            m1.SetBlock(2,0, boost::shared_ptr<NekMatrix<NekDouble> >(new NekMatrix<NekDouble>(0, 0)));
+            m1.SetBlock(2,0, empty);
             m1.SetBlock(3,1, sub3);
             m1.SetBlock(3,2, sub4);
             m1.SetBlock(6,1, sub5);

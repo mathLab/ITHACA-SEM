@@ -88,7 +88,7 @@ namespace Nektar
         }
 
         
-        TetGeom::TetGeom (const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
+        TetGeom::TetGeom (const TriGeomSharedPtr faces[], const StdRegions::FaceOrientation forient[])
         {
             m_GeomShapeType = eTetrahedron;
         }
@@ -320,6 +320,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.9  2008/05/29 19:02:55  delisi
+// Renamed eTet to eTetrahedron.
+//
 // Revision 1.8  2008/05/28 21:52:27  jfrazier
 // Added GeomShapeType initialization for the different shapes.
 //

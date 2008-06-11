@@ -50,7 +50,7 @@
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/MeshGraph2D.h>
-//#include <SpatialDomains/MeshGraph3D.h>
+#include <SpatialDomains/MeshGraph3D.h>
 
 // These are required for the Write(...) and Import(...) functions.
 #include <boost/archive/iterators/base64_from_binary.hpp>
@@ -91,8 +91,7 @@ namespace Nektar
            break;
 
         case 3:
- //          returnval = MemoryManager<MeshGraph3D>::AllocateSharedPtr();
- //          returnval->ReadGeometry(infilename);
+           returnval = MemoryManager<MeshGraph3D>::AllocateSharedPtr();
            break;
 
         default:
@@ -908,6 +907,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.18  2008/05/30 00:33:48  delisi
+// Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+//
 // Revision 1.17  2008/05/29 21:19:23  delisi
 // Added the Write(...) and Import(...) functions which write and read XML files for output.
 //

@@ -42,7 +42,7 @@ namespace Nektar
     namespace SpatialDomains
     {
 
-        PyrGeom::PyrGeom(const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
+        PyrGeom::PyrGeom(const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[], const StdRegions::FaceOrientation forient[])
         {
             m_GeomShapeType = ePyramid;
         }
@@ -92,6 +92,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.cpp,v $
+// Revision 1.4  2008/05/28 21:52:27  jfrazier
+// Added GeomShapeType initialization for the different shapes.
+//
 // Revision 1.3  2008/04/06 06:00:38  bnelson
 // Changed ConstArray to Array<const>
 //

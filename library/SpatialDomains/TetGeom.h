@@ -41,6 +41,7 @@
  
  #include <SpatialDomains/SpatialDomains.hpp>
  #include <SpatialDomains/TriGeom.h>
+ #include <SpatialDomains/QuadGeom.h>
  #include <SpatialDomains/GeomFactors.h>
  #include <SpatialDomains/Geometry3D.h>
  #include <SpatialDomains/MeshComponents.h>
@@ -59,14 +60,14 @@ namespace Nektar
         class TetGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
-	    TetGeom ();
-        TetGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr faces[],
-                const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[]);
-                
-	    TetGeom(const VertexComponentSharedPtr verts[], const TriGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-	    TetGeom(const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
-        TetGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-	    ~TetGeom();
+			TetGeom ();
+			TetGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr faces[],
+					const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[]);
+	                
+			TetGeom(const VertexComponentSharedPtr verts[], const TriGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+			TetGeom(const TriGeomSharedPtr faces[], const StdRegions::FaceOrientation forient[]);
+			TetGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+			~TetGeom();
 
             void AddElmtConnected(int gvo_id, int locid);
             int  NumElmtConnected() const;
@@ -313,6 +314,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.11  2008/05/12 17:30:09  ehan
+// Added virtual functions
+//
 // Revision 1.10  2008/04/06 06:00:38  bnelson
 // Changed ConstArray to Array<const>
 //

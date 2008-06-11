@@ -60,7 +60,7 @@ namespace Nektar
         class PyrGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
-            PyrGeom (const TriGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
+            PyrGeom (const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[], const StdRegions::FaceOrientation forient[]);
             ~PyrGeom();
 
             void AddElmtConnected(int gvo_id, int locid);
@@ -161,6 +161,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.h,v $
+// Revision 1.6  2008/04/06 06:00:38  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.5  2008/04/02 22:19:04  pvos
 // Update for 2D local to global mapping
 //

@@ -69,7 +69,7 @@ namespace Nektar
             void ReadGeometry(TiXmlDocument &doc);
 
             SegGeomSharedPtr GetSegGeom(int eID);
-            TriGeomSharedPtr GetTriGeom(int tID);
+            Geometry2DSharedPtr GetGeometry2D(int gID);
 
             inline const int GetCoordim(void){
                 return GetSpaceDimension();
@@ -231,6 +231,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.h,v $
+// Revision 1.7  2008/06/09 21:33:04  jfrazier
+// Moved segment vector to base MeshGraph class since it is used by all derived types.
+//
 // Revision 1.6  2008/05/30 00:33:48  delisi
 // Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 //

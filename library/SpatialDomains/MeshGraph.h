@@ -39,10 +39,11 @@
 #include <cstdlib>
 #include <fstream>
 
-#include <SpatialDomains/MeshComponents.h>
+
 #include <SpatialDomains/InterfaceComponent.h>
 #include <SpatialDomains/Equation.h>
 #include <SpatialDomains/SegGeom.h>
+
 
 class TiXmlDocument;
 
@@ -102,6 +103,8 @@ namespace Nektar
         typedef boost::shared_ptr<Expansion> ExpansionShPtr;
         typedef std::vector<ExpansionShPtr> ExpansionVector;
         typedef std::vector<ExpansionShPtr>::iterator ExpansionVectorIter;
+        typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;
+        typedef std::vector< SegGeomSharedPtr > SegGeomVector;
 
         class MeshGraph
         {
@@ -219,6 +222,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.22  2008/06/09 21:33:04  jfrazier
+// Moved segment vector to base MeshGraph class since it is used by all derived types.
+//
 // Revision 1.21  2008/05/29 21:19:23  delisi
 // Added the Write(...) and Import(...) functions which write and read XML files for output.
 //

@@ -109,7 +109,7 @@
         <p><a href="license.html" id="menu_License">License</a></p>
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/05 21:31:53 $</p>
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/06 16:22:04 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -117,8 +117,8 @@
     	<!-- InstanceEndEditable -->
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
-	    <p><a href="file.tar.gz">Nektar++ Unix/Windows Code</a></p>
-    	<p><a href="file.tar.gz">Required Third Party Libraries</a></p>
+	    <p><a href="downloads/Nektar++.tar.gz">Nektar++ Unix/Windows Code</a></p>
+    	<p><a href="downloads/ThirdParty.tar.gz">Required Third Party Libraries</a></p>
 	    <p><a href="getting_started.html" target="_blank">Getting Started Tutorial</a></p>
         <!-- InstanceEndEditable -->
         <p><br class="clearfloat" /></p>

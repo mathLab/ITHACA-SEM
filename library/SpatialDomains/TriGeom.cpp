@@ -41,15 +41,15 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        TriGeom::TriGeom()
+		TriGeom::TriGeom()
         {
             m_GeomShapeType = eTriangle;
         }
 
         TriGeom::TriGeom(const VertexComponentSharedPtr verts[], 
-             const SegGeomSharedPtr edges[], 
-             const StdRegions::EdgeOrientation eorient[]):
-        TriFaceComponent(verts[0]->GetCoordim())
+						 const SegGeomSharedPtr edges[], 
+						 const StdRegions::EdgeOrientation eorient[]):
+			Geometry2D(verts[0]->GetCoordim())
         {
             m_GeomShapeType = eTriangle;
 
@@ -67,11 +67,23 @@ namespace Nektar
             m_coordim = verts[0]->GetCoordim();
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
+
+            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
+
+            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+				m_xmap[i] = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+            }
         }
 
         TriGeom::TriGeom(const SegGeomSharedPtr edges[], 
-                         const StdRegions::EdgeOrientation eorient[]) :
-            TriFaceComponent(edges[0]->GetCoordim())
+						 const StdRegions::EdgeOrientation eorient[]):
+			Geometry2D(edges[0]->GetVertex(0)->GetCoordim())
         {
             m_GeomShapeType = eTriangle;
 
@@ -97,7 +109,43 @@ namespace Nektar
 
             m_coordim = edges[0]->GetVertex(0)->GetCoordim();
             ASSERTL0(m_coordim > 1,"Cannot call function with dim == 1");
+
+            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
+
+            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+				m_xmap[i] = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+            }
         }
+
+		TriGeom::TriGeom(const TriGeom &in)
+		{
+			// From Geomtry
+			m_GeomShapeType = in.m_GeomShapeType;
+
+			// From TriFaceComponent
+			m_fid = in.m_fid;
+			m_ownverts = in.m_ownverts;
+            std::list<CompToElmt>::const_iterator def;
+            for(def = in.m_elmtmap.begin(); def != in.m_elmtmap.end(); def++)
+            {
+                m_elmtmap.push_back(*def);    
+            }
+
+			// From TriGeom
+			m_verts = in.m_verts;
+			m_edges = in.m_edges;
+            for (int i = 0; i < kNedges; i++)
+			{
+				m_eorient[i] = in.m_eorient[i];
+			}
+			m_owndata = in.m_owndata;
+		}
 
         TriGeom::~TriGeom()
         {
@@ -123,6 +171,43 @@ namespace Nektar
 
             m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
 
+        }
+
+        void TriGeom::AddElmtConnected(int gvo_id, int locid)
+        {
+            CompToElmt ee(gvo_id,locid);
+            m_elmtmap.push_back(ee);
+        }
+
+
+        int TriGeom::NumElmtConnected() const
+        {
+            return int(m_elmtmap.size());
+        }
+
+
+        bool TriGeom::IsElmtConnected(int gvo_id, int locid) const
+        {
+            std::list<CompToElmt>::const_iterator def;
+            CompToElmt ee(gvo_id,locid);
+
+            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+
+            // Found the element connectivity object in the list
+            return (def != m_elmtmap.end());
+        }
+
+        /** given local collapsed coordinate Lcoord return the value of
+        physical coordinate in direction i **/
+
+
+        NekDouble TriGeom::GetCoord(const int i, 
+                                    const Array<OneD, const NekDouble> &Lcoord)
+        {
+            ASSERTL1(m_state == ePtsFilled,
+                "Goemetry is not in physical space");
+
+            return m_xmap[i]->PhysEvaluate(Lcoord);
         }
 
         /** \brief put all quadrature information into edge structure 
@@ -220,6 +305,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.15  2008/05/28 21:52:27  jfrazier
+// Added GeomShapeType initialization for the different shapes.
+//
 // Revision 1.14  2008/05/07 16:05:37  pvos
 // Mapping + Manager updates
 //

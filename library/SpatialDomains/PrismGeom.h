@@ -96,9 +96,9 @@ namespace Nektar
         protected:
 
             VertexComponentVector           m_verts;
-            EdgeComponentVector             m_edges;
-            TriFaceComponentVector          m_tfaces;
-            QuadFaceComponentVector         m_qfaces;
+            SegGeomVector                   m_edges;
+            TriGeomVector                   m_tfaces;
+            QuadGeomVector                  m_qfaces;
             StdRegions::EdgeOrientation     m_eorient [kNedges];
             StdRegions::FaceOrientation     m_forient[kNfaces];
 
@@ -160,6 +160,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.h,v $
+// Revision 1.6  2008/06/11 16:10:12  delisi
+// Added the 3D reader.
+//
 // Revision 1.5  2008/04/06 06:00:38  bnelson
 // Changed ConstArray to Array<const>
 //

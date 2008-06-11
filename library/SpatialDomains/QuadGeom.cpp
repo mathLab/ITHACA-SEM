@@ -37,7 +37,6 @@
 
 #include <StdRegions/StdRegions.hpp>
 
-#include <SpatialDomains/EdgeComponent.h>
 #include <SpatialDomains/QuadGeom.h>
 
 #include <StdRegions/StdSegExp.h>
@@ -56,9 +55,9 @@ namespace Nektar
         }
 
         QuadGeom::QuadGeom(const VertexComponentSharedPtr verts[], 
-               const SegGeomSharedPtr edges[], 
-               const StdRegions::EdgeOrientation eorient[]):
-            QuadFaceComponent(verts[0]->GetCoordim())
+						   const SegGeomSharedPtr edges[], 
+						   const StdRegions::EdgeOrientation eorient[]):
+			Geometry2D(verts[0]->GetCoordim())
         {
             m_GeomShapeType = eQuadrilateral;
 
@@ -77,17 +76,27 @@ namespace Nektar
             m_coordim = verts[0]->GetCoordim();
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
+
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+
+            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);  
+            }
         }
     
         QuadGeom::QuadGeom(const SegGeomSharedPtr edges[], 
                            const StdRegions::EdgeOrientation eorient[]):
-            QuadFaceComponent(edges[0]->GetCoordim())
+			Geometry2D(edges[0]->GetVertex(0)->GetCoordim())
         {
             int j;
             
-             m_GeomShapeType = eQuadrilateral;
+            m_GeomShapeType = eQuadrilateral;
 
-             /// Copy the edge shared pointers.
+            /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
         
             for(j=0; j <kNedges; ++j)
@@ -110,10 +119,80 @@ namespace Nektar
             m_coordim = edges[0]->GetVertex(0)->GetCoordim();
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
+
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+
+            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);  
+            }
         }
+
+		QuadGeom::QuadGeom(const QuadGeom &in)
+		{
+			// From Geometry
+			m_GeomShapeType = in.m_GeomShapeType;
+
+			// From QuadFaceComponent
+			m_fid = in.m_fid;
+			m_ownverts = in.m_ownverts;
+			std::list<CompToElmt>::const_iterator def;
+            for(def = in.m_elmtmap.begin(); def != in.m_elmtmap.end(); def++)
+            {
+                m_elmtmap.push_back(*def);
+            }
+
+			// From QuadGeom
+			m_verts = in.m_verts;
+			m_edges = in.m_edges;
+            for (int i = 0; i < kNedges; i++)
+			{
+				m_eorient[i] = in.m_eorient[i];
+			}
+			m_owndata = in.m_owndata;
+		}
 
         QuadGeom::~QuadGeom()
         {
+        }
+
+        void QuadGeom::AddElmtConnected(int gvo_id, int locid)
+        {
+            CompToElmt ee(gvo_id,locid);
+            m_elmtmap.push_back(ee);
+        }
+
+        int QuadGeom::NumElmtConnected() const
+        {
+            return int(m_elmtmap.size());
+        }
+
+        bool QuadGeom::IsElmtConnected(int gvo_id, int locid) const
+        {
+            std::list<CompToElmt>::const_iterator def;
+            CompToElmt ee(gvo_id,locid);
+
+            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+
+            // Found the element connectivity object in the list
+            if(def != m_elmtmap.end())
+            {
+                return(true);
+            }
+
+            return(false);
+        }
+
+        double QuadGeom::GetCoord(const int i, 
+                                           const Array<OneD, const NekDouble> &Lcoord)
+        {
+            ASSERTL1(m_state == ePtsFilled,
+                "Goemetry is not in physical space");
+
+            return m_xmap[i]->PhysEvaluate(Lcoord);
         }
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
@@ -258,6 +337,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.16  2008/05/29 19:01:45  delisi
+// Renamed eQuad to eQuadrilateral.
+//
 // Revision 1.15  2008/05/28 21:52:27  jfrazier
 // Added GeomShapeType initialization for the different shapes.
 //

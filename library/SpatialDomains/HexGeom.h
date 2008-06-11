@@ -146,7 +146,7 @@ namespace Nektar
 
             VertexComponentVector           m_verts;
             SegGeomVector                   m_edges;
-            QuadFaceComponentVector         m_qfaces;
+            QuadGeomVector                  m_qfaces;
             StdRegions::EdgeOrientation     m_eorient[kNedges];
             StdRegions::FaceOrientation     m_forient[kNfaces];
 
@@ -244,6 +244,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.10  2008/05/12 17:28:16  ehan
+// Added virtual functions
+//
 // Revision 1.9  2008/04/06 06:00:38  bnelson
 // Changed ConstArray to Array<const>
 //

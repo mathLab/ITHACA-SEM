@@ -44,157 +44,226 @@
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/QuadFaceComponent.h>
 
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
-        class QuadGeom: public QuadFaceComponent
+        class QuadGeom: public Geometry2D
         {
-            public:
-                QuadGeom();
-                QuadGeom(const VertexComponentSharedPtr verts[],  const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-                QuadGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-                ~QuadGeom();
+        public:
+            QuadGeom();
+            QuadGeom(const VertexComponentSharedPtr verts[],  const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+            QuadGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+            QuadGeom(const QuadGeom &in);
+			~QuadGeom();
 
-                inline void SetOwnData()
+			void AddElmtConnected(int gvo_id, int locid);
+			int  NumElmtConnected() const;
+			bool IsElmtConnected(int gvo_id, int locid) const;
+
+			inline int GetFid() const 
+			{
+				return m_fid;
+			}
+
+			inline int GetCoordDim() const 
+			{
+				return m_coordim;
+			}
+
+			inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
+			{
+				return m_xmap[i]->GetBasis(j);
+			}
+
+			inline Array<OneD,NekDouble> &UpdatePhys(const int i)
+			{
+				return m_xmap[i]->UpdatePhys();
+			}
+
+			NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
+
+            inline void SetOwnData()
+            {
+                m_owndata = true; 
+            }
+
+            void FillGeom();
+
+            void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+
+            inline int GetEid(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                return m_edges[i]->GetEid();
+            }
+
+            inline int GetVid(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 3),"Verted id must be between 0 and 3");
+                return m_verts[i]->GetVid();
+            }
+            
+            inline const SegGeomSharedPtr GetEdge(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                return m_edges[i];
+            }
+
+            inline StdRegions::EdgeOrientation GetEorient(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                return m_eorient[i];
+            }
+
+            inline StdRegions::EdgeOrientation GetCartesianEorient(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                if(i < 2)
                 {
-                    m_owndata = true; 
-                }
-
-                void FillGeom();
-
-                void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
-
-                inline int GetEid(int i) const
-                {
-                    ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
-                    return m_edges[i]->GetEid();
-                }
-
-                inline int GetVid(int i) const
-                {
-                    ASSERTL2((i >=0) && (i <= 3),"Verted id must be between 0 and 3");
-                    return m_verts[i]->GetVid();
-                }
-                
-                inline const SegGeomSharedPtr GetEdge(const int i) const
-                {
-                    ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
-                    return m_edges[i];
-                }
-
-                inline StdRegions::EdgeOrientation GetEorient(const int i) const
-                {
-                    ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
                     return m_eorient[i];
                 }
-
-                inline StdRegions::EdgeOrientation GetCartesianEorient(const int i) const
+                else
                 {
-                    ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
-                    if(i < 2)
+                    if(m_eorient[i] == StdRegions::eForwards)
                     {
-                        return m_eorient[i];
+                        return StdRegions::eBackwards;
                     }
                     else
                     {
-                        if(m_eorient[i] == StdRegions::eForwards)
-                        {
-                            return StdRegions::eBackwards;
-                        }
-                        else
-                        {
-                            return StdRegions::eForwards; 
-                        }
+                        return StdRegions::eForwards; 
                     }
                 }
+            }
 
-                /// \brief Return the edge number of the given edge, or -1, if 
-                /// not an edge of this element.
-                int WhichEdge(SegGeomSharedPtr edge)
+            /// \brief Return the edge number of the given edge, or -1, if 
+            /// not an edge of this element.
+            int WhichEdge(SegGeomSharedPtr edge)
+            {
+                int returnval = -1;
+
+                SegGeomVector::iterator edgeIter;
+                int i;
+
+                for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
                 {
-                    int returnval = -1;
-
-                    SegGeomVector::iterator edgeIter;
-                    int i;
-
-                    for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
+                    if (*edgeIter == edge)
                     {
-                        if (*edgeIter == edge)
-                        {
-                            returnval = i;
-                            break;
-                        }
+                        returnval = i;
+                        break;
                     }
-
-                    return returnval;
                 }
 
-                static const int kNverts = 4;
-                static const int kNedges = 4;
+                return returnval;
+            }
 
-            protected:
-                VertexComponentVector           m_verts;
-                SegGeomVector                   m_edges;
-                StdRegions::EdgeOrientation     m_eorient[kNedges];
+            static const int kNverts = 4;
+            static const int kNedges = 4;
 
-                void GenGeomFactors(void);
+        protected:
+            VertexComponentVector           m_verts;
+            SegGeomVector                   m_edges;
+            StdRegions::EdgeOrientation     m_eorient[kNedges];
+            int                             m_fid;
+            bool                            m_ownverts;
+            std::list<CompToElmt>           m_elmtmap;
+
+            void GenGeomFactors(void);
 
         private:
-                bool m_owndata;   ///< Boolean indicating whether object owns the data
+            bool m_owndata;   ///< Boolean indicating whether object owns the data
 
-                virtual void v_GenGeomFactors(void)
-                {
-                    GenGeomFactors();
-                }
+			virtual void v_AddElmtConnected(int gvo_id, int locid)
+			{
+				AddElmtConnected(gvo_id,locid);
+			}
 
-                virtual void v_SetOwnData()
-                {
-                    SetOwnData();
-                }
+			virtual int  v_NumElmtConnected() const
+			{
+				return NumElmtConnected();
+			}
 
-                virtual void v_FillGeom()
-                {
-                    FillGeom();
-                }            
-                
-                virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
-                {
-                    GetLocCoords(coords,Lcoords);
-                }
-                
-                virtual int v_GetEid(int i) const
-                {
-                    return GetEid(i);
-                }
-                
-                virtual int v_GetVid(int i) const
-                {
-                    return GetVid(i);
-                }
-                
-                virtual const SegGeomSharedPtr v_GetEdge(int i) const
-                {
-                    return GetEdge(i);
-                }
-                
-                virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
-                {
-                    return GetEorient(i);
-                }
+			virtual bool v_IsElmtConnected(int gvo_id, int locid) const
+			{
+				return IsElmtConnected(gvo_id,locid);
+			}
+            
+			virtual int v_GetFid() const 
+			{
+				return GetFid();
+			}
 
-                virtual StdRegions::EdgeOrientation v_GetCartesianEorient(const int i) const
-                {
-                    return GetCartesianEorient(i);
-                }
-                
-                virtual int v_WhichEdge(SegGeomSharedPtr edge)
-                {
-                    return WhichEdge(edge);
-                }
+			virtual int v_GetCoordDim() const 
+			{
+				return GetCoordDim();
+			}
+
+			virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
+			{
+				return GetBasis(i,j);
+			}
+
+			virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
+			{
+				return UpdatePhys(i);
+			}
+
+			virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
+			{
+				return GetCoord(i,Lcoord);
+			}
+
+            virtual void v_GenGeomFactors(void)
+            {
+                GenGeomFactors();
+            }
+
+            virtual void v_SetOwnData()
+            {
+                SetOwnData();
+            }
+
+            virtual void v_FillGeom()
+            {
+                FillGeom();
+            }            
+            
+            virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+            {
+                GetLocCoords(coords,Lcoords);
+            }
+            
+            virtual int v_GetEid(int i) const
+            {
+                return GetEid(i);
+            }
+            
+            virtual int v_GetVid(int i) const
+            {
+                return GetVid(i);
+            }
+            
+            virtual const SegGeomSharedPtr v_GetEdge(int i) const
+            {
+                return GetEdge(i);
+            }
+            
+            virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
+            {
+                return GetEorient(i);
+            }
+
+            virtual StdRegions::EdgeOrientation v_GetCartesianEorient(const int i) const
+            {
+                return GetCartesianEorient(i);
+            }
+            
+            virtual int v_WhichEdge(SegGeomSharedPtr edge)
+            {
+                return WhichEdge(edge);
+            }
         };
 
         // shorthand for boost pointer
@@ -209,6 +278,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.19  2008/05/10 18:27:33  sherwin
+// Modifications necessary for QuadExp Unified DG Solver
+//
 // Revision 1.18  2008/05/09 20:33:16  ehan
 // Fixed infinity loop of recursive function.
 //

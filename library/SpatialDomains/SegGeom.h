@@ -43,33 +43,86 @@
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry1D.h>
 #include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/EdgeComponent.h>
+
+#include <StdRegions/StdSegExp.h>
+#include <LibUtilities/Foundations/Basis.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
-        class SegGeom: public EdgeComponent
+        class SegGeom: public Geometry1D
         {
             public:
                 SegGeom();
 
-                SegGeom(int id, const int coordim):
-                    EdgeComponent(id,coordim)
-                    {
-                    }
+                SegGeom(int id, const int coordim);
 
-                SegGeom(int id, const int coordim,
-                        const VertexComponentSharedPtr vertex[]): 
-                    EdgeComponent(id,coordim,vertex)
-                    {
-                    }
+                SegGeom(int id, const int coordim, const VertexComponentSharedPtr vertex[]);
 
                 SegGeom(const int id, const VertexComponentSharedPtr vert1, const VertexComponentSharedPtr  vert2);
 
                 SegGeom(const SegGeom &in);
 
                 ~SegGeom();
+
+                void AddElmtConnected(int gvoId, int locId);
+                int NumElmtConnected() const;
+                bool IsElmtConnected(int gvoId, int locId) const;
+
+                inline int GetEid() const 
+                {
+                    return m_eid;
+                }
+
+                inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j) 
+                {
+                    return m_xmap[i]->GetBasis(j);
+                }
+
+                inline const StdRegions::StdExpansion1DSharedPtr &GetXmap(const int i)
+                {
+                    return m_xmap[i];
+                }
+
+                inline Array<OneD, NekDouble> &UpdatePhys(const int i)
+                {
+                    return m_xmap[i]->UpdatePhys();
+                }
+
+                inline VertexComponentSharedPtr GetVertex(const int i) const
+                {
+                    VertexComponentSharedPtr returnval;
+
+                    if (i >= 0 && i < kNverts)
+                    {
+                        returnval = m_verts[i];
+                    }
+
+                    return returnval;
+                }
+
+
+                StdRegions::StdExpansion1DSharedPtr operator[](const int i) const
+                {
+                    if((i>=0)&& (i<m_coordim))
+                    {
+                        return m_xmap[i];
+                    }
+
+                    NEKERROR(ErrorUtil::efatal,
+                        "Invalid Index used in [] operator");
+                    return m_xmap[0]; //should never be reached
+                }
+
+                NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
+                        
+                /// \brief Get the orientation of edge1.
+                ///
+                /// Since both edges are passed, it does
+                /// not need any information from the EdgeComponent instance.
+                static StdRegions::EdgeOrientation GetEdgeOrientation(const SegGeom &edge1,
+                    const SegGeom &edge2);
 
                 inline int GetVid(int i) const
                 {
@@ -95,11 +148,57 @@ namespace Nektar
                 void WriteToFile(std::ofstream &outfile, const int dumpVar);
 
             protected:
+                int m_eid;
+                std::list<CompToElmt> m_elmtmap;
+                Array<OneD, StdRegions::StdExpansion1DSharedPtr> m_xmap;
+
+                static const int kNverts = 2;
+                SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
 
                 void GenGeomFactors(void);
 
             private:
                 bool m_owndata;   ///< Boolean indicating whether object owns the data
+
+                virtual void v_AddElmtConnected(int gvo_id, int locid)
+                {      
+                    AddElmtConnected(gvo_id, locid);
+                }
+                
+                virtual int v_NumElmtConnected() const
+                {
+                    return NumElmtConnected();
+                }
+                
+                virtual bool v_IsElmtConnected(int gvo_id, int locid) const
+                {
+                    return IsElmtConnected(gvo_id, locid);
+                }
+                
+                virtual int v_GetEid() const 
+                {
+                    return GetEid();
+                }
+                
+                virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
+                {  
+                    return GetBasis(i,j);
+                }
+                
+                virtual const StdRegions::StdExpansion1DSharedPtr &v_GetXmap(const int i)
+                {
+                    return GetXmap(i);
+                }
+                
+                virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
+                {
+                    return UpdatePhys(i);
+                }
+                
+                virtual VertexComponentSharedPtr v_GetVertex(const int i) const
+                {
+                    return GetVertex(i);
+                }
 
                 virtual void v_GenGeomFactors(void)
                 {
@@ -149,6 +248,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.17  2008/05/30 00:33:48  delisi
+// Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+//
 // Revision 1.16  2008/04/06 06:00:38  bnelson
 // Changed ConstArray to Array<const>
 //

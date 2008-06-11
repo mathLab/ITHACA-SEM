@@ -217,7 +217,7 @@ namespace Nektar
             void ResolveGeomRef(const std::string &prevToken, const std::string &token);
 
         private:
-            TriGeomVector           m_trigeoms;
+			TriGeomVector           m_trigeoms;
             QuadGeomVector          m_quadgeoms;
             TetGeomVector           m_tetgeoms;
             PyrGeomVector           m_pyrgeoms;
@@ -231,6 +231,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.h,v $
+// Revision 1.8  2008/06/11 16:10:12  delisi
+// Added the 3D reader.
+//
 // Revision 1.7  2008/06/09 21:33:04  jfrazier
 // Moved segment vector to base MeshGraph class since it is used by all derived types.
 //

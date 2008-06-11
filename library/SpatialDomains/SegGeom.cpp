@@ -52,9 +52,45 @@ namespace Nektar
             m_GeomShapeType = eSegment;
         }
 
+		SegGeom::SegGeom(int id, const int coordim):
+			Geometry1D(coordim), m_xmap(coordim)
+		{
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            m_eid = id;
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+            }
+		}
+
+		SegGeom::SegGeom(int id, const int coordim,
+						 const VertexComponentSharedPtr vertex[]): 
+			Geometry1D(coordim)
+		{
+			m_eid = id;
+
+			if (coordim > 0)
+			{
+				const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
+					LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+
+				m_xmap = Array<OneD, StdRegions::StdExpansion1DSharedPtr>(m_coordim);
+
+				for(int i = 0; i < m_coordim; ++i)
+				{
+					m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+				}
+			}
+
+			m_verts[0] = vertex[0];
+			m_verts[1] = vertex[1];
+		}
+
         SegGeom::SegGeom(const int id, const VertexComponentSharedPtr vert1, 
                          const VertexComponentSharedPtr  vert2):
-            EdgeComponent(id,vert1->GetCoordim())
+            Geometry1D(vert1->GetCoordim()), m_xmap(vert1->GetCoordim())
         {
             m_GeomShapeType = eSegment;
 
@@ -63,6 +99,15 @@ namespace Nektar
             m_verts[1] = vert2;
             
             m_state = eNotFilled;
+
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            m_eid = id;
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+            }
         }
         
         SegGeom::SegGeom(const SegGeom &in)
@@ -72,7 +117,11 @@ namespace Nektar
             
             // info from EdgeComponent class
             m_eid     = in.m_eid;
-            m_elmtmap = in.m_elmtmap;
+            std::list<CompToElmt>::const_iterator def;
+            for(def = in.m_elmtmap.begin(); def != in.m_elmtmap.end(); def++)
+            {
+                m_elmtmap.push_back(*def);    
+            }
             m_xmap = in.m_xmap;
             
             // info from SegGeom class
@@ -88,6 +137,83 @@ namespace Nektar
         {
         }
         
+        /** given local collapsed coordinate Lcoord return the value of
+        physical coordinate in direction i **/
+
+        NekDouble SegGeom::GetCoord(const int i, 
+									const Array<OneD, const NekDouble> &Lcoord) 
+        {
+
+            ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
+
+            return m_xmap[i]->PhysEvaluate(Lcoord);
+        }
+
+        void SegGeom::AddElmtConnected(int gvo_id, int locid)
+        {
+            CompToElmt ee(gvo_id,locid);
+            m_elmtmap.push_back(ee);
+        }
+
+
+        int SegGeom::NumElmtConnected() const
+        {
+            return int(m_elmtmap.size());
+        }
+
+
+        bool SegGeom::IsElmtConnected(int gvo_id, int locid) const
+        {
+            std::list<CompToElmt>::const_iterator def;
+            CompToElmt ee(gvo_id,locid);
+
+            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+
+            // Found the element connectivity object in the list
+            if(def != m_elmtmap.end())
+            {
+                return(true);
+            }
+
+            return(false);
+        }
+
+        /// \brief Get the orientation of edge1.
+        ///
+        /// If edge1 is connected to edge2 in the same direction as
+        /// the points comprising edge1 then it is forward, otherwise
+        /// it is backward.  
+        ///
+        /// For example, assume edge1 is comprised of points 1 and 2,
+        /// and edge2 is comprised of points 2 and 3, then edge is
+        /// forward.
+        ///
+        /// If edge1 is comprised of points 2 and 1 and edge2 is
+        /// comprised of points 3 and 2, then edge1 is backward.
+
+        StdRegions::EdgeOrientation SegGeom::GetEdgeOrientation(const SegGeom &edge1,  const SegGeom &edge2)
+        {
+            StdRegions::EdgeOrientation returnval = StdRegions::eForwards;
+
+            /// Backward direction.  Vertex 0 is connected to edge 2.
+            if ((*edge1.GetVertex(0) == *edge2.GetVertex(0)) || 
+                (*edge1.GetVertex(0) == *edge2.GetVertex(1)))
+            {
+                returnval = StdRegions::eBackwards;
+            }
+            // Not forward either, then we have a problem.
+            else if ((*edge1.GetVertex(1) != *edge2.GetVertex(0)) && 
+                (*edge1.GetVertex(1) != *edge2.GetVertex(1)))
+            {
+                std::ostringstream errstrm;
+                errstrm << "Connected edges do not share a vertex. Edges ";
+                errstrm << edge1.GetEid() << ", " << edge2.GetEid();
+                ASSERTL0(false, errstrm.str());
+            }
+
+            return returnval;
+        }
+
         // Set up GeoFac for this geometry using Coord quadrature distribution
         void SegGeom::GenGeomFactors(void)
         {
@@ -206,6 +332,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.21  2008/05/28 21:52:27  jfrazier
+// Added GeomShapeType initialization for the different shapes.
+//
 // Revision 1.20  2008/04/06 06:00:38  bnelson
 // Changed ConstArray to Array<const>
 //

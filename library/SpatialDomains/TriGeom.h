@@ -37,9 +37,11 @@
 #define NEKTAR_SPATIALDOMAINS_TRIGEOM_H
 
 #include <StdRegions/StdRegions.hpp>
+#include <StdRegions/StdTriExp.h>
 
 #include <SpatialDomains/GeomFactors.h>
-#include <SpatialDomains/TriFaceComponent.h>
+#include <SpatialDomains/Geometry2D.h>
+#include <SpatialDomains/MeshComponents.h>
 
 namespace Nektar
 {
@@ -50,13 +52,40 @@ namespace Nektar
         typedef std::vector< TriGeomSharedPtr > TriGeomVector;
         typedef std::vector< TriGeomSharedPtr >::iterator TriGeomVectorIter;
 
-        class TriGeom: public TriFaceComponent
+        class TriGeom: public Geometry2D
         {
             public:
                 TriGeom();
                 TriGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
                 TriGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+				TriGeom(const TriGeom &in);
                 ~TriGeom();
+
+				void AddElmtConnected(int gvo_id, int locid);
+				int  NumElmtConnected() const;
+				bool IsElmtConnected(int gvo_id, int locid) const;
+
+				inline int GetFid() const 
+				{
+					return m_fid;
+				}
+
+				inline int GetCoordDim() const 
+				{
+					return m_coordim;
+				}
+
+				inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
+				{
+					return m_xmap[i]->GetBasis(j);
+				}
+
+				inline Array<OneD,NekDouble> &UpdatePhys(const int i)
+				{
+					return m_xmap[i]->UpdatePhys();
+				}
+
+				NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
                 inline void SetOwnData()
                 {
@@ -119,10 +148,53 @@ namespace Nektar
                 VertexComponentVector           m_verts;
                 SegGeomVector                   m_edges;
                 StdRegions::EdgeOrientation     m_eorient [kNedges];
+				int								m_fid;
+				bool							m_ownverts;
+				std::list<CompToElmt>			m_elmtmap;
 
                 void GenGeomFactors(void);
             private:
                 bool m_owndata;
+
+				virtual void v_AddElmtConnected(int gvo_id, int locid)
+				{
+					AddElmtConnected(gvo_id,locid);
+				}
+
+				virtual int  v_NumElmtConnected() const
+				{
+					return NumElmtConnected();
+				}
+
+				virtual bool v_IsElmtConnected(int gvo_id, int locid) const
+				{
+					return IsElmtConnected(gvo_id,locid);
+				}
+	            
+				virtual int v_GetFid() const 
+				{
+					return GetFid();
+				}
+
+				virtual int v_GetCoordDim() const 
+				{
+					return GetCoordDim();
+				}
+
+				virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
+				{
+					return GetBasis(i,j);
+				}
+
+				virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
+				{
+					return UpdatePhys(i);
+				}
+
+				virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
+				{
+					return GetCoord(i,Lcoord);
+				}
 
                 virtual void v_GenGeomFactors(void)
                 {
@@ -176,6 +248,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.20  2008/06/09 21:33:04  jfrazier
+// Moved segment vector to base MeshGraph class since it is used by all derived types.
+//
 // Revision 1.19  2008/05/10 18:27:33  sherwin
 // Modifications necessary for QuadExp Unified DG Solver
 //

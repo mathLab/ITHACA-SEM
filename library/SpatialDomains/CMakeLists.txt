@@ -1,6 +1,6 @@
 SET(SPATIAL_DOMAINS_SOURCES
 BoundaryConditions.cpp
-EdgeComponent.cpp
+#EdgeComponent.cpp
 Equation.cpp
 GeomFactors.cpp
 Geometry1D.cpp
@@ -17,18 +17,18 @@ MeshGraph3D.cpp
 pchSpatialDomains.cpp
 PrismGeom.cpp
 PyrGeom.cpp
-QuadFaceComponent.cpp
+#QuadFaceComponent.cpp
 QuadGeom.cpp
 SegGeom.cpp
 TetGeom.cpp
-TriFaceComponent.cpp
+#TriFaceComponent.cpp
 TriGeom.cpp
 )
 
 SET(SPATIAL_DOMAINS_HEADERS
 BoundaryConditions.h
 Equation.h
-EdgeComponent.h
+#EdgeComponent.h
 GeomFactors.h
 Geometry1D.h
 Geometry2D.h
@@ -45,11 +45,11 @@ ParseUtils.hpp
 pchSpatialDomains.h
 PrismGeom.h
 PyrGeom.h
-QuadFaceComponent.h
+#QuadFaceComponent.h
 QuadGeom.h
 SegGeom.h
 TetGeom.h
-TriFaceComponent.h
+#TriFaceComponent.h
 TriGeom.h
 SpatialDomains.hpp
 )

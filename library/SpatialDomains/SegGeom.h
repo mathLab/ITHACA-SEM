@@ -39,7 +39,6 @@
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 
-#include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry1D.h>
 #include <SpatialDomains/MeshComponents.h>
@@ -248,6 +247,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.18  2008/06/11 21:34:42  delisi
+// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
+//
 // Revision 1.17  2008/05/30 00:33:48  delisi
 // Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 //

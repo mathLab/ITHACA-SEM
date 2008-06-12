@@ -103,8 +103,6 @@ namespace Nektar
         typedef boost::shared_ptr<Expansion> ExpansionShPtr;
         typedef std::vector<ExpansionShPtr> ExpansionVector;
         typedef std::vector<ExpansionShPtr>::iterator ExpansionVectorIter;
-        typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;
-        typedef std::vector< SegGeomSharedPtr > SegGeomVector;
 
         class MeshGraph
         {
@@ -222,6 +220,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.23  2008/06/11 23:25:29  ehan
+// Fixed error : ‘SegGeomVector’ does not name a type
+//
 // Revision 1.22  2008/06/09 21:33:04  jfrazier
 // Moved segment vector to base MeshGraph class since it is used by all derived types.
 //

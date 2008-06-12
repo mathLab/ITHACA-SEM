@@ -64,6 +64,8 @@ namespace Nektar
             void AddElmtConnected(int gvo_id, int locid);
             int  NumElmtConnected() const;
             bool IsElmtConnected(int gvo_id, int locid) const;
+			void FillGeom();
+			void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
             inline int GetEid() const 
             {
@@ -108,9 +110,20 @@ namespace Nektar
             std::list<CompToElmt> m_elmtmap;
 
             Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
+			void GenGeomFactors(void);
 
         private:
             PrismGeom ();
+
+            virtual void v_GenGeomFactors(void)
+            {
+                GenGeomFactors();
+            }
+
+            virtual void v_FillGeom()
+            {
+                FillGeom();
+            }
 
             virtual void v_AddElmtConnected(int gvo_id, int locid)
             {
@@ -160,6 +173,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.h,v $
+// Revision 1.7  2008/06/11 21:34:42  delisi
+// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
+//
 // Revision 1.6  2008/06/11 16:10:12  delisi
 // Added the 3D reader.
 //

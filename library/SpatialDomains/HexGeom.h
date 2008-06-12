@@ -66,6 +66,7 @@ namespace Nektar
             void AddElmtConnected(int gvo_id, int locid);
             int  NumElmtConnected() const;
             bool IsElmtConnected(int gvo_id, int locid) const;
+			void FillGeom();
             void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
             inline void SetOwnData()
@@ -155,6 +156,7 @@ namespace Nektar
             std::list<CompToElmt> m_elmtmap;
 
             Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
+			void GenGeomFactors(void);
         
         private:
 
@@ -168,6 +170,11 @@ namespace Nektar
             virtual void v_SetOwnData()
             {
                 SetOwnData();
+            }
+
+            virtual void v_FillGeom()
+            {
+                FillGeom();
             }
 
             virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
@@ -244,6 +251,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.11  2008/06/11 21:34:41  delisi
+// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
+//
 // Revision 1.10  2008/05/12 17:28:16  ehan
 // Added virtual functions
 //

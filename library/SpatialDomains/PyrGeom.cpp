@@ -87,11 +87,40 @@ namespace Nektar
             return m_xmap[i]->PhysEvaluate(Lcoord);
         }
 
+        // Set up GeoFac for this geometry using Coord quadrature distribution
+
+        void PyrGeom::GenGeomFactors(void)
+        {
+			// TODO: Insert code here.
+		}
+
+		void PyrGeom::FillGeom()
+		{
+			// check to see if geometry structure is already filled
+			if(m_state == ePtsFilled)
+			{
+				return;
+			}
+
+			// TODO: Insert code here.
+
+			m_state = ePtsFilled;
+
+		}
+
+		void PyrGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD, NekDouble> &Lcoords)
+		{
+			// TODO: Insert code here.
+		}
+
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: PyrGeom.cpp,v $
+// Revision 1.5  2008/06/11 16:10:12  delisi
+// Added the 3D reader.
+//
 // Revision 1.4  2008/05/28 21:52:27  jfrazier
 // Added GeomShapeType initialization for the different shapes.
 //

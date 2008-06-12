@@ -85,17 +85,40 @@ namespace Nektar
             return m_xmap[i]->PhysEvaluate(Lcoord);
         }
 
-         void HexGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
-         {
-         
-         }
+        // Set up GeoFac for this geometry using Coord quadrature distribution
 
+        void HexGeom::GenGeomFactors(void)
+        {
+			// TODO: Insert code here.
+		}
+
+		void HexGeom::FillGeom()
+		{
+			// check to see if geometry structure is already filled
+			if(m_state == ePtsFilled)
+			{
+				return;
+			}
+
+			// TODO: Insert code here.
+
+			m_state = ePtsFilled;
+
+		}
+
+		void HexGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD, NekDouble> &Lcoords)
+		{
+			// TODO: Insert code here.
+		}
 
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.7  2008/05/29 19:02:23  delisi
+// Renamed eHex to eHexahedron.
+//
 // Revision 1.6  2008/05/28 21:52:27  jfrazier
 // Added GeomShapeType initialization for the different shapes.
 //

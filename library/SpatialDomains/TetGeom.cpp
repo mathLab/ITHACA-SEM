@@ -161,7 +161,7 @@ namespace Nektar
             return m_xmap[i]->PhysEvaluate(Lcoord);
         }
 
-          // Set up GeoFac for this geometry using Coord quadrature distribution
+        // Set up GeoFac for this geometry using Coord quadrature distribution
 
         void TetGeom::GenGeomFactors(void)
         {
@@ -268,7 +268,7 @@ namespace Nektar
 
        void TetGeom::GetLocCoords(const Array<OneD, const NekDouble>& coords, Array<OneD, NekDouble>& Lcoords)
        {
-         FillGeom();
+            FillGeom();
 
             // calculate local coordinate for coord 
             if(GetGtype() == eRegular)
@@ -320,6 +320,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.10  2008/06/11 16:10:12  delisi
+// Added the 3D reader.
+//
 // Revision 1.9  2008/05/29 19:02:55  delisi
 // Renamed eTet to eTetrahedron.
 //

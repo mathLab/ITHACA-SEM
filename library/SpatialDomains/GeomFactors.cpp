@@ -582,174 +582,176 @@ namespace Nektar
 
         **/
 
-            GeomFactors(const GeomType gtype, const int coordim,
-                        const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords);
+//TODO: Doesn't compile--need to implement
+        GeomFactors::GeomFactors(const GeomType gtype, const int coordim,
+                                 const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords)
         {
 
-            int        i,nquad0,nquad1,nquad2,nqtot;
-            StdRegions::PointsType  ptype0, ptype1, ptype2;
-            double      *tmp;
 
-            m_gtype = gtype;
-            m_gmat  = new double*[9];
-
-            nquad0 = Coords[0]->GetNumPoints(0);
-            nquad1 = Coords[0]->GetNumPoints(1);
-            nquad2 = Coords[0]->GetNumPoints(2);
-            ptype0 = Coords[0]->GetPointsType (0);
-            ptype1 = Coords[0]->GetPointsType (1);
-            ptype2 = Coords[0]->GetPointsType (2);
-
-            nqtot = nquad0*nquad1*nquad2;
-
-            Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot), 
-                                           Array<OneD, NekDouble>(nqtot)};
-            Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot), 
-                                           Array<OneD, NekDouble>(nqtot)};
-            Array<OneD,NekDouble> d3[3] = {Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot), 
-                                           Array<OneD, NekDouble>(nqtot)};
-
-            d1[0] = new double [3*nqtot];
-            d1[1] = d1[0] + nqtot;
-            d1[2] = d1[1] + nqtot;
-
-            d2[0] = new double [3*nqtot];
-            d2[1] = d2[0] + nqtot;
-            d2[2] = d2[1] + nqtot;
-
-            d3[0] = new double [3*nqtot];
-            d3[1] = d3[0] + nqtot;
-            d3[2] = d3[1] + nqtot;
-
-            // Calculate local derivatives using physical space storage
-            for(i = 0; i < 3; ++i)
-            {
-                ASSERTL2(Coords[i]->GetNumPoints(0) == nquad0,
-                    "Points order are different for coordinate 0 ");
-                ASSERTL2(Coords[i]->GetNumPoints(1) == nquad1,
-                    "Points order are different for coordinate 1 ");
-                ASSERTL2(Coords[i]->GetNumPoints(2) == nquad2,
-                    "Points order are different for coordinate 1 ");
-                ASSERTL2(Coords[i]->GetPointsType(0)  == ptype0,
-                    "Points type are different for coordinate 0 ");
-                ASSERTL2(Coords[i]->GetPointsType(1)  == ptype1,
-                    "Points type are different for coordinate 1 ");
-                ASSERTL2(Coords[i]->GetPointsType(2)  == ptype2,
-                    "Points type are different for coordinate 1 ");
-
-                Coords[i]->StdPhysDeriv(d1[i],d2[i],d3[i]);
-            }
-
-            if((m_gtype == eRegular)|| (m_gtype == eMovingRegular))
-            {
-                m_jac  = Array<OneD, NekDouble>(1,0.0);
-                m_gmat = Array<TwoD, NekDouble>(3*coordim,1,0.0);
-                m_normals = Array<TwoD,NekDouble>(coordim,1,0.0);
-
-                for(i = 1; i < 9; ++i)
-                {
-                    m_gmat[i] = m_gmat[i-1]+1;
-                }
-
-                m_jac[0] = d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
-                    - d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0]) 
-                    + d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
-
-                // d xi_1/d x_1
-                m_gmat[0][0] =  (d2[1][0]*d3[2][0] - d2[2][0]*d2[2][0])/m_jac[0]; 
-                // d xi_2/d x_1
-                m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d1[2][0]*d3[2][0])/m_jac[0]; 
-                // d xi_3/d x_1
-                m_gmat[2][0] =  (d1[1][0]*d3[1][0] - d1[2][0]*d3[1][0])/m_jac[0]; 
-
-                // d xi_1/d x_2
-                m_gmat[3][0] = -(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0])/m_jac[0]; 
-                // d xi_2/d x_2
-                m_gmat[4][0] =  (d1[0][0]*d3[2][0] - d1[2][0]*d3[0][0])/m_jac[0]; 
-                // d xi_3/d x_2
-                m_gmat[5][0] = -(d1[0][0]*d2[2][0] - d1[2][0]*d2[0][0])/m_jac[0]; 
-
-                // d xi_1/d x_3
-                m_gmat[6][0] =  (d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0])/m_jac[0]; 
-                // d xi_2/d x_3
-                m_gmat[5][0] = -(d1[0][0]*d3[1][0] - d1[1][0]*d3[0][0])/m_jac[0]; 
-                // d x7_3/d x_3
-                m_gmat[8][0] =  (d1[0][0]*d2[1][0] - d1[1][0]*d2[0][0])/m_jac[0]; 
-
-            }
-            else
-            {
-                m_jac  = Array<OneD, NekDouble>(1,0.0);
-                m_gmat = Array<TwoD, NekDouble>(3*coordim,1,0.0);
-
-                for(i = 1; i < 9; ++i)
-                {
-                    m_gmat[i] = m_gmat[i-1] + nqtot;
-                }
-
-                tmp = new double [nqtot]; 
-
-                // Jacobian
-                Vmath::Vmul (nqtot,d3[1],1,d2[2],1,tmp,1);
-                Vmath::Vvtvm(nqtot,d2[1],1,d3[2],1,tmp,1,tmp,1);
-                Vmath::Vmul (nqtot,d1[0],1,tmp,1,m_jac,1);
-
-                Vmath::Vmul (nqtot,d1[1],1,d3[2],1,tmp,1);
-                Vmath::Vvtvm(nqtot,d3[1],1,d1[2],1,tmp,1,tmp,1);
-                Vmath::Vvtvp(nqtot,d2[0],1,tmp,1,m_jac,1,m_jac,1);
-
-                Vmath::Vmul (nqtot,d2[1],1,d1[2],1,tmp,1);
-                Vmath::Vvtvm(nqtot,d1[1],1,d2[2],1,tmp,1,tmp,1);
-                Vmath::Vvtvp(nqtot,d3[0],1,tmp,1,m_jac,1,m_jac,1);
-
-                // d xi_1/d x_1
-                Vmath::Vmul (nqtot,d2[2],1,d3[1],1,m_gmat[0],1);
-                Vmath::Vvtvm(nqtot,d2[1],1,d3[2],1,m_gmat[0],1,m_gmat[0],1);
-                Vmath::Vdiv(nqtot,m_gmat[0],1,m_jac,1,m_gmat[0],1);
-
-                // d xi_2/d x_1
-                Vmath::Vmul (nqtot,d1[1],1,d3[2],1,m_gmat[1],1);
-                Vmath::Vvtvm(nqtot,d1[2],1,d3[1],1,m_gmat[1],1,m_gmat[1],1);
-                Vmath::Vdiv(nqtot,m_gmat[1],1,m_jac,1,m_gmat[1],1);
-
-                // d xi_3/d x_1
-                Vmath::Vmul (nqtot,d1[1],1,d2[2],1,m_gmat[2],1);
-                Vmath::Vvtvm(nqtot,d1[2],1,d3[1],1,m_gmat[2],1,m_gmat[2],1);
-                Vmath::Vdiv(nqtot,m_gmat[2],1,m_jac,1,m_gmat[2],1);
-
-                // d xi_1/d x_2
-                Vmath::Vmul (nqtot,d2[0],1,d3[2],1,m_gmat[3],1);
-                Vmath::Vvtvm(nqtot,d2[2],1,d3[0],1,m_gmat[3],1,m_gmat[3],1);
-                Vmath::Vdiv(nqtot,m_gmat[3],1,m_jac,1,m_gmat[3],1);
-
-                // d xi_2/d x_2
-                Vmath::Vmul (nqtot,d1[2],1,d3[0],1,m_gmat[4],1);
-                Vmath::Vvtvm(nqtot,d1[0],1,d3[2],1,m_gmat[4],1,m_gmat[4],1);
-                Vmath::Vdiv(nqtot,m_gmat[4],1,m_jac,1,m_gmat[4],1);
-
-                // d xi_3/d x_2
-                Vmath::Vmul (nqtot,d1[0],1,d2[2],1,m_gmat[5],1);
-                Vmath::Vvtvm(nqtot,d1[2],1,d3[0],1,m_gmat[5],1,m_gmat[5],1);
-                Vmath::Vdiv(nqtot,m_gmat[5],1,m_jac,1,m_gmat[5],1);
-
-                // d xi_1/d x_3
-                Vmath::Vmul (nqtot,d2[1],1,d3[0],1,m_gmat[6],1);
-                Vmath::Vvtvm(nqtot,d2[0],1,d3[1],1,m_gmat[6],1,m_gmat[6],1);
-                Vmath::Vdiv(nqtot,m_gmat[6],1,m_jac,1,m_gmat[6],1);
-
-                // d xi_2/d x_3
-                Vmath::Vmul (nqtot,d1[0],1,d3[2],1,m_gmat[7],1);
-                Vmath::Vvtvm(nqtot,d1[1],1,d3[0],1,m_gmat[7],1,m_gmat[7],1);
-                Vmath::Vdiv(nqtot,m_gmat[7],1,m_jac,1,m_gmat[7],1);
-
-                // d xim_3/d x_3
-                Vmath::Vmul (nqtot,d1[1],1,d2[0],1,m_gmat[8],1);
-                Vmath::Vvtvm(nqtot,d1[0],1,d2[1],1,m_gmat[8],1,m_gmat[8],1);
-                Vmath::Vdiv(nqtot,m_gmat[8],1,m_jac,1,m_gmat[8],1);
-            }
+//             int        i,nquad0,nquad1,nquad2,nqtot;
+//             StdRegions::PointsType  ptype0, ptype1, ptype2;
+//             double      *tmp;
+// 
+//             m_gtype = gtype;
+//             m_gmat  = new double*[9];
+// 
+//             nquad0 = Coords[0]->GetNumPoints(0);
+//             nquad1 = Coords[0]->GetNumPoints(1);
+//             nquad2 = Coords[0]->GetNumPoints(2);
+//             ptype0 = Coords[0]->GetPointsType (0);
+//             ptype1 = Coords[0]->GetPointsType (1);
+//             ptype2 = Coords[0]->GetPointsType (2);
+// 
+//             nqtot = nquad0*nquad1*nquad2;
+// 
+//             Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
+//                                            Array<OneD, NekDouble>(nqtot), 
+//                                            Array<OneD, NekDouble>(nqtot)};
+//             Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
+//                                            Array<OneD, NekDouble>(nqtot), 
+//                                            Array<OneD, NekDouble>(nqtot)};
+//             Array<OneD,NekDouble> d3[3] = {Array<OneD, NekDouble>(nqtot),
+//                                            Array<OneD, NekDouble>(nqtot), 
+//                                            Array<OneD, NekDouble>(nqtot)};
+// 
+//             d1[0] = new double [3*nqtot];
+//             d1[1] = d1[0] + nqtot;
+//             d1[2] = d1[1] + nqtot;
+// 
+//             d2[0] = new double [3*nqtot];
+//             d2[1] = d2[0] + nqtot;
+//             d2[2] = d2[1] + nqtot;
+// 
+//             d3[0] = new double [3*nqtot];
+//             d3[1] = d3[0] + nqtot;
+//             d3[2] = d3[1] + nqtot;
+// 
+//             // Calculate local derivatives using physical space storage
+//             for(i = 0; i < 3; ++i)
+//             {
+//                 ASSERTL2(Coords[i]->GetNumPoints(0) == nquad0,
+//                     "Points order are different for coordinate 0 ");
+//                 ASSERTL2(Coords[i]->GetNumPoints(1) == nquad1,
+//                     "Points order are different for coordinate 1 ");
+//                 ASSERTL2(Coords[i]->GetNumPoints(2) == nquad2,
+//                     "Points order are different for coordinate 1 ");
+//                 ASSERTL2(Coords[i]->GetPointsType(0)  == ptype0,
+//                     "Points type are different for coordinate 0 ");
+//                 ASSERTL2(Coords[i]->GetPointsType(1)  == ptype1,
+//                     "Points type are different for coordinate 1 ");
+//                 ASSERTL2(Coords[i]->GetPointsType(2)  == ptype2,
+//                     "Points type are different for coordinate 1 ");
+// 
+//                 Coords[i]->StdPhysDeriv(d1[i],d2[i],d3[i]);
+//             }
+// 
+//             if((m_gtype == eRegular)|| (m_gtype == eMovingRegular))
+//             {
+//                 m_jac  = Array<OneD, NekDouble>(1,0.0);
+//                 m_gmat = Array<TwoD, NekDouble>(3*coordim,1,0.0);
+//                 m_normals = Array<TwoD,NekDouble>(coordim,1,0.0);
+// 
+//                 for(i = 1; i < 9; ++i)
+//                 {
+//                     m_gmat[i] = m_gmat[i-1]+1;
+//                 }
+// 
+//                 m_jac[0] = d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
+//                     - d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0]) 
+//                     + d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
+// 
+//                 // d xi_1/d x_1
+//                 m_gmat[0][0] =  (d2[1][0]*d3[2][0] - d2[2][0]*d2[2][0])/m_jac[0]; 
+//                 // d xi_2/d x_1
+//                 m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d1[2][0]*d3[2][0])/m_jac[0]; 
+//                 // d xi_3/d x_1
+//                 m_gmat[2][0] =  (d1[1][0]*d3[1][0] - d1[2][0]*d3[1][0])/m_jac[0]; 
+// 
+//                 // d xi_1/d x_2
+//                 m_gmat[3][0] = -(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0])/m_jac[0]; 
+//                 // d xi_2/d x_2
+//                 m_gmat[4][0] =  (d1[0][0]*d3[2][0] - d1[2][0]*d3[0][0])/m_jac[0]; 
+//                 // d xi_3/d x_2
+//                 m_gmat[5][0] = -(d1[0][0]*d2[2][0] - d1[2][0]*d2[0][0])/m_jac[0]; 
+// 
+//                 // d xi_1/d x_3
+//                 m_gmat[6][0] =  (d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0])/m_jac[0]; 
+//                 // d xi_2/d x_3
+//                 m_gmat[5][0] = -(d1[0][0]*d3[1][0] - d1[1][0]*d3[0][0])/m_jac[0]; 
+//                 // d x7_3/d x_3
+//                 m_gmat[8][0] =  (d1[0][0]*d2[1][0] - d1[1][0]*d2[0][0])/m_jac[0]; 
+// 
+//             }
+//             else
+//             {
+//                 m_jac  = Array<OneD, NekDouble>(1,0.0);
+//                 m_gmat = Array<TwoD, NekDouble>(3*coordim,1,0.0);
+// 
+//                 for(i = 1; i < 9; ++i)
+//                 {
+//                     m_gmat[i] = m_gmat[i-1] + nqtot;
+//                 }
+// 
+//                 tmp = new double [nqtot]; 
+// 
+//                 // Jacobian
+//                 Vmath::Vmul (nqtot,d3[1],1,d2[2],1,tmp,1);
+//                 Vmath::Vvtvm(nqtot,d2[1],1,d3[2],1,tmp,1,tmp,1);
+//                 Vmath::Vmul (nqtot,d1[0],1,tmp,1,m_jac,1);
+// 
+//                 Vmath::Vmul (nqtot,d1[1],1,d3[2],1,tmp,1);
+//                 Vmath::Vvtvm(nqtot,d3[1],1,d1[2],1,tmp,1,tmp,1);
+//                 Vmath::Vvtvp(nqtot,d2[0],1,tmp,1,m_jac,1,m_jac,1);
+// 
+//                 Vmath::Vmul (nqtot,d2[1],1,d1[2],1,tmp,1);
+//                 Vmath::Vvtvm(nqtot,d1[1],1,d2[2],1,tmp,1,tmp,1);
+//                 Vmath::Vvtvp(nqtot,d3[0],1,tmp,1,m_jac,1,m_jac,1);
+// 
+//                 // d xi_1/d x_1
+//                 Vmath::Vmul (nqtot,d2[2],1,d3[1],1,m_gmat[0],1);
+//                 Vmath::Vvtvm(nqtot,d2[1],1,d3[2],1,m_gmat[0],1,m_gmat[0],1);
+//                 Vmath::Vdiv(nqtot,m_gmat[0],1,m_jac,1,m_gmat[0],1);
+// 
+//                 // d xi_2/d x_1
+//                 Vmath::Vmul (nqtot,d1[1],1,d3[2],1,m_gmat[1],1);
+//                 Vmath::Vvtvm(nqtot,d1[2],1,d3[1],1,m_gmat[1],1,m_gmat[1],1);
+//                 Vmath::Vdiv(nqtot,m_gmat[1],1,m_jac,1,m_gmat[1],1);
+// 
+//                 // d xi_3/d x_1
+//                 Vmath::Vmul (nqtot,d1[1],1,d2[2],1,m_gmat[2],1);
+//                 Vmath::Vvtvm(nqtot,d1[2],1,d3[1],1,m_gmat[2],1,m_gmat[2],1);
+//                 Vmath::Vdiv(nqtot,m_gmat[2],1,m_jac,1,m_gmat[2],1);
+// 
+//                 // d xi_1/d x_2
+//                 Vmath::Vmul (nqtot,d2[0],1,d3[2],1,m_gmat[3],1);
+//                 Vmath::Vvtvm(nqtot,d2[2],1,d3[0],1,m_gmat[3],1,m_gmat[3],1);
+//                 Vmath::Vdiv(nqtot,m_gmat[3],1,m_jac,1,m_gmat[3],1);
+// 
+//                 // d xi_2/d x_2
+//                 Vmath::Vmul (nqtot,d1[2],1,d3[0],1,m_gmat[4],1);
+//                 Vmath::Vvtvm(nqtot,d1[0],1,d3[2],1,m_gmat[4],1,m_gmat[4],1);
+//                 Vmath::Vdiv(nqtot,m_gmat[4],1,m_jac,1,m_gmat[4],1);
+// 
+//                 // d xi_3/d x_2
+//                 Vmath::Vmul (nqtot,d1[0],1,d2[2],1,m_gmat[5],1);
+//                 Vmath::Vvtvm(nqtot,d1[2],1,d3[0],1,m_gmat[5],1,m_gmat[5],1);
+//                 Vmath::Vdiv(nqtot,m_gmat[5],1,m_jac,1,m_gmat[5],1);
+// 
+//                 // d xi_1/d x_3
+//                 Vmath::Vmul (nqtot,d2[1],1,d3[0],1,m_gmat[6],1);
+//                 Vmath::Vvtvm(nqtot,d2[0],1,d3[1],1,m_gmat[6],1,m_gmat[6],1);
+//                 Vmath::Vdiv(nqtot,m_gmat[6],1,m_jac,1,m_gmat[6],1);
+// 
+//                 // d xi_2/d x_3
+//                 Vmath::Vmul (nqtot,d1[0],1,d3[2],1,m_gmat[7],1);
+//                 Vmath::Vvtvm(nqtot,d1[1],1,d3[0],1,m_gmat[7],1,m_gmat[7],1);
+//                 Vmath::Vdiv(nqtot,m_gmat[7],1,m_jac,1,m_gmat[7],1);
+// 
+//                 // d xim_3/d x_3
+//                 Vmath::Vmul (nqtot,d1[1],1,d2[0],1,m_gmat[8],1);
+//                 Vmath::Vvtvm(nqtot,d1[0],1,d2[1],1,m_gmat[8],1,m_gmat[8],1);
+//                 Vmath::Vdiv(nqtot,m_gmat[8],1,m_jac,1,m_gmat[8],1);
+//             }
         }
 
         GeomFactors::~GeomFactors(){
@@ -767,6 +769,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.20  2008/06/09 21:34:28  jfrazier
+// Added some code for 3d.
+//
 // Revision 1.19  2008/05/30 00:33:48  delisi
 // Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 //

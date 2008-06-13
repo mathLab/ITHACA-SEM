@@ -22,4 +22,9 @@ ADD_NEKTAR_EXECUTABLE(LocProject_Diff1D LocProject_Diff1DSource)
 TARGET_LINK_LIBRARIES(LocProject_Diff1D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(LocProject_Diff1D)
 
+SET(LocTetExpDemoSource  LocTetExpDemo.cpp)
+ADD_NEKTAR_EXECUTABLE(LocTetExpDemo LocTetExpDemoSource)
+TARGET_LINK_LIBRARIES(LocTetExpDemo ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(LocTetExpDemo)
+
 

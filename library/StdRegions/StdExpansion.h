@@ -409,6 +409,21 @@ namespace Nektar
                 return v_GetEdgeNcoeffs(i);
             }
 
+             /** \brief This function returns the number of expansion coefficients
+            *  belonging to the \a i-th face  
+            *  
+            *  This function is a wrapper around the virtual function 
+            *  \a v_GetFaceNcoeffs()
+            * 
+            *  \param i specifies which face
+            *  \return returns the number of expansion coefficients belonging to
+            *  the \a i-th face
+            */
+            int GetFaceNcoeffs(const int i) const
+            {
+                return v_GetFaceNcoeffs(i);
+            }
+
 
             int NumBndryCoeffs(void)  const
             {
@@ -1175,6 +1190,12 @@ namespace Nektar
                 return 0;
             }
 
+             virtual int v_GetFaceNcoeffs(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }
+
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
@@ -1365,6 +1386,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.83  2008/05/30 00:33:49  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.82  2008/05/29 21:36:25  pvos
 * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 *

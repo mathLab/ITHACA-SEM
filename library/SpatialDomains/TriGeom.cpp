@@ -46,6 +46,25 @@ namespace Nektar
             m_GeomShapeType = eTriangle;
         }
 
+        TriGeom::TriGeom(int id, const int coordim):
+                       Geometry2D(coordim), m_fid(id)
+        {
+            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, 2,
+                  LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
+                  LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
+
+            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(coordim);
+                
+            m_fid = id;
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+              m_xmap[i] = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+            }
+
+        }
+
         TriGeom::TriGeom(const VertexComponentSharedPtr verts[], 
 						 const SegGeomSharedPtr edges[], 
 						 const StdRegions::EdgeOrientation eorient[]):
@@ -69,9 +88,9 @@ namespace Nektar
                 "Cannot call function with dim == 1");
 
             const LibUtilities::BasisKey B0(LibUtilities::eModified_A, 2,
-                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                  LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
-                LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
+                  LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
 
@@ -111,9 +130,9 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,"Cannot call function with dim == 1");
 
             const LibUtilities::BasisKey B0(LibUtilities::eModified_A, 2,
-                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                  LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
-                LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
+                  LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
 
@@ -300,11 +319,34 @@ namespace Nektar
                     "inverse mapping must be set up to use this call");
             }
         }
+
+       //TODO: implement eight different case of face orientation
+       StdRegions::FaceOrientation TriGeom::GetFaceOrientation(const TriGeom &face1,
+                                                               const TriGeom &face2)
+       {
+            StdRegions::FaceOrientation returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+
+             // TODO : implement 
+//             eDir1FwdDir1_Dir2BwdDir2 
+//             eDir1BwdDir1_Dir2FwdDir2 
+//             eDir1BwdDir1_Dir2BwdDir2 
+//             eDir1FwdDir2_Dir2FwdDir1 
+//             eDir1FwdDir2_Dir2BwdDir1 
+//             eDir1BwdDir2_Dir2FwdDir1 
+//             eDir1BwdDir2_Dir2BwdDir1 
+   
+            return returnval;
+        }
+
+        
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.16  2008/06/11 21:34:42  delisi
+// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
+//
 // Revision 1.15  2008/05/28 21:52:27  jfrazier
 // Added GeomShapeType initialization for the different shapes.
 //

@@ -56,6 +56,7 @@ namespace Nektar
         {
             public:
                 TriGeom();
+                TriGeom(int id, const int coordim);
                 TriGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
                 TriGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
 				TriGeom(const TriGeom &in);
@@ -120,6 +121,11 @@ namespace Nektar
                     return m_eorient[i];
                 }
 
+                /// \brief Get the orientation of face1.
+                ///
+                static StdRegions::FaceOrientation GetFaceOrientation(const TriGeom &face1,
+                                                                      const TriGeom &face2);
+                                                                      
                 /// \brief Return the edge number of the given edge, or -1, if 
                 /// not an edge of this element.
                 int WhichEdge(SegGeomSharedPtr edge)
@@ -248,6 +254,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.21  2008/06/11 21:34:42  delisi
+// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
+//
 // Revision 1.20  2008/06/09 21:33:04  jfrazier
 // Moved segment vector to base MeshGraph class since it is used by all derived types.
 //

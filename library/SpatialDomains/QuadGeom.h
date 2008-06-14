@@ -54,6 +54,7 @@ namespace Nektar
         {
         public:
             QuadGeom();
+            QuadGeom(int id, const int coordim);
             QuadGeom(const VertexComponentSharedPtr verts[],  const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
             QuadGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
             QuadGeom(const QuadGeom &in);
@@ -115,8 +116,14 @@ namespace Nektar
             inline StdRegions::EdgeOrientation GetEorient(const int i) const
             {
                 ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
-                return m_eorient[i];
+                return m_eorient[i];            
             }
+
+            /// \brief Get the orientation of face1.
+            ///
+            static StdRegions::FaceOrientation GetFaceOrientation(const QuadGeom &face1,
+                                                                  const QuadGeom &face2);
+                                                                      
 
             inline StdRegions::EdgeOrientation GetCartesianEorient(const int i) const
             {
@@ -278,6 +285,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.20  2008/06/11 21:34:42  delisi
+// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
+//
 // Revision 1.19  2008/05/10 18:27:33  sherwin
 // Modifications necessary for QuadExp Unified DG Solver
 //

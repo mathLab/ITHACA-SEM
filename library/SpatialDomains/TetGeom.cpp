@@ -58,6 +58,22 @@ namespace Nektar
     namespace SpatialDomains
     {
 
+        TetGeom::TetGeom (const TriGeomSharedPtr faces[], const StdRegions::FaceOrientation forient[])
+        {
+            m_GeomShapeType = eTetrahedron;
+
+            /// Copy the face shared pointers
+            m_tfaces.insert(m_tfaces.begin(), faces, faces+TetGeom::kNfaces);
+
+            for (int j=0; j<kNfaces; ++j)
+            {
+               m_forient[j] = forient[j];
+            }
+
+            m_coordim = faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
+            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
+        }
+        
          TetGeom::TetGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr faces[],
                           const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[])
          {
@@ -77,7 +93,6 @@ namespace Nektar
                 m_eorient[i] = eorient[i];
             }
 
-            //TODO: check FaceOrientation for Tetrahedron case
             for (int j=0; j<kNfaces; ++j)
             {
                m_forient[j] = forient[j];
@@ -86,13 +101,7 @@ namespace Nektar
             m_coordim = verts[0]->GetCoordim();
             ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
         }
-
-        
-        TetGeom::TetGeom (const TriGeomSharedPtr faces[], const StdRegions::FaceOrientation forient[])
-        {
-            m_GeomShapeType = eTetrahedron;
-        }
-
+       
         TetGeom::TetGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[])          
         {
             m_GeomShapeType = eTetrahedron;
@@ -182,89 +191,56 @@ namespace Nektar
           //  m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
         }
 
-       void TetGeom::FillGeom()
-       {
-         // check to see if geometry structure is already filled
-            if(m_state == ePtsFilled)
+          /** \brief put all quadrature information into edge structure 
+        and backward transform 
+
+        Note verts, edges, and faces are listed according to anticlockwise
+        convention but points in _coeffs have to be in array format from
+        left to right.
+
+        */
+
+        void TetGeom::FillGeom()
+        {
+            // check to see if geometry structure is already filled
+            if(m_state != ePtsFilled)
             {
-                return;
-            }
+                int i,j,k;
 
-            int i,j; 
-            int order0 = m_xmap[0]->GetBasisNumModes(0);
-            int order1 = m_xmap[0]->GetBasisNumModes(1);
-            Array<OneD, const NekDouble> coef;
-            StdRegions::StdExpMap Map,MapV;
+                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0); //TODO: implement GetFaceNcoeffs()
+                Array<OneD, unsigned int> mapArray (nFaceCoeffs);
+                Array<OneD, int>          signArray(nFaceCoeffs);
 
-            // set side 1 
-            m_xmap[0]->MapTo((*m_edges[0])[0]->GetNcoeffs(),
-                 (*m_edges[0])[0]->GetBasisType(0),
-                 0,m_eorient[0],Map);
-
-            for(i = 0; i < m_coordim; ++i)
-            {
-                coef  = (*m_edges[0])[i]->GetCoeffs();
-                for(j = 0; j < order0; ++j)
+                 for(i = 0; i < kNfaces; i++)
                 {
-                    m_xmap[i]->SetCoeff(Map[j],coef[j]);
+                    m_tfaces[i]->FillGeom();
+                    
+                    //TODO: implement GetFaceToElementMap()
+                    // m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
+                    
+                    nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
+
+                    for(j = 0 ; j < m_coordim; j++)
+                    {
+                        for(k = 0; k < nFaceCoeffs; k++)
+                        {
+                           //TODO : insert code here
+                            //    (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = signArray[k]*
+                            //    ((*m_tfaces[i])[j]->GetCoeffs())[k];
+                        }
+                    }
                 }
-            }
-
-            // set Vertices into side 2 
-            (*m_edges[1])[0]->MapTo(m_eorient[1],MapV);
-
-            for(i = 0; i < m_coordim; ++i)
-            {
-                (*m_edges[1])[i]->SetCoeff(MapV[0],(*m_verts[1])[i]);
-                (*m_edges[1])[i]->SetCoeff(MapV[1],(*m_verts[2])[i]);
-            }
-
-            // set Vertices into side 3
-            (*m_edges[2])[0]->MapTo(m_eorient[2],MapV);
-
-            for(i = 0; i < m_coordim; ++i)
-            {
-                (*m_edges[2])[i]->SetCoeff(MapV[0],(*m_verts[0])[i]);
-                (*m_edges[2])[i]->SetCoeff(MapV[1],(*m_verts[2])[i]);
-            }
-
-            // set side 2
-            m_xmap[0]->MapTo((*m_edges[1])[0]->GetNcoeffs(),
-                 (*m_edges[1])[0]->GetBasisType(0),
-                 1,(m_eorient[1]),Map);
-        
-            for(i = 0; i < m_coordim; ++i)
-            {
-                coef  = (*m_edges[1])[i]->GetCoeffs();
-                for(j = 0; j < order1; ++j)
+                
+                for(i = 0; i < m_coordim; ++i)
                 {
-                    m_xmap[i]->SetCoeff(Map[j],coef[j]);
+                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
+                                        m_xmap[i]->UpdatePhys());
                 }
+                
+                m_state = ePtsFilled;
             }
+        }
 
-            // set side 3
-            m_xmap[0]->MapTo((*m_edges[2])[0]->GetNcoeffs(),
-                 (*m_edges[2])[0]->GetBasisType(0),
-                 2,(m_eorient[2]),Map);
-
-            for(i = 0; i < m_coordim; ++i)
-            {
-                coef  = (*m_edges[2])[i]->GetCoeffs();
-                for(j = 0; j < order0; ++j)
-                {
-                    m_xmap[i]->SetCoeff(Map[j],coef[j]);
-                }
-            }
-
-            for(i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
-                                    m_xmap[i]->UpdatePhys());
-            }
-
-            m_state = ePtsFilled;
-
-       }  
 
        void TetGeom::GetLocCoords(const Array<OneD, const NekDouble>& coords, Array<OneD, NekDouble>& Lcoords)
        {
@@ -320,6 +296,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.11  2008/06/12 21:22:55  delisi
+// Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
+//
 // Revision 1.10  2008/06/11 16:10:12  delisi
 // Added the 3D reader.
 //

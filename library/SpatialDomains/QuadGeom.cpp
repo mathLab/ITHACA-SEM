@@ -54,6 +54,24 @@ namespace Nektar
             m_GeomShapeType = eQuadrilateral;
         }
 
+        QuadGeom::QuadGeom(int id, const int coordim):
+                          Geometry2D(coordim), m_fid(id)
+        {
+
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
+            LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+
+            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            
+            m_fid = id;
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);  
+            }
+
+        }
+
         QuadGeom::QuadGeom(const VertexComponentSharedPtr verts[], 
 						   const SegGeomSharedPtr edges[], 
 						   const StdRegions::EdgeOrientation eorient[]):
@@ -78,7 +96,7 @@ namespace Nektar
                 "Cannot call function with dim == 1");
 
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                  LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
 
@@ -332,11 +350,32 @@ namespace Nektar
             }
         }
 
+        //TODO: implement eight different case of face orientation
+       StdRegions::FaceOrientation QuadGeom::GetFaceOrientation(const QuadGeom &face1,
+                                                                const QuadGeom &face2)
+       {
+            StdRegions::FaceOrientation returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+
+             // TODO : implement 
+//             eDir1FwdDir1_Dir2BwdDir2 
+//             eDir1BwdDir1_Dir2FwdDir2 
+//             eDir1BwdDir1_Dir2BwdDir2 
+//             eDir1FwdDir2_Dir2FwdDir1 
+//             eDir1FwdDir2_Dir2BwdDir1 
+//             eDir1BwdDir2_Dir2FwdDir1 
+//             eDir1BwdDir2_Dir2BwdDir1 
+   
+            return returnval;
+        }
+
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.17  2008/06/11 21:34:42  delisi
+// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
+//
 // Revision 1.16  2008/05/29 19:01:45  delisi
 // Renamed eQuad to eQuadrilateral.
 //

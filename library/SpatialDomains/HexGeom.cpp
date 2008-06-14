@@ -44,6 +44,45 @@ namespace Nektar
         HexGeom::HexGeom(const QuadGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
         {
             m_GeomShapeType = eHexahedron;
+
+            /// Copy the face shared pointers
+            m_qfaces.insert(m_qfaces.begin(), faces, faces+HexGeom::kNfaces);
+
+            for (int j=0; j<kNfaces; ++j)
+            {
+               m_forient[j] = forient[j];
+            }
+
+            m_coordim = faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
+            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
+        }
+
+        HexGeom::HexGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const QuadGeomSharedPtr faces[],
+                         const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[])
+         {
+            m_GeomShapeType = eHexahedron;
+ 
+            /// Copy the vert shared pointers.
+            m_verts.insert(m_verts.begin(), verts, verts+HexGeom::kNverts);
+
+            /// Copy the edge shared pointers.
+            m_edges.insert(m_edges.begin(), edges, edges+HexGeom::kNedges);
+
+            /// Copy the face shared pointers
+            m_qfaces.insert(m_qfaces.begin(), faces, faces+HexGeom::kNfaces);
+
+            for (int i=0; i<kNedges; ++i)
+            {
+                m_eorient[i] = eorient[i];
+            }
+
+            for (int j=0; j<kNfaces; ++j)
+            {
+               m_forient[j] = forient[j];
+            }
+
+            m_coordim = verts[0]->GetCoordim();
+            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
         }
 
         HexGeom::~HexGeom()
@@ -92,17 +131,54 @@ namespace Nektar
 			// TODO: Insert code here.
 		}
 
+
+          /** \brief put all quadrature information into edge structure 
+        and backward transform 
+
+        Note verts, edges, and faces are listed according to anticlockwise
+        convention but points in _coeffs have to be in array format from
+        left to right.
+
+        */
 		void HexGeom::FillGeom()
 		{
-			// check to see if geometry structure is already filled
-			if(m_state == ePtsFilled)
-			{
-				return;
-			}
+           // check to see if geometry structure is already filled
+            if(m_state != ePtsFilled)
+            {
+                int i,j,k;
 
-			// TODO: Insert code here.
+                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0); //TODO: implement GetFaceNcoeffs()
+                Array<OneD, unsigned int> mapArray (nFaceCoeffs);
+                Array<OneD, int>          signArray(nFaceCoeffs);
 
-			m_state = ePtsFilled;
+                 for(i = 0; i < kNfaces; i++)
+                {
+                    m_qfaces[i]->FillGeom();
+                    
+                    //TODO: implement GetFaceToElementMap()
+                    //  m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray); 
+                    
+                    nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
+
+                    for(j = 0 ; j < m_coordim; j++)
+                    {
+                        for(k = 0; k < nFaceCoeffs; k++)
+                        {
+                           //TODO : insert code here
+                            //  (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = signArray[k]*
+                            //  ((*m_tfaces[i])[j]->GetCoeffs())[k];
+                        }
+                    }
+                }
+                
+                for(i = 0; i < m_coordim; ++i)
+                {
+                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
+                                        m_xmap[i]->UpdatePhys());
+                }
+                
+                m_state = ePtsFilled;
+            }
 
 		}
 
@@ -116,6 +192,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.8  2008/06/12 21:22:43  delisi
+// Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
+//
 // Revision 1.7  2008/05/29 19:02:23  delisi
 // Renamed eHex to eHexahedron.
 //

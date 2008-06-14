@@ -60,7 +60,11 @@ namespace Nektar
         class PyrGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
+            PyrGeom ();
             PyrGeom (const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[], const StdRegions::FaceOrientation forient[]);
+            PyrGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr tfaces[],
+                    const QuadGeomSharedPtr qfaces[],const StdRegions::EdgeOrientation eorient[],
+                    const StdRegions::FaceOrientation forient[]);
             ~PyrGeom();
 
             void AddElmtConnected(int gvo_id, int locid);
@@ -89,6 +93,11 @@ namespace Nektar
                 return m_xmap[i]->UpdatePhys();
             }
 
+            inline void SetOwnData()
+            {
+                m_owndata = true; 
+            }
+
             NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
             static const int kNverts  = 5;
@@ -115,8 +124,8 @@ namespace Nektar
 			void GenGeomFactors(void);
 
         private:
-            PyrGeom ();
-
+            bool m_owndata;
+            
             virtual void v_GenGeomFactors(void)
             {
                 GenGeomFactors();
@@ -166,6 +175,12 @@ namespace Nektar
             {
                 return GetCoord(i,Lcoord);
             }
+            
+            virtual void v_SetOwnData()
+            {
+                SetOwnData();   
+            }
+           
         };
     }; //end of namespace
 }; //end of namespace
@@ -174,6 +189,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.h,v $
+// Revision 1.9  2008/06/12 21:22:55  delisi
+// Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
+//
 // Revision 1.8  2008/06/11 21:34:42  delisi
 // Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
 //

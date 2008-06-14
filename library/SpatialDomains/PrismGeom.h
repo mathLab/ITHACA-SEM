@@ -58,7 +58,11 @@ namespace Nektar
         class PrismGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
+            PrismGeom ();
             PrismGeom(const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[], const StdRegions::FaceOrientation forient[]);
+            PrismGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr tfaces[],
+                      const QuadGeomSharedPtr qfaces[],const StdRegions::EdgeOrientation eorient[],
+                      const StdRegions::FaceOrientation forient[]);
             ~PrismGeom();
 
             void AddElmtConnected(int gvo_id, int locid);
@@ -87,6 +91,11 @@ namespace Nektar
                 return m_xmap[i]->UpdatePhys();
             }
 
+            inline void SetOwnData()
+            {
+                m_owndata = true; 
+            }
+
             NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
             static const int kNverts = 6;
@@ -96,7 +105,8 @@ namespace Nektar
             static const int kNfaces = kNqfaces + kNtfaces;
 
         protected:
-
+            bool m_owndata;
+            
             VertexComponentVector           m_verts;
             SegGeomVector                   m_edges;
             TriGeomVector                   m_tfaces;
@@ -113,7 +123,7 @@ namespace Nektar
 			void GenGeomFactors(void);
 
         private:
-            PrismGeom ();
+ 
 
             virtual void v_GenGeomFactors(void)
             {
@@ -165,6 +175,11 @@ namespace Nektar
                 return GetCoord(i,Lcoord);
             }
 
+            virtual void v_SetOwnData()
+            {
+                SetOwnData();   
+            }
+
         };
     }; //end of namespace
 }; //end of namespace
@@ -173,6 +188,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.h,v $
+// Revision 1.8  2008/06/12 21:22:55  delisi
+// Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
+//
 // Revision 1.7  2008/06/11 21:34:42  delisi
 // Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
 //

@@ -60,7 +60,10 @@ namespace Nektar
         class HexGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
+            HexGeom();
             HexGeom(const QuadGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
+            HexGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const QuadGeomSharedPtr faces[],
+                    const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[]);
             ~HexGeom();
 
             void AddElmtConnected(int gvo_id, int locid);
@@ -251,6 +254,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.12  2008/06/12 21:22:55  delisi
+// Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
+//
 // Revision 1.11  2008/06/11 21:34:41  delisi
 // Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
 //

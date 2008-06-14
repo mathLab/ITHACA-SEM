@@ -44,6 +44,55 @@ namespace Nektar
         PrismGeom::PrismGeom(const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[], const StdRegions::FaceOrientation forient[])
         {
             m_GeomShapeType = ePrism;
+
+            /// Copy the quad face shared pointers
+            m_qfaces.insert(m_qfaces.begin(), qfaces, qfaces+PrismGeom::kNfaces);
+
+            /// Copy the triangle face shared pointers
+            m_tfaces.insert(m_tfaces.begin(), tfaces, tfaces+PrismGeom::kNfaces);
+            
+            for (int j=0; j<kNfaces; ++j)
+            {
+               m_forient[j] = forient[j];
+            }
+
+            m_coordim = tfaces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
+            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
+
+        }
+
+        PrismGeom::PrismGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr tfaces[],
+                             const QuadGeomSharedPtr qfaces[],const StdRegions::EdgeOrientation eorient[],
+                             const StdRegions::FaceOrientation forient[])
+        {
+
+             m_GeomShapeType = ePrism;
+ 
+            /// Copy the vert shared pointers.
+            m_verts.insert(m_verts.begin(), verts, verts+PrismGeom::kNverts);
+
+            /// Copy the edge shared pointers.
+            m_edges.insert(m_edges.begin(), edges, edges+PrismGeom::kNedges);
+
+            /// Copy the quad face shared pointers
+            m_qfaces.insert(m_qfaces.begin(), qfaces, qfaces+PrismGeom::kNfaces);
+
+            /// Copy the triangle face shared pointers
+            m_tfaces.insert(m_tfaces.begin(), tfaces, tfaces+PrismGeom::kNfaces);
+            
+            for (int i=0; i<kNedges; ++i)
+            {
+                m_eorient[i] = eorient[i];
+            }
+
+            for (int j=0; j<kNfaces; ++j)
+            {
+               m_forient[j] = forient[j];
+            }
+
+            m_coordim = verts[0]->GetCoordim();
+            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
+
         }
 
         PrismGeom::~PrismGeom()
@@ -92,19 +141,57 @@ namespace Nektar
 			// TODO: Insert code here.
 		}
 
-		void PrismGeom::FillGeom()
-		{
-			// check to see if geometry structure is already filled
-			if(m_state == ePtsFilled)
-			{
-				return;
-			}
 
-			// TODO: Insert code here.
 
-			m_state = ePtsFilled;
+          /** \brief put all quadrature information into edge structure 
+        and backward transform 
 
-		}
+        Note verts, edges, and faces are listed according to anticlockwise
+        convention but points in _coeffs have to be in array format from
+        left to right.
+
+        */
+
+        void PrismGeom::FillGeom()
+        {
+            // check to see if geometry structure is already filled
+            if(m_state != ePtsFilled)
+            {
+                int i,j,k;
+
+                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0); //TODO: implement GetFaceNcoeffs()
+                Array<OneD, unsigned int> mapArray (nFaceCoeffs);
+                Array<OneD, int>          signArray(nFaceCoeffs);
+
+                 for(i = 0; i < kNfaces; i++)
+                {
+                    m_tfaces[i]->FillGeom();
+                    
+                    //TODO: implement GetFaceToElementMap()
+                    //  m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray); 
+                    
+                    nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
+
+                    for(j = 0 ; j < m_coordim; j++)
+                    {
+                        for(k = 0; k < nFaceCoeffs; k++)
+                        {
+                           //TODO : insert code here
+//                             (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = signArray[k]*
+//                                        ((*m_tfaces[i])[j]->GetCoeffs())[k];
+                        }
+                    }
+                }
+                
+                for(i = 0; i < m_coordim; ++i)
+                {
+                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
+                                        m_xmap[i]->UpdatePhys());
+                }
+                
+                m_state = ePtsFilled;
+            }
+        }
 
 		void PrismGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD, NekDouble> &Lcoords)
 		{
@@ -116,6 +203,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.cpp,v $
+// Revision 1.6  2008/06/12 21:22:55  delisi
+// Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
+//
 // Revision 1.5  2008/06/11 16:10:12  delisi
 // Added the 3D reader.
 //

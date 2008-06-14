@@ -27,4 +27,17 @@ ADD_NEKTAR_EXECUTABLE(LocTetExpDemo LocTetExpDemoSource)
 TARGET_LINK_LIBRARIES(LocTetExpDemo ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(LocTetExpDemo)
 
+SET(LocPyrExpDemoSource  LocPyrExpDemo.cpp)
+ADD_NEKTAR_EXECUTABLE(LocPyrExpDemo LocPyrExpDemoSource)
+TARGET_LINK_LIBRARIES(LocPyrExpDemo ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(LocPyrExpDemo)
 
+SET(LocPrismExpDemoSource  LocPrismExpDemo.cpp)
+ADD_NEKTAR_EXECUTABLE(LocPrismExpDemo LocPrismExpDemoSource)
+TARGET_LINK_LIBRARIES(LocPrismExpDemo ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(LocPrismExpDemo)
+
+SET(LocHexExpDemoSource  LocHexExpDemo.cpp)
+ADD_NEKTAR_EXECUTABLE(LocHexExpDemo LocHexExpDemoSource)
+TARGET_LINK_LIBRARIES(LocHexExpDemo ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(LocHexExpDemo)

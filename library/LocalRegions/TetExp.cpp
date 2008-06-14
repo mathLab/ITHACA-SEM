@@ -437,99 +437,90 @@ namespace Nektar
             }
         }
 
-	
-        //TODO: implement
         void TetExp::GetCoords(Array<OneD,NekDouble> &coords_0,
                                Array<OneD,NekDouble> &coords_1,
                                Array<OneD,NekDouble> &coords_2)
         {
-                LibUtilities::BasisSharedPtr CBasis0;
-                LibUtilities::BasisSharedPtr CBasis1;
-                LibUtilities::BasisSharedPtr CBasis2;
-                Array<OneD,NekDouble>  x;
-
-                ASSERTL0(m_geom, "m_geom not define");
-
-                // get physical points defined in Geom
-    //            m_geom->FillGeom(); //TODO: implement FillGeom()
-
-                switch(m_geom->GetCoordim())
+            LibUtilities::BasisSharedPtr CBasis0;
+            LibUtilities::BasisSharedPtr CBasis1;
+            LibUtilities::BasisSharedPtr CBasis2;
+            Array<OneD,NekDouble>  x;
+            
+            ASSERTL0(m_geom, "m_geom not define");
+            
+            // get physical points defined in Geom
+//             m_geom->FillGeom();  //TODO: implement
+            
+            switch(m_geom->GetCoordim())
+            {
+            case 3:
+                ASSERTL0(coords_2.num_elements(), "output coords_2 is not defined");
+                CBasis0 = m_geom->GetBasis(2,0); 
+                CBasis1 = m_geom->GetBasis(2,1);
+                CBasis2 = m_geom->GetBasis(2,2);
+                
+                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
+                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
+                   (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
                 {
-                case 3:
-                    ASSERTL0(coords_2.num_elements() != 0, "output coords_2 is not defined");
-
-                //TODO: check GetBasis()
-                    CBasis0 = m_geom->GetBasis(2,0);
-                    CBasis1 = m_geom->GetBasis(2,1);
-                    CBasis2 = m_geom->GetBasis(2,2);
-
-
-                    if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                       (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                       (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-                    {
-                        x = m_geom->UpdatePhys(2); //TODO: check UpdatedPhys
-                        Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                    m_base[1]->GetNumPoints()*
-                                    m_base[2]->GetNumPoints(),
-                                    x,1,coords_2,1);
-                    }
-                    else // Interpolate to Expansion point distribution
-                    {
-                        Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(2))[0],
-                                 m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(), &coords_2[0]);
-                    }
-                case 2:
-                    ASSERTL0(coords_1.num_elements(), "output coords_1 is not defined");
-
-                    CBasis0 = m_geom->GetBasis(1,0);
-                    CBasis1 = m_geom->GetBasis(1,1);
-                    CBasis2 = m_geom->GetBasis(1,2);
-
-                    if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                       (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                       (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-                    {
-                        x = m_geom->UpdatePhys(1);
-                        Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                    m_base[1]->GetNumPoints()*
-                                    m_base[2]->GetNumPoints(),
-                                    x, 1, coords_1, 1);
-                    }
-                    else // Interpolate to Expansion point distribution
-                    {
-                    Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(1))[0],
-                             m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(),&coords_1[0]);
-                    }
-                case 1:
-                    ASSERTL0(coords_0.num_elements(),"output coords_0 is not defined");
-
-                    CBasis0 = m_geom->GetBasis(0,0); 
-                    CBasis1 = m_geom->GetBasis(0,1);
-                    CBasis2 = m_geom->GetBasis(0,2);
-
-                    if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                       (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                       (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-                    {
-                        x = m_geom->UpdatePhys(0);
-                        Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                    m_base[1]->GetNumPoints()*
-                                    m_base[2]->GetNumPoints(),
-                                    x, 1, coords_0, 1);
-                    }
-                    else // Interpolate to Expansion point distribution
-                    {
-                        Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(0))[0],
-                                 m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(),&coords_0[0]);
-                    }
-                    break;
-                default:
-                    ASSERTL0(false,"Number of dimensions are greater than 3");
-                    break;
+                    x = m_geom->UpdatePhys(2);
+                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*m_base[2]->GetNumPoints(),
+                                x, 1, coords_2, 1);
                 }
-            }  
+                else // Interpolate to Expansion point distribution
+                {
+                    Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(2))[0],
+                             m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(), &coords_2[0]);
+                }    
+            case 2:
+                ASSERTL0(coords_1.num_elements(), "output coords_1 is not defined");
+                
+                CBasis0 = m_geom->GetBasis(1,0); 
+                CBasis1 = m_geom->GetBasis(1,1);
+                CBasis2 = m_geom->GetBasis(1,2);
+                
+                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
+                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
+                   (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
+                {
+                    x = m_geom->UpdatePhys(1);
+                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*m_base[2]->GetNumPoints(),
+                                x, 1, coords_1, 1);
+                }
+                else // Interpolate to Expansion point distribution
+                {
+                    Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(1))[0],
+                             m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(), &coords_1[0]);
+                }
+            case 1:
+                ASSERTL0(coords_0.num_elements(), "output coords_0 is not defined");
+                
+                CBasis0 = m_geom->GetBasis(0,0); 
+                CBasis1 = m_geom->GetBasis(0,1);
+                CBasis2 = m_geom->GetBasis(0,2);
+                
+                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
+                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
+                   (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
+                {
+                    x = m_geom->UpdatePhys(0);
+                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*m_base[2]->GetNumPoints(),
+                                x, 1, coords_0, 1);
+                }
+                else // Interpolate to Expansion point distribution
+                {
+                    Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(0))[0],
+                             m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),m_base[2]->GetBasisKey(),&coords_0[0]);
+                }
+                break;
+            default:
+                ASSERTL0(false,"Number of dimensions are greater than 3");
+                break;
+            }
+        }
 
+	
+      
 	    // get the coordinates "coords" at the local coordinates "Lcoords"
         void TetExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
         {
@@ -855,6 +846,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.12  2008/06/06 23:25:21  ehan
+ *    Added doxygen documentation
+ *
  *    Revision 1.11  2008/06/05 20:18:47  ehan
  *    Fixed undefined function GetGtype() in the ASSERTL2().
  *

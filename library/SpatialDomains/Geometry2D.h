@@ -46,8 +46,15 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        class Geometry2D;
+        
+        // shorthand for boost pointer
+        typedef boost::shared_ptr<Geometry2D> Geometry2DSharedPtr;
+        typedef std::vector< Geometry2DSharedPtr > Geometry2DVector;
+        typedef std::vector< Geometry2DSharedPtr >::iterator Geometry2DVectorIter;
+        
         class Geometry2D: public Geometry
-        {
+        {       
         public:
             Geometry2D();
             Geometry2D(const int coordim);
@@ -125,6 +132,16 @@ namespace Nektar
             {
                 return v_GetVid(i);
             }
+
+            inline const Geometry2DSharedPtr GetFace(int i) const
+            {
+                return v_GetFace(i);
+            }
+
+            inline StdRegions::FaceOrientation GetFaceorient(const int i) const
+            {
+                return v_GetFaceorient(i);
+            }
                 
             inline const SegGeomSharedPtr GetEdge(int i) const
             {
@@ -144,6 +161,11 @@ namespace Nektar
             int WhichEdge(SegGeomSharedPtr edge)
             {
                 return v_WhichEdge(edge);
+            }
+
+            int WhichFace(Geometry2DSharedPtr face)
+            {
+                return v_WhichFace(face);
             }
 
         protected:
@@ -255,6 +277,21 @@ namespace Nektar
                 return StdRegions::eForwards;
             }
 
+            virtual const Geometry2DSharedPtr v_GetFace(int i) const
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                Geometry2DSharedPtr returnval;
+                return returnval;                
+            }
+
+            virtual StdRegions::FaceOrientation v_GetFaceorient(const int i) const
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+            }
+
             virtual StdRegions::EdgeOrientation v_GetCartesianEorient(const int i) const
             {
                 NEKERROR(ErrorUtil::efatal,
@@ -268,13 +305,15 @@ namespace Nektar
                          "This function is only valid for shape type geometries");
                 return 0;
             }
-        };
-        // shorthand for boost pointer
-        typedef boost::shared_ptr<Geometry2D> Geometry2DSharedPtr;
-        typedef std::vector< Geometry2DSharedPtr > Geometry2DVector;
-        typedef std::vector< Geometry2DSharedPtr >::iterator Geometry2DVectorIter;
 
-        typedef boost::shared_ptr<Geometry2D> Geometry2DSharedPtr;
+            virtual int v_WhichFace(Geometry2DSharedPtr face)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                return 0;
+            }
+        };
+
 
     }; //end of namespace
 }; //end of namespace
@@ -283,6 +322,9 @@ namespace Nektar
 
 //
 // $Log: Geometry2D.h,v $
+// Revision 1.5  2008/05/10 18:27:33  sherwin
+// Modifications necessary for QuadExp Unified DG Solver
+//
 // Revision 1.4  2008/04/06 06:00:37  bnelson
 // Changed ConstArray to Array<const>
 //

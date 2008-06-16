@@ -270,6 +270,11 @@ namespace Nektar
                 return GetEorient(i);
             }
 
+           virtual StdRegions::FaceOrientation v_GetFaceorient(const int i) const
+            {
+                return GetFaceorient(i);
+            }
+
             virtual int v_GetVid(int i) const
             {
                 return GetVid(i);
@@ -314,6 +319,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.12  2008/06/11 16:10:12  delisi
+// Added the 3D reader.
+//
 // Revision 1.11  2008/05/12 17:30:09  ehan
 // Added virtual functions
 //

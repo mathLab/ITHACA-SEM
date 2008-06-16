@@ -812,6 +812,15 @@ namespace Nektar
         }
 
 
+        void StdTetExp::GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                            Array<OneD, unsigned int> &maparray,
+                                            Array<OneD, int> &signarray)
+        {
+                //TODO implement 
+
+        }
+
+
        void  StdTetExp::MapTo(const int edge_ncoeffs,
                               const LibUtilities::BasisType Btype,
                               const int eid,
@@ -906,6 +915,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.15  2008/06/06 23:22:47  ehan
+ * Added doxygen documentation
+ *
  * Revision 1.14  2008/06/05 15:06:06  pvos
  * Added documentation
  *

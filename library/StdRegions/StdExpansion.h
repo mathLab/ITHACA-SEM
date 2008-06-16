@@ -714,6 +714,11 @@ namespace Nektar
                 return v_GetLocStaticCondMatrix(mkey);
             }
 
+            StdRegions::FaceOrientation GetFaceorient(int face)
+            {
+                return v_GetFaceorient(face);
+            }
+
             StdRegions::EdgeOrientation GetEorient(int edge)
             {
                 return v_GetEorient(edge);
@@ -796,6 +801,13 @@ namespace Nektar
                                      Array<OneD, int> &signarray)
             {
                 v_GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
+            }
+
+            void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                     Array<OneD, unsigned int> &maparray,
+                                     Array<OneD, int> &signarray)
+            {
+                v_GetFaceToElementMap(fid,faceOrient,maparray,signarray);
             }
             
             // element boundary ordering 
@@ -919,6 +931,12 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return NullDNekScalBlkMatSharedPtr;
                 //return boost::shared_ptr<DNekScalBlkMat>();
+            }
+
+            virtual StdRegions::FaceOrientation v_GetFaceorient(int face)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");  
+                return eDir1FwdDir1_Dir2FwdDir2;              
             }
 
             virtual StdRegions::EdgeOrientation v_GetEorient(int edge)
@@ -1339,6 +1357,13 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
+            virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                               Array<OneD, unsigned int> &maparray,
+                                               Array<OneD, int> &signarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
             // element boundary ordering 
             virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
             {
@@ -1386,6 +1411,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.84  2008/06/13 00:27:20  ehan
+* Added GetFaceNCoeffs() function.
+*
 * Revision 1.83  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

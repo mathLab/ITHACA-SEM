@@ -78,6 +78,18 @@ namespace Nektar
            return ePrism;
         }
 
+        //TODO implement
+        void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                Array<OneD, unsigned int> &maparray,
+                                Array<OneD, int> &signarray);
+
+        int GetFaceNcoeffs(const int i) const
+        {
+            ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
+            //TODO implement
+            return 0;
+        }
+            
         const int GetEdgeNcoeffs(const int i) const
         {
             ASSERTL2((i >= 0)&&(i <= 8),"edge id is out of range");
@@ -188,6 +200,18 @@ namespace Nektar
             return GetEdgeNcoeffs(i);
         }
 
+        virtual int v_GetFaceNcoeffs(const int i) const
+        {
+            return GetFaceNcoeffs(i);
+        }
+        
+        virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                            Array<OneD, unsigned int> &maparray,
+                                            Array<OneD, int> &signarray)
+        {
+            GetFaceToElementMap(fid,faceOrient,maparray,signarray);
+        }
+
         virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
         {
             return GenMatrix(mkey);
@@ -294,6 +318,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.16  2008/05/30 00:33:49  delisi
+ * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+ *
  * Revision 1.15  2008/05/29 21:36:25  pvos
  * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
  *

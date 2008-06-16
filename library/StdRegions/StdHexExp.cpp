@@ -570,6 +570,16 @@ namespace Nektar
             }
         }
 
+
+        void StdHexExp::GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                            Array<OneD, unsigned int> &maparray,
+                                            Array<OneD, int> &signarray)
+        {
+                //TODO implement 
+
+        }
+
+
         void StdHexExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
             if(format==eTecplot)
@@ -714,6 +724,9 @@ namespace Nektar
 
 /** 
 * $Log: StdHexExp.cpp,v $
+* Revision 1.20  2008/06/06 23:21:41  ehan
+* Added doxygen documentation
+*
 * Revision 1.19  2008/06/05 15:06:06  pvos
 * Added documentation
 *

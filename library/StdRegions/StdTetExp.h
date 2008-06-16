@@ -59,8 +59,7 @@ namespace Nektar
 
             /** \brief Constructor using BasisKey class for quadrature points and order definition where m_coeffs and m_phys are all set.
             */
-            StdTetExp(const  LibUtilities::BasisKey &Ba, const  LibUtilities::BasisKey &Bb, const  LibUtilities::BasisKey &Bc, 
-                      double *coeffs, double *phys);
+            StdTetExp(const  LibUtilities::BasisKey &Ba, const  LibUtilities::BasisKey &Bb, const  LibUtilities::BasisKey &Bc, double *coeffs, double *phys);
 
             /** \brief Copy Constructor */
             StdTetExp(const StdTetExp &T);
@@ -137,6 +136,19 @@ namespace Nektar
                                  const int eid,
                                  const EdgeOrientation eorient,
                                  StdExpMap &Map);
+
+          //TODO implement                       
+          void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                   Array<OneD, unsigned int> &maparray,
+                                   Array<OneD, int> &signarray);
+                                   
+         int GetFaceNcoeffs(const int i) const
+         {
+
+            ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
+            //TODO implement
+            return 0;
+          }
 
 
             //----------------------------------
@@ -221,6 +233,16 @@ namespace Nektar
             virtual int v_GetEdgeNcoeffs(const int i) const
             {
                 return GetEdgeNcoeffs(i);
+            }
+            virtual int v_GetFaceNcoeffs(const int i) const
+            {
+                return GetFaceNcoeffs(i);
+            }
+            virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                               Array<OneD, unsigned int> &maparray,
+                                               Array<OneD, int> &signarray)
+            {
+                GetFaceToElementMap(fid,faceOrient,maparray,signarray);
             }
 
             virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
@@ -337,6 +359,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.19  2008/06/06 23:23:05  ehan
+ * Added doxygen documentation
+ *
  * Revision 1.18  2008/05/30 00:33:49  delisi
  * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

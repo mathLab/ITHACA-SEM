@@ -684,6 +684,14 @@ namespace Nektar
             }
         }
 
+        void StdPyrExp::GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                            Array<OneD, unsigned int> &maparray,
+                                            Array<OneD, int> &signarray)
+        {
+                //TODO implement 
+
+        }
+
         void StdPyrExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
             if(format==eTecplot)
@@ -769,6 +777,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPyrExp.cpp,v $
+ * Revision 1.11  2008/06/06 23:22:24  ehan
+ * Added doxygen documentation
+ *
  * Revision 1.10  2008/06/05 15:06:06  pvos
  * Added documentation
  *

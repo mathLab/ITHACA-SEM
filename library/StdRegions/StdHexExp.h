@@ -80,6 +80,18 @@ namespace Nektar
                 return eHexahedron;
             }
 
+            //TODO implement
+            void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                    Array<OneD, unsigned int> &maparray,
+                                    Array<OneD, int> &signarray);
+
+            int GetFaceNcoeffs(const int i) const
+            {
+                ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
+                //TODO implement
+                return 0;
+            }
+
             const int GetEdgeNcoeffs(const int i) const
             {
                 ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
@@ -233,6 +245,17 @@ namespace Nektar
             {
                 return DetExpansionType();
             };
+
+            virtual int v_GetFaceNcoeffs(const int i) const
+            {
+                return GetFaceNcoeffs(i);
+            }
+            virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                               Array<OneD, unsigned int> &maparray,
+                                               Array<OneD, int> &signarray)
+            {
+                GetFaceToElementMap(fid,faceOrient,maparray,signarray);
+            }
             
             virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
             {
@@ -347,6 +370,9 @@ namespace Nektar
 
 /**
 * $Log: StdHexExp.h,v $
+* Revision 1.22  2008/06/05 15:06:06  pvos
+* Added documentation
+*
 * Revision 1.21  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

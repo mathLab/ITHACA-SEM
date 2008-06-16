@@ -725,6 +725,14 @@ namespace Nektar
             }
         }
 
+       void StdPrismExp::GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                           Array<OneD, unsigned int> &maparray,
+                                           Array<OneD, int> &signarray)
+        {
+                //TODO implement 
+
+        }
+
         void StdPrismExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
             if(format==eTecplot)
@@ -814,6 +822,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.12  2008/06/06 23:22:07  ehan
+ * Added doxygen documentation
+ *
  * Revision 1.11  2008/06/05 15:06:06  pvos
  * Added documentation
  *

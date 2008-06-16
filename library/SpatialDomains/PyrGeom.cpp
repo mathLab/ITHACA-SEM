@@ -51,7 +51,7 @@ namespace Nektar
             
             /// Copy the quad face shared pointers
             m_qfaces.insert(m_qfaces.begin(), qfaces, qfaces+PyrGeom::kNfaces);
-
+           
             for (int j=0; j<kNfaces; ++j)
             {
                m_forient[j] = forient[j];
@@ -90,6 +90,22 @@ namespace Nektar
             }
 
             m_coordim = verts[0]->GetCoordim();
+            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
+        }
+
+        PyrGeom::PyrGeom(const Geometry2DSharedPtr faces[], const StdRegions::FaceOrientation forient[])
+        {
+            m_GeomShapeType = ePyramid;
+
+            /// Copy the face shared pointers
+            m_faces.insert(m_faces.begin(), faces, faces+PyrGeom::kNfaces);
+           
+            for (int j=0; j<kNfaces; ++j)
+            {
+               m_forient[j] = forient[j];
+            }
+
+            m_coordim = faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
             ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
         }
 
@@ -136,7 +152,21 @@ namespace Nektar
 
         void PyrGeom::GenGeomFactors(void)
         {
-			// TODO: Insert code here.
+			GeomType Gtype = eRegular;
+            
+            FillGeom();
+
+            // check to see if expansions are linear
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                if((m_xmap[i]->GetBasisNumModes(0) != 2)||
+                   (m_xmap[i]->GetBasisNumModes(1) != 2)||
+                   (m_xmap[i]->GetBasisNumModes(2) != 2))
+                {
+                    Gtype = eDeformed;
+                }
+            }
+          //  m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
 		}
 
 
@@ -159,7 +189,7 @@ namespace Nektar
                 Array<OneD, unsigned int> mapArray (nFaceCoeffs);
                 Array<OneD, int>          signArray(nFaceCoeffs);
 
-                 for(i = 0; i < kNfaces; i++)
+                for(i = 0; i < kNfaces; i++)
                 {
                     m_tfaces[i]->FillGeom();
                     
@@ -200,6 +230,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.cpp,v $
+// Revision 1.7  2008/06/14 01:22:52  ehan
+// Implemented constructor and FillGeom().
+//
 // Revision 1.6  2008/06/12 21:22:55  delisi
 // Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
 //

@@ -95,6 +95,22 @@ namespace Nektar
 
         }
 
+        PrismGeom::PrismGeom(const Geometry2DSharedPtr faces[], const StdRegions::FaceOrientation forient[])
+        {
+            m_GeomShapeType = ePrism;
+
+            /// Copy the face shared pointers
+            m_faces.insert(m_faces.begin(), faces, faces+PrismGeom::kNfaces);
+           
+            for (int j=0; j<kNfaces; ++j)
+            {
+               m_forient[j] = forient[j];
+            }
+
+            m_coordim = faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
+            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
+        }
+
         PrismGeom::~PrismGeom()
         {
         }
@@ -165,7 +181,7 @@ namespace Nektar
 
                  for(i = 0; i < kNfaces; i++)
                 {
-                    m_tfaces[i]->FillGeom();
+                    m_faces[i]->FillGeom();
                     
                     //TODO: implement GetFaceToElementMap()
                     //  m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray); 
@@ -178,7 +194,7 @@ namespace Nektar
                         {
                            //TODO : insert code here
 //                             (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = signArray[k]*
-//                                        ((*m_tfaces[i])[j]->GetCoeffs())[k];
+//                                        ((*m_faces[i])[j]->GetCoeffs())[k];
                         }
                     }
                 }
@@ -203,6 +219,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.cpp,v $
+// Revision 1.7  2008/06/14 01:22:31  ehan
+// Implemented constructor and FillGeom().
+//
 // Revision 1.6  2008/06/12 21:22:55  delisi
 // Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
 //

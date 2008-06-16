@@ -72,9 +72,48 @@ namespace Nektar
 			void FillGeom();
             void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
+            inline int GetFid(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
+                return m_qfaces[i]->GetFid();
+            }
+
+            inline StdRegions::FaceOrientation GetFaceorient(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
+                return m_forient[i];
+            }
+
+            /// \brief Return the face number of the given face, or -1, if
+            /// not an face of this element.
+            int WhichFace(QuadGeomSharedPtr face)
+            {
+                int returnval = -1;
+
+                QuadGeomVector::iterator faceIter;
+                int i;
+
+                for (i=0,faceIter = m_qfaces.begin(); faceIter != m_qfaces.end(); ++faceIter,++i)
+                {
+                    if (*faceIter == face)
+                    {
+                        returnval = i;
+                        break;
+                    }
+                }
+
+                return returnval;
+            }
+
             inline void SetOwnData()
             {
                m_owndata = true;
+            }
+
+            inline const QuadGeomSharedPtr GetFace(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
+                return m_qfaces[i];
             }
 
             inline int GetEid() const 
@@ -165,6 +204,21 @@ namespace Nektar
 
             bool m_owndata;
 
+            virtual int v_GetFid(int i) const
+            {
+               return GetFid(i);
+            }
+
+            virtual const QuadGeomSharedPtr v_GetFace(int i) const
+            {
+               return GetFace(i);
+            }
+
+            virtual int v_WhichFace(QuadGeomSharedPtr face)
+            {
+                return WhichFace(face);
+            }
+
             virtual void v_GenGeomFactors(void)
             {
                 GenGeomFactors( );
@@ -254,6 +308,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.13  2008/06/14 01:22:18  ehan
+// Implemented constructor and FillGeom().
+//
 // Revision 1.12  2008/06/12 21:22:55  delisi
 // Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
 //

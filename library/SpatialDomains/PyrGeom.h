@@ -65,6 +65,7 @@ namespace Nektar
             PyrGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr tfaces[],
                     const QuadGeomSharedPtr qfaces[],const StdRegions::EdgeOrientation eorient[],
                     const StdRegions::FaceOrientation forient[]);
+           PyrGeom(const Geometry2DSharedPtr faces[], const StdRegions::FaceOrientation forient[]);
             ~PyrGeom();
 
             void AddElmtConnected(int gvo_id, int locid);
@@ -73,6 +74,68 @@ namespace Nektar
 			void FillGeom();
 			void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
+            inline int GetFid() const
+            {
+                return m_fid;
+            }
+
+            inline int GetFid(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 4),"Edge id must be between 0 and 4");
+                return m_faces[i]->GetFid();
+            }
+
+            inline StdRegions::FaceOrientation GetFaceorient(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 4),"Edge id must be between 0 and 4");
+                return m_forient[i];
+            }
+
+            inline const Geometry2DSharedPtr GetFace(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 4),"Edge id must be between 0 and 4");
+                return m_faces[i];
+            }
+
+           
+            /// \brief Return the face number of the given face, or -1, if
+            /// not an face of this element.
+            int WhichFace(Geometry2DSharedPtr face)
+            {
+                int returnval = -1;
+
+                TriGeomVector::iterator tfaceIter;
+                QuadGeomVector::iterator qfaceIter;
+                
+                int i;
+
+                if(face->GetGeomShapeType() == eTriangle){
+                    for (i=0,tfaceIter = m_tfaces.begin(); tfaceIter != m_tfaces.end(); ++tfaceIter,++i)
+                    {
+                        if (*tfaceIter == face)
+                        {
+                            returnval = i;
+                            break;
+                        }
+                    }
+
+                   return returnval;
+                
+                } else if (face->GetGeomShapeType() == eQuadrilateral){
+
+                    for(i=0,qfaceIter = m_qfaces.begin(); qfaceIter != m_qfaces.end(); ++qfaceIter,++i)
+                    {
+                        if(*qfaceIter == face)
+                        {
+                            returnval = i;
+                            break;
+                        }
+                    }
+                   return returnval;
+                }
+
+            }
+            
             inline int GetEid() const 
             {
                 return m_eid;
@@ -114,8 +177,11 @@ namespace Nektar
             QuadGeomVector                  m_qfaces;
             StdRegions::EdgeOrientation     m_eorient [kNedges];
             StdRegions::FaceOrientation     m_forient[kNfaces];
+            Geometry2DVector                m_faces;
 
             int m_eid;
+            int m_fid;
+
 
             bool m_ownverts;
             std::list<CompToElmt> m_elmtmap;
@@ -180,6 +246,26 @@ namespace Nektar
             {
                 SetOwnData();   
             }
+            
+            virtual int v_GetFid(int i) const
+            {
+               return GetFid(i);
+            }
+
+            virtual const Geometry2DSharedPtr v_GetFace(int i) const
+            {
+               return GetFace(i);
+            }
+
+            virtual StdRegions::FaceOrientation v_GetFaceorient(const int i) const
+            {
+                return GetFaceorient(i);
+            }
+
+            virtual int v_WhichFace(Geometry2DSharedPtr face)
+            {
+               return WhichFace(face);
+            }
            
         };
     }; //end of namespace
@@ -189,6 +275,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.h,v $
+// Revision 1.10  2008/06/14 01:23:00  ehan
+// Implemented constructor and FillGeom().
+//
 // Revision 1.9  2008/06/12 21:22:55  delisi
 // Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
 //

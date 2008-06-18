@@ -269,10 +269,10 @@ namespace Nektar
 
 
                 // Barycentric coordinates (relative volume)
-                NekDouble V = e30.dot(cp1020);
-                NekDouble beta  = er0.dot(cp2030) / V;
-                NekDouble gamma = er0.dot(cp3010) / V;
-                NekDouble delta = er0.dot(cp1020) / V;
+                NekDouble V = e30.dot(cp1020); // Tet Volume = {(e30)dot(e10)x(e20)}/6
+                NekDouble beta  = er0.dot(cp2030) / V; // volume1 = {(er0)dot(e20)x(e30)}/6
+                NekDouble gamma = er0.dot(cp3010) / V; // volume1 = {(er0)dot(e30)x(e10)}/6
+                NekDouble delta = er0.dot(cp1020) / V; // volume1 = {(er0)dot(e10)x(e20)}/6
 
                 // Make tet bigger
                 Lcoords[0] = 2.0*beta  - 1.0;
@@ -296,6 +296,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.12  2008/06/14 01:23:50  ehan
+// Implemented constructor and FillGeom().
+//
 // Revision 1.11  2008/06/12 21:22:55  delisi
 // Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
 //

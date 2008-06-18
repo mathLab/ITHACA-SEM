@@ -220,16 +220,64 @@ namespace Nektar
 
 		}
 
-		void PyrGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD, NekDouble> &Lcoords)
-		{
-			// TODO: Insert code here.
-		}
+        void PyrGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        {
+            int i;
+            
+            FillGeom();
+
+            // calculate local coordinate for coord 
+            if(GetGtype() == eRegular)
+            {   // Based on Spen's book, page 99
+
+                // Point inside tetrahedron
+                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
+
+                // Edges
+                VertexComponent er0, e10, e30, e40;
+                er0.Sub(r,*m_verts[0]);
+                e10.Sub(*m_verts[1],*m_verts[0]);
+                e30.Sub(*m_verts[3],*m_verts[0]);
+                e40.Sub(*m_verts[4],*m_verts[0]);
+
+
+                // Cross products (Normal times area)
+                VertexComponent cp1030, cp3040, cp4010;
+                cp1030.Mult(e10,e30);
+                cp3040.Mult(e30,e40);
+                cp4010.Mult(e40,e10);
+
+
+                // Barycentric coordinates (relative volume)
+                NekDouble V = e40.dot(cp1030); // Pyramid Volume = {(e40)dot(e10)x(e30)}/4
+                NekDouble scaleFactor = 2.0/3.0;
+                NekDouble v1 = er0.dot(cp3040) / V; // volume1 = {(er0)dot(e30)x(e40)}/6
+                NekDouble v2 = er0.dot(cp4010) / V; // volume2 = {(er0)dot(e40)x(e10)}/6
+                NekDouble beta  = v1 * scaleFactor;
+                NekDouble gamma = v2 * scaleFactor; 
+                NekDouble delta = er0.dot(cp1030) / V; // volume3 = {(er0)dot(e10)x(e30)}/4
+                
+
+                // Make Pyramid bigger
+                Lcoords[0] = 2.0*beta  - 1.0;
+                Lcoords[1] = 2.0*gamma - 1.0;
+                Lcoords[2] = 2.0*delta - 1.0;
+            }
+            else
+            {
+          NEKERROR(ErrorUtil::efatal,
+                    "inverse mapping must be set up to use this call");
+            }
+        }
 
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: PyrGeom.cpp,v $
+// Revision 1.8  2008/06/16 22:43:02  ehan
+// Added a new constructor PrismGeom(faces, faceorient).
+//
 // Revision 1.7  2008/06/14 01:22:52  ehan
 // Implemented constructor and FillGeom().
 //

@@ -181,17 +181,61 @@ namespace Nektar
             }
 
 		}
+        
+        void HexGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        {
+            int i;
+            
+            FillGeom();
 
-		void HexGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD, NekDouble> &Lcoords)
-		{
-			// TODO: Insert code here.
-		}
+            // calculate local coordinate for coord 
+            if(GetGtype() == eRegular)
+            {   // Based on Spen's book, page 99
+
+                // Point inside tetrahedron
+                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
+
+                // Edges
+                VertexComponent er0, e10, e30, e40;
+                er0.Sub(r,*m_verts[0]);
+                e10.Sub(*m_verts[1],*m_verts[0]);
+                e30.Sub(*m_verts[3],*m_verts[0]);
+                e40.Sub(*m_verts[4],*m_verts[0]);
+
+
+                // Cross products (Normal times area)
+                VertexComponent cp1030, cp3040, cp4010;
+                cp1030.Mult(e10,e30);
+                cp3040.Mult(e30,e40);
+                cp4010.Mult(e40,e10);
+
+
+                // Barycentric coordinates (relative volume)
+                NekDouble V = e40.dot(cp1030);// Hex Volume = {(e40)dot(e10)x(e30)}
+                NekDouble beta  = er0.dot(cp3040) / (4.0*V); // volume1 = {(er0)dot(e30)x(e40)}/4
+                NekDouble gamma = er0.dot(cp4010) / (4.0*V); // volume1 = {(er0)dot(e40)x(e10)}/4
+                NekDouble delta = er0.dot(cp1030) / (4.0*V); // volume1 = {(er0)dot(e10)x(e30)}/4
+
+                // Make Hex bigger
+                Lcoords[0] = 2.0*beta  - 1.0;
+                Lcoords[1] = 2.0*gamma - 1.0;
+                Lcoords[2] = 2.0*delta - 1.0;
+            }
+            else
+            {
+          NEKERROR(ErrorUtil::efatal,
+                    "inverse mapping must be set up to use this call");
+            }
+        }
 
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.9  2008/06/14 01:22:05  ehan
+// Implemented constructor and FillGeom().
+//
 // Revision 1.8  2008/06/12 21:22:43  delisi
 // Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
 //

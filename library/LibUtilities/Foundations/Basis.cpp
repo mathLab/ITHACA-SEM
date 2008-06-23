@@ -158,76 +158,23 @@ namespace Nektar
 
             case eOrtho_B:
                 {                       
-                     int P = numModes - 1, Q = numModes - 1;
                      NekDouble *mode = m_bdata.data();
             
-                     for( int p = 0; p <= P; ++p ) {
-                       for( int q = 0; q <= Q - p; ++q,  mode += numPoints  ) {
-                              Polylib::jacobfd(numPoints, z.data(), mode, NULL, q, 2*p + 1.0, 0.0);
-                              for( int j = 0; j < numPoints; ++j ) {
-                                   mode[j] *= 0.5*pow(1.0 - z[j], p);
-                                }
-                          }
-                      }
-
+                     for( int p = 0; p < numModes; ++p ) 
+                     {
+                         for( int q = 0; q < numModes - p; ++q,  mode += numPoints  ) 
+                         {
+                             Polylib::jacobfd(numPoints, z.data(), mode, NULL, q, 2*p + 1.0, 0.0);
+                             for( int j = 0; j < numPoints; ++j ) 
+                             {
+                                 mode[j] *= sqrt(p+q+1.0)*pow(0.5*(1.0 - z[j]), p);
+                             }
+                         }
+                     }
+                     
                      // define derivative basis 
                      Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)/2,numPoints,1.0,D,numPoints,
                                   m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
-    
-//   ******************************* Old version of Ortho-B  *****************************************
-//                     const NekDouble *one_m_z_pow;//,fac;
-// 
-//                     // bdata should be of size order*(order+1)/2*zorder;
-// 
-//                     mode = m_bdata.data();
-// 
-// 
-//                     for(i = 0; i < numPoints; ++i)
-//                         mode[i] = 1.0;
-// 
-//                     mode += numPoints;
-// 
-//                     for (q = 1; q < numModes; ++q, mode += numPoints)
-//                     {
-//                         Polylib::jacobfd(numPoints, z.data(), mode, NULL, q, 1.0, 0.0);
-//                     }
-// 
-//                     one_m_z_pow = m_bdata.data();
-// 
-//                     for(p = 1; p < numModes; ++p)
-//                     {
-// 
-//                         for(i = 0; i < numPoints; ++i)
-//                         {
-//                             mode[i] = 0.5*(1-z[i])*one_m_z_pow[i];
-//                         }
-// 
-//                         one_m_z_pow = mode;
-//                         mode += numPoints;
-// 
-//                         for(q = 1; q < numModes-p; ++q, mode+=numPoints){
-//                             Polylib::jacobfd(numPoints, z.data(), mode, NULL, q, 2.0*p+1.0, 0.0);
-// 
-//                             for(i = 0; i < numPoints; ++i)
-//                             {
-//                                 mode[i] *= one_m_z_pow[i];
-//                             }
-//                         }
-//                     }
-// 
-//                     // normalise (recalling factor of 2 for weight (1-b)/2) 
-//                     for(p = 0, mode=m_bdata.data(); p < numModes; ++p)
-//                     {
-//                         for(q = 0; q < numModes-p; ++q,mode+=numPoints)
-//                         {
-//                             scal = sqrt((p+q+1.0));
-//                             for(i = 0; i < numPoints; ++i)
-//                             {
-//                                 mode[i] *= scal;
-//                             }
-//                         }
-//                     }
-//                     
                 }
                 break; 
 
@@ -532,6 +479,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.31  2008/05/13 01:11:22  ehan
+* Added monomial basis
+*
 * Revision 1.30  2008/05/12 23:45:46  ehan
 * Added monomial basis
 *

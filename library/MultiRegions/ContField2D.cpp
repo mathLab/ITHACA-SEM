@@ -184,7 +184,11 @@ namespace Nektar
                     m_bndTypes[cnt]           = SpatialDomains::eNeumann;       
                     m_bndCondEquations[cnt++] = boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(locBCond)->
                         m_NeumannCondition;
-                }                    
+                }  
+                else if(locBCond->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                {
+                    ASSERTL0(false,"This type of BC not implemented yet");
+                }                  
             }
         }
 

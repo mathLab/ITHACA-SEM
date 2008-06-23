@@ -128,8 +128,6 @@ namespace Nektar
             SpatialDomains::Composite comp;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
-            // SpatialDomains::ElementEdgeVectorSharedPtr edgeElement;
-            //SpatialDomains::ExpansionShPtr exp;
             
             nel = 0;
             for(i = 0; i < domain.size(); ++i)
@@ -148,25 +146,7 @@ namespace Nektar
                 {                    
                     if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*comp)[j]))
                     {
-                        // edgeElement = graph2D.GetElementsFromEdge(SegmentGeom);
-//                         ASSERTL1(edgeElement->size()==1,"This boundary edge is bounded by more than one element");
-//                         exp = graph2D.GetExpansion((*edgeElement)[0]->m_Element);
-//                         // (are we sure that flag should be set to zero (for triangles or anisotropic expansions for example?))
-//                         LibUtilities::BasisKey bkey = graph2D.GetBasisKey(exp,0);
-
                         LibUtilities::BasisKey bkey = graph2D.GetEdgeBasisKey(SegmentGeom);
-
-                        // Do a fix for nodal triangular expansions
-                      //   if((exp->m_ExpansionType == SpatialDomains::eNodal)&&(bkey.GetBasisType()!=LibUtilities::eGLL_Lagrange))
-//                         {
-//                             LibUtilities::BasisKey bkey2(LibUtilities::eGLL_Lagrange,bkey.GetNumModes(),bkey.GetPointsKey());
-//                             seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey2, SegmentGeom);
-//                         }
-//                         else
-//                         {
-//                             seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
-//                         }
-
                         seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
 
                         (*m_exp).push_back(seg);  
@@ -307,6 +287,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.27  2008/05/14 18:06:50  sherwin
+* mods to fix Seggeom to Geometry1D casting
+*
 * Revision 1.26  2008/05/13 22:06:58  sherwin
 * Changed SegGeom to Geometry1D
 *

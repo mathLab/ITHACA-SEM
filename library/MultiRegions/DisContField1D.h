@@ -67,11 +67,6 @@ namespace Nektar
 
             void HelmSolve(DisContField1D &Fce, NekDouble lambda);
 
-            void SetBoundaryCondition(const int loc, const NekDouble value)
-            {
-                m_bndConstraint[loc]->SetValue(value);
-            }
-
             GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
 
         protected:

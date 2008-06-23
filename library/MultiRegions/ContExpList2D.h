@@ -123,13 +123,29 @@ namespace Nektar
              * global expansion coefficients.
              *
              * If one wants to get hold of the underlying data without modifying them, 
-             * rather use the function #getContNcoeffs instead.
+             * rather use the function #GetContCoeffs instead.
              *
              * \return (A reference to) the array #m_contCoeffs.
              */  
             inline Array<OneD, NekDouble> &UpdateContCoeffs()
             {
                 m_transState = eContinuous;
+                return m_contCoeffs;
+            }
+
+            /**
+             * \brief This function returns (a reference to) the array 
+             * \f$\boldsymbol{\hat{u}}_g\f$ (implemented as #m_contCoeffs) containing all 
+             * global expansion coefficients.
+             *
+             * As the function returns a constant reference to a <em>const Array</em>, it is not 
+             * possible to modify the underlying data of the array #m_contCoeffs. In order to 
+             * do so, use the function #UpdateContCoeffs instead.
+             *
+             * \return (A reference to) the array #m_contCoeffs.
+             */  
+            inline const Array<OneD, const NekDouble> &GetContCoeffs() const
+            {
                 return m_contCoeffs;
             }
          
@@ -438,6 +454,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.h,v $
+* Revision 1.12  2008/06/05 15:06:58  pvos
+* Added documentation
+*
 * Revision 1.11  2008/05/29 21:35:03  pvos
 * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 *

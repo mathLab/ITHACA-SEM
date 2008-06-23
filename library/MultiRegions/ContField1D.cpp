@@ -43,14 +43,16 @@ namespace Nektar
         ContField1D::ContField1D(void):
             ContExpList1D(),
             m_bndConstraint(),
-            m_bndTypes()
+            m_bndTypes(),
+            m_bndCondEquations()
         {
         }
 
         ContField1D::ContField1D(const ContField1D &In):
             ContExpList1D(In),
             m_bndConstraint(In.m_bndConstraint),
-            m_bndTypes(In.m_bndTypes)
+            m_bndTypes(In.m_bndTypes),
+            m_bndCondEquations(In.m_bndCondEquations)
         {
         }
 
@@ -59,9 +61,11 @@ namespace Nektar
                                  const int bc_loc):
             ContExpList1D(graph1D,false),
             m_bndConstraint(),
-            m_bndTypes()
+            m_bndTypes(),
+            m_bndCondEquations()
         {
-            GenerateField1D(bcs,bcs.GetVariable(bc_loc));
+            GenerateBoundaryConditionExpansion(graph1D,bcs,bcs.GetVariable(bc_loc));
+            EvaluateBoundaryConditions();
             m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
                                                                                  graph1D,m_bndConstraint,
                                                                                  m_bndTypes);
@@ -75,9 +79,11 @@ namespace Nektar
             const std::string variable):
             ContExpList1D(graph1D,false),
             m_bndConstraint(),
-            m_bndTypes()
+            m_bndTypes(),
+            m_bndCondEquations()
         {
-            GenerateField1D(bcs,variable);
+            GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
+            EvaluateBoundaryConditions();
             m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
                                                                                  graph1D,m_bndConstraint,
                                                                                  m_bndTypes);
@@ -87,14 +93,16 @@ namespace Nektar
         }
 
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
-            const SpatialDomains::MeshGraph1D &graph1D,
-            SpatialDomains::BoundaryConditions &bcs, 
-            const int bc_loc):
+                                 const SpatialDomains::MeshGraph1D &graph1D,
+                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 const int bc_loc):
             ContExpList1D(Ba,graph1D,false),
             m_bndConstraint(),
-            m_bndTypes()
+            m_bndTypes(),
+            m_bndCondEquations()
         {
-            GenerateField1D(bcs,bcs.GetVariable(bc_loc));
+            GenerateBoundaryConditionExpansion(graph1D,bcs,bcs.GetVariable(bc_loc));
+            EvaluateBoundaryConditions();
             m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
                                                                                  graph1D,m_bndConstraint,
                                                                                  m_bndTypes);
@@ -104,110 +112,129 @@ namespace Nektar
         }
 
         ContField1D::ContField1D(const LibUtilities::BasisKey &Ba, 
-            const SpatialDomains::MeshGraph1D &graph1D,
-            SpatialDomains::BoundaryConditions &bcs, 
-            const std::string variable):
+                                 const SpatialDomains::MeshGraph1D &graph1D,
+                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 const std::string variable):
             ContExpList1D(Ba,graph1D,false),
             m_bndConstraint(),
-            m_bndTypes()
-
-        {
-            GenerateField1D(bcs,variable);
-            m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
-                                                                                 graph1D,m_bndConstraint,
-                                                                                 m_bndTypes);
-	    
-	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
-	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
-        }
-
-
-        void ContField1D::GenerateField1D(SpatialDomains::BoundaryConditions &bcs, 
-            const std::string variable)
-        {
-            int i,nbnd;
-            int cnt=0;
-            LocalRegions::PointExpSharedPtr  p_exp;
-            SpatialDomains::BoundaryConditionShPtr locBCond;
-            SpatialDomains::VertexComponentSharedPtr vert;
-
-            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
+            m_bndTypes(),
+            m_bndCondEquations()
             
-            nbnd = bregions.size();
-            m_bndConstraint = Array<OneD,LocalRegions::PointExpSharedPtr>(nbnd);
-            m_bndTypes = Array<OneD,SpatialDomains::BoundaryConditionType>(nbnd);
-
-            // list Dirichlet boundaries first
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-
-                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                {
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
-                    {
-                        Array<OneD,NekDouble> coords(3,0.0);
-
-                        p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
-                        vert->GetCoords(coords);
-                        p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(locBCond)
-                                        ->m_DirichletCondition.Evaluate(coords[0],coords[1],coords[2]));
-
-                        m_bndConstraint[cnt] = p_exp;
-                        m_bndTypes[cnt++] = SpatialDomains::eDirichlet;
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a vertex failed");
-                    }
-                }
-            }
-
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-
-                if(locBCond->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
-                {
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
-                    {
-                        Array<OneD,NekDouble> coords(3,0.0);
-
-                        p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
-                        vert->GetCoords(coords);
-
-                        if(locBCond->GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                        {
-                            p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(locBCond)
-                                            ->m_NeumannCondition.Evaluate(coords[0],coords[1],coords[2]));
-                            m_bndConstraint[cnt] = p_exp;
-                            m_bndTypes[cnt++] = SpatialDomains::eNeumann;
-                        }
-                        else if(locBCond->GetBoundaryConditionType() == SpatialDomains::eRobin)
-                        {
-                            boost::shared_ptr<SpatialDomains::RobinBoundaryCondition> robinBC  = 
-                                boost::static_pointer_cast<SpatialDomains::RobinBoundaryCondition>(locBCond);
-                            p_exp->SetValue(-robinBC->m_a.Evaluate(coords[0],coords[1],coords[2])/
-                                            robinBC->m_b.Evaluate(coords[0],coords[1],coords[2]));
-                            m_bndConstraint[cnt] = p_exp;
-                            m_bndTypes[cnt++] = SpatialDomains::eRobin;
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"This type of BC not implemented yet");
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a vertex failed");
-                    }
-                }
-            }
+        {
+            GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
+            EvaluateBoundaryConditions();
+            m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
+                                                                                 graph1D,m_bndConstraint,
+                                                                                 m_bndTypes);
+	    
+	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
         ContField1D::~ContField1D()
         {
+        }
+
+        void ContField1D::GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
+                                                             SpatialDomains::BoundaryConditions &bcs, 
+                                                             const std::string variable)
+        {
+            int i,j,k;
+            int cnt  = 0;
+            
+            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();   
+            
+            LocalRegions::PointExpSharedPtr          locPointExp;
+            SpatialDomains::BoundaryConditionShPtr   locBCond; 
+            SpatialDomains::VertexComponentSharedPtr vert;
+
+            int nbnd = bregions.size(); 
+            int nPointExp = 0;
+            for(i = 0; i < nbnd; ++i)
+            {   
+                for(j = 0; j < bregions[i]->size(); j++)
+                {
+                    nPointExp += (*bregions[i])[j]->size();
+                } 
+            }
+                       
+            m_bndConstraint    = Array<OneD,LocalRegions::PointExpSharedPtr>(nPointExp);
+            m_bndTypes         = Array<OneD,SpatialDomains::BoundaryConditionType>(nPointExp);
+            m_bndCondEquations = Array<OneD,SpatialDomains::Equation>(nPointExp);
+            
+            // list Dirichlet boundaries first
+            for(i = 0; i < nbnd; ++i)
+            {  
+                locBCond = (*(bconditions[i]))[variable];  
+                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                {       
+                    for(j = 0; j < bregions[i]->size(); j++)
+                    {
+                        for(k = 0; k < ((*bregions[i])[j])->size(); k++)
+                        {
+                            if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[j])[k]))
+                            {
+                                locPointExp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
+                                m_bndConstraint[cnt]      = locPointExp;
+                                m_bndTypes[cnt]           = SpatialDomains::eDirichlet;
+                                m_bndCondEquations[cnt++] = boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(locBCond)->
+                                    m_DirichletCondition;
+                            }
+                            else
+                            {
+                                ASSERTL0(false,"dynamic cast to a vertex failed");
+                            }
+                        }
+                    }
+                } // end if Dirichlet
+            }
+
+            // list other boundaries
+            for(i = 0; i < nbnd; ++i)
+            {        
+                locBCond = (*(bconditions[i]))[variable];  
+                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                {    
+                    for(j = 0; j < bregions[i]->size(); j++)
+                    {
+                        for(k = 0; k < ((*bregions[i])[j])->size(); k++)
+                        {     
+                            if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[j])[k]))
+                            {
+                                locPointExp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
+                                m_bndConstraint[cnt]      = locPointExp;
+                                m_bndTypes[cnt]           = SpatialDomains::eNeumann;
+                                m_bndCondEquations[cnt++] = boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(locBCond)->
+                                    m_NeumannCondition;
+                            }
+                            else
+                            {
+                                ASSERTL0(false,"dynamic cast to a vertex failed");
+                            }            
+                        }
+                    }
+                }    
+                else if(locBCond->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                {
+                    ASSERTL0(false,"This type of BC not implemented yet");
+                }                  
+            }
+        }
+
+        void ContField1D::EvaluateBoundaryConditions(const NekDouble time)
+        {
+            int i;
+
+            NekDouble x0;
+            NekDouble x1;
+            NekDouble x2;
+            
+            for(i = 0; i < m_bndConstraint.num_elements(); ++i)
+            {
+                m_bndConstraint[i]->GetCoords(x0,x1,x2);
+                m_bndConstraint[i]->SetValue((m_bndCondEquations[i]).Evaluate(x0,x1,x2,time));
+            }                
         }
 
         void ContField1D::FwdTrans(const ExpList &In)

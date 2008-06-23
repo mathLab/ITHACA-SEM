@@ -516,8 +516,9 @@ int main(int argc, char *argv[])
         
 
         // Set up the index map n(p,q)
-        // This is done by listing the vertex modes first,
-        // then the edge modes and finally the interior modes
+        // As the indices p and q run over a well-defined range, 
+        // the index map can be easily constructed For the orthogonal
+        // basis functions, 
         int cnt = 0;
         int** indexmap = new int* [nModesDir1];
         for(i = 0; i < nModesDir1; i++)
@@ -534,31 +535,13 @@ int main(int argc, char *argv[])
             }
         }
 
-        indexmap[0][0]                       = 0; // Vertex A
-        indexmap[nModesDir1-1][0]            = 1; // Vertex B
-        indexmap[0][nModesDir2-1]            = 2; // Vertex C
-        indexmap[nModesDir1-1][nModesDir2-1] = 2; // Vertex D (will be collapsed with index C)
-        cnt = 3;
-        for(p = 1; p < nModesDir1-1; p++)  // Edge AB
+        for(p = 0; p < nModesDir1; p++)
         {
-            indexmap[p][0] = cnt++;
-        }        
-        for(q = 1; q < nModesDir2-1; q++)  // Egde AC
-        {
-            indexmap[0][q] = cnt++;
-        }    
-        for(q = 1; q < nModesDir2-1; q++)  // Egde BD
-        {
-            indexmap[nModesDir1-1][q] = cnt++;
-        }
-        for(p = 1;  p < nModesDir1-1; p++)  // Interior modes
-        {
-            for(q = 1; q < nModesDir2-1-p; q++)
+            for(q = 0; q < nModesDir2 - p; q++)
             {
                 indexmap[p][q] = cnt++;
             }
         }
-
 
         // Allocate memory for the mass matrix
         double** M = new double* [nTotModes];
@@ -617,13 +600,6 @@ int main(int argc, char *argv[])
 
         // Display the output
         cout << "Mass Matrix structure: " << endl;
-        cout << "(Note that the Mass matrix is not completely diagonal." <<endl;
-        cout << "This is caused by numerical quadrature errors: As the " <<endl;
-        cout << "basisfunction \phi_pq can be of order as high as 2P in" <<endl;
-        cout << "the \eta_2 coordinate, a integration order of Q=2P+1 in" <<endl;
-        cout << "direction 2 is required for an exact evaluation of all" <<endl;
-        cout << "entries in the mass matrix. This can be checked by    " <<endl;
-        cout << "setting QuadPointsDir2 = 29.)" <<endl;
 
         const double tol = 1e-12;
         for(i = 0; i < nTotModes; i++)
@@ -747,13 +723,6 @@ int main(int argc, char *argv[])
             // Display the output
             // The matrix structure might be different as in the Polylib version. This is
             // because of a difference in numbering of the expansion modes.
-            cout << "(Note that the Mass matrix is not completely diagonal." <<endl;
-            cout << "This is caused by numerical quadrature errors: As the " <<endl;
-            cout << "basisfunction \phi_pq can be of order as high as 2P in" <<endl;
-            cout << "the \eta_2 coordinate, a integration order of Q=2P+1 in" <<endl;
-            cout << "direction 2 is required for an exact evaluation of all" <<endl;
-            cout << "entries in the mass matrix. This can be checked by    " <<endl;
-            cout << "setting QuadPointsDir2 = 29.)" <<endl;
             cout << "Mass Matrix structure: " << endl;
 
             const double tol = 1e-12;            

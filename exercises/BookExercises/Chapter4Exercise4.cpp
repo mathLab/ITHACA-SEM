@@ -131,10 +131,10 @@ int main(int argc, char *argv[])
             DNekLinSysSharedPtr globalMassMatrixLinSys = 
                 MemoryManager<DNekLinSys>::AllocateSharedPtr(globalMassMatrix);
 
-            NekVector<const NekDouble> in(multiElementExp->getContNcoeffs(), 
+            NekVector<const NekDouble> in(multiElementExp->GetContNcoeffs(), 
                                           multiElementExp->UpdateContCoeffs(), 
                                           eCopy);
-            NekVector<NekDouble>       out(multiElementExp->getContNcoeffs(), 
+            NekVector<NekDouble>       out(multiElementExp->GetContNcoeffs(), 
                                            multiElementExp->UpdateContCoeffs(), 
                                            eWrapper);
             globalMassMatrixLinSys->Solve(in,out);

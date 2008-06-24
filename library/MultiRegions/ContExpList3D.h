@@ -71,7 +71,7 @@ namespace Nektar
                 return m_contCoeffs;
             }
         
-            inline int getContNcoeffs()
+            inline int GetContNcoeffs()
             {
                 return m_contNcoeffs;
             }

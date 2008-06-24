@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 
         // Display the output              
         cout << "Error = " << error << endl;
-        cout << "Number of degrees of freedom = " << spectralHpExp->getContNcoeffs() << endl << endl;
+        cout << "Number of degrees of freedom = " << spectralHpExp->GetContNcoeffs() << endl << endl;
 
         // In addition, we will use one the Nektar++ output formats to visualise the output.
         // The solution is written to the file Helmholtz2DSolution.pos

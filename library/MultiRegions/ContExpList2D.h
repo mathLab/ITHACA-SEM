@@ -156,7 +156,7 @@ namespace Nektar
              * \return  #m_contNcoeffs, the total number of global degrees of 
              * freedom.
              */  
-            inline int getContNcoeffs()
+            inline int GetContNcoeffs()
             {
                 return m_contNcoeffs;
             }
@@ -454,6 +454,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.h,v $
+* Revision 1.13  2008/06/23 14:21:01  pvos
+* updates for 1D ExpLists
+*
 * Revision 1.12  2008/06/05 15:06:58  pvos
 * Added documentation
 *

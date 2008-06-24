@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
             int nElements         = multiElementExp->GetExpSize();
             int nDirDofs          = (multiElementExp->GetLocalToGlobalMap())->GetNumDirichletDofs();
             int nGlobalBndDofs    = (multiElementExp->GetLocalToGlobalMap())->GetTotGloBndDofs();
-            int nGlobalIntDofs    = multiElementExp->getContNcoeffs() - nGlobalBndDofs;
+            int nGlobalIntDofs    = multiElementExp->GetContNcoeffs() - nGlobalBndDofs;
             // As all elements are identical, we can calculate the dimensions below just once
             int nElementalBndDofs = (multiElementExp->GetExp(0))->NumBndryCoeffs();
             int nElementalDofs    = (multiElementExp->GetExp(0))->GetNcoeffs();
@@ -176,8 +176,8 @@ int main(int argc, char *argv[])
             // The right hand side, which is now contained in the member m_contCoeffs of the object
             // multiElementExp should now be modified in order to incorporate the forcing due to the 
             // Dirichlet Dofs.
-            Array<OneD,NekDouble> dirDofsValues(multiElementExp->getContNcoeffs(),0.0);
-            Array<OneD,NekDouble> dirForcing(multiElementExp->getContNcoeffs(),0.0);
+            Array<OneD,NekDouble> dirDofsValues(multiElementExp->GetContNcoeffs(),0.0);
+            Array<OneD,NekDouble> dirForcing(multiElementExp->GetContNcoeffs(),0.0);
 
             cnt = 0;
             for(i = 0; i < (multiElementExp->GetBndCondExp()).num_elements(); ++i)
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
             multiElementExp->GeneralMatrixOp(key, dirDofsValues, dirForcing);
 
             // Substract this from the original rhs
-            Vmath::Vsub(multiElementExp->getContNcoeffs(), multiElementExp->UpdateContCoeffs(), 1,
+            Vmath::Vsub(multiElementExp->GetContNcoeffs(), multiElementExp->UpdateContCoeffs(), 1,
                         dirForcing, 1, multiElementExp->UpdateContCoeffs(), 1);
 
             // Extract the rhs that is going to be used in the solution of the linear system.
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 
             // Recover the entire solution by addinig intial conditons
             Vmath::Zero(nDirDofs, multiElementExp->UpdateContCoeffs(), 1);
-            Vmath::Vadd(multiElementExp->getContNcoeffs(), dirDofsValues, 1, multiElementExp->UpdateContCoeffs(), 1,
+            Vmath::Vadd(multiElementExp->GetContNcoeffs(), dirDofsValues, 1, multiElementExp->UpdateContCoeffs(), 1,
                 multiElementExp->UpdateContCoeffs(), 1);
 
             // DO A BACKWARD TRANSFORMATION TO CALCULATE THE EXPANSION

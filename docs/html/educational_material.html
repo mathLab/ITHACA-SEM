@@ -110,7 +110,7 @@
         <p><a href="license.html" id="menu_License">License</a></p>
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/09 15:15:01 $</p>
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/11 14:23:03 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -118,23 +118,111 @@
 	<!-- InstanceEndEditable -->
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
-    <p>The intention of this page is to provide a starting point for those who want to get familiar with both the Nektar++ library and the spectral/hp element method. To complement the documentation available throughout this website, we here present a series of examples and exercises.</p>
+    <p>The intention of this page is to provide a starting point for those who want to get familiar with both the Nektar++ library and the spectral/hp element method. To complement the documentation available throughout this website, we here present a series of examples and exercises. In addition, you can also find a set of lecture slides covering the spectral/hp element method from a Nektar++ point of view.</p>
     <ul>
-      <li> The files below implement the exercises listed at the end of chapter 2,3 and 4 of the book written by Karniadakis and Sherwin [1]. These examples provide a good overview of how the building blocks of the spectral/hp library can be implemented using either fundamental routines for polynomial manipulation or using the Nektar++ library.
-        <ul><BR>  
-          <li> <a href="downloads/BookExercises.tar.gz">BookExercises.tar.gz</a>
-          </li>
-        </ul>
+
+      <li> Lecture slides: "A hands-on approach to implementing and using spectral/hp elements."
+	<BR>
+	<BR>
+	  <TABLE border=0>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSlides/Introduction.pdf">Introduction</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSlides/LibUtilities.pdf">Lecture 1: LibUtilities</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSlides/MultiExpansions.pdf">Lecture 5: MultiRegions</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSlides/StdExpansions.pdf">Lecture 2: StdRegions</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSlides/PrePostProcessing.pdf">Lecture 6a: Pre- and Post-Processing</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSlides/SpatialDomains.pdf">Lecture 3: SpatialDomains</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSlides/IWHOFEM2007.pdf">Lecture 6b: Visualisation</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSlides/LocalExpansions.pdf">Lecture 4: LocalRegions</a></li></ul></TD>
+              <TD></TD>
+	    </TR>
+	  </TABLE>
+	</li><BR>
+
+      <li> The files below implement the exercises listed at the end of chapter 2,3 and 4 of the book written by Karniadakis and Sherwin [1]. These examples provide a good overview of how the building blocks of the spectral/hp library can be implemented using either fundamental routines for polynomial manipulation or using the Nektar++ library.<BR><BR>
+	  <TABLE border=0>
+	    <TR>
+              <TD><b> &nbsp &nbsp &nbsp Chapter 2</b></TD>
+              <TD><b> &nbsp &nbsp &nbsp Chapter 3</b></TD>
+              <TD><b> &nbsp &nbsp &nbsp Chapter 4</b></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter2Exercise1.cpp">Exercise 1</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter3Exercise1.cpp">Exercise 1</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter4Exercise1.cpp">Exercise 1</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter2Exercise2.cpp">Exercise 2</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter3Exercise2.cpp">Exercise 2</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter4Exercise2.cpp">Exercise 2</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter2Exercise3.cpp">Exercise 3</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter3Exercise3.cpp">Exercise 3</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter4Exercise3.cpp">Exercise 3</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter2Exercise4.cpp">Exercise 4</a></li></ul></TD>
+              <TD></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter4Exercise4.cpp">Exercise 4</a>&nbsp
+		    <a href="downloads/EducationalMaterialSourceCode/Chapter4Exercise4InputFiles.tar.gz">(Input Files)</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter2Exercise5.cpp">Exercise 5</a></li></ul></TD>
+              <TD></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Chapter4Exercise5.cpp">Exercise 5</a></li></ul></TD>
+	    </TR>
+	  </TABLE>
+
+
       </li><BR>
-      <li> A more concise selection of exercises can be found in the tutorial below:
-        <ul><BR>    
-          <li> <a href="downloads/TutorialHandouts.pdf">TutorialHandouts.pdf</a>
-          </li>
-        </ul>
-        <ul>      
-          <li> <a href="downloads/TutorialExercises.tar.gz">TutorialExercises.tar.gz</a>
-          </li>
-        </ul>
+      <li> A more concise selection of exercises can be found in the tutorial below:<BR><BR>
+	  <TABLE border=0>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSlides/TutorialHandouts.pdf">Assignment</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD></TD>
+	    </TR>
+	    <TR>
+              <TD><b> &nbsp &nbsp &nbsp Tutorial 1</b></TD>
+              <TD><b> &nbsp &nbsp &nbsp Tutorial 2</b></TD>
+              <TD><b> &nbsp &nbsp &nbsp Tutorial 3</b></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSlides/Tutorial1.pdf">Slides</a></li></ul></TD>
+              <TD></TD>              
+              <TD><ul><li><a href="downloads/EducationalMaterialSlides/Tutorial3.pdf">Slides</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Tutorial1Exercise1.cpp">Exercise 1</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Tutorial2Exercise1.cpp">Exercise 1</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Tutorial3Exercise1.cpp">Exercise 1</a>&nbsp
+		    <a href="downloads/EducationalMaterialSourceCode/QuadMesh.xml">(QuadMesh.xml)</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Tutorial1Exercise2.cpp">Exercise 2</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Tutorial2Exercise2.cpp">Exercise 2</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Tutorial3Exercise2.cpp">Exercise 2</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Tutorial1Exercise3.cpp">Exercise 3</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Tutorial2Exercise3.cpp">Exercise 3</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Tutorial3WithSolution.cpp">Solution</a></li></ul></TD>
+	    </TR>
+	    <TR>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Tutorial1WithSolution.cpp">Solution</a></li></ul></TD>
+              <TD><ul><li><a href="downloads/EducationalMaterialSourceCode/Tutorial2WithSolution.cpp">Solution</a></li></ul></TD>
+	    </TR>
+	  </TABLE>
       </li>
     </ul>
             [1] G.E. Karniadakis and S.J. Sherwin: <i>Spectral/hp Element Methods for Computational Fluid Dynamics</i>, Oxford Science Publications, 2005

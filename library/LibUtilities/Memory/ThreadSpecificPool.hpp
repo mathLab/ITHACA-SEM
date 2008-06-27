@@ -44,6 +44,8 @@
 #include <map>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
+#include <cstring>
+
 namespace Nektar
 {
     namespace detail
@@ -231,6 +233,9 @@ namespace Nektar
 
 /**
     $Log: ThreadSpecificPool.hpp,v $
+    Revision 1.7  2008/06/10 06:00:37  bnelson
+    Updated documentation.
+
     Revision 1.6  2008/05/23 03:39:57  bnelson
     Fixed the shutdown crash.
 

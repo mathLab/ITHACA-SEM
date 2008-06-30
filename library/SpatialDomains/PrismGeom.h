@@ -38,13 +38,10 @@
 
 #include <StdRegions/StdPrismExp.h>
 #include <StdRegions/StdRegions.hpp>
-#include <SpatialDomains/SpatialDomains.hpp>
-
-#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
-#include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>
+
 
 namespace Nektar
 {
@@ -265,6 +262,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.h,v $
+// Revision 1.10  2008/06/16 22:42:18  ehan
+// Added inline function GetFace(..), whichFace(..), and GetFaceorient(..).
+//
 // Revision 1.9  2008/06/14 01:22:38  ehan
 // Implemented constructor and FillGeom().
 //

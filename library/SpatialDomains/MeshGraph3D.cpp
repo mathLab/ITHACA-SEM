@@ -36,12 +36,6 @@
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/MeshGraph3D.h>
-#include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/TetGeom.h>
-#include <SpatialDomains/PrismGeom.h>
-#include <SpatialDomains/PyrGeom.h>
-#include <SpatialDomains/HexGeom.h>
 #include <SpatialDomains/ParseUtils.hpp>
 
 namespace Nektar
@@ -998,6 +992,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.cpp,v $
+// Revision 1.7  2008/06/12 19:56:05  delisi
+// Changed some error handling for reading 3D geometries.
+//
 // Revision 1.6  2008/06/11 16:10:12  delisi
 // Added the 3D reader.
 //

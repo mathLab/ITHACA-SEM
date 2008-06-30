@@ -39,13 +39,9 @@
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion3D.h>
 #include <StdRegions/StdHexExp.h>
-#include <SpatialDomains/SpatialDomains.hpp>
 
-#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
-#include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/QuadGeom.h>
-
 
 namespace Nektar
 {
@@ -308,6 +304,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.14  2008/06/16 22:38:48  ehan
+// Added inline function GetFace(..), whichFace(..), and GetFaceorient(..).
+//
 // Revision 1.13  2008/06/14 01:22:18  ehan
 // Implemented constructor and FillGeom().
 //

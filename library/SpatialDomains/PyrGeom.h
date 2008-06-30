@@ -39,13 +39,9 @@
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdPyrExp.h>
 
-#include <SpatialDomains/SpatialDomains.hpp>
-
-#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
-#include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>
+#include <SpatialDomains/TriGeom.h>
 
 namespace Nektar
 {
@@ -62,10 +58,12 @@ namespace Nektar
         public:
             PyrGeom ();
             PyrGeom (const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[], const StdRegions::FaceOrientation forient[]);
+            
             PyrGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr tfaces[],
                     const QuadGeomSharedPtr qfaces[],const StdRegions::EdgeOrientation eorient[],
                     const StdRegions::FaceOrientation forient[]);
-           PyrGeom(const Geometry2DSharedPtr faces[], const StdRegions::FaceOrientation forient[]);
+                    
+            PyrGeom(const Geometry2DSharedPtr faces[], const StdRegions::FaceOrientation forient[]);
             ~PyrGeom();
 
             void AddElmtConnected(int gvo_id, int locid);
@@ -275,6 +273,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.h,v $
+// Revision 1.11  2008/06/16 22:43:26  ehan
+// Added inline function GetFace(..), whichFace(..), and GetFaceorient(..).
+//
 // Revision 1.10  2008/06/14 01:23:00  ehan
 // Implemented constructor and FillGeom().
 //

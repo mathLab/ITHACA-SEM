@@ -37,21 +37,24 @@
 #define NEKTAR_SPATIALDOMAINS_QUADGEOM_H
 
 #include <StdRegions/StdRegions.hpp>
-#include <SpatialDomains/SpatialDomains.hpp>
+#include <StdRegions/StdQuadExp.h>
 
-#include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/SegGeom.h>
 
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        class QuadGeom;
+        typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
+        typedef std::vector< QuadGeomSharedPtr > QuadGeomVector;
+        typedef std::vector< QuadGeomSharedPtr >::iterator QuadGeomVectorIter;
+    
         class QuadGeom: public Geometry2D
-        {
+        {        
         public:
             QuadGeom();
             QuadGeom(int id, const int coordim);
@@ -273,11 +276,6 @@ namespace Nektar
             }
         };
 
-        // shorthand for boost pointer
-        typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
-        typedef std::vector< QuadGeomSharedPtr > QuadGeomVector;
-        typedef std::vector< QuadGeomSharedPtr >::iterator QuadGeomVectorIter;
-
     }; //end of namespace
 }; //end of namespace
 
@@ -285,6 +283,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.21  2008/06/14 01:23:17  ehan
+// Implemented constructor and FillGeom().
+//
 // Revision 1.20  2008/06/11 21:34:42  delisi
 // Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
 //

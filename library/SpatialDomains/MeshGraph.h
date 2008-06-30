@@ -39,10 +39,15 @@
 #include <cstdlib>
 #include <fstream>
 
-
 #include <SpatialDomains/InterfaceComponent.h>
 #include <SpatialDomains/Equation.h>
 #include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/TriGeom.h>
+#include <SpatialDomains/QuadGeom.h>
+#include <SpatialDomains/TetGeom.h>
+#include <SpatialDomains/PyrGeom.h>
+#include <SpatialDomains/PrismGeom.h>
+#include <SpatialDomains/HexGeom.h>
 
 
 class TiXmlDocument;
@@ -176,6 +181,8 @@ namespace Nektar
             }
 
             void ReadDomain(TiXmlDocument &doc);
+            void ReadCurves(TiXmlDocument &doc);
+            void ReadCurves(std::string &infilename);
             void GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const;
             LibUtilities::BasisKey GetBasisKey(ExpansionShPtr in, const int flag = 0);
 
@@ -206,12 +213,20 @@ namespace Nektar
 
             SegGeomVector m_seggeoms;
 
+            TriGeomVector           m_trigeoms;
+            QuadGeomVector          m_quadgeoms;
+            TetGeomVector           m_tetgeoms;
+            PyrGeomVector           m_pyrgeoms;
+            PrismGeomVector         m_prismgeoms;
+            HexGeomVector           m_hexgeoms;
+
             int m_MeshDimension;
             int m_SpaceDimension;
 
             CompositeVector m_MeshCompositeVector;
             CompositeVector m_Domain;
             ExpansionVector m_ExpansionVector;
+            
        };
     }; //end of namespace
 }; //end of namespace
@@ -220,6 +235,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.24  2008/06/12 23:27:57  delisi
+// Removed MeshGraph.h include from SegGeom.h, to get rid of circular includes. Now can use typedefs from SegGeom.h instead of repeating it in MeshGraph.h.
+//
 // Revision 1.23  2008/06/11 23:25:29  ehan
 // Fixed error : ‘SegGeomVector’ does not name a type
 //

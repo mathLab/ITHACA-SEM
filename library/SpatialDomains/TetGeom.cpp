@@ -34,19 +34,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-// #include "pchSpatialDomains.h"
-// 
-// #include <StdRegions/StdRegions.hpp>
-// #include <SpatialDomains/SpatialDomains.hpp>
-// 
-// #include <SpatialDomains/TriGeom.h>
-// #include <SpatialDomains/TetGeom.h>
-// 
-// #include <SpatialDomains/GeomFactors.h>
-// #include <SpatialDomains/Geometry3D.h>
-// #include <SpatialDomains/MeshComponents.h>
-// #include <SpatialDomains/TriFaceComponent.h>
-
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/TetGeom.h>
@@ -296,6 +283,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.13  2008/06/18 19:28:27  ehan
+// Added some comments.
+//
 // Revision 1.12  2008/06/14 01:23:50  ehan
 // Implemented constructor and FillGeom().
 //

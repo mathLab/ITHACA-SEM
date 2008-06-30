@@ -37,12 +37,6 @@
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH3D_H
 
 #include <SpatialDomains/MeshGraph.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/TetGeom.h>
-#include <SpatialDomains/PyrGeom.h>
-#include <SpatialDomains/PrismGeom.h>
-#include <SpatialDomains/HexGeom.h>
 
 #include <list>
 
@@ -217,12 +211,7 @@ namespace Nektar
             void ResolveGeomRef(const std::string &prevToken, const std::string &token);
 
         private:
-			TriGeomVector           m_trigeoms;
-            QuadGeomVector          m_quadgeoms;
-            TetGeomVector           m_tetgeoms;
-            PyrGeomVector           m_pyrgeoms;
-            PrismGeomVector         m_prismgeoms;
-            HexGeomVector           m_hexgeoms;
+
         };
     }; // end of namespace
 }; // end of namespace
@@ -231,6 +220,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.h,v $
+// Revision 1.9  2008/06/11 21:34:42  delisi
+// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
+//
 // Revision 1.8  2008/06/11 16:10:12  delisi
 // Added the 3D reader.
 //

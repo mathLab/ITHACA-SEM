@@ -37,8 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH2D_H
 
 #include <SpatialDomains/MeshGraph.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/QuadGeom.h>
+
 
 class TiXmlDocument;
 
@@ -222,8 +221,7 @@ namespace Nektar
 #endif
 
         private:
-            TriGeomVector  m_trigeoms;
-            QuadGeomVector m_quadgeoms;
+
         };
     };
 };
@@ -232,6 +230,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.22  2008/06/09 21:33:04  jfrazier
+// Moved segment vector to base MeshGraph class since it is used by all derived types.
+//
 // Revision 1.21  2008/05/30 00:33:48  delisi
 // Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 //

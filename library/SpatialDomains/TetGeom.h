@@ -39,13 +39,8 @@
  #include <StdRegions/StdRegions.hpp>
  #include <StdRegions/StdTetExp.h>
  
- #include <SpatialDomains/SpatialDomains.hpp>
- #include <SpatialDomains/TriGeom.h>
- #include <SpatialDomains/QuadGeom.h>
- #include <SpatialDomains/GeomFactors.h>
  #include <SpatialDomains/Geometry3D.h>
- #include <SpatialDomains/MeshComponents.h>
-
+ #include <SpatialDomains/TriGeom.h>
 
 namespace Nektar
 {
@@ -319,6 +314,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.13  2008/06/16 22:44:23  ehan
+// Added virtual function GetFaceorientation(..)
+//
 // Revision 1.12  2008/06/11 16:10:12  delisi
 // Added the 3D reader.
 //

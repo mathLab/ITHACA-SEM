@@ -35,13 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "pchSpatialDomains.h"
 
-#include <StdRegions/StdRegions.hpp>
-
 #include <SpatialDomains/QuadGeom.h>
-
-#include <StdRegions/StdSegExp.h>
-#include <StdRegions/StdExpMap.h>
-#include <StdRegions/StdQuadExp.h>
 
 namespace Nektar
 {
@@ -373,6 +367,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.18  2008/06/14 01:23:07  ehan
+// Implemented constructor and FillGeom().
+//
 // Revision 1.17  2008/06/11 21:34:42  delisi
 // Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
 //

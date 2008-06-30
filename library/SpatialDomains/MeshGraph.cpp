@@ -364,6 +364,22 @@ namespace Nektar
         }
     }
 
+
+    void MeshGraph::ReadCurves(TiXmlDocument &doc)
+    {
+        
+       // insert code here
+
+    }
+    
+    void MeshGraph::ReadCurves(std::string &infilename)
+    {
+
+       // insert code here
+    
+    }
+    
+
     LibUtilities::BasisKey MeshGraph::GetBasisKey(ExpansionShPtr in, 
         const int flag)
     {
@@ -907,6 +923,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.19  2008/06/11 16:10:12  delisi
+// Added the 3D reader.
+//
 // Revision 1.18  2008/05/30 00:33:48  delisi
 // Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 //

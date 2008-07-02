@@ -859,7 +859,10 @@ namespace Nektar
                               Array<OneD,NekDouble> &outarray);
         
             void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,NekDouble> &outarray);
+                                   Array<OneD,NekDouble> &outarray)
+            {
+                v_LaplacianMatrixOp(inarray,outarray);
+            }
 
             void LaplacianMatrixOp(const int k1, const int k2, 
                                    const Array<OneD, const NekDouble> &inarray,
@@ -869,22 +872,12 @@ namespace Nektar
                                    const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray);
 
-
-            void BwdTransMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,NekDouble> &outarray);
-
             void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
-                                   const double lambda);
-
-            void TensProdBwdTrans(const Array<OneD, const NekDouble>&inarray, 
-                                  Array<OneD, NekDouble> &outarray);
-
-            void TensProdBwdTrans(const StdExpansion &in)
+                                   const double lambda)
             {
-                TensProdBwdTrans(((StdExpansion &)in).GetCoeffs(), m_phys);
+                v_HelmholtzMatrixOp(inarray,outarray,lambda);
             }
-
 
             DNekMatSharedPtr GenMatrix (const StdMatrixKey &mkey)
             {
@@ -1398,6 +1391,61 @@ namespace Nektar
                 return  boost::shared_ptr<SpatialDomains::GeomFactors>();
 
             }
+        
+            virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::ewarning, (string("The function LaplacianMatrixOp() can be implemented more efficiently") + 
+                                               string("for a ") + string(ExpansionTypeMap[DetExpansionType()])) );
+
+                switch(ExpansionTypeDimMap[v_DetExpansionType()])
+                {
+                case 1:
+                    LaplacianMatrixOp(0,0,inarray,outarray);
+                    break;
+
+                case 2:
+                    {
+                        Array<OneD, NekDouble> store(m_ncoeffs);
+                    
+                        LaplacianMatrixOp(0,0,inarray,store);
+                        LaplacianMatrixOp(1,1,inarray,outarray);
+                   
+                        Vmath::Vadd(m_ncoeffs, store , 1, outarray, 1, outarray, 1);
+                    }
+                    break;
+                case 3:
+                    {
+                        Array<OneD, NekDouble> store0(m_ncoeffs);
+                        Array<OneD, NekDouble> store1(m_ncoeffs);
+                    
+                        LaplacianMatrixOp(0,0,inarray,store0);
+                        LaplacianMatrixOp(1,1,inarray,store1);
+                        LaplacianMatrixOp(2,2,inarray,outarray);
+                    
+                        Vmath::Vadd(m_ncoeffs, store0, 1, outarray, 1, outarray, 1);
+                        Vmath::Vadd(m_ncoeffs, store1, 1, outarray, 1, outarray, 1);
+                    }
+                    break;
+                default:
+                    NEKERROR(ErrorUtil::efatal, "Dimension not recognised.");
+                    break;
+                }
+            }
+
+            virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const double lambda)
+            {
+                NEKERROR(ErrorUtil::ewarning, (string("The function HelmholtzMatrixOp() can be implemented more efficiently") + 
+                                               string("for a ") + string(ExpansionTypeMap[DetExpansionType()])) );
+
+                Array<OneD,NekDouble> tmp(m_ncoeffs);
+                MassMatrixOp(inarray,tmp);
+                LaplacianMatrixOp(inarray,outarray);
+                
+                Blas::Daxpy(m_ncoeffs, lambda, tmp, 1, outarray, 1);
+            }
 
         };
 
@@ -1411,6 +1459,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
 * $Log: StdExpansion.h,v $
+* Revision 1.85  2008/06/16 22:45:15  ehan
+* Populated the function GetFaceToElementMap(..)
+*
 * Revision 1.84  2008/06/13 00:27:20  ehan
 * Added GetFaceNCoeffs() function.
 *

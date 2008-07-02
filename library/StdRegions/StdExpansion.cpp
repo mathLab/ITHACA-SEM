@@ -505,7 +505,7 @@ namespace Nektar
                 LaplacianMatrixOp(2,2,inarray,outarray);
                 break;
             case eBwdTrans:
-                BwdTransMatrixOp(inarray,outarray);
+                BwdTrans(inarray,outarray);
                 break;
             case eHelmholtz:
                 HelmholtzMatrixOp(inarray,outarray,mkey.GetConstant(0));
@@ -525,51 +525,10 @@ namespace Nektar
             v_IProductWRTBase(tmp, outarray);
         }
 
-        void StdExpansion::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray)
-        {
-
-            switch(ExpansionTypeDimMap[v_DetExpansionType()])
-            {
-            case 1:
-                LaplacianMatrixOp(0,0,inarray,outarray);
-                break;
-
-            case 2:
-                {
-                    Array<OneD, NekDouble> store(m_ncoeffs);
-                    
-                    LaplacianMatrixOp(0,0,inarray,store);
-                    LaplacianMatrixOp(1,1,inarray,outarray);
-                   
-                    Vmath::Vadd(m_ncoeffs, store , 1, outarray, 1, outarray, 1);
-                }
-                break;
-            case 3:
-                {
-                    Array<OneD, NekDouble> store0(m_ncoeffs);
-                    Array<OneD, NekDouble> store1(m_ncoeffs);
-                    
-                    LaplacianMatrixOp(0,0,inarray,store0);
-                    LaplacianMatrixOp(1,1,inarray,store1);
-                    LaplacianMatrixOp(2,2,inarray,outarray);
-                    
-                    Vmath::Vadd(m_ncoeffs, store0, 1, outarray, 1, outarray, 1);
-                    Vmath::Vadd(m_ncoeffs, store1, 1, outarray, 1, outarray, 1);
-                }
-                break;
-            default:
-                NEKERROR(ErrorUtil::efatal, "Dimension not recognised.");
-                break;
-            }
-        }
-
-
         void StdExpansion::LaplacianMatrixOp(const int k1, const int k2, 
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray)
-        {
-                
+        {                
             ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
             ASSERTL1(k2 >= 0 && k2 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid second argument");
                                   
@@ -593,43 +552,6 @@ namespace Nektar
             v_PhysDeriv(k1,tmp,tmp);
             v_IProductWRTBase(tmp, outarray);
         }
-
-
-        void StdExpansion::BwdTransMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray)
-        {
-            v_BwdTrans(inarray,outarray);
-        }
-
-
-        void StdExpansion::HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray,
-                                             const double lambda)
-        {
-            Array<OneD,NekDouble> tmp(m_ncoeffs);
-            MassMatrixOp(inarray,tmp);
-            LaplacianMatrixOp(inarray,outarray);
-
-            Blas::Daxpy(m_ncoeffs, lambda, tmp, 1, outarray, 1);
-        }
-
-        void StdExpansion::TensProdBwdTrans(const Array<OneD, const NekDouble>& inarray, 
-            Array<OneD, NekDouble> &outarray)
-        {
-            int nq = GetTotPoints();
-            StdMatrixKey      bwdtransmatkey(eBwdTrans,DetExpansionType(),*this);
-            DNekMatSharedPtr& bwdtransmat = GetStdMatrix(bwdtransmatkey);
-
-            // scenario 1
-            Blas::Dgemv('N',nq,m_ncoeffs,1.0,bwdtransmat->GetPtr().get(),
-                     nq, &inarray[0], 1.0, 0.0, &outarray[0], 1.0);
-
-            //scenario 3
-            //NekVector<const NekDouble> v_in(m_ncoeffs,inarray,eWrapper);
-            //NekVector<NekDouble> v_out(nq,outarray,eWrapper);
-            //v_out = (*bwdtransmat) * v_in;
-        }
-
 
         // 3D interpolation
 	 void StdExpansion::Interp3D(const LibUtilities::BasisKey &fbasis0, 
@@ -802,6 +724,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.70  2008/05/30 00:33:49  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.69  2008/05/10 18:27:33  sherwin
 * Modifications necessary for QuadExp Unified DG Solver
 *

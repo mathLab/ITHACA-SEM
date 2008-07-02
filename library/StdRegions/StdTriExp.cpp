@@ -318,6 +318,110 @@ namespace Nektar
                 Vmath::Vmul(nquad1,(NekDouble *)(base1.get() + mode*nquad1),1,&outarray[0]+i,
                     nquad0,&outarray[0]+i,nquad0);
             }
+        }       
+        
+        void StdTriExp::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray)
+        {
+            cout<<"StdTriExp::LaplacianMatrixOp"<<endl;
+            int    i;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nqtot = nquad0*nquad1; 
+
+            Array<OneD,NekDouble> physValues(nqtot);
+            Array<OneD,NekDouble> dPhysValuesdx(nqtot);
+            Array<OneD,NekDouble> dPhysValuesdy(nqtot);
+
+            Array<OneD,NekDouble> wsp(m_ncoeffs);
+
+            BwdTrans(inarray,physValues);
+
+            // Laplacian matrix operation
+            // multiply with metric terms of collapsed coordinate system
+            Array<OneD,NekDouble> gfac0(max(nquad0,nquad1));
+            const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
+            const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
+
+            for(i = 0; i < nquad0; ++i)
+            {
+                gfac0[i] = 0.5*(1+z0[i]);
+            }        
+            
+            for(i = 0; i < nquad1; ++i) 
+            {
+                Vmath::Vvtvp(nquad0,&gfac0[0],1,dPhysValuesdy.get()+i*nquad0,1,dPhysValuesdx.get()+i*nquad0,1,dPhysValuesdx.get()+i*nquad0,1);
+            } 
+
+            for(i = 0; i < nquad1; ++i)
+            {
+                gfac0[i] = 2.0/(1-z1[i]);
+            }
+
+            for(i = 0; i < nquad1; ++i)  
+            {
+                Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
+            }
+             
+            
+            IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
+            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
+            Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);                  
+        }       
+        
+        void StdTriExp::HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray,
+                                          const double lambda)
+        {
+            int    i;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nqtot = nquad0*nquad1; 
+
+            Array<OneD,NekDouble> physValues(nqtot);
+            Array<OneD,NekDouble> dPhysValuesdx(nqtot);
+            Array<OneD,NekDouble> dPhysValuesdy(nqtot);
+
+            Array<OneD,NekDouble> wsp(m_ncoeffs);
+
+            BwdTrans(inarray,physValues);
+
+            // mass matrix operation
+            IProductWRTBase((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),
+                            physValues,wsp);
+
+            // Laplacian matrix operation
+            // multiply with metric terms of collapsed coordinate system
+            Array<OneD,NekDouble> gfac0(max(nquad0,nquad1));
+            const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
+            const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
+
+            for(i = 0; i < nquad0; ++i)
+            {
+                gfac0[i] = 0.5*(1+z0[i]);
+            }        
+            
+            for(i = 0; i < nquad1; ++i) 
+            {
+                Vmath::Vvtvp(nquad0,&gfac0[0],1,dPhysValuesdy.get()+i*nquad0,1,dPhysValuesdx.get()+i*nquad0,1,dPhysValuesdx.get()+i*nquad0,1);
+            } 
+
+            for(i = 0; i < nquad1; ++i)
+            {
+                gfac0[i] = 2.0/(1-z1[i]);
+            }
+
+            for(i = 0; i < nquad1; ++i)  
+            {
+                Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
+            }
+             
+            
+            IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
+            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
+
+            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
+            Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);                  
         }
 
         //-----------------------------
@@ -388,6 +492,30 @@ namespace Nektar
                                  &out_d1[0]+i*nquad0,1);
                 } 
             }
+        }
+        
+        void StdTriExp::PhysDeriv(const int dir, 
+                                  const Array<OneD, const NekDouble>& inarray,
+                                  Array<OneD, NekDouble> &outarray)
+        {
+            switch(dir)
+            {
+            case 0:
+                {
+                    PhysDeriv(inarray, outarray, NullNekDouble1DArray);   
+                }
+                break;
+            case 1:
+                {
+                    PhysDeriv(inarray, NullNekDouble1DArray, outarray);   
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(false,"input dir is out of range");
+                }
+                break;
+            }             
         }
 
 
@@ -1074,6 +1202,9 @@ namespace Nektar
 
 /** 
 * $Log: StdTriExp.cpp,v $
+* Revision 1.37  2008/06/05 20:13:12  ehan
+* Removed undefined function GetAlpha() in the ASSERTL2().
+*
 * Revision 1.36  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

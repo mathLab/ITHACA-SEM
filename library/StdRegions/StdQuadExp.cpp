@@ -100,7 +100,7 @@ namespace Nektar
                 break;
             default:
                 {
-                    ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
+                    ASSERTL1(false,"input dir is out of range");
                 }
                 break;
             }             
@@ -279,6 +279,61 @@ namespace Nektar
             return Mat;
         }
 
+        void StdQuadExp::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,NekDouble> &outarray)
+        {
+            cout<<"StdQuadExp::LaplacianMatrixOp"<<endl;
+            int    i;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nqtot = nquad0*nquad1; 
+
+            Array<OneD,NekDouble> physValues(nqtot);
+            Array<OneD,NekDouble> dPhysValuesdx(nqtot);
+            Array<OneD,NekDouble> dPhysValuesdy(nqtot);
+
+            Array<OneD,NekDouble> wsp(m_ncoeffs);
+
+            BwdTrans(inarray,physValues);
+
+            // Laplacian matrix operation
+            PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
+            
+            IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray,1);
+            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp,1);  
+            Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);               
+        }
+
+        void StdQuadExp::HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,NekDouble> &outarray,
+                                           const double lambda)
+        {
+            int    i;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nqtot = nquad0*nquad1; 
+
+            Array<OneD,NekDouble> physValues(nqtot);
+            Array<OneD,NekDouble> dPhysValuesdx(nqtot);
+            Array<OneD,NekDouble> dPhysValuesdy(nqtot);
+
+            Array<OneD,NekDouble> wsp(m_ncoeffs);
+
+            BwdTrans(inarray,physValues);
+
+            // mass matrix operation
+            IProductWRTBase((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),
+                            physValues,wsp,1);
+
+            // Laplacian matrix operation
+            PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
+            
+            IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray,1);
+            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
+
+            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp,1);  
+            Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);               
+        }
 
         ///////////////////////////////
         /// Differentiation Methods
@@ -290,6 +345,30 @@ namespace Nektar
             Array<OneD, NekDouble> &out_d2)
         {
             PhysTensorDeriv(inarray, out_d0, out_d1);
+        }
+        
+        void StdQuadExp::PhysDeriv(const int dir, 
+                                   const Array<OneD, const NekDouble>& inarray,
+                                   Array<OneD, NekDouble> &outarray)
+        {
+            switch(dir)
+            {
+            case 0:
+                {
+                    PhysDeriv(inarray, outarray, NullNekDouble1DArray);   
+                }
+                break;
+            case 1:
+                {
+                    PhysDeriv(inarray, NullNekDouble1DArray, outarray);   
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(false,"input dir is out of range");
+                }
+                break;
+            }             
         }
 
         //------------------------------
@@ -1245,6 +1324,9 @@ namespace Nektar
 
 /** 
 * $Log: StdQuadExp.cpp,v $
+* Revision 1.38  2008/06/05 20:12:51  ehan
+* Removed undefined function GetAlpha() in the ASSERTL2().
+*
 * Revision 1.37  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

@@ -261,6 +261,63 @@ namespace Nektar
             StdSegExp::IProductWRTBase(base,tmp,outarray,coll_check);
         }
 
+        void SegExp::IProductWRTDerivBase(const int dir, 
+                                          const Array<OneD, const NekDouble>& inarray, 
+                                          Array<OneD, NekDouble> & outarray)
+        {
+            int    nquad = m_base[0]->GetNumPoints();
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+
+            Array<OneD, NekDouble> tmp1(nquad);
+            
+            switch(dir)
+            {
+            case 0:
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad,gmat[0],1,inarray,1,tmp1,1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(nquad, gmat[0][0], inarray, 1, tmp1, 1);
+                    }                 
+                }
+                break;
+            case 1:
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad,gmat[1],1,inarray,1,tmp1,1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(nquad, gmat[1][0], inarray, 1, tmp1, 1);
+                    }
+                }
+                break;
+            case 2:
+                {
+                    ASSERTL1(m_geom->GetCoordim() == 3,"input dir is out of range");
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad,gmat[2],1,inarray,1,tmp1,1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(nquad, gmat[2][0], inarray, 1, tmp1, 1);
+                    }
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(false,"input dir is out of range");
+                }
+                break;
+            }   
+            IProductWRTBase(m_base[0]->GetDbdata(),tmp1,outarray,1);       
+        }
+
 
         /** \brief  Inner product of \a inarray over region with respect to 
         the expansion basis (this)->_Base[0] and return in \a outarray 
@@ -285,6 +342,170 @@ namespace Nektar
             IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
         }
 
+        void SegExp::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray)
+        {
+            int    i;
+            int    nquad = m_base[0]->GetNumPoints();
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+
+            Array<OneD,NekDouble> physValues(nquad);
+            Array<OneD,NekDouble> dPhysValuesdx(nquad);
+
+            BwdTrans(inarray,physValues);
+
+            // Laplacian matrix operation
+            switch(m_geom->GetCoordim())
+            {            
+            case 1:
+                {
+                    PhysDeriv(physValues,dPhysValuesdx);
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                    }          
+                }
+                break;
+            case 2:
+                {
+                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
+
+                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
+                    }         
+                }
+                break;
+            case 3:
+                {
+                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
+                    Array<OneD,NekDouble> dPhysValuesdz(nquad);
+
+                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz); 
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[2][0],1,dPhysValuesdz.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[2][0], dPhysValuesdz.get(), 1, dPhysValuesdx.get(), 1);
+                    }  
+              }
+                break;
+            default:
+                ASSERTL0(false,"Wrong number of dimensions");
+                break;
+            }
+            
+            IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);      
+        }
+
+
+        void SegExp::HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                        Array<OneD,NekDouble> &outarray,
+                                        const double lambda)
+        {
+            int    i;
+            int    nquad = m_base[0]->GetNumPoints();
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+
+            Array<OneD,NekDouble> physValues(nquad);
+            Array<OneD,NekDouble> dPhysValuesdx(nquad);
+            Array<OneD,NekDouble> wsp(m_ncoeffs);
+
+            BwdTrans(inarray,physValues);
+
+            // mass matrix operation
+            IProductWRTBase((m_base[0]->GetBdata()),physValues,wsp,1);
+
+            // Laplacian matrix operation
+            switch(m_geom->GetCoordim())
+            {            
+            case 1:
+                {
+                    PhysDeriv(physValues,dPhysValuesdx);
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                    }          
+                }
+                break;
+            case 2:
+                {
+                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
+
+                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
+                    }         
+                }
+                break;
+            case 3:
+                {
+                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
+                    Array<OneD,NekDouble> dPhysValuesdz(nquad);
+
+                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz); 
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[2][0],1,dPhysValuesdz.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[2][0], dPhysValuesdz.get(), 1, dPhysValuesdx.get(), 1);
+                    }  
+              }
+                break;
+            default:
+                ASSERTL0(false,"Wrong number of dimensions");
+                break;
+            }
+            
+            IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
+            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);            
+        }
 
         //----------------------------
         // Differentiation Methods
@@ -364,6 +585,36 @@ namespace Nektar
                 }
             } 
         } 
+        
+        void SegExp::PhysDeriv(const int dir, 
+                               const Array<OneD, const NekDouble>& inarray,
+                               Array<OneD, NekDouble> &outarray)
+        {
+            switch(dir)
+            {
+            case 0:
+                {
+                    PhysDeriv(inarray, outarray, NullNekDouble1DArray, NullNekDouble1DArray);   
+                }
+                break;
+            case 1:
+                {
+                    PhysDeriv(inarray, NullNekDouble1DArray, outarray, NullNekDouble1DArray);   
+                }
+                break;
+            case 2:
+                {
+                    PhysDeriv(inarray, NullNekDouble1DArray, NullNekDouble1DArray, outarray);   
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(false,"input dir is out of range");
+                }
+                break;
+            }             
+        }
+
 
         //----------------------------
         // Evaluation Methods
@@ -1211,6 +1462,9 @@ namespace Nektar
  }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.47  2008/06/06 14:57:51  pvos
+// Minor Updates
+//
 // Revision 1.46  2008/06/05 20:18:38  ehan
 // Fixed undefined function GetGtype() in the ASSERTL2().
 //

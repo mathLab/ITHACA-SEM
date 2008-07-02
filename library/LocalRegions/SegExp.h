@@ -112,6 +112,9 @@ namespace Nektar
             void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                  Array<OneD,NekDouble> &outarray);
 
+            void IProductWRTDerivBase(const int dir,
+                                      const Array<OneD, const NekDouble>& inarray,
+                                      Array<OneD, NekDouble> & outarray);
 
             //-----------------------------
             // Differentiation Methods
@@ -124,7 +127,11 @@ namespace Nektar
             void PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
                Array<OneD,NekDouble> &out_d0,
                Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
-               Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray);
+               Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray);     
+        
+            void PhysDeriv(const int dir, 
+                           const Array<OneD, const NekDouble>& inarray,
+                           Array<OneD, NekDouble> &outarray);
 
             //----------------------------
             // Evaluations Methods
@@ -169,6 +176,13 @@ namespace Nektar
             {
                 AddNormBoundaryInt(dir,inarray,outarray);
             }
+
+            void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray);
+
+            void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const double lambda);
             
         protected:
 
@@ -255,6 +269,13 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
             }
 
+            virtual void v_IProductWRTDerivBase (const int dir,
+                                                 const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTDerivBase(dir,inarray,outarray);
+            }
+            
             /// Virtual call to SegExp::PhysDeriv
             virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
                     Array<OneD,NekDouble> &outarray)
@@ -271,10 +292,10 @@ namespace Nektar
             }
 
             virtual void v_PhysDeriv(const int dir, 
-                const Array<OneD, const NekDouble>& inarray,
-                                     Array<OneD, NekDouble> &out_d0)
+                                     const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD, NekDouble> &outarray)
             {
-                PhysDeriv(inarray, out_d0);
+                PhysDeriv(dir,inarray,outarray);
             }
 
             /// Virtual call to SegExp::FwdTrans
@@ -434,6 +455,18 @@ namespace Nektar
                 AddUDGHelmholtzTraceTerms(tau,inarray,outarray);
             }
 
+            virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray)
+            {
+                LaplacianMatrixOp(inarray,outarray);
+            }
+
+            virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const double lambda)
+            {
+                HelmholtzMatrixOp(inarray,outarray,lambda);
+            }            
         };
 
     // type defines for use of SegExp in a boost vector
@@ -447,6 +480,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.35  2008/05/30 00:33:48  delisi
+// Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+//
 // Revision 1.34  2008/05/29 21:33:37  pvos
 // Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 //

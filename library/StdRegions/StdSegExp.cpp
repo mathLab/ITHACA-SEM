@@ -148,6 +148,44 @@ namespace Nektar
             
             return Mat;
         }
+
+        void StdSegExp::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray)
+        {
+            int    i;
+            int    nquad = m_base[0]->GetNumPoints();
+
+            Array<OneD,NekDouble> physValues(nquad);
+            Array<OneD,NekDouble> dPhysValuesdx(nquad);
+
+            BwdTrans(inarray,physValues);
+
+            // Laplacian matrix operation
+            PhysDeriv(physValues,dPhysValuesdx);            
+            IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);        
+        }
+
+        void StdSegExp::HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray,
+                                          const double lambda)
+        {
+            int    i;
+            int    nquad = m_base[0]->GetNumPoints();
+
+            Array<OneD,NekDouble> physValues(nquad);
+            Array<OneD,NekDouble> dPhysValuesdx(nquad);
+            Array<OneD,NekDouble> wsp(m_ncoeffs);
+
+            BwdTrans(inarray,physValues);
+
+            // mass matrix operation
+            IProductWRTBase((m_base[0]->GetBdata()),physValues,wsp,1);
+
+            // Laplacian matrix operation
+            PhysDeriv(physValues,dPhysValuesdx);            
+            IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
+            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);            
+        }
         
         //----------------------------
         // Differentiation Methods
@@ -445,6 +483,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.52  2008/06/06 14:57:51  pvos
+* Minor Updates
+*
 * Revision 1.51  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

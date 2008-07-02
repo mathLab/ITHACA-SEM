@@ -137,6 +137,10 @@ namespace Nektar
                 Array<OneD, NekDouble> &out_d0,
                 Array<OneD, NekDouble> &out_d1,
                 Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
+        
+            void PhysDeriv(const int dir, 
+                           const Array<OneD, const NekDouble>& inarray,
+                           Array<OneD, NekDouble> &outarray);
 
             //-----------------------------
             // Evaluations Methods
@@ -212,6 +216,13 @@ namespace Nektar
 
             void GetCoords(Array<OneD, NekDouble> &coords_0, 
                 Array<OneD, NekDouble> &coords_1);
+
+            void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray);
+
+            void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const double lambda);
 
         protected:
 
@@ -365,30 +376,12 @@ namespace Nektar
             }
 
             virtual void v_PhysDeriv(const int dir, 
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray)
+                                     const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD, NekDouble> &outarray)
             {
-                Array<OneD,NekDouble> tmp;
-                switch(dir)
-                {
-                case 0:
-                    {
-                        PhysDeriv(inarray, outarray, tmp);   
-                    }
-                    break;
-                case 1:
-                    {
-                        PhysDeriv(inarray, tmp, outarray);   
-                    }
-                    break;
-                default:
-                    {
-                        ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
-                    }
-                    break;
-                }             
+                PhysDeriv(dir,inarray,outarray);
             }
-
+            
             virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &out_d0, 
                 Array<OneD, NekDouble> &out_d1)
@@ -495,6 +488,19 @@ namespace Nektar
             {
                 WriteCoeffsToFile(outfile);
             }
+
+            virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray)
+            {
+                LaplacianMatrixOp(inarray,outarray);
+            }
+            
+            virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const double lambda)
+            {
+                HelmholtzMatrixOp(inarray,outarray,lambda);
+            }   
         };
         typedef boost::shared_ptr<StdTriExp> StdTriExpSharedPtr;
     } //end of namespace
@@ -504,6 +510,9 @@ namespace Nektar
 
 /**
 * $Log: StdTriExp.h,v $
+* Revision 1.29  2008/05/30 00:33:49  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.28  2008/05/29 21:36:25  pvos
 * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 *

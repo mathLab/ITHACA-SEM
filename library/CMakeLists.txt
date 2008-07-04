@@ -48,7 +48,9 @@ SET(NEKTAR_USE_MKL OFF CACHE BOOL "Use the Intel Math Kernel Library (MKL) for B
 IF( APPLE )
     SET(NEKTAR_USE_FRAMEWORK ON CACHE BOOL "Use the Mac Framework system for BLAS and Lapack support." )
 ENDIF(APPLE)
-
+IF( UNIX )
+  SET(NEKTAR_USE_SYSTEM_BLAS_LAPACK OFF CACHE BOOL "Use the system provided blas and lapack libraries")
+ENDIF(UNIX)
 
 # Turn on NEKTAR_USE_WIN32_LAPACK if we are in Windows and the libraries exist.
 IF( WIN32 )

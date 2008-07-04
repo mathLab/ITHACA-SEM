@@ -253,11 +253,10 @@ namespace Nektar
             ival = StdNodalTriExp::Integral(tmp);            
             return ival; 
         }
-        
-        
-        void NodalTriExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-                                          const Array<OneD, const NekDouble> &base1, 
-                                          const Array<OneD, const NekDouble> &inarray, 
+
+        void NodalTriExp::IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                          const Array<OneD, const NekDouble>& base1,
+                                          const Array<OneD, const NekDouble>& inarray, 
                                           Array<OneD, NekDouble> &outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -276,17 +275,10 @@ namespace Nektar
             }
             StdNodalTriExp::IProductWRTBase(base0,base1,tmp,outarray);
         }
-        
-        void NodalTriExp::IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
-                                          Array<OneD,NekDouble> &outarray)
-        {
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-                            inarray,outarray);
-        }
 
         void NodalTriExp::IProductWRTDerivBase(const int dir, 
-                                              const Array<OneD, const NekDouble>& inarray, 
-                                              Array<OneD, NekDouble> & outarray)
+                                               const Array<OneD, const NekDouble>& inarray, 
+                                               Array<OneD, NekDouble> & outarray)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -1019,11 +1011,14 @@ namespace Nektar
             return returnval;
         }
 
-  }//end of namespace
+    }//end of namespace
 }//end of namespace
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.24  2008/06/05 20:17:41  ehan
+ *    Fixed undefined function GetGtype() in the ASSERTL2().
+ *
  *    Revision 1.23  2008/05/30 00:33:48  delisi
  *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

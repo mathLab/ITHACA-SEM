@@ -177,26 +177,6 @@ namespace Nektar
         // Integration Methods
         //////////////////////////////
 
-
-        void StdNodalTriExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
-            Array<OneD,  NekDouble> &outarray)
-        {
-            IProductWRTBase(m_base[0]->GetBdata(),
-                m_base[1]->GetBdata(), inarray, 
-                outarray);
-        }
-
-        void StdNodalTriExp:: IProductWRTBase(const Array<OneD, const NekDouble>& base0,
-            const Array<OneD, const NekDouble>& base1,
-            const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
-        {
-            // Take inner product with respect to Orthgonal basis using
-            // StdTri routine
-            StdTriExp::IProductWRTBase(base0,base1,inarray,outarray);
-            NodalToModalTranspose(outarray,outarray);     
-        }
-
         void StdNodalTriExp::IProductWRTDerivBase(const int dir, 
                                                   const Array<OneD, const NekDouble>& inarray, 
                                                   Array<OneD, NekDouble> & outarray)
@@ -659,6 +639,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.26  2008/06/05 15:06:06  pvos
+* Added documentation
+*
 * Revision 1.25  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

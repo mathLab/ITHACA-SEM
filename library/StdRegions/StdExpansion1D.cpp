@@ -94,7 +94,7 @@ namespace Nektar
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS    
     }
     
-    NekDouble StdExpansion1D::PhysEvaluate1D(const Array<OneD, const NekDouble>& Lcoord)
+    NekDouble StdExpansion1D::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord)
     {
         int    nquad = GetTotPoints();
         NekDouble  val;
@@ -113,6 +113,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.25  2008/05/07 16:04:57  pvos
+ * Mapping + Manager updates
+ *
  * Revision 1.24  2008/04/06 06:04:14  bnelson
  * Changed ConstArray to Array<const>
  *

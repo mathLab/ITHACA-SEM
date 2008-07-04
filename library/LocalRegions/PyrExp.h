@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/PyrExp.h,v $
+// File PyrExp.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -49,232 +49,266 @@
 
 namespace Nektar
 {
-  namespace LocalRegions
-  {
-
-    class PyrExp: public StdRegions::StdPyrExp
+    namespace LocalRegions
     {
 
-    public:
+    class PyrExp: public StdRegions::StdPyrExp
+        {
 
-      /** \brief Constructor using BasisKey class for quadrature points and order
-      definition */
-        PyrExp(const LibUtilities::BasisKey &Ba,
-               const LibUtilities::BasisKey &Bb,
-	       const LibUtilities::BasisKey &Bc,
-               const SpatialDomains::PyrGeomSharedPtr &geom);
+        public:
 
-        PyrExp(const LibUtilities::BasisKey &Ba,
-	       const LibUtilities::BasisKey &Bb,
-	       const LibUtilities::BasisKey &Bc);
+            /** \brief Constructor using BasisKey class for quadrature points and order
+                definition */
+            PyrExp(const LibUtilities::BasisKey &Ba,
+                   const LibUtilities::BasisKey &Bb,
+                   const LibUtilities::BasisKey &Bc,
+                   const SpatialDomains::PyrGeomSharedPtr &geom);
+
+            PyrExp(const LibUtilities::BasisKey &Ba,
+                   const LibUtilities::BasisKey &Bb,
+                   const LibUtilities::BasisKey &Bc);
 
 	    
-      /// Copy Constructor
-      PyrExp(const PyrExp &T);
+            /// Copy Constructor
+            PyrExp(const PyrExp &T);
 
-      /// Destructor
-      ~PyrExp();
+            /// Destructor
+            ~PyrExp();
 
-       void GetCoords(Array<OneD,NekDouble> &coords_0,
-		       Array<OneD,NekDouble> &coords_1,
-          	       Array<OneD,NekDouble> &coords_2);
+            void GetCoords(Array<OneD,NekDouble> &coords_0,
+                           Array<OneD,NekDouble> &coords_1,
+                           Array<OneD,NekDouble> &coords_2);
 
-	void GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
-                      Array<OneD,NekDouble> &coords);
+            void GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
+                          Array<OneD,NekDouble> &coords);
 
-	 //----------------------------
-        // Integration Methods
-        //----------------------------
+            //----------------------------
+            // Integration Methods
+            //----------------------------
 
-        /// \brief Integrate the physical point list \a inarray over region
-       NekDouble Integral(const Array<OneD, const NekDouble> &inarray);    
+            /// \brief Integrate the physical point list \a inarray over region
+            NekDouble Integral(const Array<OneD, const NekDouble> &inarray);    
 
-       void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
-       void FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
+            /** \brief  Inner product of \a inarray over region with respect to the
+                expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray
 
-       NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
+                Wrapper call to StdPyrExp::IProductWRTBase
 
-      //-----------------------------
-      // Differentiation Methods
-      //-----------------------------
-        void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-                       Array<OneD, NekDouble> &out_d0,
-                       Array<OneD, NekDouble> &out_d1,
-                       Array<OneD, NekDouble> &out_d2);
+                Input:\n
 
-      /// Return Shape of region, using  ShapeType enum list. i.e. Pyramid
-      StdRegions::ExpansionType DetExpansionType() const
-      {
-    	return StdRegions::ePyramid;
-      }
+                - \a inarray: array of function evaluated at the physical collocation points
 
-       SpatialDomains::PyrGeomSharedPtr GetGeom()
-      {
-          return m_geom;
-      }
+                Output:\n
 
-       void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+                - \a outarray: array of inner product with respect to each basis over region
+            */
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
+            }
 
-    protected:
-      //SpatialDomains::PyrGeom * m_geom;
-	void GenMetricInfo();
+            void FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
 
-	void IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-			     const Array<OneD, const NekDouble> &base1, 
-			     const Array<OneD, const NekDouble> &base2, 
-			     const Array<OneD, const NekDouble> &inarray,
-			     Array<OneD,NekDouble> &outarray);
+            NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
 
-        DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
-        DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
-        DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
+            //-----------------------------
+            // Differentiation Methods
+            //-----------------------------
+            void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+                           Array<OneD, NekDouble> &out_d0,
+                           Array<OneD, NekDouble> &out_d1,
+                           Array<OneD, NekDouble> &out_d2);
 
-	SpatialDomains::PyrGeomSharedPtr m_geom;
-        SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+            /// Return Shape of region, using  ShapeType enum list. i.e. Pyramid
+            StdRegions::ExpansionType DetExpansionType() const
+            {
+                return StdRegions::ePyramid;
+            }
 
-	LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
-        LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+            SpatialDomains::PyrGeomSharedPtr GetGeom()
+            {
+                return m_geom;
+            }
+
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+
+        protected:
+            //SpatialDomains::PyrGeom * m_geom;
+            void GenMetricInfo();
+
+            /**
+               \brief Calculate the inner product of inarray with respect to
+               the basis B=base0*base1*base2 and put into outarray:
+              
+               \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
+               \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
+               \psi_{p}^{a} (\bar \eta_{1i}) \psi_{q}^{a} (\eta_{2j}) \psi_{pqr}^{c} (\eta_{3k})
+               w_i w_j w_k u(\bar \eta_{1,i} \eta_{2,j} \eta_{3,k})
+               J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\bar \eta_{1,i})
+               \sum_{j=0}^{nq_1} \psi_{q}^a(\eta_{2,j}) \sum_{k=0}^{nq_2} \psi_{pqr}^c u(\bar \eta_{1i},\eta_{2j},\eta_{3k})
+               J_{i,j,k} \end{array} \f$ \n
+            
+               where
+            
+               \f$\phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\bar \eta_1) \psi_{q}^a (\eta_2) \psi_{pqr}^c (\eta_3) \f$ \n
+            
+               which can be implemented as \n
+               \f$f_{pqr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\bar \eta_{1i},\eta_{2j},\eta_{3k})
+               J_{i,j,k} = {\bf B_3 U}  \f$ \n
+               \f$ g_{pq} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{q}^a (\xi_{2j}) f_{pqr} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
+               \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$
+            **/
+            void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                 const Array<OneD, const NekDouble>& base1, 
+                                 const Array<OneD, const NekDouble>& base2, 
+                                 const Array<OneD, const NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> & outarray);
+
+            DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
+            DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
+            DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
+
+            SpatialDomains::PyrGeomSharedPtr m_geom;
+            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+
+            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
 
-    private:
-      PyrExp();
+        private:
+            PyrExp();
 
-      virtual StdRegions::ExpansionType v_DetExpansionType() const
-      {
-        return DetExpansionType();
-      }
+            virtual StdRegions::ExpansionType v_DetExpansionType() const
+            {
+                return DetExpansionType();
+            }
 
-      virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
+            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
+            {
+                return m_metricinfo;
+            }
 
-         virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
-                                 Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
-                                 Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray)
-         {
-             GetCoords(coords_0, coords_1, coords_2);
-         }
+            virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
+                                     Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
+                                     Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray)
+            {
+                GetCoords(coords_0, coords_1, coords_2);
+            }
 
-        virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, 
-                                Array<OneD, NekDouble> &coord)
-        {
-            GetCoord(lcoord, coord);
-        }
+            virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, 
+                                    Array<OneD, NekDouble> &coord)
+            {
+                GetCoord(lcoord, coord);
+            }
 
-        virtual int v_GetCoordim()
-        {
-            return m_geom->GetCoordim();
-        }
+            virtual int v_GetCoordim()
+            {
+                return m_geom->GetCoordim();
+            }
 
-        /// Virtual call to SegExp::PhysDeriv
-        virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-                                    Array<OneD, NekDouble> &out_d0,
-                                    Array<OneD, NekDouble> &out_d1,
-                                    Array<OneD, NekDouble> &out_d2)
-        {
-            StdPyrExp::PhysDeriv(inarray, out_d0, out_d1, out_d2);
-        }
-
-        virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD, NekDouble> &out_d0,
-                                 Array<OneD, NekDouble> &out_d1,
-                                 Array<OneD, NekDouble> &out_d2)
-        {
-            PhysDeriv(inarray, out_d0, out_d1, out_d2);
-        }
+            virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD, NekDouble> &out_d0,
+                                     Array<OneD, NekDouble> &out_d1,
+                                     Array<OneD, NekDouble> &out_d2)
+            {
+                PhysDeriv(inarray, out_d0, out_d1, out_d2);
+            }
         
-        virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
-        {
-            WriteToFile(outfile,format,dumpVar);
-        }
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            {
+                WriteToFile(outfile,format,dumpVar);
+            }
 
-        /** \brief Virtual call to integrate the physical point list \a inarray
-        over region (see SegExp::Integral) */
-        virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
-        {
-            return Integral(inarray);
-        }
+            /** \brief Virtual call to integrate the physical point list \a inarray
+                over region (see SegExp::Integral) */
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
+            {
+                return Integral(inarray);
+            }
 
-        /** \brief Virtual call to TriExp::IProduct_WRT_B */
-        virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD, NekDouble> &outarray)
-        {
-            IProductWRTBase(inarray,outarray);
-        }
+            /** \brief Virtual call to TriExp::IProduct_WRT_B */
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(inarray,outarray);
+            }
 
-        virtual void v_IProductWRTDerivBase (const int dir,
-                                             const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD, NekDouble> &outarray)
-        {
-            IProductWRTDerivBase(dir,inarray,outarray);
-        }
+            virtual void v_IProductWRTDerivBase (const int dir,
+                                                 const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTDerivBase(dir,inarray,outarray);
+            }
 
-        /// Virtual call to SegExp::FwdTrans
-        virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD, NekDouble> &outarray)
-        {
-            FwdTrans(inarray, outarray);
-        }
+            /// Virtual call to SegExp::FwdTrans
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                    Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans(inarray, outarray);
+            }
         
-        /// Virtual call to PyrExp::Evaluate
-        virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
-        {
-            return PhysEvaluate(coords);
-        }
+            /// Virtual call to PyrExp::Evaluate
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
+            {
+                return PhysEvaluate(coords);
+            }
 
-        virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
-        {
-            return Linf(sol);
-        }
+            virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
+            {
+                return Linf(sol);
+            }
 
-        virtual NekDouble v_Linf()
-        {
-            return Linf();
-        }
+            virtual NekDouble v_Linf()
+            {
+                return Linf();
+            }
 
-        virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
-        {
-            return StdExpansion::L2(sol);
-        }
+            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
+            {
+                return StdExpansion::L2(sol);
+            }
 
-        virtual NekDouble v_L2()
-        {
-            return StdExpansion::L2();
-        }
+            virtual NekDouble v_L2()
+            {
+                return StdExpansion::L2();
+            }
 
-        virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            return CreateStdMatrix(mkey);
-        }
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+            {
+                return CreateStdMatrix(mkey);
+            }
 
-        virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
-        {
-            return m_matrixManager[mkey];
-        }
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
+            {
+                return m_matrixManager[mkey];
+            }
 
-        virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
-        {
-            return m_staticCondMatrixManager[mkey];
-        }
-
-
+            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+            {
+                return m_staticCondMatrixManager[mkey];
+            }
 
 
-    };
 
-    // type defines for use of PyrExp in a boost vector
-    typedef boost::shared_ptr<PyrExp> PyrExpSharedPtr;
-    typedef std::vector< PyrExpSharedPtr > PyrExpVector;
-    typedef std::vector< PyrExpSharedPtr >::iterator PyrExpVectorIter;
 
-  } //end of namespace
+        };
+
+        // type defines for use of PyrExp in a boost vector
+        typedef boost::shared_ptr<PyrExp> PyrExpSharedPtr;
+        typedef std::vector< PyrExpSharedPtr > PyrExpVector;
+        typedef std::vector< PyrExpSharedPtr >::iterator PyrExpVectorIter;
+
+    } //end of namespace
 } //end of namespace
 
 #endif  //PYREXP_H
 
 /**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.15  2008/05/30 00:33:48  delisi
+ *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+ *
  *    Revision 1.14  2008/05/29 21:33:37  pvos
  *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
  *

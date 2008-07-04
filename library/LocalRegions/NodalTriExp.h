@@ -92,8 +92,12 @@ namespace Nektar
             
             /** \brief  Inner product of \a inarray over region with respect to the
                 expansion basis (this)->_Base[0] and return in \a outarray */
-            void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
-                                 Array<OneD, NekDouble> &outarray);
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
+                                inarray,outarray);
+            }  
 
             void IProductWRTDerivBase(const int dir,
                                       const Array<OneD, const NekDouble>& inarray,
@@ -136,10 +140,10 @@ namespace Nektar
             
             /** \brief  Inner product of \a inarray over region with respect to
                 the expansion basis \a base and return in \a outarray */
-            inline void IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-                                        const Array<OneD, const NekDouble> &base1, 
-                                        const Array<OneD, const NekDouble> &inarray, 
-                                        Array<OneD, NekDouble> &outarray); 
+            void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                 const Array<OneD, const NekDouble>& base1,
+                                 const Array<OneD, const NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> &outarray);
             
         private:           
         
@@ -308,12 +312,12 @@ namespace Nektar
             {
                 return m_staticCondMatrixManager[mkey];
             }
-    };
+        };
     
-    // type defines for use of TriExp in a boost vector
-    typedef boost::shared_ptr<NodalTriExp> NodalTriExpSharedPtr;
-    typedef std::vector< NodalTriExpSharedPtr > NodalTriExpVector;
-    typedef std::vector< NodalTriExpSharedPtr >::iterator NodalTriExpVectorIter;
+        // type defines for use of TriExp in a boost vector
+        typedef boost::shared_ptr<NodalTriExp> NodalTriExpSharedPtr;
+        typedef std::vector< NodalTriExpSharedPtr > NodalTriExpVector;
+        typedef std::vector< NodalTriExpSharedPtr >::iterator NodalTriExpVectorIter;
     
     } //end of namespace
 } //end of namespace
@@ -322,6 +326,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.18  2008/05/30 00:33:48  delisi
+ *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+ *
  *    Revision 1.17  2008/05/29 21:33:37  pvos
  *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
  *

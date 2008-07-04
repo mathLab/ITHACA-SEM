@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/TetExp.cpp,v $ 
+// File TetExp.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -37,28 +37,28 @@
 
 namespace Nektar
 {
-  namespace LocalRegions 
-  {
+    namespace LocalRegions 
+    {
 
         TetExp::TetExp( const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
                         const LibUtilities::BasisKey &Bc,
                         const SpatialDomains::TetGeomSharedPtr &geom
                         ):
-        StdRegions::StdTetExp(Ba,Bb,Bc),
-        m_geom(geom),
-        m_metricinfo(),
-        m_matrixManager(std::string("TetExpMatrix")),
-        m_staticCondMatrixManager(std::string("TetExpStaticCondMatrix"))
+            StdRegions::StdTetExp(Ba,Bb,Bc),
+            m_geom(geom),
+            m_metricinfo(),
+            m_matrixManager(std::string("TetExpMatrix")),
+            m_staticCondMatrixManager(std::string("TetExpStaticCondMatrix"))
         {
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
                 m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                           StdRegions::eNoExpansionType,*this),
+                                                          StdRegions::eNoExpansionType,*this),
                                                 boost::bind(&TetExp::CreateMatrix, this, _1));
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                     StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&TetExp::CreateStaticCondMatrix, this, _1));
+                                                                    StdRegions::eNoExpansionType,*this),
+                                                          boost::bind(&TetExp::CreateStaticCondMatrix, this, _1));
             }
 
             GenMetricInfo();
@@ -73,25 +73,25 @@ namespace Nektar
             m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
             m_matrixManager(std::string("TetExpMatrix")),
             m_staticCondMatrixManager(std::string("TetExpStaticCondMatrix"))
+        {
+            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-                {
-                    m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                StdRegions::eNoExpansionType,*this),
-                                                    boost::bind(&TetExp::CreateMatrix, this, _1));
-                    m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                         StdRegions::eNoExpansionType,*this),
-                                                              boost::bind(&TetExp::CreateStaticCondMatrix, this, _1));
-                }
-
-                // Set up unit geometric factors.
-                int coordim = 3;
-                Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim*coordim*coordim,0.0);
-                ndata[0] = ndata[4] = 1.0; //TODO must check
-                m_metricinfo->ResetGmat(ndata, 1, 3, coordim);//TODO must check
-                m_metricinfo->ResetJac(1, ndata); //TODO must check
-
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
+                                                          StdRegions::eNoExpansionType,*this),
+                                                boost::bind(&TetExp::CreateMatrix, this, _1));
+                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
+                                                                    StdRegions::eNoExpansionType,*this),
+                                                          boost::bind(&TetExp::CreateStaticCondMatrix, this, _1));
             }
+
+            // Set up unit geometric factors.
+            int coordim = 3;
+            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim*coordim*coordim,0.0);
+            ndata[0] = ndata[4] = 1.0; //TODO must check
+            m_metricinfo->ResetGmat(ndata, 1, 3, coordim);//TODO must check
+            m_metricinfo->ResetJac(1, ndata); //TODO must check
+
+        }
 
 
         TetExp::TetExp(const TetExp &T):
@@ -107,8 +107,8 @@ namespace Nektar
         {
         }
 
-	   //TODO: check following computations and function
-	    void TetExp::GenMetricInfo()
+        //TODO: check following computations and function
+        void TetExp::GenMetricInfo()
         {
             SpatialDomains::GeomFactorsSharedPtr Xgfac;
 
@@ -127,13 +127,13 @@ namespace Nektar
 
                 LibUtilities::BasisSharedPtr CBasis0;
                 LibUtilities::BasisSharedPtr CBasis1;
-	            LibUtilities::BasisSharedPtr CBasis2;
+                LibUtilities::BasisSharedPtr CBasis2;
                 CBasis0 = m_geom->GetBasis(0,0); // assumes all goembasis are same
                 CBasis1 = m_geom->GetBasis(0,1);
-	            CBasis2 = m_geom->GetBasis(0,2);
+                CBasis2 = m_geom->GetBasis(0,2);
                 int Cnq0 = CBasis0->GetNumPoints();
                 int Cnq1 = CBasis1->GetNumPoints();
-	       	    int Cnq2 = CBasis2->GetNumPoints();
+                int Cnq2 = CBasis2->GetNumPoints();
 
                 Array<OneD, const NekDouble> ojac = Xgfac->GetJac();
                 Array<TwoD, const NekDouble> ogmat = Xgfac->GetGmat();
@@ -223,24 +223,24 @@ namespace Nektar
         //----------------------------
 
         /** \brief Integrate the physical point list \a inarray over region
-        and return the value
+            and return the value
 
-        Inputs:\n
+            Inputs:\n
 
-        - \a inarray: definition of function to be returned at quadrature point
-        of expansion.
+            - \a inarray: definition of function to be returned at quadrature point
+            of expansion.
 
-        Outputs:\n
+            Outputs:\n
 
-        - returns \f$\int^1_{-1}\int^1_{-1} \int^1_{-1} u(\eta_1, \eta_2, \eta_3) J[i,j,k] d
-        \eta_1 d \eta_2 d \eta_3 \f$ where \f$inarray[i,j,k] = u(\eta_{1i},\eta_{2j},\eta_{3k})
-        \f$ and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature point.
-       */
-	    NekDouble TetExp::Integral(const Array<OneD, const NekDouble> &inarray)
+            - returns \f$\int^1_{-1}\int^1_{-1} \int^1_{-1} u(\eta_1, \eta_2, \eta_3) J[i,j,k] d
+            \eta_1 d \eta_2 d \eta_3 \f$ where \f$inarray[i,j,k] = u(\eta_{1i},\eta_{2j},\eta_{3k})
+            \f$ and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature point.
+        */
+        NekDouble TetExp::Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-	        int    nquad2 = m_base[2]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             NekDouble retrunVal;
             Array<OneD,NekDouble> tmp   = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
@@ -261,37 +261,15 @@ namespace Nektar
             return retrunVal; 
         }
 
-
-        /** 
-        \brief Calculate the inner product of inarray with respect to
-        the basis B=base0*base1*base2 and put into outarray:
-
-        \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
-            \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
-            \psi_{p}^{a} (\eta_{1i}) \psi_{pq}^{b} (\eta_{2j}) \psi_{pqr}^{c} (\eta_{3k})
-            w_i w_j w_k u(\eta_{1,i} \eta_{2,j} \eta_{3,k})
-            J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\eta_{1,i})
-            \sum_{j=0}^{nq_1} \psi_{pq}^b(\eta_{2,j}) \sum_{k=0}^{nq_2} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
-            J_{i,j,k} \end{array} \f$ \n
-
-        where
-        \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\eta_1) \psi_{pq}^b (\eta_2) \psi_{pqr}^c (\eta_3) \f$
-
-        which can be implemented as \n
-        \f$f_{pqr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
-        J_{i,j,k} = {\bf B_3 U}   \f$ \n
-        \f$ g_{pq} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{pq}^b (\xi_{2j}) f_{pqr} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
-        \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$ 
-        **/
-	    void TetExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-                                     const Array<OneD, const NekDouble> &base1,
-			       	                 const Array<OneD, const NekDouble> &base2, 
-                                     const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,NekDouble> &outarray)
+        void TetExp::IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                     const Array<OneD, const NekDouble>& base1, 
+                                     const Array<OneD, const NekDouble>& base2, 
+                                     const Array<OneD, const NekDouble>& inarray, 
+                                     Array<OneD, NekDouble> & outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-	        int    nquad2 = m_base[2]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
 
@@ -306,28 +284,6 @@ namespace Nektar
             }
 
             StdTetExp::IProductWRTBase(base0,base1,base2,tmp,outarray);
-        }
-
-
-        /** \brief  Inner product of \a inarray over region with respect to the 
-        expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
-    
-        Wrapper call to StdTetExp::IProductWRTBase
-    
-        Input:\n
-    
-        - \a inarray: array of function evaluated at the physical collocation points
-    
-        Output:\n
-    
-        - \a outarray: array of inner product with respect to each basis over region
-
-        */
-	    void TetExp::IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,NekDouble> &outarray)
-        {
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),
-                            inarray,outarray);
         }
 
         ///////////////////////////////
@@ -414,7 +370,7 @@ namespace Nektar
             - \a (this)->m_coeffs: updated array of expansion coefficients.             
         */
         
-   	    void TetExp::FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray)
+        void TetExp::FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
             {
@@ -449,7 +405,7 @@ namespace Nektar
             ASSERTL0(m_geom, "m_geom not define");
             
             // get physical points defined in Geom
-//             m_geom->FillGeom();  //TODO: implement
+            //             m_geom->FillGeom();  //TODO: implement
             
             switch(m_geom->GetCoordim())
             {
@@ -521,7 +477,7 @@ namespace Nektar
 
 	
       
-	    // get the coordinates "coords" at the local coordinates "Lcoords"
+        // get the coordinates "coords" at the local coordinates "Lcoords"
         void TetExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
         {
             int  i;
@@ -531,7 +487,7 @@ namespace Nektar
                      Lcoords[2] <= -1.0 && Lcoords[2] >= 1.0,
                      "Local coordinates are not in region [-1,1]");
 
-           // m_geom->FillGeom(); // TODO: implement FillGeom()
+            // m_geom->FillGeom(); // TODO: implement FillGeom()
 
             for(i = 0; i < m_geom->GetCoordDim(); ++i) 
             {
@@ -616,7 +572,7 @@ namespace Nektar
         }
 
 
-	    DNekScalMatSharedPtr TetExp::CreateMatrix(const MatrixKey &mkey)
+        DNekScalMatSharedPtr TetExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
 
@@ -668,8 +624,8 @@ namespace Nektar
                     }
                     else
                     {
-                      // TODO: make sure 3D Laplacian is set up for StdHexExp.
-                      // ASSERTL1(m_geom->GetCoordDim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
+                        // TODO: make sure 3D Laplacian is set up for StdHexExp.
+                        // ASSERTL1(m_geom->GetCoordDim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
                         ASSERTL1(m_geom->GetCoordDim() == 3,"Standard Region Laplacian is only set up for Hex in three-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
                                            mkey.GetExpansionType(), *this);
@@ -691,8 +647,8 @@ namespace Nektar
                         DNekMatSharedPtr lap = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
 
                         (*lap) = (gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0]) * (*lap00) +
-                                 (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
-                                 (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
+                            (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
+                            (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac, lap);
                     }
@@ -726,7 +682,7 @@ namespace Nektar
         }
 
 
-	    DNekScalBlkMatSharedPtr TetExp::CreateStaticCondMatrix(const MatrixKey &mkey)
+        DNekScalBlkMatSharedPtr TetExp::CreateStaticCondMatrix(const MatrixKey &mkey)
         {
             DNekScalBlkMatSharedPtr returnval;
 
@@ -841,11 +797,14 @@ namespace Nektar
 
 
   
-  }//end of namespace
+    }//end of namespace
 }//end of namespace
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.13  2008/06/14 01:20:53  ehan
+ *    Clean up the codes
+ *
  *    Revision 1.12  2008/06/06 23:25:21  ehan
  *    Added doxygen documentation
  *

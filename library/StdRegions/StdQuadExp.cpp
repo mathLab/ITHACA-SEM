@@ -46,13 +46,13 @@ namespace Nektar
         }
 
         StdQuadExp::StdQuadExp(const LibUtilities::BasisKey &Ba, 
-            const LibUtilities::BasisKey &Bb):
-        StdExpansion2D(Ba.GetNumModes()*Bb.GetNumModes(),Ba,Bb)
+                               const LibUtilities::BasisKey &Bb):
+            StdExpansion2D(Ba.GetNumModes()*Bb.GetNumModes(),Ba,Bb)
         { 
         }
 
         StdQuadExp::StdQuadExp(const StdQuadExp &T):
-        StdExpansion2D(T)
+            StdExpansion2D(T)
         {
         }
 
@@ -72,17 +72,68 @@ namespace Nektar
             return StdExpansion2D::Integral(inarray,w0,w1);
         }
 
-
-        void StdQuadExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-            Array<OneD, NekDouble> &outarray)
+        void StdQuadExp::IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                         const Array<OneD, const NekDouble>& base1,
+                                         const Array<OneD, const NekDouble>& inarray, 
+                                         Array<OneD, NekDouble> &outarray,
+                                         int coll_check)
         {
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-                inarray,outarray,1);
+            int i;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            Array<OneD, NekDouble> tmp(nquad0*nquad1);
+            
+            Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
+            Array<OneD, const NekDouble> w1 = m_base[1]->GetW();
+            
+            // multiply by integration constants 
+            for(i = 0; i < nquad1; ++i)
+            {
+                Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
+                            w0.get(),1,&tmp[0]+i*nquad0,1);
+            }
+            
+            for(i = 0; i < nquad0; ++i)
+            {
+                Vmath::Vmul(nquad1,&tmp[0]+i,nquad0,w1.get(),1,
+                            &tmp[0]+i,nquad0);
+            }
+
+            if(coll_check && m_base[0]->Collocation() && m_base[1]->Collocation())
+            {               
+                Vmath::Vcopy(nquad0*nquad1, tmp, 1, outarray, 1);
+            }
+            else if( !coll_check || !(m_base[0]->Collocation() || m_base[1]->Collocation()) )
+            {
+                int    order0 = m_base[0]->GetNumModes();
+                int    order1 = m_base[1]->GetNumModes();
+
+                Array<OneD, NekDouble> tmp1(nquad0*order1);
+                Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),               
+                            nquad0,&tmp[0],nquad0,0.0,&tmp1[0],order0);
+                Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, &tmp1[0],                            
+                            order0, base1.get(), nquad1, 0.0,&outarray[0],order0); 
+            }
+            else
+            {    
+                if(m_base[0]->Collocation())
+                {
+                    int order1 = m_base[1]->GetNumModes(); 
+                    Blas::Dgemm('N', 'N',nquad0, order1, nquad1, 1.0, &tmp[0],                            
+                                nquad0, base1.get(), nquad1, 0.0,&outarray[0],nquad0);
+                }
+                else
+                {
+                    int order0 = m_base[0]->GetNumModes();
+                    Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),               
+                                nquad0,&tmp[0],nquad0,0.0,&outarray[0],order0);
+                }
+            }
         }
 
         void StdQuadExp::IProductWRTDerivBase(const int dir, 
-                                             const Array<OneD, const NekDouble>& inarray, 
-                                             Array<OneD, NekDouble> & outarray)
+                                              const Array<OneD, const NekDouble>& inarray, 
+                                              Array<OneD, NekDouble> & outarray)
         {
             switch(dir)
             {
@@ -105,114 +156,6 @@ namespace Nektar
                 break;
             }             
         }
-        
-
-        void StdQuadExp:: IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
-            const Array<OneD, const NekDouble>& base1,
-            const Array<OneD, const NekDouble>& inarray, 
-            Array<OneD, NekDouble> &outarray,
-            int coll_check)
-        {
-            int i;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, NekDouble> tmp(nquad0*nquad1);
-
-            Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
-            Array<OneD, const NekDouble> w1 = m_base[1]->GetW();
-
-//              Does Not Compile
-//             ASSERTL2((m_base[0]->GetAlpha() == 0.0)&&(m_base[1]->GetAlpha() == 0.0),
-//                      "Basis has non-zero alpha weight");
-//             ASSERTL2((m_base[0]->GetBeta() == 0.0)&&(m_base[1]->GetBeta() == 0.0),
-//                      "Basis has non-zero beta weight");
-
-            // multiply by integration constants 
-            for(i = 0; i < nquad1; ++i)
-            {
-                Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
-                    w0.get(),1,&tmp[0]+i*nquad0,1);
-            }
-
-            for(i = 0; i < nquad0; ++i)
-            {
-                Vmath::Vmul(nquad1,&tmp[0]+i,nquad0,w1.get(),1,
-                    &tmp[0]+i,nquad0);
-            }
-
-            if(coll_check && m_base[0]->Collocation() && m_base[1]->Collocation())
-            {               
-                Vmath::Vcopy(nquad0*nquad1, tmp, 1, outarray, 1);
-            }
-            else if( !coll_check || !(m_base[0]->Collocation() || m_base[1]->Collocation()) )
-            {
-                int    order0 = m_base[0]->GetNumModes();
-                int    order1 = m_base[1]->GetNumModes();
-                
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-
-                Array<OneD, NekDouble> tmp1(nquad0*order1);
-                Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),               
-                            nquad0,&tmp[0],nquad0,0.0,&tmp1[0],order0);
-                Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, &tmp1[0],                            
-                            order0, base1.get(), nquad1, 0.0,&outarray[0],order0);
-                
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-
-                NekMatrix<const double> in(nquad0,nquad1,tmp,eWrapper);
-                NekMatrix<const double> B0(nquad0,order0,base0,eWrapper);
-                NekMatrix<const double> B1(nquad1,order1,base1,eWrapper);
-                DNekMat out(order0,order1,outarray,eWrapper);
-                // out = Transpose(B0)*in*B1; //currently not working with expression templates
-                DNekMat tmpMat(nquad0,order1);
-                tmpMat = in*B1;
-                out = Transpose(B0)*tmpMat;
-
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS   
- 
-            }
-            else
-            {    
-
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-
-                if(m_base[0]->Collocation())
-                {
-                    int order1 = m_base[1]->GetNumModes(); 
-                    Blas::Dgemm('N', 'N',nquad0, order1, nquad1, 1.0, &tmp[0],                            
-                                nquad0, base1.get(), nquad1, 0.0,&outarray[0],nquad0);
-                }
-                else
-                {
-                    int order0 = m_base[0]->GetNumModes();
-                    Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),               
-                                nquad0,&tmp[0],nquad0,0.0,&outarray[0],order0);
-                }
-
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-
-                if(m_base[0]->Collocation())
-                {
-                    int order1 = m_base[1]->GetNumModes(); 
-                    NekMatrix<const double> in(nquad0,nquad1,tmp,eWrapper);
-                    NekMatrix<const double> B1(nquad1,order1,base1,eWrapper);
-                    DNekMat out(nquad0,order1,outarray,eWrapper);
-                    
-                    out = in*B1;
-                }
-                else
-                {
-                    int order0 = m_base[0]->GetNumModes();
-                    NekMatrix<const double> in(nquad0,nquad1,tmp,eWrapper);
-                    NekMatrix<const double> B0(nquad0,order0,base0,eWrapper);
-                    DNekMat out(order0,nquad1,outarray,eWrapper);
-                    
-                    out = Transpose(B0)*in;
-                }
-
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS    
-            }
-        }
 
         void StdQuadExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
@@ -227,21 +170,21 @@ namespace Nektar
 
 
             ASSERTL2(mode1 == (int)floor((1.0*mode)/btmp0),
-                "Integer Truncation not Equiv to Floor");
+                     "Integer Truncation not Equiv to Floor");
 
             ASSERTL2(m_ncoeffs <= mode, 
-                "calling argument mode is larger than total expansion order");
+                     "calling argument mode is larger than total expansion order");
 
             for(i = 0; i < nquad1; ++i)
             {
                 Vmath::Vcopy(nquad0,(NekDouble *)(base0.get() + mode0*nquad0),
-                    1, &outarray[0]+i*nquad0,1);
+                             1, &outarray[0]+i*nquad0,1);
             }
 
             for(i = 0; i < nquad0; ++i)
             {
                 Vmath::Vmul(nquad1,(NekDouble *)(base1.get() + mode1*nquad1),1,
-                    &outarray[0]+i,nquad0,&outarray[0]+i,nquad0);
+                            &outarray[0]+i,nquad0,&outarray[0]+i,nquad0);
             }
         }
 
@@ -340,9 +283,9 @@ namespace Nektar
         ///////////////////////////////
 
         void StdQuadExp::PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &out_d0,
-            Array<OneD, NekDouble> &out_d1,
-            Array<OneD, NekDouble> &out_d2)
+                                   Array<OneD, NekDouble> &out_d0,
+                                   Array<OneD, NekDouble> &out_d1,
+                                   Array<OneD, NekDouble> &out_d2)
         {
             PhysTensorDeriv(inarray, out_d0, out_d1);
         }
@@ -376,7 +319,7 @@ namespace Nektar
         //-----------------------------
 
         void StdQuadExp::BwdTrans(const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
+                                  Array<OneD, NekDouble> &outarray)
         {
             int           nquad0 = m_base[0]->GetNumPoints();
             int           nquad1 = m_base[1]->GetNumPoints();
@@ -429,7 +372,7 @@ namespace Nektar
                 {
                     int order0 = m_base[0]->GetNumModes();
                     Blas::Dgemm('N','N', nquad0,nquad1,order0,1.0, (m_base[0]->GetBdata()).get(),
-                            nquad0, &inarray[0], order0,0.0,&outarray[0], nquad0);
+                                nquad0, &inarray[0], order0,0.0,&outarray[0], nquad0);
                 }
 
 #else //NEKTAR_USING_DIRECT_BLAS_CALLS
@@ -459,7 +402,7 @@ namespace Nektar
         }
 
         void StdQuadExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
+                                  Array<OneD, NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
             {
@@ -479,12 +422,6 @@ namespace Nektar
 
                 out = (*matsys)*in;
             }
-        }
-
-        /// Single Point Evaluation
-        NekDouble StdQuadExp::PhysEvaluate(Array<OneD, const NekDouble>& coords)
-        {
-            return  StdExpansion2D::PhysEvaluate2D(coords); 
         }
 
         void StdQuadExp::GetBoundaryMap(Array<OneD, unsigned int>& outarray)
@@ -609,52 +546,52 @@ namespace Nektar
         {
             int localDOF;
             switch(localVertexId)
-                {
-                case 0:
-                    { 
-                        localDOF = 0;    
-                    }
-                    break;
-                case 1:
-                    {              
-                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                        {
-                            localDOF = m_base[0]->GetNumModes()-1;
-                        }
-                        else
-                        {
-                            localDOF = 1;
-                        }
-                    }
-                    break;
-                case 2:
-                    {   
-                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                        {
-                            localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
-                        }
-                        else
-                        {
-                            localDOF = m_base[0]->GetNumModes()+1;
-                        }                    
-                    }
-                    break;
-                case 3:
-                    { 
-                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                        {
-                            localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
-                        }
-                        else
-                        {
-                            localDOF = m_base[0]->GetNumModes();
-                        }
-                    }
-                    break;
-                default:
-                    ASSERTL0(false,"eid must be between 0 and 3");
-                    break;
+            {
+            case 0:
+                { 
+                    localDOF = 0;    
                 }
+                break;
+            case 1:
+                {              
+                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                    {
+                        localDOF = m_base[0]->GetNumModes()-1;
+                    }
+                    else
+                    {
+                        localDOF = 1;
+                    }
+                }
+                break;
+            case 2:
+                {   
+                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                    {
+                        localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
+                    }
+                    else
+                    {
+                        localDOF = m_base[0]->GetNumModes()+1;
+                    }                    
+                }
+                break;
+            case 3:
+                { 
+                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                    {
+                        localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
+                    }
+                    else
+                    {
+                        localDOF = m_base[0]->GetNumModes();
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false,"eid must be between 0 and 3");
+                break;
+            }
 
             return localDOF;
         }
@@ -990,13 +927,13 @@ namespace Nektar
             if((eid == 0)||(eid == 2))
             { 
                 ASSERTL2(Btype == m_base[0]->GetBasisType(),
-                    "Expansion type of edge and StdQuadExp are different");
+                         "Expansion type of edge and StdQuadExp are different");
 
                 switch(Btype)
                 {
                 case LibUtilities::eGLL_Lagrange:
                     ASSERTL2(edge_ncoeffs == order0,
-                        "Expansion order of edge and StdQuadExp are different");
+                             "Expansion order of edge and StdQuadExp are different");
 
                     if(eid == 0)
                     {
@@ -1030,13 +967,13 @@ namespace Nektar
             else
             {
                 ASSERTL2(Btype == m_base[1]->GetBasisType(),
-                    "Expansion type of edge and StdQuadExp are different");      
+                         "Expansion type of edge and StdQuadExp are different");      
 
                 switch(Btype)
                 {
                 case LibUtilities::eGLL_Lagrange:
                     ASSERTL2(edge_ncoeffs == order1,
-                        "Expansion order of edge and StdQuadExp are different");
+                             "Expansion order of edge and StdQuadExp are different");
                     if(eid == 1)
                     {
                         start = order0-1;
@@ -1079,10 +1016,10 @@ namespace Nektar
         // by edges degrees of freedom
 
         void StdQuadExp::MapTo_ModalFormat(const int edge_ncoeffs, 
-            const LibUtilities::BasisType Btype, 
-            const int eid, 
-            const EdgeOrientation eorient,
-            StdExpMap &Map)
+                                           const LibUtilities::BasisType Btype, 
+                                           const int eid, 
+                                           const EdgeOrientation eorient,
+                                           StdExpMap &Map)
         {
             MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
             if(Btype == LibUtilities::eGLL_Lagrange)
@@ -1305,7 +1242,7 @@ namespace Nektar
         }
 
         void StdQuadExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
-            Array<OneD, NekDouble> &coords_1)
+                                   Array<OneD, NekDouble> &coords_1)
         {
             Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
             Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
@@ -1323,142 +1260,145 @@ namespace Nektar
 }//end namespace
 
 /** 
-* $Log: StdQuadExp.cpp,v $
-* Revision 1.38  2008/06/05 20:12:51  ehan
-* Removed undefined function GetAlpha() in the ASSERTL2().
-*
-* Revision 1.37  2008/05/30 00:33:49  delisi
-* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
-*
-* Revision 1.36  2008/05/29 21:36:25  pvos
-* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
-*
-* Revision 1.35  2008/05/10 18:27:33  sherwin
-* Modifications necessary for QuadExp Unified DG Solver
-*
-* Revision 1.34  2008/05/07 16:04:57  pvos
-* Mapping + Manager updates
-*
-* Revision 1.33  2008/04/22 05:22:15  bnelson
-* Speed enhancements.
-*
-* Revision 1.32  2008/04/06 06:04:15  bnelson
-* Changed ConstArray to Array<const>
-*
-* Revision 1.31  2008/04/03 16:12:11  pvos
-* updates for NEKTAR_USING_DIRECT_BLAS_CALLS
-*
-* Revision 1.30  2008/04/02 22:18:10  pvos
-* Update for 2D local to global mapping
-*
-* Revision 1.29  2008/03/18 14:15:45  pvos
-* Update for nodal triangular helmholtz solver
-*
-* Revision 1.28  2008/03/12 15:25:09  pvos
-* Clean up of the code
-*
-* Revision 1.27  2008/02/29 19:15:19  sherwin
-* Update for UDG stuff
-*
-* Revision 1.26  2007/12/17 13:03:51  sherwin
-* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
-*
-* Revision 1.25  2007/12/06 22:44:47  pvos
-* 2D Helmholtz solver updates
-*
-* Revision 1.24  2007/11/08 16:55:14  pvos
-* Updates towards 2D helmholtz solver
-*
-* Revision 1.23  2007/10/15 20:38:54  ehan
-* Make changes of column major matrix
-*
-* Revision 1.22  2007/07/20 02:16:54  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.21  2007/07/12 12:55:16  sherwin
-* Simplified Matrix Generation
-*
-* Revision 1.20  2007/07/11 13:35:18  kirby
-* *** empty log message ***
-*
-* Revision 1.19  2007/07/10 21:05:17  kirby
-* even more fixes
-*
-* Revision 1.17  2007/07/09 15:19:15  sherwin
-* Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
-*
-* Revision 1.16  2007/06/07 15:54:19  pvos
-* Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
-* Also made corrections to various ASSERTL2 calls
-*
-* Revision 1.15  2007/05/15 05:18:24  bnelson
-* Updated to use the new Array object.
-*
-* Revision 1.14  2007/04/10 14:00:45  sherwin
-* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
-*
-* Revision 1.13  2007/04/06 08:44:43  sherwin
-* Update to make 2D regions work at StdRegions level
-*
-* Revision 1.12  2007/04/05 15:20:11  sherwin
-* Updated 2D stuff to comply with SharedArray philosophy
-*
-* Revision 1.11  2007/04/05 11:39:47  pvincent
-* quad_edited
-*
-* Revision 1.10  2007/03/20 16:58:43  sherwin
-* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
-*
-* Revision 1.9  2007/01/20 22:35:21  sherwin
-* Version with StdExpansion compiling
-*
-* Revision 1.8  2007/01/18 18:44:45  bnelson
-* Updates to compile on Visual Studio 2005.
-*
-* Revision 1.7  2007/01/17 16:36:58  pvos
-* updating doxygen documentation
-*
-* Revision 1.6  2007/01/17 16:05:41  pvos
-* updated doxygen documentation
-*
-* Revision 1.5  2006/12/10 19:00:54  sherwin
-* Modifications to handle nodal expansions
-*
-* Revision 1.4  2006/08/05 19:03:48  sherwin
-* Update to make the multiregions 2D expansion in connected regions work
-*
-* Revision 1.3  2006/07/02 17:16:18  sherwin
-*
-* Modifications to make MultiRegions work for a connected domain in 2D (Tris)
-*
-* Revision 1.2  2006/06/01 14:13:36  kirby
-* *** empty log message ***
-*
-* Revision 1.1  2006/05/04 18:58:32  kirby
-* *** empty log message ***
-*
-* Revision 1.38  2006/04/25 20:23:34  jfrazier
-* Various fixes to correct bugs, calls to ASSERT, etc.
-*
-* Revision 1.37  2006/04/01 21:59:27  sherwin
-* Sorted new definition of ASSERT
-*
-* Revision 1.36  2006/03/21 09:21:32  sherwin
-* Introduced NekMemoryManager
-*
-* Revision 1.35  2006/03/05 22:11:03  sherwin
-*
-* Sorted out Project1D, Project2D and Project_Diff2D as well as some test scripts
-*
-* Revision 1.34  2006/03/01 08:25:04  sherwin
-*
-* First compiling version of StdRegions
-*
-* Revision 1.33  2006/02/26 23:37:30  sherwin
-*
-* Updates and compiling checks upto StdExpansions1D
-*
-**/ 
+ * $Log: StdQuadExp.cpp,v $
+ * Revision 1.39  2008/07/02 14:08:56  pvos
+ * Implementation of HelmholtzMatOp and LapMatOp on shape level
+ *
+ * Revision 1.38  2008/06/05 20:12:51  ehan
+ * Removed undefined function GetAlpha() in the ASSERTL2().
+ *
+ * Revision 1.37  2008/05/30 00:33:49  delisi
+ * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+ *
+ * Revision 1.36  2008/05/29 21:36:25  pvos
+ * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+ *
+ * Revision 1.35  2008/05/10 18:27:33  sherwin
+ * Modifications necessary for QuadExp Unified DG Solver
+ *
+ * Revision 1.34  2008/05/07 16:04:57  pvos
+ * Mapping + Manager updates
+ *
+ * Revision 1.33  2008/04/22 05:22:15  bnelson
+ * Speed enhancements.
+ *
+ * Revision 1.32  2008/04/06 06:04:15  bnelson
+ * Changed ConstArray to Array<const>
+ *
+ * Revision 1.31  2008/04/03 16:12:11  pvos
+ * updates for NEKTAR_USING_DIRECT_BLAS_CALLS
+ *
+ * Revision 1.30  2008/04/02 22:18:10  pvos
+ * Update for 2D local to global mapping
+ *
+ * Revision 1.29  2008/03/18 14:15:45  pvos
+ * Update for nodal triangular helmholtz solver
+ *
+ * Revision 1.28  2008/03/12 15:25:09  pvos
+ * Clean up of the code
+ *
+ * Revision 1.27  2008/02/29 19:15:19  sherwin
+ * Update for UDG stuff
+ *
+ * Revision 1.26  2007/12/17 13:03:51  sherwin
+ * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+ *
+ * Revision 1.25  2007/12/06 22:44:47  pvos
+ * 2D Helmholtz solver updates
+ *
+ * Revision 1.24  2007/11/08 16:55:14  pvos
+ * Updates towards 2D helmholtz solver
+ *
+ * Revision 1.23  2007/10/15 20:38:54  ehan
+ * Make changes of column major matrix
+ *
+ * Revision 1.22  2007/07/20 02:16:54  bnelson
+ * Replaced boost::shared_ptr with Nektar::ptr
+ *
+ * Revision 1.21  2007/07/12 12:55:16  sherwin
+ * Simplified Matrix Generation
+ *
+ * Revision 1.20  2007/07/11 13:35:18  kirby
+ * *** empty log message ***
+ *
+ * Revision 1.19  2007/07/10 21:05:17  kirby
+ * even more fixes
+ *
+ * Revision 1.17  2007/07/09 15:19:15  sherwin
+ * Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
+ *
+ * Revision 1.16  2007/06/07 15:54:19  pvos
+ * Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
+ * Also made corrections to various ASSERTL2 calls
+ *
+ * Revision 1.15  2007/05/15 05:18:24  bnelson
+ * Updated to use the new Array object.
+ *
+ * Revision 1.14  2007/04/10 14:00:45  sherwin
+ * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+ *
+ * Revision 1.13  2007/04/06 08:44:43  sherwin
+ * Update to make 2D regions work at StdRegions level
+ *
+ * Revision 1.12  2007/04/05 15:20:11  sherwin
+ * Updated 2D stuff to comply with SharedArray philosophy
+ *
+ * Revision 1.11  2007/04/05 11:39:47  pvincent
+ * quad_edited
+ *
+ * Revision 1.10  2007/03/20 16:58:43  sherwin
+ * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+ *
+ * Revision 1.9  2007/01/20 22:35:21  sherwin
+ * Version with StdExpansion compiling
+ *
+ * Revision 1.8  2007/01/18 18:44:45  bnelson
+ * Updates to compile on Visual Studio 2005.
+ *
+ * Revision 1.7  2007/01/17 16:36:58  pvos
+ * updating doxygen documentation
+ *
+ * Revision 1.6  2007/01/17 16:05:41  pvos
+ * updated doxygen documentation
+ *
+ * Revision 1.5  2006/12/10 19:00:54  sherwin
+ * Modifications to handle nodal expansions
+ *
+ * Revision 1.4  2006/08/05 19:03:48  sherwin
+ * Update to make the multiregions 2D expansion in connected regions work
+ *
+ * Revision 1.3  2006/07/02 17:16:18  sherwin
+ *
+ * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+ *
+ * Revision 1.2  2006/06/01 14:13:36  kirby
+ * *** empty log message ***
+ *
+ * Revision 1.1  2006/05/04 18:58:32  kirby
+ * *** empty log message ***
+ *
+ * Revision 1.38  2006/04/25 20:23:34  jfrazier
+ * Various fixes to correct bugs, calls to ASSERT, etc.
+ *
+ * Revision 1.37  2006/04/01 21:59:27  sherwin
+ * Sorted new definition of ASSERT
+ *
+ * Revision 1.36  2006/03/21 09:21:32  sherwin
+ * Introduced NekMemoryManager
+ *
+ * Revision 1.35  2006/03/05 22:11:03  sherwin
+ *
+ * Sorted out Project1D, Project2D and Project_Diff2D as well as some test scripts
+ *
+ * Revision 1.34  2006/03/01 08:25:04  sherwin
+ *
+ * First compiling version of StdRegions
+ *
+ * Revision 1.33  2006/02/26 23:37:30  sherwin
+ *
+ * Updates and compiling checks upto StdExpansions1D
+ *
+ **/ 
 
 
 

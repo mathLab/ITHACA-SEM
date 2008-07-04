@@ -75,9 +75,9 @@ namespace Nektar
             
             return Int;
         }
-        
+
         void StdSegExp::IProductWRTBase(const Array<OneD, const NekDouble>& base, 
-                                        const Array<OneD, const NekDouble>& inarray, 
+                                        const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD, NekDouble> &outarray, 
                                         int coll_check)
         {
@@ -94,30 +94,11 @@ namespace Nektar
             }
             else
             {
-
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-
                 Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
                             &tmp[0],1,0.0,outarray.get(),1);
-
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-
-                NekVector<const NekDouble> in(nquad,tmp,eWrapper);
-                NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
-                NekMatrix<const double> B(nquad,m_ncoeffs,base,eWrapper);
-                out = Transpose(B) * in;
-
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS  
-
             }    
         }
         
-        void StdSegExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray)
-        {
-            IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
-        }
-
         void StdSegExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
             int   nquad = m_base[0]->GetNumPoints();
@@ -306,11 +287,6 @@ namespace Nektar
                 }
             }
         }
-        
-        NekDouble StdSegExp::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord)
-        {
-            return StdExpansion1D::PhysEvaluate1D(Lcoord);
-        }
 
         void StdSegExp::GetBoundaryMap(Array<OneD, unsigned int>& outarray)
         {
@@ -483,6 +459,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.53  2008/07/02 14:08:56  pvos
+* Implementation of HelmholtzMatOp and LapMatOp on shape level
+*
 * Revision 1.52  2008/06/06 14:57:51  pvos
 * Minor Updates
 *

@@ -249,34 +249,12 @@ namespace Nektar
             ival = StdQuadExp::Integral(tmp);            
             return  ival;
         }
-        
-        /** 
-            \brief Calculate the inner product of inarray with respect to
-            the basis B=base0*base1 and put into outarray:
-            
-            \f$ \begin{array}{rcl} I_{pq} = (\phi_q \phi_q, u) & = &
-            \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \phi_p(\xi_{0,i})
-            \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j})
-            J_{i,j}\\ & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
-            \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}
-            J_{i,j} \end{array} \f$
-            
-            where
-            
-            \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
-            
-            which can be implemented as
-            
-            \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} = 
-            {\bf B_1 U}  \f$
-            \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
-            {\bf B_0 F}  \f$
-        **/
-        void QuadExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-                                      const Array<OneD, const NekDouble> &base1, 
-                                      const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,NekDouble> &outarray, 
-                                      const int coll_check)
+
+        void QuadExp::IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                      const Array<OneD, const NekDouble>& base1,
+                                      const Array<OneD, const NekDouble>& inarray, 
+                                      Array<OneD, NekDouble> &outarray,
+                                      int coll_check)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -298,8 +276,8 @@ namespace Nektar
         }
 
         void QuadExp::IProductWRTDerivBase(const int dir, 
-                                              const Array<OneD, const NekDouble>& inarray, 
-                                              Array<OneD, NekDouble> & outarray)
+                                           const Array<OneD, const NekDouble>& inarray, 
+                                           Array<OneD, NekDouble> & outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -541,32 +519,7 @@ namespace Nektar
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp,1);  
             Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);      
             
-        }        
-    
-        /** \brief  Inner product of \a inarray over region with respect to the 
-            expansion basis (this)->_Base[0] and return in \a outarray 
-            
-            Wrapper call to QuadExp::IProduct_WRT_B
-        
-            Input:\n
-            
-            - \a inarray: array of function evaluated at the physical
-            collocation points
-            
-            Output:\n
-            
-            - \a outarray: array of inner product with respect to each
-            basis over region
-            
-        */    
-        void QuadExp::IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
-                                      Array<OneD,NekDouble> &outarray)
-        {
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-                            inarray,outarray,1);
-        }
-        
-        
+        }       
         
         ///////////////////////////////
         /// Differentiation Methods
@@ -850,169 +803,169 @@ namespace Nektar
                     outfile << m_phys[i] << std::endl;
                 }
             }  
-          else if(format==eGmsh)
-          {             
-              if(dumpVar)
-              {
-                  outfile<<"View.MaxRecursionLevel = 8;"<<endl;
-                  outfile<<"View.TargetError = 0.00;"<<endl;
-                  outfile<<"View \" \" {"<<endl;
-              }
-              outfile<<"SQ("<<endl;                
-              // write the coordinates of the vertices of the quadrilateral
-              Array<OneD,NekDouble> coordVert1(2);
-              Array<OneD,NekDouble> coordVert2(2);
-              Array<OneD,NekDouble> coordVert3(2);
-              Array<OneD,NekDouble> coordVert4(2);
-              coordVert1[0]=-1.0;
-              coordVert1[1]=-1.0;
-              coordVert2[0]=1.0;
-              coordVert2[1]=-1.0;
-              coordVert3[0]=1.0;
-              coordVert3[1]=1.0;
-              coordVert4[0]=-1.0;
-              coordVert4[1]=1.0;
-              outfile<<m_geom->GetCoord(0,coordVert1)<<", ";
-              outfile<<m_geom->GetCoord(1,coordVert1)<<", 0.0,"<<endl;
-              outfile<<m_geom->GetCoord(0,coordVert2)<<", ";
-              outfile<<m_geom->GetCoord(1,coordVert2)<<", 0.0,"<<endl;
-              outfile<<m_geom->GetCoord(0,coordVert3)<<", ";
-              outfile<<m_geom->GetCoord(1,coordVert3)<<", 0.0,"<<endl;
-              outfile<<m_geom->GetCoord(0,coordVert4)<<", ";
-              outfile<<m_geom->GetCoord(1,coordVert4)<<", 0.0"<<endl;
-              outfile<<")"<<endl;
+            else if(format==eGmsh)
+            {             
+                if(dumpVar)
+                {
+                    outfile<<"View.MaxRecursionLevel = 8;"<<endl;
+                    outfile<<"View.TargetError = 0.00;"<<endl;
+                    outfile<<"View \" \" {"<<endl;
+                }
+                outfile<<"SQ("<<endl;                
+                // write the coordinates of the vertices of the quadrilateral
+                Array<OneD,NekDouble> coordVert1(2);
+                Array<OneD,NekDouble> coordVert2(2);
+                Array<OneD,NekDouble> coordVert3(2);
+                Array<OneD,NekDouble> coordVert4(2);
+                coordVert1[0]=-1.0;
+                coordVert1[1]=-1.0;
+                coordVert2[0]=1.0;
+                coordVert2[1]=-1.0;
+                coordVert3[0]=1.0;
+                coordVert3[1]=1.0;
+                coordVert4[0]=-1.0;
+                coordVert4[1]=1.0;
+                outfile<<m_geom->GetCoord(0,coordVert1)<<", ";
+                outfile<<m_geom->GetCoord(1,coordVert1)<<", 0.0,"<<endl;
+                outfile<<m_geom->GetCoord(0,coordVert2)<<", ";
+                outfile<<m_geom->GetCoord(1,coordVert2)<<", 0.0,"<<endl;
+                outfile<<m_geom->GetCoord(0,coordVert3)<<", ";
+                outfile<<m_geom->GetCoord(1,coordVert3)<<", 0.0,"<<endl;
+                outfile<<m_geom->GetCoord(0,coordVert4)<<", ";
+                outfile<<m_geom->GetCoord(1,coordVert4)<<", 0.0"<<endl;
+                outfile<<")"<<endl;
 
-              // calculate the coefficients (monomial format)
-              int i,j,k;
+                // calculate the coefficients (monomial format)
+                int i,j,k;
 
-              int nModes0 = m_base[0]->GetNumModes();
-              int nModes1 = m_base[1]->GetNumModes();
+                int nModes0 = m_base[0]->GetNumModes();
+                int nModes1 = m_base[1]->GetNumModes();
 
-              const LibUtilities::PointsKey Pkey1Gmsh(nModes0,LibUtilities::eGaussLobattoLegendre);
-              const LibUtilities::PointsKey Pkey2Gmsh(nModes1,LibUtilities::eGaussLobattoLegendre);
-              const LibUtilities::BasisKey  Bkey1Gmsh(m_base[0]->GetBasisType(),nModes0,Pkey1Gmsh);
-              const LibUtilities::BasisKey  Bkey2Gmsh(m_base[1]->GetBasisType(),nModes1,Pkey2Gmsh);
+                const LibUtilities::PointsKey Pkey1Gmsh(nModes0,LibUtilities::eGaussLobattoLegendre);
+                const LibUtilities::PointsKey Pkey2Gmsh(nModes1,LibUtilities::eGaussLobattoLegendre);
+                const LibUtilities::BasisKey  Bkey1Gmsh(m_base[0]->GetBasisType(),nModes0,Pkey1Gmsh);
+                const LibUtilities::BasisKey  Bkey2Gmsh(m_base[1]->GetBasisType(),nModes1,Pkey2Gmsh);
 
-              StdRegions::StdQuadExpSharedPtr EGmsh;
+                StdRegions::StdQuadExpSharedPtr EGmsh;
                 EGmsh = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh);
 
-              int nMonomialPolynomials = EGmsh->GetNcoeffs();
+                int nMonomialPolynomials = EGmsh->GetNcoeffs();
               
-              Array<OneD,NekDouble> xi1(nMonomialPolynomials);
-              Array<OneD,NekDouble> xi2(nMonomialPolynomials);
+                Array<OneD,NekDouble> xi1(nMonomialPolynomials);
+                Array<OneD,NekDouble> xi2(nMonomialPolynomials);
               
-              Array<OneD,NekDouble> x(nMonomialPolynomials);
-              Array<OneD,NekDouble> y(nMonomialPolynomials);
+                Array<OneD,NekDouble> x(nMonomialPolynomials);
+                Array<OneD,NekDouble> y(nMonomialPolynomials);
 
-              EGmsh->GetCoords(xi1,xi2);
+                EGmsh->GetCoords(xi1,xi2);
               
-              for(i=0;i<nMonomialPolynomials;i++)
-              {
-                  x[i] = xi1[i];//0.5*(1.0+xi1[i]);
-                  y[i] = xi2[i];//0.5*(1.0+xi2[i]);
-              }
+                for(i=0;i<nMonomialPolynomials;i++)
+                {
+                    x[i] = xi1[i];//0.5*(1.0+xi1[i]);
+                    y[i] = xi2[i];//0.5*(1.0+xi2[i]);
+                }
 
-              int cnt  = 0;
-              Array<TwoD, int> exponentMap(nMonomialPolynomials,3,0);
-              for(i = 0; i < nModes1; i++)
-              {
-                  for(j = 0; j < nModes0; j++)
-                  {
-                      exponentMap[cnt][0] = j;
-                      exponentMap[cnt++][1] = i;
-                  }         
-              }
+                int cnt  = 0;
+                Array<TwoD, int> exponentMap(nMonomialPolynomials,3,0);
+                for(i = 0; i < nModes1; i++)
+                {
+                    for(j = 0; j < nModes0; j++)
+                    {
+                        exponentMap[cnt][0] = j;
+                        exponentMap[cnt++][1] = i;
+                    }         
+                }
               
-              NekMatrix<NekDouble> vdm(nMonomialPolynomials,nMonomialPolynomials);
-              for(i = 0 ; i < nMonomialPolynomials; i++)
-              {
-                  for(j = 0 ; j < nMonomialPolynomials; j++)
-                  {
-                      vdm(i,j) = pow(x[i],exponentMap[j][0])*pow(y[i],exponentMap[j][1]);
-                  }
-              }
+                NekMatrix<NekDouble> vdm(nMonomialPolynomials,nMonomialPolynomials);
+                for(i = 0 ; i < nMonomialPolynomials; i++)
+                {
+                    for(j = 0 ; j < nMonomialPolynomials; j++)
+                    {
+                        vdm(i,j) = pow(x[i],exponentMap[j][0])*pow(y[i],exponentMap[j][1]);
+                    }
+                }
 
-              vdm.Invert();
+                vdm.Invert();
 
-              Array<OneD,NekDouble> rhs(nMonomialPolynomials);
-              EGmsh->BwdTrans(m_coeffs,rhs);
+                Array<OneD,NekDouble> rhs(nMonomialPolynomials);
+                EGmsh->BwdTrans(m_coeffs,rhs);
 
-              NekVector<const NekDouble> in(nMonomialPolynomials,rhs,eWrapper);
-              NekVector<NekDouble> out(nMonomialPolynomials);
-              out = vdm*in;
+                NekVector<const NekDouble> in(nMonomialPolynomials,rhs,eWrapper);
+                NekVector<NekDouble> out(nMonomialPolynomials);
+                out = vdm*in;
 
-              //write the coefficients
-              outfile<<"{";
-              for(i = 0; i < nMonomialPolynomials; i++)
-              {
-                  outfile<<out[i];
-                  if(i < nMonomialPolynomials - 1)
-                  {
-                      outfile<<", ";
-                  }
-              }
-              outfile<<"};"<<endl;
+                //write the coefficients
+                outfile<<"{";
+                for(i = 0; i < nMonomialPolynomials; i++)
+                {
+                    outfile<<out[i];
+                    if(i < nMonomialPolynomials - 1)
+                    {
+                        outfile<<", ";
+                    }
+                }
+                outfile<<"};"<<endl;
               
-              if(dumpVar)
-              {   
-                  outfile<<"INTERPOLATION_SCHEME"<<endl;
-                  outfile<<"{"<<endl;
-                  for(i=0; i < nMonomialPolynomials; i++)
-                  {
-                      outfile<<"{";
-                      for(j = 0; j < nMonomialPolynomials; j++)
-                      {
-                          if(i==j)
-                          {
-                              outfile<<"1.00";
-                          }
-                          else
-                          {
-                              outfile<<"0.00";
-                          }
-                          if(j < nMonomialPolynomials - 1)
-                          {
-                              outfile<<", ";
-                          }
-                      }
-                      if(i < nMonomialPolynomials - 1)
-                      {
-                          outfile<<"},"<<endl;
-                      }
-                      else
-                      {
-                          outfile<<"}"<<endl<<"}"<<endl;
-                      }
-                  }
+                if(dumpVar)
+                {   
+                    outfile<<"INTERPOLATION_SCHEME"<<endl;
+                    outfile<<"{"<<endl;
+                    for(i=0; i < nMonomialPolynomials; i++)
+                    {
+                        outfile<<"{";
+                        for(j = 0; j < nMonomialPolynomials; j++)
+                        {
+                            if(i==j)
+                            {
+                                outfile<<"1.00";
+                            }
+                            else
+                            {
+                                outfile<<"0.00";
+                            }
+                            if(j < nMonomialPolynomials - 1)
+                            {
+                                outfile<<", ";
+                            }
+                        }
+                        if(i < nMonomialPolynomials - 1)
+                        {
+                            outfile<<"},"<<endl;
+                        }
+                        else
+                        {
+                            outfile<<"}"<<endl<<"}"<<endl;
+                        }
+                    }
                     
-                  outfile<<"{"<<endl;
-                  for(i=0; i < nMonomialPolynomials; i++)
-                  {
-                      outfile<<"{";
-                      for(j = 0; j < 3; j++)
-                      {
-                          outfile<<exponentMap[i][j];
-                          if(j < 2)
-                          {
-                              outfile<<", ";
-                          }
-                      }
-                      if(i < nMonomialPolynomials - 1)
-                      {
-                          outfile<<"},"<<endl;
-                      }
-                      else
-                      {
-                          outfile<<"}"<<endl<<"};"<<endl;
-                      }
-                  }
-                  outfile<<"};"<<endl;
-              }                    
-          } 
-          else
-          {
-              ASSERTL0(false, "Output routine not implemented for requested type of output");
-          }
+                    outfile<<"{"<<endl;
+                    for(i=0; i < nMonomialPolynomials; i++)
+                    {
+                        outfile<<"{";
+                        for(j = 0; j < 3; j++)
+                        {
+                            outfile<<exponentMap[i][j];
+                            if(j < 2)
+                            {
+                                outfile<<", ";
+                            }
+                        }
+                        if(i < nMonomialPolynomials - 1)
+                        {
+                            outfile<<"},"<<endl;
+                        }
+                        else
+                        {
+                            outfile<<"}"<<endl<<"};"<<endl;
+                        }
+                    }
+                    outfile<<"};"<<endl;
+                }                    
+            } 
+            else
+            {
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
+            }
         }
         
         DNekMatSharedPtr QuadExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
@@ -1027,10 +980,10 @@ namespace Nektar
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
             
-        ASSERTL0(m_geom,"m_geom not defined");
-        m_geom->GetLocCoords(coord,Lcoord);
+            ASSERTL0(m_geom,"m_geom not defined");
+            m_geom->GetLocCoords(coord,Lcoord);
         
-        return StdQuadExp::PhysEvaluate(Lcoord);
+            return StdQuadExp::PhysEvaluate(Lcoord);
         }
         
         DNekScalMatSharedPtr QuadExp::CreateMatrix(const MatrixKey &mkey)
@@ -1108,7 +1061,7 @@ namespace Nektar
                         }                            
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
-                                           mkey.GetExpansionType(), *this);  
+                                            mkey.GetExpansionType(), *this);  
                         MatrixKey deriv1key(StdRegions::eWeakDeriv1,
                                             mkey.GetExpansionType(), *this);
 
@@ -1125,7 +1078,7 @@ namespace Nektar
                     }
                 }
                 break;
-           case StdRegions::eLaplacian:
+            case StdRegions::eLaplacian:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
@@ -1196,7 +1149,7 @@ namespace Nektar
                     DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
-            break;
+                break;
             case StdRegions::eInvUnifiedDGHelmholtz:
                 {
                     NekDouble one = 1.0;
@@ -1214,7 +1167,7 @@ namespace Nektar
             default:
                 NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
                 break;
-             }
+            }
                 
             return returnval;
         }
@@ -1301,7 +1254,7 @@ namespace Nektar
                                          Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,NekDouble> &outarray,
                                          bool InArrayIsTrace) 
-       {
+        {
 
             int i,e,cnt;
             int order_e,nquad_e;
@@ -1376,7 +1329,7 @@ namespace Nektar
                 AddEdgeBoundaryInt(e,EdgeExp[e],outarray);
             }
 
-       }
+        }
 
         void QuadExp:: AddEdgeBoundaryInt(const int edge, 
                                           SegExpSharedPtr &EdgeExp,
@@ -1522,9 +1475,9 @@ namespace Nektar
         // Boundary terms associated with elemental Helmholtz matrix
         // operations from the trace space
         void QuadExp::AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                             const Array<OneD,const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray,
-                                             bool InputDataIsCartesianOrient)
+                                                const Array<OneD,const NekDouble> &inarray,
+                                                Array<OneD,NekDouble> &outarray,
+                                                bool InputDataIsCartesianOrient)
         {
             int i;
             Array<OneD,SegExpSharedPtr>  EdgeExp(4);
@@ -1813,7 +1766,7 @@ namespace Nektar
                 
                 // Innerproduct wrt deriv base 
                 EdgeExp->StdSegExp::IProductWRTDerivBase(0,inval,
-                                           EdgeExp->UpdateCoeffs());
+                                                         EdgeExp->UpdateCoeffs());
                 
                 // add data to out array
                 for(i = 0; i < EdgeExp->GetNcoeffs(); ++i)
@@ -2016,14 +1969,14 @@ namespace Nektar
 
                             edgedir = GetCartesianEorient(e);
                             
-                             MapTo(order_e,EdgeExp[e]->GetBasisType(0),e,
-                                   edgedir,emap);
+                            MapTo(order_e,EdgeExp[e]->GetBasisType(0),e,
+                                  edgedir,emap);
 
-                             // Q0 * n0
-                             for(j = 0; j < order_e; ++j)
-                             {
-                                 EdgeExp[e]->SetCoeff(j,emap.GetSign(j)*LamToQ0(emap[j],i));
-                             }
+                            // Q0 * n0
+                            for(j = 0; j < order_e; ++j)
+                            {
+                                EdgeExp[e]->SetCoeff(j,emap.GetSign(j)*LamToQ0(emap[j],i));
+                            }
                             
                             EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
                                                  EdgeExp[e]->UpdatePhys());
@@ -2241,6 +2194,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.40  2008/07/02 14:09:18  pvos
+ *    Implementation of HelmholtzMatOp and LapMatOp on shape level
+ *
  *    Revision 1.39  2008/06/06 14:57:51  pvos
  *    Minor Updates
  *

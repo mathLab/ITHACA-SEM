@@ -37,13 +37,13 @@
 
 namespace Nektar 
 {
-  namespace LocalRegions 
-  {
+    namespace LocalRegions 
+    {
 
 	PyrExp::PyrExp(const LibUtilities::BasisKey &Ba,
-                   const LibUtilities::BasisKey &Bb,
-		           const LibUtilities::BasisKey &Bc,
-                   const SpatialDomains::PyrGeomSharedPtr &geom):
+                       const LibUtilities::BasisKey &Bb,
+                       const LibUtilities::BasisKey &Bc,
+                       const SpatialDomains::PyrGeomSharedPtr &geom):
             StdRegions::StdPyrExp(Ba,Bb,Bc),
             m_geom(geom),
             m_metricinfo(),
@@ -56,32 +56,32 @@ namespace Nektar
                                                           StdRegions::eNoExpansionType,*this),
                                                 boost::bind(&PyrExp::CreateMatrix, this, _1));
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&PyrExp::CreateStaticCondMatrix, this, _1));
+                                                                    StdRegions::eNoExpansionType,*this),
+                                                          boost::bind(&PyrExp::CreateStaticCondMatrix, this, _1));
             }
 
             GenMetricInfo();
         }
 
-	     PyrExp::PyrExp(const LibUtilities::BasisKey &Ba,
-                        const LibUtilities::BasisKey &Bb,
-		                const LibUtilities::BasisKey &Bc
-		      ):
+        PyrExp::PyrExp(const LibUtilities::BasisKey &Ba,
+                       const LibUtilities::BasisKey &Bb,
+                       const LibUtilities::BasisKey &Bc
+                       ):
             StdRegions::StdPyrExp(Ba,Bb,Bc),
             m_geom(),
             m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
             m_matrixManager(std::string("PyrExpMatrix")),
             m_staticCondMatrixManager(std::string("PyrExpStaticCondMatrix"))
-         {
+        {
 
-           for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
+            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
                 m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
                                                           StdRegions::eNoExpansionType,*this),
                                                 boost::bind(&PyrExp::CreateMatrix, this, _1));
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&PyrExp::CreateStaticCondMatrix, this, _1));
+                                                                    StdRegions::eNoExpansionType,*this),
+                                                          boost::bind(&PyrExp::CreateStaticCondMatrix, this, _1));
             }
 
             // Set up unit geometric factors. 
@@ -125,13 +125,13 @@ namespace Nektar
 
                 LibUtilities::BasisSharedPtr CBasis0;
                 LibUtilities::BasisSharedPtr CBasis1;
-	            LibUtilities::BasisSharedPtr CBasis2;
+                LibUtilities::BasisSharedPtr CBasis2;
                 CBasis0 = m_geom->GetBasis(0,0); // assumes all goembasis are same
                 CBasis1 = m_geom->GetBasis(0,1);
-	            CBasis2 = m_geom->GetBasis(0,2);
+                CBasis2 = m_geom->GetBasis(0,2);
                 int Cnq0 = CBasis0->GetNumPoints();
                 int Cnq1 = CBasis1->GetNumPoints();
-		        int Cnq2 = CBasis2->GetNumPoints();
+                int Cnq2 = CBasis2->GetNumPoints();
 
                 Array<OneD, const NekDouble> ojac = Xgfac->GetJac();
                 Array<TwoD, const NekDouble> ogmat = Xgfac->GetGmat();
@@ -217,26 +217,26 @@ namespace Nektar
         }
 
 
-	    //----------------------------
+        //----------------------------
         // Integration Methods
         //----------------------------
 
         /** \brief Integrate the physical point list \a inarray over pyramidic region and return the value                
-          Inputs:\n
+            Inputs:\n
             - \a inarray: definition of function to be returned at quadrature point of expansion.
 
-          Outputs:\n
+            Outputs:\n
             - returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\bar \eta_1, \eta_2, \eta_3) J[i,j,k] d \bar \eta_1 d \eta_2 d \eta_3\f$ \n
-                        \f$= \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1} u(\bar \eta_{1i}^{0,0}, \eta_{2j}^{0,0},\eta_{3k}^{2,0})w_{i}^{0,0} w_{j}^{0,0} \hat w_{k}^{2,0}    \f$ \n
-                        where \f$inarray[i,j, k] = u(\bar \eta_{1i},\eta_{2j}, \eta_{3k}) \f$, \n
-                        \f$\hat w_{k}^{2,0} = \frac {w^{2,0}} {2} \f$ \n
-                        and \f$ J[i,j,k] \f$ is the  Jacobian evaluated at the quadrature point.
+            \f$= \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1} u(\bar \eta_{1i}^{0,0}, \eta_{2j}^{0,0},\eta_{3k}^{2,0})w_{i}^{0,0} w_{j}^{0,0} \hat w_{k}^{2,0}    \f$ \n
+            where \f$inarray[i,j, k] = u(\bar \eta_{1i},\eta_{2j}, \eta_{3k}) \f$, \n
+            \f$\hat w_{k}^{2,0} = \frac {w^{2,0}} {2} \f$ \n
+            and \f$ J[i,j,k] \f$ is the  Jacobian evaluated at the quadrature point.
         */
-	    NekDouble PyrExp::Integral(const Array<OneD, const NekDouble> &inarray)
+        NekDouble PyrExp::Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-	        int    nquad2 = m_base[2]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             NekDouble retrunVal;
             Array<OneD,NekDouble> tmp   = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
@@ -257,37 +257,15 @@ namespace Nektar
             return retrunVal; 
         }
 
-        /**
-        \brief Calculate the inner product of inarray with respect to
-        the basis B=base0*base1*base2 and put into outarray:
-              
-        \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
-            \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
-            \psi_{p}^{a} (\bar \eta_{1i}) \psi_{q}^{a} (\eta_{2j}) \psi_{pqr}^{c} (\eta_{3k})
-            w_i w_j w_k u(\bar \eta_{1,i} \eta_{2,j} \eta_{3,k})
-            J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\bar \eta_{1,i})
-            \sum_{j=0}^{nq_1} \psi_{q}^a(\eta_{2,j}) \sum_{k=0}^{nq_2} \psi_{pqr}^c u(\bar \eta_{1i},\eta_{2j},\eta_{3k})
-            J_{i,j,k} \end{array} \f$ \n
-            
-            where
-            
-            \f$\phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\bar \eta_1) \psi_{q}^a (\eta_2) \psi_{pqr}^c (\eta_3) \f$ \n
-            
-            which can be implemented as \n
-            \f$f_{pqr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\bar \eta_{1i},\eta_{2j},\eta_{3k})
-            J_{i,j,k} = {\bf B_3 U}  \f$ \n
-        \f$ g_{pq} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{q}^a (\xi_{2j}) f_{pqr} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
-        \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$
-        **/
-	   void PyrExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-                                    const Array<OneD, const NekDouble> &base1,
-				                    const Array<OneD, const NekDouble> &base2, 
-                                    const Array<OneD, const NekDouble> &inarray,
-                                    Array<OneD,NekDouble> &outarray)
+        void PyrExp::IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                     const Array<OneD, const NekDouble>& base1, 
+                                     const Array<OneD, const NekDouble>& base2, 
+                                     const Array<OneD, const NekDouble>& inarray, 
+                                     Array<OneD, NekDouble> & outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-	        int    nquad2 = m_base[2]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
 
@@ -304,26 +282,7 @@ namespace Nektar
             StdPyrExp::IProductWRTBase(base0,base1,base2,tmp,outarray);
         }
 
-        /** \brief  Inner product of \a inarray over region with respect to the
-            expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray
-
-            Wrapper call to StdPyrExp::IProductWRTBase
-
-            Input:\n
-
-            - \a inarray: array of function evaluated at the physical collocation points
-
-            Output:\n
-
-            - \a outarray: array of inner product with respect to each basis over region
-        */
-	    void PyrExp::IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,NekDouble> &outarray)
-        {
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
-        }
-
-         ///////////////////////////////
+        ///////////////////////////////
         /// Differentiation Methods
         ///////////////////////////////
         
@@ -394,18 +353,18 @@ namespace Nektar
         }
 
         /** \brief Forward transform from physical quadrature space
-        stored in \a inarray and evaluate the expansion coefficients and
-        store in \a (this)->m_coeffs
+            stored in \a inarray and evaluate the expansion coefficients and
+            store in \a (this)->m_coeffs
 
-        Inputs:\n
+            Inputs:\n
 
-        - \a inarray: array of physical quadrature points to be transformed
+            - \a inarray: array of physical quadrature points to be transformed
 
-        Outputs:\n
+            Outputs:\n
 
-        - (this)->_coeffs: updated array of expansion coefficients.            
+            - (this)->_coeffs: updated array of expansion coefficients.            
         */ 
-	    void PyrExp::FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray)
+        void PyrExp::FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
             {
@@ -441,7 +400,7 @@ namespace Nektar
             ASSERTL0(m_geom, "m_geom not define");
             
             // get physical points defined in Geom
-//             m_geom->FillGeom();  //TODO: implement
+            //             m_geom->FillGeom();  //TODO: implement
             
             switch(m_geom->GetCoordim())
             {
@@ -512,7 +471,7 @@ namespace Nektar
         }
 
   
-		// get the coordinates "coords" at the local coordinates "Lcoords"
+        // get the coordinates "coords" at the local coordinates "Lcoords"
         void PyrExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
                               Array<OneD,NekDouble> &coords)
         {
@@ -523,7 +482,7 @@ namespace Nektar
                      Lcoords[2] <= -1.0 && Lcoords[2] >= 1.0,
                      "Local coordinates are not in region [-1,1]");
             
-           // m_geom->FillGeom(); // TODO: implement FillGeom()
+            // m_geom->FillGeom(); // TODO: implement FillGeom()
             
             for(i = 0; i < m_geom->GetCoordDim(); ++i) 
             {
@@ -587,14 +546,14 @@ namespace Nektar
             }
         }
 
-	    NekDouble PyrExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
+        NekDouble PyrExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
 
             ASSERTL0(m_geom,"m_geom not defined");
 	
             //TODO: check GetLocCoords()
-           // m_geom->GetLocCoords(coord, Lcoord);
+            // m_geom->GetLocCoords(coord, Lcoord);
 
             return StdPyrExp::PhysEvaluate(Lcoord);
         }
@@ -611,7 +570,7 @@ namespace Nektar
 
         DNekScalMatSharedPtr PyrExp::CreateMatrix(const MatrixKey &mkey)
         {
-           DNekScalMatSharedPtr returnval;
+            DNekScalMatSharedPtr returnval;
 
             switch(mkey.GetMatrixType())
             {
@@ -637,7 +596,7 @@ namespace Nektar
                     {
                         NekDouble one = 1.0;
                         StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),
-                                                            *this);
+                                                         *this);
                         DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
@@ -665,11 +624,11 @@ namespace Nektar
                         // ASSERTL1(m_geom->GetCoordDim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
                         ASSERTL1(m_geom->GetCoordDim() == 3,"Standard Region Laplacian is only set up for Hex in three-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
-                                            mkey.GetExpansionType(), *this);
+                                           mkey.GetExpansionType(), *this);
                         MatrixKey lap01key(StdRegions::eLaplacian01,
-                                            mkey.GetExpansionType(), *this);
+                                           mkey.GetExpansionType(), *this);
                         MatrixKey lap11key(StdRegions::eLaplacian11,
-                                            mkey.GetExpansionType(), *this);
+                                           mkey.GetExpansionType(), *this);
 
                         DNekMatSharedPtr lap00 = GetStdMatrix(*lap00key.GetStdMatKey());
                         DNekMatSharedPtr lap01 = GetStdMatrix(*lap01key.GetStdMatKey());
@@ -684,8 +643,8 @@ namespace Nektar
                         DNekMatSharedPtr lap = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
 
                         (*lap) = (gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0]) * (*lap00) +
-                                    (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
-                                    (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
+                            (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
+                            (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac, lap);
                     }
@@ -715,126 +674,129 @@ namespace Nektar
                 break;
             }
 
-        return returnval;
-    }
+            return returnval;
+        }
 
-    DNekScalBlkMatSharedPtr PyrExp::CreateStaticCondMatrix(const MatrixKey &mkey)
-    {
-        DNekScalBlkMatSharedPtr returnval;
-
-        ASSERTL2(m_metricinfo->GetGtype() == SpatialDomains::eNoGeomType,"Geometric information is not set up");
-
-        // set up block matrix system
-        int nbdry = NumBndryCoeffs();
-        int nint = m_ncoeffs - nbdry;
-        unsigned int exp_size[] = {nbdry, nint};
-        int nblks = 2;
-        returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
-        NekDouble factor = 1.0;
-
-        switch(mkey.GetMatrixType())
+        DNekScalBlkMatSharedPtr PyrExp::CreateStaticCondMatrix(const MatrixKey &mkey)
         {
-        case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
+            DNekScalBlkMatSharedPtr returnval;
 
-            // use Deformed case for both regular and deformed geometries
-            factor = 1.0;
-            goto UseLocRegionsMatrix;
-            break;
-        default:
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            ASSERTL2(m_metricinfo->GetGtype() == SpatialDomains::eNoGeomType,"Geometric information is not set up");
+
+            // set up block matrix system
+            int nbdry = NumBndryCoeffs();
+            int nint = m_ncoeffs - nbdry;
+            unsigned int exp_size[] = {nbdry, nint};
+            int nblks = 2;
+            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
+            NekDouble factor = 1.0;
+
+            switch(mkey.GetMatrixType())
             {
+            case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
+
+                // use Deformed case for both regular and deformed geometries
                 factor = 1.0;
                 goto UseLocRegionsMatrix;
-            }
-            else
-            {
-                DNekScalMatSharedPtr mat = GetLocMatrix(mkey);
-                factor = mat->Scale();
-                goto UseStdRegionsMatrix;
-            }
-            break;
-        UseStdRegionsMatrix:
-            {
-                NekDouble            invfactor = 1.0/factor;
-                NekDouble            one = 1.0;
-                DNekBlkMatSharedPtr  mat = GetStdStaticCondMatrix(*(mkey.GetStdMatKey()));
-                DNekScalMatSharedPtr Atmp;
-                DNekMatSharedPtr     Asubmat;
-
-                //TODO: check below
-                returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,Asubmat = mat->GetBlock(0,0)));
-                returnval->SetBlock(0,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Asubmat = mat->GetBlock(0,1)));
-                returnval->SetBlock(1,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,Asubmat = mat->GetBlock(1,0)));
-                returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,Asubmat = mat->GetBlock(1,1)));
-            }
-            break;
-        UseLocRegionsMatrix:
-            {
-                int i,j;
-                NekDouble            invfactor = 1.0/factor;
-                NekDouble            one = 1.0;
-                DNekScalMat &mat = *GetLocMatrix(mkey);
-                DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry);
-                DNekMatSharedPtr B = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
-                DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
-                DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
-
-                Array<OneD,unsigned int> bmap(nbdry);
-                Array<OneD,unsigned int> imap(nint);
-                GetBoundaryMap(bmap);
-                GetInteriorMap(imap);
-
-                for(i = 0; i < nbdry; ++i)
+                break;
+            default:
+                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                 {
-                    for(j = 0; j < nbdry; ++j)
-                    {
-                        (*A)(i,j) = mat(bmap[i],bmap[j]);
-                    }
-
-                    for(j = 0; j < nint; ++j)
-                    {
-                        (*B)(i,j) = mat(bmap[i],imap[j]);
-                    }
+                    factor = 1.0;
+                    goto UseLocRegionsMatrix;
                 }
-
-                for(i = 0; i < nint; ++i)
+                else
                 {
-                    for(j = 0; j < nbdry; ++j)
-                    {
-                        (*C)(i,j) = mat(imap[i],bmap[j]);
-                    }
-
-                    for(j = 0; j < nint; ++j)
-                    {
-                        (*D)(i,j) = mat(imap[i],imap[j]);
-                    }
+                    DNekScalMatSharedPtr mat = GetLocMatrix(mkey);
+                    factor = mat->Scale();
+                    goto UseStdRegionsMatrix;
                 }
-
-                // Calculate static condensed system
-                if(nint)
+                break;
+            UseStdRegionsMatrix:
                 {
-                    D->Invert();
-                    (*B) = (*B)*(*D);
-                    (*A) = (*A) - (*B)*(*C);
+                    NekDouble            invfactor = 1.0/factor;
+                    NekDouble            one = 1.0;
+                    DNekBlkMatSharedPtr  mat = GetStdStaticCondMatrix(*(mkey.GetStdMatKey()));
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr     Asubmat;
+
+                    //TODO: check below
+                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,Asubmat = mat->GetBlock(0,0)));
+                    returnval->SetBlock(0,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Asubmat = mat->GetBlock(0,1)));
+                    returnval->SetBlock(1,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,Asubmat = mat->GetBlock(1,0)));
+                    returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,Asubmat = mat->GetBlock(1,1)));
                 }
+                break;
+            UseLocRegionsMatrix:
+                {
+                    int i,j;
+                    NekDouble            invfactor = 1.0/factor;
+                    NekDouble            one = 1.0;
+                    DNekScalMat &mat = *GetLocMatrix(mkey);
+                    DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry);
+                    DNekMatSharedPtr B = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
+                    DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
+                    DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
 
-                DNekScalMatSharedPtr     Atmp;
+                    Array<OneD,unsigned int> bmap(nbdry);
+                    Array<OneD,unsigned int> imap(nint);
+                    GetBoundaryMap(bmap);
+                    GetInteriorMap(imap);
 
-                returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,A));
-                returnval->SetBlock(0,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,B));
-                returnval->SetBlock(1,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,C));
-                returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,D));
+                    for(i = 0; i < nbdry; ++i)
+                    {
+                        for(j = 0; j < nbdry; ++j)
+                        {
+                            (*A)(i,j) = mat(bmap[i],bmap[j]);
+                        }
 
+                        for(j = 0; j < nint; ++j)
+                        {
+                            (*B)(i,j) = mat(bmap[i],imap[j]);
+                        }
+                    }
+
+                    for(i = 0; i < nint; ++i)
+                    {
+                        for(j = 0; j < nbdry; ++j)
+                        {
+                            (*C)(i,j) = mat(imap[i],bmap[j]);
+                        }
+
+                        for(j = 0; j < nint; ++j)
+                        {
+                            (*D)(i,j) = mat(imap[i],imap[j]);
+                        }
+                    }
+
+                    // Calculate static condensed system
+                    if(nint)
+                    {
+                        D->Invert();
+                        (*B) = (*B)*(*D);
+                        (*A) = (*A) - (*B)*(*C);
+                    }
+
+                    DNekScalMatSharedPtr     Atmp;
+
+                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,A));
+                    returnval->SetBlock(0,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,B));
+                    returnval->SetBlock(1,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,C));
+                    returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,D));
+
+                }
             }
+            return returnval;
         }
-        return returnval;
-    }
 
-  }//end of namespace
+    }//end of namespace
 }//end of namespace
 
 /** 
  *    $Log: PyrExp.cpp,v $
+ *    Revision 1.12  2008/06/14 01:20:40  ehan
+ *    Clean up the codes
+ *
  *    Revision 1.11  2008/06/06 23:24:42  ehan
  *    Added doxygen documentation
  *

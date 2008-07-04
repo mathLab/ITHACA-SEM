@@ -50,218 +50,238 @@
 
 namespace Nektar
 {
-  namespace LocalRegions 
-  {
+    namespace LocalRegions 
+    {
 
  
     class HexExp: public StdRegions::StdHexExp
-    {
-    public:
+        {
+        public:
     
-      ///\brief Constructor using BasisKey class for quadrature
-      /// points and order definition 
+            ///\brief Constructor using BasisKey class for quadrature
+            /// points and order definition 
  
-      HexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb,
-             const LibUtilities::BasisKey &Bc, const SpatialDomains::HexGeomSharedPtr &geom);
+            HexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb,
+                   const LibUtilities::BasisKey &Bc, const SpatialDomains::HexGeomSharedPtr &geom);
 
-      HexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, 
-             const LibUtilities::BasisKey &Bc);
+            HexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, 
+                   const LibUtilities::BasisKey &Bc);
 
-      /// Copy Constructor
-      HexExp(const HexExp &T);
+            /// Copy Constructor
+            HexExp(const HexExp &T);
 
-      /// Destructor
-      ~HexExp();
+            /// Destructor
+            ~HexExp();
 
-      /// Return the region shape using the enum-list of ShapeType
-      StdRegions::ExpansionType DetExpansionType() const
-      { 
-    	 return StdRegions::eHexahedron; 
-      }
+            /// Return the region shape using the enum-list of ShapeType
+            StdRegions::ExpansionType DetExpansionType() const
+            { 
+                return StdRegions::eHexahedron; 
+            }
 
-      //------------------------------
-      //    Integration Method
-      //------------------------------
+            //------------------------------
+            //    Integration Method
+            //------------------------------
      
-     /// \brief Integrate the physical point list \a inarray over region
-      NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
-
-      void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
-
-      void IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-			   const Array<OneD, const NekDouble> &base1,
-			   const Array<OneD, const NekDouble> &base2,  
-			   const Array<OneD, const NekDouble> &inarray,
-			   Array<OneD,NekDouble> &outarray );
+            /// \brief Integrate the physical point list \a inarray over region
+            NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
  
-      void GetCoords(Array<OneD,NekDouble> &coords_1,
-                     Array<OneD,NekDouble> &coords_2, 
-                     Array<OneD,NekDouble> &coords_3);
-      void GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords);
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(m_base[0]->GetBdata(), m_base[1]->GetBdata(), m_base[2]->GetBdata(), inarray,outarray,1);
+            }
+ 
+            void GetCoords(Array<OneD,NekDouble> &coords_1,
+                           Array<OneD,NekDouble> &coords_2, 
+                           Array<OneD,NekDouble> &coords_3);
+            void GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords);
       
-      void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
-        //-----------------------------
-        // Differentiation Methods
-        //-----------------------------
+            //-----------------------------
+            // Differentiation Methods
+            //-----------------------------
 
-        void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-                       Array<OneD, NekDouble> &out_d0,
-                       Array<OneD, NekDouble> &out_d1,
-                       Array<OneD, NekDouble> &out_d2);
+            void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+                           Array<OneD, NekDouble> &out_d0,
+                           Array<OneD, NekDouble> &out_d1,
+                           Array<OneD, NekDouble> &out_d2);
 
-        //----------------------------
-        // Evaluations Methods
-        //---------------------------
-       /** \brief Forward transform from physical quadrature space
-       stored in \a inarray and evaluate the expansion coefficients and
-       store in \a (this)->_coeffs  */
-      void FwdTrans(const Array<OneD, const NekDouble> & inarray, Array<OneD,NekDouble> &outarray);
-      NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
+            //----------------------------
+            // Evaluations Methods
+            //---------------------------
+            /** \brief Forward transform from physical quadrature space
+                stored in \a inarray and evaluate the expansion coefficients and
+                store in \a (this)->_coeffs  */
+            void FwdTrans(const Array<OneD, const NekDouble> & inarray, Array<OneD,NekDouble> &outarray);
+            NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
 
-    protected:
-       void GenMetricInfo();
+        protected:
+            void GenMetricInfo();
 
-        DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
-        DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
-        DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
-        DNekBlkMatSharedPtr CreateStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
+            DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
+            DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
+            DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
+            DNekBlkMatSharedPtr CreateStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
 
-	SpatialDomains::HexGeomSharedPtr m_geom;
-        SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+            SpatialDomains::HexGeomSharedPtr m_geom;
+            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
-        LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
-        LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
-
-    private:
-      /// Return Shape of region, using  ShapeType enum list. i.e. Hexahedron
-       HexExp();
-
-        virtual StdRegions::ExpansionType v_DetExpansionType() const
-        {
-            return DetExpansionType();
-        }
-    
-        virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-       virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
-                                 Array<OneD, NekDouble> &coords_1,
-                                 Array<OneD, NekDouble> &coords_2)
-        {
-             GetCoords(coords_0, coords_1, coords_2);
-         }
-
-        virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, Array<OneD, NekDouble> &coord)
-        {
-            GetCoord(lcoord, coord);
-        }
-
-        virtual  int v_GetCoordim()
-        {
-            return m_geom->GetCoordim();
-        }
-
-        virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
-        {
-            WriteToFile(outfile,format,dumpVar);
-        }
-
-               /** \brief Virtual call to integrate the physical point list \a inarray
-        over region (see SegExp::Integral) */
-        virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
-        {
-            return Integral(inarray);
-        }
-
-        /** \brief Virtual call to QuadExp::IProduct_WRT_B */
-        virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD, NekDouble> &outarray)
-        {
-            IProductWRTBase(inarray,outarray);
-        }
-
+            /** 
+                \brief Calculate the inner product of inarray with respect to
+                the basis B=base0*base1*base2 and put into outarray:
         
-        /// Virtual call to SegExp::PhysDeriv
-        virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-                                    Array<OneD, NekDouble> &out_d0,
-                                    Array<OneD, NekDouble> &out_d1,
-                                    Array<OneD, NekDouble> &out_d2)
-        {
-            StdHexExp::PhysDeriv(inarray, out_d0, out_d1, out_d2);
-        }
+                \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
+                \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
+                \psi_{p}^{a} (\xi_{1i}) \psi_{q}^{a} (\xi_{2j}) \psi_{r}^{a} (\xi_{3k})
+                w_i w_j w_k u(\xi_{1,i} \xi_{2,j} \xi_{3,k})         
+                J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\xi_{1,i})
+                \sum_{j=0}^{nq_1} \psi_{q}^a(\xi_{2,j}) \sum_{k=0}^{nq_2} \psi_{r}^a u(\xi_{1i},\xi_{2j},\xi_{3k})
+                J_{i,j,k} \end{array} \f$ \n
         
-        virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-                                 Array<OneD, NekDouble> &out_d0,
-                                 Array<OneD, NekDouble> &out_d1,
-                                 Array<OneD, NekDouble> &out_d2)
-        {
-             PhysDeriv(inarray, out_d0, out_d1, out_d2);
-        }
-
-          /// Virtual call to SegExp::FwdTrans
-       virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                                Array<OneD, NekDouble> &outarray)
-        {
-            FwdTrans(inarray,outarray);
-        }
-    
-        /// Virtual call to QuadExp::Evaluate
-        virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
-        {
-            return PhysEvaluate(coords);
-        }
-
-        virtual NekDouble v_Linf()
-        {
-            return Linf();
-        }
-    
-        virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
-        {
-            return StdExpansion::L2(sol);
-        }
-
-    
-        virtual NekDouble v_L2()
-        {
-            return StdExpansion::L2();
-        }
-
-        virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            return CreateStdMatrix(mkey);
-        }
-
-        virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
-        {
-            return m_matrixManager[mkey];
-        }
+                where
         
-        virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
-        {
-            return m_staticCondMatrixManager[mkey];
-        }
+                \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a ( \xi_1) \psi_{q}^a (\xi_2) \psi_{r}^a (\xi_3) \f$ \n
+        
+                which can be implemented as \n
+                \f$f_{r} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{r}^a u(\xi_{1i},\xi_{2j},\xi_{3k})
+                J_{i,j,k} = {\bf B_3 U}   \f$ \n
+                \f$ g_{q} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{q}^a (\xi_{2j}) f_{r} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
+                \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{q} (\xi_{3k})  = {\bf B_1 G} \f$
+
+            **/
+            void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                 const Array<OneD, const NekDouble>& base1, 
+                                 const Array<OneD, const NekDouble>& base2, 
+                                 const Array<OneD, const NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> & outarray, 
+                                 int coll_check);
+
+        private:
+            /// Return Shape of region, using  ShapeType enum list. i.e. Hexahedron
+            HexExp();
+
+            virtual StdRegions::ExpansionType v_DetExpansionType() const
+            {
+                return DetExpansionType();
+            }
+    
+            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
+            {
+                return m_metricinfo;
+            }
+
+            virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
+                                     Array<OneD, NekDouble> &coords_1,
+                                     Array<OneD, NekDouble> &coords_2)
+            {
+                GetCoords(coords_0, coords_1, coords_2);
+            }
+
+            virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, Array<OneD, NekDouble> &coord)
+            {
+                GetCoord(lcoord, coord);
+            }
+
+            virtual  int v_GetCoordim()
+            {
+                return m_geom->GetCoordim();
+            }
+
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            {
+                WriteToFile(outfile,format,dumpVar);
+            }
+
+            /** \brief Virtual call to integrate the physical point list \a inarray
+                over region (see SegExp::Integral) */
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
+            {
+                return Integral(inarray);
+            }
+
+            /** \brief Virtual call to QuadExp::IProduct_WRT_B */
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(inarray,outarray);
+            }
+        
+            virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+                                     Array<OneD, NekDouble> &out_d0,
+                                     Array<OneD, NekDouble> &out_d1,
+                                     Array<OneD, NekDouble> &out_d2)
+            {
+                PhysDeriv(inarray, out_d0, out_d1, out_d2);
+            }
+
+            /// Virtual call to SegExp::FwdTrans
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                    Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans(inarray,outarray);
+            }
+    
+            /// Virtual call to QuadExp::Evaluate
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
+            {
+                return PhysEvaluate(coords);
+            }
+
+            virtual NekDouble v_Linf()
+            {
+                return Linf();
+            }
+    
+            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
+            {
+                return StdExpansion::L2(sol);
+            }
+
+    
+            virtual NekDouble v_L2()
+            {
+                return StdExpansion::L2();
+            }
+
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+            {
+                return CreateStdMatrix(mkey);
+            }
+
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
+            {
+                return m_matrixManager[mkey];
+            }
+        
+            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+            {
+                return m_staticCondMatrixManager[mkey];
+            }
 
       
-    };
+        };
 
-    // type defines for use of HexExp in a boost vector
-    typedef boost::shared_ptr<HexExp> HexExpSharedPtr;
-    typedef std::vector< HexExpSharedPtr > HexExpVector;
-    typedef std::vector< HexExpSharedPtr >::iterator HexExpVectorIter;
+        // type defines for use of HexExp in a boost vector
+        typedef boost::shared_ptr<HexExp> HexExpSharedPtr;
+        typedef std::vector< HexExpSharedPtr > HexExpVector;
+        typedef std::vector< HexExpSharedPtr >::iterator HexExpVectorIter;
 
     
-  } //end of namespace
+    } //end of namespace
 } //end of namespace
 
 #endif //HEX_EXP_H
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.18  2008/06/07 00:23:04  ehan
+ *    Fixed warnings.
+ *
  *    Revision 1.17  2008/06/06 23:24:03  ehan
  *    Added doxygen documentation
  *

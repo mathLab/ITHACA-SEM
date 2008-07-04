@@ -47,15 +47,15 @@ namespace Nektar
 
 
         StdTriExp::StdTriExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb):
-        StdExpansion2D(Ba.GetNumModes()*(Ba.GetNumModes()+1)/2+
-            Ba.GetNumModes()*(Bb.GetNumModes()-Ba.GetNumModes()), 
-            Ba,Bb)
+            StdExpansion2D(Ba.GetNumModes()*(Ba.GetNumModes()+1)/2+
+                           Ba.GetNumModes()*(Bb.GetNumModes()-Ba.GetNumModes()), 
+                           Ba,Bb)
         {    
             ASSERTL0(Ba.GetNumModes() <=  Bb.GetNumModes(), "order in 'a' direction is higher than order in 'b' direction");
         }
 
         StdTriExp::StdTriExp(const StdTriExp &T):
-        StdExpansion2D(T)
+            StdExpansion2D(T)
         {
         }
 
@@ -93,13 +93,74 @@ namespace Nektar
 
             return StdExpansion2D::Integral(inarray,w0,w1_tmp);
         }
-
-
-        void StdTriExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-            Array<OneD, NekDouble> &outarray)
+     
+        void StdTriExp::IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                        const Array<OneD, const NekDouble>& base1,
+                                        const Array<OneD, const NekDouble>& inarray, 
+                                        Array<OneD, NekDouble> &outarray)
         {
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),inarray,
-                outarray);
+            int    i,mode;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    order0 = m_base[0]->GetNumModes();
+            int    order1 = m_base[1]->GetNumModes();
+
+            Array<OneD, NekDouble> tmp(nquad0*nquad1);
+            Array<OneD, NekDouble> tmp1(order0*nquad1);
+            
+            Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
+            Array<OneD, const NekDouble> w1 = m_base[1]->GetW();
+            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
+
+            ASSERTL2((m_base[1]->GetBasisType() == LibUtilities::eOrtho_B)||
+                     (m_base[1]->GetBasisType() == LibUtilities::eModified_B), 
+                     "Basis[1] is not of general tensor type");
+
+            // Note cannot use outarray as tmp space since dimensions are not always
+            // guarenteed to be sufficient 
+
+            // multiply by integration constants 
+            for(i = 0; i < nquad1; ++i)
+            {
+                Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
+                            w0.get(),1, &tmp[0]+i*nquad0,1);
+            }
+
+            switch(m_base[1]->GetPointsType())
+            {
+            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
+                for(i = 0; i < nquad1; ++i)
+                {
+                    Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], &tmp[0]+i*nquad0,1);
+                }
+                break;
+            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
+                for(i = 0; i < nquad1; ++i)
+                {
+                    Blas::Dscal(nquad0,0.5*w1[i], &tmp[0]+i*nquad0,1);      
+                }
+                break;
+            }
+
+            // Inner product with respect to 'a' direction 
+            Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
+                        base0.get(),nquad0,0.0,&tmp1[0],nquad1);
+                
+            // Inner product with respect to 'b' direction 
+            for(mode=i=0; i < order0; ++i)
+            {
+                Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
+                            nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
+                            &outarray[0] + mode,1);
+                mode += order1-i;
+            }
+            
+            // fix for modified basis by splitting top vertex mode
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                outarray[1] += Blas::Ddot(nquad1,base1.get()+nquad1,1,
+                                          &tmp1[0]+nquad1,1);
+            }
         }
 
         void StdTriExp::IProductWRTDerivBase(const int dir, 
@@ -163,118 +224,6 @@ namespace Nektar
             }             
         }
 
-        void StdTriExp:: IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
-            const Array<OneD, const NekDouble>& base1, 
-            const Array<OneD, const NekDouble>& inarray, 
-            Array<OneD, NekDouble> & outarray)
-        {
-            int    i,mode;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    order0 = m_base[0]->GetNumModes();
-            int    order1 = m_base[1]->GetNumModes();
-
-            Array<OneD, NekDouble> tmp(nquad0*nquad1);
-            Array<OneD, NekDouble> tmp1(order0*nquad1);
-//            NekDouble* tmp = MemoryManager<NekDouble>::RawAllocate(nquad0*nquad1);
-//            NekDouble* tmp1 = MemoryManager<NekDouble>::RawAllocate(order0*nquad1);
-            
-            Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
-            Array<OneD, const NekDouble> w1 = m_base[1]->GetW();
-            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
-
-            ASSERTL2((m_base[1]->GetBasisType() == LibUtilities::eOrtho_B)||
-                (m_base[1]->GetBasisType() == LibUtilities::eModified_B), 
-                "Basis[1] is not of general tensor type");
-
-//            Does Not Compile
-//             ASSERTL2((m_base[0]->GetAlpha() == 0.0)&&(m_base[1]->GetAlpha() > 1.0),
-//                      "Basis[0] has illegal alpha weight");
-//             ASSERTL2((m_base[1]->GetBeta() == 0.0)&&(m_base[1]->GetBeta() == 0.0),
-//                      "Basis[1] has non-zero beta weight");
-
-            // Note cannot use outarray as tmp space since dimensions are not always
-            // guarenteed to be sufficient 
-
-            // multiply by integration constants 
-            for(i = 0; i < nquad1; ++i)
-            {
-                Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
-                    w0.get(),1, &tmp[0]+i*nquad0,1);
-            }
-
-            switch(m_base[1]->GetPointsType())
-            {
-            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
-                for(i = 0; i < nquad1; ++i)
-                {
-                   Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], &tmp[0]+i*nquad0,1);
-                }
-                break;
-            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Blas::Dscal(nquad0,0.5*w1[i], &tmp[0]+i*nquad0,1);      
-                }
-                break;
-            }
-
-            #ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-            bool useBlas = true;
-            #else
-            bool useBlas = false;
-            #endif
-            
-            if( useBlas )
-            {
-                // Inner product with respect to 'a' direction 
-                Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
-                            base0.get(),nquad0,0.0,&tmp1[0],nquad1);
-                
-                // Inner product with respect to 'b' direction 
-                for(mode=i=0; i < order0; ++i)
-                {
-                    Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
-                                nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
-                                &outarray[0] + mode,1);
-                    mode += order1-i;
-                }
-            }
-            else
-            {
-                
-                // Inner product with respect to 'a' direction 
-                DNekMat in(nquad0,nquad1,tmp,eWrapper);
-                //DNekMat B0(nquad0,order0,base0,eWrapper);
-                NekMatrix<const NekDouble> B0(nquad0, order0, base0, eWrapper);
-                DNekMat out(nquad1,order0,tmp1,eWrapper);
-                        
-                out = Transpose(in)*B0;
-
-                // Inner product with respect to 'b' direction 
-                for(mode=i=0; i < order0; ++i)
-                {
-                    NekVector<const NekDouble> in2(nquad1,tmp1 + i*nquad1,eWrapper);
-                    NekVector<NekDouble> out2(order1-i,outarray + mode,eWrapper);
-                    //DNekMat B1(nquad1,order1-i,base1 + mode*nquad1,eWrapper);
-                    NekMatrix<const NekDouble> B1(nquad1, order1-i, base1 + mode*nquad1, eWrapper);
-                    
-                    out2 = Transpose(B1)*in2;
-                    mode += order1-i;
-                }
-            }
-            
-            // fix for modified basis by splitting top vertex mode
-            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-            {
-                outarray[1] += Blas::Ddot(nquad1,base1.get()+nquad1,1,
-                    &tmp1[0]+nquad1,1);
-            }
-            
-//            MemoryManager<NekDouble>::RawDeallocate(tmp1, order0*nquad1);
-//            MemoryManager<NekDouble>::RawDeallocate(tmp, nquad0*nquad1);
-        }
-
         void StdTriExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
             int    i,m;
@@ -287,7 +236,7 @@ namespace Nektar
             int   mode0;
 
             ASSERTL2(mode >= m_ncoeffs, 
-                "calling argument mode is larger than total expansion order");
+                     "calling argument mode is larger than total expansion order");
 
             m= order1;
             for(i = 0; i < order0; ++i, m+=order1-i)
@@ -309,14 +258,14 @@ namespace Nektar
                 for(i = 0; i < nquad1; ++i)
                 {
                     Vmath::Vcopy(nquad0,(NekDouble *)(base0.get()+mode0*nquad0),
-                        1,&outarray[0]+i*nquad0,1);
+                                 1,&outarray[0]+i*nquad0,1);
                 }
             }
 
             for(i = 0; i < nquad0; ++i)
             {
                 Vmath::Vmul(nquad1,(NekDouble *)(base1.get() + mode*nquad1),1,&outarray[0]+i,
-                    nquad0,&outarray[0]+i,nquad0);
+                            nquad0,&outarray[0]+i,nquad0);
             }
         }       
         
@@ -429,9 +378,9 @@ namespace Nektar
         //-----------------------------
 
         void StdTriExp::PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
-            Array<OneD, NekDouble> &out_d0, 
-            Array<OneD, NekDouble> &out_d1,
-            Array<OneD, NekDouble> &out_d2)
+                                  Array<OneD, NekDouble> &out_d0, 
+                                  Array<OneD, NekDouble> &out_d1,
+                                  Array<OneD, NekDouble> &out_d2)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -524,7 +473,7 @@ namespace Nektar
         ///////////////////////////////
 
         void StdTriExp::BwdTrans(const Array<OneD, const NekDouble>& inarray, 
-            Array<OneD, NekDouble> &outarray)
+                                 Array<OneD, NekDouble> &outarray)
         {
             int           i,mode;
             int           nquad0 = m_base[0]->GetNumPoints();
@@ -537,8 +486,8 @@ namespace Nektar
 
 
             ASSERTL2((m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)||
-                (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
-                "Basis[1] is not of general tensor type");
+                     (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
+                     "Basis[1] is not of general tensor type");
 
 #ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
 
@@ -553,7 +502,7 @@ namespace Nektar
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 Blas::Daxpy(nquad1,inarray[1],base1.get()+nquad1,1,
-                    &tmp[0]+nquad1,1);
+                            &tmp[0]+nquad1,1);
             }
 
             Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0.get(),nquad0,
@@ -575,7 +524,7 @@ namespace Nektar
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 Blas::Daxpy(nquad1,inarray[1],base1.get()+nquad1,1,
-                    &tmp[0]+nquad1,1);
+                            &tmp[0]+nquad1,1);
             }
 
             NekMatrix<const double> in(nquad1,order0,tmp,eWrapper);
@@ -589,7 +538,7 @@ namespace Nektar
         }
 
         void StdTriExp::FwdTrans(const Array<OneD, const NekDouble>& inarray, 
-            Array<OneD, NekDouble> &outarray)
+                                 Array<OneD, NekDouble> &outarray)
         {
 
             IProductWRTBase(inarray,outarray);
@@ -611,7 +560,7 @@ namespace Nektar
 
             // set up local coordinate system 
             if((fabs(coords[0]+1.0) < NekConstants::kEvaluateTol)
-                &&(fabs(coords[1]-1.0) < NekConstants::kEvaluateTol))
+               &&(fabs(coords[1]-1.0) < NekConstants::kEvaluateTol))
             {
                 coll[0] = 0.0;
                 coll[1] = 1.0;
@@ -622,7 +571,7 @@ namespace Nektar
                 coll[1] = coords[1]; 
             }
 
-            return  StdExpansion2D::PhysEvaluate2D(coll); 
+            return  StdExpansion2D::PhysEvaluate(coll); 
         }
 
         void StdTriExp::GetBoundaryMap(Array<OneD, unsigned int>& outarray)
@@ -700,26 +649,26 @@ namespace Nektar
             
             int localDOF;
             switch(localVertexId)
-                {
-                case 0:
-                    { 
-                        localDOF = 0;    
-                    }
-                    break;
-                case 1:
-                    {   
-                        localDOF = m_base[1]->GetNumModes();                 
-                    }
-                    break;
-                case 2:
-                    { 
-                        localDOF = 1;    
-                    }
-                    break;
-                default:
-                    ASSERTL0(false,"eid must be between 0 and 2");
-                    break;
+            {
+            case 0:
+                { 
+                    localDOF = 0;    
                 }
+                break;
+            case 1:
+                {   
+                    localDOF = m_base[1]->GetNumModes();                 
+                }
+                break;
+            case 2:
+                { 
+                    localDOF = 1;    
+                }
+                break;
+            default:
+                ASSERTL0(false,"eid must be between 0 and 2");
+                break;
+            }
 
             return localDOF;
         }
@@ -872,10 +821,10 @@ namespace Nektar
         }
         
         void  StdTriExp::MapTo(const int edge_ncoeffs, 
-            const LibUtilities::BasisType Btype,
-            const int eid, 
-            const EdgeOrientation eorient, 
-            StdExpMap &Map)
+                               const LibUtilities::BasisType Btype,
+                               const int eid, 
+                               const EdgeOrientation eorient, 
+                               StdExpMap &Map)
         {
 
             int i;
@@ -885,9 +834,9 @@ namespace Nektar
 
             ASSERTL2(eid>=0&&eid<=2,"eid must be between 0 and 2");
             ASSERTL2(Btype == LibUtilities::eModified_A,"Mapping only set up "
-                "for Modified_A edges");
+                     "for Modified_A edges");
             ASSERTL2(Btype == m_base[0]->GetBasisType(),
-                "Expansion type of edge and StdQuadExp are different");
+                     "Expansion type of edge and StdQuadExp are different");
 
             // make sure haved correct memory storage
             if(edge_ncoeffs != Map.GetLen())
@@ -947,10 +896,10 @@ namespace Nektar
         // currently same as MapTo 
 
         void StdTriExp::MapTo_ModalFormat(const int edge_ncoeffs, 
-            const LibUtilities::BasisType Btype, 
-            const int eid, 
-            const EdgeOrientation eorient,
-            StdExpMap &Map)
+                                          const LibUtilities::BasisType Btype, 
+                                          const int eid, 
+                                          const EdgeOrientation eorient,
+                                          StdExpMap &Map)
         {        
             MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
         }
@@ -1178,7 +1127,7 @@ namespace Nektar
         }
 
         void StdTriExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
-            Array<OneD, NekDouble> &coords_1)
+                                  Array<OneD, NekDouble> &coords_1)
         {
             Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
             Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
@@ -1201,152 +1150,155 @@ namespace Nektar
 
 
 /** 
-* $Log: StdTriExp.cpp,v $
-* Revision 1.37  2008/06/05 20:13:12  ehan
-* Removed undefined function GetAlpha() in the ASSERTL2().
-*
-* Revision 1.36  2008/05/30 00:33:49  delisi
-* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
-*
-* Revision 1.35  2008/05/29 21:36:25  pvos
-* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
-*
-* Revision 1.34  2008/05/07 16:04:57  pvos
-* Mapping + Manager updates
-*
-* Revision 1.33  2008/04/22 05:22:15  bnelson
-* Speed enhancements.
-*
-* Revision 1.32  2008/04/06 06:04:15  bnelson
-* Changed ConstArray to Array<const>
-*
-* Revision 1.31  2008/04/03 16:12:11  pvos
-* updates for NEKTAR_USING_DIRECT_BLAS_CALLS
-*
-* Revision 1.30  2008/04/02 22:18:10  pvos
-* Update for 2D local to global mapping
-*
-* Revision 1.29  2008/03/12 15:25:09  pvos
-* Clean up of the code
-*
-* Revision 1.28  2008/01/23 09:09:46  sherwin
-* Updates for Hybrized DG
-*
-* Revision 1.27  2007/12/17 13:03:51  sherwin
-* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
-*
-* Revision 1.26  2007/12/06 22:44:47  pvos
-* 2D Helmholtz solver updates
-*
-* Revision 1.25  2007/11/20 10:16:23  pvos
-* IProductWRTDerivBase routine fix
-*
-* Revision 1.24  2007/11/08 16:55:14  pvos
-* Updates towards 2D helmholtz solver
-*
-* Revision 1.23  2007/10/15 20:40:24  ehan
-* Make changes of column major matrix
-*
-* Revision 1.22  2007/07/20 02:16:55  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.21  2007/07/11 13:35:18  kirby
-* *** empty log message ***
-*
-* Revision 1.20  2007/07/10 21:05:18  kirby
-* even more fixes
-*
-* Revision 1.19  2007/07/09 15:19:15  sherwin
-* Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
-*
-* Revision 1.18  2007/06/07 15:54:19  pvos
-* Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
-* Also made corrections to various ASSERTL2 calls
-*
-* Revision 1.17  2007/05/31 19:13:12  pvos
-* Updated NodalTriExp + LocalRegions/Project2D + some other modifications
-*
-* Revision 1.16  2007/05/22 02:01:50  bnelson
-* Changed Array::size to Array::num_elements.
-*
-* Fixed some compiler errors in assertions.
-*
-* Revision 1.15  2007/05/15 05:18:24  bnelson
-* Updated to use the new Array object.
-*
-* Revision 1.14  2007/04/10 14:00:46  sherwin
-* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
-*
-* Revision 1.13  2007/04/06 08:44:43  sherwin
-* Update to make 2D regions work at StdRegions level
-*
-* Revision 1.12  2007/04/05 15:20:11  sherwin
-* Updated 2D stuff to comply with SharedArray philosophy
-*
-* Revision 1.11  2007/03/20 16:58:43  sherwin
-* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
-*
-* Revision 1.10  2007/01/17 16:36:58  pvos
-* updating doxygen documentation
-*
-* Revision 1.9  2007/01/17 16:05:41  pvos
-* updated doxygen documentation
-*
-* Revision 1.8  2006/12/10 19:00:54  sherwin
-* Modifications to handle nodal expansions
-*
-* Revision 1.7  2006/08/05 19:03:48  sherwin
-* Update to make the multiregions 2D expansion in connected regions work
-*
-* Revision 1.6  2006/07/02 17:16:19  sherwin
-*
-* Modifications to make MultiRegions work for a connected domain in 2D (Tris)
-*
-* Revision 1.5  2006/06/13 18:05:02  sherwin
-* Modifications to make MultiRegions demo ProjectLoc2D execute properly.
-*
-* Revision 1.4  2006/06/06 15:25:21  jfrazier
-* Removed unreferenced variables and replaced ASSERTL0(false, ....) with
-* NEKERROR.
-*
-* Revision 1.3  2006/06/02 18:48:40  sherwin
-* Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
-*
-* Revision 1.2  2006/06/01 14:13:37  kirby
-* *** empty log message ***
-*
-* Revision 1.1  2006/05/04 18:58:33  kirby
-* *** empty log message ***
-*
-* Revision 1.50  2006/04/25 20:23:34  jfrazier
-* Various fixes to correct bugs, calls to ASSERT, etc.
-*
-* Revision 1.49  2006/04/01 21:59:27  sherwin
-* Sorted new definition of ASSERT
-*
-* Revision 1.48  2006/03/21 09:21:32  sherwin
-* Introduced NekMemoryManager
-*
-* Revision 1.47  2006/03/12 14:20:44  sherwin
-*
-* First compiling version of SpatialDomains and associated modifications
-*
-* Revision 1.46  2006/03/06 12:39:59  sherwin
-*
-* Added NekConstants class for all constants in this library
-*
-* Revision 1.45  2006/03/03 23:04:54  sherwin
-*
-* Corrected Mistake in StdBasis.cpp to do with eModified_B
-*
-* Revision 1.44  2006/03/01 08:25:05  sherwin
-*
-* First compiling version of StdRegions
-*
-* Revision 1.43  2006/02/26 23:37:30  sherwin
-*
-* Updates and compiling checks upto StdExpansions1D
-*
-**/ 
+ * $Log: StdTriExp.cpp,v $
+ * Revision 1.38  2008/07/02 14:08:56  pvos
+ * Implementation of HelmholtzMatOp and LapMatOp on shape level
+ *
+ * Revision 1.37  2008/06/05 20:13:12  ehan
+ * Removed undefined function GetAlpha() in the ASSERTL2().
+ *
+ * Revision 1.36  2008/05/30 00:33:49  delisi
+ * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+ *
+ * Revision 1.35  2008/05/29 21:36:25  pvos
+ * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+ *
+ * Revision 1.34  2008/05/07 16:04:57  pvos
+ * Mapping + Manager updates
+ *
+ * Revision 1.33  2008/04/22 05:22:15  bnelson
+ * Speed enhancements.
+ *
+ * Revision 1.32  2008/04/06 06:04:15  bnelson
+ * Changed ConstArray to Array<const>
+ *
+ * Revision 1.31  2008/04/03 16:12:11  pvos
+ * updates for NEKTAR_USING_DIRECT_BLAS_CALLS
+ *
+ * Revision 1.30  2008/04/02 22:18:10  pvos
+ * Update for 2D local to global mapping
+ *
+ * Revision 1.29  2008/03/12 15:25:09  pvos
+ * Clean up of the code
+ *
+ * Revision 1.28  2008/01/23 09:09:46  sherwin
+ * Updates for Hybrized DG
+ *
+ * Revision 1.27  2007/12/17 13:03:51  sherwin
+ * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+ *
+ * Revision 1.26  2007/12/06 22:44:47  pvos
+ * 2D Helmholtz solver updates
+ *
+ * Revision 1.25  2007/11/20 10:16:23  pvos
+ * IProductWRTDerivBase routine fix
+ *
+ * Revision 1.24  2007/11/08 16:55:14  pvos
+ * Updates towards 2D helmholtz solver
+ *
+ * Revision 1.23  2007/10/15 20:40:24  ehan
+ * Make changes of column major matrix
+ *
+ * Revision 1.22  2007/07/20 02:16:55  bnelson
+ * Replaced boost::shared_ptr with Nektar::ptr
+ *
+ * Revision 1.21  2007/07/11 13:35:18  kirby
+ * *** empty log message ***
+ *
+ * Revision 1.20  2007/07/10 21:05:18  kirby
+ * even more fixes
+ *
+ * Revision 1.19  2007/07/09 15:19:15  sherwin
+ * Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
+ *
+ * Revision 1.18  2007/06/07 15:54:19  pvos
+ * Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
+ * Also made corrections to various ASSERTL2 calls
+ *
+ * Revision 1.17  2007/05/31 19:13:12  pvos
+ * Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+ *
+ * Revision 1.16  2007/05/22 02:01:50  bnelson
+ * Changed Array::size to Array::num_elements.
+ *
+ * Fixed some compiler errors in assertions.
+ *
+ * Revision 1.15  2007/05/15 05:18:24  bnelson
+ * Updated to use the new Array object.
+ *
+ * Revision 1.14  2007/04/10 14:00:46  sherwin
+ * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+ *
+ * Revision 1.13  2007/04/06 08:44:43  sherwin
+ * Update to make 2D regions work at StdRegions level
+ *
+ * Revision 1.12  2007/04/05 15:20:11  sherwin
+ * Updated 2D stuff to comply with SharedArray philosophy
+ *
+ * Revision 1.11  2007/03/20 16:58:43  sherwin
+ * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
+ *
+ * Revision 1.10  2007/01/17 16:36:58  pvos
+ * updating doxygen documentation
+ *
+ * Revision 1.9  2007/01/17 16:05:41  pvos
+ * updated doxygen documentation
+ *
+ * Revision 1.8  2006/12/10 19:00:54  sherwin
+ * Modifications to handle nodal expansions
+ *
+ * Revision 1.7  2006/08/05 19:03:48  sherwin
+ * Update to make the multiregions 2D expansion in connected regions work
+ *
+ * Revision 1.6  2006/07/02 17:16:19  sherwin
+ *
+ * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
+ *
+ * Revision 1.5  2006/06/13 18:05:02  sherwin
+ * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
+ *
+ * Revision 1.4  2006/06/06 15:25:21  jfrazier
+ * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
+ * NEKERROR.
+ *
+ * Revision 1.3  2006/06/02 18:48:40  sherwin
+ * Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
+ *
+ * Revision 1.2  2006/06/01 14:13:37  kirby
+ * *** empty log message ***
+ *
+ * Revision 1.1  2006/05/04 18:58:33  kirby
+ * *** empty log message ***
+ *
+ * Revision 1.50  2006/04/25 20:23:34  jfrazier
+ * Various fixes to correct bugs, calls to ASSERT, etc.
+ *
+ * Revision 1.49  2006/04/01 21:59:27  sherwin
+ * Sorted new definition of ASSERT
+ *
+ * Revision 1.48  2006/03/21 09:21:32  sherwin
+ * Introduced NekMemoryManager
+ *
+ * Revision 1.47  2006/03/12 14:20:44  sherwin
+ *
+ * First compiling version of SpatialDomains and associated modifications
+ *
+ * Revision 1.46  2006/03/06 12:39:59  sherwin
+ *
+ * Added NekConstants class for all constants in this library
+ *
+ * Revision 1.45  2006/03/03 23:04:54  sherwin
+ *
+ * Corrected Mistake in StdBasis.cpp to do with eModified_B
+ *
+ * Revision 1.44  2006/03/01 08:25:05  sherwin
+ *
+ * First compiling version of StdRegions
+ *
+ * Revision 1.43  2006/02/26 23:37:30  sherwin
+ *
+ * Updates and compiling checks upto StdExpansions1D
+ *
+ **/ 
 
 

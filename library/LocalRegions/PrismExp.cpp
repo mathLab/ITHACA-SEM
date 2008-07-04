@@ -37,19 +37,19 @@
 
 namespace Nektar
 {
-  namespace LocalRegions 
-  {
+    namespace LocalRegions 
+    {
 
-	     PrismExp::PrismExp(const LibUtilities::BasisKey &Ba,
-                            const LibUtilities::BasisKey &Bb,
-                            const LibUtilities::BasisKey &Bc,
-                            const SpatialDomains::PrismGeomSharedPtr &geom):
+        PrismExp::PrismExp(const LibUtilities::BasisKey &Ba,
+                           const LibUtilities::BasisKey &Bb,
+                           const LibUtilities::BasisKey &Bc,
+                           const SpatialDomains::PrismGeomSharedPtr &geom):
             StdRegions::StdPrismExp(Ba,Bb,Bc),
             m_geom(geom),
             m_metricinfo(),
             m_matrixManager(std::string("PrismExpMatrix")),
             m_staticCondMatrixManager(std::string("PrismExpStaticCondMatrix"))
-         {
+        {
 
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
@@ -58,16 +58,16 @@ namespace Nektar
                                                 boost::bind(&PrismExp::CreateMatrix, this, _1));
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
                                                                     StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&PrismExp::CreateStaticCondMatrix, this, _1));
+                                                          boost::bind(&PrismExp::CreateStaticCondMatrix, this, _1));
             }
 
             GenMetricInfo();
-         }
+        }
 
-	    PrismExp::PrismExp(const LibUtilities::BasisKey &Ba,
+        PrismExp::PrismExp(const LibUtilities::BasisKey &Ba,
                            const LibUtilities::BasisKey &Bb,
-		                   const LibUtilities::BasisKey &Bc
-		      ):
+                           const LibUtilities::BasisKey &Bc
+                           ):
             StdRegions::StdPrismExp(Ba,Bb,Bc),
             m_geom(),
             m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
@@ -75,7 +75,7 @@ namespace Nektar
             m_staticCondMatrixManager(std::string("PrismExpStaticCondMatrix"))
         {
 
-           for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
+            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
                 m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
                                                           StdRegions::eNoExpansionType,*this),
@@ -126,13 +126,13 @@ namespace Nektar
 
                 LibUtilities::BasisSharedPtr CBasis0;
                 LibUtilities::BasisSharedPtr CBasis1;
-	            LibUtilities::BasisSharedPtr CBasis2;
+                LibUtilities::BasisSharedPtr CBasis2;
                 CBasis0 = m_geom->GetBasis(0,0); // assumes all goembasis are same
                 CBasis1 = m_geom->GetBasis(0,1);
-	            CBasis2 = m_geom->GetBasis(0,2);
+                CBasis2 = m_geom->GetBasis(0,2);
                 int Cnq0 = CBasis0->GetNumPoints();
                 int Cnq1 = CBasis1->GetNumPoints();
-		        int Cnq2 = CBasis2->GetNumPoints();
+                int Cnq2 = CBasis2->GetNumPoints();
 
                 Array<OneD, const NekDouble> ojac = Xgfac->GetJac();
                 Array<TwoD, const NekDouble> ogmat = Xgfac->GetGmat();
@@ -154,7 +154,7 @@ namespace Nektar
                     // interpolate Jacobian        
                     Interp3D(CBasis0->GetBasisKey(),
                              CBasis1->GetBasisKey(),
-		                     CBasis2->GetBasisKey(),
+                             CBasis2->GetBasisKey(),
                              &ojac[0],
                              m_base[0]->GetBasisKey(),
                              m_base[1]->GetBasisKey(),
@@ -216,31 +216,31 @@ namespace Nektar
                 }
             }
         }
-	 //----------------------------
+        //----------------------------
         // Integration Methods
         //----------------------------
 
-       /** \brief Integrate the physical point list \a inarray over prismatic region and return the value
+        /** \brief Integrate the physical point list \a inarray over prismatic region and return the value
 
-       Inputs:\n
+            Inputs:\n
 
-      - \a inarray: definition of function to be returned at quadrature point of expansion.
+            - \a inarray: definition of function to be returned at quadrature point of expansion.
 
-       Outputs:\n
+            Outputs:\n
 
-      - returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\bar \eta_1, \xi_2, \xi_3) J[i,j,k] d \bar \eta_1 d \xi_2 d \xi_3 \f$ \n
-        \f$ = \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1} u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0})w_{i}^{0,0} w_{j}^{0,0} \hat w_{k}^{1,0}    \f$ \n
-        where \f$ inarray[i,j, k] = u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0}) \f$, \n
-        \f$\hat w_{i}^{1,0} = \frac {w_{j}^{1,0}} {2} \f$ \n
-        and \f$ J[i,j,k] \f$ is the  Jacobian evaluated at the quadrature point.
+            - returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\bar \eta_1, \xi_2, \xi_3) J[i,j,k] d \bar \eta_1 d \xi_2 d \xi_3 \f$ \n
+            \f$ = \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1} u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0})w_{i}^{0,0} w_{j}^{0,0} \hat w_{k}^{1,0}    \f$ \n
+            where \f$ inarray[i,j, k] = u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0}) \f$, \n
+            \f$\hat w_{i}^{1,0} = \frac {w_{j}^{1,0}} {2} \f$ \n
+            and \f$ J[i,j,k] \f$ is the  Jacobian evaluated at the quadrature point.
 
         */
 
-	    NekDouble PrismExp::Integral(const Array<OneD, const NekDouble> &inarray)
+        NekDouble PrismExp::Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-	        int    nquad2 = m_base[2]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             NekDouble retrunVal;
             Array<OneD,NekDouble> tmp   = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
@@ -261,39 +261,15 @@ namespace Nektar
             return retrunVal; 
         }
 
-
-         /**
-            \brief Calculate the inner product of inarray with respect to
-            the basis B=base0*base1*base2 and put into outarray:
-              
-           \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
-               \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
-               \psi_{p}^{a} (\bar \eta_{1i}) \psi_{q}^{a} (\xi_{2j}) \psi_{pr}^{b} (\xi_{3k})
-                w_i w_j w_k u(\bar \eta_{1,i} \xi_{2,j} \xi_{3,k})      
-                J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\bar \eta_{1,i})
-                \sum_{j=0}^{nq_1} \psi_{q}^a(\xi_{2,j}) \sum_{k=0}^{nq_2} \psi_{pr}^b u(\bar \eta_{1i},\xi_{2j},\xi_{3k})
-                J_{i,j,k} \end{array} \f$ \n
-            
-            where
-            
-            \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\bar \eta_1) \psi_{q}^a (\xi_2) \psi_{pr}^b (\xi_3) \f$ \n
-            
-            which can be implemented as \n
-            \f$f_{pr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pr}^b u(\bar \eta_{1i},\xi_{2j},\xi_{3k})
-            J_{i,j,k} = {\bf B_3 U}   \f$ \n
-        \f$ g_{q} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{q}^a (\xi_{2j}) f_{pr} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
-        \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{q} (\xi_{3k})  = {\bf B_1 G} \f$
-
-        **/
-	    void PrismExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-                                       const Array<OneD, const NekDouble> &base1, 
-				                       const Array<OneD, const NekDouble> &base2, 
-                                       const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,NekDouble> &outarray)
+        void PrismExp::IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                       const Array<OneD, const NekDouble>& base1, 
+                                       const Array<OneD, const NekDouble>& base2, 
+                                       const Array<OneD, const NekDouble>& inarray, 
+                                       Array<OneD, NekDouble> & outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-	        int    nquad2 = m_base[2]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
 
@@ -309,41 +285,20 @@ namespace Nektar
 
             StdPrismExp::IProductWRTBase(base0,base1,base2,tmp,outarray);
         }
-        
-
-        /** \brief  Inner product of \a inarray over region with respect to the 
-        expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
-    
-        Wrapper call to StdPrismExp::IProductWRTBase
-    
-        Input:\n
-    
-        - \a inarray: array of function evaluated at the physical collocation points
-    
-        Output:\n
-    
-        - \a outarray: array of inner product with respect to each basis over region
-
-        */
-	    void PrismExp::IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
-        {
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
-        }
-
 
         /** \brief Forward transform from physical quadrature space
-        stored in \a inarray and evaluate the expansion coefficients and
-        store in \a (this)->m_coeffs
+            stored in \a inarray and evaluate the expansion coefficients and
+            store in \a (this)->m_coeffs
 
-        Inputs:\n
+            Inputs:\n
 
-        - \a inarray: array of physical quadrature points to be transformed
+            - \a inarray: array of physical quadrature points to be transformed
 
-        Outputs:\n
+            Outputs:\n
 
-        - (this)->_coeffs: updated array of expansion coefficients.            
+            - (this)->_coeffs: updated array of expansion coefficients.            
         */  
-	    void PrismExp::FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray)
+        void PrismExp::FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
             {
@@ -366,7 +321,7 @@ namespace Nektar
             }
         }
 
-	  ///////////////////////////////
+        ///////////////////////////////
         /// Differentiation Methods
         ///////////////////////////////
         
@@ -437,9 +392,9 @@ namespace Nektar
         }
 
 
-       void PrismExp::GetCoords(Array<OneD,NekDouble> &coords_0,
-                                Array<OneD,NekDouble> &coords_1,
-                                Array<OneD,NekDouble> &coords_2)
+        void PrismExp::GetCoords(Array<OneD,NekDouble> &coords_0,
+                                 Array<OneD,NekDouble> &coords_1,
+                                 Array<OneD,NekDouble> &coords_2)
         {
             LibUtilities::BasisSharedPtr CBasis0;
             LibUtilities::BasisSharedPtr CBasis1;
@@ -449,7 +404,7 @@ namespace Nektar
             ASSERTL0(m_geom, "m_geom not define");
             
             // get physical points defined in Geom
-//             m_geom->FillGeom();  //TODO: implement
+            //             m_geom->FillGeom();  //TODO: implement
             
             switch(m_geom->GetCoordim())
             {
@@ -520,9 +475,9 @@ namespace Nektar
         }
 
 
-   	    // get the coordinates "coords" at the local coordinates "Lcoords"
+        // get the coordinates "coords" at the local coordinates "Lcoords"
         void PrismExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
-                              Array<OneD,NekDouble> &coords)
+                                Array<OneD,NekDouble> &coords)
         {
             int  i;
 
@@ -531,7 +486,7 @@ namespace Nektar
                      Lcoords[2] <= -1.0 && Lcoords[2] >= 1.0,
                      "Local coordinates are not in region [-1,1]");
 
-           // m_geom->FillGeom(); // TODO: implement FillGeom()
+            // m_geom->FillGeom(); // TODO: implement FillGeom()
 
             for(i = 0; i < m_geom->GetCoordDim(); ++i)
             {
@@ -539,7 +494,7 @@ namespace Nektar
             }
         }
 
-	    void PrismExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void PrismExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
             if(format==eTecplot)
             {
@@ -596,30 +551,30 @@ namespace Nektar
         }
 	
 
-	    NekDouble PrismExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
+        NekDouble PrismExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
 
             ASSERTL0(m_geom,"m_geom not defined");
 	
             //TODO: check GetLocCoords()
-           // m_geom->GetLocCoords(coord, Lcoord);
+            // m_geom->GetLocCoords(coord, Lcoord);
 
             return StdPrismExp::PhysEvaluate(Lcoord);
         }
 
-      DNekMatSharedPtr PrismExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
-      {
-          LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-          LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-          LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-          StdRegions::StdPrismExpSharedPtr tmp = MemoryManager<StdPrismExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
+        DNekMatSharedPtr PrismExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
+            LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
+            LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+            StdRegions::StdPrismExpSharedPtr tmp = MemoryManager<StdPrismExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
           
-          return tmp->GetStdMatrix(mkey); 
-      }
+            return tmp->GetStdMatrix(mkey); 
+        }
 
 
-	    DNekScalMatSharedPtr PrismExp::CreateMatrix(const MatrixKey &mkey)
+        DNekScalMatSharedPtr PrismExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
 
@@ -671,8 +626,8 @@ namespace Nektar
                     }
                     else
                     {
-                      // TODO: make sure 3D Laplacian is set up for Hex in three-dimensional in Standard Region.
-                      // ASSERTL1(m_geom->GetCoordDim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
+                        // TODO: make sure 3D Laplacian is set up for Hex in three-dimensional in Standard Region.
+                        // ASSERTL1(m_geom->GetCoordDim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
                         ASSERTL1(m_geom->GetCoordDim() == 3,"Standard Region Laplacian is only set up for Hex in three-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
                                            mkey.GetExpansionType(), *this);
@@ -694,8 +649,8 @@ namespace Nektar
                         DNekMatSharedPtr lap = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
 
                         (*lap) = (gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0]) * (*lap00) +
-                                 (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
-                                 (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
+                            (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
+                            (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac, lap);
                     }
@@ -731,7 +686,7 @@ namespace Nektar
 
 
 
-	    DNekScalBlkMatSharedPtr PrismExp::CreateStaticCondMatrix(const MatrixKey &mkey)
+        DNekScalBlkMatSharedPtr PrismExp::CreateStaticCondMatrix(const MatrixKey &mkey)
         {
             DNekScalBlkMatSharedPtr returnval;
 
@@ -844,11 +799,14 @@ namespace Nektar
         }
 
 
-  }//end of namespace
+    }//end of namespace
 }//end of namespace
 
 /** 
  *    $Log: PrismExp.cpp,v $
+ *    Revision 1.12  2008/06/14 01:20:31  ehan
+ *    Clean up the codes
+ *
  *    Revision 1.11  2008/06/06 23:24:24  ehan
  *    Added doxygen documentation
  *

@@ -73,15 +73,15 @@ namespace Nektar
 
             void NodalToModal();
             void NodalToModal(const Array<OneD, const NekDouble>& inarray, 
-                Array<OneD, NekDouble> &outarray);
+                              Array<OneD, NekDouble> &outarray);
 
             void NodalToModalTranspose();
             void NodalToModalTranspose(const Array<OneD, const NekDouble>& inarray, 
-                Array<OneD, NekDouble> &outarray);
+                                       Array<OneD, NekDouble> &outarray);
 
             void ModalToNodal();
             void ModalToNodal(const Array<OneD, const NekDouble>& inarray, 
-                Array<OneD, NekDouble> &outarray);
+                              Array<OneD, NekDouble> &outarray);
 
             void GetNodalPoints(Array<OneD, const NekDouble> &x, 
                                 Array<OneD, const NekDouble> &y)
@@ -92,9 +92,12 @@ namespace Nektar
             //////////////////////////////
             // Integration Methods
             //////////////////////////////
-
             void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                 Array<OneD, NekDouble> &outarray);
+                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),inarray,
+                                outarray);
+            }
 
             void IProductWRTDerivBase(const int dir, 
                                       const Array<OneD, const NekDouble>& inarray, 
@@ -158,7 +161,13 @@ namespace Nektar
             void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
                                  const Array<OneD, const NekDouble>& base1,
                                  const Array<OneD, const NekDouble>& inarray, 
-                                 Array<OneD, NekDouble> &outarray);
+                                 Array<OneD, NekDouble> &outarray)
+            {
+                // Take inner product with respect to Orthgonal basis using
+                // StdTri routine
+                StdTriExp::IProductWRTBase(base0,base1,inarray,outarray);
+                NodalToModalTranspose(outarray,outarray);     
+            }
                         
             DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
             
@@ -272,7 +281,7 @@ namespace Nektar
             }
  
             virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                      Array<OneD, unsigned int> &maparray)
+                                              Array<OneD, unsigned int> &maparray)
             {
                 GetEdgeInteriorMap(eid,edgeOrient,maparray);
             }
@@ -315,90 +324,93 @@ namespace Nektar
 #endif //STDNODALTRIEXP_H
 
 /**
-* $Log: StdNodalTriExp.h,v $
-* Revision 1.22  2008/05/30 00:33:49  delisi
-* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
-*
-* Revision 1.21  2008/05/29 21:36:25  pvos
-* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
-*
-* Revision 1.20  2008/05/07 16:04:57  pvos
-* Mapping + Manager updates
-*
-* Revision 1.19  2008/04/06 06:04:15  bnelson
-* Changed ConstArray to Array<const>
-*
-* Revision 1.18  2008/04/02 22:18:10  pvos
-* Update for 2D local to global mapping
-*
-* Revision 1.17  2008/03/18 14:15:45  pvos
-* Update for nodal triangular helmholtz solver
-*
-* Revision 1.16  2007/12/17 13:03:51  sherwin
-* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
-*
-* Revision 1.15  2007/10/03 11:37:51  sherwin
-* Updates relating to static condensation implementation
-*
-* Revision 1.14  2007/07/22 23:04:27  bnelson
-* Backed out Nektar::ptr.
-*
-* Revision 1.13  2007/07/20 02:16:54  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.12  2007/07/12 12:55:16  sherwin
-* Simplified Matrix Generation
-*
-* Revision 1.11  2007/07/11 06:35:24  sherwin
-* Update after manager reshuffle
-*
-* Revision 1.10  2007/05/31 19:13:12  pvos
-* Updated NodalTriExp + LocalRegions/Project2D + some other modifications
-*
-* Revision 1.9  2007/05/15 05:18:24  bnelson
-* Updated to use the new Array object.
-*
-* Revision 1.8  2007/04/18 09:44:01  sherwin
-* Working version for StdNodalTri. Removed lapack.cpp from compile.
-*
-* Revision 1.7  2007/04/10 14:00:45  sherwin
-* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
-*
-* Revision 1.6  2007/01/17 16:05:40  pvos
-* updated doxygen documentation
-*
-* Revision 1.5  2007/01/15 21:13:46  sherwin
-* Nodal stuff correction and added Field Classes
-*
-* Revision 1.4  2006/12/10 19:00:54  sherwin
-* Modifications to handle nodal expansions
-*
-* Revision 1.3  2006/06/01 14:46:16  kirby
-* *** empty log message ***
-*
-* Revision 1.2  2006/05/23 15:08:19  jfrazier
-* Minor cleanup to correct compile warnings.
-*
-* Revision 1.1  2006/05/04 18:58:32  kirby
-* *** empty log message ***
-*
-* Revision 1.16  2006/04/25 20:23:33  jfrazier
-* Various fixes to correct bugs, calls to ASSERT, etc.
-*
-* Revision 1.15  2006/03/12 14:20:44  sherwin
-*
-* First compiling version of SpatialDomains and associated modifications
-*
-* Revision 1.14  2006/03/06 17:12:46  sherwin
-*
-* Updated to properly execute all current StdRegions Demos.
-*
-* Revision 1.13  2006/03/04 20:26:55  bnelson
-* Added comments after #endif.
-*
-* Revision 1.12  2006/03/01 08:25:04  sherwin
-*
-* First compiling version of StdRegions
-*
-**/
+ * $Log: StdNodalTriExp.h,v $
+ * Revision 1.23  2008/06/05 15:06:06  pvos
+ * Added documentation
+ *
+ * Revision 1.22  2008/05/30 00:33:49  delisi
+ * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+ *
+ * Revision 1.21  2008/05/29 21:36:25  pvos
+ * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
+ *
+ * Revision 1.20  2008/05/07 16:04:57  pvos
+ * Mapping + Manager updates
+ *
+ * Revision 1.19  2008/04/06 06:04:15  bnelson
+ * Changed ConstArray to Array<const>
+ *
+ * Revision 1.18  2008/04/02 22:18:10  pvos
+ * Update for 2D local to global mapping
+ *
+ * Revision 1.17  2008/03/18 14:15:45  pvos
+ * Update for nodal triangular helmholtz solver
+ *
+ * Revision 1.16  2007/12/17 13:03:51  sherwin
+ * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
+ *
+ * Revision 1.15  2007/10/03 11:37:51  sherwin
+ * Updates relating to static condensation implementation
+ *
+ * Revision 1.14  2007/07/22 23:04:27  bnelson
+ * Backed out Nektar::ptr.
+ *
+ * Revision 1.13  2007/07/20 02:16:54  bnelson
+ * Replaced boost::shared_ptr with Nektar::ptr
+ *
+ * Revision 1.12  2007/07/12 12:55:16  sherwin
+ * Simplified Matrix Generation
+ *
+ * Revision 1.11  2007/07/11 06:35:24  sherwin
+ * Update after manager reshuffle
+ *
+ * Revision 1.10  2007/05/31 19:13:12  pvos
+ * Updated NodalTriExp + LocalRegions/Project2D + some other modifications
+ *
+ * Revision 1.9  2007/05/15 05:18:24  bnelson
+ * Updated to use the new Array object.
+ *
+ * Revision 1.8  2007/04/18 09:44:01  sherwin
+ * Working version for StdNodalTri. Removed lapack.cpp from compile.
+ *
+ * Revision 1.7  2007/04/10 14:00:45  sherwin
+ * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
+ *
+ * Revision 1.6  2007/01/17 16:05:40  pvos
+ * updated doxygen documentation
+ *
+ * Revision 1.5  2007/01/15 21:13:46  sherwin
+ * Nodal stuff correction and added Field Classes
+ *
+ * Revision 1.4  2006/12/10 19:00:54  sherwin
+ * Modifications to handle nodal expansions
+ *
+ * Revision 1.3  2006/06/01 14:46:16  kirby
+ * *** empty log message ***
+ *
+ * Revision 1.2  2006/05/23 15:08:19  jfrazier
+ * Minor cleanup to correct compile warnings.
+ *
+ * Revision 1.1  2006/05/04 18:58:32  kirby
+ * *** empty log message ***
+ *
+ * Revision 1.16  2006/04/25 20:23:33  jfrazier
+ * Various fixes to correct bugs, calls to ASSERT, etc.
+ *
+ * Revision 1.15  2006/03/12 14:20:44  sherwin
+ *
+ * First compiling version of SpatialDomains and associated modifications
+ *
+ * Revision 1.14  2006/03/06 17:12:46  sherwin
+ *
+ * Updated to properly execute all current StdRegions Demos.
+ *
+ * Revision 1.13  2006/03/04 20:26:55  bnelson
+ * Added comments after #endif.
+ *
+ * Revision 1.12  2006/03/01 08:25:04  sherwin
+ *
+ * First compiling version of StdRegions
+ *
+ **/
 

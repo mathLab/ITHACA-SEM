@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/TetExp.h,v $ 
+// File TetExp.h 
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -46,238 +46,270 @@
 
 namespace Nektar
 {
-  namespace LocalRegions 
-  {
-
-    class TetExp: public StdRegions::StdTetExp
+    namespace LocalRegions 
     {
 
-    public:
+    class TetExp: public StdRegions::StdTetExp
+        {
 
-	/** \brief Constructor using BasisKey class for quadrature
-        points and order definition */
-        TetExp(const LibUtilities::BasisKey &Ba,
-               const LibUtilities::BasisKey &Bb,
+        public:
+
+            /** \brief Constructor using BasisKey class for quadrature
+                points and order definition */
+            TetExp(const LibUtilities::BasisKey &Ba,
+                   const LibUtilities::BasisKey &Bb,
 	           const LibUtilities::BasisKey &Bc,
-               const SpatialDomains::TetGeomSharedPtr &geom);
+                   const SpatialDomains::TetGeomSharedPtr &geom);
 
-        TetExp(const LibUtilities::BasisKey &Ba,
-	       const LibUtilities::BasisKey &Bb,
-	       const LibUtilities::BasisKey &Bc);
+            TetExp(const LibUtilities::BasisKey &Ba,
+                   const LibUtilities::BasisKey &Bb,
+                   const LibUtilities::BasisKey &Bc);
 
 	    
-      /// Copy Constructor
-      TetExp(const TetExp &T);
+            /// Copy Constructor
+            TetExp(const TetExp &T);
 
-      /// Destructor
-      ~TetExp();
+            /// Destructor
+            ~TetExp();
 
-        void GetCoords(Array<OneD,NekDouble> &coords_0,
-		       Array<OneD,NekDouble> &coords_1,
-          	       Array<OneD,NekDouble> &coords_2);
+            void GetCoords(Array<OneD,NekDouble> &coords_0,
+                           Array<OneD,NekDouble> &coords_1,
+                           Array<OneD,NekDouble> &coords_2);
 
-	void GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords);
+            void GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords);
 
-        //----------------------------
-        // Integration Methods
-        //----------------------------
+            //----------------------------
+            // Integration Methods
+            //----------------------------
 
-        /// \brief Integrate the physical point list \a inarray over region
-       NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
+            /// \brief Integrate the physical point list \a inarray over region
+            NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
 
-       void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+            /** \brief  Inner product of \a inarray over region with respect to the 
+                expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
+    
+                Wrapper call to StdTetExp::IProductWRTBase
+    
+                Input:\n
+    
+                - \a inarray: array of function evaluated at the physical collocation points
+    
+                Output:\n
+    
+                - \a outarray: array of inner product with respect to each basis over region
 
-       /** \brief Forward transform from physical quadrature space
-       stored in \a inarray and evaluate the expansion coefficients and
-       store in \a (this)->_coeffs  */
-       void FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
+            */
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),
+                                inarray,outarray);
+            }
 
-       NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
+            /** \brief Forward transform from physical quadrature space
+                stored in \a inarray and evaluate the expansion coefficients and
+                store in \a (this)->_coeffs  */
+            void FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
 
-      //-----------------------------
-      // Differentiation Methods
-      //-----------------------------
+            NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
 
-        void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-                       Array<OneD, NekDouble> &out_d0,
-                       Array<OneD, NekDouble> &out_d1,
-                       Array<OneD, NekDouble> &out_d2);
+            //-----------------------------
+            // Differentiation Methods
+            //-----------------------------
+
+            void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+                           Array<OneD, NekDouble> &out_d0,
+                           Array<OneD, NekDouble> &out_d1,
+                           Array<OneD, NekDouble> &out_d2);
 
 
-        /// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
-        StdRegions::ExpansionType DetExpansionType() const
-        {
+            /// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
+            StdRegions::ExpansionType DetExpansionType() const
+            {
                 return StdRegions::eTetrahedron;
-        }
+            }
 
-        SpatialDomains::TetGeomSharedPtr GetGeom()
-        {
-            return m_geom;
-        }
+            SpatialDomains::TetGeomSharedPtr GetGeom()
+            {
+                return m_geom;
+            }
 
-        void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
 
-    protected:
+        protected:
 
-        void GenMetricInfo();
+            void GenMetricInfo();
 
-        /** \brief  Inner product of \a inarray over region with respect to
-        the expansion basis \a base and return in \a outarray */
-        void IProductWRTBase(const Array<OneD, const NekDouble> &base0,
-                        const Array<OneD, const NekDouble> &base1,
-                        const Array<OneD, const NekDouble> &base2,
-                        const Array<OneD, const NekDouble> &inarray,
-                        Array<OneD,NekDouble> &outarray);
+            /** 
+                \brief Calculate the inner product of inarray with respect to
+                the basis B=base0*base1*base2 and put into outarray:
 
-        DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
-        DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
-        DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
+                \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
+                \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
+                \psi_{p}^{a} (\eta_{1i}) \psi_{pq}^{b} (\eta_{2j}) \psi_{pqr}^{c} (\eta_{3k})
+                w_i w_j w_k u(\eta_{1,i} \eta_{2,j} \eta_{3,k})
+                J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\eta_{1,i})
+                \sum_{j=0}^{nq_1} \psi_{pq}^b(\eta_{2,j}) \sum_{k=0}^{nq_2} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
+                J_{i,j,k} \end{array} \f$ \n
+
+                where
+                \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\eta_1) \psi_{pq}^b (\eta_2) \psi_{pqr}^c (\eta_3) \f$
+
+                which can be implemented as \n
+                \f$f_{pqr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
+                J_{i,j,k} = {\bf B_3 U}   \f$ \n
+                \f$ g_{pq} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{pq}^b (\xi_{2j}) f_{pqr} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
+                \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$ 
+            **/
+            void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                 const Array<OneD, const NekDouble>& base1, 
+                                 const Array<OneD, const NekDouble>& base2, 
+                                 const Array<OneD, const NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> & outarray);
+            
+            DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
+            DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
+            DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
 	    SpatialDomains::TetGeomSharedPtr m_geom;
-        SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
 	    LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
-        LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
 
-    private:
-      TetExp();
+        private:
+            TetExp();
 	
-        virtual StdRegions::ExpansionType v_DetExpansionType() const
-        {
-        return DetExpansionType();
-        }
+            virtual StdRegions::ExpansionType v_DetExpansionType() const
+            {
+                return DetExpansionType();
+            }
 
-        virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
+            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
+            {
+                return m_metricinfo;
+            }
 
-        virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
-                                 Array<OneD, NekDouble> &coords_1,
-                                 Array<OneD, NekDouble> &coords_2)
-        {
-            GetCoords(coords_0, coords_1, coords_2);
-        }
+            virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
+                                     Array<OneD, NekDouble> &coords_1,
+                                     Array<OneD, NekDouble> &coords_2)
+            {
+                GetCoords(coords_0, coords_1, coords_2);
+            }
 
-        virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, 
-                                Array<OneD, NekDouble> &coord)
-        {
-            GetCoord(lcoord, coord);
-        }
+            virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, 
+                                    Array<OneD, NekDouble> &coord)
+            {
+                GetCoord(lcoord, coord);
+            }
 
-        virtual int v_GetCoordim()
-        {
-            return m_geom->GetCoordim();
-        }
+            virtual int v_GetCoordim()
+            {
+                return m_geom->GetCoordim();
+            }
 
-         /// Virtual call to SegExp::PhysDeriv
-        virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-                                    Array<OneD, NekDouble> &out_d0,
-                                    Array<OneD, NekDouble> &out_d1,
-                                    Array<OneD, NekDouble> &out_d2)
-        {
-            StdTetExp::PhysDeriv(inarray, out_d0, out_d1, out_d2);
-        }
+            virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD, NekDouble> &out_d0,
+                                     Array<OneD, NekDouble> &out_d1,
+                                     Array<OneD, NekDouble> &out_d2)
+            {
+                PhysDeriv(inarray, out_d0, out_d1, out_d2);
+            }
 
-        virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD, NekDouble> &out_d0,
-                                 Array<OneD, NekDouble> &out_d1,
-                                 Array<OneD, NekDouble> &out_d2)
-        {
-            PhysDeriv(inarray, out_d0, out_d1, out_d2);
-        }
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            {
+                WriteToFile(outfile,format,dumpVar);
+            }
 
-        virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
-        {
-            WriteToFile(outfile,format,dumpVar);
-        }
+            /** \brief Virtual call to integrate the physical point list \a inarray
+                over region (see SegExp::Integral) */
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
+            {
+                return Integral(inarray);
+            }
 
-        /** \brief Virtual call to integrate the physical point list \a inarray
-        over region (see SegExp::Integral) */
-        virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
-        {
-            return Integral(inarray);
-        }
+            /** \brief Virtual call to TriExp::IProduct_WRT_B */
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(inarray,outarray);
+            }
 
-        /** \brief Virtual call to TriExp::IProduct_WRT_B */
-        virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
-        {
-            IProductWRTBase(inarray,outarray);
-        }
+            virtual void v_IProductWRTDerivBase (const int dir,
+                                                 const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTDerivBase(dir,inarray,outarray);
+            }
 
-        virtual void v_IProductWRTDerivBase (const int dir,
-                                             const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD, NekDouble> &outarray)
-        {
-            IProductWRTDerivBase(dir,inarray,outarray);
-        }
+            /// Virtual call to SegExp::FwdTrans
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                    Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans(inarray, outarray);
+            }
 
-        /// Virtual call to SegExp::FwdTrans
-        virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD, NekDouble> &outarray)
-        {
-            FwdTrans(inarray, outarray);
-        }
+            /// Virtual call to TetExp::Evaluate
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
+            {
+                return PhysEvaluate(coords);
+            }
 
-        /// Virtual call to TetExp::Evaluate
-        virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
-        {
-            return PhysEvaluate(coords);
-        }
+            virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
+            {
+                return Linf(sol);
+            }
 
-        virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
-        {
-            return Linf(sol);
-        }
+            virtual NekDouble v_Linf()
+            {
+                return Linf();
+            }
 
-        virtual NekDouble v_Linf()
-        {
-            return Linf();
-        }
-
-        virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
-        {
-            return StdExpansion::L2(sol);
-        }
+            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
+            {
+                return StdExpansion::L2(sol);
+            }
 
 
-        virtual NekDouble v_L2()
-        {
-            return StdExpansion::L2();
-        }
+            virtual NekDouble v_L2()
+            {
+                return StdExpansion::L2();
+            }
 
-        virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            return CreateStdMatrix(mkey);
-        }
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+            {
+                return CreateStdMatrix(mkey);
+            }
 
-        virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
-        {
-            return m_matrixManager[mkey];
-        }
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
+            {
+                return m_matrixManager[mkey];
+            }
 
-        virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
-        {
-            return m_staticCondMatrixManager[mkey];
-        }
+            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+            {
+                return m_staticCondMatrixManager[mkey];
+            }
 
 
-    };
+        };
 
-    // type defines for use of TetExp in a boost vector
-    typedef boost::shared_ptr<TetExp> TetExpSharedPtr;
-    typedef std::vector< TetExpSharedPtr > TetExpVector;
-    typedef std::vector< TetExpSharedPtr >::iterator TetExpVectorIter;
+        // type defines for use of TetExp in a boost vector
+        typedef boost::shared_ptr<TetExp> TetExpSharedPtr;
+        typedef std::vector< TetExpSharedPtr > TetExpVector;
+        typedef std::vector< TetExpSharedPtr >::iterator TetExpVectorIter;
 
-  } //end of namespace
+    } //end of namespace
 } //end of namespace
 
 #endif // TETEXP_H
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.16  2008/06/06 23:25:43  ehan
+ *    Added doxygen documentation
+ *
  *    Revision 1.15  2008/05/30 00:33:48  delisi
  *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

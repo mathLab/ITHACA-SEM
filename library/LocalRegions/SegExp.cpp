@@ -141,13 +141,13 @@ namespace Nektar
                     ndata = Array<OneD,NekDouble>(nq);   
                      
                     Interp1D(CBasis0->GetBasisKey(),odata,
-                        m_base[0]->GetBasisKey(), ndata);
+                             m_base[0]->GetBasisKey(), ndata);
 
                     m_metricinfo->ResetJac(nq,ndata);                    
                     m_metricinfo->ResetNormals(Xgfac->GetNormals());
 
                     NEKERROR(ErrorUtil::ewarning,
-                        "Need to check/debug routine for deformed elements");
+                             "Need to check/debug routine for deformed elements");
                 }
                 else  // Same data can be used 
                 {
@@ -172,17 +172,17 @@ namespace Nektar
         //----------------------------
 
         /** \brief Integrate the physical point list \a inarray over region
-        and return the value
+            and return the value
 
-        Inputs:\n
+            Inputs:\n
 
-        - \a inarray: definition of function to be returned at
-        quadrature point of expansion.
+            - \a inarray: definition of function to be returned at
+            quadrature point of expansion.
 
-        Outputs:\n
+            Outputs:\n
 
-        - returns \f$\int^1_{-1} u(\xi_1)d \xi_1 \f$ where \f$inarray[i]
-        = u(\xi_{1i}) \f$
+            - returns \f$\int^1_{-1} u(\xi_1)d \xi_1 \f$ where \f$inarray[i]
+            = u(\xi_{1i}) \f$
         */
 
         NekDouble SegExp::Integral(const Array<OneD, const NekDouble>&  inarray)
@@ -209,40 +209,10 @@ namespace Nektar
         }
 
 
-
-        /**
-        \brief  Inner product of \a inarray over region with respect to
-        expansion basis \a base and return in \a outarray 
-
-        Calculate \f$ I[p] = \int^{1}_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1
-        = \sum_{i=0}^{nq-1} \phi_p(\xi_{1i}) u(\xi_{1i}) w_i \f$ where
-        \f$ outarray[p] = I[p], inarray[i] = u(\xi_{1i}), base[p*nq+i] =
-        \phi_p(\xi_{1i}) \f$.
-
-        Inputs: \n 
-
-        - \a base: an array definiing the local basis for the inner
-        product usually passed from Basis->get_bdata() or
-        Basis->get_Dbdata()
-        - \a inarray: physical point array of function to be integrated
-        \f$ u(\xi_1) \f$
-        - \a coll_check: Flag to identify when a Basis->collocation()
-        call should be performed to see if this is a GLL_Lagrange basis
-        with a collocation property. (should be set to 0 if taking the
-        inner product with respect to the derivative of basis)
-
-        Output: \n
-
-        - \a outarray: array of coefficients representing the inner
-        product of function with ever  mode in the exapnsion
-
-        **/
-
-
         void SegExp::IProductWRTBase(const Array<OneD, const NekDouble>& base, 
                                      const Array<OneD, const NekDouble>& inarray,
-                                     Array<OneD,NekDouble> &outarray, 
-                                     const int coll_check)
+                                     Array<OneD, NekDouble> &outarray, 
+                                     int coll_check)
         {
             int        nquad0 = m_base[0]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
@@ -318,30 +288,6 @@ namespace Nektar
             IProductWRTBase(m_base[0]->GetDbdata(),tmp1,outarray,1);       
         }
 
-
-        /** \brief  Inner product of \a inarray over region with respect to 
-        the expansion basis (this)->_Base[0] and return in \a outarray 
-
-        Wrapper call to SegExp::IProduct_WRT_B
-
-        Input:\n
-
-        - \a inarray: array of function evaluated at the physical
-        collocation points
-
-        Output:\n
-
-        - \a outarray: array of inner product with respect to each
-        basis over region
-        */
-
-
-        void SegExp::IProductWRTBase(const Array<OneD, const NekDouble>&  inarray, 
-            Array<OneD,NekDouble> &outarray)
-        {
-            IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
-        }
-
         void SegExp::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,NekDouble> &outarray)
         {
@@ -411,7 +357,7 @@ namespace Nektar
                         Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
                         Blas::Daxpy(nquad, gmat[2][0], dPhysValuesdz.get(), 1, dPhysValuesdx.get(), 1);
                     }  
-              }
+                }
                 break;
             default:
                 ASSERTL0(false,"Wrong number of dimensions");
@@ -423,8 +369,8 @@ namespace Nektar
 
 
         void SegExp::HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                        Array<OneD,NekDouble> &outarray,
-                                        const double lambda)
+                                       Array<OneD,NekDouble> &outarray,
+                                       const double lambda)
         {
             int    i;
             int    nquad = m_base[0]->GetNumPoints();
@@ -496,7 +442,7 @@ namespace Nektar
                         Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
                         Blas::Daxpy(nquad, gmat[2][0], dPhysValuesdz.get(), 1, dPhysValuesdx.get(), 1);
                     }  
-              }
+                }
                 break;
             default:
                 ASSERTL0(false,"Wrong number of dimensions");
@@ -512,24 +458,24 @@ namespace Nektar
         //-----------------------------
 
         /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
-        physical quadrature points given by \a inarray and return in \a
-        outarray.
+            physical quadrature points given by \a inarray and return in \a
+            outarray.
 
-        This is a wrapper around StdExpansion1D::Tensor_Deriv
+            This is a wrapper around StdExpansion1D::Tensor_Deriv
 
-        Input:\n
+            Input:\n
 
-        - \a n: number of derivatives to be evaluated where \f$ n \leq  dim\f$
+            - \a n: number of derivatives to be evaluated where \f$ n \leq  dim\f$
 
-        - \a inarray: array of function evaluated at the quadrature points
+            - \a inarray: array of function evaluated at the quadrature points
 
-        Output: \n
+            Output: \n
 
-        - \a outarray: array of the derivatives \f$
-        du/d_{\xi_1}|_{\xi_{1i}} d\xi_1/dx, 
-        du/d_{\xi_1}|_{\xi_{1i}} d\xi_1/dy, 
-        du/d_{\xi_1}|_{\xi_{1i}} d\xi_1/dz, 
-        \f$ depending on value of \a dim
+            - \a outarray: array of the derivatives \f$
+            du/d_{\xi_1}|_{\xi_{1i}} d\xi_1/dx, 
+            du/d_{\xi_1}|_{\xi_{1i}} d\xi_1/dy, 
+            du/d_{\xi_1}|_{\xi_{1i}} d\xi_1/dz, 
+            \f$ depending on value of \a dim
         */
 
 
@@ -561,7 +507,7 @@ namespace Nektar
                 if(out_d2.num_elements())
                 {
                     Vmath::Vmul(nquad0,&gmat[2][0],1,&diff[0],1,
-                        &out_d2[0],1);
+                                &out_d2[0],1);
                 }
             }
             else 
@@ -569,19 +515,19 @@ namespace Nektar
                 if(out_d0.num_elements())
                 {
                     Vmath::Smul(nquad0, gmat[0][0], diff, 1,
-                        out_d0, 1);
+                                out_d0, 1);
                 }
 
                 if(out_d1.num_elements())
                 {
                     Vmath::Smul(nquad0, gmat[1][0], diff, 1,
-                        out_d1, 1);
+                                out_d1, 1);
                 }
 
                 if(out_d2.num_elements())
                 {
                     Vmath::Smul(nquad0, gmat[2][0], diff, 1,
-                        out_d2, 1);
+                                out_d2, 1);
                 }
             } 
         } 
@@ -673,23 +619,23 @@ namespace Nektar
         }
 
         /** \brief Forward transform from physical quadrature space
-        stored in \a inarray and evaluate the expansion coefficients and
-        store in \a outarray
+            stored in \a inarray and evaluate the expansion coefficients and
+            store in \a outarray
 
-        Perform a forward transform using a Galerkin projection by
-        taking the inner product of the physical points and multiplying
-        by the inverse of the mass matrix using the Solve method of the
-        standard matrix container holding the local mass matrix, i.e.
-        \f$ {\bf \hat{u}} = {\bf M}^{-1} {\bf I} \f$ where \f$ {\bf I}[p] =
-        \int^1_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1 \f$
+            Perform a forward transform using a Galerkin projection by
+            taking the inner product of the physical points and multiplying
+            by the inverse of the mass matrix using the Solve method of the
+            standard matrix container holding the local mass matrix, i.e.
+            \f$ {\bf \hat{u}} = {\bf M}^{-1} {\bf I} \f$ where \f$ {\bf I}[p] =
+            \int^1_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1 \f$
 
-        Inputs:\n
+            Inputs:\n
 
-        - \a inarray: array of physical quadrature points to be transformed
+            - \a inarray: array of physical quadrature points to be transformed
 
-        Outputs:\n
+            Outputs:\n
 
-        - \a outarray: updated array of expansion coefficients. 
+            - \a outarray: updated array of expansion coefficients. 
 
         */ 
 
@@ -772,8 +718,8 @@ namespace Nektar
         }
 
         void SegExp::GetCoords(Array<OneD, NekDouble> &coords_0,
-            Array<OneD, NekDouble> &coords_1,
-            Array<OneD, NekDouble> &coords_2)
+                               Array<OneD, NekDouble> &coords_1,
+                               Array<OneD, NekDouble> &coords_2)
         { 
             Array<OneD,NekDouble>  x;
 
@@ -801,7 +747,7 @@ namespace Nektar
                 }
             case 2:
                 ASSERTL0(coords_1.num_elements() != 0, 
-                    "output coords_1 is not defined");
+                         "output coords_1 is not defined");
                 CBasis = m_geom->GetBasis(1,0);
 
                 if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
@@ -816,7 +762,7 @@ namespace Nektar
                 }
             case 1:
                 ASSERTL0(coords_0.num_elements() != 0, 
-                    "output coords_2 is not defined");
+                         "output coords_2 is not defined");
                 CBasis = m_geom->GetBasis(0,0);
 
                 if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
@@ -843,7 +789,7 @@ namespace Nektar
             int  i;
 
             ASSERTL1(Lcoords[0] >= -1.0&& Lcoords[0] <= 1.0,
-                "Local coordinates are not in region [-1,1]");
+                     "Local coordinates are not in region [-1,1]");
 
             m_geom->FillGeom();
             for(i = 0; i < m_geom->GetCoordim(); ++i)
@@ -1079,7 +1025,7 @@ namespace Nektar
                     DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
-            break;
+                break;
             case StdRegions::eInvUnifiedDGHelmholtz:
                 {
                     NekDouble one = 1.0;
@@ -1145,7 +1091,7 @@ namespace Nektar
                 
                     // Matrix to map Lambda to Q
                     LocalRegions::MatrixKey Qmatkey(StdRegions::eUnifiedDGLamToQ0,
-                                            DetExpansionType(),*this, lambdaval,tau);
+                                                    DetExpansionType(),*this, lambdaval,tau);
                     DNekScalMat &LamToQ = *GetLocMatrix(Qmatkey); 
                     
 
@@ -1238,7 +1184,7 @@ namespace Nektar
         void SegExp::AddNormBoundaryInt(const int dir, 
                                         Array<OneD, const NekDouble> &inarray,
                                         Array<OneD,NekDouble> &outarray) 
-       {
+        {
 
             int k;
             int nbndry = NumBndryCoeffs();
@@ -1258,9 +1204,9 @@ namespace Nektar
         }
 
         void SegExp::AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                    const Array<OneD, const NekDouble> &inarray,
-                                    Array<OneD,NekDouble> &outarray,
-                                    bool MatrixTerms)
+                                                  const Array<OneD, const NekDouble> &inarray,
+                                                  Array<OneD,NekDouble> &outarray,
+                                                  bool MatrixTerms)
         {
             int i,j,k,n;
             int nbndry = NumBndryCoeffs();
@@ -1459,9 +1405,12 @@ namespace Nektar
         }
 
     } // end of namespace    
- }//end of namespace
+}//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.48  2008/07/02 14:09:18  pvos
+// Implementation of HelmholtzMatOp and LapMatOp on shape level
+//
 // Revision 1.47  2008/06/06 14:57:51  pvos
 // Minor Updates
 //

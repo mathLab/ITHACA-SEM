@@ -70,7 +70,7 @@ namespace Nektar
             m_matrixManager(std::string("TriExpMatrix")),
             m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
         {
-           for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
+            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
                 m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
                                                           StdRegions::eNoExpansionType,*this),
@@ -246,56 +246,6 @@ namespace Nektar
             // call StdQuadExp version;
             ival = StdTriExp::Integral(tmp);            
             return ival; 
-        }
-        
-        
-        /** 
-            \brief Calculate the inner product of inarray with respect to
-            the basis B=base0*base1 and put into outarray:
-            
-            \f$ 
-            \begin{array}{rcl}
-            I_{pq} = (\phi_q \phi_q, u) & = & \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1}
-            \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j}) 
-            J_{i,j}\                                    \
-            & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
-            \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}  J_{i,j}
-            \end{array}
-            \f$ 
-            
-            where
-            
-            \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
-            
-            which can be implemented as
-            
-            \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} = 
-            {\bf B_1 U}  \f$
-            \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
-            {\bf B_0 F}  \f$
-        **/
-        
-        void TriExp::IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-                                     const Array<OneD, const NekDouble> &base1, 
-                                     const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,NekDouble> &outarray)
-        {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
-            Array<OneD,NekDouble> tmp(nquad0*nquad1);
-            
-            // multiply inarray with Jacobian
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nquad0*nquad1, jac, 1, inarray, 1, tmp, 1);
-            }
-            else
-            {
-                Vmath::Smul(nquad0*nquad1, jac[0], inarray, 1, tmp, 1);
-            }
-            
-            StdTriExp::IProductWRTBase(base0,base1,tmp,outarray);
         }
 
         void TriExp::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
@@ -530,10 +480,32 @@ namespace Nektar
             
         }
 
+        void TriExp::IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                     const Array<OneD, const NekDouble>& base1,
+                                     const Array<OneD, const NekDouble>& inarray, 
+                                     Array<OneD, NekDouble> &outarray)
+        {
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD,NekDouble> tmp(nquad0*nquad1);
+            
+            // multiply inarray with Jacobian
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vmul(nquad0*nquad1, jac, 1, inarray, 1, tmp, 1);
+            }
+            else
+            {
+                Vmath::Smul(nquad0*nquad1, jac[0], inarray, 1, tmp, 1);
+            }
+            
+            StdTriExp::IProductWRTBase(base0,base1,tmp,outarray);
+        }
 
         void TriExp::IProductWRTDerivBase(const int dir, 
-                                              const Array<OneD, const NekDouble>& inarray, 
-                                              Array<OneD, NekDouble> & outarray)
+                                          const Array<OneD, const NekDouble>& inarray, 
+                                          Array<OneD, NekDouble> & outarray)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -633,30 +605,7 @@ namespace Nektar
             IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp1,tmp3);
             IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),tmp2,outarray);
             Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);                 
-        }
-        
-        /** \brief  Inner product of \a inarray over region with respect to the 
-            expansion basis (this)->_Base[0] and return in \a outarray 
-            
-            Wrapper call to TriExp::IProductWRTBase
-            
-            Input:\n
-            
-            - \a inarray: array of function evaluated at the physical
-            collocation points
-            
-            Output:\n
-            
-            - \a outarray: array of inner product with respect to each
-            basis over region
-            
-        */
-        void TriExp::IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
-                                     Array<OneD,NekDouble> &outarray)
-        {
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-                            inarray,outarray);
-        }    
+        }  
         
         ///////////////////////////////
         /// Differentiation Methods
@@ -1202,8 +1151,8 @@ namespace Nektar
                         DNekMatSharedPtr lap = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
                         
                         (*lap) = (gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0]) * (*lap00) + 
-                                 (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
-                                 (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
+                            (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
+                            (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
                         
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,lap);
                     }
@@ -1355,6 +1304,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.36  2008/07/02 14:09:18  pvos
+ *    Implementation of HelmholtzMatOp and LapMatOp on shape level
+ *
  *    Revision 1.35  2008/06/06 23:26:02  ehan
  *    Added doxygen documentation
  *

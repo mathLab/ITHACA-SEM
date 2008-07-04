@@ -138,7 +138,7 @@ namespace Nektar
 
         }
 
-        NekDouble StdExpansion2D::PhysEvaluate2D(const Array<OneD, const NekDouble>& coords)
+        NekDouble StdExpansion2D::PhysEvaluate(const Array<OneD, const NekDouble>& coords)
         {
             NekDouble val;
             int i;
@@ -204,6 +204,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.25  2008/06/05 15:06:06  pvos
+* Added documentation
+*
 * Revision 1.24  2008/05/07 16:04:57  pvos
 * Mapping + Manager updates
 *

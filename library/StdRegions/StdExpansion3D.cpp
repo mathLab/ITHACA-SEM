@@ -217,7 +217,7 @@ namespace Nektar
     }
     
     
-    NekDouble StdExpansion3D::PhysEvaluate3D(const Array<OneD, const NekDouble> &coords)
+    NekDouble StdExpansion3D::PhysEvaluate(const Array<OneD, const NekDouble> &coords)
     {
         NekDouble  value;
 
@@ -274,6 +274,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.16  2008/05/07 16:04:57  pvos
+ * Mapping + Manager updates
+ *
  * Revision 1.15  2008/04/06 06:04:15  bnelson
  * Changed ConstArray to Array<const>
  *

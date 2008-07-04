@@ -55,17 +55,17 @@ namespace Nektar
     {
         
     class QuadExp: public StdRegions::StdQuadExp
-    {
-    public:
+        {
+        public:
 
-        /** \brief Constructor using BasisKey class for quadrature
-        points and order definition */
-        QuadExp(const LibUtilities::BasisKey &Ba,
-                const LibUtilities::BasisKey &Bb,
-                const SpatialDomains::QuadGeomSharedPtr &geom);
+            /** \brief Constructor using BasisKey class for quadrature
+                points and order definition */
+            QuadExp(const LibUtilities::BasisKey &Ba,
+                    const LibUtilities::BasisKey &Bb,
+                    const SpatialDomains::QuadGeomSharedPtr &geom);
         
-        QuadExp(const LibUtilities::BasisKey &Ba,
-                const LibUtilities::BasisKey &Bb);
+            QuadExp(const LibUtilities::BasisKey &Ba,
+                    const LibUtilities::BasisKey &Bb);
 
             /// \brief Constructor using BasisKey class for quadrature
             /// points and order definition where it has standard geometric factors 
@@ -74,354 +74,385 @@ namespace Nektar
             /// Copy Constructor
             QuadExp(const QuadExp &T);
 
-        /// Destructor
-        ~QuadExp();
+            /// Destructor
+            ~QuadExp();
 
-        /// Return Shape of region, using ShapeType enum
-        /// list. i.e. Quadrilateral
-        StdRegions::ExpansionType DetExpansionType() const
-        {
-            return StdRegions::eQuadrilateral;
-        }
+            /// Return Shape of region, using ShapeType enum
+            /// list. i.e. Quadrilateral
+            StdRegions::ExpansionType DetExpansionType() const
+            {
+                return StdRegions::eQuadrilateral;
+            }
 
-        void GetCoords(Array<OneD,NekDouble> &coords_1,
-                       Array<OneD,NekDouble> &coords_2, 
-                       Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
-        void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
-                      Array<OneD,NekDouble> &coords);
+            void GetCoords(Array<OneD,NekDouble> &coords_1,
+                           Array<OneD,NekDouble> &coords_2, 
+                           Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
+            void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
+                          Array<OneD,NekDouble> &coords);
 
-        const SpatialDomains::Geometry2DSharedPtr& GetGeom()
-        {
-            return m_geom;
-        }
+            const SpatialDomains::Geometry2DSharedPtr& GetGeom()
+            {
+                return m_geom;
+            }
 
-        void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
-        //----------------------------
-        // Integration Methods
-        //----------------------------
+            //----------------------------
+            // Integration Methods
+            //----------------------------
 
-         /// \brief Integrate the physical point list \a inarray over region
-        NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
+            /// \brief Integrate the physical point list \a inarray over region
+            NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
 
-        /** \brief  Inner product of \a inarray over region with respect to the
-        expansion basis (this)->_Base[0] and return in \a outarray */
-        void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
-                             Array<OneD, NekDouble> &outarray);
-
-        void IProductWRTDerivBase(const int dir,
-                                  const Array<OneD, const NekDouble>& inarray,
-                                  Array<OneD, NekDouble> & outarray);
         
-        //-----------------------------
-        // Differentiation Methods
-        //-----------------------------
-
-        void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-                       Array<OneD, NekDouble> &out_d0,
-                       Array<OneD, NekDouble> &out_d1,
-                       Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);      
-        
-        void PhysDeriv(const int dir, 
-                       const Array<OneD, const NekDouble>& inarray,
-                       Array<OneD, NekDouble> &outarray);
-        
-        //----------------------------
-        // Evaluations Methods
-        //---------------------------
-        
-        /** \brief Forward transform from physical quadrature space
-            stored in \a inarray and evaluate the expansion coefficients and
-            store in \a (this)->_coeffs  */
-        void FwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                      Array<OneD, NekDouble> &outarray);
-        
-        NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);        
-        
-        SegExpSharedPtr GetEdgeExp(int edge);
-        void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
     
-        void AddNormTraceInt(const int dir,
-                             Array<OneD, const NekDouble> &inarray,
-                             Array<OneD,NekDouble> &outarray)
-        {
-            AddNormBoundaryInt(dir,inarray,outarray,true);
-        }
-
-        void AddNormBoundaryInt(const int dir,
-                                Array<OneD, const NekDouble> &inarray,
-                                Array<OneD,NekDouble> &outarray,
-                                bool InArrayIsTrace = false);
-
-        void AddUDGHelmholtzBoundaryTerms(const NekDouble tau,
-                                          const Array<OneD,const NekDouble> &inarray,
-                                          Array<OneD,NekDouble> &outarray);
+            /** \brief  Inner product of \a inarray over region with respect to the 
+                expansion basis (this)->_Base[0] and return in \a outarray 
             
-        void AddEdgeBoundaryInt(const int edge, SegExpSharedPtr &EdgeExp,
-                                Array <OneD,NekDouble > &outarray);          
-
-
-        void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                       const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,NekDouble> &outarray,
-                                       bool InputDataIsCartesianOrient = true);
-
-        void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                       const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,SegExpSharedPtr> &EdgeExp,
-                                       Array<OneD,NekDouble> &outarray);
-
-        void AddUDGHelmholtzEdgeTerms(const NekDouble tau, 
-                                      const int edge,
-                                      SegExpSharedPtr &EdgeExp, 
-                                      Array <OneD,NekDouble > &outarray);
-
-        DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
-
-        void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                               Array<OneD,NekDouble> &outarray);
-
-        void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                               Array<OneD,NekDouble> &outarray,
-                               const double lambda);
-
-    protected:
-
-        void GenMetricInfo();
-
-        DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
-        DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
-        DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
-
-        SpatialDomains::Geometry2DSharedPtr m_geom;
-        SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-
-        LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
-        LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
-
-        /** \brief  Inner product of \a inarray over region with respect to
-        the expansion basis \a base and return in \a outarray */
-        inline void IProductWRTBase(const Array<OneD, const NekDouble> &base0, 
-                                    const Array<OneD, const NekDouble> &base1, 
-                                    const Array<OneD, const NekDouble> &inarray, 
-                                    Array<OneD, NekDouble> &outarray, 
-                                    const int coll_check);
-
-    private:
-        QuadExp();
-
-        virtual StdRegions::ExpansionType v_DetExpansionType() const
-        {
-            return DetExpansionType();
-        }
-
-        virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-        virtual const SpatialDomains::Geometry2DSharedPtr& v_GetGeom()
-        {
-            return GetGeom();
-        }
-
-        virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
-                                 Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
-                                 Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray)
-     {
-             GetCoords(coords_0, coords_1, coords_2);
-         }
-
-        virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, 
-                                Array<OneD, NekDouble> &coord)
-        {
-            GetCoord(lcoord, coord);
-        }
-
-        virtual  int v_GetCoordim()
-        {
-        return m_geom->GetCoordim();
-        }
-
-        virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
-        {
-            WriteToFile(outfile,format,dumpVar);
-        }
-
-        /** \brief Virtual call to integrate the physical point list \a inarray
-        over region (see SegExp::Integral) */
-        virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
-        {
-            return Integral(inarray);
-        }
-
-        /** \brief Virtual call to QuadExp::IProduct_WRT_B */
-        virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD, NekDouble> &outarray)
-        {
-            IProductWRTBase(inarray,outarray);
-        }
-
-        virtual void v_IProductWRTDerivBase (const int dir,
-                                             const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD, NekDouble> &outarray)
-        {
-            IProductWRTDerivBase(dir,inarray,outarray);
-        }
-
-
-        /// Virtual call to SegExp::PhysDeriv
-        virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-                                    Array<OneD, NekDouble> &out_d0,
-                                    Array<OneD, NekDouble> &out_d1)
-        {
-            StdQuadExp::PhysDeriv(inarray, out_d0, out_d1);
-        }
+                Wrapper call to QuadExp::IProduct_WRT_B
         
-        virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-                                 Array<OneD, NekDouble> &out_d0,
-                                 Array<OneD, NekDouble> &out_d1,
-                                 Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
-        {
-             PhysDeriv(inarray, out_d0, out_d1);
-        }
-
-        virtual void v_PhysDeriv(const int dir, 
-                                 const Array<OneD, const NekDouble>& inarray,
+                Input:\n
+            
+                - \a inarray: array of function evaluated at the physical
+                collocation points
+            
+                Output:\n
+            
+                - \a outarray: array of inner product with respect to each
+                basis over region
+            
+            */    
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray)
-        {
-            PhysDeriv(dir,inarray,outarray);
-        }
-    
-        /// Virtual call to SegExp::FwdTrans
-       virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                                Array<OneD, NekDouble> &outarray)
-        {
-            FwdTrans(inarray,outarray);
-        }
-    
-        /// Virtual call to QuadExp::Evaluate
-        virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
-        {
-            return PhysEvaluate(coords);
-        }
-    
-        virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
-        {
-            return Linf(sol);
-        }
-    
+            {
+                IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
+                                inarray,outarray,1);
+            }
+
+            void IProductWRTDerivBase(const int dir,
+                                      const Array<OneD, const NekDouble>& inarray,
+                                      Array<OneD, NekDouble> & outarray);
         
-        virtual NekDouble v_Linf()
-        {
-            return Linf();
-        }
+            //-----------------------------
+            // Differentiation Methods
+            //-----------------------------
+
+            void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+                           Array<OneD, NekDouble> &out_d0,
+                           Array<OneD, NekDouble> &out_d1,
+                           Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);      
+        
+            void PhysDeriv(const int dir, 
+                           const Array<OneD, const NekDouble>& inarray,
+                           Array<OneD, NekDouble> &outarray);
+        
+            //----------------------------
+            // Evaluations Methods
+            //---------------------------
+        
+            /** \brief Forward transform from physical quadrature space
+                stored in \a inarray and evaluate the expansion coefficients and
+                store in \a (this)->_coeffs  */
+            void FwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                          Array<OneD, NekDouble> &outarray);
+        
+            NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);        
+        
+            SegExpSharedPtr GetEdgeExp(int edge);
+            void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
     
-        virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
-        {
-            return StdExpansion::L2(sol);
-        }
+            void AddNormTraceInt(const int dir,
+                                 Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,NekDouble> &outarray)
+            {
+                AddNormBoundaryInt(dir,inarray,outarray,true);
+            }
 
-    
-        virtual NekDouble v_L2()
-        {
-            return StdExpansion::L2();
-        }
+            void AddNormBoundaryInt(const int dir,
+                                    Array<OneD, const NekDouble> &inarray,
+                                    Array<OneD,NekDouble> &outarray,
+                                    bool InArrayIsTrace = false);
 
-        virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            return GenMatrix(mkey);
-        }
+            void AddUDGHelmholtzBoundaryTerms(const NekDouble tau,
+                                              const Array<OneD,const NekDouble> &inarray,
+                                              Array<OneD,NekDouble> &outarray);
+            
+            void AddEdgeBoundaryInt(const int edge, SegExpSharedPtr &EdgeExp,
+                                    Array <OneD,NekDouble > &outarray);          
+
+
+            void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                           const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,NekDouble> &outarray,
+                                           bool InputDataIsCartesianOrient = true);
+
+            void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                           const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,SegExpSharedPtr> &EdgeExp,
+                                           Array<OneD,NekDouble> &outarray);
+
+            void AddUDGHelmholtzEdgeTerms(const NekDouble tau, 
+                                          const int edge,
+                                          SegExpSharedPtr &EdgeExp, 
+                                          Array <OneD,NekDouble > &outarray);
+
+            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
+
+            void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray);
+
+            void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const double lambda);
+
+        protected:
+
+            void GenMetricInfo();
+
+            DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
+            DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
+            DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
+
+            SpatialDomains::Geometry2DSharedPtr m_geom;
+            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+
+            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
         
-        virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            return CreateStdMatrix(mkey);
-        }
+            /** 
+                \brief Calculate the inner product of inarray with respect to
+                the basis B=base0*base1 and put into outarray:
+            
+                \f$ \begin{array}{rcl} I_{pq} = (\phi_q \phi_q, u) & = &
+                \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \phi_p(\xi_{0,i})
+                \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j})
+                J_{i,j}\\ & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
+                \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}
+                J_{i,j} \end{array} \f$
+            
+                where
+            
+                \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
+            
+                which can be implemented as
+            
+                \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} = 
+                {\bf B_1 U}  \f$
+                \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
+                {\bf B_0 F}  \f$
+            **/
+            void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
+                                 const Array<OneD, const NekDouble>& base1,
+                                 const Array<OneD, const NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> &outarray,
+                                 int coll_check);
 
-        virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
-        {
-            return m_matrixManager[mkey];
-        }
-        
-        virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
-        {
-            MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
-            return m_matrixManager[mkey];
-        }
+        private:
+            QuadExp();
 
-        virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
-        {
-            return m_staticCondMatrixManager[mkey];
-        }
+            virtual StdRegions::ExpansionType v_DetExpansionType() const
+            {
+                return DetExpansionType();
+            }
 
+            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
+            {
+                return m_metricinfo;
+            }
 
-        virtual StdRegions::EdgeOrientation v_GetEorient(int edge)
-        {
-            return m_geom->GetEorient(edge);
-        }
+            virtual const SpatialDomains::Geometry2DSharedPtr& v_GetGeom()
+            {
+                return GetGeom();
+            }
 
+            virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
+                                     Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
+                                     Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray)
+            {
+                GetCoords(coords_0, coords_1, coords_2);
+            }
 
-        virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge)
-        {
-            return m_geom->GetCartesianEorient(edge);
-        }
+            virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, 
+                                    Array<OneD, NekDouble> &coord)
+            {
+                GetCoord(lcoord, coord);
+            }
 
-        
-        virtual void v_AddNormTraceInt(const int dir,
-                                       Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,NekDouble> &outarray)
-        {
-            AddNormBoundaryInt(dir,inarray,outarray,true);
-        }
+            virtual  int v_GetCoordim()
+            {
+                return m_geom->GetCoordim();
+            }
 
-        virtual void v_AddNormBoundaryInt(const int dir,
-                                        Array<OneD, const NekDouble> &inarray,
-                                        Array<OneD,NekDouble> &outarray)
-        {
-            AddNormBoundaryInt(dir,inarray,outarray,false);
-        }
-        
-        virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau,
-                                                    const Array<OneD, const NekDouble> &inarray,
-                                                    Array<OneD,NekDouble> &outarray)
-        {
-            AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
-        }
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            {
+                WriteToFile(outfile,format,dumpVar);
+            }
 
-        virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+            /** \brief Virtual call to integrate the physical point list \a inarray
+                over region (see SegExp::Integral) */
+            virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
+            {
+                return Integral(inarray);
+            }
+
+            /** \brief Virtual call to QuadExp::IProduct_WRT_B */
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(inarray,outarray);
+            }
+
+            virtual void v_IProductWRTDerivBase (const int dir,
                                                  const Array<OneD, const NekDouble> &inarray,
-                                                 Array<OneD,NekDouble> &outarray)
-         {
-             AddUDGHelmholtzTraceTerms(tau,inarray,outarray);
-         }
-
-        virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                 const Array<OneD, const NekDouble> &inarray,
-                                                 Array<OneD,SegExpSharedPtr> &EdgeExp, 
-                                                 Array <OneD,NekDouble > &outarray)
-         {
-             AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
-         }
-
-        virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                         Array<OneD,NekDouble> &outarray)
-        {
-            LaplacianMatrixOp(inarray,outarray);
-        }
+                                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTDerivBase(dir,inarray,outarray);
+            }
         
-        virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                         Array<OneD,NekDouble> &outarray,
-                                         const double lambda)
-        {
-            HelmholtzMatrixOp(inarray,outarray,lambda);
-        }   
-        
-    };
+            virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+                                     Array<OneD, NekDouble> &out_d0,
+                                     Array<OneD, NekDouble> &out_d1,
+                                     Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
+            {
+                PhysDeriv(inarray, out_d0, out_d1);
+            }
 
-    // type defines for use of QuadExp in a boost vector
-    typedef boost::shared_ptr<QuadExp> QuadExpSharedPtr;
-    typedef std::vector< QuadExpSharedPtr > QuadExpVector;
-    typedef std::vector< QuadExpSharedPtr >::iterator QuadExpVectorIter;
+            virtual void v_PhysDeriv(const int dir, 
+                                     const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD, NekDouble> &outarray)
+            {
+                PhysDeriv(dir,inarray,outarray);
+            }
+    
+            /// Virtual call to SegExp::FwdTrans
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                    Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans(inarray,outarray);
+            }
+    
+            /// Virtual call to QuadExp::Evaluate
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
+            {
+                return PhysEvaluate(coords);
+            }
+    
+            virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
+            {
+                return Linf(sol);
+            }
+    
+        
+            virtual NekDouble v_Linf()
+            {
+                return Linf();
+            }
+    
+            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
+            {
+                return StdExpansion::L2(sol);
+            }
+
+    
+            virtual NekDouble v_L2()
+            {
+                return StdExpansion::L2();
+            }
+
+            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
+            {
+                return GenMatrix(mkey);
+            }
+        
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+            {
+                return CreateStdMatrix(mkey);
+            }
+
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
+            {
+                return m_matrixManager[mkey];
+            }
+        
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
+            {
+                MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
+                return m_matrixManager[mkey];
+            }
+
+            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+            {
+                return m_staticCondMatrixManager[mkey];
+            }
+
+
+            virtual StdRegions::EdgeOrientation v_GetEorient(int edge)
+            {
+                return m_geom->GetEorient(edge);
+            }
+
+
+            virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge)
+            {
+                return m_geom->GetCartesianEorient(edge);
+            }
+
+        
+            virtual void v_AddNormTraceInt(const int dir,
+                                           Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,NekDouble> &outarray)
+            {
+                AddNormBoundaryInt(dir,inarray,outarray,true);
+            }
+
+            virtual void v_AddNormBoundaryInt(const int dir,
+                                              Array<OneD, const NekDouble> &inarray,
+                                              Array<OneD,NekDouble> &outarray)
+            {
+                AddNormBoundaryInt(dir,inarray,outarray,false);
+            }
+        
+            virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau,
+                                                        const Array<OneD, const NekDouble> &inarray,
+                                                        Array<OneD,NekDouble> &outarray)
+            {
+                AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
+            }
+
+            virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                                     const Array<OneD, const NekDouble> &inarray,
+                                                     Array<OneD,NekDouble> &outarray)
+            {
+                AddUDGHelmholtzTraceTerms(tau,inarray,outarray);
+            }
+
+            virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                                     const Array<OneD, const NekDouble> &inarray,
+                                                     Array<OneD,SegExpSharedPtr> &EdgeExp, 
+                                                     Array <OneD,NekDouble > &outarray)
+            {
+                AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
+            }
+
+            virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray)
+            {
+                LaplacianMatrixOp(inarray,outarray);
+            }
+        
+            virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const double lambda)
+            {
+                HelmholtzMatrixOp(inarray,outarray,lambda);
+            }   
+        
+        };
+
+        // type defines for use of QuadExp in a boost vector
+        typedef boost::shared_ptr<QuadExp> QuadExpSharedPtr;
+        typedef std::vector< QuadExpSharedPtr > QuadExpVector;
+        typedef std::vector< QuadExpSharedPtr >::iterator QuadExpVectorIter;
 
 
     } //end of namespace
@@ -431,6 +462,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.31  2008/07/02 14:09:18  pvos
+ *    Implementation of HelmholtzMatOp and LapMatOp on shape level
+ *
  *    Revision 1.30  2008/05/30 00:33:48  delisi
  *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

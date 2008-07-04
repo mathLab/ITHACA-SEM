@@ -80,10 +80,10 @@ namespace Nektar
             }    
 
             void GetCoords(Array<OneD,NekDouble> &coords_1,
-               Array<OneD,NekDouble> &coords_2 = NullNekDouble1DArray,
-               Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
+                           Array<OneD,NekDouble> &coords_2 = NullNekDouble1DArray,
+                           Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
             void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
-              Array<OneD,NekDouble> &coords);
+                          Array<OneD,NekDouble> &coords);
 
 
             const  SpatialDomains::GeomFactorsSharedPtr GetMetricInfo() const
@@ -106,11 +106,26 @@ namespace Nektar
             /// \brief Integrate the physical point list \a inarray over region
             NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
 
+            /** \brief  Inner product of \a inarray over region with respect to 
+                the expansion basis (this)->_Base[0] and return in \a outarray 
 
-            /// \brief  Inner product of \a inarray over region with respect to the 
-            /// expansion basis (this)->_Base[0] and return in \a outarray 
+                Wrapper call to SegExp::IProduct_WRT_B
+
+                Input:\n
+
+                - \a inarray: array of function evaluated at the physical
+                collocation points
+
+                Output:\n
+
+                - \a outarray: array of inner product with respect to each
+                basis over region
+            */
             void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                 Array<OneD,NekDouble> &outarray);
+                                 Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
+            }
 
             void IProductWRTDerivBase(const int dir,
                                       const Array<OneD, const NekDouble>& inarray,
@@ -122,12 +137,12 @@ namespace Nektar
 
 
             /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
-            physical quadrature points given by \a inarray and return in \a
-            outarray. */
+                physical quadrature points given by \a inarray and return in \a
+                outarray. */
             void PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
-               Array<OneD,NekDouble> &out_d0,
-               Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
-               Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray);     
+                           Array<OneD,NekDouble> &out_d0,
+                           Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
+                           Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray);     
         
             void PhysDeriv(const int dir, 
                            const Array<OneD, const NekDouble>& inarray,
@@ -140,13 +155,13 @@ namespace Nektar
             void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir);
 
             void ReverseCoeffsAndSign(const Array<OneD,NekDouble> &inarray,
-                                          Array<OneD,NekDouble> &outarray);
+                                      Array<OneD,NekDouble> &outarray);
         
             /** \brief Forward transform from physical quadrature space
-            stored in \a inarray and evaluate the expansion coefficients and
-            store in \a (this)->_coeffs  */
+                stored in \a inarray and evaluate the expansion coefficients and
+                store in \a (this)->_coeffs  */
             void FwdTrans(const Array<OneD, const NekDouble>& inarray, 
-              Array<OneD,NekDouble> &outarray);
+                          Array<OneD,NekDouble> &outarray);
 
             void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
                                          Array<OneD, NekDouble> &outarray);
@@ -171,8 +186,8 @@ namespace Nektar
                                     Array<OneD,NekDouble> &outarray);
             
             void AddNormTraceInt(const int dir,
-                             Array<OneD, const NekDouble> &inarray,
-                             Array<OneD,NekDouble> &outarray)
+                                 Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,NekDouble> &outarray)
             {
                 AddNormBoundaryInt(dir,inarray,outarray);
             }
@@ -200,12 +215,39 @@ namespace Nektar
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
-            /// \brief  Inner product of \a inarray over region with respect to
-            /// the expansion basis \a base and return in \a outarray 
-            inline void IProductWRTBase(const Array<OneD, const NekDouble>& base, 
-                    const Array<OneD, const NekDouble>& inarray, 
-                    Array<OneD,NekDouble> &outarray, 
-                    const int coll_check);
+
+
+            /**
+               \brief  Inner product of \a inarray over region with respect to
+               expansion basis \a base and return in \a outarray 
+
+               Calculate \f$ I[p] = \int^{1}_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1
+               = \sum_{i=0}^{nq-1} \phi_p(\xi_{1i}) u(\xi_{1i}) w_i \f$ where
+               \f$ outarray[p] = I[p], inarray[i] = u(\xi_{1i}), base[p*nq+i] =
+               \phi_p(\xi_{1i}) \f$.
+
+               Inputs: \n 
+
+               - \a base: an array definiing the local basis for the inner
+               product usually passed from Basis->get_bdata() or
+               Basis->get_Dbdata()
+               - \a inarray: physical point array of function to be integrated
+               \f$ u(\xi_1) \f$
+               - \a coll_check: Flag to identify when a Basis->collocation()
+               call should be performed to see if this is a GLL_Lagrange basis
+               with a collocation property. (should be set to 0 if taking the
+               inner product with respect to the derivative of basis)
+
+               Output: \n
+
+               - \a outarray: array of coefficients representing the inner
+               product of function with ever  mode in the exapnsion
+
+            **/
+            void IProductWRTBase(const Array<OneD, const NekDouble>& base, 
+                                 const Array<OneD, const NekDouble>& inarray,
+                                 Array<OneD, NekDouble> &outarray, 
+                                 int coll_check);
 
         private:
 
@@ -227,14 +269,14 @@ namespace Nektar
             }
 
             virtual void v_GetCoords(Array<OneD,NekDouble> &coords_0,
-                     Array<OneD,NekDouble> &coords_1 = NullNekDouble1DArray,
-                     Array<OneD,NekDouble> &coords_2 = NullNekDouble1DArray)
-        {
+                                     Array<OneD,NekDouble> &coords_1 = NullNekDouble1DArray,
+                                     Array<OneD,NekDouble> &coords_2 = NullNekDouble1DArray)
+            {
                 GetCoords(coords_0, coords_1, coords_2);
             }
 
             virtual void v_GetCoord(const Array<OneD, const NekDouble>& lcoord, 
-                     Array<OneD,NekDouble> &coord)
+                                    Array<OneD,NekDouble> &coord)
             {
                 GetCoord(lcoord, coord);
             }
@@ -262,9 +304,8 @@ namespace Nektar
             }
 
             /** \brief Virtual call to SegExp::IProduct_WRT_B */
-
             virtual void v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
-                       Array<OneD,NekDouble> &outarray)
+                                           Array<OneD,NekDouble> &outarray)
             {
                 IProductWRTBase(inarray,outarray);
             }
@@ -275,18 +316,11 @@ namespace Nektar
             {
                 IProductWRTDerivBase(dir,inarray,outarray);
             }
-            
-            /// Virtual call to SegExp::PhysDeriv
-            virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
-                    Array<OneD,NekDouble> &outarray)
-            {
-                StdSegExp::PhysDeriv(inarray, outarray);
-            }
 
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
-                     Array<OneD,NekDouble> &out_d0,
-                     Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
-                     Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray)
+                                     Array<OneD,NekDouble> &out_d0,
+                                     Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
+                                     Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray)
             {
                 PhysDeriv(inarray, out_d0);
             }
@@ -300,7 +334,7 @@ namespace Nektar
 
             /// Virtual call to SegExp::FwdTrans
             virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray, 
-                    Array<OneD,NekDouble> &outarray)
+                                    Array<OneD,NekDouble> &outarray)
             {
                 FwdTrans(inarray,outarray);
             }
@@ -324,21 +358,21 @@ namespace Nektar
             }
 
             /** \brief Virtual function to evaluate the discrete \f$ L_\infty\f$
-            error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
-            u_{exact}\f$ is given by the array \a sol. 
+                error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
+                u_{exact}\f$ is given by the array \a sol. 
 
-            The full function is defined in StdExpansion::Linf 
+                The full function is defined in StdExpansion::Linf 
 
-            Input: 
+                Input: 
 
-            - \a _phys: takes the physical value space array as
-            approximate solution
+                - \a _phys: takes the physical value space array as
+                approximate solution
 
-            - \a sol: array of solution function  at physical quadrature points
+                - \a sol: array of solution function  at physical quadrature points
 
-            output: 
+                output: 
 
-            - returns the \f$ L_\infty \f$ error as a NekDouble. 
+                - returns the \f$ L_\infty \f$ error as a NekDouble. 
             */
             virtual NekDouble v_Linf(const Array<OneD, const NekDouble>& sol)
             {
@@ -346,18 +380,18 @@ namespace Nektar
             }
 
             /** \brief Virtual function to evaluate the \f$ L_\infty \f$ norm of
-            the function defined at the physical points \a (this)->_phys. 
+                the function defined at the physical points \a (this)->_phys. 
 
-            The full function is defined in StdExpansion::Linf 
+                The full function is defined in StdExpansion::Linf 
 
-            Input: 
+                Input: 
 
-            - \a _phys: uses the physical value space array as discrete
-            function to be evaulated.
+                - \a _phys: uses the physical value space array as discrete
+                function to be evaulated.
 
-            output: 
+                output: 
 
-            - returns the \f$ L_\infty \f$  as a NekDouble. 
+                - returns the \f$ L_\infty \f$  as a NekDouble. 
             */
             virtual NekDouble v_Linf()
             {
@@ -365,21 +399,21 @@ namespace Nektar
             }
 
             /** \brief Virtual function to evaluate the \f$ L_2\f$, \f$ |
-            \epsilon |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2 dx
-            \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by the
-            array sol.
+                \epsilon |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2 dx
+                \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by the
+                array sol.
 
-            The full function is defined in StdExpansion::L2 
+                The full function is defined in StdExpansion::L2 
 
-            Input: 
+                Input: 
 
-            - \a _phys: takes the physical value space array as
-            approximate solution
-            - \a sol: array of solution function  at physical quadrature points
+                - \a _phys: takes the physical value space array as
+                approximate solution
+                - \a sol: array of solution function  at physical quadrature points
 
-            output: 
+                output: 
 
-            - returns the \f$ L_2 \f$ error as a NekDouble. 
+                - returns the \f$ L_2 \f$ error as a NekDouble. 
             */
             virtual NekDouble v_L2(const Array<OneD, const NekDouble>& sol)
             {
@@ -387,18 +421,18 @@ namespace Nektar
             }
 
             /** \brief Virtual function to evaluate the \f$ L_2\f$ norm of the
-            function defined at the physical points \a (this)->_phys.  
+                function defined at the physical points \a (this)->_phys.  
 
-            The full function is defined in StdExpansion::L2 
+                The full function is defined in StdExpansion::L2 
 
-            Input: 
+                Input: 
 
-            - \a _phys: uses the physical value space array as discrete
-            function to be evaulated.
+                - \a _phys: uses the physical value space array as discrete
+                function to be evaulated.
 
-            output: 
+                output: 
 
-            - returns the \f$ L_2 \f$  as a NekDouble. 
+                - returns the \f$ L_2 \f$  as a NekDouble. 
             */
             virtual NekDouble v_L2()
             {
@@ -469,10 +503,10 @@ namespace Nektar
             }            
         };
 
-    // type defines for use of SegExp in a boost vector
-    typedef boost::shared_ptr<SegExp>      SegExpSharedPtr;
-    typedef std::vector< SegExpSharedPtr > SegExpVector;
-    typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
+        // type defines for use of SegExp in a boost vector
+        typedef boost::shared_ptr<SegExp>      SegExpSharedPtr;
+        typedef std::vector< SegExpSharedPtr > SegExpVector;
+        typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
     } //end of namespace
 } //end of namespace
 
@@ -480,6 +514,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.36  2008/07/02 14:09:18  pvos
+// Implementation of HelmholtzMatOp and LapMatOp on shape level
+//
 // Revision 1.35  2008/05/30 00:33:48  delisi
 // Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 //

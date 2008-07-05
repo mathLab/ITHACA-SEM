@@ -81,7 +81,7 @@ namespace Nektar
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
                 DNekMatSharedPtr D0 = m_base[0]->GetD();
-                if(inarray == outarray_d0)
+                if(inarray.get() == outarray_d0.get())
                 {
                     Array<OneD, NekDouble> wsp(nquad0 * nquad1);
                     CopyArray(inarray,wsp);
@@ -100,7 +100,7 @@ namespace Nektar
             if (outarray_d1.num_elements() > 0) // calculate du/dx_1
             {
                 DNekMatSharedPtr D1 = m_base[1]->GetD();
-                if(inarray == outarray_d1)
+                if(inarray.get() == outarray_d1.get())
                 {
                     Array<OneD, NekDouble> wsp(nquad0 * nquad1);
                     CopyArray(inarray,wsp);
@@ -114,24 +114,39 @@ namespace Nektar
                 }
             }
 
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+#else // NEKTAR_USING_DIRECT_BLAS_CALLS off
 
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
                 DNekMatSharedPtr D0 = m_base[0]->GetD();
                 DNekMat out(nquad0,nquad1,outarray_d0,eWrapper);
-                //DNekMat in(nquad0,nquad1,inarray,eWrapper);  
-                NekMatrix<const double> in(nquad0, nquad1, inarray, eWrapper);
-                out = (*D0) * in;
+                if(inarray.get() == outarray_d0.get())
+                {
+                    DNekMat in (nquad0,nquad1,inarray);  // copy input array 
+                    out = (*D0) * in;
+                }
+                else
+                {
+                    NekMatrix<const double> in(nquad0, nquad1, inarray, eWrapper);
+                    out = (*D0) * in;
+                }
             }
 
             if (outarray_d1.num_elements() > 0) // calculate du/dx_1
             {
                 DNekMatSharedPtr D1 = m_base[1]->GetD();
                 DNekMat out(nquad0,nquad1,outarray_d1,eWrapper);
-                //DNekMat in(nquad0,nquad1,inarray,eWrapper);  
-                NekMatrix<const double> in(nquad0, nquad1, inarray, eWrapper);
-                out = in * Transpose(*D1);
+
+                if(inarray.get() == outarray_d1.get()) // copy input array 
+                {
+                    DNekMat in (nquad0,nquad1,inarray);  
+                    out = in * Transpose(*D1);
+                }
+                else 
+                {
+                    NekMatrix<const double> in(nquad0, nquad1, inarray, eWrapper);
+                    out = in * Transpose(*D1);
+                }
             }
 
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
@@ -204,6 +219,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.26  2008/07/04 10:18:40  pvos
+* Some updates
+*
 * Revision 1.25  2008/06/05 15:06:06  pvos
 * Added documentation
 *

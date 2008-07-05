@@ -597,9 +597,11 @@ namespace Nektar
             int e_ncoeffs, loc,id,offset;
             NekDouble sign;
 
-            Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs(); 
+            Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs(); // linked data
             DNekVec Floc;
 
+            // Zero trace space
+            Vmath::Zero(GloBndDofs,BndSol,1);
 
             cnt = 0;
             for(n = 0; n < nexp; ++n)
@@ -622,14 +624,7 @@ namespace Nektar
                 DNekVec     ElmtFce(e_ncoeffs, e_f ,eWrapper);
                 DNekScalMat &LamToU = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
 
-#if 1
                 Floc = Transpose(LamToU)*ElmtFce;
-#else
-                const DNekMat TLamToU = *LamToU.GetOwnedMatrix();
-                TLamToU.Transpose();
-                Floc = LamToU.Scale()*TLamToU*ElmtFce;
-                TLamToU.Transpose();
-#endif           
 
                 // Put value into trace space expansion
                 for(i = 0; i < nbndry; ++i)
@@ -724,6 +719,7 @@ namespace Nektar
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 
                 Array<OneD,NekDouble> sln = BndSol+NumDirichlet;
+
                 LinSys->Solve(sln,sln);
             }
             

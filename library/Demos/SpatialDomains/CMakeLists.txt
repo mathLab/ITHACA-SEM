@@ -1,0 +1,19 @@
+SET(LinkLibraries 
+    optimized SpatialDomains debug SpatialDomains-g
+    optimized StdRegions debug StdRegions-g
+    optimized LibUtilities debug LibUtilities-g
+    optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
+    optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
+    optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}
+    optimized tinyxml debug tinyxml
+)
+
+SET(SpatialDomains1DSource  Graph1D.cpp)
+ADD_NEKTAR_EXECUTABLE(Graph1D SpatialDomains1DSource)
+TARGET_LINK_LIBRARIES(Graph1D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(Graph1D)
+
+SET(SpatialDomains2DSource  Graph2D.cpp)
+ADD_NEKTAR_EXECUTABLE(Graph2D SpatialDomains2DSource)
+TARGET_LINK_LIBRARIES(Graph2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(Graph2D)

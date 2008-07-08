@@ -47,6 +47,7 @@
 
 #include <tinyxml/tinyxml.h>
 #include <string>
+#include <sstream>
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/MeshGraph2D.h>
@@ -265,8 +266,9 @@ namespace Nektar
         ASSERTL0(master, "Unable to find NEKTAR tag in file.");
 
         // Find the Expansions tag
-        TiXmlElement *expansionTypes = master->FirstChildElement("EXPANSIONS");
-        ASSERTL0(expansionTypes, "Unable to find EXPANSIONS tag in file.");
+         TiXmlElement *expansionTypes = master->FirstChildElement("EXPANSIONTYPES");
+//         TiXmlElement *expansionTypes = master->FirstChildElement("EXPANSIONS");
+        ASSERTL0(expansionTypes, "Unable to find EXPANSIONTYPES tag in file.");
 
         if (expansionTypes)
         {
@@ -367,20 +369,192 @@ namespace Nektar
 
     void MeshGraph::ReadCurves(TiXmlDocument &doc)
     {
-        
-       // insert code here
+        /// We know we have it since we made it this far.
+        TiXmlHandle docHandle(&doc);
+        TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
+        TiXmlElement* field = NULL;
 
+        /// Look for elements in CURVE block.
+        field = mesh->FirstChildElement("CURVE");
+
+        ASSERTL0(field, "Unable to find CURVE tag in file.");
+
+        int nextCurveNumber = -1;
+        Curve curve(-1, LibUtilities::eNoPointsType, VertexVector());
+        
+        /// All curves are of the form: "<? ID="#" TYPE="GLL OR EQUAL" NUMPOINTS="#"> ... </?>", with
+        /// ? being an element type (either E or F).
+
+        TiXmlElement *element = field->FirstChildElement();
+
+        while(element)
+        {
+            std::string elementType(element->ValueStr());
+
+            ASSERTL0(elementType == "E" || elementType == "F", (std::string("Unknown 3D curve type: ") + elementType).c_str());
+
+            /// These should be ordered.
+            nextCurveNumber++;
+
+            /// Read id attribute.
+            int indx=-1;
+            int err = element->QueryIntAttribute("ID", &indx);
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
+            ASSERTL0(indx == nextCurveNumber, "Curve IDs must begin with zero and be sequential.");
+
+            /// Read text element description.
+            TiXmlNode* elementChild = element->FirstChild();
+            std::string elementStr;
+            while(elementChild)
+            {
+                if (elementChild->Type() == TiXmlNode::TEXT)
+                {
+                    elementStr += elementChild->ToText()->ValueStr();
+                }
+                elementChild = elementChild->NextSibling();
+            }
+
+            ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
+            
+                /// Parse out the element components corresponding to type of element.
+                if (elementType == "E")
+                {
+                    std::string typeStr = element->Attribute("TYPE");
+                    ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
+
+                    LibUtilities::PointsType type;
+                    const std::string* begStr = kPointsTypeStr;
+                    const std::string* endStr = kPointsTypeStr + LibUtilities::SIZE_PointsType;
+                    const std::string* ptsStr = std::find(begStr, endStr, typeStr);
+
+                    ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                    type = (LibUtilities::PointsType)(ptsStr - begStr);
+
+                    std::string numptsStr = element->Attribute("NUMPOINTS");
+                    ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
+                    int numPts=0;
+                    std::strstream s;
+                    s << numptsStr;
+                    s >> numPts;
+                    
+                    cout << "numpts = " << numPts << endl;
+ 
+                    // Read points (x, y, z)
+                    double xval, yval, zval;
+                    std::istringstream elementDataStrm(elementStr.c_str());
+                    try
+                    {
+                        while(!elementDataStrm.fail())
+                        {
+                            elementDataStrm >> xval >> yval >> zval;
+
+                            // Need to check it here because we may not be good after the read
+                            // indicating that there was nothing to read.
+                            if (!elementDataStrm.fail())
+                            {
+                                VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, indx, xval, yval, zval));
+                                curve.m_verts.push_back(vert);
+                            }
+                        }
+                    }
+                    catch(...)
+                    {
+                        NEKERROR(ErrorUtil::efatal,
+                        (std::string("Unable to read curve data for EDGE: ") + elementStr).c_str());
+                        
+                    }   
+
+
+                } // end if-loop
+                else if(elementType == "F")
+                {
+                    std::string typeStr = element->Attribute("TYPE");
+                    ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
+
+                     cout << "typeStr = " << typeStr << endl;
+
+                    LibUtilities::PointsType type;
+                    const std::string* begStr = kPointsTypeStr;
+                    const std::string* endStr = kPointsTypeStr + LibUtilities::SIZE_PointsType;
+                    const std::string* ptsStr = std::find(begStr, endStr, typeStr);
+
+                    ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                    type = (LibUtilities::PointsType)(ptsStr - begStr);
+
+                    std::string numptsStr = element->Attribute("NUMPOINTS");
+                    ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
+                    int numPts=0;
+                    std::strstream s;
+                    s << numptsStr;
+                    s >> numPts;
+                    
+                    cout << "numpts = " << numPts << endl;
+ 
+                    // Read points (x, y, z)
+                    double xval, yval, zval;
+                    std::istringstream elementDataStrm(elementStr.c_str());
+                    try
+                    {
+                        while(!elementDataStrm.fail())
+                        {
+                            elementDataStrm >> xval >> yval >> zval;
+
+                            // Need to check it here because we may not be good after the read
+                            // indicating that there was nothing to read.
+                            if (!elementDataStrm.fail())
+                            {
+                                VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, indx, xval, yval, zval));
+                                curve.m_verts.push_back(vert);
+                            }
+                        }
+                    }
+                    catch(...)
+                    {
+                        NEKERROR(ErrorUtil::efatal,
+                        (std::string("Unable to read curve data for FACE: ") + elementStr).c_str());
+                        
+                    }   
+
+
+                }
+
+
+                
+
+        } // end while-loop
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       // insert code here
     }
-    
+
     void MeshGraph::ReadCurves(std::string &infilename)
     {
+        TiXmlDocument doc(infilename);
+        bool loadOkay = doc.LoadFile();
 
-       // insert code here
-    
+        std::string errstr = "Unable to load file: ";
+        errstr += infilename;
+        ASSERTL0(loadOkay, errstr.c_str());
+
+        ReadCurves(doc);
     }
-    
 
-    LibUtilities::BasisKey MeshGraph::GetBasisKey(ExpansionShPtr in, 
+
+    LibUtilities::BasisKey MeshGraph::GetBasisKey(ExpansionShPtr in,
         const int flag)
     {
         int order = (int) in->m_NumModesEqn.Evaluate();
@@ -923,6 +1097,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.20  2008/06/30 19:34:46  ehan
+// Fixed infinity recursive-loop error.
+//
 // Revision 1.19  2008/06/11 16:10:12  delisi
 // Added the 3D reader.
 //

@@ -19,14 +19,14 @@ int main(int argc, char *argv[]){
     //  exit(1);
     //}
 
-#if 1
+#if 0
     string in(argv[argc-1]);
     string bcfile(argv[argc-1]);
 #else
     // If we all have the same relative structure, these should work for everyone.
-#if 0 
-    string in("../../../library/Demos/SpatialDomains/meshdef2D.xml");
-    string bcfile("../../../library/Demos/SpatialDomains/BC1.xml");
+#if 1
+    string in("../../../../library/Demos/SpatialDomains/meshdef2D.xml");
+    string bcfile("../../../../library/Demos/SpatialDomains/BC1.xml");
 #else 
     string in("C:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/meshdef2D.xml");
     string bcfile("c:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/BC1.xml");
@@ -37,7 +37,8 @@ int main(int argc, char *argv[]){
     BoundaryConditions bcs(&graph2D);
 
     graph2D.ReadGeometry(in);
-    graph2D.ReadExpansions(in);
+//     graph2D.ReadExpansions(in);
+//     graph2D.ReadCurve(in);
     bcs.Read(bcfile);
 
     try

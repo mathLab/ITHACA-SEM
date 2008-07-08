@@ -75,6 +75,30 @@ namespace Nektar
             "NODAL"
         };
 
+        const std::string kPointsTypeStr[] =
+        {
+            "NoPointsType",
+            "GaussGaussLegendre",
+            "GaussRadauMLegendre",
+            "GaussRadauPLegendre",
+            "GaussLobattoLegendre",
+            "GaussGaussChebyshev",
+            "GaussRadauMChebyshev",
+            "GaussRadauPChebyshev",
+            "GaussLobattoChebyshev",
+            "GaussRadauMAlpha0Beta1",
+            "GaussRadauMAlpha0Beta2",
+            "GaussRadauMAlpha1Beta0",
+            "GaussRadauMAlpha2Beta0",
+            "PolyEvenlySpaced",
+            "FourierEvenlySpaced",
+            "NodalTriElec",
+            "NodalTriFekete",
+            "NodalTriEvenlySpaced",
+            "NodalTetEvenlySpaced",
+            "NodalTetElec",
+        };
+
         typedef boost::shared_ptr<InterfaceComponent> SharedInterfaceCompPtr;
         typedef std::vector< VertexComponentSharedPtr >  VertexVector;
         typedef std::list< SharedInterfaceCompPtr > InterfaceCompList;
@@ -89,9 +113,29 @@ namespace Nektar
             int m_EdgeIndx;
         };
 
+
+       // typedef boost::shared_ptr<LibUtilities::Points<NekDouble> > PointsSharedPtr;
+
+        // curve reader structure
+        struct Curve
+        {
+            Curve(int edgeID, LibUtilities::PointsType type, VertexVector verts):
+                edgeID(edgeID),
+                type(type),
+                m_verts(verts)
+            {};
+            int edgeID;
+            LibUtilities::PointsType type;
+            VertexVector m_verts;
+        };
+
         typedef boost::shared_ptr<ElementEdge> ElementEdgeSharedPtr;
         typedef std::vector<ElementEdgeSharedPtr> ElementEdgeVector;
         typedef boost::shared_ptr<ElementEdgeVector> ElementEdgeVectorSharedPtr;
+
+        typedef boost::shared_ptr<Curve> CurveSharedPtr;
+        typedef std::vector<CurveSharedPtr> CurveVector;
+        typedef boost::shared_ptr<CurveVector> CurveVectorSharedPtr;
 
         struct Expansion
         {
@@ -211,7 +255,9 @@ namespace Nektar
             VertexVector  m_vertset;
             InterfaceCompList m_icomps;
 
-            SegGeomVector m_seggeoms;
+            CurveVector             m_curvegeoms;
+
+            SegGeomVector           m_seggeoms;
 
             TriGeomVector           m_trigeoms;
             QuadGeomVector          m_quadgeoms;
@@ -235,6 +281,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.25  2008/06/30 19:34:54  ehan
+// Fixed infinity recursive-loop error.
+//
 // Revision 1.24  2008/06/12 23:27:57  delisi
 // Removed MeshGraph.h include from SegGeom.h, to get rid of circular includes. Now can use typedefs from SegGeom.h instead of repeating it in MeshGraph.h.
 //

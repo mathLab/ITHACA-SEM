@@ -1,3 +1,4 @@
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // File DisContField2D.cpp
@@ -610,6 +611,7 @@ namespace Nektar
             }
             e_lambda = Array<OneD,NekDouble>(cnt);
 
+#if 0       //Forcing based on analytical derivation  From Cockburn paper -- Slow convergence
             // Set up boundary space forcing
             for(cnt = n = 0; n < nexp; ++n)
             {
@@ -635,6 +637,39 @@ namespace Nektar
                 }
                 cnt  += e_ncoeffs;
             }
+#else      // Forcing based on flux derivative. 
+            Array<OneD,NekDouble> ftmp;
+
+            // Forcing  using  Direct form <\phi,[[qf ]]>
+            offset = 0;
+            for(e = 0; e < nexp; ++e)
+            {
+                nbndry = (*m_exp)[e]->NumDGBndryCoeffs();
+                e_ncoeffs = (*m_exp)[e]->GetNcoeffs();
+
+                // Get BndSysForce Matrix
+                LocalRegions::MatrixKey Bmatkey(StdRegions::eUnifiedDGHelmBndSysForce,  (*m_exp)[e]->DetExpansionType(),*((*m_exp)[e]), lambda, tau);
+                
+                DNekScalMat &BndSys = *((*m_exp)[e]->GetLocMatrix(Bmatkey));                               
+                DNekVec vin (e_ncoeffs,ftmp = f+offset,eWrapper);
+                DNekVec vout(nbndry);
+                
+                vout = BndSys*vin;
+
+                // Subtract vout from forcing terms 
+                cnt = 0;
+                for(i = 0; i < nbndry; ++i)
+                {
+                    id = m_elmtTraceMap[e][i];
+                    m_trace->SetCoeff(id, m_trace->GetCoeff(id)
+                                      - m_elmtTraceSign[e][cnt]*vout[i]);
+                    cnt++;
+                }
+
+                offset += e_ncoeffs;
+            }
+
+#endif
 
             // Copy Dirichlet boundary conditions into trace space        
             for(i = 0; i < m_bndTypes.num_elements(); ++i)
@@ -651,10 +686,10 @@ namespace Nektar
                         {
                             m_trace->SetCoeff(offset + j,BndExp->GetCoeff(j));
                         }
-
                     }
                 }
             }
+
 
             // Dirichlet boundary forcing 
             for(e = 0; e < nexp; ++e)
@@ -667,7 +702,7 @@ namespace Nektar
                     // Get BndSys Matrix
 
                     LocalRegions::MatrixKey Bmatkey(StdRegions::eUnifiedDGHelmBndSys,  (*m_exp)[e]->DetExpansionType(),*((*m_exp)[e]), lambda, tau);
-
+                    
                     DNekScalMat &BndSys = *((*m_exp)[e]->GetLocMatrix(Bmatkey));               
                     DNekVec vin (nbndry);
                     DNekVec vout(nbndry);
@@ -734,7 +769,7 @@ namespace Nektar
                 e_f      = f + cnt;
                 // put elemental solutions into local space; 
                 
-#if 0
+#if 1
                 for(j = 0; j < nbndry; ++j)
                 {
                     e_lambda[j] = m_elmtTraceSign[i][j]*m_trace->GetCoeffs(m_elmtTraceMap[i][j]);

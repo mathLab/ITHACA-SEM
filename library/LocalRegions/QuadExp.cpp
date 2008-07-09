@@ -1119,7 +1119,7 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetScaleFactor();
+                    NekDouble factor = mkey.GetConstant(0);
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetExpansionType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
@@ -1143,6 +1143,7 @@ namespace Nektar
             case StdRegions::eUnifiedDGLamToQ0:
             case StdRegions::eUnifiedDGLamToQ1:
             case StdRegions::eUnifiedDGHelmBndSys:
+            case StdRegions::eUnifiedDGHelmBndSysForce:
                 {
                     NekDouble one    = 1.0;
                     
@@ -1330,6 +1331,63 @@ namespace Nektar
             }
 
         }
+
+
+#if 0 
+        void QuadExp::AddBoundaryInt(const int dir,
+                                     Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD,NekDouble> &outarray,
+                                     bool InArrayIsTrace) 
+        {
+
+            int i,e,cnt;
+            int order_e,nquad_e;
+            
+            StdRegions::StdExpMap vmap;
+
+            Array<OneD,SegExpSharedPtr>   EdgeExp(4);
+            
+            // Set up edge segment expansions
+            for(i = 0; i < 4; ++i)
+            {
+                EdgeExp[i] = GetEdgeExp(i);
+            }
+
+            
+            cnt = 0;
+            for(e = 0; e < 4; ++e)
+            {
+                order_e = EdgeExp[e]->GetNcoeffs();
+                nquad_e = EdgeExp[e]->GetNumPoints(0);
+                
+
+                // Fill modes into expansion
+                if(InArrayIsTrace == true)
+                {
+                    for(i = 0; i < order_e; ++i)
+                    {
+                        EdgeExp[e]->SetCoeff(i,inarray[i+cnt]);
+                    }
+                    cnt += order_e;
+                }
+                else
+                {
+                    MapTo(order_e,EdgeExp[e]->GetBasisType(0),e,
+                          GetCartesianEorient(e),vmap);
+                    for(i = 0; i < order_e; ++i)
+                    {
+                        EdgeExp[e]->SetCoeff(i,inarray[vmap[i]]);
+                    }
+                }
+
+                EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
+                                     EdgeExp[e]->UpdatePhys());
+
+                AddEdgeBoundaryInt(e,EdgeExp[e],outarray);
+            }
+
+        }
+#endif
 
         void QuadExp:: AddEdgeBoundaryInt(const int edge, 
                                           SegExpSharedPtr &EdgeExp,
@@ -1529,9 +1587,13 @@ namespace Nektar
             {
                 
                 order_e = EdgeExp[e]->GetNcoeffs();                    
+
                 Vmath::Vcopy(order_e,tmp =inarray+cnt,1,EdgeExp[e]->UpdateCoeffs(),1);
+
                 EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),EdgeExp[e]->UpdatePhys());
+
                 AddUDGHelmholtzEdgeTerms(tau,e,EdgeExp[e],outarray);
+
                 cnt += order_e;
             }
         }
@@ -1954,6 +2016,7 @@ namespace Nektar
                     LocalRegions::MatrixKey Q1matkey(StdRegions::eUnifiedDGLamToQ1, DetExpansionType(),*this, lambdaval,tau);
                     DNekScalMat &LamToQ1 = *GetLocMatrix(Q1matkey); 
 
+
                     // Set up matrix derived from <mu, Q_lam.n - \tau (
                     // U_lam - Lam) > Not we do not need the lambda term in
                     // continuous flux since this is equal and
@@ -2033,7 +2096,6 @@ namespace Nektar
                                              work,1,work,1);
                             }
 
-                            
                             // - tau (ulam - lam)
                             for(j = 0; j < order_e; ++j)
                             {
@@ -2047,6 +2109,7 @@ namespace Nektar
                             Vmath::Svtvp(nquad_e,-tau,EdgeExp[e]->GetPhys(),1,
                                          work,1,work,1);
                       
+
                             EdgeExp[e]->IProductWRTBase(work,EdgeExp[e]->UpdateCoeffs());
                             
                             EdgeExp[e]->SetCoeffsToOrientation(edgedir);
@@ -2060,9 +2123,172 @@ namespace Nektar
 
                         }
                     }
+                }
+                break;
+            case StdRegions::eUnifiedDGHelmBndSysForce:
+                {
+                    int order_e, nquad_e;
+                    int i,j,e,cnt;
+                    int nbndry = NumDGBndryCoeffs();
+                    int nquad0 = GetNumPoints(0);
+                    int nquad1 = GetNumPoints(1);
+                    Array<OneD,NekDouble>       work(max(nquad0,nquad1));
+                    SpatialDomains::GeomType    Gtype   = m_metricinfo->GetGtype();
+                    Array<TwoD,const NekDouble> normals = m_metricinfo->GetNormals();
+                    int coordim = m_geom->GetCoordim();
+                    Array<OneD,SegExpSharedPtr>  EdgeExp(4);
 
-                    // Could symmetrise system here if necessary
+                    NekDouble lambdaval = mkey.GetConstant(0);
+                    NekDouble tau       = mkey.GetConstant(1);
 
+                    StdRegions::StdExpMap emap;
+                    StdRegions::EdgeOrientation edgedir;
+                    
+                    ASSERTL0(coordim < 3,"Needs to be  set up for expansion in 3 space");
+
+                    // Set up edge segment expansions from local geom info
+                    for(i = 0; i < 4; ++i)
+                    {
+                        EdgeExp[i] = GetEdgeExp(i);
+                    }
+
+                    // declare matrix space
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry, m_ncoeffs);
+                    DNekMat &BndMat = *returnval;
+                    
+                    // Matrix to map Lambda to U
+                    LocalRegions::MatrixKey Umatkey(StdRegions::eUnifiedDGLamToU,DetExpansionType(),*this, lambdaval,tau);
+                    DNekScalMat &LamToU = *GetLocMatrix(Umatkey); 
+                
+                    // UDG Helmholtz inverse
+                    LocalRegions::MatrixKey InvDGHelmkey(StdRegions::eInvUnifiedDGHelmholtz,DetExpansionType(),*this, lambdaval,tau);
+                    DNekScalMat &InvDGHelm = *GetLocMatrix(InvDGHelmkey); 
+                 
+                    // Weak derivative matrices
+                    DNekScalMat &Dmat0 = *GetLocMatrix(StdRegions::eWeakDeriv0);
+                    DNekScalMat &Dmat1 = *GetLocMatrix(StdRegions::eWeakDeriv1);                     
+                    // inverse mass matrix
+                    LocalRegions::MatrixKey InvMasskey(StdRegions::eInvMass, 
+                                                       DetExpansionType(),
+                                                       *this, lambdaval,tau);
+                    DNekScalMat &InvMass = *GetLocMatrix(InvMasskey); 
+                    Array<OneD,NekDouble> f(m_ncoeffs);
+                    DNekVec  F(m_ncoeffs,f,eWrapper);
+                    DNekVec  Q0(m_ncoeffs),Q1(m_ncoeffs),U(m_ncoeffs);
+
+                    // Set up matrix for all forcing inputs
+                    for(i = 0; i < m_ncoeffs; ++i)
+                    {
+                        cnt = 0; 
+
+                        Vmath::Zero(m_ncoeffs,f,1);
+                        F[i] = 1;
+                        
+                        // calculate U
+                        U  = InvDGHelm*F;
+
+                        // calculate Q0
+                        Q0 = InvMass*Transpose(Dmat0)*U;
+                        Q0 = -1*Q0;
+
+                        // calculate Q1                        
+                        Q1 = InvMass*Transpose(Dmat1)*U;
+                        Q1 = -1*Q1;
+
+                        for(e = 0; e < GetNedges(); ++e)
+                        {
+                            order_e = EdgeExp[e]->GetNcoeffs();  
+                            nquad_e = EdgeExp[e]->GetNumPoints(0);    
+
+                            edgedir = GetCartesianEorient(e);
+
+                            MapTo(order_e,EdgeExp[e]->GetBasisType(0),
+                                  e,edgedir,emap);
+
+                            // Q0 * n0
+                            for(j = 0; j < order_e; ++j)
+                            {
+                                EdgeExp[e]->SetCoeff(j,emap.GetSign(j)*Q0[emap[j]]);
+                            }
+                            
+                            EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
+                                                 EdgeExp[e]->UpdatePhys());
+                            if(Gtype == SpatialDomains::eDeformed)
+                            {
+                                if(edgedir == StdRegions::eForwards)
+                                {
+                                    Vmath::Vmul(nquad_e,&normals[e][0],1,
+                                                &EdgeExp[e]->GetPhys()[0],1,
+                                                &work[0],1);
+                                }
+                                else
+                                {
+                                    Vmath::Vmul(nquad_e,&normals[e][0] +nquad_e-1,-1,
+                                                &EdgeExp[e]->GetPhys()[0],1,
+                                                &work[0],1);
+                                }
+                            }
+                            else
+                            {
+                                Vmath::Smul(nquad_e,normals[e][0],
+                                            EdgeExp[e]->GetPhys(),1,work,1);
+                            }
+
+                            // Q1 * n1
+                            for(j = 0; j < order_e; ++j)
+                            {
+                                EdgeExp[e]->SetCoeff(j,emap.GetSign(j)*Q1[emap[j]]);
+                            }
+                            
+                            EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
+                                                 EdgeExp[e]->UpdatePhys());
+                            if(Gtype == SpatialDomains::eDeformed)
+                            {
+                                
+                                if(edgedir == StdRegions::eForwards)
+                                {
+                                    Vmath::Vvtvp(nquad_e,&normals[e][nquad_e],1,
+                                                 &EdgeExp[e]->GetPhys()[0],1,
+                                                 &work[0],1,&work[0],1);
+                                }
+                                else
+                                {
+                                    Vmath::Vvtvp(nquad_e,&normals[e][nquad_e]+nquad_e-1,-1,
+                                                 &EdgeExp[e]->GetPhys()[0],1,
+                                                 &work[0],1,&work[0],1);
+                                }
+                            }
+                            else
+                            {
+                                Vmath::Svtvp(nquad_e,normals[e][1],
+                                             EdgeExp[e]->GetPhys(),1,
+                                             work,1,work,1);
+                            }
+                            
+                            // -tau ulam (for force case) 
+                            for(j = 0; j < order_e; ++j)
+                            {
+                                EdgeExp[e]->SetCoeff(j,emap.GetSign(j)*U[emap[j]]);
+                            }
+                            
+                            EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
+                                                 EdgeExp[e]->UpdatePhys());
+
+                            Vmath::Svtvp(nquad_e,-tau,EdgeExp[e]->GetPhys(),1,
+                                         work,1,work,1);
+                      
+                            EdgeExp[e]->IProductWRTBase(work,EdgeExp[e]->UpdateCoeffs());
+                            
+                            EdgeExp[e]->SetCoeffsToOrientation(edgedir);
+
+                            for(j = 0; j < order_e; ++j)
+                            {
+                                BndMat(cnt+j,i) = EdgeExp[e]->GetCoeff(j);
+                            }
+                            
+                            cnt += order_e;
+                        }
+                    }
                 }
                 break;
             default:
@@ -2194,6 +2420,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.41  2008/07/04 10:19:05  pvos
+ *    Some updates
+ *
  *    Revision 1.40  2008/07/02 14:09:18  pvos
  *    Implementation of HelmholtzMatOp and LapMatOp on shape level
  *

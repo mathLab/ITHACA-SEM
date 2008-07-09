@@ -1,10 +1,13 @@
 #include <cstdio>
 #include <cstdlib>
-#include <iostream> 
-#include "SpatialDomains/MeshGraph2D.h"
+#include <iostream>
+#include <vector>
+#include <string>
+#include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/BoundaryConditions.h>
 
 #include <boost/shared_ptr.hpp>
+
 
 using namespace Nektar;
 using namespace SpatialDomains; 
@@ -25,20 +28,23 @@ int main(int argc, char *argv[]){
 #else
     // If we all have the same relative structure, these should work for everyone.
 #if 1
+
     string in("../../../../library/Demos/SpatialDomains/meshdef2D.xml");
     string bcfile("../../../../library/Demos/SpatialDomains/BC1.xml");
-#else 
+
+#else
     string in("C:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/meshdef2D.xml");
-    string bcfile("c:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/BC1.xml");
+    string bcfile("c:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/BC1.xml");    
 #endif
+
 #endif
 
     MeshGraph2D graph2D;
     BoundaryConditions bcs(&graph2D);
 
     graph2D.ReadGeometry(in);
-//     graph2D.ReadExpansions(in);
-//     graph2D.ReadCurve(in);
+    graph2D.ReadCurves(in);
+    graph2D.ReadExpansions(in);
     bcs.Read(bcfile);
 
     try

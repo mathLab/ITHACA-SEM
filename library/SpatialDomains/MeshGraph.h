@@ -75,28 +75,28 @@ namespace Nektar
             "NODAL"
         };
 
+        enum PointsType
+        {
+            eNoPointsType,
+            eGaussLobattoLegendre,
+            eGaussGaussChebyshev,
+            ePolyEvenlySpaced,
+            eNodalTriFekete,
+            eNodalTriElec,
+            eNodalTriEvenlySpaced,
+            ePointsTypeSize
+        };
+
+        // Keep this consistent with the enums in PointsType.        
         const std::string kPointsTypeStr[] =
         {
-            "NoPointsType",
-            "GaussGaussLegendre",
-            "GaussRadauMLegendre",
-            "GaussRadauPLegendre",
-            "GaussLobattoLegendre",
-            "GaussGaussChebyshev",
-            "GaussRadauMChebyshev",
-            "GaussRadauPChebyshev",
-            "GaussLobattoChebyshev",
-            "GaussRadauMAlpha0Beta1",
-            "GaussRadauMAlpha0Beta2",
-            "GaussRadauMAlpha1Beta0",
-            "GaussRadauMAlpha2Beta0",
-            "PolyEvenlySpaced",
-            "FourierEvenlySpaced",
-            "NodalTriElec",
-            "NodalTriFekete",
-            "NodalTriEvenlySpaced",
-            "NodalTetEvenlySpaced",
-            "NodalTetElec",
+            "NOTYPE",         // 0
+            "GLL",            // 1
+            "CHEBYSHEV",      // 2
+            "POLYEVEN",       // 3
+            "FEKETE",         // 4
+            "ELECTROSTATIC",  // 5
+            "TRIEVEN"         // 6
         };
 
         typedef boost::shared_ptr<InterfaceComponent> SharedInterfaceCompPtr;
@@ -113,19 +113,16 @@ namespace Nektar
             int m_EdgeIndx;
         };
 
-
-       // typedef boost::shared_ptr<LibUtilities::Points<NekDouble> > PointsSharedPtr;
-
         // curve reader structure
         struct Curve
         {
-            Curve(int edgeID, LibUtilities::PointsType type, VertexVector verts):
-                edgeID(edgeID),
-                type(type),
-                m_verts(verts)
-            {};
-            int edgeID;
-            LibUtilities::PointsType type;
+            Curve(int curveID, PointsType type, VertexVector verts):
+                  curveID(curveID),
+                  type(type),
+                  m_verts(verts)
+                {};
+            int curveID; // id for edges or faces
+            PointsType type;
             VertexVector m_verts;
         };
 
@@ -281,6 +278,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.26  2008/07/08 18:58:34  ehan
+// Added curve reader.
+//
 // Revision 1.25  2008/06/30 19:34:54  ehan
 // Fixed infinity recursive-loop error.
 //

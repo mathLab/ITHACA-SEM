@@ -46,7 +46,7 @@
 #endif
 
 #include <tinyxml/tinyxml.h>
-#include <string>
+#include <cstring>
 #include <sstream>
 
 #include <SpatialDomains/MeshGraph1D.h>
@@ -266,9 +266,8 @@ namespace Nektar
         ASSERTL0(master, "Unable to find NEKTAR tag in file.");
 
         // Find the Expansions tag
-         TiXmlElement *expansionTypes = master->FirstChildElement("EXPANSIONTYPES");
-//         TiXmlElement *expansionTypes = master->FirstChildElement("EXPANSIONS");
-        ASSERTL0(expansionTypes, "Unable to find EXPANSIONTYPES tag in file.");
+         TiXmlElement *expansionTypes = master->FirstChildElement("EXPANSIONS");
+        ASSERTL0(expansionTypes, "Unable to find EXPANSIONS tag in file.");
 
         if (expansionTypes)
         {
@@ -374,172 +373,206 @@ namespace Nektar
         TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
         TiXmlElement* field = NULL;
 
+        int err;
+
         /// Look for elements in CURVE block.
         field = mesh->FirstChildElement("CURVE");
 
         ASSERTL0(field, "Unable to find CURVE tag in file.");
 
-        int nextCurveNumber = -1;
-        Curve curve(-1, LibUtilities::eNoPointsType, VertexVector());
-        
-        /// All curves are of the form: "<? ID="#" TYPE="GLL OR EQUAL" NUMPOINTS="#"> ... </?>", with
+        /// All curves are of the form: "<? ID="#" TYPE="GLL OR other points type" NUMPOINTS="#"> ... </?>", with
         /// ? being an element type (either E or F).
 
-        TiXmlElement *element = field->FirstChildElement();
+        TiXmlElement *edgelement = field->FirstChildElement("E");
 
-        while(element)
+        int edgeindx;
+        int nextEdgeNumber = -1;
+        Curve curve(-1, eNoPointsType, VertexVector());
+
+        while(edgelement)
         {
-            std::string elementType(element->ValueStr());
-
-            ASSERTL0(elementType == "E" || elementType == "F", (std::string("Unknown 3D curve type: ") + elementType).c_str());
-
+           cout << "edge element = " << *edgelement << endl;
+           
             /// These should be ordered.
-            nextCurveNumber++;
+            nextEdgeNumber++;
+
+            std::string edge(edgelement->ValueStr());
+            ASSERTL0(edge == "E", (std::string("Unknown 3D curve type: ") + edge).c_str());
 
             /// Read id attribute.
-            int indx=-1;
-            int err = element->QueryIntAttribute("ID", &indx);
+            err = edgelement->QueryIntAttribute("ID", &edgeindx);
             ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
-            ASSERTL0(indx == nextCurveNumber, "Curve IDs must begin with zero and be sequential.");
+            ASSERTL0(edgeindx == nextEdgeNumber, "Curve IDs must begin with zero and be sequential.");
 
-            /// Read text element description.
-            TiXmlNode* elementChild = element->FirstChild();
+            /// Read text edgelement description.
             std::string elementStr;
+            TiXmlNode* elementChild = edgelement->FirstChild();
+
             while(elementChild)
             {
+                // Accumulate all non-comment element data
                 if (elementChild->Type() == TiXmlNode::TEXT)
                 {
                     elementStr += elementChild->ToText()->ValueStr();
+                    elementStr += " ";
                 }
                 elementChild = elementChild->NextSibling();
             }
 
             ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
-            
-                /// Parse out the element components corresponding to type of element.
-                if (elementType == "E")
+
+            /// Parse out the element components corresponding to type of element.
+           if (edge == "E")
+            {
+                std::string typeStr = edgelement->Attribute("TYPE");
+                ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
+
+                LibUtilities::PointsType type;
+                const std::string* begStr = kPointsTypeStr;
+                const std::string* endStr = kPointsTypeStr + LibUtilities::SIZE_PointsType;
+                const std::string* ptsStr = std::find(begStr, endStr, typeStr);
+
+                ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                type = (LibUtilities::PointsType)(ptsStr - begStr);
+
+                std::string numptsStr = edgelement->Attribute("NUMPOINTS");
+                ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
+                int numPts=0;
+                std::strstream s;
+                s << numptsStr;
+                s >> numPts;
+
+                // Read points (x, y, z)
+                double xval, yval, zval;
+                std::istringstream elementDataStrm(elementStr.c_str());
+                try
                 {
-                    std::string typeStr = element->Attribute("TYPE");
-                    ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
-
-                    LibUtilities::PointsType type;
-                    const std::string* begStr = kPointsTypeStr;
-                    const std::string* endStr = kPointsTypeStr + LibUtilities::SIZE_PointsType;
-                    const std::string* ptsStr = std::find(begStr, endStr, typeStr);
-
-                    ASSERTL0(ptsStr != endStr, "Invalid points type.");
-                    type = (LibUtilities::PointsType)(ptsStr - begStr);
-
-                    std::string numptsStr = element->Attribute("NUMPOINTS");
-                    ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
-                    int numPts=0;
-                    std::strstream s;
-                    s << numptsStr;
-                    s >> numPts;
-                    
-                    cout << "numpts = " << numPts << endl;
- 
-                    // Read points (x, y, z)
-                    double xval, yval, zval;
-                    std::istringstream elementDataStrm(elementStr.c_str());
-                    try
+                    while(!elementDataStrm.fail())
                     {
-                        while(!elementDataStrm.fail())
+                        elementDataStrm >> xval >> yval >> zval;
+
+                        // Need to check it here because we may not be good after the read
+                        // indicating that there was nothing to read.
+                        if (!elementDataStrm.fail())
                         {
-                            elementDataStrm >> xval >> yval >> zval;
-
-                            // Need to check it here because we may not be good after the read
-                            // indicating that there was nothing to read.
-                            if (!elementDataStrm.fail())
-                            {
-                                VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, indx, xval, yval, zval));
-                                curve.m_verts.push_back(vert);
-                            }
+                            VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, edgeindx, xval, yval, zval));
+                            curve.m_verts.push_back(vert);
                         }
+
+                     cout << "xval = " << xval << "  yval = " << yval <<"  zval = " << zval << endl;
+                     cout << endl;
                     }
-                    catch(...)
-                    {
-                        NEKERROR(ErrorUtil::efatal,
-                        (std::string("Unable to read curve data for EDGE: ") + elementStr).c_str());
-                        
-                    }   
-
-
-                } // end if-loop
-                else if(elementType == "F")
+                }
+                catch(...)
                 {
-                    std::string typeStr = element->Attribute("TYPE");
-                    ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
-
-                     cout << "typeStr = " << typeStr << endl;
-
-                    LibUtilities::PointsType type;
-                    const std::string* begStr = kPointsTypeStr;
-                    const std::string* endStr = kPointsTypeStr + LibUtilities::SIZE_PointsType;
-                    const std::string* ptsStr = std::find(begStr, endStr, typeStr);
-
-                    ASSERTL0(ptsStr != endStr, "Invalid points type.");
-                    type = (LibUtilities::PointsType)(ptsStr - begStr);
-
-                    std::string numptsStr = element->Attribute("NUMPOINTS");
-                    ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
-                    int numPts=0;
-                    std::strstream s;
-                    s << numptsStr;
-                    s >> numPts;
-                    
-                    cout << "numpts = " << numPts << endl;
- 
-                    // Read points (x, y, z)
-                    double xval, yval, zval;
-                    std::istringstream elementDataStrm(elementStr.c_str());
-                    try
-                    {
-                        while(!elementDataStrm.fail())
-                        {
-                            elementDataStrm >> xval >> yval >> zval;
-
-                            // Need to check it here because we may not be good after the read
-                            // indicating that there was nothing to read.
-                            if (!elementDataStrm.fail())
-                            {
-                                VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, indx, xval, yval, zval));
-                                curve.m_verts.push_back(vert);
-                            }
-                        }
-                    }
-                    catch(...)
-                    {
-                        NEKERROR(ErrorUtil::efatal,
-                        (std::string("Unable to read curve data for FACE: ") + elementStr).c_str());
-                        
-                    }   
-
+                    NEKERROR(ErrorUtil::efatal,
+                    (std::string("Unable to read curve data for EDGE: ") + elementStr).c_str());
 
                 }
 
+                edgelement = edgelement->NextSiblingElement("E");
 
-                
+            } // end if-loop
 
         } // end while-loop
 
 
+        TiXmlElement *facelement = field->FirstChildElement("F");
+        int faceindx;
+        int nextFaceNumber = -1;
+        
+        while(facelement)
+        {
+            cout << "facelement = " << *facelement << endl;
+             
+            /// These should be ordered.
+            nextFaceNumber++;
 
+            std::string face(facelement->ValueStr());
+            ASSERTL0(face == "F", (std::string("Unknown 3D curve type: ") + face).c_str());
 
+            /// Read id attribute.
+            err = facelement->QueryIntAttribute("ID", &faceindx);
 
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
+            ASSERTL0(faceindx == nextFaceNumber, "Face IDs must begin with zero and be sequential.");
 
+            /// Read text face element description.
+            std::string elementStr;
+            TiXmlNode* elementChild = facelement->FirstChild();
+          
+            while(elementChild)
+            {
+                // Accumulate all non-comment element data
+                if (elementChild->Type() == TiXmlNode::TEXT)
+                {
+                    elementStr += elementChild->ToText()->ValueStr();
+                    elementStr += " ";
+                }
+                elementChild = elementChild->NextSibling();
+            }
 
+            ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
 
+            
+               /// Parse out the element components corresponding to type of element.
 
+               if(face == "F") {
+                std::string typeStr = facelement->Attribute("TYPE");
+                ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
 
+                PointsType type;
+                const std::string* begStr = kPointsTypeStr;
+                const std::string* endStr = kPointsTypeStr + ePointsTypeSize;
+                const std::string* ptsStr = std::find(begStr, endStr, typeStr);
 
+                // ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                type = (PointsType)(ptsStr - begStr);
 
+                std::string numptsStr = facelement->Attribute("NUMPOINTS");
+                ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
+                int numPts=0;
+                std::strstream s;
+                s << numptsStr;
+                s >> numPts;
 
+                // Read points (x, y, z)
+                double xval, yval, zval;
+                std::istringstream elementDataStrm(elementStr.c_str());
+                try
+                {
+                    while(!elementDataStrm.fail())
+                    {
+                        elementDataStrm >> xval >> yval >> zval;
 
+                        // Need to check it here because we may not be good after the read
+                        // indicating that there was nothing to read.
+                        if (!elementDataStrm.fail())
+                        {
+                            VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, faceindx, xval, yval, zval));
+                            curve.m_verts.push_back(vert);
+                        }
 
+                     cout << "xval = " << xval << "  yval = " << yval <<"  zval = " << zval << endl;
+                     cout << endl;
+                        
+                    }
+                }
+                catch(...)
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                    (std::string("Unable to read curve data for FACE: ") + elementStr).c_str());
 
-       // insert code here
-    }
+                }
+
+                facelement = facelement->NextSiblingElement("F");
+                
+              } // end if-loop
+
+        } // end while-loop
+        
+    } // end of ReadCurves()
+
 
     void MeshGraph::ReadCurves(std::string &infilename)
     {
@@ -1097,6 +1130,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.21  2008/07/08 18:58:07  ehan
+// Added curve reader.
+//
 // Revision 1.20  2008/06/30 19:34:46  ehan
 // Fixed infinity recursive-loop error.
 //

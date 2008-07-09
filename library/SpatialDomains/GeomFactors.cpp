@@ -66,7 +66,7 @@ namespace Nektar
 
         GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
             const Array<OneD, const StdRegions::StdExpansion1DSharedPtr>  &Coords):
-            m_gtype(gtype), m_coordim(coordim)
+            m_gtype(gtype), m_coordim(coordim), m_expdim(1)
         {
             int        i,nquad;
             LibUtilities::PointsType  ptype;
@@ -74,7 +74,6 @@ namespace Nektar
             ASSERTL1(coordim <= 3, "Only understand up to 3 Coordinate for this routine");
 
             nquad = Coords[0]->GetNumPoints(0);
-            m_expdim = nquad;
             ptype = Coords[0]->GetPointsType(0);
             NekDouble fac0,fac1;
 
@@ -82,12 +81,12 @@ namespace Nektar
                                             Array<OneD, NekDouble>(nquad), 
                                             Array<OneD, NekDouble>(nquad)};
 
-            // Calculate local derivatives usin g physical space storage
+            // Calculate local derivatives using physical space storage
             for(i = 0; i < coordim; ++i)
             {
-                ASSERTL2(Coords[i]->GetNumPoints(0) == nquad,
+                ASSERTL2(Coords[i]->GetNumPoints(0)  == nquad,
                     "Points order are different for each coordinate");
-                ASSERTL2(Coords[i]->GetPointsType(0)  == ptype,
+                ASSERTL2(Coords[i]->GetPointsType(0) == ptype,
                     "Points type are different for each coordinate");
         
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), 
@@ -209,7 +208,8 @@ namespace Nektar
 
         **/
         GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
-                                 const Array<OneD, const StdRegions::StdExpansion2DSharedPtr> &Coords)
+                                 const Array<OneD, const StdRegions::StdExpansion2DSharedPtr> &Coords):
+        m_gtype(gtype), m_coordim(coordim), m_expdim(2)
         {
             int i,j,nquad0,nquad1,nqtot;
             LibUtilities::PointsType  ptype0, ptype1;
@@ -217,8 +217,6 @@ namespace Nektar
             ASSERTL1((coordim >= 2)&&(coordim <= 3),
                 "Only understand up to three Coordinate and must have "
                 "at least two coordinates for this routine");
-
-            m_gtype = gtype;
 
             nquad0 = Coords[0]->GetNumPoints(0);
             nquad1 = Coords[0]->GetNumPoints(1);
@@ -769,6 +767,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.21  2008/06/13 18:07:30  ehan
+// Commented out the function GeomFactors(..)
+//
 // Revision 1.20  2008/06/09 21:34:28  jfrazier
 // Added some code for 3d.
 //

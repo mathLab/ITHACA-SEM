@@ -658,7 +658,7 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetScaleFactor();
+                    NekDouble factor = mkey.GetConstant(0);
                     MatrixKey masskey(StdRegions::eMass, mkey.GetExpansionType(), *this);
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetExpansionType(), *this);
@@ -804,6 +804,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.cpp,v $
+ *    Revision 1.13  2008/07/04 10:19:04  pvos
+ *    Some updates
+ *
  *    Revision 1.12  2008/06/14 01:20:31  ehan
  *    Clean up the codes
  *

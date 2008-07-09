@@ -872,7 +872,7 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetScaleFactor();
+                    NekDouble factor = mkey.GetConstant(0);
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetExpansionType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
@@ -1016,6 +1016,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.25  2008/07/04 10:19:04  pvos
+ *    Some updates
+ *
  *    Revision 1.24  2008/06/05 20:17:41  ehan
  *    Fixed undefined function GetGtype() in the ASSERTL2().
  *

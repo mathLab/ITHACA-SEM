@@ -1160,7 +1160,7 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetScaleFactor();
+                    NekDouble factor = mkey.GetConstant(0);
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetExpansionType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
@@ -1304,6 +1304,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.37  2008/07/04 10:19:05  pvos
+ *    Some updates
+ *
  *    Revision 1.36  2008/07/02 14:09:18  pvos
  *    Implementation of HelmholtzMatOp and LapMatOp on shape level
  *

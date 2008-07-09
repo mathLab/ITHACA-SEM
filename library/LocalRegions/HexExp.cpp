@@ -751,7 +751,7 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetScaleFactor();
+                    NekDouble factor = mkey.GetConstant(0);
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetExpansionType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
@@ -928,6 +928,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.15  2008/07/04 10:19:04  pvos
+ *    Some updates
+ *
  *    Revision 1.14  2008/06/14 01:20:21  ehan
  *    Clean up the codes
  *

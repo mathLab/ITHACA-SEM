@@ -116,11 +116,6 @@ namespace Nektar
                 return m_metricinfo;
             }
 
-            const NekDouble GetScaleFactor() const 
-            {
-                return m_scalefactor;
-            }
-
             const NekDouble GetConstant(int i) const 
             {
                 return m_stdMatKey->GetConstant(i);
@@ -131,7 +126,6 @@ namespace Nektar
 
             StdRegions::StdMatrixKeySharedPtr     m_stdMatKey;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo; 
-            NekDouble                             m_scalefactor;
 
         private:
         };
@@ -145,6 +139,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.16  2008/05/30 00:33:48  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.15  2008/04/06 05:59:04  bnelson
 * Changed ConstArray to Array<const>
 *

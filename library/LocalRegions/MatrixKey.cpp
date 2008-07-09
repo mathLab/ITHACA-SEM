@@ -57,7 +57,6 @@ namespace Nektar
         {
             m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,expansionType,stdExpansion,scalefactor,nodalType);
 
-            m_scalefactor = scalefactor;
             m_metricinfo  = stdExpansion.GetMetricInfo(); 
         }
 
@@ -70,7 +69,6 @@ namespace Nektar
         {
             m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,expansionType,stdExpansion,scalefactor,constant,nodalType);
 
-            m_scalefactor = scalefactor;
             m_metricinfo  = stdExpansion.GetMetricInfo(); 
         }
 
@@ -83,25 +81,6 @@ namespace Nektar
 
         bool operator<(const MatrixKey &lhs, const MatrixKey &rhs)
         {
-            if(lhs.GetMatrixType() < rhs.GetMatrixType())
-            {
-                return true;
-            }
-
-            if(lhs.GetMatrixType() > rhs.GetMatrixType())
-            {
-                return false;
-            }
-
-            if(lhs.GetNcoeffs() < rhs.GetNcoeffs())
-            {
-                return true;
-            }
-
-            if(lhs.GetNcoeffs() > rhs.GetNcoeffs())
-            {
-                return false;
-            }
 
             if(lhs.m_metricinfo.get() < rhs.m_metricinfo.get())
             {
@@ -114,30 +93,9 @@ namespace Nektar
                 return false;
             }
 
-            for(unsigned int i = 0; i < StdRegions::ExpansionTypeDimMap[lhs.GetExpansionType()]; ++i)
-            {
-                if(lhs.GetBasis(i).get() < rhs.GetBasis(i).get())
-                {
-                    return true;
-                }
+            bool returnval = (*lhs.GetStdMatKey() < *rhs.GetStdMatKey());
 
-                if(lhs.GetBasis(i).get() > rhs.GetBasis(i).get())
-                {
-                    return false;
-                }
-            }
-
-            if(lhs.m_scalefactor > rhs.m_scalefactor)
-            {
-                return false;
-            }
-
-            if(lhs.m_scalefactor < rhs.m_scalefactor)
-            {
-                return true;
-            }
-
-            return false;
+            return returnval;
         }
 
         std::ostream& operator<<(std::ostream& os, const MatrixKey& rhs)
@@ -151,6 +109,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.17  2008/06/02 23:33:46  ehan
+* Fixed warning : no new line at end of file
+*
 * Revision 1.16  2008/05/30 00:33:48  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

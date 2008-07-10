@@ -164,6 +164,7 @@ namespace Nektar
             eUnifiedDGHelmholtz,
             eInvUnifiedDGHelmholtz,
             eUnifiedDGHelmBndSys,
+            eUnifiedDGHelmBndSysForce,
             eUnifiedDGLamToQ0,
             eUnifiedDGLamToQ1,
             eUnifiedDGLamToQ2,
@@ -293,6 +294,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.25  2008/06/05 15:06:06  pvos
+* Added documentation
+*
 * Revision 1.24  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *
